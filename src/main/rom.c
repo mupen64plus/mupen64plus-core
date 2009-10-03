@@ -41,7 +41,7 @@
 #include "util.h"
 
 #include "../memory/memory.h"
-#include "../opengl/osd.h"
+#include "../osd/osd.h"
 
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 

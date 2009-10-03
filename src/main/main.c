@@ -69,8 +69,8 @@
 
 #include "../memory/memory.h"
 
-#include "../opengl/osd.h"
-#include "../opengl/screenshot.h"
+#include "../osd/osd.h"
+#include "../osd/screenshot.h"
 
 #ifndef NO_GUI
 #include "gui.h"

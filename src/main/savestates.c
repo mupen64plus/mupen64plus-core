@@ -37,7 +37,7 @@
 #include "../r4300/macros.h"
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
-#include "../opengl/osd.h"
+#include "../osd/osd.h"
 
 #include "zip/unzip.h"
 #include "zip/zip.h"

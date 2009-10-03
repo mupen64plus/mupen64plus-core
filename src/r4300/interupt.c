@@ -54,7 +54,7 @@
 #include "../main/lirc.h"
 #endif //WITH_LIRC
 
-#include "../opengl/osd.h"
+#include "../osd/osd.h"
 
 unsigned int next_vi;
 int vi_field=0;

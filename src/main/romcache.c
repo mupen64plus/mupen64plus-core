@@ -32,7 +32,7 @@
 #include "main.h"
 #include "translate.h"
 
-#include "../opengl/osd.h"
+#include "../osd/osd.h"
 
 #define DEFAULT 16
 

@@ -172,10 +172,10 @@ endif
 SRC_LIRC = \
 	$(SRCDIR)/main/lirc.c
 
-SRC_OPENGL = \
-	$(SRCDIR)/opengl/OGLFT.cpp \
-	$(SRCDIR)/opengl/osd.cpp \
-	$(SRCDIR)/opengl/screenshot.cpp
+SRC_OSD = \
+	$(SRCDIR)/osd/OGLFT.cpp \
+	$(SRCDIR)/osd/osd.cpp \
+	$(SRCDIR)/osd/screenshot.cpp
 
 SRC_DBG = \
 	$(SRCDIR)/debugger/debugger.c \
@@ -193,7 +193,7 @@ SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 
 # set primary objects and libraries for all outputs
 ALL = mupen64plus
-SOURCE = $(SRC_CORE) $(SRC_DYNAREC) $(SRC_OPENGL) $(SRC_DUMMYPLUGINS)
+SOURCE = $(SRC_CORE) $(SRC_DYNAREC) $(SRC_OSD) $(SRC_DUMMYPLUGINS)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS) -lbz2
 
 # add extra objects and libraries for selected options
@@ -257,7 +257,7 @@ clean:
 rebuild: clean all
 
 # build rules
-mupen64plus: $(MISC_DEPS) $(SRCDIR)/main/version.h $(OBJECTS)
+mupen64plus: $(MISC_DEPS) version.h $(OBJECTS)
 	$(CXX) $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
 	$(STRIP) $@
 
