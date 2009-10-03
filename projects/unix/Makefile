@@ -90,7 +90,6 @@ OBJDIR = _obj
 # list of object files to generate
 SRC_CORE = \
 	$(SRCDIR)/main/main.c \
-	$(SRCDIR)/main/romcache.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/config.c \

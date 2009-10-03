@@ -23,12 +23,13 @@
 #ifndef __ROM_H__
 #define __ROM_H__
 
-#include "7zip/7zMain.h"
+#include "md5.h"
+
+/* ROM Loading and Saving functions */
 
 int open_rom(const char* filename, unsigned int archivefile);
 int close_rom(void);
 unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char* compressiontype, int* loadlength);
-unsigned char* load_archive_rom(const char* filename, int* romsize, unsigned char* compressiontype, int* loadlength, unsigned int* archivefile, UInt32* blockIndex, Byte** outBuffer, size_t* outBufferSize, CFileInStream* archiveStream, CArchiveDatabaseEx* db);
 void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength);
 
 extern unsigned char* rom;
@@ -103,6 +104,57 @@ enum
     CONTROLLER_PACK,
     NONE
 };
+
+/* Rom INI database structures and functions */
+
+/* The romdatabase contains the items mupen64plus indexes for each rom. These
+ * include the goodname (from the GoodN64 project), the current status of the rom
+ * in mupen, the N64 savetype used in the original cartridge (often necessary for
+ * booting the rom in mupen), the number of players (including netplay options),
+ * and whether the rom can make use of the N64's rumble feature. Md5, crc1, and
+ * crc2 used for rom lookup. Md5s are unique hashes of the ENTIRE rom. Crcs are not
+ * unique and read from the rom header, meaning corrupt crcs are also a problem.
+ * Crcs were widely used (mainly in the cheat system). Refmd5s allows for a smaller
+ * database file and need not be used outside database loading.
+ */
+typedef struct
+{
+   char* goodname;
+   md5_byte_t md5[16];
+   md5_byte_t* refmd5;
+   unsigned int crc1;
+   unsigned int crc2;
+   unsigned char status; /* Rom status on a scale from 0-5. */
+   unsigned char savetype;
+   unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
+   unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
+} romdatabase_entry;
+
+typedef struct _romdatabase_search
+{
+    romdatabase_entry entry;
+    struct _romdatabase_search* next_entry;
+    struct _romdatabase_search* next_crc;
+    struct _romdatabase_search* next_md5;
+} romdatabase_search;
+
+typedef struct
+{
+    char* comment;
+    romdatabase_search* crc_lists[256];
+    romdatabase_search* md5_lists[256];
+    romdatabase_search* list;
+} _romdatabase;
+
+extern romdatabase_entry empty_entry;
+
+void romdatabase_open(void);
+void romdatabase_close(void);
+romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
+/* Should be used by current cheat system (isn't), when cheat system is
+ * migrated to md5s, will be fully depreciated.
+ */
+romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2);
 
 #endif /* __ROM_H__ */
 

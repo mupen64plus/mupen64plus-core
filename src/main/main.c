@@ -57,7 +57,6 @@
 #include "config.h"
 #include "plugin.h"
 #include "rom.h"
-#include "romcache.h"
 #include "savestates.h"
 #include "util.h"
 #include "translate.h"

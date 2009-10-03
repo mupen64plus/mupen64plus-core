@@ -35,7 +35,6 @@
 
 #include "md5.h"
 #include "rom.h"
-#include "romcache.h"
 #include "translate.h"
 #include "main.h"
 #include "util.h"
@@ -43,11 +42,16 @@
 #include "../memory/memory.h"
 #include "../osd/osd.h"
 
+#define DEFAULT 16
+
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
 #ifndef NO_GUI
 #include "gui.h"
 #endif
+
+_romdatabase g_romdatabase;
+romdatabase_entry empty_entry;
 
 /* Global loaded rom memory space. */
 unsigned char* rom;
@@ -306,141 +310,6 @@ unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char
     return localrom;
 }
 
-/* Open a file and test if its a zip or 7zip archive. If so load check if *archivefile
- * is a rom and load *loadlength into the returned pointer. If *archivefile is not a rom
- * in a many file archive, function will keep checking until a rom is found or the 
- * end of the archive is reached. Returns NULL if unable to find a rom. The large function
- * API is to allow for persistent 7zip memory space.
- */
-unsigned char* load_archive_rom(const char* filename, int* romsize, unsigned char* compressiontype, int* loadlength, unsigned int* archivefile, UInt32* blockIndex, Byte** outBuffer, size_t* outBufferSize, CFileInStream* archiveStream, CArchiveDatabaseEx* db)
-{
-    int status;
-    unsigned int filecounter = 0;
-    unsigned short romread = 0;
-    unsigned char* localrom;
-
-    /* Zip roms. */
-    unsigned char buffer[4];
-    unzFile zipromfile;
-    unz_file_info fileinfo;
-    char szFileName[256], szExtraField[256], szComment[256];
-    zipromfile = unzOpen(filename);
-    if(zipromfile!=NULL) 
-        {
-        if(unzGoToFirstFile(zipromfile)==UNZ_OK)
-            {
-            /* Get first valid rom in archive. */
-            do
-                {
-                if(unzGetCurrentFileInfo(zipromfile, &fileinfo, szFileName, 255, 
-                szExtraField, 255, szComment, 255)!=UNZ_OK)
-                    break;
-                if(unzOpenCurrentFile(zipromfile)!=UNZ_OK)
-                    break;
-
-                if(fileinfo.uncompressed_size>=4&&filecounter>=*archivefile)
-                    {
-                    if(unzReadCurrentFile(zipromfile, buffer, 4)!=4)
-                        break;
-                    if(is_valid_rom(buffer))
-                        {
-                        unzOpenCurrentFile(zipromfile);
-                        *romsize = fileinfo.uncompressed_size;
-                        localrom = (unsigned char*)malloc(*loadlength*sizeof(unsigned char));
-                        if(localrom==NULL)
-                            {
-                            fprintf(stderr, "%s, %d: Out of memory!\n", __FILE__, __LINE__);
-                            return NULL;
-                            }
-
-                        if(unzReadCurrentFile(zipromfile, localrom, *loadlength)==*loadlength)
-                            {
-                            *compressiontype = ZIP_COMPRESSION;
-                            unzCloseCurrentFile(zipromfile);
-                            romread = 1;
-                            break;
-                            }
-                        else
-                            free(localrom);
-                        }
-                    }
-                ++filecounter;
-                }
-            while ((status=unzGoToNextFile(zipromfile)) != UNZ_END_OF_LIST_OF_FILE);
-
-            unzClose(zipromfile);
-            }
-        }
-    else
-        {
-        /* 7zip */
-        ISzAlloc allocImp;
-        allocImp.Free = SzFree;
-        allocImp.Alloc = SzAlloc;
-
-        ISzAlloc allocTempImp;
-        allocTempImp.Alloc = SzAllocTemp;
-        allocTempImp.Free = SzFreeTemp;
-
-        if(archiveStream->File==NULL)
-            {
-            archiveStream->File = fopen(filename, "rb");
-            if(archiveStream->File==NULL)
-                return NULL;
-            status = SzArchiveOpen(&(archiveStream->InStream), db, &allocImp, &allocTempImp);
-            if(status==SZ_OK)
-                printf("Deflating 7zip archive.\n");
-            }
-        else
-            status = SZ_OK;
-
-        if(status==SZ_OK)
-            {
-            for (filecounter = *archivefile; filecounter < db->Database.NumFiles; ++filecounter)
-                {
-                size_t offset;
-                size_t outSizeProcessed;
-
-                CFileItem *f = db->Database.Files + filecounter;
-                status = SzExtract(&(archiveStream->InStream), db, filecounter, blockIndex, outBuffer, outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
-                if(status!=SZ_OK)
-                    {
-                    if(status==SZE_NOTIMPL)
-                        printf("7zip decoder doesn't support this archive.");
-                    else if(status==SZE_OUTOFMEMORY)
-                        printf("7zip decoder can not allocate memory\n");
-                    else if(status==SZE_CRC_ERROR)
-                       printf("7zip CRC error");
-                    else
-                       printf("7zip Error# %d\n", status);
-                    break; 
-                    }
-                if(is_valid_rom(*outBuffer+offset))
-                    {
-                    *romsize=f->Size;
-                    *compressiontype = SZIP_COMPRESSION;
-                    localrom = (unsigned char*)malloc(*loadlength*sizeof(unsigned char));
-                    if(localrom==NULL)
-                        {
-                        fprintf(stderr, "%s, %d: Out of memory!\n", __FILE__, __LINE__);
-                        return NULL;
-                        }
-                    memcpy(localrom,*outBuffer+offset,*loadlength);
-                    romread = 1;
-                    break;
-                    }
-                }
-            }
-        }
-
-    /* File invalid, or valid rom not found in file. */
-    if(romread==0)
-        return NULL;
-
-    *archivefile = filecounter;
-    return localrom;
-}
-
 static int ask_bad(void)
 {
 #ifndef NO_GUI
@@ -505,31 +374,18 @@ int open_rom(const char* filename, unsigned int archivefile)
     Byte* outBuffer = NULL;
     size_t outBufferSize = 0;
 
-    CFileInStream archiveStream;
-    archiveStream.File = NULL;
-    archiveStream.InStream.Read = SzFileReadImp;
-    archiveStream.InStream.Seek = SzFileSeekImp;
-
-    CArchiveDatabaseEx db;
-    SzArDbExInit(&db);
     CrcGenerateTable();
 
     strncpy(buffer, filename, PATH_MAX-1);
     buffer[PATH_MAX-1] = 0;
     if ((rom=load_single_rom(filename, &taille_rom, &compressiontype, &taille_rom))==NULL)
         {
-        if((rom=load_archive_rom(filename, &taille_rom, &compressiontype, &taille_rom, &archivefile, &blockIndex, &outBuffer, &outBufferSize, &archiveStream, &db))==NULL)
-            {
-            error_message(tr("Couldn't load Rom!")); 
-            return -1;
-            }
+        error_message(tr("Couldn't load Rom!")); 
+        return -1;
         }
 
     if(outBuffer)
         free(outBuffer);
-    if(archiveStream.File)
-        fclose(archiveStream.File);
-    SzArDbExFree(&db, free);
 
     swap_rom(rom, &imagetype, taille_rom);
 
@@ -659,4 +515,310 @@ int close_rom(void)
 
     return 0;
 }
+
+/********************************************************************************************/
+/* INI Rom database functions */
+
+/* Convert two letters representing hexidecimal to the appropriate value: 00->0 - FF->255. */
+static unsigned char hexconvert(const char* bigraph)
+{
+    unsigned char returnvalue = 0;
+    char character;
+    int digits;
+
+    for(digits = 2; digits > 0; --digits)
+        {
+        returnvalue = returnvalue << 4;
+        character = *bigraph++ | 0x20;
+        if(character>='0'&&character<='9')
+            returnvalue += character - '0';
+        else if(character>='a'&&character<='f')
+            returnvalue += character - 'a' + 10;
+        }
+
+    return returnvalue;
+}
+
+/* Helper function, identify the space of a line before an = sign. */
+static int split_property(char* string)
+{
+    int counter = 0;
+    while (string[counter] != '=' && string[counter] != '\0')
+        ++counter;
+    if(string[counter]=='\0')
+        return -1;
+    string[counter] = '\0';
+    return counter;
+}
+
+void romdatabase_open(void)
+{
+    gzFile gzfile;
+    char buffer[256];
+    romdatabase_search* search = NULL;
+    romdatabase_entry* entry = NULL;
+
+    int stringlength, totallength, namelength, index, counter, value;
+    char hashtemp[3];
+    hashtemp[2] = '\0';
+
+    if(g_romdatabase.comment!=NULL)
+        return;
+
+    /* Setup empty_entry. */
+    empty_entry.goodname = "";
+    for(counter=0; counter<16; ++counter)
+       empty_entry.md5[counter]=0;
+    empty_entry.refmd5 = NULL;
+    empty_entry.crc1 = 0;
+    empty_entry.crc2 = 0;
+    empty_entry.status = 0;
+    empty_entry.savetype = DEFAULT;
+    empty_entry.players = DEFAULT;
+    empty_entry.rumble = DEFAULT;
+
+    /* Open romdatabase. */
+    char* pathname = (char*)malloc(PATH_MAX*sizeof(char));
+    snprintf(pathname, PATH_MAX, "%s%s", get_installpath(), "mupen64plus.ini");
+
+    /* printf("Database file: %s \n", pathname); */
+    gzfile = gzopen(pathname, "rb");
+    if(gzfile==NULL)
+        {
+        printf("Unable to open rom database.\n");
+        free(pathname);
+        return;
+        }
+    free(pathname);
+
+    /* Move through opening comments, set romdatabase.comment to non-NULL
+    to signal we have a database. */
+    totallength = 0;
+    do
+        {
+        gzgets(gzfile, buffer, 255);
+        if(buffer[0]!='[')
+            {
+            stringlength=strlen(buffer);
+            totallength+=stringlength;
+            if(g_romdatabase.comment==NULL) 
+                {
+                g_romdatabase.comment = (char*)malloc(stringlength+2);
+                snprintf(g_romdatabase.comment, stringlength, "%s", buffer);
+                }
+            else
+                {
+                g_romdatabase.comment = (char*)realloc(g_romdatabase.comment, totallength+2);
+                snprintf(g_romdatabase.comment, totallength+1, "%s%s", g_romdatabase.comment, buffer);
+                }
+            }
+        }
+    while (buffer[0] != '[' && !gzeof(gzfile));
+
+    /* Clear premade indices. */
+    for(counter = 0; counter < 255; ++counter)
+        g_romdatabase.crc_lists[counter] = NULL;
+    for(counter = 0; counter < 255; ++counter)
+        g_romdatabase.md5_lists[counter] = NULL;
+    g_romdatabase.list = NULL;
+
+    do
+        {
+        if(buffer[0]=='[')
+            {
+            if(g_romdatabase.list==NULL)
+                {
+                g_romdatabase.list = (romdatabase_search*)malloc(sizeof(romdatabase_search));
+                g_romdatabase.list->next_entry = NULL;
+                g_romdatabase.list->next_crc = NULL;
+                g_romdatabase.list->next_md5 = NULL;
+                search = g_romdatabase.list;
+                }
+            else
+                {
+                search->next_entry = (romdatabase_search*)malloc(sizeof(romdatabase_search));
+                search = search->next_entry;
+                search->next_entry = NULL;
+                search->next_crc = NULL;
+                search->next_md5 = NULL;
+                }
+            for (counter=0; counter < 16; ++counter)
+              {
+              hashtemp[0] = buffer[counter*2+1];
+              hashtemp[1] = buffer[counter*2+2];
+              search->entry.md5[counter] = hexconvert(hashtemp);
+              }
+            /* Index MD5s by first 8 bits. */
+            index = search->entry.md5[0];
+            if(g_romdatabase.md5_lists[index]==NULL)
+                g_romdatabase.md5_lists[index] = search;
+            else
+                {
+                romdatabase_search* aux = g_romdatabase.md5_lists[index];
+                search->next_md5 = aux;
+                g_romdatabase.md5_lists[index] = search;
+                }
+            search->entry.goodname = NULL;
+            search->entry.refmd5 = NULL;
+            search->entry.crc1 = 0;
+            search->entry.crc2 = 0;
+            search->entry.status = 0; /* Set default to 0 stars. */
+            search->entry.savetype = DEFAULT;
+            search->entry.rumble = DEFAULT; 
+            search->entry.players = DEFAULT; 
+            }
+        else
+            {
+            stringlength = split_property(buffer);
+            if(stringlength!=-1)
+                {
+                if(!strcmp(buffer, "GoodName"))
+                    {
+                    /* Get length of GoodName since we dynamically allocate. */
+                    namelength = strlen(buffer+stringlength+1);
+                    search->entry.goodname = (char*)malloc(namelength*sizeof(char));
+                    /* Make sure we're null terminated. */
+                    if(buffer[stringlength+namelength]=='\n'||buffer[stringlength+namelength]=='\r')
+                        buffer[stringlength+namelength] = '\0';
+                    snprintf(search->entry.goodname, namelength, "%s", buffer+stringlength+1);
+                    /* printf("Name: %s, Length: %d\n", search->entry.goodname, namelength-1); */
+                    }
+                else if(!strcmp(buffer, "CRC"))
+                    {
+                    buffer[stringlength+19] = '\0';
+                    sscanf(buffer+stringlength+10, "%X", &search->entry.crc2);
+                    buffer[stringlength+9] = '\0';
+                    sscanf(buffer+stringlength+1, "%X", &search->entry.crc1);
+                    buffer[stringlength+3] = '\0';
+                    index = hexconvert(buffer+stringlength+1);
+                    /* Index CRCs by first 8 bits. */
+                    if(g_romdatabase.crc_lists[index]==NULL)
+                        g_romdatabase.crc_lists[index] = search;
+                    else
+                        {
+                        romdatabase_search* aux = g_romdatabase.crc_lists[index];
+                        search->next_crc = aux;
+                        g_romdatabase.crc_lists[index] = search;
+                        }
+                    }
+                else if(!strcmp(buffer, "RefMD5"))
+                    {
+                    /* If we have a refernce MD5, dynamically allocate. */
+                    search->entry.refmd5 = (md5_byte_t*)malloc(16*sizeof(md5_byte_t));
+                    for (counter=0; counter < 16; ++counter)
+                        {
+                        hashtemp[0] = buffer[stringlength+1+counter*2];
+                        hashtemp[1] = buffer[stringlength+2+counter*2];
+                        search->entry.refmd5[counter] = hexconvert(hashtemp);
+                        }
+                    /* Lookup reference MD5 and replace non-default entries. */
+                    if((entry = ini_search_by_md5(search->entry.refmd5))!=&empty_entry)
+                        {
+                        /* printf("RefMD5: %s\n", aux->goodname); */
+                        if(entry->savetype!=DEFAULT)
+                            search->entry.savetype = entry->savetype;
+                        if(entry->status!=0)
+                            search->entry.status = entry->status;
+                        if(entry->players!=DEFAULT)
+                            search->entry.players = entry->players;
+                        if(entry->rumble!=DEFAULT)
+                            search->entry.rumble = entry->rumble;
+                        }
+                    }
+                else if(!strcmp(buffer, "SaveType"))
+                    {
+                    if(!strncmp(buffer+stringlength+1, "Eeprom 4KB", 10))
+                        search->entry.savetype = EEPROM_4KB;
+                    else if(!strncmp(buffer+stringlength+1, "Eeprom 16KB", 10))
+                        search->entry.savetype = EEPROM_16KB;
+                    else if(!strncmp(buffer+stringlength+1, "SRAM", 4))
+                        search->entry.savetype = SRAM;
+                    else if(!strncmp(buffer+stringlength+1, "Flash RAM", 9))
+                        search->entry.savetype = FLASH_RAM;
+                    else if(!strncmp(buffer+stringlength+1, "Controller Pack", 15))
+                        search->entry.savetype = CONTROLLER_PACK;
+                    else if(!strncmp(buffer+stringlength+1, "None", 4))
+                        search->entry.savetype = NONE;
+                    }
+                else if(!strcmp(buffer, "Status"))
+                    {
+                    value = (unsigned char)atoi(buffer+stringlength+1);
+                    if(value>-1&&value<6)
+                        search->entry.status = value;
+                    }
+                else if(!strcmp(buffer, "Players"))
+                    {
+                    value = (unsigned char)atoi(buffer+stringlength+1);
+                    if(value>-1&&value<8)
+                        search->entry.players = value;
+                    }
+                else if(!strcmp(buffer, "Rumble"))
+                    {
+                    if(!strncmp(buffer+stringlength+1, "Yes", 3))
+                        search->entry.rumble = 1;
+                    if(!strncmp(buffer+stringlength+1, "No", 2))
+                        search->entry.rumble = 0;
+                    }
+                }
+            }
+
+        gzgets(gzfile, buffer, 255);
+        }
+   while (!gzeof(gzfile));
+
+   gzclose(gzfile);
+}
+
+void romdatabase_close(void)
+{
+    if (g_romdatabase.comment == NULL)
+        return;
+
+    free(g_romdatabase.comment);
+
+    while (g_romdatabase.list != NULL)
+        {
+        romdatabase_search* search = g_romdatabase.list->next_entry;
+        if(g_romdatabase.list->entry.goodname)
+            free(g_romdatabase.list->entry.goodname);
+        if(g_romdatabase.list->entry.refmd5)
+            free(g_romdatabase.list->entry.refmd5);
+        free(g_romdatabase.list);
+        g_romdatabase.list = search;
+        }
+}
+
+romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
+{
+    if(g_romdatabase.comment==NULL)
+        return &empty_entry;
+    romdatabase_search* search;
+    search = g_romdatabase.md5_lists[md5[0]];
+
+    while (search != NULL && memcmp(search->entry.md5, md5, 16) != 0)
+        search = search->next_md5;
+
+    if(search==NULL)
+        return &empty_entry;
+    else
+        return &(search->entry);
+}
+
+romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
+{
+    if(g_romdatabase.comment==NULL) 
+        return &empty_entry;
+
+    romdatabase_search* search;
+    search = g_romdatabase.crc_lists[((crc1 >> 24) & 0xff)];
+
+    while (search != NULL && search->entry.crc1 != crc1 && search->entry.crc2 != crc2)
+        search = search->next_crc;
+
+    if(search == NULL) 
+        return &empty_entry;
+    else
+        return &(search->entry);
+}
+
 
