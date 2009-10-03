@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #if defined(__GNUC__)
 #include <unistd.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/mman.h>
 #endif
 
@@ -2589,10 +2589,9 @@ void *malloc_exec(size_t size)
    if (pagesize == -1)
        { printf("Memory error: couldn't determine system memory page size.\n"); return NULL; }
 
-   /* Allocate a buffer aligned on a page boundary;
-      initial protection is PROT_READ | PROT_WRITE */
-   void *block = NULL;
-   if (posix_memalign(&block, pagesize, size) != 0)
+   /* Allocate a buffer aligned on a page boundary; initial protection is PROT_READ | PROT_WRITE */
+   void *block = valloc(size);
+   if (block == NULL)
        { printf("Memory error: couldn't allocate %i byte block of %i-byte aligned memory.\n", size, pagesize); return NULL; }
 
    if (mprotect(block, size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
