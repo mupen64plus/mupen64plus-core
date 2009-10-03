@@ -29,6 +29,9 @@
 # include pre-make file with a bunch of definitions
 include ./pre.mk
 
+# add core library CFLAGS AND LDFLAGS
+CFLAGS += -fPIC
+
 ifeq ($(OS), FREEBSD)
   LDFLAGS += -Wl,-export-dynamic
 endif
@@ -136,7 +139,13 @@ SRC_CORE = \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/special.c \
 	$(SRCDIR)/r4300/regimm.c \
-	$(SRCDIR)/r4300/tlb.c
+	$(SRCDIR)/r4300/tlb.c \
+	$(SRCDIR)/osd/OGLFT.cpp \
+	$(SRCDIR)/osd/osd.cpp \
+	$(SRCDIR)/osd/screenshot.cpp \
+	$(SRCDIR)/dummy_video/video.cpp \
+	$(SRCDIR)/dummy_audio/audio.c \
+	$(SRCDIR)/dummy_input/input.c
 
 # handle dynamic recompiler objects
 ifneq ($(NO_ASM), 1)
@@ -172,11 +181,6 @@ endif
 SRC_LIRC = \
 	$(SRCDIR)/main/lirc.c
 
-SRC_OSD = \
-	$(SRCDIR)/osd/OGLFT.cpp \
-	$(SRCDIR)/osd/osd.cpp \
-	$(SRCDIR)/osd/screenshot.cpp
-
 SRC_DBG = \
 	$(SRCDIR)/debugger/debugger.c \
 	$(SRCDIR)/debugger/decoder.c \
@@ -184,16 +188,11 @@ SRC_DBG = \
 	$(SRCDIR)/debugger/memory.c \
 	$(SRCDIR)/debugger/breakpoints.c
 
-SRC_DUMMYPLUGINS = \
-	$(SRCDIR)/dummy_video/video.cpp \
-	$(SRCDIR)/dummy_audio/audio.c \
-	$(SRCDIR)/dummy_input/input.c
-
 SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 
 # set primary objects and libraries for all outputs
-ALL = mupen64plus
-SOURCE = $(SRC_CORE) $(SRC_DYNAREC) $(SRC_OSD) $(SRC_DUMMYPLUGINS)
+ALL = mupen64plus.$(SO_EXTENSION)
+SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS) -lbz2
 
 # add extra objects and libraries for selected options
@@ -252,13 +251,13 @@ uninstall:
 	./uninstall.sh $(INSTALLOPTS)
 
 clean:
-	$(RM) -rf ./_obj ./_lib mupen64plus $(SRCDIR)/main/version.h
+	$(RM) -rf ./_obj ./_lib mupen64plus.$(SO_EXTENSION) $(SRCDIR)/main/version.h
 
 rebuild: clean all
 
 # build rules
-mupen64plus: $(MISC_DEPS) version.h $(OBJECTS)
-	$(CXX) $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
+mupen64plus.$(SO_EXTENSION): $(MISC_DEPS) version.h $(OBJECTS)
+	$(CXX) -shared $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
 	$(STRIP) $@
 
 mupen64plus.desktop: FORCE
