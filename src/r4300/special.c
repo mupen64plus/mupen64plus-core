@@ -26,6 +26,7 @@
 #include "macros.h"
 
 #include "../memory/memory.h"
+#include "../debugger/types.h"
 #include "../debugger/debugger.h"
 
 void NOP(void)

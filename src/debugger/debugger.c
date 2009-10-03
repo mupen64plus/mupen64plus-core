@@ -20,8 +20,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-//#include <glib.h>
+#include <SDL.h>
+
+#include "types.h"
 #include "debugger.h"
+#include "breakpoints.h"
 
 // State of the Emulation Thread:
 // 0 -> pause, 2 -> run.

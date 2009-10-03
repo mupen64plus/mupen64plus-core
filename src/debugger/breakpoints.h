@@ -22,11 +22,6 @@
 #ifndef __BREAKPOINTS_H__
 #define __BREAKPOINTS_H__
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "debugger.h"
-
 #define BREAKPOINTS_MAX_NUMBER  128
 
 #define BPT_FLAG_ENABLED        0x01

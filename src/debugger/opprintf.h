@@ -22,8 +22,6 @@
 #ifndef __OPPRINTF_H__
 #define __OPPRINTF_H__
 
-#include "types.h"
-
 /* Macros */
 #define MR4KD_SPACING(x)     ((x) << 24)
 #define MR4KD_SET_SPACE(x)   (mr4kd_conf |= (x) << 24)

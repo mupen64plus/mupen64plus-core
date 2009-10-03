@@ -32,6 +32,7 @@
 #include "../memory/memory.h"
 
 #ifdef DBG
+#include "../debugger/types.h"
 #include "../debugger/debugger.h"
 #endif
 

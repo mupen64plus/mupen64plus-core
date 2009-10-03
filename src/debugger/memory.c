@@ -20,8 +20,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "types.h"
 #include "memory.h"
+#include "breakpoints.h"
 
+#include "../memory/memory.h"
 #include "../r4300/r4300.h"
 #include "../r4300/ops.h"
 

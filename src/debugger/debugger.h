@@ -23,19 +23,6 @@
 #ifndef __DEBUGGER_H__
 #define __DEBUGGER_H__
 
-#include <stdlib.h>
-#include <string.h>
-
-#include <SDL.h>
-#include <SDL_thread.h>
-
-#include "types.h"
-#include "breakpoints.h"
-#include "memory.h"
-
-#include "../r4300/r4300.h"
-#include "../memory/memory.h"
-
 extern int debugger_mode;  /* Debugger option enabled. */
 extern int g_DebuggerEnabled;  /* Whether the debugger is enabled. */
 

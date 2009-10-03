@@ -42,6 +42,8 @@
 #include "../main/plugin.h"
 
 #ifdef DBG
+#include "../debugger/types.h"
+#include "../debugger/memory.h"
 #include "../debugger/breakpoints.h"
 #endif
 

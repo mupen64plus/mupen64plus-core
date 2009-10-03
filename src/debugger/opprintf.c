@@ -23,6 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "types.h"
 #include "opprintf.h"
 
 /* Command Access Macros */

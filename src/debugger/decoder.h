@@ -22,12 +22,6 @@
 #ifndef __DECODER_H__
 #define __DECODER_H__
 
-#include <stdio.h>
-#include <string.h>
-
-#include "types.h"
-#include "opprintf.h"
-
 void r4300_decode_op( uint32 instr, char *op, char *args, int pc );
 
 #endif /* __DECODER_H__ */

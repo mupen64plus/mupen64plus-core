@@ -77,7 +77,7 @@
 #endif
 
 #ifdef DBG
-#include <glib.h>
+#include "../debugger/types.h"
 #include "../debugger/debugger.h"
 #endif
 

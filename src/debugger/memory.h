@@ -23,11 +23,6 @@
 #ifndef __DEBUGGER_MEMORY_H__
 #define __DEBUGGER_MEMORY_H__
 
-#include "debugger.h"
-
-#include "../memory/memory.h"
-#include "../r4300/r4300.h"
-
 #define MEM_INVALID 0xFFFFFFFF
 #define MEM_FLAG_READABLE    0x01
 #define MEM_FLAG_WRITABLE    0x02

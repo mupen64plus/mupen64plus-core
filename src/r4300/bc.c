@@ -23,6 +23,7 @@
 #include "ops.h"
 #include "macros.h"
 #include "interupt.h"
+#include "../debugger/types.h"
 #include "../debugger/debugger.h"
 
 void BC1F(void)

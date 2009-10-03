@@ -22,6 +22,8 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
+#include "types.h"
+#include "debugger.h"
 #include "breakpoints.h"
 
 int g_NumBreakpoints=0;

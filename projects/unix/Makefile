@@ -30,7 +30,7 @@
 include ./pre.mk
 
 # add core library CFLAGS AND LDFLAGS
-CFLAGS += -fPIC
+CFLAGS += -fPIC -DPIC
 
 ifeq ($(OS), FREEBSD)
   LDFLAGS += -Wl,-export-dynamic
