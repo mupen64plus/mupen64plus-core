@@ -20,58 +20,56 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
-
 #include "../main/winlnxdefs.h"
-
 #include "Audio_1.1.h"
 
 static AUDIO_INFO AudioInfo;
 
 
 EXPORT void CALL
-AiDacrateChanged( int SystemType )
+dummyaudio_AiDacrateChanged( int SystemType )
 {
 }
 
 EXPORT void CALL
-AiLenChanged( void )
+dummyaudio_AiLenChanged( void )
 {
 }
 
 EXPORT DWORD CALL
-AiReadLength( void )
+dummyaudio_AiReadLength( void )
 {
     return 0;
 }
 
 EXPORT void CALL
-AiUpdate( BOOL Wait )
+dummyaudio_AiUpdate( BOOL Wait )
 {
 }
 
 EXPORT void CALL
-CloseDLL( void )
+dummyaudio_CloseDLL( void )
 {
 }
 
 EXPORT void CALL
-DllAbout( HWND hParent )
+dummyaudio_DllAbout( HWND hParent )
 {
     printf ("No Audio Plugin\n" );
 }
 
 EXPORT void CALL
-DllConfig ( HWND hParent )
+dummyaudio_DllConfig ( HWND hParent )
 {
 }
 
 EXPORT void CALL
-DllTest ( HWND hParent )
+dummyaudio_DllTest ( HWND hParent )
 {
 }
 
 EXPORT void CALL
-GetDllInfo( PLUGIN_INFO * PluginInfo )
+dummyaudio_GetDllInfo( PLUGIN_INFO * PluginInfo )
 {
     PluginInfo->Version = 0x0101;
     PluginInfo->Type    = PLUGIN_TYPE_AUDIO;
@@ -81,23 +79,24 @@ GetDllInfo( PLUGIN_INFO * PluginInfo )
 }
 
 EXPORT BOOL CALL
-InitiateAudio( AUDIO_INFO Audio_Info )
+dummyaudio_InitiateAudio( AUDIO_INFO Audio_Info )
 {
     AudioInfo = Audio_Info;
     return TRUE;
 }
 
-EXPORT void CALL RomOpen(void)
+EXPORT void CALL
+dummyaudio_RomOpen(void)
 {
 }
 
 EXPORT void CALL
-RomClosed( void )
+dummyaudio_RomClosed( void )
 {
 }
 
 EXPORT void CALL
-ProcessAList( void )
+dummyaudio_ProcessAList( void )
 {
 }
 

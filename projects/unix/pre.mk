@@ -42,116 +42,97 @@ endif
 ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
   CPU := PPC
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
   CPU := PPC
   ARCH_DETECTED := 64BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifneq ("$(filter alpha%,$(HOST_CPU))","")
   CPU := ALPHA
   ARCH_DETECTED := 64BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 ifneq ("$(filter arm%b,$(HOST_CPU))","")
   CPU := ARM
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 else
 ifneq ("$(filter arm%,$(HOST_CPU))","")
   CPU := ARM
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 endif
 ifneq ("$(filter hppa%b,$(HOST_CPU))","")
   CPU := HPPA
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","ia64")
   CPU := IA64
   ARCH_DETECTED := 64BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 ifeq ("$(HOST_CPU)","avr32")
   CPU := AVR32
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","m32r")
   CPU := M32R
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","m68k")
   CPU := M68K
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifneq ("$(filter mips mipseb,$(HOST_CPU))","")
   CPU := MIPS
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","mipsel")
   CPU := MIPS
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 ifeq ("$(HOST_CPU)","s390")
   CPU := S390
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","s390x")
   CPU := S390
   ARCH_DETECTED := 64BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","sh3")
   CPU := SH3
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 ifeq ("$(HOST_CPU)","sh3eb")
   CPU := SH3
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","sh4")
   CPU := SH4
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := LITTLE
 endif
 ifeq ("$(HOST_CPU)","sh4eb")
   CPU := SH4
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 ifeq ("$(HOST_CPU)","sparc")
   CPU := SPARC
   ARCH_DETECTED := 32BITS
-  NO_ASM := 1
   CPU_ENDIANNESS := BIG
 endif
 
@@ -199,72 +180,6 @@ FREETYPE_FLAGS	= $(shell freetype-config --cflags)
 # set Freetype flags
 FREETYPEINC = $(shell pkg-config --cflags freetype2)
 CFLAGS += $(FREETYPEINC)
-
-# detect GUI options
-ifeq ($(GUI),)
-  GUI = GTK2
-endif
-
-# set GTK2 flags and libraries
-# ideally we don't always do this, only when using the Gtk GUI,
-# but too many plugins require it...
-
-# test for presence of GTK 2.0
-ifeq ($(shell which pkg-config 2>/dev/null),)
-  $(error pkg-config not installed!)
-endif
-ifneq ("$(shell pkg-config gtk+-2.0 --modversion | head -c 2)", "2.")
-  $(error No GTK 2.x development libraries found!)
-endif
-# set GTK flags and libraries
-GTK_FLAGS	= $(shell pkg-config gtk+-2.0 --cflags)
-GTK_LIBS	= $(shell pkg-config gtk+-2.0 --libs)
-GTHREAD_LIBS 	= $(shell pkg-config gthread-2.0 --libs)
-
-# set Qt flags and libraries
-# some distros append -qt4 to the binaries so look for those first
-ifeq ($(GUI), QT4)
-   ifneq ($(USES_QT4),)
-    QMAKE       = ${shell which qmake-qt4 2>/dev/null}
-    ifeq ($(QMAKE),)
-      QMAKE = ${shell which qmake 2>/dev/null}
-    endif
-    ifeq ($(QMAKE),)
-      $(error qmake from Qt not found! Make sure the Qt binaries are in your PATH)
-    endif
-    MOC = $(shell which moc-qt4 2>/dev/null)
-    ifeq ($(MOC),)
-      MOC = $(shell which moc 2>/dev/null)
-    endif
-    ifeq ($(MOC),)
-      $(error moc from Qt not found! Make sure the Qt binaries are in your PATH)
-    endif
-    UIC         = $(shell which uic-qt4 2>/dev/null)
-    ifeq ($(UIC),)
-      UIC = $(shell which uic 2>/dev/null)
-    endif
-    ifeq ($(UIC),)
-      $(error uic from Qt not found! Make sure the Qt binaries are in your PATH)
-    endif
-    RCC         = $(shell which rcc-qt4 2>/dev/null)
-    ifeq ($(RCC),)
-      RCC = $(shell which rcc 2>/dev/null)
-    endif
-    ifeq ($(RCC),)
-      $(error rcc from Qt not found! Make sure the Qt binaries are in your PATH)
-    endif
-    LRELEASE    = $(shell which lrelease-qt4 2>/dev/null)
-    ifeq ($(LRELEASE),)
-      LRELEASE = $(shell which lrelease 2>/dev/null)
-    endif
-    ifeq ($(LRELEASE),)
-      $(error lrelease from Qt not found! Make sure the Qt binaries are in your PATH)
-    endif
-    QT_FLAGS    = $(shell pkg-config QtCore QtGui --cflags)
-    QT_LIBS     = $(shell pkg-config QtCore QtGui --libs)
-    # define Gtk flags when using Qt4 gui so it can load plugins, etc.
-  endif
-endif
 
 # set base program pointers and flags
 ifeq ($(OS),FREEBSD)

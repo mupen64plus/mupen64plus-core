@@ -21,29 +21,19 @@
 
 #include <limits.h>
 #include <string.h>
-#include "input.h"
+
+#ifdef WIN32
+#include <windows.h>
+#else
+# include "../main/winlnxdefs.h"
+#endif
+
 #include "Input_1.1.h"
 
-char pluginName[] = "No Input";
-char configdir[PATH_MAX] = {0};
+static char pluginName[] = "No Input";
+static char configdir[PATH_MAX] = {0};
 
-#ifndef __LINUX__
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
-{
-    if (dwReason == DLL_PROCESS_ATTACH)
-    {
-
-    }
-    return TRUE;
-}
-#else
-void _init( void )
-{
-}
-#endif // !__LINUX__
-
-EXPORT void CALL GetDllInfo ( PLUGIN_INFO * PluginInfo )
+EXPORT void CALL dummyinput_GetDllInfo ( PLUGIN_INFO * PluginInfo )
 {
     PluginInfo->Version = 0x0101;
     PluginInfo->Type = PLUGIN_TYPE_CONTROLLER;
@@ -52,12 +42,12 @@ EXPORT void CALL GetDllInfo ( PLUGIN_INFO * PluginInfo )
     PluginInfo->Reserved2 = FALSE;
 }
 
-EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
+EXPORT void CALL dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
 {
     ControlInfo.Controls[0].Present = TRUE;
 }
 
-EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
+EXPORT void CALL dummyinput_GetKeys(int Control, BUTTONS * Keys )
 {
     Keys->Value = 0x0000;
 }
