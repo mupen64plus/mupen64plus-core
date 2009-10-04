@@ -29,8 +29,11 @@
 # include pre-make file with a bunch of definitions
 include ./pre.mk
 
-# add core library CFLAGS AND LDFLAGS
-CFLAGS += -fPIC -DPIC
+# Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
+# On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
+ifeq ($(ARCH_DETECTED), 64BITS)
+  CFLAGS += -fPIC -DPIC -fvisibility=hidden
+endif
 
 ifeq ($(OS), FREEBSD)
   LDFLAGS += -Wl,-export-dynamic

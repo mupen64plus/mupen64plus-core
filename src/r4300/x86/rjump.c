@@ -80,7 +80,9 @@ void dyna_start(void (*code)())
      mov esp, _save_esp
    }
 #elif defined(__GNUC__) && defined(__i386__)
-   asm volatile 
+  #if defined(PIC)
+    /* for -fPIC (shared libraries) */
+    asm volatile
       (" movl %%ebp,  save_ebp@GOTOFF(%%ebx)\n"
        " movl %%esp,  save_esp@GOTOFF(%%ebx)\n"
        " movl %%esi,  save_esi@GOTOFF(%%ebx)\n"
@@ -102,6 +104,31 @@ void dyna_start(void (*code)())
        : [codeptr]"r"(code)
        : "eax", "ecx", "edx", "memory"
        );
+  #else
+    /* for non-PIC binaries */
+    asm volatile 
+      (" movl %%ebp, save_ebp \n"
+       " movl %%esp, save_esp \n"
+       " movl %%ebx, save_ebx \n"
+       " movl %%esi, save_esi \n"
+       " movl %%edi, save_edi \n"
+       " call 1f              \n"
+       " jmp 2f               \n"
+       "1:                    \n"
+       " popl %%eax           \n"
+       " movl %%eax, save_eip \n"
+       " call *%[codeptr]     \n"
+       "2:                    \n"
+       " movl save_ebp, %%ebp \n"
+       " movl save_esp, %%esp \n"
+       " movl save_ebx, %%ebx \n"
+       " movl save_esi, %%esi \n"
+       " movl save_edi, %%edi \n"
+       :
+       : [codeptr]"r"(code)
+       : "eax", "ecx", "edx", "memory"
+       );
+  #endif
 #endif
 
     /* clear flag; stack is back to normal */
