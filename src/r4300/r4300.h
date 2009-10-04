@@ -22,12 +22,7 @@
 #ifndef R4300_H
 #define R4300_H
 
-#include <stdio.h>
-#include <string.h>
-
 #include "recomp.h"
-
-#include "../main/rom.h"
 #include "../memory/tlb.h"
 
 extern precomp_instr *PC;

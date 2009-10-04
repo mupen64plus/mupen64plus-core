@@ -36,6 +36,7 @@
 #include "../r4300/interupt.h"
 
 #include "../main/main.h"
+#include "../main/rom.h"
 #include "../main/plugin.h"
 
 static unsigned char eeprom[0x800];

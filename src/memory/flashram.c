@@ -27,6 +27,7 @@
 #include "../r4300/r4300.h"
 
 #include "../main/main.h"
+#include "../main/rom.h"
 
 int use_flashram;
 

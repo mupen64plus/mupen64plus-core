@@ -25,6 +25,7 @@
 #include "assemble.h"
 
 #include "../recomph.h"
+#include "../recomp.h"
 #include "../r4300.h"
 
 typedef struct _jump_table

@@ -24,6 +24,7 @@
 #include "../r4300/r4300.h"
 #include "../r4300/exception.h"
 #include "../r4300/macros.h"
+#include "../main/rom.h"
 
 unsigned int tlb_LUT_r[0x100000];
 unsigned int tlb_LUT_w[0x100000];

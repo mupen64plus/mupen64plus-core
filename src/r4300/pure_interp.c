@@ -29,6 +29,7 @@
 #include "interupt.h"
 
 #include "../memory/memory.h"
+#include "../main/rom.h"
 
 #ifdef DBG
 #include "../debugger/types.h"

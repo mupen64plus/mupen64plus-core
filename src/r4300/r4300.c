@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "r4300.h"
 #include "ops.h"
@@ -30,6 +31,7 @@
 #include "recomph.h"
 
 #include "../memory/memory.h"
+#include "../main/rom.h"
 
 #ifdef DBG
 #include "../debugger/types.h"

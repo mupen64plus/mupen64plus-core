@@ -39,6 +39,7 @@
 #include "../r4300/ops.h"
 
 #include "../main/main.h"
+#include "../main/rom.h"
 #include "../main/plugin.h"
 
 #ifdef DBG

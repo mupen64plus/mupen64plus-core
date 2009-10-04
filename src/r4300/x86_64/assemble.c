@@ -26,6 +26,7 @@
 #include "assemble.h"
 
 #include "../recomph.h"
+#include "../recomp.h"
 #include "../r4300.h"
 
 /* Placeholder for RIP-relative offsets is maxmimum 32-bit signed value.
