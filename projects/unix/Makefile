@@ -59,9 +59,6 @@ ifeq ($(LIRC), 1)
   CFLAGS += -DWITH_LIRC
 endif
 
-# fixme remove
-CFLAGS += -DNO_GUI
-
 # set installation options
 ifeq ($(PREFIX),)
   PREFIX := /usr/local

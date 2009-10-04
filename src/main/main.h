@@ -44,7 +44,6 @@ char* get_installpath(void);
 char* get_savespath(void);
 char* get_iconspath(void);
 char* get_iconpath(const char *iconfile);
-int gui_enabled(void);
 
 void new_frame();
 void new_vi();

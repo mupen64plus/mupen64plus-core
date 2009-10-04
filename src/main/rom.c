@@ -46,10 +46,6 @@
 
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
-#ifndef NO_GUI
-#include "gui.h"
-#endif
-
 _romdatabase g_romdatabase;
 romdatabase_entry empty_entry;
 
@@ -312,14 +308,6 @@ unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char
 
 static int ask_bad(void)
 {
-#ifndef NO_GUI
-    if(!g_Noask)
-        return gui_message(GUI_MESSAGE_CONFIRM,
-                           tr("The rom you are trying to load is probably a bad dump!\n"
-                              "Be warned that this will probably give unexpected results.\n"
-                              "Do you still want to run it?"));
-    else
-#endif
         printf(tr("The rom you are trying to load is probably a bad dump!\n"
                   "Be warned that this will probably give unexpected results.\n"));
 
@@ -328,13 +316,6 @@ static int ask_bad(void)
 
 static int ask_hack(void)
 {
-#ifndef NO_GUI
-    if(!g_Noask)
-        return gui_message(GUI_MESSAGE_CONFIRM, tr("The rom you are trying to load is probably a hack!\n"
-                                 "Be warned that this will probably give unexpected results.\n"
-                                 "Do you still want to run it?"));
-    else
-#endif
         printf(tr("The rom you are trying to load is probably a hack!\n"
                   "Be warned that this will probably give unexpected results.\n"));
 
@@ -345,15 +326,6 @@ int open_rom(const char* filename, unsigned int archivefile)
 {
     if(g_EmulatorRunning)
          {
-#ifndef NO_GUI
-         if(!g_Noask)
-             {
-             if(!gui_message(GUI_MESSAGE_CONFIRM,
-                             tr("Emulation is running. Do you want to\n"
-                                "stop it and load the selected rom?")))
-                 return -1;
-             }
-#endif
          stopEmulation();
          }
 
