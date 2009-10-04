@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <limits.h>
-#include <zlib.h> // TODO: compress cfg file
 
 #include "../memory/memory.h"
 #include "cheat.h"

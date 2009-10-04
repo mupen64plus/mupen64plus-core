@@ -23,7 +23,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <zlib.h>
 
 #include "savestates.h"
 #include "main.h"

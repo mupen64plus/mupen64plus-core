@@ -96,24 +96,10 @@ SRC_CORE = \
 	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/translate.c \
+	$(SRCDIR)/main/adler32.c \
 	$(SRCDIR)/main/zip/ioapi.c \
 	$(SRCDIR)/main/zip/zip.c \
 	$(SRCDIR)/main/zip/unzip.c \
-	$(SRCDIR)/main/lzma/buffer.c \
-	$(SRCDIR)/main/lzma/io.c \
-	$(SRCDIR)/main/lzma/main.c \
-	$(SRCDIR)/main/7zip/7zAlloc.c \
-	$(SRCDIR)/main/7zip/7zBuffer.c \
-	$(SRCDIR)/main/7zip/7zCrc.c \
-	$(SRCDIR)/main/7zip/7zDecode.c \
-	$(SRCDIR)/main/7zip/7zExtract.c \
-	$(SRCDIR)/main/7zip/7zHeader.c \
-	$(SRCDIR)/main/7zip/7zIn.c \
-	$(SRCDIR)/main/7zip/7zItem.c \
-	$(SRCDIR)/main/7zip/7zMain.c \
-	$(SRCDIR)/main/7zip/LzmaDecode.c \
-	$(SRCDIR)/main/7zip/BranchX86.c \
-	$(SRCDIR)/main/7zip/BranchX86_2.c \
 	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \

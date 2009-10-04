@@ -19,18 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <zlib.h>
-
 #include "r4300.h"
 #include "macros.h"
 #include "ops.h"
 #include "recomph.h"
 #include "interupt.h"
 
+#include "../main/adler32.h"
 #include "../main/md5.h"
 #include "../memory/memory.h"
-
-uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len);
 
 void TLBR(void)
 {
@@ -70,7 +67,7 @@ void TLBWI(void)
           md5_finish(&state, digest);
           for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
           
-          blocks[i]->adler32 = adler32(0, (const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+          blocks[i]->adler32 = adler32(0, (const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
           
           invalid_code[i] = 1;
            }
@@ -105,7 +102,7 @@ void TLBWI(void)
           md5_finish(&state, digest);
           for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
           
-          blocks[i]->adler32 = adler32(0, (const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+          blocks[i]->adler32 = adler32(0, (const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
           
           invalid_code[i] = 1;
            }
@@ -177,7 +174,7 @@ void TLBWI(void)
           }*/
          if(blocks[i] && blocks[i]->adler32)
            {
-          if(blocks[i]->adler32 == adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+          if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
             invalid_code[i] = 0;
            }
       }
@@ -224,7 +221,7 @@ void TLBWI(void)
            }*/
          if(blocks[i] && blocks[i]->adler32)
            {
-          if(blocks[i]->adler32 == adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+          if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
             invalid_code[i] = 0;
            }
       }
@@ -257,7 +254,7 @@ void TLBWR(void)
           md5_finish(&state, digest);
           for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
           
-          blocks[i]->adler32 = adler32(0, (const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+          blocks[i]->adler32 = adler32(0, (const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
           
           invalid_code[i] = 1;
            }
@@ -292,7 +289,7 @@ void TLBWR(void)
           md5_finish(&state, digest);
           for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
           
-          blocks[i]->adler32 = adler32(0, (const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+          blocks[i]->adler32 = adler32(0, (const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
           
           invalid_code[i] = 1;
            }
@@ -364,7 +361,7 @@ void TLBWR(void)
            }*/
          if(blocks[i] && blocks[i]->adler32)
            {
-          if(blocks[i]->adler32 == adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+          if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
              invalid_code[i] = 0;
            }
       }
@@ -411,7 +408,7 @@ void TLBWR(void)
           }*/
          if(blocks[i] && blocks[i]->adler32)
            {
-          if(blocks[i]->adler32 == adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+          if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&rdram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
             invalid_code[i] = 0;
            }
       }

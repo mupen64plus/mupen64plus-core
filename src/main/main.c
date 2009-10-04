@@ -28,7 +28,6 @@
  
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
-#define _7ZIP_UINT32_DEFINED // avoid stupid conflicts between native types and 7zip types
 #endif
  
 #ifndef __WIN32__
