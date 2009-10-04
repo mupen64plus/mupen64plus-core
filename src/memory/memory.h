@@ -22,8 +22,6 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "tlb.h"
-
 #ifdef __WIN32__
 #define byte __byte_
 #endif
