@@ -89,6 +89,11 @@ OBJDIR = _obj
 
 # list of object files to generate
 SRC_CORE = \
+	$(SRCDIR)/main/api_common.c \
+	$(SRCDIR)/main/api_config.c \
+	$(SRCDIR)/main/api_debugger.c \
+	$(SRCDIR)/main/api_frontend.c \
+	$(SRCDIR)/main/api_vidext.c \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
@@ -178,7 +183,7 @@ SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 # set primary objects and libraries for all outputs
 ALL = mupen64plus.$(SO_EXTENSION)
 SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
-LIBS = $(SDL_LIBS) $(LIBGL_LIBS) -lbz2
+LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
 
 # add extra objects and libraries for selected options
 ifeq ($(DBG), 1)
@@ -243,7 +248,6 @@ rebuild: clean all
 # build rules
 mupen64plus.$(SO_EXTENSION): $(MISC_DEPS) version.h $(OBJECTS)
 	$(CXX) -shared $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
-	$(STRIP) $@
 
 mupen64plus.desktop: FORCE
 	@sed s:SHARE_DIR:"$(SHAREDIR)": mupen64plus.desktop.in > mupen64plus.desktop
