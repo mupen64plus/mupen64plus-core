@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - decoder.h                                               *
+ *   Mupen64plus - dbg_types.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 davFr                                              *
  *                                                                         *
@@ -19,10 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __DECODER_H__
-#define __DECODER_H__
+#ifndef __TYPES_H__
+#define __TYPES_H__
 
-void r4300_decode_op( uint32 instr, char *op, char *args, int pc );
+typedef unsigned char       uint8;
+typedef unsigned short      uint16;
+typedef unsigned int        uint32;
+typedef unsigned long long  uint64;
 
-#endif /* __DECODER_H__ */
+#endif /* __TYPES_H__ */
 

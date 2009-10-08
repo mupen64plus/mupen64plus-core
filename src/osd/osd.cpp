@@ -26,9 +26,9 @@
 #include "osd.h"
 
 extern "C" {
-    #include "../main/main.h"
-    #include "../main/plugin.h"
-    #include "../main/util.h"
+    #include "main/main.h"
+    #include "main/util.h"
+    #include "plugin/plugin.h"
 }
 
 #define FONT_FILENAME "font.ttf"

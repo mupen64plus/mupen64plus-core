@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-#include "../api/m64p_types.h"
+#include "api/m64p_types.h"
  
 EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallback)(void * context, const char * SectionName))
 {

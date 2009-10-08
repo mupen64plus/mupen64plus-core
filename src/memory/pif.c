@@ -23,7 +23,7 @@
 #include <stdlib.h>
 
 #ifndef __WIN32__
-#include "../main/winlnxdefs.h"
+#include "main/winlnxdefs.h"
 #else
 #include <windows.h>
 #endif
@@ -32,12 +32,12 @@
 #include "pif.h"
 #include "pif2.h"
 
-#include "../r4300/r4300.h"
-#include "../r4300/interupt.h"
+#include "r4300/r4300.h"
+#include "r4300/interupt.h"
 
-#include "../main/main.h"
-#include "../main/rom.h"
-#include "../main/plugin.h"
+#include "main/main.h"
+#include "main/rom.h"
+#include "plugin/plugin.h"
 
 static unsigned char eeprom[0x800];
 static unsigned char mempack[4][0x8000];

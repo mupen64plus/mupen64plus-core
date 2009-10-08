@@ -33,7 +33,7 @@
 #include "r4300.h"
 #include "ops.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 
 // global variables :
 precomp_instr *dst; // destination structure for the recompiled instruction

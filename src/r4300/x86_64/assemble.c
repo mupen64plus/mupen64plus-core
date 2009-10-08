@@ -25,9 +25,9 @@
 
 #include "assemble.h"
 
-#include "../recomph.h"
-#include "../recomp.h"
-#include "../r4300.h"
+#include "r4300/recomph.h"
+#include "r4300/recomp.h"
+#include "r4300/r4300.h"
 
 /* Placeholder for RIP-relative offsets is maxmimum 32-bit signed value.
  * So, if recompiled code is run without running passe2() first, it will

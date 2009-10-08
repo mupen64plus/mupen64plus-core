@@ -28,12 +28,12 @@
 #include "macros.h"
 #include "interupt.h"
 
-#include "../memory/memory.h"
-#include "../main/rom.h"
+#include "memory/memory.h"
+#include "main/rom.h"
 
 #ifdef DBG
-#include "../debugger/types.h"
-#include "../debugger/debugger.h"
+#include "debugger/dbg_types.h"
+#include "debugger/debugger.h"
 #endif
 
 unsigned int interp_addr;

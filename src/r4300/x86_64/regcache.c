@@ -24,9 +24,9 @@
 
 #include "regcache.h"
 
-#include "../recomp.h"
-#include "../r4300.h"
-#include "../recomph.h"
+#include "r4300/recomp.h"
+#include "r4300/r4300.h"
+#include "r4300/recomph.h"
 
 static unsigned long long * reg_content[8];
 static precomp_instr* last_access[8];

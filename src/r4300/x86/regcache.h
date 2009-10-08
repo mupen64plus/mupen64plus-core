@@ -22,7 +22,7 @@
 #ifndef REGCACHE_H
 #define REGCACHE_H
 
-#include "../recomp.h"
+#include "r4300/recomp.h"
 
 void init_cache(precomp_instr* start);
 void free_all_registers();

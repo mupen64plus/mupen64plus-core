@@ -26,9 +26,12 @@
 #include "ops.h"
 #include "macros.h"
 
-#include "../memory/memory.h"
-#include "../debugger/types.h"
-#include "../debugger/debugger.h"
+#include "memory/memory.h"
+
+#ifdef DBG
+  #include "debugger/dbg_types.h"
+  #include "debugger/debugger.h"
+#endif
 
 void BLTZ(void)
 {

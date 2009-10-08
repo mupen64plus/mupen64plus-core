@@ -25,9 +25,9 @@
 #include "recomph.h"
 #include "interupt.h"
 
-#include "../main/adler32.h"
-#include "../main/md5.h"
-#include "../memory/memory.h"
+#include "main/adler32.h"
+#include "main/md5.h"
+#include "memory/memory.h"
 
 void TLBR(void)
 {

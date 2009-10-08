@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <limits.h>
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 #include "cheat.h"
 #include "main.h"
 #include "rom.h"

@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef __WIN32__
-#include "../main/winlnxdefs.h"
+#include "main/winlnxdefs.h"
 #else
 #include <windows.h>
 #endif
@@ -32,20 +32,20 @@
 #include "pif.h"
 #include "flashram.h"
 
-#include "../r4300/r4300.h"
-#include "../r4300/macros.h"
-#include "../r4300/interupt.h"
-#include "../r4300/recomph.h"
-#include "../r4300/ops.h"
+#include "r4300/r4300.h"
+#include "r4300/macros.h"
+#include "r4300/interupt.h"
+#include "r4300/recomph.h"
+#include "r4300/ops.h"
 
-#include "../main/main.h"
-#include "../main/rom.h"
-#include "../main/plugin.h"
+#include "main/main.h"
+#include "main/rom.h"
+#include "plugin/plugin.h"
 
 #ifdef DBG
-#include "../debugger/types.h"
-#include "../debugger/memory.h"
-#include "../debugger/breakpoints.h"
+#include "debugger/dbg_types.h"
+#include "debugger/dbg_memory.h"
+#include "debugger/dbg_breakpoints.h"
 #endif
 
 /* definitions of the rcp's structures and memory area */

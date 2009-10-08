@@ -24,10 +24,10 @@
 #include "assemble.h"
 #include "interpret.h"
 
-#include "../recomph.h"
-#include "../r4300.h"
-#include "../ops.h"
-#include "../macros.h"
+#include "r4300/recomph.h"
+#include "r4300/r4300.h"
+#include "r4300/ops.h"
+#include "r4300/macros.h"
 
 void genadd_s(void)
 {

@@ -22,8 +22,8 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-#include "winlnxdefs.h"
-#include "util.h" // list_t type
+#include "main/winlnxdefs.h"
+#include "main/util.h" // list_t type
 
 //--------------------- plugin storage type ----------------
 typedef struct _plugin

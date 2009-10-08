@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - breakpoints.h                                           *
+ *   Mupen64plus - dbg_breakpoints.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2008 DarkJeztr HyperHacker                              *
  *                                                                         *

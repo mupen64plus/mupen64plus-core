@@ -25,13 +25,13 @@
 #include "assemble.h"
 #include "interpret.h"
 
-#include "../recomph.h"
-#include "../recomp.h"
-#include "../r4300.h"
-#include "../ops.h"
-#include "../macros.h"
+#include "r4300/recomph.h"
+#include "r4300/recomp.h"
+#include "r4300/r4300.h"
+#include "r4300/ops.h"
+#include "r4300/macros.h"
 
-#include "../../memory/memory.h"
+#include "memory/memory.h"
 
 void genmfc1(void)
 {

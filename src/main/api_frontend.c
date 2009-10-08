@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-#include "../api/m64p_types.h"
+#include "api/m64p_types.h"
 
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void *Context,
                                    void (*DebugCallback)(void *Context, const char *message), void *Context2,

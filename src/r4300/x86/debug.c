@@ -23,11 +23,11 @@
 
 #include "assemble.h"
 
-#include "../r4300.h"
-#include "../macros.h"
-#include "../recomph.h"
+#include "r4300/r4300.h"
+#include "r4300/macros.h"
+#include "r4300/recomph.h"
 
-#include "../../memory/memory.h"
+#include "memory/memory.h"
 
 void debug(void)
 {

@@ -35,26 +35,27 @@
 
 #include <SDL.h>
 
-#include "../main/winlnxdefs.h"
+#include "main/winlnxdefs.h"
 
 #include "interupt.h"
 #include "r4300.h"
 #include "macros.h"
 #include "exception.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 
-#include "../main/rom.h"
-#include "../main/main.h"
-#include "../main/plugin.h"
-#include "../main/savestates.h"
-#include "../main/cheat.h"
+#include "main/rom.h"
+#include "main/main.h"
+#include "main/savestates.h"
+#include "main/cheat.h"
+
+#include "plugin/plugin.h"
 
 #ifdef WITH_LIRC
-#include "../main/lirc.h"
+#include "main/lirc.h"
 #endif //WITH_LIRC
 
-#include "../osd/osd.h"
+#include "osd/osd.h"
 
 unsigned int next_vi;
 int vi_field=0;

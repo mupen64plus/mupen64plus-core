@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - types.h                                                 *
+ *   Mupen64plus - audio.h                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 davFr                                              *
+ *   Copyright (C) 2008 Richard42                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,13 +19,84 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#include <stdio.h>
+#include "main/winlnxdefs.h"
+#include "Audio_1.1.h"
 
-typedef unsigned char       uint8;
-typedef unsigned short      uint16;
-typedef unsigned int        uint32;
-typedef unsigned long long  uint64;
+static AUDIO_INFO AudioInfo;
 
-#endif /* __TYPES_H__ */
+
+EXPORT void CALL
+dummyaudio_AiDacrateChanged( int SystemType )
+{
+}
+
+EXPORT void CALL
+dummyaudio_AiLenChanged( void )
+{
+}
+
+EXPORT DWORD CALL
+dummyaudio_AiReadLength( void )
+{
+    return 0;
+}
+
+EXPORT void CALL
+dummyaudio_AiUpdate( BOOL Wait )
+{
+}
+
+EXPORT void CALL
+dummyaudio_CloseDLL( void )
+{
+}
+
+EXPORT void CALL
+dummyaudio_DllAbout( HWND hParent )
+{
+    printf ("No Audio Plugin\n" );
+}
+
+EXPORT void CALL
+dummyaudio_DllConfig ( HWND hParent )
+{
+}
+
+EXPORT void CALL
+dummyaudio_DllTest ( HWND hParent )
+{
+}
+
+EXPORT void CALL
+dummyaudio_GetDllInfo( PLUGIN_INFO * PluginInfo )
+{
+    PluginInfo->Version = 0x0101;
+    PluginInfo->Type    = PLUGIN_TYPE_AUDIO;
+    sprintf(PluginInfo->Name,"No Audio");
+    PluginInfo->NormalMemory  = TRUE;
+    PluginInfo->MemoryBswaped = TRUE;
+}
+
+EXPORT BOOL CALL
+dummyaudio_InitiateAudio( AUDIO_INFO Audio_Info )
+{
+    AudioInfo = Audio_Info;
+    return TRUE;
+}
+
+EXPORT void CALL
+dummyaudio_RomOpen(void)
+{
+}
+
+EXPORT void CALL
+dummyaudio_RomClosed( void )
+{
+}
+
+EXPORT void CALL
+dummyaudio_ProcessAList( void )
+{
+}
 

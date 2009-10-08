@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-#include "../api/m64p_types.h"
+#include "api/m64p_types.h"
 
 EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {

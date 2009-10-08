@@ -24,7 +24,7 @@
 #include "macros.h"
 #include "exception.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 
 void MFC1(void)
 {

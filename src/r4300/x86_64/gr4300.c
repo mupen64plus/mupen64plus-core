@@ -24,14 +24,14 @@
 #include "regcache.h"
 #include "interpret.h"
 
-#include "../r4300.h"
-#include "../macros.h"
-#include "../interupt.h"
-#include "../ops.h"
-#include "../recomph.h"
-#include "../exception.h"
+#include "r4300/r4300.h"
+#include "r4300/macros.h"
+#include "r4300/interupt.h"
+#include "r4300/ops.h"
+#include "r4300/recomph.h"
+#include "r4300/exception.h"
 
-#include "../../memory/memory.h"
+#include "memory/memory.h"
 
 #if !defined(offsetof)
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)

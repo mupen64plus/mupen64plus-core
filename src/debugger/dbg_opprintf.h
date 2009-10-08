@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - audio.h                                                 *
+ *   Mupen64plus - dbg_opprintf.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Richard42                                          *
+ *   Copyright (C) 2008 ZZT32                                              *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,84 +19,41 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-#include "../main/winlnxdefs.h"
-#include "Audio_1.1.h"
+#ifndef __OPPRINTF_H__
+#define __OPPRINTF_H__
 
-static AUDIO_INFO AudioInfo;
+/* Macros */
+#define MR4KD_SPACING(x)     ((x) << 24)
+#define MR4KD_SET_SPACE(x)   (mr4kd_conf |= (x) << 24)
+#define MR4KD_GET_SPACE(x)   (mr4kd_conf >> 24 & 0xFF)
+#define MR4KD_FLAG_SET(x)    (mr4kd_conf |=  (x))
+#define MR4KD_FLAG_GET(x)    (mr4kd_conf &   (x))
+#define MR4KD_FLAG_CLEAR(x)  (mr4kd_conf &= ~(x))
 
-
-EXPORT void CALL
-dummyaudio_AiDacrateChanged( int SystemType )
+/* Disassembler flags */
+enum
 {
-}
+    /* Register display options */
+    MR4KD_RTYPE0  = 0x00000001, /*  K0 */
+    MR4KD_RTYPE1  = 0x00000002, /*  21 */
+    MR4KD_RPREFIX = 0x00000004, /* $K0 */
+    MR4KD_RLOWER  = 0x00000008, /*  k0 */
 
-EXPORT void CALL
-dummyaudio_AiLenChanged( void )
-{
-}
+    /* Opcode display options */
+    MR4KD_OLOWER  = 0x00000010, /* mfhi */
 
-EXPORT DWORD CALL
-dummyaudio_AiReadLength( void )
-{
-    return 0;
-}
+    /* Number display options */
+    MR4KD_HLOWER  = 0x00000020, /* 0xffff */
+};
 
-EXPORT void CALL
-dummyaudio_AiUpdate( BOOL Wait )
-{
-}
+/* Controlling functions (global) */
+void mr4kd_flag_set   ( int flag  );
+void mr4kd_flag_clear ( int flag  );
+void mr4kd_spacing    ( int space );
+int  mr4kd_flag_get   ( int flag  );
 
-EXPORT void CALL
-dummyaudio_CloseDLL( void )
-{
-}
+/* Controlling functions (app-wide) */
+int mr4kd_sprintf ( char *dest, char *name, uint32 instruction, uint32 pc, char *fmt );
 
-EXPORT void CALL
-dummyaudio_DllAbout( HWND hParent )
-{
-    printf ("No Audio Plugin\n" );
-}
-
-EXPORT void CALL
-dummyaudio_DllConfig ( HWND hParent )
-{
-}
-
-EXPORT void CALL
-dummyaudio_DllTest ( HWND hParent )
-{
-}
-
-EXPORT void CALL
-dummyaudio_GetDllInfo( PLUGIN_INFO * PluginInfo )
-{
-    PluginInfo->Version = 0x0101;
-    PluginInfo->Type    = PLUGIN_TYPE_AUDIO;
-    sprintf(PluginInfo->Name,"No Audio");
-    PluginInfo->NormalMemory  = TRUE;
-    PluginInfo->MemoryBswaped = TRUE;
-}
-
-EXPORT BOOL CALL
-dummyaudio_InitiateAudio( AUDIO_INFO Audio_Info )
-{
-    AudioInfo = Audio_Info;
-    return TRUE;
-}
-
-EXPORT void CALL
-dummyaudio_RomOpen(void)
-{
-}
-
-EXPORT void CALL
-dummyaudio_RomClosed( void )
-{
-}
-
-EXPORT void CALL
-dummyaudio_ProcessAList( void )
-{
-}
+#endif /* __OPPRINTF_H__ */
 

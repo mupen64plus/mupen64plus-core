@@ -24,10 +24,10 @@
 
 #include "assemble.h"
 
-#include "../recomp.h"
-#include "../recomph.h"
-#include "../r4300.h"
-#include "../ops.h"
+#include "r4300/recomp.h"
+#include "r4300/recomph.h"
+#include "r4300/r4300.h"
+#include "r4300/ops.h"
 
 void genmfc0(void)
 {

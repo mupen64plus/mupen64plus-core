@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - decoder.h                                               *
+ *   Mupen64plus - dbg_breakpoints.c                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2008 DarkJeztr HyperHacker                              *
  *                                                                         *
@@ -22,9 +22,9 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
-#include "types.h"
+#include "dbg_types.h"
 #include "debugger.h"
-#include "breakpoints.h"
+#include "dbg_breakpoints.h"
 
 int g_NumBreakpoints=0;
 breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];

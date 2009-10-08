@@ -32,8 +32,8 @@
 #include "main.h"
 #include "util.h"
 
-#include "../memory/memory.h"
-#include "../osd/osd.h"
+#include "memory/memory.h"
+#include "osd/osd.h"
 
 #define DEFAULT 16
 

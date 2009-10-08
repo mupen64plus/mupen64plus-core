@@ -29,6 +29,9 @@
 # include pre-make file with a bunch of definitions
 include ./pre.mk
 
+# set include directories required for all builds
+CFLAGS += -I../../src
+
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(ARCH_DETECTED), 64BITS)
@@ -99,7 +102,6 @@ SRC_CORE = \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/config.c \
 	$(SRCDIR)/main/md5.c \
-	$(SRCDIR)/main/plugin.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
@@ -113,6 +115,10 @@ SRC_CORE = \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/memory/tlb.c \
+	$(SRCDIR)/plugin/plugin.c \
+	$(SRCDIR)/plugin/dummy_video.c \
+	$(SRCDIR)/plugin/dummy_audio.c \
+	$(SRCDIR)/plugin/dummy_input.c \
 	$(SRCDIR)/r4300/r4300.c \
 	$(SRCDIR)/r4300/bc.c \
 	$(SRCDIR)/r4300/compare_core.c \
@@ -132,10 +138,7 @@ SRC_CORE = \
 	$(SRCDIR)/r4300/tlb.c \
 	$(SRCDIR)/osd/OGLFT.cpp \
 	$(SRCDIR)/osd/osd.cpp \
-	$(SRCDIR)/osd/screenshot.cpp \
-	$(SRCDIR)/dummy_video/video.cpp \
-	$(SRCDIR)/dummy_audio/audio.c \
-	$(SRCDIR)/dummy_input/input.c
+	$(SRCDIR)/osd/screenshot.cpp
 
 # handle dynamic recompiler objects
 ifneq ($(NO_ASM), 1)
@@ -173,10 +176,10 @@ SRC_LIRC = \
 
 SRC_DBG = \
 	$(SRCDIR)/debugger/debugger.c \
-	$(SRCDIR)/debugger/decoder.c \
-	$(SRCDIR)/debugger/opprintf.c \
-	$(SRCDIR)/debugger/memory.c \
-	$(SRCDIR)/debugger/breakpoints.c
+	$(SRCDIR)/debugger/dbg_decoder.c \
+	$(SRCDIR)/debugger/dbg_opprintf.c \
+	$(SRCDIR)/debugger/dbg_memory.c \
+	$(SRCDIR)/debugger/dbg_breakpoints.c
 
 SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 

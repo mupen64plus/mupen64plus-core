@@ -31,15 +31,15 @@
 #include "util.h"
 #include "config.h"
 
-#include "../memory/memory.h"
-#include "../memory/flashram.h"
-#include "../r4300/macros.h"
-#include "../r4300/r4300.h"
-#include "../r4300/interupt.h"
-#include "../osd/osd.h"
+#include "memory/memory.h"
+#include "memory/flashram.h"
+#include "r4300/macros.h"
+#include "r4300/r4300.h"
+#include "r4300/interupt.h"
+#include "osd/osd.h"
 
-#include "zip/unzip.h"
-#include "zip/zip.h"
+#include "main/zip/unzip.h"
+#include "main/zip/zip.h"
 
 const char* savestate_magic = "M64+SAVE";
 const int savestate_version = 0x00010000;  /* 1.0 */

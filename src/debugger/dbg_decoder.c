@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - decoder.c                                               *
+ *   Mupen64plus - dbg_decoder.c                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 davFr                                              *
  *   Copyright (C) 2008 ZZT32                                              *
@@ -24,9 +24,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "types.h"
-#include "decoder.h"
-#include "opprintf.h"
+#include "dbg_types.h"
+#include "dbg_decoder.h"
+#include "dbg_opprintf.h"
 
 static int  mot;
 static char *op;

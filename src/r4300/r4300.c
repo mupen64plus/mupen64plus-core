@@ -30,12 +30,12 @@
 #include "recomp.h"
 #include "recomph.h"
 
-#include "../memory/memory.h"
-#include "../main/rom.h"
+#include "memory/memory.h"
+#include "main/rom.h"
 
 #ifdef DBG
-#include "../debugger/types.h"
-#include "../debugger/debugger.h"
+#include "debugger/dbg_types.h"
+#include "debugger/debugger.h"
 #endif
 
 unsigned int dynacore = 0, interpcore = 0;

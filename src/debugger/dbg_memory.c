@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - memory.c                                                *
+ *   Mupen64plus - dbg_memory.c                                            *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2008 DarkJeztr                                          *
  *   Copyright (C) 2002 Blight                                             *
@@ -22,14 +22,14 @@
 
 #include <string.h>
 
-#include "types.h"
-#include "memory.h"
-#include "breakpoints.h"
+#include "dbg_types.h"
+#include "dbg_memory.h"
+#include "dbg_breakpoints.h"
 
-#include "../memory/memory.h"
-#include "../r4300/r4300.h"
-#include "../r4300/ops.h"
-#include "../main/rom.h"
+#include "memory/memory.h"
+#include "r4300/r4300.h"
+#include "r4300/ops.h"
+#include "main/rom.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
 

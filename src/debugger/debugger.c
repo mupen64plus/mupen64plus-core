@@ -22,9 +22,9 @@
 
 #include <SDL.h>
 
-#include "types.h"
+#include "dbg_types.h"
 #include "debugger.h"
-#include "breakpoints.h"
+#include "dbg_breakpoints.h"
 
 // State of the Emulation Thread:
 // 0 -> pause, 2 -> run.

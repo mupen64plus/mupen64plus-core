@@ -23,15 +23,15 @@
 
 #include "r4300.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 #ifndef __WIN32__
-#include "../main/winlnxdefs.h"
+#include "main/winlnxdefs.h"
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-#include "../main/plugin.h"
-#include "../r4300/recomph.h"
+#include "plugin/plugin.h"
+#include "r4300/recomph.h"
 
 static FILE *f;
 static int pipe_opened = 0;

@@ -23,7 +23,7 @@
 #define R4300_H
 
 #include "recomp.h"
-#include "../memory/tlb.h"
+#include "memory/tlb.h"
 
 extern precomp_instr *PC;
 

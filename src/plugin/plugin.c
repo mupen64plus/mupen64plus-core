@@ -28,12 +28,13 @@
 #include <limits.h>
 
 #include "plugin.h"
-#include "main.h"
-#include "util.h"
-#include "rom.h"
-#include "../memory/memory.h"
-#include "../r4300/interupt.h"
-#include "../r4300/r4300.h"
+
+#include "main/main.h"
+#include "main/util.h"
+#include "main/rom.h"
+#include "memory/memory.h"
+#include "r4300/interupt.h"
+#include "r4300/r4300.h"
 
 CONTROL Controls[4];
 

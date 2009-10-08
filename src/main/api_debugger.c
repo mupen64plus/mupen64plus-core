@@ -25,7 +25,7 @@
    
 #include <stdlib.h>
 
-#include "../api/m64p_types.h"
+#include "api/m64p_types.h"
  
 EXPORT m64p_error CALL DebugSetCallbacks(void (*dbg_frontend_init)(void), void (*dbg_frontend_update)(unsigned int pc), void (*dbg_frontend_vi)(void))
 {

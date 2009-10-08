@@ -54,25 +54,26 @@
 #include "main.h"
 #include "version.h"
 #include "config.h"
-#include "plugin.h"
 #include "rom.h"
 #include "savestates.h"
 #include "util.h"
 #include "translate.h"
 #include "cheat.h"
 
-#include "../r4300/r4300.h"
-#include "../r4300/recomph.h"
-#include "../r4300/interupt.h"
+#include "r4300/r4300.h"
+#include "r4300/recomph.h"
+#include "r4300/interupt.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 
-#include "../osd/osd.h"
-#include "../osd/screenshot.h"
+#include "plugin/plugin.h"
+
+#include "osd/osd.h"
+#include "osd/screenshot.h"
 
 #ifdef DBG
-#include "../debugger/types.h"
-#include "../debugger/debugger.h"
+#include "debugger/dbg_types.h"
+#include "debugger/debugger.h"
 #endif
 
 #ifdef WITH_LIRC

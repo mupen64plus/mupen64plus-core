@@ -22,11 +22,11 @@
 
 #include <stdlib.h>
 
-#include "../recomp.h"
-#include "../r4300.h"
-#include "../macros.h"
-#include "../ops.h"
-#include "../recomph.h"
+#include "r4300/recomp.h"
+#include "r4300/r4300.h"
+#include "r4300/macros.h"
+#include "r4300/ops.h"
+#include "r4300/recomph.h"
 
 extern int dynarec_stack_initialized;  /* in gr4300.c */
 

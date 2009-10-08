@@ -24,7 +24,7 @@
 #include "macros.h"
 #include "recomph.h"
 
-#include "../memory/memory.h"
+#include "memory/memory.h"
 
 extern unsigned int interp_addr;
 

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - opprintf.c                                              *
+ *   Mupen64plus - dbg_opprintf.c                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2008 ZZT32                                              *
  *                                                                         *
@@ -23,8 +23,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "types.h"
-#include "opprintf.h"
+#include "dbg_types.h"
+#include "dbg_opprintf.h"
 
 /* Command Access Macros */
 #define _OPCODE(x)      (((x) >> 26) & 0x3F)

@@ -34,10 +34,10 @@
 #include "osd.h"
 
 extern "C" {
-#include "../main/main.h"
-#include "../main/util.h"
-#include "../main/rom.h"
-#include "../main/translate.h"
+#include "main/main.h"
+#include "main/util.h"
+#include "main/rom.h"
+#include "main/translate.h"
 }
 
 static char  l_SshotDir[PATH_MAX] = {0}; // pointer to screenshot dir specified at commandline
