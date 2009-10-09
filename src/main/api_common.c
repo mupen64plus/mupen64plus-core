@@ -29,7 +29,11 @@
 
 EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
-  return M64ERR_INTERNAL;
+    /* set version info */
+    if (PluginType != NULL)
+        *PluginType = M64PLUGIN_CORE;
+
+  return M64ERR_SUCCESS;
 }
 
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)

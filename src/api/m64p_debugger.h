@@ -73,7 +73,7 @@ typedef void (*ptr_DebugDecodeOp)(unsigned int, char *, char *, int);
  * R4300 instruction and compile it into 10 x86 instructions. This function may
  * then be used to retrieve the disassembled code of the 10 x86 instructions.
  */
-typedef void * (ptr_DebugMemGetRecompInfo)(m64p_dbg_mem_info, unsigned int, int);
+typedef void * (*ptr_DebugMemGetRecompInfo)(m64p_dbg_mem_info, unsigned int, int);
 
 /* DebugMemGetMemInfo()
  *
@@ -89,7 +89,7 @@ typedef int (*ptr_DebugMemGetMemInfo)(m64p_dbg_mem_info, unsigned int);
  * emulated N64 memory. This may be used to retrieve a pointer to a special N64
  * block (such as the serial, video, or audio registers) or the RDRAM.
  */
-typedef void * (ptr_DebugMemGetPointer)(m64p_dbg_memptr_type);
+typedef void * (*ptr_DebugMemGetPointer)(m64p_dbg_memptr_type);
 
 /* DebugMemRead**()
  *
