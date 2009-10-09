@@ -184,7 +184,7 @@ SRC_DBG = \
 SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 
 # set primary objects and libraries for all outputs
-ALL = mupen64plus.$(SO_EXTENSION)
+ALL = libmupen64plus.so
 SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
 
@@ -235,7 +235,7 @@ targets:
 # The RELEASE and VER flags are hidden from view as they should only be used internally.
 # They only affect the version strings
 
-all: version.h $(ALL)
+all: $(ALL)
 
 install:
 	./install.sh $(INSTALLOPTS)
@@ -244,21 +244,16 @@ uninstall:
 	./uninstall.sh $(INSTALLOPTS)
 
 clean:
-	$(RM) -rf ./_obj ./_lib mupen64plus.$(SO_EXTENSION) $(SRCDIR)/main/version.h
+	$(RM) -rf ./_obj ./_lib libmupen64plus.so
 
 rebuild: clean all
 
 # build rules
-mupen64plus.$(SO_EXTENSION): $(MISC_DEPS) version.h $(OBJECTS)
+libmupen64plus.so: $(MISC_DEPS) $(OBJECTS)
 	$(CXX) -shared $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
 
 mupen64plus.desktop: FORCE
 	@sed s:SHARE_DIR:"$(SHAREDIR)": mupen64plus.desktop.in > mupen64plus.desktop
-
-version.h: FORCE
-	@sed 's|@MUPEN_VERSION@|\"$(MUPEN_VERSION)\"| ; s|@PLUGIN_VERSION@|\"$(PLUGIN_VERSION)\"|' \
-        $(SRCDIR)/main/version.template > version.h
-	@$(MV) version.h $(SRCDIR)/main/version.h
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) -o $@ $(CFLAGS) $(SDL_FLAGS) -c $<

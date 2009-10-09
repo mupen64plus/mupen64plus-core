@@ -24,10 +24,13 @@
 #ifndef __VERSION_H__
 #define __VERSION_H__
 
-#define MUPEN_NAME "Mupen64Plus"
+#define MUPEN_CORE_NAME "Mupen64Plus Core"
+#define MUPEN_CORE_VERSION 0x20000
 
-#define MUPEN_VERSION @MUPEN_VERSION@
-#define PLUGIN_VERSION @PLUGIN_VERSION@
+#define MINIMUM_FRONTEND_VERSION 0x20000
+#define MINIMUM_API_VERSION 0x10000
+
+#define VERSION_PRINTF_SPLIT(x) (((x) >> 16) & 0xffff), (((x) >> 8) & 0xff), ((x) & 0xff)
 
 #endif /* __VERSION_H__ */
 
