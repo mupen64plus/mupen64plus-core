@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "api/m64p_types.h"
+#include "version.h"
 
 EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
@@ -33,7 +34,27 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     if (PluginType != NULL)
         *PluginType = M64PLUGIN_CORE;
 
-  return M64ERR_SUCCESS;
+    if (PluginVersion != NULL)
+        *PluginVersion = MUPEN_CORE_VERSION;
+
+    if (APIVersion != NULL)
+        *APIVersion = MUPEN_API_VERSION;
+    
+    if (PluginNamePtr != NULL)
+        *PluginNamePtr = MUPEN_CORE_NAME;
+
+    if (Capabilities != NULL)
+    {
+        *Capabilities = 0;
+#if defined(DBG)
+         *Capabilities |= M64CAPS_DEBUGGER;
+#endif
+#if defined(DYNAREC)
+         *Capabilities |= M64CAPS_DYNAREC;
+#endif         
+    }
+                    
+    return M64ERR_SUCCESS;
 }
 
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)

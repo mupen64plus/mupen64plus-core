@@ -151,6 +151,7 @@ ifneq ($(NO_ASM), 1)
   endif
 endif
 ifneq ($(DYNAREC), )
+  CFLAGS += -DDYNAREC
   SRC_DYNAREC = \
     $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
     $(SRCDIR)/r4300/$(DYNAREC)/debug.c \
