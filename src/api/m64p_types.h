@@ -50,7 +50,7 @@
 
 typedef void * m64p_handle;
 
-typedef void (*m64p_frame_callback)(unsigned char *pixels, int *bitsperpixel, int *width, int *height);
+typedef void (*m64p_frame_callback)(unsigned char *pixels, int bitsperpixel, int width, int height);
 
 typedef enum {
   M64TYPE_INT = 1,

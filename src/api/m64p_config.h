@@ -52,12 +52,18 @@ typedef m64p_error (*ptr_ConfigOpenSection)(const char *, m64p_handle *);
  */
 typedef m64p_error (*ptr_ConfigListParameters)(m64p_handle *, void *, void (*)(void *, const char *, m64p_type));
 
+/* ConfigSaveFile()
+ *
+ * This function saves the Mupen64Plus configuration file to disk.
+ */
+typedef m64p_error (*ptr_ConfigSaveFile)(void);
+
 /* ConfigSetParameter()
  *
  * This function sets the value of one of the emulator's configuration
  * parameters.
  */
-typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle *, const char *, m64p_type, void *);
+typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle *, const char *, m64p_type, const void *);
 
 /* ConfigGetParameter()
  *

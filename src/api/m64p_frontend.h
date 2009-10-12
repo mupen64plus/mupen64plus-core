@@ -38,7 +38,7 @@ typedef m64p_error (*ptr_CoreStartup)(int, const char *, void *, void (*)(void *
 /* CoreShutdown()
  *
  * This function saves the configuration file, then destroys data structures
- * and releases memory allocated by the core library. 
+ * and releases memory allocated by the core library.
  */
 typedef m64p_error (*ptr_CoreShutdown)(void);
 

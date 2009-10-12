@@ -42,7 +42,7 @@ EXPORT m64p_error CALL ConfigListParameters(m64p_handle *ConfigSectionHandle, vo
   return M64ERR_INTERNAL;
 }
 
-EXPORT m64p_error CALL ConfigSetParameter(m64p_handle *ConfigSectionHandle, const char *ParamName, m64p_type ParamType, void *ParamValue)
+EXPORT m64p_error CALL ConfigSetParameter(m64p_handle *ConfigSectionHandle, const char *ParamName, m64p_type ParamType, const void *ParamValue)
 {
   return M64ERR_INTERNAL;
 }

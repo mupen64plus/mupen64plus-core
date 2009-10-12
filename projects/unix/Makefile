@@ -90,7 +90,7 @@ INSTALLOPTS := $(PREFIX) $(SHAREDIR) $(BINDIR) $(LIBDIR) $(MANDIR) $(APPLICATION
 SRCDIR = ../../src
 OBJDIR = _obj
 
-# list of object files to generate
+# list of source files to compile
 SRC_CORE = \
 	$(SRCDIR)/main/api_common.c \
 	$(SRCDIR)/main/api_config.c \
