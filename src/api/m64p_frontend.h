@@ -33,7 +33,7 @@
  * This function initializes libmupen64plus for use by allocating memory,
  * creating data structures, and loading the configuration file.
  */
-typedef m64p_error (*ptr_CoreStartup)(int, const char *, void *, void (*)(void *, const char *), void *, void (*)(void *, m64p_core_param, int));
+typedef m64p_error (*ptr_CoreStartup)(int, const char *, void *, void (*)(void *, int, const char *), void *, void (*)(void *, m64p_core_param, int));
 
 /* CoreShutdown()
  *

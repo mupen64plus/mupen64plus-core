@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - m64p_common.h                                      *
+ *   Mupen64plus-core - api_callbacks.c                                    *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -19,43 +19,42 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* This header file defines typedefs for function pointers to common Core
- * and plugin functions, for use by the front-end and plugin modules to attach
- * to the dynamic libraries.
+/* This file contains the Core functions for handling callbacks to the
+ * front-end application
  */
 
-#if !defined(M64P_COMMON_H)
-#define M64P_COMMON_H
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-#include "m64p_types.h"
+#include "api/m64p_types.h"
+#include "api_callbacks.h"
 
-/* PluginGetVersion()
- *
- * This function retrieves version information from a library. This
- * function is the same for the core library and the plugins.
- */
-typedef m64p_error (*ptr_PluginGetVersion)(m64p_plugin_type *, int *, int *, const char **, int *);
+/* local variables */
+static ptr_DebugCallback pDebugFunc = NULL;
+static void *            DebugContext = NULL;
 
-/* CoreErrorMessage()
- *
- * This function returns a pointer to a NULL-terminated string giving a
- * human-readable description of the error.
-*/
-typedef const char * (*ptr_CoreErrorMessage)(m64p_error);
+/* global Functions for use by the Core */
+ m64p_error SetDebugCallback(ptr_DebugCallback pFunc, void *Context)
+{
+    pDebugFunc = pFunc;
+    DebugContext = Context;
+    return M64ERR_SUCCESS;
+}
 
-/* PluginStartup()
- *
- * This function initializes a plugin for use by allocating memory, creating
- * data structures, and loading the configuration data.
-*/
-typedef m64p_error (*ptr_PluginStartup)(m64p_dynlib_handle, void *, void (*)(void *, int, const char *));
+void DebugMessage(int level, const char *message, ...)
+{
+  char msgbuf[256];
+  va_list args;
 
-/* PluginShutdown()
- *
- * This function destroys data structures and releases memory allocated by
- * the plugin library.
-*/
-typedef m64p_error (*ptr_PluginShutdown)(void);
+  if (pDebugFunc == NULL)
+      return;
 
-#endif /* #define M64P_COMMON_H */
+  va_start(args, message);
+  vsprintf(msgbuf, message, args);
+
+  (*pDebugFunc)(DebugContext, level, msgbuf);
+
+  va_end(args);
+}
 

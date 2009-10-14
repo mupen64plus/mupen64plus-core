@@ -27,10 +27,15 @@
 
 #include "api/m64p_types.h"
 
+#include "api_callbacks.h"
+
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void *Context,
-                                   void (*DebugCallback)(void *Context, const char *message), void *Context2,
-                                   void (*StateCallback)(void *Context2, m64p_core_param ParamChanged, int NewValue))
+                                   void (*DebugCallback)(void *, int, const char *), void *Context2,
+                                   void (*StateCallback)(void *, m64p_core_param, int))
 {
+  /* very first thing is to set the callback function for debug info */
+  SetDebugCallback(DebugCallback, Context);
+  
   return M64ERR_INTERNAL;
 }
 

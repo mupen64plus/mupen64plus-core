@@ -85,6 +85,11 @@ ifeq ($(APPLICATIONSDIR),)
   APPLICATIONSDIR := $(PREFIX)/share/applications
 endif
 
+# set special flags for given Makefile parameters
+ifneq ($(SHAREDIR), )
+  CFLAGS += -DSHAREDIR="$(SHAREDIR)"
+endif
+
 INSTALLOPTS := $(PREFIX) $(SHAREDIR) $(BINDIR) $(LIBDIR) $(MANDIR) $(APPLICATIONSDIR)
 
 SRCDIR = ../../src
@@ -92,6 +97,7 @@ OBJDIR = _obj
 
 # list of source files to compile
 SRC_CORE = \
+	$(SRCDIR)/main/api_callbacks.c \
 	$(SRCDIR)/main/api_common.c \
 	$(SRCDIR)/main/api_config.c \
 	$(SRCDIR)/main/api_debugger.c \
@@ -115,6 +121,7 @@ SRC_CORE = \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/memory/tlb.c \
+	$(SRCDIR)/osal/files_unix.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \

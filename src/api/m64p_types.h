@@ -60,6 +60,13 @@ typedef enum {
 } m64p_type;
 
 typedef enum {
+  M64MSG_ERROR = 1,
+  M64MSG_WARNING,
+  M64MSG_INFO,
+  M64MSG_VERBOSE
+} m64p_msg_level;
+
+typedef enum {
   M64ERR_SUCCESS = 0,
   M64ERR_NOT_INIT,        /* Function is disallowed before InitMupen64Plus() is called */
   M64ERR_ALREADY_INIT,    /* InitMupen64Plus() was called twice */

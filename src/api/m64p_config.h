@@ -50,7 +50,7 @@ typedef m64p_error (*ptr_ConfigOpenSection)(const char *, m64p_handle *);
  * This function is called to enumerate the list of Parameters in a given
  * Section of the Mupen64Plus configuration file. 
  */
-typedef m64p_error (*ptr_ConfigListParameters)(m64p_handle *, void *, void (*)(void *, const char *, m64p_type));
+typedef m64p_error (*ptr_ConfigListParameters)(m64p_handle, void *, void (*)(void *, const char *, m64p_type));
 
 /* ConfigSaveFile()
  *
@@ -63,20 +63,20 @@ typedef m64p_error (*ptr_ConfigSaveFile)(void);
  * This function sets the value of one of the emulator's configuration
  * parameters.
  */
-typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle *, const char *, m64p_type, const void *);
+typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle, const char *, m64p_type, const void *);
 
 /* ConfigGetParameter()
  *
  * This function retrieves the value of one of the emulator's parameters. 
  */
-typedef m64p_error (*ptr_ConfigGetParameter)(m64p_handle *, const char *, m64p_type, void *, int);
+typedef m64p_error (*ptr_ConfigGetParameter)(m64p_handle, const char *, m64p_type, void *, int);
 
 /* ConfigGetParameterHelp()
  *
  * This function retrieves the help information about one of the emulator's
  * parameters.
  */
-typedef const char * (*ptr_ConfigGetParameterHelp)(m64p_handle *, const char *);
+typedef const char * (*ptr_ConfigGetParameterHelp)(m64p_handle, const char *);
 
 /* ConfigSetDefault***()
  *
@@ -87,9 +87,9 @@ typedef const char * (*ptr_ConfigGetParameterHelp)(m64p_handle *, const char *);
  * present in the given section of the configuration file, then no action will
  * be taken and this function will return successfully.
  */
-typedef m64p_error (*ptr_ConfigSetDefaultInt)(m64p_handle *, const char *, int, const char *);
-typedef m64p_error (*ptr_ConfigSetDefaultBool)(m64p_handle *, const char *, int, const char *);
-typedef m64p_error (*ptr_ConfigSetDefaultString)(m64p_handle *, const char *, const char *, const char *);
+typedef m64p_error (*ptr_ConfigSetDefaultInt)(m64p_handle, const char *, int, const char *);
+typedef m64p_error (*ptr_ConfigSetDefaultBool)(m64p_handle, const char *, int, const char *);
+typedef m64p_error (*ptr_ConfigSetDefaultString)(m64p_handle, const char *, const char *, const char *);
 
 /* ConfigGetParam***()
  *
@@ -100,9 +100,9 @@ typedef m64p_error (*ptr_ConfigSetDefaultString)(m64p_handle *, const char *, co
  * via the DebugCallback() function, and either a 0 (zero) or an empty string
  * will be returned.
  */
-typedef int          (*ptr_ConfigGetParamInt)(m64p_handle *, const char *);
-typedef int          (*ptr_ConfigGetParamBool)(m64p_handle *, const char *);
-typedef const char * (*ptr_ConfigGetParamString)(m64p_handle *, const char *);
+typedef int          (*ptr_ConfigGetParamInt)(m64p_handle, const char *);
+typedef int          (*ptr_ConfigGetParamBool)(m64p_handle, const char *);
+typedef const char * (*ptr_ConfigGetParamString)(m64p_handle, const char *);
 
 /* ConfigGetSharedDataFilepath()
  *
@@ -112,13 +112,19 @@ typedef const char * (*ptr_ConfigGetParamString)(m64p_handle *, const char *);
  */
 typedef const char * (*ptr_ConfigGetSharedDataFilepath)(const char *);
 
+/* ConfigGetUserConfigPath()
+ *
+ * This function may be used by the plugins or front-end to get a path to the
+ * directory for storing user-specific configuration files. This will be the
+ * directory where "mupen64plus.cfg" is located.
+ */
+typedef const char * (*ptr_ConfigGetUserConfigPath)(void);
+
 /* ConfigGetUserDataPath()
  *
  * This function may be used by the plugins or front-end to get a path to the
- * directory for storing user-specific data files. This will be the directory
- * where the configuration file "mupen64plus.cfg" is located, and may be used
- * to store other files such as screenshots, saved game states, or hi-res
- * textures.
+ * directory for storing user-specific data files. This may be used to store
+ * files such as screenshots, saved game states, or hi-res textures.
  */
 typedef const char * (*ptr_ConfigGetUserDataPath)(void);
 
