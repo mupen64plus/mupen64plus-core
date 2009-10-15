@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - osal/files.h                                       *
+ *   Mupen64plus-core - osal/strings.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -19,26 +19,19 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
                        
-/* This file contains the declarations for OS-dependent file handling
+/* This file contains the declarations for OS-dependent string handling
  * functions
  */
 
-#if !defined (OSAL_FILES_H)
-#define OSAL_FILES_H
+#if !defined (OSAL_STRINGS_H)
+#define OSAL_STRINGS_H
 
 /* some file-related preprocessor definitions */
 #if defined(WIN32)
-  #define OSAL_DIR_SEPARATOR           '\\'
+  #define osal_insensitive_strcmp(x, y) stricmp(x, y)
 #else  /* Not WIN32 */
-  #define OSAL_DIR_SEPARATOR           '/'
+  #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
 #endif
 
-extern int osal_mkdirp(const char *dirpath, int mode);
-
-extern const char * osal_get_shared_filepath(const char *filename, const char *firstsearch);
-extern const char * osal_get_user_configpath(void);
-extern const char * osal_get_user_datapath(void);
-extern const char * osal_get_user_cachepath(void);
-
-#endif /* OSAL_FILES_H */
+#endif /* OSAL_STRINGS_H */
 

@@ -28,6 +28,7 @@
 #include "api/m64p_types.h"
 
 #include "api_callbacks.h"
+#include "api_config.h"
 
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
@@ -35,12 +36,21 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void 
 {
   /* very first thing is to set the callback function for debug info */
   SetDebugCallback(DebugCallback, Context);
+
+  /* next, start up the configuration handling code by loading the config file and setting up data structures */
+  if (ConfigInit() != M64ERR_SUCCESS)
+      return M64ERR_INTERNAL;
+
   
   return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreShutdown(void)
 {
+
+  /* lastly, shut down the configuration code */
+  ConfigShutdown();
+
   return M64ERR_INTERNAL;
 }
 

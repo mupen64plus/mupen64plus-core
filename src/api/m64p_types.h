@@ -75,6 +75,7 @@ typedef enum {
   M64ERR_INPUT_INVALID,   /* Invalid input data, such as ParamValue="maybe" for SetCoreParameter() to set a BOOL-type value */
   M64ERR_INPUT_NOT_FOUND, /* The input parameter(s) specified a particular item which was not found */
   M64ERR_NO_MEMORY,       /* Memory allocation failed */
+  M64ERR_FILES,           /* Error opening, creating, reading, or writing to a file */
   M64ERR_INTERNAL,        /* Internal error (bug) */
   M64ERR_INVALID_STATE    /* Current program state does not allow operation */
 } m64p_error;

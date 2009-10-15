@@ -88,6 +88,7 @@ typedef const char * (*ptr_ConfigGetParameterHelp)(m64p_handle, const char *);
  * be taken and this function will return successfully.
  */
 typedef m64p_error (*ptr_ConfigSetDefaultInt)(m64p_handle, const char *, int, const char *);
+typedef m64p_error (*ptr_ConfigSetDefaultFloat)(m64p_handle, const char *, float, const char *);
 typedef m64p_error (*ptr_ConfigSetDefaultBool)(m64p_handle, const char *, int, const char *);
 typedef m64p_error (*ptr_ConfigSetDefaultString)(m64p_handle, const char *, const char *, const char *);
 
@@ -101,6 +102,7 @@ typedef m64p_error (*ptr_ConfigSetDefaultString)(m64p_handle, const char *, cons
  * will be returned.
  */
 typedef int          (*ptr_ConfigGetParamInt)(m64p_handle, const char *);
+typedef float        (*ptr_ConfigGetParamFloat)(m64p_handle, const char *);
 typedef int          (*ptr_ConfigGetParamBool)(m64p_handle, const char *);
 typedef const char * (*ptr_ConfigGetParamString)(m64p_handle, const char *);
 
