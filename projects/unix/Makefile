@@ -65,6 +65,11 @@ ifeq ($(LIRC), 1)
   CFLAGS += -DWITH_LIRC
 endif
 
+# set special flags for given Makefile parameters
+ifneq ($(SHAREDIR),)
+  CFLAGS += -DSHAREDIR="$(SHAREDIR)"
+endif
+
 # set installation options
 ifeq ($(PREFIX),)
   PREFIX := /usr/local
@@ -83,11 +88,6 @@ ifeq ($(MANDIR),)
 endif
 ifeq ($(APPLICATIONSDIR),)
   APPLICATIONSDIR := $(PREFIX)/share/applications
-endif
-
-# set special flags for given Makefile parameters
-ifneq ($(SHAREDIR), )
-  CFLAGS += -DSHAREDIR="$(SHAREDIR)"
 endif
 
 INSTALLOPTS := $(PREFIX) $(SHAREDIR) $(BINDIR) $(LIBDIR) $(MANDIR) $(APPLICATIONSDIR)

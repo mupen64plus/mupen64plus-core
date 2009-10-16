@@ -37,7 +37,7 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void 
   /* very first thing is to set the callback function for debug info */
   SetDebugCallback(DebugCallback, Context);
 
-  /* next, start up the configuration handling code by loading the config file and setting up data structures */
+  /* next, start up the configuration handling code by loading and parsing the config file */
   if (ConfigInit() != M64ERR_SUCCESS)
       return M64ERR_INTERNAL;
 

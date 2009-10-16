@@ -31,8 +31,11 @@
 #include "osal/files.h"
 #include "osal/strings.h"
 #include "api_config.h"
+#include "api_callbacks.h"
 
 /* local types */
+#define MUPEN64PLUS_CFG_NAME "mupen64plus.cfg"
+
 #define SECTION_MAGIC 0xDBDC0580
 
 typedef struct _config_var {
@@ -123,7 +126,7 @@ m64p_error ConfigInit(void)
         return M64ERR_NO_MEMORY;
 
     strcpy(filepath, configpath);
-    strcat(filepath, "mupen64plus.cfg");
+    strcat(filepath, MUPEN64PLUS_CFG_NAME);
     FILE *fPtr = fopen(filepath, "rb");
     if (fPtr == NULL)
     {
@@ -240,6 +243,10 @@ m64p_error ConfigInit(void)
             else
                 ConfigSetDefaultInt((m64p_handle) current_section, varname, val_int, lastcomment);
         }
+        else
+        {
+            DebugMessage(M64MSG_WARNING, "Invalid config file parameter: %s=%s", varname, varvalue);
+        }
         lastcomment = NULL;
         line = nextline;
     }
@@ -254,6 +261,30 @@ m64p_error ConfigShutdown(void)
         return M64ERR_NOT_INIT;
     l_ConfigInit = 0;
 
+    /* free all of the malloc'd blocks */
+    config_section *curr_section = l_SectionHead;
+    while (curr_section != NULL)
+    {
+        config_section *next_section = curr_section->next;
+        /* delete all the variables in this section */
+        config_var *curr_var = curr_section->first_var;
+        while (curr_var != NULL)
+        {
+            config_var *next_var = curr_var->next;
+            if (curr_var->val_string != NULL)
+                free(curr_var->val_string);
+            if (curr_var->comment != NULL)
+                free(curr_var->comment);
+            free(curr_var);
+            curr_var = next_var;
+        }
+        /* delete the section itself */
+        free(curr_section);
+        curr_section = next_section;
+    }
+
+    l_SectionHead = NULL;
+    return M64ERR_SUCCESS;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -262,6 +293,9 @@ m64p_error ConfigShutdown(void)
 
 EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallback)(void * context, const char * SectionName))
 {
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+
   return M64ERR_INTERNAL;
 }
 
@@ -273,6 +307,65 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
 EXPORT m64p_error CALL ConfigListParameters(m64p_handle ConfigSectionHandle, void *context, void (*ParameterListCallback)(void * context, const char *ParamName, m64p_type ParamType))
 {
   return M64ERR_INTERNAL;
+}
+
+EXPORT m64p_error CALL ConfigSaveFile(void)
+{
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+
+    /* get the full pathname to the config file and try to open it */
+    const char *configpath = ConfigGetUserConfigPath();
+    if (configpath == NULL)
+        return M64ERR_FILES;
+
+    char *filepath = (char *) malloc(strlen(configpath) + 32);
+    if (filepath == NULL)
+        return M64ERR_NO_MEMORY;
+
+    strcpy(filepath, configpath);
+    strcat(filepath, MUPEN64PLUS_CFG_NAME);
+    FILE *fPtr = fopen(filepath, "wb"); 
+    if (fPtr == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "Couldn't open configuration file '%s' for writing.", filepath);
+        free(filepath);
+        return M64ERR_FILES;
+    }
+    free(filepath);
+
+    /* write out header */
+    fprintf(fPtr, "# Mupen64Plus Configuration File\n");
+    fprintf(fPtr, "# This file is automatically read and written by the Mupen64Plus Core library\n\n");
+
+    /* write out all of the config parameters */
+    config_section *curr_section = l_SectionHead;
+    while (curr_section != NULL)
+    {
+        fprintf(fPtr, "[%s]\n", curr_section->name);
+        config_var *curr_var = curr_section->first_var;
+        while (curr_var != NULL)
+        {
+            if (curr_var->comment != NULL && strlen(curr_var->comment) > 0)
+                fprintf(fPtr, "# %s", curr_var->comment);
+            else if (curr_var->type == M64TYPE_INT)
+                fprintf(fPtr, "%s = %i\n", curr_var->name, curr_var->val_int);
+            else if (curr_var->type == M64TYPE_FLOAT)
+                fprintf(fPtr, "%s = %lf\n", curr_var->name, curr_var->val_double);
+            else if (curr_var->type == M64TYPE_BOOL && curr_var->val_int)
+                fprintf(fPtr, "%s = True\n", curr_var->name);
+            else if (curr_var->type == M64TYPE_BOOL && !curr_var->val_int)
+                fprintf(fPtr, "%s = False\n", curr_var->name);
+            else if (curr_var->type == M64TYPE_STRING && curr_var->val_string != NULL)
+                fprintf(fPtr, "%s = \"%s\"\n", curr_var->name, curr_var->val_string);
+            curr_var = curr_var->next;
+        }
+        fprintf(fPtr, "\n");
+        curr_section = curr_section->next;
+    }
+
+    fclose(fPtr);
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, const void *ParamValue)
