@@ -288,26 +288,72 @@ m64p_error ConfigShutdown(void)
     return M64ERR_SUCCESS;
 }
 
-/* -------------------------------------------------------------------------- */
-/* these functions are exported outside of the Core as well as used within it */
-/* -------------------------------------------------------------------------- */
+/* ------------------------------------------------ */
+/* Selector functions, exported outside of the Core */
+/* ------------------------------------------------ */
 
 EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallback)(void * context, const char * SectionName))
 {
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
+    if (SectionListCallback == NULL)
+        return M64ERR_INPUT_ASSERT;
 
-  return M64ERR_INTERNAL;
+    /* just walk through the section list, making a callback for each section name */
+    config_section *curr_section = l_SectionHead;
+    while (curr_section != NULL)
+    {
+        (*SectionListCallback)(context, curr_section->name);
+        curr_section = curr_section->next;
+    }
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *ConfigSectionHandle)
 {
-  return M64ERR_INTERNAL;
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (SectionName == NULL || ConfigSectionHandle == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    /* walk through the section list, looking for a case-insensitive name match */
+    config_section *curr_section = l_SectionHead;
+    while (curr_section != NULL)
+    {
+        if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
+        {
+            *ConfigSectionHandle = curr_section;
+            return M64ERR_SUCCESS;
+        }
+        curr_section = curr_section->next;
+    }
+
+    /* didn't find the section */
+    *ConfigSectionHandle = NULL;
+    return M64ERR_INPUT_NOT_FOUND;
 }
 
 EXPORT m64p_error CALL ConfigListParameters(m64p_handle ConfigSectionHandle, void *context, void (*ParameterListCallback)(void * context, const char *ParamName, m64p_type ParamType))
 {
-  return M64ERR_INTERNAL;
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParameterListCallback == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* walk through this section's parameter list, making a callback for each parameter */
+    config_var *curr_var = section->first_var;
+    while (curr_var != NULL)
+    {
+        (*ParameterListCallback)(context, curr_var->name, curr_var->type);
+        curr_var = curr_var->next;
+    }
+
+  return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigSaveFile(void)
@@ -369,6 +415,10 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
     return M64ERR_SUCCESS;
 }
 
+/* ------------------------------------------------------- */
+/* Generic Get/Set functions, exported outside of the Core */
+/* ------------------------------------------------------- */
+
 EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, const void *ParamValue)
 {
   return M64ERR_INTERNAL;
@@ -383,6 +433,10 @@ EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle,
 {
   return NULL;
 }
+
+/* ------------------------------------------------------- */
+/* Special Get/Set functions, exported outside of the Core */
+/* ------------------------------------------------------- */
 
 EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, const char *ParamName, int ParamValue, const char *ParamHelp)
 {
@@ -423,6 +477,10 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
 {
   return NULL;
 }
+
+/* ------------------------------------------------------ */
+/* OS Abstraction functions, exported outside of the Core */
+/* ------------------------------------------------------ */
 
 EXPORT const char * CALL ConfigGetSharedDataFilepath(const char *filename)
 {
