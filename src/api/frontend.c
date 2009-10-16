@@ -33,15 +33,16 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void 
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
                                    void (*StateCallback)(void *, m64p_core_param, int))
 {
-  /* very first thing is to set the callback function for debug info */
-  SetDebugCallback(DebugCallback, Context);
+    /* very first thing is to set the callback function for debug info */
+    SetDebugCallback(DebugCallback, Context);
 
-  /* next, start up the configuration handling code by loading and parsing the config file */
-  if (ConfigInit() != M64ERR_SUCCESS)
-      return M64ERR_INTERNAL;
+    /* next, start up the configuration handling code by loading and parsing the config file */
+    if (ConfigInit() != M64ERR_SUCCESS)
+        return M64ERR_INTERNAL;
 
+    /* set default configuration parameter values for Core */
   
-  return M64ERR_INTERNAL;
+    return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreShutdown(void)

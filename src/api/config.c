@@ -43,7 +43,7 @@ typedef struct _config_var {
   char                  name[64];
   m64p_type             type;
   int                   val_int;
-  double                val_double;
+  float                 val_float;
   char                 *val_string;
   char                 *comment;
   struct _config_var   *next;
@@ -105,6 +105,23 @@ static int is_numeric(const char *string)
     }
 
     return 1; /* true, input is numeric */
+}
+
+static config_var *find_section_var(config_section *section, const char *ParamName)
+{
+    /* walk through the linked list of variables in the section */
+    config_var *curr_var = section->first_var;
+    while (curr_var != NULL)
+    {
+        if (osal_insensitive_strcmp(ParamName, curr_var->name) == 0)
+        {
+            return curr_var;
+        }
+        curr_var = curr_var->next;
+    }
+
+    /* couldn't find this configuration parameter */
+    return NULL;
 }
 
 /* ----------------------------------------------------------- */
@@ -238,9 +255,9 @@ m64p_error ConfigInit(void)
         else if (is_numeric(varvalue))
         {
             int val_int = (int) strtol(varvalue, NULL, 10);
-            double val_float = strtod(varvalue, NULL);
+            float val_float = (float) strtod(varvalue, NULL);
             if ((val_float - val_int) != 0.0)
-                ConfigSetDefaultFloat((m64p_handle) current_section, varname, (float) val_float, lastcomment);
+                ConfigSetDefaultFloat((m64p_handle) current_section, varname, val_float, lastcomment);
             else
                 ConfigSetDefaultInt((m64p_handle) current_section, varname, val_int, lastcomment);
         }
@@ -398,7 +415,7 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
             else if (curr_var->type == M64TYPE_INT)
                 fprintf(fPtr, "%s = %i\n", curr_var->name, curr_var->val_int);
             else if (curr_var->type == M64TYPE_FLOAT)
-                fprintf(fPtr, "%s = %lf\n", curr_var->name, curr_var->val_double);
+                fprintf(fPtr, "%s = %f\n", curr_var->name, curr_var->val_float);
             else if (curr_var->type == M64TYPE_BOOL && curr_var->val_int)
                 fprintf(fPtr, "%s = True\n", curr_var->name);
             else if (curr_var->type == M64TYPE_BOOL && !curr_var->val_int)
@@ -421,17 +438,122 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
 
 EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, const void *ParamValue)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL || (int) ParamType < 1 || (int) ParamType > 4)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter doesn't already exist, then create it and add it to the section */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+    {
+        var = (config_var *) malloc(sizeof(config_var));
+        if (var == NULL)
+            return M64ERR_NO_MEMORY;
+        strncpy(var->name, ParamName, 63);
+        var->name[63] = 0;
+        var->type = M64TYPE_INT;
+        var->val_int = 0;
+        var->val_string = NULL;
+        var->comment = NULL;
+        var->next = section->first_var;
+        section->first_var = var;
+    }
+
+    /* set this parameter's value */
+    var->type = ParamType;
+    switch(ParamType)
+    {
+        case M64TYPE_INT:
+            var->val_int = *((int *) ParamValue);
+            break;
+        case M64TYPE_FLOAT:
+            var->val_float = *((float *) ParamValue);
+            break;
+        case M64TYPE_BOOL:
+            var->val_int = (*((int *) ParamValue) != 0);
+            break;
+        case M64TYPE_STRING:
+            if (var->val_string != NULL)
+                free(var->val_string);
+            var->val_string = malloc(strlen((char *) ParamValue) + 1);
+            if (var->val_string == NULL)
+                return M64ERR_NO_MEMORY;
+            memcpy(var->val_string, ParamValue, strlen((char *) ParamValue) + 1);
+            break;
+        default:
+            /* this is logically impossible because of the ParamType check at the top of this function */
+            break;
+    }
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, void *ParamValue, int MaxSize)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL || (int) ParamType < 1 || (int) ParamType > 4)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter doesn't already exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    /* call the specific Get function to translate the parameter to the desired type */
+    switch(ParamType)
+    {
+        case M64TYPE_INT:
+            *((int *) ParamValue) = ConfigGetParamInt(ConfigSectionHandle, ParamName);
+            break;
+        case M64TYPE_FLOAT:
+            *((float *) ParamValue) = ConfigGetParamFloat(ConfigSectionHandle, ParamName);
+            break;
+        case M64TYPE_BOOL:
+            *((int *) ParamValue) = ConfigGetParamBool(ConfigSectionHandle, ParamName);
+            break;
+        case M64TYPE_STRING:
+        {
+            const char *string = ConfigGetParamString(ConfigSectionHandle, ParamName);
+            strncpy(ParamValue, string, MaxSize);
+            *((char *) ParamValue + MaxSize - 1) = 0;
+            break;
+        }
+        default:
+            /* this is logically impossible because of the ParamType check at the top of this function */
+            break;
+    }
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
-  return NULL;
+    /* check input conditions */
+    if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
+        return NULL;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return NULL;
+
+    /* if this parameter doesn't exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+        return NULL;
+
+    return var->comment;
 }
 
 /* ------------------------------------------------------- */
