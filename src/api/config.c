@@ -582,22 +582,180 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
 
 EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
-  return 0;
+    /* check input conditions */
+    if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): Input assertion!");
+        return 0;
+    }
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): ConfigSectionHandle invalid!");
+        return 0;
+    }
+
+    /* if this parameter doesn't already exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): Parameter '%s' not found!", ParamName);
+        return 0;
+    }
+
+    /* translate the actual variable type to an int */
+    switch(var->type)
+    {
+        case M64TYPE_INT:
+            return var->val_int;
+        case M64TYPE_FLOAT:
+            return (int) var->val_float;
+        case M64TYPE_BOOL:
+            return (var->val_int != 0);
+        case M64TYPE_STRING:
+            return atoi(var->val_string);
+        default:
+            DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): invalid internal parameter type for '%s'", ParamName);
+            return 0;
+    }
+
+    return 0;
 }
 
 EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
-  return 0.0;
+    /* check input conditions */
+    if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): Input assertion!");
+        return 0.0;
+    }
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): ConfigSectionHandle invalid!");
+        return 0.0;
+    }
+
+    /* if this parameter doesn't already exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): Parameter '%s' not found!", ParamName);
+        return 0.0;
+    }
+
+    /* translate the actual variable type to an int */
+    switch(var->type)
+    {
+        case M64TYPE_INT:
+            return (float) var->val_int;
+        case M64TYPE_FLOAT:
+            return var->val_float;
+        case M64TYPE_BOOL:
+            return (var->val_int != 0) ? 1.0 : 0.0;
+        case M64TYPE_STRING:
+            return (float) atof(var->val_string);
+        default:
+            DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): invalid internal parameter type for '%s'", ParamName);
+            return 0.0;
+    }
+
+    return 0.0;
 }
 
 EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
-  return 0;
+    /* check input conditions */
+    if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): Input assertion!");
+        return 0;
+    }
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): ConfigSectionHandle invalid!");
+        return 0;
+    }
+
+    /* if this parameter doesn't already exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): Parameter '%s' not found!", ParamName);
+        return 0;
+    }
+
+    /* translate the actual variable type to an int */
+    switch(var->type)
+    {
+        case M64TYPE_INT:
+            return (var->val_int != 0);
+        case M64TYPE_FLOAT:
+            return (var->val_float != 0.0);
+        case M64TYPE_BOOL:
+            return var->val_int;
+        case M64TYPE_STRING:
+            return (osal_insensitive_strcmp(var->val_string, "true") == 0);
+        default:
+            DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): invalid internal parameter type for '%s'", ParamName);
+            return 0;
+    }
+
+    return 0;
 }
 
 EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
-  return NULL;
+    static char outstr[64];  /* warning: not thread safe */
+
+    /* check input conditions */
+    if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): Input assertion!");
+        return "";
+    }
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): ConfigSectionHandle invalid!");
+        return "";
+    }
+
+    /* if this parameter doesn't already exist, return an error */
+    config_var *var = find_section_var(section, ParamName);
+    if (var == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): Parameter '%s' not found!", ParamName);
+        return "";
+    }
+
+    /* translate the actual variable type to an int */
+    switch(var->type)
+    {
+        case M64TYPE_INT:
+            snprintf(outstr, 63, "%i", var->val_int);
+            outstr[63] = 0;
+            return outstr;
+        case M64TYPE_FLOAT:
+            snprintf(outstr, 63, "%f", var->val_float);
+            outstr[63] = 0;
+            return outstr;
+        case M64TYPE_BOOL:
+            return (var->val_int ? "True" : "False");
+        case M64TYPE_STRING:
+            return var->val_string;
+        default:
+            DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): invalid internal parameter type for '%s'", ParamName);
+            return "";
+    }
+
+  return "";
 }
 
 /* ------------------------------------------------------ */
