@@ -124,6 +124,24 @@ static config_var *find_section_var(config_section *section, const char *ParamNa
     return NULL;
 }
 
+static void append_var_to_section(config_section *section, config_var *var)
+{
+    if (section == NULL || var == NULL || section->magic != SECTION_MAGIC)
+        return;
+
+    if (section->first_var == NULL)
+    {
+        section->first_var = var;
+        return;
+    }
+
+    config_var *last_var = section->first_var;
+    while (last_var->next != NULL)
+        last_var = last_var->next;
+
+    last_var->next = var;
+}
+
 /* ----------------------------------------------------------- */
 /* these functions are only to be used within the Core library */
 /* ----------------------------------------------------------- */
@@ -562,22 +580,164 @@ EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle,
 
 EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, const char *ParamName, int ParamValue, const char *ParamHelp)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter already exists, then just return successfully */
+    config_var *var = find_section_var(section, ParamName);
+    if (var != NULL)
+        return M64ERR_SUCCESS;
+
+    /* otherwise create a new config_var object and add it to this section */
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
+        return M64ERR_NO_MEMORY;
+    strncpy(var->name, ParamName, 63);
+    var->name[63] = 0;
+    var->type = M64TYPE_INT;
+    var->val_int = ParamValue;
+    var->val_string = NULL;
+    if (ParamHelp == NULL)
+        var->comment = NULL;
+    else
+    {
+        var->comment = malloc(strlen(ParamHelp) + 1);
+        if (var->comment == NULL)
+            return M64ERR_NO_MEMORY;
+        strcpy(var->comment, ParamHelp);
+    }
+    append_var_to_section(section, var);
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, const char *ParamName, float ParamValue, const char *ParamHelp)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter already exists, then just return successfully */
+    config_var *var = find_section_var(section, ParamName);
+    if (var != NULL)
+        return M64ERR_SUCCESS;
+
+    /* otherwise create a new config_var object and add it to this section */
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
+        return M64ERR_NO_MEMORY;
+    strncpy(var->name, ParamName, 63);
+    var->name[63] = 0;
+    var->type = M64TYPE_FLOAT;
+    var->val_float = ParamValue;
+    var->val_string = NULL; 
+    if (ParamHelp == NULL)  
+        var->comment = NULL;
+    else
+    {
+        var->comment = malloc(strlen(ParamHelp) + 1);
+        if (var->comment == NULL)   
+            return M64ERR_NO_MEMORY;
+        strcpy(var->comment, ParamHelp);
+    }
+    append_var_to_section(section, var);
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, const char *ParamName, int ParamValue, const char *ParamHelp)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter already exists, then just return successfully */
+    config_var *var = find_section_var(section, ParamName);
+    if (var != NULL)
+        return M64ERR_SUCCESS;
+
+    /* otherwise create a new config_var object and add it to this section */
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
+        return M64ERR_NO_MEMORY;
+    strncpy(var->name, ParamName, 63);
+    var->name[63] = 0;
+    var->type = M64TYPE_BOOL;
+    var->val_int = ParamValue ? 1 : 0;
+    var->val_string = NULL; 
+    if (ParamHelp == NULL)  
+        var->comment = NULL;
+    else
+    {
+        var->comment = malloc(strlen(ParamHelp) + 1);
+        if (var->comment == NULL)   
+            return M64ERR_NO_MEMORY;
+        strcpy(var->comment, ParamHelp);
+    }
+    append_var_to_section(section, var);
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, const char *ParamName, const char * ParamValue, const char *ParamHelp)
 {
-  return M64ERR_INTERNAL;
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    config_section *section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter already exists, then just return successfully */
+    config_var *var = find_section_var(section, ParamName);
+    if (var != NULL)
+        return M64ERR_SUCCESS;
+
+    /* otherwise create a new config_var object and add it to this section */
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
+        return M64ERR_NO_MEMORY;
+    strncpy(var->name, ParamName, 63);
+    var->name[63] = 0;
+    var->type = M64TYPE_STRING;
+    var->val_string = (char *) malloc(strlen(ParamValue) + 1);
+    if (var->val_string == NULL)
+        return M64ERR_NO_MEMORY;
+    strcpy(var->val_string, ParamValue);
+    if (ParamHelp == NULL)  
+        var->comment = NULL;
+    else
+    {
+        var->comment = malloc(strlen(ParamHelp) + 1);
+        if (var->comment == NULL)   
+            return M64ERR_NO_MEMORY;
+        strcpy(var->comment, ParamHelp);
+    }
+    append_var_to_section(section, var);
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *ParamName)
