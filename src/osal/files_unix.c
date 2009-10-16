@@ -124,7 +124,7 @@ int osal_mkdirp(const char *dirpath, int mode)
     /* then re-assemble the path from left to right until we get to a directory that doesn't exist */
     while (strlen(currpath) < dirpathlen)
     {
-        if (stat(currpath, &fileinfo) != 0)
+        if (strlen(currpath) > 0 && stat(currpath, &fileinfo) != 0)
             break;
         currpath[strlen(currpath)] = '/';
     }
