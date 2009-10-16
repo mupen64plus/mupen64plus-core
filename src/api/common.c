@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api_vidext.c                                       *
+ *   Mupen64plus-core - api/common.c                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,57 +18,47 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
-/* This file contains the Core video extension functions which will be exported
+
+/* This file contains the Core common functions which will be exported
  * outside of the core library.
  */
 
 #include <stdlib.h>
 
-#include "api/m64p_types.h"
- 
-EXPORT m64p_error CALL VidExt_Init(void)
+#include "m64p_types.h"
+#include "../main/version.h"
+
+EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
 {
-  return M64ERR_INTERNAL;
+    /* set version info */
+    if (PluginType != NULL)
+        *PluginType = M64PLUGIN_CORE;
+
+    if (PluginVersion != NULL)
+        *PluginVersion = MUPEN_CORE_VERSION;
+
+    if (APIVersion != NULL)
+        *APIVersion = MUPEN_API_VERSION;
+    
+    if (PluginNamePtr != NULL)
+        *PluginNamePtr = MUPEN_CORE_NAME;
+
+    if (Capabilities != NULL)
+    {
+        *Capabilities = 0;
+#if defined(DBG)
+         *Capabilities |= M64CAPS_DEBUGGER;
+#endif
+#if defined(DYNAREC)
+         *Capabilities |= M64CAPS_DYNAREC;
+#endif         
+    }
+                    
+    return M64ERR_SUCCESS;
 }
 
-EXPORT m64p_error CALL VidExt_Quit(void)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT m64p_error CALL VidExt_SetCaption(const char *Title)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT void * CALL VidExt_GL_GetProcAddress(const char* Proc)
+EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {
   return NULL;
-}
-
-EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
-{
-  return M64ERR_INTERNAL;
-}
-
-EXPORT m64p_error CALL VidExt_GL_SwapBuffers(void)
-{
-  return M64ERR_INTERNAL;
 }
 

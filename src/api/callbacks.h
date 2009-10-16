@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api_common.c                                       *
+ *   Mupen64plus-core - api/callbacks.h                                    *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -19,46 +19,21 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* This file contains the Core common functions which will be exported
- * outside of the core library.
+/* This file contains the Core functions for handling callbacks to the
+ * front-end application
  */
 
-#include <stdlib.h>
+#if !defined(API_CALLBACKS_H)
+#define API_CALLBACKS_H
 
-#include "api/m64p_types.h"
-#include "version.h"
+#include "m64p_types.h"
 
-EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion, int *APIVersion, const char **PluginNamePtr, int *Capabilities)
-{
-    /* set version info */
-    if (PluginType != NULL)
-        *PluginType = M64PLUGIN_CORE;
+/* pointer types to the callback functions in the front-end application */
+typedef void (*ptr_DebugCallback)(void *Context, int level, const char *message);
 
-    if (PluginVersion != NULL)
-        *PluginVersion = MUPEN_CORE_VERSION;
+/* Functions for use by the Core, to send information back to the front-end app */
+extern m64p_error SetDebugCallback(ptr_DebugCallback pFunc, void *Context);
+extern void       DebugMessage(int level, const char *message, ...);
 
-    if (APIVersion != NULL)
-        *APIVersion = MUPEN_API_VERSION;
-    
-    if (PluginNamePtr != NULL)
-        *PluginNamePtr = MUPEN_CORE_NAME;
-
-    if (Capabilities != NULL)
-    {
-        *Capabilities = 0;
-#if defined(DBG)
-         *Capabilities |= M64CAPS_DEBUGGER;
-#endif
-#if defined(DYNAREC)
-         *Capabilities |= M64CAPS_DYNAREC;
-#endif         
-    }
-                    
-    return M64ERR_SUCCESS;
-}
-
-EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
-{
-  return NULL;
-}
+#endif /* API_CALLBACKS_H */
 

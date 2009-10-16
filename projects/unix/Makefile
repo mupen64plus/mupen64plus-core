@@ -97,12 +97,12 @@ OBJDIR = _obj
 
 # list of source files to compile
 SRC_CORE = \
-	$(SRCDIR)/main/api_callbacks.c \
-	$(SRCDIR)/main/api_common.c \
-	$(SRCDIR)/main/api_config.c \
-	$(SRCDIR)/main/api_debugger.c \
-	$(SRCDIR)/main/api_frontend.c \
-	$(SRCDIR)/main/api_vidext.c \
+	$(SRCDIR)/api/callbacks.c \
+	$(SRCDIR)/api/common.c \
+	$(SRCDIR)/api/config.c \
+	$(SRCDIR)/api/debugger.c \
+	$(SRCDIR)/api/frontend.c \
+	$(SRCDIR)/api/vidext.c \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \

@@ -33,7 +33,7 @@
 
 #include "files.h"
 #include "api/m64p_types.h"
-#include "main/api_callbacks.h"
+#include "api/callbacks.h"
 
 /* definitions for system directories to search when looking for shared data files */
 #if defined(SHAREDIR)

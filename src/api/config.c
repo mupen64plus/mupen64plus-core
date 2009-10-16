@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api_config.c                                       *
+ *   Mupen64plus-core - api/config.c                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -27,11 +27,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "api/m64p_types.h"
+#include "m64p_types.h"
+#include "config.h"
+#include "callbacks.h"
+
 #include "osal/files.h"
 #include "osal/strings.h"
-#include "api_config.h"
-#include "api_callbacks.h"
 
 /* local types */
 #define MUPEN64PLUS_CFG_NAME "mupen64plus.cfg"

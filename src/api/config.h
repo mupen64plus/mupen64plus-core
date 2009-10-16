@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api_config.h                                       *
+ *   Mupen64plus-core - api/config.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -22,7 +22,7 @@
 /* This file contains the Core configuration functions
  */
 
-#include "api/m64p_types.h"
+#include "m64p_types.h"
 
 /* these functions are only to be used within the Core library */
 

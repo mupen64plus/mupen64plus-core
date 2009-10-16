@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api_frontend.c                                     *
+ *   Mupen64plus-core - api/frontend.c                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -25,10 +25,9 @@
 
 #include <stdlib.h>
 
-#include "api/m64p_types.h"
-
-#include "api_callbacks.h"
-#include "api_config.h"
+#include "m64p_types.h"
+#include "callbacks.h"
+#include "config.h"
 
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
