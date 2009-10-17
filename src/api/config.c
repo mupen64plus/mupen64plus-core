@@ -146,16 +146,22 @@ static void append_var_to_section(config_section *section, config_var *var)
 /* these functions are only to be used within the Core library */
 /* ----------------------------------------------------------- */
 
-m64p_error ConfigInit(void)
+m64p_error ConfigInit(const char *ConfigDirOverride)
 {
     if (l_ConfigInit)
         return M64ERR_ALREADY_INIT;
     l_ConfigInit = 1;
 
     /* get the full pathname to the config file and try to open it */
-    const char *configpath = ConfigGetUserConfigPath();
-    if (configpath == NULL)
-        return M64ERR_FILES;
+    const char *configpath = NULL;
+    if (ConfigDirOverride != NULL)
+        configpath = ConfigDirOverride;
+    else
+    {
+        configpath = ConfigGetUserConfigPath();
+        if (configpath == NULL)
+            return M64ERR_FILES;
+    }
 
     char *filepath = (char *) malloc(strlen(configpath) + 32);
     if (filepath == NULL)
@@ -229,7 +235,7 @@ m64p_error ConfigInit(void)
             if (current_section == NULL)
             {
                 free(configtext);
-                return M64ERR_INTERNAL;
+                return M64ERR_NO_MEMORY;
             }
             current_section->magic = SECTION_MAGIC;
             strncpy(current_section->name, line, 63);
@@ -364,9 +370,28 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
         curr_section = curr_section->next;
     }
 
-    /* didn't find the section */
-    *ConfigSectionHandle = NULL;
-    return M64ERR_INPUT_NOT_FOUND;
+    /* didn't find the section, so create new one */
+    config_section *new_section = (config_section *) malloc(sizeof(config_section));
+    if (new_section == NULL)
+        return M64ERR_NO_MEMORY;
+    new_section->magic = SECTION_MAGIC;
+    strncpy(new_section->name, SectionName, 63);
+    new_section->name[63] = 0;
+    new_section->first_var = NULL;
+
+    /* add section to the end of the list */
+    if (l_SectionHead == NULL)
+        l_SectionHead = new_section;
+    else
+    {
+        curr_section = l_SectionHead;
+        while (curr_section->next != NULL)
+            curr_section = curr_section->next;
+        curr_section->next = new_section;
+    }
+
+    *ConfigSectionHandle = new_section;
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL ConfigListParameters(m64p_handle ConfigSectionHandle, void *context, void (*ParameterListCallback)(void * context, const char *ParamName, m64p_type ParamType))
@@ -429,8 +454,8 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
         while (curr_var != NULL)
         {
             if (curr_var->comment != NULL && strlen(curr_var->comment) > 0)
-                fprintf(fPtr, "# %s", curr_var->comment);
-            else if (curr_var->type == M64TYPE_INT)
+                fprintf(fPtr, "\n# %s\n", curr_var->comment);
+            if (curr_var->type == M64TYPE_INT)
                 fprintf(fPtr, "%s = %i\n", curr_var->name, curr_var->val_int);
             else if (curr_var->type == M64TYPE_FLOAT)
                 fprintf(fPtr, "%s = %f\n", curr_var->name, curr_var->val_float);
@@ -479,8 +504,8 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
         var->val_int = 0;
         var->val_string = NULL;
         var->comment = NULL;
-        var->next = section->first_var;
-        section->first_var = var;
+        var->next = NULL;
+        append_var_to_section(section, var);
     }
 
     /* set this parameter's value */
@@ -613,6 +638,7 @@ EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, cons
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
     }
+    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -653,6 +679,7 @@ EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, co
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
     }
+    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -693,6 +720,7 @@ EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, con
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
     }
+    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -735,6 +763,7 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
     }
+    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;

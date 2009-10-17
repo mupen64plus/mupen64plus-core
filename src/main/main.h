@@ -23,8 +23,11 @@
 #define __MAIN_H__
 
 #include <SDL_thread.h>
+#include "api/m64p_types.h"
 
 /* globals */
+extern m64p_handle g_CoreConfig;
+
 extern int g_Noask;
 extern int g_NoaskParam;
 extern int g_MemHasBeenBSwapped;

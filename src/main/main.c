@@ -49,7 +49,9 @@
 #include <png.h>    // for writing screenshot PNG files
 
 #include <SDL.h>
-#include <SDL_thread.h>
+
+#include "api/m64p_types.h"
+#include "api/m64p_config.h"
 
 #include "main.h"
 #include "version.h"
@@ -121,6 +123,8 @@ SDL_Thread * g_EmulationThread;         // core thread handle
 SDL_Thread * g_RomCacheThread;          // rom cache thread handle
 
 /** globals **/
+m64p_handle g_CoreConfig = NULL;
+
 int         g_Noask = 0;                // don't ask to force load on bad dumps
 int         g_NoaskParam = 0;           // was --noask passed at the commandline?
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
