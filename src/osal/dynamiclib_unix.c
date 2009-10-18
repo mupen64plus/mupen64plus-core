@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.c                                           *
+ *   Mupen64plus-core - osal/dynamiclib_unix.c                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Scott Gorman (okaygo)                              *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -21,42 +20,47 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <dlfcn.h>
 
 #include "api/m64p_types.h"
-#include "plugin.h"
+#include "dynamiclib.h"
 
-void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
+m64p_error osal_dynlib_open(m64p_dynlib_handle *pLibHandle, const char *pccLibraryPath)
 {
-    ControlInfo.Controls[0].Present = 1;
+    if (pLibHandle == NULL || pccLibraryPath == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    *pLibHandle = dlopen(pccLibraryPath, RTLD_LAZY);
+
+    if (*pLibHandle == NULL)
+    {
+        fprintf(stderr, "dlopen('%s') error: %s\n", pccLibraryPath, dlerror());
+        return M64ERR_INPUT_NOT_FOUND;
+    }
+
+    return M64ERR_SUCCESS;
 }
 
-void dummyinput_GetKeys(int Control, BUTTONS * Keys )
+void * osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedureName)
 {
-    Keys->Value = 0x0000;
+    if (pccProcedureName == NULL)
+        return NULL;
+
+    return dlsym(LibHandle, pccProcedureName);
 }
 
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
+m64p_error osal_dynlib_close(m64p_dynlib_handle LibHandle)
 {
-}
+    int rval = dlclose(LibHandle);
 
-void dummyinput_ReadController(int Control, unsigned char *Command)
-{
-}
+    if (rval != 0)
+    {
+        fprintf(stderr, "dlclose() error: %s\n", dlerror());
+        return M64ERR_INTERNAL;
+    }
 
-void dummyinput_RomOpen(void)
-{
-}
-
-void dummyinput_RomClosed(void)
-{
-}
-
-void dummyinput_SDL_KeyDown(int keymod, int keysym)
-{
-}
-
-void dummyinput_SDL_KeyUp(int keymod, int keysym)
-{
+    return M64ERR_SUCCESS;
 }
 
 

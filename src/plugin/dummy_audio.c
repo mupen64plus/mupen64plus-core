@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - audio.h                                                 *
+ *   Mupen64plus - dummy_audio.c                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Richard42                                          *
+ *   Copyright (C) 2008-2009 Richard Goedeken                              *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,84 +19,74 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-#include "main/winlnxdefs.h"
-#include "Audio_1.1.h"
+#include <stdlib.h>
 
-static AUDIO_INFO AudioInfo;
+#include "api/m64p_types.h"
+#include "plugin.h"
 
-
-EXPORT void CALL
-dummyaudio_AiDacrateChanged( int SystemType )
+void dummyaudio_AiDacrateChanged(int SystemType)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_AiLenChanged( void )
+void dummyaudio_AiLenChanged(void)
 {
+    return;
 }
 
-EXPORT DWORD CALL
-dummyaudio_AiReadLength( void )
+unsigned int dummyaudio_InitiateAudio(AUDIO_INFO Audio_Info)
 {
-    return 0;
+    return 1;
 }
 
-EXPORT void CALL
-dummyaudio_AiUpdate( BOOL Wait )
+void dummyaudio_RomOpen(void)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_CloseDLL( void )
+void dummyaudio_RomClosed(void)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_DllAbout( HWND hParent )
+void dummyaudio_ProcessAList(void)
 {
-    printf ("No Audio Plugin\n" );
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_DllConfig ( HWND hParent )
+void dummyaudio_SetSpeedFactor(int percent)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_DllTest ( HWND hParent )
+void dummyaudio_VolumeUp(void)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_GetDllInfo( PLUGIN_INFO * PluginInfo )
+void dummyaudio_VolumeDown(void)
 {
-    PluginInfo->Version = 0x0101;
-    PluginInfo->Type    = PLUGIN_TYPE_AUDIO;
-    sprintf(PluginInfo->Name,"No Audio");
-    PluginInfo->NormalMemory  = TRUE;
-    PluginInfo->MemoryBswaped = TRUE;
+    return;
 }
 
-EXPORT BOOL CALL
-dummyaudio_InitiateAudio( AUDIO_INFO Audio_Info )
+int dummyaudio_VolumeGetLevel(void)
 {
-    AudioInfo = Audio_Info;
-    return TRUE;
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_RomOpen(void)
+void dummyaudio_VolumeSetLevel(int level)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_RomClosed( void )
+void dummyaudio_VolumeMute(void)
 {
+    return;
 }
 
-EXPORT void CALL
-dummyaudio_ProcessAList( void )
+const char *dummyaudio_VolumeGetString(void)
 {
+    return "disabled";
 }
+
 

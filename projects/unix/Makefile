@@ -1,7 +1,8 @@
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - Makefile                                                *
 # *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
-# *   Copyright (C) 2007-2008 DarkJeztr Tillin9 Richard42                   *
+# *   Copyright (C) 2008-2009 Richard Goedeken                              *
+# *   Copyright (C) 2007-2008 DarkJeztr Tillin9                             *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
 # *   it under the terms of the GNU General Public License as published by  *
@@ -121,11 +122,13 @@ SRC_CORE = \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/memory/tlb.c \
+	$(SRCDIR)/osal/dynamiclib_unix.c \
 	$(SRCDIR)/osal/files_unix.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
 	$(SRCDIR)/plugin/dummy_input.c \
+	$(SRCDIR)/plugin/dummy_rsp.c \
 	$(SRCDIR)/r4300/r4300.c \
 	$(SRCDIR)/r4300/bc.c \
 	$(SRCDIR)/r4300/compare_core.c \

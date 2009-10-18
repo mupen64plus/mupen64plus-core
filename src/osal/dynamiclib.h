@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.c                                           *
+ *   Mupen64plus-core - osal/dynamiclib.h                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Scott Gorman (okaygo)                              *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,43 +19,16 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
+#if !defined(OSAL_DYNAMICLIB_H)
+#define OSAL_DYNAMICLIB_H
 
 #include "api/m64p_types.h"
-#include "plugin.h"
 
-void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
-{
-    ControlInfo.Controls[0].Present = 1;
-}
+m64p_error osal_dynlib_open(m64p_dynlib_handle *pLibHandle, const char *pccLibraryPath);
 
-void dummyinput_GetKeys(int Control, BUTTONS * Keys )
-{
-    Keys->Value = 0x0000;
-}
+void *     osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedureName);
 
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
-{
-}
+m64p_error osal_dynlib_close(m64p_dynlib_handle LibHandle);
 
-void dummyinput_ReadController(int Control, unsigned char *Command)
-{
-}
-
-void dummyinput_RomOpen(void)
-{
-}
-
-void dummyinput_RomClosed(void)
-{
-}
-
-void dummyinput_SDL_KeyDown(int keymod, int keysym)
-{
-}
-
-void dummyinput_SDL_KeyUp(int keymod, int keysym)
-{
-}
-
+#endif /* #define OSAL_DYNAMICLIB_H */
 

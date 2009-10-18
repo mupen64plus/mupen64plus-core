@@ -1,7 +1,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - main.c                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Richard42 Ebenblues Nmn Okaygo Tillin9             *
+ *   Copyright (C) 2008-2009 Richard Goedeken                              *
+ *   Copyright (C) 2008 Ebenblues Nmn Okaygo Tillin9                       *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -352,11 +353,6 @@ void startEmulation(void)
     VILimitMilliseconds = (double) 1000.0/VILimit; 
     printf("init timer!\n");
 
-    const char *gfx_plugin = NULL,
-               *audio_plugin = NULL,
-               *input_plugin = NULL,
-               *RSP_plugin = NULL;
-
     // make sure rom is loaded before running
     if(!rom)
     {
@@ -364,10 +360,7 @@ void startEmulation(void)
         return;
     }
 
-    /* Determine which plugins to use:
-    *  -If valid plugin was specified at the commandline, use it
-    *  -Else, get plugin from config. NOTE: gui code must change config if user switches plugin in the gui)
-    */
+    /* 
     if(g_GfxPlugin)
     {
         gfx_plugin = plugin_name_by_filename(g_GfxPlugin);
@@ -421,6 +414,7 @@ void startEmulation(void)
     // Examples: GTK Icon theme setup in Rice which otherwise hangs forever
     // with the Qt4 interface.
     plugin_load_plugins(gfx_plugin, audio_plugin, input_plugin, RSP_plugin);
+    */
 
     // in nogui mode, just start the emulator in the main thread
     emulationThread(NULL);
@@ -446,7 +440,7 @@ void stopEmulation(void)
             SDL_WaitThread(g_EmulationThread, NULL);
 
 #ifdef __WIN32__
-        plugin_close_plugins();
+        //plugin_close_plugins();
 #endif
         g_EmulatorRunning = 0;
         g_EmulationThread = 0;
@@ -595,7 +589,7 @@ static int sdl_event_filter( const SDL_Event *event )
 {
     static osd_message_t *msgFF = NULL;
     static int SavedSpeedFactor = 100;
-    static BYTE StopRumble[6] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00};
+    static unsigned char StopRumble[6] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00};
     char *event_str = NULL;
 
     switch( event->type )
@@ -764,7 +758,7 @@ static int emulationThread( void *_arg )
         dynacore = CORE_INTERPRETER;
 #endif
 
-    no_compiled_jump = config_get_bool("NoCompiledJump", FALSE);
+    no_compiled_jump = config_get_bool("NoCompiledJump", 0);
 
     // init sdl
     SDL_Init(SDL_INIT_VIDEO);
@@ -850,10 +844,10 @@ static int emulationThread( void *_arg )
     romClosed_input();
     romClosed_audio();
     romClosed_gfx();
-    closeDLL_RSP();
-    closeDLL_input();
-    closeDLL_audio();
-    closeDLL_gfx();
+    //closeDLL_RSP();
+    //closeDLL_input();
+    //closeDLL_audio();
+    //closeDLL_gfx();
     free_memory();
 
     // clean up
@@ -924,8 +918,8 @@ void parseCommandLine(int argc, char **argv)
     };
     struct option long_options[] =
     {
-        {"noosd", no_argument, &g_OsdEnabled, FALSE},
-        {"fullscreen", no_argument, &g_Fullscreen, TRUE},
+        {"noosd", no_argument, &g_OsdEnabled, 0},
+        {"fullscreen", no_argument, &g_Fullscreen, 1},
         {"romnumber", required_argument, NULL, OPT_ROMNUMBER},
         {"gfx", required_argument, NULL, OPT_GFX},
         {"audio", required_argument, NULL, OPT_AUDIO},
@@ -954,51 +948,11 @@ void parseCommandLine(int argc, char **argv)
             // if getopt_long returns 0, it already set the global for us, so do nothing
             case 0:
                 break;
-            case OPT_GFX:
-                if(plugin_scan_file(optarg, PLUGIN_TYPE_GFX))
-                {
-                    g_GfxPlugin = optarg;
-                }
-                else
-                {
-                    printf("***Warning: GFX Plugin '%s' couldn't be loaded!\n", optarg);
-                }
-                break;
-            case OPT_AUDIO:
-                if(plugin_scan_file(optarg, PLUGIN_TYPE_AUDIO))
-                {
-                    g_AudioPlugin = optarg;
-                }
-                else
-                {
-                    printf("***Warning: Audio Plugin '%s' couldn't be loaded!\n", optarg);
-                }
-                break;
-            case OPT_INPUT:
-                if(plugin_scan_file(optarg, PLUGIN_TYPE_CONTROLLER))
-                {
-                    g_InputPlugin = optarg;
-                }
-                else
-                {
-                    printf("***Warning: Input Plugin '%s' couldn't be loaded!\n", optarg);
-                }
-                break;
-            case OPT_RSP:
-                if(plugin_scan_file(optarg, PLUGIN_TYPE_RSP))
-                {
-                    g_RspPlugin = optarg;
-                }
-                else
-                {
-                    printf("***Warning: RSP Plugin '%s' couldn't be loaded!\n", optarg);
-                }
-                break;
             case OPT_EMUMODE:
                 i = atoi(optarg);
                 if(i >= CORE_INTERPRETER && i <= CORE_PURE_INTERPRETER)
                 {
-                    l_EmuMode = TRUE;
+                    l_EmuMode =  1;
                     dynacore = i;
                 }
                 else
@@ -1025,7 +979,7 @@ void parseCommandLine(int argc, char **argv)
                     printf("***Warning: Install directory '%s' is not accessible or not a directory.\n", optarg);
                 break;
             case OPT_NOASK:
-                g_Noask = g_NoaskParam = TRUE;
+                g_Noask = g_NoaskParam = 1;
                 break;
             case OPT_TESTSHOTS:
                 // count the number of integers in the list
@@ -1052,7 +1006,7 @@ void parseCommandLine(int argc, char **argv)
                 break;
 #ifdef DBG
             case OPT_DEBUGGER:
-                g_DebuggerEnabled = TRUE;
+                g_DebuggerEnabled = 1;
                 break;
 #endif
             case OPT_ROMNUMBER:
@@ -1272,12 +1226,12 @@ int main(int argc, char *argv[])
         dirpath[PATH_MAX-1] = '\0';
     }
     // scan the plugin directory and set the config dir for the plugins
-    plugin_scan_directory(dirpath);
-    plugin_set_dirs(l_ConfigDir, l_InstallDir);
+    //plugin_scan_directory(dirpath);
+    //plugin_set_dirs(l_ConfigDir, l_InstallDir);
 
     // must be called after building gui
     // look for plugins in the install dir and set plugin config dir
-    savestates_set_autoinc_slot(config_get_bool("AutoIncSaveSlot", FALSE));
+    savestates_set_autoinc_slot(config_get_bool("AutoIncSaveSlot", 0));
 
     if((i=config_get_number("CurrentSaveSlot",10))!=10)
     {
@@ -1329,7 +1283,7 @@ int main(int argc, char *argv[])
     cheat_delete_all();
 
     romdatabase_close();
-    plugin_delete_list();
+    //plugin_delete_list();
     tr_delete_languages();
     config_delete();
 

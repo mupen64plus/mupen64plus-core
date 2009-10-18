@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.c                                           *
+ *   Mupen64plus - dummy_input.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Scott Gorman (okaygo)                              *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,43 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
+#if !defined(DUMMY_INPUT_H)
+#define DUMMY_INPUT_H
 
-#include "api/m64p_types.h"
 #include "plugin.h"
 
-void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
-{
-    ControlInfo.Controls[0].Present = 1;
-}
+extern void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo);
+extern void dummyinput_GetKeys(int Control, BUTTONS * Keys );
+extern void dummyinput_ControllerCommand(int Control, unsigned char *Command);
+extern void dummyinput_GetKeys(int Control, BUTTONS * Keys);
+extern void dummyinput_InitiateControllers(CONTROL_INFO ControlInfo);
+extern void dummyinput_ReadController(int Control, unsigned char *Command);
+extern void dummyinput_RomOpen(void);
+extern void dummyinput_RomClosed(void);
+extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
+extern void dummyinput_SDL_KeyUp(int keymod, int keysym);
 
-void dummyinput_GetKeys(int Control, BUTTONS * Keys )
-{
-    Keys->Value = 0x0000;
-}
-
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
-{
-}
-
-void dummyinput_ReadController(int Control, unsigned char *Command)
-{
-}
-
-void dummyinput_RomOpen(void)
-{
-}
-
-void dummyinput_RomClosed(void)
-{
-}
-
-void dummyinput_SDL_KeyDown(int keymod, int keysym)
-{
-}
-
-void dummyinput_SDL_KeyUp(int keymod, int keysym)
-{
-}
+#endif /* DUMMY_INPUT_H */
 
 

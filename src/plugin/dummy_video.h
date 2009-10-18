@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.c                                           *
+ *   Mupen64plus - dummy_video.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Scott Gorman (okaygo)                              *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,43 +19,29 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
+#if !defined(DUMMY_VIDEO_H)
+#define DUMMY_VIDEO_H
 
-#include "api/m64p_types.h"
 #include "plugin.h"
 
-void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
-{
-    ControlInfo.Controls[0].Present = 1;
-}
+void dummyvideo_ChangeWindow (void);
+int dummyvideo_InitiateGFX (GFX_INFO Gfx_Info);
+void dummyvideo_MoveScreen (int xpos, int ypos);
+void dummyvideo_ProcessDList(void);
+void dummyvideo_ProcessRDPList(void);
+void dummyvideo_RomClosed (void);
+void dummyvideo_RomOpen (void);
+void dummyvideo_ShowCFB (void);
+void dummyvideo_UpdateScreen (void);
+void dummyvideo_ViStatusChanged (void);
+void dummyvideo_ViWidthChanged (void);
+void dummyvideo_ReadScreen (void **dest, int *width, int *height);
+void dummyvideo_SetRenderingCallback(void (*callback)());
 
-void dummyinput_GetKeys(int Control, BUTTONS * Keys )
-{
-    Keys->Value = 0x0000;
-}
+void dummyvideo_FBRead(unsigned int addr);
+void dummyvideo_FBWrite(unsigned int addr, unsigned int size);
+void dummyvideo_FBGetFrameBufferInfo(void *p);
 
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
-{
-}
-
-void dummyinput_ReadController(int Control, unsigned char *Command)
-{
-}
-
-void dummyinput_RomOpen(void)
-{
-}
-
-void dummyinput_RomClosed(void)
-{
-}
-
-void dummyinput_SDL_KeyDown(int keymod, int keysym)
-{
-}
-
-void dummyinput_SDL_KeyUp(int keymod, int keysym)
-{
-}
+#endif /* DUMMY_VIDEO_H */
 
 

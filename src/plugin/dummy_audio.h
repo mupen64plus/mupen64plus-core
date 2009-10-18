@@ -1,8 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.c                                           *
+ *   Mupen64plus - dummy_audio.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 Scott Gorman (okaygo)                              *
- *   Copyright (C) 2009 Richard Goedeken                                   *
+ *   Copyright (C) 2008-2009 Richard Goedeken                              *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,43 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
+#if !defined(DUMMY_AUDIO_H)
+#define DUMMY_AUDIO_H
 
-#include "api/m64p_types.h"
 #include "plugin.h"
 
-void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
-{
-    ControlInfo.Controls[0].Present = 1;
-}
+extern void dummyaudio_AiDacrateChanged(int SystemType);
+extern void dummyaudio_AiLenChanged(void);
+extern int  dummyaudio_InitiateAudio(AUDIO_INFO Audio_Info);
+extern void dummyaudio_ProcessAList(void);
+extern void dummyaudio_RomOpen(void);
+extern void dummyaudio_RomClosed(void);
+extern void dummyaudio_SetSpeedFactor(int percent);
+extern void dummyaudio_VolumeUp(void);
+extern void dummyaudio_VolumeDown(void);
+extern int dummyaudio_VolumeGetLevel(void);
+extern void dummyaudio_VolumeSetLevel(int level);
+extern void dummyaudio_VolumeMute(void);
+extern const char * dummyaudio_VolumeGetString(void);
 
-void dummyinput_GetKeys(int Control, BUTTONS * Keys )
-{
-    Keys->Value = 0x0000;
-}
-
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
-{
-}
-
-void dummyinput_ReadController(int Control, unsigned char *Command)
-{
-}
-
-void dummyinput_RomOpen(void)
-{
-}
-
-void dummyinput_RomClosed(void)
-{
-}
-
-void dummyinput_SDL_KeyDown(int keymod, int keysym)
-{
-}
-
-void dummyinput_SDL_KeyUp(int keymod, int keysym)
-{
-}
+#endif /* DUMMY_AUDIO_H */
 
 
