@@ -22,7 +22,7 @@
 #if !defined(DUMMY_RSP_H)
 #define DUMMY_RSP_H
 
-#include "plugin.h"
+#include "api/m64p_plugin.h"
 
 extern unsigned int dummyrsp_DoRspCycles(unsigned int Cycles);
 extern void dummyrsp_InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount);

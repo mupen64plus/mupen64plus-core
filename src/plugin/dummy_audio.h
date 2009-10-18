@@ -22,7 +22,7 @@
 #if !defined(DUMMY_AUDIO_H)
 #define DUMMY_AUDIO_H
 
-#include "plugin.h"
+#include "api/m64p_plugin.h"
 
 extern void dummyaudio_AiDacrateChanged(int SystemType);
 extern void dummyaudio_AiLenChanged(void);

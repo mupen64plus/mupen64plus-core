@@ -22,7 +22,7 @@
 #if !defined(DUMMY_INPUT_H)
 #define DUMMY_INPUT_H
 
-#include "plugin.h"
+#include "api/m64p_plugin.h"
 
 extern void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo);
 extern void dummyinput_GetKeys(int Control, BUTTONS * Keys );

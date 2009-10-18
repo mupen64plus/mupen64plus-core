@@ -27,6 +27,7 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_common.h"
+#include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 
 #include "main/rom.h"
@@ -64,23 +65,23 @@ m64p_error plugin_connect(m64p_plugin_type, m64p_handle plugin_handle);
 m64p_error plugin_start(m64p_plugin_type);
 
 /* global function pointers */
-void (*changeWindow)() = NULL;
-int  (*initiateGFX)(GFX_INFO Gfx_Info) = NULL;
-void (*moveScreen)(int x, int y) = NULL;
-void (*processDList)() = NULL;
-void (*processRDPList)() = NULL;
-void (*romClosed_gfx)() = NULL;
-void (*romOpen_gfx)() = NULL;
-void (*showCFB)() = NULL;
-void (*updateScreen)() = NULL;
-void (*viStatusChanged)() = NULL;
-void (*viWidthChanged)() = NULL;
-void (*readScreen)(void **dest, int *width, int *height) = NULL;
-void (*setRenderingCallback)(void (*callback)()) = NULL;
+void (*changeWindow)() = dummyvideo_ChangeWindow;
+int  (*initiateGFX)(GFX_INFO Gfx_Info) = dummyvideo_InitiateGFX;
+void (*moveScreen)(int x, int y) = dummyvideo_MoveScreen;
+void (*processDList)() = dummyvideo_ProcessDList;
+void (*processRDPList)() = dummyvideo_ProcessRDPList;
+void (*romClosed_gfx)() = dummyvideo_RomClosed;
+void (*romOpen_gfx)() = dummyvideo_RomOpen;
+void (*showCFB)() = dummyvideo_ShowCFB;
+void (*updateScreen)() = dummyvideo_UpdateScreen;
+void (*viStatusChanged)() = dummyvideo_ViStatusChanged;
+void (*viWidthChanged)() = dummyvideo_ViWidthChanged;
+void (*readScreen)(void **dest, int *width, int *height) = dummyvideo_ReadScreen;
+void (*setRenderingCallback)(void (*callback)()) = dummyvideo_SetRenderingCallback;
 
-void (*fBRead)(unsigned int addr) = NULL;
-void (*fBWrite)(unsigned int addr, unsigned int size) = NULL;
-void (*fBGetFrameBufferInfo)(void *p) = NULL;
+void (*fBRead)(unsigned int addr) = dummyvideo_FBRead;
+void (*fBWrite)(unsigned int addr, unsigned int size) = dummyvideo_FBWrite;
+void (*fBGetFrameBufferInfo)(void *p) = dummyvideo_FBGetFrameBufferInfo;
 
 void (*aiDacrateChanged)(int SystemType) = dummyaudio_AiDacrateChanged;
 void (*aiLenChanged)() = dummyaudio_AiLenChanged;
@@ -382,7 +383,6 @@ static m64p_error plugin_connect_gfx(m64p_handle plugin_handle)
 static m64p_error plugin_start_rsp(void)
 {
     /* fill in the RSP_INFO data structure */
-    rsp_info.MemoryBswaped = 1;
     rsp_info.RDRAM = (unsigned char *) rdram;
     rsp_info.DMEM = (unsigned char *) SP_DMEM;
     rsp_info.IMEM = (unsigned char *) SP_IMEM;
@@ -421,7 +421,6 @@ static m64p_error plugin_start_input(void)
     int i;
 
     /* fill in the CONTROL_INFO data structure */
-    control_info.MemoryBswaped = 1;
     control_info.HEADER = rom;
     control_info.Controls = Controls;
     for (i=0; i<4; i++)
@@ -440,7 +439,6 @@ static m64p_error plugin_start_input(void)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.MemoryBswaped = 1;
     audio_info.HEADER = rom;
     audio_info.RDRAM = (unsigned char *) rdram;
     audio_info.DMEM = (unsigned char *) SP_DMEM;
@@ -464,7 +462,6 @@ static m64p_error plugin_start_audio(void)
 static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
-    gfx_info.MemoryBswaped = 1;
     gfx_info.HEADER = rom;
     gfx_info.RDRAM = (unsigned char *) rdram;
     gfx_info.DMEM = (unsigned char *) SP_DMEM;

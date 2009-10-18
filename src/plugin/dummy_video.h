@@ -22,20 +22,20 @@
 #if !defined(DUMMY_VIDEO_H)
 #define DUMMY_VIDEO_H
 
-#include "plugin.h"
+#include "api/m64p_plugin.h"
 
-void dummyvideo_ChangeWindow (void);
-int dummyvideo_InitiateGFX (GFX_INFO Gfx_Info);
-void dummyvideo_MoveScreen (int xpos, int ypos);
+void dummyvideo_ChangeWindow(void);
+int dummyvideo_InitiateGFX(GFX_INFO Gfx_Info);
+void dummyvideo_MoveScreen(int xpos, int ypos);
 void dummyvideo_ProcessDList(void);
 void dummyvideo_ProcessRDPList(void);
-void dummyvideo_RomClosed (void);
-void dummyvideo_RomOpen (void);
-void dummyvideo_ShowCFB (void);
-void dummyvideo_UpdateScreen (void);
-void dummyvideo_ViStatusChanged (void);
-void dummyvideo_ViWidthChanged (void);
-void dummyvideo_ReadScreen (void **dest, int *width, int *height);
+void dummyvideo_RomClosed(void);
+void dummyvideo_RomOpen(void);
+void dummyvideo_ShowCFB(void);
+void dummyvideo_UpdateScreen(void);
+void dummyvideo_ViStatusChanged(void);
+void dummyvideo_ViWidthChanged(void);
+void dummyvideo_ReadScreen(void **dest, int *width, int *height);
 void dummyvideo_SetRenderingCallback(void (*callback)());
 
 void dummyvideo_FBRead(unsigned int addr);
