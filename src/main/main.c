@@ -27,36 +27,20 @@
  * if you want to implement an interface, you should look here
  */
  
-#ifdef __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#endif
- 
-#ifndef __WIN32__
-# include <ucontext.h> // extra signal types (for portability)
-# include <libgen.h> // basename, dirname
-#endif
-
-#include <sys/time.h>
-#include <sys/stat.h> /* mkdir() */
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>  // POSIX macros and standard types.
-#include <signal.h> // signals
-#include <getopt.h> // getopt_long
-#include <dirent.h>
 #include <stdlib.h>
-
-#include <png.h>    // for writing screenshot PNG files
 
 #include <SDL.h>
 
 #include "api/m64p_types.h"
-#include "api/m64p_config.h"
+#include "api/callbacks.h"
+#include "api/config.h"
+
+#include "osal/files.h"
 
 #include "main.h"
 #include "version.h"
-#include "config.h"
 #include "rom.h"
 #include "savestates.h"
 #include "util.h"
@@ -83,115 +67,38 @@
 #include "lirc.h"
 #endif //WITH_LIRC
 
-#ifdef __APPLE__
-// dynamic data path detection onmac
-bool macSetBundlePath(char* buffer)
-{
-    printf("checking whether we are using an app bundle... ");
-    // the following code will enable mupen to find its plugins when placed in an app bundle on mac OS X.
-    // returns true if path is set, returns false if path was not set
-    char path[1024];
-    CFBundleRef main_bundle = CFBundleGetMainBundle(); assert(main_bundle);
-    CFURLRef main_bundle_URL = CFBundleCopyBundleURL(main_bundle); assert(main_bundle_URL);
-    CFStringRef cf_string_ref = CFURLCopyFileSystemPath( main_bundle_URL, kCFURLPOSIXPathStyle); assert(cf_string_ref);
-    CFStringGetCString(cf_string_ref, path, 1024, kCFStringEncodingASCII);
-    CFRelease(main_bundle_URL);
-    CFRelease(cf_string_ref);
-    
-    if(strstr( path, ".app" ) != 0)
-    {
-        printf("yes\n");
-        // executable is inside an app bundle, use app bundle-relative paths
-        sprintf(buffer, "%s/Contents/Resources/", path);
-        return true;
-    }
-    else
-    {
-        printf("no\n");
-        return false;
-    }
-}
-#endif
-
-/** function prototypes **/
-static void parseCommandLine(int argc, char **argv);
-static int emulationThread( void *_arg );
-extern int rom_cache_system( void *_arg );
-
-
-/** threads **/
-SDL_Thread * g_EmulationThread;         // core thread handle
-SDL_Thread * g_RomCacheThread;          // rom cache thread handle
-
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
-int         g_Noask = 0;                // don't ask to force load on bad dumps
-int         g_NoaskParam = 0;           // was --noask passed at the commandline?
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
-int         g_OsdEnabled = 1;           // On Screen Display enabled?
-int         g_Fullscreen = 0;           // fullscreen enabled?
 int         g_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
 
-char        *g_GfxPlugin = NULL;        // pointer to graphics plugin specified at commandline (if any)
-char        *g_AudioPlugin = NULL;      // pointer to audio plugin specified at commandline (if any)
-char        *g_InputPlugin = NULL;      // pointer to input plugin specified at commandline (if any)
-char        *g_RspPlugin = NULL;        // pointer to rsp plugin specified at commandline (if any)
-
 /** static (local) variables **/
-static char l_ConfigDir[PATH_MAX] = {'\0'};
-static char l_InstallDir[PATH_MAX] = {'\0'};
-
-static int   l_EmuMode = 0;              // emumode specified at commandline?
 static int   l_CurrentFrame = 0;         // frame counter
-static int  *l_TestShotList = NULL;      // list of screenshots to take for regression test support
-static int   l_TestShotIdx = 0;          // index of next screenshot frame in list
-static char *l_Filename = NULL;          // filename to load & run at startup (if given at command line)
-static int   l_RomNumber = 0;            // rom number in archive (if given at command line)
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
 
 static osd_message_t *l_volMsg = NULL;
 
 /*********************************************************************************************************
-* exported gui funcs
+* helper functions
 */
-char *get_configpath()
-{
-    return l_ConfigDir;
-}
-
-char *get_installpath()
-{
-    return l_InstallDir;
-}
-
 char *get_savespath()
 {
-    static char path[PATH_MAX];
-    strncpy(path, get_configpath(), PATH_MAX-5);
-    strcat(path, "save/");
+    static char path[1024];
+
+    snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
+    path[1023] = 0;
+
+    /* make sure the directory exists */
+    if (osal_mkdirp(path, 0700) != 0)
+        return NULL;
+
     return path;
 }
 
-char *get_iconspath()
-{
-    static char path[PATH_MAX];
-    strncpy(path, get_installpath(), PATH_MAX-6);
-    strcat(path, "icons/");
-    return path;
-}
-
-char *get_iconpath(const char *iconfile)
-{
-    static char path[PATH_MAX];
-    strncpy(path, get_iconspath(), PATH_MAX-strlen(iconfile));
-    strcat(path, iconfile);
-    return path;
-}
-
-void main_message(unsigned int console, unsigned int statusbar, unsigned int osd, unsigned int osd_corner, const char *format, ...)
+void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...)
 {
     va_list ap;
     char buffer[2049];
@@ -200,22 +107,11 @@ void main_message(unsigned int console, unsigned int statusbar, unsigned int osd
     buffer[2048]='\0';
     va_end(ap);
 
-    if (g_OsdEnabled && osd)
+    /* send message to on-screen-display if enabled */
+    if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
         osd_new_message(osd_corner, buffer);
-    if (console)
-        printf("%s\n", buffer);
-}
-
-void error_message(const char *format, ...)
-{
-    va_list ap;
-    char buffer[2049];
-    va_start(ap, format);
-    vsnprintf(buffer, 2047, format, ap);
-    buffer[2048]='\0';
-    va_end(ap);
-
-    printf("%s: %s\n", tr("Error"), buffer);
+    /* send message to front-end */
+    DebugMessage(level, buffer);
 }
 
 
@@ -258,7 +154,7 @@ static int GetVILimit(void)
 static unsigned int gettimeofday_msec(void)
 {
     unsigned int foo;
-#if defined(__WIN32__)
+#if defined(WIN32)
     FILETIME ft;
     unsigned __int64 tmpres = 0;
     GetSystemTimeAsFileTime(&ft);
@@ -279,12 +175,57 @@ static unsigned int gettimeofday_msec(void)
 * global functions, for adjusting the core emulator behavior
 */
 
+void main_set_core_defaults(void)
+{
+    /* parameters controlling the operation of the core */
+    ConfigSetDefaultBool(g_CoreConfig, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False ");
+    ConfigSetDefaultBool(g_CoreConfig, "OnScreenDisplay", 1, "Draw on-screen display if True, otherwise don't draw OSD");
+    ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 1, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
+    ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
+    ConfigSetDefaultBool(g_CoreConfig, "DisableExtraMem", 0, "Disable 4MB expansion RAM pack. May be necessary for some games");
+    ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
+    ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
+    ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
+    ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
+    ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
+    ConfigSetDefaultString(g_CoreConfig, "Language", "English", "Language to use for messages from the core library");
+    /* Keyboard presses mapped to core functions */
+    ConfigSetDefaultInt(g_CoreConfig, kbdStop, SDLK_ESCAPE,          "SDL keysym for stopping the emulator");
+    ConfigSetDefaultInt(g_CoreConfig, kbdFullscreen, SDLK_LAST,      "SDL keysym for switching between fullscreen/windowed modes");
+    ConfigSetDefaultInt(g_CoreConfig, kbdSave, SDLK_F5,              "SDL keysym for saving the emulator state");
+    ConfigSetDefaultInt(g_CoreConfig, kbdLoad, SDLK_F7,              "SDL keysym for loading the emulator state");
+    ConfigSetDefaultInt(g_CoreConfig, kbdIncrement, 0,               "SDL keysym for advancing the save state slot");
+    ConfigSetDefaultInt(g_CoreConfig, kbdReset, SDLK_F9,             "SDL keysym for resetting the emulator");
+    ConfigSetDefaultInt(g_CoreConfig, kbdSpeeddown, SDLK_F10,        "SDL keysym for slowing down the emulator");
+    ConfigSetDefaultInt(g_CoreConfig, kbdSpeedup, SDLK_F11,          "SDL keysym for speeding up the emulator");
+    ConfigSetDefaultInt(g_CoreConfig, kbdScreenshot, SDLK_F12,       "SDL keysym for taking a screenshot");
+    ConfigSetDefaultInt(g_CoreConfig, kbdPause, SDLK_p,              "SDL keysym for pausing the emulator");
+    ConfigSetDefaultInt(g_CoreConfig, kbdMute, SDLK_m,               "SDL keysym for muting/unmuting the sound");
+    ConfigSetDefaultInt(g_CoreConfig, kbdIncrease, SDLK_RIGHTBRACKET,"SDL keysym for increasing the volume");
+    ConfigSetDefaultInt(g_CoreConfig, kbdDecrease, SDLK_LEFTBRACKET, "SDL keysym for decreasing the volume");
+    ConfigSetDefaultInt(g_CoreConfig, kbdForward, SDLK_f,            "SDL keysym for temporarily going really fast");
+    ConfigSetDefaultInt(g_CoreConfig, kbdAdvance, SDLK_SLASH,        "SDL keysym for advancing by one frame when paused");
+    ConfigSetDefaultInt(g_CoreConfig, kbdGameshark, SDLK_g,          "SDL keysym for pressing the game shark button");
+    /* Joystick events mapped to core functions */
+    ConfigSetDefaultString(g_CoreConfig, joyStop, "",       "Joystick event string for stopping the emulator");
+    ConfigSetDefaultString(g_CoreConfig, joyFullscreen, "", "Joystick event string for switching between fullscreen/windowed modes");
+    ConfigSetDefaultString(g_CoreConfig, joySave, "",       "Joystick event string for saving the emulator state");
+    ConfigSetDefaultString(g_CoreConfig, joyLoad, "",       "Joystick event string for loading the emulator state");
+    ConfigSetDefaultString(g_CoreConfig, joyIncrement, "",  "Joystick event string for advancing the save state slot");
+    ConfigSetDefaultString(g_CoreConfig, joyScreenshot, "", "Joystick event string for taking a screenshot");
+    ConfigSetDefaultString(g_CoreConfig, joyPause, "",      "Joystick event string for pausing the emulator");
+    ConfigSetDefaultString(g_CoreConfig, joyMute, "",       "Joystick event string for muting/unmuting the sound");
+    ConfigSetDefaultString(g_CoreConfig, joyIncrease, "",   "Joystick event string for increasing the volume");
+    ConfigSetDefaultString(g_CoreConfig, joyDecrease, "",   "Joystick event string for decreasing the volume");
+    ConfigSetDefaultString(g_CoreConfig, joyGameshark, "",  "Joystick event string for pressing the game shark button");
+}
+
 void main_speeddown(int percent)
 {
     if (l_SpeedFactor - percent > 10)  /* 10% minimum speed */
     {
         l_SpeedFactor -= percent;
-        main_message(0, 1, 1, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
     }
 }
@@ -294,14 +235,14 @@ void main_speedup(int percent)
     if (l_SpeedFactor + percent < 300) /* 300% maximum speed */
     {
         l_SpeedFactor += percent;
-        main_message(0, 1, 1, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
     }
 }
 
 void main_pause(void)
 {
-    pauseContinueEmulation();
+    pauseContinueEmulator();
     l_FrameAdvance = 0;
 }
 
@@ -313,7 +254,7 @@ void main_advance_one(void)
 
 void main_draw_volume_osd(void)
 {
-    char msgString[32];
+    char msgString[64];
     const char *volString;
 
     // if we had a volume message, make sure that it's still in the OSD list, or set it to NULL
@@ -347,109 +288,25 @@ void take_next_screenshot(void)
     g_TakeScreenshot = l_CurrentFrame + 1;
 }
 
-void startEmulation(void)
+void stopEmulator(void)
 {
-    VILimit = GetVILimit();
-    VILimitMilliseconds = (double) 1000.0/VILimit; 
-    printf("init timer!\n");
-
-    // make sure rom is loaded before running
-    if(!rom)
-    {
-        error_message(tr("There is no Rom loaded."));
+    /* note: this operation is asynchronous.  It may be called from a thread other than the
+       main emulator thread, and may return before the emulator is completely stopped */
+    if (!g_EmulatorRunning)
         return;
-    }
 
-    /* 
-    if(g_GfxPlugin)
-    {
-        gfx_plugin = plugin_name_by_filename(g_GfxPlugin);
-    }
-    else
-    {
-        gfx_plugin = plugin_name_by_filename(config_get_string("Gfx Plugin", ""));
-    }
-
-    if(!gfx_plugin)
-    {
-        error_message(tr("No graphics plugin specified."));
-        return;
-    }
-
-    if(g_AudioPlugin)
-        audio_plugin = plugin_name_by_filename(g_AudioPlugin);
-    else
-        audio_plugin = plugin_name_by_filename(config_get_string("Audio Plugin", ""));
-
-    if(!audio_plugin)
-    {
-        error_message(tr("No audio plugin specified."));
-        return;
-    }
-
-    if(g_InputPlugin)
-        input_plugin = plugin_name_by_filename(g_InputPlugin);
-    else
-        input_plugin = plugin_name_by_filename(config_get_string("Input Plugin", ""));
-
-    if(!input_plugin)
-    {
-        error_message(tr("No input plugin specified."));
-        return;
-    }
-
-    if(g_RspPlugin)
-        RSP_plugin = plugin_name_by_filename(g_RspPlugin);
-    else
-        RSP_plugin = plugin_name_by_filename(config_get_string("RSP Plugin", ""));
-
-    if(!RSP_plugin)
-    {
-        error_message(tr("No RSP plugin specified."));
-        return;
-    }
-
-    // load the plugins. Do this outside the emulation thread for GUI
-    // related things which cannot be done outside the main thread.
-    // Examples: GTK Icon theme setup in Rice which otherwise hangs forever
-    // with the Qt4 interface.
-    plugin_load_plugins(gfx_plugin, audio_plugin, input_plugin, RSP_plugin);
-    */
-
-    // in nogui mode, just start the emulator in the main thread
-    emulationThread(NULL);
-}
-
-void stopEmulation(void)
-{
-    if(g_EmulatorRunning)
-    {
-        main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Stopping emulation.\n"));
-        rompause = 0;
-        stop_it();
+    DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
+    rompause = 0;
+    stop_it();
 #ifdef DBG
-        if(debugger_mode)
-        {
-            
-            debugger_step();
-        }
-#endif        
-
-        // wait until emulation thread is done before continuing
-        if(g_EmulatorRunning)
-            SDL_WaitThread(g_EmulationThread, NULL);
-
-#ifdef __WIN32__
-        //plugin_close_plugins();
-#endif
-        g_EmulatorRunning = 0;
-        g_EmulationThread = 0;
-
-        main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Emulation stopped.\n"));
+    if(debugger_mode)
+    {
+        debugger_step();
     }
+#endif        
 }
 
-int pauseContinueEmulation(void)
+int pauseContinueEmulator(void)
 {
     static osd_message_t *msg = NULL;
 
@@ -458,7 +315,7 @@ int pauseContinueEmulation(void)
 
     if (rompause)
     {
-        main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Emulation continued.\n"));
+        DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
         if(msg)
         {
             osd_delete_message(msg);
@@ -470,7 +327,7 @@ int pauseContinueEmulation(void)
         if(msg)
             osd_delete_message(msg);
 
-        main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Paused\n"));
+        DebugMessage(M64MSG_STATUS, tr("Paused\n"));
         msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
         osd_message_set_static(msg);
     }
@@ -493,7 +350,7 @@ void video_plugin_render_callback(void)
     }
 
     // if the OSD is enabled, then draw it now
-    if (g_OsdEnabled)
+    if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
         osd_render();
     }
@@ -501,6 +358,7 @@ void video_plugin_render_callback(void)
 
 void new_frame(void)
 {
+/* fixme remove
     // take a screenshot if we need to
     if (l_TestShotList != NULL)
     {
@@ -522,6 +380,7 @@ void new_frame(void)
 
     // advance the current frame
     l_CurrentFrame++;
+*/
 }
 
 void new_vi(void)
@@ -559,7 +418,7 @@ void new_vi(void)
         time = (int)(CalculatedTime - CurrentFPSTime);
         if (time > 0)
         {
-#ifdef __WIN32__
+#ifdef WIN32
             Sleep(time);
 #else
             usleep(time * 1000);
@@ -596,7 +455,7 @@ static int sdl_event_filter( const SDL_Event *event )
     {
         // user clicked on window close button
         case SDL_QUIT:
-            stopEmulation();
+            stopEmulator();
             break;
         case SDL_KEYDOWN:
             /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
@@ -609,13 +468,13 @@ static int sdl_event_filter( const SDL_Event *event )
                 savestates_select_slot( event->key.keysym.unicode - '0' );
             }
             /* check all of the configurable commands */
-            else if (event->key.keysym.sym == config_get_number(kbdStop, SDLK_ESCAPE))
-                stopEmulation();
-            else if (event->key.keysym.sym == config_get_number(kbdFullscreen, SDLK_LAST))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdStop))
+                stopEmulator();
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdFullscreen))
                 changeWindow();
-            else if (event->key.keysym.sym == config_get_number(kbdSave, SDLK_F5))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSave))
                 savestates_job |= SAVESTATE;
-            else if (event->key.keysym.sym == config_get_number(kbdLoad, SDLK_F7))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdLoad))
             {
                 savestates_job |= LOADSTATE;
                 controllerCommand(0, StopRumble);
@@ -623,38 +482,38 @@ static int sdl_event_filter( const SDL_Event *event )
                 controllerCommand(2, StopRumble);
                 controllerCommand(3, StopRumble);
             }
-            else if (event->key.keysym.sym == config_get_number(kbdIncrement, 0))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdIncrement))
                 savestates_inc_slot();
-            else if (event->key.keysym.sym == config_get_number(kbdReset, SDLK_F9))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdReset))
             {
                 add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
                 add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
             }
-            else if (event->key.keysym.sym == config_get_number(kbdSpeeddown, SDLK_F10))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSpeeddown))
                 main_speeddown(5);
-            else if (event->key.keysym.sym == config_get_number(kbdSpeedup, SDLK_F11))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSpeedup))
                 main_speedup(5);
-            else if (event->key.keysym.sym == config_get_number(kbdScreenshot, SDLK_F12))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdScreenshot))
                 // set flag so that screenshot will be taken at the end of frame rendering
                 take_next_screenshot();
-            else if (event->key.keysym.sym == config_get_number(kbdPause, SDLK_p))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdPause))
                 main_pause();
-            else if (event->key.keysym.sym == config_get_number(kbdMute, SDLK_m))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdMute))
             {
                 volumeMute();
                 main_draw_volume_osd();
             }
-            else if (event->key.keysym.sym == config_get_number(kbdIncrease, SDLK_RIGHTBRACKET))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdIncrease))
             {
                 volumeUp();
                 main_draw_volume_osd();
             }
-            else if (event->key.keysym.sym == config_get_number(kbdDecrease, SDLK_LEFTBRACKET))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdDecrease))
             {
                 volumeDown();
                 main_draw_volume_osd();
             }
-            else if (event->key.keysym.sym == config_get_number(kbdForward, SDLK_f))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdForward))
             {
                 SavedSpeedFactor = l_SpeedFactor;
                 l_SpeedFactor = 250;
@@ -663,7 +522,7 @@ static int sdl_event_filter( const SDL_Event *event )
                 msgFF = osd_new_message(OSD_TOP_RIGHT, tr("Fast Forward"));
                 osd_message_set_static(msgFF);
             }
-            else if (event->key.keysym.sym == config_get_number(kbdAdvance, SDLK_SLASH))
+            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdAdvance))
                 main_advance_one();
             // pass all other keypresses to the input plugin
             else keyDown( 0, event->key.keysym.sym );
@@ -671,11 +530,11 @@ static int sdl_event_filter( const SDL_Event *event )
             return 0;
 
         case SDL_KEYUP:
-            if(event->key.keysym.sym == config_get_number(kbdStop, SDLK_ESCAPE))
+            if(event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdStop))
             {
                 return 0;
             }
-            else if(event->key.keysym.sym == config_get_number(kbdForward, SDLK_f))
+            else if(event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdForward))
             {
                 // cancel fast-forward
                 l_SpeedFactor = SavedSpeedFactor;
@@ -698,31 +557,31 @@ static int sdl_event_filter( const SDL_Event *event )
 
             if(!event_str) return 0;
 
-            if(strcmp(event_str, config_get_string("Joy Mapping Fullscreen", "")) == 0)
+            if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyFullscreen)) == 0)
                 changeWindow();
-            else if(strcmp(event_str, config_get_string("Joy Mapping Stop", "")) == 0)
-                stopEmulation();
-            else if(strcmp(event_str, config_get_string("Joy Mapping Pause", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyStop)) == 0)
+                stopEmulator();
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyPause)) == 0)
                 main_pause();
-            else if(strcmp(event_str, config_get_string("Joy Mapping Save State", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joySave)) == 0)
                 savestates_job |= SAVESTATE;
-            else if(strcmp(event_str, config_get_string("Joy Mapping Load State", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyLoad)) == 0)
                 savestates_job |= LOADSTATE;
-            else if(strcmp(event_str, config_get_string("Joy Mapping Increment Slot", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrement)) == 0)
                 savestates_inc_slot();
-            else if(strcmp(event_str, config_get_string("Joy Mapping Screenshot", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyScreenshot)) == 0)
                 take_next_screenshot();
-            else if(strcmp(event_str, config_get_string("Joy Mapping Mute", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyMute)) == 0)
             {
                 volumeMute();
                 main_draw_volume_osd();
             }
-            else if(strcmp(event_str, config_get_string("Joy Mapping Decrease Volume", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyDecrease)) == 0)
             {
                 volumeDown();
                 main_draw_volume_osd();
             }
-            else if(strcmp(event_str, config_get_string("Joy Mapping Increase Volume", "")) == 0)
+            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrease)) == 0)
             {
                 volumeUp();
                 main_draw_volume_osd();
@@ -739,32 +598,26 @@ static int sdl_event_filter( const SDL_Event *event )
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
-static int emulationThread( void *_arg )
+int runEmulator(void)
 {
-#if !defined(__WIN32__)
-    struct sigaction sa;
-#endif
-    const char *gfx_plugin = NULL,
-               *audio_plugin = NULL,
-           *input_plugin = NULL,
-           *RSP_plugin = NULL;
+    VILimit = GetVILimit();
+    VILimitMilliseconds = (double) 1000.0/VILimit; 
 
     g_EmulatorRunning = 1;
-    // if emu mode wasn't specified at the commandline, set from config file
-    if(!l_EmuMode)
-        dynacore = config_get_number( "Core", CORE_DYNAREC );
-#ifdef NO_ASM
-    if(dynacore==CORE_DYNAREC)
-        dynacore = CORE_INTERPRETER;
-#endif
 
-    no_compiled_jump = config_get_bool("NoCompiledJump", 0);
+    /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
+    r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
-    // init sdl
+    /* set some other core parameters based on the config file values */
+    savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
+    savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
+    no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
+
+    /* fixme this should already have been done when attaching the video plugin */
+    /* */
     SDL_Init(SDL_INIT_VIDEO);
     SDL_ShowCursor(0);
     SDL_EnableKeyRepeat(0, 0);
-
     SDL_SetEventFilter(sdl_event_filter);
     SDL_EnableUNICODE(1);
 
@@ -785,10 +638,10 @@ static int emulationThread( void *_arg )
     romOpen_input();
 
     // switch to fullscreen if enabled
-    if (g_Fullscreen)
+    if (ConfigGetParamBool(g_CoreConfig, "Fullscreen"))
         changeWindow();
 
-    if (g_OsdEnabled)
+    if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
         // init on-screen display
         void *pvPixels = NULL;
@@ -810,6 +663,7 @@ static int emulationThread( void *_arg )
 #endif // WITH_LIRC
 
 #ifdef DBG
+    /* fixme this needs some communication with front-end to work */
     if (g_DebuggerEnabled)
         init_debugger();
 #endif
@@ -834,7 +688,7 @@ static int emulationThread( void *_arg )
         destroy_debugger();
 #endif
 
-    if (g_OsdEnabled)
+    if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
         osd_exit();
     }
@@ -858,473 +712,11 @@ static int emulationThread( void *_arg )
     return 0;
 }
 
-static void printUsage(const char *progname)
-{
-    char *str = strdup(progname);
-
-    printf("Usage: %s [parameter(s)] [romfile]\n"
-           "\n"
-           "Parameters:\n"
-           "    --noask               : do not prompt user if rom file is hacked or a bad dump.\n"
-           "    --noosd               : disable onscreen display.\n"
-           "    --fullscreen          : turn fullscreen mode on.\n"
-           "    --romnumber (number)  : specify which rom in romfile, if multirom archive.\n"
-           "    --gfx (plugin-file)   : use gfx plugin given by (path)\n"
-           "    --audio (plugin-file) : use audio plugin given by (path)\n"
-           "    --input (plugin-file) : use input plugin given by (path)\n"
-           "    --rsp (plugin-file)   : use rsp plugin given by (path)\n"
-           "    --emumode (mode)      : set emu mode to: 0=Interpreter 1=DynaRec 2=Pure Interpreter\n"
-           "    --sshotdir (dir)      : set screenshot directory to (dir)\n"
-           "    --configdir (dir)     : force config dir (must contain mupen64plus.conf)\n"
-           "    --installdir (dir)    : force install dir (place to look for plugins, icons, lang, etc)\n"
-           "    --testshots (list)    : take screenshots at frames given in comma-separated (list), then quit\n"
-#ifdef DBG
-           "    --debugger            : start with debugger enabled\n"
-#endif 
-           "    -h, --help            : see this help message\n"
-           "\n", str);
-
-    free(str);
-
-    return;
-}
-
-/* parseCommandLine
- *  Parses commandline options and sets global variables accordingly
- */
-void parseCommandLine(int argc, char **argv)
-{
-    int i, shots;
-    char *str = NULL;
-
-    // option parsing vars
-    int opt, option_index;
-    enum
-    {
-        OPT_GFX = 1,
-        OPT_AUDIO,
-        OPT_INPUT,
-        OPT_RSP,
-        OPT_EMUMODE,
-        OPT_SSHOTDIR,
-        OPT_CONFIGDIR,
-        OPT_INSTALLDIR,
-#ifdef DBG
-    OPT_DEBUGGER,
-#endif
-        OPT_NOASK,
-        OPT_TESTSHOTS,
-        OPT_ROMNUMBER
-    };
-    struct option long_options[] =
-    {
-        {"noosd", no_argument, &g_OsdEnabled, 0},
-        {"fullscreen", no_argument, &g_Fullscreen, 1},
-        {"romnumber", required_argument, NULL, OPT_ROMNUMBER},
-        {"gfx", required_argument, NULL, OPT_GFX},
-        {"audio", required_argument, NULL, OPT_AUDIO},
-        {"input", required_argument, NULL, OPT_INPUT},
-        {"rsp", required_argument, NULL, OPT_RSP},
-        {"emumode", required_argument, NULL, OPT_EMUMODE},
-        {"sshotdir", required_argument, NULL, OPT_SSHOTDIR},
-        {"configdir", required_argument, NULL, OPT_CONFIGDIR},
-        {"installdir", required_argument, NULL, OPT_INSTALLDIR},
-#ifdef DBG
-        {"debugger", no_argument, NULL, OPT_DEBUGGER},
-#endif
-        {"noask", no_argument, NULL, OPT_NOASK},
-        {"testshots", required_argument, NULL, OPT_TESTSHOTS},
-        {"help", no_argument, NULL, 'h'},
-        {0, 0, 0, 0}    // last opt must be empty
-    };
-    char opt_str[] = "h";
-
-    /* parse commandline options */
-    while((opt = getopt_long(argc, argv, opt_str,
-                 long_options, &option_index)) != -1)
-    {
-        switch(opt)
-        {
-            // if getopt_long returns 0, it already set the global for us, so do nothing
-            case 0:
-                break;
-            case OPT_EMUMODE:
-                i = atoi(optarg);
-                if(i >= CORE_INTERPRETER && i <= CORE_PURE_INTERPRETER)
-                {
-                    l_EmuMode =  1;
-                    dynacore = i;
-                }
-                else
-                {
-                    printf("***Warning: Invalid Emumode: %s\n", optarg);
-                }
-                break;
-            case OPT_SSHOTDIR:
-                if(isdir(optarg))
-                    SetScreenshotDir(optarg);
-                else
-                    printf("***Warning: Screen shot directory '%s' is not accessible or not a directory.\n", optarg);
-                break;
-            case OPT_CONFIGDIR:
-                if(isdir(optarg))
-                    strncpy(l_ConfigDir, optarg, PATH_MAX);
-                else
-                    printf("***Warning: Config directory '%s' is not accessible or not a directory.\n", optarg);
-                break;
-            case OPT_INSTALLDIR:
-                if(isdir(optarg))
-                    strncpy(l_InstallDir, optarg, PATH_MAX);
-                else
-                    printf("***Warning: Install directory '%s' is not accessible or not a directory.\n", optarg);
-                break;
-            case OPT_NOASK:
-                g_Noask = g_NoaskParam = 1;
-                break;
-            case OPT_TESTSHOTS:
-                // count the number of integers in the list
-                shots = 1;
-                str = optarg;
-                while ((str = strchr(str, ',')) != NULL)
-                {
-                    str++;
-                    shots++;
-                }
-                // create a list and populate it with the frame counter values at which to take screenshots
-                if ((l_TestShotList = malloc(sizeof(int) * (shots + 1))) != NULL)
-                {
-                    int idx = 0;
-                    str = optarg;
-                    while (str != NULL)
-                    {
-                        l_TestShotList[idx++] = atoi(str);
-                        str = strchr(str, ',');
-                        if (str != NULL) str++;
-                    }
-                    l_TestShotList[idx] = 0;
-                }
-                break;
-#ifdef DBG
-            case OPT_DEBUGGER:
-                g_DebuggerEnabled = 1;
-                break;
-#endif
-            case OPT_ROMNUMBER:
-                l_RomNumber = atoi(optarg);
-                break;
-            // print help
-            case 'h':
-            case '?':
-            default:
-                printUsage(argv[0]);
-                exit(1);
-                break;
-        }
-    }
-
-    // if there are still parameters left after option parsing, assume it's the rom filename
-    if(optind < argc)
-    {
-        l_Filename = argv[optind];
-    }
-
-}
-
-/** setPaths
- *  setup paths to config/install/screenshot directories. The config dir is the dir where all
- *  user config information is stored, e.g. mupen64plus.conf, save files, and plugin conf files.
- *  The install dir is where mupen64plus looks for common files, e.g. plugins, icons, language
- *  translation files.
- */
-static void setPaths(void)
-{
-#ifdef __WIN32__
-    strncpy(l_ConfigDir, "./", PATH_MAX);
-    strncpy(l_InstallDir, "./", PATH_MAX);
-    return;
-#else
-    char buf[PATH_MAX], buf2[PATH_MAX];
-
-    // if the config dir was not specified at the commandline, look for ~/.mupen64plus dir
-    if (strlen(l_ConfigDir) == 0)
-    {
-        strncpy(l_ConfigDir, getenv("HOME"), PATH_MAX);
-        strncat(l_ConfigDir, "/.mupen64plus", PATH_MAX - strlen(l_ConfigDir));
-
-        // if ~/.mupen64plus dir is not found, create it
-        if(!isdir(l_ConfigDir))
-        {
-            printf("Creating %s to store user data\n", l_ConfigDir);
-            if(mkdir(l_ConfigDir, (mode_t)0755) != 0)
-            {
-                printf("Error: Could not create %s: ", l_ConfigDir);
-                perror(NULL);
-                exit(errno);
-            }
-
-            // create save subdir
-            strncpy(buf, l_ConfigDir, PATH_MAX);
-            strncat(buf, "/save", PATH_MAX - strlen(buf));
-            if(mkdir(buf, (mode_t)0755) != 0)
-            {
-                // report error, but don't exit
-                printf("Warning: Could not create %s: %s", buf, strerror(errno));
-            }
-
-            // create screenshots subdir
-            strncpy(buf, l_ConfigDir, PATH_MAX);
-            strncat(buf, "/screenshots", PATH_MAX - strlen(buf));
-            if(mkdir(buf, (mode_t)0755) != 0)
-            {
-                // report error, but don't exit
-                printf("Warning: Could not create %s: %s", buf, strerror(errno));
-            }
-        }
-    }
-
-    // make sure config dir has a '/' on the end.
-    if(l_ConfigDir[strlen(l_ConfigDir)-1] != '/')
-        strncat(l_ConfigDir, "/", PATH_MAX - strlen(l_ConfigDir));
-
-    // if install dir was not specified at the commandline, look for it in the executable's directory
-    if (strlen(l_InstallDir) == 0)
-    {
-#ifdef __APPLE__
-        macSetBundlePath(buf);
-        strncpy(l_InstallDir, buf, PATH_MAX);
-        strncat(buf, "/config/mupen64plus.conf", PATH_MAX - strlen(buf));
-#else
-        buf[0] = '\0';
-        int n = readlink("/proc/self/exe", buf, PATH_MAX);
-        if (n > 0)
-        {
-            buf[n] = '\0';
-            dirname(buf);
-            strncpy(l_InstallDir, buf, PATH_MAX);
-            strncat(buf, "/config/mupen64plus.conf", PATH_MAX - strlen(buf));
-        }
-#endif
-        // if it's not in the executable's directory, try a couple of default locations
-        if (buf[0] == '\0' || !isfile(buf))
-        {
-            strcpy(l_InstallDir, "/usr/local/share/mupen64plus");
-            strcpy(buf, l_InstallDir);
-            strcat(buf, "/config/mupen64plus.conf");
-            if (!isfile(buf))
-            {
-                strcpy(l_InstallDir, "/usr/share/mupen64plus");
-                strcpy(buf, l_InstallDir);
-                strcat(buf, "/config/mupen64plus.conf");
-                // if install dir is not in the default locations, try the same dir as the binary
-                if (!isfile(buf))
-                {
-                    // try cwd as last resort
-                    getcwd(l_InstallDir, PATH_MAX);
-                }
-            }
-        }
-    }
-
-    // make sure install dir has a '/' on the end.
-    if(l_InstallDir[strlen(l_InstallDir)-1] != '/')
-        strncat(l_InstallDir, "/", PATH_MAX - strlen(l_InstallDir));
-
-    // make sure install dir is valid
-    strncpy(buf, l_InstallDir, PATH_MAX);
-    strncat(buf, "config/mupen64plus.conf", PATH_MAX - strlen(buf));
-    if(!isfile(buf))
-    {
-        printf("Could not locate valid install directory\n");
-        exit(1);
-    }
-
-    // check user config dir for mupen64plus.conf file. If it's not there, copy all
-    // config files from install dir over to user dir.
-    strncpy(buf, l_ConfigDir, PATH_MAX);
-    strncat(buf, "mupen64plus.conf", PATH_MAX - strlen(buf));
-    if(!isfile(buf))
-    {
-        DIR *dir;
-        struct dirent *entry;
-
-        strncpy(buf, l_InstallDir, PATH_MAX);
-        strncat(buf, "config", PATH_MAX - strlen(buf));
-        dir = opendir(buf);
-
-        // should never hit this error because of previous checks
-        if(!dir)
-        {
-            perror(buf);
-            return;
-        }
-
-        while((entry = readdir(dir)) != NULL)
-        {
-            strncpy(buf, l_InstallDir, PATH_MAX);
-            strncat(buf, "config/", PATH_MAX - strlen(buf));
-            strncat(buf, entry->d_name, PATH_MAX - strlen(buf));
-
-            // only copy regular files
-            if(isfile(buf))
-            {
-                strncpy(buf2, l_ConfigDir, PATH_MAX);
-                strncat(buf2, entry->d_name, PATH_MAX - strlen(buf2));
-
-                printf("Copying %s to %s\n", buf, l_ConfigDir);
-                if(copyfile(buf, buf2) != 0)
-                    printf("Error copying file\n");
-            }
-        }
-
-        closedir(dir);
-    }
-
-    // set screenshot dir if it wasn't specified by the user
-    if (!ValidScreenshotDir())
-    {
-        char chDefaultDir[PATH_MAX + 1];
-        snprintf(chDefaultDir, PATH_MAX, "%sscreenshots/", l_ConfigDir);
-        SetScreenshotDir(chDefaultDir);
-    }
-#endif /* __WIN32__ */
-}
-
 /*********************************************************************************************************
 * main function
 */
 int main(int argc, char *argv[])
 {
-    char dirpath[PATH_MAX];
-    int i;
-    int retval = EXIT_SUCCESS;
-    printf(" __  __                         __   _  _   ____  _             \n");  
-    printf("|  \\/  |_   _ _ __   ___ _ __  / /_ | || | |  _ \\| |_   _ ___ \n");
-    printf("| |\\/| | | | | '_ \\ / _ \\ '_ \\| '_ \\| || |_| |_) | | | | / __|  \n");
-    printf("| |  | | |_| | |_) |  __/ | | | (_) |__   _|  __/| | |_| \\__ \\  \n");
-    printf("|_|  |_|\\__,_| .__/ \\___|_| |_|\\___/   |_| |_|   |_|\\__,_|___/  \n");
-    printf("             |_|         http://code.google.com/p/mupen64plus/  \n");
-    printf("Version %i.%i.%i\n\n", VERSION_PRINTF_SPLIT(MUPEN_CORE_VERSION));
-
-    parseCommandLine(argc, argv);
-    setPaths();
-    config_read();
-
-    // init multi-language support
-    tr_init();
-
-    cheat_read_config();
-
-    // try to get plugin folder path from the mupen64plus config file (except on mac where app bundles may be used)
-    strncpy(dirpath, config_get_string("PluginDirectory", ""), PATH_MAX-1);
-        
-    dirpath[PATH_MAX-1] = '\0';
-    // if it's not set in the config file, use the /plugins/ sub-folder of the installation directory
-    if (strlen(dirpath) < 2)
-    {
-        strncpy(dirpath, l_InstallDir, PATH_MAX);
-        strncat(dirpath, "plugins/", PATH_MAX - strlen(dirpath));
-        dirpath[PATH_MAX-1] = '\0';
-    }
-    // scan the plugin directory and set the config dir for the plugins
-    //plugin_scan_directory(dirpath);
-    //plugin_set_dirs(l_ConfigDir, l_InstallDir);
-
-    // must be called after building gui
-    // look for plugins in the install dir and set plugin config dir
-    savestates_set_autoinc_slot(config_get_bool("AutoIncSaveSlot", 0));
-
-    if((i=config_get_number("CurrentSaveSlot",10))!=10)
-    {
-        savestates_select_slot((unsigned int)i);
-    }
-    else
-    {
-        config_put_number("CurrentSaveSlot",0);
-    }
-
-    main_message(1, 0, 0, 0, tr("Config Dir:  %s\nInstall Dir: %s\nPlugin Dir:  %s\n"), l_ConfigDir, l_InstallDir, dirpath);
-    main_message(0, 1, 0, 0, tr("Config Dir: \"%s\", Install Dir: \"%s\", Plugin Dir:  \"%s\""), l_ConfigDir, l_InstallDir, dirpath);
-
-    //The database needs to be opened regardless of GUI mode.
-    romdatabase_open();
-
-    // if rom file was specified, run it
-    if (!l_Filename)
-    {
-        error_message("Rom file must be specified in nogui mode.");
-        printUsage(argv[0]);
-        retval = 1;
-    }
-    else
-    {
-        if (open_rom(l_Filename, l_RomNumber) >= 0)
-        {
-            startEmulation();
-        }
-        else
-        {
-            retval = 1;
-        }
-    }
-
-    // free allocated memory
-    if (l_TestShotList != NULL)
-        free(l_TestShotList);
-
-    // cleanup and exit
-    config_write();
-
-/**  Disabling as it seems to be causing some problems
- * Maybe some of the "objects are already deleted?
- * Is it required? Cheats should be saved when clicking OK in
- * The cheats dialog.
-**/
-//    cheat_write_config();
-    cheat_delete_all();
-
-    romdatabase_close();
-    //plugin_delete_list();
-    tr_delete_languages();
-    config_delete();
-
-    return retval;
+    return 1;
 }
-
-#ifdef __WIN32__
-
-static const char* programName = "mupen64plus.exe";
-
-int APIENTRY WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParamarg, int cmdShow)
-{
-    list_t arguments = NULL;
-    list_node_t*  node = NULL;
-    int i = 0;
-    char* arg = NULL;
-    char* wrk = NULL;
-    char** argv = NULL;
-
-    g_ProgramInstance = instance;
-    
-    wrk = malloc(strlen(programName) + 1);
-    strcpy(wrk, programName);
-    list_append(&arguments, wrk);
-    
-    for (arg = strtok(cmdParamarg, " ");
-         arg != NULL;
-         arg = strtok(NULL, " "))
-    {
-        wrk = malloc(strlen(arg) + 1);
-        strcpy(wrk, arg);
-        list_append(&arguments, arg);
-    }
-    
-    argv = malloc(list_length(arguments) + 1 * sizeof(char*));
-    list_foreach(arguments, node)
-    {
-        argv[i++] = node->data;
-    }
-    
-    return main(i, argv);
-}
-#endif
 

@@ -31,11 +31,21 @@
 
 #include "main/main.h"
 #include "main/version.h"
+#include "plugin/plugin.h"
 
+/* some local state variables */
+static int l_CoreInit = 0;
+static int l_ROMOpen = 0;
+static int l_EmuRunning = 0;
+
+/* functions exported outside of libmupen64plus to front-end application */
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
                                    void (*StateCallback)(void *, m64p_core_param, int))
 {
+    if (l_CoreInit)
+        return M64ERR_ALREADY_INIT;
+
     /* very first thing is to set the callback function for debug info */
     SetDebugCallback(DebugCallback, Context);
 
@@ -54,61 +64,118 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, void 
     /* set default configuration parameter values for Core */
     if (ConfigOpenSection("Core", &g_CoreConfig) != M64ERR_SUCCESS || g_CoreConfig == NULL)
         return M64ERR_INTERNAL;
+    main_set_core_defaults();
 
-    ConfigSetDefaultBool(g_CoreConfig, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False ");
-    ConfigSetDefaultBool(g_CoreConfig, "OnScreenDisplay", 1, "Draw on-screen display if True, otherwise don't draw OSD");
-    ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 1, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
-    ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
-    ConfigSetDefaultBool(g_CoreConfig, "DisableExtraMem", 0, "Disable 4MB expansion RAM pack. May be necessary for some games");
-    ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
-    ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
-    ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
-    ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
+    /* set up multi-language support */
+    tr_init();
 
+    /* The ROM database contains MD5 hashes, goodnames, and some game-specific parameters */
+    romdatabase_open();
+
+    l_CoreInit = 1;
     return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL CoreShutdown(void)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
+    /* close down some core sub-systems */
+    cheat_delete_all(); /* fixme: should this be somewhere else? */
+    romdatabase_close();
+    tr_delete_languages();
 
     /* lastly, shut down the configuration code */
     ConfigShutdown();
 
-    return M64ERR_INTERNAL;
+    l_CoreInit = 0;
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL CoreAttachPlugin(m64p_plugin_type PluginType, m64p_dynlib_handle PluginLibHandle)
 {
-    return M64ERR_INTERNAL;
+    m64p_error rval;
+
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
+    rval = plugin_connect(PluginType, PluginLibHandle);
+    if (rval != M64ERR_SUCCESS)
+        return rval;
+
+    rval = plugin_start(PluginType);
+    if (rval != M64ERR_SUCCESS)
+        return rval;
+
+    return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL CoreDetachPlugin(m64p_plugin_type PluginType)
 {
-    return M64ERR_INTERNAL;
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
+    return plugin_connect(PluginType, NULL);
 }
 
 EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *ParamPtr)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
+    switch(Command)
+    {
+        case M64CMD_NOP:
+            return M64ERR_SUCCESS;
+        case M64CMD_ROM_OPEN:
+        case M64CMD_ROM_CLOSE:
+        case M64CMD_ROM_GET_HEADER:
+        case M64CMD_ROM_GET_SETTINGS:
+        case M64CMD_EXECUTE:
+        case M64CMD_STOP:
+        case M64CMD_PAUSE:
+        case M64CMD_RESUME:
+        case M64CMD_CORE_STATE_QUERY:
+        case M64CMD_SEND_SDL_KEYDOWN:
+        case M64CMD_SEND_SDL_KEYUP:
+        case M64CMD_SET_FRAME_CALLBACK:
+        default:
+            return M64ERR_INPUT_INVALID;
+    }
+
     return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreOverrideVidExt(m64p_video_extension_functions *VideoFunctionStruct)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
     return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *CodeList, int NumCodes)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
     return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreRemoveCheat(const char *CheatName)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
     return M64ERR_INTERNAL;
 }
 
 EXPORT m64p_error CALL CoreRemoveAllCheats(void)
 {
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+
     return M64ERR_INTERNAL;
 }
 

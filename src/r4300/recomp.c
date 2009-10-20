@@ -60,19 +60,19 @@ static int delay_slot_compiled = 0;
 static void RSV()
 {
    dst->ops = RESERVED;
-   if (dynacore) genreserved();
+   if (r4300emu == CORE_DYNAREC) genreserved();
 }
 
 static void RFIN_BLOCK()
 {
    dst->ops = FIN_BLOCK;
-   if (dynacore) genfin_block();
+   if (r4300emu == CORE_DYNAREC) genfin_block();
 }
 
 static void RNOTCOMPILED()
 {
    dst->ops = NOTCOMPILED;
-   if (dynacore) gennotcompiled();
+   if (r4300emu == CORE_DYNAREC) gennotcompiled();
 }
 
 static void recompile_standard_i_type()
@@ -116,7 +116,7 @@ static void recompile_standard_cf_type()
 static void RNOP()
 {
    dst->ops = NOP;
-   if (dynacore) gennop();
+   if (r4300emu == CORE_DYNAREC) gennop();
 }
 
 static void RSLL()
@@ -124,7 +124,7 @@ static void RSLL()
    dst->ops = SLL;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensll();
+   else if (r4300emu == CORE_DYNAREC) gensll();
 }
 
 static void RSRL()
@@ -132,7 +132,7 @@ static void RSRL()
    dst->ops = SRL;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensrl();
+   else if (r4300emu == CORE_DYNAREC) gensrl();
 }
 
 static void RSRA()
@@ -140,7 +140,7 @@ static void RSRA()
    dst->ops = SRA;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensra();
+   else if (r4300emu == CORE_DYNAREC) gensra();
 }
 
 static void RSLLV()
@@ -148,7 +148,7 @@ static void RSLLV()
    dst->ops = SLLV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensllv();
+   else if (r4300emu == CORE_DYNAREC) gensllv();
 }
 
 static void RSRLV()
@@ -156,7 +156,7 @@ static void RSRLV()
    dst->ops = SRLV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensrlv();
+   else if (r4300emu == CORE_DYNAREC) gensrlv();
 }
 
 static void RSRAV()
@@ -164,39 +164,39 @@ static void RSRAV()
    dst->ops = SRAV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensrav();
+   else if (r4300emu == CORE_DYNAREC) gensrav();
 }
 
 static void RJR()
 {
    dst->ops = JR;
    recompile_standard_i_type();
-   if (dynacore) genjr();
+   if (r4300emu == CORE_DYNAREC) genjr();
 }
 
 static void RJALR()
 {
    dst->ops = JALR;
    recompile_standard_r_type();
-   if (dynacore) genjalr();
+   if (r4300emu == CORE_DYNAREC) genjalr();
 }
 
 static void RSYSCALL()
 {
    dst->ops = SYSCALL;
-   if (dynacore) gensyscall();
+   if (r4300emu == CORE_DYNAREC) gensyscall();
 }
 
 static void RBREAK()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RSYNC()
 {
    dst->ops = SYNC;
-   if (dynacore) gensync();
+   if (r4300emu == CORE_DYNAREC) gensync();
 }
 
 static void RMFHI()
@@ -204,14 +204,14 @@ static void RMFHI()
    dst->ops = MFHI;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genmfhi();
+   else if (r4300emu == CORE_DYNAREC) genmfhi();
 }
 
 static void RMTHI()
 {
    dst->ops = MTHI;
    recompile_standard_r_type();
-   if (dynacore) genmthi();
+   if (r4300emu == CORE_DYNAREC) genmthi();
 }
 
 static void RMFLO()
@@ -219,14 +219,14 @@ static void RMFLO()
    dst->ops = MFLO;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genmflo();
+   else if (r4300emu == CORE_DYNAREC) genmflo();
 }
 
 static void RMTLO()
 {
    dst->ops = MTLO;
    recompile_standard_r_type();
-   if (dynacore) genmtlo();
+   if (r4300emu == CORE_DYNAREC) genmtlo();
 }
 
 static void RDSLLV()
@@ -234,7 +234,7 @@ static void RDSLLV()
    dst->ops = DSLLV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsllv();
+   else if (r4300emu == CORE_DYNAREC) gendsllv();
 }
 
 static void RDSRLV()
@@ -242,7 +242,7 @@ static void RDSRLV()
    dst->ops = DSRLV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsrlv();
+   else if (r4300emu == CORE_DYNAREC) gendsrlv();
 }
 
 static void RDSRAV()
@@ -250,63 +250,63 @@ static void RDSRAV()
    dst->ops = DSRAV;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsrav();
+   else if (r4300emu == CORE_DYNAREC) gendsrav();
 }
 
 static void RMULT()
 {
    dst->ops = MULT;
    recompile_standard_r_type();
-   if (dynacore) genmult();
+   if (r4300emu == CORE_DYNAREC) genmult();
 }
 
 static void RMULTU()
 {
    dst->ops = MULTU;
    recompile_standard_r_type();
-   if (dynacore) genmultu();
+   if (r4300emu == CORE_DYNAREC) genmultu();
 }
 
 static void RDIV()
 {
    dst->ops = DIV;
    recompile_standard_r_type();
-   if (dynacore) gendiv();
+   if (r4300emu == CORE_DYNAREC) gendiv();
 }
 
 static void RDIVU()
 {
    dst->ops = DIVU;
    recompile_standard_r_type();
-   if (dynacore) gendivu();
+   if (r4300emu == CORE_DYNAREC) gendivu();
 }
 
 static void RDMULT()
 {
    dst->ops = DMULT;
    recompile_standard_r_type();
-   if (dynacore) gendmult();
+   if (r4300emu == CORE_DYNAREC) gendmult();
 }
 
 static void RDMULTU()
 {
    dst->ops = DMULTU;
    recompile_standard_r_type();
-   if (dynacore) gendmultu();
+   if (r4300emu == CORE_DYNAREC) gendmultu();
 }
 
 static void RDDIV()
 {
    dst->ops = DDIV;
    recompile_standard_r_type();
-   if (dynacore) genddiv();
+   if (r4300emu == CORE_DYNAREC) genddiv();
 }
 
 static void RDDIVU()
 {
    dst->ops = DDIVU;
    recompile_standard_r_type();
-   if (dynacore) genddivu();
+   if (r4300emu == CORE_DYNAREC) genddivu();
 }
 
 static void RADD()
@@ -314,7 +314,7 @@ static void RADD()
    dst->ops = ADD;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genadd();
+   else if (r4300emu == CORE_DYNAREC) genadd();
 }
 
 static void RADDU()
@@ -322,7 +322,7 @@ static void RADDU()
    dst->ops = ADDU;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genaddu();
+   else if (r4300emu == CORE_DYNAREC) genaddu();
 }
 
 static void RSUB()
@@ -330,7 +330,7 @@ static void RSUB()
    dst->ops = SUB;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   if (dynacore) gensub();
+   if (r4300emu == CORE_DYNAREC) gensub();
 }
 
 static void RSUBU()
@@ -338,7 +338,7 @@ static void RSUBU()
    dst->ops = SUBU;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensubu();
+   else if (r4300emu == CORE_DYNAREC) gensubu();
 }
 
 static void RAND()
@@ -346,7 +346,7 @@ static void RAND()
    dst->ops = AND;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genand();
+   else if (r4300emu == CORE_DYNAREC) genand();
 }
 
 static void ROR()
@@ -354,7 +354,7 @@ static void ROR()
    dst->ops = OR;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genor();
+   else if (r4300emu == CORE_DYNAREC) genor();
 }
 
 static void RXOR()
@@ -362,7 +362,7 @@ static void RXOR()
    dst->ops = XOR;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genxor();
+   else if (r4300emu == CORE_DYNAREC) genxor();
 }
 
 static void RNOR()
@@ -370,7 +370,7 @@ static void RNOR()
    dst->ops = NOR;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   if (dynacore) gennor();
+   if (r4300emu == CORE_DYNAREC) gennor();
 }
 
 static void RSLT()
@@ -378,7 +378,7 @@ static void RSLT()
    dst->ops = SLT;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   else if (dynacore) genslt();
+   else if (r4300emu == CORE_DYNAREC) genslt();
 }
 
 static void RSLTU()
@@ -386,7 +386,7 @@ static void RSLTU()
    dst->ops = SLTU;
    recompile_standard_r_type();
    if(dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gensltu();
+   else if (r4300emu == CORE_DYNAREC) gensltu();
 }
 
 static void RDADD()
@@ -394,7 +394,7 @@ static void RDADD()
    dst->ops = DADD;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendadd();
+   else if (r4300emu == CORE_DYNAREC) gendadd();
 }
 
 static void RDADDU()
@@ -402,7 +402,7 @@ static void RDADDU()
    dst->ops = DADDU;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendaddu();
+   else if (r4300emu == CORE_DYNAREC) gendaddu();
 }
 
 static void RDSUB()
@@ -410,7 +410,7 @@ static void RDSUB()
    dst->ops = DSUB;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsub();
+   else if (r4300emu == CORE_DYNAREC) gendsub();
 }
 
 static void RDSUBU()
@@ -418,44 +418,44 @@ static void RDSUBU()
    dst->ops = DSUBU;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsubu();
+   else if (r4300emu == CORE_DYNAREC) gendsubu();
 }
 
 static void RTGE()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTGEU()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTLT()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTLTU()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTEQ()
 {
    dst->ops = TEQ;
    recompile_standard_r_type();
-   if (dynacore) genteq();
+   if (r4300emu == CORE_DYNAREC) genteq();
 }
 
 static void RTNE()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RDSLL()
@@ -463,7 +463,7 @@ static void RDSLL()
    dst->ops = DSLL;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsll();
+   else if (r4300emu == CORE_DYNAREC) gendsll();
 }
 
 static void RDSRL()
@@ -471,7 +471,7 @@ static void RDSRL()
    dst->ops = DSRL;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsrl();
+   else if (r4300emu == CORE_DYNAREC) gendsrl();
 }
 
 static void RDSRA()
@@ -479,7 +479,7 @@ static void RDSRA()
    dst->ops = DSRA;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsra();
+   else if (r4300emu == CORE_DYNAREC) gendsra();
 }
 
 static void RDSLL32()
@@ -487,7 +487,7 @@ static void RDSLL32()
    dst->ops = DSLL32;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsll32();
+   else if (r4300emu == CORE_DYNAREC) gendsll32();
 }
 
 static void RDSRL32()
@@ -495,7 +495,7 @@ static void RDSRL32()
    dst->ops = DSRL32;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsrl32();
+   else if (r4300emu == CORE_DYNAREC) gendsrl32();
 }
 
 static void RDSRA32()
@@ -503,7 +503,7 @@ static void RDSRA32()
    dst->ops = DSRA32;
    recompile_standard_r_type();
    if (dst->f.r.rd == reg) RNOP();
-   else if (dynacore) gendsra32();
+   else if (r4300emu == CORE_DYNAREC) gendsra32();
 }
 
 static void (*recomp_special[64])(void) =
@@ -533,16 +533,16 @@ static void RBLTZ()
     if (check_nop)
       {
          dst->ops = BLTZ_IDLE;
-         if (dynacore) genbltz_idle();
+         if (r4300emu == CORE_DYNAREC) genbltz_idle();
       }
-    else if (dynacore) genbltz();
+    else if (r4300emu == CORE_DYNAREC) genbltz();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLTZ_OUT;
-    if (dynacore) genbltz_out();
+    if (r4300emu == CORE_DYNAREC) genbltz_out();
      }
-   else if (dynacore) genbltz();
+   else if (r4300emu == CORE_DYNAREC) genbltz();
 }
 
 static void RBGEZ()
@@ -556,16 +556,16 @@ static void RBGEZ()
     if (check_nop)
       {
          dst->ops = BGEZ_IDLE;
-         if (dynacore) genbgez_idle();
+         if (r4300emu == CORE_DYNAREC) genbgez_idle();
       }
-    else if (dynacore) genbgez();
+    else if (r4300emu == CORE_DYNAREC) genbgez();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGEZ_OUT;
-    if (dynacore) genbgez_out();
+    if (r4300emu == CORE_DYNAREC) genbgez_out();
      }
-   else if (dynacore) genbgez();
+   else if (r4300emu == CORE_DYNAREC) genbgez();
 }
 
 static void RBLTZL()
@@ -579,16 +579,16 @@ static void RBLTZL()
     if (check_nop)
       {
          dst->ops = BLTZL_IDLE;
-         if (dynacore) genbltzl_idle();
+         if (r4300emu == CORE_DYNAREC) genbltzl_idle();
       }
-    else if (dynacore) genbltzl();
+    else if (r4300emu == CORE_DYNAREC) genbltzl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLTZL_OUT;
-    if (dynacore) genbltzl_out();
+    if (r4300emu == CORE_DYNAREC) genbltzl_out();
      }
-   else if (dynacore) genbltzl();
+   else if (r4300emu == CORE_DYNAREC) genbltzl();
 }
 
 static void RBGEZL()
@@ -602,52 +602,52 @@ static void RBGEZL()
     if (check_nop)
       {
          dst->ops = BGEZL_IDLE;
-         if (dynacore) genbgezl_idle();
+         if (r4300emu == CORE_DYNAREC) genbgezl_idle();
       }
-    else if (dynacore) genbgezl();
+    else if (r4300emu == CORE_DYNAREC) genbgezl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGEZL_OUT;
-    if (dynacore) genbgezl_out();
+    if (r4300emu == CORE_DYNAREC) genbgezl_out();
      }
-   else if (dynacore) genbgezl();
+   else if (r4300emu == CORE_DYNAREC) genbgezl();
 }
 
 static void RTGEI()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTGEIU()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTLTI()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTLTIU()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTEQI()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RTNEI()
 {
    dst->ops = NI;
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RBLTZAL()
@@ -661,16 +661,16 @@ static void RBLTZAL()
     if (check_nop)
       {
          dst->ops = BLTZAL_IDLE;
-         if (dynacore) genbltzal_idle();
+         if (r4300emu == CORE_DYNAREC) genbltzal_idle();
       }
-    else if (dynacore) genbltzal();
+    else if (r4300emu == CORE_DYNAREC) genbltzal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLTZAL_OUT;
-    if (dynacore) genbltzal_out();
+    if (r4300emu == CORE_DYNAREC) genbltzal_out();
      }
-   else if (dynacore) genbltzal();
+   else if (r4300emu == CORE_DYNAREC) genbltzal();
 }
 
 static void RBGEZAL()
@@ -684,16 +684,16 @@ static void RBGEZAL()
     if (check_nop)
       {
          dst->ops = BGEZAL_IDLE;
-         if (dynacore) genbgezal_idle();
+         if (r4300emu == CORE_DYNAREC) genbgezal_idle();
       }
-    else if (dynacore) genbgezal();
+    else if (r4300emu == CORE_DYNAREC) genbgezal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGEZAL_OUT;
-    if (dynacore) genbgezal_out();
+    if (r4300emu == CORE_DYNAREC) genbgezal_out();
      }
-   else if (dynacore) genbgezal();
+   else if (r4300emu == CORE_DYNAREC) genbgezal();
 }
 
 static void RBLTZALL()
@@ -707,16 +707,16 @@ static void RBLTZALL()
     if (check_nop)
       {
          dst->ops = BLTZALL_IDLE;
-         if (dynacore) genbltzall_idle();
+         if (r4300emu == CORE_DYNAREC) genbltzall_idle();
       }
-    else if (dynacore) genbltzall();
+    else if (r4300emu == CORE_DYNAREC) genbltzall();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLTZALL_OUT;
-    if (dynacore) genbltzall_out();
+    if (r4300emu == CORE_DYNAREC) genbltzall_out();
      }
-   else if (dynacore) genbltzall();
+   else if (r4300emu == CORE_DYNAREC) genbltzall();
 }
 
 static void RBGEZALL()
@@ -730,16 +730,16 @@ static void RBGEZALL()
     if (check_nop)
       {
          dst->ops = BGEZALL_IDLE;
-         if (dynacore) genbgezall_idle();
+         if (r4300emu == CORE_DYNAREC) genbgezall_idle();
       }
-    else if (dynacore) genbgezall();
+    else if (r4300emu == CORE_DYNAREC) genbgezall();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGEZALL_OUT;
-    if (dynacore) genbgezall_out();
+    if (r4300emu == CORE_DYNAREC) genbgezall_out();
      }
-   else if (dynacore) genbgezall();
+   else if (r4300emu == CORE_DYNAREC) genbgezall();
 }
 
 static void (*recomp_regimm[32])(void) =
@@ -757,31 +757,31 @@ static void (*recomp_regimm[32])(void) =
 static void RTLBR()
 {
    dst->ops = TLBR;
-   if (dynacore) gentlbr();
+   if (r4300emu == CORE_DYNAREC) gentlbr();
 }
 
 static void RTLBWI()
 {
    dst->ops = TLBWI;
-   if (dynacore) gentlbwi();
+   if (r4300emu == CORE_DYNAREC) gentlbwi();
 }
 
 static void RTLBWR()
 {
    dst->ops = TLBWR;
-   if (dynacore) gentlbwr();
+   if (r4300emu == CORE_DYNAREC) gentlbwr();
 }
 
 static void RTLBP()
 {
    dst->ops = TLBP;
-   if (dynacore) gentlbp();
+   if (r4300emu == CORE_DYNAREC) gentlbp();
 }
 
 static void RERET()
 {
    dst->ops = ERET;
-   if (dynacore) generet();
+   if (r4300emu == CORE_DYNAREC) generet();
 }
 
 static void (*recomp_tlb[64])(void) =
@@ -807,7 +807,7 @@ static void RMFC0()
    dst->f.r.rd = (long long*)(reg_cop0 + ((src >> 11) & 0x1F));
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == reg) RNOP();
-   else if (dynacore) genmfc0();
+   else if (r4300emu == CORE_DYNAREC) genmfc0();
 }
 
 static void RMTC0()
@@ -815,7 +815,7 @@ static void RMTC0()
    dst->ops = MTC0;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dynacore) genmtc0();
+   if (r4300emu == CORE_DYNAREC) genmtc0();
 }
 
 static void RTLB()
@@ -846,16 +846,16 @@ static void RBC1F()
     if (check_nop)
       {
          dst->ops = BC1F_IDLE;
-         if (dynacore) genbc1f_idle();
+         if (r4300emu == CORE_DYNAREC) genbc1f_idle();
       }
-    else if (dynacore) genbc1f();
+    else if (r4300emu == CORE_DYNAREC) genbc1f();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BC1F_OUT;
-    if (dynacore) genbc1f_out();
+    if (r4300emu == CORE_DYNAREC) genbc1f_out();
      }
-   else if (dynacore) genbc1f();
+   else if (r4300emu == CORE_DYNAREC) genbc1f();
 }
 
 static void RBC1T()
@@ -869,16 +869,16 @@ static void RBC1T()
     if (check_nop)
       {
          dst->ops = BC1T_IDLE;
-         if (dynacore) genbc1t_idle();
+         if (r4300emu == CORE_DYNAREC) genbc1t_idle();
       }
-    else if (dynacore) genbc1t();
+    else if (r4300emu == CORE_DYNAREC) genbc1t();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BC1T_OUT;
-    if (dynacore) genbc1t_out();
+    if (r4300emu == CORE_DYNAREC) genbc1t_out();
      }
-   else if (dynacore) genbc1t();
+   else if (r4300emu == CORE_DYNAREC) genbc1t();
 }
 
 static void RBC1FL()
@@ -892,16 +892,16 @@ static void RBC1FL()
     if (check_nop)
       {
          dst->ops = BC1FL_IDLE;
-         if (dynacore) genbc1fl_idle();
+         if (r4300emu == CORE_DYNAREC) genbc1fl_idle();
       }
-    else if (dynacore) genbc1fl();
+    else if (r4300emu == CORE_DYNAREC) genbc1fl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BC1FL_OUT;
-    if (dynacore) genbc1fl_out();
+    if (r4300emu == CORE_DYNAREC) genbc1fl_out();
      }
-   else if (dynacore) genbc1fl();
+   else if (r4300emu == CORE_DYNAREC) genbc1fl();
 }
 
 static void RBC1TL()
@@ -915,16 +915,16 @@ static void RBC1TL()
     if (check_nop)
       {
          dst->ops = BC1TL_IDLE;
-         if (dynacore) genbc1tl_idle();
+         if (r4300emu == CORE_DYNAREC) genbc1tl_idle();
       }
-    else if (dynacore) genbc1tl();
+    else if (r4300emu == CORE_DYNAREC) genbc1tl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BC1TL_OUT;
-    if (dynacore) genbc1tl_out();
+    if (r4300emu == CORE_DYNAREC) genbc1tl_out();
      }
-   else if (dynacore) genbc1tl();
+   else if (r4300emu == CORE_DYNAREC) genbc1tl();
 }
 
 static void (*recomp_bc[4])(void) =
@@ -941,245 +941,245 @@ static void RADD_S()
 {
    dst->ops = ADD_S;
    recompile_standard_cf_type();
-   if (dynacore) genadd_s();
+   if (r4300emu == CORE_DYNAREC) genadd_s();
 }
 
 static void RSUB_S()
 {
    dst->ops = SUB_S;
    recompile_standard_cf_type();
-   if (dynacore) gensub_s();
+   if (r4300emu == CORE_DYNAREC) gensub_s();
 }
 
 static void RMUL_S()
 {
    dst->ops = MUL_S;
    recompile_standard_cf_type();
-   if (dynacore) genmul_s();
+   if (r4300emu == CORE_DYNAREC) genmul_s();
 }
 
 static void RDIV_S()
 {
    dst->ops = DIV_S;
    recompile_standard_cf_type();
-   if (dynacore) gendiv_s();
+   if (r4300emu == CORE_DYNAREC) gendiv_s();
 }
 
 static void RSQRT_S()
 {
    dst->ops = SQRT_S;
    recompile_standard_cf_type();
-   if (dynacore) gensqrt_s();
+   if (r4300emu == CORE_DYNAREC) gensqrt_s();
 }
 
 static void RABS_S()
 {
    dst->ops = ABS_S;
    recompile_standard_cf_type();
-   if (dynacore) genabs_s();
+   if (r4300emu == CORE_DYNAREC) genabs_s();
 }
 
 static void RMOV_S()
 {
    dst->ops = MOV_S;
    recompile_standard_cf_type();
-   if (dynacore) genmov_s();
+   if (r4300emu == CORE_DYNAREC) genmov_s();
 }
 
 static void RNEG_S()
 {
    dst->ops = NEG_S;
    recompile_standard_cf_type();
-   if (dynacore) genneg_s();
+   if (r4300emu == CORE_DYNAREC) genneg_s();
 }
 
 static void RROUND_L_S()
 {
    dst->ops = ROUND_L_S;
    recompile_standard_cf_type();
-   if (dynacore) genround_l_s();
+   if (r4300emu == CORE_DYNAREC) genround_l_s();
 }
 
 static void RTRUNC_L_S()
 {
    dst->ops = TRUNC_L_S;
    recompile_standard_cf_type();
-   if (dynacore) gentrunc_l_s();
+   if (r4300emu == CORE_DYNAREC) gentrunc_l_s();
 }
 
 static void RCEIL_L_S()
 {
    dst->ops = CEIL_L_S;
    recompile_standard_cf_type();
-   if (dynacore) genceil_l_s();
+   if (r4300emu == CORE_DYNAREC) genceil_l_s();
 }
 
 static void RFLOOR_L_S()
 {
    dst->ops = FLOOR_L_S;
    recompile_standard_cf_type();
-   if (dynacore) genfloor_l_s();
+   if (r4300emu == CORE_DYNAREC) genfloor_l_s();
 }
 
 static void RROUND_W_S()
 {
    dst->ops = ROUND_W_S;
    recompile_standard_cf_type();
-   if (dynacore) genround_w_s();
+   if (r4300emu == CORE_DYNAREC) genround_w_s();
 }
 
 static void RTRUNC_W_S()
 {
    dst->ops = TRUNC_W_S;
    recompile_standard_cf_type();
-   if (dynacore) gentrunc_w_s();
+   if (r4300emu == CORE_DYNAREC) gentrunc_w_s();
 }
 
 static void RCEIL_W_S()
 {
    dst->ops = CEIL_W_S;
    recompile_standard_cf_type();
-   if (dynacore) genceil_w_s();
+   if (r4300emu == CORE_DYNAREC) genceil_w_s();
 }
 
 static void RFLOOR_W_S()
 {
    dst->ops = FLOOR_W_S;
    recompile_standard_cf_type();
-   if (dynacore) genfloor_w_s();
+   if (r4300emu == CORE_DYNAREC) genfloor_w_s();
 }
 
 static void RCVT_D_S()
 {
    dst->ops = CVT_D_S;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_d_s();
+   if (r4300emu == CORE_DYNAREC) gencvt_d_s();
 }
 
 static void RCVT_W_S()
 {
    dst->ops = CVT_W_S;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_w_s();
+   if (r4300emu == CORE_DYNAREC) gencvt_w_s();
 }
 
 static void RCVT_L_S()
 {
    dst->ops = CVT_L_S;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_l_s();
+   if (r4300emu == CORE_DYNAREC) gencvt_l_s();
 }
 
 static void RC_F_S()
 {
    dst->ops = C_F_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_f_s();
+   if (r4300emu == CORE_DYNAREC) genc_f_s();
 }
 
 static void RC_UN_S()
 {
    dst->ops = C_UN_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_un_s();
+   if (r4300emu == CORE_DYNAREC) genc_un_s();
 }
 
 static void RC_EQ_S()
 {
    dst->ops = C_EQ_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_eq_s();
+   if (r4300emu == CORE_DYNAREC) genc_eq_s();
 }
 
 static void RC_UEQ_S()
 {
    dst->ops = C_UEQ_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ueq_s();
+   if (r4300emu == CORE_DYNAREC) genc_ueq_s();
 }
 
 static void RC_OLT_S()
 {
    dst->ops = C_OLT_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_olt_s();
+   if (r4300emu == CORE_DYNAREC) genc_olt_s();
 }
 
 static void RC_ULT_S()
 {
    dst->ops = C_ULT_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ult_s();
+   if (r4300emu == CORE_DYNAREC) genc_ult_s();
 }
 
 static void RC_OLE_S()
 {
    dst->ops = C_OLE_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ole_s();
+   if (r4300emu == CORE_DYNAREC) genc_ole_s();
 }
 
 static void RC_ULE_S()
 {
    dst->ops = C_ULE_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ule_s();
+   if (r4300emu == CORE_DYNAREC) genc_ule_s();
 }
 
 static void RC_SF_S()
 {
    dst->ops = C_SF_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_sf_s();
+   if (r4300emu == CORE_DYNAREC) genc_sf_s();
 }
 
 static void RC_NGLE_S()
 {
    dst->ops = C_NGLE_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngle_s();
+   if (r4300emu == CORE_DYNAREC) genc_ngle_s();
 }
 
 static void RC_SEQ_S()
 {
    dst->ops = C_SEQ_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_seq_s();
+   if (r4300emu == CORE_DYNAREC) genc_seq_s();
 }
 
 static void RC_NGL_S()
 {
    dst->ops = C_NGL_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngl_s();
+   if (r4300emu == CORE_DYNAREC) genc_ngl_s();
 }
 
 static void RC_LT_S()
 {
    dst->ops = C_LT_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_lt_s();
+   if (r4300emu == CORE_DYNAREC) genc_lt_s();
 }
 
 static void RC_NGE_S()
 {
    dst->ops = C_NGE_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_nge_s();
+   if (r4300emu == CORE_DYNAREC) genc_nge_s();
 }
 
 static void RC_LE_S()
 {
    dst->ops = C_LE_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_le_s();
+   if (r4300emu == CORE_DYNAREC) genc_le_s();
 }
 
 static void RC_NGT_S()
 {
    dst->ops = C_NGT_S;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngt_s();
+   if (r4300emu == CORE_DYNAREC) genc_ngt_s();
 }
 
 static void (*recomp_s[64])(void) =
@@ -1202,245 +1202,245 @@ static void RADD_D()
 {
    dst->ops = ADD_D;
    recompile_standard_cf_type();
-   if (dynacore) genadd_d();
+   if (r4300emu == CORE_DYNAREC) genadd_d();
 }
 
 static void RSUB_D()
 {
    dst->ops = SUB_D;
    recompile_standard_cf_type();
-   if (dynacore) gensub_d();
+   if (r4300emu == CORE_DYNAREC) gensub_d();
 }
 
 static void RMUL_D()
 {
    dst->ops = MUL_D;
    recompile_standard_cf_type();
-   if (dynacore) genmul_d();
+   if (r4300emu == CORE_DYNAREC) genmul_d();
 }
 
 static void RDIV_D()
 {
    dst->ops = DIV_D;
    recompile_standard_cf_type();
-   if (dynacore) gendiv_d();
+   if (r4300emu == CORE_DYNAREC) gendiv_d();
 }
 
 static void RSQRT_D()
 {
    dst->ops = SQRT_D;
    recompile_standard_cf_type();
-   if (dynacore) gensqrt_d();
+   if (r4300emu == CORE_DYNAREC) gensqrt_d();
 }
 
 static void RABS_D()
 {
    dst->ops = ABS_D;
    recompile_standard_cf_type();
-   if (dynacore) genabs_d();
+   if (r4300emu == CORE_DYNAREC) genabs_d();
 }
 
 static void RMOV_D()
 {
    dst->ops = MOV_D;
    recompile_standard_cf_type();
-   if (dynacore) genmov_d();
+   if (r4300emu == CORE_DYNAREC) genmov_d();
 }
 
 static void RNEG_D()
 {
    dst->ops = NEG_D;
    recompile_standard_cf_type();
-   if (dynacore) genneg_d();
+   if (r4300emu == CORE_DYNAREC) genneg_d();
 }
 
 static void RROUND_L_D()
 {
    dst->ops = ROUND_L_D;
    recompile_standard_cf_type();
-   if (dynacore) genround_l_d();
+   if (r4300emu == CORE_DYNAREC) genround_l_d();
 }
 
 static void RTRUNC_L_D()
 {
    dst->ops = TRUNC_L_D;
    recompile_standard_cf_type();
-   if (dynacore) gentrunc_l_d();
+   if (r4300emu == CORE_DYNAREC) gentrunc_l_d();
 }
 
 static void RCEIL_L_D()
 {
    dst->ops = CEIL_L_D;
    recompile_standard_cf_type();
-   if (dynacore) genceil_l_d();
+   if (r4300emu == CORE_DYNAREC) genceil_l_d();
 }
 
 static void RFLOOR_L_D()
 {
    dst->ops = FLOOR_L_D;
    recompile_standard_cf_type();
-   if (dynacore) genfloor_l_d();
+   if (r4300emu == CORE_DYNAREC) genfloor_l_d();
 }
 
 static void RROUND_W_D()
 {
    dst->ops = ROUND_W_D;
    recompile_standard_cf_type();
-   if (dynacore) genround_w_d();
+   if (r4300emu == CORE_DYNAREC) genround_w_d();
 }
 
 static void RTRUNC_W_D()
 {
    dst->ops = TRUNC_W_D;
    recompile_standard_cf_type();
-   if (dynacore) gentrunc_w_d();
+   if (r4300emu == CORE_DYNAREC) gentrunc_w_d();
 }
 
 static void RCEIL_W_D()
 {
    dst->ops = CEIL_W_D;
    recompile_standard_cf_type();
-   if (dynacore) genceil_w_d();
+   if (r4300emu == CORE_DYNAREC) genceil_w_d();
 }
 
 static void RFLOOR_W_D()
 {
    dst->ops = FLOOR_W_D;
    recompile_standard_cf_type();
-   if (dynacore) genfloor_w_d();
+   if (r4300emu == CORE_DYNAREC) genfloor_w_d();
 }
 
 static void RCVT_S_D()
 {
    dst->ops = CVT_S_D;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_s_d();
+   if (r4300emu == CORE_DYNAREC) gencvt_s_d();
 }
 
 static void RCVT_W_D()
 {
    dst->ops = CVT_W_D;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_w_d();
+   if (r4300emu == CORE_DYNAREC) gencvt_w_d();
 }
 
 static void RCVT_L_D()
 {
    dst->ops = CVT_L_D;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_l_d();
+   if (r4300emu == CORE_DYNAREC) gencvt_l_d();
 }
 
 static void RC_F_D()
 {
    dst->ops = C_F_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_f_d();
+   if (r4300emu == CORE_DYNAREC) genc_f_d();
 }
 
 static void RC_UN_D()
 {
    dst->ops = C_UN_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_un_d();
+   if (r4300emu == CORE_DYNAREC) genc_un_d();
 }
 
 static void RC_EQ_D()
 {
    dst->ops = C_EQ_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_eq_d();
+   if (r4300emu == CORE_DYNAREC) genc_eq_d();
 }
 
 static void RC_UEQ_D()
 {
    dst->ops = C_UEQ_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ueq_d();
+   if (r4300emu == CORE_DYNAREC) genc_ueq_d();
 }
 
 static void RC_OLT_D()
 {
    dst->ops = C_OLT_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_olt_d();
+   if (r4300emu == CORE_DYNAREC) genc_olt_d();
 }
 
 static void RC_ULT_D()
 {
    dst->ops = C_ULT_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ult_d();
+   if (r4300emu == CORE_DYNAREC) genc_ult_d();
 }
 
 static void RC_OLE_D()
 {
    dst->ops = C_OLE_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ole_d();
+   if (r4300emu == CORE_DYNAREC) genc_ole_d();
 }
 
 static void RC_ULE_D()
 {
    dst->ops = C_ULE_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ule_d();
+   if (r4300emu == CORE_DYNAREC) genc_ule_d();
 }
 
 static void RC_SF_D()
 {
    dst->ops = C_SF_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_sf_d();
+   if (r4300emu == CORE_DYNAREC) genc_sf_d();
 }
 
 static void RC_NGLE_D()
 {
    dst->ops = C_NGLE_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngle_d();
+   if (r4300emu == CORE_DYNAREC) genc_ngle_d();
 }
 
 static void RC_SEQ_D()
 {
    dst->ops = C_SEQ_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_seq_d();
+   if (r4300emu == CORE_DYNAREC) genc_seq_d();
 }
 
 static void RC_NGL_D()
 {
    dst->ops = C_NGL_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngl_d();
+   if (r4300emu == CORE_DYNAREC) genc_ngl_d();
 }
 
 static void RC_LT_D()
 {
    dst->ops = C_LT_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_lt_d();
+   if (r4300emu == CORE_DYNAREC) genc_lt_d();
 }
 
 static void RC_NGE_D()
 {
    dst->ops = C_NGE_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_nge_d();
+   if (r4300emu == CORE_DYNAREC) genc_nge_d();
 }
 
 static void RC_LE_D()
 {
    dst->ops = C_LE_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_le_d();
+   if (r4300emu == CORE_DYNAREC) genc_le_d();
 }
 
 static void RC_NGT_D()
 {
    dst->ops = C_NGT_D;
    recompile_standard_cf_type();
-   if (dynacore) genc_ngt_d();
+   if (r4300emu == CORE_DYNAREC) genc_ngt_d();
 }
 
 static void (*recomp_d[64])(void) =
@@ -1463,14 +1463,14 @@ static void RCVT_S_W()
 {
    dst->ops = CVT_S_W;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_s_w();
+   if (r4300emu == CORE_DYNAREC) gencvt_s_w();
 }
 
 static void RCVT_D_W()
 {
    dst->ops = CVT_D_W;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_d_w();
+   if (r4300emu == CORE_DYNAREC) gencvt_d_w();
 }
 
 static void (*recomp_w[64])(void) =
@@ -1493,14 +1493,14 @@ static void RCVT_S_L()
 {
    dst->ops = CVT_S_L;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_s_l();
+   if (r4300emu == CORE_DYNAREC) gencvt_s_l();
 }
 
 static void RCVT_D_L()
 {
    dst->ops = CVT_D_L;
    recompile_standard_cf_type();
-   if (dynacore) gencvt_d_l();
+   if (r4300emu == CORE_DYNAREC) gencvt_d_l();
 }
 
 static void (*recomp_l[64])(void) =
@@ -1525,7 +1525,7 @@ static void RMFC1()
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == reg) RNOP();
-   else if (dynacore) genmfc1();
+   else if (r4300emu == CORE_DYNAREC) genmfc1();
 }
 
 static void RDMFC1()
@@ -1534,7 +1534,7 @@ static void RDMFC1()
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == reg) RNOP();
-   else if (dynacore) gendmfc1();
+   else if (r4300emu == CORE_DYNAREC) gendmfc1();
 }
 
 static void RCFC1()
@@ -1543,7 +1543,7 @@ static void RCFC1()
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == reg) RNOP();
-   else if (dynacore) gencfc1();
+   else if (r4300emu == CORE_DYNAREC) gencfc1();
 }
 
 static void RMTC1()
@@ -1551,7 +1551,7 @@ static void RMTC1()
    dst->ops = MTC1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dynacore) genmtc1();
+   if (r4300emu == CORE_DYNAREC) genmtc1();
 }
 
 static void RDMTC1()
@@ -1559,7 +1559,7 @@ static void RDMTC1()
    dst->ops = DMTC1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dynacore) gendmtc1();
+   if (r4300emu == CORE_DYNAREC) gendmtc1();
 }
 
 static void RCTC1()
@@ -1567,7 +1567,7 @@ static void RCTC1()
    dst->ops = CTC1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dynacore) genctc1();
+   if (r4300emu == CORE_DYNAREC) genctc1();
 }
 
 static void RBC()
@@ -1628,16 +1628,16 @@ static void RJ()
     if (check_nop)
       {
          dst->ops = J_IDLE;
-         if (dynacore) genj_idle();
+         if (r4300emu == CORE_DYNAREC) genj_idle();
       }
-    else if (dynacore) genj();
+    else if (r4300emu == CORE_DYNAREC) genj();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = J_OUT;
-    if (dynacore) genj_out();
+    if (r4300emu == CORE_DYNAREC) genj_out();
      }
-   else if (dynacore) genj();
+   else if (r4300emu == CORE_DYNAREC) genj();
 }
 
 static void RJAL()
@@ -1651,16 +1651,16 @@ static void RJAL()
     if (check_nop)
       {
          dst->ops = JAL_IDLE;
-         if (dynacore) genjal_idle();
+         if (r4300emu == CORE_DYNAREC) genjal_idle();
       }
-    else if (dynacore) genjal();
+    else if (r4300emu == CORE_DYNAREC) genjal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = JAL_OUT;
-    if (dynacore) genjal_out();
+    if (r4300emu == CORE_DYNAREC) genjal_out();
      }
-   else if (dynacore) genjal();
+   else if (r4300emu == CORE_DYNAREC) genjal();
 }
 
 static void RBEQ()
@@ -1674,16 +1674,16 @@ static void RBEQ()
     if (check_nop)
       {
          dst->ops = BEQ_IDLE;
-         if (dynacore) genbeq_idle();
+         if (r4300emu == CORE_DYNAREC) genbeq_idle();
       }
-    else if (dynacore) genbeq();
+    else if (r4300emu == CORE_DYNAREC) genbeq();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BEQ_OUT;
-    if (dynacore) genbeq_out();
+    if (r4300emu == CORE_DYNAREC) genbeq_out();
      }
-   else if (dynacore) genbeq();
+   else if (r4300emu == CORE_DYNAREC) genbeq();
 }
 
 static void RBNE()
@@ -1697,16 +1697,16 @@ static void RBNE()
     if (check_nop)
       {
          dst->ops = BNE_IDLE;
-         if (dynacore) genbne_idle();
+         if (r4300emu == CORE_DYNAREC) genbne_idle();
       }
-    else if (dynacore) genbne();
+    else if (r4300emu == CORE_DYNAREC) genbne();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BNE_OUT;
-    if (dynacore) genbne_out();
+    if (r4300emu == CORE_DYNAREC) genbne_out();
      }
-   else if (dynacore) genbne();
+   else if (r4300emu == CORE_DYNAREC) genbne();
 }
 
 static void RBLEZ()
@@ -1720,16 +1720,16 @@ static void RBLEZ()
     if (check_nop)
       {
          dst->ops = BLEZ_IDLE;
-         if (dynacore) genblez_idle();
+         if (r4300emu == CORE_DYNAREC) genblez_idle();
       }
-    else if (dynacore) genblez();
+    else if (r4300emu == CORE_DYNAREC) genblez();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLEZ_OUT;
-    if (dynacore) genblez_out();
+    if (r4300emu == CORE_DYNAREC) genblez_out();
      }
-   else if (dynacore) genblez();
+   else if (r4300emu == CORE_DYNAREC) genblez();
 }
 
 static void RBGTZ()
@@ -1743,16 +1743,16 @@ static void RBGTZ()
     if (check_nop)
       {
          dst->ops = BGTZ_IDLE;
-         if (dynacore) genbgtz_idle();
+         if (r4300emu == CORE_DYNAREC) genbgtz_idle();
       }
-    else if (dynacore) genbgtz();
+    else if (r4300emu == CORE_DYNAREC) genbgtz();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGTZ_OUT;
-    if (dynacore) genbgtz_out();
+    if (r4300emu == CORE_DYNAREC) genbgtz_out();
      }
-   else if (dynacore) genbgtz();
+   else if (r4300emu == CORE_DYNAREC) genbgtz();
 }
 
 static void RADDI()
@@ -1760,7 +1760,7 @@ static void RADDI()
    dst->ops = ADDI;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genaddi();
+   else if (r4300emu == CORE_DYNAREC) genaddi();
 }
 
 static void RADDIU()
@@ -1768,7 +1768,7 @@ static void RADDIU()
    dst->ops = ADDIU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genaddiu();
+   else if (r4300emu == CORE_DYNAREC) genaddiu();
 }
 
 static void RSLTI()
@@ -1776,7 +1776,7 @@ static void RSLTI()
    dst->ops = SLTI;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genslti();
+   else if (r4300emu == CORE_DYNAREC) genslti();
 }
 
 static void RSLTIU()
@@ -1784,7 +1784,7 @@ static void RSLTIU()
    dst->ops = SLTIU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) gensltiu();
+   else if (r4300emu == CORE_DYNAREC) gensltiu();
 }
 
 static void RANDI()
@@ -1792,7 +1792,7 @@ static void RANDI()
    dst->ops = ANDI;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genandi();
+   else if (r4300emu == CORE_DYNAREC) genandi();
 }
 
 static void RORI()
@@ -1800,7 +1800,7 @@ static void RORI()
    dst->ops = ORI;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genori();
+   else if (r4300emu == CORE_DYNAREC) genori();
 }
 
 static void RXORI()
@@ -1808,7 +1808,7 @@ static void RXORI()
    dst->ops = XORI;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genxori();
+   else if (r4300emu == CORE_DYNAREC) genxori();
 }
 
 static void RLUI()
@@ -1816,7 +1816,7 @@ static void RLUI()
    dst->ops = LUI;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlui();
+   else if (r4300emu == CORE_DYNAREC) genlui();
 }
 
 static void RCOP0()
@@ -1840,16 +1840,16 @@ static void RBEQL()
     if (check_nop)
       {
          dst->ops = BEQL_IDLE;
-         if (dynacore) genbeql_idle();
+         if (r4300emu == CORE_DYNAREC) genbeql_idle();
       }
-    else if (dynacore) genbeql();
+    else if (r4300emu == CORE_DYNAREC) genbeql();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BEQL_OUT;
-    if (dynacore) genbeql_out();
+    if (r4300emu == CORE_DYNAREC) genbeql_out();
      }
-   else if (dynacore) genbeql();
+   else if (r4300emu == CORE_DYNAREC) genbeql();
 }
 
 static void RBNEL()
@@ -1863,16 +1863,16 @@ static void RBNEL()
     if (check_nop)
       {
          dst->ops = BNEL_IDLE;
-         if (dynacore) genbnel_idle();
+         if (r4300emu == CORE_DYNAREC) genbnel_idle();
       }
-    else if (dynacore) genbnel();
+    else if (r4300emu == CORE_DYNAREC) genbnel();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BNEL_OUT;
-    if (dynacore) genbnel_out();
+    if (r4300emu == CORE_DYNAREC) genbnel_out();
      }
-   else if (dynacore) genbnel();
+   else if (r4300emu == CORE_DYNAREC) genbnel();
 }
 
 static void RBLEZL()
@@ -1886,16 +1886,16 @@ static void RBLEZL()
     if (check_nop)
       {
          dst->ops = BLEZL_IDLE;
-         if (dynacore) genblezl_idle();
+         if (r4300emu == CORE_DYNAREC) genblezl_idle();
       }
-    else if (dynacore) genblezl();
+    else if (r4300emu == CORE_DYNAREC) genblezl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BLEZL_OUT;
-    if (dynacore) genblezl_out();
+    if (r4300emu == CORE_DYNAREC) genblezl_out();
      }
-   else if (dynacore) genblezl();
+   else if (r4300emu == CORE_DYNAREC) genblezl();
 }
 
 static void RBGTZL()
@@ -1909,16 +1909,16 @@ static void RBGTZL()
     if (check_nop)
       {
          dst->ops = BGTZL_IDLE;
-         if (dynacore) genbgtzl_idle();
+         if (r4300emu == CORE_DYNAREC) genbgtzl_idle();
       }
-    else if (dynacore) genbgtzl();
+    else if (r4300emu == CORE_DYNAREC) genbgtzl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
     dst->ops = BGTZL_OUT;
-    if (dynacore) genbgtzl_out();
+    if (r4300emu == CORE_DYNAREC) genbgtzl_out();
      }
-   else if (dynacore) genbgtzl();
+   else if (r4300emu == CORE_DYNAREC) genbgtzl();
 }
 
 static void RDADDI()
@@ -1926,7 +1926,7 @@ static void RDADDI()
    dst->ops = DADDI;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) gendaddi();
+   else if (r4300emu == CORE_DYNAREC) gendaddi();
 }
 
 static void RDADDIU()
@@ -1934,7 +1934,7 @@ static void RDADDIU()
    dst->ops = DADDIU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) gendaddiu();
+   else if (r4300emu == CORE_DYNAREC) gendaddiu();
 }
 
 static void RLDL()
@@ -1942,7 +1942,7 @@ static void RLDL()
    dst->ops = LDL;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genldl();
+   else if (r4300emu == CORE_DYNAREC) genldl();
 }
 
 static void RLDR()
@@ -1950,7 +1950,7 @@ static void RLDR()
    dst->ops = LDR;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genldr();
+   else if (r4300emu == CORE_DYNAREC) genldr();
 }
 
 static void RLB()
@@ -1958,7 +1958,7 @@ static void RLB()
    dst->ops = LB;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlb();
+   else if (r4300emu == CORE_DYNAREC) genlb();
 }
 
 static void RLH()
@@ -1966,7 +1966,7 @@ static void RLH()
    dst->ops = LH;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlh();
+   else if (r4300emu == CORE_DYNAREC) genlh();
 }
 
 static void RLWL()
@@ -1974,7 +1974,7 @@ static void RLWL()
    dst->ops = LWL;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlwl();
+   else if (r4300emu == CORE_DYNAREC) genlwl();
 }
 
 static void RLW()
@@ -1982,7 +1982,7 @@ static void RLW()
    dst->ops = LW;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlw();
+   else if (r4300emu == CORE_DYNAREC) genlw();
 }
 
 static void RLBU()
@@ -1990,7 +1990,7 @@ static void RLBU()
    dst->ops = LBU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlbu();
+   else if (r4300emu == CORE_DYNAREC) genlbu();
 }
 
 static void RLHU()
@@ -1998,7 +1998,7 @@ static void RLHU()
    dst->ops = LHU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlhu();
+   else if (r4300emu == CORE_DYNAREC) genlhu();
 }
 
 static void RLWR()
@@ -2006,7 +2006,7 @@ static void RLWR()
    dst->ops = LWR;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlwr();
+   else if (r4300emu == CORE_DYNAREC) genlwr();
 }
 
 static void RLWU()
@@ -2014,62 +2014,62 @@ static void RLWU()
    dst->ops = LWU;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genlwu();
+   else if (r4300emu == CORE_DYNAREC) genlwu();
 }
 
 static void RSB()
 {
    dst->ops = SB;
    recompile_standard_i_type();
-   if (dynacore) gensb();
+   if (r4300emu == CORE_DYNAREC) gensb();
 }
 
 static void RSH()
 {
    dst->ops = SH;
    recompile_standard_i_type();
-   if (dynacore) gensh();
+   if (r4300emu == CORE_DYNAREC) gensh();
 }
 
 static void RSWL()
 {
    dst->ops = SWL;
    recompile_standard_i_type();
-   if (dynacore) genswl();
+   if (r4300emu == CORE_DYNAREC) genswl();
 }
 
 static void RSW()
 {
    dst->ops = SW;
    recompile_standard_i_type();
-   if (dynacore) gensw();
+   if (r4300emu == CORE_DYNAREC) gensw();
 }
 
 static void RSDL()
 {
    dst->ops = SDL;
    recompile_standard_i_type();
-   if (dynacore) gensdl();
+   if (r4300emu == CORE_DYNAREC) gensdl();
 }
 
 static void RSDR()
 {
    dst->ops = SDR;
    recompile_standard_i_type();
-   if (dynacore) gensdr();
+   if (r4300emu == CORE_DYNAREC) gensdr();
 }
 
 static void RSWR()
 {
    dst->ops = SWR;
    recompile_standard_i_type();
-   if (dynacore) genswr();
+   if (r4300emu == CORE_DYNAREC) genswr();
 }
 
 static void RCACHE()
 {
    dst->ops = CACHE;
-   if (dynacore) gencache();
+   if (r4300emu == CORE_DYNAREC) gencache();
 }
 
 static void RLL()
@@ -2077,28 +2077,28 @@ static void RLL()
    dst->ops = LL;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genll();
+   else if (r4300emu == CORE_DYNAREC) genll();
 }
 
 static void RLWC1()
 {
    dst->ops = LWC1;
    recompile_standard_lf_type();
-   if (dynacore) genlwc1();
+   if (r4300emu == CORE_DYNAREC) genlwc1();
 }
 
 static void RLLD()
 {
    dst->ops = NI;
    recompile_standard_i_type();
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RLDC1()
 {
    dst->ops = LDC1;
    recompile_standard_lf_type();
-   if (dynacore) genldc1();
+   if (r4300emu == CORE_DYNAREC) genldc1();
 }
 
 static void RLD()
@@ -2106,7 +2106,7 @@ static void RLD()
    dst->ops = LD;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) genld();
+   else if (r4300emu == CORE_DYNAREC) genld();
 }
 
 static void RSC()
@@ -2114,35 +2114,35 @@ static void RSC()
    dst->ops = SC;
    recompile_standard_i_type();
    if (dst->f.i.rt == reg) RNOP();
-   else if (dynacore) gensc();
+   else if (r4300emu == CORE_DYNAREC) gensc();
 }
 
 static void RSWC1()
 {
    dst->ops = SWC1;
    recompile_standard_lf_type();
-   if (dynacore) genswc1();
+   if (r4300emu == CORE_DYNAREC) genswc1();
 }
 
 static void RSCD()
 {
    dst->ops = NI;
    recompile_standard_i_type();
-   if (dynacore) genni();
+   if (r4300emu == CORE_DYNAREC) genni();
 }
 
 static void RSDC1()
 {
    dst->ops = SDC1;
    recompile_standard_lf_type();
-   if (dynacore) gensdc1();
+   if (r4300emu == CORE_DYNAREC) gensdc1();
 }
 
 static void RSD()
 {
    dst->ops = SD;
    recompile_standard_i_type();
-   if (dynacore) gensd();
+   if (r4300emu == CORE_DYNAREC) gensd();
 }
 
 static void (*recomp_ops[64])(void) =
@@ -2179,7 +2179,7 @@ void init_block(int *source, precomp_block *block)
     already_exist = 0;
   }
 
-  if (dynacore)
+  if (r4300emu == CORE_DYNAREC)
   {
     if (!block->code)
     {
@@ -2229,7 +2229,7 @@ void init_block(int *source, precomp_block *block)
       dst->reg_cache_infos.need_map = 0;
       dst->local_addr = code_length;
 #ifdef COMPARE_CORE
-      if (dynacore) gendebug();
+      if (r4300emu == CORE_DYNAREC) gendebug();
 #endif
       RNOTCOMPILED();
     }
@@ -2255,7 +2255,7 @@ void init_block(int *source, precomp_block *block)
     }
   }
    
-  if (dynacore)
+  if (r4300emu == CORE_DYNAREC)
   {
     free_all_registers();
     /* calling pass2 of the assembler is not necessary here because all of the code emitted by
@@ -2348,7 +2348,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
    //for (i=0; i<16; i++) block->md5[i] = 0;
    block->adler32 = 0;
    
-   if (dynacore)
+   if (r4300emu == CORE_DYNAREC)
      {
     code_length = block->code_length;
     max_code_length = block->max_code_length;
@@ -2379,7 +2379,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     dst->reg_cache_infos.need_map = 0;
     dst->local_addr = code_length;
 #ifdef COMPARE_CORE
-    if (dynacore) gendebug();
+    if (r4300emu == CORE_DYNAREC) gendebug();
 #endif
 #if defined(PROFILE_R4300)
     long x86addr = (long) (block->code + block->block[i].local_addr);
@@ -2392,7 +2392,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     /*if ((dst+1)->ops != NOTCOMPILED && !delay_slot_compiled &&
         i < length)
       {
-         if (dynacore) genlink_subblock();
+         if (r4300emu == CORE_DYNAREC) genlink_subblock();
          finished = 2;
       }*/
     if (delay_slot_compiled) 
@@ -2427,7 +2427,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     dst->reg_cache_infos.need_map = 0;
     dst->local_addr = code_length;
 #ifdef COMPARE_CORE
-    if (dynacore) gendebug();
+    if (r4300emu == CORE_DYNAREC) gendebug();
 #endif
     RFIN_BLOCK();
     i++;
@@ -2438,15 +2438,15 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
          dst->reg_cache_infos.need_map = 0;
          dst->local_addr = code_length;
 #ifdef COMPARE_CORE
-         if (dynacore) gendebug();
+         if (r4300emu == CORE_DYNAREC) gendebug();
 #endif
          RFIN_BLOCK();
          i++;
       }
      }
-   else if (dynacore) genlink_subblock();
+   else if (r4300emu == CORE_DYNAREC) genlink_subblock();
 
-   if (dynacore)
+   if (r4300emu == CORE_DYNAREC)
      {
     free_all_registers();
     passe2(block->block, (func&0xFFF)/4, i, block);
@@ -2468,8 +2468,8 @@ int is_jump()
 {
    int dyn=0;
    int jump=0;
-   if(dynacore) dyn=1;
-   if(dyn) dynacore = 0;
+   if(r4300emu == CORE_DYNAREC) dyn=1;
+   if(dyn) r4300emu = CORE_INTERPRETER;
    recomp_ops[((src >> 26) & 0x3F)]();
    if(dst->ops == J ||
       dst->ops == J_OUT ||
@@ -2540,7 +2540,7 @@ int is_jump()
       dst->ops == BC1TL_OUT ||
       dst->ops == BC1TL_IDLE)
      jump = 1;
-   if(dyn) dynacore = 1;
+   if(dyn) r4300emu = CORE_DYNAREC;
    return jump;
 }
 

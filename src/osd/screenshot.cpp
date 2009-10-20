@@ -34,6 +34,7 @@
 #include "osd.h"
 
 extern "C" {
+#include "api/m64p_types.h"
 #include "main/main.h"
 #include "main/util.h"
 #include "main/rom.h"
@@ -207,6 +208,6 @@ extern "C" void TakeScreenshot(int iFrameNumber)
     // free the memory
     free(pucFrame);
     // print message -- this allows developers to capture frames and use them in the regression test
-    main_message(1, 1, 1, OSD_BOTTOM_LEFT, tr("Captured screenshot for frame %i.\n"), iFrameNumber);
+    main_message(M64MSG_INFO, OSD_BOTTOM_LEFT, tr("Captured screenshot for frame %i."), iFrameNumber);
 }
 

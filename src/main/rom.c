@@ -26,6 +26,10 @@
 #include <ctype.h>
 #include <limits.h>
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "api/config.h"
+
 #include "md5.h"
 #include "rom.h"
 #include "translate.h"
@@ -45,7 +49,7 @@ romdatabase_entry empty_entry;
 /* Global loaded rom memory space. */
 unsigned char* rom;
 /* Global loaded rom size. */
-int taille_rom;
+int rom_size;
 
 /* TODO: Replace with a glocal cache_entry. */
 rom_header* ROM_HEADER;
@@ -165,9 +169,10 @@ static int ask_hack(void)
 int open_rom(const char* filename, unsigned int archivefile)
 {
     if(g_EmulatorRunning)
-         {
-         stopEmulation();
-         }
+    {
+        DebugMessage(M64MSG_ERROR, tr("Can't load Rom when emulator is running!")); 
+        return -1;
+    }
 
     md5_state_t state;
     md5_byte_t digest[16];
@@ -184,13 +189,13 @@ int open_rom(const char* filename, unsigned int archivefile)
 
     strncpy(buffer, filename, PATH_MAX-1);
     buffer[PATH_MAX-1] = 0;
-    if ((rom=load_single_rom(filename, &taille_rom, &compressiontype, &taille_rom))==NULL)
-        {
-        error_message(tr("Couldn't load Rom!")); 
+    if ((rom=load_single_rom(filename, &rom_size, &compressiontype, &rom_size))==NULL)
+    {
+        DebugMessage(M64MSG_ERROR, tr("Couldn't load Rom!")); 
         return -1;
-        }
+    }
 
-    swap_rom(rom, &imagetype, taille_rom);
+    swap_rom(rom, &imagetype, rom_size);
 
     compressionstring(compressiontype, buffer);
     printf("Compression: %s\n", buffer);
@@ -199,13 +204,13 @@ int open_rom(const char* filename, unsigned int archivefile)
     printf("Imagetype: %s\n", buffer);
 
     printf("Rom size: %d bytes (or %d Mb or %d Megabits)\n",
-    taille_rom, taille_rom/1024/1024, taille_rom/1024/1024*8);
+    rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
 
     /* TODO: Replace the following validation code with fill_entry(). */
 
     /* Load rom settings and check if it's a good dump. */
     md5_init(&state);
-    md5_append(&state, (const md5_byte_t*)rom, taille_rom);
+    md5_append(&state, (const md5_byte_t*)rom, rom_size);
     md5_finish(&state, digest);
     for ( i = 0; i < 16; ++i ) 
         sprintf(buffer+i*2, "%02X", digest[i]);
@@ -280,7 +285,7 @@ int open_rom(const char* filename, unsigned int archivefile)
         rom = NULL;
         free(ROM_HEADER);
         ROM_HEADER = NULL;
-        main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Rom closed."));
+        DebugMessage(M64MSG_STATUS, tr("Rom closed."));
         return -3;
         }
 
@@ -296,7 +301,7 @@ int open_rom(const char* filename, unsigned int archivefile)
 int close_rom(void)
 {
     if(g_EmulatorRunning)
-        stopEmulation();
+        stopEmulator();
 
     if(ROM_HEADER)
         {
@@ -314,7 +319,7 @@ int close_rom(void)
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
-    main_message(0, 1, 0, OSD_BOTTOM_LEFT, tr("Rom closed."));
+    DebugMessage(M64MSG_STATUS, tr("Rom closed."));
 
     return 0;
 }
@@ -381,18 +386,13 @@ void romdatabase_open(void)
     empty_entry.rumble = DEFAULT;
 
     /* Open romdatabase. */
-    char* pathname = (char*)malloc(PATH_MAX*sizeof(char));
-    snprintf(pathname, PATH_MAX, "%s%s", get_installpath(), "mupen64plus.ini");
-
-    /* printf("Database file: %s \n", pathname); */
+    const char *pathname = ConfigGetSharedDataFilepath("mupen64plus.ini");
     fPtr = fopen(pathname, "rb");
-    if(fPtr == NULL)
-        {
-        printf("Unable to open rom database.\n");
-        free(pathname);
+    if (fPtr == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "Unable to open rom database file '%s'.", pathname);
         return;
-        }
-    free(pathname);
+    }
 
     /* Move through opening comments, set romdatabase.comment to non-NULL
     to signal we have a database. */

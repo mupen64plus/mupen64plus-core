@@ -15,10 +15,10 @@ Email                : blight@Ashitaka
  *                                                                         *
  ***************************************************************************/
 
+#include "api/config.h"
 #include "translate.h"
 #include "main.h"
 #include "util.h"
-#include "config.h"
 
 #include <dirent.h>
 #include <limits.h>
@@ -194,7 +194,10 @@ tr_load_languages( void )
     tr_delete_languages();
 
     // list languages
-    snprintf(langdir, PATH_MAX, "%slang/", get_installpath());
+    //snprintf(langdir, PATH_MAX, "%slang/", get_installpath());
+    /* fixme the configuration API needs to be extended to support searching through the shared data folder */
+    return;
+    langdir[PATH_MAX-1] = 0;
     dir = opendir(langdir);
     if(!dir)
         return;
@@ -230,7 +233,7 @@ void tr_init(void)
 
     // set language based on config file
     langList = tr_language_list();
-    confLang = config_get_string( "Language", "English" );
+    confLang = ConfigGetParamString(g_CoreConfig, "Language");
     list_foreach(langList, node)
     {
         language = (char *)node->data;

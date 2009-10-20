@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "dma.h"
@@ -32,7 +33,7 @@
 #include "r4300/macros.h"
 #include "r4300/ops.h"
 
-#include "main/config.h"
+#include "api/config.h"
 #include "main/main.h"
 #include "main/rom.h"
 
@@ -178,12 +179,12 @@ void dma_pi_write()
 
     longueur = (pi_register.pi_wr_len_reg & 0xFFFFFF)+1;
     i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF;
-    longueur = (i + longueur) > taille_rom ?
-    (taille_rom - i) : longueur;
+    longueur = (i + longueur) > rom_size ?
+    (rom_size - i) : longueur;
     longueur = (pi_register.pi_dram_addr_reg + longueur) > 0x7FFFFF ?
     (0x7FFFFF - pi_register.pi_dram_addr_reg) : longueur;
 
-    if(i>taille_rom || pi_register.pi_dram_addr_reg > 0x7FFFFF)
+    if(i>rom_size || pi_register.pi_dram_addr_reg > 0x7FFFFF)
     {
         pi_register.read_pi_status_reg |= 3;
         update_count();
@@ -192,7 +193,7 @@ void dma_pi_write()
         return;
     }
     
-    if(!interpcore)
+    if(r4300emu != CORE_PURE_INTERPRETER)
     {
         for (i=0; i<longueur; i++)
         {
@@ -236,7 +237,7 @@ void dma_pi_write()
             case 3:
             case 6:
             {
-                if ( config_get_bool( "NoMemoryExpansion", 0 ) )
+                if (ConfigGetParamInt(g_CoreConfig, "DisableExtraMem"))
                 {
                     rdram[0x318/4] = 0x400000;
                 }
@@ -248,7 +249,7 @@ void dma_pi_write()
             }
             case 5:
             {
-                if ( config_get_bool( "NoMemoryExpansion", 0 ) )
+                if (ConfigGetParamInt(g_CoreConfig, "DisableExtraMem"))
                 {
                     rdram[0x3F0/4] = 0x400000;
                 }

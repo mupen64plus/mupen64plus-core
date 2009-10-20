@@ -129,7 +129,7 @@ int init_memory(int DoByteSwap)
     //swap rom
      unsigned int *roml;
      roml = (void *)rom;
-     for (i=0; i<(taille_rom/4); i++) roml[i] = sl(roml[i]);
+     for (i=0; i<(rom_size/4); i++) roml[i] = sl(roml[i]);
    }
    
    //init hash tables
@@ -918,7 +918,7 @@ int init_memory(int DoByteSwap)
      }
    
    //init rom area
-   for (i=0; i<(taille_rom >> 16); i++) 
+   for (i=0; i<(rom_size >> 16); i++) 
      {
     readmem[0x9000+i] = read_rom;
     readmem[0xb000+i] = read_rom;
@@ -937,7 +937,7 @@ int init_memory(int DoByteSwap)
     writememd[0x9000+i] = write_nothingd;
     writememd[0xb000+i] = write_nothingd;
      }
-   for (i=(taille_rom >> 16); i<0xfc0; i++) 
+   for (i=(rom_size >> 16); i<0xfc0; i++) 
      {
     readmem[0x9000+i] = read_nothing;
     readmem[0xb000+i] = read_nothing;
@@ -1495,7 +1495,7 @@ void read_nomemd()
 
 void write_nomem()
 {
-   if (!interpcore && !invalid_code[address>>12])
+   if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED)
        invalid_code[address>>12] = 1;
    address = virtual_to_physical_address(address,1);
@@ -1505,7 +1505,7 @@ void write_nomem()
 
 void write_nomemb()
 {
-   if (!interpcore && !invalid_code[address>>12])
+   if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED)
        invalid_code[address>>12] = 1;
    address = virtual_to_physical_address(address,1);
@@ -1515,7 +1515,7 @@ void write_nomemb()
 
 void write_nomemh()
 {
-   if (!interpcore && !invalid_code[address>>12])
+   if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED)
        invalid_code[address>>12] = 1;
    address = virtual_to_physical_address(address,1);
@@ -1525,7 +1525,7 @@ void write_nomemh()
 
 void write_nomemd()
 {
-   if (!interpcore && !invalid_code[address>>12])
+   if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED)
        invalid_code[address>>12] = 1;
    address = virtual_to_physical_address(address,1);

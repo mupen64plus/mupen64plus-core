@@ -45,7 +45,7 @@ void display_error(char *txt)
    int i;
    unsigned int *comp_reg2 = (unsigned int *)comp_reg;
    printf("err: %6s  ", txt);
-   if (interpcore)
+   if (r4300emu == CORE_PURE_INTERPRETER)
      {
     printf("addr:%x\t ", (int)interp_addr);
     if (!strcmp(txt, "PC")) printf("My PC: %x  Ref PC: %x\t ", (int)interp_addr, *(int*)&comp_reg[0]);
@@ -87,7 +87,7 @@ void display_error(char *txt)
 
 void check_input_sync(unsigned char *value)
 {
-   if (dynacore || interpcore)
+   if (r4300emu == CORE_DYNAREC || r4300emu == CORE_PURE_INTERPRETER)
      {
     fread(value, 4, 1, f);
      }
@@ -106,7 +106,7 @@ void compare_core()
    char errHead[128];
    sprintf(errHead, "Compare #%i  old_op: %x op: %x\n", comparecnt++, (int) old_op, (int) op);
 
-   if (dynacore || interpcore)
+   if (r4300emu == CORE_DYNAREC || r4300emu == CORE_PURE_INTERPRETER)
      {
     if (!pipe_opened)
       {
@@ -117,7 +117,7 @@ void compare_core()
       }
     
     fread (comp_reg, 4, sizeof(int), f);
-    if (interpcore)
+    if (r4300emu == CORE_PURE_INTERPRETER)
       {
          if (memcmp(&interp_addr, comp_reg, 4))
          {

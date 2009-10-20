@@ -30,7 +30,6 @@
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 
-#include "main/rom.h"
 #include "memory/memory.h"
 
 #include "osal/dynamiclib.h"
@@ -421,7 +420,6 @@ static m64p_error plugin_start_input(void)
     int i;
 
     /* fill in the CONTROL_INFO data structure */
-    control_info.HEADER = rom;
     control_info.Controls = Controls;
     for (i=0; i<4; i++)
       {
@@ -439,7 +437,6 @@ static m64p_error plugin_start_input(void)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.HEADER = rom;
     audio_info.RDRAM = (unsigned char *) rdram;
     audio_info.DMEM = (unsigned char *) SP_DMEM;
     audio_info.IMEM = (unsigned char *) SP_IMEM;
@@ -462,7 +459,6 @@ static m64p_error plugin_start_audio(void)
 static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
-    gfx_info.HEADER = rom;
     gfx_info.RDRAM = (unsigned char *) rdram;
     gfx_info.DMEM = (unsigned char *) SP_DMEM;
     gfx_info.IMEM = (unsigned char *) SP_IMEM;

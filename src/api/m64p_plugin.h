@@ -72,8 +72,6 @@ typedef struct {
 } RSP_INFO;
 
 typedef struct {
-    unsigned char * HEADER;         /* This is the rom header (first 40h unsigned chars of the rom
-                                       This will be in the same memory format as the rest of the memory.*/
     unsigned char * RDRAM;
     unsigned char * DMEM;
     unsigned char * IMEM;
@@ -108,8 +106,6 @@ typedef struct {
 } GFX_INFO;
 
 typedef struct {
-    unsigned char * HEADER;         /* This is the rom header (first 40h unsigned chars of the rom
-                                       This will be in the same memory format as the rest of the memory.*/
     unsigned char * RDRAM;
     unsigned char * DMEM;
     unsigned char * IMEM;
@@ -160,8 +156,6 @@ typedef union {
 } BUTTONS;
 
 typedef struct {
-    unsigned char * HEADER;         /* This is the rom header (first 40h unsigned chars of the rom
-                                       This will be in the same memory format as the rest of the memory.*/
     CONTROL *Controls;      /* A pointer to an array of 4 controllers .. eg:
                                CONTROL Controls[4]; */
 } CONTROL_INFO;

@@ -23,14 +23,16 @@
 
 #include <stdio.h>
 #include <errno.h>
-#include <limits.h>
+
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "api/config.h"
 
 #include "memory/memory.h"
 #include "cheat.h"
 #include "main.h"
 #include "rom.h"
 #include "util.h" // list utilities
-#include "config.h"
 #include "ini_reader.h"
 
 // this seems stupid
@@ -131,8 +133,8 @@ static int execute_cheat(unsigned int address, unsigned short value, int *old_va
 
 static int gs_button_pressed(void)
 {
-    return key_pressed(config_get_number("Kbd Mapping GS Button", SDLK_g)) ||
-           event_active(config_get_string("Joy Mapping GS Button", ""));
+    return key_pressed(ConfigGetParamInt(g_CoreConfig, kbdGameshark)) ||
+           event_active(ConfigGetParamString(g_CoreConfig, joyGameshark));
 }
 
 // public functions
@@ -264,9 +266,14 @@ void cheat_read_config(void)
 /**
  * Read and parse the DATABASE (PJ64),
 */
-    char buf[PATH_MAX];
-    snprintf(buf, PATH_MAX, "%s%s", get_installpath(), DATABASE_FILENAME);
-    cheat_file = ini_file_parse(buf);
+    const char *romdbpath = ConfigGetSharedDataFilepath(DATABASE_FILENAME);
+    if (romdbpath == NULL)
+    {
+        DebugMessage(M64MSG_WARNING, "Cheat code database file '%s' not found.", DATABASE_FILENAME);
+        return;
+    }
+
+    cheat_file = ini_file_parse(romdbpath);
 
 /**   Read config file and populate list of supported cheats. Format of cheat file is:
  *
@@ -290,7 +297,7 @@ void cheat_read_config(void)
  *   name=Another Game
  *   ...
  */
-    char path[PATH_MAX];
+    char path[2048];
     FILE *f = NULL;
     char line[2048];
 
@@ -298,7 +305,8 @@ void cheat_read_config(void)
     cheat_t *cheat = NULL;
     cheat_code_t *cheatcode = NULL;
 
-    snprintf(path, PATH_MAX, "%s%s", get_configpath(), CHEAT_FILENAME);
+    snprintf(path, 2048, "%s%s", ConfigGetUserConfigPath(), CHEAT_FILENAME);
+    path[2047] = 0;
     f = fopen(path, "r");
 
     // if no cheat config file installed, exit quietly
@@ -359,7 +367,7 @@ void cheat_read_config(void)
  */
 void cheat_write_config(void)
 {
-    char path[PATH_MAX];
+    char path[2048];
     FILE *f = NULL;
 
     list_node_t *node1, *node2, *node3;
@@ -370,7 +378,8 @@ void cheat_write_config(void)
     // if no cheats, don't bother writing out file
     if(list_empty(g_Cheats)) return;
 
-    snprintf(path, PATH_MAX, "%s%s", get_configpath(), CHEAT_FILENAME);
+    snprintf(path, 2048, "%s%s", ConfigGetUserConfigPath(), CHEAT_FILENAME);
+    path[2047] = 0;
     f = fopen(path, "w");
     if(!f)
         return;
@@ -489,7 +498,7 @@ list_t cheats_for_current_rom()
     int n = 0, len = 0;
     int value = 0;
     unsigned int address = 0;
-    char buf[PATH_MAX];
+    char buf[2048];
     cheat_option_t *option;
     cheat_code_t *code;
 
@@ -511,7 +520,7 @@ list_t cheats_for_current_rom()
                 node2 = NULL;
                 list_foreach(temp, node2)
                 {
-                    memset(buf, '\0', PATH_MAX);
+                    memset(buf, '\0', sizeof(buf));
                     if (sscanf(node2->data, "$%x %[a-zA-Z0-9 ']", &value, buf) == 2)
                     {
                         option = malloc(sizeof(cheat_option_t));

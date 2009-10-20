@@ -42,8 +42,7 @@ extern int FCR0, FCR31;
 extern tlb tlb_e[32];
 extern unsigned int delay_slot, skip_jump, dyna_interp;
 extern unsigned long long int debug_count;
-extern unsigned int dynacore;
-extern unsigned int interpcore;
+extern unsigned int r4300emu;
 extern unsigned int next_interupt, CIC_Chip;
 extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
 extern unsigned int last_addr, interp_addr;
@@ -64,6 +63,11 @@ void shuffle_fpr_data(int oldStatus, int newStatus);
 void set_fpr_pointers(int newStatus);
 
 #define jump_to(a) { jump_to_address = a; jump_to_func(); }
+
+// r4300 emulators
+#define CORE_PURE_INTERPRETER 0
+#define CORE_INTERPRETER      1
+#define CORE_DYNAREC          2
 
 // profiling
 

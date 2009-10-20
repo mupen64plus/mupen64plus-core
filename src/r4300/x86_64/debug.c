@@ -98,7 +98,7 @@ void debug(void)
 
 void stop_it(void)
 {
-   if (dynacore)
+   if (r4300emu == CORE_DYNAREC)
      {
     stop = 1;
     /**return_address = (unsigned int)dyna_stop;

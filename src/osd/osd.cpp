@@ -20,14 +20,14 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // On-screen Display
-#include <limits.h>
-
 #include "OGLFT.h"
 #include "osd.h"
 
 extern "C" {
+    #include "api/config.h"
     #include "main/main.h"
     #include "main/util.h"
+    #include "osal/files.h"
     #include "plugin/plugin.h"
 }
 
@@ -206,9 +206,10 @@ static float get_message_offset(osd_message_t *msg, float fLinePos)
 extern "C"
 void osd_init(int width, int height)
 {
-    char fontpath[PATH_MAX];
+    const char *fontpath;
 
-    snprintf(fontpath, PATH_MAX, "%sfonts/%s", get_installpath(), FONT_FILENAME);
+    fontpath = ConfigGetSharedDataFilepath(FONT_FILENAME);
+
     l_font = new OGLFT::Monochrome(fontpath, height / 35);  // make font size proportional to screen height
 
     if(!l_font || !l_font->isValid())
@@ -422,7 +423,7 @@ extern "C"
 osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
 {
     va_list ap;
-    char buf[PATH_MAX];
+    char buf[1024];
 
     if (!l_OsdInitialized) return NULL;
 
@@ -431,7 +432,8 @@ osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
     if (!msg) return NULL;
 
     va_start(ap, fmt);
-    vsnprintf(buf, PATH_MAX, fmt, ap);
+    vsnprintf(buf, 1024, fmt, ap);
+    buf[1023] = 0;
     va_end(ap);
 
     // set default values
@@ -479,12 +481,13 @@ extern "C"
 void osd_update_message(osd_message_t *msg, const char *fmt, ...)
 {
     va_list ap;
-    char buf[PATH_MAX];
+    char buf[1024];
 
     if (!l_OsdInitialized || !msg) return;
 
     va_start(ap, fmt);
-    vsnprintf(buf, PATH_MAX, fmt, ap);
+    vsnprintf(buf, 1024, fmt, ap);
+    buf[1023] = 0;
     va_end(ap);
 
     if(msg->text)

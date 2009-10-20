@@ -196,7 +196,7 @@ int get_has_recompiled(uint32 addr)
 {
     unsigned char *assemb, *end_addr;
 
-    if(!dynacore || blocks[addr>>12] == NULL)
+    if(r4300emu != CORE_DYNAREC || blocks[addr>>12] == NULL)
         return FALSE;
 
     assemb = (blocks[addr>>12]->code) + 

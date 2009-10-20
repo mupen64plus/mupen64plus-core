@@ -63,6 +63,7 @@ typedef enum {
   M64MSG_ERROR = 1,
   M64MSG_WARNING,
   M64MSG_INFO,
+  M64MSG_STATUS,
   M64MSG_VERBOSE
 } m64p_msg_level;
 

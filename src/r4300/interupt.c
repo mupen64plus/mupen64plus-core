@@ -352,7 +352,7 @@ void gen_interupt()
             next_interupt = q->count;
         else
             next_interupt = 0;
-        if (interpcore)
+        if (r4300emu == CORE_PURE_INTERPRETER)
         {
              interp_addr = skip_jump;
              last_addr = interp_addr;
@@ -570,7 +570,7 @@ void gen_interupt()
             // clear the audio status register so that subsequent write_ai() calls will work properly
             ai_register.ai_status = 0;
             // reset the r4300 internal state
-            if (interpcore) /* pure interpreter only */
+            if (r4300emu == CORE_PURE_INTERPRETER) /* pure interpreter only */
             {
                 // set ErrorEPC with last instruction address and set next instruction address to reset vector
                 ErrorEPC = interp_addr;

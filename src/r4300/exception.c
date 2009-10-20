@@ -56,7 +56,7 @@ void TLB_refill_exception(unsigned int address, int w)
 {
    int usual_handler = 0, i;
    //printf("TLB_refill_exception:%x\n", address);
-   if (!dynacore && w != 2) update_count();
+   if (r4300emu != CORE_DYNAREC && w != 2) update_count();
    if (w == 1) Cause = (3 << 2);
    else Cause = (2 << 2);
    BadVAddr = address;
@@ -64,14 +64,14 @@ void TLB_refill_exception(unsigned int address, int w)
    EntryHi = address & 0xFFFFE000;
    if (Status & 0x2) // Test de EXL
      {
-    if (interpcore) interp_addr = 0x80000180;
+    if (r4300emu == CORE_PURE_INTERPRETER) interp_addr = 0x80000180;
     else jump_to(0x80000180);
     if(delay_slot==1 || delay_slot==3) Cause |= 0x80000000;
     else Cause &= 0x7FFFFFFF;
      }
    else
      {
-    if (!interpcore) 
+    if (r4300emu != CORE_PURE_INTERPRETER) 
       {
          if (w!=2)
            EPC = PC->addr;
@@ -96,12 +96,12 @@ void TLB_refill_exception(unsigned int address, int w)
       }
     if (usual_handler)
       {
-         if (interpcore) interp_addr = 0x80000180;
+         if (r4300emu == CORE_PURE_INTERPRETER) interp_addr = 0x80000180;
          else jump_to(0x80000180);
       }
     else
       {
-         if (interpcore) interp_addr = 0x80000000;
+         if (r4300emu == CORE_PURE_INTERPRETER) interp_addr = 0x80000000;
          else jump_to(0x80000000);
       }
      }
@@ -116,16 +116,16 @@ void TLB_refill_exception(unsigned int address, int w)
      }
    if(w != 2) EPC-=4;
    
-   if (interpcore) last_addr = interp_addr;
+   if (r4300emu == CORE_PURE_INTERPRETER) last_addr = interp_addr;
    else last_addr = PC->addr;
    
-   if (dynacore) 
+   if (r4300emu == CORE_DYNAREC) 
      {
     dyna_jump();
     if (!dyna_interp) delay_slot = 0;
      }
    
-   if (!dynacore || dyna_interp)
+   if (r4300emu != CORE_DYNAREC || dyna_interp)
      {
     dyna_interp = 0;
     if (delay_slot)
@@ -160,7 +160,7 @@ void exception_general(void)
    update_count();
    Status |= 2;
    
-   if (!interpcore) EPC = PC->addr;
+   if (r4300emu != CORE_PURE_INTERPRETER) EPC = PC->addr;
    else EPC = interp_addr;
    
    if(delay_slot==1 || delay_slot==3)
@@ -172,7 +172,7 @@ void exception_general(void)
      {
     Cause &= 0x7FFFFFFF;
      }
-   if (interpcore)
+   if (r4300emu == CORE_PURE_INTERPRETER)
      {
     interp_addr = 0x80000180;
     last_addr = interp_addr;
@@ -182,17 +182,17 @@ void exception_general(void)
     jump_to(0x80000180);
     last_addr = PC->addr;
      }
-   if (dynacore)
+   if (r4300emu == CORE_DYNAREC)
      {
     dyna_jump();
     if (!dyna_interp) delay_slot = 0;
      }
-   if (!dynacore || dyna_interp)
+   if (r4300emu != CORE_DYNAREC || dyna_interp)
      {
     dyna_interp = 0;
     if (delay_slot)
       {
-         if (interpcore) skip_jump = interp_addr;
+         if (r4300emu == CORE_PURE_INTERPRETER) skip_jump = interp_addr;
          else skip_jump = PC->addr;
          next_interupt = 0;
       }

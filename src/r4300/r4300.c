@@ -31,6 +31,7 @@
 #include "recomph.h"
 
 #include "memory/memory.h"
+#include "main/main.h"
 #include "main/rom.h"
 
 #ifdef DBG
@@ -38,7 +39,7 @@
 #include "debugger/debugger.h"
 #endif
 
-unsigned int dynacore = 0, interpcore = 0;
+unsigned int r4300emu = 0;
 int no_compiled_jump = 0;
 int stop, llbit, rompause;
 long long int reg[32], hi, lo;
@@ -103,7 +104,7 @@ void FIN_BLOCK()
 Used by dynarec only, check should be unnecessary
 */
     PC->ops();
-    if (dynacore) dyna_jump();
+    if (r4300emu == CORE_DYNAREC) dyna_jump();
      }
    else
      {
@@ -125,7 +126,7 @@ Used by dynarec only, check should be unnecessary
     else
       PC->ops();
     
-    if (dynacore) dyna_jump();
+    if (r4300emu == CORE_DYNAREC) dyna_jump();
      }
 }
 
@@ -1428,7 +1429,7 @@ The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
 */
    PC->ops();
-   if (dynacore)
+   if (r4300emu == CORE_DYNAREC)
      dyna_jump();
 }
 
@@ -1494,7 +1495,7 @@ void jump_to_func()
      }
    PC=actual->block+((addr-actual->start)>>2);
    
-   if (dynacore) dyna_jump();
+   if (r4300emu == CORE_DYNAREC) dyna_jump();
 }
 #undef addr
 
@@ -1595,7 +1596,7 @@ int check_cop1_unusable()
 
 void update_count()
 {
-   if (interpcore)
+   if (r4300emu == CORE_PURE_INTERPRETER)
      {
     Count = Count + (interp_addr - last_addr)/2;
     last_addr = interp_addr;
@@ -1888,11 +1889,10 @@ void r4300_execute()
     last_addr = 0xa4000040;
     next_interupt = 624999;
     init_interupt();
-    interpcore = 0;
-
-    if (dynacore == 0)
+    
+    if (r4300emu == CORE_INTERPRETER)
     {
-        printf ("R4300 Core mode: Interpreter\n");
+        printf ("R4300 Core mode: Cached Interpreter\n");
         init_blocks();
         last_addr = PC->addr;
         while (!stop)
@@ -1909,10 +1909,10 @@ void r4300_execute()
             PC->ops();
         }
     }
-#if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
-    else if (dynacore == 1)
+#if defined(DYNAREC)
+    else if (r4300emu >= 2)
     {
-        dynacore = 1;
+        r4300emu = CORE_DYNAREC;
         printf ("R4300 Core mode: Dynamic Recompiler\n");
         init_blocks();
         code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
@@ -1939,8 +1939,7 @@ void r4300_execute()
     else
     {
         printf ("R4300 Core mode: Pure Interpreter\n");
-        dynacore = 0;
-        interpcore = 1;
+        r4300emu = CORE_PURE_INTERPRETER;
         pure_interpreter();
     }
     debug_count+= Count;
@@ -1957,11 +1956,11 @@ void r4300_execute()
             blocks[i] = NULL;
         }
     }
-    if (!dynacore && interpcore) free(PC);
+    if (r4300emu == CORE_PURE_INTERPRETER) free(PC);
 
     /* print instruction counts */
 #if defined(COUNT_INSTR)
-    if (dynacore)
+    if (r4300emu == CORE_DYNAREC)
     {
         unsigned int iTypeCount[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         unsigned int iTotal = 0;

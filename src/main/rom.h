@@ -33,7 +33,7 @@ unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char
 void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength);
 
 extern unsigned char* rom;
-extern int taille_rom;
+extern int rom_size;
 
 typedef struct _rom_header
 {
