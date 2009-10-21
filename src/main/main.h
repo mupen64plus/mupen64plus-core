@@ -36,20 +36,18 @@ char* get_savespath(void);
 void new_frame();
 void new_vi();
 
-int  runEmulator(void);
-void stopEmulator(void);
-int  pauseContinueEmulator(void);
-
 void main_set_core_defaults(void);
+void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
 
-void main_pause(void);
+int  main_run(void);
+void main_stop(void);
+
+void main_toggle_pause(void);
 void main_advance_one(void);
 void main_speedup(int percent);
 void main_speeddown(int percent);
 void main_draw_volume_osd(void);
-void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
-
-void take_next_screenshot(void);
+void main_take_next_screenshot(void);
 
 #define kbdFullscreen "Kbd Mapping Fullscreen"
 #define kbdStop "Kbd Mapping Stop"

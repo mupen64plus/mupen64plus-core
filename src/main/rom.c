@@ -301,7 +301,7 @@ int open_rom(const char* filename, unsigned int archivefile)
 int close_rom(void)
 {
     if(g_EmulatorRunning)
-        stopEmulator();
+        main_stop();
 
     if(ROM_HEADER)
         {

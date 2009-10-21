@@ -174,6 +174,9 @@ void ini_file_free(ini_file **ini)
     ini_section* section;
     ini_entry* entry;
 
+    if (ini == NULL || *ini == NULL)
+        return;
+
     free((*ini)->filename);
 
     list_foreach((*ini)->sections, p1)

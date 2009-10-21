@@ -240,9 +240,33 @@ void main_speedup(int percent)
     }
 }
 
-void main_pause(void)
+void main_toggle_pause(void)
 {
-    pauseContinueEmulator();
+    static osd_message_t *msg = NULL;
+
+    if (!g_EmulatorRunning)
+        return;
+
+    if (rompause)
+    {
+        DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
+        if(msg)
+        {
+            osd_delete_message(msg);
+            msg = NULL;
+        }
+    }
+    else
+    {
+        if(msg)
+            osd_delete_message(msg);
+
+        DebugMessage(M64MSG_STATUS, tr("Emulation paused.\n"));
+        msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
+        osd_message_set_static(msg);
+    }
+
+    rompause = !rompause;
     l_FrameAdvance = 0;
 }
 
@@ -283,57 +307,9 @@ void main_draw_volume_osd(void)
 
 /* this function could be called as a result of a keypress, joystick/button movement,
    LIRC command, or 'testshots' command-line option timer */
-void take_next_screenshot(void)
+void main_take_next_screenshot(void)
 {
     g_TakeScreenshot = l_CurrentFrame + 1;
-}
-
-void stopEmulator(void)
-{
-    /* note: this operation is asynchronous.  It may be called from a thread other than the
-       main emulator thread, and may return before the emulator is completely stopped */
-    if (!g_EmulatorRunning)
-        return;
-
-    DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
-    rompause = 0;
-    stop_it();
-#ifdef DBG
-    if(debugger_mode)
-    {
-        debugger_step();
-    }
-#endif        
-}
-
-int pauseContinueEmulator(void)
-{
-    static osd_message_t *msg = NULL;
-
-    if (!g_EmulatorRunning)
-        return 1;
-
-    if (rompause)
-    {
-        DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
-        if(msg)
-        {
-            osd_delete_message(msg);
-            msg = NULL;
-        }
-    }
-    else
-    {
-        if(msg)
-            osd_delete_message(msg);
-
-        DebugMessage(M64MSG_STATUS, tr("Paused\n"));
-        msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
-        osd_message_set_static(msg);
-    }
-
-    rompause = !rompause;
-    return rompause;
 }
 
 /*********************************************************************************************************
@@ -366,13 +342,13 @@ void new_frame(void)
         if (nextshot == l_CurrentFrame)
         {
             // set global variable so screenshot will be taken just before OSD is drawn at the end of frame rendering
-            take_next_screenshot();
+            main_take_next_screenshot();
             // advance list index to next screenshot frame number.  If it's 0, then quit
             l_TestShotIdx++;
         }
         else if (nextshot == 0)
         {
-            stopEmulation();
+            main_stop();
             free(l_TestShotList);
             l_TestShotList = NULL;
         }
@@ -455,7 +431,7 @@ static int sdl_event_filter( const SDL_Event *event )
     {
         // user clicked on window close button
         case SDL_QUIT:
-            stopEmulator();
+            main_stop();
             break;
         case SDL_KEYDOWN:
             /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
@@ -469,7 +445,7 @@ static int sdl_event_filter( const SDL_Event *event )
             }
             /* check all of the configurable commands */
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdStop))
-                stopEmulator();
+                main_stop();
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdFullscreen))
                 changeWindow();
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSave))
@@ -495,9 +471,9 @@ static int sdl_event_filter( const SDL_Event *event )
                 main_speedup(5);
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdScreenshot))
                 // set flag so that screenshot will be taken at the end of frame rendering
-                take_next_screenshot();
+                main_take_next_screenshot();
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdPause))
-                main_pause();
+                main_toggle_pause();
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdMute))
             {
                 volumeMute();
@@ -560,9 +536,9 @@ static int sdl_event_filter( const SDL_Event *event )
             if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyFullscreen)) == 0)
                 changeWindow();
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyStop)) == 0)
-                stopEmulator();
+                main_stop();
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyPause)) == 0)
-                main_pause();
+                main_toggle_pause();
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joySave)) == 0)
                 savestates_job |= SAVESTATE;
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyLoad)) == 0)
@@ -570,7 +546,7 @@ static int sdl_event_filter( const SDL_Event *event )
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrement)) == 0)
                 savestates_inc_slot();
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyScreenshot)) == 0)
-                take_next_screenshot();
+                main_take_next_screenshot();
             else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyMute)) == 0)
             {
                 volumeMute();
@@ -598,7 +574,7 @@ static int sdl_event_filter( const SDL_Event *event )
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
-int runEmulator(void)
+int main_run(void)
 {
     VILimit = GetVILimit();
     VILimitMilliseconds = (double) 1000.0/VILimit; 
@@ -710,6 +686,24 @@ int runEmulator(void)
     SDL_Quit();
 
     return 0;
+}
+
+void main_stop(void)
+{
+    /* note: this operation is asynchronous.  It may be called from a thread other than the
+       main emulator thread, and may return before the emulator is completely stopped */
+    if (!g_EmulatorRunning)
+        return;
+
+    DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
+    rompause = 0;
+    stop_it();
+#ifdef DBG
+    if(debugger_mode)
+    {
+        debugger_step();
+    }
+#endif        
 }
 
 /*********************************************************************************************************
