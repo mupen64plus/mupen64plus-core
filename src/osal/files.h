@@ -35,7 +35,7 @@
 
 extern int osal_mkdirp(const char *dirpath, int mode);
 
-extern const char * osal_get_shared_filepath(const char *filename, const char *firstsearch);
+extern const char * osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch);
 extern const char * osal_get_user_configpath(void);
 extern const char * osal_get_user_datapath(void);
 extern const char * osal_get_user_cachepath(void);

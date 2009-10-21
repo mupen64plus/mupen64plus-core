@@ -58,6 +58,7 @@ typedef struct _config_section {
 
 /* local variables */
 static int      l_ConfigInit = 0;
+static char    *l_DataDirOverride = NULL;
 config_section *l_SectionHead = NULL;
 
 /* --------------- */
@@ -146,11 +147,20 @@ static void append_var_to_section(config_section *section, config_var *var)
 /* these functions are only to be used within the Core library */
 /* ----------------------------------------------------------- */
 
-m64p_error ConfigInit(const char *ConfigDirOverride)
+m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride)
 {
     if (l_ConfigInit)
         return M64ERR_ALREADY_INIT;
     l_ConfigInit = 1;
+
+    /* if a data directory was specified, make a copy of it */
+    if (DataDirOverride != NULL)
+    {
+        l_DataDirOverride = malloc(strlen(DataDirOverride) + 1);
+        if (l_DataDirOverride == NULL)
+            return M64ERR_NO_MEMORY;
+        strcpy(l_DataDirOverride, DataDirOverride);
+    }
 
     /* get the full pathname to the config file and try to open it */
     const char *configpath = NULL;
@@ -302,6 +312,13 @@ m64p_error ConfigShutdown(void)
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     l_ConfigInit = 0;
+
+    /* free any malloc'd local variables */
+    if (l_DataDirOverride != NULL)
+    {
+        free(l_DataDirOverride);
+        l_DataDirOverride = NULL;
+    }
 
     /* free all of the malloc'd blocks */
     config_section *curr_section = l_SectionHead;
@@ -964,7 +981,7 @@ EXPORT const char * CALL ConfigGetSharedDataFilepath(const char *filename)
         configsharepath = ConfigGetParamString(CoreHandle, "SharedDataPath");
     }
 
-    return osal_get_shared_filepath(filename, configsharepath);
+    return osal_get_shared_filepath(filename, l_DataDirOverride, configsharepath);
 }
 
 EXPORT const char * CALL ConfigGetUserConfigPath(void)

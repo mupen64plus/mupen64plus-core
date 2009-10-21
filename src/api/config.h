@@ -26,7 +26,7 @@
 
 /* these functions are only to be used within the Core library */
 
-m64p_error ConfigInit(const char *ConfigDirOverride);
+m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride);
 m64p_error ConfigShutdown(void);
 
 /* these functions are exported outside of the Core as well as used within it */

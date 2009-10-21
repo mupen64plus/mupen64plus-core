@@ -150,13 +150,15 @@ int osal_mkdirp(const char *dirpath, int mode)
     return 0;
 }
 
-const char * osal_get_shared_filepath(const char *filename, const char *firstsearch)
+const char * osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch)
 {
     static char retpath[PATH_MAX];
     int i;
 
-    /* if caller gave us a directory to search, then look there first */
+    /* if caller gave us any directories to search, then look there first */
     if (firstsearch != NULL && search_dir_file(retpath, firstsearch, filename) == 0)
+        return retpath;
+    if (secondsearch != NULL && search_dir_file(retpath, secondsearch, filename) == 0)
         return retpath;
 
     /* otherwise check our standard paths */
