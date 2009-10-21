@@ -57,8 +57,27 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     return M64ERR_SUCCESS;
 }
 
+static const char *ErrorMessages[] = {
+                   "SUCCESS: No error",
+                   "NOT_INIT: A function was called before it's associated module was initialized",
+                   "ALREADY_INIT: Initialization function called twice",
+                   "INCOMPATIBLE: API versions between components are incompatible",
+                   "INPUT_ASSERT: Invalid function parameters, such as a NULL pointer",
+                   "INPUT_INVALID: An input function parameter is logically invalid",
+                   "INPUT_NOT_FOUND: The input parameter(s) specified a particular item which was not found",
+                   "NO_MEMORY: Memory allocation failed",
+                   "FILES: Error opening, creating, reading, or writing to a file",
+                   "INTERNAL: logical inconsistency in program code.  Probably a bug.",
+                   "INVALID_STATE: An operation was requested which is not allowed in the current state",
+                   "PLUGIN_FAIL: A plugin function returned a fatal error"};
+
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {
-  return NULL;
+    int i = (int) ReturnCode;
+
+    if (i < 0 || i > (sizeof(ErrorMessages) / sizeof(char *)))
+        return "ERROR: Invalid m64p_error code given to CoreErrorMessage()";
+
+    return ErrorMessages[i];
 }
 
