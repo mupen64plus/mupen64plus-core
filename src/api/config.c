@@ -395,6 +395,7 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     strncpy(new_section->name, SectionName, 63);
     new_section->name[63] = 0;
     new_section->first_var = NULL;
+    new_section->next = NULL;
 
     /* add section to the end of the list */
     if (l_SectionHead == NULL)
