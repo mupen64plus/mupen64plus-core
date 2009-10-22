@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -51,12 +50,11 @@ unsigned char* rom;
 /* Global loaded rom size. */
 int rom_size;
 
-/* TODO: Replace with a glocal cache_entry. */
 rom_header* ROM_HEADER;
 rom_settings ROM_SETTINGS;
 
 /* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
-int is_valid_rom(unsigned char buffer[4])
+static int is_valid_rom(const unsigned char buffer[4])
 {
     /* Test if rom is a native .z64 image with header 0x80371240. [ABCD] */
     if((buffer[0]==0x80)&&(buffer[1]==0x37)&&(buffer[2]==0x12)&&(buffer[3]==0x40))
@@ -75,7 +73,7 @@ int is_valid_rom(unsigned char buffer[4])
  * rom data to native .z64 before forwarding. Makes sure that data extraction
  * and MD5ing routines always deal with a .z64 image.
  */
-void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength)
+static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength)
 {
     unsigned char temp;
     int i;
@@ -109,104 +107,40 @@ void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength)
         *imagetype = Z64IMAGE;
 }
 
-/* Open a file and test if its an uncompressed rom, bzip2ed rom, or gzipped rom. If so,
- * set compressiontype and load *loadlength of the rom
- * into the returned pointer. On failure return NULL.
- */
-unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char* compressiontype, int* loadlength)
+m64p_error open_rom(const char* romimage, unsigned int size)
 {
-    int i;
-    unsigned short romread = 0;
-    unsigned char buffer[4];
-    unsigned char* localrom;
-
-    FILE* romfile;
-    /* Uncompressed roms. */
-    romfile=fopen(filename, "rb");
-    if(romfile!=NULL)
-        {
-        fread(buffer, 1, 4, romfile);
-        if(is_valid_rom(buffer))
-            {
-            *compressiontype = UNCOMPRESSED;
-            fseek(romfile, 0L, SEEK_END);
-            *romsize=ftell(romfile);
-            fseek(romfile, 0L, SEEK_SET);
-            localrom = (unsigned char*)malloc(*loadlength*sizeof(unsigned char));
-            if(localrom==NULL)
-                {
-                fprintf(stderr, "%s, %d: Out of memory!\n", __FILE__, __LINE__);
-                return NULL;
-                }
-            fread(localrom, 1, *loadlength, romfile); 
-            romread = 1;
-            }
-        }
-
-    /* File invalid, or valid rom not found in file. */
-    if(romread==0)
-        return NULL;
-
-    return localrom;
-}
-
-static int ask_bad(void)
-{
-        printf(tr("The rom you are trying to load is probably a bad dump!\n"
-                  "Be warned that this will probably give unexpected results.\n"));
-
-    return 1;
-}
-
-static int ask_hack(void)
-{
-        printf(tr("The rom you are trying to load is probably a hack!\n"
-                  "Be warned that this will probably give unexpected results.\n"));
-
-    return 1;
-}
-
-int open_rom(const char* filename, unsigned int archivefile)
-{
-    if(g_EmulatorRunning)
+    /* check input requirements */
+    if (rom != NULL)
     {
-        DebugMessage(M64MSG_ERROR, tr("Can't load Rom when emulator is running!")); 
-        return -1;
+        DebugMessage(M64MSG_ERROR, tr("open_rom(): previous ROM image was not freed"));
+        return M64ERR_INTERNAL;
+    }
+    if (romimage == NULL || !is_valid_rom(romimage))
+    {
+        DebugMessage(M64MSG_ERROR, tr("open_rom(): not a valid ROM image"));
+        return M64ERR_INPUT_INVALID;
     }
 
     md5_state_t state;
     md5_byte_t digest[16];
     romdatabase_entry* entry;
-    char buffer[PATH_MAX];
-    unsigned char compressiontype, imagetype;
+    char buffer[256];
+    unsigned char imagetype;
     int i;
-
-    if(rom)
-        free(rom);
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
-
-    strncpy(buffer, filename, PATH_MAX-1);
-    buffer[PATH_MAX-1] = 0;
-    if ((rom=load_single_rom(filename, &rom_size, &compressiontype, &rom_size))==NULL)
-    {
-        DebugMessage(M64MSG_ERROR, tr("Couldn't load Rom!")); 
-        return -1;
-    }
-
+    /* allocate new buffer for ROM and copy into this buffer */
+    rom_size = size;
+    rom = malloc(size);
+    if (rom == NULL)
+        return M64ERR_NO_MEMORY;
+    memcpy(rom, romimage, size);
     swap_rom(rom, &imagetype, rom_size);
 
-    compressionstring(compressiontype, buffer);
-    printf("Compression: %s\n", buffer);
-
     imagestring(imagetype, buffer);
-    printf("Imagetype: %s\n", buffer);
-
-    printf("Rom size: %d bytes (or %d Mb or %d Megabits)\n",
-    rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
-
-    /* TODO: Replace the following validation code with fill_entry(). */
+    DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
+    DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
 
     /* Load rom settings and check if it's a good dump. */
     md5_init(&state);
@@ -216,36 +150,29 @@ int open_rom(const char* filename, unsigned int archivefile)
         sprintf(buffer+i*2, "%02X", digest[i]);
     buffer[32] = '\0';
     strcpy(ROM_SETTINGS.MD5, buffer);
-    printf("MD5: %s\n", buffer);
+    DebugMessage(M64MSG_INFO, "MD5: %s", buffer);
 
     if(ROM_HEADER)
         free(ROM_HEADER);
     ROM_HEADER = malloc(sizeof(rom_header));
     if(ROM_HEADER==NULL)
-        {
-        fprintf(stderr, "%s, %d: Out of memory!\n", __FILE__, __LINE__);
-        return 0;
-        }
+        return M64ERR_NO_MEMORY;
     memcpy(ROM_HEADER, rom, sizeof(rom_header));
     trim((char*)ROM_HEADER->nom); /* Remove trailing whitespace from Rom name. */
 
-    printf("%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
-                            ROM_HEADER->init_PI_BSB_DOM1_PGS_REG,
-                            ROM_HEADER->init_PI_BSB_DOM1_PWD_REG,
-                            ROM_HEADER->init_PI_BSB_DOM1_PGS_REG2);
-    printf("ClockRate = %x\n", sl((unsigned int)ROM_HEADER->ClockRate));
-    printf("Version: %x\n", sl((unsigned int)ROM_HEADER->Release));
-    printf("CRC: %x %x\n", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
-    printf ("Name: %s\n", ROM_HEADER->nom);
+    DebugMessage(M64MSG_INFO, "ClockRate = %x", sl((unsigned int)ROM_HEADER->ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %x", sl((unsigned int)ROM_HEADER->Release));
+    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+    DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->nom);
     if(sl(ROM_HEADER->Manufacturer_ID) == 'N')
-        printf ("Manufacturer: Nintendo\n");
+        DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
-        printf("Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID));
-    printf("Cartridge_ID: %x\n", ROM_HEADER->Cartridge_ID);
+        DebugMessage(M64MSG_INFO, "Manufacturer: %x", (unsigned int)(ROM_HEADER->Manufacturer_ID));
+    DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER->Cartridge_ID);
 
     countrycodestring(ROM_HEADER->Country_code, buffer);
-    printf("Country: %s\n", buffer);
-    printf ("PC = %x\n", sl((unsigned int)ROM_HEADER->PC));
+    DebugMessage(M64MSG_INFO, "Country: %s", buffer);
+    DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER->PC));
 
     if((entry=ini_search_by_md5(digest))==&empty_entry)
         {
@@ -253,40 +180,10 @@ int open_rom(const char* filename, unsigned int archivefile)
             {
             strcpy(ROM_SETTINGS.goodname, (char*)ROM_HEADER->nom);
             strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-            printf("%s\n", ROM_SETTINGS.goodname);
+            DebugMessage(M64MSG_INFO, "%s", ROM_SETTINGS.goodname);
             ROM_SETTINGS.eeprom_16kb = 0;
-            return 0;
+            return M64ERR_SUCCESS;
             }
-        }
-
-    unsigned short close = 0;
-    char* s = entry->goodname;
-    if(s!=NULL)
-        {
-        for ( i = strlen(s); i > 1; --i )
-        if(i!=0)
-            {
-            if(s[i-1]=='['&&(s[i]=='T'||s[i]=='t'||s[i]=='h'||s[i]=='f'))
-                {
-                if(!ask_hack())
-                    close = 1;
-                }
-            else if(s[i-1]=='['&&s[i]=='b')
-                {
-                if(!ask_bad())
-                    close = 1;
-                }
-            }
-        }
-
-    if(close)
-        {
-        free(rom);
-        rom = NULL;
-        free(ROM_HEADER);
-        ROM_HEADER = NULL;
-        DebugMessage(M64MSG_STATUS, tr("Rom closed."));
-        return -3;
         }
 
     strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
@@ -294,34 +191,30 @@ int open_rom(const char* filename, unsigned int archivefile)
 
     if(entry->savetype==EEPROM_16KB)
         ROM_SETTINGS.eeprom_16kb = 1;
-    printf("EEPROM type: %d\n", ROM_SETTINGS.eeprom_16kb);
-    return 0;
+    DebugMessage(M64MSG_INFO, "EEPROM type: %d", ROM_SETTINGS.eeprom_16kb);
+
+    return M64ERR_SUCCESS;
 }
 
-int close_rom(void)
+m64p_error close_rom(void)
 {
-    if(g_EmulatorRunning)
-        main_stop();
+    if (rom == NULL)
+        return M64ERR_INVALID_STATE;
 
-    if(ROM_HEADER)
-        {
+    free(rom);
+    rom = NULL;
+
+    if (ROM_HEADER)
+    {
         free(ROM_HEADER);
         ROM_HEADER = NULL;
-        }
-
-    if(rom)
-        {
-        free(rom);
-        rom = NULL;
-        }
-     else
-        return -1;
+    }
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
     DebugMessage(M64MSG_STATUS, tr("Rom closed."));
 
-    return 0;
+    return M64ERR_SUCCESS;
 }
 
 /********************************************************************************************/

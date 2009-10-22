@@ -23,14 +23,13 @@
 #ifndef __ROM_H__
 #define __ROM_H__
 
+#include "api/m64p_types.h"
 #include "md5.h"
 
 /* ROM Loading and Saving functions */
 
-int open_rom(const char* filename, unsigned int archivefile);
-int close_rom(void);
-unsigned char* load_single_rom(const char* filename, int* romsize, unsigned char* compressiontype, int* loadlength);
-void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength);
+m64p_error open_rom(const char* romimage, unsigned int size);
+m64p_error close_rom(void);
 
 extern unsigned char* rom;
 extern int rom_size;

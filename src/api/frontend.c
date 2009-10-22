@@ -24,12 +24,14 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "m64p_types.h"
 #include "callbacks.h"
 #include "config.h"
 
 #include "main/main.h"
+#include "main/rom.h"
 #include "main/version.h"
 #include "plugin/plugin.h"
 
@@ -99,6 +101,8 @@ EXPORT m64p_error CALL CoreAttachPlugin(m64p_plugin_type PluginType, m64p_dynlib
 
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (g_EmulatorRunning || l_ROMOpen)
+        return M64ERR_INVALID_STATE;
 
     rval = plugin_connect(PluginType, PluginLibHandle);
     if (rval != M64ERR_SUCCESS)
@@ -115,12 +119,16 @@ EXPORT m64p_error CALL CoreDetachPlugin(m64p_plugin_type PluginType)
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (g_EmulatorRunning)
+        return M64ERR_INVALID_STATE;
 
     return plugin_connect(PluginType, NULL);
 }
 
 EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *ParamPtr)
 {
+    m64p_error rval;
+
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
 
@@ -129,10 +137,43 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_NOP:
             return M64ERR_SUCCESS;
         case M64CMD_ROM_OPEN:
+            if (g_EmulatorRunning || l_ROMOpen)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL || ParamInt < 4096)
+                return M64ERR_INPUT_ASSERT;
+            rval = open_rom((const char *) ParamPtr, ParamInt);
+            if (rval == M64ERR_SUCCESS)
+                l_ROMOpen = 1;
+            return rval;
         case M64CMD_ROM_CLOSE:
+            if (g_EmulatorRunning || !l_ROMOpen)
+                return M64ERR_INVALID_STATE;
+            l_ROMOpen = 0;
+            return close_rom();
         case M64CMD_ROM_GET_HEADER:
+            if (!l_ROMOpen || ROM_HEADER == NULL)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            if (sizeof(rom_header) < ParamInt)
+                ParamInt = sizeof(rom_header);
+            memcpy(ParamPtr, ROM_HEADER, ParamInt);
+            return M64ERR_SUCCESS;
         case M64CMD_ROM_GET_SETTINGS:
+            if (!l_ROMOpen)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            if (sizeof(rom_settings) < ParamInt)
+                ParamInt = sizeof(rom_settings);
+            memcpy(ParamPtr, &ROM_SETTINGS, ParamInt);
+            return M64ERR_SUCCESS;
         case M64CMD_EXECUTE:
+            if (g_EmulatorRunning || !l_ROMOpen)
+                return M64ERR_INVALID_STATE;
+            /* the main_run() function will not return until the player has quit the game */
+            main_run();
+            return M64ERR_SUCCESS;
         case M64CMD_STOP:
         case M64CMD_PAUSE:
         case M64CMD_RESUME:
