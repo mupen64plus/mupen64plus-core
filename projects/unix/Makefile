@@ -47,7 +47,7 @@ ifeq ($(OS), LINUX)
 endif
 
 # set options
-ifeq ($(DBG), 1)
+ifeq ($(DEBUGGER), 1)
   CFLAGS += -DDBG
 endif
 ifeq ($(DBG_COMPARE), 1)

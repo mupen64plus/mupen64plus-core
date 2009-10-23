@@ -302,7 +302,7 @@ ifeq ($(PROFILE), 1)
   LDFLAGS += -pg
   STRIP = true
 else   # set variables for debugging symbols
-  ifeq ($(DBGSYM), 1)
+  ifeq ($(DEBUG), 1)
     CFLAGS += -g
     STRIP = true
   endif
