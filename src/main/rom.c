@@ -138,11 +138,7 @@ m64p_error open_rom(const char* romimage, unsigned int size)
     memcpy(rom, romimage, size);
     swap_rom(rom, &imagetype, rom_size);
 
-    imagestring(imagetype, buffer);
-    DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
-    DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
-
-    /* Load rom settings and check if it's a good dump. */
+    /* Calculate MD5 hash  */
     md5_init(&state);
     md5_append(&state, (const md5_byte_t*)rom, rom_size);
     md5_finish(&state, digest);
@@ -150,48 +146,53 @@ m64p_error open_rom(const char* romimage, unsigned int size)
         sprintf(buffer+i*2, "%02X", digest[i]);
     buffer[32] = '\0';
     strcpy(ROM_SETTINGS.MD5, buffer);
-    DebugMessage(M64MSG_INFO, "MD5: %s", buffer);
 
+    /* allocate space for ROM_HEADER object, and copy the first N bytes into new buffer */
     if(ROM_HEADER)
         free(ROM_HEADER);
     ROM_HEADER = malloc(sizeof(rom_header));
     if(ROM_HEADER==NULL)
         return M64ERR_NO_MEMORY;
     memcpy(ROM_HEADER, rom, sizeof(rom_header));
-    trim((char*)ROM_HEADER->nom); /* Remove trailing whitespace from Rom name. */
 
-    DebugMessage(M64MSG_INFO, "ClockRate = %x", sl((unsigned int)ROM_HEADER->ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %x", sl((unsigned int)ROM_HEADER->Release));
-    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+    /* Remove trailing whitespace from ROM name. */
+    trim((char*)ROM_HEADER->nom);
+
+    /* Look up this ROM in the .ini file and fill in goodname, etc */
+    if ((entry=ini_search_by_md5(digest)) != &empty_entry ||
+        (entry=ini_search_by_crc(sl(ROM_HEADER->CRC1),sl(ROM_HEADER->CRC2))) != &empty_entry)
+    {
+        strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
+        ROM_SETTINGS.goodname[255] = '\0';
+        if (entry->savetype==EEPROM_16KB)
+            ROM_SETTINGS.eeprom_16kb = 1;
+    }
+    else
+    {
+        strcpy(ROM_SETTINGS.goodname, (char*)ROM_HEADER->nom);
+        strcat(ROM_SETTINGS.goodname, " (unknown rom)");
+        ROM_SETTINGS.eeprom_16kb = 0;
+    }
+
+    /* print out a bunch of info about the ROM */
+    DebugMessage(M64MSG_INFO, "Goodname: %s", ROM_SETTINGS.goodname);
     DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->nom);
+    imagestring(imagetype, buffer);
+    DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
+    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+    DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
+    DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl((unsigned int)ROM_HEADER->ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %x", sl((unsigned int)ROM_HEADER->Release));
     if(sl(ROM_HEADER->Manufacturer_ID) == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
         DebugMessage(M64MSG_INFO, "Manufacturer: %x", (unsigned int)(ROM_HEADER->Manufacturer_ID));
     DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER->Cartridge_ID);
-
     countrycodestring(ROM_HEADER->Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
     DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER->PC));
-
-    if((entry=ini_search_by_md5(digest))==&empty_entry)
-        {
-        if((entry=ini_search_by_crc(sl(ROM_HEADER->CRC1),sl(ROM_HEADER->CRC2)))==&empty_entry)
-            {
-            strcpy(ROM_SETTINGS.goodname, (char*)ROM_HEADER->nom);
-            strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-            DebugMessage(M64MSG_INFO, "%s", ROM_SETTINGS.goodname);
-            ROM_SETTINGS.eeprom_16kb = 0;
-            return M64ERR_SUCCESS;
-            }
-        }
-
-    strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
-    ROM_SETTINGS.goodname[255] = '\0';
-
-    if(entry->savetype==EEPROM_16KB)
-        ROM_SETTINGS.eeprom_16kb = 1;
-    DebugMessage(M64MSG_INFO, "EEPROM type: %d", ROM_SETTINGS.eeprom_16kb);
+    DebugMessage(M64MSG_VERBOSE, "EEPROM type: %d", ROM_SETTINGS.eeprom_16kb);
 
     return M64ERR_SUCCESS;
 }
