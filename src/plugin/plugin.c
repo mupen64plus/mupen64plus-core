@@ -30,6 +30,7 @@
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 
+#include "main/rom.h"
 #include "memory/memory.h"
 
 #include "osal/dynamiclib.h"
@@ -459,6 +460,7 @@ static m64p_error plugin_start_audio(void)
 static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
+    gfx_info.HEADER = (unsigned char *) ROM_HEADER;
     gfx_info.RDRAM = (unsigned char *) rdram;
     gfx_info.DMEM = (unsigned char *) SP_DMEM;
     gfx_info.IMEM = (unsigned char *) SP_IMEM;

@@ -72,6 +72,7 @@ typedef struct {
 } RSP_INFO;
 
 typedef struct {
+    unsigned char * HEADER;  /* This is the rom header (first 40h bytes of the rom) */
     unsigned char * RDRAM;
     unsigned char * DMEM;
     unsigned char * IMEM;

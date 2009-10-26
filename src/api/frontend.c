@@ -101,7 +101,7 @@ EXPORT m64p_error CALL CoreAttachPlugin(m64p_plugin_type PluginType, m64p_dynlib
 
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
-    if (g_EmulatorRunning || l_ROMOpen)
+    if (g_EmulatorRunning || !l_ROMOpen)
         return M64ERR_INVALID_STATE;
 
     rval = plugin_connect(PluginType, PluginLibHandle);
