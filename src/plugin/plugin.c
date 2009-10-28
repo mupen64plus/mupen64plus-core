@@ -48,6 +48,11 @@ static AUDIO_INFO audio_info;
 static CONTROL_INFO control_info;
 static RSP_INFO rsp_info;
 
+static int l_RspAttached = 0;
+static int l_InputAttached = 0;
+static int l_AudioAttached = 0;
+static int l_GfxAttached = 0;
+
 static m64p_error plugin_connect_gfx(m64p_handle plugin_handle);
 static m64p_error plugin_connect_audio(m64p_handle plugin_handle);
 static m64p_error plugin_connect_input(m64p_handle plugin_handle);
@@ -63,6 +68,7 @@ static unsigned int dummy;
 /* global functions */
 m64p_error plugin_connect(m64p_plugin_type, m64p_handle plugin_handle);
 m64p_error plugin_start(m64p_plugin_type);
+m64p_error plugin_check(void);
 
 /* global function pointers */
 void (*changeWindow)() = dummyvideo_ChangeWindow;
@@ -149,6 +155,20 @@ m64p_error plugin_start(m64p_plugin_type type)
     return M64ERR_INTERNAL;
 }
 
+m64p_error plugin_check(void)
+{
+    if (!l_GfxAttached)
+        DebugMessage(M64MSG_WARNING, "No video plugin attached.  There will be no video output.");
+    else if (!l_RspAttached)
+        DebugMessage(M64MSG_WARNING, "No RSP plugin attached.  The video output will be corrupted.");
+    if (!l_AudioAttached)
+        DebugMessage(M64MSG_WARNING, "No audio plugin attached.  There will be no sound output.");
+    if (!l_InputAttached)
+        DebugMessage(M64MSG_WARNING, "No input plugin attached.  You won't be able to control the game.");
+
+    return M64ERR_SUCCESS;
+}
+
 /* local functions */
 static void EmptyFunc(void)
 {
@@ -156,20 +176,18 @@ static void EmptyFunc(void)
 
 static m64p_error plugin_connect_rsp(m64p_handle plugin_handle)
 {
-    static int PluginAttached = 0;
-
     /* attach the RSP plugin function pointers */
     if (plugin_handle == NULL)
     {
         doRspCycles = dummyrsp_DoRspCycles;
         initiateRSP = dummyrsp_InitiateRSP;
         romClosed_RSP = dummyrsp_RomClosed;
-        PluginAttached = 0;
+        l_RspAttached = 0;
     }
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
-        if (PluginAttached)
+        if (l_RspAttached)
             return M64ERR_INVALID_STATE;
         getVersion = osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
         doRspCycles = osal_dynlib_getproc(plugin_handle, "DoRspCycles");
@@ -189,7 +207,7 @@ static m64p_error plugin_connect_rsp(m64p_handle plugin_handle)
             DebugMessage(M64MSG_ERROR, "incompatible RSP plugin");
             return M64ERR_INCOMPATIBLE;
         }
-        PluginAttached = 1;
+        l_RspAttached = 1;
     }
 
     return M64ERR_SUCCESS;
@@ -197,8 +215,6 @@ static m64p_error plugin_connect_rsp(m64p_handle plugin_handle)
 
 static m64p_error plugin_connect_input(m64p_handle plugin_handle)
 {
-    static int PluginAttached = 0;
-
     /* attach the Input plugin function pointers */
     if (plugin_handle == NULL)
     {
@@ -210,12 +226,12 @@ static m64p_error plugin_connect_input(m64p_handle plugin_handle)
         romClosed_input = dummyinput_RomClosed;
         keyDown = dummyinput_SDL_KeyDown;
         keyUp = dummyinput_SDL_KeyUp;
-        PluginAttached = 0;
+        l_InputAttached = 0;
     }
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
-        if (PluginAttached)
+        if (l_InputAttached)
             return M64ERR_INVALID_STATE;
         getVersion = osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
         controllerCommand = osal_dynlib_getproc(plugin_handle, "ControllerCommand");
@@ -241,7 +257,7 @@ static m64p_error plugin_connect_input(m64p_handle plugin_handle)
             DebugMessage(M64MSG_ERROR, "incompatible Input plugin");
             return M64ERR_INCOMPATIBLE;
         }
-        PluginAttached = 1;
+        l_InputAttached = 1;
     }
 
     return M64ERR_SUCCESS;
@@ -249,8 +265,6 @@ static m64p_error plugin_connect_input(m64p_handle plugin_handle)
 
 static m64p_error plugin_connect_audio(m64p_handle plugin_handle)
 {
-    static int PluginAttached = 0;
-
     /* attach the Audio plugin function pointers */
     if (plugin_handle == NULL)
     {
@@ -267,12 +281,12 @@ static m64p_error plugin_connect_audio(m64p_handle plugin_handle)
         volumeSetLevel = dummyaudio_VolumeSetLevel;
         volumeMute = dummyaudio_VolumeMute;
         volumeGetString = dummyaudio_VolumeGetString;
-        PluginAttached = 0;
+        l_AudioAttached = 0;
     }
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
-        if (PluginAttached)
+        if (l_AudioAttached)
             return M64ERR_INVALID_STATE;
         getVersion = osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
         aiDacrateChanged = osal_dynlib_getproc(plugin_handle, "AiDacrateChanged");
@@ -304,7 +318,7 @@ static m64p_error plugin_connect_audio(m64p_handle plugin_handle)
             DebugMessage(M64MSG_ERROR, "incompatible Audio plugin");
             return M64ERR_INCOMPATIBLE;
         }
-        PluginAttached = 1;
+        l_AudioAttached = 1;
     }
 
     return M64ERR_SUCCESS;
@@ -312,8 +326,6 @@ static m64p_error plugin_connect_audio(m64p_handle plugin_handle)
 
 static m64p_error plugin_connect_gfx(m64p_handle plugin_handle)
 {
-    static int PluginAttached = 0;
-
     /* attach the Video plugin function pointers */
     if (plugin_handle == NULL)
     {
@@ -333,12 +345,12 @@ static m64p_error plugin_connect_gfx(m64p_handle plugin_handle)
         fBRead = dummyvideo_FBRead;
         fBWrite = dummyvideo_FBWrite;
         fBGetFrameBufferInfo = dummyvideo_FBGetFrameBufferInfo;
-        PluginAttached = 0;
+        l_GfxAttached = 0;
     }
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
-        if (PluginAttached)
+        if (l_GfxAttached)
             return M64ERR_INVALID_STATE;
         getVersion = osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
         changeWindow = osal_dynlib_getproc(plugin_handle, "ChangeWindow");
@@ -374,7 +386,7 @@ static m64p_error plugin_connect_gfx(m64p_handle plugin_handle)
             DebugMessage(M64MSG_ERROR, "incompatible Video plugin");
             return M64ERR_INCOMPATIBLE;
         }
-        PluginAttached = 1;
+        l_GfxAttached = 1;
     }
 
     return M64ERR_SUCCESS;

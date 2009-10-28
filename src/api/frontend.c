@@ -171,6 +171,8 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_EXECUTE:
             if (g_EmulatorRunning || !l_ROMOpen)
                 return M64ERR_INVALID_STATE;
+            /* print out plugin-related warning messages */
+            plugin_check();
             /* the main_run() function will not return until the player has quit the game */
             main_run();
             return M64ERR_SUCCESS;
