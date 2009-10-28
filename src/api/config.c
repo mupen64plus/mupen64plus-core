@@ -461,18 +461,18 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
 
     /* write out header */
     fprintf(fPtr, "# Mupen64Plus Configuration File\n");
-    fprintf(fPtr, "# This file is automatically read and written by the Mupen64Plus Core library\n\n");
+    fprintf(fPtr, "# This file is automatically read and written by the Mupen64Plus Core library\n");
 
     /* write out all of the config parameters */
     config_section *curr_section = l_SectionHead;
     while (curr_section != NULL)
     {
-        fprintf(fPtr, "[%s]\n", curr_section->name);
+        fprintf(fPtr, "\n[%s]\n\n", curr_section->name);
         config_var *curr_var = curr_section->first_var;
         while (curr_var != NULL)
         {
             if (curr_var->comment != NULL && strlen(curr_var->comment) > 0)
-                fprintf(fPtr, "\n# %s\n", curr_var->comment);
+                fprintf(fPtr, "# %s\n", curr_var->comment);
             if (curr_var->type == M64TYPE_INT)
                 fprintf(fPtr, "%s = %i\n", curr_var->name, curr_var->val_int);
             else if (curr_var->type == M64TYPE_FLOAT)
