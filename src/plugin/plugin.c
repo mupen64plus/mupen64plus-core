@@ -121,14 +121,20 @@ m64p_error plugin_connect(m64p_plugin_type type, m64p_handle plugin_handle)
 {
     switch(type)
     {
-        case M64PLUGIN_RSP:
-            return plugin_connect_rsp(plugin_handle);
         case M64PLUGIN_GFX:
+            if (plugin_handle != NULL && (l_AudioAttached || l_InputAttached || l_RspAttached))
+                DebugMessage(M64MSG_WARNING, "Front-end bug: plugins are attached in wrong order.");
             return plugin_connect_gfx(plugin_handle);
         case M64PLUGIN_AUDIO:
+            if (plugin_handle != NULL && (l_InputAttached || l_RspAttached))
+                DebugMessage(M64MSG_WARNING, "Front-end bug: plugins are attached in wrong order.");
             return plugin_connect_audio(plugin_handle);
         case M64PLUGIN_INPUT:
+            if (plugin_handle != NULL && (l_RspAttached))
+                DebugMessage(M64MSG_WARNING, "Front-end bug: plugins are attached in wrong order.");
             return plugin_connect_input(plugin_handle);
+        case M64PLUGIN_RSP:
+            return plugin_connect_rsp(plugin_handle);
         default:
             return M64ERR_INPUT_INVALID;
     }
