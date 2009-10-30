@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - api/callbacks.h                                    *
+ *   Mupen64plus-core - api/vidext.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
+ *   This program is distributed in the hope that it will be useful,       * 
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,22 +18,17 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-/* This file contains the definitions for callback functions which will be
- * called from the other Core modules
+                       
+/* This file contains the definitions for the video extension functions which
+ * will be called from other Core modules.
  */
 
-#if !defined(API_CALLBACKS_H)
-#define API_CALLBACKS_H
+#if !defined(API_VIDEXT_H)
+#define API_VIDEXT_H
 
 #include "m64p_types.h"
 
-/* pointer types to the callback functions in the front-end application */
-typedef void (*ptr_DebugCallback)(void *Context, int level, const char *message);
+/* global function for use by frontend.c */
+m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct);
 
-/* Functions for use by the Core, to send information back to the front-end app */
-extern m64p_error SetDebugCallback(ptr_DebugCallback pFunc, void *Context);
-extern void       DebugMessage(int level, const char *message, ...);
-
-#endif /* API_CALLBACKS_H */
-
+#endif /* API_VIDEXT_H */

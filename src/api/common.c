@@ -69,7 +69,8 @@ static const char *ErrorMessages[] = {
                    "FILES: Error opening, creating, reading, or writing to a file",
                    "INTERNAL: logical inconsistency in program code.  Probably a bug.",
                    "INVALID_STATE: An operation was requested which is not allowed in the current state",
-                   "PLUGIN_FAIL: A plugin function returned a fatal error"};
+                   "PLUGIN_FAIL: A plugin function returned a fatal error",
+                   "SYSTEM_FAIL: A system function call, such as an SDL or file operation, failed"};
 
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {

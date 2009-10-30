@@ -29,6 +29,7 @@
 #include "m64p_types.h"
 #include "callbacks.h"
 #include "config.h"
+#include "vidext.h"
 
 #include "main/main.h"
 #include "main/rom.h"
@@ -195,7 +196,7 @@ EXPORT m64p_error CALL CoreOverrideVidExt(m64p_video_extension_functions *VideoF
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
 
-    return M64ERR_INTERNAL;
+    return OverrideVideoFunctions(VideoFunctionStruct); /* in vidext.c */
 }
 
 EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *CodeList, int NumCodes)
