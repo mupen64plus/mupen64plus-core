@@ -58,6 +58,12 @@ typedef m64p_error (*ptr_ConfigListParameters)(m64p_handle, void *, void (*)(voi
  */
 typedef m64p_error (*ptr_ConfigSaveFile)(void);
 
+/* ConfigDeleteSection()
+ *
+ * This function deletes a section from the Mupen64Plus configuration data.
+ */
+typedef m64p_error (*ptr_ConfigDeleteSection)(const char *SectionName);
+
 /* ConfigSetParameter()
  *
  * This function sets the value of one of the emulator's configuration
