@@ -26,11 +26,11 @@
 #define PLUGIN_API_VERSION 0x10000 /* any plugins built against this m64p_plugin.h should report this API Version */
 
 /*** Controller plugin's ****/
-#define PLUGIN_NONE                             1
-#define PLUGIN_MEMPAK                           2
-#define PLUGIN_RUMBLE_PAK                       3 /* not implemeted for non raw data */
-#define PLUGIN_TANSFER_PAK                      4 /* not implemeted for non raw data */
-#define PLUGIN_RAW                              5 /* the controller plugin is passed in raw data */
+#define PLUGIN_NONE                 1
+#define PLUGIN_MEMPAK               2
+#define PLUGIN_RUMBLE_PAK           3 /* not implemeted for non raw data */
+#define PLUGIN_TANSFER_PAK          4 /* not implemeted for non raw data */
+#define PLUGIN_RAW                  5 /* the controller plugin is passed in raw data */
 
 /*** Audio plugin system types ***/
 #define SYSTEM_NTSC                 0

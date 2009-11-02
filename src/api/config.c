@@ -494,6 +494,59 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
 }
 
 /* ------------------------------------------------------- */
+/* Modifier functions, exported outside of the Core        */
+/* ------------------------------------------------------- */
+
+EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
+{
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (l_SectionHead == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    /* find the named section and pull it out of the list */
+    config_section *curr_section = l_SectionHead;
+    if (osal_insensitive_strcmp(l_SectionHead->name, SectionName) == 0)
+    {
+        l_SectionHead = l_SectionHead->next;
+    }
+    else
+    {
+        while (curr_section != NULL)
+        {
+            config_section *next_section = curr_section->next;
+            if (next_section == NULL)
+                return M64ERR_INPUT_NOT_FOUND;
+            if (osal_insensitive_strcmp(next_section->name, SectionName) == 0)
+            {
+                curr_section->next = next_section->next;
+                curr_section = next_section;
+                break;
+            }
+            curr_section = next_section;
+        }
+    }
+
+    /* delete all the variables in this section */
+    config_var *curr_var = curr_section->first_var;
+    while (curr_var != NULL)
+    {
+        config_var *next_var = curr_var->next;
+        if (curr_var->val_string != NULL)
+            free(curr_var->val_string);
+        if (curr_var->comment != NULL)
+            free(curr_var->comment);
+        free(curr_var);
+        curr_var = next_var;
+    }
+    /* delete the section itself */
+    free(curr_section);
+
+    return M64ERR_SUCCESS;
+}
+
+
+/* ------------------------------------------------------- */
 /* Generic Get/Set functions, exported outside of the Core */
 /* ------------------------------------------------------- */
 
