@@ -178,6 +178,12 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         return M64ERR_NO_MEMORY;
 
     strcpy(filepath, configpath);
+    int pathlen = strlen(filepath);
+    if (filepath[pathlen - 1] != OSAL_DIR_SEPARATOR)
+    {
+        filepath[pathlen] = OSAL_DIR_SEPARATOR;
+        filepath[pathlen + 1] = 0;
+    }
     strcat(filepath, MUPEN64PLUS_CFG_NAME);
     FILE *fPtr = fopen(filepath, "rb");
     if (fPtr == NULL)
