@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - regression-video.py                                     *
 # *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
-# *   Copyright (C) 2008 Richard Goedeken                                   *
+# *   Copyright (C) 2008-2009 Richard Goedeken                              *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
 # *   it under the terms of the GNU General Public License as published by  *
@@ -52,28 +53,40 @@ def main(rootdir, cfgfile, nobuild):
         if not tester.LoadConfig(cfgfile):
             rval = 1
             break
-        # Step 2: check out from SVN
+        # Step 2: check out from Mercurial
         if not nobuild:
-            if not CheckoutSource(srcdir):
+            if not tester.CheckoutSource(srcdir):
                 rval = 2
                 break
         # Step 3: run test builds
         if not nobuild:
-            testlist = [ name.strip() for name in tester.generalParams["testbuilds"].split(',') ]
-            makeparams = [ params.strip() for params in tester.generalParams["testbuildparams"].split(',') ]
-            if len(testlist) != len(makeparams):
-                report += "Config file error for test builds.  Build name list and makefile parameter list have different lengths.\n"
-            testbuilds = min(len(testlist), len(makeparams))
-            for i in range(testbuilds):
-                buildname = testlist[i]
-                buildmake = makeparams[i]
-                BuildSource(srcdir, buildname, buildmake, True)
+            for modname in tester.modulesAndParams:
+                module = tester.modulesAndParams[modname]
+                if "testbuilds" not in module:
+                    continue
+                modurl = module["url"]
+                modfilename = modurl.split('/')[-1]
+                testlist = [ name.strip() for name in module["testbuilds"].split(',') ]
+                makeparams = [ params.strip() for params in module["testbuildparams"].split(',') ]
+                if len(testlist) != len(makeparams):
+                    report += "Config file error for test builds in %s.  Build name list and makefile parameter list have different lengths.\n" % modname
+                testbuilds = min(len(testlist), len(makeparams))
+                for i in range(testbuilds):
+                    buildname = testlist[i]
+                    buildmake = makeparams[i]
+                    BuildSource(srcdir, modfilename, modname, buildname, buildmake, module["outputfiles"], True)
         # Step 4: build the binary for the video regression test
         if not nobuild:
-            videobuild = tester.generalParams["videobuild"]
-            videomake = tester.generalParams["videobuildparams"]
-            if not BuildSource(srcdir, videobuild, videomake, False):
-                rval = 3
+            for modname in tester.modulesAndParams:
+                module = tester.modulesAndParams[modname]
+                modurl = module["url"]
+                modfilename = modurl.split('/')[-1]
+                videobuild = module["videobuild"]
+                videomake = module["videobuildparams"]
+                if not BuildSource(srcdir, modfilename, modname, videobuild, videomake, module["outputfiles"], False):
+                    rval = 3
+                    break
+            if rval != 0:
                 break
         # Step 5: run the tests, check the results
         if not tester.RunTests():
@@ -96,29 +109,15 @@ def main(rootdir, cfgfile, nobuild):
 # Checkout & build functions
 #
 
-def CheckoutSource(srcdir):
+def BuildSource(srcdir, moddir, modname, buildname, buildmake, outputfiles, istest):
     global report
-    # remove any current source directory
-    if not deltree(srcdir):
-        return False
-    # call svn to checkout current Mupen64Plus source tree
-    output = commands.getoutput("svn co svn://fascination.homelinux.net:7684/mupen64plus/trunk " + srcdir)
-    # parse the output
-    lastline = output.split("\n")[-1]
-    if lastline[:20] == "Checked out revision":
-        report += "SVN Checkout successful: %s\n\n" % lastline
-        return True
-    report += "SVN Error: %s\n\n" % lastline
-    return False
-
-def BuildSource(srcdir, buildname, buildmake, istest):
-    global report
+    makepath = os.path.join(srcdir, moddir,  "projects", "unix")
     # print build report message and clear counters
-    testbuildcommand = "make -C %s %s" % (srcdir, buildmake)
+    testbuildcommand = "make -C %s %s" % (makepath, buildmake)
     if istest:
-        report += "Running test build \"%s\" with command \"%s\"\n" % (buildname, testbuildcommand)
+        report += "Running %s test build \"%s\" with command \"%s\"\n" % (modname, buildname, testbuildcommand)
     else:
-        report += "Building Mupen64Plus \"%s\" for video test with command \"%s\"\n" % (buildname, testbuildcommand)
+        report += "Building %s \"%s\" for video test with command \"%s\"\n" % (modname, buildname, testbuildcommand)
     warnings = 0
     errors = 0
     # run make and capture the output
@@ -135,21 +134,23 @@ def BuildSource(srcdir, buildname, buildmake, istest):
     report += "%i errors. %i warnings.\n" % (errors, warnings)
     if errors > 0 and not istest:
         return False
-    # check for program files
-    binfiles = [ "mupen64plus" ]
-    libfiles = [ "blight_input.so", "dummyaudio.so", "dummyvideo.so", "glN64.so", "glide64.so", "ricevideo.so",
-                 "mupen64_hle_rsp_azimer.so", "jttl_audio.so" ]
-    filelist = [ os.path.join(srcdir, filename) for filename in binfiles ]
-    filelist += [ os.path.join(srcdir, "plugins", filename) for filename in libfiles ]
-    for filename in filelist:
-        if not os.path.exists(filename):
+    # check for output files
+    for filename in outputfiles.split(','):
+        if not os.path.exists(os.path.join(makepath, filename)):
             report += "Build failed: '%s' not found\n" % filename
             errors += 1
     if errors > 0 and not istest:
         return False
     # clean up if this was a test
     if istest:
-        os.system("make -C %s clean" % srcdir)
+        os.system("make -C %s clean" % makepath)
+    # if this wasn't a test, then copy our output files and data files
+    if not istest:
+        for filename in outputfiles.split(','):
+            shutil.move(os.path.join(makepath, filename), srcdir)
+        datapath = os.path.join(srcdir, moddir, "data")
+        if os.path.isdir(datapath):
+            copytree(datapath, os.path.join(srcdir, "data"))
     # build was successful!
     return True
 
@@ -161,10 +162,10 @@ class RegTester:
         self.rootdir = rootdir
         self.bindir = bindir
         self.screenshotdir = screenshotdir
-        self.libdir = os.path.join(bindir, "plugins")
         self.generalParams = { }
         self.gamesAndParams = { }
-        self.videoplugins = [ "glN64.so", "glide64.so", "ricevideo.so" ]
+        self.modulesAndParams = { }
+        self.videoplugins = [ "mupen64plus-video-rice.so" ]
         self.thisdate = str(date.today())
 
     def LoadConfig(self, filename):
@@ -180,6 +181,7 @@ class RegTester:
             return False
         # parse the file
         GameFilename = None
+        ModuleName = None
         for line in cfglines:
             # strip leading and trailing whitespace
             line = line.strip()
@@ -194,6 +196,14 @@ class RegTester:
                 else:
                     self.gamesAndParams[GameFilename] = { }
                 continue
+            # test for new source module build
+            if line[0] == '{' and line [-1] == '}':
+                ModuleName = line[1:-1]
+                if ModuleName in self.modulesAndParams:
+                    report += "    Warning: Config file '%s' contains duplicate source module '%s'\n" % (filename, ModuleName)
+                else:
+                    self.modulesAndParams[ModuleName] = { }
+                continue
             # print warning and continue if it's not a (key = value) pair
             pivot = line.find('=')
             if pivot == -1:
@@ -202,12 +212,14 @@ class RegTester:
             # parse key, value
             key = line[:pivot].strip().lower()
             value = line[pivot+1:].strip()
-            if GameFilename is None:
+            if ModuleName is None:
                 paramDict = self.generalParams
+            elif GameFilename is None:
+                paramDict = self.modulesAndParams[ModuleName]
             else:
                 paramDict = self.gamesAndParams[GameFilename]
             if key in paramDict:
-                report += "    Warning: Game '%s' contains duplicate key '%s'\n" % (str(GameFilename), key)
+                report += "    Warning: duplicate key '%s'\n" % key
                 continue
             paramDict[key] = value
         # check for required parameters
@@ -215,6 +227,41 @@ class RegTester:
             report += "    Error: rompath is not given in config file\n"
             return False
         # config is loaded
+        return True
+
+    def CheckoutSource(self, srcdir):
+        global report
+        # remove any current source directory
+        if not deltree(srcdir):
+            return False
+        os.mkdir(srcdir)
+        os.mkdir(os.path.join(srcdir, "data"))
+        # loop through all of the source modules
+        for modname in self.modulesAndParams:
+            module = self.modulesAndParams[modname]
+            if "url" not in module:
+                report += "Error: no Hg repository URL for module %s\n\n" % modname
+                return False
+            modurl = module["url"]
+            modfilename = modurl.split("/")[-1]
+            # call Hg to checkout Mupen64Plus source module
+            output = commands.getoutput("hg clone --cwd %s %s" % (srcdir, modurl))
+            # parse the output
+            lastline = output.split("\n")[-1]
+            if "0 files unresolved" not in lastline:
+                report += "Hg Error: %s\n\n" % lastline
+                return False
+            # get the revision info
+            RevFound = False
+            output = commands.getoutput("hg tip -R %s" % os.path.join(srcdir, modfilename))
+            for line in output.split('\n'):
+                words = line.split()
+                if len(words) == 2 and words[0] == 'changeset:':
+                    report += "Hg Checkout %s: changeset %s\n" % (modfilename, words[1])
+                    RevFound = True
+            if not RevFound:
+                report += "Hg Error: couldn't find revision information\n\n"
+                return False
         return True
 
     def RunTests(self):
@@ -257,18 +304,16 @@ class RegTester:
                     if skipit:
                         continue
                 # construct the command line
-                exepath = os.path.join(self.bindir, "mupen64plus")
-                exeparms = ["--nogui", "--noosd", "--noask", "--emumode", "1" ]
+                exepath = os.path.join(self.bindir, "mupen64plus-cli")
+                exeparms = [ "--corelib", os.path.join(self.bindir, "libmupen64plus.so") ]
                 exeparms += [ "--testshots",  ",".join(shotlist) ]
-                exeparms += [ "--installdir", self.bindir ]
                 exeparms += [ "--sshotdir", os.path.join(self.screenshotdir, videoname) ]
+                exeparms += [ "--plugindir", self.bindir ]
+                exeparms += [ "--datadir", os.path.join(self.bindir, "data") ]
                 myconfig = os.path.join(self.rootdir, "config")
                 if os.path.exists(myconfig):
                     exeparms += [ "--configdir", myconfig ]
-                exeparms += [ "--gfx", os.path.join(self.libdir, plugin) ]
-                exeparms += [ "--audio", os.path.join(self.libdir, "dummyaudio.so") ]
-                exeparms += [ "--input", os.path.join(self.libdir, "blight_input.so") ]
-                exeparms += [ "--rsp", os.path.join(self.libdir, "mupen64_hle_rsp_azimer.so") ]
+                exeparms += [ "--gfx", plugin ]
                 exeparms += [ os.path.join(rompath, GameFilename) ]
                 # run it, but if it takes too long print an error and kill it
                 testrun = RegTestRunner(exepath, exeparms)
@@ -388,7 +433,8 @@ class RegTester:
         if os.path.exists(subdir):
             if not deltree(subdir):
                 return False
-        shutil.move(self.screenshotdir, subdir)
+        if os.path.exists(self.screenshotdir):
+            shutil.move(self.screenshotdir, subdir)
         # copy the report into the archive directory
         f = open(os.path.join(archivedir, "report_%s.txt" % self.thisdate), "w")
         f.write(report)
@@ -434,6 +480,19 @@ def deltree(dirname):
         report += "Error in deltree(): %s\n" % e
         return False
 
+    return True
+
+def copytree(srcpath, dstpath):
+    if not os.path.isdir(srcpath) or not os.path.isdir(dstpath):
+        return False
+    for filename in os.listdir(srcpath):
+        filepath = os.path.join(srcpath, filename)
+        if os.path.isdir(filepath):
+            subdstpath = os.path.join(dstpath, filename)
+            os.mkdir(subdstpath)
+            copytree(filepath, subdstpath)
+        else:
+            shutil.copy(filepath, dstpath)
     return True
 
 #******************************************************************************
