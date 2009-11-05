@@ -23,8 +23,6 @@
 extern "C" {
 #endif
 
-void SetScreenshotDir(const char *chDir);
-int ValidScreenshotDir(void);
 void TakeScreenshot(int iFrameNumber);
 
 #ifdef __cplusplus

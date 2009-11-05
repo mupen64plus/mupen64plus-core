@@ -70,6 +70,8 @@
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
+m64p_frame_callback g_FrameCallback = NULL;
+
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 int         g_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
@@ -334,29 +336,11 @@ void video_plugin_render_callback(void)
 
 void new_frame(void)
 {
-/* fixme remove
-    // take a screenshot if we need to
-    if (l_TestShotList != NULL)
-    {
-        int nextshot = l_TestShotList[l_TestShotIdx];
-        if (nextshot == l_CurrentFrame)
-        {
-            // set global variable so screenshot will be taken just before OSD is drawn at the end of frame rendering
-            main_take_next_screenshot();
-            // advance list index to next screenshot frame number.  If it's 0, then quit
-            l_TestShotIdx++;
-        }
-        else if (nextshot == 0)
-        {
-            main_stop();
-            free(l_TestShotList);
-            l_TestShotList = NULL;
-        }
-    }
+    if (g_FrameCallback != NULL)
+        (*g_FrameCallback)(l_CurrentFrame);
 
-    // advance the current frame
+    /* advance the current frame */
     l_CurrentFrame++;
-*/
 }
 
 void new_vi(void)

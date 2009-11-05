@@ -50,7 +50,7 @@
 
 typedef void * m64p_handle;
 
-typedef void (*m64p_frame_callback)(unsigned char *pixels, int bitsperpixel, int width, int height);
+typedef void (*m64p_frame_callback)(unsigned int FrameIndex);
 
 typedef enum {
   M64TYPE_INT = 1,
@@ -132,7 +132,8 @@ typedef enum {
   M64CMD_STATE_SET_SLOT,
   M64CMD_SEND_SDL_KEYDOWN,
   M64CMD_SEND_SDL_KEYUP,
-  M64CMD_SET_FRAME_CALLBACK
+  M64CMD_SET_FRAME_CALLBACK,
+  M64CMD_TAKE_NEXT_SCREENSHOT
 } m64p_command;
 
 typedef struct {

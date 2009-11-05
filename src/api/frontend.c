@@ -178,12 +178,22 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             main_run();
             return M64ERR_SUCCESS;
         case M64CMD_STOP:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            /* this stop function is asynchronous.  The emulator may not terminate until later */
+            main_stop();
+            return M64ERR_SUCCESS;
         case M64CMD_PAUSE:
         case M64CMD_RESUME:
         case M64CMD_CORE_STATE_QUERY:
         case M64CMD_SEND_SDL_KEYDOWN:
         case M64CMD_SEND_SDL_KEYUP:
         case M64CMD_SET_FRAME_CALLBACK:
+            g_FrameCallback = ParamPtr;
+            return M64ERR_SUCCESS;
+        case M64CMD_TAKE_NEXT_SCREENSHOT:
+            main_take_next_screenshot();
+            return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
     }

@@ -35,13 +35,13 @@
 
 extern "C" {
 #include "api/m64p_types.h"
+#include "api/config.h"
 #include "main/main.h"
 #include "main/util.h"
 #include "main/rom.h"
 #include "main/translate.h"
+#include "osal/files.h"
 }
-
-static char  l_SshotDir[PATH_MAX] = {0}; // pointer to screenshot dir specified at commandline
 
 /*********************************************************************************************************
 * PNG support functions for writing screenshot files
@@ -117,47 +117,24 @@ static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, in
 /*********************************************************************************************************
 * Global screenshot functions
 */
-extern "C" void SetScreenshotDir(const char *chDir)
-{
-    // copy directory path
-    strncpy(l_SshotDir, chDir, PATH_MAX - 1);
-    l_SshotDir[PATH_MAX - 1] = '\0';
-
-    // if path is empty, then return
-    if (l_SshotDir[0] == '\0')
-        return;
-
-    // make sure screenshots dir has a '/' on the end.
-    if (l_SshotDir[strlen(l_SshotDir)-1] != '/')
-        strcat(l_SshotDir, "/");
-
-    // check for valid directory
-    if (!isdir(l_SshotDir))
-    {
-        printf("Warning: Could not find screenshot dir: %s\n", l_SshotDir);
-        l_SshotDir[0] = '\0';
-    }
-
-    return;
-}
-
-extern "C" int ValidScreenshotDir(void)
-{
-    if (l_SshotDir[0] != 0)
-        return 1;
-    else
-        return 0;
-}
 
 extern "C" void TakeScreenshot(int iFrameNumber)
 {
     // start by getting the base file path
+    const char *SshotDir = ConfigGetParamString(g_CoreConfig, "ScreenshotPath");
     char filepath[PATH_MAX], filename[PATH_MAX];
     char *pch, ch;
-    filepath[0] = 0;
-    filename[0] = 0;
-    strncpy(filepath, l_SshotDir, sizeof(filepath));
+
+    /* get the path to store screenshots */
+    strncpy(filepath, SshotDir, sizeof(filepath)-1);
     filepath[PATH_MAX-1] = '\0';
+    if (strlen(filepath) == 0)
+    {
+        snprintf(filepath, sizeof(filepath)-1, "%s/screenshot/", ConfigGetUserDataPath());
+        osal_mkdirp(filepath, 0700);
+    }
+
+    /* make sure there is a slash on the end of the pathname */
     if (strlen(filepath) > 0 && filepath[strlen(filepath)-1] != '/')
         strcat(filepath, "/");
 

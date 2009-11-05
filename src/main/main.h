@@ -31,6 +31,8 @@ extern int g_MemHasBeenBSwapped;
 extern int g_TakeScreenshot;
 extern int g_EmulatorRunning;
 
+extern m64p_frame_callback g_FrameCallback;
+
 char* get_savespath(void);
 
 void new_frame();
