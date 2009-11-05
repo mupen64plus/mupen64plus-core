@@ -501,7 +501,7 @@ static int sdl_event_filter( const SDL_Event *event )
             else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdAdvance))
                 main_advance_one();
             // pass all other keypresses to the input plugin
-            else keyDown( 0, event->key.keysym.sym );
+            else keyDown(event->key.keysym.mod, event->key.keysym.sym);
 
             return 0;
 
@@ -518,7 +518,7 @@ static int sdl_event_filter( const SDL_Event *event )
                 // remove message
                 osd_delete_message(msgFF);
             }
-            else keyUp( 0, event->key.keysym.sym );
+            else keyUp(event->key.keysym.mod, event->key.keysym.sym);
 
             return 0;
 
