@@ -58,6 +58,7 @@ typedef struct _config_section {
 
 /* local variables */
 static int      l_ConfigInit = 0;
+static int      l_SaveConfigOnExit = 0;
 static char    *l_DataDirOverride = NULL;
 config_section *l_SectionHead = NULL;
 
@@ -190,6 +191,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     {
         DebugMessage(M64MSG_WARNING, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
         free(filepath);
+        l_SaveConfigOnExit = 1; /* auto-save the config file so that the defaults will be saved to disk */
         return M64ERR_SUCCESS;
     }
     free(filepath);
@@ -315,6 +317,11 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
 
 m64p_error ConfigShutdown(void)
 {
+    /* first, save the file if necessary */
+    if (l_SaveConfigOnExit)
+        ConfigSaveFile();
+
+    /* reset the initialized flag */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     l_ConfigInit = 0;
