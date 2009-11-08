@@ -180,7 +180,6 @@ static unsigned int gettimeofday_msec(void)
 void main_set_core_defaults(void)
 {
     /* parameters controlling the operation of the core */
-    ConfigSetDefaultBool(g_CoreConfig, "Fullscreen", 0, "Use fullscreen mode if True, or windowed mode if False ");
     ConfigSetDefaultBool(g_CoreConfig, "OnScreenDisplay", 1, "Draw on-screen display if True, otherwise don't draw OSD");
     ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 1, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
     ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
@@ -575,7 +574,6 @@ int main_run(void)
 
     /* fixme this should already have been done when attaching the video plugin */
     /* */
-    SDL_Init(SDL_INIT_VIDEO);
     SDL_ShowCursor(0);
     SDL_EnableKeyRepeat(0, 0);
     SDL_SetEventFilter(sdl_event_filter);
@@ -596,10 +594,6 @@ int main_run(void)
     romOpen_gfx();
     romOpen_audio();
     romOpen_input();
-
-    // switch to fullscreen if enabled
-    if (ConfigGetParamBool(g_CoreConfig, "Fullscreen"))
-        changeWindow();
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -658,10 +652,6 @@ int main_run(void)
     romClosed_input();
     romClosed_audio();
     romClosed_gfx();
-    //closeDLL_RSP();
-    //closeDLL_input();
-    //closeDLL_audio();
-    //closeDLL_gfx();
     free_memory();
 
     // clean up
