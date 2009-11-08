@@ -30,5 +30,6 @@
 
 /* global function for use by frontend.c */
 m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct);
+int        VidExt_InFullscreenMode(void);
 
 #endif /* API_VIDEXT_H */

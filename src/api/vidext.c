@@ -32,6 +32,7 @@
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
+static int l_Fullscreen = 0;
 static SDL_Surface *l_pScreen = NULL;
 
 /* global function for use by frontend.c */
@@ -66,6 +67,10 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
     return M64ERR_SUCCESS;
 }
 
+int VidExt_InFullscreenMode(void)
+{
+    return l_Fullscreen;
+}
 
 /* video extension functions to be called by the video plugin */
 EXPORT m64p_error CALL VidExt_Init(void)
@@ -150,9 +155,15 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     const SDL_VideoInfo *videoInfo;
     int videoFlags = 0;
     if (ScreenMode == M64VIDEO_WINDOWED)
+    {
         videoFlags = SDL_OPENGL;
+        l_Fullscreen = 0;
+    }
     else if (ScreenMode == M64VIDEO_FULLSCREEN)
+    {
         videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
+        l_Fullscreen = 1;
+    }
     else
         return M64ERR_INPUT_INVALID;
 
@@ -197,10 +208,18 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
 {
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
-        return (*l_ExternalVideoFuncTable.VidExtFuncToggleFS)();
+    {
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncToggleFS)();
+        if (rval == M64ERR_SUCCESS)
+            l_Fullscreen = !l_Fullscreen;
+        return rval;
+    }
 
     if (SDL_WM_ToggleFullScreen(l_pScreen) == 1)
+    {
+        l_Fullscreen = !l_Fullscreen;
         return M64ERR_SUCCESS;
+    }
 
     return M64ERR_SYSTEM_FAIL;
 }
