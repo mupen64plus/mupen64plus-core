@@ -194,7 +194,7 @@ SRC_DBG = \
 SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 
 # set primary objects and libraries for all outputs
-ALL = libmupen64plus.so
+ALL = libmupen64plus.$(SO_EXTENSION)
 SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
 
@@ -254,13 +254,13 @@ uninstall:
 	./uninstall.sh $(INSTALLOPTS)
 
 clean:
-	$(RM) -rf ./_obj ./_lib libmupen64plus.so
+	$(RM) -rf ./_obj ./_lib libmupen64plus.$(SO_EXTENSION)
 
 rebuild: clean all
 
 # build rules
-libmupen64plus.so: $(MISC_DEPS) $(OBJECTS)
-	$(CXX) -shared $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
+libmupen64plus.$(SO_EXTENSION): $(MISC_DEPS) $(OBJECTS)
+	$(CXX) $(PLUGIN_LDFLAGS) $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
 
 mupen64plus.desktop: FORCE
 	@sed s:SHARE_DIR:"$(SHAREDIR)": mupen64plus.desktop.in > mupen64plus.desktop
