@@ -1542,8 +1542,8 @@ void shuffle_fpr_data(int oldStatus, int newStatus)
             // take the low 32 bits from each register and pack them together into 64-bit pairs
             for (i = 0; i < 16; i++)
             {
-                int least32 = *((int *) &reg_cop1_fgr_64[i*2] + isBigEndian);
-                int most32 = *((int *) &reg_cop1_fgr_64[i*2+1] + isBigEndian);
+                unsigned int least32 = *((unsigned int *) &reg_cop1_fgr_64[i*2] + isBigEndian);
+                unsigned int most32 = *((unsigned int *) &reg_cop1_fgr_64[i*2+1] + isBigEndian);
                 reg_cop1_fgr_64[i] = ((unsigned long long) most32 << 32) | (unsigned long long) least32;
             }
             // store the high bits in the upper 16 FGRs, which wont be accessible in 32-bit mode
