@@ -300,6 +300,8 @@ void savestates_load()
     gzread(f, &rsp_register, sizeof(RSP_register));
     gzread(f, &si_register, sizeof(SI_register));
     gzread(f, &vi_register, sizeof(VI_register));
+    update_vi_status(vi_register.vi_status);
+    update_vi_width(vi_register.vi_width);
     gzread(f, &ri_register, sizeof(RI_register));
     gzread(f, &ai_register, sizeof(AI_register));
     update_ai_dacrate(ai_register.ai_dacrate);

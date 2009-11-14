@@ -423,6 +423,8 @@ void update_DPC();
 void update_MI_intr_mode_reg();
 void update_MI_init_mask_reg();
 void update_ai_dacrate(unsigned int word);
+void update_vi_status(unsigned int word);
+void update_vi_width(unsigned int word);
 
 #endif
 
