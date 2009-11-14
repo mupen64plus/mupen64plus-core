@@ -302,6 +302,7 @@ void savestates_load()
     gzread(f, &vi_register, sizeof(VI_register));
     gzread(f, &ri_register, sizeof(RI_register));
     gzread(f, &ai_register, sizeof(AI_register));
+    update_ai_dacrate(ai_register.ai_dacrate);
     gzread(f, &dpc_register, sizeof(DPC_register));
     gzread(f, &dps_register, sizeof(DPS_register));
     gzread(f, rdram, 0x800000);
