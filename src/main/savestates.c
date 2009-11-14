@@ -450,16 +450,7 @@ int savestates_save_pj64()
     length = zipWriteInFileInZip(zipfile, &vi_timer,                       4);
     length = zipWriteInFileInZip(zipfile, &addr,                           4);
     length = zipWriteInFileInZip(zipfile, reg,                             32*8);
-    if ((Status & 0x04000000) == 0)
-    {   // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
-        length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
-    }
-    else
-    {
-        length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
-    }
+    length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
     length = zipWriteInFileInZip(zipfile, reg_cop0,                        32*4);
     length = zipWriteInFileInZip(zipfile, &FCR0,                           4);
     length = zipWriteInFileInZip(zipfile, &dummy,                          4*30);
@@ -605,8 +596,6 @@ void savestates_load_pj64()
     unzReadCurrentFile(zipstatefile, reg_cop0, 4*32);
 
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
-    if ((Status & 0x04000000) == 0)
-        shuffle_fpr_data(0x04000000, 0);  // shuffle FGR data into 32-bit format
 
     // Initialze the interupts
     vi_timer += reg_cop0[9]; // Add current Count
