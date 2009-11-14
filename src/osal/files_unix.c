@@ -42,7 +42,6 @@
 // dynamic data path detection onmac
 bool macSetBundlePath(char* buffer)
 {
-    printf("checking whether we are using an app bundle... ");
     // the following code will enable mupen to find its data when placed in an app bundle on mac OS X.
     // returns true if path is set, returns false if path was not set
     char path[1024];
@@ -55,14 +54,14 @@ bool macSetBundlePath(char* buffer)
     
     if (strstr( path, ".app" ) != 0)
     {
-        printf("yes\n");
+        DebugMessage(M64MSG_VERBOSE, "checking whether we are using an app bundle: yes");
         // executable is inside an app bundle, use app bundle-relative paths
         sprintf(buffer, "%s/Contents/Resources/", path);
         return true;
     }
     else
     {
-        printf("no\n");
+        DebugMessage(M64MSG_VERBOSE, "checking whether we are using an app bundle: no");
         return false;
     }
 }
@@ -194,17 +193,17 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
     if (secondsearch != NULL && search_dir_file(retpath, secondsearch, filename) == 0)
         return retpath;
 
-    /* otherwise check our standard paths */
 #ifdef __APPLE__
     /* Special case : OS X bundles */
     static char buf[1024];
     if (macSetBundlePath(buf))
     {
-        static char buffer2[1024];
-        sprintf(buffer2, "%s%s", buf, filename);
-        return buffer2;
+        sprintf(retpath, "%s%s", buf, filename);
+        return retpath;
     }
 #endif
+
+    /* otherwise check our standard paths */
     for (i = 0; i < datasearchdirs; i++)
     {
         if (search_dir_file(retpath, datasearchpath[i], filename) == 0)
