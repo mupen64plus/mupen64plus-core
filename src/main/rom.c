@@ -292,28 +292,28 @@ void romdatabase_open(void)
     to signal we have a database. */
     totallength = 0;
     do
-        {
+    {
         if (fgets(buffer, 255, fPtr) == NULL)
         {
             DebugMessage(M64MSG_ERROR, "Error reading rom database file '%s'.", pathname);
             return;
         }
         if(buffer[0]!='[')
-            {
+        {
             stringlength=strlen(buffer);
             totallength+=stringlength;
             if(g_romdatabase.comment==NULL) 
-                {
+            {
                 g_romdatabase.comment = (char*)malloc(stringlength+2);
                 snprintf(g_romdatabase.comment, stringlength, "%s", buffer);
-                }
+            }
             else
-                {
+            {
                 g_romdatabase.comment = (char*)realloc(g_romdatabase.comment, totallength+2);
                 snprintf(g_romdatabase.comment, totallength+1, "%s%s", g_romdatabase.comment, buffer);
-                }
             }
         }
+    }
     while (buffer[0] != '[' && !feof(fPtr));
 
     /* Clear premade indices. */
