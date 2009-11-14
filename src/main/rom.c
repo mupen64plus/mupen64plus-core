@@ -293,7 +293,11 @@ void romdatabase_open(void)
     totallength = 0;
     do
         {
-        fgets(buffer, 255, fPtr);
+        if (fgets(buffer, 255, fPtr) == NULL)
+        {
+            DebugMessage(M64MSG_ERROR, "Error reading rom database file '%s'.", pathname);
+            return;
+        }
         if(buffer[0]!='[')
             {
             stringlength=strlen(buffer);
