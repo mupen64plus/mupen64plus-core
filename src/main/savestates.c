@@ -300,8 +300,11 @@ void savestates_load()
     gzread(f, &rsp_register, sizeof(RSP_register));
     gzread(f, &si_register, sizeof(SI_register));
     gzread(f, &vi_register, sizeof(VI_register));
+    update_vi_status(vi_register.vi_status);
+    update_vi_width(vi_register.vi_width);
     gzread(f, &ri_register, sizeof(RI_register));
     gzread(f, &ai_register, sizeof(AI_register));
+    update_ai_dacrate(ai_register.ai_dacrate);
     gzread(f, &dpc_register, sizeof(DPC_register));
     gzread(f, &dps_register, sizeof(DPS_register));
     gzread(f, rdram, 0x800000);
@@ -447,16 +450,7 @@ int savestates_save_pj64()
     length = zipWriteInFileInZip(zipfile, &vi_timer,                       4);
     length = zipWriteInFileInZip(zipfile, &addr,                           4);
     length = zipWriteInFileInZip(zipfile, reg,                             32*8);
-    if ((Status & 0x04000000) == 0)
-    {   // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
-        length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
-    }
-    else
-    {
-        length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
-    }
+    length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
     length = zipWriteInFileInZip(zipfile, reg_cop0,                        32*4);
     length = zipWriteInFileInZip(zipfile, &FCR0,                           4);
     length = zipWriteInFileInZip(zipfile, &dummy,                          4*30);
@@ -602,8 +596,6 @@ void savestates_load_pj64()
     unzReadCurrentFile(zipstatefile, reg_cop0, 4*32);
 
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
-    if ((Status & 0x04000000) == 0)
-        shuffle_fpr_data(0x04000000, 0);  // shuffle FGR data into 32-bit format
 
     // Initialze the interupts
     vi_timer += reg_cop0[9]; // Add current Count

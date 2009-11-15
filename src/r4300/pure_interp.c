@@ -36,6 +36,10 @@
 #include "debugger/debugger.h"
 #endif
 
+#define check_r0_rd() { if (PC->f.r.rd == reg) { interp_addr+=4; return; } }
+#define check_r0_rt() { if (PC->f.r.rt == reg) { interp_addr+=4; return; } }
+#define check_r0_irt() { if (PC->f.i.rt == reg) { interp_addr+=4; return; } }
+
 unsigned int interp_addr;
 unsigned int op;
 static int skip;
@@ -54,6 +58,7 @@ static void NI()
 
 static void SLL()
 {
+   check_r0_rd();
    rrd32 = (unsigned int)(rrt32) << rsa;
    sign_extended(rrd);
    interp_addr+=4;
@@ -61,6 +66,7 @@ static void SLL()
 
 static void SRL()
 {
+   check_r0_rd();
    rrd32 = (unsigned int)rrt32 >> rsa;
    sign_extended(rrd);
    interp_addr+=4;
@@ -68,6 +74,7 @@ static void SRL()
 
 static void SRA()
 {
+   check_r0_rd();
    rrd32 = (signed int)rrt32 >> rsa;
    sign_extended(rrd);
    interp_addr+=4;
@@ -75,6 +82,7 @@ static void SRA()
 
 static void SLLV()
 {
+   check_r0_rd();
    rrd32 = (unsigned int)(rrt32) << (rrs32&0x1F);
    sign_extended(rrd);
    interp_addr+=4;
@@ -82,6 +90,7 @@ static void SLLV()
 
 static void SRLV()
 {
+   check_r0_rd();
    rrd32 = (unsigned int)rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    interp_addr+=4;
@@ -89,6 +98,7 @@ static void SRLV()
 
 static void SRAV()
 {
+   check_r0_rd();
    rrd32 = (signed int)rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    interp_addr+=4;
@@ -142,6 +152,7 @@ static void SYNC()
 
 static void MFHI()
 {
+   check_r0_rd();
    rrd = hi;
    interp_addr+=4;
 }
@@ -154,6 +165,7 @@ static void MTHI()
 
 static void MFLO()
 {
+   check_r0_rd();
    rrd = lo;
    interp_addr+=4;
 }
@@ -166,18 +178,21 @@ static void MTLO()
 
 static void DSLLV()
 {
+   check_r0_rd();
    rrd = rrt << (rrs32&0x3F);
    interp_addr+=4;
 }
 
 static void DSRLV()
 {
+   check_r0_rd();
    rrd = (unsigned long long)rrt >> (rrs32 & 0x3F);
    interp_addr+=4;
 }
 
 static void DSRAV()
 {
+   check_r0_rd();
    rrd = (long long)rrt >> (rrs32 & 0x3F);
    interp_addr+=4;
 }
@@ -325,6 +340,7 @@ static void DDIVU()
 
 static void ADD()
 {
+   check_r0_rd();
    rrd32 = rrs32 + rrt32;
    sign_extended(rrd);
    interp_addr+=4;
@@ -332,6 +348,7 @@ static void ADD()
 
 static void ADDU()
 {
+   check_r0_rd();
    rrd32 = rrs32 + rrt32;
    sign_extended(rrd);
    interp_addr+=4;
@@ -339,6 +356,7 @@ static void ADDU()
 
 static void SUB()
 {
+   check_r0_rd();
    rrd32 = rrs32 - rrt32;
    sign_extended(rrd);
    interp_addr+=4;
@@ -346,6 +364,7 @@ static void SUB()
 
 static void SUBU()
 {
+   check_r0_rd();
    rrd32 = rrs32 - rrt32;
    sign_extended(rrd);
    interp_addr+=4;
@@ -353,30 +372,35 @@ static void SUBU()
 
 static void AND()
 {
+   check_r0_rd();
    rrd = rrs & rrt;
    interp_addr+=4;
 }
 
 static void OR()
 {
+   check_r0_rd();
    rrd = rrs | rrt;
    interp_addr+=4;
 }
 
 static void XOR()
 {
+   check_r0_rd();
    rrd = rrs ^ rrt;
    interp_addr+=4;
 }
 
 static void NOR()
 {
+   check_r0_rd();
    rrd = ~(rrs | rrt);
    interp_addr+=4;
 }
 
 static void SLT()
 {
+   check_r0_rd();
    if (rrs < rrt) rrd = 1;
    else rrd = 0;
    interp_addr+=4;
@@ -384,6 +408,7 @@ static void SLT()
 
 static void SLTU()
 {
+   check_r0_rd();
    if ((unsigned long long)rrs < (unsigned long long)rrt)
      rrd = 1;
    else rrd = 0;
@@ -392,24 +417,28 @@ static void SLTU()
 
 static void DADD()
 {
+   check_r0_rd();
    rrd = rrs + rrt;
    interp_addr+=4;
 }
 
 static void DADDU()
 {
+   check_r0_rd();
    rrd = rrs + rrt;
    interp_addr+=4;
 }
 
 static void DSUB()
 {
+   check_r0_rd();
    rrd = rrs - rrt;
    interp_addr+=4;
 }
 
 static void DSUBU()
 {
+   check_r0_rd();
    rrd = rrs - rrt;
    interp_addr+=4;
 }
@@ -426,36 +455,42 @@ static void TEQ()
 
 static void DSLL()
 {
+   check_r0_rd();
    rrd = rrt << rsa;
    interp_addr+=4;
 }
 
 static void DSRL()
 {
+   check_r0_rd();
    rrd = (unsigned long long)rrt >> rsa;
    interp_addr+=4;
 }
 
 static void DSRA()
 {
+   check_r0_rd();
    rrd = rrt >> rsa;
    interp_addr+=4;
 }
 
 static void DSLL32()
 {
+   check_r0_rd();
    rrd = rrt << (32+rsa);
    interp_addr+=4;
 }
 
 static void DSRL32()
 {
+   check_r0_rd();
    rrd = (unsigned long long int)rrt >> (32+rsa);
    interp_addr+=4;
 }
 
 static void DSRA32()
 {
+   check_r0_rd();
    rrd = (signed long long int)rrt >> (32+rsa);
    interp_addr+=4;
 }
@@ -984,6 +1019,7 @@ static void MFC0()
     printf("lecture de Random\n");
     stop=1;
       default:
+    check_r0_rt();
     rrt32 = reg_cop0[PC->f.r.nrd];
     sign_extended(rrt);
      }
@@ -1934,6 +1970,7 @@ static void (*interp_cop1_l[64])(void) =
 
 static void MFC1()
 {
+   check_r0_rt();
    rrt32 = *((int*)reg_cop1_simple[rfs]);
    sign_extended(rrt);
    interp_addr+=4;
@@ -1941,12 +1978,14 @@ static void MFC1()
 
 static void DMFC1()
 {
+   check_r0_rt();
    rrt = *((long long*)(reg_cop1_double[rfs]));
    interp_addr+=4;
 }
 
 static void CFC1()
 {
+   check_r0_rt();
    if (rfs==31)
      {
     rrt32 = FCR31;
@@ -2223,6 +2262,7 @@ static void BGTZ()
 
 static void ADDI()
 {
+   check_r0_irt();
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    interp_addr+=4;
@@ -2230,6 +2270,7 @@ static void ADDI()
 
 static void ADDIU()
 {
+   check_r0_irt();
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    interp_addr+=4;
@@ -2237,6 +2278,7 @@ static void ADDIU()
 
 static void SLTI()
 {
+   check_r0_irt();
    if (irs < iimmediate) irt = 1;
    else irt = 0;
    interp_addr+=4;
@@ -2244,6 +2286,7 @@ static void SLTI()
 
 static void SLTIU()
 {
+   check_r0_irt();
    if ((unsigned long long)irs < (unsigned long long)((long long)iimmediate))
      irt = 1;
    else irt = 0;
@@ -2252,24 +2295,28 @@ static void SLTIU()
 
 static void ANDI()
 {
+   check_r0_irt();
    irt = irs & (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
 static void ORI()
 {
+   check_r0_irt();
    irt = irs | (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
 static void XORI()
 {
+   check_r0_irt();
    irt = irs ^ (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
 static void LUI()
 {
+   check_r0_irt();
    irt32 = iimmediate << 16;
    sign_extended(irt);
    interp_addr+=4;
@@ -2438,12 +2485,14 @@ static void BGTZL()
 
 static void DADDI()
 {
+   check_r0_irt();
    irt = irs + iimmediate;
    interp_addr+=4;
 }
 
 static void DADDIU()
 {
+   check_r0_irt();
    irt = irs + iimmediate;
    interp_addr+=4;
 }
@@ -2451,6 +2500,7 @@ static void DADDIU()
 static void LDL()
 {
    unsigned long long int word = 0;
+   check_r0_irt();
    interp_addr+=4;
    switch ((iimmediate + irs32) & 7)
      {
@@ -2507,6 +2557,7 @@ static void LDL()
 static void LDR()
 {
    unsigned long long int word = 0;
+   check_r0_irt();
    interp_addr+=4;
    switch ((iimmediate + irs32) & 7)
      {
@@ -2562,6 +2613,7 @@ static void LDR()
 
 static void LB()
 {
+   check_r0_irt();
    interp_addr+=4;
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
@@ -2571,6 +2623,7 @@ static void LB()
 
 static void LH()
 {
+   check_r0_irt();
    interp_addr+=4;
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
@@ -2581,6 +2634,7 @@ static void LH()
 static void LWL()
 {
    unsigned long long int word = 0;
+   check_r0_irt();
    interp_addr+=4;
    switch ((iimmediate + irs32) & 3)
      {
@@ -2613,6 +2667,7 @@ static void LWL()
 
 static void LW()
 {
+   check_r0_irt();
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
    interp_addr+=4;
@@ -2622,6 +2677,7 @@ static void LW()
 
 static void LBU()
 {
+   check_r0_irt();
    interp_addr+=4;
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
@@ -2630,6 +2686,7 @@ static void LBU()
 
 static void LHU()
 {
+   check_r0_irt();
    interp_addr+=4;
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
@@ -2639,6 +2696,7 @@ static void LHU()
 static void LWR()
 {
    unsigned long long int word = 0;
+   check_r0_irt();
    interp_addr+=4;
    switch ((iimmediate + irs32) & 3)
      {
@@ -2670,6 +2728,7 @@ static void LWR()
 
 static void LWU()
 {
+   check_r0_irt();
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
    interp_addr+=4;
@@ -2901,6 +2960,7 @@ static void CACHE()
 
 static void LL()
 {
+   check_r0_irt();
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
    interp_addr+=4;
@@ -2931,6 +2991,7 @@ static void LDC1()
 
 static void LD()
 {
+   check_r0_irt();
    interp_addr+=4;
    address = iimmediate + irs32;
    rdword = (unsigned long long *) &irt;
@@ -2939,6 +3000,7 @@ static void LD()
 
 static void SC()
 {
+   check_r0_irt();
    interp_addr+=4;
    if(llbit)
      {

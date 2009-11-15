@@ -241,30 +241,29 @@ void main_speedup(int percent)
     }
 }
 
+static osd_message_t *pause_msg = NULL;
 void main_toggle_pause(void)
 {
-    static osd_message_t *msg = NULL;
-
     if (!g_EmulatorRunning)
         return;
 
     if (rompause)
     {
         DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
-        if(msg)
+        if(pause_msg)
         {
-            osd_delete_message(msg);
-            msg = NULL;
+            osd_delete_message(pause_msg);
+            pause_msg = NULL;
         }
     }
     else
     {
-        if(msg)
-            osd_delete_message(msg);
+        if(pause_msg)
+            osd_delete_message(pause_msg);
 
         DebugMessage(M64MSG_STATUS, tr("Emulation paused.\n"));
-        msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
-        osd_message_set_static(msg);
+        pause_msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
+        osd_message_set_static(pause_msg);
     }
 
     rompause = !rompause;
@@ -670,6 +669,11 @@ void main_stop(void)
         return;
 
     DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
+    if(pause_msg)
+    {
+        osd_delete_message(pause_msg);
+        pause_msg = NULL;
+    }
     rompause = 0;
     stop_it();
 #ifdef DBG

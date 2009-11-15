@@ -277,16 +277,18 @@ endif
 # set CFLAGS, LIBS, and LDFLAGS according to the target OS
 ifeq ($(OS),FREEBSD)
   PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
+  SO_EXTENSION   = so
   LIBGL_LIBS     = -L${LOCALBASE}/lib -lGL -lGLU
 endif
 ifeq ($(OS),LINUX)
   PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
+  SO_EXTENSION   = so
   LIBGL_LIBS     = -L/usr/X11R6/lib -lGL -lGLU
 endif
 ifeq ($(OS),OSX)
-  PLUGIN_LDFLAGS = -bundle
+  PLUGIN_LDFLAGS = -bundle -read_only_relocs suppress
+  SO_EXTENSION   = dylib
   LIBGL_LIBS     = -framework OpenGL
-  QMAKE_FLAGS    = -spec macx-g++
 endif
 
 # set flags for compile options.
@@ -307,6 +309,4 @@ else   # set variables for debugging symbols
     STRIP = true
   endif
 endif
-
-SO_EXTENSION = so
 

@@ -35,6 +35,38 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 
+#ifdef __APPLE__
+/* OS X code for app bundle handling */
+#include <CoreFoundation/CoreFoundation.h>
+
+// dynamic data path detection onmac
+bool macSetBundlePath(char* buffer)
+{
+    // the following code will enable mupen to find its data when placed in an app bundle on mac OS X.
+    // returns true if path is set, returns false if path was not set
+    char path[1024];
+    CFBundleRef main_bundle = CFBundleGetMainBundle(); assert(main_bundle);
+    CFURLRef main_bundle_URL = CFBundleCopyBundleURL(main_bundle); assert(main_bundle_URL);
+    CFStringRef cf_string_ref = CFURLCopyFileSystemPath( main_bundle_URL, kCFURLPOSIXPathStyle); assert(cf_string_ref);
+    CFStringGetCString(cf_string_ref, path, 1024, kCFStringEncodingASCII);
+    CFRelease(main_bundle_URL);
+    CFRelease(cf_string_ref);
+    
+    if (strstr( path, ".app" ) != 0)
+    {
+        DebugMessage(M64MSG_VERBOSE, "checking whether we are using an app bundle: yes");
+        // executable is inside an app bundle, use app bundle-relative paths
+        sprintf(buffer, "%s/Contents/Resources/", path);
+        return true;
+    }
+    else
+    {
+        DebugMessage(M64MSG_VERBOSE, "checking whether we are using an app bundle: no");
+        return false;
+    }
+}
+#endif
+
 /* definitions for system directories to search when looking for shared data files */
 #if defined(SHAREDIR)
   #define XSTR(S) STR(S) /* this wacky preprocessor thing is necessary to generate a quote-enclosed */
@@ -160,6 +192,16 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
         return retpath;
     if (secondsearch != NULL && search_dir_file(retpath, secondsearch, filename) == 0)
         return retpath;
+
+#ifdef __APPLE__
+    /* Special case : OS X bundles */
+    static char buf[1024];
+    if (macSetBundlePath(buf))
+    {
+        sprintf(retpath, "%s%s", buf, filename);
+        return retpath;
+    }
+#endif
 
     /* otherwise check our standard paths */
     for (i = 0; i < datasearchdirs; i++)
