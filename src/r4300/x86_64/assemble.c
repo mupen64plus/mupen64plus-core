@@ -396,17 +396,14 @@ void mov_m16abs_reg16(unsigned short *m16, int reg16)
    put32((int) (unsigned long) m16);
 }
 
-void cmp_reg32_m32abs(int reg32, unsigned int *m32)
+void cmp_xreg32_m32rel(int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for cmp_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "cmp_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x3B);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void cmp_xreg64_m64rel(int xreg64, unsigned long long *m64)
@@ -595,17 +592,14 @@ void test_reg32_imm32(int reg32, unsigned int imm32)
    put32(imm32);
 }
 
-void test_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void test_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for test_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "test_m32rel_imm32");
+
+   put8(0x41);
    put8(0xF7);
-   put8(0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87);
+   put32(offset);
    put32(imm32);
 }
 
@@ -615,30 +609,24 @@ void cmp_al_imm8(unsigned char imm8)
    put8(imm8);
 }
 
-void add_m32abs_reg32(unsigned int *m32, int reg32)
+void add_m32rel_xreg32(unsigned int *m32, int xreg32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for add_m32abs_reg32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "add_m32rel_xreg32");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x01);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
-void sub_reg32_m32abs(int reg32, unsigned int *m32)
+void sub_xreg32_m32rel(int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for sub_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "sub_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x2B);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void sub_reg32_reg32(int reg1, int reg2)
@@ -855,44 +843,35 @@ void jmp_imm_short(char saut)
    put8(saut);
 }
 
-void or_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void or_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for or_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "or_m32rel_imm32");
+
+   put8(0x41);
    put8(0x81);
-   put8(0x0C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x8F);
+   put32(offset);
    put32(imm32);
 }
 
-void or_m32abs_reg32(unsigned int *m32, unsigned int reg32)
+void or_m32rel_xreg32(unsigned int *m32, unsigned int xreg32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for or_m32abs_reg32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "or_m32rel_xreg32");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x09);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
-void or_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void or_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for or_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "or_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x0B);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void or_reg32_reg32(unsigned int reg1, unsigned int reg2)
@@ -921,31 +900,25 @@ void and_reg64_reg64(unsigned int reg1, unsigned int reg2)
    put8(0xC0 | (reg2 << 3) | reg1);
 }
 
-void and_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void and_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for and_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "and_m32rel_imm32");
+
+   put8(0x41);
    put8(0x81);
-   put8(0x24);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xA7);
+   put32(offset);
    put32(imm32);
 }
 
-void and_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void and_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for and_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "and_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x23);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void xor_reg32_reg32(unsigned int reg1, unsigned int reg2)
@@ -961,58 +934,46 @@ void xor_reg64_reg64(unsigned int reg1, unsigned int reg2)
    put8(0xC0 | (reg2 << 3) | reg1);
 }
 
-void xor_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void xor_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for xor_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "xor_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x33);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
-void add_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void add_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for add_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "add_m32rel_imm32");
+
+   put8(0x41);
    put8(0x81);
-   put8(0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87);
+   put32(offset);
    put32(imm32);
 }
 
-void add_m32abs_imm8(unsigned int *m32, unsigned char imm8)
+void add_m32rel_imm8(unsigned int *m32, unsigned char imm8)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for add_m32abs_imm8()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "add_m32rel_imm8");
+
+   put8(0x41);
    put8(0x83);
-   put8(0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87);
+   put32(offset);
    put8(imm8);
 }
 
-void sub_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void sub_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for sub_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "sub_m32rel_imm32");
+
+   put8(0x41);
    put8(0x81);
-   put8(0x2C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xAF);
+   put32(offset);
    put32(imm32);
 }
 
@@ -1049,44 +1010,35 @@ void add_reg32_imm32(unsigned int reg32, unsigned int imm32)
    put32(imm32);
 }
 
-void inc_m32abs(unsigned int *m32)
+void inc_m32rel(unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for inc_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "inc_m32rel");
+
+   put8(0x41);
    put8(0xFF);
-   put8(0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87);
+   put32(offset);
 }
 
-void cmp_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void cmp_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for cmp_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "cmp_m32rel_imm32");
+
+   put8(0x41);
    put8(0x81);
-   put8(0x3C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xBF);
+   put32(offset);
    put32(imm32);
 }
 
-void cmp_m32abs_imm8(unsigned int *m32, unsigned char imm8)
+void cmp_m32rel_imm8(unsigned int *m32, unsigned char imm8)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for cmp_m32_imm8()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "cmp_m32rel_imm8");
+
+   put8(0x41);
    put8(0x83);
-   put8(0x3C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xBF);
+   put32(offset);
    put8(imm8);
 }
 
@@ -1110,17 +1062,14 @@ void cmp_eax_imm32(unsigned int imm32)
    put32(imm32);
 }
 
-void mov_m32abs_imm32(unsigned int *m32, unsigned int imm32)
+void mov_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for mov_m32abs_imm32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "mov_m32rel_imm32");
+
+   put8(0x41);
    put8(0xC7);
-   put8(0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87);
+   put32(offset);
    put32(imm32);
 }
 
@@ -1269,17 +1218,14 @@ void shrd_reg32_reg32_imm8(unsigned int reg1, unsigned int reg2, unsigned char i
    put8(imm8);
 }
 
-void mul_m32abs(unsigned int *m32)
+void mul_m32rel(unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for mul_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "mul_m32rel");
+
+   put8(0x41);
    put8(0xF7);
-   put8(0x24);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xA7);
+   put32(offset);
 }
 
 void imul_reg32(unsigned int reg32)
@@ -1313,30 +1259,24 @@ void div_reg32(unsigned int reg32)
    put8(0xF0+reg32);
 }
 
-void idiv_m32abs(unsigned int *m32)
+void idiv_m32rel(unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for idiv_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "idiv_m32rel");
+
+   put8(0x41);
    put8(0xF7);
-   put8(0x3C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xBF);
+   put32(offset);
 }
 
-void div_m32abs(unsigned int *m32)
+void div_m32rel(unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for div_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "div_m32rel");
+
+   put8(0x41);
    put8(0xF7);
-   put8(0x34);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0xB7);
+   put32(offset);
 }
 
 void add_reg32_reg32(unsigned int reg1, unsigned int reg2)
@@ -1352,17 +1292,14 @@ void add_reg64_reg64(unsigned int reg1, unsigned int reg2)
    put8(0xC0 | (reg2 << 3) | reg1);
 }
 
-void add_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void add_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for add_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "add_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x03);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void add_xreg64_m64rel(unsigned int xreg64, unsigned long long *m64)
@@ -1381,17 +1318,14 @@ void adc_reg32_reg32(unsigned int reg1, unsigned int reg2)
    put8(0xC0 | (reg2 << 3) | reg1);
 }
 
-void adc_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void adc_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for adc_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "adc_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x13);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void adc_reg32_imm32(unsigned int reg32, unsigned int imm32)
@@ -1619,30 +1553,24 @@ void mov_reg64_reg64(unsigned int reg1, unsigned int reg2)
    put8(0xC0 | (reg2 << 3) | reg1);
 }
 
-void mov_reg32_m32abs(unsigned int reg32, unsigned int *m32)
+void mov_xreg32_m32rel(unsigned int xreg32, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for mov_reg32_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "mov_xreg32_m32rel");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x8B);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
-void mov_m32abs_reg32(unsigned int *m32, unsigned int reg32)
+void mov_m32rel_xreg32(unsigned int *m32, unsigned int xreg32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for mov_m32abs_reg32()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "mov_m32rel_xreg32");
+
+   put8(0x41 | ((xreg32 & 8) >> 1));
    put8(0x89);
-   put8((reg32 << 3) | 4);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg32 & 7) << 3));
+   put32(offset);
 }
 
 void mov_xreg64_m64rel(unsigned int xreg64, unsigned long long* m64)
@@ -1896,18 +1824,14 @@ void movsxd_reg64_reg32(int reg64, int reg32)
    put8((reg64 << 3) | reg32 | 0xC0);
 }
 
-void movsxd_reg64_m32abs(int reg64, unsigned int *m32)
+void movsxd_xreg64_m32rel(int xreg64, unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for movsxd_reg64_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
-   put8(0x48);
+   int offset = rel_r15_offset(m32, "movsxd_xreg64_m32rel");
+
+   put8(0x49 | ((xreg64 & 8) >> 1));
    put8(0x63);
-   put8((reg64 << 3) | 0x04);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x87 | ((xreg64 & 7) << 3));
+   put32(offset);
 }
 
 void fldcw_m16abs(unsigned short *m16)
@@ -1983,17 +1907,14 @@ void fistp_preg64_dword(int reg64)
    put8(0x18 + reg64);
 }
 
-void fistp_m32abs(unsigned int *m32)
+void fistp_m32rel(unsigned int *m32)
 {
-   if ((long) m32 & 0xFFFFFFFF80000000LL)
-   {
-     printf("Error: destination %lx not in lower 2GB for fistp_m32abs()\n", (long) m32);
-     asm(" int $3; ");
-   }
+   int offset = rel_r15_offset(m32, "fistp_m32rel");
+
+   put8(0x41);
    put8(0xDB);
-   put8(0x1C);
-   put8(0x25);
-   put32((int) (unsigned long) m32);
+   put8(0x9F);
+   put32(offset);
 }
 
 void fistp_preg64_qword(int reg64)
