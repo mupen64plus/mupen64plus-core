@@ -31,7 +31,7 @@
 void gentlbwi(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[104]);
+   inc_m32rel(&instr_count[104]);
 #endif
    gencallinterp((unsigned long long)TLBWI, 0);
    /*dst->local_addr = code_length;
@@ -44,7 +44,7 @@ void gentlbwi(void)
 void gentlbp(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[105]);
+   inc_m32rel(&instr_count[105]);
 #endif
    gencallinterp((unsigned long long)TLBP, 0);
    /*dst->local_addr = code_length;
@@ -57,7 +57,7 @@ void gentlbp(void)
 void gentlbr(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[106]);
+   inc_m32rel(&instr_count[106]);
 #endif
    gencallinterp((unsigned long long)TLBR, 0);
    /*dst->local_addr = code_length;
@@ -70,7 +70,7 @@ void gentlbr(void)
 void generet(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[108]);
+   inc_m32rel(&instr_count[108]);
 #endif
    gencallinterp((unsigned long long)ERET, 1);
    /*dst->local_addr = code_length;
@@ -85,7 +85,7 @@ void generet(void)
 void gentlbwr(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[107]);
+   inc_m32rel(&instr_count[107]);
 #endif
    gencallinterp((unsigned long long)TLBWR, 0);
 }

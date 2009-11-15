@@ -128,12 +128,12 @@ void free_register(int reg)
   {
     if (is64bits[reg])
     {
-      mov_m64abs_reg64((unsigned long long *) reg_content[reg], reg);
+      mov_m64rel_xreg64((unsigned long long *) reg_content[reg], reg);
     }
     else
     {
       movsxd_reg64_reg32(reg, reg);
-      mov_m64abs_reg64((unsigned long long *) reg_content[reg], reg);
+      mov_m64rel_xreg64((unsigned long long *) reg_content[reg], reg);
     }
   }
 
@@ -159,12 +159,12 @@ void flush_registers(void)
       last_access[i] = dst;
       if (is64bits[i])
       {
-        mov_m64abs_reg64((unsigned long long *) reg_content[i], i);
+        mov_m64rel_xreg64((unsigned long long *) reg_content[i], i);
       }
       else
       {
         movsxd_reg64_reg32(i, i);
-        mov_m64abs_reg64((unsigned long long *) reg_content[i], i);
+        mov_m64rel_xreg64((unsigned long long *) reg_content[i], i);
       }
       dirty[i] = 0;
     }
@@ -182,9 +182,9 @@ void reload_registers(void)
       if (reg_content[i] == r0)
         xor_reg64_reg64(i, i);
       else if (is64bits[i])
-        mov_reg64_m64abs(i, reg_content[i]);
+        mov_xreg64_m64rel(i, reg_content[i]);
       else
-        mov_reg32_m32abs(i, (unsigned int *) reg_content[i]);
+        mov_xreg32_m32rel(i, (unsigned int *) reg_content[i]);
     }
   }
 }
@@ -322,7 +322,7 @@ int allocate_register_32(unsigned int *addr)
     if (addr == (unsigned int *) r0)
       xor_reg32_reg32(reg, reg);
     else
-      mov_reg32_m32abs(reg, addr);
+      mov_xreg32_m32rel(reg, addr);
   }
 
   return reg;
@@ -383,7 +383,7 @@ int allocate_register_64(unsigned long long *addr)
     if (addr == r0)
       xor_reg64_reg64(reg, reg);
     else
-      mov_reg64_m64abs(reg, addr);
+      mov_xreg64_m64rel(reg, addr);
   }
 
   return reg;
@@ -562,7 +562,7 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
   if ((unsigned long long *) addr == r0)
     xor_reg32_reg32(reg, reg);
   else
-    mov_reg32_m32abs(reg, addr);
+    mov_xreg32_m32rel(reg, addr);
 }
 
 void allocate_register_32_manually_w(int reg, unsigned int *addr)

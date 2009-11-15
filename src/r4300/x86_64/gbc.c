@@ -31,14 +31,14 @@
 
 static void genbc1f_test(void)
 {
-   test_m32abs_imm32((unsigned int*)&FCR31, 0x800000);
-   sete_m8abs((unsigned char *) &branch_taken);
+   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
+   sete_m8rel((unsigned char *) &branch_taken);
 }
 
 void genbc1f(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[100]);
+   inc_m32rel(&instr_count[100]);
 #endif
 #ifdef INTERPRET_BC1F
    gencallinterp((unsigned long long)BC1F, 1);
@@ -60,7 +60,7 @@ void genbc1f(void)
 void genbc1f_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[100]);
+   inc_m32rel(&instr_count[100]);
 #endif
 #ifdef INTERPRET_BC1F_OUT
    gencallinterp((unsigned long long)BC1F_OUT, 1);
@@ -100,14 +100,14 @@ void genbc1f_idle(void)
 
 static void genbc1t_test(void)
 {
-   test_m32abs_imm32((unsigned int*)&FCR31, 0x800000);
-   setne_m8abs((unsigned char *) &branch_taken);
+   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
+   setne_m8rel((unsigned char *) &branch_taken);
 }
 
 void genbc1t(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[101]);
+   inc_m32rel(&instr_count[101]);
 #endif
 #ifdef INTERPRET_BC1T
    gencallinterp((unsigned long long)BC1T, 1);
@@ -129,7 +129,7 @@ void genbc1t(void)
 void genbc1t_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[101]);
+   inc_m32rel(&instr_count[101]);
 #endif
 #ifdef INTERPRET_BC1T_OUT
    gencallinterp((unsigned long long)BC1T_OUT, 1);
@@ -170,7 +170,7 @@ void genbc1t_idle(void)
 void genbc1fl(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[102]);
+   inc_m32rel(&instr_count[102]);
 #endif
 #ifdef INTERPRET_BC1FL
    gencallinterp((unsigned long long)BC1FL, 1);
@@ -192,7 +192,7 @@ void genbc1fl(void)
 void genbc1fl_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[102]);
+   inc_m32rel(&instr_count[102]);
 #endif
 #ifdef INTERPRET_BC1FL_OUT
    gencallinterp((unsigned long long)BC1FL_OUT, 1);
@@ -233,7 +233,7 @@ void genbc1fl_idle(void)
 void genbc1tl(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[103]);
+   inc_m32rel(&instr_count[103]);
 #endif
 #ifdef INTERPRET_BC1TL
    gencallinterp((unsigned long long)BC1TL, 1);
@@ -255,7 +255,7 @@ void genbc1tl(void)
 void genbc1tl_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[103]);
+   inc_m32rel(&instr_count[103]);
 #endif
 #ifdef INTERPRET_BC1TL_OUT
    gencallinterp((unsigned long long)BC1TL_OUT, 1);

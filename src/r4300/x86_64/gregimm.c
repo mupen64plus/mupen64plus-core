@@ -42,26 +42,26 @@ void genbltz_test(void)
     int rs = allocate_register_32((unsigned int *)dst->f.i.rs);
     
     cmp_reg32_imm32(rs, 0);
-    setl_m8abs((unsigned char *) &branch_taken);
+    setl_m8rel((unsigned char *) &branch_taken);
   }
   else if (rs_64bit == -1)
   {
-    cmp_m32abs_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
-    setl_m8abs((unsigned char *) &branch_taken);
+    cmp_m32rel_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
+    setl_m8rel((unsigned char *) &branch_taken);
   }
   else
   {
     int rs = allocate_register_64((unsigned long long *)dst->f.i.rs);
 
     cmp_reg64_imm8(rs, 0);
-    setl_m8abs((unsigned char *) &branch_taken);
+    setl_m8rel((unsigned char *) &branch_taken);
   }
 }
 
 void genbltz(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[47]);
+   inc_m32rel(&instr_count[47]);
 #endif
 #ifdef INTERPRET_BLTZ
    gencallinterp((unsigned long long)BLTZ, 1);
@@ -82,7 +82,7 @@ void genbltz(void)
 void genbltz_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[47]);
+   inc_m32rel(&instr_count[47]);
 #endif
 #ifdef INTERPRET_BLTZ_OUT
    gencallinterp((unsigned long long)BLTZ_OUT, 1);
@@ -126,25 +126,25 @@ void genbgez_test(void)
   {
     int rs = allocate_register_32((unsigned int *)dst->f.i.rs);
     cmp_reg32_imm32(rs, 0);
-    setge_m8abs((unsigned char *) &branch_taken);
+    setge_m8rel((unsigned char *) &branch_taken);
   }
   else if (rs_64bit == -1)
   {
-    cmp_m32abs_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
-    setge_m8abs((unsigned char *) &branch_taken);
+    cmp_m32rel_imm32(((unsigned int *)dst->f.i.rs)+1, 0);
+    setge_m8rel((unsigned char *) &branch_taken);
   }
   else
   {
     int rs = allocate_register_64((unsigned long long *)dst->f.i.rs);
     cmp_reg64_imm8(rs, 0);
-    setge_m8abs((unsigned char *) &branch_taken);
+    setge_m8rel((unsigned char *) &branch_taken);
   }
 }
 
 void genbgez(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[48]);
+   inc_m32rel(&instr_count[48]);
 #endif
 #ifdef INTERPRET_BGEZ
    gencallinterp((unsigned long long)BGEZ, 1);
@@ -165,7 +165,7 @@ void genbgez(void)
 void genbgez_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[48]);
+   inc_m32rel(&instr_count[48]);
 #endif
 #ifdef INTERPRET_BGEZ_OUT
    gencallinterp((unsigned long long)BGEZ_OUT, 1);
@@ -204,7 +204,7 @@ void genbgez_idle(void)
 void genbltzl(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[49]);
+   inc_m32rel(&instr_count[49]);
 #endif
 #ifdef INTERPRET_BLTZL
    gencallinterp((unsigned long long)BLTZL, 1);
@@ -225,7 +225,7 @@ void genbltzl(void)
 void genbltzl_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[49]);
+   inc_m32rel(&instr_count[49]);
 #endif
 #ifdef INTERPRET_BLTZL_OUT
    gencallinterp((unsigned long long)BLTZL_OUT, 1);
@@ -264,7 +264,7 @@ void genbltzl_idle(void)
 void genbgezl(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[50]);
+   inc_m32rel(&instr_count[50]);
 #endif
 #ifdef INTERPRET_BGEZL
    gencallinterp((unsigned long long)BGEZL, 1);
@@ -285,7 +285,7 @@ void genbgezl(void)
 void genbgezl_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[50]);
+   inc_m32rel(&instr_count[50]);
 #endif
 #ifdef INTERPRET_BGEZL_OUT
    gencallinterp((unsigned long long)BGEZL_OUT, 1);
@@ -333,11 +333,11 @@ void genbranchlink(void)
      }
    else if (r31_64bit == -1)
      {
-    mov_m32abs_imm32((unsigned int *)&reg[31], dst->addr + 8);
+    mov_m32rel_imm32((unsigned int *)&reg[31], dst->addr + 8);
     if (dst->addr & 0x80000000)
-      mov_m32abs_imm32(((unsigned int *)&reg[31])+1, 0xFFFFFFFF);
+      mov_m32rel_imm32(((unsigned int *)&reg[31])+1, 0xFFFFFFFF);
     else
-      mov_m32abs_imm32(((unsigned int *)&reg[31])+1, 0);
+      mov_m32rel_imm32(((unsigned int *)&reg[31])+1, 0);
      }
    else
      {
@@ -351,7 +351,7 @@ void genbranchlink(void)
 void genbltzal(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[51]);
+   inc_m32rel(&instr_count[51]);
 #endif
 #ifdef INTERPRET_BLTZAL
    gencallinterp((unsigned long long)BLTZAL, 1);
@@ -373,7 +373,7 @@ void genbltzal(void)
 void genbltzal_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[51]);
+   inc_m32rel(&instr_count[51]);
 #endif
 #ifdef INTERPRET_BLTZAL_OUT
    gencallinterp((unsigned long long)BLTZAL_OUT, 1);
@@ -414,7 +414,7 @@ void genbltzal_idle(void)
 void genbgezal(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[52]);
+   inc_m32rel(&instr_count[52]);
 #endif
 #ifdef INTERPRET_BGEZAL
    gencallinterp((unsigned long long)BGEZAL, 1);
@@ -436,7 +436,7 @@ void genbgezal(void)
 void genbgezal_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[52]);
+   inc_m32rel(&instr_count[52]);
 #endif
 #ifdef INTERPRET_BGEZAL_OUT
    gencallinterp((unsigned long long)BGEZAL_OUT, 1);
@@ -477,7 +477,7 @@ void genbgezal_idle(void)
 void genbltzall(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[53]);
+   inc_m32rel(&instr_count[53]);
 #endif
 #ifdef INTERPRET_BLTZALL
    gencallinterp((unsigned long long)BLTZALL, 1);
@@ -499,7 +499,7 @@ void genbltzall(void)
 void genbltzall_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[53]);
+   inc_m32rel(&instr_count[53]);
 #endif
 #ifdef INTERPRET_BLTZALL_OUT
    gencallinterp((unsigned long long)BLTZALL_OUT, 1);
@@ -540,7 +540,7 @@ void genbltzall_idle(void)
 void genbgezall(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[54]);
+   inc_m32rel(&instr_count[54]);
 #endif
 #ifdef INTERPRET_BGEZALL
    gencallinterp((unsigned long long)BGEZALL, 1);
@@ -562,7 +562,7 @@ void genbgezall(void)
 void genbgezall_out(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[54]);
+   inc_m32rel(&instr_count[54]);
 #endif
 #ifdef INTERPRET_BGEZALL_OUT
    gencallinterp((unsigned long long)BGEZALL_OUT, 1);

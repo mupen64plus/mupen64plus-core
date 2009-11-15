@@ -30,15 +30,15 @@
 void gencvt_s_l(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[117]);
+   inc_m32rel(&instr_count[117]);
 #endif
 #ifdef INTERPRET_CVT_S_L
    gencallinterp((unsigned long long)CVT_S_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_reg64_m64abs(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_reg64_m64abs(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.cf.fd]));
    fstp_preg64_dword(RAX);
 #endif
 }
@@ -46,15 +46,15 @@ void gencvt_s_l(void)
 void gencvt_d_l(void)
 {
 #if defined(COUNT_INSTR)
-   inc_m32abs(&instr_count[117]);
+   inc_m32rel(&instr_count[117]);
 #endif
 #ifdef INTERPRET_CVT_D_L
    gencallinterp((unsigned long long)CVT_D_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_reg64_m64abs(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_reg64_m64abs(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fd]));
    fstp_preg64_qword(RAX);
 #endif
 }
