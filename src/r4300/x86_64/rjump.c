@@ -66,7 +66,7 @@ void dyna_start(void (*code)())
        " push %%r15           \n"
        " push %%rbp           \n"
        " mov  %%rsp, save_rsp(%%rip) \n"
-       " mov  reg(%%rip), %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
+       " lea  reg(%%rip), %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
        " call 1f              \n"
        " jmp 2f               \n"
        "1:                    \n"
@@ -95,7 +95,7 @@ void dyna_start(void (*code)())
        " push %%r15           \n"
        " push %%rbp           \n"
        " mov  %%rsp, save_rsp \n"
-       " mov  reg, %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
+       " lea  reg, %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
        " call 1f              \n"
        " jmp 2f               \n"
        "1:                    \n"
