@@ -32,6 +32,7 @@
 #include "cheat.h"
 #include "main.h"
 #include "rom.h"
+#include "eventloop.h"
 #include "util.h" // list utilities
 #include "ini_reader.h"
 
@@ -133,8 +134,9 @@ static int execute_cheat(unsigned int address, unsigned short value, int *old_va
 
 static int gs_button_pressed(void)
 {
-    return key_pressed(ConfigGetParamInt(g_CoreConfig, kbdGameshark)) ||
-           event_active(ConfigGetParamString(g_CoreConfig, joyGameshark));
+    // fixme
+    return key_pressed(ConfigGetParamInt(g_CoreConfig, "Kbd Mapping Gameshark")) ||
+           event_active(ConfigGetParamString(g_CoreConfig, "Joy Mapping Gameshark"));
 }
 
 // public functions

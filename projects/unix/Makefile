@@ -107,6 +107,7 @@ SRC_CORE = \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
+	$(SRCDIR)/main/eventloop.c \
 	$(SRCDIR)/main/md5.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/ini_reader.c \

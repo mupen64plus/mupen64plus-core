@@ -94,6 +94,7 @@ EXPORT m64p_error CALL VidExt_Quit(void)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncQuit)();
 
+    SDL_ShowCursor(SDL_ENABLE);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     l_pScreen = NULL;
 
@@ -189,6 +190,8 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
         DebugMessage(M64MSG_ERROR, "SDL_SetVideoMode failed: %s", SDL_GetError());
         return M64ERR_SYSTEM_FAIL;
     }
+
+    SDL_ShowCursor(SDL_DISABLE);
 
     return M64ERR_SUCCESS;
 }

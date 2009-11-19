@@ -28,9 +28,6 @@
 extern "C" {
 #endif
 
-int event_active(const char *event_str);
-int key_pressed(SDLKey k);
-
 /** file utilities **/
 int isfile(char *path);
 int isdir(char *path);
@@ -78,7 +75,6 @@ void playersstring(unsigned char players, char *string);
 /** string utilities **/
 char *trim(char *str);
 char *strnstrip(char* string, int size);
-char *event_to_str(const SDL_Event *event);
 list_t tokenize_string(const char *string, const char* delim);
 
 #ifdef __cplusplus

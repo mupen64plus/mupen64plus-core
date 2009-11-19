@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - main.h                                                  *
+ *   Mupen64plus - eventloop.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 Blight                                             *
+ *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,38 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#if !defined(EVENTLOOP_H)
+#define EVENTLOOP_H
 
-#include "api/m64p_types.h"
+extern void event_set_core_defaults(void);
+extern void event_sdl_keydown(int keysym, int keymod);
+extern void event_sdl_keyup(int keysym, int keymod);
+extern int event_sdl_filter(const SDL_Event *event);
 
-/* globals */
-extern m64p_handle g_CoreConfig;
+extern int event_active(const char *event_str);
+extern int key_pressed(int sdl_keysym);
 
-extern int g_MemHasBeenBSwapped;
-extern int g_TakeScreenshot;
-extern int g_EmulatorRunning;
+#endif /* define(EVENTLOOP_H) */
 
-extern m64p_frame_callback g_FrameCallback;
-
-char* get_savespath(void);
-
-void new_frame();
-void new_vi();
-
-void main_set_core_defaults(void);
-void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
-
-int  main_run(void);
-void main_stop(void);
-
-void main_toggle_pause(void);
-void main_advance_one(void);
-void main_speedup(int percent);
-void main_speeddown(int percent);
-void main_set_fastforward(int enable);
-void main_draw_volume_osd(void);
-void main_take_next_screenshot(void);
-
-#endif /* __MAIN_H__ */
 

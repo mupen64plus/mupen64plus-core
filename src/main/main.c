@@ -37,26 +37,16 @@
 #include "api/callbacks.h"
 #include "api/config.h"
 
-#include "osal/files.h"
-
 #include "main.h"
-#include "version.h"
+#include "eventloop.h"
 #include "rom.h"
-#include "savestates.h"
-#include "util.h"
 #include "translate.h"
-#include "cheat.h"
 
-#include "r4300/r4300.h"
-#include "r4300/recomph.h"
-#include "r4300/interupt.h"
-
-#include "memory/memory.h"
-
-#include "plugin/plugin.h"
-
+#include "osal/files.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
+#include "plugin/plugin.h"
+#include "r4300/r4300.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -81,7 +71,9 @@ static int   l_CurrentFrame = 0;         // frame counter
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
 
-static osd_message_t *l_volMsg = NULL;
+static osd_message_t *l_msgVol = NULL;
+static osd_message_t *l_msgFF = NULL;
+static osd_message_t *l_msgPause = NULL;
 
 /*********************************************************************************************************
 * helper functions
@@ -190,35 +182,6 @@ void main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultString(g_CoreConfig, "Language", "English", "Language to use for messages from the core library");
-    /* Keyboard presses mapped to core functions */
-    ConfigSetDefaultInt(g_CoreConfig, kbdStop, SDLK_ESCAPE,          "SDL keysym for stopping the emulator");
-    ConfigSetDefaultInt(g_CoreConfig, kbdFullscreen, SDLK_LAST,      "SDL keysym for switching between fullscreen/windowed modes");
-    ConfigSetDefaultInt(g_CoreConfig, kbdSave, SDLK_F5,              "SDL keysym for saving the emulator state");
-    ConfigSetDefaultInt(g_CoreConfig, kbdLoad, SDLK_F7,              "SDL keysym for loading the emulator state");
-    ConfigSetDefaultInt(g_CoreConfig, kbdIncrement, 0,               "SDL keysym for advancing the save state slot");
-    ConfigSetDefaultInt(g_CoreConfig, kbdReset, SDLK_F9,             "SDL keysym for resetting the emulator");
-    ConfigSetDefaultInt(g_CoreConfig, kbdSpeeddown, SDLK_F10,        "SDL keysym for slowing down the emulator");
-    ConfigSetDefaultInt(g_CoreConfig, kbdSpeedup, SDLK_F11,          "SDL keysym for speeding up the emulator");
-    ConfigSetDefaultInt(g_CoreConfig, kbdScreenshot, SDLK_F12,       "SDL keysym for taking a screenshot");
-    ConfigSetDefaultInt(g_CoreConfig, kbdPause, SDLK_p,              "SDL keysym for pausing the emulator");
-    ConfigSetDefaultInt(g_CoreConfig, kbdMute, SDLK_m,               "SDL keysym for muting/unmuting the sound");
-    ConfigSetDefaultInt(g_CoreConfig, kbdIncrease, SDLK_RIGHTBRACKET,"SDL keysym for increasing the volume");
-    ConfigSetDefaultInt(g_CoreConfig, kbdDecrease, SDLK_LEFTBRACKET, "SDL keysym for decreasing the volume");
-    ConfigSetDefaultInt(g_CoreConfig, kbdForward, SDLK_f,            "SDL keysym for temporarily going really fast");
-    ConfigSetDefaultInt(g_CoreConfig, kbdAdvance, SDLK_SLASH,        "SDL keysym for advancing by one frame when paused");
-    ConfigSetDefaultInt(g_CoreConfig, kbdGameshark, SDLK_g,          "SDL keysym for pressing the game shark button");
-    /* Joystick events mapped to core functions */
-    ConfigSetDefaultString(g_CoreConfig, joyStop, "",       "Joystick event string for stopping the emulator");
-    ConfigSetDefaultString(g_CoreConfig, joyFullscreen, "", "Joystick event string for switching between fullscreen/windowed modes");
-    ConfigSetDefaultString(g_CoreConfig, joySave, "",       "Joystick event string for saving the emulator state");
-    ConfigSetDefaultString(g_CoreConfig, joyLoad, "",       "Joystick event string for loading the emulator state");
-    ConfigSetDefaultString(g_CoreConfig, joyIncrement, "",  "Joystick event string for advancing the save state slot");
-    ConfigSetDefaultString(g_CoreConfig, joyScreenshot, "", "Joystick event string for taking a screenshot");
-    ConfigSetDefaultString(g_CoreConfig, joyPause, "",      "Joystick event string for pausing the emulator");
-    ConfigSetDefaultString(g_CoreConfig, joyMute, "",       "Joystick event string for muting/unmuting the sound");
-    ConfigSetDefaultString(g_CoreConfig, joyIncrease, "",   "Joystick event string for increasing the volume");
-    ConfigSetDefaultString(g_CoreConfig, joyDecrease, "",   "Joystick event string for decreasing the volume");
-    ConfigSetDefaultString(g_CoreConfig, joyGameshark, "",  "Joystick event string for pressing the game shark button");
 }
 
 void main_speeddown(int percent)
@@ -241,7 +204,33 @@ void main_speedup(int percent)
     }
 }
 
-static osd_message_t *pause_msg = NULL;
+void main_set_fastforward(int enable)
+{
+    static int ff_state = 0;
+    static int SavedSpeedFactor = 100;
+
+    if (enable && !ff_state)
+    {
+        ff_state = 1; /* activate fast-forward */
+        SavedSpeedFactor = l_SpeedFactor;
+        l_SpeedFactor = 250;
+        setSpeedFactor(l_SpeedFactor);  /* call to audio plugin */
+        // set fast-forward indicator
+        l_msgFF = osd_new_message(OSD_TOP_RIGHT, tr("Fast Forward"));
+        osd_message_set_static(l_msgFF);
+    }
+    else if (!enable && ff_state)
+    {
+        ff_state = 0; /* de-activate fast-forward */
+        l_SpeedFactor = SavedSpeedFactor;
+        setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        // remove message
+        osd_delete_message(l_msgFF);
+        l_msgFF = NULL;
+    }
+
+}
+
 void main_toggle_pause(void)
 {
     if (!g_EmulatorRunning)
@@ -250,20 +239,20 @@ void main_toggle_pause(void)
     if (rompause)
     {
         DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
-        if(pause_msg)
+        if(l_msgPause)
         {
-            osd_delete_message(pause_msg);
-            pause_msg = NULL;
+            osd_delete_message(l_msgPause);
+            l_msgPause = NULL;
         }
     }
     else
     {
-        if(pause_msg)
-            osd_delete_message(pause_msg);
+        if(l_msgPause)
+            osd_delete_message(l_msgPause);
 
         DebugMessage(M64MSG_STATUS, tr("Emulation paused.\n"));
-        pause_msg = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
-        osd_message_set_static(pause_msg);
+        l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
+        osd_message_set_static(l_msgPause);
     }
 
     rompause = !rompause;
@@ -282,8 +271,8 @@ void main_draw_volume_osd(void)
     const char *volString;
 
     // if we had a volume message, make sure that it's still in the OSD list, or set it to NULL
-    if (l_volMsg != NULL && !osd_message_valid(l_volMsg))
-        l_volMsg = NULL;
+    if (l_msgVol != NULL && !osd_message_valid(l_msgVol))
+        l_msgVol = NULL;
 
     // this calls into the audio plugin
     volString = volumeGetString();
@@ -299,10 +288,10 @@ void main_draw_volume_osd(void)
     }
 
     // create a new message or update an existing one
-    if (l_volMsg != NULL)
-        osd_update_message(l_volMsg, msgString);
+    if (l_msgVol != NULL)
+        osd_update_message(l_msgVol, msgString);
     else
-        l_volMsg = osd_new_message(OSD_MIDDLE_CENTER, msgString);
+        l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, msgString);
 }
 
 /* this function could be called as a result of a keypress, joystick/button movement,
@@ -400,160 +389,6 @@ void new_vi(void)
 }
 
 /*********************************************************************************************************
-* sdl event filter
-*/
-static int sdl_event_filter( const SDL_Event *event )
-{
-    static osd_message_t *msgFF = NULL;
-    static int SavedSpeedFactor = 100;
-    static unsigned char StopRumble[6] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00};
-    char *event_str = NULL;
-
-    switch( event->type )
-    {
-        // user clicked on window close button
-        case SDL_QUIT:
-            main_stop();
-            break;
-        case SDL_KEYDOWN:
-            /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
-            if (event->key.keysym.sym == SDLK_RETURN && event->key.keysym.mod & (KMOD_LALT | KMOD_RALT))
-            {
-                changeWindow();
-            }
-            else if (event->key.keysym.unicode >= '0' && event->key.keysym.unicode <= '9')
-            {
-                savestates_select_slot( event->key.keysym.unicode - '0' );
-            }
-            /* check all of the configurable commands */
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdStop))
-                main_stop();
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdFullscreen))
-                changeWindow();
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSave))
-                savestates_job |= SAVESTATE;
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdLoad))
-            {
-                savestates_job |= LOADSTATE;
-                controllerCommand(0, StopRumble);
-                controllerCommand(1, StopRumble);
-                controllerCommand(2, StopRumble);
-                controllerCommand(3, StopRumble);
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdIncrement))
-                savestates_inc_slot();
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdReset))
-            {
-                add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
-                add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSpeeddown))
-                main_speeddown(5);
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdSpeedup))
-                main_speedup(5);
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdScreenshot))
-                // set flag so that screenshot will be taken at the end of frame rendering
-                main_take_next_screenshot();
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdPause))
-                main_toggle_pause();
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdMute))
-            {
-                volumeMute();
-                main_draw_volume_osd();
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdIncrease))
-            {
-                volumeUp();
-                main_draw_volume_osd();
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdDecrease))
-            {
-                volumeDown();
-                main_draw_volume_osd();
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdForward))
-            {
-                SavedSpeedFactor = l_SpeedFactor;
-                l_SpeedFactor = 250;
-                setSpeedFactor(l_SpeedFactor);  // call to audio plugin
-                // set fast-forward indicator
-                msgFF = osd_new_message(OSD_TOP_RIGHT, tr("Fast Forward"));
-                osd_message_set_static(msgFF);
-            }
-            else if (event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdAdvance))
-                main_advance_one();
-            // pass all other keypresses to the input plugin
-            else keyDown(event->key.keysym.mod, event->key.keysym.sym);
-
-            return 0;
-
-        case SDL_KEYUP:
-            if(event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdStop))
-            {
-                return 0;
-            }
-            else if(event->key.keysym.sym == ConfigGetParamInt(g_CoreConfig, kbdForward))
-            {
-                // cancel fast-forward
-                l_SpeedFactor = SavedSpeedFactor;
-                setSpeedFactor(l_SpeedFactor);  // call to audio plugin
-                // remove message
-                osd_delete_message(msgFF);
-            }
-            else keyUp(event->key.keysym.mod, event->key.keysym.sym);
-
-            return 0;
-
-        // if joystick action is detected, check if it's mapped to a special function
-        case SDL_JOYAXISMOTION:
-            // axis events have to be above a certain threshold to be valid
-            if(event->jaxis.value > -15000 && event->jaxis.value < 15000)
-                break;
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYHATMOTION:
-            event_str = event_to_str(event);
-
-            if(!event_str) return 0;
-
-            if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyFullscreen)) == 0)
-                changeWindow();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyStop)) == 0)
-                main_stop();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyPause)) == 0)
-                main_toggle_pause();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joySave)) == 0)
-                savestates_job |= SAVESTATE;
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyLoad)) == 0)
-                savestates_job |= LOADSTATE;
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrement)) == 0)
-                savestates_inc_slot();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyScreenshot)) == 0)
-                main_take_next_screenshot();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyMute)) == 0)
-            {
-                volumeMute();
-                main_draw_volume_osd();
-            }
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyDecrease)) == 0)
-            {
-                volumeDown();
-                main_draw_volume_osd();
-            }
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrease)) == 0)
-            {
-                volumeUp();
-                main_draw_volume_osd();
-            }
-
-            free(event_str);
-            return 0;
-            break;
-    }
-
-    return 1;
-}
-
-/*********************************************************************************************************
 * emulation thread - runs the core
 */
 int main_run(void)
@@ -571,12 +406,9 @@ int main_run(void)
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
 
-    /* fixme this should already have been done when attaching the video plugin */
-    /* */
-    SDL_ShowCursor(0);
+    /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
     SDL_EnableKeyRepeat(0, 0);
-    SDL_SetEventFilter(sdl_event_filter);
-    SDL_EnableUNICODE(1);
+    SDL_SetEventFilter(event_sdl_filter);
 
     // initialize memory, and do byte-swapping if it's not been done yet
     if (g_MemHasBeenBSwapped == 0)
@@ -669,10 +501,15 @@ void main_stop(void)
         return;
 
     DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
-    if(pause_msg)
+    if(l_msgPause)
     {
-        osd_delete_message(pause_msg);
-        pause_msg = NULL;
+        osd_delete_message(l_msgPause);
+        l_msgPause = NULL;
+    }
+    if(l_msgFF)
+    {
+        osd_delete_message(l_msgFF);
+        l_msgFF = NULL;
     }
     rompause = 0;
     stop_it();
