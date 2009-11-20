@@ -89,12 +89,12 @@ void check_input_sync(unsigned char *value)
 {
     if (r4300emu == CORE_DYNAREC || r4300emu == CORE_PURE_INTERPRETER)
     {
-        if (fread(value, 4, 1, f) != 4)
+        if (fread(value, 1, 4, f) != 4)
             stop_it();
     }
     else
     {
-        if (fwrite(value, 4, 1, f) != 4)
+        if (fwrite(value, 1, 4, f) != 4)
             stop_it();
     }
 }
@@ -117,7 +117,7 @@ void compare_core()
          pipe_opened = 1;
       }
     
-    if (fread(comp_reg, 4, sizeof(int), f) != 4)
+    if (fread(comp_reg, sizeof(int), 4, f) != 4)
         printf("compare_core: fread() failed");
     if (r4300emu == CORE_PURE_INTERPRETER)
       {
@@ -135,21 +135,21 @@ void compare_core()
            display_error("PC");
          }
       }
-    if (fread (comp_reg, 32, sizeof(long long int), f) != 32)
+    if (fread (comp_reg, sizeof(long long int), 32, f) != 32)
         printf("compare_core: fread() failed");
     if (memcmp(reg, comp_reg, 32*sizeof(long long int)))
     {
       if (iFirst) { printf("%s", errHead); iFirst = 0; }
       display_error("gpr");
     }
-    if (fread(comp_reg, 32, sizeof(int), f) != 32)
+    if (fread(comp_reg, sizeof(int), 32, f) != 32)
         printf("compare_core: fread() failed");
     if (memcmp(reg_cop0, comp_reg, 32*sizeof(int)))
     {
       if (iFirst) { printf("%s", errHead); iFirst = 0; }
       display_error("cop0");
       }
-    if (fread (comp_reg, 32, sizeof(long long int), f) != 32)
+    if (fread (comp_reg, sizeof(long long int), 32, f) != 32)
         printf("compare_core: fread() failed");
     if (memcmp(reg_cop1_fgr_64, comp_reg, 32*sizeof(long long int)))
     {
@@ -173,10 +173,10 @@ void compare_core()
          pipe_opened = 1;
       }
     
-    if (fwrite(&PC->addr, 4, sizeof(int), f) != 4 ||
-        fwrite(reg, 32, sizeof(long long int), f) != 32 ||
-        fwrite(reg_cop0, 32, sizeof(int), f) != 32 ||
-        fwrite(reg_cop1_fgr_64, 32, sizeof(long long int), f) != 32)
+    if (fwrite(&PC->addr, sizeof(int), 4, f) != 4 ||
+        fwrite(reg, sizeof(long long int), 32, f) != 32 ||
+        fwrite(reg_cop0, sizeof(int), 32, f) != 32 ||
+        fwrite(reg_cop1_fgr_64, sizeof(long long int), 32, f) != 32)
         printf("compare_core: write() failed");
     /*fwrite(&rdram[0x31280/4], 1, sizeof(int), f);
     fwrite(&FCR31, 4, 1, f);*/
