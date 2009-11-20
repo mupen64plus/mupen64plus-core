@@ -36,6 +36,8 @@
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
@@ -91,12 +93,17 @@ void EepromCommand(BYTE *Command)
          strcat(filename, ROM_SETTINGS.goodname);
          strcat(filename, ".eep");
          f = fopen(filename, "rb");
-         if (f)
-           {
-          fread(eeprom, 1, 0x800, f);
-          fclose(f);
-           }
-         else for (i=0; i<0x800; i++) eeprom[i] = 0;
+         if (f == NULL)
+         {
+             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for reading", filename);
+             memset(eeprom, 0, 0x800);
+         }
+         else
+         {
+             if (fread(eeprom, 1, 0x800, f) != 0x800)
+                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
+             fclose(f);
+         }
          free(filename);
          memcpy(&Command[4], eeprom + Command[3]*8, 8);
       }
@@ -112,22 +119,28 @@ void EepromCommand(BYTE *Command)
          strcat(filename, ROM_SETTINGS.goodname);
          strcat(filename, ".eep");
          f = fopen(filename, "rb");
-         if (f)
-           {
-          fread(eeprom, 1, 0x800, f);
-          fclose(f);
-           }
-         else for (i=0; i<0x800; i++) eeprom[i] = 0;
+         if (f == NULL)
+         {
+             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for reading", filename);
+             memset(eeprom, 0, 0x800);
+         }
+         else
+         {
+             if (fread(eeprom, 1, 0x800, f) != 0x800)
+                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
+             fclose(f);
+         }
          memcpy(eeprom + Command[3]*8, &Command[4], 8);
          f = fopen(filename, "wb");
          if (f == NULL)
          {
-           printf("Warning: Couldn't open EEPROM file '%s' for writing.\n", filename);
+             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", filename);
          }
          else
          {
-           fwrite(eeprom, 1, 0x800, f);
-           fclose(f);
+             if (fwrite(eeprom, 1, 0x800, f) != 0x800)
+                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
+             fclose(f);
          }
          free(filename);
       }
@@ -279,15 +292,23 @@ void internal_ControllerCommand(int Control, BYTE *Command)
                  strcat(filename, ROM_SETTINGS.goodname);
                  strcat(filename, ".mpk");
                  f = fopen(filename, "rb");
-                 if (f)
-                   {
-                      fread(mempack[0], 1, 0x8000, f);
-                      fread(mempack[1], 1, 0x8000, f);
-                      fread(mempack[2], 1, 0x8000, f);
-                      fread(mempack[3], 1, 0x8000, f);
-                      fclose(f);
-                   }
-                 else format_mempacks();
+                 if (f == NULL)
+                 {
+                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for reading", filename);
+                     format_mempacks();
+                 }
+                 else
+                 {
+                     if (fread(mempack[0], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 1st 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[1], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 2nd 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[2], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 3rd 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[3], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 4th 32kb mempack in file '%s'", filename);
+                     fclose(f);
+                 }
                  free(filename);
                  memcpy(&Command[5], &mempack[Control][address], 0x20);
                   }
@@ -333,29 +354,41 @@ void internal_ControllerCommand(int Control, BYTE *Command)
                  strcat(filename, ROM_SETTINGS.goodname);
                  strcat(filename, ".mpk");
                  f = fopen(filename, "rb");
-                 if (f)
-                   {
-                      fread(mempack[0], 1, 0x8000, f);
-                      fread(mempack[1], 1, 0x8000, f);
-                      fread(mempack[2], 1, 0x8000, f);
-                      fread(mempack[3], 1, 0x8000, f);
-                      fclose(f);
-                   }
-                 else format_mempacks();
+                 if (f == NULL)
+                 {
+                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for reading", filename);
+                     format_mempacks();
+                 }
+                 else
+                 {
+                     if (fread(mempack[0], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 1st 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[1], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 2nd 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[2], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 3rd 32kb mempack in file '%s'", filename);
+                     else if (fread(mempack[3], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fread() failed for 4th 32kb mempack in file '%s'", filename);
+                     fclose(f);
+                 }
                  memcpy(&mempack[Control][address], &Command[5], 0x20);
                  f = fopen(filename, "wb");
                  if (f == NULL)
                  {
-                     printf("Warning: couldn't open memory pack file '%s' for writing.\n", filename);
+                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for writing", filename);
                  }
                  else
                  {
-                     fwrite(mempack[0], 1, 0x8000, f);
-                     fwrite(mempack[1], 1, 0x8000, f);
-                     fwrite(mempack[2], 1, 0x8000, f);
-                     fwrite(mempack[3], 1, 0x8000, f);
+                     if (fwrite(mempack[0], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 1st 32kb memory pack in file '%s'", filename);
+                     else if (fwrite(mempack[1], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 2nd 32kb memory pack in file '%s'", filename);
+                     else if (fwrite(mempack[2], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 3rd 32kb memory pack in file '%s'", filename);
+                     else if (fwrite(mempack[3], 1, 0x8000, f) != 0x8000)
+                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 4th 32kb memory pack in file '%s'", filename);
+                     fclose(f);
                  }
-                 fclose(f);
                  free(filename);
                   }
                 Command[0x25] = mempack_crc(&Command[5]);

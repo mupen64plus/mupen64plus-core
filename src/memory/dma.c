@@ -33,7 +33,9 @@
 #include "r4300/macros.h"
 #include "r4300/ops.h"
 
+#include "api/m64p_types.h"
 #include "api/config.h"
+#include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
 
@@ -56,17 +58,19 @@ void dma_pi_read()
             strcat(filename, ROM_SETTINGS.goodname);
             strcat(filename, ".sra");
             f = fopen(filename, "rb");
-            if (f)
+            if (f == NULL)
             {
-                fread(sram, 1, 0x8000, f);
-                fclose(f);
+                DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
+                memset(sram, 0, 0x8000);
             }
             else
             {
-                for (i=0; i<0x8000; i++)
+                if (fread(sram, 1, 0x8000, f) != 0x8000)
                 {
-                    sram[i] = 0;
+                    DebugMessage(M64MSG_WARNING, "fread() failed on 32kb read from sram file '%s'", filename);
+                    memset(sram, 0, 0x8000);
                 }
+                fclose(f);
             }
             for (i=0; i < (pi_register.pi_rd_len_reg & 0xFFFFFF)+1; i++)
             {
@@ -76,11 +80,12 @@ void dma_pi_read()
             f = fopen(filename, "wb");
             if (f == NULL)
             {
-                 printf("Warning: couldn't open flash ram file '%s' for writing.\n", filename);
+                 DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for writing.", filename);
             }
             else
             {
-                fwrite(sram, 1, 0x8000, f);
+                if (fwrite(sram, 1, 0x8000, f) != 0x8000)
+                    DebugMessage(M64MSG_WARNING, "frwite() failed on 32kb write to sram file '%s'", filename);
                 fclose(f);
             }
             free(filename);
@@ -93,7 +98,7 @@ void dma_pi_read()
     }
     else
     {
-        printf("unknown dma read\n");
+        DebugMessage(M64MSG_WARNING, "Unknown dma read in dma_pi_read()");
     }
     
     pi_register.read_pi_status_reg |= 1;
@@ -123,18 +128,16 @@ void dma_pi_write()
                 strcat(filename, ROM_SETTINGS.goodname);
                 strcat(filename, ".sra");
                 f = fopen(filename, "rb");
-                
-                if (f)
+                if (f == NULL)
                 {
-                    fread(sram, 1, 0x8000, f);
-                    fclose(f);
+                    DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
+                    memset(sram, 0, 0x8000);
                 }
                 else
                 {
-                    for (i=0; i<0x8000; i++)
-                    {
-                        sram[i] = 0x0;
-                    }
+                    if (fread(sram, 1, 0x8000, f) != 0x8000)
+                        DebugMessage(M64MSG_WARNING, "fread() failed on 32kb read to sram file '%s'", filename);
+                    fclose(f);
                 }
                 
                 free(filename);
@@ -158,7 +161,7 @@ void dma_pi_write()
         }
         else
         {
-            printf("unknown dma write:%x\n", (int)pi_register.pi_cart_addr_reg);
+            DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%x in dma_pi_write()", (int)pi_register.pi_cart_addr_reg);
         }
         
         pi_register.read_pi_status_reg |= 1;

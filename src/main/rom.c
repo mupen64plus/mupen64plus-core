@@ -324,7 +324,7 @@ void romdatabase_open(void)
     g_romdatabase.list = NULL;
 
     do
-        {
+    {
         if(buffer[0]=='[')
             {
             if(g_romdatabase.list==NULL)
@@ -462,12 +462,11 @@ void romdatabase_open(void)
                     }
                 }
             }
+        if (fgets(buffer, 255, fPtr) == NULL)
+            break;
+    } while (!feof(fPtr));
 
-        fgets(buffer, 255, fPtr);
-        }
-   while (!feof(fPtr));
-
-   fclose(fPtr);
+    fclose(fPtr);
 }
 
 void romdatabase_close(void)

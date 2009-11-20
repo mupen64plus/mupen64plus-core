@@ -27,6 +27,8 @@
 
 #include "r4300/r4300.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
 
@@ -109,17 +111,16 @@ void flashram_command(unsigned int command)
                    strcat(filename, ROM_SETTINGS.goodname);
                    strcat(filename, ".fla");
                    f = fopen(filename, "rb");
-                   if (f)
+                   if (f == NULL)
                    {
-                       fread(flashram, 1, 0x20000, f);
-                       fclose(f);
+                       DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for reading", filename);
+                       memset(flashram, 0xff, 0x20000);
                    }
                    else
                    {
-                       for (i=0; i<0x20000; i++)
-                       {
-                           flashram[i] = 0xff;
-                       }
+                       if (fread(flashram, 1, 0x20000, f) != 0x20000)
+                           DebugMessage(M64MSG_WARNING, "couldn't read 128kb flash ram file '%s'", filename);
+                       fclose(f);
                    }
                    for (i=erase_offset; i<(erase_offset+128); i++)
                    {
@@ -128,11 +129,12 @@ void flashram_command(unsigned int command)
                    f = fopen(filename, "wb");
                    if (f == NULL)
                    {
-                       printf("Warning: couldn't open flashram file '%s' for erasing.\n", filename);
+                       DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for writing", filename);
                    }
                    else
                    {
-                       fwrite(flashram, 1, 0x20000, f);
+                       if (fwrite(flashram, 1, 0x20000, f) != 0x20000)
+                           DebugMessage(M64MSG_WARNING, "couldn't write 128kb flash ram file '%s'", filename);
                        fclose(f);
                    }
                    free(filename);
@@ -149,17 +151,16 @@ void flashram_command(unsigned int command)
                     strcat(filename, ROM_SETTINGS.goodname);
                     strcat(filename, ".fla");
                     f = fopen(filename, "rb");
-                    if (f)
+                    if (f == NULL)
                     {
-                        fread(flashram, 1, 0x20000, f);
-                        fclose(f);
+                        DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for reading", filename);
+                        memset(flashram, 0xff, 0x20000);
                     }
                     else
                     {
-                        for (i=0; i<0x20000; i++)
-                        {
-                            flashram[i] = 0xff;
-                        }
+                        if (fread(flashram, 1, 0x20000, f) != 0x20000)
+                            DebugMessage(M64MSG_WARNING, "couldn't read 128kb flash ram file '%s'", filename);
+                        fclose(f);
                     }
                     for (i=0; i<128; i++)
                     {
@@ -169,11 +170,12 @@ void flashram_command(unsigned int command)
                     f = fopen(filename, "wb");
                     if (f == NULL)
                     {
-                        printf("Warning: couldn't open flashram file '%s' for writing.\n", filename);
+                        DebugMessage(M64MSG_WARNING, "couldn't open flashram file '%s' for writing", filename);
                     }
                     else
                     {
-                        fwrite(flashram, 1, 0x20000, f);
+                        if (fwrite(flashram, 1, 0x20000, f) != 0x20000)
+                            DebugMessage(M64MSG_WARNING, "couldn't write 128kb flash ram file '%s'", filename);
                         fclose(f);
                     }
                     free(filename);
@@ -182,7 +184,7 @@ void flashram_command(unsigned int command)
                 case STATUS_MODE:
                     break;
                 default:
-                    printf("unknown flashram command with mode:%x\n", (int)mode);
+                    DebugMessage(M64MSG_WARNING, "unknown flashram command with mode:%x", (int)mode);
                     stop=1;
                     break;
             }
@@ -197,8 +199,7 @@ void flashram_command(unsigned int command)
             status = 0x11118004f0000000LL;
             break;
         default:
-            printf("unknown flashram command:%x\n", (int)command);
-            //stop=1;
+            DebugMessage(M64MSG_WARNING, "unknown flashram command: %x", (int)command);
             break;
       }
 }
@@ -222,17 +223,16 @@ void dma_read_flashram()
             strcat(filename, ROM_SETTINGS.goodname);
             strcat(filename, ".fla");
             f = fopen(filename, "rb");
-            if (f)
+            if (f == NULL)
             {
-                fread(flashram, 1, 0x20000, f);
-                fclose(f);
+                DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for reading", filename);
+                memset(flashram, 0xff, 0x20000);
             }
             else
             {
-                for (i=0; i<0x20000; i++) 
-                {
-                    flashram[i] = 0xff;
-                }
+                if (fread(flashram, 1, 0x20000, f) != 0x20000)
+                    DebugMessage(M64MSG_WARNING, "couldn't read 128kb flash ram file '%s'", filename);
+                fclose(f);
             }
             free(filename);
             for (i=0; i<(pi_register.pi_wr_len_reg & 0x0FFFFFF)+1; i++)
@@ -242,7 +242,7 @@ void dma_read_flashram()
             }
             break;
         default:  
-            printf("unknown dma_read_flashram:%x\n", mode);
+            DebugMessage(M64MSG_WARNING, "unknown dma_read_flashram: %x", mode);
             stop=1;
             break;
       }

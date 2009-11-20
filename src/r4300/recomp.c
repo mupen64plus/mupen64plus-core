@@ -2593,10 +2593,10 @@ void *malloc_exec(size_t size)
    /* Allocate a buffer aligned on a page boundary; initial protection is PROT_READ | PROT_WRITE */
    void *block = valloc(size);
    if (block == NULL)
-       { printf("Memory error: couldn't allocate %i byte block of %i-byte aligned memory.\n", size, pagesize); return NULL; }
+       { printf("Memory error: couldn't allocate %i byte block of %i-byte aligned memory.\n", (int) size, pagesize); return NULL; }
 
    if (mprotect(block, size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-       { printf("Memory error: couldn't set RWX permissions on %i byte block of memory.\n", size); return NULL; }
+       { printf("Memory error: couldn't set RWX permissions on %i byte block of memory.\n", (int) size); return NULL; }
 
    return block;
 #else
