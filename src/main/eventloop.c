@@ -62,6 +62,7 @@ typedef enum {joyFullscreen,
               joyMute,
               joyIncrease,
               joyDecrease,
+              joyForward,
               joyGameshark
 } eJoyCommand;
 
@@ -75,6 +76,7 @@ const char *JoyCmdName[] = { "Joy Mapping Fullscreen",
                              "Joy Mapping Mute",
                              "Joy Mapping Increase Volume",
                              "Joy Mapping Decrease Volume",
+                             "Joy Mapping Fast Forward",
                              "Joy Mapping Gameshark"};
 
 const int NumJoyCommands = sizeof(JoyCmdName) / sizeof(const char *);
@@ -88,12 +90,12 @@ static int KbdGamesharkPressed = 0;
 */
 
 /** MatchJoyCommand
- *    This function processes a given SDL event and updates the JoyCmdActive array.
- *    If the given event activates a joystick command which was not previously active, then
- *    a 1 is returned.  Otherwise, a 0 is returned.
+ *    This function processes an SDL event and updates the JoyCmdActive array if the
+ *    event matches with the given command.
  *
- *    Notes:
- *     -This function assumes SDL events are already initialized.
+ *    If the event activates a joystick command which was not previously active, then
+ *    a 1 is returned.  If the event de-activates an command, a -1 is returned.  Otherwise
+ *    (if the event does not match the command or active status didn't change), a 0 is returned.
  */
 static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
 {
@@ -124,7 +126,10 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                     return 1;
                 }
                 else if (event->jaxis.value <= 8000 && JoyCmdActive[cmd] == 1)
+                {
                     JoyCmdActive[cmd] = 0;
+                    return -1;
+                }
                 return 0;
             }
             else if (axis_direction == '-')
@@ -135,7 +140,10 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                     return 1;
                 }
                 else if (event->jaxis.value >= -8000 && JoyCmdActive[cmd] == 1)
+                {
                     JoyCmdActive[cmd] = 0;
+                    return -1;
+                }
                 return 0;
             }
             else return 0; /* invalid axis direction in configuration parameter */
@@ -154,7 +162,10 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                 return 1;
             }
             else if (!(event->jhat.value & input_value) && JoyCmdActive[cmd] == 1)
+            {
                 JoyCmdActive[cmd] = 0;
+                return -1;
+            }
             return 0;
             break;
         /* Button. */
@@ -171,7 +182,10 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                 return 1;
             }
             else if (event->type == SDL_JOYBUTTONUP && JoyCmdActive[cmd] == 1)
+            {
                 JoyCmdActive[cmd] = 0;
+                return -1;
+            }
             return 0;
             break;
         default:
@@ -188,6 +202,8 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
 */
 static int event_sdl_filter(const SDL_Event *event)
 {
+    int cmd, action;
+
     switch(event->type)
     {
         // user clicked on window close button
@@ -207,34 +223,48 @@ static int event_sdl_filter(const SDL_Event *event)
         case SDL_JOYBUTTONDOWN:
         case SDL_JOYBUTTONUP:
         case SDL_JOYHATMOTION:
-            if (MatchJoyCommand(event, joyFullscreen))
-                changeWindow();
-            else if (MatchJoyCommand(event, joyStop))
-                main_stop();
-            else if (MatchJoyCommand(event, joyPause))
-                main_toggle_pause();
-            else if (MatchJoyCommand(event, joySave))
-                savestates_job |= SAVESTATE;
-            else if (MatchJoyCommand(event, joyLoad))
-                savestates_job |= LOADSTATE;
-            else if (MatchJoyCommand(event, joyIncrement))
-                savestates_inc_slot();
-            else if (MatchJoyCommand(event, joyScreenshot))
-                main_take_next_screenshot();
-            else if (MatchJoyCommand(event, joyMute))
+            for (cmd = 0; cmd < NumJoyCommands; cmd++)
             {
-                volumeMute();
-                main_draw_volume_osd();
-            }
-            else if (MatchJoyCommand(event, joyDecrease))
-            {
-                volumeDown();
-                main_draw_volume_osd();
-            }
-            else if (MatchJoyCommand(event, joyIncrease))
-            {
-                volumeUp();
-                main_draw_volume_osd();
+                action = MatchJoyCommand(event, cmd);
+                if (action == 1) /* command was just activated (button down, etc) */
+                {
+                    if (cmd == joyFullscreen)
+                        changeWindow();
+                    else if (cmd == joyStop)
+                        main_stop();
+                    else if (cmd == joyPause)
+                        main_toggle_pause();
+                    else if (cmd == joySave)
+                        savestates_job |= SAVESTATE;
+                    else if (cmd == joyLoad)
+                        savestates_job |= LOADSTATE;
+                    else if (cmd == joyIncrement)
+                        savestates_inc_slot();
+                    else if (cmd == joyScreenshot)
+                        main_take_next_screenshot();
+                    else if (cmd == joyMute)
+                    {
+                        volumeMute();
+                        main_draw_volume_osd();
+                    }
+                    else if (cmd == joyDecrease)
+                    {
+                        volumeDown();
+                        main_draw_volume_osd();
+                    }
+                    else if (cmd == joyIncrease)
+                    {
+                        volumeUp();
+                        main_draw_volume_osd();
+                    }
+                    else if (cmd == joyForward)
+                        main_set_fastforward(1);
+                }
+                else if (action == -1) /* command was just de-activated (button up, etc) */
+                {
+                    if (cmd == joyForward)
+                        main_set_fastforward(0);
+                }
             }
 
             return 0;
@@ -306,6 +336,7 @@ void event_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyMute], "",       "Joystick event string for muting/unmuting the sound");
     ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyIncrease], "",   "Joystick event string for increasing the volume");
     ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyDecrease], "",   "Joystick event string for decreasing the volume");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyForward], "",    "Joystick event string for fast-forward");
     ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyGameshark], "",  "Joystick event string for pressing the game shark button");
 }
 
