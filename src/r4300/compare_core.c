@@ -24,12 +24,6 @@
 #include "r4300.h"
 
 #include "memory/memory.h"
-#ifndef __WIN32__
-#include "main/winlnxdefs.h"
-#else
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
 #include "plugin/plugin.h"
 #include "r4300/recomph.h"
 

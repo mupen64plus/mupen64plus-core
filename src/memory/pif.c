@@ -23,12 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef __WIN32__
-#include "main/winlnxdefs.h"
-#else
-#include <windows.h>
-#endif
-
 #include "memory.h"
 #include "pif.h"
 #include "pif2.h"
@@ -60,7 +54,7 @@ void print_pif()
 }
 #endif
 
-void EepromCommand(BYTE *Command)
+void EepromCommand(unsigned char *Command)
 {
    switch (Command[2])
      {
@@ -202,7 +196,7 @@ unsigned char mempack_crc(unsigned char *data)
    return CRC;
 }
 
-void internal_ReadController(int Control, BYTE *Command)
+void internal_ReadController(int Control, unsigned char *Command)
 {
    switch (Command[2])
      {
@@ -234,7 +228,7 @@ void internal_ReadController(int Control, BYTE *Command)
      }
 }
 
-void internal_ControllerCommand(int Control, BYTE *Command)
+void internal_ControllerCommand(int Control, unsigned char *Command)
 {
    switch (Command[2])
      {
