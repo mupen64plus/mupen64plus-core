@@ -156,12 +156,12 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                 return 0;
             if (dev_number != event->jhat.which || input_number != event->jhat.hat)
                 return 0;
-            if ((event->jhat.value & input_value) && JoyCmdActive[cmd] == 0)
+            if ((event->jhat.value & input_value) == input_value && JoyCmdActive[cmd] == 0)
             {
                 JoyCmdActive[cmd] = 1;
                 return 1;
             }
-            else if (!(event->jhat.value & input_value) && JoyCmdActive[cmd] == 1)
+            else if ((event->jhat.value & input_value) != input_value  && JoyCmdActive[cmd] == 1)
             {
                 JoyCmdActive[cmd] = 0;
                 return -1;
