@@ -2218,8 +2218,9 @@ void init_block(int *source, precomp_block *block)
     pfProfile = fopen("instructionaddrs.dat", "ab");
     long x86addr = (long) block->code;
     int mipsop = -2; /* -2 == NOTCOMPILED block at beginning of x86 code */
-    fwrite(&mipsop, 1, 4, pfProfile); // write 4-byte MIPS opcode
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+    if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
+        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        printf("Error writing R4300 instruction address profiling data\n");
 #endif
 
     for (i=0; i<length; i++)
@@ -2383,8 +2384,9 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
 #endif
 #if defined(PROFILE_R4300)
     long x86addr = (long) (block->code + block->block[i].local_addr);
-    fwrite(source + i, 1, 4, pfProfile); // write 4-byte MIPS opcode
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+    if (fwrite(source + i, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
+        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        printf("Error writing R4300 instruction address profiling data\n");
 #endif
     recomp_ops[((src >> 26) & 0x3F)]();
     dst = block->block + i;
@@ -2416,8 +2418,9 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
 #if defined(PROFILE_R4300)
     long x86addr = (long) (block->code + code_length);
     int mipsop = -3; /* -3 == block-postfix */
-    fwrite(&mipsop, 1, 4, pfProfile); // write 4-byte MIPS opcode
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+    if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
+        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        printf("Error writing R4300 instruction address profiling data\n");
 #endif
 
    if (i >= length)
@@ -2558,8 +2561,9 @@ void recompile_opcode()
    {
 #if defined(PROFILE_R4300)
      long x86addr = (long) ((*inst_pointer) + code_length);
-     fwrite(&src, 1, 4, pfProfile); // write 4-byte MIPS opcode
-     fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+     if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
+         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        printf("Error writing R4300 instruction address profiling data\n");
 #endif
      recomp_ops[((src >> 26) & 0x3F)]();
    }

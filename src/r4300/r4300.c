@@ -1928,8 +1928,9 @@ void r4300_execute()
                 // store final code length for this block
                 mipsop = -1; /* -1 == end of x86 code block */
                 x86addr = blocks[i]->code + blocks[i]->code_length;
-                fwrite(&mipsop, 1, 4, pfProfile);
-                fwrite(&x86addr, 1, sizeof(char *), pfProfile);
+                if (fwrite(&mipsop, 1, 4, pfProfile) != 4 ||
+                    fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *))
+                    printf("Error writing R4300 instruction address profiling data\n");
             }
         fclose(pfProfile);
         pfProfile = NULL;
