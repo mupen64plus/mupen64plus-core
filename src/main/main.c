@@ -182,6 +182,9 @@ void main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultString(g_CoreConfig, "Language", "English", "Language to use for messages from the core library");
+
+    /* set config parameters for keyboard and joystick commands */
+    event_set_core_defaults();
 }
 
 void main_speeddown(int percent)
@@ -407,8 +410,7 @@ int main_run(void)
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
-    SDL_EnableKeyRepeat(0, 0);
-    SDL_SetEventFilter(event_sdl_filter);
+    event_initialize();
 
     // initialize memory, and do byte-swapping if it's not been done yet
     if (g_MemHasBeenBSwapped == 0)

@@ -24,6 +24,7 @@
 #include <SDL.h>
 
 #include "main.h"
+#include "eventloop.h"
 #include "savestates.h"
 #include "util.h"
 #include "api/config.h"
@@ -31,141 +32,7 @@
 #include "r4300/interupt.h"
 
 /*********************************************************************************************************
-* static functions for eventloop.c
-*/
-
-/** event_to_str
- *    Creates a string representation of an SDL input event. If the event is
- *    not supported by this function, NULL is returned.
- *
- *    Notes:
- *     -This function assumes SDL events are already initialized.
- *     -It is up to the caller to free the string memory allocated by this
- *      function.
- */
-static char *event_to_str(const SDL_Event *event)
-{
-    char *event_str = NULL;
-
-    switch(event->type)
-    {
-        case SDL_JOYAXISMOTION:
-            if(event->jaxis.value >= 15000 || event->jaxis.value <= -15000)
-            {
-                event_str = malloc(10);
-                snprintf(event_str, 10, "J%dA%d%c",
-                         event->jaxis.which,
-                     event->jaxis.axis,
-                     event->jaxis.value > 0? '+' : '-');
-            }
-            break;
-
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-            event_str = malloc(10);
-            snprintf(event_str, 10, "J%dB%d",
-                     event->jbutton.which,
-                     event->jbutton.button);
-            break;
-
-        case SDL_JOYHATMOTION:
-            event_str = malloc(10);
-            snprintf(event_str, 10, "J%dH%dV%d",
-                     event->jhat.which,
-                     event->jhat.hat,
-                     event->jhat.value);
-            break;
-    }
-
-    return event_str;
-}
-
-/*********************************************************************************************************
-* global functions for testing if certain events are active
-*/
-
-/** event_active
- *    Returns 1 if the specified joystick event is currently active. This
- *    function expects an input string of the same form output by event_to_str.
- */
-int event_active(const char* event_str)
-{
-    char device, joy_input_type, axis_direction;
-    int dev_number, input_number, input_value;
-    SDL_Joystick *joystick = NULL;
-
-    /* Empty string. */
-    if(!event_str||strlen(event_str)==0)
-        return 0;
-
-    /* Parse string depending on type of joystick input. */
-    if(event_str[0]=='J')
-        {
-        switch(event_str[2])
-            {
-            /* Axis. */
-            case 'A':
-                sscanf(event_str, "%c%d%c%d%c", &device, &dev_number,
-                       &joy_input_type, &input_number, &axis_direction);
-                break;
-            /* Hat. ??? */
-            case 'H':
-                sscanf(event_str, "%c%d%c%dV%d", &device, &dev_number,
-                       &joy_input_type, &input_number, &input_value);
-                break;
-            /* Button. */
-            case 'B':
-                sscanf(event_str, "%c%d%c%d", &device, &dev_number,
-                       &joy_input_type, &input_number);
-                break;
-            }
-
-        joystick = SDL_JoystickOpen(dev_number);
-        SDL_JoystickUpdate();
-        switch(joy_input_type)
-            {
-            case 'A':
-                if(axis_direction=='-')
-                    return SDL_JoystickGetAxis(joystick, input_number) < -15000;
-                else
-                    return SDL_JoystickGetAxis(joystick, input_number) > 15000;
-                return (int)SDL_JoystickGetButton(joystick, input_number);
-                break;
-            case 'B':
-                return (int)SDL_JoystickGetButton(joystick, input_number);
-                break;
-            case 'H':
-                return SDL_JoystickGetHat(joystick, input_number) == input_value;
-                break;
-            }
-        }
-
-    /* TODO: Keyboard event. */
-    /* if(event_str[0]=='K') */
-
-    /* Undefined event. */
-    return 0;
-}
-
-/** key_pressed
- *   Returns 1 if the given key is currently pressed.
- */
-int key_pressed(int k)
-{
-    Uint8 *key_states;
-    int num_keys;
-
-    SDL_PumpEvents(); // update input state array
-    key_states = SDL_GetKeyState(&num_keys);
-
-    if(k >= num_keys)
-        return 0;
-
-    return key_states[k];
-}
-
-/*********************************************************************************************************
-* definitions and function for setting the event-related configuration defaults in the Core section
+* static variables and definitions for eventloop.c
 */
 
 #define kbdFullscreen "Kbd Mapping Fullscreen"
@@ -185,17 +52,229 @@ int key_pressed(int k)
 #define kbdAdvance "Kbd Mapping Frame Advance"
 #define kbdGameshark "Kbd Mapping Gameshark"
 
-#define joyFullscreen "Joy Mapping Fullscreen"
-#define joyStop "Joy Mapping Stop"
-#define joyPause "Joy Mapping Pause"
-#define joySave "Joy Mapping Save State"
-#define joyLoad "Joy Mapping Load State"
-#define joyIncrement "Joy Mapping Increment Slot"
-#define joyScreenshot "Joy Mapping Screenshot"
-#define joyMute "Joy Mapping Mute"
-#define joyIncrease "Joy Mapping Increase Volume"
-#define joyDecrease "Joy Mapping Decrease Volume"
-#define joyGameshark "Joy Mapping Gameshark"
+typedef enum {joyFullscreen,
+              joyStop,
+              joyPause,
+              joySave,
+              joyLoad,
+              joyIncrement,
+              joyScreenshot,
+              joyMute,
+              joyIncrease,
+              joyDecrease,
+              joyGameshark
+} eJoyCommand;
+
+const char *JoyCmdName[] = { "Joy Mapping Fullscreen",
+                             "Joy Mapping Stop",
+                             "Joy Mapping Pause",
+                             "Joy Mapping Save State",
+                             "Joy Mapping Load State",
+                             "Joy Mapping Increment Slot",
+                             "Joy Mapping Screenshot",
+                             "Joy Mapping Mute",
+                             "Joy Mapping Increase Volume",
+                             "Joy Mapping Decrease Volume",
+                             "Joy Mapping Gameshark"};
+
+const int NumJoyCommands = sizeof(JoyCmdName) / sizeof(const char *);
+
+static int JoyCmdActive[16];  /* if extra joystick commands are added above, make sure there is enough room in this array */
+
+static int KbdGamesharkPressed = 0;
+
+/*********************************************************************************************************
+* static functions for eventloop.c
+*/
+
+/** MatchJoyCommand
+ *    This function processes a given SDL event and updates the JoyCmdActive array.
+ *    If the given event activates a joystick command which was not previously active, then
+ *    a 1 is returned.  Otherwise, a 0 is returned.
+ *
+ *    Notes:
+ *     -This function assumes SDL events are already initialized.
+ */
+static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
+{
+    const char *event_str = ConfigGetParamString(g_CoreConfig, JoyCmdName[cmd]);
+    int dev_number, input_number, input_value;
+    char axis_direction;
+
+    /* Empty string or non-joystick command */
+    if (event_str == NULL || strlen(event_str) < 4 || event_str[0] != 'J')
+        return 0;
+
+    /* Evaluate event based on type of joystick input expected by the given command */
+    switch (event_str[2])
+    {
+        /* Axis */
+        case 'A':
+            if (event->type != SDL_JOYAXISMOTION)
+                return 0;
+            if (sscanf(event_str, "J%dA%d%c", &dev_number, &input_number, &axis_direction) != 3)
+                return 0;
+            if (dev_number != event->jaxis.which || input_number != event->jaxis.axis)
+                return 0;
+            if (axis_direction == '+')
+            {
+                if (event->jaxis.value >= 15000 && JoyCmdActive[cmd] == 0)
+                {
+                    JoyCmdActive[cmd] = 1;
+                    return 1;
+                }
+                else if (event->jaxis.value <= 8000 && JoyCmdActive[cmd] == 1)
+                    JoyCmdActive[cmd] = 0;
+                return 0;
+            }
+            else if (axis_direction == '-')
+            {
+                if (event->jaxis.value <= -15000 && JoyCmdActive[cmd] == 0)
+                {
+                    JoyCmdActive[cmd] = 1;
+                    return 1;
+                }
+                else if (event->jaxis.value >= -8000 && JoyCmdActive[cmd] == 1)
+                    JoyCmdActive[cmd] = 0;
+                return 0;
+            }
+            else return 0; /* invalid axis direction in configuration parameter */
+            break;
+        /* Hat */
+        case 'H':
+            if (event->type != SDL_JOYHATMOTION)
+                return 0;
+            if (sscanf(event_str, "J%dH%dV%d", &dev_number, &input_number, &input_value) != 3)
+                return 0;
+            if (dev_number != event->jhat.which || input_number != event->jhat.hat)
+                return 0;
+            if ((event->jhat.value & input_value) && JoyCmdActive[cmd] == 0)
+            {
+                JoyCmdActive[cmd] = 1;
+                return 1;
+            }
+            else if (!(event->jhat.value & input_value) && JoyCmdActive[cmd] == 1)
+                JoyCmdActive[cmd] = 0;
+            return 0;
+            break;
+        /* Button. */
+        case 'B':
+            if (event->type != SDL_JOYBUTTONDOWN && event->type != SDL_JOYBUTTONUP)
+                return 0;
+            if (sscanf(event_str, "J%dB%d", &dev_number, &input_number) != 2)
+                return 0;
+            if (dev_number != event->jbutton.which || input_number != event->jbutton.button)
+                return 0;
+            if (event->type == SDL_JOYBUTTONDOWN && JoyCmdActive[cmd] == 0)
+            {
+                JoyCmdActive[cmd] = 1;
+                return 1;
+            }
+            else if (event->type == SDL_JOYBUTTONUP && JoyCmdActive[cmd] == 1)
+                JoyCmdActive[cmd] = 0;
+            return 0;
+            break;
+        default:
+            /* bad configuration parameter */
+            return 0;
+    }
+
+    /* impossible to reach this point */
+    return 0;
+}
+
+/*********************************************************************************************************
+* sdl event filter
+*/
+static int event_sdl_filter(const SDL_Event *event)
+{
+    switch(event->type)
+    {
+        // user clicked on window close button
+        case SDL_QUIT:
+            main_stop();
+            break;
+
+        case SDL_KEYDOWN:
+            event_sdl_keydown(event->key.keysym.sym, event->key.keysym.mod);
+            return 0;
+        case SDL_KEYUP:
+            event_sdl_keyup(event->key.keysym.sym, event->key.keysym.mod);
+            return 0;
+
+        // if joystick action is detected, check if it's mapped to a special function
+        case SDL_JOYAXISMOTION:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        case SDL_JOYHATMOTION:
+            if (MatchJoyCommand(event, joyFullscreen))
+                changeWindow();
+            else if (MatchJoyCommand(event, joyStop))
+                main_stop();
+            else if (MatchJoyCommand(event, joyPause))
+                main_toggle_pause();
+            else if (MatchJoyCommand(event, joySave))
+                savestates_job |= SAVESTATE;
+            else if (MatchJoyCommand(event, joyLoad))
+                savestates_job |= LOADSTATE;
+            else if (MatchJoyCommand(event, joyIncrement))
+                savestates_inc_slot();
+            else if (MatchJoyCommand(event, joyScreenshot))
+                main_take_next_screenshot();
+            else if (MatchJoyCommand(event, joyMute))
+            {
+                volumeMute();
+                main_draw_volume_osd();
+            }
+            else if (MatchJoyCommand(event, joyDecrease))
+            {
+                volumeDown();
+                main_draw_volume_osd();
+            }
+            else if (MatchJoyCommand(event, joyIncrease))
+            {
+                volumeUp();
+                main_draw_volume_osd();
+            }
+
+            return 0;
+            break;
+    }
+
+    return 1;
+}
+
+/*********************************************************************************************************
+* global functions
+*/
+
+void event_initialize(void)
+{
+    int i;
+
+    /* set initial state of all joystick commands to 'off' */
+    for (i = 0; i < NumJoyCommands; i++)
+        JoyCmdActive[i] = 0;
+
+    /* activate any joysticks which are referenced in the joystick event command strings */
+    const char *event_str = NULL;
+    for (i = 0; i < NumJoyCommands; i++)
+    {
+        event_str = ConfigGetParamString(g_CoreConfig, JoyCmdName[i]);
+        if (event_str != NULL && strlen(event_str) >= 4 && event_str[0] == 'J' && event_str[1] >= '0' && event_str[1] <= '9')
+        {
+            int device = event_str[1] - '0';
+            if (!SDL_WasInit(SDL_INIT_JOYSTICK))
+                SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+            if (!SDL_JoystickOpened(device))
+                SDL_JoystickOpen(device);
+        }
+    }
+
+    /* set up SDL event filter and disable key repeat */
+    SDL_EnableKeyRepeat(0, 0);
+    SDL_SetEventFilter(event_sdl_filter);
+}
 
 void event_set_core_defaults(void)
 {
@@ -217,17 +296,17 @@ void event_set_core_defaults(void)
     ConfigSetDefaultInt(g_CoreConfig, kbdAdvance, SDLK_SLASH,        "SDL keysym for advancing by one frame when paused");
     ConfigSetDefaultInt(g_CoreConfig, kbdGameshark, SDLK_g,          "SDL keysym for pressing the game shark button");
     /* Joystick events mapped to core functions */
-    ConfigSetDefaultString(g_CoreConfig, joyStop, "",       "Joystick event string for stopping the emulator");
-    ConfigSetDefaultString(g_CoreConfig, joyFullscreen, "", "Joystick event string for switching between fullscreen/windowed modes");
-    ConfigSetDefaultString(g_CoreConfig, joySave, "",       "Joystick event string for saving the emulator state");
-    ConfigSetDefaultString(g_CoreConfig, joyLoad, "",       "Joystick event string for loading the emulator state");
-    ConfigSetDefaultString(g_CoreConfig, joyIncrement, "",  "Joystick event string for advancing the save state slot");
-    ConfigSetDefaultString(g_CoreConfig, joyScreenshot, "", "Joystick event string for taking a screenshot");
-    ConfigSetDefaultString(g_CoreConfig, joyPause, "",      "Joystick event string for pausing the emulator");
-    ConfigSetDefaultString(g_CoreConfig, joyMute, "",       "Joystick event string for muting/unmuting the sound");
-    ConfigSetDefaultString(g_CoreConfig, joyIncrease, "",   "Joystick event string for increasing the volume");
-    ConfigSetDefaultString(g_CoreConfig, joyDecrease, "",   "Joystick event string for decreasing the volume");
-    ConfigSetDefaultString(g_CoreConfig, joyGameshark, "",  "Joystick event string for pressing the game shark button");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyStop], "",       "Joystick event string for stopping the emulator");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyFullscreen], "", "Joystick event string for switching between fullscreen/windowed modes");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joySave], "",       "Joystick event string for saving the emulator state");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyLoad], "",       "Joystick event string for loading the emulator state");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyIncrement], "",  "Joystick event string for advancing the save state slot");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyScreenshot], "", "Joystick event string for taking a screenshot");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyPause], "",      "Joystick event string for pausing the emulator");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyMute], "",       "Joystick event string for muting/unmuting the sound");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyIncrease], "",   "Joystick event string for increasing the volume");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyDecrease], "",   "Joystick event string for decreasing the volume");
+    ConfigSetDefaultString(g_CoreConfig, JoyCmdName[joyGameshark], "",  "Joystick event string for pressing the game shark button");
 }
 
 /*********************************************************************************************************
@@ -301,6 +380,10 @@ void event_sdl_keydown(int keysym, int keymod)
     {
         main_advance_one();
     }
+    else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdGameshark))
+    {
+        KbdGamesharkPressed = 1;
+    }
     else
     {
         /* pass all other keypresses to the input plugin */
@@ -319,78 +402,17 @@ void event_sdl_keyup(int keysym, int keymod)
     {
         main_set_fastforward(0);
     }
+    else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdGameshark))
+    {
+        KbdGamesharkPressed = 0;
+    }
     else keyUp(keymod, keysym);
 
 }
 
-/*********************************************************************************************************
-* sdl event filter
-*/
-int event_sdl_filter(const SDL_Event *event)
+int event_gameshark_active(void)
 {
-    char *event_str = NULL;
-
-    switch(event->type)
-    {
-        // user clicked on window close button
-        case SDL_QUIT:
-            main_stop();
-            break;
-
-        case SDL_KEYDOWN:
-            event_sdl_keydown(event->key.keysym.sym, event->key.keysym.mod);
-            return 0;
-        case SDL_KEYUP:
-            event_sdl_keyup(event->key.keysym.sym, event->key.keysym.mod);
-            return 0;
-
-        // if joystick action is detected, check if it's mapped to a special function
-        case SDL_JOYAXISMOTION:
-            // axis events have to be above a certain threshold to be valid
-            if(event->jaxis.value > -15000 && event->jaxis.value < 15000)
-                break;
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYHATMOTION:
-            event_str = event_to_str(event);
-
-            if(!event_str) return 0;
-
-            if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyFullscreen)) == 0)
-                changeWindow();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyStop)) == 0)
-                main_stop();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyPause)) == 0)
-                main_toggle_pause();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joySave)) == 0)
-                savestates_job |= SAVESTATE;
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyLoad)) == 0)
-                savestates_job |= LOADSTATE;
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrement)) == 0)
-                savestates_inc_slot();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyScreenshot)) == 0)
-                main_take_next_screenshot();
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyMute)) == 0)
-            {
-                volumeMute();
-                main_draw_volume_osd();
-            }
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyDecrease)) == 0)
-            {
-                volumeDown();
-                main_draw_volume_osd();
-            }
-            else if(strcmp(event_str, ConfigGetParamString(g_CoreConfig, joyIncrease)) == 0)
-            {
-                volumeUp();
-                main_draw_volume_osd();
-            }
-
-            free(event_str);
-            return 0;
-            break;
-    }
-
-    return 1;
+    return KbdGamesharkPressed || JoyCmdActive[joyGameshark];
 }
 
 

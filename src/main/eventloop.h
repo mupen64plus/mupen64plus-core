@@ -23,12 +23,10 @@
 #define EVENTLOOP_H
 
 extern void event_set_core_defaults(void);
+extern void event_initialize(void);
 extern void event_sdl_keydown(int keysym, int keymod);
 extern void event_sdl_keyup(int keysym, int keymod);
-extern int event_sdl_filter(const SDL_Event *event);
-
-extern int event_active(const char *event_str);
-extern int key_pressed(int sdl_keysym);
+extern int event_gameshark_active(void);
 
 #endif /* define(EVENTLOOP_H) */
 

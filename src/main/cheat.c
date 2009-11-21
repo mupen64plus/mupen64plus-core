@@ -132,13 +132,6 @@ static int execute_cheat(unsigned int address, unsigned short value, int *old_va
     }
 }
 
-static int gs_button_pressed(void)
-{
-    // fixme
-    return key_pressed(ConfigGetParamInt(g_CoreConfig, "Kbd Mapping Gameshark")) ||
-           event_active(ConfigGetParamString(g_CoreConfig, "Joy Mapping Gameshark"));
-}
-
 // public functions
 void cheat_apply_cheats(int entry)
 {
@@ -179,7 +172,7 @@ void cheat_apply_cheats(int entry)
                                 (code->address & 0xFF000000) == 0xD9000000 ||
                                 (code->address & 0xFF000000) == 0xDA000000 ||
                                 (code->address & 0xFF000000) == 0xDB000000) &&
-                               !gs_button_pressed())
+                               !event_gameshark_active())
                             {
                                 // skip next code
                                 if(node2->next != NULL)
@@ -216,7 +209,7 @@ void cheat_apply_cheats(int entry)
                                 (code->address & 0xFF000000) == 0xA8000000 ||
                                 (code->address & 0xFF000000) == 0xA9000000)
                         {
-                            if(gs_button_pressed())
+                            if(event_gameshark_active())
                                 execute_cheat(code->address, code->value, NULL);
                         }
                         // normal cheat code
