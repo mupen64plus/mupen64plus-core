@@ -35,10 +35,12 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/config.h"
+#include "api/vidext.h"
 
 #include "main.h"
 #include "eventloop.h"
 #include "rom.h"
+#include "savestates.h"
 #include "translate.h"
 
 #include "osal/files.h"
@@ -233,6 +235,11 @@ void main_set_fastforward(int enable)
 
 }
 
+int main_is_paused(void)
+{
+    return (g_EmulatorRunning && rompause);
+}
+
 void main_toggle_pause(void)
 {
     if (!g_EmulatorRunning)
@@ -301,6 +308,83 @@ void main_draw_volume_osd(void)
 void main_take_next_screenshot(void)
 {
     g_TakeScreenshot = l_CurrentFrame + 1;
+}
+
+void main_state_set_slot(int slot)
+{
+    if (slot < 0 || slot > 9)
+    {
+        DebugMessage(M64MSG_WARNING, "Invalid savestate slot '%i' in main_state_set_slot().  Using 0", slot);
+        slot = 0;
+    }
+
+    savestates_select_slot(slot);
+}
+
+void main_state_inc_slot(void)
+{
+    savestates_inc_slot();
+}
+
+void main_state_load(const char *filename)
+{
+    static unsigned char StopRumble[6] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00};
+
+    if (filename != NULL)
+        savestates_select_filename(filename);
+
+    controllerCommand(0, StopRumble);
+    controllerCommand(1, StopRumble);
+    controllerCommand(2, StopRumble);
+    controllerCommand(3, StopRumble);
+
+    savestates_job |= LOADSTATE;
+}
+
+void main_state_save(int format_pj64, const char *filename)
+{
+    if (filename != NULL)
+        savestates_select_filename(filename);
+
+    savestates_job |= SAVESTATE;
+    if (format_pj64)
+        savestates_job |= SAVEPJ64STATE;
+}
+
+m64p_error main_core_state_query(m64p_core_param param, int *rval)
+{
+    if (rval == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    switch (param)
+    {
+        case M64CORE_EMU_STATE:
+            if (!g_EmulatorRunning)
+                *rval = M64EMU_STOPPED;
+            else if (rompause)
+                *rval = M64EMU_PAUSED;
+            else
+                *rval = M64EMU_RUNNING;
+            break;
+        case M64CORE_VIDEO_MODE:
+            if (!VidExt_VideoRunning())
+                *rval = M64VIDEO_NONE;
+            else if (VidExt_InFullscreenMode())
+                *rval = M64VIDEO_FULLSCREEN;
+            else
+                *rval = M64VIDEO_WINDOWED;
+            break;
+        case M64CORE_SAVESTATE_SLOT:
+            *rval = savestates_get_slot();
+            break;
+        case M64CORE_SPEED_FACTOR:
+            *rval = l_SpeedFactor;
+            break;
+        default:
+            return M64ERR_INPUT_INVALID;
+    }
+
+    return M64ERR_SUCCESS;
 }
 
 /*********************************************************************************************************

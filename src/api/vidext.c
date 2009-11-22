@@ -32,6 +32,7 @@
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
+static int l_VideoOutputActive = 0;
 static int l_Fullscreen = 0;
 static SDL_Surface *l_pScreen = NULL;
 
@@ -72,6 +73,11 @@ int VidExt_InFullscreenMode(void)
     return l_Fullscreen;
 }
 
+int VidExt_VideoRunning(void)
+{
+    return l_VideoOutputActive;
+}
+
 /* video extension functions to be called by the video plugin */
 EXPORT m64p_error CALL VidExt_Init(void)
 {
@@ -92,11 +98,17 @@ EXPORT m64p_error CALL VidExt_Quit(void)
 {
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
-        return (*l_ExternalVideoFuncTable.VidExtFuncQuit)();
+    {
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncQuit)();
+        if (rval == M64ERR_SUCCESS)
+            l_VideoOutputActive = 0;
+        return rval;
+    }
 
     SDL_ShowCursor(SDL_ENABLE);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     l_pScreen = NULL;
+    l_VideoOutputActive = 0;
 
     return M64ERR_SUCCESS;
 }
@@ -150,21 +162,20 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 {
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
-        return (*l_ExternalVideoFuncTable.VidExtFuncSetMode)(Width, Height, BitsPerPixel, ScreenMode);
+    {
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncSetMode)(Width, Height, BitsPerPixel, ScreenMode);
+        l_Fullscreen = (rval == M64ERR_SUCCESS && ScreenMode == M64VIDEO_FULLSCREEN);
+        l_VideoOutputActive = (rval == M64ERR_SUCCESS);
+        return rval;
+    }
 
     /* Get SDL video flags to use */
     const SDL_VideoInfo *videoInfo;
     int videoFlags = 0;
     if (ScreenMode == M64VIDEO_WINDOWED)
-    {
         videoFlags = SDL_OPENGL;
-        l_Fullscreen = 0;
-    }
     else if (ScreenMode == M64VIDEO_FULLSCREEN)
-    {
         videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
-        l_Fullscreen = 1;
-    }
     else
         return M64ERR_INPUT_INVALID;
 
@@ -193,6 +204,8 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 
     SDL_ShowCursor(SDL_DISABLE);
 
+    l_Fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
+    l_VideoOutputActive = 1;
     return M64ERR_SUCCESS;
 }
 

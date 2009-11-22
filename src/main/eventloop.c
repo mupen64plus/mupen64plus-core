@@ -25,7 +25,6 @@
 
 #include "main.h"
 #include "eventloop.h"
-#include "savestates.h"
 #include "util.h"
 #include "api/config.h"
 #include "plugin/plugin.h"
@@ -235,11 +234,11 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyPause)
                         main_toggle_pause();
                     else if (cmd == joySave)
-                        savestates_job |= SAVESTATE;
+                        main_state_save(0, NULL); /* save in mupen64plus format using current slot */
                     else if (cmd == joyLoad)
-                        savestates_job |= LOADSTATE;
+                        main_state_load(NULL); /* load using current slot */
                     else if (cmd == joyIncrement)
-                        savestates_inc_slot();
+                        main_state_inc_slot();
                     else if (cmd == joyScreenshot)
                         main_take_next_screenshot();
                     else if (cmd == joyMute)
@@ -346,8 +345,6 @@ void event_set_core_defaults(void)
 
 void event_sdl_keydown(int keysym, int keymod)
 {
-    static unsigned char StopRumble[6] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00};
-
     /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
     if (keysym == SDLK_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
     {
@@ -355,7 +352,7 @@ void event_sdl_keydown(int keysym, int keymod)
     }
     else if (keysym >= SDLK_0 && keysym <= SDLK_9)
     {
-        savestates_select_slot(keysym - SDLK_0);
+        main_state_set_slot(keysym - SDLK_0);
     }
     /* check all of the configurable commands */
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdStop))
@@ -363,17 +360,11 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdFullscreen))
         changeWindow();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdSave))
-        savestates_job |= SAVESTATE;
+        main_state_save(0, NULL); /* save in mupen64plus format using current slot */
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdLoad))
-    {
-        savestates_job |= LOADSTATE;
-        controllerCommand(0, StopRumble);
-        controllerCommand(1, StopRumble);
-        controllerCommand(2, StopRumble);
-        controllerCommand(3, StopRumble);
-    }
+        main_state_load(NULL); /* load using current slot */
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdIncrement))
-        savestates_inc_slot();
+        main_state_inc_slot();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdReset))
     {
         add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
@@ -384,8 +375,7 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdSpeedup))
         main_speedup(5);
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdScreenshot))
-        // set flag so that screenshot will be taken at the end of frame rendering
-        main_take_next_screenshot();
+        main_take_next_screenshot();    /* screenshot will be taken at the end of frame rendering */
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdPause))
         main_toggle_pause();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdMute))

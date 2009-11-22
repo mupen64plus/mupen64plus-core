@@ -43,14 +43,23 @@ void main_message(m64p_msg_level level, unsigned int osd_corner, const char *for
 
 int  main_run(void);
 void main_stop(void);
-
+int  main_is_paused(void);
 void main_toggle_pause(void);
 void main_advance_one(void);
+
 void main_speedup(int percent);
 void main_speeddown(int percent);
 void main_set_fastforward(int enable);
+
 void main_draw_volume_osd(void);
 void main_take_next_screenshot(void);
+
+void main_state_set_slot(int slot);
+void main_state_inc_slot(void);
+void main_state_load(const char *filename);
+void main_state_save(int format_pj64, const char *filename);
+
+m64p_error main_core_state_query(m64p_core_param param, int *rval);
 
 #endif /* __MAIN_H__ */
 

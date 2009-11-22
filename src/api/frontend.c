@@ -31,8 +31,10 @@
 #include "config.h"
 #include "vidext.h"
 
+#include "main/eventloop.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "main/savestates.h"
 #include "main/version.h"
 #include "plugin/plugin.h"
 
@@ -129,6 +131,7 @@ EXPORT m64p_error CALL CoreDetachPlugin(m64p_plugin_type PluginType)
 EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *ParamPtr)
 {
     m64p_error rval;
+    int keysym, keymod;
 
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
@@ -184,14 +187,59 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             main_stop();
             return M64ERR_SUCCESS;
         case M64CMD_PAUSE:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (!main_is_paused())
+                main_toggle_pause();
+            return M64ERR_SUCCESS;
         case M64CMD_RESUME:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (main_is_paused())
+                main_toggle_pause();
+            return M64ERR_SUCCESS;
         case M64CMD_CORE_STATE_QUERY:
+            return main_core_state_query((m64p_core_param) ParamInt, (int *) ParamPtr);
+        case M64CMD_STATE_LOAD:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            main_state_load(ParamPtr);
+            return M64ERR_SUCCESS;
+        case M64CMD_STATE_SAVE:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamInt < 1 || ParamInt > 2)
+                return M64ERR_INPUT_INVALID;
+            if (ParamInt == 2)
+                main_state_save(1, ParamPtr);  /* save a pj64 state file */
+            else
+                main_state_save(0, ParamPtr);  /* save a mupen64plus state file */
+            return M64ERR_SUCCESS;
+        case M64CMD_STATE_SET_SLOT:
+            if (ParamInt < 0 || ParamInt > 9)
+                return M64ERR_INPUT_INVALID;
+            savestates_select_slot(ParamInt);
+            return M64ERR_SUCCESS;
         case M64CMD_SEND_SDL_KEYDOWN:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            keysym = ParamInt & 0xffff;
+            keymod = (ParamInt >> 16) & 0xffff;
+            event_sdl_keydown(keysym, keymod);
+            return M64ERR_SUCCESS;
         case M64CMD_SEND_SDL_KEYUP:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            keysym = ParamInt & 0xffff;
+            keymod = (ParamInt >> 16) & 0xffff;
+            event_sdl_keyup(keysym, keymod);
+            return M64ERR_SUCCESS;
         case M64CMD_SET_FRAME_CALLBACK:
             g_FrameCallback = ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
             main_take_next_screenshot();
             return M64ERR_SUCCESS;
         default:

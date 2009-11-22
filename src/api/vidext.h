@@ -29,7 +29,9 @@
 #include "m64p_types.h"
 
 /* global function for use by frontend.c */
-m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct);
-int        VidExt_InFullscreenMode(void);
+extern m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct);
+
+extern int VidExt_InFullscreenMode(void);
+extern int VidExt_VideoRunning(void);
 
 #endif /* API_VIDEXT_H */
