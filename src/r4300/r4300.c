@@ -30,6 +30,8 @@
 #include "recomp.h"
 #include "recomph.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 #include "main/main.h"
 #include "main/rom.h"
@@ -74,22 +76,20 @@ void (*code)();
 
 void NI()
 {
-   printf("NI() @ %x\n", (int)PC->addr);
-   printf("opcode not implemented : ");
+   DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", (int)PC->addr);
    if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
-     printf("%x:%x\n", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
+     DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
    else
-     printf("%x:%x\n", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
+     DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
    stop=1;
 }
 
 void RESERVED()
 {
-   printf("reserved opcode : ");
    if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
-     printf("%x:%x\n", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
+     DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
    else
-     printf("%x:%x\n", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
+     DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
    stop=1;
 }
 
@@ -1340,15 +1340,6 @@ void LD()
 
 void SC()
 {
-   /*PC++;
-   printf("SC\n");
-   if (llbit) {
-      address = lsaddr;
-      word = (unsigned int)(lsrt & 0xFFFFFFFF);
-      write_word_in_memory();
-   }
-   lsrt = llbit;*/
-   
    PC++;
    if(llbit)
      {
@@ -1397,7 +1388,7 @@ void SD()
 void NOTCOMPILED()
 {
 #ifdef CORE_DBG
-   printf("NOTCOMPILED: addr = %x ops = %lx\n", PC->addr, (long) PC->ops);
+   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
    if ((PC->addr>>16) == 0xa400)
@@ -1420,7 +1411,7 @@ void NOTCOMPILED()
            recompile_block((int *) rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
                    blocks[PC->addr>>12], PC->addr);
       }
-    else printf("not compiled exception\n");
+    else DebugMessage(M64MSG_ERROR, "not compiled exception");
      }
 /*#ifdef DBG
             if (debugger_mode) update_debugger(PC->addr);
@@ -1605,7 +1596,7 @@ void update_count()
      {
     if (PC->addr < last_addr)
       {
-         printf("PC->addr < last_addr\n");
+         DebugMessage(M64MSG_ERROR, "PC->addr < last_addr");
       }
     Count = Count + (PC->addr - last_addr)/2;
     last_addr = PC->addr;
@@ -1874,8 +1865,6 @@ void r4300_execute()
     unsigned int i;
 
     debug_count = 0;
-    printf("Starting r4300 emulator\n");
-
     delay_slot=0;
     stop = 0;
     rompause = 0;
@@ -1892,7 +1881,7 @@ void r4300_execute()
     
     if (r4300emu == CORE_INTERPRETER)
     {
-        printf ("R4300 Core mode: Cached Interpreter\n");
+        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         init_blocks();
         last_addr = PC->addr;
         while (!stop)
@@ -1913,7 +1902,7 @@ void r4300_execute()
     else if (r4300emu >= 2)
     {
         r4300emu = CORE_DYNAREC;
-        printf ("R4300 Core mode: Dynamic Recompiler\n");
+        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         init_blocks();
         code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
         dyna_start(code);
@@ -1930,7 +1919,7 @@ void r4300_execute()
                 x86addr = blocks[i]->code + blocks[i]->code_length;
                 if (fwrite(&mipsop, 1, 4, pfProfile) != 4 ||
                     fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *))
-                    printf("Error writing R4300 instruction address profiling data\n");
+                    DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
             }
         fclose(pfProfile);
         pfProfile = NULL;
@@ -1939,12 +1928,12 @@ void r4300_execute()
 #endif
     else
     {
-        printf ("R4300 Core mode: Pure Interpreter\n");
+        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
         r4300emu = CORE_PURE_INTERPRETER;
         pure_interpreter();
     }
     debug_count+= Count;
-    printf("R4300 core finished.\n");
+    DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
     for (i=0; i<0x100000; i++)
     {
         if (blocks[i])
@@ -1965,18 +1954,25 @@ void r4300_execute()
     {
         unsigned int iTypeCount[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
         unsigned int iTotal = 0;
-        printf("Instruction counters:\n");
+        char line[128], param[24];
+        DebugMessage(M64MSG_INFO, "Instruction counters:");
+        line[0] = 0;
         for (i = 0; i < 131; i++)
         {
-            printf("%8s: %08i  ", instr_name[i], instr_count[i]);
-            if (i % 5 == 4) printf("\n");
+            sprintf(param, "%8s: %08i  ", instr_name[i], instr_count[i]);
+            strcat(line, param);
+            if (i % 5 == 4)
+            {
+                DebugMessage(M64MSG_INFO, "%s", line);
+                line[0] = 0;
+            }
             iTypeCount[instr_type[i]] += instr_count[i];
             iTotal += instr_count[i];
         }
-        printf("\nInstruction type summary (total instructions = %i)\n", iTotal);
+        DebugMessage(M64MSG_INFO, "Instruction type summary (total instructions = %i)", iTotal);
         for (i = 0; i < 11; i++)
         {
-            printf("%20s: %04.1f%% (%i)\n", instr_typename[i], (float) iTypeCount[i] * 100.0 / iTotal, iTypeCount[i]);
+            DebugMessage(M64MSG_INFO, "%20s: %04.1f%% (%i)", instr_typename[i], (float) iTypeCount[i] * 100.0 / iTotal, iTypeCount[i]);
         }
     }
 #endif

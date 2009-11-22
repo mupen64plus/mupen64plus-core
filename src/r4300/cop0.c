@@ -19,7 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #include "r4300.h"
 #include "macros.h"
@@ -29,14 +30,14 @@
 void MFC0(void)
 {
    switch(PC->f.r.nrd)
-     {
+   {
       case 1:
-    printf("lecture de Random\n");
-    stop=1;
+        DebugMessage(M64MSG_ERROR, "MFC0 instruction reading un-implemented Random register");
+        stop=1;
       default:
-    rrt32 = reg_cop0[PC->f.r.nrd];
-    sign_extended(rrt);
-     }
+        rrt32 = reg_cop0[PC->f.r.nrd];
+        sign_extended(rrt);
+   }
    PC++;
 }
 
@@ -48,7 +49,7 @@ void MTC0(void)
       Index = rrt & 0x8000003F;
       if ((Index & 0x3F) > 31) 
       {
-        printf ("il y a plus de 32 TLB\n");
+        DebugMessage(M64MSG_ERROR, "MTC0 instruction writing Index register with TLB index > 31");
         stop=1;
       }
       break;
@@ -106,7 +107,7 @@ void MTC0(void)
     case 13:   // Cause
       if (rrt!=0)
       {
-         printf("Write in Cause\n");
+         DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
          stop = 1;
       }
       else Cause = rrt;
@@ -134,7 +135,7 @@ void MTC0(void)
       TagHi =0;
       break;
     default:
-      printf("unknown mtc0 write : %d\n", PC->f.r.nrd);
+      DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", PC->f.r.nrd);
       stop=1;
   }
   PC++;

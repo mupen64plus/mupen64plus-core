@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/macros.h"
@@ -147,7 +149,7 @@ void dyna_start(void (*code)())
 void dyna_stop()
 {
   if (save_eip == 0)
-    printf("Warning: instruction pointer is 0 at dyna_stop()\n");
+    DebugMessage(M64MSG_WARNING, "instruction pointer is 0 at dyna_stop()");
   else
   {
     *return_address = (unsigned long) save_eip;

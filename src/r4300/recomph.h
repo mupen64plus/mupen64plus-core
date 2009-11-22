@@ -22,8 +22,6 @@
 #ifndef RECOMPH_H
 #define RECOMPH_H
 
-#include <stdio.h>
-
 #include "recomp.h"
 
 #if defined(COUNT_INSTR)
@@ -43,7 +41,8 @@ extern int fast_memory;
 extern int src;   /* opcode of r4300 instruction being recompiled */
 
 #if defined(PROFILE_R4300)
-extern FILE *pfProfile;
+  #include <stdio.h>
+  extern FILE *pfProfile;
 #endif
 
 void passe2(precomp_instr *dest, int start, int end, precomp_block* block);

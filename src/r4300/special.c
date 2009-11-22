@@ -19,14 +19,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-
 #include "r4300.h"
 #include "interupt.h"
 #include "ops.h"
 #include "exception.h"
 #include "macros.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 
 #ifdef DBG
@@ -196,26 +196,26 @@ void MULTU(void)
 void DIV(void)
 {
    if (rrt32)
-     {
-    lo = rrs32 / rrt32;
-    hi = rrs32 % rrt32;
-    sign_extended(lo);
-    sign_extended(hi);
-     }
-   else printf("div\n");
+   {
+     lo = rrs32 / rrt32;
+     hi = rrs32 % rrt32;
+     sign_extended(lo);
+     sign_extended(hi);
+   }
+   else DebugMessage(M64MSG_ERROR, "DIV: divide by 0");
    PC++;
 }
 
 void DIVU(void)
 {
    if (rrt32)
-     {
-    lo = (unsigned int)rrs32 / (unsigned int)rrt32;
-    hi = (unsigned int)rrs32 % (unsigned int)rrt32;
-    sign_extended(lo);
-    sign_extended(hi);
-     }
-   else printf("divu\n");
+   {
+     lo = (unsigned int)rrs32 / (unsigned int)rrt32;
+     hi = (unsigned int)rrs32 % (unsigned int)rrt32;
+     sign_extended(lo);
+     sign_extended(hi);
+   }
+   else DebugMessage(M64MSG_ERROR, "DIVU: divide by 0");
    PC++;
 }
 
@@ -295,22 +295,22 @@ void DMULTU(void)
 void DDIV(void)
 {
    if (rrt)
-     {
-    lo = (long long int)rrs / (long long int)rrt;
-    hi = (long long int)rrs % (long long int)rrt;
-     }
-//   else printf("ddiv\n");
+   {
+     lo = (long long int)rrs / (long long int)rrt;
+     hi = (long long int)rrs % (long long int)rrt;
+   }
+   else DebugMessage(M64MSG_ERROR, "DDIV: divide by 0");
    PC++;
 }
 
 void DDIVU(void)
 {
    if (rrt)
-     {
-    lo = (unsigned long long int)rrs / (unsigned long long int)rrt;
-    hi = (unsigned long long int)rrs % (unsigned long long int)rrt;
-     }
-//   else printf("ddivu\n");
+   {
+     lo = (unsigned long long int)rrs / (unsigned long long int)rrt;
+     hi = (unsigned long long int)rrs % (unsigned long long int)rrt;
+   }
+   else DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0");
    PC++;
 }
 
@@ -408,10 +408,10 @@ void DSUBU(void)
 void TEQ(void)
 {
    if (rrs == rrt)
-     {
-    printf("trap exception in teq\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
+     stop=1;
+   }
    PC++;
 }
 

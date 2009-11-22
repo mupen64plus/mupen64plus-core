@@ -33,6 +33,8 @@
 #include "r4300.h"
 #include "ops.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 
 // global variables :
@@ -2166,7 +2168,7 @@ void init_block(int *source, precomp_block *block)
   static int init_length;
   start_section(COMPILER_SECTION);
 #ifdef CORE_DBG
-  printf("init block %x - %x\n", (int) block->start, (int) block->end);
+  DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
 #endif
 
   length = (block->end-block->start)/4;
@@ -2220,7 +2222,7 @@ void init_block(int *source, precomp_block *block)
     int mipsop = -2; /* -2 == NOTCOMPILED block at beginning of x86 code */
     if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
 
     for (i=0; i<length; i++)
@@ -2386,7 +2388,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     long x86addr = (long) (block->code + block->block[i].local_addr);
     if (fwrite(source + i, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
     recomp_ops[((src >> 26) & 0x3F)]();
     dst = block->block + i;
@@ -2420,7 +2422,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     int mipsop = -3; /* -3 == block-postfix */
     if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
 
    if (i >= length)
@@ -2458,7 +2460,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
      }
 #ifdef CORE_DBG
-   printf("block recompiled (%x-%x)\n", (int)func, (int)(block->start+i*4));
+   DebugMessage(M64MSG_INFO, "block recompiled (%x-%x)", (int)func, (int)(block->start+i*4));
 #endif
 #if defined(PROFILE_R4300)
    fclose(pfProfile);
@@ -2563,7 +2565,7 @@ void recompile_opcode()
      long x86addr = (long) ((*inst_pointer) + code_length);
      if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
          fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
      recomp_ops[((src >> 26) & 0x3F)]();
    }
@@ -2592,15 +2594,15 @@ void *malloc_exec(size_t size)
 #if defined(__GNUC__)
    int pagesize = sysconf(_SC_PAGE_SIZE);
    if (pagesize == -1)
-       { printf("Memory error: couldn't determine system memory page size.\n"); return NULL; }
+       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
 
    /* Allocate a buffer aligned on a page boundary; initial protection is PROT_READ | PROT_WRITE */
    void *block = valloc(size);
    if (block == NULL)
-       { printf("Memory error: couldn't allocate %i byte block of %i-byte aligned memory.\n", (int) size, pagesize); return NULL; }
+       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate %i byte block of %i-byte aligned memory.", (int) size, pagesize); return NULL; }
 
    if (mprotect(block, size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-       { printf("Memory error: couldn't set RWX permissions on %i byte block of memory.\n", (int) size); return NULL; }
+       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't set RWX permissions on %i byte block of memory.", (int) size); return NULL; }
 
    return block;
 #else

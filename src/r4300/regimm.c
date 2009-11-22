@@ -19,13 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-
 #include "r4300.h"
 #include "interupt.h"
 #include "ops.h"
 #include "macros.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 
 #ifdef DBG
@@ -258,7 +258,7 @@ void BLTZAL(void)
     if(local_rs < 0 && !skip_jump)
       PC += (PC-2)->f.i.immediate-1;
      }
-   else printf("error in bltzal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZAL");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -281,7 +281,7 @@ void BLTZAL_OUT(void)
     if(!skip_jump && local_rs < 0)
       jump_to(PC->addr + ((jump_target-1)<<2));
      }
-   else printf("error in bltzal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZAL_OUT");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -316,7 +316,7 @@ void BGEZAL(void)
     if(local_rs >= 0 && !skip_jump)
       PC += (PC-2)->f.i.immediate-1;
      }
-   else printf("error in bgezal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZAL");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -339,7 +339,7 @@ void BGEZAL_OUT(void)
     if(!skip_jump && local_rs >= 0)
       jump_to(PC->addr + ((jump_target-1)<<2));
      }
-   else printf("error in bgezal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZAL_OUT");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -379,7 +379,7 @@ void BLTZALL(void)
     else
       PC+=2;
      }
-   else printf("error in bltzall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZALL");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -407,7 +407,7 @@ void BLTZALL_OUT(void)
     else
       PC+=2;
      }
-   else printf("error in bltzall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZALL_OUT");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -447,7 +447,7 @@ void BGEZALL(void)
     else
       PC+=2;
      }
-   else printf("error in bgezall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZALL");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -475,7 +475,7 @@ void BGEZALL_OUT(void)
     else
       PC+=2;
      }
-   else printf("error in bgezall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZALL_OUT");
    last_addr = PC->addr;
    if (next_interupt <= Count) gen_interupt();
 }

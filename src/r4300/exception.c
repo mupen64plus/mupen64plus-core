@@ -24,38 +24,40 @@
 #include "macros.h"
 #include "recomph.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 
 extern unsigned int interp_addr;
 
 void address_error_exception(void)
 {
-   printf("address_error_exception\n");
+   DebugMessage(M64MSG_ERROR, "address_error_exception");
    stop=1;
 }
 
 void TLB_invalid_exception(void)
 {
    if (delay_slot)
-     {
-    skip_jump = 1;
-    printf("delay slot\nTLB refill exception\n");
-    stop=1;
-     }
-   printf("TLB invalid exception\n");
+   {
+     skip_jump = 1;
+     DebugMessage(M64MSG_ERROR, "delay slot - TLB refill exception");
+     stop=1;
+   }
+   DebugMessage(M64MSG_ERROR, "TLB invalid exception");
    stop=1;
 }
 
 void XTLB_refill_exception(unsigned long long int addresse)
 {
-   printf("XTLB refill exception\n");
+   DebugMessage(M64MSG_ERROR, "XTLB refill exception");
    stop=1;
 }
 
 void TLB_refill_exception(unsigned int address, int w)
 {
    int usual_handler = 0, i;
-   //printf("TLB_refill_exception:%x\n", address);
+
    if (r4300emu != CORE_DYNAREC && w != 2) update_count();
    if (w == 1) Cause = (3 << 2);
    else Cause = (2 << 2);
@@ -139,19 +141,19 @@ void TLB_refill_exception(unsigned int address, int w)
 
 void TLB_mod_exception(void)
 {
-   printf("TLB mod exception\n");
+   DebugMessage(M64MSG_ERROR, "TLB mod exception");
    stop=1;
 }
 
 void integer_overflow_exception(void)
 {
-   printf("integer overflow exception\n");
+   DebugMessage(M64MSG_ERROR, "integer overflow exception");
    stop=1;
 }
 
 void coprocessor_unusable_exception(void)
 {
-   printf("coprocessor_unusable_exception\n");
+   DebugMessage(M64MSG_ERROR, "coprocessor_unusable_exception");
    stop=1;
 }
 

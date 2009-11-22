@@ -25,6 +25,8 @@
 
 #include "assemble.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
@@ -164,7 +166,7 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
       *((int *) (block->code + jmp_offset_loc)) = (int) jump_rel_offset;
       if (jump_rel_offset >= 0x7fffffffLL || jump_rel_offset < -0x80000000LL)
       {
-        printf("assembler pass2 error: offset too big for relative jump from %lx to %lx\n", 
+        DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big for relative jump from %lx to %lx", 
                (long) (block->code + jmp_offset_loc + 4), (long) addr_dest);
         asm(" int $3; ");
       }
@@ -181,7 +183,7 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
     long rip_rel_offset = (long) (riprel_table[i].global_dst - (rel_offset_ptr + 4 + riprel_table[i].extra_bytes));
     if (rip_rel_offset >= 0x7fffffffLL || rip_rel_offset < -0x80000000LL)
     {
-      printf("assembler pass2 error: offset too big between mem target: %lx and code position: %lx\n",
+      DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big between mem target: %lx and code position: %lx",
              (long) riprel_table[i].global_dst, (long) rel_offset_ptr);
       asm(" int $3; ");
     }
@@ -241,7 +243,7 @@ static int rel_r15_offset(void *dest, const char *op_name)
 
     if (llabs(rel_offset) > 0x7fffffff)
     {
-        printf("Error: destination %lx more than 2GB away from r15 base %lx in %s()\n", (long) dest, (long) reg, op_name);
+        DebugMessage(M64MSG_ERROR, "Error: destination %lx more than 2GB away from r15 base %lx in %s()", (long) dest, (long) reg, op_name);
         asm(" int $3; ");
     }
 
@@ -254,7 +256,7 @@ void code_align16(void)
 
   if (((long) (*inst_pointer) & 15) != 0)
   {
-    printf("Error: code block pointer is not 16-byte aligned!\n");
+    DebugMessage(M64MSG_ERROR, "Error: code block pointer is not 16-byte aligned!");
     asm(" int $3; ");
   }
 
@@ -304,7 +306,7 @@ void jump_end_rel8(void)
 
   if (jump_vec > 127 || jump_vec < -128)
   {
-    printf("Error: 8-bit relative jump too long! From %x to %x\n", g_jump_start8, jump_end);
+    DebugMessage(M64MSG_ERROR, "Error: 8-bit relative jump too long! From %x to %x", g_jump_start8, jump_end);
     asm(" int $3; ");
   }
 

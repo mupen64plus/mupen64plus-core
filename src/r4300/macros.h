@@ -63,14 +63,6 @@
 #define irt32 *((int*)PC->f.i.rt+1)
 #endif
 
-#define check_PC \
-if (PC->addr == actual->fin) \
-{ \
-printf("changement de block\n"); \
-stop=1; \
-}
-
-
 //cop0 macros
 #define Index reg_cop0[0]
 #define Random reg_cop0[1]

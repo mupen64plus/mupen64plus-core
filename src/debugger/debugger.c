@@ -70,10 +70,7 @@ void update_debugger(uint32 pc)
 // Checks for breakpoint hits on PC
 {
     int bpt;
-    /*if ( previousPC == pc ) {
-        printf("update_debugger: previousPC == pc (%08x)\n",pc);
-        return;
-    }*/
+
     if(run!=0) {//check if we hit a breakpoint
         bpt = check_breakpoints(pc);
         if( bpt!=-1 ) {

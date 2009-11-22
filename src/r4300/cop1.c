@@ -91,8 +91,6 @@ void CTC1(void)
     rounding_mode = 0x73F;
     break;
      }
-   //if ((FCR31 >> 7) & 0x1F) printf("FPU Exception enabled : %x\n", 
-//                 (int)((FCR31 >> 7) & 0x1F));
    PC++;
 }
 

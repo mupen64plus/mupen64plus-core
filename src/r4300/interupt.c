@@ -19,9 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
 
 #include <SDL.h>
@@ -31,20 +29,19 @@
 #include "macros.h"
 #include "exception.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
-
 #include "main/rom.h"
 #include "main/main.h"
 #include "main/savestates.h"
 #include "main/cheat.h"
-
+#include "osd/osd.h"
 #include "plugin/plugin.h"
 
 #ifdef WITH_LIRC
 #include "main/lirc.h"
 #endif
-
-#include "osd/osd.h"
 
 unsigned int next_vi;
 int vi_field=0;
@@ -72,15 +69,13 @@ void print_queue()
 {
     interupt_queue *aux;
     //if (Count < 0x7000000) return;
-    printf("------------------ %x\n", (unsigned int)Count);
+    DebugMessage(M64MSG_INFO, "------------------ 0x%x", (unsigned int)Count);
     aux = q;
     while (aux != NULL)
     {
-        printf("Count:%x, %x\n", (unsigned int)aux->count, aux->type);
+        DebugMessage(M64MSG_INFO, "Count:%x, %x", (unsigned int)aux->count, aux->type);
         aux = aux->next;
     }
-    printf("------------------\n");
-    //getchar();
 }
 
 static int SPECIAL_done = 0;
@@ -123,7 +118,7 @@ void add_interupt_event(int type, unsigned int delay)
     if(Count > 0x80000000) SPECIAL_done = 0;
    
     if (get_event(type)) {
-        printf("two events of type %x in queue\n", type);
+        DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
     }
     interupt_queue *aux = q;
    

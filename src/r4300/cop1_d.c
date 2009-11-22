@@ -19,9 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <math.h>
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300.h"
 #include "ops.h"
 #include "macros.h"
@@ -261,10 +262,10 @@ void C_ULE_D(void)
 void C_SF_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    FCR31 &= ~0x800000;
    PC++;
 }
@@ -272,10 +273,10 @@ void C_SF_D(void)
 void C_NGLE_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    FCR31 &= ~0x800000;
    PC++;
 }
@@ -283,10 +284,10 @@ void C_NGLE_D(void)
 void C_SEQ_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] == *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -296,10 +297,10 @@ void C_SEQ_D(void)
 void C_NGL_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] == *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -310,10 +311,10 @@ void C_LT_D(void)
 {
    if (check_cop1_unusable()) return;
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] < *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -324,10 +325,10 @@ void C_NGE_D(void)
 {
    if (check_cop1_unusable()) return;
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] < *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -338,10 +339,10 @@ void C_LE_D(void)
 {
    if (check_cop1_unusable()) return;
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -352,10 +353,10 @@ void C_NGT_D(void)
 {
    if (check_cop1_unusable()) return;
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;

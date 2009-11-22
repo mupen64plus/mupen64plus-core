@@ -26,6 +26,9 @@
 #include "debugger.h"
 #include "dbg_breakpoints.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+
 int g_NumBreakpoints=0;
 breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
 
@@ -33,7 +36,7 @@ breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
 int add_breakpoint( uint32 address )
 {
     if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
-        printf("BREAKPOINTS_MAX_NUMBER have been reached.\n");//REMOVE ME
+        DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
         return -1;
     }
     g_Breakpoints[g_NumBreakpoints].address=address;
@@ -48,7 +51,7 @@ int add_breakpoint( uint32 address )
 int add_breakpoint_struct(breakpoint* newbp)
 {
      if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
-        printf("BREAKPOINTS_MAX_NUMBER have been reached.\n");//REMOVE ME
+        DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
         return -1;
     }
 
@@ -122,9 +125,9 @@ void remove_breakpoint_by_address( uint32 address )
 {
     int bpt = lookup_breakpoint( address, 0, 0 );
     if(bpt==-1)
-        {
-        printf("Tried to remove Nonexistant breakpoint %x!", address);
-        }
+    {
+        DebugMessage(M64MSG_ERROR, "Tried to remove Nonexistant breakpoint %x!", address);
+    }
     else
         remove_breakpoint_by_num( bpt );
 }
@@ -207,7 +210,6 @@ int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access)
     if(Flag & BPT_FLAG_READ) sprintf(msg, "0x%08X read 0x%08X", PC, Access);
     else if(Flag & BPT_FLAG_WRITE) sprintf(msg, "0x%08X wrote 0x%08X", PC, Access);
     else sprintf(msg, "0x%08X executed", PC);
-    printf("BPT: %s\n", msg);
-    //todo: log to file
+    DebugMessage(M64MSG_INFO, "BPT: %s", msg);
 }
 

@@ -19,9 +19,11 @@
 *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */ 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #include "ini_reader.h"
 
@@ -152,7 +154,7 @@ ini_file* ini_file_parse(const char* filename)
         }
         else
         {
-            fprintf(stderr, "Couldn't parse line %d in file %s: %s", i, filename, buf);
+            DebugMessage(M64MSG_ERROR, "Couldn't parse line %d in file %s: %s", i, filename, buf);
         }
     }
 

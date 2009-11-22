@@ -19,8 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <sys/time.h>
+
 #include "r4300.h"
-#include "sys/time.h"
+
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #ifdef PROFILE
 static unsigned int time_in_section[5];
@@ -53,7 +57,7 @@ void refresh_stat()
     unsigned int end =
       ((tv.tv_sec % 1000000) * 1000) + (tv.tv_usec / 1000);
     time_in_section[0] = end - last_start[0];
-    printf("gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%\r",
+    DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
            100.0f * (float)time_in_section[1] / (float)time_in_section[0],
            100.0f * (float)time_in_section[2] / (float)time_in_section[0],
            100.0f * (float)time_in_section[3] / (float)time_in_section[0],

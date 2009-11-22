@@ -24,6 +24,8 @@
 
 #include "assemble.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
@@ -149,7 +151,7 @@ void jump_end_rel8(void)
 
   if (jump_vec > 127 || jump_vec < -128)
   {
-    printf("Error: 8-bit relative jump too long! From %x to %x\n", g_jump_start8, jump_end);
+    DebugMessage(M64MSG_ERROR, "8-bit relative jump too long! From %x to %x", g_jump_start8, jump_end);
     asm(" int $3; ");
   }
 

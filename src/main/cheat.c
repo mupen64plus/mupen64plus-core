@@ -21,9 +21,6 @@
 
 // gameshark and xploder64 reference: http://doc.kodewerx.net/hacking_n64.html 
 
-#include <stdio.h>
-#include <errno.h>
-
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/config.h"

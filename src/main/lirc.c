@@ -19,10 +19,12 @@
 #ifdef WITH_LIRC
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <sys/poll.h>
 #include <string.h>
 #include <lirc/lirc_client.h>
+
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #include "lirc.h"
 #include "main.h"
@@ -33,32 +35,29 @@ static int g_lircfd = 0;
 
 void lircStart(void)
 {
-    printf("Launching LIRC...");
-
     if((g_lircfd = lirc_init("mupen64plus", 1)) != -1)
     {
         g_config = NULL;
         if(lirc_readconfig(NULL, &g_config, NULL) == 0)
-            printf("OK!\n");
+            DebugMessage(M64MSG_INFO, "LIRC input system started successfully");
         else
-            printf("Error reading lircrc!\n");
+            DebugMessage(M64MSG_WARNING, "LIRC disabled: Error reading lircrc!");
     }
     else
-        printf("Error contacting daemon!\n");
+        DebugMessage(M64MSG_WARNING, "LIRC disabled: Error contacting daemon!");
 }
 
 void lircStop(void)
 {
     if(g_lircfd!=-1)
     {
-        printf("Terminating LIRC...");
         if(g_config != NULL)
         {
             lirc_freeconfig(g_config);
             g_config = NULL;
         }
         lirc_deinit();
-        printf("done.\n");
+        DebugMessage(M64MSG_INFO, "LIRC system shut down");
     }
 }
 
@@ -84,9 +83,7 @@ void lircCheckInput(void)
                     *c_ind = toupper(*c_ind);
                     c_ind++;
                 }
-#ifdef DEBUG
-                printf("LIRC Execing command \"%s\"\n", c);
-#endif //DEBUG
+                DebugMessage(M64MSG_VERBOSE, "LIRC Execing command \"%s\"", c);
 
                 if(strcmp(c, "SAVE") == 0)
                     savestates_job |= SAVESTATE;

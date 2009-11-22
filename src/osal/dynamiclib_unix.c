@@ -20,10 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <dlfcn.h>
 
 #include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "dynamiclib.h"
 
 m64p_error osal_dynlib_open(m64p_dynlib_handle *pLibHandle, const char *pccLibraryPath)
@@ -35,7 +35,7 @@ m64p_error osal_dynlib_open(m64p_dynlib_handle *pLibHandle, const char *pccLibra
 
     if (*pLibHandle == NULL)
     {
-        fprintf(stderr, "dlopen('%s') error: %s\n", pccLibraryPath, dlerror());
+        DebugMessage(M64MSG_ERROR, "dlopen('%s') error: %s", pccLibraryPath, dlerror());
         return M64ERR_INPUT_NOT_FOUND;
     }
 
@@ -56,7 +56,7 @@ m64p_error osal_dynlib_close(m64p_dynlib_handle LibHandle)
 
     if (rval != 0)
     {
-        fprintf(stderr, "dlclose() error: %s\n", dlerror());
+        DebugMessage(M64MSG_ERROR, "dlclose() error: %s", dlerror());
         return M64ERR_INTERNAL;
     }
 

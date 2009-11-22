@@ -19,7 +19,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -28,6 +27,8 @@
 #include "macros.h"
 #include "interupt.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 #include "main/rom.h"
 
@@ -52,7 +53,7 @@ extern unsigned int next_vi;
 
 static void NI()
 {
-   printf("NI:%x\n", (unsigned int)op);
+   DebugMessage(M64MSG_ERROR, "NI:%x", (unsigned int)op);
    stop=1;
 }
 
@@ -220,26 +221,26 @@ static void MULTU()
 static void DIV()
 {
    if (rrt32)
-     {
-    lo = rrs32 / rrt32;
-    hi = rrs32 % rrt32;
-    sign_extended(lo);
-    sign_extended(hi);
-     }
-   else printf("div\n");
+   {
+     lo = rrs32 / rrt32;
+     hi = rrs32 % rrt32;
+     sign_extended(lo);
+     sign_extended(hi);
+   }
+   else DebugMessage(M64MSG_ERROR, "DIV: divide by 0");
    interp_addr+=4;
 }
 
 static void DIVU()
 {
    if (rrt32)
-     {
-    lo = (unsigned int)rrs32 / (unsigned int)rrt32;
-    hi = (unsigned int)rrs32 % (unsigned int)rrt32;
-    sign_extended(lo);
-    sign_extended(hi);
-     }
-   else printf("divu\n");
+   {
+     lo = (unsigned int)rrs32 / (unsigned int)rrt32;
+     hi = (unsigned int)rrs32 % (unsigned int)rrt32;
+     sign_extended(lo);
+     sign_extended(hi);
+   }
+   else DebugMessage(M64MSG_ERROR, "DIVU: divide by 0");
    interp_addr+=4;
 }
 
@@ -319,22 +320,22 @@ static void DMULTU()
 static void DDIV()
 {
    if (rrt)
-     {
-    lo = (long long int)rrs / (long long int)rrt;
-    hi = (long long int)rrs % (long long int)rrt;
-     }
-   else printf("ddiv\n");
+   {
+     lo = (long long int)rrs / (long long int)rrt;
+     hi = (long long int)rrs % (long long int)rrt;
+   }
+   else DebugMessage(M64MSG_ERROR, "DDIV: divide by 0");
    interp_addr+=4;
 }
 
 static void DDIVU()
 {
    if (rrt)
-     {
-    lo = (unsigned long long int)rrs / (unsigned long long int)rrt;
-    hi = (unsigned long long int)rrs % (unsigned long long int)rrt;
-     }
-   else printf("ddivu\n");
+   {
+     lo = (unsigned long long int)rrs / (unsigned long long int)rrt;
+     hi = (unsigned long long int)rrs % (unsigned long long int)rrt;
+   }
+   else DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0");
    interp_addr+=4;
 }
 
@@ -446,10 +447,10 @@ static void DSUBU()
 static void TEQ()
 {
    if (rrs == rrt)
-     {
-    printf("trap exception in teq\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
+     stop=1;
+   }
    interp_addr+=4;
 }
 
@@ -663,7 +664,7 @@ static void BLTZAL()
     if(local_rs < 0)
       interp_addr += (local_immediate-1)*4;
      }
-   else printf("error in bltzal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZAL");
    last_addr = interp_addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -698,7 +699,7 @@ static void BGEZAL()
     if(local_rs >= 0)
       interp_addr += (local_immediate-1)*4;
      }
-   else printf("error in bgezal\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZAL");
    last_addr = interp_addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -736,7 +737,7 @@ static void BLTZALL()
       }
     else interp_addr+=8;
      }
-   else printf("error in bltzall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BLTZALL");
    last_addr = interp_addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -774,7 +775,7 @@ static void BGEZALL()
       }
     else interp_addr+=8;
      }
-   else printf("error in bgezall\n");
+   else DebugMessage(M64MSG_ERROR, "error in BGEZALL");
    last_addr = interp_addr;
    if (next_interupt <= Count) gen_interupt();
 }
@@ -984,15 +985,15 @@ static void ERET()
 {
    update_count();
    if (Status & 0x4)
-     {
-    printf("error in ERET\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "error in ERET");
+     stop=1;
+   }
    else
-     {
-    Status &= 0xFFFFFFFD;
-    interp_addr = EPC;
-     }
+   {
+     Status &= 0xFFFFFFFD;
+     interp_addr = EPC;
+   }
    llbit = 0;
    check_interupt();
    last_addr = interp_addr;
@@ -1016,12 +1017,12 @@ static void MFC0()
    switch(PC->f.r.nrd)
      {
       case 1:
-    printf("lecture de Random\n");
-    stop=1;
+        DebugMessage(M64MSG_ERROR, "MFC0 reading un-implemented Random register");
+        stop=1;
       default:
-    check_r0_rt();
-    rrt32 = reg_cop0[PC->f.r.nrd];
-    sign_extended(rrt);
+        check_r0_rt();
+        rrt32 = reg_cop0[PC->f.r.nrd];
+        sign_extended(rrt);
      }
    interp_addr+=4;
 }
@@ -1034,7 +1035,7 @@ static void MTC0()
     Index = rrt & 0x8000003F;
     if ((Index & 0x3F) > 31) 
       {
-         printf ("il y a plus de 32 TLB\n");
+         DebugMessage(M64MSG_ERROR, "MTC0 writing Index register with TLB index > 31");
          stop=1;
       }
     break;
@@ -1092,7 +1093,7 @@ static void MTC0()
       case 13:   // Cause
     if (rrt!=0)
       {
-         printf("Write in Cause\n");
+         DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
          stop = 1;
       }
     else Cause = rrt;
@@ -1120,7 +1121,7 @@ static void MTC0()
     TagHi =0;
     break;
       default:
-    printf("unknown mtc0 write : %d\n", PC->f.r.nrd);
+    DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", PC->f.r.nrd);
     stop=1;
      }
    interp_addr+=4;
@@ -1296,9 +1297,9 @@ static void MUL_S()
 static void DIV_S()
 {
    if((FCR31 & 0x400) && *reg_cop1_simple[cfft] == 0)
-     {
-    printf("div_s by 0\n");
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "DIV_S by 0");
+   }
    set_rounding();
    *reg_cop1_simple[cffd] = *reg_cop1_simple[cffs] /
      *reg_cop1_simple[cfft];
@@ -1481,10 +1482,10 @@ static void C_ULE_S()
 static void C_SF_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
@@ -1492,10 +1493,10 @@ static void C_SF_S()
 static void C_NGLE_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
@@ -1503,10 +1504,10 @@ static void C_NGLE_S()
 static void C_SEQ_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] == *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1516,10 +1517,10 @@ static void C_SEQ_S()
 static void C_NGL_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] == *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1529,10 +1530,10 @@ static void C_NGL_S()
 static void C_LT_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] < *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1542,10 +1543,10 @@ static void C_LT_S()
 static void C_NGE_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] < *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1555,10 +1556,10 @@ static void C_NGE_S()
 static void C_LE_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] <= *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1568,10 +1569,10 @@ static void C_LE_S()
 static void C_NGT_S()
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_simple[cffs] <= *reg_cop1_simple[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1622,7 +1623,7 @@ static void DIV_D()
     /*FCR31 |= 0x8000;
     Cause = 15 << 2;
     exception_general();*/
-    printf("div_d by 0\n");
+    DebugMessage(M64MSG_ERROR, "DIV_D by 0");
     //return;
      }
    set_rounding();
@@ -1807,10 +1808,10 @@ static void C_ULE_D()
 static void C_SF_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+      stop=1;
+   }
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
@@ -1818,10 +1819,10 @@ static void C_SF_D()
 static void C_NGLE_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
@@ -1829,10 +1830,10 @@ static void C_NGLE_D()
 static void C_SEQ_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] == *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1842,10 +1843,10 @@ static void C_SEQ_D()
 static void C_NGL_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] == *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1855,10 +1856,10 @@ static void C_NGL_D()
 static void C_LT_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] < *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1868,10 +1869,10 @@ static void C_LT_D()
 static void C_NGE_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] < *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1881,10 +1882,10 @@ static void C_NGE_D()
 static void C_LE_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -1894,10 +1895,10 @@ static void C_LE_D()
 static void C_NGT_D()
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
-     {
-    printf("Invalid operation exception in C opcode\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
+     stop=1;
+   }
    if (*reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
      FCR31 |= 0x800000;
    else FCR31 &= ~0x800000;
@@ -3056,34 +3057,11 @@ static void (*interp_ops[64])(void) =
 
 void prefetch()
 {
-   //static FILE *f = NULL;
-   //static int line=1;
-   //static int tlb_used = 0;
-   //unsigned int comp;
-   //if (!tlb_used)
-     //{
-    /*if (f==NULL) f = fopen("/mnt/windows/pcdeb.txt", "rb");
-    fscanf(f, "%x", &comp);
-    if (comp != interp_addr)
-      {
-         printf("diff@%x, line:%d\n", interp_addr, line);
-         stop=1;
-      }*/
-    //line++;
-    //if ((debug_count+Count) > 0x50fe000) printf("line:%d\n", line);
-    /*if ((debug_count+Count) > 0xb70000)
-      printf("count:%x, add:%x, op:%x, l%d\n", (int)(Count+debug_count),
-         interp_addr, op, line);*/
-     //}
-   //printf("addr:%x\n", interp_addr);
    if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
      {
     if ((interp_addr >= 0x80000000) && (interp_addr < 0x80800000))
       {
          op = rdram[(interp_addr&0xFFFFFF)/4];
-         /*if ((debug_count+Count) > 0xabaa20)
-           printf("count:%x, add:%x, op:%x, l%d\n", (int)(Count+debug_count),
-              interp_addr, op, line);*/
          prefetch_opcode(op);
       }
     else if ((interp_addr >= 0xa4000000) && (interp_addr < 0xa4001000))
@@ -3098,7 +3076,7 @@ void prefetch()
       }
     else
       {
-         printf("execute address :%x\n", (int)interp_addr);
+         DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
          stop=1;
       }
      }
@@ -3133,23 +3111,17 @@ void pure_interpreter()
 #endif*/
 
    while (!stop)
-     {
-    //if (interp_addr == 0x10022d08) stop = 1;
-    prefetch();
+   {
+     prefetch();
 #ifdef COMPARE_CORE
-    compare_core();
+     compare_core();
 #endif
-    //if (Count > 0x2000000) printf("inter:%x,%x\n", interp_addr,op);
-    //if ((Count+debug_count) > 0xabaa2c) stop=1;
 #ifdef DBG
-    PC->addr = interp_addr;
-   if (debugger_mode) update_debugger(PC->addr);
+     PC->addr = interp_addr;
+     if (debugger_mode) update_debugger(PC->addr);
 #endif
-    interp_ops[((op >> 26) & 0x3F)]();
-
-    //Count = (unsigned int)Count + 2;
-    //if (interp_addr == 0x80000180) last_addr = interp_addr;
-     }
+     interp_ops[((op >> 26) & 0x3F)]();
+   }
    PC->addr = interp_addr;
 }
 

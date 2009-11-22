@@ -25,6 +25,8 @@
 #include "recomph.h"
 #include "interupt.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "main/adler32.h"
 #include "main/md5.h"
 #include "memory/memory.h"
@@ -440,15 +442,15 @@ void ERET(void)
 {
    update_count();
    if (Status & 0x4)
-     {
-    printf ("error in ERET\n");
-    stop=1;
-     }
+   {
+     DebugMessage(M64MSG_ERROR, "error in ERET");
+     stop=1;
+   }
    else
-     {
-    Status &= 0xFFFFFFFD;
-    jump_to(EPC);
-     }
+   {
+     Status &= 0xFFFFFFFD;
+     jump_to(EPC);
+   }
    llbit = 0;
    check_interupt();
    last_addr = PC->addr;

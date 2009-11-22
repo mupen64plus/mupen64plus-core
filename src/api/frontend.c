@@ -55,7 +55,7 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     /* check front-end's API version */
     if (APIVersion < MINIMUM_FRONTEND_API_VERSION)
     {
-        DebugMessage(M64MSG_ERROR, "CoreStartup(): Front-end API version %i.%i.%i is below minimum supported %i.%i.%i\n",
+        DebugMessage(M64MSG_ERROR, "CoreStartup(): Front-end API version %i.%i.%i is below minimum supported %i.%i.%i",
                      VERSION_PRINTF_SPLIT(APIVersion), VERSION_PRINTF_SPLIT(MINIMUM_FRONTEND_API_VERSION));
         return M64ERR_INCOMPATIBLE;
     }

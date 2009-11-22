@@ -25,6 +25,7 @@
 
 extern "C" {
     #include "api/config.h"
+    #include "api/callbacks.h"
     #include "main/main.h"
     #include "main/util.h"
     #include "osal/files.h"
@@ -214,7 +215,7 @@ void osd_init(int width, int height)
 
     if(!l_font || !l_font->isValid())
     {
-        printf("Could not construct face from %s\n", fontpath);
+        DebugMessage(M64MSG_ERROR, "Could not construct face from %s", fontpath);
         return;
     }
 

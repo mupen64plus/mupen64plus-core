@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/macros.h"
@@ -54,7 +56,7 @@ void dyna_start(void (*code)())
   /* then call the code(), which should theoretically never return.  */
   /* When dyna_stop() sets the *return_address to the saved RIP, the emulator thread will come back here. */
   /* It will jump to label 2, restore the base and stack pointers, and exit this function */
-  printf("R4300 core: starting 64-bit dynamic recompiler at: 0x%lx.\n", (unsigned long) code);
+  DebugMessage(M64MSG_INFO, "R4300: starting 64-bit dynamic recompiler at: 0x%lx", (unsigned long) code);
 #if defined(__GNUC__) && defined(__x86_64__)
   #if defined(PIC)
     /* for -fPIC (shared libraries) */
@@ -128,7 +130,7 @@ void dyna_start(void (*code)())
 void dyna_stop()
 {
   if (save_rip == 0)
-    printf("Warning: instruction pointer is 0 at dyna_stop()\n");
+    DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");
   else
   {
     *return_address = (unsigned long) save_rip;

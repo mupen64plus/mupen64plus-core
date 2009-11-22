@@ -19,7 +19,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -35,6 +34,7 @@
 
 extern "C" {
 #include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "api/config.h"
 #include "main/main.h"
 #include "main/util.h"
@@ -49,12 +49,12 @@ extern "C" {
 
 static void mupen_png_error(png_structp png_write, const char *message)
 {
-    printf("PNG Error: %s\n", message);
+    DebugMessage(M64MSG_ERROR, "PNG Error: %s", message);
 }
 
 static void mupen_png_warn(png_structp png_write, const char *message)
 {
-    printf("PNG Warning: %s\n", message);
+    DebugMessage(M64MSG_WARNING, "PNG Warning: %s", message);
 }
 
 static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, int height, int pitch)
@@ -65,28 +65,28 @@ static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, in
     png_structp png_write = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, mupen_png_error, mupen_png_warn);
     if (!png_write)
     {
-        printf("Error creating PNG write struct.\n");
+        DebugMessage(M64MSG_ERROR, "Error creating PNG write struct.");
         return 1;
     }
     png_infop png_info = png_create_info_struct(png_write);
     if (!png_info)
     {
         png_destroy_write_struct(&png_write, (png_infopp)NULL);
-        printf("Error creating PNG info struct.\n");
+        DebugMessage(M64MSG_ERROR, "Error creating PNG info struct.");
         return 2;
     }
     // Set the jumpback
     if (setjmp(png_jmpbuf(png_write)))
     {
         png_destroy_write_struct(&png_write, &png_info);
-        printf("Error calling setjmp()\n");
+        DebugMessage(M64MSG_ERROR, "Error calling setjmp()");
         return 3;
     }
     // open the file to write
     FILE *savefile = fopen(filename, "wb");
     if (savefile == NULL)
     {
-        printf("Error opening '%s' to save screenshot.\n", filename);
+        DebugMessage(M64MSG_ERROR, "Error opening '%s' to save screenshot.", filename);
         return 4;
     }
     // give the file handle to the PNG compressor

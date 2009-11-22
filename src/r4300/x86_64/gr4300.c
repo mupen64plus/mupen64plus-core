@@ -377,9 +377,7 @@ void genni(void)
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[1]);
 #endif
-#ifdef EMU64_DEBUG
    gencallinterp((unsigned long long)NI, 0);
-#endif
 }
 
 void genreserved(void)
@@ -387,9 +385,7 @@ void genreserved(void)
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[0]);
 #endif
-#ifdef EMU64_DEBUG
    gencallinterp((unsigned long long)RESERVED, 0);
-#endif
 }
 
 void genfin_block(void)

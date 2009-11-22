@@ -26,6 +26,8 @@
 #include "dbg_memory.h"
 #include "dbg_breakpoints.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "memory/memory.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
@@ -134,9 +136,6 @@ void decode_recompiled(uint32 addr)
     else
         end_addr += blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
 
-    //for(as_inc=assemb; as_inc<end_addr; as_inc++)
-    //  printf("%02x", *as_inc);
-
     while(assemb < end_addr)
       {
         opaddr_recompiled[lines_recompiled] = assemb;
@@ -148,7 +147,6 @@ void decode_recompiled(uint32 addr)
       }
 
     addr_recompiled = addr;
-    //printf("\n");
 }
 
 char* get_recompiled_opcode(uint32 addr, int index)
@@ -439,7 +437,7 @@ int get_memory_type(uint32 addr){
   else if((readfunc == read_mi) || (readfunc == read_mi_break))
     return MEM_MI;
   else
-    printf("Unknown memory type in get_memory_type: %x\n", readfunc);
+    DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger get_memory_type(): %x", readfunc);
 }
 
 void activate_memory_break_read(uint32 addr) {
@@ -560,7 +558,7 @@ void activate_memory_break_read(uint32 addr) {
         readmemd[addr >> 16] = read_romd_break;
    }
    else
-        printf("Unknown memory type in activate_memory_break_read: %x\n", readfunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_read(): %x", readfunc);
 }
 
 void deactivate_memory_break_read(uint32 addr) {
@@ -681,7 +679,7 @@ void deactivate_memory_break_read(uint32 addr) {
         readmemd[addr >> 16] = read_romd;
     }
     else
-        printf("Unknown memory type in deactivate_memory_break_read: %x\n", readfunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_read(): %x", readfunc);
 }
 
 void activate_memory_break_write(uint32 addr) {
@@ -808,7 +806,7 @@ void activate_memory_break_write(uint32 addr) {
         writememd[addr >> 16] = write_nothingd_break;
    }
    else
-        printf("Unknown memory type in activate_memory_break_write: %x\n", writefunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_write(): %x", writefunc);
 }
 
 void deactivate_memory_break_write(uint32 addr) {
@@ -935,7 +933,7 @@ void deactivate_memory_break_write(uint32 addr) {
         writememd[addr >> 16] = write_nothingd;
     }
     else
-        printf("Unknown memory type in deactivate_memory_break_write: %x\n", writefunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_write(): %x", writefunc);
 }
 
 /* Following are the breakpoint functions for memory access calls.  See debugger/memory.h

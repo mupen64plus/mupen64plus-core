@@ -20,7 +20,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -382,7 +381,6 @@ void romdatabase_open(void)
                     if(buffer[stringlength+namelength]=='\n'||buffer[stringlength+namelength]=='\r')
                         buffer[stringlength+namelength] = '\0';
                     snprintf(search->entry.goodname, namelength, "%s", buffer+stringlength+1);
-                    /* printf("Name: %s, Length: %d\n", search->entry.goodname, namelength-1); */
                     }
                 else if(!strcmp(buffer, "CRC"))
                     {
@@ -415,7 +413,6 @@ void romdatabase_open(void)
                     /* Lookup reference MD5 and replace non-default entries. */
                     if((entry = ini_search_by_md5(search->entry.refmd5))!=&empty_entry)
                         {
-                        /* printf("RefMD5: %s\n", aux->goodname); */
                         if(entry->savetype!=DEFAULT)
                             search->entry.savetype = entry->savetype;
                         if(entry->status!=0)

@@ -47,7 +47,7 @@ void print_pif()
 {
    int i;
    for (i=0; i<(64/8); i++)
-     printf("%x %x %x %x | %x %x %x %x\n",
+     DebugMessage(M64MSG_INFO, "%x %x %x %x | %x %x %x %x",
         PIF_RAMb[i*8+0], PIF_RAMb[i*8+1],PIF_RAMb[i*8+2], PIF_RAMb[i*8+3],
         PIF_RAMb[i*8+4], PIF_RAMb[i*8+5],PIF_RAMb[i*8+6], PIF_RAMb[i*8+7]);
    getchar();
@@ -140,7 +140,7 @@ void EepromCommand(unsigned char *Command)
       }
     break;
       default:
-    printf("unknown command in EepromCommand : %x\n", Command[2]);
+    DebugMessage(M64MSG_ERROR, "unknown command in EepromCommand(): %x", Command[2]);
      }
 }
 
@@ -406,7 +406,7 @@ void update_pif_write()
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF
-   printf("write\n");
+   DebugMessage(M64MSG_INFO, "update_pif_write()");
    print_pif();
 #endif
    if (PIF_RAMb[0x3F] > 1)
@@ -422,9 +422,9 @@ void update_pif_write()
                return;
             }
            }
-         printf("unknown pif2 code:\n");
+         DebugMessage(M64MSG_ERROR, "update_pif_write(): unknown pif2 code:");
          for (i=(64-2*8)/8; i<(64/8); i++)
-           printf("%x %x %x %x | %x %x %x %x\n",
+           DebugMessage(M64MSG_ERROR, "%x %x %x %x | %x %x %x %x",
               PIF_RAMb[i*8+0], PIF_RAMb[i*8+1],PIF_RAMb[i*8+2], PIF_RAMb[i*8+3],
               PIF_RAMb[i*8+4], PIF_RAMb[i*8+5],PIF_RAMb[i*8+6], PIF_RAMb[i*8+7]);
          break;
@@ -432,7 +432,7 @@ void update_pif_write()
          PIF_RAMb[0x3F] = 0;
          break;
        default:
-         printf("error in update_pif_write : %x\n", PIF_RAMb[0x3F]);
+         DebugMessage(M64MSG_ERROR, "error in update_pif_write(): %x", PIF_RAMb[0x3F]);
       }
     return;
      }
@@ -460,7 +460,7 @@ void update_pif_write()
           else if (channel == 4)
             EepromCommand(&PIF_RAMb[i]);
           else
-            printf("channel >= 4 in update_pif_write\n");
+            DebugMessage(M64MSG_ERROR, "channel >= 4 in update_pif_write");
           i += PIF_RAMb[i] + (PIF_RAMb[(i+1)] & 0x3F) + 1;
           channel++;
            }
@@ -480,7 +480,7 @@ void update_pif_read()
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF
-   printf("read\n");
+   DebugMessage(M64MSG_INFO, "update_pif_read()");
    print_pif();
 #endif
    while (i<0x40)

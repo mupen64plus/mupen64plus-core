@@ -123,7 +123,6 @@ unsigned int virtual_to_physical_address(unsigned int addresse, int w)
            }
          else
            {
-          printf("tlb refill inconnu\n");
           TLB_refill_exception(addresse,w);
            }
       }

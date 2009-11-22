@@ -27,7 +27,6 @@
  * if you want to implement an interface, you should look here
  */
  
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -241,7 +240,7 @@ void main_toggle_pause(void)
 
     if (rompause)
     {
-        DebugMessage(M64MSG_STATUS, tr("Emulation continued.\n"));
+        DebugMessage(M64MSG_STATUS, tr("Emulation continued."));
         if(l_msgPause)
         {
             osd_delete_message(l_msgPause);
@@ -253,8 +252,8 @@ void main_toggle_pause(void)
         if(l_msgPause)
             osd_delete_message(l_msgPause);
 
-        DebugMessage(M64MSG_STATUS, tr("Emulation paused.\n"));
-        l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused\n"));
+        DebugMessage(M64MSG_STATUS, tr("Emulation paused."));
+        l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused"));
         osd_message_set_static(l_msgPause);
     }
 
@@ -502,7 +501,7 @@ void main_stop(void)
     if (!g_EmulatorRunning)
         return;
 
-    DebugMessage(M64MSG_STATUS, tr("Stopping emulation.\n"));
+    DebugMessage(M64MSG_STATUS, tr("Stopping emulation."));
     if(l_msgPause)
     {
         osd_delete_message(l_msgPause);

@@ -19,7 +19,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "memory.h"
@@ -33,6 +32,8 @@
 #include "r4300/recomph.h"
 #include "r4300/ops.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
@@ -118,7 +119,7 @@ static int firstFrameBufferSetting;
 int init_memory(int DoByteSwap)
 {
    int i;
-//printf("Are we byteswapping? %d\n", DoByteSwap);
+
    if (DoByteSwap != 0)
    {
     //swap rom
@@ -998,7 +999,7 @@ int init_memory(int DoByteSwap)
    fast_memory = 1;
    firstFrameBufferSetting = 1;
    
-   printf("memory initialized\n");
+   DebugMessage(M64MSG_VERBOSE, "Memory initialized");
    return 0;
 }
 
@@ -1378,7 +1379,6 @@ void update_SP()
         }
         else
         {
-            //printf("other task\n");
             rsp_register.rsp_pc &= 0xFFF;
             doRspCycles(100);
             rsp_register.rsp_pc |= save_pc;
@@ -1388,10 +1388,6 @@ void update_SP()
             update_count();
             add_interupt_event(SP_INT, 0/*100*/);
         }
-        //printf("unknown task type\n");
-        /*if (hle) execute_dlist();
-        //if (hle) processDList();
-        else sp_register.halt = 0;*/
     }
 }
 
@@ -3431,22 +3427,22 @@ void read_flashram_status()
     use_flashram = 1;
      }
    else
-     printf("unknown read in read_flashram_status\n");
+     DebugMessage(M64MSG_ERROR, "unknown read in read_flashram_status()");
 }
 
 void read_flashram_statusb()
 {
-   printf("read_flashram_statusb\n");
+   DebugMessage(M64MSG_ERROR, "read_flashram_statusb() not implemented");
 }
 
 void read_flashram_statush()
 {
-   printf("read_flashram_statush\n");
+   DebugMessage(M64MSG_ERROR, "read_flashram_statush() not implemented");
 }
 
 void read_flashram_statusd()
 {
-   printf("read_flashram_statusd\n");
+   DebugMessage(M64MSG_ERROR, "read_flashram_statusd() not implemented");
 }
 
 void write_flashram_dummy()
@@ -3473,22 +3469,22 @@ void write_flashram_command()
     use_flashram = 1;
      }
    else
-     printf("unknown write in write_flashram_command\n");
+     DebugMessage(M64MSG_ERROR, "unknown write in write_flashram_command()");
 }
 
 void write_flashram_commandb()
 {
-   printf("write_flashram_commandb\n");
+   DebugMessage(M64MSG_ERROR, "write_flashram_commandb() not implemented");
 }
 
 void write_flashram_commandh()
 {
-   printf("write_flashram_commandh\n");
+   DebugMessage(M64MSG_ERROR, "write_flashram_commandh() not implemented");
 }
 
 void write_flashram_commandd()
 {
-   printf("write_flashram_commandd\n");
+   DebugMessage(M64MSG_ERROR, "write_flashram_commandd() not implemented");
 }
 
 static unsigned int lastwrite = 0;
@@ -3527,67 +3523,62 @@ void write_rom()
 
 void read_pif()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in reading a word in PIF\n");
-    *rdword = 0;
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "reading a word in PIF at invalid address 0x%x", address);
+       *rdword = 0;
+       return;
+   }
+
    *rdword = sl(*((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)));
 }
 
 void read_pifb()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in reading a byte in PIF\n");
-    *rdword = 0;
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "reading a byte in PIF at invalid address 0x%x", address);
+       *rdword = 0;
+       return;
+   }
+
    *rdword = *(PIF_RAMb + ((address & 0x7FF) - 0x7C0));
 }
 
 void read_pifh()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in reading a hword in PIF\n");
-    *rdword = 0;
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "reading a hword in PIF at invalid address 0x%x", address);
+       *rdword = 0;
+       return;
+   }
+
    *rdword = (*(PIF_RAMb + ((address & 0x7FF) - 0x7C0)) << 8) |
-     *(PIF_RAMb + (((address+1) & 0x7FF) - 0x7C0));;
+     *(PIF_RAMb + (((address+1) & 0x7FF) - 0x7C0));
 }
 
 void read_pifd()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in reading a double word in PIF\n");
-    *rdword = 0;
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "reading a double word in PIF in invalid address 0x%x", address);
+       *rdword = 0;
+       return;
+   }
+
    *rdword = ((unsigned long long)sl(*((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0))) << 32)|
      sl(*((unsigned int *)(PIF_RAMb + ((address+4) & 0x7FF) - 0x7C0)));
 }
 
 void write_pif()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in writing a word in PIF\n");
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "writing a word in PIF at invalid address 0x%x", address);
+       return;
+   }
+
    *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) = sl(word);
    if ((address & 0x7FF) == 0x7FC)
      {
@@ -3604,13 +3595,12 @@ void write_pif()
 
 void write_pifb()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in writing a byte in PIF\n");
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "writing a byte in PIF at invalid address 0x%x", address);
+       return;
+   }
+
    *(PIF_RAMb + (address & 0x7FF) - 0x7C0) = byte;
    if ((address & 0x7FF) == 0x7FF)
      {
@@ -3627,13 +3617,12 @@ void write_pifb()
 
 void write_pifh()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in writing a hword in PIF\n");
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "writing a hword in PIF at invalid address 0x%x", address);
+       return;
+   }
+
    *(PIF_RAMb + (address & 0x7FF) - 0x7C0) = hword >> 8;
    *(PIF_RAMb + ((address+1) & 0x7FF) - 0x7C0) = hword & 0xFF;
    if ((address & 0x7FF) == 0x7FE)
@@ -3651,13 +3640,12 @@ void write_pifh()
 
 void write_pifd()
 {
-#ifdef EMU64_DEBUG
    if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
-     {
-    printf("error in writing a double word in PIF\n");
-    return;
-     }
-#endif
+   {
+       DebugMessage(M64MSG_ERROR, "writing a double word in PIF at 0x%x", address);
+       return;
+   }
+
    *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) =
      sl((unsigned int)(dword >> 32));
    *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) =

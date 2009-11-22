@@ -256,7 +256,7 @@ void dma_write_flashram()
             write_pointer = pi_register.pi_dram_addr_reg;
             break;
         default:
-            printf("unknown dma_read_flashram:%x\n", mode);
+            DebugMessage(M64MSG_ERROR, "unknown dma_write_flashram: %x", mode);
             stop=1;
             break;
     }

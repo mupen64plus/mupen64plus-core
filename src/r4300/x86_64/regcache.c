@@ -24,6 +24,8 @@
 
 #include "regcache.h"
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/recomph.h"
@@ -83,11 +85,11 @@ void free_all_registers(void)
     int mipsop = -5;
     if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || /* -5 = regcache flushing */
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
     x86addr = (long) ((*inst_pointer) + code_length);
     if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-        printf("Error writing R4300 instruction address profiling data\n");
+        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
   }
 #endif
 }
@@ -652,7 +654,7 @@ void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_block* bl
    int mipsop = -4;
    if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-       printf("Error writing R4300 instruction address profiling data\n");
+       DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
 
    *pCode++ = 0x48;
@@ -693,7 +695,7 @@ void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_block* bl
        pCode += 4;
        if (riprel >= 0x7fffffffLL || riprel < -0x80000000LL)
        {
-         printf("build_wrapper error: reg[%i] offset too big for relative address from %lx to %lx\n", 
+         DebugMessage(M64MSG_ERROR, "build_wrapper error: reg[%i] offset too big for relative address from %lx to %lx",
                 i, (long) (&reg[0]), (long) instr->reg_cache_infos.needed_registers[i]);
          asm(" int $3; ");
        }
