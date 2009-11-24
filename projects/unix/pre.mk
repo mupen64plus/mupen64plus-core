@@ -23,6 +23,7 @@
 # IA64, M32R, M68K, MIPS, S390, SH3, SH4, SPARC
 HOST_CPU ?= $(shell uname -m)
 NO_ASM ?= 1
+
 ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
   CPU := X86
   ifeq ("$(BITS)", "32")
@@ -146,7 +147,6 @@ ifeq ("$(UNAME)","linux")
 endif
 ifeq ("$(UNAME)","Darwin")
   OS = OSX
-  LDFLAGS += -liconv -lpng
 endif
 ifeq ("$(UNAME)","FreeBSD")
   OS = FREEBSD
@@ -235,36 +235,55 @@ endif
 
 # set base CFLAGS and LDFLAGS
 CFLAGS += -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing
-ifneq ($(OS), FREEBSD)
-  CFLAGS += -pipe -O3
-endif
 
-ifeq ($(OS), FREEBSD)
-  CORE_LDFLAGS += -lz -lm -lpng -lfreetype
-else
-  CORE_LDFLAGS += -lz -lm -lpng -lfreetype -ldl
+# tweak flags for 32-bit build on 64-bit system
+ifeq ($(ARCH_DETECTED), 64BITS_32)
+  ifeq ($(OS), FREEBSD)
+    $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
+  endif
+  CFLAGS += -m32
+  LDFLAGS += -m32 -m elf_i386
 endif
 
 # set special flags per-system
-ifneq ($(OS), FREEBSD)
+ifeq ($(OS), FREEBSD)
+  CORE_LDFLAGS += -lz -lm -lpng -lfreetype
+  PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
+  SO_EXTENSION   = so
+  LIBGL_LIBS     = -L${LOCALBASE}/lib -lGL -lGLU
+endif
+ifeq ($(OS), LINUX)
+  CORE_LDFLAGS += -lz -lm -lpng -lfreetype -ldl
+  PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
+  SO_EXTENSION   = so
+  LIBGL_LIBS     = -L/usr/X11R6/lib -lGL -lGLU
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -march=athlon64
+      CFLAGS += -pipe -O3 -march=athlon64
     else
-      CFLAGS += -mmmx -msse -march=i686 -mtune=pentium-m
+      CFLAGS += -pipe -O3 -mmmx -msse -march=i686 -mtune=pentium-m
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
       endif
     endif
-    # tweak flags for 32-bit build on 64-bit system
-    ifeq ($(ARCH_DETECTED), 64BITS_32)
-      CFLAGS += -m32
-      LDFLAGS += -m32 -m elf_i386
-    endif
   endif
-else
-  ifeq ($(ARCH_DETECTED), 64BITS_32)
-    $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
+endif
+ifeq ($(OS), OSX)
+  CORE_LDFLAGS += -lz -lm -lpng -lfreetype -ldl
+  PLUGIN_LDFLAGS = -bundle -read_only_relocs suppress
+  SO_EXTENSION   = dylib
+  LIBGL_LIBS     = -framework OpenGL
+  ifeq ($(CPU), X86)
+    ifeq ($(ARCH_DETECTED), 64BITS)
+      CFLAGS += -pipe -O3 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      LDFLAGS += -arch x86_64
+    else
+      CFLAGS += -pipe -O3 -mmmx -msse -arch i686 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      LDFLAGS += -arch i686
+      ifneq ($(PROFILE), 1)
+        CFLAGS += -fomit-frame-pointer
+      endif
+    endif
   endif
 endif
 ifeq ($(CPU), PPC)
@@ -272,23 +291,6 @@ ifeq ($(CPU), PPC)
 endif
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -D_BIG_ENDIAN
-endif
-
-# set CFLAGS, LIBS, and LDFLAGS according to the target OS
-ifeq ($(OS),FREEBSD)
-  PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
-  SO_EXTENSION   = so
-  LIBGL_LIBS     = -L${LOCALBASE}/lib -lGL -lGLU
-endif
-ifeq ($(OS),LINUX)
-  PLUGIN_LDFLAGS = -Wl,-Bsymbolic -shared
-  SO_EXTENSION   = so
-  LIBGL_LIBS     = -L/usr/X11R6/lib -lGL -lGLU
-endif
-ifeq ($(OS),OSX)
-  PLUGIN_LDFLAGS = -bundle -read_only_relocs suppress
-  SO_EXTENSION   = dylib
-  LIBGL_LIBS     = -framework OpenGL
 endif
 
 # set flags for compile options.
