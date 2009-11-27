@@ -138,8 +138,6 @@ typedef enum {
 typedef struct {
   unsigned int address;
   int          value;
-  int          flags;     /* Or'd combination of flags: 1=optional code, 2=activate option */
-  int          reserved;
 } m64p_cheat_code;
 
 /* ----------------------------------------- */

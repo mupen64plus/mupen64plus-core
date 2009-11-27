@@ -31,6 +31,7 @@
 #include "config.h"
 #include "vidext.h"
 
+#include "main/cheat.h"
 #include "main/eventloop.h"
 #include "main/main.h"
 #include "main/rom.h"
@@ -87,7 +88,6 @@ EXPORT m64p_error CALL CoreShutdown(void)
         return M64ERR_NOT_INIT;
 
     /* close down some core sub-systems */
-    cheat_delete_all(); /* fixme: should this be somewhere else? */
     romdatabase_close();
     tr_delete_languages();
 
@@ -147,12 +147,17 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INPUT_ASSERT;
             rval = open_rom((const char *) ParamPtr, ParamInt);
             if (rval == M64ERR_SUCCESS)
+            {
                 l_ROMOpen = 1;
+                cheat_init();
+            }
             return rval;
         case M64CMD_ROM_CLOSE:
             if (g_EmulatorRunning || !l_ROMOpen)
                 return M64ERR_INVALID_STATE;
             l_ROMOpen = 0;
+            cheat_delete_all();
+            cheat_uninit();
             return close_rom();
         case M64CMD_ROM_GET_HEADER:
             if (!l_ROMOpen || ROM_HEADER == NULL)
@@ -261,24 +266,29 @@ EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *Code
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (CheatName == NULL || CodeList == NULL)
+        return M64ERR_INPUT_ASSERT;
+    if (strlen(CheatName) < 1 || NumCodes < 1)
+        return M64ERR_INPUT_INVALID;
 
-    return M64ERR_INTERNAL;
+    if (cheat_add_new(CheatName, CodeList, NumCodes))
+        return M64ERR_SUCCESS;
+
+    return M64ERR_INPUT_INVALID;
 }
 
-EXPORT m64p_error CALL CoreRemoveCheat(const char *CheatName)
+EXPORT m64p_error CALL CoreCheatEnabled(const char *CheatName, int Enabled)
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (CheatName == NULL)
+        return M64ERR_INPUT_ASSERT;
 
-    return M64ERR_INTERNAL;
+    if (cheat_set_enabled(CheatName, Enabled))
+        return M64ERR_SUCCESS;
+
+    return M64ERR_INPUT_INVALID;
 }
 
-EXPORT m64p_error CALL CoreRemoveAllCheats(void)
-{
-    if (!l_CoreInit)
-        return M64ERR_NOT_INIT;
-
-    return M64ERR_INTERNAL;
-}
 
 

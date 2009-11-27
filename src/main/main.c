@@ -538,9 +538,6 @@ int main_run(void)
         init_debugger();
 #endif
 
-    /* load cheats for the current rom  */
-    cheat_load_current_rom();
-
     /* Startup message on the OSD */
     osd_new_message(OSD_MIDDLE_CENTER, "Mupen64Plus Started...");
 
@@ -563,7 +560,6 @@ int main_run(void)
         osd_exit();
     }
 
-    cheat_unload_current_rom();
     romClosed_RSP();
     romClosed_input();
     romClosed_audio();

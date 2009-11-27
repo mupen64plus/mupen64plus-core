@@ -79,20 +79,12 @@ typedef m64p_error (*ptr_CoreOverrideVidExt)(m64p_video_extension_functions *);
  */
 typedef m64p_error (*ptr_CoreAddCheat)(const char *, m64p_cheat_code *, int);
 
-/* CoreRemoveCheat()
+/* CoreCheatEnabled()
  *
- * This function removes one Cheat Function from the list of currently active
- * cheats. 
+ * This function will enable or disable a Cheat Function which is in the list of
+ * currently active cheats.
  */
-typedef m64p_error (*ptr_CoreRemoveCheat)(const char *);
-
-/* CoreRemoveAllCheats()
- *
- * This function removes all Cheat Functions from the list of currently active
- * cheats. 
- */
-typedef m64p_error (*ptr_CoreRemoveAllCheats)(void);
-
+typedef m64p_error (*ptr_CoreCheatEnabled)(const char *, int);
 
 #endif /* #define M64P_FRONTEND_H */
 
