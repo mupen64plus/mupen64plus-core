@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #include "savestates.h"
 #include "main.h"
@@ -59,6 +60,7 @@ void savestates_select_slot(unsigned int s)
         return;
     slot = s;
     ConfigSetParameter(g_CoreConfig, "CurrentSaveSlot", M64TYPE_INT, &s);
+    StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 
     if(rom)
         {
@@ -92,6 +94,7 @@ void savestates_inc_slot(void)
 {
     if(++slot>9)
         slot = 0;
+    StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
 void savestates_select_filename(const char* fn)

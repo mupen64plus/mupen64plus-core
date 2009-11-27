@@ -30,10 +30,13 @@
 
 /* pointer types to the callback functions in the front-end application */
 typedef void (*ptr_DebugCallback)(void *Context, int level, const char *message);
+typedef void (*ptr_StateCallback)(void *Context, m64p_core_param param_type, int new_value);
 
 /* Functions for use by the Core, to send information back to the front-end app */
 extern m64p_error SetDebugCallback(ptr_DebugCallback pFunc, void *Context);
+extern m64p_error SetStateCallback(ptr_StateCallback pFunc, void *Context);
 extern void       DebugMessage(int level, const char *message, ...);
+extern void       StateChanged(m64p_core_param param_type, int new_value);
 
 #endif /* API_CALLBACKS_H */
 

@@ -52,8 +52,9 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     if (l_CoreInit)
         return M64ERR_ALREADY_INIT;
 
-    /* very first thing is to set the callback function for debug info */
+    /* very first thing is to set the callback functions for debug info and state changing*/
     SetDebugCallback(DebugCallback, Context);
+    SetStateCallback(StateCallback, Context2);
 
     /* check front-end's API version */
     if (APIVersion < MINIMUM_FRONTEND_API_VERSION)

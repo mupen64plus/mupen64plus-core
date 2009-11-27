@@ -28,6 +28,7 @@
 #include <SDL.h>
 
 #include "m64p_types.h"
+#include "callbacks.h"
 
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -101,7 +102,10 @@ EXPORT m64p_error CALL VidExt_Quit(void)
     {
         m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncQuit)();
         if (rval == M64ERR_SUCCESS)
+        {
             l_VideoOutputActive = 0;
+            StateChanged(M64CORE_VIDEO_MODE, M64VIDEO_NONE);
+        }
         return rval;
     }
 
@@ -109,6 +113,7 @@ EXPORT m64p_error CALL VidExt_Quit(void)
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     l_pScreen = NULL;
     l_VideoOutputActive = 0;
+    StateChanged(M64CORE_VIDEO_MODE, M64VIDEO_NONE);
 
     return M64ERR_SUCCESS;
 }
@@ -166,6 +171,8 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
         m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncSetMode)(Width, Height, BitsPerPixel, ScreenMode);
         l_Fullscreen = (rval == M64ERR_SUCCESS && ScreenMode == M64VIDEO_FULLSCREEN);
         l_VideoOutputActive = (rval == M64ERR_SUCCESS);
+        if (l_VideoOutputActive)
+            StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
         return rval;
     }
 
@@ -206,6 +213,7 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 
     l_Fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
     l_VideoOutputActive = 1;
+    StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
     return M64ERR_SUCCESS;
 }
 
@@ -227,13 +235,17 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
     {
         m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncToggleFS)();
         if (rval == M64ERR_SUCCESS)
+        {
             l_Fullscreen = !l_Fullscreen;
+            StateChanged(M64CORE_VIDEO_MODE, l_Fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED);
+        }
         return rval;
     }
 
     if (SDL_WM_ToggleFullScreen(l_pScreen) == 1)
     {
         l_Fullscreen = !l_Fullscreen;
+        StateChanged(M64CORE_VIDEO_MODE, l_Fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED);
         return M64ERR_SUCCESS;
     }
 

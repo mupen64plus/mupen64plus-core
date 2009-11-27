@@ -193,6 +193,7 @@ void main_speeddown(int percent)
         l_SpeedFactor -= percent;
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
     }
 }
 
@@ -203,6 +204,7 @@ void main_speedup(int percent)
         l_SpeedFactor += percent;
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
     }
 }
 
@@ -217,6 +219,7 @@ void main_set_fastforward(int enable)
         SavedSpeedFactor = l_SpeedFactor;
         l_SpeedFactor = 250;
         setSpeedFactor(l_SpeedFactor);  /* call to audio plugin */
+        StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
         // set fast-forward indicator
         l_msgFF = osd_new_message(OSD_TOP_RIGHT, "Fast Forward");
         osd_message_set_static(l_msgFF);
@@ -226,6 +229,7 @@ void main_set_fastforward(int enable)
         ff_state = 0; /* de-activate fast-forward */
         l_SpeedFactor = SavedSpeedFactor;
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
         // remove message
         osd_delete_message(l_msgFF);
         l_msgFF = NULL;
@@ -251,6 +255,7 @@ void main_toggle_pause(void)
             osd_delete_message(l_msgPause);
             l_msgPause = NULL;
         }
+        StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
     else
     {
@@ -260,6 +265,7 @@ void main_toggle_pause(void)
         DebugMessage(M64MSG_STATUS, "Emulation paused.");
         l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, "Paused");
         osd_message_set_static(l_msgPause);
+        StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 
     rompause = !rompause;
@@ -270,6 +276,7 @@ void main_advance_one(void)
 {
     l_FrameAdvance = 1;
     rompause = 0;
+    StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 }
 
 void main_draw_volume_osd(void)
@@ -469,6 +476,7 @@ void new_vi(void)
     if (l_FrameAdvance) {
         rompause = 1;
         l_FrameAdvance = 0;
+        StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 }
 
@@ -481,6 +489,7 @@ int main_run(void)
     VILimitMilliseconds = (double) 1000.0/VILimit; 
 
     g_EmulatorRunning = 1;
+    StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -566,6 +575,7 @@ int main_run(void)
 
     // clean up
     g_EmulatorRunning = 0;
+    StateChanged(M64CORE_EMU_STATE, M64EMU_STOPPED);
 
     SDL_Quit();
 
@@ -590,7 +600,11 @@ void main_stop(void)
         osd_delete_message(l_msgFF);
         l_msgFF = NULL;
     }
-    rompause = 0;
+    if (rompause)
+    {
+        rompause = 0;
+        StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
+    }
     stop_it();
 #ifdef DBG
     if(debugger_mode)
