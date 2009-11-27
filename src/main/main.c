@@ -419,6 +419,12 @@ void new_frame(void)
 
     /* advance the current frame */
     l_CurrentFrame++;
+
+    if (l_FrameAdvance) {
+        rompause = 1;
+        l_FrameAdvance = 0;
+        StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
+    }
 }
 
 void new_vi(void)
@@ -473,11 +479,6 @@ void new_vi(void)
     
     LastFPSTime = CurrentFPSTime ;
     end_section(IDLE_SECTION);
-    if (l_FrameAdvance) {
-        rompause = 1;
-        l_FrameAdvance = 0;
-        StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
-    }
 }
 
 /*********************************************************************************************************
