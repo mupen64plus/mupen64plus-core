@@ -112,7 +112,6 @@ SRC_CORE = \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
-	$(SRCDIR)/main/translate.c \
 	$(SRCDIR)/main/adler32.c \
 	$(SRCDIR)/main/zip/ioapi.c \
 	$(SRCDIR)/main/zip/zip.c \

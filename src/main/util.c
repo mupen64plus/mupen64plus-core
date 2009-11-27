@@ -34,7 +34,6 @@
 
 #include "rom.h"
 #include "util.h"
-#include "translate.h"
 
 /** trim
  *    Removes leading and trailing whitespace from str. Function modifies str
@@ -408,52 +407,52 @@ void countrycodestring(unsigned short countrycode, char *string)
     switch (countrycode)
     {
     case 0:    /* Demo */
-        strcpy(string, tr("Demo"));
+        strcpy(string, "Demo");
         break;
 
     case '7':  /* Beta */
-        strcpy(string, tr("Beta"));
+        strcpy(string, "Beta");
         break;
 
     case 0x41: /* Japan / USA */
-        strcpy(string, tr("USA/Japan"));
+        strcpy(string, "USA/Japan");
         break;
 
     case 0x44: /* Germany */
-        strcpy(string, tr("Germany"));
+        strcpy(string, "Germany");
         break;
 
     case 0x45: /* USA */
-        strcpy(string, tr("USA"));
+        strcpy(string, "USA");
         break;
 
     case 0x46: /* France */
-        strcpy(string, tr("France"));
+        strcpy(string, "France");
         break;
 
     case 'I':  /* Italy */
-        strcpy(string, tr("Italy"));
+        strcpy(string, "Italy");
         break;
 
     case 0x4A: /* Japan */
-        strcpy(string, tr("Japan"));
+        strcpy(string, "Japan");
         break;
 
     case 'S':  /* Spain */
-        strcpy(string, tr("Spain"));
+        strcpy(string, "Spain");
         break;
 
     case 0x55: case 0x59:  /* Australia */
-        sprintf(string, tr("Australia (0x%2.2X)"), countrycode);
+        sprintf(string, "Australia (0x%2.2X)", countrycode);
         break;
 
     case 0x50: case 0x58: case 0x20:
     case 0x21: case 0x38: case 0x70:
-        sprintf(string, tr("Europe (0x%02X)"), countrycode);
+        sprintf(string, "Europe (0x%02X)", countrycode);
         break;
 
     default:
-        sprintf(string, tr("Unknown (0x%02X)"), countrycode);
+        sprintf(string, "Unknown (0x%02X)", countrycode);
         break;
     }
 }
@@ -463,22 +462,22 @@ void compressionstring(unsigned char compressiontype, char *string)
     switch (compressiontype)
     {
     case UNCOMPRESSED:
-        strcpy(string, tr("Uncompressed"));
+        strcpy(string, "Uncompressed");
         break;
     case ZIP_COMPRESSION:
-        strcpy(string, tr("Zip"));
+        strcpy(string, "Zip");
         break;
     case GZIP_COMPRESSION:
-        strcpy(string, tr("Gzip"));
+        strcpy(string, "Gzip");
         break;
     case BZIP2_COMPRESSION:
-        strcpy(string, tr("Bzip2"));
+        strcpy(string, "Bzip2");
         break;
     case LZMA_COMPRESSION:
-        strcpy(string, tr("LZMA"));
+        strcpy(string, "LZMA");
         break;
     case SZIP_COMPRESSION:
-        strcpy(string, tr("7zip"));
+        strcpy(string, "7zip");
         break;
     default:
         string[0] = '\0';
@@ -490,13 +489,13 @@ void imagestring(unsigned char imagetype, char *string)
     switch (imagetype)
     {
     case Z64IMAGE:
-        strcpy(string, tr(".z64 (native)"));
+        strcpy(string, ".z64 (native)");
         break;
     case V64IMAGE:
-        strcpy(string, tr(".v64 (byteswapped)"));
+        strcpy(string, ".v64 (byteswapped)");
         break;
     case N64IMAGE:
-        strcpy(string, tr(".n64 (wordswapped)"));
+        strcpy(string, ".n64 (wordswapped)");
         break;
     default:
         string[0] = '\0';
@@ -508,19 +507,19 @@ void cicstring(unsigned char cic, char *string)
     switch (cic)
     {
     case CIC_NUS_6101:
-        strcpy(string, tr("CIC-NUS-6101"));
+        strcpy(string, "CIC-NUS-6101");
         break;
     case CIC_NUS_6102:
-        strcpy(string, tr("CIC-NUS-6102"));
+        strcpy(string, "CIC-NUS-6102");
         break;
     case CIC_NUS_6103:
-        strcpy(string, tr("CIC-NUS-6103"));
+        strcpy(string, "CIC-NUS-6103");
         break;
     case CIC_NUS_6105:
-        strcpy(string, tr("CIC-NUS-6105"));
+        strcpy(string, "CIC-NUS-6105");
         break;
     case CIC_NUS_6106:
-        strcpy(string, tr("CIC-NUS-6106"));
+        strcpy(string, "CIC-NUS-6106");
         break;
     default:
         string[0] = '\0';
@@ -532,10 +531,10 @@ void rumblestring(unsigned char rumble, char *string)
     switch (rumble)
     {
     case 1:
-        strcpy(string, tr("Yes"));
+        strcpy(string, "Yes");
         break;
     case 0:
-        strcpy(string, tr("No"));
+        strcpy(string, "No");
         break;
     default:
         string[0] = '\0';
@@ -547,22 +546,22 @@ void savestring(unsigned char savetype, char *string)
     switch (savetype)
     {
     case EEPROM_4KB:
-        strcpy(string, tr("Eeprom 4KB"));
+        strcpy(string, "Eeprom 4KB");
         break;
     case EEPROM_16KB:
-        strcpy(string, tr("Eeprom 16KB"));
+        strcpy(string, "Eeprom 16KB");
         break;
     case SRAM:
-        strcpy(string, tr("SRAM"));
+        strcpy(string, "SRAM");
         break;
     case FLASH_RAM:
-        strcpy(string, tr("Flash RAM"));
+        strcpy(string, "Flash RAM");
         break;
     case CONTROLLER_PACK:
-        strcpy(string, tr("Controller Pack"));
+        strcpy(string, "Controller Pack");
         break;
     case NONE:
-        strcpy(string, tr("None"));
+        strcpy(string, "None");
         break;
     default:
         string[0] = '\0';

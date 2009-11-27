@@ -28,7 +28,6 @@
 
 #include "savestates.h"
 #include "main.h"
-#include "translate.h"
 #include "rom.h"
 #include "util.h"
 
@@ -64,11 +63,11 @@ void savestates_select_slot(unsigned int s)
     if(rom)
         {
         char* filename = savestates_get_filename();
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Selected state file: %s"), filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state file: %s", filename);
         free(filename);
         }
     else
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Selected state slot: %d"), slot);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
 }
 
 /* Returns the currently selected save slot. */
@@ -219,7 +218,7 @@ void savestates_save()
     gzwrite(f, buffer, queuelength);
 
     gzclose(f);
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Saved state to: %s"), filename);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
     free(filename);
 }
 
@@ -253,7 +252,7 @@ void savestates_load()
 
     if(f==NULL)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Could not open state file: %s"), filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filename);
         free(filename);
         return;
         }
@@ -262,7 +261,7 @@ void savestates_load()
     gzread(f, buffer, 8);
     if(strncmp(buffer, savestate_magic, 8)!=0)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State file: %s is not a valid Mupen64plus savestate. Checking if in Project64 format..."), filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate. Checking if in Project64 format...", filename);
         free(filename);
         gzclose(f);
         savestates_load_pj64();
@@ -278,7 +277,7 @@ void savestates_load()
     i = (i << 8) | inbuf[3];
     if(i!=savestate_version)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State version (%08x) doesn't match current version (%08x)."), i, savestate_version);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) doesn't match current version (%08x).", i, savestate_version);
         free(filename);
         gzclose(f);
         return;
@@ -287,7 +286,7 @@ void savestates_load()
     gzread(f, buffer, 32);
     if(memcmp(buffer, ROM_SETTINGS.MD5, 32))
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State ROM MD5 does not match current ROM."));
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
         free(filename);
         gzclose(f);
         return;
@@ -362,7 +361,7 @@ void savestates_load()
     else
         last_addr = PC->addr;
 
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State loaded from: %s"), filename);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
     free(filename);
     fname[0] = 0;
 }
@@ -406,7 +405,7 @@ int savestates_save_pj64()
 
     if(zipfile==NULL)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Could not create PJ64 state file: %s"), filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filename);
         free(filename);
         return -2;
         }
@@ -415,7 +414,7 @@ int savestates_save_pj64()
     if(retval!=ZIP_OK)
         {
         zipClose(zipfile, "");
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Zip error. Could not create state file: %s"), filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not create state file: %s", filename);
         free(filename);
         return -3;
         }
@@ -495,7 +494,7 @@ int savestates_save_pj64()
 
     zipCloseFileInZip(zipfile);
     zipClose(zipfile, "");
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Saved state to: %s"), filename);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
     free(filename);
     return 1;
 }
@@ -546,7 +545,7 @@ void savestates_load_pj64()
     if(exit)
         {
         unzClose(zipstatefile);
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("Zip error. Could not open state file: %s"), file);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not open state file: %s", file);
         free(file);
         return;
         }
@@ -556,7 +555,7 @@ void savestates_load_pj64()
     if (magic!=pj64_magic)
         {
         unzClose(zipstatefile);
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State file: %s is not a valid Project64 savestate. Unrecognized file format."), file);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", file);
         free(file);
         return;
         }
@@ -566,7 +565,7 @@ void savestates_load_pj64()
     unzReadCurrentFile(zipstatefile, RomHeader, 0x40);
     if(memcmp(RomHeader, rom, 0x40)!=0) 
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State ROM header does not match current ROM."));
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
         unzClose(zipstatefile);
         free(file);
         return;
@@ -843,7 +842,7 @@ void savestates_load_pj64()
     else
         last_addr = PC->addr;
 
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, tr("State loaded from: %s"), filename);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
     free(filename);
     fname[0] = 0;
 }

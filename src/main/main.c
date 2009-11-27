@@ -41,7 +41,6 @@
 #include "eventloop.h"
 #include "rom.h"
 #include "savestates.h"
-#include "translate.h"
 
 #include "osal/files.h"
 #include "osd/osd.h"
@@ -182,7 +181,6 @@ void main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
-    ConfigSetDefaultString(g_CoreConfig, "Language", "English", "Language to use for messages from the core library");
 
     /* set config parameters for keyboard and joystick commands */
     event_set_core_defaults();
@@ -193,7 +191,7 @@ void main_speeddown(int percent)
     if (l_SpeedFactor - percent > 10)  /* 10% minimum speed */
     {
         l_SpeedFactor -= percent;
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
     }
 }
@@ -203,7 +201,7 @@ void main_speedup(int percent)
     if (l_SpeedFactor + percent < 300) /* 300% maximum speed */
     {
         l_SpeedFactor += percent;
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", tr("Playback speed:"), l_SpeedFactor);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
         setSpeedFactor(l_SpeedFactor);  // call to audio plugin
     }
 }
@@ -220,7 +218,7 @@ void main_set_fastforward(int enable)
         l_SpeedFactor = 250;
         setSpeedFactor(l_SpeedFactor);  /* call to audio plugin */
         // set fast-forward indicator
-        l_msgFF = osd_new_message(OSD_TOP_RIGHT, tr("Fast Forward"));
+        l_msgFF = osd_new_message(OSD_TOP_RIGHT, "Fast Forward");
         osd_message_set_static(l_msgFF);
     }
     else if (!enable && ff_state)
@@ -247,7 +245,7 @@ void main_toggle_pause(void)
 
     if (rompause)
     {
-        DebugMessage(M64MSG_STATUS, tr("Emulation continued."));
+        DebugMessage(M64MSG_STATUS, "Emulation continued.");
         if(l_msgPause)
         {
             osd_delete_message(l_msgPause);
@@ -259,8 +257,8 @@ void main_toggle_pause(void)
         if(l_msgPause)
             osd_delete_message(l_msgPause);
 
-        DebugMessage(M64MSG_STATUS, tr("Emulation paused."));
-        l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, tr("Paused"));
+        DebugMessage(M64MSG_STATUS, "Emulation paused.");
+        l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, "Paused");
         osd_message_set_static(l_msgPause);
     }
 
@@ -287,11 +285,11 @@ void main_draw_volume_osd(void)
     volString = volumeGetString();
     if (volString == NULL)
     {
-        strcpy(msgString, tr("Volume Not Supported."));
+        strcpy(msgString, "Volume Not Supported.");
     }
     else
     {
-        sprintf(msgString, "%s: %s", tr("Volume"), volString);
+        sprintf(msgString, "%s: %s", "Volume", volString);
         if (msgString[strlen(msgString) - 1] == '%')
             strcat(msgString, "%");
     }
@@ -581,7 +579,7 @@ void main_stop(void)
     if (!g_EmulatorRunning)
         return;
 
-    DebugMessage(M64MSG_STATUS, tr("Stopping emulation."));
+    DebugMessage(M64MSG_STATUS, "Stopping emulation.");
     if(l_msgPause)
     {
         osd_delete_message(l_msgPause);

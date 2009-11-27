@@ -30,7 +30,6 @@
 
 #include "md5.h"
 #include "rom.h"
-#include "translate.h"
 #include "main.h"
 #include "util.h"
 
@@ -111,12 +110,12 @@ m64p_error open_rom(const char* romimage, unsigned int size)
     /* check input requirements */
     if (rom != NULL)
     {
-        DebugMessage(M64MSG_ERROR, tr("open_rom(): previous ROM image was not freed"));
+        DebugMessage(M64MSG_ERROR, "open_rom(): previous ROM image was not freed");
         return M64ERR_INTERNAL;
     }
     if (romimage == NULL || !is_valid_rom(romimage))
     {
-        DebugMessage(M64MSG_ERROR, tr("open_rom(): not a valid ROM image"));
+        DebugMessage(M64MSG_ERROR, "open_rom(): not a valid ROM image");
         return M64ERR_INPUT_INVALID;
     }
 
@@ -212,7 +211,7 @@ m64p_error close_rom(void)
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
-    DebugMessage(M64MSG_STATUS, tr("Rom closed."));
+    DebugMessage(M64MSG_STATUS, "Rom closed.");
 
     return M64ERR_SUCCESS;
 }
