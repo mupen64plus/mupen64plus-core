@@ -72,9 +72,6 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
         return M64ERR_INTERNAL;
     main_set_core_defaults();
 
-    /* set up multi-language support */
-    tr_init();
-
     /* The ROM database contains MD5 hashes, goodnames, and some game-specific parameters */
     romdatabase_open();
 
@@ -89,7 +86,6 @@ EXPORT m64p_error CALL CoreShutdown(void)
 
     /* close down some core sub-systems */
     romdatabase_close();
-    tr_delete_languages();
 
     /* lastly, shut down the configuration code */
     ConfigShutdown();
