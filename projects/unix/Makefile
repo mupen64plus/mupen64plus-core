@@ -199,7 +199,7 @@ SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
 
 # add extra objects and libraries for selected options
-ifeq ($(DBG), 1)
+ifeq ($(DEBUGGER), 1)
   SOURCE +=  $(SRC_DBG)
   LIBS += -lopcodes -lbfd
 endif
@@ -234,8 +234,8 @@ targets:
 	@echo "    MANDIR=path   == path to install manual files (default: PREFIX/man/man1/)"
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
-	@echo "    DBGSYM=1      == add debugging symbols to binaries"
-	@echo "    DBG=1         == build graphical debugger"
+	@echo "    DEBUG=1       == add debugging symbols to binaries"
+	@echo "    DEBUGGER=1    == build graphical debugger"
 	@echo "    DBG_CORE=1    == print debugging info in r4300 core"
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
