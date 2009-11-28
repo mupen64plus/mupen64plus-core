@@ -22,6 +22,8 @@
 
 #include <SDL.h>
 
+#include "api/debugger.h"
+
 #include "dbg_types.h"
 #include "debugger.h"
 #include "dbg_breakpoints.h"
@@ -29,8 +31,7 @@
 // State of the Emulation Thread:
 // 0 -> pause, 2 -> run.
 
-int g_DebuggerEnabled = 0;    // whether the debugger is enabled or not
-int debugger_mode;
+int g_DebuggerActive = 0;    // whether the debugger is enabled or not
 int run;
 
 SDL_cond  *debugger_done_cond;
@@ -42,10 +43,10 @@ uint32 previousPC;
 
 void init_debugger()
 {
-    debugger_mode = 1;
+    g_DebuggerActive = 1;
     run = 0;
 
-    init_debugger_frontend();
+    DebuggerCallback(DEBUG_UI_INIT, 0); /* call front-end to initialize user interface */
 
     init_host_disassembler();
 
@@ -59,7 +60,7 @@ void destroy_debugger()
     mutex = NULL;
     SDL_DestroyCond(debugger_done_cond);
     debugger_done_cond = NULL;
-    debugger_mode = 0;
+    g_DebuggerActive = 0;
 }
 
 //]=-=-=-=-=-=-=-=-=-=-=-=-=[ Mise-a-Jour Debugger ]=-=-=-=-=-=-=-=-=-=-=-=-=[
@@ -82,7 +83,7 @@ void update_debugger(uint32 pc)
     }
 
     if(run!=2) {
-        update_debugger_frontend( pc );
+        DebuggerCallback(DEBUG_UI_UPDATE, pc);  /* call front-end to notify user interface to update */
     }
     if(run==0) {
         // Emulation thread is blocked until a button is clicked.
@@ -98,3 +99,5 @@ void debugger_step()
 {
     SDL_CondSignal(debugger_done_cond);
 }
+
+

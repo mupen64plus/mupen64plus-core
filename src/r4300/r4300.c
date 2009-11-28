@@ -99,7 +99,7 @@ void FIN_BLOCK()
      {
     jump_to((PC-1)->addr+4);
 /*#ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
 Used by dynarec only, check should be unnecessary
 */
@@ -113,7 +113,7 @@ Used by dynarec only, check should be unnecessary
     jump_to((PC-1)->addr+4);
     
 /*#ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
 Used by dynarec only, check should be unnecessary
 */
@@ -135,7 +135,7 @@ void J()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -153,7 +153,7 @@ void J_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -178,7 +178,7 @@ void JAL()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -201,7 +201,7 @@ void JAL_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -233,7 +233,7 @@ void BEQ()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -252,7 +252,7 @@ void BEQ_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -283,7 +283,7 @@ void BNE()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -302,7 +302,7 @@ void BNE_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -332,7 +332,7 @@ void BLEZ()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -350,7 +350,7 @@ void BLEZ_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -380,7 +380,7 @@ void BGTZ()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -398,7 +398,7 @@ void BGTZ_OUT()
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -483,7 +483,7 @@ void BEQL()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -508,7 +508,7 @@ void BEQL_OUT()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -545,7 +545,7 @@ void BNEL()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -570,7 +570,7 @@ void BNEL_OUT()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -607,7 +607,7 @@ void BLEZL()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -632,7 +632,7 @@ void BLEZL_OUT()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -669,7 +669,7 @@ void BGTZL()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -694,7 +694,7 @@ void BGTZL_OUT()
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -1414,7 +1414,7 @@ void NOTCOMPILED()
     else DebugMessage(M64MSG_ERROR, "not compiled exception");
      }
 /*#ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
 The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
@@ -1606,7 +1606,7 @@ void update_count()
      compare_core();
 #endif
 /*#ifdef DBG
-   if (debugger_mode && !delay_slot) update_debugger(PC->addr);
+   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
 #endif
 */
 }
@@ -1631,7 +1631,7 @@ void init_blocks()
    init_block((int *) SP_DMEM, blocks[0xa4000000>>12]);
    PC=actual->block+(0x40/4);
 /*#ifdef DBG //should only be needed by dynamic recompiler
-   if (debugger_mode) // debugger shows initial state (before 1st instruction).
+   if (g_DebuggerActive) // debugger shows initial state (before 1st instruction).
      update_debugger(PC->addr);
 #endif*/
 }
@@ -1893,7 +1893,7 @@ void r4300_execute()
             compare_core();
 #endif
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
             PC->ops();
         }

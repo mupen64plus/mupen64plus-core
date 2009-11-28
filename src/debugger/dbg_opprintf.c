@@ -103,7 +103,7 @@ static char *registers_a_cop[] =
 };
 
 /* The configuration word */
-static long mr4kd_conf = 
+static int mr4kd_conf = 
     MR4KD_SPACING(16) | MR4KD_RPREFIX | MR4KD_RLOWER | MR4KD_OLOWER;
 
 /* Copy a register name to dest */

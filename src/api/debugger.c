@@ -26,10 +26,46 @@
 #include <stdlib.h>
 
 #include "m64p_types.h"
+#include "debugger.h"
+
+/* local variables */
+static void (*callback_ui_init)(void) = NULL;
+static void (*callback_ui_update)(unsigned int) = NULL;
+static void (*callback_ui_vi)(void) = NULL;
+
+/* global Functions for use by the Core */
+
+void DebuggerCallback(eDbgCallbackType type, unsigned int param)
+{
+    if (type == DEBUG_UI_INIT)
+    {
+        if (callback_ui_init != NULL)
+            (*callback_ui_init)();
+    }
+    else if (type == DEBUG_UI_UPDATE)
+    {
+        if (callback_ui_update != NULL)
+            (*callback_ui_update)(param);
+    }
+    else if (type == DEBUG_UI_VI)
+    {
+        if (callback_ui_vi != NULL)
+            (*callback_ui_vi)();
+    }
+}
+
+/* exported functions for use by the front-end User Interface */
  
 EXPORT m64p_error CALL DebugSetCallbacks(void (*dbg_frontend_init)(void), void (*dbg_frontend_update)(unsigned int pc), void (*dbg_frontend_vi)(void))
 {
-  return M64ERR_INTERNAL;
+#ifdef DBG
+    callback_ui_init = dbg_frontend_init;
+    callback_ui_update = dbg_frontend_update;
+    callback_ui_vi = dbg_frontend_vi;
+    return M64ERR_SUCCESS;
+#else
+    return M64ERR_UNSUPPORTED;
+#endif
 }
 
 EXPORT m64p_error CALL DebugSetRunState(int runstate)

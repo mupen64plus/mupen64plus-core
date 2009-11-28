@@ -87,7 +87,7 @@ void JR(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -104,7 +104,7 @@ void JALR(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();

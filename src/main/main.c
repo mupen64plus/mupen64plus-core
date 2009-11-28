@@ -35,6 +35,7 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/config.h"
+#include "api/debugger.h"
 #include "api/vidext.h"
 
 #include "main.h"
@@ -177,6 +178,7 @@ void main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
     ConfigSetDefaultBool(g_CoreConfig, "DisableExtraMem", 0, "Disable 4MB expansion RAM pack. May be necessary for some games");
     ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
+    ConfigSetDefaultBool(g_CoreConfig, "EnableDebugger", 0, "Activate the R4300 debugger when ROM execution begins, if core was built with Debugger support");
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
     ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
@@ -441,9 +443,9 @@ void new_vi(void)
 
     start_section(IDLE_SECTION);
     VI_Counter++;
-    
+
 #ifdef DBG
-    if(debugger_mode) debugger_frontend_vi();
+    if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
 #endif
 
     if(LastFPSTime == 0)
@@ -541,8 +543,7 @@ int main_run(void)
 #endif // WITH_LIRC
 
 #ifdef DBG
-    /* fixme this needs some communication with front-end to work */
-    if (g_DebuggerEnabled)
+    if (ConfigGetParamBool(g_CoreConfig, "EnableDebugger"))
         init_debugger();
 #endif
 
@@ -559,7 +560,7 @@ int main_run(void)
 #endif // WITH_LIRC
 
 #ifdef DBG
-    if (debugger_mode)
+    if (g_DebuggerActive)
         destroy_debugger();
 #endif
 
@@ -608,7 +609,7 @@ void main_stop(void)
     }
     stop_it();
 #ifdef DBG
-    if(debugger_mode)
+    if(g_DebuggerActive)
     {
         debugger_step();
     }

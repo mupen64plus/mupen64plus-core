@@ -3106,7 +3106,7 @@ void pure_interpreter()
    PC->addr = last_addr = interp_addr;
 
 /*#ifdef DBG
-         if (debugger_mode)
+         if (g_DebuggerActive)
            update_debugger(PC->addr);
 #endif*/
 
@@ -3118,7 +3118,7 @@ void pure_interpreter()
 #endif
 #ifdef DBG
      PC->addr = interp_addr;
-     if (debugger_mode) update_debugger(PC->addr);
+     if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
      interp_ops[((op >> 26) & 0x3F)]();
    }
@@ -3140,7 +3140,7 @@ void interprete_section(unsigned int addr)
     interp_ops[((op >> 26) & 0x3F)]();
 #ifdef DBG
     PC->addr = interp_addr;
-    if (debugger_mode) update_debugger(PC->addr);
+    if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
      }
    PC->addr = interp_addr;

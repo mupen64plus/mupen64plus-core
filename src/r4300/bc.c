@@ -35,7 +35,7 @@ void BC1F(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -53,7 +53,7 @@ void BC1F_OUT(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -83,7 +83,7 @@ void BC1T(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -101,7 +101,7 @@ void BC1T_OUT(void)
    PC++;
    delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
    PC->ops();
    update_count();
@@ -133,7 +133,7 @@ void BC1FL(void)
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -156,7 +156,7 @@ void BC1FL_OUT(void)
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -191,7 +191,7 @@ void BC1TL(void)
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();
@@ -214,7 +214,7 @@ void BC1TL_OUT(void)
     PC++;
     delay_slot=1;
 #ifdef DBG
-            if (debugger_mode) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
     PC->ops();
     update_count();

@@ -1,8 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - debugger.h                                              *
+ *   Mupen64plus-core - api/debugger.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2008 DarkJeztr                                          *
- *   Copyright (C) 2002 davFr                                              *
+ *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,21 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __DEBUGGER_H__
-#define __DEBUGGER_H__
+/* This file contains the definitions for debugger functions which will be
+ * called from the other Core modules
+ */
 
-extern int g_DebuggerActive;  /* True if the debugger is running */
+#if !defined(API_DEBUGGER_H)
+#define API_DEBUGGER_H
 
-/* State of the Emulation Thread:
-   0 -> pause, 1 -> step, 2 -> run. */
-extern int run;
+#include "m64p_types.h"
 
-extern uint32 previousPC;
+/* Debugger Definitions */
 
-void init_debugger();
-void update_debugger(uint32 pc);
-void destroy_debugger();
-void debugger_step();
+typedef enum {
+    DEBUG_UI_INIT = 1,
+    DEBUG_UI_UPDATE,
+    DEBUG_UI_VI
+  } eDbgCallbackType;
 
-#endif /* __DEBUGGER_H__ */
+/* Functions for use by the Core, to send information back to the front-end app */
+extern void DebuggerCallback(eDbgCallbackType type, unsigned int param);
+
+#endif /* API_CALLBACKS_H */
 
