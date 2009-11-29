@@ -26,7 +26,14 @@
 #include <stdlib.h>
 
 #include "m64p_types.h"
+#include "callbacks.h"
 #include "debugger.h"
+
+#include "debugger/dbg_types.h"
+#include "debugger/dbg_breakpoints.h"
+#include "debugger/dbg_decoder.h"
+#include "debugger/debugger.h"
+#include "r4300/r4300.h"
 
 /* local variables */
 static void (*callback_ui_init)(void) = NULL;
@@ -70,21 +77,60 @@ EXPORT m64p_error CALL DebugSetCallbacks(void (*dbg_frontend_init)(void), void (
 
 EXPORT m64p_error CALL DebugSetRunState(int runstate)
 {
-  return M64ERR_INTERNAL;
+#ifdef DBG
+    run = runstate; /* in debugger/debugger.c */
+    return M64ERR_SUCCESS;
+#else
+    return M64ERR_UNSUPPORTED;
+#endif
 }
 
 EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
 {
-  return 0;
+#ifdef DBG
+    switch (statenum)
+    {
+        case M64P_DBG_RUN_STATE:
+            return run;
+        case M64P_DBG_PREVIOUS_PC:
+            return previousPC;
+        case M64P_DBG_NUM_BREAKPOINTS:
+            return g_NumBreakpoints;
+        case M64P_DBG_CPU_DYNACORE:
+            return r4300emu;
+        case M64P_DBG_CPU_NEXT_INTERRUPT:
+            return next_interupt;
+        default:
+            DebugMessage(M64MSG_WARNING, "Front-end bug: invalid m64p_dbg_state input in DebugGetState()");
+            return 0;
+    }
+    return 0;
+#else
+    DebugMessage(M64MSG_ERROR, "Front-end bug: DebugGetState() called, but Debugger not supported in Core library");
+    return 0;
+#endif
 }
 
 EXPORT m64p_error CALL DebugStep(void)
 {
-  return M64ERR_INTERNAL;
+#ifdef DBG
+    if (!g_DebuggerActive)
+        return M64ERR_INVALID_STATE;
+    debugger_step(); /* in debugger/debugger.c */
+    return M64ERR_SUCCESS;
+#else
+    return M64ERR_UNSUPPORTED;
+#endif
 }
 
 EXPORT void CALL DebugDecodeOp(unsigned int instruction, char *op, char *args, int pc)
 {
+#ifdef DBG
+    r4300_decode_op(instruction, op, args, pc);
+#else
+    DebugMessage(M64MSG_ERROR, "Front-end bug: DebugDecodeOp() called, but Debugger not supported in Core library");
+    return;
+#endif
   return;
 }
 
