@@ -32,7 +32,9 @@
 #include "debugger/dbg_types.h"
 #include "debugger/dbg_breakpoints.h"
 #include "debugger/dbg_decoder.h"
+#include "debugger/dbg_memory.h"
 #include "debugger/debugger.h"
+#include "memory/memory.h"
 #include "r4300/r4300.h"
 
 /* local variables */
@@ -101,12 +103,12 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
         case M64P_DBG_CPU_NEXT_INTERRUPT:
             return next_interupt;
         default:
-            DebugMessage(M64MSG_WARNING, "Front-end bug: invalid m64p_dbg_state input in DebugGetState()");
+            DebugMessage(M64MSG_WARNING, "Bug: invalid m64p_dbg_state input in DebugGetState()");
             return 0;
     }
     return 0;
 #else
-    DebugMessage(M64MSG_ERROR, "Front-end bug: DebugGetState() called, but Debugger not supported in Core library");
+    DebugMessage(M64MSG_ERROR, "Bug: DebugGetState() called, but Debugger not supported in Core library");
     return 0;
 #endif
 }
@@ -128,65 +130,162 @@ EXPORT void CALL DebugDecodeOp(unsigned int instruction, char *op, char *args, i
 #ifdef DBG
     r4300_decode_op(instruction, op, args, pc);
 #else
-    DebugMessage(M64MSG_ERROR, "Front-end bug: DebugDecodeOp() called, but Debugger not supported in Core library");
-    return;
+    DebugMessage(M64MSG_ERROR, "Bug: DebugDecodeOp() called, but Debugger not supported in Core library");
 #endif
-  return;
 }
 
 EXPORT void * CALL DebugMemGetRecompInfo(m64p_dbg_mem_info recomp_type, unsigned int address, int index)
 {
-  return NULL;
+#ifdef DBG
+    switch (recomp_type)
+    {
+        case M64P_DBG_RECOMP_OPCODE:
+            return get_recompiled_opcode(address, index);
+        case M64P_DBG_RECOMP_ARGS:
+            return get_recompiled_args(address, index);
+        case M64P_DBG_RECOMP_ADDR:
+            return get_recompiled_addr(address, index);
+        default:
+            DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetRecompInfo() called with invalid m64p_dbg_mem_info");
+            return NULL;
+    }
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetRecompInfo() called, but Debugger not supported in Core library");
+    return NULL;
+#endif
 }
 
 EXPORT int CALL DebugMemGetMemInfo(m64p_dbg_mem_info mem_info_type, unsigned int address)
 {
-  return 0;
+#ifdef DBG
+    switch (mem_info_type)
+    {
+        case M64P_DBG_MEM_TYPE:
+            return get_memory_type(address);
+        case M64P_DBG_MEM_FLAGS:
+            return get_memory_flags(address);
+        case M64P_DBG_MEM_HAS_RECOMPILED:
+            return get_has_recompiled(address);
+        case M64P_DBG_MEM_NUM_RECOMPILED:
+            return get_num_recompiled(address);
+        default:
+            DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetMemInfo() called with invalid m64p_dbg_mem_info");
+            return 0;
+    }
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetMemInfo() called, but Debugger not supported in Core library");
+    return 0;
+#endif
 }
 
 EXPORT void * CALL DebugMemGetPointer(m64p_dbg_memptr_type mem_ptr_type)
 {
-  return NULL;
+    switch (mem_ptr_type)
+    {
+        case M64P_DBG_PTR_RDRAM:
+            return rdram;
+        case M64P_DBG_PTR_PI_REG:
+            return &pi_register;
+        case M64P_DBG_PTR_SI_REG:
+            return &si_register;
+        case M64P_DBG_PTR_VI_REG:
+            return &vi_register;
+        case M64P_DBG_PTR_RI_REG:
+            return &ri_register;
+        case M64P_DBG_PTR_AI_REG:
+            return &ai_register;
+        default:
+            DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetPointer() called with invalid m64p_dbg_memptr_type");
+            return NULL;
+    }
 }
 
 EXPORT unsigned long long CALL DebugMemRead64(unsigned int address)
 {
-  return 0;
+#ifdef DBG
+    if ((address & 3) == 0)
+        return read_memory_64(address);
+    else
+        return read_memory_64_unaligned(address);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead64() called, but Debugger not supported in Core library");
+    return 0LL;
+#endif
 }
 
 EXPORT unsigned int CALL DebugMemRead32(unsigned int address)
 {
-  return 0;
+#ifdef DBG
+    if ((address & 3) == 0)
+        return read_memory_32(address);
+    else
+        return read_memory_32_unaligned(address);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead32() called, but Debugger not supported in Core library");
+    return 0;
+#endif
 }
 
 EXPORT unsigned short CALL DebugMemRead16(unsigned int address)
 {
-  return 0;
+#ifdef DBG
+    return read_memory_16(address);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead16() called, but Debugger not supported in Core library");
+    return 0;
+#endif
 }
 
 EXPORT unsigned char CALL DebugMemRead8(unsigned int address)
 {
-  return 0;
+#ifdef DBG
+    return read_memory_8(address);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead8() called, but Debugger not supported in Core library");
+    return 0;
+#endif
 }
 
 EXPORT void CALL DebugMemWrite64(unsigned int address, unsigned long long value)
 {
-  return;
+#ifdef DBG
+    if ((address & 3) == 0)
+        write_memory_64(address, value);
+    else
+        write_memory_64_unaligned(address, value);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite64() called, but Debugger not supported in Core library");
+#endif
 }
 
 EXPORT void CALL DebugMemWrite32(unsigned int address, unsigned int value)
 {
-  return;
+#ifdef DBG
+    if ((address & 3) == 0)
+        write_memory_32(address, value);
+    else
+        write_memory_32_unaligned(address, value);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite32() called, but Debugger not supported in Core library");
+#endif
 }
 
 EXPORT void CALL DebugMemWrite16(unsigned int address, unsigned short value)
 {
-  return;
+#ifdef DBG
+    write_memory_16(address, value);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite16() called, but Debugger not supported in Core library");
+#endif
 }
 
 EXPORT void CALL DebugMemWrite8(unsigned int address, unsigned char value)
 {
-  return;
+#ifdef DBG
+    write_memory_8(address, value);
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite8() called, but Debugger not supported in Core library");
+#endif
 }
 
 EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
