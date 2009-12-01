@@ -84,6 +84,7 @@ EXPORT m64p_error CALL DebugSetCoreCompare(void (*dbg_core_compare)(void), void 
 {
     callback_core_compare = dbg_core_compare;
     callback_core_data_sync = dbg_core_data_sync;
+    return M64ERR_SUCCESS;
 }
  
 EXPORT m64p_error CALL DebugSetCallbacks(void (*dbg_frontend_init)(void), void (*dbg_frontend_update)(unsigned int pc), void (*dbg_frontend_vi)(void))
