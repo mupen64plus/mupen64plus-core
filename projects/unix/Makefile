@@ -130,7 +130,6 @@ SRC_CORE = \
 	$(SRCDIR)/plugin/dummy_rsp.c \
 	$(SRCDIR)/r4300/r4300.c \
 	$(SRCDIR)/r4300/bc.c \
-	$(SRCDIR)/r4300/compare_core.c \
 	$(SRCDIR)/r4300/cop0.c \
 	$(SRCDIR)/r4300/cop1.c \
 	$(SRCDIR)/r4300/cop1_d.c \
@@ -163,7 +162,6 @@ ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
   SRC_DYNAREC = \
     $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/debug.c \
     $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
     $(SRCDIR)/r4300/$(DYNAREC)/gcop0.c \
     $(SRCDIR)/r4300/$(DYNAREC)/gcop1.c \

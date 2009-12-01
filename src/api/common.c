@@ -47,11 +47,14 @@ EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *PluginType, int *Plugi
     {
         *Capabilities = 0;
 #if defined(DBG)
-         *Capabilities |= M64CAPS_DEBUGGER;
+        *Capabilities |= M64CAPS_DEBUGGER;
 #endif
 #if defined(DYNAREC)
-         *Capabilities |= M64CAPS_DYNAREC;
-#endif         
+        *Capabilities |= M64CAPS_DYNAREC;
+#endif
+#if defined(COMPARE_CORE)
+        *Capabilities |= M64CAPS_CORE_COMPARE;
+#endif
     }
                     
     return M64ERR_SUCCESS;

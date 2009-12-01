@@ -69,8 +69,6 @@ typedef struct _reg_cache_struct
 
 extern int branch_taken;
 
-void debug();
-
 void jump_start_rel8();
 void jump_end_rel8();
 void jump_start_rel32();

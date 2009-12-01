@@ -607,7 +607,7 @@ void main_stop(void)
         rompause = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
-    stop_it();
+    stop = 1;
 #ifdef DBG
     if(g_DebuggerActive)
     {

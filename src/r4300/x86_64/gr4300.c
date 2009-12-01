@@ -24,6 +24,8 @@
 #include "regcache.h"
 #include "interpret.h"
 
+#include "api/debugger.h"
+
 #include "r4300/r4300.h"
 #include "r4300/macros.h"
 #include "r4300/interupt.h"
@@ -327,7 +329,7 @@ void gendebug(void)
    mov_memoffs64_rax((unsigned long long *) &PC);
    mov_reg32_imm32(EAX, (unsigned int) src);
    mov_memoffs32_eax((unsigned int *) &op);
-   mov_reg64_imm64(RAX, (unsigned long long) debug);
+   mov_reg64_imm64(RAX, (unsigned long long) CoreCompareCallback);
    call_reg64(RAX);
    
    mov_reg64_imm64(RAX, (unsigned long long) &debug_reg_storage);

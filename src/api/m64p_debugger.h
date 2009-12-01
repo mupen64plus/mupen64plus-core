@@ -37,6 +37,13 @@
  */
 typedef m64p_error (*ptr_DebugSetCallbacks)(void (*)(void), void (*)(unsigned int), void (*)(void));
 
+/* DebugSetCoreCompare()
+ *
+ * This function is called by the front-end to supply callback function pointers
+ * for the Core Comparison feature.
+ */
+typedef m64p_error (*ptr_DebugSetCoreCompare)(void (*)(void), void (*)(int, void *));
+
 /* DebugSetRunState()
  *
  * This function sets the run state of the R4300 CPU emulator.

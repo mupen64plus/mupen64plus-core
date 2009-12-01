@@ -29,6 +29,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/debugger.h"
 #include "memory/memory.h"
 #include "main/rom.h"
 
@@ -3114,7 +3115,7 @@ void pure_interpreter()
    {
      prefetch();
 #ifdef COMPARE_CORE
-     compare_core();
+     CoreCompareCallback();
 #endif
 #ifdef DBG
      PC->addr = interp_addr;
@@ -3134,7 +3135,7 @@ void interprete_section(unsigned int addr)
      {
     prefetch();
 #ifdef COMPARE_CORE
-    compare_core();
+    CoreCompareCallback();
 #endif
     PC->addr = interp_addr;
     interp_ops[((op >> 26) & 0x3F)]();

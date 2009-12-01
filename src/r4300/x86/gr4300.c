@@ -23,6 +23,8 @@
 #include "interpret.h"
 #include "regcache.h"
 
+#include "api/debugger.h"
+
 #include "r4300/r4300.h"
 #include "r4300/macros.h"
 #include "r4300/interupt.h"
@@ -344,7 +346,7 @@ void gendebug(void)
    
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst));
    mov_m32_imm32((unsigned int*)(&op), (unsigned int)(src));
-   mov_reg32_imm32(EAX, (unsigned int)debug);
+   mov_reg32_imm32(EAX, (unsigned int) CoreCompareCallback);
    call_reg32(EAX);
    
    mov_reg32_m32(EAX, (unsigned int*)&eax);

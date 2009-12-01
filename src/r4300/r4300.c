@@ -32,6 +32,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/debugger.h"
 #include "memory/memory.h"
 #include "main/main.h"
 #include "main/rom.h"
@@ -1603,7 +1604,7 @@ void update_count()
      }
 #ifdef COMPARE_CORE
    if (delay_slot)
-     compare_core();
+     CoreCompareCallback();
 #endif
 /*#ifdef DBG
    if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
@@ -1887,10 +1888,9 @@ void r4300_execute()
         while (!stop)
         {
 #ifdef COMPARE_CORE
-            if (PC->ops == FIN_BLOCK && 
-            (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
-            virtual_to_physical_address(PC->addr, 2);
-            compare_core();
+            if (PC->ops == FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
+                virtual_to_physical_address(PC->addr, 2);
+            CoreCompareCallback();
 #endif
 #ifdef DBG
             if (g_DebuggerActive) update_debugger(PC->addr);

@@ -36,12 +36,6 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
 {
 }
 
-/* From debug.c */
-
-void stop_it()
-{
-}
-
 /* From gbc.c */
 
 void genbc1f_test()

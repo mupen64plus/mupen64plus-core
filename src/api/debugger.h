@@ -33,11 +33,14 @@
 typedef enum {
     DEBUG_UI_INIT = 1,
     DEBUG_UI_UPDATE,
-    DEBUG_UI_VI
+    DEBUG_UI_VI,
+    DEBUG_CORE_COMPARE
   } eDbgCallbackType;
 
 /* Functions for use by the Core, to send information back to the front-end app */
 extern void DebuggerCallback(eDbgCallbackType type, unsigned int param);
+extern void CoreCompareCallback(void);
+extern void CoreCompareDataSync(int length, void *ptr);
 
-#endif /* API_CALLBACKS_H */
+#endif /* API_DEBUGGER_H */
 

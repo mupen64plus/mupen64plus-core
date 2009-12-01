@@ -32,14 +32,13 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/debugger.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
 
 static unsigned char eeprom[0x800];
 static unsigned char mempack[4][0x8000];
-
-void check_input_sync(unsigned char *value);
 
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
@@ -207,7 +206,7 @@ void internal_ReadController(int Control, unsigned char *Command)
          getKeys(Control, &Keys);
          *((unsigned int *)(Command + 3)) = Keys.Value;
 #ifdef COMPARE_CORE
-         check_input_sync(Command+3);
+         CoreCompareDataSync(4, Command+3);
 #endif
       }
     break;
