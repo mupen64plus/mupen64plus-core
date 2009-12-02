@@ -202,7 +202,6 @@ unsigned int get_event(int type)
 
 int get_next_event_type()
 {
-    interupt_queue *aux = q;
     if (q == NULL) return 0;
     return q->type;
 }

@@ -26,6 +26,7 @@
 
 unsigned int dummyrsp_DoRspCycles(unsigned int Cycles)
 {
+    return Cycles;
 }
 
 void dummyrsp_InitiateRSP(RSP_INFO Rsp_Info, unsigned int * CycleCount)

@@ -42,7 +42,6 @@
 /* some local state variables */
 static int l_CoreInit = 0;
 static int l_ROMOpen = 0;
-static int l_EmuRunning = 0;
 
 /* functions exported outside of libmupen64plus to front-end application */
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context,

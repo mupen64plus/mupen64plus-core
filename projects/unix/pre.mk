@@ -234,7 +234,7 @@ else
 endif
 
 # set base CFLAGS and LDFLAGS
-CFLAGS += -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing
+CFLAGS += -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing
 
 # tweak flags for 32-bit build on 64-bit system
 ifeq ($(ARCH_DETECTED), 64BITS_32)

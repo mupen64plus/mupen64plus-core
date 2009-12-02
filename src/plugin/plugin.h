@@ -46,6 +46,7 @@ extern ptr_ChangeWindow    changeWindow;
 extern ptr_InitiateGFX     initiateGFX;
 extern ptr_MoveScreen      moveScreen;
 extern ptr_ProcessDList    processDList;
+extern ptr_ProcessRDPList  processRDPList;
 extern ptr_RomClosed       romClosed_gfx;
 extern ptr_RomOpen         romOpen_gfx;
 extern ptr_ShowCFB         showCFB;

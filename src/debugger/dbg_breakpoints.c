@@ -25,6 +25,7 @@
 #include "dbg_types.h"
 #include "debugger.h"
 #include "dbg_breakpoints.h"
+#include "dbg_memory.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -185,7 +186,7 @@ int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uin
     //range to check, flags specifies the flags that all need to be set.
     //It automatically stops and updates the debugger on hit, so the memory access
     //functions only need to call it and can discard the result.
-    int i, bpt;
+    int bpt;
     if(run == 2)
     {
         bpt=lookup_breakpoint( address, size, flags );
@@ -211,5 +212,6 @@ int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access)
     else if(Flag & BPT_FLAG_WRITE) sprintf(msg, "0x%08X wrote 0x%08X", PC, Access);
     else sprintf(msg, "0x%08X executed", PC);
     DebugMessage(M64MSG_INFO, "BPT: %s", msg);
+    return 0;
 }
 

@@ -53,7 +53,7 @@ disassemble_info dis_info;
      invalid_code[(address) >> 12] = 1;
 
 void process_opcode_out(void *strm, const char *fmt, ...){
-  va_list ap = {0};
+  va_list ap;
   va_start(ap, fmt);
   char *arg;
   char buff[256];
@@ -108,7 +108,6 @@ void init_host_disassembler(void){
 void decode_recompiled(uint32 addr)
 {
     unsigned char *assemb, *end_addr;
-    unsigned char *as_inc;
 
     lines_recompiled=0;
 
@@ -438,6 +437,7 @@ int get_memory_type(uint32 addr){
     return MEM_MI;
   else
     DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger get_memory_type(): %x", readfunc);
+  return MEM_NOMEM;
 }
 
 void activate_memory_break_read(uint32 addr) {

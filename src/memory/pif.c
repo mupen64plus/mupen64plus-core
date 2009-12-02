@@ -79,7 +79,6 @@ void EepromCommand(unsigned char *Command)
       {
          char *filename;
          FILE *f;
-         int i;
          filename = malloc(strlen(get_savespath())+
                    strlen(ROM_SETTINGS.goodname)+4+1);
          strcpy(filename, get_savespath());
@@ -105,7 +104,6 @@ void EepromCommand(unsigned char *Command)
       {
          char *filename;
          FILE *f;
-         int i;
          filename = malloc(strlen(get_savespath())+
                    strlen(ROM_SETTINGS.goodname)+4+1);
          strcpy(filename, get_savespath());

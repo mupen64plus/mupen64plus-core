@@ -27,6 +27,7 @@
 #include "dbg_types.h"
 #include "debugger.h"
 #include "dbg_breakpoints.h"
+#include "dbg_memory.h"
 
 // State of the Emulation Thread:
 // 0 -> pause, 2 -> run.

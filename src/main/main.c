@@ -29,6 +29,8 @@
  
 #include <string.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include <SDL.h>
 
@@ -43,6 +45,7 @@
 #include "rom.h"
 #include "savestates.h"
 
+#include "memory/memory.h"
 #include "osal/files.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"

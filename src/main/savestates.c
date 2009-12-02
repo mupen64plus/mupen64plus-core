@@ -26,6 +26,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/config.h"
 
 #include "savestates.h"
 #include "main.h"

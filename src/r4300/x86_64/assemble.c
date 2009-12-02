@@ -72,19 +72,6 @@ static void add_jump(unsigned int pc_addr, unsigned int mi_addr, unsigned int ab
   jumps_number++;
 }
 
-static void add_riprelative(unsigned int pc_addr, unsigned int extra_bytes, void *global_64_ptr)
-{
-  if (riprel_number == max_riprel_number)
-  {
-    max_riprel_number += 512;
-    riprel_table = realloc(riprel_table, max_riprel_number * sizeof(riprelative_table));
-  }
-  riprel_table[riprel_number].pc_addr = pc_addr;
-  riprel_table[riprel_number].extra_bytes = extra_bytes;
-  riprel_table[riprel_number].global_dst = (unsigned char *) global_64_ptr;
-  riprel_number++;
-}
-
 /* Global Functions */
 
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)

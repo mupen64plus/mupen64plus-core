@@ -30,7 +30,6 @@
 
 static int  mot;
 static char *op;
-static char *args;
 static int pc;
 
 static void RESERV(){

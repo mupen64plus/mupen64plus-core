@@ -52,7 +52,7 @@ rom_header* ROM_HEADER;
 rom_settings ROM_SETTINGS;
 
 /* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
-static int is_valid_rom(const unsigned char buffer[4])
+static int is_valid_rom(const char *buffer)
 {
     /* Test if rom is a native .z64 image with header 0x80371240. [ABCD] */
     if((buffer[0]==0x80)&&(buffer[1]==0x37)&&(buffer[2]==0x12)&&(buffer[3]==0x40))

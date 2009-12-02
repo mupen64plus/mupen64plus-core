@@ -71,7 +71,7 @@ void dummyaudio_VolumeDown(void)
 
 int dummyaudio_VolumeGetLevel(void)
 {
-    return;
+    return 0;
 }
 
 void dummyaudio_VolumeSetLevel(int level)

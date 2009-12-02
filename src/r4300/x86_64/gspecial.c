@@ -186,7 +186,6 @@ void genjr(void)
    unsigned int diff = (unsigned int) offsetof(precomp_instr, local_addr);
    unsigned int diff_need = (unsigned int) offsetof(precomp_instr, reg_cache_infos.need_map);
    unsigned int diff_wrap = (unsigned int) offsetof(precomp_instr, reg_cache_infos.jump_wrapper);
-   unsigned int temp, temp2;
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)

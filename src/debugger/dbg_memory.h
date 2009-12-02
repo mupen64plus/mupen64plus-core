@@ -100,6 +100,11 @@ void write_memory_8(uint32 addr, uint8 value);
 uint32 get_memory_flags(uint32);
 int get_memory_type(uint32);
 
+void activate_memory_break_read(uint32 addr);
+void deactivate_memory_break_read(uint32 addr);
+void activate_memory_break_write(uint32 addr);
+void deactivate_memory_break_write(uint32 addr);
+
 /* Following are the prototypes for the memory breakpoint functions */
 void read_nothing_break();
 void read_nothingh_break();

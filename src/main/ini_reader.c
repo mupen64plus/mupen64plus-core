@@ -32,8 +32,6 @@
 static int iscomment(char *line);
 static ini_entry *parse_entry(char *line);
 static ini_section *parse_section(char *line);
-static void dump_entries(ini_section *s, list_t entries);
-static void dump_sections(ini_file* ini, list_t sections);
 
 static ini_entry *parse_entry(char *line)
 {
