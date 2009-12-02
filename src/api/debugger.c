@@ -37,12 +37,14 @@
 #include "memory/memory.h"
 #include "r4300/r4300.h"
 
+extern unsigned int op; /* this is in r4300/pure_interp.c */
+
 /* local variables */
 static void (*callback_ui_init)(void) = NULL;
 static void (*callback_ui_update)(unsigned int) = NULL;
 static void (*callback_ui_vi)(void) = NULL;
 
-static void (*callback_core_compare)(void) = NULL;
+static void (*callback_core_compare)(unsigned int) = NULL;
 static void (*callback_core_data_sync)(int, void *) = NULL;
 
 /* global Functions for use by the Core */
@@ -69,7 +71,7 @@ void DebuggerCallback(eDbgCallbackType type, unsigned int param)
 void CoreCompareCallback(void)
 {
     if (callback_core_compare != NULL)
-        (*callback_core_compare)();
+        (*callback_core_compare)(op);
 }
 
 void CoreCompareDataSync(int length, void *ptr)
@@ -80,7 +82,7 @@ void CoreCompareDataSync(int length, void *ptr)
 
 /* exported functions for use by the front-end User Interface */
 
-EXPORT m64p_error CALL DebugSetCoreCompare(void (*dbg_core_compare)(void), void (*dbg_core_data_sync)(int, void *))
+EXPORT m64p_error CALL DebugSetCoreCompare(void (*dbg_core_compare)(unsigned int), void (*dbg_core_data_sync)(int, void *))
 {
     callback_core_compare = dbg_core_compare;
     callback_core_data_sync = dbg_core_data_sync;

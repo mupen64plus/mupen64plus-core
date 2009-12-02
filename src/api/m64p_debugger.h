@@ -42,7 +42,7 @@ typedef m64p_error (*ptr_DebugSetCallbacks)(void (*)(void), void (*)(unsigned in
  * This function is called by the front-end to supply callback function pointers
  * for the Core Comparison feature.
  */
-typedef m64p_error (*ptr_DebugSetCoreCompare)(void (*)(void), void (*)(int, void *));
+typedef m64p_error (*ptr_DebugSetCoreCompare)(void (*)(unsigned int), void (*)(int, void *));
 
 /* DebugSetRunState()
  *
