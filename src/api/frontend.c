@@ -141,7 +141,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             if (ParamPtr == NULL || ParamInt < 4096)
                 return M64ERR_INPUT_ASSERT;
-            rval = open_rom((const char *) ParamPtr, ParamInt);
+            rval = open_rom((const unsigned char *) ParamPtr, ParamInt);
             if (rval == M64ERR_SUCCESS)
             {
                 l_ROMOpen = 1;

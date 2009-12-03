@@ -28,7 +28,7 @@
 
 /* ROM Loading and Saving functions */
 
-m64p_error open_rom(const char* romimage, unsigned int size);
+m64p_error open_rom(const unsigned char* romimage, unsigned int size);
 m64p_error close_rom(void);
 
 extern unsigned char* rom;

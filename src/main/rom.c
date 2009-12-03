@@ -52,7 +52,7 @@ rom_header* ROM_HEADER;
 rom_settings ROM_SETTINGS;
 
 /* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
-static int is_valid_rom(const char *buffer)
+static int is_valid_rom(const unsigned char *buffer)
 {
     /* Test if rom is a native .z64 image with header 0x80371240. [ABCD] */
     if((buffer[0]==0x80)&&(buffer[1]==0x37)&&(buffer[2]==0x12)&&(buffer[3]==0x40))
@@ -105,7 +105,7 @@ static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int load
         *imagetype = Z64IMAGE;
 }
 
-m64p_error open_rom(const char* romimage, unsigned int size)
+m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 {
     /* check input requirements */
     if (rom != NULL)
