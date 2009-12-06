@@ -40,10 +40,17 @@ ifeq ($(ARCH_DETECTED), 64BITS)
 endif
 
 ifeq ($(OS), FREEBSD)
-  LDFLAGS += -Wl,-export-dynamic
+  TARGET = libmupen64plus.so.2.0.0
+  SONAME = libmupen64plus.so.2
+  LDFLAGS += -Wl,-export-dynamic -Wl,-soname,$(SONAME)
 endif
 ifeq ($(OS), LINUX)
-  LDFLAGS += -Wl,-export-dynamic
+  TARGET = libmupen64plus.so.2.0.0
+  SONAME = libmupen64plus.so.2
+  LDFLAGS += -Wl,-export-dynamic -Wl,-soname,$(SONAME)
+endif
+ifeq ($(OS), OSX)
+  TARGET = libmupen64plus.dylib
 endif
 
 # set options
@@ -192,7 +199,6 @@ SRC_DBG = \
 SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
 
 # set primary objects and libraries for all outputs
-TARGET = libmupen64plus.$(SO_EXTENSION)
 SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
 LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
 
@@ -259,6 +265,7 @@ rebuild: clean all
 # build rules
 $(TARGET): $(MISC_DEPS) $(OBJECTS)
 	$(CXX) $(PLUGIN_LDFLAGS) $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
+	if [ "$(SONAME)" != "" ]; then ln -s $(TARGET) $(SONAME); fi
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) -o $@ $(CFLAGS) $(SDL_FLAGS) -c $<
