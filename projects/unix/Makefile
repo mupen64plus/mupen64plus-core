@@ -19,41 +19,180 @@
 # *   Free Software Foundation, Inc.,                                       *
 # *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+# Makefile for Mupen64Plus Core
 
-# include output from configure script
--include ./configure.gen
-#This will eventually be necessary to build
-#ifndef CONFIGURE.GEN
-#  $(error Run ./configure before make)
-#endif
+# detect operation system
+UNAME = $(shell uname -s)
+ifeq ("$(UNAME)","Linux")
+  OS = LINUX
+endif
+ifeq ("$(UNAME)","linux")
+  OS = LINUX
+endif
+ifeq ("$(UNAME)","Darwin")
+  OS = OSX
+endif
+ifeq ("$(UNAME)","FreeBSD")
+  OS = FREEBSD
+endif
 
-# include pre-make file with a bunch of definitions
-include ./pre.mk
+ifeq ($(OS),)
+   $(error OS not supported or detected)
+endif
 
-# set include directories required for all builds
-CFLAGS += -I../../src
+# detect system architecture
+HOST_CPU ?= $(shell uname -m)
+ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
+  CPU := X86
+  ifeq ("$(BITS)", "32")
+    ARCH_DETECTED := 64BITS_32
+  else
+    ARCH_DETECTED := 64BITS
+  endif
+endif
+ifneq ("$(filter pentium i%86,$(HOST_CPU))","")
+  CPU := X86
+  ARCH_DETECTED := 32BITS
+endif
+ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
+  CPU := PPC
+  ARCH_DETECTED := 32BITS
+  NO_ASM := 1
+endif
+ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
+  CPU := PPC
+  ARCH_DETECTED := 64BITS
+  NO_ASM := 1
+endif
+
+ifeq ($(CPU),)
+   $(error CPU not supported or detected)
+endif
+
+# base CFLAGS, LIBS, and LDFLAGS
+CFLAGS = -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -I../../src
+LIBS = -ldl -lpng -lz -lm -lfreetype
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(ARCH_DETECTED), 64BITS)
   CFLAGS += -fPIC -DPIC -fvisibility=hidden
 endif
+# tweak flags for 32-bit build on 64-bit system
+ifeq ($(ARCH_DETECTED), 64BITS_32)
+  ifeq ($(OS), FREEBSD)
+    $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
+  endif
+  CFLAGS += -m32
+  LDFLAGS += -m32 -m elf_i386
+endif
 
+# set special flags per-system
 ifeq ($(OS), FREEBSD)
   TARGET = libmupen64plus.so.2.0.0
   SONAME = libmupen64plus.so.2
-  LDFLAGS += -Wl,-export-dynamic -Wl,-soname,$(SONAME)
+  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
+  LIBS += -L${LOCALBASE}/lib -lGL -lGLU
 endif
 ifeq ($(OS), LINUX)
   TARGET = libmupen64plus.so.2.0.0
   SONAME = libmupen64plus.so.2
-  LDFLAGS += -Wl,-export-dynamic -Wl,-soname,$(SONAME)
+  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
+  LIBS += -L/usr/X11R6/lib -lGL -lGLU
+  ifeq ($(CPU), X86)
+    ifeq ($(ARCH_DETECTED), 64BITS)
+      CFLAGS += -pipe -O3 -march=athlon64
+    else
+      CFLAGS += -pipe -O3 -mmmx -msse -march=i686 -mtune=pentium-m
+      ifneq ($(PROFILE), 1)
+        CFLAGS += -fomit-frame-pointer
+      endif
+    endif
+  endif
 endif
 ifeq ($(OS), OSX)
   TARGET = libmupen64plus.dylib
+  LDFLAGS += -bundle -read_only_relocs suppress
+  LIBS += -framework OpenGL
+  ifeq ($(CPU), X86)
+    ifeq ($(ARCH_DETECTED), 64BITS)
+      CFLAGS += -pipe -O3 -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      LDFLAGS += -arch x86_64
+    else
+      CFLAGS += -pipe -O3 -mmmx -msse -arch i686 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      LDFLAGS += -arch i686
+      ifneq ($(PROFILE), 1)
+        CFLAGS += -fomit-frame-pointer
+      endif
+    endif
+  endif
+endif
+ifeq ($(CPU), PPC)
+  CFLAGS += -mcpu=powerpc
+endif
+ifeq ($(CPU_ENDIANNESS), BIG)
+  CFLAGS += -D_BIG_ENDIAN
 endif
 
-# set options
+# test for presence of SDL
+ifeq ($(shell which sdl-config 2>/dev/null),)
+  $(error No SDL development libraries found!)
+endif
+ifeq ($(OS),FREEBSD)
+    CFLAGS	+= `${SDL_CONFIG} --cflags`
+    LIBS	+= `${SDL_CONFIG} --libs`
+else
+    CFLAGS	+= $(shell sdl-config --cflags)
+    LIBS	+= $(shell sdl-config --libs)
+endif
+
+# test for presence of FreeType
+ifeq ($(shell which freetype-config 2>/dev/null),)
+   $(error freetype-config not installed!)
+endif
+LIBS	+= $(shell freetype-config --libs)
+CFLAGS	+= $(shell freetype-config --cflags)
+
+# set base program pointers and flags
+ifeq ($(OS),FREEBSD)
+  CC      ?= gcc
+  CXX     ?= g++
+  LD      ?= g++
+  RM      ?= rm
+  STRIP	  ?= strip -s
+else
+  CC      = gcc
+  CXX     = g++
+  LD      = g++
+  RM      = rm
+  ifeq ($(OS),LINUX)
+    STRIP	= strip -s
+  endif
+  ifeq ($(OS),OSX)
+    STRIP	= strip -x 
+  endif
+endif
+
+# compiler/linker flags for various compile-time options.
+# 1. macro for no assembly language
+ifeq ($(NO_ASM), 1)
+  CFLAGS += -DNO_ASM
+endif
+# 2. variables for profiling and adding debugging symbols
+ifeq ($(PROFILE), 1)
+  CFLAGS += -pg -g
+  LDFLAGS += -pg
+  STRIP = true
+else
+  ifeq ($(DEBUG), 1)
+    CFLAGS += -g
+    STRIP = true
+  endif
+endif
+# 3. other options given to the makefile on the command line
+ifeq ($(LIRC), 1)
+  CFLAGS += -DWITH_LIRC
+endif
 ifeq ($(DEBUGGER), 1)
   CFLAGS += -DDBG
 endif
@@ -69,11 +208,7 @@ endif
 ifeq ($(DBG_PROFILE), 1)
   CFLAGS += -DPROFILE_R4300
 endif
-ifeq ($(LIRC), 1)
-  CFLAGS += -DWITH_LIRC
-endif
-
-# set special flags for given Makefile parameters
+# 4. compile-time directory paths for building into the library
 ifneq ($(SHAREDIR),)
   CFLAGS += -DSHAREDIR="$(SHAREDIR)"
 endif
@@ -103,8 +238,8 @@ INSTALLOPTS := $(PREFIX) $(SHAREDIR) $(BINDIR) $(LIBDIR) $(MANDIR) $(APPLICATION
 SRCDIR = ../../src
 OBJDIR = _obj
 
-# list of source files to compile
-SRC_CORE = \
+# list of required source files for compilation
+SOURCE = \
 	$(SRCDIR)/api/callbacks.c \
 	$(SRCDIR)/api/common.c \
 	$(SRCDIR)/api/config.c \
@@ -155,7 +290,7 @@ SRC_CORE = \
 	$(SRCDIR)/osd/osd.cpp \
 	$(SRCDIR)/osd/screenshot.cpp
 
-# handle dynamic recompiler objects
+# source files for optional features
 ifneq ($(NO_ASM), 1)
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
@@ -167,7 +302,7 @@ ifneq ($(NO_ASM), 1)
 endif
 ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
-  SRC_DYNAREC = \
+  SOURCE += \
     $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
     $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
     $(SRCDIR)/r4300/$(DYNAREC)/gcop0.c \
@@ -183,35 +318,25 @@ ifneq ($(DYNAREC), )
     $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
     $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
 else
-  SRC_DYNAREC = $(SRCDIR)/r4300/empty_dynarec.c
+  SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
 endif
 
-SRC_LIRC = \
-	$(SRCDIR)/main/lirc.c
+ifeq ($(LIRC), 1)
+  SOURCE += $(SRCDIR)/main/lirc.c
+  LIBS += -llirc_client
+endif
 
-SRC_DBG = \
+ifeq ($(DEBUGGER), 1)
+  SOURCE += \
 	$(SRCDIR)/debugger/debugger.c \
 	$(SRCDIR)/debugger/dbg_decoder.c \
 	$(SRCDIR)/debugger/dbg_opprintf.c \
 	$(SRCDIR)/debugger/dbg_memory.c \
 	$(SRCDIR)/debugger/dbg_breakpoints.c
-
-SHARE = $(shell grep CONFIG_PATH config.h | cut -d '"' -f 2)
-
-# set primary objects and libraries for all outputs
-SOURCE = $(SRC_CORE) $(SRC_DYNAREC)
-LIBS = $(SDL_LIBS) $(LIBGL_LIBS)
-
-# add extra objects and libraries for selected options
-ifeq ($(DEBUGGER), 1)
-  SOURCE +=  $(SRC_DBG)
   LIBS += -lopcodes -lbfd
 endif
-ifeq ($(LIRC), 1)
-  SOURCE += $(SRC_LIRC)
-  LDFLAGS += -llirc_client
-endif
 
+# generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
 OBJDIRS = $(dir $(OBJECTS))
@@ -244,10 +369,7 @@ targets:
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
-#	@echo "    RELEASE=1     == inhibit SVN info from version strings"
-#	@echo "    VER=x.y.z     == use this version number when RELEASE=1"
-# The RELEASE and VER flags are hidden from view as they should only be used internally.
-# They only affect the version strings
+
 
 all: $(TARGET)
 
@@ -258,21 +380,20 @@ uninstall:
 	./uninstall.sh $(INSTALLOPTS)
 
 clean:
-	$(RM) -rf ./_obj ./_lib $(TARGET)
+	$(RM) -rf ./_obj/* $(TARGET) $(SONAME)
 
 rebuild: clean all
 
 # build rules
-$(TARGET): $(MISC_DEPS) $(OBJECTS)
-	$(CXX) $(PLUGIN_LDFLAGS) $(OBJECTS) $(LDFLAGS) $(CORE_LDFLAGS) $(LIBS) -o $@
-	if [ "$(SONAME)" != "" ]; then ln -s $(TARGET) $(SONAME); fi
+$(TARGET): $(OBJECTS)
+	$(CXX) $(LDFLAGS) $(LIBS) $(OBJECTS) -o $@
+	$(STRIP) $@
+	if [ "$(SONAME)" != "" ]; then ln -sf $@ $(SONAME); fi
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) -o $@ $(CFLAGS) $(SDL_FLAGS) -c $<
+	$(CXX) -o $@ $(CFLAGS) -c $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) -o $@ $(CFLAGS) $(SDL_FLAGS) -c $<
+	$(CC) -o $@ $(CFLAGS) -c $<
 
-# This is used to force the plugin builds
-FORCE:
 
