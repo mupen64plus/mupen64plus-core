@@ -155,16 +155,20 @@ CFLAGS	+= $(shell freetype-config --cflags)
 
 # set base program pointers and flags
 ifeq ($(OS),FREEBSD)
-  CC      ?= gcc
-  CXX     ?= g++
-  LD      ?= g++
-  RM      ?= rm
-  STRIP	  ?= strip -s
+  CC       ?= gcc
+  CXX      ?= g++
+  LD       ?= g++
+  RM       ?= rm
+  INSTALL  ?= install
+  LDCONFIG ?= ldconfig
+  STRIP	   ?= strip -s
 else
-  CC      = gcc
-  CXX     = g++
-  LD      = g++
-  RM      = rm
+  CC       = gcc
+  CXX      = g++
+  LD       = g++
+  RM       = rm
+  INSTALL  = install
+  LDCONFIG = ldconfig
   ifeq ($(OS),LINUX)
     STRIP	= strip -s
   endif
@@ -220,20 +224,9 @@ endif
 ifeq ($(SHAREDIR),)
   SHAREDIR := $(PREFIX)/share/mupen64plus
 endif
-ifeq ($(BINDIR),)
-  BINDIR := $(PREFIX)/bin
-endif
 ifeq ($(LIBDIR),)
-  LIBDIR := $(SHAREDIR)/plugins
+  LIBDIR := $(PREFIX)/lib
 endif
-ifeq ($(MANDIR),)
-  MANDIR := $(PREFIX)/man/man1
-endif
-ifeq ($(APPLICATIONSDIR),)
-  APPLICATIONSDIR := $(PREFIX)/share/applications
-endif
-
-INSTALLOPTS := $(PREFIX) $(SHAREDIR) $(BINDIR) $(LIBDIR) $(MANDIR) $(APPLICATIONSDIR)
 
 SRCDIR = ../../src
 OBJDIR = _obj
@@ -348,19 +341,17 @@ targets:
 	@echo "  Targets:"
 	@echo "    all           == Build Mupen64Plus core library"
 	@echo "    clean         == remove object files"
-	@echo "    rebuild       == clean and re-build all"
 	@echo "    install       == Install Mupen64Plus core library"
 	@echo "    uninstall     == Uninstall Mupen64Plus core library"
-	@echo "  Options:"
+	@echo "  Build Options:"
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
+	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
-	@echo "    SHAREDIR=path == path to install shared data (default: PREFIX/share/mupen64plus/)"
-	@echo "    BINDIR=path   == path to install mupen64plus binary (default: PREFIX/bin/)"
-	@echo "    LIBDIR=path   == path to install plugin libraries (default: SHAREDIR/plugins/)"
-	@echo "    MANDIR=path   == path to install manual files (default: PREFIX/man/man1/)"
+	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
+	@echo "    LIBDIR=path   == path to install core library (default: PREFIX/lib)"
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
 	@echo "    DEBUG=1       == add debugging symbols to binaries"
@@ -370,19 +361,24 @@ targets:
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
 
-
 all: $(TARGET)
 
 install:
-	./install.sh $(INSTALLOPTS)
+	$(INSTALL) -d -v "$(LIBDIR)"
+	$(INSTALL) -m 0644 $(TARGET) "$(LIBDIR)"
+	$(INSTALL) -d -v "$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/* "$(SHAREDIR)"
+	$(LDCONFIG) -n "$(LIBDIR)"
 
 uninstall:
-	./uninstall.sh $(INSTALLOPTS)
+	$(RM) -f "$(LIBDIR)/$(TARGET)"
+	if [ "$(SONAME)" != "" ]; then $(RM) -f "$(LIBDIR)/$(SONAME)"; fi
+	$(RM) -f "$(SHAREDIR)/mupen64plus.cht"
+	$(RM) -f "$(SHAREDIR)/mupen64plus.ini"
+	$(RM) -f "$(SHAREDIR)/font.ttf"
 
 clean:
-	$(RM) -rf ./_obj/* $(TARGET) $(SONAME)
-
-rebuild: clean all
+	$(RM) -rf $(TARGET) $(SONAME) ./_obj
 
 # build rules
 $(TARGET): $(OBJECTS)
