@@ -304,7 +304,7 @@ class RegTester:
                     if skipit:
                         continue
                 # construct the command line
-                exepath = os.path.join(self.bindir, "mupen64plus-cli")
+                exepath = os.path.join(self.bindir, "mupen64plus")
                 exeparms = [ "--corelib", os.path.join(self.bindir, "libmupen64plus.so") ]
                 exeparms += [ "--testshots",  ",".join(shotlist) ]
                 exeparms += [ "--sshotdir", os.path.join(self.screenshotdir, videoname) ]

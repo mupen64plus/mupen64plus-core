@@ -344,7 +344,7 @@ $(shell mkdir -p $(OBJDIRS))
 
 # build targets
 targets:
-	@echo "Mupen64Plus makefile. "
+	@echo "Mupen64Plus-core makefile. "
 	@echo "  Targets:"
 	@echo "    all           == Build Mupen64Plus core library"
 	@echo "    clean         == remove object files"
