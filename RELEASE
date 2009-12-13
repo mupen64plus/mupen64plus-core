@@ -1,3 +1,40 @@
+
+Mupen64Plus v1.99.1 - December 14, 2009
+---------------------------------------
+New 2.0 architecture advantages:
+ - Simplified emulator Core, making it much more portable
+ - Removed all GUI code from plugins, making them simpler and more portable
+ - User interface development is not tied to Core emulator releases
+ - All messages from core/plugins can be filtered and shown in GUI instead of only on console
+ - Video Extension allows Front-end to override some video functions, ie to support embedded render window
+ - Startup in Fullscreen mode, instead of always starting in windowed mode and switching to FS after few seconds
+ - video resolution can be given via command-line parameter
+ - all configuration options for core and plugins are in a single config file, can be configured with a single GUI
+ - dummy plugins are automatically used if plugin loading fails for any reason
+ - core and plugins all use the same conventions for where to put data/config files
+Mupen64Plus core:
+ - New feature: cheat code support
+ - New feature: Keyboard shortcuts for Core commands are now user-configurable
+ - New feature: can load/save PJ64 state files
+ - Major code cleanup, refactored build system to separate source and object files
+ - Removed many dependencies to simplify porting to other platforms
+ - Moved all of the SDL event-related stuff into a new source file eventloop.c
+ - Use XDG directory convention for file locations on Unix
+ - bugfix: frame advance feature should advance every frame, instead of every vertical interrupt (every field)
+ - bugfix: allow diagonal hat movements for core joystick commands
+ - bugfix: modified SDL event loop joystick code so that gameshark button press is captured, and joystick commands that are level-triggered instead of edge-triggered (such as fast foward) can be accommodated
+ - bugfix: fixed the outstanding SDL event issues by re-writing the code which handles the joystick-event-driven core commands.  Now the axis-based commands use hysteresis and there is a single global event function for determining if the gameshark button is pressed
+ - bugfix: OSD crash after pause-stop-start-pause of emulator
+ - bugfix: Set video width and status, aiDacrate during savestate load
+ - bugfix: in pure interpreter, Dont allow to override r0 register
+ - bugfix #52: PJ64 load state patch from olejl77
+ - bugfix #268: use aligned malloc and mprotect to set executable status for dynarec emitted code
+ - bugfix #51: Floating Point Register data was not correctly converted when switching between 32-bit (MIPS-I) mode and 64-bit (MIPS III).
+               New code more closely emulates behavior of r4300 hardware.  Fixes collision problems in Banjo-Tooie
+ - bugfix #272: rounding mode for x86 FPU not being set correctly in interpreter and pure interpreter cores
+ - bugfix: many games need different ScreenUpdateSetting to work properly with Rice Video
+
+
 Mupen64Plus v1.5 - January 4, 2009
 ----------------------------------
 Major New Features:
