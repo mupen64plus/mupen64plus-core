@@ -21,6 +21,6 @@ with your desired local installation path):
 
 $ cd projects/unix
 $ make all SHAREDIR=<my-folder>
-$ sudo make install LIBDIR=<my-folder> SHAREDIR=<my-folder>
+$ make install LIBDIR=<my-folder> SHAREDIR=<my-folder>
 
 
