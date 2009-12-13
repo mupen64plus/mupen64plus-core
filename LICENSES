@@ -1,7 +1,7 @@
-Mupen64Plus LICENSES
---------------------
+Mupen64Plus-Core LICENSES
+-------------------------
 
-Mupen64Plus is licensed under the GNU General Public License version 2.  Please see the
+Mupen64Plus-Core is licensed under the GNU General Public License version 2.  Please see the
 included doc/gpl-license file for the terms and conditions of the GNU General Public License. 
 The authors of Mupen64Plus are:
   * Richard Goedeken (Richard42)
@@ -24,22 +24,7 @@ Mupen64Plus is based on GPL-licensed source code from Mupen64 v0.5, originally w
   * Juha Luotio (JttL)
   * and others.
 
-The Glide64 video plugin is GPL-licensed and was originally written by:
-  * Dave2001
-  * Gonetz
-  * Gugaman
-  * Hacktarux
-  * Josh
-  * Ziggy
-  * Günther
-
-The icons included with Glide64 are derived from GPL2-licensed Gnome SVG icons.
-
-The Rice Video plugin is GPL-licensed and was originally written by:
-  * Rice1964
-  * Mudlord
-
-Mupen64Plus includes a GPL-license demo rom written by:
+Mupen64Plus-Core includes a GPL-license demo rom (in mupen64plus.v64.gz) written by:
   *  Marshallh
 
 The OGLFT library used for the On-Screen Display is based on GPL/LGPL-licensed code Copyright 2002 lignum Computing. Please see the included doc/lgpl-license file for the terms and conditions of the GNU Lesser General Public License. More information about this library is available at the following websites:
@@ -47,10 +32,6 @@ The OGLFT library used for the On-Screen Display is based on GPL/LGPL-licensed c
   - http://directory.fsf.org/project/OGLFT/
 
 Additionally, mupen includes a number of components licensed under other OSI approved licenses:
-
-The GPL license:
-   * LZMA decoder by Igor Pavlov and Lasse Collin
-   * 7zip SDK simple C decoder by Igor Pavlov
 
 The BSD license:
    * minizip by Gilles Vollant and others, ftp://ftp.info-zip.org/pub/infozip/license.html
@@ -60,10 +41,7 @@ The zlib/libpng license:
    * libpng by Glenn Randers-Pehrson, Peter Deutsch, and Guy Eric Schalnat
    * MD5 hasing code by Peter Deutsch
 
-The (zlib-like) bzip2 license:
-   * libbzip2 by Julian R Seward. Please see the included doc/bzip2-license file for the terms and conditions of the bzip2 license.
-
 The Bitstream license:
-   * The font(s) in the fonts/ directory are licensed by the Bitstream license. Please see the included doc/font-license file for the terms and conditions of the bzip2 license.
+   * The TrueType font (data/font.ttf) is licensed by the Bitstream license. Please see the included doc/font-license file for the terms and conditions of the Bitstream license.
 
 
