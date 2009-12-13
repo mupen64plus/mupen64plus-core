@@ -207,7 +207,7 @@ static m64p_error plugin_connect_rsp(m64p_handle plugin_handle)
         m64p_plugin_type PluginType;
         int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_RSP || PluginVersion < MINIMUM_RSP_VERSION || APIVersion < MINIMUM_RSP_API_VERSION)
+        if (PluginType != M64PLUGIN_RSP || APIVersion < MINIMUM_RSP_API_VERSION)
         {
             DebugMessage(M64MSG_ERROR, "incompatible RSP plugin");
             return M64ERR_INCOMPATIBLE;
@@ -257,7 +257,7 @@ static m64p_error plugin_connect_input(m64p_handle plugin_handle)
         m64p_plugin_type PluginType;
         int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_INPUT || PluginVersion < MINIMUM_INPUT_VERSION || APIVersion < MINIMUM_INPUT_API_VERSION)
+        if (PluginType != M64PLUGIN_INPUT || APIVersion < MINIMUM_INPUT_API_VERSION)
         {
             DebugMessage(M64MSG_ERROR, "incompatible Input plugin");
             return M64ERR_INCOMPATIBLE;
@@ -318,7 +318,7 @@ static m64p_error plugin_connect_audio(m64p_handle plugin_handle)
         m64p_plugin_type PluginType;
         int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_AUDIO || PluginVersion < MINIMUM_AUDIO_VERSION || APIVersion < MINIMUM_AUDIO_API_VERSION)
+        if (PluginType != M64PLUGIN_AUDIO || APIVersion < MINIMUM_AUDIO_API_VERSION)
         {
             DebugMessage(M64MSG_ERROR, "incompatible Audio plugin");
             return M64ERR_INCOMPATIBLE;
@@ -386,7 +386,7 @@ static m64p_error plugin_connect_gfx(m64p_handle plugin_handle)
         m64p_plugin_type PluginType;
         int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_GFX || PluginVersion < MINIMUM_GFX_VERSION || APIVersion < MINIMUM_GFX_API_VERSION)
+        if (PluginType != M64PLUGIN_GFX || APIVersion < MINIMUM_GFX_API_VERSION)
         {
             DebugMessage(M64MSG_ERROR, "incompatible Video plugin");
             return M64ERR_INCOMPATIBLE;

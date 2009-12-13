@@ -31,11 +31,6 @@ extern m64p_error plugin_start(m64p_plugin_type);
 extern m64p_error plugin_check(void);
 
 /*** Version requirement information ***/
-#define MINIMUM_RSP_VERSION   0x20000
-#define MINIMUM_GFX_VERSION   0x20000
-#define MINIMUM_AUDIO_VERSION 0x20000
-#define MINIMUM_INPUT_VERSION 0x20000
-
 #define MINIMUM_RSP_API_VERSION   0x10000
 #define MINIMUM_GFX_API_VERSION   0x10000
 #define MINIMUM_AUDIO_API_VERSION 0x10000
