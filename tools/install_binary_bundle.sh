@@ -66,8 +66,8 @@ MANDIR="${6:-${PREFIX}/man/man6}"
 printf "Installing Mupen64Plus Binary Bundle to ${PREFIX}\n"
 # Mupen64Plus-Core
 $INSTALL -d -v "${LIBDIR}"
-$INSTALL -m 0644 libmupen64plus.so* "${LIBDIR}"
-ldconfig
+$INSTALL -m 0644 libmupen64plus.so.2.* "${LIBDIR}"
+/sbin/ldconfig
 $INSTALL -d -v "${SHAREDIR}"
 $INSTALL -m 0644 font.ttf "${SHAREDIR}"
 $INSTALL -m 0644 mupen64plus.cht "${SHAREDIR}"

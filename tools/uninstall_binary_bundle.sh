@@ -50,13 +50,13 @@ MANDIR="${6:-${PREFIX}/man/man6}"
 
 printf "Uninstalling Mupen64Plus Binary Bundle from ${PREFIX}\n"
 # Mupen64Plus-Core
-rm -f "${LIBDIR}/libmupen64plus.so*"
-ldconfig
+rm -f "${LIBDIR}"/libmupen64plus.so*
+/sbin/ldconfig
 rm -f "${SHAREDIR}/font.ttf"
 rm -f "${SHAREDIR}/mupen64plus.cht"
 rm -f "${SHAREDIR}/mupen64plus.ini"
 rm -f "${SHAREDIR}/m64p_test_rom.v64"
-rm -f "${SHAREDIR}/doc/*"
+rm -f "${SHAREDIR}"/doc/*
 # Mupen64Plus-UI-Console
 rm -f "${BINDIR}/mupen64plus"
 rm -f "${MANDIR}/mupen64plus.6.gz"
