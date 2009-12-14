@@ -363,12 +363,12 @@ targets:
 
 all: $(TARGET)
 
-install:
+install: $(TARGET)
 	$(INSTALL) -d -v "$(LIBDIR)"
 	$(INSTALL) -m 0644 $(TARGET) "$(LIBDIR)"
 	$(INSTALL) -d -v "$(SHAREDIR)"
 	$(INSTALL) -m 0644 ../../data/* "$(SHAREDIR)"
-	$(LDCONFIG) -n "$(LIBDIR)"
+	$(LDCONFIG)
 
 uninstall:
 	$(RM) -f "$(LIBDIR)/$(TARGET)"
