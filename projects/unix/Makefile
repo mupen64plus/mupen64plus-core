@@ -382,7 +382,7 @@ clean:
 
 # build rules
 $(TARGET): $(OBJECTS)
-	$(CXX) $(LDFLAGS) $(LIBS) $(OBJECTS) -o $@
+	$(CXX) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 	$(STRIP) $@
 	if [ "$(SONAME)" != "" ]; then ln -sf $@ $(SONAME); fi
 
