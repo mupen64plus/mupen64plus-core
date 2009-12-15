@@ -24,11 +24,11 @@
 set -e
 
 if [ $# -lt 2 ]; then
-    echo "Usage: build_bundle_src.sh <tag-name> <version-name>"
+    echo "Usage: build_bundle_src.sh <tag-name> <build-name>"
     exit 1
 fi
 
-OUTPUTDIR="mupen64plus-bundle-src-$2"
+OUTPUTDIR="mupen64plus-bundle-$2"
 
 echo "************************************ Creating directory: " ${OUTPUTDIR}
 rm -rf ${OUTPUTDIR}

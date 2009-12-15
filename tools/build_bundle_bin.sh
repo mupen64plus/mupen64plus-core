@@ -24,7 +24,7 @@
 set -e
 
 if [ $# -lt 2 ]; then
-    echo "Usage: build_bundle_bin.sh <tag-name> <version-name> [<makefile_param> ...]"
+    echo "Usage: build_bundle_bin.sh <tag-name> <build-name> [<makefile_param> ...]"
     exit 1
 fi
 
@@ -44,7 +44,7 @@ hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-video-rice
 shift
 for dirname in ./mupen64plus-*; do rm -rf ${dirname}/.hg*; done
 
-OUTPUTDIR="mupen64plus-bundle-bin-$1"
+OUTPUTDIR="mupen64plus-bundle-$1"
 shift
 
 echo "************************************ Building Mupen64Plus modules"
