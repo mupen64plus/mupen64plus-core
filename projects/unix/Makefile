@@ -21,8 +21,9 @@
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 # Makefile for Mupen64Plus Core
 
-# detect operation system
+# detect operating system
 UNAME = $(shell uname -s)
+OS := NONE
 ifeq ("$(UNAME)","Linux")
   OS = LINUX
 endif
@@ -35,13 +36,13 @@ endif
 ifeq ("$(UNAME)","FreeBSD")
   OS = FREEBSD
 endif
-
-ifeq ($(OS),)
-   $(error OS not supported or detected)
+ifeq ("$(OS)","NONE")
+  $(error OS type "$(UNAME)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
 
 # detect system architecture
 HOST_CPU ?= $(shell uname -m)
+CPU := NONE
 ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
   CPU := X86
   ifeq ("$(BITS)", "32")
@@ -54,19 +55,19 @@ ifneq ("$(filter pentium i%86,$(HOST_CPU))","")
   CPU := X86
   ARCH_DETECTED := 32BITS
 endif
-ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
-  CPU := PPC
-  ARCH_DETECTED := 32BITS
-  NO_ASM := 1
-endif
-ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
-  CPU := PPC
-  ARCH_DETECTED := 64BITS
-  NO_ASM := 1
-endif
-
-ifeq ($(CPU),)
-   $(error CPU not supported or detected)
+# PPC doesn't work yet
+#ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
+#  CPU := PPC
+#  ARCH_DETECTED := 32BITS
+#  NO_ASM := 1
+#endif
+#ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
+#  CPU := PPC
+#  ARCH_DETECTED := 64BITS
+#  NO_ASM := 1
+#endif
+ifeq ("$(CPU)","NONE")
+  $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
 
 # base CFLAGS, LIBS, and LDFLAGS
@@ -154,27 +155,16 @@ LIBS	+= $(shell freetype-config --libs)
 CFLAGS	+= $(shell freetype-config --cflags)
 
 # set base program pointers and flags
-ifeq ($(OS),FREEBSD)
-  CC       ?= gcc
-  CXX      ?= g++
-  LD       ?= g++
-  RM       ?= rm
-  INSTALL  ?= install
-  LDCONFIG ?= ldconfig
-  STRIP	   ?= strip -s
+CC       ?= gcc
+CXX      ?= g++
+LD       ?= g++
+RM       ?= rm
+INSTALL  ?= install
+LDCONFIG ?= ldconfig
+ifeq ($(OS),OSX)
+  STRIP	?= strip -x 
 else
-  CC       = gcc
-  CXX      = g++
-  LD       = g++
-  RM       = rm
-  INSTALL  = install
-  LDCONFIG = ldconfig
-  ifeq ($(OS),LINUX)
-    STRIP	= strip -s
-  endif
-  ifeq ($(OS),OSX)
-    STRIP	= strip -x 
-  endif
+  STRIP	?= strip -s
 endif
 
 # compiler/linker flags for various compile-time options.
@@ -352,6 +342,7 @@ targets:
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
 	@echo "    LIBDIR=path   == path to install core library (default: PREFIX/lib)"
+	@echo "    DESTDIR=path  == path to prepend to all installation paths (only for packagers)"
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
 	@echo "    DEBUG=1       == add debugging symbols to binaries"
@@ -364,18 +355,18 @@ targets:
 all: $(TARGET)
 
 install: $(TARGET)
-	$(INSTALL) -d -v "$(LIBDIR)"
-	$(INSTALL) -m 0644 $(TARGET) "$(LIBDIR)"
-	$(INSTALL) -d -v "$(SHAREDIR)"
-	$(INSTALL) -m 0644 ../../data/* "$(SHAREDIR)"
+	$(INSTALL) -d -v "$(DESTDIR)$(LIBDIR)"
+	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(LIBDIR)"
+	$(INSTALL) -d -v "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
 	$(LDCONFIG)
 
 uninstall:
-	$(RM) -f "$(LIBDIR)/$(TARGET)"
-	if [ "$(SONAME)" != "" ]; then $(RM) -f "$(LIBDIR)/$(SONAME)"; fi
-	$(RM) -f "$(SHAREDIR)/mupen64plus.cht"
-	$(RM) -f "$(SHAREDIR)/mupen64plus.ini"
-	$(RM) -f "$(SHAREDIR)/font.ttf"
+	$(RM) -f "$(DESTDIR)$(LIBDIR)/$(TARGET)"
+	if [ "$(SONAME)" != "" ]; then $(RM) -f "$(DESTDIR)$(LIBDIR)/$(SONAME)"; fi
+	$(RM) -f "$(DESTDIR)$(SHAREDIR)/mupen64plus.cht"
+	$(RM) -f "$(DESTDIR)$(SHAREDIR)/mupen64plus.ini"
+	$(RM) -f "$(DESTDIR)$(SHAREDIR)/font.ttf"
 
 clean:
 	$(RM) -rf $(TARGET) $(SONAME) ./_obj
