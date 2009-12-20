@@ -217,6 +217,9 @@ endif
 ifeq ($(LIBDIR),)
   LIBDIR := $(PREFIX)/lib
 endif
+ifeq ($(INCDIR),)
+  INCDIR := $(PREFIX)/include/mupen64plus
+endif
 
 SRCDIR = ../../src
 OBJDIR = _obj
@@ -342,6 +345,7 @@ targets:
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
 	@echo "    LIBDIR=path   == path to install core library (default: PREFIX/lib)"
+	@echo "    INCDIR=path   == path to install core header files (default: PREFIX/include/mupen64plus)"
 	@echo "    DESTDIR=path  == path to prepend to all installation paths (only for packagers)"
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
@@ -359,11 +363,14 @@ install: $(TARGET)
 	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(LIBDIR)"
 	$(INSTALL) -d -v "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -d -v "$(DESTDIR)$(INCDIR)"
+	$(INSTALL) -m 0644 ../../src/api/m64p_*.h "$(DESTDIR)$(INCDIR)"
 	$(LDCONFIG)
 
 uninstall:
 	$(RM) -f "$(DESTDIR)$(LIBDIR)/$(TARGET)"
 	if [ "$(SONAME)" != "" ]; then $(RM) -f "$(DESTDIR)$(LIBDIR)/$(SONAME)"; fi
+	$(RM) -f $(DESTDIR)$(INCDIR)/m64p_*.h
 	$(RM) -f "$(DESTDIR)$(SHAREDIR)/mupen64plus.cht"
 	$(RM) -f "$(DESTDIR)$(SHAREDIR)/mupen64plus.ini"
 	$(RM) -f "$(DESTDIR)$(SHAREDIR)/font.ttf"
