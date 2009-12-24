@@ -22,16 +22,16 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "r4300.h"
-#include "exception.h"
-#include "macros.h"
-#include "interupt.h"
-
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
 #include "memory/memory.h"
 #include "main/rom.h"
+
+#include "r4300.h"
+#include "exception.h"
+#include "macros.h"
+#include "interupt.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -48,7 +48,7 @@ static int skip;
 
 void prefetch();
 
-static void (*interp_ops[64])(void);
+extern void (*interp_ops[64])(void);
 
 extern unsigned int next_vi;
 
@@ -1033,7 +1033,7 @@ static void MTC0()
    switch(PC->f.r.nrd)
      {
       case 0:    // Index
-    Index = rrt & 0x8000003F;
+    Index = (unsigned int) rrt & 0x8000003F;
     if ((Index & 0x3F) > 31) 
       {
          DebugMessage(M64MSG_ERROR, "MTC0 writing Index register with TLB index > 31");
@@ -1043,19 +1043,19 @@ static void MTC0()
       case 1:    // Random
     break;
       case 2:    // EntryLo0
-    EntryLo0 = rrt & 0x3FFFFFFF;
+    EntryLo0 = (unsigned int) rrt & 0x3FFFFFFF;
     break;
       case 3:    // EntryLo1
-    EntryLo1 = rrt & 0x3FFFFFFF;
+    EntryLo1 = (unsigned int) rrt & 0x3FFFFFFF;
     break;
       case 4:    // Context
-    Context = (rrt & 0xFF800000) | (Context & 0x007FFFF0);
+    Context = ((unsigned int) rrt & 0xFF800000) | (Context & 0x007FFFF0);
     break;
       case 5:    // PageMask
-    PageMask = rrt & 0x01FFE000;
+    PageMask = (unsigned int) rrt & 0x01FFE000;
     break;
       case 6:    // Wired
-    Wired = rrt;
+    Wired = (unsigned int) rrt;
     Random = 31;
     break;
       case 8:    // BadVAddr
@@ -1064,27 +1064,27 @@ static void MTC0()
     update_count();
     if (next_interupt <= Count) gen_interupt();
     debug_count += Count;
-    translate_event_queue(rrt & 0xFFFFFFFF);
-    Count = rrt & 0xFFFFFFFF;
+    translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
+    Count = (unsigned int) rrt & 0xFFFFFFFF;
     debug_count -= Count;
     break;
       case 10:   // EntryHi
-    EntryHi = rrt & 0xFFFFE0FF;
+    EntryHi = (unsigned int) rrt & 0xFFFFE0FF;
     break;
       case 11:   // Compare
     update_count();
     remove_event(COMPARE_INT);
     add_interupt_event_count(COMPARE_INT, (unsigned int)rrt);
-    Compare = rrt;
+    Compare = (unsigned int) rrt;
     Cause = Cause & 0xFFFF7FFF; //Timer interupt is clear
     break;
       case 12:   // Status
     if((rrt & 0x04000000) != (Status & 0x04000000))
     {
-      shuffle_fpr_data(Status, rrt);
-      set_fpr_pointers(rrt);
+      shuffle_fpr_data(Status, (unsigned int) rrt);
+      set_fpr_pointers((unsigned int) rrt);
     }
-    Status = rrt;
+    Status = (unsigned int) rrt;
     interp_addr+=4;
     check_interupt();
     update_count();
@@ -1097,26 +1097,26 @@ static void MTC0()
          DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
          stop = 1;
       }
-    else Cause = rrt;
+    else Cause = (unsigned int) rrt;
     break;
       case 14:   // EPC
-    EPC = rrt;
+    EPC = (unsigned int) rrt;
     break;
       case 15:  // PRevID
     break;
       case 16:  // Config
-    Config = rrt;
+    Config = (unsigned int) rrt;
     break;
       case 18:  // WatchLo
-    WatchLo = rrt & 0xFFFFFFFF;
+    WatchLo = (unsigned int) rrt & 0xFFFFFFFF;
     break;
       case 19:  // WatchHi
-    WatchHi = rrt & 0xFFFFFFFF;
+    WatchHi = (unsigned int) rrt & 0xFFFFFFFF;
     break;
       case 27: // CacheErr
     break;
       case 28: // TagLo
-    TagLo = rrt & 0x0FFFFFC0;
+    TagLo = (unsigned int) rrt & 0x0FFFFFC0;
     break;
       case 29: // TagHi
     TagHi =0;
@@ -1338,56 +1338,56 @@ static void NEG_S()
 static void ROUND_L_S()
 {
    set_round();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_simple[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void TRUNC_L_S()
 {
    set_trunc();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_simple[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void CEIL_L_S()
 {
    set_ceil();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_simple[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void FLOOR_L_S()
 {
    set_floor();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_simple[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void ROUND_W_S()
 {
    set_round();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_simple[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void TRUNC_W_S()
 {
    set_trunc();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_simple[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void CEIL_W_S()
 {
    set_ceil();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_simple[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void FLOOR_W_S()
 {
    set_floor();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_simple[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
@@ -1401,14 +1401,14 @@ static void CVT_D_S()
 static void CVT_W_S()
 {
    set_rounding();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_simple[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
 static void CVT_L_S()
 {
    set_rounding();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_simple[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
@@ -1664,77 +1664,77 @@ static void NEG_D()
 static void ROUND_L_D()
 {
    set_round();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void TRUNC_L_D()
 {
    set_trunc();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void CEIL_L_D()
 {
    set_ceil();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void FLOOR_L_D()
 {
    set_floor();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void ROUND_W_D()
 {
    set_round();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void TRUNC_W_D()
 {
    set_trunc();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void CEIL_W_D()
 {
    set_ceil();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void FLOOR_W_D()
 {
    set_floor();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void CVT_S_D()
 {
    set_rounding();
-   *reg_cop1_simple[cffd] = *reg_cop1_double[cffs];
+   *reg_cop1_simple[cffd] = (float) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void CVT_W_D()
 {
    set_rounding();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
 static void CVT_L_D()
 {
    set_rounding();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
@@ -1921,7 +1921,7 @@ C_SF_D   ,C_NGLE_D ,C_SEQ_D ,C_NGL_D  ,C_LT_D   ,C_NGE_D  ,C_LE_D  ,C_NGT_D
 static void CVT_S_W()
 {
    set_rounding();
-   *reg_cop1_simple[cffd] = *((int*)reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) *((int*)reg_cop1_simple[cffs]);
    interp_addr+=4;
 }
 
@@ -1947,14 +1947,14 @@ static void (*interp_cop1_w[64])(void) =
 static void CVT_S_L()
 {
    set_rounding();
-   *reg_cop1_simple[cffd] = *((long long*)(reg_cop1_double[cffs]));
+   *reg_cop1_simple[cffd] = (float) *((long long*)(reg_cop1_double[cffs]));
    interp_addr+=4;
 }
 
 static void CVT_D_L()
 {
    set_rounding();
-   *reg_cop1_double[cffd] = *((long long*)(reg_cop1_double[cffs]));
+   *reg_cop1_double[cffd] = (double) *((long long*)(reg_cop1_double[cffs]));
    interp_addr+=4;
 }
 
@@ -2741,7 +2741,7 @@ static void SB()
 {
    interp_addr+=4;
    address = iimmediate + irs32;
-   byte = (unsigned char)(irt & 0xFF);
+   cpu_byte = (unsigned char)(irt & 0xFF);
    write_byte_in_memory();
 }
 
@@ -2768,19 +2768,19 @@ static void SWL()
     address = (iimmediate + irs32) & 0xFFFFFFFC;
     rdword = &old_word;
     read_word_in_memory();
-    word = ((unsigned int)irt >> 8) | (old_word & 0xFF000000);
+    word = ((unsigned int)irt >> 8) | ((unsigned int) old_word & 0xFF000000);
     write_word_in_memory();
     break;
       case 2:
     address = (iimmediate + irs32) & 0xFFFFFFFC;
     rdword = &old_word;
     read_word_in_memory();
-    word = ((unsigned int)irt >> 16) | (old_word & 0xFFFF0000);
+    word = ((unsigned int)irt >> 16) | ((unsigned int) old_word & 0xFFFF0000);
     write_word_in_memory();
     break;
       case 3:
     address = iimmediate + irs32;
-    byte = (unsigned char)(irt >> 24);
+    cpu_byte = (unsigned char)(irt >> 24);
     write_byte_in_memory();
     break;
      }
@@ -2930,21 +2930,21 @@ static void SWR()
     address = iimmediate + irs32;
     rdword = &old_word;
     read_word_in_memory();
-    word = ((unsigned int)irt << 24) | (old_word & 0x00FFFFFF);
+    word = ((unsigned int)irt << 24) | ((unsigned int) old_word & 0x00FFFFFF);
     write_word_in_memory();
     break;
       case 1:
     address = (iimmediate + irs32) & 0xFFFFFFFC;
     rdword = &old_word;
     read_word_in_memory();
-    word = ((unsigned int)irt << 16) | (old_word & 0x0000FFFF);
+    word = ((unsigned int)irt << 16) | ((unsigned int) old_word & 0x0000FFFF);
     write_word_in_memory();
     break;
       case 2:
     address = (iimmediate + irs32) & 0xFFFFFFFC;
     rdword = &old_word;
     read_word_in_memory();
-    word = ((unsigned int)irt << 8) | (old_word & 0x000000FF);
+    word = ((unsigned int)irt << 8) | ((unsigned int) old_word & 0x000000FF);
     write_word_in_memory();
     break;
       case 3:
@@ -2976,17 +2976,17 @@ static void LWC1()
    unsigned long long int temp;
    if (check_cop1_unusable()) return;
    interp_addr+=4;
-   address = lfoffset+reg[lfbase];
+   address = (unsigned int) (lfoffset + reg[lfbase]);
    rdword = &temp;
    read_word_in_memory();
-   *((int*)reg_cop1_simple[lfft]) = *rdword;
+   *((int*)reg_cop1_simple[lfft]) = (int) *rdword;
 }
 
 static void LDC1()
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
-   address = lfoffset+reg[lfbase];
+   address = (unsigned int) (lfoffset + reg[lfbase]);
    rdword = (unsigned long long*) reg_cop1_double[lfft];
    read_dword_in_memory();
 }
@@ -3022,7 +3022,7 @@ static void SWC1()
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
-   address = lfoffset+reg[lfbase];
+   address = (unsigned int) (lfoffset + reg[lfbase]);
    word = *((int*)reg_cop1_simple[lfft]);
    write_word_in_memory();
 }
@@ -3031,7 +3031,7 @@ static void SDC1()
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
-   address = lfoffset+reg[lfbase];
+   address = (unsigned int) (lfoffset + reg[lfbase]);
    dword = *((unsigned long long*)reg_cop1_double[lfft]);
    write_dword_in_memory();
 }
@@ -3044,7 +3044,7 @@ static void SD()
    write_dword_in_memory();
 }
 
-static void (*interp_ops[64])(void) =
+void (*interp_ops[64])(void) =
 {
    SPECIAL, REGIMM, J   , JAL  , BEQ , BNE , BLEZ , BGTZ ,
    ADDI   , ADDIU , SLTI, SLTIU, ANDI, ORI , XORI , LUI  ,
@@ -3103,7 +3103,7 @@ void pure_interpreter()
 {
    interp_addr = 0xa4000040;
    stop=0;
-   PC = malloc(sizeof(precomp_instr));
+   PC = (precomp_instr *) malloc(sizeof(precomp_instr));
    PC->addr = last_addr = interp_addr;
 
 /*#ifdef DBG
@@ -3129,7 +3129,7 @@ void pure_interpreter()
 void interprete_section(unsigned int addr)
 {
    interp_addr = addr;
-   PC = malloc(sizeof(precomp_instr));
+   PC = (precomp_instr *) malloc(sizeof(precomp_instr));
    last_addr = interp_addr;
    while (!stop && (addr >> 12) == (interp_addr >> 12))
      {

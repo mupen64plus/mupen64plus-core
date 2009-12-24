@@ -224,7 +224,7 @@ static int event_sdl_filter(const SDL_Event *event)
         case SDL_JOYHATMOTION:
             for (cmd = 0; cmd < NumJoyCommands; cmd++)
             {
-                action = MatchJoyCommand(event, cmd);
+                action = MatchJoyCommand(event, (eJoyCommand) cmd);
                 if (action == 1) /* command was just activated (button down, etc) */
                 {
                     if (cmd == joyFullscreen)

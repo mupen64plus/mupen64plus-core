@@ -24,11 +24,6 @@
 
 #include <SDL.h>
 
-#include "interupt.h"
-#include "r4300.h"
-#include "macros.h"
-#include "exception.h"
-
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "memory/memory.h"
@@ -38,6 +33,11 @@
 #include "main/cheat.h"
 #include "osd/osd.h"
 #include "plugin/plugin.h"
+
+#include "interupt.h"
+#include "r4300.h"
+#include "macros.h"
+#include "exception.h"
 
 #ifdef WITH_LIRC
 #include "main/lirc.h"
@@ -124,7 +124,7 @@ void add_interupt_event(int type, unsigned int delay)
    
     if (q == NULL)
     {
-        q = malloc(sizeof(interupt_queue));
+        q = (interupt_queue *) malloc(sizeof(interupt_queue));
         q->next = NULL;
         q->count = count;
         q->type = type;
@@ -135,7 +135,7 @@ void add_interupt_event(int type, unsigned int delay)
    
     if(before_event(count, q->count, q->type) && !special)
     {
-        q = malloc(sizeof(interupt_queue));
+        q = (interupt_queue *) malloc(sizeof(interupt_queue));
         q->next = aux;
         q->count = count;
         q->type = type;
@@ -149,7 +149,7 @@ void add_interupt_event(int type, unsigned int delay)
    
     if (aux->next == NULL)
     {
-        aux->next = malloc(sizeof(interupt_queue));
+        aux->next = (interupt_queue *) malloc(sizeof(interupt_queue));
         aux = aux->next;
         aux->next = NULL;
         aux->count = count;
@@ -162,7 +162,7 @@ void add_interupt_event(int type, unsigned int delay)
             while(aux->next != NULL && aux->next->count == count)
                 aux = aux->next;
         aux2 = aux->next;
-        aux->next = malloc(sizeof(interupt_queue));
+        aux->next = (interupt_queue *) malloc(sizeof(interupt_queue));
         aux = aux->next;
         aux->next = aux2;
         aux->count = count;
@@ -297,14 +297,14 @@ void check_interupt()
     {
         if(q == NULL)
         {
-            q = malloc(sizeof(interupt_queue));
+            q = (interupt_queue *) malloc(sizeof(interupt_queue));
             q->next = NULL;
             q->count = Count;
             q->type = CHECK_INT;
         }
         else
         {
-            interupt_queue* aux = malloc(sizeof(interupt_queue));
+            interupt_queue* aux = (interupt_queue *) malloc(sizeof(interupt_queue));
             aux->next = q;
             aux->count = Count;
             aux->type = CHECK_INT;

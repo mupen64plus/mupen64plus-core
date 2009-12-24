@@ -22,6 +22,12 @@
 #ifndef R4300_H
 #define R4300_H
 
+#if defined(WIN32)
+  // for isnan()
+  #include <float.h>
+  #define isnan _isnan
+#endif
+
 #include "recomp.h"
 #include "memory/tlb.h"
 

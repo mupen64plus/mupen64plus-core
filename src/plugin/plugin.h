@@ -26,7 +26,7 @@
 #include "api/m64p_types.h"
 #include "api/m64p_plugin.h"
 
-extern m64p_error plugin_connect(m64p_plugin_type, m64p_handle plugin_handle);
+extern m64p_error plugin_connect(m64p_plugin_type, m64p_dynlib_handle plugin_handle);
 extern m64p_error plugin_start(m64p_plugin_type);
 extern m64p_error plugin_check(void);
 

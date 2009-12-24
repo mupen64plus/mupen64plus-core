@@ -74,7 +74,7 @@ void init_flashram()
 
 unsigned int flashram_status()
 {
-    return (status >> 32);
+    return (unsigned int) (status >> 32);
 }
 
 void flashram_command(unsigned int command)
@@ -104,8 +104,8 @@ void flashram_command(unsigned int command)
                 {
                    char *filename;
                    FILE *f;
-                   int i;
-                   filename = malloc(strlen(get_savespath())+
+                   unsigned int i;
+                   filename = (char *) malloc(strlen(get_savespath())+
                               strlen(ROM_SETTINGS.goodname)+4+1);
                    strcpy(filename, get_savespath());
                    strcat(filename, ROM_SETTINGS.goodname);
@@ -145,7 +145,7 @@ void flashram_command(unsigned int command)
                     char *filename;
                     FILE *f;
                     int i;
-                    filename = malloc(strlen(get_savespath())+
+                    filename = (char *) malloc(strlen(get_savespath())+
                                strlen(ROM_SETTINGS.goodname)+4+1);
                     strcpy(filename, get_savespath());
                     strcat(filename, ROM_SETTINGS.goodname);
@@ -206,7 +206,7 @@ void flashram_command(unsigned int command)
 
 void dma_read_flashram()
 {
-    int i;
+    unsigned int i;
     char *filename;
     FILE *f;
     
@@ -217,7 +217,7 @@ void dma_read_flashram()
             rdram[pi_register.pi_dram_addr_reg/4+1] = (unsigned int)(status);
             break;
         case READ_MODE:
-            filename = malloc(strlen(get_savespath())+
+            filename = (char *) malloc(strlen(get_savespath())+
                        strlen(ROM_SETTINGS.goodname)+4+1);
             strcpy(filename, get_savespath());
             strcat(filename, ROM_SETTINGS.goodname);

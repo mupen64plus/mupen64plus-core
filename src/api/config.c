@@ -157,7 +157,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     /* if a data directory was specified, make a copy of it */
     if (DataDirOverride != NULL)
     {
-        l_DataDirOverride = malloc(strlen(DataDirOverride) + 1);
+        l_DataDirOverride = (char *) malloc(strlen(DataDirOverride) + 1);
         if (l_DataDirOverride == NULL)
             return M64ERR_NO_MEMORY;
         strcpy(l_DataDirOverride, DataDirOverride);
@@ -608,7 +608,7 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
         case M64TYPE_STRING:
             if (var->val_string != NULL)
                 free(var->val_string);
-            var->val_string = malloc(strlen((char *) ParamValue) + 1);
+            var->val_string = (char *) malloc(strlen((char *) ParamValue) + 1);
             if (var->val_string == NULL)
                 return M64ERR_NO_MEMORY;
             memcpy(var->val_string, ParamValue, strlen((char *) ParamValue) + 1);
@@ -653,7 +653,7 @@ EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const
         case M64TYPE_STRING:
         {
             const char *string = ConfigGetParamString(ConfigSectionHandle, ParamName);
-            strncpy(ParamValue, string, MaxSize);
+            strncpy((char *) ParamValue, string, MaxSize);
             *((char *) ParamValue + MaxSize - 1) = 0;
             break;
         }
@@ -717,7 +717,7 @@ EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, cons
         var->comment = NULL;
     else
     {
-        var->comment = malloc(strlen(ParamHelp) + 1);
+        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
         if (var->comment == NULL)
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
@@ -758,7 +758,7 @@ EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, co
         var->comment = NULL;
     else
     {
-        var->comment = malloc(strlen(ParamHelp) + 1);
+        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
@@ -799,7 +799,7 @@ EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, con
         var->comment = NULL;
     else
     {
-        var->comment = malloc(strlen(ParamHelp) + 1);
+        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
@@ -842,7 +842,7 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
         var->comment = NULL;
     else
     {
-        var->comment = malloc(strlen(ParamHelp) + 1);
+        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
         strcpy(var->comment, ParamHelp);
@@ -928,7 +928,7 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
         case M64TYPE_FLOAT:
             return var->val_float;
         case M64TYPE_BOOL:
-            return (var->val_int != 0) ? 1.0 : 0.0;
+            return (var->val_int != 0) ? 1.0f : 0.0f;
         case M64TYPE_STRING:
             return (float) atof(var->val_string);
         default:

@@ -42,17 +42,17 @@ static int jumps_number, max_jumps_number;
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)
 {
    if (block_jumps_table)
-     {
-    jumps_table = block_jumps_table;
-    jumps_number = block_jumps_number;
-    max_jumps_number = jumps_number;
-     }
+   {
+     jumps_table = (jump_table *) block_jumps_table;
+     jumps_number = block_jumps_number;
+     max_jumps_number = jumps_number;
+   }
    else
-     {
-    jumps_table = malloc(1000*sizeof(jump_table));
-    jumps_number = 0;
-    max_jumps_number = 1000;
-     }
+   {
+     jumps_table = (jump_table *) malloc(1000*sizeof(jump_table));
+     jumps_number = 0;
+     max_jumps_number = 1000;
+   }
 }
 
 void free_assembler(void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number)
@@ -66,10 +66,10 @@ void free_assembler(void **block_jumps_table, int *block_jumps_number, void **bl
 static void add_jump(unsigned int pc_addr, unsigned int mi_addr)
 {
    if (jumps_number == max_jumps_number)
-     {
-    max_jumps_number += 1000;
-    jumps_table = realloc(jumps_table, max_jumps_number*sizeof(jump_table));
-     }
+   {
+     max_jumps_number += 1000;
+     jumps_table = (jump_table *) realloc(jumps_table, max_jumps_number*sizeof(jump_table));
+   }
    jumps_table[jumps_number].pc_addr = pc_addr;
    jumps_table[jumps_number].mi_addr = mi_addr;
    jumps_number++;
@@ -80,19 +80,19 @@ static void put8(unsigned char octet)
    (*inst_pointer)[code_length] = octet;
    code_length++;
    if (code_length == max_code_length)
-     {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
-     }
+   {
+     *inst_pointer = (unsigned char *) realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
+     max_code_length += 8192;
+   }
 }
 
 static void put16(unsigned short word)
 {
    if ((code_length+2) >= max_code_length)
-     {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
-     }
+   {
+     *inst_pointer = (unsigned char *) realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
+     max_code_length += 8192;
+   }
    *((unsigned short *)(&(*inst_pointer)[code_length])) = word;
    code_length+=2;
 }
@@ -100,34 +100,35 @@ static void put16(unsigned short word)
 static void put32(unsigned int dword)
 {
    if ((code_length+4) >= max_code_length)
-     {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
-     }
+   {
+     *inst_pointer = (unsigned char *) realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
+     max_code_length += 8192;
+   }
    *((unsigned int *)(&(*inst_pointer)[code_length])) = dword;
    code_length+=4;
 }
 
 void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
 {
-   unsigned int i, real_code_length, addr_dest;
+   unsigned int real_code_length, addr_dest;
+   int i;
    build_wrappers(dest, start, end, block);
    real_code_length = code_length;
    
-   for (i=0; i<jumps_number; i++)
+   for (i=0; i < jumps_number; i++)
+   {
+     code_length = jumps_table[i].pc_addr;
+     if (dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.need_map)
      {
-    code_length = jumps_table[i].pc_addr;
-    if (dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.need_map)
-      {
-         addr_dest = (unsigned int)dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.jump_wrapper;
-         put32(addr_dest-((unsigned int)block->code+code_length)-4);
-      }
-    else
-      {
-         addr_dest = dest[(jumps_table[i].mi_addr - dest[0].addr)/4].local_addr;
-         put32(addr_dest-code_length-4);
-      }
+       addr_dest = (unsigned int)dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.jump_wrapper;
+       put32(addr_dest-((unsigned int)block->code+code_length)-4);
      }
+     else
+     {
+       addr_dest = dest[(jumps_table[i].mi_addr - dest[0].addr)/4].local_addr;
+       put32(addr_dest-code_length-4);
+     }
+   }
    code_length = real_code_length;
 }
 
@@ -152,7 +153,11 @@ void jump_end_rel8(void)
   if (jump_vec > 127 || jump_vec < -128)
   {
     DebugMessage(M64MSG_ERROR, "8-bit relative jump too long! From %x to %x", g_jump_start8, jump_end);
+#if defined(WIN32)
+    __asm{ int 3 };
+#else
     asm(" int $3; ");
+#endif
   }
 
   code_length = g_jump_start8 - 1;

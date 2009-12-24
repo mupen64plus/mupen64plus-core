@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "api/m64p_types.h"
+
 #include "dma.h"
 #include "memory.h"
 #include "pif.h"
@@ -33,7 +35,6 @@
 #include "r4300/macros.h"
 #include "r4300/ops.h"
 
-#include "api/m64p_types.h"
 #include "api/config.h"
 #include "api/callbacks.h"
 #include "main/main.h"
@@ -43,7 +44,7 @@ static unsigned char sram[0x8000];
 
 void dma_pi_read()
 {
-    int i;
+    unsigned int i;
    
     if (pi_register.pi_cart_addr_reg >= 0x08000000
     && pi_register.pi_cart_addr_reg < 0x08010000)
@@ -52,7 +53,7 @@ void dma_pi_read()
         {
             char *filename;
             FILE *f;
-            filename = malloc(strlen(get_savespath())+
+            filename = (char *) malloc(strlen(get_savespath())+
             strlen(ROM_SETTINGS.goodname)+4+1);
             strcpy(filename, get_savespath());
             strcat(filename, ROM_SETTINGS.goodname);
@@ -122,7 +123,7 @@ void dma_pi_write()
                 FILE *f;
                 int i;
                 
-                filename = malloc(strlen(get_savespath())+
+                filename = (char *) malloc(strlen(get_savespath())+
                 strlen(ROM_SETTINGS.goodname)+4+1);
                 strcpy(filename, get_savespath());
                 strcat(filename, ROM_SETTINGS.goodname);
@@ -142,7 +143,7 @@ void dma_pi_write()
                 
                 free(filename);
                 
-                for (i=0; i<(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
+                for (i=0; i<(int)(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
                 {
                     ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
                     sram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)+i)^S8];
@@ -182,7 +183,7 @@ void dma_pi_write()
 
     longueur = (pi_register.pi_wr_len_reg & 0xFFFFFF)+1;
     i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF;
-    longueur = (i + longueur) > rom_size ?
+    longueur = (i + (int) longueur) > rom_size ?
     (rom_size - i) : longueur;
     longueur = (pi_register.pi_dram_addr_reg + longueur) > 0x7FFFFF ?
     (0x7FFFFF - pi_register.pi_dram_addr_reg) : longueur;
@@ -198,7 +199,7 @@ void dma_pi_write()
     
     if(r4300emu != CORE_PURE_INTERPRETER)
     {
-        for (i=0; i<longueur; i++)
+        for (i=0; i<(int)longueur; i++)
         {
             unsigned long rdram_address1 = pi_register.pi_dram_addr_reg+i+0x80000000;
             unsigned long rdram_address2 = pi_register.pi_dram_addr_reg+i+0xa0000000;
@@ -223,7 +224,7 @@ void dma_pi_write()
     }
     else
     {
-        for (i=0; i<longueur; i++)
+        for (i=0; i<(int)longueur; i++)
         {
             ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
             rom[(((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)+i)^S8];
@@ -274,7 +275,7 @@ void dma_pi_write()
     
 void dma_sp_write()
 {
-    int i;
+    unsigned int i;
     
     if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
     {
@@ -296,7 +297,7 @@ void dma_sp_write()
 
 void dma_sp_read()
 {
-    int i;
+    unsigned int i;
     
     if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
     {

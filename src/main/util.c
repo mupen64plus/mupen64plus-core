@@ -27,13 +27,14 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/stat.h>
 
 #include "rom.h"
 #include "util.h"
+#include "osal/files.h"
+#include "osal/strings.h"
 
 /** trim
  *    Removes leading and trailing whitespace from str. Function modifies str
@@ -41,7 +42,7 @@
  */
 char *trim(char *str)
 {
-    int i;
+    unsigned int i;
     char *p = str;
 
     while (isspace(*p))
@@ -78,26 +79,6 @@ char* strnstrip(char* string, int size)
 }
 
 /** file utilities **/
-
-/** isfile
- *    Returns TRUE if given file path exists and is a regular file
- */
-int isfile(char *path)
-{
-    struct stat sbuf;
-
-    return (stat(path, &sbuf) == 0) && S_ISREG(sbuf.st_mode);
-}
-
-/** isdir
- *    Returns TRUE if given file path exists and is a directory
- */
-int isdir(char *path)
-{
-    struct stat sbuf;
-
-    return (stat(path, &sbuf) == 0) && S_ISDIR(sbuf.st_mode);
-}
 
 /** copyfile
  *    copies file at src to a new file dest. If dest exists, its contents will be truncated and replaced.
@@ -158,7 +139,7 @@ list_node_t *list_prepend(list_t *list, void *data)
 
     if(list_empty(*list))
     {
-        (*list) = malloc(sizeof(list_node_t));
+        (*list) = (list_t) malloc(sizeof(list_node_t));
         (*list)->data = data;
         (*list)->prev = NULL;
         (*list)->next = NULL;
@@ -167,7 +148,7 @@ list_node_t *list_prepend(list_t *list, void *data)
 
     // create new node and prepend it to the list
     first_node = *list;
-    new_node = malloc(sizeof(list_node_t));
+    new_node = (list_node_t *) malloc(sizeof(list_node_t));
     first_node->prev = new_node;
     *list = new_node;
 
@@ -191,7 +172,7 @@ list_node_t *list_append(list_t *list, void *data)
 
     if(list_empty(*list))
     {
-        (*list) = malloc(sizeof(list_node_t));
+        (*list) = (list_t) malloc(sizeof(list_node_t));
         (*list)->data = data;
         (*list)->prev = NULL;
         (*list)->next = NULL;
@@ -204,7 +185,7 @@ list_node_t *list_append(list_t *list, void *data)
         last_node = last_node->next;
 
     // create new node and return it
-    last_node->next = new_node = malloc(sizeof(list_node_t));
+    last_node->next = new_node = (list_node_t *) malloc(sizeof(list_node_t));
     new_node->data = data;
     new_node->prev = last_node;
     new_node->next = NULL;
@@ -616,14 +597,14 @@ list_t tokenize_string(const char *string, const char* delim)
     token = strtok(buf, delim);
     if (token)
     {
-        wrk = malloc(strlen(token) + 1);
+        wrk = (char *) malloc(strlen(token) + 1);
         strcpy(wrk, token);
         list_append(&list, wrk);
     }
 
     while ((token = strtok(NULL, delim)))
     {
-        wrk = malloc(strlen(token) + 1);
+        wrk = (char *) malloc(strlen(token) + 1);
         strcpy(wrk, token);
         list_append(&list, wrk);
     }

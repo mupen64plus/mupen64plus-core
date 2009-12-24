@@ -34,6 +34,7 @@
 #include "util.h"
 
 #include "memory/memory.h"
+#include "osal/strings.h"
 #include "osd/osd.h"
 
 #define DEFAULT 16
@@ -130,7 +131,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     g_MemHasBeenBSwapped = 0;
     /* allocate new buffer for ROM and copy into this buffer */
     rom_size = size;
-    rom = malloc(size);
+    rom = (unsigned char *) malloc(size);
     if (rom == NULL)
         return M64ERR_NO_MEMORY;
     memcpy(rom, romimage, size);
@@ -148,7 +149,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     /* allocate space for ROM_HEADER object, and copy the first N bytes into new buffer */
     if(ROM_HEADER)
         free(ROM_HEADER);
-    ROM_HEADER = malloc(sizeof(rom_header));
+    ROM_HEADER = (rom_header *) malloc(sizeof(rom_header));
     if(ROM_HEADER==NULL)
         return M64ERR_NO_MEMORY;
     memcpy(ROM_HEADER, rom, sizeof(rom_header));

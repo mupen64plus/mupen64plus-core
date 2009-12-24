@@ -204,7 +204,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_STATE_LOAD:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            main_state_load(ParamPtr);
+            main_state_load((char *) ParamPtr);
             return M64ERR_SUCCESS;
         case M64CMD_STATE_SAVE:
             if (!g_EmulatorRunning)
@@ -212,9 +212,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (ParamInt < 1 || ParamInt > 2)
                 return M64ERR_INPUT_INVALID;
             if (ParamInt == 2)
-                main_state_save(1, ParamPtr);  /* save a pj64 state file */
+                main_state_save(1, (char *) ParamPtr);  /* save a pj64 state file */
             else
-                main_state_save(0, ParamPtr);  /* save a mupen64plus state file */
+                main_state_save(0, (char *) ParamPtr);  /* save a mupen64plus state file */
             return M64ERR_SUCCESS;
         case M64CMD_STATE_SET_SLOT:
             if (ParamInt < 0 || ParamInt > 9)
@@ -236,7 +236,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             event_sdl_keyup(keysym, keymod);
             return M64ERR_SUCCESS;
         case M64CMD_SET_FRAME_CALLBACK:
-            g_FrameCallback = ParamPtr;
+            g_FrameCallback = (m64p_frame_callback) ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
             if (!g_EmulatorRunning)

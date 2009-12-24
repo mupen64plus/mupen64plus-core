@@ -21,6 +21,8 @@
 
 #include <string.h>
 
+#include "api/m64p_types.h"
+
 #include "memory.h"
 
 #include "r4300/r4300.h"

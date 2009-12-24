@@ -27,15 +27,15 @@
 #include <sys/mman.h>
 #endif
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "memory/memory.h"
+
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
 #include "macros.h"
 #include "r4300.h"
 #include "ops.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "memory/memory.h"
 
 // global variables :
 precomp_instr *dst; // destination structure for the recompiled instruction
@@ -2176,7 +2176,7 @@ void init_block(int *source, precomp_block *block)
   if (!block->block)
   {
     long memsize = ((length+1)+(length>>2)) * sizeof(precomp_instr);
-    block->block = malloc_exec(memsize);
+    block->block = (precomp_instr *) malloc_exec(memsize);
     memset(block->block, 0, memsize);
     already_exist = 0;
   }
@@ -2191,7 +2191,7 @@ void init_block(int *source, precomp_block *block)
 #else
       max_code_length = 32768;
 #endif
-      block->code = malloc_exec(max_code_length);
+      block->code = (unsigned char *) malloc_exec(max_code_length);
     }
     else
     {
@@ -2280,7 +2280,7 @@ void init_block(int *source, precomp_block *block)
     invalid_code[paddr>>12] = 0;
     if (!blocks[paddr>>12])
     {
-      blocks[paddr>>12] = malloc(sizeof(precomp_block));
+      blocks[paddr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
       blocks[paddr>>12]->code = NULL;
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
@@ -2294,7 +2294,7 @@ void init_block(int *source, precomp_block *block)
     invalid_code[paddr>>12] = 0;
     if (!blocks[paddr>>12])
     {
-      blocks[paddr>>12] = malloc(sizeof(precomp_block));
+      blocks[paddr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
       blocks[paddr>>12]->code = NULL;
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
@@ -2310,7 +2310,7 @@ void init_block(int *source, precomp_block *block)
     {
       if (!blocks[(block->start+0x20000000)>>12])
       {
-        blocks[(block->start+0x20000000)>>12] = malloc(sizeof(precomp_block));
+        blocks[(block->start+0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
         blocks[(block->start+0x20000000)>>12]->code = NULL;
         blocks[(block->start+0x20000000)>>12]->block = NULL;
         blocks[(block->start+0x20000000)>>12]->jumps_table = NULL;
@@ -2324,7 +2324,7 @@ void init_block(int *source, precomp_block *block)
     {
       if (!blocks[(block->start-0x20000000)>>12])
       {
-        blocks[(block->start-0x20000000)>>12] = malloc(sizeof(precomp_block));
+        blocks[(block->start-0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
         blocks[(block->start-0x20000000)>>12]->code = NULL;
         blocks[(block->start-0x20000000)>>12]->block = NULL;
         blocks[(block->start-0x20000000)>>12]->jumps_table = NULL;

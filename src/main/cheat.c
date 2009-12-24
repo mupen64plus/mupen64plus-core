@@ -30,6 +30,7 @@
 #include "api/config.h"
 
 #include "memory/memory.h"
+#include "osal/strings.h"
 #include "cheat.h"
 #include "main.h"
 #include "rom.h"
@@ -75,13 +76,13 @@ static void update_address_16bit(unsigned int address, unsigned short new_value)
 
 static void update_address_8bit(unsigned int address, unsigned char new_value)
 {
-    *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S8))) = new_value;
+    *(unsigned char *)((rdramb + ((address & 0xFFFFFF)^S8))) = new_value;
 }
 
 static int address_equal_to_8bit(unsigned int address, unsigned char value)
 {
     unsigned char value_read;
-    value_read = *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S8)));
+    value_read = *(unsigned char *)((rdramb + ((address & 0xFFFFFF)^S8)));
     return value_read == value;
 }
 
@@ -106,7 +107,7 @@ static int execute_cheat(unsigned int address, unsigned short value, int *old_va
             // if pointer to old value is valid and uninitialized, write current value to it
             if(old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE))
                 *old_value = (int) read_address_8bit(address);
-            update_address_8bit(address,value);
+            update_address_8bit(address,(unsigned char) value);
             return 1;
         case 0x81000000:
         case 0x89000000:
@@ -120,13 +121,13 @@ static int execute_cheat(unsigned int address, unsigned short value, int *old_va
             return 1;
         case 0xD0000000:
         case 0xD8000000:
-            return address_equal_to_8bit(address,value);
+            return address_equal_to_8bit(address,(unsigned char) value);
         case 0xD1000000:
         case 0xD9000000:
             return address_equal_to_16bit(address,value);
         case 0xD2000000:
         case 0xDB000000:
-            return !(address_equal_to_8bit(address,value));
+            return !(address_equal_to_8bit(address,(unsigned char) value));
         case 0xD3000000:
         case 0xDA000000:
             return !(address_equal_to_16bit(address,value));
@@ -147,7 +148,7 @@ static cheat_t *find_or_create_cheat(const char *name)
     int found = 0;
 
     list_foreach(active_cheats, node) {
-        cheat = node->data;
+        cheat = (cheat_t *) node->data;
         if (strcmp(cheat->name, name) == 0) {
             found = 1;
             break;
@@ -168,7 +169,7 @@ static cheat_t *find_or_create_cheat(const char *name)
     }
     else
     {
-        cheat = malloc(sizeof(cheat_t));
+        cheat = (cheat_t *) malloc(sizeof(cheat_t));
         cheat->name = strdup(name);
         cheat->cheat_codes = NULL;
         cheat->enabled = 0;
@@ -337,7 +338,7 @@ void cheat_delete_all(void)
 
     list_foreach(active_cheats, node1)
     {
-        cheat = node1->data;
+        cheat = (cheat_t *) node1->data;
         
         free(cheat->name);
 
@@ -368,7 +369,7 @@ int cheat_set_enabled(const char *name, int enabled)
 
     list_foreach(active_cheats, node)
     {
-        cheat = node->data;
+        cheat = (cheat_t *) node->data;
 
         if (strcmp(name, cheat->name) == 0)
         {
@@ -403,7 +404,7 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
     int i;
     for (i = 0; i < num_codes; i++)
     {
-        cheat_code_t *code = malloc(sizeof(cheat_code_t));
+        cheat_code_t *code = (cheat_code_t *) malloc(sizeof(cheat_code_t));
         code->address = code_list[i].address;
         code->value = code_list[i].value;
         code->old_value = CHEAT_CODE_MAGIC_VALUE;

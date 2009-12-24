@@ -26,11 +26,16 @@
  * gui subdirectories for the gui-specific code.
  * if you want to implement an interface, you should look here
  */
- 
+
+#if defined(WIN32)
+  #include <windows.h>
+#else
+  #include <sys/time.h>
+  #include <unistd.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <unistd.h>
 
 #include <SDL.h>
 
@@ -47,6 +52,7 @@
 
 #include "memory/memory.h"
 #include "osal/files.h"
+#include "osal/strings.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
@@ -96,7 +102,7 @@ char *get_savespath()
     return path;
 }
 
-void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...)
+void main_message(m64p_msg_level level, unsigned int corner, const char *format, ...)
 {
     va_list ap;
     char buffer[2049];
@@ -107,7 +113,7 @@ void main_message(m64p_msg_level level, unsigned int osd_corner, const char *for
 
     /* send message to on-screen-display if enabled */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
-        osd_new_message(osd_corner, buffer);
+        osd_new_message((osd_corner) corner, buffer);
     /* send message to front-end */
     DebugMessage(level, buffer);
 }
@@ -159,7 +165,7 @@ static unsigned int gettimeofday_msec(void)
     tmpres |= ft.dwHighDateTime;
     tmpres <<= 32;
     tmpres |= ft.dwLowDateTime;
-    foo = (((tmpres / 1000000UL) % 1000000) * 1000) + (tmpres % 1000000UL / 1000);
+    foo = (unsigned int) ((((tmpres / 1000000UL) % 1000000) * 1000) + (tmpres % 1000000UL / 1000));
 #else
     struct timeval tv;
 
@@ -463,7 +469,7 @@ void new_vi(void)
     
     if (Dif < AdjustedLimit) 
     {
-        CalculatedTime = CounterTime + AdjustedLimit * VI_Counter;
+        CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
         time = (int)(CalculatedTime - CurrentFPSTime);
         if (time > 0)
         {
@@ -491,7 +497,7 @@ void new_vi(void)
 */
 int main_run(void)
 {
-    VILimit = GetVILimit();
+    VILimit = (float) GetVILimit();
     VILimitMilliseconds = (double) 1000.0/VILimit; 
 
     g_EmulatorRunning = 1;

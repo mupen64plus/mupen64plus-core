@@ -47,7 +47,7 @@ static ini_entry *parse_entry(char *line)
 
     if ((equals_sign = strstr(line, "=")) != NULL)
     {
-        entry = malloc(sizeof(ini_entry));
+        entry = (ini_entry *) malloc(sizeof(ini_entry));
         for (i = 0; line != equals_sign; i++, line++)
         {
             key[i] = *line;
@@ -56,11 +56,11 @@ static ini_entry *parse_entry(char *line)
         strncpy(value, line, BUF_MAX);
 
         trim(key);
-        entry->key = malloc(strlen(key) + 1);
+        entry->key = (char *) malloc(strlen(key) + 1);
         strcpy(entry->key, key);
 
         trim(value);
-        entry->value = malloc(strlen(value) + 1);
+        entry->value = (char *) malloc(strlen(value) + 1);
         strcpy(entry->value, value);
     }
 
@@ -85,8 +85,8 @@ static ini_section *parse_section(char *line)
             {
                 buf[i++] = *opening_bracket;
             }
-            section = malloc(sizeof(ini_section));
-            section->title = malloc(strlen(buf) + 1);
+            section = (ini_section *) malloc(sizeof(ini_section));
+            section->title = (char *) malloc(strlen(buf) + 1);
             strcpy(section->title, buf);
             section->entries = NULL;
         }
@@ -141,7 +141,7 @@ ini_file* ini_file_parse(const char* filename)
         }
         else if ((entry = parse_entry(buf)))
         {
-            section = list_last_data(sections);
+            section = (ini_section *) list_last_data(sections);
             if (section) {
                 list_append(&section->entries, entry);
             }
@@ -158,8 +158,8 @@ ini_file* ini_file_parse(const char* filename)
 
     if (!list_empty(sections))
     {
-        res = malloc(sizeof(ini_file));
-        res->filename = malloc(strlen(filename) + 1);
+        res = (ini_file *) malloc(sizeof(ini_file));
+        res->filename = (char *) malloc(strlen(filename) + 1);
         strcpy(res->filename, filename);
         res->sections = sections;
     }
@@ -181,11 +181,11 @@ void ini_file_free(ini_file **ini)
 
     list_foreach((*ini)->sections, p1)
     {
-        section = p1->data;
+        section = (ini_section *) p1->data;
         free(section->title);
         list_foreach(section->entries, p2)
         {
-            entry = p2->data;
+            entry = (ini_entry *) p2->data;
             free(entry->key);
             free(entry->value);
         }

@@ -19,15 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "memory/memory.h"
+
 #include "r4300.h"
 #include "interupt.h"
 #include "ops.h"
 #include "exception.h"
 #include "macros.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "memory/memory.h"
 
 #ifdef DBG
   #include "debugger/dbg_types.h"

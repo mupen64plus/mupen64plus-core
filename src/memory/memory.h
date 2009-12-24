@@ -22,10 +22,6 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#ifdef __WIN32__
-#define byte __byte_
-#endif
-
 int init_memory(int DoByteSwap);
 void free_memory();
 #define read_word_in_memory() readmem[address>>16]()
@@ -44,7 +40,7 @@ extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
 extern unsigned int rdram[0x800000/4];
 extern unsigned int address, word;
-extern unsigned char byte;
+extern unsigned char cpu_byte;
 extern unsigned short hword;
 extern unsigned long long dword, *rdword;
 

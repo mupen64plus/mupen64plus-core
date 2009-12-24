@@ -29,6 +29,7 @@
 /* some file-related preprocessor definitions */
 #if defined(WIN32)
   #define OSAL_DIR_SEPARATOR           '\\'
+  #define unlink _unlink
 #else  /* Not WIN32 */
   #define OSAL_DIR_SEPARATOR           '/'
 #endif

@@ -28,7 +28,9 @@
 
 /* some file-related preprocessor definitions */
 #if defined(WIN32)
-  #define osal_insensitive_strcmp(x, y) stricmp(x, y)
+  #define osal_insensitive_strcmp(x, y) _stricmp(x, y)
+  #define snprintf _snprintf
+  #define strdup _strdup
 #else  /* Not WIN32 */
   #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
 #endif

@@ -99,7 +99,7 @@ void ROUND_L_D(void)
 {
    if (check_cop1_unusable()) return;
    set_round();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -107,7 +107,7 @@ void TRUNC_L_D(void)
 {
    if (check_cop1_unusable()) return;
    set_trunc();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -115,7 +115,7 @@ void CEIL_L_D(void)
 {
    if (check_cop1_unusable()) return;
    set_ceil();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -123,7 +123,7 @@ void FLOOR_L_D(void)
 {
    if (check_cop1_unusable()) return;
    set_floor();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -131,7 +131,7 @@ void ROUND_W_D(void)
 {
    if (check_cop1_unusable()) return;
    set_round();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -139,7 +139,7 @@ void TRUNC_W_D(void)
 {
    if (check_cop1_unusable()) return;
    set_trunc();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -147,7 +147,7 @@ void CEIL_W_D(void)
 {
    if (check_cop1_unusable()) return;
    set_ceil();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -155,7 +155,7 @@ void FLOOR_W_D(void)
 {
    if (check_cop1_unusable()) return;
    set_floor();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -163,7 +163,7 @@ void CVT_S_D(void)
 {
    if (check_cop1_unusable()) return;
    set_rounding();
-   *reg_cop1_simple[cffd] = *reg_cop1_double[cffs];
+   *reg_cop1_simple[cffd] = (float) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -171,7 +171,7 @@ void CVT_W_D(void)
 {
    if (check_cop1_unusable()) return;
    set_rounding();
-   *((int*)reg_cop1_simple[cffd]) = *reg_cop1_double[cffs];
+   *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    PC++;
 }
 
@@ -179,7 +179,7 @@ void CVT_L_D(void)
 {
    if (check_cop1_unusable()) return;
    set_rounding();
-   *((long long*)(reg_cop1_double[cffd])) = *reg_cop1_double[cffs];
+   *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    PC++;
 }
 
