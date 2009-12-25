@@ -34,7 +34,7 @@
 #define irt *PC->f.i.rt
 #define ioffset PC->f.i.immediate
 #define iimmediate PC->f.i.immediate
-#define lsaddr (PC-1)->f.i.immediate+(*(PC-1)->f.i.rs)
+#define lsaddr ((PC-1)->f.i.immediate+(*(PC-1)->f.i.rs))
 #define lsrt *(PC-1)->f.i.rt
 #define irs *PC->f.i.rs
 #define ibase *PC->f.i.rs
@@ -42,7 +42,7 @@
 #define lfbase PC->f.lf.base
 #define lfft PC->f.lf.ft
 #define lfoffset PC->f.lf.offset
-#define lslfaddr (PC-1)->f.lf.offset+reg[(PC-1)->f.lf.base]
+#define lslfaddr ((PC-1)->f.lf.offset+reg[(PC-1)->f.lf.base])
 #define lslfft (PC-1)->f.lf.ft
 #define cfft PC->f.cf.ft
 #define cffs PC->f.cf.fs

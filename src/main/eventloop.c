@@ -224,7 +224,7 @@ static int event_sdl_filter(const SDL_Event *event)
         case SDL_JOYHATMOTION:
             for (cmd = 0; cmd < NumJoyCommands; cmd++)
             {
-                action = MatchJoyCommand(event, cmd);
+                action = MatchJoyCommand(event, (eJoyCommand) cmd);
                 if (action == 1) /* command was just activated (button down, etc) */
                 {
                     if (cmd == joyFullscreen)
@@ -279,6 +279,7 @@ static int event_sdl_filter(const SDL_Event *event)
 
 void event_initialize(void)
 {
+    const char *event_str = NULL;
     int i;
 
     /* set initial state of all joystick commands to 'off' */
@@ -286,7 +287,6 @@ void event_initialize(void)
         JoyCmdActive[i] = 0;
 
     /* activate any joysticks which are referenced in the joystick event command strings */
-    const char *event_str = NULL;
     for (i = 0; i < NumJoyCommands; i++)
     {
         event_str = ConfigGetParamString(g_CoreConfig, JoyCmdName[i]);

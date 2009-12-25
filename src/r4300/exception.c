@@ -19,14 +19,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "memory/memory.h"
+
 #include "exception.h"
 #include "r4300.h"
 #include "macros.h"
 #include "recomph.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "memory/memory.h"
 
 extern unsigned int interp_addr;
 

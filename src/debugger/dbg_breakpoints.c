@@ -74,14 +74,14 @@ void enable_breakpoint( int bpt)
     
     if(BPT_CHECK_FLAG((*curBpt), BPT_FLAG_READ)) {
         for(bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
-            if(lookup_breakpoint(bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_READ) == -1)
-                activate_memory_break_read(bptAddr);
+            if(lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_READ) == -1)
+                activate_memory_break_read((uint32) bptAddr);
     }
 
     if(BPT_CHECK_FLAG((*curBpt), BPT_FLAG_WRITE)) {
         for(bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
-            if(lookup_breakpoint(bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_WRITE) == -1)
-                activate_memory_break_write(bptAddr);
+            if(lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_WRITE) == -1)
+                activate_memory_break_write((uint32) bptAddr);
     }
     
     BPT_SET_FLAG(g_Breakpoints[bpt], BPT_FLAG_ENABLED);
@@ -96,14 +96,14 @@ void disable_breakpoint( int bpt )
 
     if(BPT_CHECK_FLAG((*curBpt), BPT_FLAG_READ)) {
         for(bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
-            if(lookup_breakpoint(bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_READ) == -1)
-                deactivate_memory_break_read(bptAddr);
+            if(lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_READ) == -1)
+                deactivate_memory_break_read((uint32) bptAddr);
     }
 
     if(BPT_CHECK_FLAG((*curBpt), BPT_FLAG_WRITE)) {
         for(bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
-            if(lookup_breakpoint(bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_WRITE) == -1)
-                deactivate_memory_break_write(bptAddr);
+            if(lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0xFFFF, BPT_FLAG_ENABLED | BPT_FLAG_WRITE) == -1)
+                deactivate_memory_break_write((uint32) bptAddr);
     }
 
     BPT_CLEAR_FLAG(g_Breakpoints[bpt], BPT_FLAG_ENABLED);

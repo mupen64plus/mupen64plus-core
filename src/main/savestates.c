@@ -38,6 +38,7 @@
 #include "r4300/macros.h"
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
+#include "osal/strings.h"
 #include "osd/osd.h"
 
 #include "main/zip/unzip.h"
@@ -107,8 +108,7 @@ void savestates_select_filename(const char* fn)
 
 char* savestates_get_filename()
 {
-    size_t length;
-    length = strlen(ROM_SETTINGS.goodname)+4+1;
+    size_t length = strlen(ROM_SETTINGS.goodname)+4+1;
     char* filename = (char*)malloc(length);
     snprintf(filename, length, "%s.st%d", ROM_SETTINGS.goodname, slot);
     return filename;
@@ -116,8 +116,7 @@ char* savestates_get_filename()
 
 char* savestates_get_pj64_filename()
 {
-    size_t length;
-    length = strlen((char*)ROM_HEADER->nom)+8+1;
+    size_t length = strlen((char*)ROM_HEADER->nom)+8+1;
     char* filename = (char*)malloc(length);
     snprintf(filename, length, "%s.pj%d.zip", (char*)ROM_HEADER->nom, slot);
     return filename;
@@ -136,10 +135,11 @@ void savestates_save()
 
     if(fname[0]!=0)  /* A specific filename was given. */
         {
+        char *handle;
         file = malloc(strlen(fname)+1);
         filename = malloc(strlen(fname)+1);
         strcpy(file, fname);
-        char *handle = dirfrompath(file);
+        handle = dirfrompath(file);
         strcpy(filename, fname+strlen(handle));
         free(handle);
         fname[0] = 0;
@@ -236,10 +236,11 @@ void savestates_load()
 
     if(fname[0]!=0)  /* A specific filename was given. */
         {
+        char *handle;
         file = malloc(strlen(fname)+1);
         filename = malloc(strlen(fname)+1);
         strcpy(file, fname);
-        char *handle = dirfrompath(file);
+        handle = dirfrompath(file);
         strcpy(filename, fname+strlen(handle));
         free(handle);
         }
@@ -374,6 +375,7 @@ int savestates_save_pj64()
 {
     char *file, *filename;
     unsigned int i, vi_timer, addr;
+    int retval;
     size_t length;
     TLB_pj64 tlb_pj64[32];
     zipFile zipfile;
@@ -389,10 +391,11 @@ int savestates_save_pj64()
 
     if(fname[0]!=0)  /* A specific filename was given. */
         {
+        char *handle;
         file = malloc(strlen(fname)+1);
         filename = malloc(strlen(fname)+1);
         strcpy(file, fname);
-        char *handle = dirfrompath(file);
+        handle = dirfrompath(file);
         strcpy(filename, fname+strlen(handle));
         free(handle);
         }
@@ -414,7 +417,7 @@ int savestates_save_pj64()
         return -2;
         }
 
-    int retval = zipOpenNewFileInZip(zipfile, filename, &zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+    retval = zipOpenNewFileInZip(zipfile, filename, &zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
     if(retval!=ZIP_OK)
         {
         zipClose(zipfile, "");
@@ -507,17 +510,24 @@ void savestates_load_pj64()
 {
     char *file, *filename, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;
+    unsigned char exit = 1;
     int queuelength, i;
     size_t length;
     unzFile zipstatefile;
     unz_file_info fileinfo;
 
+    unsigned int *sp, *w_sp;
+    unsigned int *dpc, *w_dpc;
+    unsigned int *mi, *w_mi;
+    TLB_pj64 tlb_pj64;
+
     if(fname[0]!=0)  /* A specific filename was given. */
         {
+        char *handle;
         file = malloc(strlen(fname)+1);
         filename = malloc(strlen(fname)+1);
         strcpy(file, fname);
-        char *handle = dirfrompath(file);
+        handle = dirfrompath(file);
         strcpy(filename, fname+strlen(handle));
         free(handle);
         }
@@ -530,7 +540,6 @@ void savestates_load_pj64()
         }
 
     zipstatefile = unzOpen(file); /*Open the .zip file. */
-    unsigned char exit = 1;
     if(zipstatefile!=NULL)
         {
         if(unzGoToFirstFile(zipstatefile)==UNZ_OK)
@@ -635,8 +644,8 @@ void savestates_load_pj64()
     unzReadCurrentFile(zipstatefile, &value, 4); // SP_PC_REG -> Not part of mupen savestate. Dummy read.
     unzReadCurrentFile(zipstatefile, &value, 4); // SP_IBIST_REG -> Not part of mupen savestate. Dummy read.
 
-    unsigned int *w_sp = &sp_register.w_sp_status_reg; // Only done to reduce the amount
-    unsigned int *sp = &sp_register.sp_status_reg;     // of character in the below ifs / elses
+    w_sp = &sp_register.w_sp_status_reg; // Only done to reduce the amount
+    sp = &sp_register.sp_status_reg;     // of character in the below ifs / elses
     *w_sp = 0;
     if ((*sp & 0x0001) == 0) { *w_sp |= 0x0000001; }
     else                     { *w_sp |= 0x0000002; }
@@ -676,8 +685,8 @@ void savestates_load_pj64()
     unzReadCurrentFile(zipstatefile, &dpc_register.dpc_tmem, 4);
     unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
     unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
-    unsigned int *w_dpc = &dpc_register.w_dpc_status;
-    unsigned int *dpc = &dpc_register.dpc_status;
+    w_dpc = &dpc_register.w_dpc_status;
+    dpc = &dpc_register.dpc_status;
     *w_dpc = 0;
     if ((*dpc & 0x0001) == 0) { *w_dpc |= 0x0000001; }
     else                      { *w_dpc |= 0x0000002; }
@@ -705,8 +714,8 @@ void savestates_load_pj64()
     }
     // TODO: Unsecure about 'clear DP interrupt' (MI_register.w_mi_init_mode_reg[11])
     update_MI_intr_mask_reg();
-    unsigned int *w_mi = (unsigned int *) &MI_register.w_mi_intr_mask_reg;
-    unsigned int *mi = (unsigned int *) &MI_register.mi_intr_mask_reg;
+    w_mi = (unsigned int *) &MI_register.w_mi_intr_mask_reg;
+    mi = (unsigned int *) &MI_register.mi_intr_mask_reg;
     *w_mi = 0;
     if ((*mi & 0x01) == 0) { *w_mi |= 0x0000001; }
     else                   { *w_mi |= 0x0000002; }
@@ -744,7 +753,6 @@ void savestates_load_pj64()
     // tlb
     memset(tlb_LUT_r, 0, 0x400000);
     memset(tlb_LUT_w, 0, 0x400000);
-    TLB_pj64 tlb_pj64;
     for (i=0; i < 32; i++)
         {
         unsigned int j;

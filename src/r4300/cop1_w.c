@@ -27,7 +27,7 @@ void CVT_S_W(void)
 {  
    if (check_cop1_unusable()) return;
    set_rounding();
-   *reg_cop1_simple[cffd] = *((int*)reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) *((int*)reg_cop1_simple[cffs]);
    PC++;
 }
 

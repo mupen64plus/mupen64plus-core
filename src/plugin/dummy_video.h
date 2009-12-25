@@ -36,7 +36,7 @@ void dummyvideo_UpdateScreen(void);
 void dummyvideo_ViStatusChanged(void);
 void dummyvideo_ViWidthChanged(void);
 void dummyvideo_ReadScreen(void **dest, int *width, int *height);
-void dummyvideo_SetRenderingCallback(void (*callback)());
+void dummyvideo_SetRenderingCallback(void (*callback)(void));
 
 void dummyvideo_FBRead(unsigned int addr);
 void dummyvideo_FBWrite(unsigned int addr, unsigned int size);

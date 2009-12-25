@@ -275,14 +275,14 @@ uint64 read_memory_64_unaligned(uint32 addr)
 
 void write_memory_64(uint32 addr, uint64 value)
 {
-    write_memory_32(addr, value >> 32);
-    write_memory_32(addr + 4, value & 0xFFFFFFFF);
+    write_memory_32(addr, (uint32) (value >> 32));
+    write_memory_32(addr + 4, (uint32) (value & 0xFFFFFFFF));
 }
 
 void write_memory_64_unaligned(uint32 addr, uint64 value)
 {
-    write_memory_32_unaligned(addr, value >> 32);
-    write_memory_32_unaligned(addr + 4, value & 0xFFFFFFFF);
+    write_memory_32_unaligned(addr, (uint32) (value >> 32));
+    write_memory_32_unaligned(addr + 4, (uint32) (value & 0xFFFFFFFF));
 }
 
 uint32 read_memory_32(uint32 addr){

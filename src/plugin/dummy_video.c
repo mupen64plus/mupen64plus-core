@@ -84,7 +84,7 @@ void dummyvideo_ReadScreen (void **dest, int *width, int *height)
 
 }
 
-void dummyvideo_SetRenderingCallback(void (*callback)())
+void dummyvideo_SetRenderingCallback(void (*callback)(void))
 {
 
 }

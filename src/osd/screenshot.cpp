@@ -22,9 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <limits.h>
 
 #include <SDL_opengl.h>
 #include <SDL.h>
@@ -40,6 +37,7 @@ extern "C" {
 #include "main/util.h"
 #include "main/rom.h"
 #include "osal/files.h"
+#include "osal/strings.h"
 }
 
 /*********************************************************************************************************

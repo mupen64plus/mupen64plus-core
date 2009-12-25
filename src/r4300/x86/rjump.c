@@ -68,18 +68,18 @@ void dyna_start(void (*code)())
 #if defined(_WIN32) && !defined(__GNUC__)
    __asm
    {
-     mov _save_ebp, ebp
-     mov _save_esp, esp
+     mov save_ebp, ebp
+     mov save_esp, esp
      call point1
      jmp point2
    point1:
      pop eax
-     mov _save_eip, eax
+     mov save_eip, eax
      mov eax, code
      call eax
    point2:
-     mov ebp, _save_ebp
-     mov esp, _save_esp
+     mov ebp, save_ebp
+     mov esp, save_esp
    }
 #elif defined(__GNUC__) && defined(__i386__)
   #if defined(PIC)

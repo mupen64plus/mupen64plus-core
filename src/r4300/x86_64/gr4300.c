@@ -1703,7 +1703,7 @@ void gensb(void)
    mov_reg64_imm64(RAX, (unsigned long long) (dst+1)); // 10
    mov_m64rel_xreg64((unsigned long long *)(&PC), RAX); // 7
    mov_m32rel_xreg32((unsigned int *)(&address), EBX); // 7
-   mov_m8rel_xreg8((unsigned char *)(&byte), CL); // 7
+   mov_m8rel_xreg8((unsigned char *)(&cpu_byte), CL); // 7
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
    call_reg64(RBX); // 2

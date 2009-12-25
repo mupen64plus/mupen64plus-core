@@ -19,14 +19,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <sys/time.h>
-
 #include "r4300.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 
 #ifdef PROFILE
+#include <sys/time.h>
+
 static unsigned int time_in_section[5];
 static unsigned int last_start[5];
 static unsigned int last_refresh;

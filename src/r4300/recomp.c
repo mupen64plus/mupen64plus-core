@@ -27,15 +27,15 @@
 #include <sys/mman.h>
 #endif
 
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "memory/memory.h"
+
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
 #include "macros.h"
 #include "r4300.h"
 #include "ops.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "memory/memory.h"
 
 // global variables :
 precomp_instr *dst; // destination structure for the recompiled instruction
@@ -59,37 +59,37 @@ static int delay_slot_compiled = 0;
 
 
 
-static void RSV()
+static void RSV(void)
 {
    dst->ops = RESERVED;
    if (r4300emu == CORE_DYNAREC) genreserved();
 }
 
-static void RFIN_BLOCK()
+static void RFIN_BLOCK(void)
 {
    dst->ops = FIN_BLOCK;
    if (r4300emu == CORE_DYNAREC) genfin_block();
 }
 
-static void RNOTCOMPILED()
+static void RNOTCOMPILED(void)
 {
    dst->ops = NOTCOMPILED;
    if (r4300emu == CORE_DYNAREC) gennotcompiled();
 }
 
-static void recompile_standard_i_type()
+static void recompile_standard_i_type(void)
 {
    dst->f.i.rs = reg + ((src >> 21) & 0x1F);
    dst->f.i.rt = reg + ((src >> 16) & 0x1F);
    dst->f.i.immediate = src & 0xFFFF;
 }
 
-static void recompile_standard_j_type()
+static void recompile_standard_j_type(void)
 {
    dst->f.j.inst_index = src & 0x3FFFFFF;
 }
 
-static void recompile_standard_r_type()
+static void recompile_standard_r_type(void)
 {
    dst->f.r.rs = reg + ((src >> 21) & 0x1F);
    dst->f.r.rt = reg + ((src >> 16) & 0x1F);
@@ -97,14 +97,14 @@ static void recompile_standard_r_type()
    dst->f.r.sa = (src >>  6) & 0x1F;
 }
 
-static void recompile_standard_lf_type()
+static void recompile_standard_lf_type(void)
 {
    dst->f.lf.base = (src >> 21) & 0x1F;
    dst->f.lf.ft = (src >> 16) & 0x1F;
    dst->f.lf.offset = src & 0xFFFF;
 }
 
-static void recompile_standard_cf_type()
+static void recompile_standard_cf_type(void)
 {
    dst->f.cf.ft = (src >> 16) & 0x1F;
    dst->f.cf.fs = (src >> 11) & 0x1F;
@@ -115,13 +115,13 @@ static void recompile_standard_cf_type()
 //                                  SPECIAL                                
 //-------------------------------------------------------------------------
 
-static void RNOP()
+static void RNOP(void)
 {
    dst->ops = NOP;
    if (r4300emu == CORE_DYNAREC) gennop();
 }
 
-static void RSLL()
+static void RSLL(void)
 {
    dst->ops = SLL;
    recompile_standard_r_type();
@@ -129,7 +129,7 @@ static void RSLL()
    else if (r4300emu == CORE_DYNAREC) gensll();
 }
 
-static void RSRL()
+static void RSRL(void)
 {
    dst->ops = SRL;
    recompile_standard_r_type();
@@ -137,7 +137,7 @@ static void RSRL()
    else if (r4300emu == CORE_DYNAREC) gensrl();
 }
 
-static void RSRA()
+static void RSRA(void)
 {
    dst->ops = SRA;
    recompile_standard_r_type();
@@ -145,7 +145,7 @@ static void RSRA()
    else if (r4300emu == CORE_DYNAREC) gensra();
 }
 
-static void RSLLV()
+static void RSLLV(void)
 {
    dst->ops = SLLV;
    recompile_standard_r_type();
@@ -153,7 +153,7 @@ static void RSLLV()
    else if (r4300emu == CORE_DYNAREC) gensllv();
 }
 
-static void RSRLV()
+static void RSRLV(void)
 {
    dst->ops = SRLV;
    recompile_standard_r_type();
@@ -161,7 +161,7 @@ static void RSRLV()
    else if (r4300emu == CORE_DYNAREC) gensrlv();
 }
 
-static void RSRAV()
+static void RSRAV(void)
 {
    dst->ops = SRAV;
    recompile_standard_r_type();
@@ -169,39 +169,39 @@ static void RSRAV()
    else if (r4300emu == CORE_DYNAREC) gensrav();
 }
 
-static void RJR()
+static void RJR(void)
 {
    dst->ops = JR;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) genjr();
 }
 
-static void RJALR()
+static void RJALR(void)
 {
    dst->ops = JALR;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genjalr();
 }
 
-static void RSYSCALL()
+static void RSYSCALL(void)
 {
    dst->ops = SYSCALL;
    if (r4300emu == CORE_DYNAREC) gensyscall();
 }
 
-static void RBREAK()
+static void RBREAK(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RSYNC()
+static void RSYNC(void)
 {
    dst->ops = SYNC;
    if (r4300emu == CORE_DYNAREC) gensync();
 }
 
-static void RMFHI()
+static void RMFHI(void)
 {
    dst->ops = MFHI;
    recompile_standard_r_type();
@@ -209,14 +209,14 @@ static void RMFHI()
    else if (r4300emu == CORE_DYNAREC) genmfhi();
 }
 
-static void RMTHI()
+static void RMTHI(void)
 {
    dst->ops = MTHI;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genmthi();
 }
 
-static void RMFLO()
+static void RMFLO(void)
 {
    dst->ops = MFLO;
    recompile_standard_r_type();
@@ -224,14 +224,14 @@ static void RMFLO()
    else if (r4300emu == CORE_DYNAREC) genmflo();
 }
 
-static void RMTLO()
+static void RMTLO(void)
 {
    dst->ops = MTLO;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genmtlo();
 }
 
-static void RDSLLV()
+static void RDSLLV(void)
 {
    dst->ops = DSLLV;
    recompile_standard_r_type();
@@ -239,7 +239,7 @@ static void RDSLLV()
    else if (r4300emu == CORE_DYNAREC) gendsllv();
 }
 
-static void RDSRLV()
+static void RDSRLV(void)
 {
    dst->ops = DSRLV;
    recompile_standard_r_type();
@@ -247,7 +247,7 @@ static void RDSRLV()
    else if (r4300emu == CORE_DYNAREC) gendsrlv();
 }
 
-static void RDSRAV()
+static void RDSRAV(void)
 {
    dst->ops = DSRAV;
    recompile_standard_r_type();
@@ -255,63 +255,63 @@ static void RDSRAV()
    else if (r4300emu == CORE_DYNAREC) gendsrav();
 }
 
-static void RMULT()
+static void RMULT(void)
 {
    dst->ops = MULT;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genmult();
 }
 
-static void RMULTU()
+static void RMULTU(void)
 {
    dst->ops = MULTU;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genmultu();
 }
 
-static void RDIV()
+static void RDIV(void)
 {
    dst->ops = DIV;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) gendiv();
 }
 
-static void RDIVU()
+static void RDIVU(void)
 {
    dst->ops = DIVU;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) gendivu();
 }
 
-static void RDMULT()
+static void RDMULT(void)
 {
    dst->ops = DMULT;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) gendmult();
 }
 
-static void RDMULTU()
+static void RDMULTU(void)
 {
    dst->ops = DMULTU;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) gendmultu();
 }
 
-static void RDDIV()
+static void RDDIV(void)
 {
    dst->ops = DDIV;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genddiv();
 }
 
-static void RDDIVU()
+static void RDDIVU(void)
 {
    dst->ops = DDIVU;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genddivu();
 }
 
-static void RADD()
+static void RADD(void)
 {
    dst->ops = ADD;
    recompile_standard_r_type();
@@ -319,7 +319,7 @@ static void RADD()
    else if (r4300emu == CORE_DYNAREC) genadd();
 }
 
-static void RADDU()
+static void RADDU(void)
 {
    dst->ops = ADDU;
    recompile_standard_r_type();
@@ -327,7 +327,7 @@ static void RADDU()
    else if (r4300emu == CORE_DYNAREC) genaddu();
 }
 
-static void RSUB()
+static void RSUB(void)
 {
    dst->ops = SUB;
    recompile_standard_r_type();
@@ -335,7 +335,7 @@ static void RSUB()
    if (r4300emu == CORE_DYNAREC) gensub();
 }
 
-static void RSUBU()
+static void RSUBU(void)
 {
    dst->ops = SUBU;
    recompile_standard_r_type();
@@ -343,7 +343,7 @@ static void RSUBU()
    else if (r4300emu == CORE_DYNAREC) gensubu();
 }
 
-static void RAND()
+static void RAND(void)
 {
    dst->ops = AND;
    recompile_standard_r_type();
@@ -351,7 +351,7 @@ static void RAND()
    else if (r4300emu == CORE_DYNAREC) genand();
 }
 
-static void ROR()
+static void ROR(void)
 {
    dst->ops = OR;
    recompile_standard_r_type();
@@ -359,7 +359,7 @@ static void ROR()
    else if (r4300emu == CORE_DYNAREC) genor();
 }
 
-static void RXOR()
+static void RXOR(void)
 {
    dst->ops = XOR;
    recompile_standard_r_type();
@@ -367,7 +367,7 @@ static void RXOR()
    else if (r4300emu == CORE_DYNAREC) genxor();
 }
 
-static void RNOR()
+static void RNOR(void)
 {
    dst->ops = NOR;
    recompile_standard_r_type();
@@ -375,7 +375,7 @@ static void RNOR()
    if (r4300emu == CORE_DYNAREC) gennor();
 }
 
-static void RSLT()
+static void RSLT(void)
 {
    dst->ops = SLT;
    recompile_standard_r_type();
@@ -383,7 +383,7 @@ static void RSLT()
    else if (r4300emu == CORE_DYNAREC) genslt();
 }
 
-static void RSLTU()
+static void RSLTU(void)
 {
    dst->ops = SLTU;
    recompile_standard_r_type();
@@ -391,7 +391,7 @@ static void RSLTU()
    else if (r4300emu == CORE_DYNAREC) gensltu();
 }
 
-static void RDADD()
+static void RDADD(void)
 {
    dst->ops = DADD;
    recompile_standard_r_type();
@@ -399,7 +399,7 @@ static void RDADD()
    else if (r4300emu == CORE_DYNAREC) gendadd();
 }
 
-static void RDADDU()
+static void RDADDU(void)
 {
    dst->ops = DADDU;
    recompile_standard_r_type();
@@ -407,7 +407,7 @@ static void RDADDU()
    else if (r4300emu == CORE_DYNAREC) gendaddu();
 }
 
-static void RDSUB()
+static void RDSUB(void)
 {
    dst->ops = DSUB;
    recompile_standard_r_type();
@@ -415,7 +415,7 @@ static void RDSUB()
    else if (r4300emu == CORE_DYNAREC) gendsub();
 }
 
-static void RDSUBU()
+static void RDSUBU(void)
 {
    dst->ops = DSUBU;
    recompile_standard_r_type();
@@ -423,44 +423,44 @@ static void RDSUBU()
    else if (r4300emu == CORE_DYNAREC) gendsubu();
 }
 
-static void RTGE()
+static void RTGE(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTGEU()
+static void RTGEU(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTLT()
+static void RTLT(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTLTU()
+static void RTLTU(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTEQ()
+static void RTEQ(void)
 {
    dst->ops = TEQ;
    recompile_standard_r_type();
    if (r4300emu == CORE_DYNAREC) genteq();
 }
 
-static void RTNE()
+static void RTNE(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RDSLL()
+static void RDSLL(void)
 {
    dst->ops = DSLL;
    recompile_standard_r_type();
@@ -468,7 +468,7 @@ static void RDSLL()
    else if (r4300emu == CORE_DYNAREC) gendsll();
 }
 
-static void RDSRL()
+static void RDSRL(void)
 {
    dst->ops = DSRL;
    recompile_standard_r_type();
@@ -476,7 +476,7 @@ static void RDSRL()
    else if (r4300emu == CORE_DYNAREC) gendsrl();
 }
 
-static void RDSRA()
+static void RDSRA(void)
 {
    dst->ops = DSRA;
    recompile_standard_r_type();
@@ -484,7 +484,7 @@ static void RDSRA()
    else if (r4300emu == CORE_DYNAREC) gendsra();
 }
 
-static void RDSLL32()
+static void RDSLL32(void)
 {
    dst->ops = DSLL32;
    recompile_standard_r_type();
@@ -492,7 +492,7 @@ static void RDSLL32()
    else if (r4300emu == CORE_DYNAREC) gendsll32();
 }
 
-static void RDSRL32()
+static void RDSRL32(void)
 {
    dst->ops = DSRL32;
    recompile_standard_r_type();
@@ -500,7 +500,7 @@ static void RDSRL32()
    else if (r4300emu == CORE_DYNAREC) gendsrl32();
 }
 
-static void RDSRA32()
+static void RDSRA32(void)
 {
    dst->ops = DSRA32;
    recompile_standard_r_type();
@@ -524,7 +524,7 @@ static void (*recomp_special[64])(void) =
 //                                   REGIMM                                
 //-------------------------------------------------------------------------
 
-static void RBLTZ()
+static void RBLTZ(void)
 {
     unsigned int target;
    dst->ops = BLTZ;
@@ -547,7 +547,7 @@ static void RBLTZ()
    else if (r4300emu == CORE_DYNAREC) genbltz();
 }
 
-static void RBGEZ()
+static void RBGEZ(void)
 {
     unsigned int target;
    dst->ops = BGEZ;
@@ -570,7 +570,7 @@ static void RBGEZ()
    else if (r4300emu == CORE_DYNAREC) genbgez();
 }
 
-static void RBLTZL()
+static void RBLTZL(void)
 {
     unsigned int target;
    dst->ops = BLTZL;
@@ -593,7 +593,7 @@ static void RBLTZL()
    else if (r4300emu == CORE_DYNAREC) genbltzl();
 }
 
-static void RBGEZL()
+static void RBGEZL(void)
 {
     unsigned int target;
    dst->ops = BGEZL;
@@ -616,43 +616,43 @@ static void RBGEZL()
    else if (r4300emu == CORE_DYNAREC) genbgezl();
 }
 
-static void RTGEI()
+static void RTGEI(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTGEIU()
+static void RTGEIU(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTLTI()
+static void RTLTI(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTLTIU()
+static void RTLTIU(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTEQI()
+static void RTEQI(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RTNEI()
+static void RTNEI(void)
 {
    dst->ops = NI;
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RBLTZAL()
+static void RBLTZAL(void)
 {
     unsigned int target;
    dst->ops = BLTZAL;
@@ -675,7 +675,7 @@ static void RBLTZAL()
    else if (r4300emu == CORE_DYNAREC) genbltzal();
 }
 
-static void RBGEZAL()
+static void RBGEZAL(void)
 {
     unsigned int target;
    dst->ops = BGEZAL;
@@ -698,7 +698,7 @@ static void RBGEZAL()
    else if (r4300emu == CORE_DYNAREC) genbgezal();
 }
 
-static void RBLTZALL()
+static void RBLTZALL(void)
 {
     unsigned int target;
    dst->ops = BLTZALL;
@@ -721,7 +721,7 @@ static void RBLTZALL()
    else if (r4300emu == CORE_DYNAREC) genbltzall();
 }
 
-static void RBGEZALL()
+static void RBGEZALL(void)
 {
     unsigned int target;
    dst->ops = BGEZALL;
@@ -756,31 +756,31 @@ static void (*recomp_regimm[32])(void) =
 //                                     TLB                                 
 //-------------------------------------------------------------------------
 
-static void RTLBR()
+static void RTLBR(void)
 {
    dst->ops = TLBR;
    if (r4300emu == CORE_DYNAREC) gentlbr();
 }
 
-static void RTLBWI()
+static void RTLBWI(void)
 {
    dst->ops = TLBWI;
    if (r4300emu == CORE_DYNAREC) gentlbwi();
 }
 
-static void RTLBWR()
+static void RTLBWR(void)
 {
    dst->ops = TLBWR;
    if (r4300emu == CORE_DYNAREC) gentlbwr();
 }
 
-static void RTLBP()
+static void RTLBP(void)
 {
    dst->ops = TLBP;
    if (r4300emu == CORE_DYNAREC) gentlbp();
 }
 
-static void RERET()
+static void RERET(void)
 {
    dst->ops = ERET;
    if (r4300emu == CORE_DYNAREC) generet();
@@ -802,7 +802,7 @@ static void (*recomp_tlb[64])(void) =
 //                                    COP0                                 
 //-------------------------------------------------------------------------
 
-static void RMFC0()
+static void RMFC0(void)
 {
    dst->ops = MFC0;
    recompile_standard_r_type();
@@ -812,7 +812,7 @@ static void RMFC0()
    else if (r4300emu == CORE_DYNAREC) genmfc0();
 }
 
-static void RMTC0()
+static void RMTC0(void)
 {
    dst->ops = MTC0;
    recompile_standard_r_type();
@@ -820,7 +820,7 @@ static void RMTC0()
    if (r4300emu == CORE_DYNAREC) genmtc0();
 }
 
-static void RTLB()
+static void RTLB(void)
 {
    recomp_tlb[(src & 0x3F)]();
 }
@@ -837,7 +837,7 @@ static void (*recomp_cop0[32])(void) =
 //                                     BC                                  
 //-------------------------------------------------------------------------
 
-static void RBC1F()
+static void RBC1F(void)
 {
     unsigned int target;
    dst->ops = BC1F;
@@ -860,7 +860,7 @@ static void RBC1F()
    else if (r4300emu == CORE_DYNAREC) genbc1f();
 }
 
-static void RBC1T()
+static void RBC1T(void)
 {
     unsigned int target;
    dst->ops = BC1T;
@@ -883,7 +883,7 @@ static void RBC1T()
    else if (r4300emu == CORE_DYNAREC) genbc1t();
 }
 
-static void RBC1FL()
+static void RBC1FL(void)
 {
     unsigned int target;
    dst->ops = BC1FL;
@@ -906,7 +906,7 @@ static void RBC1FL()
    else if (r4300emu == CORE_DYNAREC) genbc1fl();
 }
 
-static void RBC1TL()
+static void RBC1TL(void)
 {
     unsigned int target;
    dst->ops = BC1TL;
@@ -939,245 +939,245 @@ static void (*recomp_bc[4])(void) =
 //                                     S                                   
 //-------------------------------------------------------------------------
 
-static void RADD_S()
+static void RADD_S(void)
 {
    dst->ops = ADD_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genadd_s();
 }
 
-static void RSUB_S()
+static void RSUB_S(void)
 {
    dst->ops = SUB_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gensub_s();
 }
 
-static void RMUL_S()
+static void RMUL_S(void)
 {
    dst->ops = MUL_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genmul_s();
 }
 
-static void RDIV_S()
+static void RDIV_S(void)
 {
    dst->ops = DIV_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gendiv_s();
 }
 
-static void RSQRT_S()
+static void RSQRT_S(void)
 {
    dst->ops = SQRT_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gensqrt_s();
 }
 
-static void RABS_S()
+static void RABS_S(void)
 {
    dst->ops = ABS_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genabs_s();
 }
 
-static void RMOV_S()
+static void RMOV_S(void)
 {
    dst->ops = MOV_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genmov_s();
 }
 
-static void RNEG_S()
+static void RNEG_S(void)
 {
    dst->ops = NEG_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genneg_s();
 }
 
-static void RROUND_L_S()
+static void RROUND_L_S(void)
 {
    dst->ops = ROUND_L_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genround_l_s();
 }
 
-static void RTRUNC_L_S()
+static void RTRUNC_L_S(void)
 {
    dst->ops = TRUNC_L_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gentrunc_l_s();
 }
 
-static void RCEIL_L_S()
+static void RCEIL_L_S(void)
 {
    dst->ops = CEIL_L_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genceil_l_s();
 }
 
-static void RFLOOR_L_S()
+static void RFLOOR_L_S(void)
 {
    dst->ops = FLOOR_L_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genfloor_l_s();
 }
 
-static void RROUND_W_S()
+static void RROUND_W_S(void)
 {
    dst->ops = ROUND_W_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genround_w_s();
 }
 
-static void RTRUNC_W_S()
+static void RTRUNC_W_S(void)
 {
    dst->ops = TRUNC_W_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gentrunc_w_s();
 }
 
-static void RCEIL_W_S()
+static void RCEIL_W_S(void)
 {
    dst->ops = CEIL_W_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genceil_w_s();
 }
 
-static void RFLOOR_W_S()
+static void RFLOOR_W_S(void)
 {
    dst->ops = FLOOR_W_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genfloor_w_s();
 }
 
-static void RCVT_D_S()
+static void RCVT_D_S(void)
 {
    dst->ops = CVT_D_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_d_s();
 }
 
-static void RCVT_W_S()
+static void RCVT_W_S(void)
 {
    dst->ops = CVT_W_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_w_s();
 }
 
-static void RCVT_L_S()
+static void RCVT_L_S(void)
 {
    dst->ops = CVT_L_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_l_s();
 }
 
-static void RC_F_S()
+static void RC_F_S(void)
 {
    dst->ops = C_F_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_f_s();
 }
 
-static void RC_UN_S()
+static void RC_UN_S(void)
 {
    dst->ops = C_UN_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_un_s();
 }
 
-static void RC_EQ_S()
+static void RC_EQ_S(void)
 {
    dst->ops = C_EQ_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_eq_s();
 }
 
-static void RC_UEQ_S()
+static void RC_UEQ_S(void)
 {
    dst->ops = C_UEQ_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ueq_s();
 }
 
-static void RC_OLT_S()
+static void RC_OLT_S(void)
 {
    dst->ops = C_OLT_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_olt_s();
 }
 
-static void RC_ULT_S()
+static void RC_ULT_S(void)
 {
    dst->ops = C_ULT_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ult_s();
 }
 
-static void RC_OLE_S()
+static void RC_OLE_S(void)
 {
    dst->ops = C_OLE_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ole_s();
 }
 
-static void RC_ULE_S()
+static void RC_ULE_S(void)
 {
    dst->ops = C_ULE_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ule_s();
 }
 
-static void RC_SF_S()
+static void RC_SF_S(void)
 {
    dst->ops = C_SF_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_sf_s();
 }
 
-static void RC_NGLE_S()
+static void RC_NGLE_S(void)
 {
    dst->ops = C_NGLE_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ngle_s();
 }
 
-static void RC_SEQ_S()
+static void RC_SEQ_S(void)
 {
    dst->ops = C_SEQ_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_seq_s();
 }
 
-static void RC_NGL_S()
+static void RC_NGL_S(void)
 {
    dst->ops = C_NGL_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ngl_s();
 }
 
-static void RC_LT_S()
+static void RC_LT_S(void)
 {
    dst->ops = C_LT_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_lt_s();
 }
 
-static void RC_NGE_S()
+static void RC_NGE_S(void)
 {
    dst->ops = C_NGE_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_nge_s();
 }
 
-static void RC_LE_S()
+static void RC_LE_S(void)
 {
    dst->ops = C_LE_S;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_le_s();
 }
 
-static void RC_NGT_S()
+static void RC_NGT_S(void)
 {
    dst->ops = C_NGT_S;
    recompile_standard_cf_type();
@@ -1200,245 +1200,245 @@ static void (*recomp_s[64])(void) =
 //                                     D                                   
 //-------------------------------------------------------------------------
 
-static void RADD_D()
+static void RADD_D(void)
 {
    dst->ops = ADD_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genadd_d();
 }
 
-static void RSUB_D()
+static void RSUB_D(void)
 {
    dst->ops = SUB_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gensub_d();
 }
 
-static void RMUL_D()
+static void RMUL_D(void)
 {
    dst->ops = MUL_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genmul_d();
 }
 
-static void RDIV_D()
+static void RDIV_D(void)
 {
    dst->ops = DIV_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gendiv_d();
 }
 
-static void RSQRT_D()
+static void RSQRT_D(void)
 {
    dst->ops = SQRT_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gensqrt_d();
 }
 
-static void RABS_D()
+static void RABS_D(void)
 {
    dst->ops = ABS_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genabs_d();
 }
 
-static void RMOV_D()
+static void RMOV_D(void)
 {
    dst->ops = MOV_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genmov_d();
 }
 
-static void RNEG_D()
+static void RNEG_D(void)
 {
    dst->ops = NEG_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genneg_d();
 }
 
-static void RROUND_L_D()
+static void RROUND_L_D(void)
 {
    dst->ops = ROUND_L_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genround_l_d();
 }
 
-static void RTRUNC_L_D()
+static void RTRUNC_L_D(void)
 {
    dst->ops = TRUNC_L_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gentrunc_l_d();
 }
 
-static void RCEIL_L_D()
+static void RCEIL_L_D(void)
 {
    dst->ops = CEIL_L_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genceil_l_d();
 }
 
-static void RFLOOR_L_D()
+static void RFLOOR_L_D(void)
 {
    dst->ops = FLOOR_L_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genfloor_l_d();
 }
 
-static void RROUND_W_D()
+static void RROUND_W_D(void)
 {
    dst->ops = ROUND_W_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genround_w_d();
 }
 
-static void RTRUNC_W_D()
+static void RTRUNC_W_D(void)
 {
    dst->ops = TRUNC_W_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gentrunc_w_d();
 }
 
-static void RCEIL_W_D()
+static void RCEIL_W_D(void)
 {
    dst->ops = CEIL_W_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genceil_w_d();
 }
 
-static void RFLOOR_W_D()
+static void RFLOOR_W_D(void)
 {
    dst->ops = FLOOR_W_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genfloor_w_d();
 }
 
-static void RCVT_S_D()
+static void RCVT_S_D(void)
 {
    dst->ops = CVT_S_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_s_d();
 }
 
-static void RCVT_W_D()
+static void RCVT_W_D(void)
 {
    dst->ops = CVT_W_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_w_d();
 }
 
-static void RCVT_L_D()
+static void RCVT_L_D(void)
 {
    dst->ops = CVT_L_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_l_d();
 }
 
-static void RC_F_D()
+static void RC_F_D(void)
 {
    dst->ops = C_F_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_f_d();
 }
 
-static void RC_UN_D()
+static void RC_UN_D(void)
 {
    dst->ops = C_UN_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_un_d();
 }
 
-static void RC_EQ_D()
+static void RC_EQ_D(void)
 {
    dst->ops = C_EQ_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_eq_d();
 }
 
-static void RC_UEQ_D()
+static void RC_UEQ_D(void)
 {
    dst->ops = C_UEQ_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ueq_d();
 }
 
-static void RC_OLT_D()
+static void RC_OLT_D(void)
 {
    dst->ops = C_OLT_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_olt_d();
 }
 
-static void RC_ULT_D()
+static void RC_ULT_D(void)
 {
    dst->ops = C_ULT_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ult_d();
 }
 
-static void RC_OLE_D()
+static void RC_OLE_D(void)
 {
    dst->ops = C_OLE_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ole_d();
 }
 
-static void RC_ULE_D()
+static void RC_ULE_D(void)
 {
    dst->ops = C_ULE_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ule_d();
 }
 
-static void RC_SF_D()
+static void RC_SF_D(void)
 {
    dst->ops = C_SF_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_sf_d();
 }
 
-static void RC_NGLE_D()
+static void RC_NGLE_D(void)
 {
    dst->ops = C_NGLE_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ngle_d();
 }
 
-static void RC_SEQ_D()
+static void RC_SEQ_D(void)
 {
    dst->ops = C_SEQ_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_seq_d();
 }
 
-static void RC_NGL_D()
+static void RC_NGL_D(void)
 {
    dst->ops = C_NGL_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_ngl_d();
 }
 
-static void RC_LT_D()
+static void RC_LT_D(void)
 {
    dst->ops = C_LT_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_lt_d();
 }
 
-static void RC_NGE_D()
+static void RC_NGE_D(void)
 {
    dst->ops = C_NGE_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_nge_d();
 }
 
-static void RC_LE_D()
+static void RC_LE_D(void)
 {
    dst->ops = C_LE_D;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) genc_le_d();
 }
 
-static void RC_NGT_D()
+static void RC_NGT_D(void)
 {
    dst->ops = C_NGT_D;
    recompile_standard_cf_type();
@@ -1461,14 +1461,14 @@ static void (*recomp_d[64])(void) =
 //                                     W                                   
 //-------------------------------------------------------------------------
 
-static void RCVT_S_W()
+static void RCVT_S_W(void)
 {
    dst->ops = CVT_S_W;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_s_w();
 }
 
-static void RCVT_D_W()
+static void RCVT_D_W(void)
 {
    dst->ops = CVT_D_W;
    recompile_standard_cf_type();
@@ -1491,14 +1491,14 @@ static void (*recomp_w[64])(void) =
 //                                     L                                   
 //-------------------------------------------------------------------------
 
-static void RCVT_S_L()
+static void RCVT_S_L(void)
 {
    dst->ops = CVT_S_L;
    recompile_standard_cf_type();
    if (r4300emu == CORE_DYNAREC) gencvt_s_l();
 }
 
-static void RCVT_D_L()
+static void RCVT_D_L(void)
 {
    dst->ops = CVT_D_L;
    recompile_standard_cf_type();
@@ -1521,7 +1521,7 @@ static void (*recomp_l[64])(void) =
 //                                    COP1                                 
 //-------------------------------------------------------------------------
 
-static void RMFC1()
+static void RMFC1(void)
 {
    dst->ops = MFC1;
    recompile_standard_r_type();
@@ -1530,7 +1530,7 @@ static void RMFC1()
    else if (r4300emu == CORE_DYNAREC) genmfc1();
 }
 
-static void RDMFC1()
+static void RDMFC1(void)
 {
    dst->ops = DMFC1;
    recompile_standard_r_type();
@@ -1539,7 +1539,7 @@ static void RDMFC1()
    else if (r4300emu == CORE_DYNAREC) gendmfc1();
 }
 
-static void RCFC1()
+static void RCFC1(void)
 {
    dst->ops = CFC1;
    recompile_standard_r_type();
@@ -1548,7 +1548,7 @@ static void RCFC1()
    else if (r4300emu == CORE_DYNAREC) gencfc1();
 }
 
-static void RMTC1()
+static void RMTC1(void)
 {
    dst->ops = MTC1;
    recompile_standard_r_type();
@@ -1556,7 +1556,7 @@ static void RMTC1()
    if (r4300emu == CORE_DYNAREC) genmtc1();
 }
 
-static void RDMTC1()
+static void RDMTC1(void)
 {
    dst->ops = DMTC1;
    recompile_standard_r_type();
@@ -1564,7 +1564,7 @@ static void RDMTC1()
    if (r4300emu == CORE_DYNAREC) gendmtc1();
 }
 
-static void RCTC1()
+static void RCTC1(void)
 {
    dst->ops = CTC1;
    recompile_standard_r_type();
@@ -1572,27 +1572,27 @@ static void RCTC1()
    if (r4300emu == CORE_DYNAREC) genctc1();
 }
 
-static void RBC()
+static void RBC(void)
 {
    recomp_bc[((src >> 16) & 3)]();
 }
 
-static void RS()
+static void RS(void)
 {
    recomp_s[(src & 0x3F)]();
 }
 
-static void RD()
+static void RD(void)
 {
    recomp_d[(src & 0x3F)]();
 }
 
-static void RW()
+static void RW(void)
 {
    recomp_w[(src & 0x3F)]();
 }
 
-static void RL()
+static void RL(void)
 {
    recomp_l[(src & 0x3F)]();
 }
@@ -1609,17 +1609,17 @@ static void (*recomp_cop1[32])(void) =
 //                                   R4300                                 
 //-------------------------------------------------------------------------
 
-static void RSPECIAL()
+static void RSPECIAL(void)
 {
    recomp_special[(src & 0x3F)]();
 }
 
-static void RREGIMM()
+static void RREGIMM(void)
 {
    recomp_regimm[((src >> 16) & 0x1F)]();
 }
 
-static void RJ()
+static void RJ(void)
 {
     unsigned int target;
    dst->ops = J_OUT;
@@ -1642,7 +1642,7 @@ static void RJ()
    else if (r4300emu == CORE_DYNAREC) genj();
 }
 
-static void RJAL()
+static void RJAL(void)
 {
     unsigned int target;
    dst->ops = JAL_OUT;
@@ -1665,7 +1665,7 @@ static void RJAL()
    else if (r4300emu == CORE_DYNAREC) genjal();
 }
 
-static void RBEQ()
+static void RBEQ(void)
 {
     unsigned int target;
    dst->ops = BEQ;
@@ -1688,7 +1688,7 @@ static void RBEQ()
    else if (r4300emu == CORE_DYNAREC) genbeq();
 }
 
-static void RBNE()
+static void RBNE(void)
 {
     unsigned int target;
    dst->ops = BNE;
@@ -1711,7 +1711,7 @@ static void RBNE()
    else if (r4300emu == CORE_DYNAREC) genbne();
 }
 
-static void RBLEZ()
+static void RBLEZ(void)
 {
     unsigned int target;
    dst->ops = BLEZ;
@@ -1734,7 +1734,7 @@ static void RBLEZ()
    else if (r4300emu == CORE_DYNAREC) genblez();
 }
 
-static void RBGTZ()
+static void RBGTZ(void)
 {
     unsigned int target;
    dst->ops = BGTZ;
@@ -1757,7 +1757,7 @@ static void RBGTZ()
    else if (r4300emu == CORE_DYNAREC) genbgtz();
 }
 
-static void RADDI()
+static void RADDI(void)
 {
    dst->ops = ADDI;
    recompile_standard_i_type();
@@ -1765,7 +1765,7 @@ static void RADDI()
    else if (r4300emu == CORE_DYNAREC) genaddi();
 }
 
-static void RADDIU()
+static void RADDIU(void)
 {
    dst->ops = ADDIU;
    recompile_standard_i_type();
@@ -1773,7 +1773,7 @@ static void RADDIU()
    else if (r4300emu == CORE_DYNAREC) genaddiu();
 }
 
-static void RSLTI()
+static void RSLTI(void)
 {
    dst->ops = SLTI;
    recompile_standard_i_type();
@@ -1781,7 +1781,7 @@ static void RSLTI()
    else if (r4300emu == CORE_DYNAREC) genslti();
 }
 
-static void RSLTIU()
+static void RSLTIU(void)
 {
    dst->ops = SLTIU;
    recompile_standard_i_type();
@@ -1789,7 +1789,7 @@ static void RSLTIU()
    else if (r4300emu == CORE_DYNAREC) gensltiu();
 }
 
-static void RANDI()
+static void RANDI(void)
 {
    dst->ops = ANDI;
    recompile_standard_i_type();
@@ -1797,7 +1797,7 @@ static void RANDI()
    else if (r4300emu == CORE_DYNAREC) genandi();
 }
 
-static void RORI()
+static void RORI(void)
 {
    dst->ops = ORI;
    recompile_standard_i_type();
@@ -1805,7 +1805,7 @@ static void RORI()
    else if (r4300emu == CORE_DYNAREC) genori();
 }
 
-static void RXORI()
+static void RXORI(void)
 {
    dst->ops = XORI;
    recompile_standard_i_type();
@@ -1813,7 +1813,7 @@ static void RXORI()
    else if (r4300emu == CORE_DYNAREC) genxori();
 }
 
-static void RLUI()
+static void RLUI(void)
 {
    dst->ops = LUI;
    recompile_standard_i_type();
@@ -1821,17 +1821,17 @@ static void RLUI()
    else if (r4300emu == CORE_DYNAREC) genlui();
 }
 
-static void RCOP0()
+static void RCOP0(void)
 {
    recomp_cop0[((src >> 21) & 0x1F)]();
 }
 
-static void RCOP1()
+static void RCOP1(void)
 {
    recomp_cop1[((src >> 21) & 0x1F)]();
 }
 
-static void RBEQL()
+static void RBEQL(void)
 {
     unsigned int target;
    dst->ops = BEQL;
@@ -1854,7 +1854,7 @@ static void RBEQL()
    else if (r4300emu == CORE_DYNAREC) genbeql();
 }
 
-static void RBNEL()
+static void RBNEL(void)
 {
     unsigned int target;
    dst->ops = BNEL;
@@ -1877,7 +1877,7 @@ static void RBNEL()
    else if (r4300emu == CORE_DYNAREC) genbnel();
 }
 
-static void RBLEZL()
+static void RBLEZL(void)
 {
     unsigned int target;
    dst->ops = BLEZL;
@@ -1900,7 +1900,7 @@ static void RBLEZL()
    else if (r4300emu == CORE_DYNAREC) genblezl();
 }
 
-static void RBGTZL()
+static void RBGTZL(void)
 {
     unsigned int target;
    dst->ops = BGTZL;
@@ -1923,7 +1923,7 @@ static void RBGTZL()
    else if (r4300emu == CORE_DYNAREC) genbgtzl();
 }
 
-static void RDADDI()
+static void RDADDI(void)
 {
    dst->ops = DADDI;
    recompile_standard_i_type();
@@ -1931,7 +1931,7 @@ static void RDADDI()
    else if (r4300emu == CORE_DYNAREC) gendaddi();
 }
 
-static void RDADDIU()
+static void RDADDIU(void)
 {
    dst->ops = DADDIU;
    recompile_standard_i_type();
@@ -1939,7 +1939,7 @@ static void RDADDIU()
    else if (r4300emu == CORE_DYNAREC) gendaddiu();
 }
 
-static void RLDL()
+static void RLDL(void)
 {
    dst->ops = LDL;
    recompile_standard_i_type();
@@ -1947,7 +1947,7 @@ static void RLDL()
    else if (r4300emu == CORE_DYNAREC) genldl();
 }
 
-static void RLDR()
+static void RLDR(void)
 {
    dst->ops = LDR;
    recompile_standard_i_type();
@@ -1955,7 +1955,7 @@ static void RLDR()
    else if (r4300emu == CORE_DYNAREC) genldr();
 }
 
-static void RLB()
+static void RLB(void)
 {
    dst->ops = LB;
    recompile_standard_i_type();
@@ -1963,7 +1963,7 @@ static void RLB()
    else if (r4300emu == CORE_DYNAREC) genlb();
 }
 
-static void RLH()
+static void RLH(void)
 {
    dst->ops = LH;
    recompile_standard_i_type();
@@ -1971,7 +1971,7 @@ static void RLH()
    else if (r4300emu == CORE_DYNAREC) genlh();
 }
 
-static void RLWL()
+static void RLWL(void)
 {
    dst->ops = LWL;
    recompile_standard_i_type();
@@ -1979,7 +1979,7 @@ static void RLWL()
    else if (r4300emu == CORE_DYNAREC) genlwl();
 }
 
-static void RLW()
+static void RLW(void)
 {
    dst->ops = LW;
    recompile_standard_i_type();
@@ -1987,7 +1987,7 @@ static void RLW()
    else if (r4300emu == CORE_DYNAREC) genlw();
 }
 
-static void RLBU()
+static void RLBU(void)
 {
    dst->ops = LBU;
    recompile_standard_i_type();
@@ -1995,7 +1995,7 @@ static void RLBU()
    else if (r4300emu == CORE_DYNAREC) genlbu();
 }
 
-static void RLHU()
+static void RLHU(void)
 {
    dst->ops = LHU;
    recompile_standard_i_type();
@@ -2003,7 +2003,7 @@ static void RLHU()
    else if (r4300emu == CORE_DYNAREC) genlhu();
 }
 
-static void RLWR()
+static void RLWR(void)
 {
    dst->ops = LWR;
    recompile_standard_i_type();
@@ -2011,7 +2011,7 @@ static void RLWR()
    else if (r4300emu == CORE_DYNAREC) genlwr();
 }
 
-static void RLWU()
+static void RLWU(void)
 {
    dst->ops = LWU;
    recompile_standard_i_type();
@@ -2019,62 +2019,62 @@ static void RLWU()
    else if (r4300emu == CORE_DYNAREC) genlwu();
 }
 
-static void RSB()
+static void RSB(void)
 {
    dst->ops = SB;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) gensb();
 }
 
-static void RSH()
+static void RSH(void)
 {
    dst->ops = SH;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) gensh();
 }
 
-static void RSWL()
+static void RSWL(void)
 {
    dst->ops = SWL;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) genswl();
 }
 
-static void RSW()
+static void RSW(void)
 {
    dst->ops = SW;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) gensw();
 }
 
-static void RSDL()
+static void RSDL(void)
 {
    dst->ops = SDL;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) gensdl();
 }
 
-static void RSDR()
+static void RSDR(void)
 {
    dst->ops = SDR;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) gensdr();
 }
 
-static void RSWR()
+static void RSWR(void)
 {
    dst->ops = SWR;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) genswr();
 }
 
-static void RCACHE()
+static void RCACHE(void)
 {
    dst->ops = CACHE;
    if (r4300emu == CORE_DYNAREC) gencache();
 }
 
-static void RLL()
+static void RLL(void)
 {
    dst->ops = LL;
    recompile_standard_i_type();
@@ -2082,28 +2082,28 @@ static void RLL()
    else if (r4300emu == CORE_DYNAREC) genll();
 }
 
-static void RLWC1()
+static void RLWC1(void)
 {
    dst->ops = LWC1;
    recompile_standard_lf_type();
    if (r4300emu == CORE_DYNAREC) genlwc1();
 }
 
-static void RLLD()
+static void RLLD(void)
 {
    dst->ops = NI;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RLDC1()
+static void RLDC1(void)
 {
    dst->ops = LDC1;
    recompile_standard_lf_type();
    if (r4300emu == CORE_DYNAREC) genldc1();
 }
 
-static void RLD()
+static void RLD(void)
 {
    dst->ops = LD;
    recompile_standard_i_type();
@@ -2111,7 +2111,7 @@ static void RLD()
    else if (r4300emu == CORE_DYNAREC) genld();
 }
 
-static void RSC()
+static void RSC(void)
 {
    dst->ops = SC;
    recompile_standard_i_type();
@@ -2119,28 +2119,28 @@ static void RSC()
    else if (r4300emu == CORE_DYNAREC) gensc();
 }
 
-static void RSWC1()
+static void RSWC1(void)
 {
    dst->ops = SWC1;
    recompile_standard_lf_type();
    if (r4300emu == CORE_DYNAREC) genswc1();
 }
 
-static void RSCD()
+static void RSCD(void)
 {
    dst->ops = NI;
    recompile_standard_i_type();
    if (r4300emu == CORE_DYNAREC) genni();
 }
 
-static void RSDC1()
+static void RSDC1(void)
 {
    dst->ops = SDC1;
    recompile_standard_lf_type();
    if (r4300emu == CORE_DYNAREC) gensdc1();
 }
 
-static void RSD()
+static void RSD(void)
 {
    dst->ops = SD;
    recompile_standard_i_type();
@@ -2176,7 +2176,7 @@ void init_block(int *source, precomp_block *block)
   if (!block->block)
   {
     long memsize = ((length+1)+(length>>2)) * sizeof(precomp_instr);
-    block->block = malloc_exec(memsize);
+    block->block = (precomp_instr *) malloc_exec(memsize);
     memset(block->block, 0, memsize);
     already_exist = 0;
   }
@@ -2191,7 +2191,7 @@ void init_block(int *source, precomp_block *block)
 #else
       max_code_length = 32768;
 #endif
-      block->code = malloc_exec(max_code_length);
+      block->code = (unsigned char *) malloc_exec(max_code_length);
     }
     else
     {
@@ -2280,7 +2280,7 @@ void init_block(int *source, precomp_block *block)
     invalid_code[paddr>>12] = 0;
     if (!blocks[paddr>>12])
     {
-      blocks[paddr>>12] = malloc(sizeof(precomp_block));
+      blocks[paddr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
       blocks[paddr>>12]->code = NULL;
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
@@ -2294,7 +2294,7 @@ void init_block(int *source, precomp_block *block)
     invalid_code[paddr>>12] = 0;
     if (!blocks[paddr>>12])
     {
-      blocks[paddr>>12] = malloc(sizeof(precomp_block));
+      blocks[paddr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
       blocks[paddr>>12]->code = NULL;
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
@@ -2310,7 +2310,7 @@ void init_block(int *source, precomp_block *block)
     {
       if (!blocks[(block->start+0x20000000)>>12])
       {
-        blocks[(block->start+0x20000000)>>12] = malloc(sizeof(precomp_block));
+        blocks[(block->start+0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
         blocks[(block->start+0x20000000)>>12]->code = NULL;
         blocks[(block->start+0x20000000)>>12]->block = NULL;
         blocks[(block->start+0x20000000)>>12]->jumps_table = NULL;
@@ -2324,7 +2324,7 @@ void init_block(int *source, precomp_block *block)
     {
       if (!blocks[(block->start-0x20000000)>>12])
       {
-        blocks[(block->start-0x20000000)>>12] = malloc(sizeof(precomp_block));
+        blocks[(block->start-0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
         blocks[(block->start-0x20000000)>>12]->code = NULL;
         blocks[(block->start-0x20000000)>>12]->block = NULL;
         blocks[(block->start-0x20000000)>>12]->jumps_table = NULL;
@@ -2469,7 +2469,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
    end_section(COMPILER_SECTION);
 }
 
-int is_jump()
+int is_jump(void)
 {
    int dyn=0;
    int jump=0;
@@ -2552,7 +2552,7 @@ int is_jump()
 /**********************************************************************
  ************ recompile only one opcode (use for delay slot) **********
  **********************************************************************/
-void recompile_opcode()
+void recompile_opcode(void)
 {
    SRC++;
    src = *SRC;

@@ -46,7 +46,7 @@ void MTC0(void)
   switch(PC->f.r.nrd)
   {
     case 0:    // Index
-      Index = rrt & 0x8000003F;
+      Index = (unsigned int) rrt & 0x8000003F;
       if ((Index & 0x3F) > 31) 
       {
         DebugMessage(M64MSG_ERROR, "MTC0 instruction writing Index register with TLB index > 31");
@@ -56,19 +56,19 @@ void MTC0(void)
     case 1:    // Random
       break;
     case 2:    // EntryLo0
-      EntryLo0 = rrt & 0x3FFFFFFF;
+      EntryLo0 = (unsigned int) rrt & 0x3FFFFFFF;
       break;
     case 3:    // EntryLo1
-      EntryLo1 = rrt & 0x3FFFFFFF;
+      EntryLo1 = (unsigned int) rrt & 0x3FFFFFFF;
       break;
     case 4:    // Context
-      Context = (rrt & 0xFF800000) | (Context & 0x007FFFF0);
+      Context = ((unsigned int) rrt & 0xFF800000) | (Context & 0x007FFFF0);
       break;
     case 5:    // PageMask
-      PageMask = rrt & 0x01FFE000;
+      PageMask = (unsigned int) rrt & 0x01FFE000;
       break;
     case 6:    // Wired
-      Wired = rrt;
+      Wired = (unsigned int) rrt;
       Random = 31;
       break;
     case 8:    // BadVAddr
@@ -77,27 +77,27 @@ void MTC0(void)
       update_count();
       if (next_interupt <= Count) gen_interupt();
       debug_count += Count;
-      translate_event_queue(rrt & 0xFFFFFFFF);
-      Count = rrt & 0xFFFFFFFF;
+      translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
+      Count = (unsigned int) rrt & 0xFFFFFFFF;
       debug_count -= Count;
       break;
     case 10:   // EntryHi
-      EntryHi = rrt & 0xFFFFE0FF;
+      EntryHi = (unsigned int) rrt & 0xFFFFE0FF;
       break;
     case 11:   // Compare
       update_count();
       remove_event(COMPARE_INT);
       add_interupt_event_count(COMPARE_INT, (unsigned int)rrt);
-      Compare = rrt;
+      Compare = (unsigned int) rrt;
       Cause = Cause & 0xFFFF7FFF; //Timer interupt is clear
       break;
     case 12:   // Status
       if((rrt & 0x04000000) != (Status & 0x04000000))
       {
-          shuffle_fpr_data(Status, rrt);
-          set_fpr_pointers(rrt);
+          shuffle_fpr_data(Status, (unsigned int) rrt);
+          set_fpr_pointers((unsigned int) rrt);
       }
-      Status = rrt;
+      Status = (unsigned int) rrt;
       PC++;
       check_interupt();
       update_count();
@@ -110,26 +110,26 @@ void MTC0(void)
          DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
          stop = 1;
       }
-      else Cause = rrt;
+      else Cause = (unsigned int) rrt;
       break;
     case 14:   // EPC
-      EPC = rrt;
+      EPC = (unsigned int) rrt;
       break;
     case 15:  // PRevID
       break;
     case 16:  // Config
-      Config = rrt;
+      Config = (unsigned int) rrt;
       break;
     case 18:  // WatchLo
-      WatchLo = rrt & 0xFFFFFFFF;
+      WatchLo = (unsigned int) rrt & 0xFFFFFFFF;
       break;
     case 19:  // WatchHi
-      WatchHi = rrt & 0xFFFFFFFF;
+      WatchHi = (unsigned int) rrt & 0xFFFFFFFF;
       break;
     case 27:  // CacheErr
       break;
     case 28:  // TagLo
-      TagLo = rrt & 0x0FFFFFC0;
+      TagLo = (unsigned int) rrt & 0x0FFFFFC0;
       break;
     case 29: // TagHi
       TagHi =0;

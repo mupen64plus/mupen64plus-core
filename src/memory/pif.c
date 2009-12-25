@@ -79,8 +79,7 @@ void EepromCommand(unsigned char *Command)
       {
          char *filename;
          FILE *f;
-         filename = malloc(strlen(get_savespath())+
-                   strlen(ROM_SETTINGS.goodname)+4+1);
+         filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
          strcpy(filename, get_savespath());
          strcat(filename, ROM_SETTINGS.goodname);
          strcat(filename, ".eep");
@@ -104,8 +103,7 @@ void EepromCommand(unsigned char *Command)
       {
          char *filename;
          FILE *f;
-         filename = malloc(strlen(get_savespath())+
-                   strlen(ROM_SETTINGS.goodname)+4+1);
+         filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
          strcpy(filename, get_savespath());
          strcat(filename, ROM_SETTINGS.goodname);
          strcat(filename, ".eep");
@@ -277,8 +275,7 @@ void internal_ControllerCommand(int Control, unsigned char *Command)
                   {
                  char *filename;
                  FILE *f;
-                 filename = malloc(strlen(get_savespath())+
-                           strlen(ROM_SETTINGS.goodname)+4+1);
+                 filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
                  strcpy(filename, get_savespath());
                  strcat(filename, ROM_SETTINGS.goodname);
                  strcat(filename, ".mpk");
@@ -339,8 +336,7 @@ void internal_ControllerCommand(int Control, unsigned char *Command)
                   {
                  char *filename;
                  FILE *f;
-                 filename = malloc(strlen(get_savespath())+
-                           strlen(ROM_SETTINGS.goodname)+4+1);
+                 filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
                  strcpy(filename, get_savespath());
                  strcat(filename, ROM_SETTINGS.goodname);
                  strcat(filename, ".mpk");
