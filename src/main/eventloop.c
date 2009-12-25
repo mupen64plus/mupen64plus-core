@@ -279,6 +279,7 @@ static int event_sdl_filter(const SDL_Event *event)
 
 void event_initialize(void)
 {
+    const char *event_str = NULL;
     int i;
 
     /* set initial state of all joystick commands to 'off' */
@@ -286,7 +287,6 @@ void event_initialize(void)
         JoyCmdActive[i] = 0;
 
     /* activate any joysticks which are referenced in the joystick event command strings */
-    const char *event_str = NULL;
     for (i = 0; i < NumJoyCommands; i++)
     {
         event_str = ConfigGetParamString(g_CoreConfig, JoyCmdName[i]);

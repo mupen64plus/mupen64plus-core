@@ -145,6 +145,7 @@ const char * osal_get_user_configpath(void)
 {
     static char chHomePath[MAX_PATH];
     LPITEMIDLIST pidl;
+    LPMALLOC pMalloc;
     struct _stat fileinfo;
 
     // Get item ID list for the path of user's personal directory
@@ -152,10 +153,9 @@ const char * osal_get_user_configpath(void)
     // get the path in a char string
     SHGetPathFromIDList(pidl, chHomePath);
     // do a bunch of crap just to free some memory
-    LPMALLOC pMalloc;
     hr = SHGetMalloc(&pMalloc);
-    pMalloc->Free(pidl);
-    pMalloc->Release();
+    pMalloc->lpVtbl->Free(pMalloc, pidl);
+    pMalloc->lpVtbl->Release(pMalloc);
 
     // tack on 'mupen64plus'
     if (chHomePath[strlen(chHomePath)-1] != '\\')

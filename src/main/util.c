@@ -347,7 +347,7 @@ void *list_last_data(list_t list)
 /** list_empty
  *    Returns 1 if list is empty, else 0.
  */
-int inline list_empty(list_t list)
+int list_empty(list_t list)
 {
     return list == NULL;
 }
@@ -551,13 +551,14 @@ void savestring(unsigned char savetype, char *string)
 
 void playersstring(unsigned char players, char *string)
 {
+    unsigned short netplay=0;
+
     if (players > 7)
         {
         string[0] = '\0';
         return;
         }
 
-    unsigned short netplay=0;
     if (players > 4)
         {
         players-=3;

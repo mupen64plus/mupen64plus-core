@@ -108,6 +108,13 @@ static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int load
 
 m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 {
+    md5_state_t state;
+    md5_byte_t digest[16];
+    romdatabase_entry* entry;
+    char buffer[256];
+    unsigned char imagetype;
+    int i;
+
     /* check input requirements */
     if (rom != NULL)
     {
@@ -119,13 +126,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         DebugMessage(M64MSG_ERROR, "open_rom(): not a valid ROM image");
         return M64ERR_INPUT_INVALID;
     }
-
-    md5_state_t state;
-    md5_byte_t digest[16];
-    romdatabase_entry* entry;
-    char buffer[256];
-    unsigned char imagetype;
-    int i;
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
@@ -260,8 +260,8 @@ void romdatabase_open(void)
     romdatabase_entry* entry = NULL;
 
     int stringlength, totallength, namelength, index, counter, value;
-    char hashtemp[3];
-    hashtemp[2] = '\0';
+    char hashtemp[3] = {0,0,0};
+    const char *pathname = ConfigGetSharedDataFilepath("mupen64plus.ini");
 
     if(g_romdatabase.comment!=NULL)
         return;
@@ -279,7 +279,6 @@ void romdatabase_open(void)
     empty_entry.rumble = DEFAULT;
 
     /* Open romdatabase. */
-    const char *pathname = ConfigGetSharedDataFilepath("mupen64plus.ini");
     fPtr = fopen(pathname, "rb");
     if (fPtr == NULL)
     {
@@ -487,9 +486,11 @@ void romdatabase_close(void)
 
 romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 {
+    romdatabase_search* search;
+
     if(g_romdatabase.comment==NULL)
         return &empty_entry;
-    romdatabase_search* search;
+
     search = g_romdatabase.md5_lists[md5[0]];
 
     while (search != NULL && memcmp(search->entry.md5, md5, 16) != 0)
@@ -503,10 +504,11 @@ romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 
 romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
 {
+    romdatabase_search* search;
+
     if(g_romdatabase.comment==NULL) 
         return &empty_entry;
 
-    romdatabase_search* search;
     search = g_romdatabase.crc_lists[((crc1 >> 24) & 0xff)];
 
     while (search != NULL && search->entry.crc1 != crc1 && search->entry.crc2 != crc2)

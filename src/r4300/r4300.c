@@ -1430,7 +1430,7 @@ void NOTCOMPILED2()
    NOTCOMPILED();
 }
 
-static inline unsigned int update_invalid_addr(unsigned int addr)
+static unsigned int update_invalid_addr(unsigned int addr)
 {
    if (addr >= 0x80000000 && addr < 0xa0000000)
      {

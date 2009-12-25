@@ -65,7 +65,7 @@ static m64p_error plugin_start_input(void);
 static unsigned int dummy;
 
 /* global functions */
-m64p_error plugin_connect(m64p_plugin_type, m64p_handle plugin_handle);
+m64p_error plugin_connect(m64p_plugin_type, m64p_dynlib_handle plugin_handle);
 m64p_error plugin_start(m64p_plugin_type);
 m64p_error plugin_check(void);
 
@@ -82,7 +82,7 @@ void (*updateScreen)() = dummyvideo_UpdateScreen;
 void (*viStatusChanged)() = dummyvideo_ViStatusChanged;
 void (*viWidthChanged)() = dummyvideo_ViWidthChanged;
 void (*readScreen)(void **dest, int *width, int *height) = dummyvideo_ReadScreen;
-void (*setRenderingCallback)(void (*callback)()) = dummyvideo_SetRenderingCallback;
+void (*setRenderingCallback)(void (*callback)(void)) = dummyvideo_SetRenderingCallback;
 
 void (*fBRead)(unsigned int addr) = dummyvideo_FBRead;
 void (*fBWrite)(unsigned int addr, unsigned int size) = dummyvideo_FBWrite;
@@ -192,6 +192,9 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
+        m64p_plugin_type PluginType;
+        int PluginVersion, APIVersion;
+
         if (l_RspAttached)
             return M64ERR_INVALID_STATE;
         getVersion = (ptr_PluginGetVersion) osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
@@ -204,8 +207,6 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
         /* check the version info */
-        m64p_plugin_type PluginType;
-        int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_RSP || APIVersion < MINIMUM_RSP_API_VERSION)
         {
@@ -236,6 +237,9 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
+        m64p_plugin_type PluginType;
+        int PluginVersion, APIVersion;
+
         if (l_InputAttached)
             return M64ERR_INVALID_STATE;
         getVersion = (ptr_PluginGetVersion) osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
@@ -254,8 +258,6 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
         /* check the version info */
-        m64p_plugin_type PluginType;
-        int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_INPUT || APIVersion < MINIMUM_INPUT_API_VERSION)
         {
@@ -291,6 +293,9 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
+        m64p_plugin_type PluginType;
+        int PluginVersion, APIVersion;
+
         if (l_AudioAttached)
             return M64ERR_INVALID_STATE;
         getVersion = (ptr_PluginGetVersion) osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
@@ -315,8 +320,6 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
         /* check the version info */
-        m64p_plugin_type PluginType;
-        int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_AUDIO || APIVersion < MINIMUM_AUDIO_API_VERSION)
         {
@@ -355,6 +358,9 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
     else
     {
         ptr_PluginGetVersion getVersion = NULL;
+        m64p_plugin_type PluginType;
+        int PluginVersion, APIVersion;
+
         if (l_GfxAttached)
             return M64ERR_INVALID_STATE;
         getVersion = (ptr_PluginGetVersion) osal_dynlib_getproc(plugin_handle, "PluginGetVersion");
@@ -383,8 +389,6 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
         /* check the version info */
-        m64p_plugin_type PluginType;
-        int PluginVersion, APIVersion;
         (*getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_GFX || APIVersion < MINIMUM_GFX_API_VERSION)
         {

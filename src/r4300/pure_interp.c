@@ -52,13 +52,13 @@ extern void (*interp_ops[64])(void);
 
 extern unsigned int next_vi;
 
-static void NI()
+static void NI(void)
 {
    DebugMessage(M64MSG_ERROR, "NI:%x", (unsigned int)op);
    stop=1;
 }
 
-static void SLL()
+static void SLL(void)
 {
    check_r0_rd();
    rrd32 = (unsigned int)(rrt32) << rsa;
@@ -66,7 +66,7 @@ static void SLL()
    interp_addr+=4;
 }
 
-static void SRL()
+static void SRL(void)
 {
    check_r0_rd();
    rrd32 = (unsigned int)rrt32 >> rsa;
@@ -74,7 +74,7 @@ static void SRL()
    interp_addr+=4;
 }
 
-static void SRA()
+static void SRA(void)
 {
    check_r0_rd();
    rrd32 = (signed int)rrt32 >> rsa;
@@ -82,7 +82,7 @@ static void SRA()
    interp_addr+=4;
 }
 
-static void SLLV()
+static void SLLV(void)
 {
    check_r0_rd();
    rrd32 = (unsigned int)(rrt32) << (rrs32&0x1F);
@@ -90,7 +90,7 @@ static void SLLV()
    interp_addr+=4;
 }
 
-static void SRLV()
+static void SRLV(void)
 {
    check_r0_rd();
    rrd32 = (unsigned int)rrt32 >> (rrs32 & 0x1F);
@@ -98,7 +98,7 @@ static void SRLV()
    interp_addr+=4;
 }
 
-static void SRAV()
+static void SRAV(void)
 {
    check_r0_rd();
    rrd32 = (signed int)rrt32 >> (rrs32 & 0x1F);
@@ -106,7 +106,7 @@ static void SRAV()
    interp_addr+=4;
 }
 
-static void JR()
+static void JR(void)
 {
    local_rs32 = irs32;
    interp_addr+=4;
@@ -120,7 +120,7 @@ static void JR()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void JALR()
+static void JALR(void)
 {
    unsigned long long *dest = (unsigned long long *) PC->f.r.rd;
    local_rs32 = rrs32;
@@ -141,65 +141,65 @@ static void JALR()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void SYSCALL()
+static void SYSCALL(void)
 {
    Cause = 8 << 2;
    exception_general();
 }
 
-static void SYNC()
+static void SYNC(void)
 {
    interp_addr+=4;
 }
 
-static void MFHI()
+static void MFHI(void)
 {
    check_r0_rd();
    rrd = hi;
    interp_addr+=4;
 }
 
-static void MTHI()
+static void MTHI(void)
 {
    hi = rrs;
    interp_addr+=4;
 }
 
-static void MFLO()
+static void MFLO(void)
 {
    check_r0_rd();
    rrd = lo;
    interp_addr+=4;
 }
 
-static void MTLO()
+static void MTLO(void)
 {
    lo = rrs;
    interp_addr+=4;
 }
 
-static void DSLLV()
+static void DSLLV(void)
 {
    check_r0_rd();
    rrd = rrt << (rrs32&0x3F);
    interp_addr+=4;
 }
 
-static void DSRLV()
+static void DSRLV(void)
 {
    check_r0_rd();
    rrd = (unsigned long long)rrt >> (rrs32 & 0x3F);
    interp_addr+=4;
 }
 
-static void DSRAV()
+static void DSRAV(void)
 {
    check_r0_rd();
    rrd = (long long)rrt >> (rrs32 & 0x3F);
    interp_addr+=4;
 }
 
-static void MULT()
+static void MULT(void)
 {
    long long int temp;
    temp = rrs * rrt;
@@ -209,7 +209,7 @@ static void MULT()
    interp_addr+=4;
 }
 
-static void MULTU()
+static void MULTU(void)
 {
    unsigned long long int temp;
    temp = (unsigned int)rrs * (unsigned long long)((unsigned int)rrt);
@@ -219,7 +219,7 @@ static void MULTU()
    interp_addr+=4;
 }
 
-static void DIV()
+static void DIV(void)
 {
    if (rrt32)
    {
@@ -232,7 +232,7 @@ static void DIV()
    interp_addr+=4;
 }
 
-static void DIVU()
+static void DIVU(void)
 {
    if (rrt32)
    {
@@ -245,7 +245,7 @@ static void DIVU()
    interp_addr+=4;
 }
 
-static void DMULT()
+static void DMULT(void)
 {
    unsigned long long int op1, op2, op3, op4;
    unsigned long long int result1, result2, result3, result4;
@@ -291,7 +291,7 @@ static void DMULT()
    interp_addr+=4;
 }
 
-static void DMULTU()
+static void DMULTU(void)
 {
    unsigned long long int op1, op2, op3, op4;
    unsigned long long int result1, result2, result3, result4;
@@ -318,7 +318,7 @@ static void DMULTU()
    interp_addr+=4;
 }
 
-static void DDIV()
+static void DDIV(void)
 {
    if (rrt)
    {
@@ -329,7 +329,7 @@ static void DDIV()
    interp_addr+=4;
 }
 
-static void DDIVU()
+static void DDIVU(void)
 {
    if (rrt)
    {
@@ -340,7 +340,7 @@ static void DDIVU()
    interp_addr+=4;
 }
 
-static void ADD()
+static void ADD(void)
 {
    check_r0_rd();
    rrd32 = rrs32 + rrt32;
@@ -348,7 +348,7 @@ static void ADD()
    interp_addr+=4;
 }
 
-static void ADDU()
+static void ADDU(void)
 {
    check_r0_rd();
    rrd32 = rrs32 + rrt32;
@@ -356,7 +356,7 @@ static void ADDU()
    interp_addr+=4;
 }
 
-static void SUB()
+static void SUB(void)
 {
    check_r0_rd();
    rrd32 = rrs32 - rrt32;
@@ -364,7 +364,7 @@ static void SUB()
    interp_addr+=4;
 }
 
-static void SUBU()
+static void SUBU(void)
 {
    check_r0_rd();
    rrd32 = rrs32 - rrt32;
@@ -372,35 +372,35 @@ static void SUBU()
    interp_addr+=4;
 }
 
-static void AND()
+static void AND(void)
 {
    check_r0_rd();
    rrd = rrs & rrt;
    interp_addr+=4;
 }
 
-static void OR()
+static void OR(void)
 {
    check_r0_rd();
    rrd = rrs | rrt;
    interp_addr+=4;
 }
 
-static void XOR()
+static void XOR(void)
 {
    check_r0_rd();
    rrd = rrs ^ rrt;
    interp_addr+=4;
 }
 
-static void NOR()
+static void NOR(void)
 {
    check_r0_rd();
    rrd = ~(rrs | rrt);
    interp_addr+=4;
 }
 
-static void SLT()
+static void SLT(void)
 {
    check_r0_rd();
    if (rrs < rrt) rrd = 1;
@@ -408,7 +408,7 @@ static void SLT()
    interp_addr+=4;
 }
 
-static void SLTU()
+static void SLTU(void)
 {
    check_r0_rd();
    if ((unsigned long long)rrs < (unsigned long long)rrt)
@@ -417,35 +417,35 @@ static void SLTU()
    interp_addr+=4;
 }
 
-static void DADD()
+static void DADD(void)
 {
    check_r0_rd();
    rrd = rrs + rrt;
    interp_addr+=4;
 }
 
-static void DADDU()
+static void DADDU(void)
 {
    check_r0_rd();
    rrd = rrs + rrt;
    interp_addr+=4;
 }
 
-static void DSUB()
+static void DSUB(void)
 {
    check_r0_rd();
    rrd = rrs - rrt;
    interp_addr+=4;
 }
 
-static void DSUBU()
+static void DSUBU(void)
 {
    check_r0_rd();
    rrd = rrs - rrt;
    interp_addr+=4;
 }
 
-static void TEQ()
+static void TEQ(void)
 {
    if (rrs == rrt)
    {
@@ -455,42 +455,42 @@ static void TEQ()
    interp_addr+=4;
 }
 
-static void DSLL()
+static void DSLL(void)
 {
    check_r0_rd();
    rrd = rrt << rsa;
    interp_addr+=4;
 }
 
-static void DSRL()
+static void DSRL(void)
 {
    check_r0_rd();
    rrd = (unsigned long long)rrt >> rsa;
    interp_addr+=4;
 }
 
-static void DSRA()
+static void DSRA(void)
 {
    check_r0_rd();
    rrd = rrt >> rsa;
    interp_addr+=4;
 }
 
-static void DSLL32()
+static void DSLL32(void)
 {
    check_r0_rd();
    rrd = rrt << (32+rsa);
    interp_addr+=4;
 }
 
-static void DSRL32()
+static void DSRL32(void)
 {
    check_r0_rd();
    rrd = (unsigned long long int)rrt >> (32+rsa);
    interp_addr+=4;
 }
 
-static void DSRA32()
+static void DSRA32(void)
 {
    check_r0_rd();
    rrd = (signed long long int)rrt >> (32+rsa);
@@ -509,7 +509,7 @@ static void (*interp_special[64])(void) =
    DSLL, NI   , DSRL, DSRA, DSLL32 , NI    , DSRL32, DSRA32
 };
 
-static void BLTZ()
+static void BLTZ(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -539,7 +539,7 @@ static void BLTZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGEZ()
+static void BGEZ(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -569,7 +569,7 @@ static void BGEZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BLTZL()
+static void BLTZL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -602,7 +602,7 @@ static void BLTZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGEZL()
+static void BGEZL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -635,7 +635,7 @@ static void BGEZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BLTZAL()
+static void BLTZAL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -670,7 +670,7 @@ static void BLTZAL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGEZAL()
+static void BGEZAL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -705,7 +705,7 @@ static void BGEZAL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BLTZALL()
+static void BLTZALL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -743,7 +743,7 @@ static void BLTZALL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGEZALL()
+static void BGEZALL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -789,7 +789,7 @@ static void (*interp_regimm[32])(void) =
    NI    , NI    , NI     , NI     , NI, NI, NI, NI
 };
 
-static void TLBR()
+static void TLBR(void)
 {
    int index;
    index = Index & 0x1F;
@@ -804,7 +804,7 @@ static void TLBR()
    interp_addr+=4;
 }
 
-static void TLBWI()
+static void TLBWI(void)
 {
    unsigned int i;
    
@@ -884,7 +884,7 @@ static void TLBWI()
    interp_addr+=4;
 }
 
-static void TLBWR()
+static void TLBWR(void)
 {
    unsigned int i;
    update_count();
@@ -964,7 +964,7 @@ static void TLBWR()
    interp_addr+=4;
 }
 
-static void TLBP()
+static void TLBP(void)
 {
    int i;
    Index |= 0x80000000;
@@ -982,7 +982,7 @@ static void TLBP()
    interp_addr+=4;
 }
 
-static void ERET()
+static void ERET(void)
 {
    update_count();
    if (Status & 0x4)
@@ -1013,7 +1013,7 @@ static void (*interp_tlb[64])(void) =
    NI  , NI  , NI   , NI, NI, NI, NI   , NI
 };
 
-static void MFC0()
+static void MFC0(void)
 {
    switch(PC->f.r.nrd)
      {
@@ -1028,7 +1028,7 @@ static void MFC0()
    interp_addr+=4;
 }
 
-static void MTC0()
+static void MTC0(void)
 {
    switch(PC->f.r.nrd)
      {
@@ -1128,7 +1128,7 @@ static void MTC0()
    interp_addr+=4;
 }
 
-static void TLB()
+static void TLB(void)
 {
    interp_tlb[(op & 0x3F)]();
 }
@@ -1141,7 +1141,7 @@ static void (*interp_cop0[32])(void) =
    NI  , NI, NI, NI, NI  , NI, NI, NI
 };
 
-static void BC1F()
+static void BC1F(void)
 {
    short local_immediate = iimmediate;
    if ((interp_addr + (local_immediate+1)*4) == interp_addr)
@@ -1170,7 +1170,7 @@ static void BC1F()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BC1T()
+static void BC1T(void)
 {
    short local_immediate = iimmediate;
    if ((interp_addr + (local_immediate+1)*4) == interp_addr)
@@ -1199,7 +1199,7 @@ static void BC1T()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BC1FL()
+static void BC1FL(void)
 {
    short local_immediate = iimmediate;
    if ((interp_addr + (local_immediate+1)*4) == interp_addr)
@@ -1232,7 +1232,7 @@ static void BC1FL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BC1TL()
+static void BC1TL(void)
 {
    short local_immediate = iimmediate;
    if ((interp_addr + (local_immediate+1)*4) == interp_addr)
@@ -1271,7 +1271,7 @@ static void (*interp_cop1_bc[4])(void) =
    BC1FL, BC1TL
 };
 
-static void ADD_S()
+static void ADD_S(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = *reg_cop1_simple[cffs] +
@@ -1279,7 +1279,7 @@ static void ADD_S()
    interp_addr+=4;
 }
 
-static void SUB_S()
+static void SUB_S(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = *reg_cop1_simple[cffs] -
@@ -1287,7 +1287,7 @@ static void SUB_S()
    interp_addr+=4;
 }
 
-static void MUL_S()
+static void MUL_S(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = *reg_cop1_simple[cffs] *
@@ -1295,7 +1295,7 @@ static void MUL_S()
    interp_addr+=4;
 }
 
-static void DIV_S()
+static void DIV_S(void)
 {
    if((FCR31 & 0x400) && *reg_cop1_simple[cfft] == 0)
    {
@@ -1307,118 +1307,118 @@ static void DIV_S()
    interp_addr+=4;
 }
 
-static void SQRT_S()
+static void SQRT_S(void)
 {
    set_rounding();
-   *reg_cop1_simple[cffd] = sqrt(*reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) sqrt(*reg_cop1_simple[cffs]);
    interp_addr+=4;
 }
 
-static void ABS_S()
+static void ABS_S(void)
 {
    set_rounding();
-   *reg_cop1_simple[cffd] = fabs(*reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) fabs(*reg_cop1_simple[cffs]);
    interp_addr+=4;
 }
 
-static void MOV_S()
+static void MOV_S(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void NEG_S()
+static void NEG_S(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = -(*reg_cop1_simple[cffs]);
    interp_addr+=4;
 }
 
-static void ROUND_L_S()
+static void ROUND_L_S(void)
 {
    set_round();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void TRUNC_L_S()
+static void TRUNC_L_S(void)
 {
    set_trunc();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void CEIL_L_S()
+static void CEIL_L_S(void)
 {
    set_ceil();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void FLOOR_L_S()
+static void FLOOR_L_S(void)
 {
    set_floor();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void ROUND_W_S()
+static void ROUND_W_S(void)
 {
    set_round();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void TRUNC_W_S()
+static void TRUNC_W_S(void)
 {
    set_trunc();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void CEIL_W_S()
+static void CEIL_W_S(void)
 {
    set_ceil();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void FLOOR_W_S()
+static void FLOOR_W_S(void)
 {
    set_floor();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void CVT_D_S()
+static void CVT_D_S(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void CVT_W_S()
+static void CVT_W_S(void)
 {
    set_rounding();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void CVT_L_S()
+static void CVT_L_S(void)
 {
    set_rounding();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_simple[cffs];
    interp_addr+=4;
 }
 
-static void C_F_S()
+static void C_F_S(void)
 {
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
 
-static void C_UN_S()
+static void C_UN_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
      FCR31 |= 0x800000;
@@ -1426,7 +1426,7 @@ static void C_UN_S()
    interp_addr+=4;
 }
 
-static void C_EQ_S()
+static void C_EQ_S(void)
 {
    if (!isnan(*reg_cop1_simple[cffs]) && !isnan(*reg_cop1_simple[cfft]) &&
        *reg_cop1_simple[cffs] == *reg_cop1_simple[cfft])
@@ -1435,7 +1435,7 @@ static void C_EQ_S()
    interp_addr+=4;
 }
 
-static void C_UEQ_S()
+static void C_UEQ_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]) ||
        *reg_cop1_simple[cffs] == *reg_cop1_simple[cfft])
@@ -1444,7 +1444,7 @@ static void C_UEQ_S()
    interp_addr+=4;
 }
 
-static void C_OLT_S()
+static void C_OLT_S(void)
 {
    if (!isnan(*reg_cop1_simple[cffs]) && !isnan(*reg_cop1_simple[cfft]) &&
        *reg_cop1_simple[cffs] < *reg_cop1_simple[cfft])
@@ -1453,7 +1453,7 @@ static void C_OLT_S()
    interp_addr+=4;
 }
 
-static void C_ULT_S()
+static void C_ULT_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]) ||
        *reg_cop1_simple[cffs] < *reg_cop1_simple[cfft])
@@ -1462,7 +1462,7 @@ static void C_ULT_S()
    interp_addr+=4;
 }
 
-static void C_OLE_S()
+static void C_OLE_S(void)
 {
    if (!isnan(*reg_cop1_simple[cffs]) && !isnan(*reg_cop1_simple[cfft]) &&
        *reg_cop1_simple[cffs] <= *reg_cop1_simple[cfft])
@@ -1471,7 +1471,7 @@ static void C_OLE_S()
    interp_addr+=4;
 }
 
-static void C_ULE_S()
+static void C_ULE_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]) ||
        *reg_cop1_simple[cffs] <= *reg_cop1_simple[cfft])
@@ -1480,7 +1480,7 @@ static void C_ULE_S()
    interp_addr+=4;
 }
 
-static void C_SF_S()
+static void C_SF_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1491,7 +1491,7 @@ static void C_SF_S()
    interp_addr+=4;
 }
 
-static void C_NGLE_S()
+static void C_NGLE_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1502,7 +1502,7 @@ static void C_NGLE_S()
    interp_addr+=4;
 }
 
-static void C_SEQ_S()
+static void C_SEQ_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1515,7 +1515,7 @@ static void C_SEQ_S()
    interp_addr+=4;
 }
 
-static void C_NGL_S()
+static void C_NGL_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1528,7 +1528,7 @@ static void C_NGL_S()
    interp_addr+=4;
 }
 
-static void C_LT_S()
+static void C_LT_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1541,7 +1541,7 @@ static void C_LT_S()
    interp_addr+=4;
 }
 
-static void C_NGE_S()
+static void C_NGE_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1554,7 +1554,7 @@ static void C_NGE_S()
    interp_addr+=4;
 }
 
-static void C_LE_S()
+static void C_LE_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1567,7 +1567,7 @@ static void C_LE_S()
    interp_addr+=4;
 }
 
-static void C_NGT_S()
+static void C_NGT_S(void)
 {
    if (isnan(*reg_cop1_simple[cffs]) || isnan(*reg_cop1_simple[cfft]))
    {
@@ -1592,7 +1592,7 @@ C_F_S    ,C_UN_S   ,C_EQ_S  ,C_UEQ_S  ,C_OLT_S  ,C_ULT_S  ,C_OLE_S ,C_ULE_S  ,
 C_SF_S   ,C_NGLE_S ,C_SEQ_S ,C_NGL_S  ,C_LT_S   ,C_NGE_S  ,C_LE_S  ,C_NGT_S
 };
 
-static void ADD_D()
+static void ADD_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *reg_cop1_double[cffs] +
@@ -1600,7 +1600,7 @@ static void ADD_D()
    interp_addr+=4;
 }
 
-static void SUB_D()
+static void SUB_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *reg_cop1_double[cffs] -
@@ -1608,7 +1608,7 @@ static void SUB_D()
    interp_addr+=4;
 }
 
-static void MUL_D()
+static void MUL_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *reg_cop1_double[cffs] *
@@ -1616,7 +1616,7 @@ static void MUL_D()
    interp_addr+=4;
 }
 
-static void DIV_D()
+static void DIV_D(void)
 {
    if((FCR31 & 0x400) && *reg_cop1_double[cfft] == 0)
      {
@@ -1633,118 +1633,118 @@ static void DIV_D()
    interp_addr+=4;
 }
 
-static void SQRT_D()
+static void SQRT_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = sqrt(*reg_cop1_double[cffs]);
    interp_addr+=4;
 }
 
-static void ABS_D()
+static void ABS_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = fabs(*reg_cop1_double[cffs]);
    interp_addr+=4;
 }
 
-static void MOV_D()
+static void MOV_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void NEG_D()
+static void NEG_D(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = -(*reg_cop1_double[cffs]);
    interp_addr+=4;
 }
 
-static void ROUND_L_D()
+static void ROUND_L_D(void)
 {
    set_round();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void TRUNC_L_D()
+static void TRUNC_L_D(void)
 {
    set_trunc();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void CEIL_L_D()
+static void CEIL_L_D(void)
 {
    set_ceil();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void FLOOR_L_D()
+static void FLOOR_L_D(void)
 {
    set_floor();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void ROUND_W_D()
+static void ROUND_W_D(void)
 {
    set_round();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void TRUNC_W_D()
+static void TRUNC_W_D(void)
 {
    set_trunc();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void CEIL_W_D()
+static void CEIL_W_D(void)
 {
    set_ceil();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void FLOOR_W_D()
+static void FLOOR_W_D(void)
 {
    set_floor();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void CVT_S_D()
+static void CVT_S_D(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = (float) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void CVT_W_D()
+static void CVT_W_D(void)
 {
    set_rounding();
    *((int*)reg_cop1_simple[cffd]) = (int) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void CVT_L_D()
+static void CVT_L_D(void)
 {
    set_rounding();
    *((long long*)(reg_cop1_double[cffd])) = (long long) *reg_cop1_double[cffs];
    interp_addr+=4;
 }
 
-static void C_F_D()
+static void C_F_D(void)
 {
    FCR31 &= ~0x800000;
    interp_addr+=4;
 }
 
-static void C_UN_D()
+static void C_UN_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
      FCR31 |= 0x800000;
@@ -1752,7 +1752,7 @@ static void C_UN_D()
    interp_addr+=4;
 }
 
-static void C_EQ_D()
+static void C_EQ_D(void)
 {
    if (!isnan(*reg_cop1_double[cffs]) && !isnan(*reg_cop1_double[cfft]) &&
        *reg_cop1_double[cffs] == *reg_cop1_double[cfft])
@@ -1761,7 +1761,7 @@ static void C_EQ_D()
    interp_addr+=4;
 }
 
-static void C_UEQ_D()
+static void C_UEQ_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]) ||
        *reg_cop1_double[cffs] == *reg_cop1_double[cfft])
@@ -1770,7 +1770,7 @@ static void C_UEQ_D()
    interp_addr+=4;
 }
 
-static void C_OLT_D()
+static void C_OLT_D(void)
 {
    if (!isnan(*reg_cop1_double[cffs]) && !isnan(*reg_cop1_double[cfft]) &&
        *reg_cop1_double[cffs] < *reg_cop1_double[cfft])
@@ -1779,7 +1779,7 @@ static void C_OLT_D()
    interp_addr+=4;
 }
 
-static void C_ULT_D()
+static void C_ULT_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]) ||
        *reg_cop1_double[cffs] < *reg_cop1_double[cfft])
@@ -1788,7 +1788,7 @@ static void C_ULT_D()
    interp_addr+=4;
 }
 
-static void C_OLE_D()
+static void C_OLE_D(void)
 {
    if (!isnan(*reg_cop1_double[cffs]) && !isnan(*reg_cop1_double[cfft]) &&
        *reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
@@ -1797,7 +1797,7 @@ static void C_OLE_D()
    interp_addr+=4;
 }
 
-static void C_ULE_D()
+static void C_ULE_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]) ||
        *reg_cop1_double[cffs] <= *reg_cop1_double[cfft])
@@ -1806,7 +1806,7 @@ static void C_ULE_D()
    interp_addr+=4;
 }
 
-static void C_SF_D()
+static void C_SF_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1817,7 +1817,7 @@ static void C_SF_D()
    interp_addr+=4;
 }
 
-static void C_NGLE_D()
+static void C_NGLE_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1828,7 +1828,7 @@ static void C_NGLE_D()
    interp_addr+=4;
 }
 
-static void C_SEQ_D()
+static void C_SEQ_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1841,7 +1841,7 @@ static void C_SEQ_D()
    interp_addr+=4;
 }
 
-static void C_NGL_D()
+static void C_NGL_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1854,7 +1854,7 @@ static void C_NGL_D()
    interp_addr+=4;
 }
 
-static void C_LT_D()
+static void C_LT_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1867,7 +1867,7 @@ static void C_LT_D()
    interp_addr+=4;
 }
 
-static void C_NGE_D()
+static void C_NGE_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1880,7 +1880,7 @@ static void C_NGE_D()
    interp_addr+=4;
 }
 
-static void C_LE_D()
+static void C_LE_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1893,7 +1893,7 @@ static void C_LE_D()
    interp_addr+=4;
 }
 
-static void C_NGT_D()
+static void C_NGT_D(void)
 {
    if (isnan(*reg_cop1_double[cffs]) || isnan(*reg_cop1_double[cfft]))
    {
@@ -1918,14 +1918,14 @@ C_F_D    ,C_UN_D   ,C_EQ_D  ,C_UEQ_D  ,C_OLT_D  ,C_ULT_D  ,C_OLE_D ,C_ULE_D  ,
 C_SF_D   ,C_NGLE_D ,C_SEQ_D ,C_NGL_D  ,C_LT_D   ,C_NGE_D  ,C_LE_D  ,C_NGT_D
 };
 
-static void CVT_S_W()
+static void CVT_S_W(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = (float) *((int*)reg_cop1_simple[cffs]);
    interp_addr+=4;
 }
 
-static void CVT_D_W()
+static void CVT_D_W(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = *((int*)reg_cop1_simple[cffs]);
@@ -1944,14 +1944,14 @@ static void (*interp_cop1_w[64])(void) =
    NI     , NI     , NI, NI, NI, NI, NI, NI
 };
 
-static void CVT_S_L()
+static void CVT_S_L(void)
 {
    set_rounding();
    *reg_cop1_simple[cffd] = (float) *((long long*)(reg_cop1_double[cffs]));
    interp_addr+=4;
 }
 
-static void CVT_D_L()
+static void CVT_D_L(void)
 {
    set_rounding();
    *reg_cop1_double[cffd] = (double) *((long long*)(reg_cop1_double[cffs]));
@@ -1970,7 +1970,7 @@ static void (*interp_cop1_l[64])(void) =
    NI     , NI     , NI, NI, NI, NI, NI, NI
 };
 
-static void MFC1()
+static void MFC1(void)
 {
    check_r0_rt();
    rrt32 = *((int*)reg_cop1_simple[rfs]);
@@ -1978,14 +1978,14 @@ static void MFC1()
    interp_addr+=4;
 }
 
-static void DMFC1()
+static void DMFC1(void)
 {
    check_r0_rt();
    rrt = *((long long*)(reg_cop1_double[rfs]));
    interp_addr+=4;
 }
 
-static void CFC1()
+static void CFC1(void)
 {
    check_r0_rt();
    if (rfs==31)
@@ -2001,19 +2001,19 @@ static void CFC1()
    interp_addr+=4;
 }
 
-static void MTC1()
+static void MTC1(void)
 {
    *((int*)reg_cop1_simple[rfs]) = rrt32;
    interp_addr+=4;
 }
 
-static void DMTC1()
+static void DMTC1(void)
 {
    *((long long*)reg_cop1_double[rfs]) = rrt;
    interp_addr+=4;
 }
 
-static void CTC1()
+static void CTC1(void)
 {
    if (rfs==31)
      FCR31 = rrt32;
@@ -2037,27 +2037,27 @@ static void CTC1()
    interp_addr+=4;
 }
 
-static void BC()
+static void BC(void)
 {
    interp_cop1_bc[(op >> 16) & 3]();
 }
 
-static void S()
+static void S(void)
 {
    interp_cop1_s[(op & 0x3F)]();
 }
 
-static void D()
+static void D(void)
 {
    interp_cop1_d[(op & 0x3F)]();
 }
 
-static void W()
+static void W(void)
 {
    interp_cop1_w[(op & 0x3F)]();
 }
 
-static void L()
+static void L(void)
 {
    interp_cop1_l[(op & 0x3F)]();
 }
@@ -2070,17 +2070,17 @@ static void (*interp_cop1[32])(void) =
    NI  , NI   , NI  , NI, NI  , NI   , NI  , NI
 };
 
-static void SPECIAL()
+static void SPECIAL(void)
 {
    interp_special[(op & 0x3F)]();
 }
 
-static void REGIMM()
+static void REGIMM(void)
 {
    interp_regimm[((op >> 16) & 0x1F)]();
 }
 
-static void J()
+static void J(void)
 {
    unsigned int naddr = (PC->f.j.inst_index<<2) | (interp_addr & 0xF0000000);
    if (naddr == interp_addr)
@@ -2107,7 +2107,7 @@ static void J()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void JAL()
+static void JAL(void)
 {
    unsigned int naddr = (PC->f.j.inst_index<<2) | (interp_addr & 0xF0000000);
    if (naddr == interp_addr)
@@ -2140,7 +2140,7 @@ static void JAL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BEQ()
+static void BEQ(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2171,7 +2171,7 @@ static void BEQ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BNE()
+static void BNE(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2202,7 +2202,7 @@ static void BNE()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BLEZ()
+static void BLEZ(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2232,7 +2232,7 @@ static void BLEZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGTZ()
+static void BGTZ(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2262,7 +2262,7 @@ static void BGTZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void ADDI()
+static void ADDI(void)
 {
    check_r0_irt();
    irt32 = irs32 + iimmediate;
@@ -2270,7 +2270,7 @@ static void ADDI()
    interp_addr+=4;
 }
 
-static void ADDIU()
+static void ADDIU(void)
 {
    check_r0_irt();
    irt32 = irs32 + iimmediate;
@@ -2278,7 +2278,7 @@ static void ADDIU()
    interp_addr+=4;
 }
 
-static void SLTI()
+static void SLTI(void)
 {
    check_r0_irt();
    if (irs < iimmediate) irt = 1;
@@ -2286,7 +2286,7 @@ static void SLTI()
    interp_addr+=4;
 }
 
-static void SLTIU()
+static void SLTIU(void)
 {
    check_r0_irt();
    if ((unsigned long long)irs < (unsigned long long)((long long)iimmediate))
@@ -2295,28 +2295,28 @@ static void SLTIU()
    interp_addr+=4;
 }
 
-static void ANDI()
+static void ANDI(void)
 {
    check_r0_irt();
    irt = irs & (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
-static void ORI()
+static void ORI(void)
 {
    check_r0_irt();
    irt = irs | (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
-static void XORI()
+static void XORI(void)
 {
    check_r0_irt();
    irt = irs ^ (unsigned short)iimmediate;
    interp_addr+=4;
 }
 
-static void LUI()
+static void LUI(void)
 {
    check_r0_irt();
    irt32 = iimmediate << 16;
@@ -2324,18 +2324,18 @@ static void LUI()
    interp_addr+=4;
 }
 
-static void COP0()
+static void COP0(void)
 {
    interp_cop0[((op >> 21) & 0x1F)]();
 }
 
-static void COP1()
+static void COP1(void)
 {
    if (check_cop1_unusable()) return;
    interp_cop1[((op >> 21) & 0x1F)]();
 }
 
-static void BEQL()
+static void BEQL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2373,7 +2373,7 @@ static void BEQL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BNEL()
+static void BNEL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2411,7 +2411,7 @@ static void BNEL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BLEZL()
+static void BLEZL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2448,7 +2448,7 @@ static void BLEZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void BGTZL()
+static void BGTZL(void)
 {
    short local_immediate = iimmediate;
    local_rs = irs;
@@ -2485,21 +2485,21 @@ static void BGTZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-static void DADDI()
+static void DADDI(void)
 {
    check_r0_irt();
    irt = irs + iimmediate;
    interp_addr+=4;
 }
 
-static void DADDIU()
+static void DADDIU(void)
 {
    check_r0_irt();
    irt = irs + iimmediate;
    interp_addr+=4;
 }
 
-static void LDL()
+static void LDL(void)
 {
    unsigned long long int word = 0;
    check_r0_irt();
@@ -2556,7 +2556,7 @@ static void LDL()
      }
 }
 
-static void LDR()
+static void LDR(void)
 {
    unsigned long long int word = 0;
    check_r0_irt();
@@ -2613,7 +2613,7 @@ static void LDR()
      }
 }
 
-static void LB()
+static void LB(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -2623,7 +2623,7 @@ static void LB()
    sign_extendedb(irt);
 }
 
-static void LH()
+static void LH(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -2633,7 +2633,7 @@ static void LH()
    sign_extendedh(irt);
 }
 
-static void LWL()
+static void LWL(void)
 {
    unsigned long long int word = 0;
    check_r0_irt();
@@ -2667,7 +2667,7 @@ static void LWL()
    sign_extended(irt);
 }
 
-static void LW()
+static void LW(void)
 {
    check_r0_irt();
    address = iimmediate + irs32;
@@ -2677,7 +2677,7 @@ static void LW()
    sign_extended(irt);
 }
 
-static void LBU()
+static void LBU(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -2686,7 +2686,7 @@ static void LBU()
    read_byte_in_memory();
 }
 
-static void LHU()
+static void LHU(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -2695,7 +2695,7 @@ static void LHU()
    read_hword_in_memory();
 }
 
-static void LWR()
+static void LWR(void)
 {
    unsigned long long int word = 0;
    check_r0_irt();
@@ -2728,7 +2728,7 @@ static void LWR()
      }
 }
 
-static void LWU()
+static void LWU(void)
 {
    check_r0_irt();
    address = iimmediate + irs32;
@@ -2737,7 +2737,7 @@ static void LWU()
    read_word_in_memory();
 }
 
-static void SB()
+static void SB(void)
 {
    interp_addr+=4;
    address = iimmediate + irs32;
@@ -2745,7 +2745,7 @@ static void SB()
    write_byte_in_memory();
 }
 
-static void SH()
+static void SH(void)
 {
    interp_addr+=4;
    address = iimmediate + irs32;
@@ -2753,7 +2753,7 @@ static void SH()
    write_hword_in_memory();
 }
 
-static void SWL()
+static void SWL(void)
 {
    unsigned long long int old_word = 0;
    interp_addr+=4;
@@ -2786,7 +2786,7 @@ static void SWL()
      }
 }
 
-static void SW()
+static void SW(void)
 {
    interp_addr+=4;
    address = iimmediate + irs32;
@@ -2794,7 +2794,7 @@ static void SW()
    write_word_in_memory();
 }
 
-static void SDL()
+static void SDL(void)
 {
    unsigned long long int old_word = 0;
    interp_addr+=4;
@@ -2857,7 +2857,7 @@ static void SDL()
      }
 }
 
-static void SDR()
+static void SDR(void)
 {
    unsigned long long int old_word = 0;
    interp_addr+=4;
@@ -2920,7 +2920,7 @@ static void SDR()
      }
 }
 
-static void SWR()
+static void SWR(void)
 {
    unsigned long long int old_word = 0;
    interp_addr+=4;
@@ -2955,12 +2955,12 @@ static void SWR()
      }
 }
 
-static void CACHE()
+static void CACHE(void)
 {
    interp_addr+=4;
 }
 
-static void LL()
+static void LL(void)
 {
    check_r0_irt();
    address = iimmediate + irs32;
@@ -2971,7 +2971,7 @@ static void LL()
    llbit = 1;
 }
 
-static void LWC1()
+static void LWC1(void)
 {
    unsigned long long int temp;
    if (check_cop1_unusable()) return;
@@ -2982,7 +2982,7 @@ static void LWC1()
    *((int*)reg_cop1_simple[lfft]) = (int) *rdword;
 }
 
-static void LDC1()
+static void LDC1(void)
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
@@ -2991,7 +2991,7 @@ static void LDC1()
    read_dword_in_memory();
 }
 
-static void LD()
+static void LD(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -3000,7 +3000,7 @@ static void LD()
    read_dword_in_memory();
 }
 
-static void SC()
+static void SC(void)
 {
    check_r0_irt();
    interp_addr+=4;
@@ -3018,7 +3018,7 @@ static void SC()
      }
 }
 
-static void SWC1()
+static void SWC1(void)
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
@@ -3027,7 +3027,7 @@ static void SWC1()
    write_word_in_memory();
 }
 
-static void SDC1()
+static void SDC1(void)
 {
    if (check_cop1_unusable()) return;
    interp_addr+=4;
@@ -3036,7 +3036,7 @@ static void SDC1()
    write_dword_in_memory();
 }
 
-static void SD()
+static void SD(void)
 {
    interp_addr+=4;
    address = iimmediate + irs32;
@@ -3056,7 +3056,7 @@ void (*interp_ops[64])(void) =
    SC     , SWC1  , NI  , NI   , NI  , SDC1, NI   , SD
 };
 
-void prefetch()
+void prefetch(void)
 {
    if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
      {
@@ -3099,7 +3099,7 @@ void prefetch()
      }
 }
 
-void pure_interpreter()
+void pure_interpreter(void)
 {
    interp_addr = 0xa4000040;
    stop=0;

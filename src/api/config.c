@@ -69,6 +69,7 @@ static void strip_whitespace(char *string)
 {
     char *start = string;
     char *end = string + strlen(string) - 1;
+    int newlen;
 
     while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
         start++;
@@ -82,7 +83,7 @@ static void strip_whitespace(char *string)
         return;
     }
 
-    int newlen = end - start + 1;
+    newlen = end - start + 1;
     memmove(string, start, newlen);
     string[newlen] = 0;
 
@@ -128,6 +129,8 @@ static config_var *find_section_var(config_section *section, const char *ParamNa
 
 static void append_var_to_section(config_section *section, config_var *var)
 {
+    config_var *last_var;
+
     if (section == NULL || var == NULL || section->magic != SECTION_MAGIC)
         return;
 
@@ -137,7 +140,7 @@ static void append_var_to_section(config_section *section, config_var *var)
         return;
     }
 
-    config_var *last_var = section->first_var;
+    last_var = section->first_var;
     while (last_var->next != NULL)
         last_var = last_var->next;
 
@@ -150,6 +153,15 @@ static void append_var_to_section(config_section *section, config_var *var)
 
 m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride)
 {
+    const char *configpath = NULL;
+    char *filepath;
+    long filelen, pathlen;
+    FILE *fPtr;
+    char *configtext;
+
+    config_section *current_section = NULL;
+    char *line, *end, *lastcomment;
+
     if (l_ConfigInit)
         return M64ERR_ALREADY_INIT;
     l_ConfigInit = 1;
@@ -164,7 +176,6 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     }
 
     /* get the full pathname to the config file and try to open it */
-    const char *configpath = NULL;
     if (ConfigDirOverride != NULL)
         configpath = ConfigDirOverride;
     else
@@ -174,19 +185,19 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
             return M64ERR_FILES;
     }
 
-    char *filepath = (char *) malloc(strlen(configpath) + 32);
+    filepath = (char *) malloc(strlen(configpath) + 32);
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
     strcpy(filepath, configpath);
-    int pathlen = strlen(filepath);
+    pathlen = strlen(filepath);
     if (filepath[pathlen - 1] != OSAL_DIR_SEPARATOR)
     {
         filepath[pathlen] = OSAL_DIR_SEPARATOR;
         filepath[pathlen + 1] = 0;
     }
     strcat(filepath, MUPEN64PLUS_CFG_NAME);
-    FILE *fPtr = fopen(filepath, "rb");
+    fPtr = fopen(filepath, "rb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_WARNING, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
@@ -198,10 +209,10 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
 
     /* read the entire config file */
     fseek(fPtr, 0L, SEEK_END);
-    long filelen = ftell(fPtr);
+    filelen = ftell(fPtr);
     fseek(fPtr, 0L, SEEK_SET);
 
-    char *configtext = (char *) malloc(filelen + 16);
+    configtext = (char *) malloc(filelen + 16);
     if (configtext == NULL)
     {
         fclose(fPtr);
@@ -216,13 +227,14 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     fclose(fPtr);
 
     /* parse the file data */
-    config_section *current_section = NULL;
-    char *line = configtext;
-    char *end = configtext + filelen;
-    char *lastcomment = NULL;
+    current_section = NULL;
+    line = configtext;
+    end = configtext + filelen;
+    lastcomment = NULL;
     *end = 0;
     while (line < end)
     {
+        char *pivot, *varname, *varvalue;
         /* get the pointer to the next line, and null-terminate this line */
         char *nextline = strchr(line, '\n');
         if (nextline == NULL)
@@ -269,14 +281,14 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
             continue;
         }
         /* handle variable definition */
-        char *pivot = strchr(line, '=');
+        pivot = strchr(line, '=');
         if (current_section == NULL || pivot == NULL)
         {
             line = nextline;
             continue;
         }
-        char *varname = line;
-        char *varvalue = pivot + 1;
+        varname = line;
+        varvalue = pivot + 1;
         *pivot = 0;
         strip_whitespace(varname);
         strip_whitespace(varvalue);
@@ -317,6 +329,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
 
 m64p_error ConfigShutdown(void)
 {
+    config_section *curr_section;
+
     /* first, save the file if necessary */
     if (l_SaveConfigOnExit)
         ConfigSaveFile();
@@ -334,7 +348,7 @@ m64p_error ConfigShutdown(void)
     }
 
     /* free all of the malloc'd blocks */
-    config_section *curr_section = l_SectionHead;
+    curr_section = l_SectionHead;
     while (curr_section != NULL)
     {
         config_section *next_section = curr_section->next;
@@ -365,13 +379,15 @@ m64p_error ConfigShutdown(void)
 
 EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallback)(void * context, const char * SectionName))
 {
+    config_section *curr_section;
+
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (SectionListCallback == NULL)
         return M64ERR_INPUT_ASSERT;
 
     /* just walk through the section list, making a callback for each section name */
-    config_section *curr_section = l_SectionHead;
+    curr_section = l_SectionHead;
     while (curr_section != NULL)
     {
         (*SectionListCallback)(context, curr_section->name);
@@ -383,13 +399,15 @@ EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallb
 
 EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *ConfigSectionHandle)
 {
+    config_section *curr_section, *new_section;
+
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (SectionName == NULL || ConfigSectionHandle == NULL)
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the section list, looking for a case-insensitive name match */
-    config_section *curr_section = l_SectionHead;
+    curr_section = l_SectionHead;
     while (curr_section != NULL)
     {
         if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
@@ -401,7 +419,7 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     }
 
     /* didn't find the section, so create new one */
-    config_section *new_section = (config_section *) malloc(sizeof(config_section));
+    new_section = (config_section *) malloc(sizeof(config_section));
     if (new_section == NULL)
         return M64ERR_NO_MEMORY;
     new_section->magic = SECTION_MAGIC;
@@ -427,17 +445,20 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
 
 EXPORT m64p_error CALL ConfigListParameters(m64p_handle ConfigSectionHandle, void *context, void (*ParameterListCallback)(void * context, const char *ParamName, m64p_type ParamType))
 {
+    config_section *section;
+    config_var *curr_var;
+
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParameterListCallback == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* walk through this section's parameter list, making a callback for each parameter */
-    config_var *curr_var = section->first_var;
+    curr_var = section->first_var;
     while (curr_var != NULL)
     {
         (*ParameterListCallback)(context, curr_var->name, curr_var->type);
@@ -449,21 +470,26 @@ EXPORT m64p_error CALL ConfigListParameters(m64p_handle ConfigSectionHandle, voi
 
 EXPORT m64p_error CALL ConfigSaveFile(void)
 {
+    config_section *curr_section;
+    const char *configpath;
+    char *filepath;
+    FILE *fPtr;
+
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
 
     /* get the full pathname to the config file and try to open it */
-    const char *configpath = ConfigGetUserConfigPath();
+    configpath = ConfigGetUserConfigPath();
     if (configpath == NULL)
         return M64ERR_FILES;
 
-    char *filepath = (char *) malloc(strlen(configpath) + 32);
+    filepath = (char *) malloc(strlen(configpath) + 32);
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
     strcpy(filepath, configpath);
     strcat(filepath, MUPEN64PLUS_CFG_NAME);
-    FILE *fPtr = fopen(filepath, "wb"); 
+    fPtr = fopen(filepath, "wb"); 
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Couldn't open configuration file '%s' for writing.", filepath);
@@ -477,11 +503,11 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
     fprintf(fPtr, "# This file is automatically read and written by the Mupen64Plus Core library\n");
 
     /* write out all of the config parameters */
-    config_section *curr_section = l_SectionHead;
+    curr_section = l_SectionHead;
     while (curr_section != NULL)
     {
-        fprintf(fPtr, "\n[%s]\n\n", curr_section->name);
         config_var *curr_var = curr_section->first_var;
+        fprintf(fPtr, "\n[%s]\n\n", curr_section->name);
         while (curr_var != NULL)
         {
             if (curr_var->comment != NULL && strlen(curr_var->comment) > 0)
@@ -512,13 +538,16 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
 
 EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
 {
+    config_section *curr_section;
+    config_var *curr_var;
+
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (l_SectionHead == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* find the named section and pull it out of the list */
-    config_section *curr_section = l_SectionHead;
+    curr_section = l_SectionHead;
     if (osal_insensitive_strcmp(l_SectionHead->name, SectionName) == 0)
     {
         l_SectionHead = l_SectionHead->next;
@@ -541,7 +570,7 @@ EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
     }
 
     /* delete all the variables in this section */
-    config_var *curr_var = curr_section->first_var;
+    curr_var = curr_section->first_var;
     while (curr_var != NULL)
     {
         config_var *next_var = curr_var->next;
@@ -565,18 +594,21 @@ EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
 
 EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, const void *ParamValue)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL || (int) ParamType < 1 || (int) ParamType > 4)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter doesn't already exist, then create it and add it to the section */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
     {
         var = (config_var *) malloc(sizeof(config_var));
@@ -623,18 +655,21 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
 
 EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, void *ParamValue, int MaxSize)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL || (int) ParamType < 1 || (int) ParamType > 4)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter doesn't already exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
@@ -667,16 +702,19 @@ EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const
 
 EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
         return NULL;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return NULL;
 
     /* if this parameter doesn't exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
         return NULL;
 
@@ -689,18 +727,21 @@ EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle,
 
 EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, const char *ParamName, int ParamValue, const char *ParamHelp)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter already exists, then just return successfully */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var != NULL)
         return M64ERR_SUCCESS;
 
@@ -730,18 +771,21 @@ EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, cons
 
 EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, const char *ParamName, float ParamValue, const char *ParamHelp)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter already exists, then just return successfully */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var != NULL)
         return M64ERR_SUCCESS;
 
@@ -771,18 +815,21 @@ EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, co
 
 EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, const char *ParamName, int ParamValue, const char *ParamHelp)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter already exists, then just return successfully */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var != NULL)
         return M64ERR_SUCCESS;
 
@@ -812,18 +859,21 @@ EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, con
 
 EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, const char *ParamName, const char * ParamValue, const char *ParamHelp)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
     if (ConfigSectionHandle == NULL || ParamName == NULL || ParamValue == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
         return M64ERR_INPUT_INVALID;
 
     /* if this parameter already exists, then just return successfully */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var != NULL)
         return M64ERR_SUCCESS;
 
@@ -855,6 +905,9 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
 
 EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
     {
@@ -862,7 +915,7 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
         return 0;
     }
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): ConfigSectionHandle invalid!");
@@ -870,7 +923,7 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
     }
 
     /* if this parameter doesn't already exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): Parameter '%s' not found!", ParamName);
@@ -898,6 +951,9 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
 
 EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
     {
@@ -905,7 +961,7 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
         return 0.0;
     }
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): ConfigSectionHandle invalid!");
@@ -913,7 +969,7 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
     }
 
     /* if this parameter doesn't already exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): Parameter '%s' not found!", ParamName);
@@ -941,6 +997,9 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
 
 EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
+    config_section *section;
+    config_var *var;
+
     /* check input conditions */
     if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
     {
@@ -948,7 +1007,7 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
         return 0;
     }
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): ConfigSectionHandle invalid!");
@@ -956,7 +1015,7 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
     }
 
     /* if this parameter doesn't already exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): Parameter '%s' not found!", ParamName);
@@ -985,6 +1044,8 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
 EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
     static char outstr[64];  /* warning: not thread safe */
+    config_section *section;
+    config_var *var;
 
     /* check input conditions */
     if (!l_ConfigInit || ConfigSectionHandle == NULL || ParamName == NULL)
@@ -993,7 +1054,7 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
         return "";
     }
 
-    config_section *section = (config_section *) ConfigSectionHandle;
+    section = (config_section *) ConfigSectionHandle;
     if (section->magic != SECTION_MAGIC)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): ConfigSectionHandle invalid!");
@@ -1001,7 +1062,7 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
     }
 
     /* if this parameter doesn't already exist, return an error */
-    config_var *var = find_section_var(section, ParamName);
+    var = find_section_var(section, ParamName);
     if (var == NULL)
     {
         DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): Parameter '%s' not found!", ParamName);
@@ -1037,12 +1098,13 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
 
 EXPORT const char * CALL ConfigGetSharedDataFilepath(const char *filename)
 {
+    const char *configsharepath = NULL;
+    m64p_handle CoreHandle = NULL;
+
     /* check input parameter */
     if (filename == NULL) return NULL;
 
     /* try to get the SharedDataPath string variable in the Core configuration section */
-    const char *configsharepath = NULL;
-    m64p_handle CoreHandle = NULL;
     if (ConfigOpenSection("Core", &CoreHandle) == M64ERR_SUCCESS)
     {
         configsharepath = ConfigGetParamString(CoreHandle, "SharedDataPath");

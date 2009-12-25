@@ -385,6 +385,9 @@ int cheat_set_enabled(const char *name, int enabled)
 
 int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
 {
+    cheat_t *cheat;
+    int i;
+
     if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_add_new()");
@@ -392,7 +395,7 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
     }
 
     /* create a new cheat function or erase the codes in an existing cheat function */
-    cheat_t *cheat = find_or_create_cheat(name);
+    cheat = find_or_create_cheat(name);
     if (cheat == NULL)
     {
         SDL_UnlockMutex(cheat_mutex);
@@ -401,7 +404,6 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
 
     cheat->enabled = 1; /* default for new cheats is enabled */
 
-    int i;
     for (i = 0; i < num_codes; i++)
     {
         cheat_code_t *code = (cheat_code_t *) malloc(sizeof(cheat_code_t));

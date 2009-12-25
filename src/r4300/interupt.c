@@ -113,6 +113,7 @@ void add_interupt_event(int type, unsigned int delay)
 {
     unsigned int count = Count + delay/**2*/;
     int special = 0;
+    interupt_queue *aux = q;
    
     if(type == SPECIAL_INT /*|| type == COMPARE_INT*/) special = 1;
     if(Count > 0x80000000) SPECIAL_done = 0;
@@ -120,7 +121,6 @@ void add_interupt_event(int type, unsigned int delay)
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
     }
-    interupt_queue *aux = q;
    
     if (q == NULL)
     {

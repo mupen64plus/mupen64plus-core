@@ -54,7 +54,7 @@ list_node_t *list_first_node(list_t list);
 void *list_first_data(list_t list);
 list_node_t *list_last_node(list_t list);
 void *list_last_data(list_t list);
-int inline list_empty(list_t list);
+int list_empty(list_t list);
 int list_length(list_t list);
 list_node_t *list_find_node(list_t list, void *data);
 char* dirfrompath(const char* string);

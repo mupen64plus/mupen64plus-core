@@ -68,7 +68,7 @@ void SQRT_S(void)
 {
    if (check_cop1_unusable()) return;
    set_rounding();
-   *reg_cop1_simple[cffd] = sqrt(*reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) sqrt(*reg_cop1_simple[cffs]);
    PC++;
 }
 
@@ -76,7 +76,7 @@ void ABS_S(void)
 {
    if (check_cop1_unusable()) return;
    set_rounding();
-   *reg_cop1_simple[cffd] = fabs(*reg_cop1_simple[cffs]);
+   *reg_cop1_simple[cffd] = (float) fabs(*reg_cop1_simple[cffs]);
    PC++;
 }
 
