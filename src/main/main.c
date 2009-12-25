@@ -113,7 +113,7 @@ void main_message(m64p_msg_level level, unsigned int corner, const char *format,
 
     /* send message to on-screen-display if enabled */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
-        osd_new_message((osd_corner) corner, buffer);
+        osd_new_message((enum osd_corner) corner, buffer);
     /* send message to front-end */
     DebugMessage(level, buffer);
 }

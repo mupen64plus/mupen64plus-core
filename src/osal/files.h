@@ -30,8 +30,11 @@
 #if defined(WIN32)
   #define OSAL_DIR_SEPARATOR           '\\'
   #define unlink _unlink
+  #define PATH_MAX _MAX_PATH
 #else  /* Not WIN32 */
   #define OSAL_DIR_SEPARATOR           '/'
+  #include <limits.h>  // for PATH_MAX
+  #include <unistd.h>  // for unlink()
 #endif
 
 extern int osal_mkdirp(const char *dirpath, int mode);
