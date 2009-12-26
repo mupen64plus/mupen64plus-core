@@ -38,7 +38,11 @@ extern unsigned int *SP_IMEM;
 extern unsigned char *SP_IMEMb;
 extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
-extern unsigned int rdram[0x800000/4];
+#if defined(WIN32)
+  extern __declspec(align(16)) unsigned int rdram[0x800000/4];
+#else
+  extern unsigned int rdram[0x800000/4];
+#endif
 extern unsigned int address, word;
 extern unsigned char cpu_byte;
 extern unsigned short hword;

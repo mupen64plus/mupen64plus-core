@@ -35,7 +35,8 @@ extern "C" {
 #define FONT_FILENAME "font.ttf"
 
 #ifdef __WIN32__
-# warning This hack should be fixed at some point
+# define strdup _strdup
+# pragma message("warning: This hack should be fixed at some point")
 # define glActiveTexture(x)
 #endif
 
@@ -83,7 +84,7 @@ static void draw_message(osd_message_t *msg, int width, int height)
         case OSD_TOP_CENTER:
             l_font->setVerticalJustification(OGLFT::Face::TOP);
             l_font->setHorizontalJustification(OGLFT::Face::CENTER);
-            x = ((float)width)/2.0;
+            x = ((float)width)/2.0f;
             y = (float)height;
             break;
         case OSD_TOP_RIGHT:
@@ -96,19 +97,19 @@ static void draw_message(osd_message_t *msg, int width, int height)
             l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
             l_font->setHorizontalJustification(OGLFT::Face::LEFT);
             x = 0.;
-            y = ((float)height)/2.0;
+            y = ((float)height)/2.0f;
             break;
         case OSD_MIDDLE_CENTER:
             l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
             l_font->setHorizontalJustification(OGLFT::Face::CENTER);
-            x = ((float)width)/2.0;
-            y = ((float)height)/2.0;
+            x = ((float)width)/2.0f;
+            y = ((float)height)/2.0f;
             break;
         case OSD_MIDDLE_RIGHT:
             l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
             l_font->setHorizontalJustification(OGLFT::Face::RIGHT);
             x = (float)width;
-            y = ((float)height)/2.0;
+            y = ((float)height)/2.0f;
             break;
         case OSD_BOTTOM_LEFT:
             l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
@@ -119,7 +120,7 @@ static void draw_message(osd_message_t *msg, int width, int height)
         case OSD_BOTTOM_CENTER:
             l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
             l_font->setHorizontalJustification(OGLFT::Face::CENTER);
-            x = ((float)width)/2.0;
+            x = ((float)width)/2.0f;
             y = 0.;
             break;
         case OSD_BOTTOM_RIGHT:
@@ -188,7 +189,7 @@ static void animation_fade(osd_message_t *msg)
 // sets message Y offset depending on where they are in the message queue
 static float get_message_offset(osd_message_t *msg, float fLinePos)
 {
-    float offset = l_font->height() * fLinePos;
+    float offset = (float) (l_font->height() * fLinePos);
 
     switch(msg->corner)
     {
@@ -211,7 +212,7 @@ void osd_init(int width, int height)
 
     fontpath = ConfigGetSharedDataFilepath(FONT_FILENAME);
 
-    l_font = new OGLFT::Monochrome(fontpath, height / 35);  // make font size proportional to screen height
+    l_font = new OGLFT::Monochrome(fontpath, (float) height / 35.0f);  // make font size proportional to screen height
 
     if(!l_font || !l_font->isValid())
     {
@@ -278,10 +279,10 @@ void osd_render()
 
     // save all the attributes
     glPushAttrib(GL_ALL_ATTRIB_BITS);
-    bool bFragmentProg = glIsEnabled(GL_FRAGMENT_PROGRAM_ARB);
-    bool bColorArray = glIsEnabled(GL_COLOR_ARRAY);
-    bool bTexCoordArray = glIsEnabled(GL_TEXTURE_COORD_ARRAY);
-    bool bSecColorArray = glIsEnabled(GL_SECONDARY_COLOR_ARRAY);
+    bool bFragmentProg = glIsEnabled(GL_FRAGMENT_PROGRAM_ARB) != 0;
+    bool bColorArray = glIsEnabled(GL_COLOR_ARRAY) != 0;
+    bool bTexCoordArray = glIsEnabled(GL_TEXTURE_COORD_ARRAY) != 0;
+    bool bSecColorArray = glIsEnabled(GL_SECONDARY_COLOR_ARRAY) != 0;
 
     // deactivate all the texturing units
     GLint  iActiveTex;
@@ -290,7 +291,7 @@ void osd_render()
     for (i = 0; i < 8; i++)
     {
         glActiveTexture(GL_TEXTURE0_ARB + i);
-        bTexture2D[i] = glIsEnabled(GL_TEXTURE_2D);
+        bTexture2D[i] = glIsEnabled(GL_TEXTURE_2D) != 0;
         glDisable(GL_TEXTURE_2D);
     }
 
@@ -327,13 +328,13 @@ void osd_render()
     if (l_fLineHeight < 0.0)
     {
         OGLFT::BBox bbox = l_font->measure("01abjZpqRGB");
-        l_fLineHeight = (bbox.y_max_ - bbox.y_min_) / 30.0;
+        l_fLineHeight = (bbox.y_max_ - bbox.y_min_) / 30.0f;
     }
 
     // keeps track of next message position for each corner
     float fCornerPos[OSD_NUM_CORNERS];
     for (i = 0; i < OSD_NUM_CORNERS; i++)
-        fCornerPos[i] = 0.5 * l_fLineHeight;
+        fCornerPos[i] = 0.5f * l_fLineHeight;
 
     list_foreach(l_messageQueue, node)
     {
@@ -379,7 +380,7 @@ void osd_render()
     // do the scrolling
     for (int i = 0; i < OSD_NUM_CORNERS; i++)
     {
-        fCornerScroll[i] += 0.1;
+        fCornerScroll[i] += 0.1f;
         if (fCornerScroll[i] >= 0.0)
             fCornerScroll[i] = 0.0;
     }

@@ -238,7 +238,7 @@ namespace OGLFT
             {
                 float angle;
                 if (string_rotation_<0) 
-                    angle = 360. - fmod(fabs(string_rotation_), 360.f);
+                    angle = 360.0f - fmod(fabs(string_rotation_), 360.f);
                 else 
                     angle = fmod(string_rotation_, 360.f);
 
@@ -420,7 +420,7 @@ namespace OGLFT
 
         float angle;
         if(string_rotation_<0.)
-            angle = 360. - fmod(fabs(string_rotation_), 360.f);
+            angle = 360.0f - fmod(fabs(string_rotation_), 360.f);
         else 
             angle = fmod(string_rotation_, 360.f);
 
@@ -450,7 +450,7 @@ namespace OGLFT
 
         float angle;
         if(string_rotation_<0.0) 
-            angle = 360. - fmod(fabs(string_rotation_), 360.f);
+            angle = 360.0f - fmod(fabs(string_rotation_), 360.f);
         else 
             angle = fmod(string_rotation_, 360.f);
 
@@ -701,14 +701,14 @@ namespace OGLFT
             switch (horizontal_justification_)
             {
                 case LEFT:   dx = -sizebox[0] + 1; break;
-                case CENTER: dx = -(sizebox[0] + sizebox[2])/ 2.; break;
+                case CENTER: dx = -(sizebox[0] + sizebox[2])/ 2.0f; break;
                 case RIGHT:  dx = -sizebox[2] - 1; break;
                 default: break;
             }
             switch (vertical_justification_)
             {
                 case BOTTOM: dy = -sizebox[1] + 1; break;
-                case MIDDLE: dy = -(sizebox[1] + sizebox[3])/ 2.; break;
+                case MIDDLE: dy = -(sizebox[1] + sizebox[3])/ 2.0f; break;
                 case TOP: dy = -sizebox[3] - 1; break;
                 default: break;
             }
@@ -748,14 +748,14 @@ namespace OGLFT
             switch (horizontal_justification_)
             {
                 case LEFT:   dx = -bbox.x_min_; break;
-                case CENTER: dx = -(bbox.x_min_ + bbox.x_max_)/ 2.; break;
+                case CENTER: dx = -(bbox.x_min_ + bbox.x_max_)/ 2.0f; break;
                 case RIGHT: dx = -bbox.x_max_; break;
                 default: break;
             }
             switch (vertical_justification_)
             {
                 case BOTTOM: dy = -bbox.y_min_; break;
-                case MIDDLE: dy = -(bbox.y_min_ + bbox.y_max_)/ 2.; break;
+                case MIDDLE: dy = -(bbox.y_min_ + bbox.y_max_)/ 2.0f; break;
                 case TOP:    dy = -bbox.y_max_; break;
                 default: break;
             }
@@ -798,7 +798,7 @@ namespace OGLFT
                 case LEFT:
                     dx = -bbox.x_min_; break;
                 case CENTER:
-                    dx = -(bbox.x_min_ + bbox.x_max_)/ 2.0; break;
+                    dx = -(bbox.x_min_ + bbox.x_max_)/ 2.0f; break;
                 case RIGHT:
                     dx = -bbox.x_max_; break;
                 default:
@@ -809,7 +809,7 @@ namespace OGLFT
                 case BOTTOM:
                     dy = -bbox.y_min_; break;
                 case MIDDLE:
-                    dy = -(bbox.y_min_ + bbox.y_max_)/ 2.0; break;
+                    dy = -(bbox.y_min_ + bbox.y_max_)/ 2.0f; break;
                 case TOP:
                     dy = -bbox.y_max_; break;
                 default:
@@ -864,7 +864,7 @@ namespace OGLFT
 
                 float angle;
                 if(string_rotation_<0.0)
-                    angle = 360. - fmod(fabs(string_rotation_), 360.f);
+                    angle = 360.0f - fmod(fabs(string_rotation_), 360.f);
                 else
                     angle = fmod(string_rotation_, 360.f);
 
@@ -1037,21 +1037,21 @@ namespace OGLFT
 
         GLdouble x, y, z;
         gluUnProject(bbox.x_min_, bbox.y_min_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.x_min_ = x - x0;
-        bbox.y_min_ = y - y0;
+        bbox.x_min_ = (float) (x - x0);
+        bbox.y_min_ = (float) (y - y0);
 
         gluUnProject(bbox.x_max_, bbox.y_max_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.x_max_ = x - x0;
-        bbox.y_max_ = y - y0;
+        bbox.x_max_ = (float) (x - x0);
+        bbox.y_max_ = (float) (y - y0);
 
         gluUnProject(bbox.advance_.dx_, bbox.advance_.dy_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.advance_.dx_ = x - x0;
-        bbox.advance_.dy_ = y - y0;
+        bbox.advance_.dx_ = (float) (x - x0);
+        bbox.advance_.dy_ = (float) (y - y0);
 
         return bbox;
     }
 
-    BBox Raster::measure (const wchar_t c)
+    BBox Raster::measure (wchar_t c)
     {
         BBox bbox;
         
@@ -1101,16 +1101,16 @@ namespace OGLFT
 
         GLdouble x, y, z;
         gluUnProject(bbox.x_min_, bbox.y_min_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.x_min_ = x - x0;
-        bbox.y_min_ = y - y0;
+        bbox.x_min_ = (float) (x - x0);
+        bbox.y_min_ = (float) (y - y0);
 
         gluUnProject(bbox.x_max_, bbox.y_max_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.x_max_ = x - x0;
-        bbox.y_max_ = y - y0;
+        bbox.x_max_ = (float) (x - x0);
+        bbox.y_max_ = (float) (y - y0);
 
         gluUnProject(bbox.advance_.dx_, bbox.advance_.dy_, 0., modelview, projection, viewport, &x, &y, &z);
-        bbox.advance_.dx_ = x - x0;
-        bbox.advance_.dy_ = y - y0;
+        bbox.advance_.dx_ = (float) (x - x0);
+        bbox.advance_.dy_ = (float) (y - y0);
 
         return bbox;
     }
@@ -1145,7 +1145,7 @@ namespace OGLFT
 
         if(error != 0) return;
 
-        rotation_offset_y_ = rotation_reference_face_->glyph->bitmap.rows / 2.;
+        rotation_offset_y_ = rotation_reference_face_->glyph->bitmap.rows / 2.0f;
     }
 
     void Raster::clearCaches (void)
@@ -1279,10 +1279,10 @@ namespace OGLFT
         GLubyte* inverted_bitmap = invertBitmap(bitmap_glyph->bitmap);
 
         glBitmap(bitmap_glyph->bitmap.width, bitmap_glyph->bitmap.rows,
-                 -bitmap_glyph->left,
-                 bitmap_glyph->bitmap.rows - bitmap_glyph->top,
-                 face->glyph->advance.x / 64.,
-                 face->glyph->advance.y / 64.,
+                 (GLfloat) -bitmap_glyph->left,
+                 (GLfloat) (bitmap_glyph->bitmap.rows - bitmap_glyph->top),
+                 face->glyph->advance.x / 64.0f,
+                 face->glyph->advance.y / 64.0f,
                  inverted_bitmap);
 
         FT_Done_Glyph(glyph);

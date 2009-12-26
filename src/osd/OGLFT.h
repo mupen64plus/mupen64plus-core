@@ -76,14 +76,14 @@ namespace OGLFT
 
         Advance ( FT_Vector v )
         {
-            dx_ = v.x / 64.;
-            dy_ = v.y / 64.;
+            dx_ = (float) (v.x / 64.);
+            dy_ = (float) (v.y / 64.);
         }
 
         Advance& operator+= ( const FT_Vector v )
         {
-            dx_ += v.x / 64.;
-            dy_ += v.y / 64.;
+            dx_ += (float) (v.x / 64.);
+            dy_ += (float) (v.y / 64.);
             return *this;
         }
     };
@@ -102,19 +102,19 @@ namespace OGLFT
         }
         BBox ( FT_BBox ft_bbox )
         {
-            x_min_ = ft_bbox.xMin / 64.;
-            y_min_ = ft_bbox.yMin / 64.;
-            x_max_ = ft_bbox.xMax / 64.;
-            y_max_ = ft_bbox.yMax / 64.;
+            x_min_ = (float) (ft_bbox.xMin / 64.);
+            y_min_ = (float) (ft_bbox.yMin / 64.);
+            x_max_ = (float) (ft_bbox.xMax / 64.);
+            y_max_ = (float) (ft_bbox.yMax / 64.);
         }
         BBox& operator*= ( double k )
         {
-            x_min_ *= k;
-            y_min_ *= k;
-            x_max_ *= k;
-            y_max_ *= k;
-            advance_.dx_ *= k;
-            advance_.dy_ *= k;
+            x_min_ *= (float) k;
+            y_min_ *= (float) k;
+            x_max_ *= (float) k;
+            y_max_ *= (float) k;
+            advance_.dx_ *= (float) k;
+            advance_.dy_ *= (float) k;
 
             return *this;
         }
@@ -295,7 +295,7 @@ namespace OGLFT
             GLfloat characterRotationZ ( void ) const { return character_rotation_z_; }
             double height ( void ) const;
             BBox measure ( unsigned char c );
-            BBox measure ( const wchar_t c );
+            BBox measure ( wchar_t c );
             BBox measure ( const char* s ) { return Face::measure( s ); }
             BBox measure ( const wchar_t* format, double number ) { return Face::measure( format, number ); }
 
