@@ -20,7 +20,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -40,14 +40,16 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MUPEN64PLUSCORE_EXPORTS"
+				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\libpng-1.2.37\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -60,6 +62,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -136,6 +140,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -448,6 +453,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\memory\tlb.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\tlb.c"
 				>
 				<FileConfiguration
@@ -468,10 +477,6 @@
 						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\src\memory\tlb.c"
-				>
 			</File>
 			<File
 				RelativePath="..\..\src\main\zip\unzip.c"
@@ -540,11 +545,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\api\debugger.h"
+				RelativePath="..\..\src\debugger\debugger.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\debugger\debugger.h"
+				RelativePath="..\..\src\api\debugger.h"
 				>
 			</File>
 			<File

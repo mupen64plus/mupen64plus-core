@@ -279,8 +279,7 @@ void romdatabase_open(void)
     empty_entry.rumble = DEFAULT;
 
     /* Open romdatabase. */
-    fPtr = fopen(pathname, "rb");
-    if (fPtr == NULL)
+    if (pathname == NULL || (fPtr = fopen(pathname, "rb")) == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Unable to open rom database file '%s'.", pathname);
         return;

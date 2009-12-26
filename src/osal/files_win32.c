@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - osal/files_unix.c                                  *
+ *   Mupen64plus-core - osal/files_win32.c                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -81,32 +81,28 @@ int osal_mkdirp(const char *dirpath, int mode)
     size_t dirpathlen = strlen(dirpath);
     char *currpath = _strdup(dirpath);
 
-    /* first, break the path into pieces by replacing all of the slashes with NULL chars */
-    while (strlen(currpath) > 1)
+    /* first, remove sub-dirs on the end (by replacing slashes with NULL chars) until we find an existing directory */
+    while (strlen(currpath) > 1 && _stat(currpath, &fileinfo) != 0)
     {
         char *lastslash = strrchr(currpath, '\\');
         if (lastslash == NULL)
-            break;
+        {
+            free(currpath);
+            return 1; /* error: we never found an existing directory, this path is bad */
+        }
         *lastslash = 0;
-    }
-    
-    /* then re-assemble the path from left to right until we get to a directory that doesn't exist */
-    while (strlen(currpath) < dirpathlen)
-    {
-        if (strlen(currpath) > 0 && _stat(currpath, &fileinfo) != 0)
-            break;
-        currpath[strlen(currpath)] = '\\';
     }
 
     /* then walk up the path chain, creating directories along the way */
     do
     {
-        if (_stat(currpath, &fileinfo) != 0)
+        if (currpath[strlen(currpath)-1] != '\\' && _stat(currpath, &fileinfo) != 0)
         {
             if (_mkdir(currpath) != 0)
             {
+                DebugMessage(M64MSG_ERROR, "MKDIR failed for '%s'.", currpath);
                 free(currpath);
-                return 1;        /* mkdir failed */
+                return 2;        /* mkdir failed */
             }
         }
         if (strlen(currpath) == dirpathlen)
@@ -160,18 +156,26 @@ const char * osal_get_user_configpath(void)
     // tack on 'mupen64plus'
     if (chHomePath[strlen(chHomePath)-1] != '\\')
         strcat(chHomePath, "\\");
-    strcat(chHomePath, "mupen64plus\\");
+    strcat(chHomePath, "Mupen64Plus");
 
     // if this directory doesn't exist, then make it
-    if (_stat(chHomePath, &fileinfo) != 0)
+    if (_stat(chHomePath, &fileinfo) == 0)
+    {
+        strcat(chHomePath, "\\");
+        return chHomePath;
+    }
+    else
     {
         osal_mkdirp(chHomePath, 0);
         if (_stat(chHomePath, &fileinfo) == 0)
+        {
+            strcat(chHomePath, "\\");
             return chHomePath;
+        }
     }
 
     /* otherwise we are in trouble */
-    DebugMessage(M64MSG_ERROR, "Failed to get configuration directory; $HOME is undefined or invalid.");
+    DebugMessage(M64MSG_ERROR, "Failed to open configuration directory '%s'.", chHomePath);
     return NULL;
 }
 
