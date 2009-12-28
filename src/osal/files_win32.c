@@ -127,6 +127,8 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
         return retpath;
 
     /* otherwise check our standard paths */
+    if (search_dir_file(retpath, osal_get_user_configpath(), filename) == 0)
+        return retpath;
     for (i = 0; i < datasearchdirs; i++)
     {
         if (search_dir_file(retpath, datasearchpath[i], filename) == 0)
