@@ -231,6 +231,8 @@ void internal_ReadController(int Control, unsigned char *Command)
 
 void internal_ControllerCommand(int Control, unsigned char *Command)
 {
+    int MpkFileWarningSent = 0;
+
    switch (Command[2])
      {
       case 0x00: // check
@@ -288,7 +290,9 @@ void internal_ControllerCommand(int Control, unsigned char *Command)
                  f = fopen(filename, "rb");
                  if (f == NULL)
                  {
-                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for reading", filename);
+                     if (!MpkFileWarningSent)
+                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
+                     MpkFileWarningSent = 1;
                      format_mempacks();
                  }
                  else
@@ -349,7 +353,9 @@ void internal_ControllerCommand(int Control, unsigned char *Command)
                  f = fopen(filename, "rb");
                  if (f == NULL)
                  {
-                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for reading", filename);
+                     if (!MpkFileWarningSent)
+                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
+                     MpkFileWarningSent = 1;
                      format_mempacks();
                  }
                  else
