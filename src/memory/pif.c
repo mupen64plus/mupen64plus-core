@@ -55,6 +55,8 @@ void print_pif()
 
 void EepromCommand(unsigned char *Command)
 {
+    static int EepromFileWarningSent = 0;
+
    switch (Command[2])
      {
       case 0: // check
@@ -86,7 +88,9 @@ void EepromCommand(unsigned char *Command)
          f = fopen(filename, "rb");
          if (f == NULL)
          {
-             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for reading", filename);
+             if (!EepromFileWarningSent)
+                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
+             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
              memset(eeprom, 0, 0x800);
          }
          else
@@ -110,7 +114,9 @@ void EepromCommand(unsigned char *Command)
          f = fopen(filename, "rb");
          if (f == NULL)
          {
-             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for reading", filename);
+             if (!EepromFileWarningSent)
+                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
+             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
              memset(eeprom, 0, 0x800);
          }
          else
