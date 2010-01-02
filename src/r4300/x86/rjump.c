@@ -70,6 +70,9 @@ void dyna_start(void (*code)())
    {
      mov save_ebp, ebp
      mov save_esp, esp
+     mov save_ebx, ebx
+     mov save_esi, esi
+     mov save_edi, edi
      call point1
      jmp point2
    point1:
@@ -80,6 +83,9 @@ void dyna_start(void (*code)())
    point2:
      mov ebp, save_ebp
      mov esp, save_esp
+     mov ebx, save_ebx
+     mov esi, save_esi
+     mov edi, save_edi
    }
 #elif defined(__GNUC__) && defined(__i386__)
   #if defined(PIC)
