@@ -265,8 +265,6 @@ namespace OGLFT
             void draw ( GLfloat x, GLfloat y, GLfloat z, const char* s );
             void draw ( GLfloat x, GLfloat y, const wchar_t* s );
             void draw ( GLfloat x, GLfloat y, GLfloat z, const wchar_t* s );
-            void draw ( GLfloat x, GLfloat y, const wchar_t* format, double number );
-            void draw ( GLfloat x, GLfloat y, GLfloat z, const wchar_t* format, double number );
             int ascender ( void ) { return faces_.front().face_->ascender; }
             int descender ( void ) { return faces_.front().face_->descender; }
             BBox measure_nominal ( const char* s );

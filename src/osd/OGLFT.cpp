@@ -935,18 +935,6 @@ namespace OGLFT
             glPopMatrix();
     }
 
-    // Draw the number at the given position per the given format.
-    void Face::draw (GLfloat x, GLfloat y, const wchar_t* format, double number)
-    {
-        draw(x, y, format, number);
-    }
-
-    // Draw the number at the given position per the given format.
-    void Face::draw (GLfloat x, GLfloat y, GLfloat z, const wchar_t* format,double number)
-    {
-        draw(x, y, z, format, number);
-    }
-
     Raster::Raster (const char* filename, float point_size, FT_UInt resolution)
         : Face(filename, point_size, resolution)
     {
