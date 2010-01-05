@@ -473,11 +473,7 @@ void new_vi(void)
         time = (int)(CalculatedTime - CurrentFPSTime);
         if (time > 0)
         {
-#ifdef WIN32
-            Sleep(time);
-#else
-            usleep(time * 1000);
-#endif
+            SDL_Delay(time);
         }
         CurrentFPSTime = CurrentFPSTime + time;
     }
