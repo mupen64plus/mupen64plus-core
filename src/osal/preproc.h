@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - osal/strings.h                                     *
+ *   Mupen64plus-core - osal/preproc.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -19,21 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
                        
-/* This file contains the declarations for OS-dependent string handling
- * functions
- */
+/* this header file is for system-dependent #defines, #includes, and typedefs */
 
-#if !defined (OSAL_STRINGS_H)
-#define OSAL_STRINGS_H
+#if !defined (OSAL_PREPROC_H)
+#define OSAL_PREPROC_H
 
-/* some file-related preprocessor definitions */
 #if defined(WIN32)
   #define osal_insensitive_strcmp(x, y) _stricmp(x, y)
   #define snprintf _snprintf
   #define strdup _strdup
+
+  // for isnan()
+  #include <float.h>
+  #define isnan _isnan
+
+  #define OSAL_BREAKPOINT_INTERRUPT __asm{ int 3 };
+  #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA;
 #else  /* Not WIN32 */
   #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
+
+  #define OSAL_BREAKPOINT_INTERRUPT asm(" int $3; ");
+  #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)));
 #endif
 
-#endif /* OSAL_STRINGS_H */
+#endif /* OSAL_PREPROC_H */
 

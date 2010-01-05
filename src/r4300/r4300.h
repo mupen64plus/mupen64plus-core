@@ -22,12 +22,6 @@
 #ifndef R4300_H
 #define R4300_H
 
-#if defined(WIN32)
-  // for isnan()
-  #include <float.h>
-  #define isnan _isnan
-#endif
-
 #include "recomp.h"
 #include "memory/tlb.h"
 
@@ -82,31 +76,15 @@ void set_fpr_pointers(int newStatus);
 #define COMPILER_SECTION 3
 #define IDLE_SECTION 4
 
-#ifndef __WIN32__
-
-//#define PROFILE
-
 #ifdef PROFILE
-
-void start_section(int section_type);
-void end_section(int section_type);
-void refresh_stat();
-
+  void start_section(int section_type);
+  void end_section(int section_type);
+  void refresh_stat();
 #else
-
-#define start_section(a)
-#define end_section(a)
-#define refresh_stat()
-
+  #define start_section(a)
+  #define end_section(a)
+  #define refresh_stat()
 #endif
 
-#else
-
-#define start_section(a)
-#define end_section(a)
-#define refresh_stat()
-
-#endif
-
-#endif
+#endif /* R4300_H */
 

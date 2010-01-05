@@ -20,7 +20,6 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdlib.h>
-#include <time.h>
 
 #include <SDL.h>
 
@@ -384,14 +383,7 @@ void gen_interupt()
                 SDL_GL_SwapBuffers();
                 while(rompause)
                 {
-#ifdef __WIN32__
-                    Sleep(10);
-#else
-                    struct timespec ts;
-                    ts.tv_sec = 0;
-                    ts.tv_nsec = 10000000;
-                    nanosleep(&ts, NULL); // sleep for 10 milliseconds
-#endif
+                    SDL_Delay(10);
                     SDL_PumpEvents();
 #ifdef WITH_LIRC
                     lircCheckInput();

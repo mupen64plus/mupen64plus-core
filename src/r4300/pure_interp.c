@@ -27,6 +27,7 @@
 #include "api/debugger.h"
 #include "memory/memory.h"
 #include "main/rom.h"
+#include "osal/preproc.h"
 
 #include "r4300.h"
 #include "exception.h"

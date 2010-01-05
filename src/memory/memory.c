@@ -37,6 +37,7 @@
 #include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "osal/preproc.h"
 #include "plugin/plugin.h"
 
 #ifdef DBG
@@ -57,11 +58,9 @@ RI_register ri_register;
 AI_register ai_register;
 DPC_register dpc_register;
 DPS_register dps_register;
-#if defined(WIN32)
-  __declspec(align(16)) unsigned int rdram[0x800000/4];
-#else
-  unsigned int rdram[0x800000/4]  __attribute__((aligned(16)));
-#endif
+
+ALIGN(16, unsigned int rdram[0x800000/4]);
+
 unsigned char *rdramb = (unsigned char *)(rdram);
 unsigned int SP_DMEM[0x1000/4*2];
 unsigned int *SP_IMEM = SP_DMEM+0x1000/4;

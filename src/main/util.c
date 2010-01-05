@@ -34,7 +34,7 @@
 #include "rom.h"
 #include "util.h"
 #include "osal/files.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 
 /** trim
  *    Removes leading and trailing whitespace from str. Function modifies str

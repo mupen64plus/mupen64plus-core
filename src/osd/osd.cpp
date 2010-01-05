@@ -29,13 +29,13 @@ extern "C" {
     #include "main/main.h"
     #include "main/util.h"
     #include "osal/files.h"
+    #include "osal/preproc.h"
     #include "plugin/plugin.h"
 }
 
 #define FONT_FILENAME "font.ttf"
 
-#ifdef __WIN32__
-# define strdup _strdup
+#ifdef WIN32
 # pragma message("warning: This hack should be fixed at some point")
 # define glActiveTexture(x)
 #endif

@@ -37,7 +37,7 @@ extern "C" {
 #include "main/util.h"
 #include "main/rom.h"
 #include "osal/files.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 }
 
 /*********************************************************************************************************

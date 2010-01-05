@@ -22,6 +22,8 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include "osal/preproc.h"
+
 int init_memory(int DoByteSwap);
 void free_memory();
 #define read_word_in_memory() readmem[address>>16]()
@@ -38,11 +40,9 @@ extern unsigned int *SP_IMEM;
 extern unsigned char *SP_IMEMb;
 extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
-#if defined(WIN32)
-  extern __declspec(align(16)) unsigned int rdram[0x800000/4];
-#else
-  extern unsigned int rdram[0x800000/4];
-#endif
+
+extern ALIGN(16, unsigned int rdram[0x800000/4]);
+
 extern unsigned int address, word;
 extern unsigned char cpu_byte;
 extern unsigned short hword;

@@ -30,7 +30,7 @@
 #include "api/config.h"
 
 #include "memory/memory.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 #include "cheat.h"
 #include "main.h"
 #include "rom.h"

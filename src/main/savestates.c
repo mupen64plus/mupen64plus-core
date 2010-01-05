@@ -38,7 +38,7 @@
 #include "r4300/macros.h"
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 #include "osd/osd.h"
 
 #include "main/zip/unzip.h"

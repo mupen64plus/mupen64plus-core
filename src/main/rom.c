@@ -34,7 +34,7 @@
 #include "util.h"
 
 #include "memory/memory.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 #include "osd/osd.h"
 
 #define DEFAULT 16

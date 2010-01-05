@@ -27,13 +27,6 @@
  * if you want to implement an interface, you should look here
  */
 
-#if defined(WIN32)
-  #include <windows.h>
-#else
-  #include <sys/time.h>
-  #include <unistd.h>
-#endif
-
 #include <string.h>
 #include <stdlib.h>
 
@@ -52,7 +45,7 @@
 
 #include "memory/memory.h"
 #include "osal/files.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
@@ -153,26 +146,6 @@ static int GetVILimit(void)
         default:
             return 60;
     }
-}
-
-static unsigned int gettimeofday_msec(void)
-{
-    unsigned int foo;
-#if defined(WIN32)
-    FILETIME ft;
-    unsigned __int64 tmpres = 0;
-    GetSystemTimeAsFileTime(&ft);
-    tmpres |= ft.dwHighDateTime;
-    tmpres <<= 32;
-    tmpres |= ft.dwLowDateTime;
-    foo = (unsigned int) ((((tmpres / 1000000UL) % 1000000) * 1000) + (tmpres % 1000000UL / 1000));
-#else
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-    foo = ((tv.tv_sec % 1000000) * 1000) + (tv.tv_usec / 1000);
-#endif
-    return foo;
 }
 
 /*********************************************************************************************************
@@ -459,11 +432,10 @@ void new_vi(void)
 
     if(LastFPSTime == 0)
     {
-        LastFPSTime = gettimeofday_msec();
-        CounterTime = gettimeofday_msec();
+        LastFPSTime = CounterTime = SDL_GetTicks();
         return;
     }
-    CurrentFPSTime = gettimeofday_msec();
+    CurrentFPSTime = SDL_GetTicks();
     
     Dif = CurrentFPSTime - LastFPSTime;
     
@@ -480,7 +452,7 @@ void new_vi(void)
 
     if (CurrentFPSTime - CounterTime >= 1000.0 ) 
     {
-        CounterTime = gettimeofday_msec();
+        CounterTime = SDL_GetTicks();
         VI_Counter = 0 ;
     }
     

@@ -32,7 +32,7 @@
 #include "callbacks.h"
 
 #include "osal/files.h"
-#include "osal/strings.h"
+#include "osal/preproc.h"
 
 /* local types */
 #define MUPEN64PLUS_CFG_NAME "mupen64plus.cfg"

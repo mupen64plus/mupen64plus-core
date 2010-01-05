@@ -65,7 +65,7 @@ void dyna_start(void (*code)())
   /* then call the code(), which should theoretically never return.  */
   /* When dyna_stop() sets the *return_address to the saved EIP, the emulator thread will come back here. */
   /* It will jump to label 2, restore the base and stack pointers, and exit this function */
-#if defined(_WIN32) && !defined(__GNUC__)
+#if defined(WIN32) && !defined(__GNUC__)
    __asm
    {
      mov save_ebp, ebp

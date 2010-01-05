@@ -23,6 +23,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "osal/preproc.h"
 
 #include "r4300.h"
 #include "ops.h"
