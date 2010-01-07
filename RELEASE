@@ -1,6 +1,18 @@
 Mupen64Plus-Core Emulator Library RELEASE
 -----------------------------------------
 
+Mupen64Plus v1.99.2 - January 6, 2010
+---------------------------------------
+ - doc: added tarball of emuwiki api documentation from 2010-01-06 for backup purposes
+ - clean-up: removed almost all of the ifdef WIN32 statements
+ - bugfix: stop spamming console with "Core: couldn't open memory pack file '...' for reading" messages
+ - bugfix: stop spamming console with "Core: couldn't open eeprom file '...' for reading" messages
+ - new feature: MSVC8 project file for mupen64plus-core, refactored code for VC8 compatibility
+ - Makefile improvements:
+   - throw error if OS/CPU not supported
+   - use DESTDIR in install/uninstall paths
+   - Allow user-specified CC/CXX/LD paths
+   - makefile needs to install Core header files so that plugins can be built later
 
 Mupen64Plus v1.99.1 - December 14, 2009
 ---------------------------------------
