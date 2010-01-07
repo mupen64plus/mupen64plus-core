@@ -20,12 +20,15 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // On-screen Display
+#include <SDL_opengl.h>
+
 #include "OGLFT.h"
 #include "osd.h"
 
 extern "C" {
     #include "api/config.h"
     #include "api/callbacks.h"
+    #include "api/vidext.h"
     #include "main/main.h"
     #include "main/util.h"
     #include "osal/files.h"
@@ -35,10 +38,8 @@ extern "C" {
 
 #define FONT_FILENAME "font.ttf"
 
-#ifdef WIN32
-# pragma message("warning: This hack should be fixed at some point")
-# define glActiveTexture(x)
-#endif
+typedef void (APIENTRYP PTRGLACTIVETEXTURE)(GLenum texture);
+static PTRGLACTIVETEXTURE pglActiveTexture = NULL;
 
 // static variables for OSD
 static int l_OsdInitialized = 0;
@@ -229,6 +230,13 @@ void osd_init(int width, int height)
     glEnable(GL_RASTER_POSITION_UNCLIPPED_IBM);
 #endif
 
+    pglActiveTexture = (PTRGLACTIVETEXTURE) VidExt_GL_GetProcAddress("glActiveTexture");
+    if (pglActiveTexture == NULL)
+    {
+        DebugMessage(M64MSG_WARNING, "OpenGL function glActiveTexture() not supported.  OSD deactivated.");
+        return;
+    }
+
     // set initialized flag
     l_OsdInitialized = 1;
 }
@@ -290,7 +298,7 @@ void osd_render()
     glGetIntegerv(GL_ACTIVE_TEXTURE_ARB, &iActiveTex);
     for (i = 0; i < 8; i++)
     {
-        glActiveTexture(GL_TEXTURE0_ARB + i);
+        pglActiveTexture(GL_TEXTURE0_ARB + i);
         bTexture2D[i] = glIsEnabled(GL_TEXTURE_2D) != 0;
         glDisable(GL_TEXTURE_2D);
     }
@@ -313,7 +321,6 @@ void osd_render()
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
-    glDisable(GL_REGISTER_COMBINERS_NV);
     glDisable(GL_COLOR_MATERIAL);
 
     glEnable(GL_BLEND);
@@ -398,13 +405,13 @@ void osd_render()
     // restore the attributes
     for (int i = 0; i < 8; i++)
     {
-        glActiveTexture(GL_TEXTURE0_ARB + i);
+        pglActiveTexture(GL_TEXTURE0_ARB + i);
         if (bTexture2D[i])
             glEnable(GL_TEXTURE_2D);
         else
             glDisable(GL_TEXTURE_2D);
     }
-    glActiveTexture(iActiveTex);
+    pglActiveTexture(iActiveTex);
     glPopAttrib();
     if (bFragmentProg)
         glEnable(GL_FRAGMENT_PROGRAM_ARB);

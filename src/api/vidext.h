@@ -34,4 +34,7 @@ extern m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFu
 extern int VidExt_InFullscreenMode(void);
 extern int VidExt_VideoRunning(void);
 
+/* these functions are exported outside of the Core as well as used within it */
+EXPORT void * CALL VidExt_GL_GetProcAddress(const char* Proc);
+
 #endif /* API_VIDEXT_H */
