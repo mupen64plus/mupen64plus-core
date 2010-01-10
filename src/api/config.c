@@ -700,6 +700,31 @@ EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const
     return M64ERR_SUCCESS;
 }
 
+EXPORT m64p_error CALL ConfigGetParameterType(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type *ParamType)
+{
+    config_section *section;
+    config_var *var;
+
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL || ParamType == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter doesn't already exist, return an error */
+    var = find_section_var(section, ParamName);
+    if (var == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    *ParamType = var->type;
+    return M64ERR_SUCCESS;
+}
+
+
 EXPORT const char * CALL ConfigGetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName)
 {
     config_section *section;

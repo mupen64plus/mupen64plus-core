@@ -77,6 +77,12 @@ typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle, const char *, m64p_typ
  */
 typedef m64p_error (*ptr_ConfigGetParameter)(m64p_handle, const char *, m64p_type, void *, int);
 
+/* ConfigGetParameterType()
+ *
+ * This function retrieves the type of one of the emulator's parameters. 
+ */
+typedef m64p_error (*ptr_ConfigGetParameterType)(m64p_handle, const char *, m64p_type *);
+
 /* ConfigGetParameterHelp()
  *
  * This function retrieves the help information about one of the emulator's
