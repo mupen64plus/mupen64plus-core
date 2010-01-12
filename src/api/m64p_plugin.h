@@ -164,7 +164,7 @@ extern CONTROL Controls[4];
 
 /* common plugin function pointer types */
 typedef void (*ptr_RomClosed)(void);
-typedef void (*ptr_RomOpen)(void);
+typedef int  (*ptr_RomOpen)(void);
 
 
 /* video plugin function pointer types */

@@ -43,8 +43,9 @@ void dummyinput_ReadController(int Control, unsigned char *Command)
 {
 }
 
-void dummyinput_RomOpen(void)
+int dummyinput_RomOpen(void)
 {
+    return 1;
 }
 
 void dummyinput_RomClosed(void)

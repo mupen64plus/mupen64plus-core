@@ -41,7 +41,7 @@ void new_vi();
 void main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
 
-int  main_run(void);
+m64p_error main_run(void);
 void main_stop(void);
 int  main_is_paused(void);
 void main_toggle_pause(void);

@@ -28,7 +28,7 @@ extern void dummyaudio_AiDacrateChanged(int SystemType);
 extern void dummyaudio_AiLenChanged(void);
 extern int  dummyaudio_InitiateAudio(AUDIO_INFO Audio_Info);
 extern void dummyaudio_ProcessAList(void);
-extern void dummyaudio_RomOpen(void);
+extern int  dummyaudio_RomOpen(void);
 extern void dummyaudio_RomClosed(void);
 extern void dummyaudio_SetSpeedFactor(int percent);
 extern void dummyaudio_VolumeUp(void);

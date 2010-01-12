@@ -34,14 +34,14 @@ void dummyaudio_AiLenChanged(void)
     return;
 }
 
-unsigned int dummyaudio_InitiateAudio(AUDIO_INFO Audio_Info)
+int dummyaudio_InitiateAudio(AUDIO_INFO Audio_Info)
 {
     return 1;
 }
 
-void dummyaudio_RomOpen(void)
+int dummyaudio_RomOpen(void)
 {
-    return;
+    return 1;
 }
 
 void dummyaudio_RomClosed(void)

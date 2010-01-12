@@ -54,9 +54,9 @@ void dummyvideo_RomClosed (void)
 
 }
 
-void dummyvideo_RomOpen (void)
+int dummyvideo_RomOpen (void)
 {
-
+    return 1;
 }
 
 void dummyvideo_ShowCFB (void)

@@ -30,7 +30,7 @@ extern void dummyinput_ControllerCommand(int Control, unsigned char *Command);
 extern void dummyinput_GetKeys(int Control, BUTTONS * Keys);
 extern void dummyinput_InitiateControllers(CONTROL_INFO ControlInfo);
 extern void dummyinput_ReadController(int Control, unsigned char *Command);
-extern void dummyinput_RomOpen(void);
+extern int  dummyinput_RomOpen(void);
 extern void dummyinput_RomClosed(void);
 extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
 extern void dummyinput_SDL_KeyUp(int keymod, int keysym);

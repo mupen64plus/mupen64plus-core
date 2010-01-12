@@ -468,13 +468,10 @@ void new_vi(void)
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
-int main_run(void)
+m64p_error main_run(void)
 {
     VILimit = (float) GetVILimit();
     VILimitMilliseconds = (double) 1000.0/VILimit; 
-
-    g_EmulatorRunning = 1;
-    StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -499,9 +496,18 @@ int main_run(void)
     }
 
     // Attach rom to plugins
-    romOpen_gfx();
-    romOpen_audio();
-    romOpen_input();
+    if (!romOpen_gfx())
+    {
+        free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+    }
+    if (!romOpen_audio())
+    {
+        romClosed_gfx(); free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+    }
+    if (!romOpen_input())
+    {
+        romClosed_audio(); romClosed_gfx(); free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+    }
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -531,6 +537,9 @@ int main_run(void)
 
     /* Startup message on the OSD */
     osd_new_message(OSD_MIDDLE_CENTER, "Mupen64Plus Started...");
+
+    g_EmulatorRunning = 1;
+    StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     /* call r4300 CPU core and run the game */
     r4300_reset_hard();
@@ -563,7 +572,7 @@ int main_run(void)
 
     SDL_Quit();
 
-    return 0;
+    return M64ERR_SUCCESS;
 }
 
 void main_stop(void)

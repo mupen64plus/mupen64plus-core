@@ -71,8 +71,8 @@ These functions are present in all of the plugins.
 |<tt>void RomClosed(void);</tt>
 |Called after the emulator is stopped.
 |-
-|<tt>void RomOpen(void);</tt>
-|Called just before the emulator begins executing a ROM.
+|<tt>int RomOpen(void);</tt>
+|Called just before the emulator begins executing a ROM.  '''***changed*** - this function now returns an int (boolean)'''
 |-
 |<tt>void ShowCFB (void);</tt>
 |Called from the RSP plugin to signal a condition to the video plugin.
@@ -141,8 +141,8 @@ These functions are present in all of the plugins.
 |<tt>void ProcessAList(void);</tt>
 |Signal that there is an A-list to be processed.  (not currently used)
 |-
-|<tt>void RomOpen(void);</tt>
-|Called just before the emulator begins executing a ROM.
+|<tt>int RomOpen(void);</tt>
+|Called just before the emulator begins executing a ROM.  '''***changed*** - this function now returns an int (boolean)'''
 |-
 |<tt>void RomClosed(void);</tt>
 |Called after the emulator is stopped.
@@ -208,8 +208,8 @@ These functions are present in all of the plugins.
 |<tt>void ReadController(int Control, BYTE *Command);</tt>
 |Process the raw data in the pif ram that is about to be read. (not currently used)
 |-
-|<tt>void RomOpen(void);</tt>
-|Called just before the emulator begins executing a ROM.
+|<tt>int RomOpen(void);</tt>
+|Called just before the emulator begins executing a ROM.  '''***changed*** - this function now returns an int (boolean)'''
 |-
 |<tt>void RomClosed(void);</tt>
 |Called after the emulator is stopped.
