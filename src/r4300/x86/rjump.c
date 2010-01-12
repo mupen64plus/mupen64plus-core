@@ -58,6 +58,10 @@ static long save_edi ASM_NAME("save_edi") = 0;
 static long save_esp ASM_NAME("save_esp") = 0;
 static long save_eip ASM_NAME("save_eip") = 0;
 
+#if defined(WIN32) && !defined(__GNUC__) /* this warning disable only works if placed outside of the scope of a function */
+#pragma warning(disable:4731) /* frame pointer register 'ebp' modified by inline assembly code */
+#endif
+
 void dyna_start(void (*code)())
 {
   /* save the base and stack pointers */
