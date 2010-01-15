@@ -45,9 +45,9 @@ _romdatabase g_romdatabase;
 romdatabase_entry empty_entry;
 
 /* Global loaded rom memory space. */
-unsigned char* rom;
+unsigned char* rom = NULL;
 /* Global loaded rom size. */
-int rom_size;
+int rom_size = 0;
 
 rom_header* ROM_HEADER;
 rom_settings ROM_SETTINGS;
@@ -165,6 +165,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.goodname[255] = '\0';
         if (entry->savetype==EEPROM_16KB)
             ROM_SETTINGS.eeprom_16kb = 1;
+        else
+            ROM_SETTINGS.eeprom_16kb = 0;
     }
     else
     {
