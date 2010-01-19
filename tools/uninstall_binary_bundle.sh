@@ -66,6 +66,7 @@ rm -f "${PLUGINDIR}/mupen64plus-input-sdl.so"
 rm -f "${PLUGINDIR}/mupen64plus-rsp-hle.so"
 rm -f "${PLUGINDIR}/mupen64plus-video-rice.so"
 rm -f "${SHAREDIR}/RiceVideoLinux.ini"
+rm -f "${SHAREDIR}/InputAutoCfg.ini"
 # get rid of the empty dirs
 rmdir --ignore-fail-on-non-empty "${SHAREDIR}/doc"
 rmdir --ignore-fail-on-non-empty "${SHAREDIR}"
