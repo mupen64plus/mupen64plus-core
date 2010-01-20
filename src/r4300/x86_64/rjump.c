@@ -60,35 +60,67 @@ void dyna_start(void (*code)())
 #if defined(__GNUC__) && defined(__x86_64__)
   #if defined(PIC)
     /* for -fPIC (shared libraries) */
-    asm volatile
-      (" push %%rbx           \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
-       " push %%r12           \n"
-       " push %%r13           \n"
-       " push %%r14           \n"
-       " push %%r15           \n"
-       " push %%rbp           \n"
-       " mov  %%rsp, save_rsp(%%rip) \n"
-       " lea  reg(%%rip), %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
-       " call 1f              \n"
-       " jmp 2f               \n"
-       "1:                    \n"
-       " pop  %%rax           \n"
-       " mov  %%rax, save_rip(%%rip) \n"
-       " call *%%rbx          \n"
-       "2:                    \n"
-       " mov  save_rsp(%%rip), %%rsp \n"
-       " pop  %%rbp           \n"
-       " pop  %%r15           \n"
-       " pop  %%r14           \n"
-       " pop  %%r13           \n"
-       " pop  %%r12           \n"
-       " pop  %%rbx           \n"
-       :
-       : "b" (code)
-       : "%rax", "memory"
-       );
+    #if defined(__APPLE__)
+      /* OSX uses underscores before the symbols names in 64-bit PIC compilation */
+      asm volatile
+        (" push %%rbx           \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
+         " push %%r12           \n"
+         " push %%r13           \n"
+         " push %%r14           \n"
+         " push %%r15           \n"
+         " push %%rbp           \n"
+         " mov  %%rsp, _save_rsp(%%rip) \n"
+         " lea  _reg(%%rip), %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
+         " call 1f              \n"
+         " jmp 2f               \n"
+         "1:                    \n"
+         " pop  %%rax           \n"
+         " mov  %%rax, _save_rip(%%rip) \n"
+         " call *%%rbx          \n"
+         "2:                    \n"
+         " mov  _save_rsp(%%rip), %%rsp \n"
+         " pop  %%rbp           \n"
+         " pop  %%r15           \n"
+         " pop  %%r14           \n"
+         " pop  %%r13           \n"
+         " pop  %%r12           \n"
+         " pop  %%rbx           \n"
+         :
+         : "b" (code)
+         : "%rax", "memory"
+         );
+    #else
+      /* Linux and other unix variants do not use underscores */
+      asm volatile
+        (" push %%rbx           \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
+         " push %%r12           \n"
+         " push %%r13           \n"
+         " push %%r14           \n"
+         " push %%r15           \n"
+         " push %%rbp           \n"
+         " mov  %%rsp, save_rsp(%%rip) \n"
+         " lea  reg(%%rip), %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
+         " call 1f              \n"
+         " jmp 2f               \n"
+         "1:                    \n"
+         " pop  %%rax           \n"
+         " mov  %%rax, save_rip(%%rip) \n"
+         " call *%%rbx          \n"
+         "2:                    \n"
+         " mov  save_rsp(%%rip), %%rsp \n"
+         " pop  %%rbp           \n"
+         " pop  %%r15           \n"
+         " pop  %%r14           \n"
+         " pop  %%r13           \n"
+         " pop  %%r12           \n"
+         " pop  %%rbx           \n"
+         :
+         : "b" (code)
+         : "%rax", "memory"
+         );
+      #endif
   #else
-    /* for non-PIC binaries */
+    /* for non-PIC binaries (this is normally not used, because the core is always compiled as a shared library) */
     asm volatile
       (" push %%rbx           \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
        " push %%r12           \n"
