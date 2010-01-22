@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <ctype.h>
 
 #include <SDL_opengl.h>
@@ -52,6 +53,19 @@ static void mupen_png_error(png_structp png_write, const char *message)
 static void mupen_png_warn(png_structp png_write, const char *message)
 {
     DebugMessage(M64MSG_WARNING, "PNG Warning: %s", message);
+}
+
+static void user_write_data(png_structp png_write, png_bytep data, png_size_t length)
+{
+    FILE *fPtr = (FILE *) png_get_io_ptr(png_write);
+    if (fwrite(data, 1, length, fPtr) != length)
+        DebugMessage(M64MSG_ERROR, "Failed to write %i bytes to screenshot file.", length);
+}
+
+static void user_flush_data(png_structp png_write)
+{
+    FILE *fPtr = (FILE *) png_get_io_ptr(png_write);
+    fflush(fPtr);
 }
 
 static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, int height, int pitch)
@@ -86,8 +100,8 @@ static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, in
         DebugMessage(M64MSG_ERROR, "Error opening '%s' to save screenshot.", filename);
         return 4;
     }
-    // give the file handle to the PNG compressor
-    png_init_io(png_write, savefile);
+    // set function pointers in the PNG library, for write callbacks
+    png_set_write_fn(png_write, (png_voidp) savefile, user_write_data, user_flush_data);
     // set the info
     png_set_IHDR(png_write, png_info, width, height, 8, PNG_COLOR_TYPE_RGB,
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
@@ -121,19 +135,24 @@ extern "C" void TakeScreenshot(int iFrameNumber)
     const char *SshotDir = ConfigGetParamString(g_CoreConfig, "ScreenshotPath");
     char filepath[PATH_MAX], filename[PATH_MAX];
     char *pch, ch;
+    int pathlen;
 
     /* get the path to store screenshots */
     strncpy(filepath, SshotDir, sizeof(filepath)-1);
     filepath[PATH_MAX-1] = '\0';
     if (strlen(filepath) == 0)
     {
-        snprintf(filepath, sizeof(filepath)-1, "%s/screenshot/", ConfigGetUserDataPath());
+        snprintf(filepath, sizeof(filepath)-1, "%sscreenshot%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
         osal_mkdirp(filepath, 0700);
     }
 
     /* make sure there is a slash on the end of the pathname */
-    if (strlen(filepath) > 0 && filepath[strlen(filepath)-1] != '/')
-        strcat(filepath, "/");
+    pathlen = strlen(filepath);
+    if (pathlen > 0 && filepath[pathlen-1] != OSAL_DIR_SEPARATOR)
+    {
+        filepath[pathlen+1] = 0;
+        filepath[pathlen] = OSAL_DIR_SEPARATOR;
+    }
 
     // add the game's name to the end, convert to lowercase, convert spaces to underscores
     pch = filepath + strlen(filepath);
