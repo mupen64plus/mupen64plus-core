@@ -23,6 +23,7 @@
 extern "C" {
 #endif
 
+void ScreenshotRomOpen(void);
 void TakeScreenshot(int iFrameNumber);
 
 #ifdef __cplusplus

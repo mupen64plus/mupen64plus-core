@@ -68,6 +68,10 @@ static void user_flush_data(png_structp png_write)
     fflush(fPtr);
 }
 
+/*********************************************************************************************************
+* Other Local (static) functions
+*/
+
 static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, int height, int pitch)
 {
     int i;
@@ -125,38 +129,40 @@ static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, in
     return 0;
 }
 
-/*********************************************************************************************************
-* Global screenshot functions
-*/
-
-extern "C" void TakeScreenshot(int iFrameNumber)
+static void GetBaseFilepath(char *filepath, int maxlen)
 {
-    // start by getting the base file path
     const char *SshotDir = ConfigGetParamString(g_CoreConfig, "ScreenshotPath");
-    char filepath[PATH_MAX], filename[PATH_MAX];
-    char *pch, ch;
-    int pathlen;
+
+    // sanity check input
+    if (filepath == NULL)
+        return;
+    if (maxlen < 32)
+    {
+        filepath[0] = 0;
+        return;
+    }
 
     /* get the path to store screenshots */
-    strncpy(filepath, SshotDir, sizeof(filepath)-1);
-    filepath[PATH_MAX-1] = '\0';
+    strncpy(filepath, SshotDir, maxlen - 24);
+    filepath[maxlen-24] = 0;
     if (strlen(filepath) == 0)
     {
-        snprintf(filepath, sizeof(filepath)-1, "%sscreenshot%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
+        snprintf(filepath, maxlen - 24, "%sscreenshot%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
         osal_mkdirp(filepath, 0700);
     }
 
     /* make sure there is a slash on the end of the pathname */
-    pathlen = strlen(filepath);
+    int pathlen = strlen(filepath);
     if (pathlen > 0 && filepath[pathlen-1] != OSAL_DIR_SEPARATOR)
     {
-        filepath[pathlen+1] = 0;
         filepath[pathlen] = OSAL_DIR_SEPARATOR;
+        filepath[pathlen+1] = 0;
     }
 
     // add the game's name to the end, convert to lowercase, convert spaces to underscores
-    pch = filepath + strlen(filepath);
-    strncpy(pch, (char*) ROM_HEADER->nom, sizeof(ROM_HEADER->nom));
+    char *pch = filepath + strlen(filepath);
+    char ch;
+    strncpy(pch, (char*) ROM_HEADER->nom, 20);
     pch[20] = '\0';
     do
     {
@@ -167,9 +173,25 @@ extern "C" void TakeScreenshot(int iFrameNumber)
             *pch++ = tolower(ch);
     } while (ch != 0);
 
-    // look for a file
+    return;
+}
+
+/*********************************************************************************************************
+* Global screenshot functions
+*/
+
+static int CurrentShotIndex = 0;
+
+extern "C" void ScreenshotRomOpen(void)
+{
+    char filepath[PATH_MAX], filename[PATH_MAX];
+
+    // get screenshot directory and base filename (based on ROM header)
+    GetBaseFilepath(filepath, PATH_MAX - 10);
+
+    // look for the first unused screenshot filename
     int i;
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < 1000; i++)
     {
         sprintf(filename, "%s-%03i.png", filepath, i);
         FILE *pFile = fopen(filename, "r");
@@ -177,7 +199,32 @@ extern "C" void TakeScreenshot(int iFrameNumber)
             break;
         fclose(pFile);
     }
-    if (i == 100) return;
+
+    CurrentShotIndex = i;
+}
+
+extern "C" void TakeScreenshot(int iFrameNumber)
+{
+    char filepath[PATH_MAX], filename[PATH_MAX];
+
+    // get screenshot directory and base filename (based on ROM header)
+    GetBaseFilepath(filepath, PATH_MAX - 10);
+
+    // look for an unused screenshot filename
+    for (; CurrentShotIndex < 1000; CurrentShotIndex++)
+    {
+        sprintf(filename, "%s-%03i.png", filepath, CurrentShotIndex);
+        FILE *pFile = fopen(filename, "r");
+        if (pFile == NULL)
+            break;
+        fclose(pFile);
+    }
+    if (CurrentShotIndex >= 1000)
+    {
+        DebugMessage(M64MSG_ERROR, "Can't save screenshot; folder already contains 1000 screenshots for this ROM");
+        return;
+    }
+    CurrentShotIndex++;
 
     // get the SDL surface and find the width and height
     SDL_Surface *pSurf = SDL_GetVideoSurface();
