@@ -1879,30 +1879,18 @@ void r4300_execute()
     last_addr = 0xa4000040;
     next_interupt = 624999;
     init_interupt();
-    
-    if (r4300emu == CORE_INTERPRETER)
+
+    if (r4300emu == CORE_PURE_INTERPRETER)
     {
-        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
-        init_blocks();
-        last_addr = PC->addr;
-        while (!stop)
-        {
-#ifdef COMPARE_CORE
-            if (PC->ops == FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
-                virtual_to_physical_address(PC->addr, 2);
-            CoreCompareCallback();
-#endif
-#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-            PC->ops();
-        }
+        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
+        r4300emu = CORE_PURE_INTERPRETER;
+        pure_interpreter();
     }
 #if defined(DYNAREC)
     else if (r4300emu >= 2)
     {
-        r4300emu = CORE_DYNAREC;
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
+        r4300emu = CORE_DYNAREC;
         init_blocks();
         code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
         dyna_start(code);
@@ -1926,12 +1914,26 @@ void r4300_execute()
 #endif
     }
 #endif
-    else
+    else /* if (r4300emu == CORE_INTERPRETER) */
     {
-        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
-        r4300emu = CORE_PURE_INTERPRETER;
-        pure_interpreter();
+        DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
+        r4300emu = CORE_INTERPRETER;
+        init_blocks();
+        last_addr = PC->addr;
+        while (!stop)
+        {
+#ifdef COMPARE_CORE
+            if (PC->ops == FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
+                virtual_to_physical_address(PC->addr, 2);
+            CoreCompareCallback();
+#endif
+#ifdef DBG
+            if (g_DebuggerActive) update_debugger(PC->addr);
+#endif
+            PC->ops();
+        }
     }
+
     debug_count+= Count;
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
     for (i=0; i<0x100000; i++)
