@@ -386,7 +386,7 @@ int cheat_set_enabled(const char *name, int enabled)
 int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
 {
     cheat_t *cheat;
-    int i;
+    int i, j;
 
     if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
     {
@@ -406,11 +406,34 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
 
     for (i = 0; i < num_codes; i++)
     {
-        cheat_code_t *code = (cheat_code_t *) malloc(sizeof(cheat_code_t));
-        code->address = code_list[i].address;
-        code->value = code_list[i].value;
-        code->old_value = CHEAT_CODE_MAGIC_VALUE;
-        list_append(&cheat->cheat_codes, code);
+        /* if this is a 'patch' code, convert it and dump out all of the individual codes */
+        if ((code_list[i].address & 0xFFFF0000) == 0x50000000 && i < num_codes - 1)
+        {
+            int code_count = ((code_list[i].address & 0xFF00) >> 8);
+            int incr_addr = code_list[i].address & 0xFF;
+            int incr_value = code_list[i].value;
+            int cur_addr = code_list[i+1].address;
+            int cur_value = code_list[i+1].value;
+            i += 1;
+            for (j = 0; j < code_count; j++)
+            {
+                cheat_code_t *code = (cheat_code_t *) malloc(sizeof(cheat_code_t));
+                code->address = cur_addr;
+                code->value = cur_value;
+                code->old_value = CHEAT_CODE_MAGIC_VALUE;
+                list_append(&cheat->cheat_codes, code);
+                cur_addr += incr_addr;
+                cur_value += incr_value;
+            }
+        }
+        else
+        { /* just a normal code */
+            cheat_code_t *code = (cheat_code_t *) malloc(sizeof(cheat_code_t));
+            code->address = code_list[i].address;
+            code->value = code_list[i].value;
+            code->old_value = CHEAT_CODE_MAGIC_VALUE;
+            list_append(&cheat->cheat_codes, code);
+        }
     }
 
     SDL_UnlockMutex(cheat_mutex);
