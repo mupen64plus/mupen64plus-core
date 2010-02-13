@@ -160,8 +160,6 @@ typedef struct {
                                CONTROL Controls[4]; */
 } CONTROL_INFO;
 
-extern CONTROL Controls[4];
-
 /* common plugin function pointer types */
 typedef void (*ptr_RomClosed)(void);
 typedef int  (*ptr_RomOpen)(void);

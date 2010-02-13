@@ -30,6 +30,8 @@ extern m64p_error plugin_connect(m64p_plugin_type, m64p_dynlib_handle plugin_han
 extern m64p_error plugin_start(m64p_plugin_type);
 extern m64p_error plugin_check(void);
 
+extern CONTROL Controls[4];
+
 /*** Version requirement information ***/
 #define MINIMUM_RSP_API_VERSION   0x10000
 #define MINIMUM_GFX_API_VERSION   0x10000
