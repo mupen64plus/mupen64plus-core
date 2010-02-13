@@ -1,6 +1,25 @@
 Mupen64Plus-Core Emulator Library RELEASE
 -----------------------------------------
 
+Mupen64Plus v1.99.3 - February 13, 2010
+---------------------------------------
+ - New feature: configuration function ConfigGetParameterType()
+ - New feature: up to 1000 screenshots per ROM are allowed
+ - New feature: support for Gameshark 3.3 patch codes
+ - Bugfix: Use Dynarec by default when core supports it.  If dynarec is selected but unavailable, fall back to cached interpreter
+ - Bugfix: screenshot directory handling code used unix-specific path separators; now is platform-independent
+ - Bugfix: #313 - 64-bit inline assembly code in r4300/x86_64/rjump.c needs to have underscores before the symbols names in OSX
+ - Bugfix: old bug in the core - hang if a ROM *without* a 16kb EEPROM type is loaded after a ROM *with* a 16kb EEPROM type
+ - Bugfix: rumble feature caused memory corruption
+ - Bugfix: Problem with zilmar API: the plugin RomOpen() functions had no way of returning errors to the core, causing crashes
+ - Replaced api documentation .tar.gz file with the mediawiki text
+ - Build script improvements:
+   - new feature: m64p_update.sh script can take an input argument to update to a tag or revision
+   - new feature: added bash script for building source packages of individual modules
+ - Makefile improvements:
+   - dont run ldconfig on make install unless user is root
+   - added OS type GNU/kFreeBSD
+
 Mupen64Plus v1.99.2 - January 6, 2010
 ---------------------------------------
  - doc: added tarball of emuwiki api documentation from 2010-01-06 for backup purposes

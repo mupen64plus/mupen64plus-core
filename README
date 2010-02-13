@@ -65,6 +65,8 @@ Type 'make' by itself to view all available build options:
      PREFIX=path   == install/uninstall prefix (default: /usr/local/)
      SHAREDIR=path == path to install shared data (default: PREFIX/share/mupen64plus/)
      LIBDIR=path   == path to install plugin libs (default: PREFIX/lib)
+     INCDIR=path   == path to install core header files (default: PREFIX/include/mupen64plus)
+     DESTDIR=path  == path to prepend to all installation paths (only for packagers)
    Debugging Options:
      PROFILE=1     == build gprof instrumentation into binaries for profiling
      DEBUG=1       == add debugging symbols to binaries
