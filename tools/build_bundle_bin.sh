@@ -69,7 +69,7 @@ for dirname in mupen64plus-*; do
     cp ${dirname}/RELEASE "../${OUTPUTDIR}/doc/RELEASE-${dirname}"
   fi
 done
-cp mupen64plus-core/doc/* "../${OUTPUTDIR}/doc/"
+cp -R mupen64plus-core/doc/* "../${OUTPUTDIR}/doc/"
 cp mupen64plus-core/tools/install_binary_bundle.sh "../${OUTPUTDIR}/install.sh"
 cp mupen64plus-core/tools/uninstall_binary_bundle.sh "../${OUTPUTDIR}/uninstall.sh"
 cp mupen64plus-ui-console/doc/* "../${OUTPUTDIR}/"
