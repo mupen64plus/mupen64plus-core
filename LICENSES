@@ -16,6 +16,9 @@ The authors of Mupen64Plus are:
   * HyperHacker
   * and others.
 
+The Mupen64Plus API documentation (located in doc/emuwiki-api-doc/*) is Copyright(C) 2009-2010
+by Richard Goedeken and is licensed under the GNU General Public License version 2.
+
 Mupen64Plus is based on GPL-licensed source code from Mupen64 v0.5, originally written by:
   * Hacktarux
   * Dave2001
