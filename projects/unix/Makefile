@@ -74,8 +74,8 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LIBS, and LDFLAGS
-CFLAGS = -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -I../../src
-LIBS = -ldl -lpng -lz -lm -lfreetype
+CFLAGS += -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -I../../src
+LIBS += -ldl -lpng -lz -lm -lfreetype
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
