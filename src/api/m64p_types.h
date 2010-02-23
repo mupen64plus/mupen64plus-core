@@ -91,6 +91,7 @@ typedef enum {
 } m64p_core_caps;
 
 typedef enum {
+  M64PLUGIN_NULL = 0,
   M64PLUGIN_RSP = 1,
   M64PLUGIN_GFX,
   M64PLUGIN_AUDIO,
