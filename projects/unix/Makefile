@@ -319,7 +319,6 @@ ifeq ($(DEBUGGER), 1)
   SOURCE += \
 	$(SRCDIR)/debugger/debugger.c \
 	$(SRCDIR)/debugger/dbg_decoder.c \
-	$(SRCDIR)/debugger/dbg_opprintf.c \
 	$(SRCDIR)/debugger/dbg_memory.c \
 	$(SRCDIR)/debugger/dbg_breakpoints.c
   LIBS += -lopcodes -lbfd

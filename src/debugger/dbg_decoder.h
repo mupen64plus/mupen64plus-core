@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - dbg_decoder.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 davFr                                              *
+ *   Copyright (C) 2010 Marshall B. Rogers <mbr@64.vg>                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -22,7 +22,37 @@
 #ifndef __DECODER_H__
 #define __DECODER_H__
 
-void r4300_decode_op( uint32 instr, char *op, char *args, int pc );
+#include "dbg_types.h"
+#include <stdint.h>
+
+/* Disassembler lookup handler */
+typedef char * (*r4k_lookup_func)(uint32_t, void *);
+
+/* Disassembler state */
+typedef
+struct r4k_dis_t
+{
+    r4k_lookup_func  lookup_sym;
+    void *           lookup_sym_d;
+    r4k_lookup_func  lookup_rel_hi16;
+    void *           lookup_rel_hi16_d;   
+    r4k_lookup_func  lookup_rel_lo16;
+    void *           lookup_rel_lo16_d;
+    
+    /* Private */
+    char * dest;
+    int length;
+}
+R4kDis;
+
+extern void r4k_dis_init ( R4kDis *, void *, void *, void *, void *, void *, void * );
+extern int r4k_disassemble ( R4kDis *, uint32_t, uint32_t, char * );
+extern int r4k_disassemble_quick ( uint32_t, uint32_t, char * );
+extern int r4k_disassemble_split ( R4kDis *, uint32_t, uint32_t, char **, char ** );
+extern int r4k_disassemble_split_quick ( uint32_t, uint32_t, char **, char ** );
+
+extern void r4300_decode_op ( uint32, char *, char *, int );
+
 
 #endif /* __DECODER_H__ */
 

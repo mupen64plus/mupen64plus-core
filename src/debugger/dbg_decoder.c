@@ -1,9 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dbg_decoder.c                                           *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 davFr                                              *
- *   Copyright (C) 2008 ZZT32                                              *
- *   Copyright (C) 2008 DarkJezter                                         *
+ *   Mupen64plus -- dbg_decoder.c                                          *
+ *   Copyright (c) 2010  Marshall B. Rogers <mbr@64.vg>                    *
+ *   http://64.vg/                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -21,1240 +19,851 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/*
+ *  This is a heavily modified reentrant version of the MIPS disassembler found
+ *  in the NetBSD operating system. I chose to use this as a base due to the 
+ *  small, compact, and easily manageable code.
+ *  
+ *  Original copyright/license information is contained below.
+ */
+
+/*	$NetBSD: db_disasm.c,v 1.21 2009/12/14 00:46:06 matt Exp $	*/
+
+/*-
+ * Copyright (c) 1991, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Ralph Campbell.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *	from: @(#)kadb.c	8.1 (Berkeley) 6/10/93
+ */
 #include <stdio.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <string.h>
-
-#include "dbg_types.h"
+#include <stdlib.h>
+#ifndef MIPS32
+#define MIPS32
+#endif
 #include "dbg_decoder.h"
-#include "dbg_opprintf.h"
+#include "dbg_decoder_local.h"
 
-static int  mot;
-static char *op;
-static int pc;
 
-static void RESERV(){
-    sprintf(op, "INVLD(%02X)       0x%08X", (mot>>26)&0x3F, mot);
-}
 
-static void mr4kd_disassemble( uint32 instruction, uint32 counter, char * buffer );
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Data types
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ SPECIAL ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
+typedef uint32_t db_addr_t;
 
-static void SLL()
+
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Local variables
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+const char * const r4k_str_op_name[64] = 
 {
-    if( !mot )
-        mr4kd_sprintf( op, "NOP", mot, pc, "%n0" );
+/* 0 */ "spec", "bcond","j",	"jal",	"beq",	"bne",	"blez", "bgtz",
+/* 8 */ "addi", "addiu","slti", "sltiu","andi", "ori",	"xori", "lui",
+/*16 */ "cop0", "cop1", "cop2", "cop3", "beql", "bnel", "blezl","bgtzl",
+/*24 */ "daddi","daddiu","ldl", "ldr",	"op34", "op35", "op36", "op37",
+/*32 */ "lb",	"lh",	"lwl",	"lw",	"lbu",	"lhu",	"lwr",	"lwu",
+/*40 */ "sb",	"sh",	"swl",	"sw",	"sdl",	"sdr",	"swr",	"cache",
+/*48 */ "ll",	"lwc1", "lwc2", "lwc3", "lld",	"ldc1", "ldc2", "ld",
+/*56 */ "sc",	"swc1", "swc2", "swc3", "scd",	"sdc1", "sdc2", "sd"
+};
+
+const char * const r4k_str_spec_name[64] = 
+{
+/* 0 */ "sll",	"spec01","srl", "sra",	"sllv", "spec05","srlv","srav",
+/* 8 */ "jr",	"jalr", "spec12","spec13","syscall","break","spec16","sync",
+/*16 */ "mfhi", "mthi", "mflo", "mtlo", "dsllv","spec25","dsrlv","dsrav",
+/*24 */ "mult", "multu","div",	"divu", "dmult","dmultu","ddiv","ddivu",
+/*32 */ "add",	"addu", "sub",	"subu", "and",	"or",	"xor",	"nor",
+/*40 */ "spec50","spec51","slt","sltu", "dadd","daddu","dsub","dsubu",
+/*48 */ "tge","tgeu","tlt","tltu","teq","spec65","tne","spec67",
+/*56 */ "dsll","spec71","dsrl","dsra","dsll32","spec75","dsrl32","dsra32"
+};
+
+const char * const r4k_str_spec2_name[4] = /* QED RM4650, R5000, etc. */
+{		
+/* 0 */ "mad", "madu", "mul", "spec3"
+};
+
+const char * const r4k_str_bcond_name[32] = 
+{
+/* 0 */ "bltz", "bgez", "bltzl", "bgezl", "?", "?", "?", "?",
+/* 8 */ "tgei", "tgeiu", "tlti", "tltiu", "teqi", "?", "tnei", "?",
+/*16 */ "bltzal", "bgezal", "bltzall", "bgezall", "?", "?", "?", "?",
+/*24 */ "?", "?", "?", "?", "?", "?", "?", "?",
+};
+
+const char * const r4k_str_cop1_name[64] = 
+{
+/* 0 */ "add",   "sub", "mul", "div", "sqrt","abs", "mov", "neg",
+/* 8 */ "fop08", "trunc.l","fop0a","fop0b","fop0c","trunc.w","fop0e","fop0f",
+/*16 */ "fop10", "fop11","fop12","fop13","fop14","fop15","fop16","fop17",
+/*24 */ "fop18", "fop19","fop1a","fop1b","fop1c","fop1d","fop1e","fop1f",
+/*32 */ "cvt.s", "cvt.d","fop22","fop23","cvt.w","cvt.l","fop26","fop27",
+/*40 */ "fop28", "fop29","fop2a","fop2b","fop2c","fop2d","fop2e","fop2f",
+/*48 */ "c.f",   "c.un","c.eq","c.ueq","c.olt","c.ult",
+	"c.ole", "c.ule",
+/*56 */ "c.sf",  "c.ngle","c.seq","c.ngl","c.lt","c.nge",
+	"c.le",  "c.ngt"
+};
+
+const char * const r4k_str_fmt_name[16] = 
+{
     
-    else{
-        mr4kd_sprintf( op, "SLL", mot, pc, "%ns%rd, %rt, %sa" );
-    }
-}
+	"s",	"d",	"e",	"fmt3",
+	"w",	"l",    "fmt6", "fmt7",
+	"fmt8", "fmt9", "fmta", "fmtb",
+	"fmtc", "fmtd", "fmte", "fmtf"
+};
 
-static void SRL(){
-    mr4kd_sprintf( op, "SRL", mot, pc, "%ns%rd, %rt, %sa" );
-}
 
-static void SRA(){
-    mr4kd_sprintf( op, "SRA", mot, pc, "%ns%rd, %rt, %sa" );
-}
-
-static void SLLV(){
-    mr4kd_sprintf( op, "SLLV", mot, pc, "%ns%rd, %rt, %rs" );
-}
-
-static void SRLV(){
-    mr4kd_sprintf( op, "SRLV", mot, pc, "%ns%rd, %rt, %rs" );
-}
-
-static void SRAV(){
-    mr4kd_sprintf( op, "SRAV", mot, pc, "%ns%rd, %rt, %rs" );
-
-}
-
-static void JR(){
-    mr4kd_sprintf( op, "JR", mot, pc, "%ns%rs" );
-}
-
-static void JALR(){
-    mr4kd_sprintf( op, "JALR", mot, pc, "%ns%rd, %rs" );
-}
-
-static void SYSCALL(){
-    mr4kd_sprintf( op, "SYSCALL", mot, pc, "%n0" );
-}
-
-static void BREAK(){
-    mr4kd_sprintf( op, "BREAK", mot, pc, "%n0" );
-}
-
-static void SYNC(){
-    mr4kd_sprintf( op, "SYNC", mot, pc, "%n0" );
-}
-
-static void MFHI(){
-    mr4kd_sprintf( op, "MFHI", mot, pc, "%ns%rd" );
-}
-
-static void MTHI(){
-    mr4kd_sprintf( op, "MTHI", mot, pc, "%ns%rs" );
-}
-
-static void MFLO(){
-    mr4kd_sprintf( op, "MFLO", mot, pc, "%ns%rd" );
-}
-
-static void MTLO(){
-    mr4kd_sprintf( op, "MTLO", mot, pc, "%ns%rs" );
-}
-
-static void DSLLV(){
-    mr4kd_sprintf( op, "DSLLV", mot, pc, "%ns%rd, %rt, %rs" );
-}
-
-static void DSRLV(){
-    mr4kd_sprintf( op, "DSRLV", mot, pc, "%ns%rd, %rt, %rs" );
-}
-
-static void DSRAV(){
-    mr4kd_sprintf( op, "DSRAV", mot, pc, "%ns%rd, %rt, %rs" );
-}
-
-static void MULT(){
-    mr4kd_sprintf( op, "MULT", mot, pc, "%ns%rs, %rt" );
-}
-
-static void MULTU(){
-    mr4kd_sprintf( op, "MULTU", mot, pc, "%ns%rs, %rt" );
-}
-
-static void DIV(){
-    mr4kd_sprintf( op, "DIV", mot, pc, "%ns%rs, %rt" );
-}
-
-static void DIVU(){
-    mr4kd_sprintf( op, "DIVU", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void DMULT(){
-    mr4kd_sprintf( op, "DMULT", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void DMULTU(){
-    mr4kd_sprintf( op, "DMULTU", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void DDIV(){
-    mr4kd_sprintf( op, "DDIV", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void DDIVU(){
-    mr4kd_sprintf( op, "DDIVU", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void ADD(){
-    mr4kd_sprintf( op, "ADD", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void ADDU(){
-    mr4kd_sprintf( op, "ADDU", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void SUB()
+const char * const r4k_str_reg_name[32] = 
 {
-    mr4kd_sprintf( op, "SUB", mot, pc, "%ns%rd, %rs, %rt" );
-}
+	"$zero", "$at",	"v0",	"v1",	"a0",	"a1",	"a2",	"a3",
+	"t0",	"t1",	"t2",	"t3",	"t4",	"t5",	"t6",	"t7",
+	"s0",	"s1",	"s2",	"s3",	"s4",	"s5",	"s6",	"s7",
+	"t8",	"t9",	"k0",	"k1",	"$gp",	"$sp",	"s8",	"$ra"
+};
 
-static void SUBU(){
-    mr4kd_sprintf( op, "SUBU", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void AND(){
-    mr4kd_sprintf( op, "AND", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void OR(){
-    mr4kd_sprintf( op, "OR", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void XOR(){
-    mr4kd_sprintf( op, "XOR", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void NOR(){
-    mr4kd_sprintf( op, "NOR", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void SLT(){
-    mr4kd_sprintf( op, "SLT", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void SLTU(){
-    mr4kd_sprintf( op, "SLTU", mot, pc, "%ns%rd, %rs, %rt" );
-}
-
-static void DADD(){
-    mr4kd_sprintf( op, "DADD", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void DADDU(){
-    mr4kd_sprintf( op, "DADDU", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void DSUB(){
-    mr4kd_sprintf( op, "DSUB", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void DSUBU(){
-    mr4kd_sprintf( op, "DSUBU", mot, pc, "%ns%rd, %rs, %rt" ); 
-}
-
-static void TGE(){
-    mr4kd_sprintf( op, "TGE", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void TGEU(){
-    mr4kd_sprintf( op, "TGEU", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void TLT(){
-    mr4kd_sprintf( op, "TLT", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void TLTU(){
-    mr4kd_sprintf( op, "TLTU", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void TEQ(){
-    mr4kd_sprintf( op, "TEQ", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void TNE(){
-    mr4kd_sprintf( op, "TNE", mot, pc, "%ns%rs, %rt" ); 
-}
-
-static void DSLL(){
-    mr4kd_sprintf( op, "DSLL", mot, pc, "%ns%rd, %rt, %sa" ); 
-}
-
-static void DSRL(){
-    mr4kd_sprintf( op, "DSRL", mot, pc, "%ns%rd, %rt, %sa" ); 
-}
-
-static void DSRA(){
-    mr4kd_sprintf( op, "DSRA", mot, pc, "%ns%rd, %rt, %sa" ); 
-}
-
-static void DSLL32(){
-    mr4kd_sprintf( op, "DSLL32", mot, pc, "%ns%rd, %rt, %sa" );
-}
-
-static void DSRL32(){
-    mr4kd_sprintf( op, "DSRL32", mot, pc, "%ns%rd, %rt, %sa" );
-}
-
-static void DSRA32(){
-    mr4kd_sprintf( op, "DSRA32", mot, pc, "%ns%rd, %rt, %sa" );
-}
-
-static void special()
+const char * const r4k_str_c0_opname[64] = 
 {
-//  sprintf(op, "[00] SPECIAL");
+	"c0op00","tlbr",  "tlbwi", "c0op03","c0op04","c0op05","tlbwr", "c0op07",
+	"tlbp",	 "c0op11","c0op12","c0op13","c0op14","c0op15","c0op16","c0op17",
+	"rfe",	 "c0op21","c0op22","c0op23","c0op24","c0op25","c0op26","c0op27",
+	"eret",  "c0op31","c0op32","c0op33","c0op34","c0op35","c0op36","c0op37",
+	"c0op40","c0op41","c0op42","c0op43","c0op44","c0op45","c0op46","c0op47",
+	"c0op50","c0op51","c0op52","c0op53","c0op54","c0op55","c0op56","c0op57",
+	"c0op60","c0op61","c0op62","c0op63","c0op64","c0op65","c0op66","c0op67",
+	"c0op70","c0op71","c0op72","c0op73","c0op74","c0op75","c0op77","c0op77",
+};
+
+const char * const r4k_str_c0_reg[32] = 
+{
+	"C0_INX",      "C0_RAND",     "C0_ENTRYLO0",  "C0_ENTRYLO1",
+	"C0_CONTEXT",  "C0_PAGEMASK", "C0_WIRED",     "cp0r7",
+	"C0_BADVADDR", "C0_COUNT",    "C0_ENTRYHI",   "C0_COMPARE",
+	"C0_SR",       "C0_CAUSE",    "C0_EPC",       "C0_PRID",
+	"C0_CONFIG",   "C0_LLADDR",   "C0_WATCHLO",   "C0_WATCHHI",
+	"xcontext",    "cp0r21",      "cp0r22",       "debug",
+	"depc",        "perfcnt",     "C0_ECC",       "C0_CACHE_ERR",
+	"C0_TAGLO",    "C0_TAGHI",    "C0_ERROR_EPC", "desave"
+};
+
+
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Local functions - lookup
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* Look up a symbol */
+static char *
+lookup_sym ( struct r4k_dis_t * state,
+             uint32_t address          )
+{
+    if( state->lookup_sym )
+        return state->lookup_sym( address, state->lookup_sym_d );
     
-    switch( mot & 0x3F)
+    return NULL;
+}
+
+/* Look up an upper 16-bits relocation */
+static char *
+lookup_rel_hi16 ( struct r4k_dis_t * state,
+                  uint32_t address          )
+{
+    if( state->lookup_rel_hi16 )
+        return state->lookup_rel_hi16( address, state->lookup_rel_hi16_d );
+    
+    return NULL;
+}
+
+/* Look up a lower 16-bits relocation */
+static char *
+lookup_rel_lo16 ( struct r4k_dis_t * state,
+                  uint32_t address          )
+{
+    if( state->lookup_rel_lo16 )
+        return state->lookup_rel_lo16( address, state->lookup_rel_lo16_d );
+    
+    return NULL;
+}
+
+
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Local functions - disassembler
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/* Print text into the destination buffer */
+static int
+db_printf ( struct r4k_dis_t * state,
+            char * fmt, 
+            ...                       )
+{
+    int l;
+    va_list ap;
+    char buffer[1024];
+    
+    
+    /* Prepare user provided */
+    va_start( ap, fmt );
+    l = vsnprintf( buffer, sizeof(buffer), fmt, ap );
+    va_end( ap );
+    
+    /* Add it to our string */
+    state->dest += sprintf(
+        state->dest,
+        "%s",
+        buffer
+    );
+    state->length += l;
+    
+    return l;
+}
+
+
+/* Print an address to a string. If there's a symbol, the name will be printed */
+static int
+print_addr ( struct r4k_dis_t * state,
+             uint32_t address          )
+{
+    int len;
+    char * sym;
+    
+    
+    /* Try to lookup symbol */
+    if( (sym = lookup_sym(state, address)) )
     {
-        case 0x00: SLL();   break;
-        case 0x02: SRL();   break;
-        case 0x03: SRA();   break;
-        case 0x04: SLLV();  break;
-        case 0x06: SRLV();  break;
-        case 0x07: SRAV();  break;
-        case 0x08: JR();    break;
-        case 0x09: JALR();  break;
-        case 0x0C: SYSCALL();   break;
-        case 0x0D: BREAK(); break;
-        case 0x0F: SYNC();  break;
-        case 0x10: MFHI();  break;
-        case 0x11: MTHI();  break;
-        case 0x12: MFLO();  break;
-        case 0x13: MTLO();  break;
-        case 0x14: DSLLV(); break;
-        case 0x16: DSRLV(); break;
-        case 0x17: DSRAV(); break;
-        case 0x18: MULT();  break;
-        case 0x19: MULTU(); break;
-        case 0x1A: DIV();   break;
-        case 0x1B: DIVU();  break;
-        case 0x1C: DMULT(); break;
-        case 0x1D: DMULTU();    break;
-        case 0x1E: DDIV();  break;
-        case 0x1F: DDIVU(); break;
-        case 0x20: ADD();   break;
-        case 0x21: ADDU();  break;
-        case 0x22: SUB();   break;
-        case 0x23: SUBU();  break;
-        case 0x24: AND();   break;
-        case 0x25: OR();    break;
-        case 0x26: XOR();   break;
-        case 0x27: NOR();   break;
-        case 0x2A: SLT();   break;
-        case 0x2B: SLTU();  break;
-        case 0x2C: DADD();  break;
-        case 0x2D: DADDU(); break;
-        case 0x2E: DSUB();  break;
-        case 0x2F: DSUBU(); break;
-        case 0x30: TGE();   break;
-        case 0x31: TGEU();  break;
-        case 0x32: TLT();   break;
-        case 0x33: TLTU();  break;
-        case 0x34: TEQ();   break;
-        case 0x36: TNE();   break;
-        case 0x38: DSLL();  break;
-        case 0x3A: DSRL();  break;
-        case 0x3B: DSRA();  break;
-        case 0x3C: DSLL32();    break;
-        case 0x3E: DSRL32();    break;
-        case 0x3F: DSRA32();    break;
-        default :  RESERV(); //just to be sure
+        len = db_printf( state, "%s", sym );
     }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ REGIMM ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void BLTZ(){
-    mr4kd_sprintf( op, "BLTZ", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGEZ(){
-    mr4kd_sprintf( op, "BGEZ", mot, pc, "%ns%rs, %br" );
-}
-
-static void BLTZL(){
-    mr4kd_sprintf( op, "BLTZL", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGEZL(){
-    mr4kd_sprintf( op, "BGEZL", mot, pc, "%ns%rs, %br" );
-}
-
-static void TGEI(){
-    mr4kd_sprintf( op, "TGEI", mot, pc, "%ns%rs, %ih" );
-}
-
-static void TGEIU(){
-    mr4kd_sprintf( op, "TGEIU", mot, pc, "%ns%rs, %ih" );
-}
-
-static void TLTI(){
-    mr4kd_sprintf( op, "TLTI", mot, pc, "%ns%rs, %ih" );
-}
-
-static void TLTIU(){
-    mr4kd_sprintf( op, "TLTIU", mot, pc, "%ns%rs, %ih" );
-}
-
-static void TEQI(){
-    mr4kd_sprintf( op, "TEQI", mot, pc, "%ns%rs, %ih" );
-}
-
-static void TNEI(){
-    mr4kd_sprintf( op, "TNEI", mot, pc, "%ns%rs, %ih" );
-}
-
-static void BLTZAL(){
-    mr4kd_sprintf( op, "BLTZAL", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGEZAL(){
-    mr4kd_sprintf( op, "BGEZAL", mot, pc, "%ns%rs, %br" );
-}
-
-static void BLTZALL(){
-    mr4kd_sprintf( op, "BLTZALL", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGEZALL(){
-    mr4kd_sprintf( op, "BGEZALL", mot, pc, "%ns%rs, %br" );
-}
-
-static void regimm()
-{
-//  sprintf(op, "[01] REGIMM");
-    
-    switch( (mot>>16) & 0x1F)
+    else
     {
-        case 0x00: BLTZ();  break;
-        case 0x01: BGEZ();  break;
-        case 0x02: BLTZL(); break;
-        case 0x03: BGEZL(); break;
-        case 0x08: TGEI();  break;
-        case 0x09: TGEIU(); break;
-        case 0x0A: TLTI();  break;
-        case 0x0B: TLTIU(); break;
-        case 0x0C: TEQI();  break;
-        case 0x0E: TNEI();  break;
-        case 0x10: BLTZAL();    break;
-        case 0x11: BGEZAL();    break;
-        case 0x12: BLTZALL();   break;
-        case 0x13: BGEZALL();   break;
-        default: RESERV();
+        len = db_printf( state, "0x%08X", address );
+    }
+    
+    return len;
+}
+
+
+/* Disassemble an instruction */
+static db_addr_t
+db_disasm_insn ( struct r4k_dis_t * state,
+                 int insn, 
+                 db_addr_t loc, 
+                 bool altfmt               )
+{
+    char * rel;
+    bool bdslot = false;
+    InstFmt i;
+
+    i.word = insn;
+
+    switch (i.JType.op) {
+    case OP_SPECIAL:
+            if (i.word == 0) {
+                    db_printf(state, "nop");
+                    break;
+            }
+            /* XXX
+             * "addu" is a "move" only in 32-bit mode.  What's the correct
+             * answer - never decode addu/daddu as "move"?
+             */
+            if (i.RType.func == OP_ADDU && i.RType.rt == 0) {
+                    db_printf(state, "%-16s%s,%s",
+                        "move",
+                        r4k_str_reg_name[i.RType.rd],
+                        r4k_str_reg_name[i.RType.rs]);
+                    break;
+            }
+            db_printf(state, "%-16s", r4k_str_spec_name[i.RType.func]);
+            switch (i.RType.func) {
+            case OP_SLL:
+            case OP_SRL:
+            case OP_SRA:
+            case OP_DSLL:
+
+            case OP_DSRL:
+            case OP_DSRA:
+            case OP_DSLL32:
+            case OP_DSRL32:
+            case OP_DSRA32:
+                    db_printf(state, "%s,%s,%d",
+                        r4k_str_reg_name[i.RType.rd],
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.shamt);
+                    break;
+
+            case OP_SLLV:
+            case OP_SRLV:
+            case OP_SRAV:
+            case OP_DSLLV:
+            case OP_DSRLV:
+            case OP_DSRAV:
+                    db_printf(state, "%s,%s,%s",
+                        r4k_str_reg_name[i.RType.rd],
+                        r4k_str_reg_name[i.RType.rt],
+                        r4k_str_reg_name[i.RType.rs]);
+                    break;
+
+            case OP_MFHI:
+            case OP_MFLO:
+                    db_printf(state, "%s", r4k_str_reg_name[i.RType.rd]);
+                    break;
+
+            case OP_JR:
+            case OP_JALR:
+                    db_printf(state, "%s", r4k_str_reg_name[i.RType.rs]);
+                    bdslot = true;
+                    break;
+            case OP_MTLO:
+            case OP_MTHI:
+                    db_printf(state, "%s", r4k_str_reg_name[i.RType.rs]);
+                    break;
+
+            case OP_MULT:
+            case OP_MULTU:
+            case OP_DMULT:
+            case OP_DMULTU:
+                    db_printf(state, "%s,%s",
+                        r4k_str_reg_name[i.RType.rs],
+                        r4k_str_reg_name[i.RType.rt]);
+                    break;
+                    
+            case OP_DIV:
+            case OP_DIVU:
+            case OP_DDIV:
+            case OP_DDIVU:
+                    db_printf(state, "$zero,%s,%s",
+                        r4k_str_reg_name[i.RType.rs],
+                        r4k_str_reg_name[i.RType.rt]);
+                    break;
+
+
+            case OP_SYSCALL:
+            case OP_SYNC:
+                    break;
+
+            case OP_BREAK:
+                    db_printf(state, "%d", (i.RType.rs << 5) | i.RType.rt);
+                    break;
+
+            default:
+                    db_printf(state, "%s,%s,%s",
+                        r4k_str_reg_name[i.RType.rd],
+                        r4k_str_reg_name[i.RType.rs],
+                        r4k_str_reg_name[i.RType.rt]);
+            }
+            break;
+
+    case OP_SPECIAL2:
+            if (i.RType.func == OP_MUL)
+                    db_printf(state, "%s\t%s,%s,%s",
+                            r4k_str_spec2_name[i.RType.func & 0x3],
+                            r4k_str_reg_name[i.RType.rd],
+                            r4k_str_reg_name[i.RType.rs],
+                            r4k_str_reg_name[i.RType.rt]);
+            else
+                    db_printf(state, "%s\t%s,%s",
+                            r4k_str_spec2_name[i.RType.func & 0x3],
+                            r4k_str_reg_name[i.RType.rs],
+                            r4k_str_reg_name[i.RType.rt]);
+                    
+            break;
+
+    case OP_BCOND:
+            db_printf(state, "%-16s%s,", r4k_str_bcond_name[i.IType.rt],
+                r4k_str_reg_name[i.IType.rs]);
+            goto pr_displ;
+
+    case OP_BLEZ:
+    case OP_BLEZL:
+    case OP_BGTZ:
+    case OP_BGTZL:
+            db_printf(state, "%-16s%s,", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rs]);
+            goto pr_displ;
+
+    case OP_BEQ:
+    case OP_BEQL:
+            if (i.IType.rs == 0 && i.IType.rt == 0) {
+                    db_printf(state, "%-16s", "b");
+                    goto pr_displ;
+            }
+            /* FALLTHROUGH */
+    case OP_BNE:
+    case OP_BNEL:
+            db_printf(state, "%-16s%s,%s,", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rs],
+                r4k_str_reg_name[i.IType.rt]);
+    pr_displ:
+            print_addr( state, loc + 4 + ((short)i.IType.imm << 2) );
+            bdslot = true;
+            break;
+
+    case OP_COP0:
+            switch (i.RType.rs) {
+            case OP_BCx:
+            case OP_BCy:
+
+                    db_printf(state, "bc0%c\t",
+                        "ft"[i.RType.rt & COPz_BC_TF_MASK]);
+                    goto pr_displ;
+
+            case OP_MT:
+                    db_printf(state, "%-16s%s,%s",
+                        "mtc0",
+                        r4k_str_reg_name[i.RType.rt],
+                        r4k_str_c0_reg[i.RType.rd]);
+                    break;
+
+            case OP_DMT:
+                    db_printf(state, "%-16s%s,%s",
+                        "dmtc0",
+                        r4k_str_reg_name[i.RType.rt],
+                        r4k_str_c0_reg[i.RType.rd]);
+                    break;
+
+            case OP_MF:
+                    db_printf(state, "%-16s%s,%s", "mfc0",
+                        r4k_str_reg_name[i.RType.rt],
+                        r4k_str_c0_reg[i.RType.rd]);
+                    break;
+
+            case OP_DMF:
+                    db_printf(state, "%-16s%s,%s","dmfc0",
+                        r4k_str_reg_name[i.RType.rt],
+                        r4k_str_c0_reg[i.RType.rd]);
+                    break;
+
+            default:
+                    db_printf(state, "%s", r4k_str_c0_opname[i.FRType.func]);
+            }
+            break;
+
+    case OP_COP1:
+            switch (i.RType.rs) {
+            case OP_BCx:
+            case OP_BCy:
+                    db_printf(state, "bc1%c%s\t\t",
+                        "ft"[i.RType.rt & COPz_BC_TF_MASK],
+                        (insn >> 16 & 0x1F) == 2 || (insn >> 16 & 0x1F)  == 3 ? "l" : "");
+                    goto pr_displ;
+
+            case OP_MT:
+                    db_printf(state, "mtc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_MF:
+                    db_printf(state, "mfc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_CT:
+                    db_printf(state, "ctc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_CF:
+                    db_printf(state, "cfc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_DMT:
+                    db_printf(state, "dmtc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_DMF:
+                    db_printf(state, "dmfc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_MTH:
+                    db_printf(state, "mthc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+
+            case OP_MFH:
+                    db_printf(state, "mfhc1\t\t%s,$f%d",
+                        r4k_str_reg_name[i.RType.rt],
+                        i.RType.rd);
+                    break;
+            
+
+            default:
+                
+                if( i.FRType.func == 0x21 || i.FRType.func == 0x20 || i.FRType.func == 0x24 || i.FRType.func == 0x25 || 
+                    i.FRType.func == 7 || i.FRType.func == 6 || i.FRType.func == 0xd || 
+                    i.FRType.func == 4 || i.FRType.func == 5 || i.FRType.func == 9 )
+                {/*NEG.fmt fd, fs*/
+                    
+                    db_printf(state, "%s.%s\t\t$f%d,$f%d",
+                        r4k_str_cop1_name[i.FRType.func],
+                        r4k_str_fmt_name[i.FRType.fmt],
+                        i.FRType.fd, i.FRType.fs);
+                }
+                else if( i.FRType.func != 1 && i.FRType.func != 2 && (insn & 0x3F) && !(insn >> 6 & 0x1F) ) /* C */
+                {
+                    db_printf(state, "%s.%s\t\t$f%d,$f%d",
+                        r4k_str_cop1_name[i.FRType.func],
+                        r4k_str_fmt_name[i.FRType.fmt],
+                        i.FRType.fs, i.FRType.ft);
+                }
+                else
+                {
+                    db_printf(state, "%s.%s\t\t$f%d,$f%d,$f%d",
+                        r4k_str_cop1_name[i.FRType.func],
+                        r4k_str_fmt_name[i.FRType.fmt],
+                        i.FRType.fd, i.FRType.fs, i.FRType.ft);
+                }
+            }
+            break;
+
+    case OP_J:
+    case OP_JAL:
+            db_printf(state, "%-16s", r4k_str_op_name[i.JType.op]);
+            print_addr(state, (loc & 0xF0000000) | (i.JType.target << 2));
+            bdslot = true;
+            break;
+    
+    case OP_LDC1:
+    case OP_LWC1:
+    case OP_SWC1:
+    case OP_SDC1:
+            db_printf(state, "%-16s$f%d,", r4k_str_op_name[i.IType.op],
+                i.IType.rt);
+            goto loadstore;
+
+    case OP_LB:
+    case OP_LH:
+    case OP_LW:
+    case OP_LWL:
+    case OP_LWR:
+    case OP_LD:
+    case OP_LBU:
+    case OP_LHU:
+    case OP_LWU:
+    case OP_SB:
+    case OP_SH:
+    case OP_SW:
+    case OP_SWL:
+    case OP_SWR:
+    case OP_SD:
+            db_printf(state, "%-16s%s,", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt]);
+    loadstore:
+        
+        /* Part of a relocation? */
+        if( (rel = lookup_rel_lo16(state, loc)) )
+        {
+            /* Yes. */
+            db_printf(state, 
+                "%%lo(%s)(%s)",
+                rel,
+                r4k_str_reg_name[i.IType.rs]
+            );
+            
+            break;
         }
-}
+        
+        
+            db_printf(state, "%d(%s)", (short)i.IType.imm,
+                r4k_str_reg_name[i.IType.rs]);
+            break;
 
+    case OP_ORI:
+    case OP_XORI:
+            if( i.IType.op == OP_ORI )
+            {
+                /* Part of a relocation? */
+                if( (rel = lookup_rel_lo16(state, loc)) )
+                {
+                    /* Yes. */
+                    db_printf(state, 
+                        "%-16s%s,%s,%%lo(%s)", 
+                        r4k_str_op_name[i.IType.op],
+                        r4k_str_reg_name[i.IType.rt],
+                        r4k_str_reg_name[i.IType.rs],
+                        rel
+                    );
+                    
+                    break;
+                }
+                else
+                {
+                    db_printf(state, "%-16s%s,%s,0x%x", r4k_str_op_name[i.IType.op],
+                        r4k_str_reg_name[i.IType.rt],
+                        r4k_str_reg_name[i.IType.rs],
+                        i.IType.imm);
+                    
+                    break;
+                }
+            }
+            else
+            if (i.IType.rs == 0) {
+                    db_printf(state, "%-16s%s,0x%x",
+                        "li",
+                        r4k_str_reg_name[i.IType.rt],
+                        i.IType.imm);
+                    break;
+            }
+            /* FALLTHROUGH */
+    case OP_ANDI:
+            db_printf(state, "%-16s%s,%s,0x%x", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt],
+                r4k_str_reg_name[i.IType.rs],
+                i.IType.imm);
+            break;
 
-//]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ ... ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[
+    case OP_LUI:
+    {
+        /* Part of a relocation? */
+        if( (rel = lookup_rel_hi16(state, loc)) )
+        {
+            /* Yes. */
+            db_printf(state, 
+                "%-16s%s,%%hi(%s)",
+                r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt],
+                rel
+            );
+        }
+        else
+        {
+            db_printf(state, "%-16s%s,0x%x", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt],
+                i.IType.imm);
+        }
+    }
+    break;
 
-static void J(){
-    mr4kd_sprintf( op, "J", mot, pc, "%ns%jm" );
-}
+    case OP_CACHE:
+            db_printf(state, "%-16s0x%x,0x%x(%s)",
+                r4k_str_op_name[i.IType.op],
+                i.IType.rt,
+                i.IType.imm,
+                r4k_str_reg_name[i.IType.rs]);
+            break;
 
-static void JAL(){
-    mr4kd_sprintf( op, "JAL", mot, pc, "%ns%jm" );
-}
-
-static void BEQ(){
-    mr4kd_sprintf( op, "BEQ", mot, pc, "%ns%rs, %rt, %br" );
-}
-
-static void BNE(){
-    mr4kd_sprintf( op, "BNE", mot, pc, "%ns%rs, %rt, %br" );
-}
-
-static void BLEZ(){
-    mr4kd_sprintf( op, "BLEZ", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGTZ(){
-    mr4kd_sprintf( op, "BGTZ", mot, pc, "%ns%rs, %br" );
-}
-
-static void ADDI(){
-    mr4kd_sprintf( op, "ADDI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void ADDIU(){
-    mr4kd_sprintf( op, "ADDIU", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void SLTI(){
-    mr4kd_sprintf( op, "SLTI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void SLTIU(){
-    mr4kd_sprintf( op, "SLTIU", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void ANDI(){
-    mr4kd_sprintf( op, "ANDI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void ORI(){
-    mr4kd_sprintf( op, "ORI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void XORI(){
-    mr4kd_sprintf( op, "XORI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void LUI(){
-    mr4kd_sprintf( op, "LUI", mot, pc, "%ns%rt, %ih" );
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ cop0 ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void MFC0(){
-    mr4kd_sprintf( op, "MFC0", mot, pc, "%ns%rt, %cp" );
-}   
-
-static void MTC0(){
-    mr4kd_sprintf( op, "MTC0", mot, pc, "%ns%rt, %cp" );
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ tlb ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void TLBR(){   
-    mr4kd_sprintf( op, "TLBR", mot, pc, "%n0" );
-}   
+    case OP_ADDI:
+    case OP_DADDI:
+    case OP_ADDIU:
+    case OP_DADDIU:
+    {
+        
+        /* Part of a relocation? */
+        if( (rel = lookup_rel_lo16(state, loc)) )
+        {
+            /* Yes. */
+            db_printf(state, 
+                "%-16s%s,%s,%%lo(%s)", 
+                r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt],
+                r4k_str_reg_name[i.IType.rs],
+                rel
+            );
+            
+            break;
+        }
+        
+            if (i.IType.rs == 0) {
+                    db_printf(state, "%-16s%s,%d", "li",
+                        r4k_str_reg_name[i.IType.rt],
+                        (short)i.IType.imm);
+                    break;
+            }
+            /* FALLTHROUGH */
     
-static void TLBWI(){
-    mr4kd_sprintf( op, "TLBWI", mot, pc, "%n0" );
-}   
+    default:
+        
+            db_printf(state, "%-16s%s,%s,%d", r4k_str_op_name[i.IType.op],
+                r4k_str_reg_name[i.IType.rt],
+                r4k_str_reg_name[i.IType.rs],
+                (short)i.IType.imm);
+    } }
+    /*db_printf(state, "\n");*/
+    
+    return (loc + 4);
+}
 
-static void TLBWR(){
-    mr4kd_sprintf( op, "TLBWR", mot, pc, "%n0" );
-}   
 
-static void TLBP(){
-    mr4kd_sprintf( op, "TLBP", mot, pc, "%n0" );
-}   
 
-static void ERET(){
-    mr4kd_sprintf( op, "ERET", mot, pc, "%n0" );
-}   
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   Global functions
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-static void tlb()
+/* Initialize a state */
+void
+r4k_dis_init ( struct r4k_dis_t * state,
+               void * syml,
+               void * symld,
+               void * rel_hi16l,
+               void * rel_hi16ld,
+               void * rel_lo16l,
+               void * rel_lo16ld        )
 {
-//  sprintf(op, "[10] tlb");
-    
-    switch( mot & 0x3F)
-    {
-        case 0x01: TLBR()   ; break;
-        case 0x02: TLBWI()  ; break;
-        case 0x06: TLBWR()  ; break;
-        case 0x08: TLBP()   ; break;
-        case 0x18: ERET()   ; break;
-        default: RESERV();
-    }
+    state->dest = 0;
+    state->length = 0;
+    state->lookup_sym        = syml;
+    state->lookup_sym_d      = symld;
+    state->lookup_rel_hi16   = rel_hi16l;
+    state->lookup_rel_hi16_d = rel_hi16ld;
+    state->lookup_rel_lo16   = rel_lo16l;
+    state->lookup_rel_lo16_d = rel_lo16ld;
 }
 
-static void cop0()
+
+/* Disassemble an instruction with state */
+int
+r4k_disassemble ( struct r4k_dis_t * state,
+                  uint32_t instruction,
+                  uint32_t location,
+                  char * dest               )
 {
-//  sprintf(op, "[10] COP0");
+    state->dest = dest;
+    db_disasm_insn( state, instruction, location, 0 );
     
-    switch( (mot>>21) & 0x1F)
-    {
-        case 0x00: MFC0()   ; break;
-        case 0x04: MTC0()   ; break;
-        case 0x10: tlb()    ; break;
-        default: RESERV();
-    }
+    return state->length;
 }
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ cop1 ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-static void MFC1(){
-    mr4kd_sprintf( op, "MFC1", mot, pc, "%ns%rt, %fs" );
-}
 
-static void DMFC1(){
-    mr4kd_sprintf( op, "DMFC1", mot, pc, "%ns%rt, %fs" );
-}
-
-static void CFC1(){
-    mr4kd_sprintf( op, "CFC1", mot, pc, "%ns%rt, %fs" );
-}
-
-static void MTC1(){
-    mr4kd_sprintf( op, "MTC1", mot, pc, "%ns%rt, %fs" );
-}
-
-static void DMTC1(){
-    mr4kd_sprintf( op, "DMTC1", mot, pc, "%ns%rt, %fs" );
-}
-
-static void CTC1(){
-    mr4kd_sprintf( op, "CTC1", mot, pc, "%ns%rt, %fs" );
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ BC ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void BC1F(){
-    mr4kd_sprintf( op, "BC1F", mot, pc, "%ns%br" );
-}
-
-static void BC1T(){
-    mr4kd_sprintf( op, "BC1T", mot, pc, "%ns%br" );
-    
-}
-
-static void BC1FL(){
-    mr4kd_sprintf( op, "BC1FL", mot, pc, "%ns%br" );
-    
-}
-
-static void BC1TL(){
-    mr4kd_sprintf( op, "BC1TL", mot, pc, "%ns%br" );
-}
-
-static void BC()
+/* Disassemble an instruction but split the opcode/operands into two char *'s */
+int
+r4k_disassemble_split ( struct r4k_dis_t * state,
+                        uint32_t instruction,
+                        uint32_t location,
+                        char ** opcode,
+                        char ** operands         )
 {
-//  sprintf(op, "[11] BC");
-
-    switch( (mot>>16) & 3)
-    {
-        case 0x00: BC1F();  break;
-        case 0x01: BC1T();  break;
-        case 0x02: BC1FL(); break;
-        case 0x03: BC1TL(); break;
-    }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ S ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void ADD_S(){
-    mr4kd_sprintf( op, "ADD.S", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void SUB_S(){
-    mr4kd_sprintf( op, "SUB.S", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void MUL_S(){
-    mr4kd_sprintf( op, "MUL.S", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void DIV_S(){
-    mr4kd_sprintf( op, "DIV.S", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void SQRT_S(){
-    mr4kd_sprintf( op, "SQRT.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ABS_S(){
-    mr4kd_sprintf( op, "ABS.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void MOV_S(){
-    mr4kd_sprintf( op, "MOV.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void NEG_S(){
-    mr4kd_sprintf( op, "NEG.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ROUND_L_S(){
-    mr4kd_sprintf( op, "ROUND.L.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void TRUNC_L_S(){
-    mr4kd_sprintf( op, "TRUNC.L.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CEIL_L_S(){
-    mr4kd_sprintf( op, "CEIL.L.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void FLOOR_L_S(){
-    mr4kd_sprintf( op, "FLOOR.L.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ROUND_W_S(){
-    mr4kd_sprintf( op, "ROUND.W.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void TRUNC_W_S(){
-    mr4kd_sprintf( op, "TRUNC.W.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CEIL_W_S(){
-    mr4kd_sprintf( op, "CEIL.W.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void FLOOR_W_S(){
-    mr4kd_sprintf( op, "FLOOR.W.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_D_S(){
-    mr4kd_sprintf( op, "CVT.D.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_W_S(){
-    mr4kd_sprintf( op, "CVT.W.S", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_L_S(){
-    mr4kd_sprintf( op, "CVT.L.S", mot, pc, "%ns%fd, %fs" );
-}
-
-
-static void C_F_S(){
-    mr4kd_sprintf( op, "C.F.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_UN_S(){
-    mr4kd_sprintf( op, "C.UN.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_EQ_S(){
-    mr4kd_sprintf( op, "C.EQ.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_UEQ_S(){
-    mr4kd_sprintf( op, "C.UEQ.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_OLT_S(){
-    mr4kd_sprintf( op, "C.OLT.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_ULT_S(){
-    mr4kd_sprintf( op, "C.ULT.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_OLE_S(){
-    mr4kd_sprintf( op, "C.OLE.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_ULE_S(){
-    mr4kd_sprintf( op, "C.ULE.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_SF_S(){
-    mr4kd_sprintf( op, "C.SF.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGLE_S(){
-    mr4kd_sprintf( op, "C.NGLE.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_SEQ_S(){
-    mr4kd_sprintf( op, "C.SEQ.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGL_S(){
-    mr4kd_sprintf( op, "C.NGL.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_LT_S(){
-    mr4kd_sprintf( op, "C.LT.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGE_S(){
-    mr4kd_sprintf( op, "C.NGE.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_LE_S(){
-    mr4kd_sprintf( op, "C.LE.S", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGT_S(){
-    mr4kd_sprintf( op, "C.NGT.S", mot, pc, "%ns%fs, %ft" );
-}
-
-
-static void S()
-{
-//  sprintf(op, "[11] S");
+    int v, i;
+    char buff[128], * dupd;
     
-    switch( mot & 0x3F)
-    {
-        case 0x00: ADD_S(); break;
-        case 0x01: SUB_S(); break;
-        case 0x02: MUL_S(); break;
-        case 0x03: DIV_S(); break;
-        case 0x04: SQRT_S();    break;
-        case 0x05: ABS_S(); break;
-        case 0x06: MOV_S(); break;
-        case 0x07: NEG_S(); break;
-        case 0x08: ROUND_L_S(); break;
-        case 0x09: TRUNC_L_S(); break;
-        case 0x0A: CEIL_L_S();  break;
-        case 0x0B: FLOOR_L_S(); break;
-        case 0x0C: ROUND_W_S(); break;
-        case 0x0D: TRUNC_W_S(); break;
-        case 0x0E: CEIL_W_S();  break;
-        case 0x0F: FLOOR_W_S(); break;
-        case 0x21: CVT_D_S();   break;
-        case 0x24: CVT_W_S();   break;
-        case 0x25: CVT_L_S();   break;
-        case 0x30: C_F_S(); break;
-        case 0x31: C_UN_S();    break;
-        case 0x32: C_EQ_S();    break;
-        case 0x33: C_UEQ_S();   break;
-        case 0x34: C_OLT_S();   break;
-        case 0x35: C_ULT_S();   break;
-        case 0x36: C_OLE_S();   break;
-        case 0x37: C_ULE_S();   break;
-        case 0x38: C_SF_S();    break;
-        case 0x39: C_NGLE_S();  break;
-        case 0x3A: C_SEQ_S();   break;
-        case 0x3B: C_NGL_S();   break;
-        case 0x3C: C_LT_S();    break;
-        case 0x3D: C_NGE_S();   break;
-        case 0x3E: C_LE_S();    break;
-        case 0x3F: C_NGT_S();   break;
-        default: RESERV();
-    }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ D ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-
-static void ADD_D(){
-    mr4kd_sprintf( op, "ADD.D", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void SUB_D(){
-    mr4kd_sprintf( op, "SUB.D", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void MUL_D(){
-    mr4kd_sprintf( op, "MUL.D", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void DIV_D(){
-    mr4kd_sprintf( op, "DIV.D", mot, pc, "%ns%fd, %fs, %ft" );
-}
-
-static void SQRT_D(){
-    mr4kd_sprintf( op, "SQRT.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ABS_D(){
-    mr4kd_sprintf( op, "ABS.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void MOV_D(){
-    mr4kd_sprintf( op, "MOV.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void NEG_D(){
-    mr4kd_sprintf( op, "NEG.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ROUND_L_D(){
-    mr4kd_sprintf( op, "ROUND.L.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void TRUNC_L_D(){
-    mr4kd_sprintf( op, "TRUNC.L.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CEIL_L_D(){
-    mr4kd_sprintf( op, "CEIL.L.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void FLOOR_L_D(){
-    mr4kd_sprintf( op, "FLOOR.L.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void ROUND_W_D(){
-    mr4kd_sprintf( op, "ROUND.W.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void TRUNC_W_D(){
-    mr4kd_sprintf( op, "TRUNC.W.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CEIL_W_D(){
-    mr4kd_sprintf( op, "CEIL.W.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void FLOOR_W_D(){
-    mr4kd_sprintf( op, "FLOOR.W.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_S_D(){
-    mr4kd_sprintf( op, "CVT.S.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_W_D(){
-    mr4kd_sprintf( op, "CVT.W.D", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_L_D(){
-    mr4kd_sprintf( op, "CVT.L.D", mot, pc, "%ns%fd, %fs" );
-}
-
-
-
-static void C_F_D(){
-    mr4kd_sprintf( op, "C.F.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_UN_D(){
-    mr4kd_sprintf( op, "C.UN.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_EQ_D(){
-    mr4kd_sprintf( op, "C.EQ.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_UEQ_D(){
-    mr4kd_sprintf( op, "C.UEQ.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_OLT_D(){
-    mr4kd_sprintf( op, "C.OLT.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_ULT_D(){
-    mr4kd_sprintf( op, "C.ULT.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_OLE_D(){
-    mr4kd_sprintf( op, "C.OLE.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_ULE_D(){
-    mr4kd_sprintf( op, "C.ULE.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_SF_D(){
-    mr4kd_sprintf( op, "C.SF.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGLE_D(){
-    mr4kd_sprintf( op, "C.NGLE.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_SEQ_D(){
-    mr4kd_sprintf( op, "C.SEQ.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGL_D(){
-    mr4kd_sprintf( op, "C.NGL.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_LT_D(){
-    mr4kd_sprintf( op, "C.LT.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGE_D(){
-    mr4kd_sprintf( op, "C.NGE.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_LE_D(){
-    mr4kd_sprintf( op, "C.LE.D", mot, pc, "%ns%fs, %ft" );
-}
-
-static void C_NGT_D(){
-    mr4kd_sprintf( op, "C.NGT.D", mot, pc, "%ns%fs, %ft" );
-}
-
-
-static void D()
-{
-//  sprintf(op, "[11] D");
-
-    switch( mot & 0x3F)
-    {
-        case 0x00: ADD_D(); break;
-        case 0x01: SUB_D(); break;
-        case 0x02: MUL_D(); break;
-        case 0x03: DIV_D(); break;
-        case 0x04: SQRT_D();    break;
-        case 0x05: ABS_D(); break;
-        case 0x06: MOV_D(); break;
-        case 0x07: NEG_D(); break;
-        case 0x08: ROUND_L_D(); break;
-        case 0x09: TRUNC_L_D(); break;
-        case 0x0A: CEIL_L_D();  break;
-        case 0x0B: FLOOR_L_D(); break;
-        case 0x0C: ROUND_W_D(); break;
-        case 0x0D: TRUNC_W_D(); break;
-        case 0x0E: CEIL_W_D();  break;
-        case 0x0F: FLOOR_W_D(); break;
-        case 0x20: CVT_S_D();   break;
-        case 0x24: CVT_W_D();   break;
-        case 0x25: CVT_L_D();   break;
-        case 0x30: C_F_D(); break;
-        case 0x31: C_UN_D();    break;
-        case 0x32: C_EQ_D();    break;
-        case 0x33: C_UEQ_D();   break;
-        case 0x34: C_OLT_D();   break;
-        case 0x35: C_ULT_D();   break;
-        case 0x36: C_OLE_D();   break;
-        case 0x37: C_ULE_D();   break;
-        case 0x38: C_SF_D();    break;
-        case 0x39: C_NGLE_D();  break;
-        case 0x3A: C_SEQ_D();   break;
-        case 0x3B: C_NGL_D();   break;
-        case 0x3C: C_LT_D();    break;
-        case 0x3D: C_NGE_D();   break;
-        case 0x3E: C_LE_D();    break;
-        case 0x3F: C_NGT_D();   break;
-        default: RESERV();
-    }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ W ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void CVT_S_W(){
-    mr4kd_sprintf( op, "CVT.S.W", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_D_W(){
-    mr4kd_sprintf( op, "CVT.D.W", mot, pc, "%ns%fd, %fs" );
-}
-
-
-static void W()
-{
-//  sprintf(op, "[11] W");
-//  sprintf(args, " ");
+    v = r4k_disassemble(
+        state,
+        instruction,
+        location,
+        buff
+    );
     
-    switch( mot & 0x3F)
-    {
-        case 0x20: CVT_S_W();   break;
-        case 0x21: CVT_D_W();   break;
-        default: RESERV();
-    }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ L ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void CVT_S_L(){
-    mr4kd_sprintf( op, "CVT.S.L", mot, pc, "%ns%fd, %fs" );
-}
-
-static void CVT_D_L(){
-    mr4kd_sprintf( op, "CVT.D.L", mot, pc, "%ns%fd, %fs" );
-}
-
-
-static void L(){
-//  sprintf(op, "[11] L");
-//  sprintf(args, " ");
-
-    switch( mot & 0x3F)
-    {
-        case 0x20: CVT_S_L();   break;
-        case 0x21: CVT_D_L();   break;
-        default: RESERV();
-    }
-}
-
-
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ cop1 ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-
-static void cop1()
-{
-//  sprintf(op, "[11] COP1");
+    dupd = strdup( buff );
+    *opcode = &dupd[0];
     
-    switch( (mot>>21) & 0x1F)
-    {
-        case 0x00: MFC1();  break;
-        case 0x01: DMFC1(); break;
-        case 0x02: CFC1();  break;
-        case 0x04: MTC1();  break;
-        case 0x05: DMTC1(); break;
-        case 0x06: CTC1();  break;
-        case 0x08: BC();    break;
-        case 0x10: S();     break;
-        case 0x11: D();     break;
-        case 0x14: W();     break;
-        case 0x15: L();     break;
-        default: RESERV();
-    }
+    for( i = 0; buff[i] && buff[i] != ' '; i++ );
+    
+    dupd[i] = '\0';
+    
+    for( ; buff[i] && buff[i] == ' '; i++ );
+    
+    *operands = &dupd[i];
+    
+    return v;
+}
+    
+
+
+/* Disassemble an instruction with a blank state */
+int
+r4k_disassemble_quick ( uint32_t instruction,
+                        uint32_t location,
+                        char * dest           )
+{
+    struct r4k_dis_t state;
+    
+    /* Init state */
+    memset( &state, 0, sizeof(state) );
+    state.dest = dest;
+    
+    /* Perform */
+    db_disasm_insn( &state, instruction, location, 0 );
+    
+    return state.length;
 }
 
 
-//=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ ... ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
 
-static void BEQL(){
-    mr4kd_sprintf( op, "BEQL", mot, pc, "%ns%rs, %rt, %br" );
+/* Disassemble an instruction with a blank state but split op/operands */
+int
+r4k_disassemble_split_quick ( uint32_t instruction,
+                              uint32_t location,
+                              char ** opcode,
+                              char ** operands      )
+{
+    struct r4k_dis_t state;
+    
+    /* Init state */
+    memset( &state, 0, sizeof(state) );
+    
+    /* Perform */
+    return r4k_disassemble_split(
+        &state,
+        instruction,
+        location,
+        opcode,
+        operands
+    );
 }
-
-static void BNEL(){
-    mr4kd_sprintf( op, "BNEL", mot, pc, "%ns%rs, %rt, %br" );
-}
-
-static void BLEZL(){
-    mr4kd_sprintf( op, "BLEZL", mot, pc, "%ns%rs, %br" );
-}
-
-static void BGTZL(){
-    mr4kd_sprintf( op, "BGTZL", mot, pc, "%ns%rs, %br" );
-}
-
-
-static void DADDI(){
-    mr4kd_sprintf( op, "DADDI", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-static void DADDIU(){
-    mr4kd_sprintf( op, "DADDIU", mot, pc, "%ns%rt, %rs, %ih" );
-}
-
-
-static void LDL(){
-    mr4kd_sprintf( op, "LDL", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LDR(){
-    mr4kd_sprintf( op, "LDR", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LB(){
-    mr4kd_sprintf( op, "LB", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LH(){
-    mr4kd_sprintf( op, "LH", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LWL(){
-    mr4kd_sprintf( op, "LWL", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LW(){
-    mr4kd_sprintf( op, "LW", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LBU(){
-    mr4kd_sprintf( op, "LBU", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LHU(){
-    mr4kd_sprintf( op, "LHU", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LWR(){
-    mr4kd_sprintf( op, "LWR", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LWU(){
-    mr4kd_sprintf( op, "LWU", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SB(){
-    mr4kd_sprintf( op, "SB", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SH(){
-    mr4kd_sprintf( op, "SH", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SWL(){
-    mr4kd_sprintf( op, "SWL", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SW(){
-    mr4kd_sprintf( op, "SW", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SDL(){
-    mr4kd_sprintf( op, "SDL", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SDR(){
-    mr4kd_sprintf( op, "SDR", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SWR(){
-    mr4kd_sprintf( op, "SWR", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void CACHE(){
-    mr4kd_sprintf( op, "CACHE", mot, pc, "%ns%rt, %ih(%rs)");
-}
-
-static void LL(){
-    mr4kd_sprintf( op, "LL", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LWC1(){
-    mr4kd_sprintf( op, "LWC1", mot, pc, "%ns%ft, %ih(%rs)" );
-}
-
-static void LLD(){
-    mr4kd_sprintf( op, "LLD", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void LDC1(){
-    mr4kd_sprintf( op, "LDC1", mot, pc, "%ns%ft, %ih(%rs)" );
-}
-
-static void LD(){
-    mr4kd_sprintf( op, "LD", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SC(){
-    mr4kd_sprintf( op, "SC", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SWC1(){
-    mr4kd_sprintf( op, "SWC1", mot, pc, "%ns%ft, %ih(%rs)" );
-}
-
-static void SCD(){
-    mr4kd_sprintf( op, "SCD", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SDC1(){
-    mr4kd_sprintf( op, "SDC1", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
-static void SD(){
-    mr4kd_sprintf( op, "SD", mot, pc, "%ns%rt, %ih(%rs)" );
-}
-
 
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ DECODE_OP ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
-void r4300_decode_op( uint32 instr, char *opcode, char *arguments, int counter )
-{
-    char buffer[256]; int result;
-    mr4kd_disassemble( instr, counter, buffer );
-    
-    /* Split it up */
-    if( (result = sscanf( buffer, "%s %s", opcode, arguments )) == 1 )
-        strcpy( arguments, " " );
-    else
-        strcpy( arguments, buffer + 16);
-}
 
-/* Disassemble */
-static void mr4kd_disassemble ( uint32 instruction, uint32 counter, char * buffer )
+void r4300_decode_op ( uint32 instr, char * opcode, char * arguments, int counter )
 {
-    mot = instruction;
-    pc  = counter;
-    op  = buffer;
+    char * _op, * _args;
     
-    switch((mot>>26)&0x3F)
-    {
-        case 0x00: special();   break;
-        case 0x01: regimm();    break;
-        case 0x02: J();     break;
-        case 0x03: JAL();   break;
-        case 0x04: BEQ();   break;
-        case 0x05: BNE();   break;
-        case 0x06: BLEZ();  break;
-        case 0x07: BGTZ();  break;
-        case 0x08: ADDI();  break;
-        case 0x09: ADDIU(); break;
-        case 0x0A: SLTI();  break;
-        case 0x0B: SLTIU(); break;
-        case 0x0C: ANDI();  break;
-        case 0x0D: ORI();   break;
-        case 0x0E: XORI();  break;
-        case 0x0F: LUI();   break;
-        case 0x10: cop0();  break;
-        case 0x11: cop1();  break;
-        case 0x14: BEQL();  break;
-        case 0x15: BNEL();  break;
-        case 0x16: BLEZL(); break;
-        case 0x17: BGTZL(); break;
-        case 0x18: DADDI(); break;
-        case 0x19: DADDIU();    break;
-        case 0x1A: LDL();   break;
-        case 0x1B: LDR();   break;
-        case 0x20: LB();    break;
-        case 0x21: LH();    break;
-        case 0x22: LWL();   break;
-        case 0x23: LW();    break;
-        case 0x24: LBU();   break;
-        case 0x25: LHU();   break;
-        case 0x26: LWR();   break;
-        case 0x27: LWU();   break;
-        case 0x28: SB();    break;
-        case 0x29: SH();    break;
-        case 0x2A: SWL();   break;
-        case 0x2B: SW();    break;
-        case 0x2C: SDL();   break;
-        case 0x2D: SDR();   break;
-        case 0x2E: SWR();   break;
-        case 0x2F: CACHE(); break;
-        case 0x30: LL();    break;
-        case 0x31: LWC1();  break;
-        case 0x34: LLD();   break;
-        case 0x35: LDC1();  break;
-        case 0x37: LD();    break;
-        case 0x38: SC();    break;
-        case 0x39: SWC1();  break;
-        case 0x3C: SCD();   break;
-        case 0x3D: SDC1();  break;
-        case 0x3F: SD();    break;
-        default: RESERV();
-    }
+    _op = NULL;
+    _args = NULL;
+    
+    r4k_disassemble_split_quick(
+        instr,
+        counter,
+        &_op,
+        &_args
+    );
+    
+    strcpy( opcode, _op );
+    strcpy( arguments, _args );
+    
+    free( _op );
 }
 
