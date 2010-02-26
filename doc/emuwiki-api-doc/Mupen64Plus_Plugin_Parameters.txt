@@ -167,6 +167,10 @@ These are standard parameters which are used by the Mupen64Plus plugins.  The be
 |M64TYPE_BOOL
 |Display On-screen FPS
 |-
+|MultiSampling
+|M64TYPE_INT
+|Enable/Disable MultiSampling (0=off, 2,4,8,16=quality)
+|-
 |TextureEnhancement
 |M64TYPE_INT
 |Primary texture filter (0=None, 1=2X, 2=2XSAI, 3=HQ2X, 4=LQ2X, 5=HQ4X, 6=Sharpen, 7=Sharpen More, 8=External, 9=Mirrored)

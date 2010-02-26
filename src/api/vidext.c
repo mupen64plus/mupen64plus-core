@@ -279,7 +279,9 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
         { M64P_GL_GREEN_SIZE,   SDL_GL_GREEN_SIZE },
         { M64P_GL_BLUE_SIZE,    SDL_GL_BLUE_SIZE },
         { M64P_GL_ALPHA_SIZE,   SDL_GL_ALPHA_SIZE },
-        { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL } };
+        { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
+        { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
+        { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }};
     const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
     int i;
 
