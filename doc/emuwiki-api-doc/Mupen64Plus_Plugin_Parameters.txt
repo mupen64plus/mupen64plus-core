@@ -228,11 +228,11 @@ The Mupen64Plus-Input-SDL plugin uses a separate config section for each simulat
 |-
 |AnalogDeadzone
 |M64TYPE_STRING
-|The minimum absolute value of the SDL analog joystick axis to move the N64 controller axis value from 0.  For Y, X axes.
+|The minimum absolute value of the SDL analog joystick axis to move the N64 controller axis value from 0.  For X, Y axes.
 |-
 |AnalogPeak
 |M64TYPE_STRING
-|An absolute value of the SDL joystick axis >= AnalogPeak will saturate the N64 controller axis value (at 80).  For Y, X axes. For each axis, this must be greater than the corresponding AnalogDeadzone value
+|An absolute value of the SDL joystick axis >= AnalogPeak will saturate the N64 controller axis value (at 80).  For X, Y axes. For each axis, this must be greater than the corresponding AnalogDeadzone value
 |-
 |}
 
@@ -250,6 +250,9 @@ These parameters are used to bind input events with N64 Controller button presse
 |-
 |<tt>axis(&lt;num&gt;&lt;dir&gt;)</tt>
 |&lt;num&gt; = SDL Joystick Axis Number, &lt;dir&gt; = axis direction (+ = positive, - = negative)
+|-
+|<tt>axis(&lt;num&gt;&lt;dir&gt;,&lt;deadzone&gt;)</tt>
+|&lt;num&gt; = SDL Joystick Axis Number, &lt;dir&gt; = axis direction (+ = positive, - = negative), &lt;deadzone&gt; = minimum axis value (max 32767) to activate button; default 6000
 |-
 |<tt>hat(&lt;num&gt; &lt;dir&gt;)</tt>
 |&lt;num&gt; = SDL Joystick Hat Number, &lt;dir&gt; = hat direction (Up, Down, Left, or Right)
