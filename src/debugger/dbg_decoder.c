@@ -63,17 +63,15 @@
  *	from: @(#)kadb.c	8.1 (Berkeley) 6/10/93
  */
 #include <stdio.h>
-#include <stdbool.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #ifndef MIPS32
-#define MIPS32
+  #define MIPS32
 #endif
 #include "dbg_decoder.h"
 #include "dbg_decoder_local.h"
-
+#include "osal/preproc.h"
 
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

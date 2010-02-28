@@ -23,7 +23,12 @@
 #define __DECODER_H__
 
 #include "dbg_types.h"
-#include <stdint.h>
+
+/* this debugger code used stdint.h and stdbool.h which are not available under Win32 */
+typedef unsigned int uint32_t;
+typedef unsigned char bool;
+#define false 0
+#define true 1
 
 /* Disassembler lookup handler */
 typedef char * (*r4k_lookup_func)(uint32_t, void *);

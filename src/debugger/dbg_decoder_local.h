@@ -21,7 +21,6 @@
 #ifndef __DECODER_LOCAL_H__
 #define __DECODER_LOCAL_H__
 
-#include <stdint.h>
 #include <stdio.h>
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
