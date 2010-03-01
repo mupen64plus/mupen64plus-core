@@ -157,7 +157,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |The emulator must be currently running or paused.
 |-
 |M64CMD_SET_FRAME_CALLBACK
-|This command either registers or removes (if '''<tt>ParamPtr</tt>''' is NULL) a frame callback function.  This function will be called after each video frame is rendered.  The front-end callback function may call the video plugin's ReadScreen() function to retrieve the frame if desired.
+|This command either registers or removes (if '''<tt>ParamPtr</tt>''' is NULL) a frame callback function.  This function will be called after each video frame is rendered.  The front-end callback function may call the video plugin's ReadScreen2() function to retrieve the frame if desired.
 |'''<tt>ParamPtr</tt>''' Can be either NULL or a <tt>m64p_frame_callback</tt> object.
 |None
 |-

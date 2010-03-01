@@ -86,8 +86,8 @@ These functions are present in all of the plugins.
 |<tt>void ViWidthChanged(void);</tt>
 |This function is called to notify the video plugin that the ViWidth registers value has been changed.
 |-
-|<tt>void ReadScreen(void **dest, int *width, int *height);</tt>
-|This function reads the pixels of the currently displayed screen
+|<tt>void ReadScreen2(void *dest, int *width, int *height, int front);</tt>
+|This function reads the pixels of the frame buffer that is either currently displayed (front != 0) or being drawn (front == 0)
 |-
 |<tt>void SetRenderingCallback(void (*callback)());</tt>
 |Allows the core to register a callback function that will be called by the graphics plugin just before the the frame buffers are swapped.
@@ -118,6 +118,8 @@ These functions are present in all of the plugins.
 |<tt>void DrawScreen(void);</tt>
 |-
 |<tt>void GetDllInfo(PLUGIN_INFO *PluginInfo);</tt>
+|-
+|<tt>void ReadScreen(void **dest, int *width, int *height);</tt>
 |-
 |<tt>void SetConfigDir(char *configDir);</tt>
 |-

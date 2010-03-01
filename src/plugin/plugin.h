@@ -50,7 +50,7 @@ extern ptr_ShowCFB         showCFB;
 extern ptr_UpdateScreen    updateScreen;
 extern ptr_ViStatusChanged viStatusChanged;
 extern ptr_ViWidthChanged  viWidthChanged;
-extern ptr_ReadScreen      readScreen;
+extern ptr_ReadScreen2     readScreen;
 extern ptr_SetRenderingCallback setRenderingCallback;
 
 /* frame buffer plugin spec extension */

@@ -516,14 +516,8 @@ m64p_error main_run(void)
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
         // init on-screen display
-        void *pvPixels = NULL;
         int width = 640, height = 480;
-        readScreen(&pvPixels, &width, &height); // read screen to get width and height
-        if (pvPixels != NULL)
-        {
-            free(pvPixels);
-            pvPixels = NULL;
-        }
+        readScreen(NULL, &width, &height, 0); // read screen to get width and height
         osd_init(width, height);
     }
 

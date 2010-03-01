@@ -81,7 +81,7 @@ void (*showCFB)() = dummyvideo_ShowCFB;
 void (*updateScreen)() = dummyvideo_UpdateScreen;
 void (*viStatusChanged)() = dummyvideo_ViStatusChanged;
 void (*viWidthChanged)() = dummyvideo_ViWidthChanged;
-void (*readScreen)(void **dest, int *width, int *height) = dummyvideo_ReadScreen;
+void (*readScreen)(void *dest, int *width, int *height, int front) = dummyvideo_ReadScreen2;
 void (*setRenderingCallback)(void (*callback)(void)) = dummyvideo_SetRenderingCallback;
 
 void (*fBRead)(unsigned int addr) = dummyvideo_FBRead;
@@ -348,7 +348,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
         updateScreen = dummyvideo_UpdateScreen;
         viStatusChanged = dummyvideo_ViStatusChanged;
         viWidthChanged = dummyvideo_ViWidthChanged;
-        readScreen = dummyvideo_ReadScreen;
+        readScreen = dummyvideo_ReadScreen2;
         setRenderingCallback = dummyvideo_SetRenderingCallback;
         fBRead = dummyvideo_FBRead;
         fBWrite = dummyvideo_FBWrite;
@@ -375,7 +375,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
         updateScreen = (ptr_UpdateScreen) osal_dynlib_getproc(plugin_handle, "UpdateScreen");
         viStatusChanged = (ptr_ViStatusChanged) osal_dynlib_getproc(plugin_handle, "ViStatusChanged");
         viWidthChanged = (ptr_ViWidthChanged) osal_dynlib_getproc(plugin_handle, "ViWidthChanged");
-        readScreen = (ptr_ReadScreen) osal_dynlib_getproc(plugin_handle, "ReadScreen");
+        readScreen = (ptr_ReadScreen2) osal_dynlib_getproc(plugin_handle, "ReadScreen2");
         setRenderingCallback = (ptr_SetRenderingCallback) osal_dynlib_getproc(plugin_handle, "SetRenderingCallback");
         fBRead = (ptr_FBRead) osal_dynlib_getproc(plugin_handle, "FBRead");
         fBWrite = (ptr_FBWrite) osal_dynlib_getproc(plugin_handle, "FBWrite");

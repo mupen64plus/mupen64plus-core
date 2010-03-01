@@ -39,6 +39,7 @@ extern "C" {
 #include "main/rom.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
+#include "plugin/plugin.h"
 }
 
 /*********************************************************************************************************
@@ -226,22 +227,18 @@ extern "C" void TakeScreenshot(int iFrameNumber)
     }
     CurrentShotIndex++;
 
-    // get the SDL surface and find the width and height
-    SDL_Surface *pSurf = SDL_GetVideoSurface();
-    int width = pSurf->w;
-    int height = pSurf->h;
+    // get the width and height
+    int width = 640;
+    int height = 480;
+    readScreen(NULL, &width, &height, 0);
 
     // allocate memory for the image
     unsigned char *pucFrame = (unsigned char *) malloc(width * height * 3);
     if (pucFrame == 0)
         return;
 
-    // grab the back image from OpenGL
-    GLint oldMode;
-    glGetIntegerv(GL_READ_BUFFER, &oldMode);
-    glReadBuffer(GL_BACK);
-    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pucFrame);
-    glReadBuffer(oldMode);
+    // grab the back image from OpenGL by calling the video plugin
+    readScreen(pucFrame, &width, &height, 0);
 
     // write the image to a PNG
     SaveRGBBufferToFile(filename, pucFrame, width, height, width * 3);

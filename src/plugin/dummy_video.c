@@ -79,7 +79,7 @@ void dummyvideo_ViWidthChanged (void)
 
 }
 
-void dummyvideo_ReadScreen (void **dest, int *width, int *height)
+void dummyvideo_ReadScreen2 (void *dest, int *width, int *height, int front)
 {
 
 }

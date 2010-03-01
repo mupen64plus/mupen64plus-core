@@ -175,7 +175,7 @@ typedef void (*ptr_ShowCFB)(void);
 typedef void (*ptr_UpdateScreen)(void);
 typedef void (*ptr_ViStatusChanged)(void);
 typedef void (*ptr_ViWidthChanged)(void);
-typedef void (*ptr_ReadScreen)(void **dest, int *width, int *height);
+typedef void (*ptr_ReadScreen2)(void *dest, int *width, int *height, int front);
 typedef void (*ptr_SetRenderingCallback)(void (*callback)(void));
 
 /* frame buffer plugin spec extension */
