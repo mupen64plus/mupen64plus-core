@@ -24,6 +24,7 @@
 
 #include "api/m64p_types.h"
 #include "plugin.h"
+#include "dummy_input.h"
 
 void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo)
 {
@@ -35,7 +36,7 @@ void dummyinput_GetKeys(int Control, BUTTONS * Keys )
     Keys->Value = 0x0000;
 }
 
-void dummyinput_ControllerCommand(int Control, unsigned int *Command)
+void dummyinput_ControllerCommand(int Control, unsigned char *Command)
 {
 }
 

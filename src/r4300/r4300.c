@@ -64,7 +64,7 @@ char invalid_code[0x100000];
 precomp_block *blocks[0x100000], *actual;
 int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
     ceil_mode = 0xB3F, floor_mode = 0x73F;
-void (*code)();
+static void (*code)(void);
 
 /*#define check_memory() \
    if (!invalid_code[address>>12]) \

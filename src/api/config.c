@@ -60,7 +60,7 @@ typedef struct _config_section {
 static int      l_ConfigInit = 0;
 static int      l_SaveConfigOnExit = 0;
 static char    *l_DataDirOverride = NULL;
-config_section *l_SectionHead = NULL;
+static config_section *l_SectionHead = NULL;
 
 /* --------------- */
 /* local functions */

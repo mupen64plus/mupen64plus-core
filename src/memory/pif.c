@@ -53,7 +53,7 @@ void print_pif(void)
 }
 #endif
 
-void EepromCommand(unsigned char *Command)
+static void EepromCommand(unsigned char *Command)
 {
     static int EepromFileWarningSent = 0;
 
@@ -145,7 +145,7 @@ void EepromCommand(unsigned char *Command)
      }
 }
 
-void format_mempacks(void)
+static void format_mempacks(void)
 {
    unsigned char init[] =
      {
@@ -179,7 +179,7 @@ void format_mempacks(void)
      }
 }
 
-unsigned char mempack_crc(unsigned char *data)
+static unsigned char mempack_crc(unsigned char *data)
 {
    int i;
    unsigned char CRC = 0;
@@ -197,7 +197,7 @@ unsigned char mempack_crc(unsigned char *data)
    return CRC;
 }
 
-void internal_ReadController(int Control, unsigned char *Command)
+static void internal_ReadController(int Control, unsigned char *Command)
 {
    switch (Command[2])
      {
@@ -229,7 +229,7 @@ void internal_ReadController(int Control, unsigned char *Command)
      }
 }
 
-void internal_ControllerCommand(int Control, unsigned char *Command)
+static void internal_ControllerCommand(int Control, unsigned char *Command)
 {
     int MpkFileWarningSent = 0;
 

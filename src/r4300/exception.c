@@ -48,12 +48,6 @@ void TLB_invalid_exception(void)
    stop=1;
 }
 
-void XTLB_refill_exception(unsigned long long int addresse)
-{
-   DebugMessage(M64MSG_ERROR, "XTLB refill exception");
-   stop=1;
-}
-
 void TLB_refill_exception(unsigned int address, int w)
 {
    int usual_handler = 0, i;

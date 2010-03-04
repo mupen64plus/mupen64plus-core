@@ -321,7 +321,7 @@ void genbgezl_idle(void)
 #endif
 }
 
-void genbranchlink(void)
+static void genbranchlink(void)
 {
    int r31_64bit = is64((unsigned int*)&reg[31]);
    

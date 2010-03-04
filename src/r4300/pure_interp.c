@@ -3126,25 +3126,3 @@ void pure_interpreter(void)
    }
    PC->addr = interp_addr;
 }
-
-void interprete_section(unsigned int addr)
-{
-   interp_addr = addr;
-   PC = (precomp_instr *) malloc(sizeof(precomp_instr));
-   last_addr = interp_addr;
-   while (!stop && (addr >> 12) == (interp_addr >> 12))
-     {
-    prefetch();
-#ifdef COMPARE_CORE
-    CoreCompareCallback();
-#endif
-    PC->addr = interp_addr;
-    interp_ops[((op >> 26) & 0x3F)]();
-#ifdef DBG
-    PC->addr = interp_addr;
-    if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-     }
-   PC->addr = interp_addr;
-}
-

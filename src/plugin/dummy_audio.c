@@ -23,6 +23,7 @@
 
 #include "api/m64p_types.h"
 #include "plugin.h"
+#include "dummy_audio.h"
 
 void dummyaudio_AiDacrateChanged(int SystemType)
 {

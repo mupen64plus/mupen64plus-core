@@ -2469,7 +2469,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
    end_section(COMPILER_SECTION);
 }
 
-int is_jump(void)
+static int is_jump(void)
 {
    int dyn=0;
    int jump=0;

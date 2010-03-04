@@ -24,6 +24,7 @@
 
 #include "api/m64p_types.h"
 #include "plugin.h"
+#include "dummy_video.h"
 
 void dummyvideo_ChangeWindow (void)
 {

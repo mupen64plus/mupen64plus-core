@@ -23,6 +23,7 @@
 
 #include "api/m64p_types.h"
 #include "plugin.h"
+#include "dummy_rsp.h"
 
 unsigned int dummyrsp_DoRspCycles(unsigned int Cycles)
 {

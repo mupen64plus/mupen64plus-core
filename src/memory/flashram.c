@@ -24,6 +24,7 @@
 #include <stdlib.h>
 
 #include "memory.h"
+#include "flashram.h"
 
 #include "r4300/r4300.h"
 
