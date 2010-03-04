@@ -380,6 +380,10 @@ uninstall:
 clean:
 	$(RM) -rf $(TARGET) $(SONAME) ./_obj
 
+# build dependency files
+CFLAGS += -MD
+-include $(OBJECTS:.o=.d)
+
 # build rules
 $(TARGET): $(OBJECTS)
 	$(CXX) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
