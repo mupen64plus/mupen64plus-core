@@ -26,16 +26,16 @@
 #include "r4300/recomp.h"
 
 void init_cache(precomp_instr* start);
-void free_registers_move_start();
-void free_all_registers();
+void free_registers_move_start(void);
+void free_all_registers(void);
 void free_register(int reg);
-void flush_registers();
-void reload_registers();
-void stack_save_registers();
-void stack_load_registers();
+void flush_registers(void);
+void reload_registers(void);
+void stack_save_registers(void);
+void stack_load_registers(void);
 int is64(unsigned int *addr);
-int lru_register();
-int lru_base_register();
+int lru_register(void);
+int lru_base_register(void);
 void set_register_state(int reg, unsigned int *addr, int dirty, int is64bits);
 int lock_register(int reg);
 void unlock_register(int reg);
@@ -45,7 +45,7 @@ int allocate_register_32_w(unsigned int *addr);
 int allocate_register_64_w(unsigned long long *addr);
 void allocate_register_32_manually(int reg, unsigned int *addr);
 void allocate_register_32_manually_w(int reg, unsigned int *addr);
-void simplify_access();
+void simplify_access(void);
 void build_wrapper(precomp_instr*, unsigned char*, precomp_block*);
 void build_wrappers(precomp_instr*, int, int, precomp_block*);
 

@@ -31,10 +31,10 @@ extern int run;
 
 extern uint32 previousPC;
 
-void init_debugger();
+void init_debugger(void);
 void update_debugger(uint32 pc);
-void destroy_debugger();
-void debugger_step();
+void destroy_debugger(void);
+void debugger_step(void);
 
 #endif /* __DEBUGGER_H__ */
 

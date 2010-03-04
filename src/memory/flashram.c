@@ -66,13 +66,13 @@ void load_flashram_infos(char *buf)
     memcpy(&write_pointer, buf+20, 4);
 }
 
-void init_flashram()
+void init_flashram(void)
 {
     mode = NOPES_MODE;
     status = 0;
 }
 
-unsigned int flashram_status()
+unsigned int flashram_status(void)
 {
     return (unsigned int) (status >> 32);
 }
@@ -204,7 +204,7 @@ void flashram_command(unsigned int command)
       }
 }
 
-void dma_read_flashram()
+void dma_read_flashram(void)
 {
     unsigned int i;
     char *filename;
@@ -248,7 +248,7 @@ void dma_read_flashram()
       }
 }
 
-void dma_write_flashram()
+void dma_write_flashram(void)
 {
     switch(mode)
     {

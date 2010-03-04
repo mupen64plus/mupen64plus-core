@@ -42,7 +42,7 @@ static unsigned char mempack[4][0x8000];
 
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
-void print_pif()
+void print_pif(void)
 {
    int i;
    for (i=0; i<(64/8); i++)
@@ -145,7 +145,7 @@ void EepromCommand(unsigned char *Command)
      }
 }
 
-void format_mempacks()
+void format_mempacks(void)
 {
    unsigned char init[] =
      {
@@ -407,7 +407,7 @@ void internal_ControllerCommand(int Control, unsigned char *Command)
      }
 }
 
-void update_pif_write()
+void update_pif_write(void)
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF
@@ -481,7 +481,7 @@ void update_pif_write()
 #endif
 }
 
-void update_pif_read()
+void update_pif_read(void)
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF

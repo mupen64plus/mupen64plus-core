@@ -31,7 +31,7 @@
 
 typedef struct _precomp_instr
 {
-   void (*ops)();
+   void (*ops)(void);
    union
      {
     struct
@@ -88,11 +88,11 @@ typedef struct _precomp_block
 
 void recompile_block(int *source, precomp_block *block, unsigned int func);
 void init_block(int *source, precomp_block *block);
-void recompile_opcode();
+void recompile_opcode(void);
 void prefetch_opcode(unsigned int op);
-void dyna_jump();
-void dyna_start(void (*code)());
-void dyna_stop();
+void dyna_jump(void);
+void dyna_start(void (*code)(void));
+void dyna_stop(void);
 void *malloc_exec(size_t size);
 void *realloc_exec(void *ptr, size_t size, size_t newsize);
 

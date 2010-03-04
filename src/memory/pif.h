@@ -22,8 +22,8 @@
 #ifndef PIF_H
 #define PIF_H
 
-void update_pif_write();
-void update_pif_read();
+void update_pif_write(void);
+void update_pif_read(void);
 
 #endif
 

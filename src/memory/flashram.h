@@ -21,11 +21,11 @@
 
 extern int use_flashram;
 
-void init_flashram();
+void init_flashram(void);
 void flashram_command(unsigned int command);
-unsigned int flashram_status();
-void dma_read_flashram();
-void dma_write_flashram();
+unsigned int flashram_status(void);
+void dma_read_flashram(void);
+void dma_write_flashram(void);
 
 void save_flashram_infos(char *buf);
 void load_flashram_infos(char *buf);

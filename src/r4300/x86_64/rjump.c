@@ -32,7 +32,7 @@
 
 extern int dynarec_stack_initialized;  /* in gr4300.c */
 
-void dyna_jump()
+void dyna_jump(void)
 {
     if (stop == 1)
     {
@@ -159,7 +159,7 @@ void dyna_start(void (*code)())
     save_rip=0;
 }
 
-void dyna_stop()
+void dyna_stop(void)
 {
   if (save_rip == 0)
     DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");

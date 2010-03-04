@@ -22,12 +22,12 @@
 #ifndef DMA_H
 #define DMA_H
 
-void dma_pi_write();
-void dma_pi_read();
-void dma_si_write();
-void dma_si_read();
-void dma_sp_write();
-void dma_sp_read();
+void dma_pi_write(void);
+void dma_pi_read(void);
+void dma_si_write(void);
+void dma_si_read(void);
+void dma_sp_write(void);
+void dma_sp_read(void);
 
 #endif
 

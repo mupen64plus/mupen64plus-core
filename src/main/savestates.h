@@ -30,11 +30,11 @@
 
 extern int savestates_job;
 
-void savestates_save();
-void savestates_load();
-int savestates_save_pj64();
-void savestates_load_pj64();
-char* savestates_get_pj64_filename();
+void savestates_save(void);
+void savestates_load(void);
+int savestates_save_pj64(void);
+void savestates_load_pj64(void);
+char* savestates_get_pj64_filename(void);
 
 void savestates_select_slot(unsigned int s);
 unsigned int savestates_get_slot(void);
@@ -42,7 +42,7 @@ void savestates_set_autoinc_slot(int b);
 int savestates_get_autoinc_slot(void);
 void savestates_inc_slot(void);
 void savestates_select_filename(const char* fn);
-char* savestates_get_filename();
+char* savestates_get_filename(void);
 
 typedef struct _TLB_pj64
     {

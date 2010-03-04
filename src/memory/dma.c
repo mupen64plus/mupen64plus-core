@@ -42,7 +42,7 @@
 
 static unsigned char sram[0x8000];
 
-void dma_pi_read()
+void dma_pi_read(void)
 {
     unsigned int i;
    
@@ -107,7 +107,7 @@ void dma_pi_read()
     add_interupt_event(PI_INT, 0x1000/*pi_register.pi_rd_len_reg*/);
 }
 
-void dma_pi_write()
+void dma_pi_write(void)
 {
     unsigned int longueur;
     int i;
@@ -273,7 +273,7 @@ void dma_pi_write()
     return;
 }
     
-void dma_sp_write()
+void dma_sp_write(void)
 {
     unsigned int i;
     
@@ -295,7 +295,7 @@ void dma_sp_write()
     }
 }
 
-void dma_sp_read()
+void dma_sp_read(void)
 {
     unsigned int i;
     
@@ -317,7 +317,7 @@ void dma_sp_read()
     }
 }
 
-void dma_si_write()
+void dma_si_write(void)
 {
     int i;
     
@@ -337,7 +337,7 @@ void dma_si_write()
     add_interupt_event(SI_INT, /*0x100*/0x900);
 }
 
-void dma_si_read()
+void dma_si_read(void)
 {
     int i;
     

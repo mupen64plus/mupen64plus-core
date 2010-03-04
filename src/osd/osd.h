@@ -85,7 +85,7 @@ extern "C" {
 
 void osd_init(int width, int height);
 void osd_exit(void);
-void osd_render();
+void osd_render(void);
 osd_message_t * osd_new_message(enum osd_corner, const char *, ...);
 void osd_update_message(osd_message_t *, const char *, ...);
 void osd_delete_message(osd_message_t *);

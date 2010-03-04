@@ -75,7 +75,7 @@ void (*code)();
        if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED) \
      invalid_code[address>>12] = 1;
 
-void NI()
+void NI(void)
 {
    DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", (int)PC->addr);
    if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
@@ -85,7 +85,7 @@ void NI()
    stop=1;
 }
 
-void RESERVED()
+void RESERVED(void)
 {
    if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
      DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
@@ -94,7 +94,7 @@ void RESERVED()
    stop=1;
 }
 
-void FIN_BLOCK()
+void FIN_BLOCK(void)
 {
    if (!delay_slot)
      {
@@ -131,7 +131,7 @@ Used by dynarec only, check should be unnecessary
      }
 }
 
-void J()
+void J(void)
 {
    PC++;
    delay_slot=1;
@@ -148,7 +148,7 @@ void J()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void J_OUT()
+void J_OUT(void)
 {
    jump_target = (PC->addr & 0xF0000000) | (PC->f.j.inst_index<<2);
    PC++;
@@ -165,7 +165,7 @@ void J_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void J_IDLE()
+void J_IDLE(void)
 {
    int skip;
    update_count();
@@ -174,7 +174,7 @@ void J_IDLE()
    else J();
 }
 
-void JAL()
+void JAL(void)
 {
    PC++;
    delay_slot=1;
@@ -196,7 +196,7 @@ void JAL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void JAL_OUT()
+void JAL_OUT(void)
 {
    jump_target = (PC->addr & 0xF0000000) | (PC->f.j.inst_index<<2);
    PC++;
@@ -218,7 +218,7 @@ void JAL_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void JAL_IDLE()
+void JAL_IDLE(void)
 {
    int skip;
    update_count();
@@ -227,7 +227,7 @@ void JAL_IDLE()
    else JAL();
 }
 
-void BEQ()
+void BEQ(void)
 {
    local_rs = irs;
    local_rt = irt;
@@ -245,7 +245,7 @@ void BEQ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BEQ_OUT()
+void BEQ_OUT(void)
 {
    local_rs = irs;
    local_rt = irt;
@@ -264,7 +264,7 @@ void BEQ_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BEQ_IDLE()
+void BEQ_IDLE(void)
 {
    int skip;
    if (irs == irt)
@@ -277,7 +277,7 @@ void BEQ_IDLE()
    else BEQ();
 }
 
-void BNE()
+void BNE(void)
 {
    local_rs = irs;
    local_rt = irt;
@@ -295,7 +295,7 @@ void BNE()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BNE_OUT()
+void BNE_OUT(void)
 {
    local_rs = irs;
    local_rt = irt;
@@ -314,7 +314,7 @@ void BNE_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BNE_IDLE()
+void BNE_IDLE(void)
 {
    int skip;
    if (irs != irt)
@@ -327,7 +327,7 @@ void BNE_IDLE()
    else BNE();
 }
 
-void BLEZ()
+void BLEZ(void)
 {
    local_rs = irs;
    PC++;
@@ -344,7 +344,7 @@ void BLEZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BLEZ_OUT()
+void BLEZ_OUT(void)
 {
    local_rs = irs;
    jump_target = (int)PC->f.i.immediate;
@@ -362,7 +362,7 @@ void BLEZ_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BLEZ_IDLE()
+void BLEZ_IDLE(void)
 {
    int skip;
    if (irs <= irt)
@@ -375,7 +375,7 @@ void BLEZ_IDLE()
    else BLEZ();
 }
 
-void BGTZ()
+void BGTZ(void)
 {
    local_rs = irs;
    PC++;
@@ -392,7 +392,7 @@ void BGTZ()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BGTZ_OUT()
+void BGTZ_OUT(void)
 {
    local_rs = irs;
    jump_target = (int)PC->f.i.immediate;
@@ -410,7 +410,7 @@ void BGTZ_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BGTZ_IDLE()
+void BGTZ_IDLE(void)
 {
    int skip;
    if (irs > irt)
@@ -423,28 +423,28 @@ void BGTZ_IDLE()
    else BGTZ();
 }
 
-void ADDI()
+void ADDI(void)
 {
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    PC++;
 }
 
-void ADDIU()
+void ADDIU(void)
 {
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    PC++;
 }
 
-void SLTI()
+void SLTI(void)
 {
    if (irs < iimmediate) irt = 1;
    else irt = 0;
    PC++;
 }
 
-void SLTIU()
+void SLTIU(void)
 {
    if ((unsigned long long)irs < (unsigned long long)((long long)iimmediate))
      irt = 1;
@@ -452,32 +452,32 @@ void SLTIU()
    PC++;
 }
 
-void ANDI()
+void ANDI(void)
 {
    irt = irs & (unsigned short)iimmediate;
    PC++;
 }
 
-void ORI()
+void ORI(void)
 {
    irt = irs | (unsigned short)iimmediate;
    PC++;
 }
 
-void XORI()
+void XORI(void)
 {
    irt = irs ^ (unsigned short)iimmediate;
    PC++;
 }
 
-void LUI()
+void LUI(void)
 {
    irt32 = iimmediate << 16;
    sign_extended(irt);
    PC++;
 }
 
-void BEQL()
+void BEQL(void)
 {
    if (irs == irt)
      {
@@ -501,7 +501,7 @@ void BEQL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BEQL_OUT()
+void BEQL_OUT(void)
 {
    if (irs == irt)
      {
@@ -526,7 +526,7 @@ void BEQL_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BEQL_IDLE()
+void BEQL_IDLE(void)
 {
    int skip;
    if (irs == irt)
@@ -539,7 +539,7 @@ void BEQL_IDLE()
    else BEQL();
 }
 
-void BNEL()
+void BNEL(void)
 {
    if (irs != irt)
      {
@@ -563,7 +563,7 @@ void BNEL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BNEL_OUT()
+void BNEL_OUT(void)
 {
    if (irs != irt)
      {
@@ -588,7 +588,7 @@ void BNEL_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BNEL_IDLE()
+void BNEL_IDLE(void)
 {
    int skip;
    if (irs != irt)
@@ -601,7 +601,7 @@ void BNEL_IDLE()
    else BNEL();
 }
 
-void BLEZL()
+void BLEZL(void)
 {
    if (irs <= 0)
      {
@@ -625,7 +625,7 @@ void BLEZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BLEZL_OUT()
+void BLEZL_OUT(void)
 {
    if (irs <= 0)
      {
@@ -650,7 +650,7 @@ void BLEZL_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BLEZL_IDLE()
+void BLEZL_IDLE(void)
 {
    int skip;
    if (irs <= irt)
@@ -663,7 +663,7 @@ void BLEZL_IDLE()
    else BLEZL();
 }
 
-void BGTZL()
+void BGTZL(void)
 {
    if (irs > 0)
      {
@@ -687,7 +687,7 @@ void BGTZL()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BGTZL_OUT()
+void BGTZL_OUT(void)
 {
    if (irs > 0)
      {
@@ -712,7 +712,7 @@ void BGTZL_OUT()
    if (next_interupt <= Count) gen_interupt();
 }
 
-void BGTZL_IDLE()
+void BGTZL_IDLE(void)
 {
    int skip;
    if (irs > irt)
@@ -725,19 +725,19 @@ void BGTZL_IDLE()
    else BGTZL();
 }
 
-void DADDI()
+void DADDI(void)
 {
    irt = irs + iimmediate;
    PC++;
 }
 
-void DADDIU()
+void DADDIU(void)
 {
    irt = irs + iimmediate;
    PC++;
 }
 
-void LDL()
+void LDL(void)
 {
    unsigned long long int word = 0;
    PC++;
@@ -800,7 +800,7 @@ void LDL()
      }
 }
 
-void LDR()
+void LDR(void)
 {
    unsigned long long int word = 0;
    PC++;
@@ -863,7 +863,7 @@ void LDR()
      }
 }
 
-void LB()
+void LB(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -873,7 +873,7 @@ void LB()
      sign_extendedb(lsrt);
 }
 
-void LH()
+void LH(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -883,7 +883,7 @@ void LH()
      sign_extendedh(lsrt);
 }
 
-void LWL()
+void LWL(void)
 {
    unsigned long long int word = 0;
    PC++;
@@ -920,7 +920,7 @@ void LWL()
      sign_extended(lsrt);
 }
 
-void LW()
+void LW(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -930,7 +930,7 @@ void LW()
      sign_extended(lsrt);
 }
 
-void LBU()
+void LBU(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -938,7 +938,7 @@ void LBU()
    read_byte_in_memory();
 }
 
-void LHU()
+void LHU(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -946,7 +946,7 @@ void LHU()
    read_hword_in_memory();
 }
 
-void LWR()
+void LWR(void)
 {
    unsigned long long int word = 0;
    PC++;
@@ -982,7 +982,7 @@ void LWR()
      }
 }
 
-void LWU()
+void LWU(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -990,7 +990,7 @@ void LWU()
    read_word_in_memory();
 }
 
-void SB()
+void SB(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -999,7 +999,7 @@ void SB()
    check_memory();
 }
 
-void SH()
+void SH(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -1008,7 +1008,7 @@ void SH()
    check_memory();
 }
 
-void SWL()
+void SWL(void)
 {
    unsigned long long int old_word = 0;
    PC++;
@@ -1051,7 +1051,7 @@ void SWL()
      }
 }
 
-void SW()
+void SW(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -1060,7 +1060,7 @@ void SW()
    check_memory();
 }
 
-void SDL()
+void SDL(void)
 {
    unsigned long long int old_word = 0;
    PC++;
@@ -1152,7 +1152,7 @@ void SDL()
      }
 }
 
-void SDR()
+void SDR(void)
 {
    unsigned long long int old_word = 0;
    PC++;
@@ -1244,7 +1244,7 @@ void SDR()
      }
 }
 
-void SWR()
+void SWR(void)
 {
    unsigned long long int old_word = 0;
    PC++;
@@ -1292,12 +1292,12 @@ void SWR()
      }
 }
 
-void CACHE()
+void CACHE(void)
 {
    PC++;
 }
 
-void LL()
+void LL(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -1310,7 +1310,7 @@ void LL()
      }
 }
 
-void LWC1()
+void LWC1(void)
 {  
    unsigned long long int temp;
    if (check_cop1_unusable()) return;
@@ -1322,7 +1322,7 @@ void LWC1()
      *((int*)reg_cop1_simple[lslfft]) = (int) *rdword;
 }
 
-void LDC1()
+void LDC1(void)
 {
    if (check_cop1_unusable()) return;
    PC++;
@@ -1331,7 +1331,7 @@ void LDC1()
    read_dword_in_memory();
 }
 
-void LD()
+void LD(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -1339,7 +1339,7 @@ void LD()
    read_dword_in_memory();
 }
 
-void SC()
+void SC(void)
 {
    PC++;
    if(llbit)
@@ -1357,7 +1357,7 @@ void SC()
      }
 }
 
-void SWC1()
+void SWC1(void)
 {
    if (check_cop1_unusable()) return;
    PC++;
@@ -1367,7 +1367,7 @@ void SWC1()
    check_memory();
 }
 
-void SDC1()
+void SDC1(void)
 {
    if (check_cop1_unusable()) return;
    PC++;
@@ -1377,7 +1377,7 @@ void SDC1()
    check_memory();
 }
 
-void SD()
+void SD(void)
 {
    PC++;
    address = (unsigned int) lsaddr;
@@ -1386,7 +1386,7 @@ void SD()
    check_memory();
 }
 
-void NOTCOMPILED()
+void NOTCOMPILED(void)
 {
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
@@ -1425,7 +1425,7 @@ called before NOTCOMPILED would have been executed
      dyna_jump();
 }
 
-void NOTCOMPILED2()
+void NOTCOMPILED2(void)
 {
    NOTCOMPILED();
 }
@@ -1462,7 +1462,7 @@ static unsigned int update_invalid_addr(unsigned int addr)
 
 #define addr jump_to_address
 unsigned int jump_to_address;
-void jump_to_func()
+void jump_to_func(void)
 {
    unsigned int paddr;
    if (skip_jump) return;
@@ -1575,7 +1575,7 @@ void set_fpr_pointers(int newStatus)
     }
 }
 
-int check_cop1_unusable()
+int check_cop1_unusable(void)
 {
    if (!(Status & 0x20000000))
      {
@@ -1586,7 +1586,7 @@ int check_cop1_unusable()
    return 0;
 }
 
-void update_count()
+void update_count(void)
 {
    if (r4300emu == CORE_PURE_INTERPRETER)
      {
@@ -1612,7 +1612,7 @@ void update_count()
 */
 }
 
-void init_blocks()
+void init_blocks(void)
 {
    int i;
    for (i=0; i<0x100000; i++)
@@ -1638,7 +1638,7 @@ void init_blocks()
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */
-void r4300_reset_hard()
+void r4300_reset_hard(void)
 {
     unsigned int i;
 
@@ -1700,7 +1700,7 @@ void r4300_reset_hard()
 }
 
 /* this soft reset function simulates the actions of the PIF ROM, which may vary by region */
-void r4300_reset_soft()
+void r4300_reset_soft(void)
 {
     long long CRC = 0;
     unsigned int i;
@@ -1861,7 +1861,7 @@ void r4300_reset_soft()
 
 }
 
-void r4300_execute()
+void r4300_execute(void)
 {
     unsigned int i;
 

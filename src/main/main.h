@@ -35,8 +35,8 @@ extern m64p_frame_callback g_FrameCallback;
 
 char* get_savespath(void);
 
-void new_frame();
-void new_vi();
+void new_frame(void);
+void new_vi(void);
 
 void main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);

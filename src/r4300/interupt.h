@@ -19,22 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void compare_interupt();
-void gen_dp();
-void init_interupt();
+void compare_interupt(void);
+void gen_dp(void);
+void init_interupt(void);
 
 extern int vi_field;
 extern unsigned int next_vi;
 
-void gen_interupt();
-void check_interupt();
+void gen_interupt(void);
+void check_interupt(void);
 
 void translate_event_queue(unsigned int base);
 void remove_event(int type);
 void add_interupt_event_count(int type, unsigned int count);
 void add_interupt_event(int type, unsigned int delay);
 unsigned int get_event(int type);
-int get_next_event_type();
+int get_next_event_type(void);
 
 int save_eventqueue_infos(char *buf);
 void load_eventqueue_infos(char *buf);

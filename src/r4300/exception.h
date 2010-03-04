@@ -22,13 +22,13 @@
 #ifndef EXCEPTION_H
 #define EXCEPTION_H
 
-void address_error_exception();
-void TLB_invalid_exception();
+void address_error_exception(void);
+void TLB_invalid_exception(void);
 void TLB_refill_exception(unsigned int addresse, int w);
-void TLB_mod_exception();
-void integer_overflow_exception();
-void coprocessor_unusable_exception();
-void exception_general();
+void TLB_mod_exception(void);
+void integer_overflow_exception(void);
+void coprocessor_unusable_exception(void);
+void exception_general(void);
 
 #endif //EXCEPTION_H
 

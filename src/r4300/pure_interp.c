@@ -47,7 +47,7 @@ unsigned int interp_addr;
 unsigned int op;
 static int skip;
 
-void prefetch();
+void prefetch(void);
 
 extern void (*interp_ops[64])(void);
 

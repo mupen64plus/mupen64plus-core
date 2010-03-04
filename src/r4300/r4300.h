@@ -50,15 +50,15 @@ extern char invalid_code[0x100000];
 extern unsigned int jump_to_address;
 extern int no_compiled_jump;
 
-void init_blocks();
-void r4300_reset_hard();
-void r4300_reset_soft();
-void r4300_execute();
-void pure_interpreter();
-void compare_core();
-void jump_to_func();
-void update_count();
-int check_cop1_unusable();
+void init_blocks(void);
+void r4300_reset_hard(void);
+void r4300_reset_soft(void);
+void r4300_execute(void);
+void pure_interpreter(void);
+void compare_core(void);
+void jump_to_func(void);
+void update_count(void);
+int check_cop1_unusable(void);
 void shuffle_fpr_data(int oldStatus, int newStatus);
 void set_fpr_pointers(int newStatus);
 
@@ -79,7 +79,7 @@ void set_fpr_pointers(int newStatus);
 #ifdef PROFILE
   void start_section(int section_type);
   void end_section(int section_type);
-  void refresh_stat();
+  void refresh_stat(void);
 #else
   #define start_section(a)
   #define end_section(a)
