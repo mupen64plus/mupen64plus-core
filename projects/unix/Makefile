@@ -227,6 +227,9 @@ endif
 SRCDIR = ../../src
 OBJDIR = _obj
 
+# only export api symbols
+LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+
 # list of required source files for compilation
 SOURCE = \
 	$(SRCDIR)/api/callbacks.c \
