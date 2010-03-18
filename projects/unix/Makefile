@@ -384,6 +384,8 @@ clean:
 CFLAGS += -MD
 -include $(OBJECTS:.o=.d)
 
+CXXFLAGS += $(CFLAGS)
+
 # build rules
 $(TARGET): $(OBJECTS)
 	$(CXX) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
@@ -391,9 +393,7 @@ $(TARGET): $(OBJECTS)
 	if [ "$(SONAME)" != "" ]; then ln -sf $@ $(SONAME); fi
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) -o $@ $(CFLAGS) -c $<
+	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(CC) -o $@ $(CFLAGS) -c $<
-
-
