@@ -36,8 +36,8 @@ endif
 ifeq ("$(UNAME)","FreeBSD")
   OS = FREEBSD
 endif
-ifeq ("$(UNAME)","GNU/kFreeBSD")
-  OS = FREEBSD
+ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
+  OS = LINUX
 endif
 ifeq ("$(OS)","NONE")
   $(error OS type "$(UNAME)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
