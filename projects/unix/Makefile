@@ -104,6 +104,8 @@ ifeq ($(OS), LINUX)
   SONAME = libmupen64plus.so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LIBS += -L/usr/X11R6/lib -lGL -lGLU
+  # only export api symbols
+  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
       CFLAGS += -pipe -O3 -march=athlon64
@@ -226,9 +228,6 @@ endif
 
 SRCDIR = ../../src
 OBJDIR = _obj
-
-# only export api symbols
-LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 
 # list of required source files for compilation
 SOURCE = \
