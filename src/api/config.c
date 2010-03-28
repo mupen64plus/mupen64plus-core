@@ -317,7 +317,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         }
         else
         {
-            DebugMessage(M64MSG_WARNING, "Invalid config file parameter: %s=%s", varname, varvalue);
+            /* assume that it's a string */
+            ConfigSetDefaultString((m64p_handle) current_section, varname, varvalue, lastcomment);
         }
         lastcomment = NULL;
         line = nextline;
