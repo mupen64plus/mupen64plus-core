@@ -62,7 +62,7 @@ static long save_eip ASM_NAME("save_eip") = 0;
 #pragma warning(disable:4731) /* frame pointer register 'ebp' modified by inline assembly code */
 #endif
 
-void dyna_start(void (*code)())
+void dyna_start(void (*code)(void))
 {
   /* save the base and stack pointers */
   /* make a call and a pop to retrieve the instruction pointer and save it too */
