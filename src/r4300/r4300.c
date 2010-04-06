@@ -1940,8 +1940,8 @@ void r4300_execute(void)
     {
         if (blocks[i])
         {
-            if (blocks[i]->block) { free(blocks[i]->block); blocks[i]->block = NULL; }
-            if (blocks[i]->code) { free(blocks[i]->code); blocks[i]->code = NULL; }
+            if (blocks[i]->block) { free_exec(blocks[i]->block); blocks[i]->block = NULL; }
+            if (blocks[i]->code) { free_exec(blocks[i]->code); blocks[i]->code = NULL; }
             if (blocks[i]->jumps_table) { free(blocks[i]->jumps_table); blocks[i]->jumps_table = NULL; }
             if (blocks[i]->riprel_table) { free(blocks[i]->riprel_table); blocks[i]->riprel_table = NULL; }
             free(blocks[i]);

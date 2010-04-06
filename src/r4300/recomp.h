@@ -95,6 +95,7 @@ void dyna_start(void (*code)(void));
 void dyna_stop(void);
 void *malloc_exec(size_t size);
 void *realloc_exec(void *ptr, size_t size, size_t newsize);
+void free_exec(void *ptr);
 
 extern precomp_instr *dst; /* precomp_instr structure for instruction being recompiled */
 

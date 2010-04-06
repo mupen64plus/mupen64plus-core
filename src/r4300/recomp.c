@@ -2591,7 +2591,9 @@ void prefetch_opcode(unsigned int op)
  **********************************************************************/
 void *malloc_exec(size_t size)
 {
-#if defined(__GNUC__)
+#if defined(WIN32)
+	return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#elif defined(__GNUC__)
    int pagesize = sysconf(_SC_PAGE_SIZE);
    if (pagesize == -1)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
@@ -2625,8 +2627,18 @@ void *realloc_exec(void *ptr, size_t size, size_t newsize)
          copysize = newsize;
       memcpy(block, ptr, copysize);
    }
-   free(ptr);
+   free_exec(ptr);
    return block;
 }
 
-
+/**********************************************************************
+ **************** frees memory with executable bit set ****************
+ **********************************************************************/
+void free_exec(void *ptr)
+{
+#if defined(WIN32)
+	VirtualFree(ptr, 0, MEM_RELEASE);
+#else
+	free(ptr);
+#endif
+}
