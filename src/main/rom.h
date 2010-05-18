@@ -54,6 +54,8 @@ typedef struct _rom_header
    unsigned int Boot_Code[1008];            /* 0x40 */
 } rom_header;
 
+unsigned char isGoldeneyeRom;
+
 extern rom_header* ROM_HEADER;
 
 typedef struct _rom_settings

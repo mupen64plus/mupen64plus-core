@@ -195,6 +195,11 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER->PC));
     DebugMessage(M64MSG_VERBOSE, "EEPROM type: %d", ROM_SETTINGS.eeprom_16kb);
 
+    //Prepare Hack for GOLDENEYE
+    isGoldeneyeRom = 0;
+    if(strncmp((char *) ROM_HEADER->nom, "GOLDENEYE",9) == 0)
+       isGoldeneyeRom = 1;
+
     return M64ERR_SUCCESS;
 }
 
