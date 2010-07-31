@@ -25,6 +25,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "m64p_types.h"
 #include "callbacks.h"
@@ -171,8 +172,8 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             if (ParamPtr == NULL)
                 return M64ERR_INPUT_ASSERT;
-            if (sizeof(rom_settings) < ParamInt)
-                ParamInt = sizeof(rom_settings);
+            if (sizeof(m64p_rom_settings) < ParamInt)
+                ParamInt = sizeof(m64p_rom_settings);
             memcpy(ParamPtr, &ROM_SETTINGS, ParamInt);
             return M64ERR_SUCCESS;
         case M64CMD_EXECUTE:
@@ -288,5 +289,34 @@ EXPORT m64p_error CALL CoreCheatEnabled(const char *CheatName, int Enabled)
     return M64ERR_INPUT_INVALID;
 }
 
+EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int RomSettingsLength, int Crc1, int Crc2)
+{
+    romdatabase_entry* entry;
+    int i;
+
+    if (!l_CoreInit)
+        return M64ERR_NOT_INIT;
+    if (RomSettings == NULL)
+        return M64ERR_INPUT_ASSERT;
+    if (RomSettingsLength < sizeof(m64p_rom_settings))
+        return M64ERR_INPUT_INVALID;
+
+    /* Look up this ROM in the .ini file and fill in goodname, etc */
+    entry = ini_search_by_crc(Crc1, Crc2);
+    if (entry == &empty_entry)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    strncpy(RomSettings->goodname, entry->goodname, 255);
+    RomSettings->goodname[255] = '\0';
+    for (i = 0; i < 16; i++)
+        sprintf(RomSettings->MD5 + i*2, "%02X", entry->md5[i]);
+    RomSettings->MD5[32] = '\0';
+    RomSettings->savetype = entry->savetype;
+    RomSettings->status = entry->status;
+    RomSettings->players = entry->players;
+    RomSettings->rumble = entry->rumble;
+
+    return M64ERR_SUCCESS;
+}
 
 

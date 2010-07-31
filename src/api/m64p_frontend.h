@@ -86,5 +86,12 @@ typedef m64p_error (*ptr_CoreAddCheat)(const char *, m64p_cheat_code *, int);
  */
 typedef m64p_error (*ptr_CoreCheatEnabled)(const char *, int);
 
+/* CoreGetRomSettings()
+ *
+ * This function will retrieve the ROM settings from the mupen64plus INI file for
+ * the ROM image corresponding to the given CRC values.
+ */
+typedef m64p_error (*ptr_CoreGetRomSettings)(m64p_rom_settings *, int, int, int);
+
 #endif /* #define M64P_FRONTEND_H */
 

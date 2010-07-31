@@ -56,15 +56,8 @@ typedef struct _rom_header
 
 unsigned char isGoldeneyeRom;
 
-extern rom_header* ROM_HEADER;
-
-typedef struct _rom_settings
-{
-   char goodname[256];
-   int eeprom_16kb;
-   char MD5[33];
-} rom_settings;
-extern rom_settings ROM_SETTINGS;
+extern rom_header*       ROM_HEADER;
+extern m64p_rom_settings ROM_SETTINGS;
 
 /* Supported rom compressiontypes. */
 enum 

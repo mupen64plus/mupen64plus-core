@@ -66,14 +66,14 @@ static void EepromCommand(unsigned char *Command)
          if ((Command[1] & 3) > 0)
            Command[3] = 0;
          if ((Command[1] & 3) > 1)
-           Command[4] = ROM_SETTINGS.eeprom_16kb == 0 ? 0x80 : 0xc0;
+           Command[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
          if ((Command[1] & 3) > 2)
            Command[5] = 0;
       }
     else
       {
          Command[3] = 0;
-         Command[4] = ROM_SETTINGS.eeprom_16kb == 0 ? 0x80 : 0xc0;
+         Command[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
          Command[5] = 0;
       }
     break;
