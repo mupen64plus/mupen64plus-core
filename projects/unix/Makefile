@@ -163,10 +163,11 @@ CC       ?= gcc
 CXX      ?= g++
 RM       ?= rm
 INSTALL  ?= install
-LDCONFIG ?= ldconfig
 ifeq ($(OS),OSX)
+  LDCONFIG ?= true  # no 'ldconfig' under OSX
   STRIP	?= strip -x 
 else
+  LDCONFIG ?= ldconfig
   STRIP	?= strip -s
 endif
 
