@@ -81,7 +81,8 @@ typedef enum {
   M64ERR_INVALID_STATE,   /* Current program state does not allow operation */
   M64ERR_PLUGIN_FAIL,     /* A plugin function returned a fatal error */
   M64ERR_SYSTEM_FAIL,     /* A system function call, such as an SDL or file operation, failed */
-  M64ERR_UNSUPPORTED      /* Function call is not supported (ie, core not built with debugger) */
+  M64ERR_UNSUPPORTED,     /* Function call is not supported (ie, core not built with debugger) */
+  M64ERR_WRONG_TYPE       /* A given input type parameter cannot be used for desired operation */
 } m64p_error;
 
 typedef enum {

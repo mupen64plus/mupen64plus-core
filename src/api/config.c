@@ -679,20 +679,25 @@ EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const
     {
         case M64TYPE_INT:
             if (MaxSize < sizeof(int)) return M64ERR_INPUT_INVALID;
+            if (var->type != M64TYPE_INT && var->type != M64TYPE_FLOAT) return M64ERR_WRONG_TYPE;
             *((int *) ParamValue) = ConfigGetParamInt(ConfigSectionHandle, ParamName);
             break;
         case M64TYPE_FLOAT:
             if (MaxSize < sizeof(float)) return M64ERR_INPUT_INVALID;
+            if (var->type != M64TYPE_INT && var->type != M64TYPE_FLOAT) return M64ERR_WRONG_TYPE;
             *((float *) ParamValue) = ConfigGetParamFloat(ConfigSectionHandle, ParamName);
             break;
         case M64TYPE_BOOL:
             if (MaxSize < sizeof(int)) return M64ERR_INPUT_INVALID;
+            if (var->type != M64TYPE_BOOL && var->type != M64TYPE_INT) return M64ERR_WRONG_TYPE;
             *((int *) ParamValue) = ConfigGetParamBool(ConfigSectionHandle, ParamName);
             break;
         case M64TYPE_STRING:
         {
+            const char *string;
             if (MaxSize < 1) return M64ERR_INPUT_INVALID;
-            const char *string = ConfigGetParamString(ConfigSectionHandle, ParamName);
+            if (var->type != M64TYPE_STRING && var->type != M64TYPE_BOOL) return M64ERR_WRONG_TYPE;
+            string = ConfigGetParamString(ConfigSectionHandle, ParamName);
             strncpy((char *) ParamValue, string, MaxSize);
             *((char *) ParamValue + MaxSize - 1) = 0;
             break;
