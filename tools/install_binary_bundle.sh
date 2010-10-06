@@ -89,5 +89,5 @@ $INSTALL -m 0644 mupen64plus-video-rice.so "${PLUGINDIR}"
 $INSTALL -m 0644 RiceVideoLinux.ini "${SHAREDIR}"
 $INSTALL -m 0644 InputAutoCfg.ini "${SHAREDIR}"
 
-printf "Done.\n"
+printf "Installation successful.\n"
 
