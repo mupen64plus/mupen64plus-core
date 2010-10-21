@@ -73,7 +73,9 @@ static const char *ErrorMessages[] = {
                    "INTERNAL: logical inconsistency in program code.  Probably a bug.",
                    "INVALID_STATE: An operation was requested which is not allowed in the current state",
                    "PLUGIN_FAIL: A plugin function returned a fatal error",
-                   "SYSTEM_FAIL: A system function call, such as an SDL or file operation, failed"};
+                   "SYSTEM_FAIL: A system function call, such as an SDL or file operation, failed",
+                   "UNSUPPORTED: Function call is not supported (ie, core not built with debugger)",
+                   "WRONG_TYPE: A given input type parameter cannot be used for desired operation" };
 
 EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {

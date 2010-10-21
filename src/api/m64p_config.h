@@ -33,7 +33,7 @@
  * This function is called to enumerate the list of Sections in the Mupen64Plus
  * configuration file. It is expected that there will be a section named "Core"
  * for core-specific configuration data, "Graphics" for common graphics options,
- * and one section for each plugin library. 
+ * and one or more sections for each plugin library. 
  */
 typedef m64p_error (*ptr_ConfigListSections)(void *, void (*)(void *, const char *));
 
