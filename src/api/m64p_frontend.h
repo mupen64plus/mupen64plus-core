@@ -28,12 +28,17 @@
 
 #include "m64p_types.h"
 
+
+/* pointer types to the callback functions in the front-end application */
+typedef void (*ptr_DebugCallback)(void *Context, int level, const char *message);
+typedef void (*ptr_StateCallback)(void *Context, m64p_core_param param_type, int new_value);
+
 /* CoreStartup()
  *
  * This function initializes libmupen64plus for use by allocating memory,
  * creating data structures, and loading the configuration file.
  */
-typedef m64p_error (*ptr_CoreStartup)(int, const char *, const char *, void *, void (*)(void *, int, const char *), void *, void (*)(void *, m64p_core_param, int));
+typedef m64p_error (*ptr_CoreStartup)(int, const char *, const char *, void *, ptr_DebugCallback, void *, ptr_StateCallback);
 
 /* CoreShutdown()
  *
