@@ -155,6 +155,13 @@ void savestates_save()
     f = gzopen(file, "wb");
     free(file);
 
+    if (f==NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filename);
+        free(filename);
+        return;
+    }
+
     /* Write magic number. */
     gzwrite(f, savestate_magic, 8);
 
@@ -256,11 +263,11 @@ void savestates_load()
     free(file);
 
     if(f==NULL)
-        {
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filename);
         free(filename);
         return;
-        }
+    }
 
     /* Read and check Mupen64Plus magic number. */
     gzread(f, buffer, 8);

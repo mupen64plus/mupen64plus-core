@@ -88,9 +88,8 @@ char *get_savespath()
     snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
     path[1023] = 0;
 
-    /* make sure the directory exists */
-    if (osal_mkdirp(path, 0700) != 0)
-        return NULL;
+    /* create directory if it doesn't exist */
+    osal_mkdirp(path, 0700);
 
     return path;
 }
