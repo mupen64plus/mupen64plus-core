@@ -200,7 +200,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     fPtr = fopen(filepath, "rb");
     if (fPtr == NULL)
     {
-        DebugMessage(M64MSG_WARNING, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
+        DebugMessage(M64MSG_INFO, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
         free(filepath);
         l_SaveConfigOnExit = 1; /* auto-save the config file so that the defaults will be saved to disk */
         return M64ERR_SUCCESS;
