@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "memory.h"
 #include "pif.h"
@@ -53,9 +54,17 @@ void print_pif(void)
 }
 #endif
 
+static inline unsigned char byte2bcd(int n)
+{
+	n %= 100;
+	return ((n / 10) << 4) | (n % 10);
+}
+
 static void EepromCommand(unsigned char *Command)
 {
     static int EepromFileWarningSent = 0;
+    time_t curtime_time;
+    struct tm curtime;
 
    switch (Command[2])
      {
@@ -139,6 +148,42 @@ static void EepromCommand(unsigned char *Command)
          }
          free(filename);
       }
+    break;
+      case 6:
+	      // RTCstatus query
+	      Command[3] = 0x00;
+	      Command[4] = 0x10;
+	      Command[5] = 0x00;
+	      break;
+      case 7:
+	      // read RTC block
+	      switch (Command[3]) {	// block number
+		      case 0:
+			      Command[4] = 0x00;
+			      Command[5] = 0x02;
+			      Command[12] = 0x00;
+			      break;
+		      case 1:
+			      DebugMessage(M64MSG_ERROR, "RTC command in EepromCommand(): read block %d", Command[2]);
+			      break;
+		      case 2:
+			      time(&curtime_time);
+			      localtime_r(&curtime_time, &curtime);
+			      Command[4] = byte2bcd(curtime.tm_sec);
+			      Command[5] = byte2bcd(curtime.tm_min);
+			      Command[6] = 0x80 + byte2bcd(curtime.tm_hour);
+			      Command[7] = byte2bcd(curtime.tm_mday);
+			      Command[8] = byte2bcd(curtime.tm_wday);
+			      Command[9] = byte2bcd(curtime.tm_mon + 1);
+			      Command[10] = byte2bcd(curtime.tm_year);
+			      Command[11] = byte2bcd(curtime.tm_year / 100);
+			      Command[12] = 0x00;	// status
+			      break;
+	      }
+	      break;
+      case 8:
+	      // write RTC block
+	      DebugMessage(M64MSG_ERROR, "RTC write in EepromCommand(): %d not yet implemented", Command[2]);
     break;
       default:
     DebugMessage(M64MSG_ERROR, "unknown command in EepromCommand(): %x", Command[2]);
