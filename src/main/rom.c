@@ -95,7 +95,7 @@ static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int load
         for (i = 0; i < loadlength; i+=4)
             {
             temp=localrom[i];
-            localrom[i]=localrom[1+3];
+            localrom[i]=localrom[i+3];
             localrom[i+3]=temp;
             temp=localrom[i+1];
             localrom[i+1]=localrom[i+2];
