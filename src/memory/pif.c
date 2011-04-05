@@ -54,7 +54,7 @@ void print_pif(void)
 }
 #endif
 
-static inline unsigned char byte2bcd(int n)
+static unsigned char byte2bcd(int n)
 {
 	n %= 100;
 	return ((n / 10) << 4) | (n % 10);
@@ -168,7 +168,11 @@ static void EepromCommand(unsigned char *Command)
 			      break;
 		      case 2:
 			      time(&curtime_time);
+#if defined(WIN32)
+			      localtime_s(&curtime, &curtime_time);
+#else
 			      localtime_r(&curtime_time, &curtime);
+#endif
 			      Command[4] = byte2bcd(curtime.tm_sec);
 			      Command[5] = byte2bcd(curtime.tm_min);
 			      Command[6] = 0x80 + byte2bcd(curtime.tm_hour);
