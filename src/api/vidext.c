@@ -287,9 +287,7 @@ typedef struct {
     SDL_GLattr sdlAttr;
 } GLAttrMapNode;
 
-EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
-{
-    GLAttrMapNode GLAttrMap[] = {
+static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_DOUBLEBUFFER, SDL_GL_DOUBLEBUFFER },
         { M64P_GL_BUFFER_SIZE,  SDL_GL_BUFFER_SIZE },
         { M64P_GL_DEPTH_SIZE,   SDL_GL_DEPTH_SIZE },
@@ -300,7 +298,10 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
         { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
         { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
         { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }};
-    const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
+const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
+
+EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
+{
     int i;
 
     /* call video extension override if necessary */
@@ -316,8 +317,33 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
         {
             if (SDL_GL_SetAttribute(GLAttrMap[i].sdlAttr, Value) != 0)
                 return M64ERR_SYSTEM_FAIL;
-            else
-                return M64ERR_SUCCESS;
+            return M64ERR_SUCCESS;
+        }
+    }
+
+    return M64ERR_INPUT_INVALID;
+}
+
+EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
+{
+    int i;
+
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncGLGetAttr)(Attr, pValue);
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO))
+        return M64ERR_NOT_INIT;
+
+    for (i = 0; i < mapSize; i++)
+    {
+        if (GLAttrMap[i].m64Attr == Attr)
+        {
+            int NewValue = 0;
+            if (SDL_GL_GetAttribute(GLAttrMap[i].sdlAttr, &NewValue) != 0)
+                return M64ERR_SYSTEM_FAIL;
+            *pValue = NewValue;
+            return M64ERR_SUCCESS;
         }
     }
 

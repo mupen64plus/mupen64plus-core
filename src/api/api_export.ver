@@ -53,6 +53,7 @@ DebugStep;
 PluginGetVersion;
 VidExt_GL_GetProcAddress;
 VidExt_GL_SetAttribute;
+VidExt_GL_GetAttribute;
 VidExt_GL_SwapBuffers;
 VidExt_Init;
 VidExt_ListFullscreenModes;

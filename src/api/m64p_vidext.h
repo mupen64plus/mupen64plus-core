@@ -89,6 +89,13 @@ typedef void * (*ptr_VidExt_GL_GetProcAddress)(const char *);
  */
 typedef m64p_error (*ptr_VidExt_GL_SetAttribute)(m64p_GLattr, int);
 
+/* VidExt_GL_GetAttribute()
+ *
+ * This function is used to get the value of OpenGL attributes.  These values may 
+ * be changed when calling VidExt_SetVideoMode.
+ */
+typedef m64p_error (*ptr_VidExt_GL_GetAttribute)(m64p_GLattr, int *);
+
 /* VidExt_GL_SwapBuffers()
  *
  * This function is used to swap the front/back buffers after rendering an
