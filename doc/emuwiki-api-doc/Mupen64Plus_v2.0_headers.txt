@@ -166,6 +166,7 @@
    m64p_error (*VidExtFuncSetMode)(int, int, int, int),
    void *     (*VidExtFuncGLGetProc)(const char*),
    m64p_error (*VidExtFuncGLSetAttr)(m64p_GLattr, int),
+   m64p_error (*VidExtFuncGLGetAttr)(m64p_GLattr, int),
    m64p_error (*VidExtFuncGLSwapBuf)(void),
    m64p_error (*VidExtFuncSetCaption)(const char *),
    m64p_error (*VidExtFuncToggleFS)(void)

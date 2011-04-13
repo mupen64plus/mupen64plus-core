@@ -31,7 +31,7 @@
 #include "callbacks.h"
 
 /* local variables */
-static m64p_video_extension_functions l_ExternalVideoFuncTable = {9, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static m64p_video_extension_functions l_ExternalVideoFuncTable = {10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
 static int l_VideoOutputActive = 0;
 static int l_Fullscreen = 0;
@@ -43,7 +43,7 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
     /* check input data */
     if (VideoFunctionStruct == NULL)
         return M64ERR_INPUT_ASSERT;
-    if (VideoFunctionStruct->Functions < 9)
+    if (VideoFunctionStruct->Functions < 10)
         return M64ERR_INPUT_INVALID;
 
     /* disable video extension if any of the function pointers are NULL */
@@ -53,12 +53,13 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
         VideoFunctionStruct->VidExtFuncSetMode == NULL ||
         VideoFunctionStruct->VidExtFuncGLGetProc == NULL ||
         VideoFunctionStruct->VidExtFuncGLSetAttr == NULL ||
+        VideoFunctionStruct->VidExtFuncGLGetAttr == NULL ||
         VideoFunctionStruct->VidExtFuncGLSwapBuf == NULL ||
         VideoFunctionStruct->VidExtFuncSetCaption == NULL ||
         VideoFunctionStruct->VidExtFuncToggleFS == NULL)
     {
-        l_ExternalVideoFuncTable.Functions = 9;
-        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 9 * sizeof(void *));
+        l_ExternalVideoFuncTable.Functions = 10;
+        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 10 * sizeof(void *));
         l_VideoExtensionActive = 0;
         return M64ERR_SUCCESS;
     }
