@@ -25,6 +25,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/vidext.h"
 #include "memory/memory.h"
 #include "main/rom.h"
 #include "main/main.h"
@@ -380,7 +381,7 @@ void gen_interupt()
             if(rompause)
             {
                 osd_render();  // draw Paused message in case updateScreen didn't do it
-                SDL_GL_SwapBuffers();
+                VidExt_GL_SwapBuffers();
                 while(rompause)
                 {
                     SDL_Delay(10);
