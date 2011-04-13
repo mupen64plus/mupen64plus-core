@@ -273,12 +273,12 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
 
 EXPORT void * CALL VidExt_GL_GetProcAddress(const char* Proc)
 {
-    if (!SDL_WasInit(SDL_INIT_VIDEO))
-        return NULL;
-
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetProc)(Proc);
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO))
+        return NULL;
 
     return SDL_GL_GetProcAddress(Proc);
 }
