@@ -26,6 +26,7 @@ CoreCheatEnabled;
 CoreDetachPlugin;
 CoreDoCommand;
 CoreErrorMessage;
+CoreGetAPIVersions;
 CoreGetRomSettings;
 CoreOverrideVidExt;
 CoreShutdown;

@@ -23,8 +23,6 @@
 #if !defined(M64P_PLUGIN_H)
 #define M64P_PLUGIN_H
 
-#define PLUGIN_API_VERSION 0x10000 /* any plugins built against this m64p_plugin.h should report this API Version */
-
 /*** Controller plugin's ****/
 #define PLUGIN_NONE                 1
 #define PLUGIN_MEMPAK               2

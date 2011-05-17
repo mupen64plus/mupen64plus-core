@@ -36,6 +36,12 @@
  */
 typedef m64p_error (*ptr_PluginGetVersion)(m64p_plugin_type *, int *, int *, const char **, int *);
 
+/* CoreGetAPIVersions()
+ *
+ * This function retrieves API version information from the core.
+ */
+typedef m64p_error (*ptr_CoreGetAPIVersions)(int *, int *, int *, int *);
+
 /* CoreErrorMessage()
  *
  * This function returns a pointer to a NULL-terminated string giving a
