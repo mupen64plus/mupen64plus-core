@@ -29,12 +29,19 @@
 
 #include "m64p_types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* PluginGetVersion()
  *
  * This function retrieves version information from a library. This
  * function is the same for the core library and the plugins.
  */
 typedef m64p_error (*ptr_PluginGetVersion)(m64p_plugin_type *, int *, int *, const char **, int *);
+#if defined(M64P_PLUGIN_PROTOTYPES)
+EXPORT m64p_error CALL PluginGetVersion(m64p_plugin_type *, int *, int *, const char **, int *);
+#endif
 
 /* CoreGetAPIVersions()
  *
@@ -55,6 +62,9 @@ typedef const char * (*ptr_CoreErrorMessage)(m64p_error);
  * data structures, and loading the configuration data.
 */
 typedef m64p_error (*ptr_PluginStartup)(m64p_dynlib_handle, void *, void (*)(void *, int, const char *));
+#if defined(M64P_PLUGIN_PROTOTYPES)
+EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle, void *, void (*)(void *, int, const char *));
+#endif
 
 /* PluginShutdown()
  *
@@ -62,6 +72,13 @@ typedef m64p_error (*ptr_PluginStartup)(m64p_dynlib_handle, void *, void (*)(voi
  * the plugin library.
 */
 typedef m64p_error (*ptr_PluginShutdown)(void);
+#if defined(M64P_PLUGIN_PROTOTYPES)
+EXPORT m64p_error CALL PluginShutdown(void);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* #define M64P_COMMON_H */
 
