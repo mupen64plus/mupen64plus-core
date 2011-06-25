@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "r4300.h"
+#include "r4300/ops.h"
 #include "macros.h"
 
 void CVT_S_L(void)

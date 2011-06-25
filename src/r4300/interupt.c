@@ -45,7 +45,7 @@
 
 unsigned int next_vi;
 int vi_field=0;
-int vi_counter=0;
+static int vi_counter=0;
 typedef struct _interupt_queue
 {
    int type;
@@ -55,7 +55,7 @@ typedef struct _interupt_queue
 
 static interupt_queue *q = NULL;
 
-void clear_queue()
+static void clear_queue(void)
 {
     while(q != NULL)
     {
@@ -65,7 +65,7 @@ void clear_queue()
     }
 }
 
-void print_queue()
+/*static void print_queue(void)
 {
     interupt_queue *aux;
     //if (Count < 0x7000000) return;
@@ -76,11 +76,11 @@ void print_queue()
         DebugMessage(M64MSG_INFO, "Count:%x, %x", (unsigned int)aux->count, aux->type);
         aux = aux->next;
     }
-}
+}*/
 
 static int SPECIAL_done = 0;
 
-int before_event(unsigned int evt1, unsigned int evt2, int type2)
+static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 {
     if(evt1 - Count < 0x80000000)
     {
@@ -175,7 +175,7 @@ void add_interupt_event_count(int type, unsigned int count)
     add_interupt_event(type, (count - Count)/*/2*/);
 }
 
-void remove_interupt_event()
+static void remove_interupt_event(void)
 {
     interupt_queue *aux = q->next;
     if(q->type == SPECIAL_INT) SPECIAL_done = 1;
@@ -200,7 +200,7 @@ unsigned int get_event(int type)
     return 0;
 }
 
-int get_next_event_type()
+int get_next_event_type(void)
 {
     if (q == NULL) return 0;
     return q->type;
@@ -275,7 +275,7 @@ void load_eventqueue_infos(char *buf)
     }
 }
 
-void init_interupt()
+void init_interupt(void)
 {
     SPECIAL_done = 1;
     next_vi = next_interupt = 5000;
@@ -286,7 +286,7 @@ void init_interupt()
     add_interupt_event_count(SPECIAL_INT, 0);
 }
 
-void check_interupt()
+void check_interupt(void)
 {
     if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
         Cause = (Cause | 0x400) & 0xFFFFFF83;
@@ -314,7 +314,7 @@ void check_interupt()
     }
 }
 
-void gen_interupt()
+void gen_interupt(void)
 {
 
     if (stop == 1)

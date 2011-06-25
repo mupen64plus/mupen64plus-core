@@ -44,9 +44,9 @@
 #include "main/zip/unzip.h"
 #include "main/zip/zip.h"
 
-const char* savestate_magic = "M64+SAVE";
-const int savestate_version = 0x00010000;  /* 1.0 */
-const int pj64_magic = 0x23D8A6C8;
+static const char* savestate_magic = "M64+SAVE";
+static const int savestate_version = 0x00010000;  /* 1.0 */
+static const int pj64_magic = 0x23D8A6C8;
 
 extern unsigned int interp_addr;
 
@@ -106,7 +106,7 @@ void savestates_select_filename(const char* fn)
    strcpy(fname, fn);
 }
 
-char* savestates_get_filename()
+char* savestates_get_filename(void)
 {
     size_t length = strlen(ROM_SETTINGS.goodname)+4+1;
     char* filename = (char*)malloc(length);
@@ -114,7 +114,7 @@ char* savestates_get_filename()
     return filename;
 }
 
-char* savestates_get_pj64_filename()
+char* savestates_get_pj64_filename(void)
 {
     size_t length = strlen((char*)ROM_HEADER->nom)+8+1;
     char* filename = (char*)malloc(length);
@@ -122,7 +122,7 @@ char* savestates_get_pj64_filename()
     return filename;
 }
 
-void savestates_save()
+void savestates_save(void)
 {
     char *filename, *file, buffer[1024];
     unsigned char outbuf[4];
@@ -233,7 +233,7 @@ void savestates_save()
     free(filename);
 }
 
-void savestates_load()
+void savestates_load(void)
 {
     char *filename, *file, buffer[1024];
     unsigned char inbuf[4];
@@ -378,7 +378,7 @@ void savestates_load()
     fname[0] = 0;
 }
 
-int savestates_save_pj64()
+int savestates_save_pj64(void)
 {
     char *file, *filename;
     unsigned int i, vi_timer, addr;
@@ -513,7 +513,7 @@ int savestates_save_pj64()
     return 1;
 }
 
-void savestates_load_pj64()
+void savestates_load_pj64(void)
 {
     char *file, *filename, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;

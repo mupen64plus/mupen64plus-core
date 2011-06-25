@@ -41,7 +41,7 @@
 
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
-_romdatabase g_romdatabase;
+static _romdatabase g_romdatabase;
 romdatabase_entry empty_entry;
 
 /* Global loaded rom memory space. */

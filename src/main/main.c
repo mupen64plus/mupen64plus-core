@@ -81,7 +81,7 @@ static osd_message_t *l_msgPause = NULL;
 /*********************************************************************************************************
 * helper functions
 */
-char *get_savespath()
+char *get_savespath(void)
 {
     static char path[1024];
 
@@ -388,7 +388,7 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
 * global functions, callbacks from the r4300 core or from other plugins
 */
 
-void video_plugin_render_callback(void)
+static void video_plugin_render_callback(void)
 {
     // if the flag is set to take a screenshot, then grab it now
     if (g_TakeScreenshot != 0)
