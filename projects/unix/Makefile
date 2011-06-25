@@ -77,9 +77,9 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LIBS, and LDFLAGS
-CFLAGS += -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -fvisibility=hidden -I../../src
+CFLAGS += -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -fvisibility=hidden -I../../src $(shell pkg-config --cflags libpng zlib freetype2 gl glu sdl)
 CXXFLAGS += -fvisibility-inlines-hidden
-LIBS += -lpng -lz -lm -lfreetype
+LIBS +=  -lm $(shell pkg-config --libs libpng zlib freetype2 gl glu sdl)
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
@@ -100,13 +100,13 @@ ifeq ($(OS), FREEBSD)
   TARGET = libmupen64plus.so.2.0.0
   SONAME = libmupen64plus.so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
-  LIBS += -L${LOCALBASE}/lib -lGL -lGLU -lc
+  LIBS += -L${LOCALBASE}/lib -lc
 endif
 ifeq ($(OS), LINUX)
   TARGET = libmupen64plus.so.2.0.0
   SONAME = libmupen64plus.so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
-  LIBS += -ldl -L/usr/X11R6/lib -lGL -lGLU
+  LIBS += -ldl
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
   ifeq ($(CPU), X86)
@@ -143,20 +143,6 @@ endif
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -D_BIG_ENDIAN
 endif
-
-# test for presence of SDL
-ifeq ($(shell which sdl-config 2>/dev/null),)
-  $(error No SDL development libraries found!)
-endif
-CFLAGS	+= $(shell sdl-config --cflags)
-LIBS	+= $(shell sdl-config --libs)
-
-# test for presence of FreeType
-ifeq ($(shell which freetype-config 2>/dev/null),)
-   $(error freetype-config not installed!)
-endif
-LIBS	+= $(shell freetype-config --libs)
-CFLAGS	+= $(shell freetype-config --cflags)
 
 # set base program pointers and flags
 CC       ?= gcc
@@ -313,7 +299,8 @@ endif
 
 ifeq ($(LIRC), 1)
   SOURCE += $(SRCDIR)/main/lirc.c
-  LIBS += -llirc_client
+  CFLAGS += $(shell pkg-config --cflags liblircclient0)
+  LIBS += $(shell pkg-config --libs liblircclient0)
 endif
 
 ifeq ($(DEBUGGER), 1)
