@@ -27,7 +27,10 @@
 #include <string.h>
 #include <SDL.h>
 
+#define M64P_CORE_PROTOTYPES 1
 #include "m64p_types.h"
+#include "m64p_vidext.h"
+#include "vidext.h"
 #include "callbacks.h"
 
 /* local variables */

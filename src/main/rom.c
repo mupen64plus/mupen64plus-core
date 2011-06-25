@@ -24,9 +24,11 @@
 #include <string.h>
 #include <ctype.h>
 
+#define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/config.h"
+#include "api/m64p_config.h"
 
 #include "md5.h"
 #include "rom.h"

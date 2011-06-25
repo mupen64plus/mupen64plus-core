@@ -31,8 +31,10 @@
 #include "osd.h"
 
 extern "C" {
+#define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_config.h"
 #include "api/config.h"
 #include "main/main.h"
 #include "main/util.h"

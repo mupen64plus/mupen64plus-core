@@ -27,8 +27,11 @@
 #include <string.h>
 #include <stdio.h>
 
+#define M64P_CORE_PROTOTYPES 1
 #include "m64p_types.h"
 #include "callbacks.h"
+#include "m64p_config.h"
+#include "m64p_frontend.h"
 #include "config.h"
 #include "vidext.h"
 

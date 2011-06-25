@@ -35,6 +35,8 @@
 #include "r4300/macros.h"
 #include "r4300/ops.h"
 
+#define M64P_CORE_PROTOTYPES 1
+#include "api/m64p_config.h"
 #include "api/config.h"
 #include "api/callbacks.h"
 #include "main/main.h"

@@ -23,10 +23,12 @@
 #include <stdlib.h>
 #include <SDL.h>
 
+#define M64P_CORE_PROTOTYPES 1
 #include "main.h"
 #include "eventloop.h"
 #include "util.h"
 #include "api/config.h"
+#include "api/m64p_config.h"
 #include "plugin/plugin.h"
 #include "r4300/interupt.h"
 

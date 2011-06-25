@@ -23,8 +23,10 @@
 
 #include <SDL.h>
 
+#define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_vidext.h"
 #include "api/vidext.h"
 #include "memory/memory.h"
 #include "main/rom.h"
