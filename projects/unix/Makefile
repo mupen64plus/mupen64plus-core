@@ -77,7 +77,7 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LIBS, and LDFLAGS
-CFLAGS += -Wall -ffast-math -funroll-loops -fexpensive-optimizations -fno-strict-aliasing -fvisibility=hidden -I../../src $(shell pkg-config --cflags libpng zlib freetype2 gl glu sdl)
+CFLAGS += -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src $(shell pkg-config --cflags libpng zlib freetype2 gl glu sdl)
 CXXFLAGS += -fvisibility-inlines-hidden
 LIBS +=  -lm $(shell pkg-config --libs libpng zlib freetype2 gl glu sdl)
 
@@ -109,16 +109,6 @@ ifeq ($(OS), LINUX)
   LIBS += -ldl
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
-  ifeq ($(CPU), X86)
-    ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -pipe -O3 -march=athlon64
-    else
-      CFLAGS += -pipe -O3 -mmmx -msse -march=i686 -mtune=pentium-m
-      ifneq ($(PROFILE), 1)
-        CFLAGS += -fomit-frame-pointer
-      endif
-    endif
-  endif
 endif
 ifeq ($(OS), OSX)
   TARGET = libmupen64plus.dylib
@@ -136,9 +126,6 @@ ifeq ($(OS), OSX)
       endif
     endif
   endif
-endif
-ifeq ($(CPU), PPC)
-  CFLAGS += -mcpu=powerpc
 endif
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -D_BIG_ENDIAN
