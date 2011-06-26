@@ -39,6 +39,10 @@ endif
 ifeq ("$(UNAME)","FreeBSD")
   OS = FREEBSD
 endif
+ifeq ("$(UNAME)","OpenBSD")
+  OS = FREEBSD
+  $(warning OS type "$(UNAME)" not officially supported.')
+endif
 ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
   OS = LINUX
 endif
