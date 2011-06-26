@@ -366,6 +366,7 @@ install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(INCDIR)"
 	$(INSTALL) -m 0644 ../../src/api/m64p_*.h "$(DESTDIR)$(INCDIR)"
 	-$(LDCONFIG) "$(DESTDIR)$(LIBDIR)"
+	if [ ! -e "$(DESTDIR)$(LIBDIR)/$(SONAME)" ]; then ln -sf "$(SONAME)" "$(DESTDIR)$(LIBDIR)/$(TARGET)"; fi
 
 uninstall:
 	$(RM) "$(DESTDIR)$(LIBDIR)/$(TARGET)"
