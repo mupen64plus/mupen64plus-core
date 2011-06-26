@@ -350,11 +350,11 @@ targets:
 all: $(TARGET)
 
 install: $(TARGET)
-	$(INSTALL) -d -v "$(DESTDIR)$(LIBDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
 	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(LIBDIR)"
-	$(INSTALL) -d -v "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
-	$(INSTALL) -d -v "$(DESTDIR)$(INCDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(INCDIR)"
 	$(INSTALL) -m 0644 ../../src/api/m64p_*.h "$(DESTDIR)$(INCDIR)"
 	-$(LDCONFIG) -n "$(DESTDIR)$(LIBDIR)"
 
