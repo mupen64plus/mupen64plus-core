@@ -26,7 +26,7 @@ export PATH=/bin:/usr/bin
 
 GINSTALLFLAG=-D
 
-if command -v ginstall >/dev/null 2>&1; then
+if `which ginstall >/dev/null 2>&1`; then
     INSTALL=ginstall
 elif install --help >/dev/null 2>&1; then
     INSTALL=install

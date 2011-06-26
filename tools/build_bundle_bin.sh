@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - build_bundle_bin.sh                                     *
 # *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *

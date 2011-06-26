@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - build_modules_src.sh                                    *
 # *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
@@ -35,7 +35,7 @@ for modname in ${modules}; do
   rm -rf "${OUTPUTDIR}"
   hg clone -r $1 "http://bitbucket.org/richard42/$modname" "${OUTPUTDIR}"
   rm -rf "${OUTPUTDIR}"/.hg*
-  if [ $# -eq 3 -a "$3" == "-norom" -a "$modname" == "mupen64plus-core" ]; then
+  if [ $# -eq 3 -a "$3" = "-norom" -a "$modname" = "mupen64plus-core" ]; then
     rm -rf "${OUTPUTDIR}"/roms
   fi
   tar c "${OUTPUTDIR}" | gzip > "${OUTPUTDIR}.tar.gz"
