@@ -154,7 +154,7 @@ ifeq ($(OS),OSX)
   LDCONFIG ?= true  # no 'ldconfig' under OSX
   STRIP	?= strip -x 
 else
-  LDCONFIG ?= ldconfig
+  LDCONFIG ?= PATH="$$PATH:/sbin" ldconfig
   STRIP	?= strip -s
 endif
 
@@ -356,7 +356,7 @@ install: $(TARGET)
 	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL) -d -v "$(DESTDIR)$(INCDIR)"
 	$(INSTALL) -m 0644 ../../src/api/m64p_*.h "$(DESTDIR)$(INCDIR)"
-	-$(LDCONFIG)
+	-$(LDCONFIG) -n "$(DESTDIR)$(LIBDIR)"
 
 uninstall:
 	$(RM) "$(DESTDIR)$(LIBDIR)/$(TARGET)"
