@@ -49,7 +49,7 @@
 #define cffd PC->f.cf.fd
 
 // 32 bits macros
-#ifndef _BIG_ENDIAN
+#ifndef M64P_BIG_ENDIAN
 #define rrt32 *((int*)PC->f.r.rt)
 #define rrd32 *((int*)PC->f.r.rd)
 #define rrs32 *((int*)PC->f.r.rs)

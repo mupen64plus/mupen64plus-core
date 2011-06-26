@@ -132,7 +132,7 @@ ifeq ($(OS), OSX)
   endif
 endif
 ifeq ($(CPU_ENDIANNESS), BIG)
-  CFLAGS += -D_BIG_ENDIAN
+  CFLAGS += -DM64P_BIG_ENDIAN
 endif
 
 # disable verbose output

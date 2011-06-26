@@ -1497,7 +1497,7 @@ void jump_to_func(void)
 */
 void shuffle_fpr_data(int oldStatus, int newStatus)
 {
-#if defined(_BIG_ENDIAN)
+#if defined(M64P_BIG_ENDIAN)
     const int isBigEndian = 1;
 #else
     const int isBigEndian = 0;
@@ -1550,7 +1550,7 @@ void shuffle_fpr_data(int oldStatus, int newStatus)
 void set_fpr_pointers(int newStatus)
 {
     int i;
-#if defined(_BIG_ENDIAN)
+#if defined(M64P_BIG_ENDIAN)
     const int isBigEndian = 1;
 #else
     const int isBigEndian = 0;
