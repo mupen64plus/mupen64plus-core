@@ -51,6 +51,8 @@ unsigned char* rom = NULL;
 /* Global loaded rom size. */
 int rom_size = 0;
 
+unsigned char isGoldeneyeRom = 0;
+
 rom_header*       ROM_HEADER;
 m64p_rom_settings ROM_SETTINGS;
 
