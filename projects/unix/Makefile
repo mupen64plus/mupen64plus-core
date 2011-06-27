@@ -407,6 +407,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupen64plus.cht"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupen64plus.ini"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/font.ttf"
+	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
 	$(RM) -r $(TARGET) $(SONAME) ./_obj
