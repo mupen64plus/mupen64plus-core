@@ -171,7 +171,7 @@ ifeq ($(shell which sdl-config 2>/dev/null),)
   $(error No SDL development libraries found!)
 endif
 CFLAGS	+= $(shell sdl-config --cflags)
-LIBS	+= $(shell sdl-config --libs)
+LDLIBS	+= $(shell sdl-config --libs)
 
 # set base program pointers and flags
 CC       ?= gcc
