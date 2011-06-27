@@ -81,9 +81,9 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LDLIBS, and LDFLAGS
-CFLAGS += -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src $(shell pkg-config --cflags libpng zlib freetype2 gl glu sdl)
+CFLAGS += -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src $(shell pkg-config --cflags libpng zlib freetype2 gl glu)
 CXXFLAGS += -fvisibility-inlines-hidden
-LDLIBS +=  -lm $(shell pkg-config --libs libpng zlib freetype2 gl glu sdl)
+LDLIBS +=  -lm $(shell pkg-config --libs libpng zlib freetype2 gl glu)
 
 # Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
 # On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
@@ -143,6 +143,13 @@ ifndef V
 	Q_LD  = @echo '    LD  '$@;
 endif
 endif
+
+# test for presence of SDL
+ifeq ($(shell which sdl-config 2>/dev/null),)
+  $(error No SDL development libraries found!)
+endif
+CFLAGS	+= $(shell sdl-config --cflags)
+LIBS	+= $(shell sdl-config --libs)
 
 # set base program pointers and flags
 CC       ?= gcc
