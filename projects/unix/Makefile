@@ -81,7 +81,8 @@ ifeq ("$(CPU)","NONE")
 endif
 
 # base CFLAGS, LDLIBS, and LDFLAGS
-CFLAGS += -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
+OPTFLAGS ?= -O3
+CFLAGS += $(OPTFLAGS) -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
@@ -373,6 +374,7 @@ targets:
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
+	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
