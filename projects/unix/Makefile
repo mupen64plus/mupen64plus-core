@@ -339,11 +339,7 @@ endif
 
 ifeq ($(LIRC), 1)
   SOURCE += $(SRCDIR)/main/lirc.c
-  ifeq ($(shell pkg-config --modversion liblircclient0 2>/dev/null),)
-    $(error No LIRC development libraries found!)
-  endif
-  CFLAGS += $(shell pkg-config --cflags liblircclient0)
-  LDLIBS += $(shell pkg-config --libs liblircclient0)
+  LIBS += -llirc_client
 endif
 
 ifeq ($(DEBUGGER), 1)
