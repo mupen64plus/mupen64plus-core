@@ -64,7 +64,6 @@ char invalid_code[0x100000];
 precomp_block *blocks[0x100000], *actual;
 int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
     ceil_mode = 0xB3F, floor_mode = 0x73F;
-static void (*code)(void);
 
 /*#define check_memory() \
    if (!invalid_code[address>>12]) \
@@ -1889,6 +1888,7 @@ void r4300_execute(void)
 #if defined(DYNAREC)
     else if (r4300emu >= 2)
     {
+        void (*code)(void);
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300emu = CORE_DYNAREC;
         init_blocks();
