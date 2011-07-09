@@ -1892,6 +1892,11 @@ void r4300_execute(void)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300emu = CORE_DYNAREC;
         init_blocks();
+
+        /* Prevent segfault on failed init_blocks */
+        if (!actual->block || !actual->code)
+            return;
+
         code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
         dyna_start(code);
         PC++;
