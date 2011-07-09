@@ -103,7 +103,7 @@ void savestates_inc_slot(void)
 
 void savestates_select_filename(const char* fn)
 {
-   if(strlen((char*)fn)>=1024)
+   if(strlen(fn) >= sizeof(fname))
        return;
    strcpy(fname, fn);
 }
