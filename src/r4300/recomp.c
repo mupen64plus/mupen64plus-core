@@ -2159,6 +2159,17 @@ static void (*recomp_ops[64])(void) =
    RSC     , RSWC1  , RSV  , RSV   , RSCD , RSDC1, RSV   , RSD
 };
 
+static int get_block_length(const precomp_block *block)
+{
+  return (block->end-block->start)/4;
+}
+
+static size_t get_block_memsize(const precomp_block *block)
+{
+  int length = get_block_length(block);
+  return ((length+1)+(length>>2)) * sizeof(precomp_instr);
+}
+
 /**********************************************************************
  ******************** initialize an empty block ***********************
  **********************************************************************/
@@ -2171,11 +2182,11 @@ void init_block(int *source, precomp_block *block)
   DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
 #endif
 
-  length = (block->end-block->start)/4;
+  length = get_block_length(block);
    
   if (!block->block)
   {
-    long memsize = ((length+1)+(length>>2)) * sizeof(precomp_instr);
+    size_t memsize = get_block_memsize(block);
     block->block = (precomp_instr *) malloc_exec(memsize);
     memset(block->block, 0, memsize);
     already_exist = 0;
@@ -2336,6 +2347,16 @@ void init_block(int *source, precomp_block *block)
     }
   }
   end_section(COMPILER_SECTION);
+}
+
+void free_block(precomp_block *block)
+{
+    size_t memsize = get_block_memsize(block);
+
+    if (block->block) { free_exec(block->block, memsize);; block->block = NULL; }
+    if (block->code) { free_exec(block->code, block->max_code_length); block->code = NULL; }
+    if (block->jumps_table) { free(block->jumps_table); block->jumps_table = NULL; }
+    if (block->riprel_table) { free(block->riprel_table); block->riprel_table = NULL; }
 }
 
 /**********************************************************************
@@ -2598,13 +2619,9 @@ void *malloc_exec(size_t size)
    if (pagesize == -1)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
 
-   /* Allocate a buffer aligned on a page boundary; initial protection is PROT_READ | PROT_WRITE */
-   void *block = valloc(size);
-   if (block == NULL)
-       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate %i byte block of %i-byte aligned memory.", (int) size, pagesize); return NULL; }
-
-   if (mprotect(block, size, PROT_READ | PROT_WRITE | PROT_EXEC) != 0)
-       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't set RWX permissions on %i byte block of memory.", (int) size); return NULL; }
+   void *block = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+   if (block == MAP_FAILED)
+       { DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate %i byte block of %zd-byte aligned RWX memory.", size, pagesize); return NULL; }
 
    return block;
 #else
@@ -2615,30 +2632,30 @@ void *malloc_exec(size_t size)
 /**********************************************************************
  ************* reallocate memory with executable bit set **************
  **********************************************************************/
-void *realloc_exec(void *ptr, size_t size, size_t newsize)
+void *realloc_exec(void *ptr, size_t oldsize, size_t newsize)
 {
    void* block = malloc_exec(newsize);
    if (block != NULL)
    {
       size_t copysize;
-      if (size < newsize)
-         copysize = size;
+      if (oldsize < newsize)
+         copysize = oldsize;
       else
          copysize = newsize;
       memcpy(block, ptr, copysize);
    }
-   free_exec(ptr);
+   free_exec(ptr, oldsize);
    return block;
 }
 
 /**********************************************************************
  **************** frees memory with executable bit set ****************
  **********************************************************************/
-void free_exec(void *ptr)
+void free_exec(void *ptr, size_t length)
 {
 #if defined(WIN32)
 	VirtualFree(ptr, 0, MEM_RELEASE);
 #else
-	free(ptr);
+	munmap(ptr, length);
 #endif
 }
