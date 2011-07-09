@@ -212,6 +212,7 @@ void main_set_fastforward(int enable)
         // set fast-forward indicator
         l_msgFF = osd_new_message(OSD_TOP_RIGHT, "Fast Forward");
         osd_message_set_static(l_msgFF);
+	osd_message_set_user_managed(l_msgFF);
     }
     else if (!enable && ff_state)
     {
@@ -254,6 +255,7 @@ void main_toggle_pause(void)
         DebugMessage(M64MSG_STATUS, "Emulation paused.");
         l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, "Paused");
         osd_message_set_static(l_msgPause);
+	osd_message_set_user_managed(l_msgPause);
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 
@@ -273,10 +275,6 @@ void main_draw_volume_osd(void)
     char msgString[64];
     const char *volString;
 
-    // if we had a volume message, make sure that it's still in the OSD list, or set it to NULL
-    if (l_msgVol != NULL && !osd_message_valid(l_msgVol))
-        l_msgVol = NULL;
-
     // this calls into the audio plugin
     volString = volumeGetString();
     if (volString == NULL)
@@ -293,8 +291,10 @@ void main_draw_volume_osd(void)
     // create a new message or update an existing one
     if (l_msgVol != NULL)
         osd_update_message(l_msgVol, msgString);
-    else
+    else {
         l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, msgString);
+	osd_message_set_user_managed(l_msgVol);
+    }
 }
 
 /* this function could be called as a result of a keypress, joystick/button movement,
@@ -592,6 +592,11 @@ void main_stop(void)
     {
         osd_delete_message(l_msgFF);
         l_msgFF = NULL;
+    }
+    if(l_msgVol)
+    {
+        osd_delete_message(l_msgVol);
+        l_msgVol = NULL;
     }
     if (rompause)
     {
