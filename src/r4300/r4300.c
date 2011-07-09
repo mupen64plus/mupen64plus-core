@@ -1924,6 +1924,11 @@ void r4300_execute(void)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300emu = CORE_INTERPRETER;
         init_blocks();
+
+        /* Prevent segfault on failed init_blocks */
+        if (!actual->block || !actual->code)
+            return;
+
         last_addr = PC->addr;
         while (!stop)
         {
