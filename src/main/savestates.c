@@ -60,7 +60,7 @@ static char fname[1024] = {0};
 
 void savestates_select_slot(unsigned int s)
 {
-    if(s<0||s>9||s==slot)
+    if(s>9||s==slot)
         return;
     slot = s;
     ConfigSetParameter(g_CoreConfig, "CurrentSaveSlot", M64TYPE_INT, &s);
