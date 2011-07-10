@@ -1926,7 +1926,7 @@ void r4300_execute(void)
         init_blocks();
 
         /* Prevent segfault on failed init_blocks */
-        if (!actual->block || !actual->code)
+        if (!actual->block)
             return;
 
         last_addr = PC->addr;

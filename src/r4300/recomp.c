@@ -2187,11 +2187,21 @@ void init_block(int *source, precomp_block *block)
   if (!block->block)
   {
     size_t memsize = get_block_memsize(block);
-    block->block = (precomp_instr *) malloc_exec(memsize);
-    if (!block->block) {
-        DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate executable memory for dynamic recompiler/cached interpreter. Try to use the pure interpreter.");
-	return;
+    if (r4300emu == CORE_DYNAREC) {
+        block->block = (precomp_instr *) malloc_exec(memsize);
+        if (!block->block) {
+            DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate executable memory for dynamic recompiler. Try to use an interpreter mode.");
+            return;
+        }
     }
+    else {
+        block->block = (precomp_instr *) malloc(memsize);
+        if (!block->block) {
+            DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate memory for cached interpreter.");
+            return;
+        }
+    }
+
     memset(block->block, 0, memsize);
     already_exist = 0;
   }
@@ -2357,7 +2367,13 @@ void free_block(precomp_block *block)
 {
     size_t memsize = get_block_memsize(block);
 
-    if (block->block) { free_exec(block->block, memsize);; block->block = NULL; }
+    if (block->block) {
+        if (r4300emu == CORE_DYNAREC)
+            free_exec(block->block, memsize);
+        else
+            free(block->block);
+        block->block = NULL;
+    }
     if (block->code) { free_exec(block->code, block->max_code_length); block->code = NULL; }
     if (block->jumps_table) { free(block->jumps_table); block->jumps_table = NULL; }
     if (block->riprel_table) { free(block->riprel_table); block->riprel_table = NULL; }
