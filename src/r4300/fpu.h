@@ -20,8 +20,9 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <math.h>
+#include <fenv.h>
 
-extern int FCR0, FCR31;
+#include "r4300.h"
 
 #ifdef _MSC_VER
 #define M64P_FPU_INLINE static __inline
@@ -29,28 +30,53 @@ extern int FCR0, FCR31;
 #define M64P_FPU_INLINE static inline
 #endif
 
+
+M64P_FPU_INLINE void set_rounding(void)
+{
+  switch(rounding_mode) {
+  case 0x33F:
+    fesetround(FE_TONEAREST);
+    break;
+  case 0xF3F:
+    fesetround(FE_TOWARDZERO);
+    break;
+  case 0xB3F:
+    fesetround(FE_UPWARD);
+    break;
+  case 0x73F:
+    fesetround(FE_DOWNWARD);
+    break;
+  }
+}
+
 M64P_FPU_INLINE void cvt_s_w(int *source,float *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 M64P_FPU_INLINE void cvt_d_w(int *source,double *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 M64P_FPU_INLINE void cvt_s_l(long long *source,float *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 M64P_FPU_INLINE void cvt_d_l(long long *source,double *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 M64P_FPU_INLINE void cvt_d_s(float *source,double *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 M64P_FPU_INLINE void cvt_s_d(double *source,float *dest)
 {
+  set_rounding();
   *dest = *source;
 }
 
@@ -122,6 +148,7 @@ M64P_FPU_INLINE void floor_w_d(double *source,int *dest)
 
 M64P_FPU_INLINE void cvt_w_s(float *source,int *dest)
 {
+  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_w_s(source,dest);return;
@@ -132,6 +159,7 @@ M64P_FPU_INLINE void cvt_w_s(float *source,int *dest)
 }
 M64P_FPU_INLINE void cvt_w_d(double *source,int *dest)
 {
+  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_w_d(source,dest);return;
@@ -142,6 +170,7 @@ M64P_FPU_INLINE void cvt_w_d(double *source,int *dest)
 }
 M64P_FPU_INLINE void cvt_l_s(float *source,long long *dest)
 {
+  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_l_s(source,dest);return;
@@ -152,6 +181,7 @@ M64P_FPU_INLINE void cvt_l_s(float *source,long long *dest)
 }
 M64P_FPU_INLINE void cvt_l_d(double *source,long long *dest)
 {
+  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_l_d(source,dest);return;
@@ -336,65 +366,81 @@ M64P_FPU_INLINE void c_ngt_d(double *source,double *target)
 
 M64P_FPU_INLINE void add_s(float *source1,float *source2,float *target)
 {
+  set_rounding();
   *target=(*source1)+(*source2);
 }
 M64P_FPU_INLINE void sub_s(float *source1,float *source2,float *target)
 {
+  set_rounding();
   *target=(*source1)-(*source2);
 }
 M64P_FPU_INLINE void mul_s(float *source1,float *source2,float *target)
 {
+  set_rounding();
   *target=(*source1)*(*source2);
 }
 M64P_FPU_INLINE void div_s(float *source1,float *source2,float *target)
 {
+  set_rounding();
   *target=(*source1)/(*source2);
 }
 M64P_FPU_INLINE void sqrt_s(float *source,float *target)
 {
+  set_rounding();
   *target=sqrtf(*source);
 }
 M64P_FPU_INLINE void abs_s(float *source,float *target)
 {
+  set_rounding();
   *target=fabsf(*source);
 }
 M64P_FPU_INLINE void mov_s(float *source,float *target)
 {
+  set_rounding();
   *target=*source;
 }
 M64P_FPU_INLINE void neg_s(float *source,float *target)
 {
+  set_rounding();
   *target=-(*source);
 }
 M64P_FPU_INLINE void add_d(double *source1,double *source2,double *target)
 {
+  set_rounding();
   *target=(*source1)+(*source2);
 }
 M64P_FPU_INLINE void sub_d(double *source1,double *source2,double *target)
 {
+  set_rounding();
   *target=(*source1)-(*source2);
 }
 M64P_FPU_INLINE void mul_d(double *source1,double *source2,double *target)
 {
+  set_rounding();
   *target=(*source1)*(*source2);
 }
 M64P_FPU_INLINE void div_d(double *source1,double *source2,double *target)
 {
+  set_rounding();
   *target=(*source1)/(*source2);
 }
 M64P_FPU_INLINE void sqrt_d(double *source,double *target)
 {
+  set_rounding();
   *target=sqrt(*source);
 }
 M64P_FPU_INLINE void abs_d(double *source,double *target)
 {
+  set_rounding();
   *target=fabs(*source);
 }
 M64P_FPU_INLINE void mov_d(double *source,double *target)
 {
+  set_rounding();
   *target=*source;
 }
 M64P_FPU_INLINE void neg_d(double *source,double *target)
 {
+  set_rounding();
   *target=-(*source);
 }
