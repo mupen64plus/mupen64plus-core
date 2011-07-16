@@ -26,7 +26,7 @@
 
 #include "memory.h"
 #include "pif.h"
-#include "pif2.h"
+#include "n64_cic_nus_6105.h"
 
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
@@ -458,6 +458,7 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
 
 void update_pif_write(void)
 {
+   char challenge[30], response[30];
    int i=0, channel=0;
 #ifdef DEBUG_PIF
    DebugMessage(M64MSG_INFO, "update_pif_write()");
@@ -468,19 +469,21 @@ void update_pif_write(void)
     switch (PIF_RAMb[0x3F])
       {
        case 0x02:
-         for (i=0; i<sizeof(pif2_lut)/32; i++)
-           {
-          if (!memcmp(PIF_RAMb + 64-2*8, pif2_lut[i][0], 16))
-            {
-               memcpy(PIF_RAMb + 64-2*8, pif2_lut[i][1], 16);
-               return;
-            }
-           }
-         DebugMessage(M64MSG_ERROR, "update_pif_write(): unknown pif2 code:");
-         for (i=(64-2*8)/8; i<(64/8); i++)
-           DebugMessage(M64MSG_ERROR, "%x %x %x %x | %x %x %x %x",
-              PIF_RAMb[i*8+0], PIF_RAMb[i*8+1],PIF_RAMb[i*8+2], PIF_RAMb[i*8+3],
-              PIF_RAMb[i*8+4], PIF_RAMb[i*8+5],PIF_RAMb[i*8+6], PIF_RAMb[i*8+7]);
+         // format the 'challenge' message into 30 nibbles for X-Scale's CIC code
+         for (i = 0; i < 15; i++)
+         {
+           challenge[i*2] =   (PIF_RAMb[48+i] >> 4) & 0x0f;
+           challenge[i*2+1] =  PIF_RAMb[48+i]       & 0x0f;
+         }
+         // calculate the proper response for the given challenge (X-Scale's algorithm)
+         n64_cic_nus_6105(challenge, response, CHL_LEN - 2);
+         // re-format the 'response' into a byte stream
+         for (i = 0; i < 15; i++)
+         {
+           PIF_RAMb[48+i] = (response[i*2] << 4) + response[i*2+1];
+         }
+         // the last byte (2 nibbles) is always 0
+         PIF_RAMb[63] = 0;
          break;
        case 0x08:
          PIF_RAMb[0x3F] = 0;

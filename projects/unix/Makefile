@@ -282,6 +282,7 @@ SOURCE = \
 	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \
+	$(SRCDIR)/memory/n64_cic_nus_6105.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/memory/tlb.c \
 	$(SRCDIR)/osal/dynamiclib_unix.c \
