@@ -30,6 +30,7 @@ extern m64p_handle g_CoreConfig;
 extern int g_MemHasBeenBSwapped;
 extern int g_TakeScreenshot;
 extern int g_EmulatorRunning;
+extern int g_MainSpeedLimit;
 
 extern m64p_frame_callback g_FrameCallback;
 
