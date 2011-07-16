@@ -131,6 +131,11 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |'''<tt>ParamInt</tt>''' An <tt>m64p_core_param</tt> enumerated type specifying the desired state variable'''<br /><tt>ParamPtr</tt>''' Pointer to an integer to receive the value of the requested state variable.
 |None
 |-
+|M64CMD_CORE_STATE_SET
+|This command will set the value of a state parameter in the emulator core
+|'''<tt>ParamInt</tt>''' An <tt>m64p_core_param</tt> enumerated type specifying the desired state variable'''<br /><tt>ParamPtr</tt>''' Pointer to an integer to containing the value of the requested state variable.
+|The initial requirements vary depending upon the variable being set.  Setting some variables requires the emulator to be running.
+|-
 |M64CMD_STATE_LOAD
 |This command will attempt to load a saved state file.  If '''<tt>ParamPtr</tt>''' is not NULL, this function will load a state file from a full pathname specified by this pointer.  Otherwise ('''<tt>ParamPtr</tt>''' is NULL), it will load from the current slot.
 |'''<tt>ParamInt</tt>''' Ignored'''<br /><tt>ParamPtr</tt>''' Pointer to string containing state file path and name, or NULL
