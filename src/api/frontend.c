@@ -245,8 +245,6 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                     main_speedset(iVal);
                     return M64ERR_SUCCESS;
                 case M64CORE_SPEED_LIMITER:
-                    if (!g_EmulatorRunning)
-                        return M64ERR_INVALID_STATE;
                     main_set_speedlimiter(iVal);
                     return M64ERR_SUCCESS;
                 default:
