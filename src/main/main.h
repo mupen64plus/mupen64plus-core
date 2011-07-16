@@ -30,7 +30,6 @@ extern m64p_handle g_CoreConfig;
 extern int g_MemHasBeenBSwapped;
 extern int g_TakeScreenshot;
 extern int g_EmulatorRunning;
-extern int g_MainSpeedLimit;
 
 extern m64p_frame_callback g_FrameCallback;
 
@@ -52,6 +51,7 @@ void main_speedup(int percent);
 void main_speeddown(int percent);
 void main_speedset(int percent)
 void main_set_fastforward(int enable);
+void main_set_speedlimiter(int enable);
 
 void main_draw_volume_osd(void);
 void main_take_next_screenshot(void);

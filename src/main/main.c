@@ -70,12 +70,12 @@ m64p_frame_callback g_FrameCallback = NULL;
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 int         g_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
-int         g_MainSpeedLimit = 1;       // insert delay during vi_interrupt to keep speed at real-time
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
+static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to keep speed at real-time
 
 static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
@@ -242,6 +242,11 @@ void main_set_fastforward(int enable)
         l_msgFF = NULL;
     }
 
+}
+
+void main_set_speedlimiter(int enable)
+{
+    l_MainSpeedLimit = enable;
 }
 
 int main_is_paused(void)
@@ -471,7 +476,7 @@ void new_vi(void)
     {
         CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
         time = (int)(CalculatedTime - CurrentFPSTime);
-        if (time > 0 && g_MainSpeedLimit)
+        if (time > 0 && l_MainSpeedLimit)
         {
             DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", time);
             SDL_Delay(time);
