@@ -246,7 +246,15 @@ void main_set_fastforward(int enable)
 
 void main_set_speedlimiter(int enable)
 {
-    l_MainSpeedLimit = enable;
+    if (enable)
+        l_MainSpeedLimit = 1;
+    else
+        l_MainSpeedLimit = 0;
+}
+
+int main_get_speedlimiter(void)
+{
+    return l_MainSpeedLimit ? 1 : 0;
 }
 
 int main_is_paused(void)
@@ -401,6 +409,9 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
             break;
         case M64CORE_SPEED_FACTOR:
             *rval = l_SpeedFactor;
+            break;
+        case M64CORE_SPEED_LIMITER:
+            *rval = l_MainSpeedLimit;
             break;
         default:
             return M64ERR_INPUT_INVALID;

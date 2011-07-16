@@ -52,6 +52,7 @@ void main_speeddown(int percent);
 void main_speedset(int percent)
 void main_set_fastforward(int enable);
 void main_set_speedlimiter(int enable);
+int main_get_speedlimiter(void);
 
 void main_draw_volume_osd(void);
 void main_take_next_screenshot(void);

@@ -239,10 +239,15 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                     return M64ERR_INPUT_INVALID;
                 case M64CORE_SAVESTATE_SLOT:  // recursively call myself to handle this
                     return CoreDoCommand(M64CMD_STATE_SET_SLOT, iVal, NULL);
-                case M64CORE_SPEED_FACTOR:  // hand this command directly
+                case M64CORE_SPEED_FACTOR:  // handle this command directly
                     if (!g_EmulatorRunning)
                         return M64ERR_INVALID_STATE;
                     main_speedset(iVal);
+                    return M64ERR_SUCCESS;
+                case M64CORE_SPEED_LIMITER:
+                    if (!g_EmulatorRunning)
+                        return M64ERR_INVALID_STATE;
+                    main_set_speedlimiter(iVal);
                     return M64ERR_SUCCESS;
                 default:
                     return M64ERR_INPUT_INVALID;
