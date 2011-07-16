@@ -132,7 +132,7 @@ EXPORT m64p_error CALL CoreDetachPlugin(m64p_plugin_type PluginType)
 EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *ParamPtr)
 {
     m64p_error rval;
-    int keysym, keymod;
+    int keysym, keymod, iVal;
 
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
@@ -207,6 +207,46 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             return M64ERR_SUCCESS;
         case M64CMD_CORE_STATE_QUERY:
             return main_core_state_query((m64p_core_param) ParamInt, (int *) ParamPtr);
+        case M64CMD_CORE_STATE_SET:
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            iVal = *((int *) ParamPtr);
+            switch (ParamInt)
+            {
+                case M64CORE_EMU_STATE:  // recursively call myself to handle this
+                    if (iVal == M64EMU_STOPPED)
+                        return CoreDoCommand(M64CMD_STOP, 0, NULL);
+                    else if (iVal == M64EMU_RUNNING)
+                        return CoreDoCommand(M64CMD_RESUME, 0, NULL);
+                    else if (iVal == M64EMU_PAUSED)
+                        return CoreDoCommand(M64CMD_PAUSE, 0, NULL);
+                    return M64ERR_INPUT_INVALID;
+                case M64CORE_VIDEO_MODE:  // handle this command directly
+                    if (!g_EmulatorRunning)
+                        return M64ERR_INVALID_STATE;
+                    if (iVal == M64VIDEO_WINDOWED)
+                    {
+                        if (VidExt_InFullscreenMode())
+                            changeWindow(); // in video plugin
+                        return M64ERR_SUCCESS;
+                    }
+                    else if (iVal == M64VIDEO_FULLSCREEN)
+                    {
+                        if (!VidExt_InFullscreenMode())
+                            changeWindow(); // in video plugin
+                        return M64ERR_SUCCESS;
+                    }
+                    return M64ERR_INPUT_INVALID;
+                case M64CORE_SAVESTATE_SLOT:  // recursively call myself to handle this
+                    return CoreDoCommand(M64CMD_STATE_SET_SLOT, iVal, NULL);
+                case M64CORE_SPEED_FACTOR:  // hand this command directly
+                    if (!g_EmulatorRunning)
+                        return M64ERR_INVALID_STATE;
+                    main_speedset(iVal);
+                    return M64ERR_SUCCESS;
+                default:
+                    return M64ERR_INPUT_INVALID;
+            }
         case M64CMD_STATE_LOAD:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;

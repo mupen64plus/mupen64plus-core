@@ -50,6 +50,7 @@ void main_advance_one(void);
 
 void main_speedup(int percent);
 void main_speeddown(int percent);
+void main_speedset(int percent)
 void main_set_fastforward(int enable);
 
 void main_draw_volume_osd(void);

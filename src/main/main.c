@@ -198,6 +198,22 @@ void main_speedup(int percent)
     }
 }
 
+void main_speedset(int percent)
+{
+    if (percent < 1 || percent > 1000)
+    {
+        DebugMessage(M64MSG_WARNING, "Invalid speed setting %i percent", percent);
+        return;
+    }
+    // disable fast-forward if it's enabled
+    main_set_fastforward(0);
+    // set speed
+    l_SpeedFactor = percent;
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
+    setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+    StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
+}
+
 void main_set_fastforward(int enable)
 {
     static int ff_state = 0;
@@ -213,7 +229,7 @@ void main_set_fastforward(int enable)
         // set fast-forward indicator
         l_msgFF = osd_new_message(OSD_TOP_RIGHT, "Fast Forward");
         osd_message_set_static(l_msgFF);
-	osd_message_set_user_managed(l_msgFF);
+        osd_message_set_user_managed(l_msgFF);
     }
     else if (!enable && ff_state)
     {
@@ -314,6 +330,7 @@ void main_state_set_slot(int slot)
     }
 
     savestates_select_slot(slot);
+    StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
 void main_state_inc_slot(void)
