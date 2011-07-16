@@ -49,7 +49,7 @@ void main_advance_one(void);
 
 void main_speedup(int percent);
 void main_speeddown(int percent);
-void main_speedset(int percent)
+void main_speedset(int percent);
 void main_set_fastforward(int enable);
 void main_set_speedlimiter(int enable);
 int main_get_speedlimiter(void);
