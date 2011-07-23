@@ -2635,6 +2635,13 @@ void *malloc_exec(size_t size)
 #if defined(WIN32)
 	return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #elif defined(__GNUC__)
+
+#ifndef  MAP_ANONYMOUS
+   #ifdef MAP_ANON
+      #define MAP_ANONYMOUS MAP_ANON
+   #endif
+#endif
+
    int pagesize = sysconf(_SC_PAGE_SIZE);
    if (pagesize == -1)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
