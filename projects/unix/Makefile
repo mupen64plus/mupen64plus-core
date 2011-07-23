@@ -191,7 +191,6 @@ LINK.o = $(Q_LD)$(CXX) $(LDFLAGS) $(TARGET_ARCH)
 
 ifeq ($(OS),OSX)
   LDCONFIG ?= true  # no 'ldconfig' under OSX
-  STRIP	?= strip -x 
 else
   ifeq ($(OS),LINUX)
     LDCONFIG ?= PATH="$$PATH:/sbin" ldconfig -n
@@ -199,7 +198,6 @@ else
   ifeq ($(OS),FREEBSD)
     LDCONFIG ?= PATH="$$PATH:/sbin" ldconfig -m
   endif
-  STRIP	?= strip -s
 endif
 
 # compiler/linker flags for various compile-time options.
@@ -211,11 +209,13 @@ endif
 ifeq ($(PROFILE), 1)
   CFLAGS += -pg -g
   LDFLAGS += -pg
-  STRIP = true
+  INSTALL_STRIP_FLAG ?= 
 else
   ifeq ($(DEBUG), 1)
     CFLAGS += -g
-    STRIP = true
+    INSTALL_STRIP_FLAG ?= 
+  else
+    INSTALL_STRIP_FLAG ?= -s
   endif
 endif
 # 3. other options given to the makefile on the command line
@@ -398,7 +398,7 @@ all: $(TARGET)
 
 install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
-	$(INSTALL) -m 0644 $(TARGET) "$(DESTDIR)$(LIBDIR)"
+	$(INSTALL) -m 0644 $(INSTALL_STRIP_FLAG) $(TARGET) "$(DESTDIR)$(LIBDIR)"
 	$(INSTALL) -d "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
 	$(INSTALL) -d "$(DESTDIR)$(INCDIR)"
@@ -433,7 +433,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 $(TARGET): $(OBJECTS)
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
-	$(STRIP) $@
 	if [ "$(SONAME)" != "" ]; then ln -sf $@ $(SONAME); fi
 
 .PHONY: all clean install uninstall targets
