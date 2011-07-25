@@ -150,5 +150,12 @@ romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
  */
 romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2);
 
+/* PIF ROM Loading functions */
+m64p_error open_pifrom(const unsigned char *romimage, unsigned int size);
+m64p_error close_pifrom(void);
+
+extern int have_pifrom_image;
+extern unsigned char pifrom_image[0x7C0];
+
 #endif /* __ROM_H__ */
 

@@ -313,7 +313,7 @@ void gennotcompiled(void)
     free_all_registers();
     simplify_access();
    
-    if (dst->addr == 0xa4000040 && dynarec_stack_initialized == 0)
+    if (dst->addr == boot_addr && dynarec_stack_initialized == 0)
     {
         dynarec_stack_initialized = 1;
         sub_reg32_imm32(ESP, 0x10); /* save 16 bytes of padding just in case */

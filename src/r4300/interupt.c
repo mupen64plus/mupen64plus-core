@@ -552,7 +552,7 @@ void gen_interupt(void)
             {
                 // set ErrorEPC with last instruction address and set next instruction address to reset vector
                 ErrorEPC = interp_addr;
-                interp_addr = 0xa4000040;
+                interp_addr = boot_addr;
                 last_addr = interp_addr;
             }
             else  /* decode-cached interpreter or dynamic recompiler */
@@ -572,7 +572,7 @@ void gen_interupt(void)
                 init_blocks();
                 // jump to the start
                 ErrorEPC = PC->addr;
-                jump_to(0xa4000040);
+                jump_to(boot_addr);
                 last_addr = PC->addr;
             }
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags

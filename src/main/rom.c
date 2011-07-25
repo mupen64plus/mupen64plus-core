@@ -163,7 +163,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != &empty_entry ||
-        (entry=ini_search_by_crc(sl(ROM_HEADER->CRC1),sl(ROM_HEADER->CRC2))) != &empty_entry)
+        (entry=ini_search_by_crc(BE32(ROM_HEADER->CRC1),BE32(ROM_HEADER->CRC2))) != &empty_entry)
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -187,19 +187,19 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->nom);
     imagestring(imagetype, buffer);
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
-    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+    DebugMessage(M64MSG_INFO, "CRC: %x %x", BE32((unsigned int)ROM_HEADER->CRC1), BE32((unsigned int)ROM_HEADER->CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
     DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
-    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl((unsigned int)ROM_HEADER->ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %x", sl((unsigned int)ROM_HEADER->Release));
-    if(sl(ROM_HEADER->Manufacturer_ID) == 'N')
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", BE32((unsigned int)ROM_HEADER->ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %x", BE32((unsigned int)ROM_HEADER->Release));
+    if(BE32(ROM_HEADER->Manufacturer_ID) == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
         DebugMessage(M64MSG_INFO, "Manufacturer: %x", (unsigned int)(ROM_HEADER->Manufacturer_ID));
     DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER->Cartridge_ID);
     countrycodestring(ROM_HEADER->Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
-    DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER->PC));
+    DebugMessage(M64MSG_VERBOSE, "PC = %x", BE32((unsigned int)ROM_HEADER->PC));
     DebugMessage(M64MSG_VERBOSE, "Save type: %d", ROM_SETTINGS.savetype);
 
     //Prepare Hack for GOLDENEYE
@@ -533,4 +533,27 @@ romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
         return &(search->entry);
 }
 
+int have_pifrom_image = 0;
+unsigned char pifrom_image[0x7C0];
 
+m64p_error open_pifrom(const unsigned char *romimage, unsigned int size)
+{
+    if (size != 0x7C0 && size != 0x800) // Allow real and padded images
+    {
+        DebugMessage(M64MSG_ERROR, "open_pifrom(): Invalid PIF ROM size");
+        return M64ERR_INPUT_INVALID;
+    }
+
+    have_pifrom_image = 1;
+    memcpy(pifrom_image, romimage, sizeof(pifrom_image));
+
+    return M64ERR_SUCCESS;
+}
+
+m64p_error close_pifrom(void)
+{
+    have_pifrom_image = 0;
+    memset(pifrom_image, 0, sizeof(pifrom_image));
+
+    return M64ERR_SUCCESS;
+}

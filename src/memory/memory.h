@@ -38,6 +38,8 @@ extern unsigned int SP_DMEM[0x1000/4*2];
 extern unsigned char *SP_DMEMb;
 extern unsigned int *SP_IMEM;
 extern unsigned char *SP_IMEMb;
+extern unsigned int PIF_ROM[0x7C0/4];
+extern unsigned char *PIF_ROMb;
 extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
 
@@ -242,7 +244,7 @@ extern DPS_register dps_register;
 extern unsigned char *rdramb;
 
 #ifndef M64P_BIG_ENDIAN
-#define sl(mot) \
+#define BE32(mot) \
 ( \
 ((mot & 0x000000FF) << 24) | \
 ((mot & 0x0000FF00) <<  8) | \
@@ -256,7 +258,7 @@ extern unsigned char *rdramb;
 
 #else
 
-#define sl(mot) mot
+#define BE32(mot) mot
 #define S8 0
 #define S16 0
 #define Sh16 0

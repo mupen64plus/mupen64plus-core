@@ -292,6 +292,10 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             main_take_next_screenshot();
             return M64ERR_SUCCESS;
+        case M64CMD_PIFROM_OPEN:
+            return open_pifrom((const unsigned char *)ParamPtr, ParamInt);
+        case M64CMD_PIFROM_CLOSE:
+            return close_pifrom();
         default:
             return M64ERR_INPUT_INVALID;
     }

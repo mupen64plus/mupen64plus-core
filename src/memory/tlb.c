@@ -150,7 +150,7 @@ int probe_nop(unsigned int address)
    else
      a = address;
    
-   if (a >= 0xa4000000 && a < 0xa4001000)
+   if (a >= 0xa4000000 && a < 0xa4002000)
      {
     if (!SP_DMEM[(a&0xFFF)/4]) return 1;
     else return 0;

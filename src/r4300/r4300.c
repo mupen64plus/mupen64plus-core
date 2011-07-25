@@ -55,7 +55,7 @@ double *reg_cop1_double[32];
 long long int reg_cop1_fgr_64[32];
 int FCR0, FCR31;
 tlb tlb_e[32];
-unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
+unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr, boot_addr;
 unsigned long long int debug_count = 0;
 unsigned int next_interupt, CIC_Chip;
 precomp_instr *PC;
@@ -77,7 +77,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
 void NI(void)
 {
    DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", (int)PC->addr);
-   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
+   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4002000)
      DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
    else
      DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
@@ -86,7 +86,7 @@ void NI(void)
 
 void RESERVED(void)
 {
-   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
+   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4002000)
      DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
    else
      DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
@@ -1391,10 +1391,6 @@ void NOTCOMPILED(void)
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
-   if ((PC->addr>>16) == 0xa400)
-     recompile_block((int *) SP_DMEM, blocks[0xa4000000>>12], PC->addr);
-   else
-     {
     unsigned int paddr = 0;
     if (PC->addr >= 0x80000000 && PC->addr < 0xc0000000)
       paddr = PC->addr;
@@ -1402,17 +1398,28 @@ void NOTCOMPILED(void)
       paddr = virtual_to_physical_address(PC->addr, 2);
     if (paddr)
       {
-         if ((paddr & 0x1FFFFFFF) >= 0x10000000)
-           {
-          recompile_block((int *) rom+((((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF) - 0x10000000)>>2),
-                  blocks[PC->addr>>12], PC->addr);
-           }
-         else
-           recompile_block((int *) rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
-                   blocks[PC->addr>>12], PC->addr);
+        if ((paddr >= 0x80000000) && (paddr < 0x80800000))
+        {
+            recompile_block((int *) rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) - 0x80000000)>>2),
+                blocks[PC->addr>>12], PC->addr);
+        }
+        else if ((paddr >= 0xa4000000) && (paddr < 0xa4002000))
+        {
+            recompile_block((int *) SP_DMEM+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) - 0xa4000000)>>2),
+                blocks[PC->addr>>12], PC->addr);
+        }
+        else if ((paddr >= 0xb0000000) && (paddr < 0xbfc00000))
+        {
+            recompile_block((int *) rom+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) - 0xb0000000)>>2),
+                blocks[PC->addr>>12], PC->addr);
+        }
+        else if ((paddr >= 0xbfc00000) && (paddr < 0xbfc007c0))
+        {
+            recompile_block((int *) PIF_ROMb+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) - 0xbfc00000)>>2),
+                blocks[PC->addr>>12], PC->addr);
+        }
       }
     else DebugMessage(M64MSG_ERROR, "not compiled exception");
-     }
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
@@ -1459,9 +1466,7 @@ static unsigned int update_invalid_addr(unsigned int addr)
      }
 }
 
-#define addr jump_to_address
-unsigned int jump_to_address;
-void jump_to_func(void)
+static void prepare_block_for_jump(unsigned int addr)
 {
    unsigned int paddr;
    if (skip_jump) return;
@@ -1485,10 +1490,14 @@ void jump_to_func(void)
            blocks[addr>>12]);
      }
    PC=actual->block+((addr-actual->start)>>2);
-   
+}
+
+unsigned int jump_to_address;
+void jump_to_func(void)
+{
+   prepare_block_for_jump(jump_to_address);
    if (r4300emu == CORE_DYNAREC) dyna_jump();
 }
-#undef addr
 
 /* Refer to Figure 6-2 on page 155 and explanation on page B-11
    of MIPS R4000 Microprocessor User's Manual (Second Edition)
@@ -1619,21 +1628,8 @@ void init_blocks(void)
     invalid_code[i] = 1;
     blocks[i] = NULL;
      }
-   blocks[0xa4000000>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-   invalid_code[0xa4000000>>12] = 1;
-   blocks[0xa4000000>>12]->code = NULL;
-   blocks[0xa4000000>>12]->block = NULL;
-   blocks[0xa4000000>>12]->jumps_table = NULL;
-   blocks[0xa4000000>>12]->riprel_table = NULL;
-   blocks[0xa4000000>>12]->start = 0xa4000000;
-   blocks[0xa4000000>>12]->end = 0xa4001000;
-   actual=blocks[0xa4000000>>12];
-   init_block((int *) SP_DMEM, blocks[0xa4000000>>12]);
-   PC=actual->block+(0x40/4);
-/*#ifdef DBG //should only be needed by dynamic recompiler
-   if (g_DebuggerActive) // debugger shows initial state (before 1st instruction).
-     update_debugger(PC->addr);
-#endif*/
+
+   prepare_block_for_jump(boot_addr);
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */
@@ -1701,163 +1697,179 @@ void r4300_reset_hard(void)
 /* this soft reset function simulates the actions of the PIF ROM, which may vary by region */
 void r4300_reset_soft(void)
 {
+    // the following values are extracted from the pj64 source code
+    // thanks to Zilmar and Jabo
+
     long long CRC = 0;
     unsigned int i;
-
-    // copy boot code from ROM to SP_DMEM
-    memcpy((char *)SP_DMEM+0x40, rom+0x40, 0xFC0);
-
-   // the following values are extracted from the pj64 source code
-   // thanks to Zilmar and Jabo
-   
-   reg[6] = 0xFFFFFFFFA4001F0CLL;
-   reg[7] = 0xFFFFFFFFA4001F08LL;
-   reg[8] = 0x00000000000000C0LL;
-   reg[10]= 0x0000000000000040LL;
-   reg[11]= 0xFFFFFFFFA4000040LL;
-   reg[29]= 0xFFFFFFFFA4001FF0LL;
    
     // figure out which ROM type is loaded
-   for (i = 0x40/4; i < (0x1000/4); i++)
-     CRC += SP_DMEM[i];
-   switch(CRC) {
+    for (i = 0x40/4; i < (0x1000/4); i++)
+        CRC += ((unsigned int *)rom)[i];
+
+    switch(CRC) {
     case 0x000000D0027FDF31LL:
     case 0x000000CFFB631223LL:
-      CIC_Chip = 1;
-      break;
+        CIC_Chip = 1;
+        break;
     case 0x000000D057C85244LL:
-      CIC_Chip = 2;
-      break;
+        CIC_Chip = 2;
+        break;
     case 0x000000D6497E414BLL:
-      CIC_Chip = 3;
-      break;
+        CIC_Chip = 3;
+        break;
     case 0x0000011A49F60E96LL:
-      CIC_Chip = 5;
-      break;
+        CIC_Chip = 5;
+        break;
     case 0x000000D6D5BE5580LL:
-      CIC_Chip = 6;
-      break;
+        CIC_Chip = 6;
+        break;
     default:
-      CIC_Chip = 2;
+        DebugMessage(M64MSG_WARNING, "CIC Chip could not be detected, attempting to use CIC_Chip = 2.");
+        CIC_Chip = 2;
    }
 
-   switch(ROM_HEADER->Country_code&0xFF)
-     {
-      case 0x44:
-      case 0x46:
-      case 0x49:
-      case 0x50:
-      case 0x53:
-      case 0x55:
-      case 0x58:
-      case 0x59:
-    switch (CIC_Chip) {
-     case 2:
-       reg[5] = 0xFFFFFFFFC0F1D859LL;
-       reg[14]= 0x000000002DE108EALL;
-       break;
-     case 3:
-       reg[5] = 0xFFFFFFFFD4646273LL;
-       reg[14]= 0x000000001AF99984LL;
-       break;
-     case 5:
-       SP_IMEM[1] = 0xBDA807FC;
-       reg[5] = 0xFFFFFFFFDECAAAD1LL;
-       reg[14]= 0x000000000CF85C13LL;
-       reg[24]= 0x0000000000000002LL;
-       break;
-     case 6:
-       reg[5] = 0xFFFFFFFFB04DC903LL;
-       reg[14]= 0x000000001AF99984LL;
-       reg[24]= 0x0000000000000002LL;
-       break;
-    }
-    reg[23]= 0x0000000000000006LL;
-    reg[31]= 0xFFFFFFFFA4001554LL;
-    break;
-      case 0x37:
-      case 0x41:
-      case 0x45:
-      case 0x4A:
-      default:
-    switch (CIC_Chip) {
-     case 2:
-       reg[5] = 0xFFFFFFFFC95973D5LL;
-       reg[14]= 0x000000002449A366LL;
-       break;
-     case 3:
-       reg[5] = 0xFFFFFFFF95315A28LL;
-       reg[14]= 0x000000005BACA1DFLL;
-       break;
-     case 5:
-       SP_IMEM[1] = 0x8DA807FC;
-       reg[5] = 0x000000005493FB9ALL;
-       reg[14]= 0xFFFFFFFFC2C20384LL;
-       break;
-     case 6:
-       reg[5] = 0xFFFFFFFFE067221FLL;
-       reg[14]= 0x000000005CD2B70FLL;
-       break;
-    }
-    reg[20]= 0x0000000000000001LL;
-    reg[24]= 0x0000000000000003LL;
-    reg[31]= 0xFFFFFFFFA4001550LL;
-     }
-   switch (CIC_Chip) {
-    case 1:
-      reg[22]= 0x000000000000003FLL;
-      break;
-    case 2:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x000000000EBDA536LL;
-      reg[3] = 0x000000000EBDA536LL;
-      reg[4] = 0x000000000000A536LL;
-      reg[12]= 0xFFFFFFFFED10D0B3LL;
-      reg[13]= 0x000000001402A4CCLL;
-      reg[15]= 0x000000003103E121LL;
-      reg[22]= 0x000000000000003FLL;
-      reg[25]= 0xFFFFFFFF9DEBB54FLL;
-      break;
-    case 3:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x0000000049A5EE96LL;
-      reg[3] = 0x0000000049A5EE96LL;
-      reg[4] = 0x000000000000EE96LL;
-      reg[12]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[13]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[15]= 0x0000000018B63D28LL;
-      reg[22]= 0x0000000000000078LL;
-      reg[25]= 0xFFFFFFFF825B21C9LL;
-      break;
-    case 5:
-      SP_IMEM[0] = 0x3C0DBFC0;
-      SP_IMEM[2] = 0x25AD07C0;
-      SP_IMEM[3] = 0x31080080;
-      SP_IMEM[4] = 0x5500FFFC;
-      SP_IMEM[5] = 0x3C0DBFC0;
-      SP_IMEM[6] = 0x8DA80024;
-      SP_IMEM[7] = 0x3C0BB000;
-      reg[2] = 0xFFFFFFFFF58B0FBFLL;
-      reg[3] = 0xFFFFFFFFF58B0FBFLL;
-      reg[4] = 0x0000000000000FBFLL;
-      reg[12]= 0xFFFFFFFF9651F81ELL;
-      reg[13]= 0x000000002D42AAC5LL;
-      reg[15]= 0x0000000056584D60LL;
-      reg[22]= 0x0000000000000091LL;
-      reg[25]= 0xFFFFFFFFCDCE565FLL;
-      break;
-    case 6:
-      reg[2] = 0xFFFFFFFFA95930A4LL;
-      reg[3] = 0xFFFFFFFFA95930A4LL;
-      reg[4] = 0x00000000000030A4LL;
-      reg[12]= 0xFFFFFFFFBCB59510LL;
-      reg[13]= 0xFFFFFFFFBCB59510LL;
-      reg[15]= 0x000000007A3C07F4LL;
-      reg[22]= 0x0000000000000085LL;
-      reg[25]= 0x00000000465E3F72LL;
-      break;
-   }
+    if (have_pifrom_image)
+    {
+        // copy PIF ROM image to memory
+        memcpy((char *)PIF_ROMb, pifrom_image, 0x7C0);
+        for (i=0; i<(0x7C0/4); i++) PIF_ROM[i] = BE32(PIF_ROM[i]);
 
+        // TODO: Finish initialization for PIF ROM boot
+
+        boot_addr = 0xBFC00000;
+    }
+    else
+    {
+       // copy boot code from ROM to SP_DMEM
+       memcpy((char *)SP_DMEM+0x40, rom+0x40, 0xFC0);
+
+       reg[6] = 0xFFFFFFFFA4001F0CLL;
+       reg[7] = 0xFFFFFFFFA4001F08LL;
+       reg[8] = 0x00000000000000C0LL;
+       reg[10]= 0x0000000000000040LL;
+       reg[11]= 0xFFFFFFFFA4000040LL;
+       reg[29]= 0xFFFFFFFFA4001FF0LL;
+
+       switch(ROM_HEADER->Country_code&0xFF)
+         {
+          case 0x44:
+          case 0x46:
+          case 0x49:
+          case 0x50:
+          case 0x53:
+          case 0x55:
+          case 0x58:
+          case 0x59:
+        switch (CIC_Chip) {
+         case 2:
+           reg[5] = 0xFFFFFFFFC0F1D859LL;
+           reg[14]= 0x000000002DE108EALL;
+           break;
+         case 3:
+           reg[5] = 0xFFFFFFFFD4646273LL;
+           reg[14]= 0x000000001AF99984LL;
+           break;
+         case 5:
+           SP_IMEM[1] = 0xBDA807FC;
+           reg[5] = 0xFFFFFFFFDECAAAD1LL;
+           reg[14]= 0x000000000CF85C13LL;
+           reg[24]= 0x0000000000000002LL;
+           break;
+         case 6:
+           reg[5] = 0xFFFFFFFFB04DC903LL;
+           reg[14]= 0x000000001AF99984LL;
+           reg[24]= 0x0000000000000002LL;
+           break;
+        }
+        reg[23]= 0x0000000000000006LL;
+        reg[31]= 0xFFFFFFFFA4001554LL;
+        break;
+          case 0x37:
+          case 0x41:
+          case 0x45:
+          case 0x4A:
+          default:
+        switch (CIC_Chip) {
+         case 2:
+           reg[5] = 0xFFFFFFFFC95973D5LL;
+           reg[14]= 0x000000002449A366LL;
+           break;
+         case 3:
+           reg[5] = 0xFFFFFFFF95315A28LL;
+           reg[14]= 0x000000005BACA1DFLL;
+           break;
+         case 5:
+           SP_IMEM[1] = 0x8DA807FC;
+           reg[5] = 0x000000005493FB9ALL;
+           reg[14]= 0xFFFFFFFFC2C20384LL;
+           break;
+         case 6:
+           reg[5] = 0xFFFFFFFFE067221FLL;
+           reg[14]= 0x000000005CD2B70FLL;
+           break;
+        }
+        reg[20]= 0x0000000000000001LL;
+        reg[24]= 0x0000000000000003LL;
+        reg[31]= 0xFFFFFFFFA4001550LL;
+         }
+       switch (CIC_Chip) {
+        case 1:
+          reg[22]= 0x000000000000003FLL;
+          break;
+        case 2:
+          reg[1] = 0x0000000000000001LL;
+          reg[2] = 0x000000000EBDA536LL;
+          reg[3] = 0x000000000EBDA536LL;
+          reg[4] = 0x000000000000A536LL;
+          reg[12]= 0xFFFFFFFFED10D0B3LL;
+          reg[13]= 0x000000001402A4CCLL;
+          reg[15]= 0x000000003103E121LL;
+          reg[22]= 0x000000000000003FLL;
+          reg[25]= 0xFFFFFFFF9DEBB54FLL;
+          break;
+        case 3:
+          reg[1] = 0x0000000000000001LL;
+          reg[2] = 0x0000000049A5EE96LL;
+          reg[3] = 0x0000000049A5EE96LL;
+          reg[4] = 0x000000000000EE96LL;
+          reg[12]= 0xFFFFFFFFCE9DFBF7LL;
+          reg[13]= 0xFFFFFFFFCE9DFBF7LL;
+          reg[15]= 0x0000000018B63D28LL;
+          reg[22]= 0x0000000000000078LL;
+          reg[25]= 0xFFFFFFFF825B21C9LL;
+          break;
+        case 5:
+          SP_IMEM[0] = 0x3C0DBFC0;
+          SP_IMEM[2] = 0x25AD07C0;
+          SP_IMEM[3] = 0x31080080;
+          SP_IMEM[4] = 0x5500FFFC;
+          SP_IMEM[5] = 0x3C0DBFC0;
+          SP_IMEM[6] = 0x8DA80024;
+          SP_IMEM[7] = 0x3C0BB000;
+          reg[2] = 0xFFFFFFFFF58B0FBFLL;
+          reg[3] = 0xFFFFFFFFF58B0FBFLL;
+          reg[4] = 0x0000000000000FBFLL;
+          reg[12]= 0xFFFFFFFF9651F81ELL;
+          reg[13]= 0x000000002D42AAC5LL;
+          reg[15]= 0x0000000056584D60LL;
+          reg[22]= 0x0000000000000091LL;
+          reg[25]= 0xFFFFFFFFCDCE565FLL;
+          break;
+        case 6:
+          reg[2] = 0xFFFFFFFFA95930A4LL;
+          reg[3] = 0xFFFFFFFFA95930A4LL;
+          reg[4] = 0x00000000000030A4LL;
+          reg[12]= 0xFFFFFFFFBCB59510LL;
+          reg[13]= 0xFFFFFFFFBCB59510LL;
+          reg[15]= 0x000000007A3C07F4LL;
+          reg[22]= 0x0000000000000085LL;
+          reg[25]= 0x00000000465E3F72LL;
+          break;
+       }
+
+        boot_addr = 0xA4000040;
+    }
 }
 
 void r4300_execute(void)
@@ -1875,7 +1887,7 @@ void r4300_execute(void)
         instr_count[i] = 0;
 #endif
 
-    last_addr = 0xa4000040;
+    last_addr = boot_addr;
     next_interupt = 624999;
     init_interupt();
 
@@ -1897,7 +1909,7 @@ void r4300_execute(void)
         if (!actual->block || !actual->code)
             return;
 
-        code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
+        code = (void *)(actual->code+PC->local_addr);
         dyna_start(code);
         PC++;
 #if defined(PROFILE_R4300)

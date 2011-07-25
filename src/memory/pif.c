@@ -488,6 +488,7 @@ void update_pif_write(void)
        case 0x08:
          PIF_RAMb[0x3F] = 0;
          break;
+       // TODO: Implement required cases for PIF ROM boot
        default:
          DebugMessage(M64MSG_ERROR, "error in update_pif_write(): %x", PIF_RAMb[0x3F]);
       }

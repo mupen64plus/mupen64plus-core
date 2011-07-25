@@ -291,7 +291,7 @@ void gennotcompiled(void)
 {
    free_registers_move_start();
 
-    if (dst->addr == 0xa4000040 && dynarec_stack_initialized == 0)
+    if (dst->addr == boot_addr && dynarec_stack_initialized == 0)
     {
         dynarec_stack_initialized = 1;
         sub_reg64_imm32(RSP, 0x18); // fixme why is this here, how does stack get re-adjusted?

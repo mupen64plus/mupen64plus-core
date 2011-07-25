@@ -329,7 +329,7 @@ void dma_si_write(void)
     
     for (i=0; i<(64/4); i++)
     {
-        PIF_RAM[i] = sl(rdram[si_register.si_dram_addr/4+i]);
+        PIF_RAM[i] = BE32(rdram[si_register.si_dram_addr/4+i]);
     }
     
     update_pif_write();
@@ -351,7 +351,7 @@ void dma_si_read(void)
     
     for (i=0; i<(64/4); i++)
     {
-        rdram[si_register.si_dram_addr/4+i] = sl(PIF_RAM[i]);
+        rdram[si_register.si_dram_addr/4+i] = BE32(PIF_RAM[i]);
     }
     
     update_count();

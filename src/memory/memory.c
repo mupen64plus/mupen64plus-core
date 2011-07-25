@@ -66,6 +66,8 @@ unsigned int SP_DMEM[0x1000/4*2];
 unsigned int *SP_IMEM = SP_DMEM+0x1000/4;
 unsigned char *SP_DMEMb = (unsigned char *)(SP_DMEM);
 unsigned char *SP_IMEMb = (unsigned char*)(SP_DMEM+0x1000/4);
+unsigned int PIF_ROM[0x7C0/4];
+unsigned char *PIF_ROMb = (unsigned char *)(PIF_ROM);
 unsigned int PIF_RAM[0x40/4];
 unsigned char *PIF_RAMb = (unsigned char *)(PIF_RAM);
 
@@ -128,7 +130,7 @@ int init_memory(int DoByteSwap)
    {
     //swap rom
      unsigned int *roml = (unsigned int *) rom;
-     for (i=0; i<(rom_size/4); i++) roml[i] = sl(roml[i]);
+     for (i=0; i<(rom_size/4); i++) roml[i] = BE32(roml[i]);
    }
    
    //init hash tables
@@ -3521,53 +3523,68 @@ void write_rom(void)
 
 void read_pif(void)
 {
-   if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
+   if (*address_low > 0x7FF)
    {
        DebugMessage(M64MSG_ERROR, "reading a word in PIF at invalid address 0x%x", address);
        *rdword = 0;
        return;
    }
 
-   *rdword = sl(*((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)));
+   if (*address_low < 0x7C0)
+       *rdword = *((unsigned int *)(PIF_ROMb + (address & 0x7FF)));
+   else
+       *rdword = BE32(*((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)));
 }
 
 void read_pifb(void)
 {
-   if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
+   if (*address_low > 0x7FF)
    {
        DebugMessage(M64MSG_ERROR, "reading a byte in PIF at invalid address 0x%x", address);
        *rdword = 0;
        return;
    }
 
-   *rdword = *(PIF_RAMb + ((address & 0x7FF) - 0x7C0));
+   if (*address_low < 0x7C0)
+       *rdword = *(PIF_ROMb + ((address^S8) & 0x7FF));
+   else
+       *rdword = *(PIF_RAMb + ((address & 0x7FF) - 0x7C0));
 }
 
 void read_pifh(void)
 {
-   if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
+   if (*address_low > 0x7FF)
    {
        DebugMessage(M64MSG_ERROR, "reading a hword in PIF at invalid address 0x%x", address);
        *rdword = 0;
        return;
    }
 
-   *rdword = (*(PIF_RAMb + ((address & 0x7FF) - 0x7C0)) << 8) |
-     *(PIF_RAMb + (((address+1) & 0x7FF) - 0x7C0));
+   if (*address_low < 0x7C0)
+       *rdword = *((unsigned short *)(PIF_ROMb + ((address^S16) & 0x7FF)));
+   else
+       *rdword = (*(PIF_RAMb + ((address & 0x7FF) - 0x7C0)) << 8) |
+         *(PIF_RAMb + (((address+1) & 0x7FF) - 0x7C0));
 }
 
 void read_pifd(void)
 {
-   if ((*address_low > 0x7FF) || (*address_low < 0x7C0))
+   if (*address_low > 0x7FF)
    {
        DebugMessage(M64MSG_ERROR, "reading a double word in PIF in invalid address 0x%x", address);
        *rdword = 0;
        return;
    }
 
-   *rdword = ((unsigned long long)sl(*((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0))) << 32)|
-     sl(*((unsigned int *)(PIF_RAMb + ((address+4) & 0x7FF) - 0x7C0)));
+   if (*address_low < 0x7C0)
+       *rdword = ((unsigned long long)(*((unsigned int *)(PIF_ROMb+(address&0x7FF))))<<32)|
+         *((unsigned int *)(PIF_ROMb + ((address+4)&0x7FF)));
+   else
+       *rdword = ((unsigned long long)BE32(*((unsigned int *)(PIF_RAMb + (address & 0x7FF)))) << 32)|
+         BE32(*((unsigned int *)(PIF_RAMb + ((address+4) & 0x7FF) - 0x7C0)));
 }
+
+// TODO is PIF ROM writable in real hardware? not that it matters much for practical use...
 
 void write_pif(void)
 {
@@ -3577,7 +3594,7 @@ void write_pif(void)
        return;
    }
 
-   *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) = sl(word);
+   *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) = BE32(word);
    if ((address & 0x7FF) == 0x7FC)
      {
     if (PIF_RAMb[0x3F] == 0x08)
@@ -3645,9 +3662,9 @@ void write_pifd(void)
    }
 
    *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) =
-     sl((unsigned int)(dword >> 32));
+     BE32((unsigned int)(dword >> 32));
    *((unsigned int *)(PIF_RAMb + (address & 0x7FF) - 0x7C0)) =
-     sl((unsigned int)(dword & 0xFFFFFFFF));
+     BE32((unsigned int)(dword & 0xFFFFFFFF));
    if ((address & 0x7FF) == 0x7F8)
      {
     if (PIF_RAMb[0x3F] == 0x08)
