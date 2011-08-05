@@ -57,25 +57,30 @@ ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
   CPU := X86
   ifeq ("$(BITS)", "32")
     ARCH_DETECTED := 64BITS_32
+    PIC ?= 0
   else
     ARCH_DETECTED := 64BITS
+    PIC ?= 1
   endif
 endif
 ifneq ("$(filter pentium i%86,$(HOST_CPU))","")
   CPU := X86
   ARCH_DETECTED := 32BITS
+  PIC ?= 0
 endif
 # PPC doesn't work yet
 #ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
 #  CPU := PPC
 #  ARCH_DETECTED := 32BITS
 #  BIG_ENDIAN := 1
+#  PIC ?= 1
 #  NO_ASM := 1
 #endif
 #ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
 #  CPU := PPC
 #  ARCH_DETECTED := 64BITS
 #  BIG_ENDIAN := 1
+#  PIC ?= 1
 #  NO_ASM := 1
 #endif
 ifeq ("$(CPU)","NONE")
@@ -88,11 +93,8 @@ CFLAGS += $(OPTFLAGS) -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
-# Since we are building a shared library, we must compile with -fPIC for x86_64 CPUs.
-# On 32-bit systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
-ifeq ($(ARCH_DETECTED), 64BITS)
-  PIC ?= 1
-endif
+# Since we are building a shared library, we must compile with -fPIC on some architectures
+# On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
   CFLAGS += -fPIC
   LDFLAGS += -fPIC
