@@ -69,11 +69,13 @@ endif
 #ifneq ("$(filter ppc powerpc,$(HOST_CPU))","")
 #  CPU := PPC
 #  ARCH_DETECTED := 32BITS
+#  BIG_ENDIAN := 1
 #  NO_ASM := 1
 #endif
 #ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
 #  CPU := PPC
 #  ARCH_DETECTED := 64BITS
+#  BIG_ENDIAN := 1
 #  NO_ASM := 1
 #endif
 ifeq ("$(CPU)","NONE")
@@ -94,6 +96,10 @@ endif
 ifeq ($(PIC), 1)
   CFLAGS += -fPIC
   LDFLAGS += -fPIC
+endif
+
+ifeq ($(BIG_ENDIAN), 1)
+  CFLAGS += -DM64P_BIG_ENDIAN
 endif
 
 # tweak flags for 32-bit build on 64-bit system
