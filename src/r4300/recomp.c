@@ -2639,7 +2639,7 @@ void *malloc_exec(size_t size)
    if (pagesize == -1)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
 
-   void *block = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+   void *block = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON, -1, 0);
    if (block == MAP_FAILED)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate %i byte block of %zd-byte aligned RWX memory.", size, pagesize); return NULL; }
 
