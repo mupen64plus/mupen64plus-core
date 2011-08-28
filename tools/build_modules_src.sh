@@ -38,7 +38,6 @@ for modname in ${modules}; do
   if [ $# -eq 3 -a "$3" = "-norom" -a "$modname" = "mupen64plus-core" ]; then
     rm -rf "${OUTPUTDIR}"/roms
   fi
-  tar c "${OUTPUTDIR}" | gzip > "${OUTPUTDIR}.tar.gz"
+  tar c "${OUTPUTDIR}" --owner 0 --group 0 --numeric-owner | gzip -n > "${OUTPUTDIR}.tar.gz"
   rm -rf "${OUTPUTDIR}"
 done
-
