@@ -1,0 +1,5 @@
+syntax: regexp
+
+^projects/unix/_obj/
+^projects/unix/libmupen64plus.so.2$
+^projects/unix/libmupen64plus.so.2.0.0$

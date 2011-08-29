@@ -34,7 +34,7 @@ for modname in ${modules}; do
   echo "************************************ Downloading and packaging module source code: ${modname}"
   rm -rf "tmp"
   hg clone --noupdate "http://bitbucket.org/richard42/$modname" "tmp"
-  EXCLUDE="--exclude tmp/.hgtags --exclude tmp/.hg_archival.txt"
+  EXCLUDE="--exclude tmp/.hgtags --exclude tmp/.hg_archival.txt tmp/.hgignore"
   if [ $# -eq 3 -a "$3" = "-norom" -a "$modname" = "mupen64plus-core" ]; then
     EXCLUDE="${EXCLUDE} --exclude tmp/roms"
   fi
