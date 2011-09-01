@@ -51,7 +51,7 @@ rm -f m64p_get.sh m64p_update.sh
 
 echo "************************************ Creating archive"
 cd ..
-tar c "${OUTPUTDIR}" | gzip > "${OUTPUTDIR}.tar.gz"
+tar c "${OUTPUTDIR}" --owner 0 --group 0 --numeric-owner | gzip -n > "${OUTPUTDIR}.tar.gz"
 rm -rf "${OUTPUTDIR}"
 
 

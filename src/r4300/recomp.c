@@ -2635,11 +2635,18 @@ void *malloc_exec(size_t size)
 #if defined(WIN32)
 	return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #elif defined(__GNUC__)
+
+   #ifndef  MAP_ANONYMOUS
+      #ifdef MAP_ANON
+         #define MAP_ANONYMOUS MAP_ANON
+      #endif
+   #endif
+
    int pagesize = sysconf(_SC_PAGE_SIZE);
    if (pagesize == -1)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't determine system memory page size."); return NULL; }
 
-   void *block = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON, -1, 0);
+   void *block = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
    if (block == MAP_FAILED)
        { DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate %i byte block of %zd-byte aligned RWX memory.", size, pagesize); return NULL; }
 
