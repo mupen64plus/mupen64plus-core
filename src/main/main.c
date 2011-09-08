@@ -521,9 +521,6 @@ m64p_error main_run(void)
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
 
-    /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
-    event_initialize();
-
     // initialize memory, and do byte-swapping if it's not been done yet
     if (g_MemHasBeenBSwapped == 0)
     {
@@ -538,17 +535,21 @@ m64p_error main_run(void)
     // Attach rom to plugins
     if (!romOpen_gfx())
     {
-        free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+        free_memory(); return M64ERR_PLUGIN_FAIL;
     }
     if (!romOpen_audio())
     {
-        romClosed_gfx(); free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+        romClosed_gfx(); free_memory(); return M64ERR_PLUGIN_FAIL;
     }
     if (!romOpen_input())
     {
-        romClosed_audio(); romClosed_gfx(); free_memory(); SDL_Quit(); return M64ERR_PLUGIN_FAIL;
+        romClosed_audio(); romClosed_gfx(); free_memory(); return M64ERR_PLUGIN_FAIL;
     }
 
+    /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
+    event_initialize();
+
+    /* initialize the on-screen display */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
         // init on-screen display
@@ -580,6 +581,7 @@ m64p_error main_run(void)
     r4300_reset_soft();
     r4300_execute();
 
+    /* now begin to shut down */
 #ifdef WITH_LIRC
     lircStop();
 #endif // WITH_LIRC
@@ -603,8 +605,6 @@ m64p_error main_run(void)
     // clean up
     g_EmulatorRunning = 0;
     StateChanged(M64CORE_EMU_STATE, M64EMU_STOPPED);
-
-    SDL_Quit();
 
     return M64ERR_SUCCESS;
 }

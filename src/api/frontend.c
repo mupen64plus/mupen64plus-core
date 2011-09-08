@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <SDL.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "m64p_types.h"
@@ -91,9 +92,10 @@ EXPORT m64p_error CALL CoreShutdown(void)
 
     /* close down some core sub-systems */
     romdatabase_close();
-
-    /* lastly, shut down the configuration code */
     ConfigShutdown();
+
+    /* tell SDL to shut down */
+    SDL_Quit();
 
     l_CoreInit = 0;
     return M64ERR_SUCCESS;
