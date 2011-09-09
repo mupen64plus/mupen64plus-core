@@ -75,7 +75,7 @@ cp mupen64plus-core/tools/uninstall_binary_bundle.sh "../${OUTPUTDIR}/uninstall.
 cp mupen64plus-ui-console/doc/* "../${OUTPUTDIR}/"
 cd ..
 
-tar c "${OUTPUTDIR}" | gzip > "../${OUTPUTDIR}.tar.gz"
+tar c "${OUTPUTDIR}" --owner 0 --group 0 --numeric-owner | gzip -n > "../${OUTPUTDIR}.tar.gz"
 cd ..
 rm -rf "${TEMPDIR}"
 

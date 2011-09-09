@@ -39,6 +39,8 @@ else
     exit 1
 fi
 
+INSTALL_STRIP_FLAG="${INSTALL_STRIP_FLAG:=-s}"
+
 usage()
 {
 printf "usage: $(basename $0) [PREFIX] [SHAREDIR] [BINDIR] [LIBDIR] [PLUGINDIR] [MANDIR]
@@ -66,7 +68,7 @@ MANDIR="${6:-${PREFIX}/share/man}"
 printf "Installing Mupen64Plus Binary Bundle to ${PREFIX}\n"
 # Mupen64Plus-Core
 $INSTALL -d -v "${LIBDIR}"
-$INSTALL -m 0644 libmupen64plus.so.2.* "${LIBDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" libmupen64plus.so.2.* "${LIBDIR}"
 /sbin/ldconfig
 $INSTALL -d -v "${SHAREDIR}"
 $INSTALL -m 0644 font.ttf "${SHAREDIR}"
@@ -82,10 +84,10 @@ $INSTALL -d -v "${MANDIR}/man6"
 $INSTALL -m 0644 mupen64plus.6.gz "${MANDIR}/man6"
 # Plugins
 $INSTALL -d -v "${PLUGINDIR}"
-$INSTALL -m 0644 mupen64plus-audio-sdl.so "${PLUGINDIR}"
-$INSTALL -m 0644 mupen64plus-input-sdl.so "${PLUGINDIR}"
-$INSTALL -m 0644 mupen64plus-rsp-hle.so "${PLUGINDIR}"
-$INSTALL -m 0644 mupen64plus-video-rice.so "${PLUGINDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-audio-sdl.so "${PLUGINDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-input-sdl.so "${PLUGINDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-rsp-hle.so "${PLUGINDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-video-rice.so "${PLUGINDIR}"
 $INSTALL -m 0644 RiceVideoLinux.ini "${SHAREDIR}"
 $INSTALL -m 0644 InputAutoCfg.ini "${SHAREDIR}"
 

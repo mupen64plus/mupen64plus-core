@@ -62,7 +62,7 @@ static void user_write_data(png_structp png_write, png_bytep data, png_size_t le
 {
     FILE *fPtr = (FILE *) png_get_io_ptr(png_write);
     if (fwrite(data, 1, length, fPtr) != length)
-        DebugMessage(M64MSG_ERROR, "Failed to write %i bytes to screenshot file.", length);
+        DebugMessage(M64MSG_ERROR, "Failed to write %zi bytes to screenshot file.", length);
 }
 
 static void user_flush_data(png_structp png_write)

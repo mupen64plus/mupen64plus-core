@@ -108,9 +108,9 @@ void main_message(m64p_msg_level level, unsigned int corner, const char *format,
 
     /* send message to on-screen-display if enabled */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
-        osd_new_message((enum osd_corner) corner, buffer);
+        osd_new_message((enum osd_corner) corner, "%s", buffer);
     /* send message to front-end */
-    DebugMessage(level, buffer);
+    DebugMessage(level, "%s", buffer);
 }
 
 
@@ -320,9 +320,9 @@ void main_draw_volume_osd(void)
 
     // create a new message or update an existing one
     if (l_msgVol != NULL)
-        osd_update_message(l_msgVol, msgString);
+        osd_update_message(l_msgVol, "%s", msgString);
     else {
-        l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, msgString);
+        l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, "%s", msgString);
 	osd_message_set_user_managed(l_msgVol);
     }
 }
