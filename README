@@ -1,3 +1,15 @@
+** EXTREMELY IMPORTANT ** - Read to avoid wasting your time
+-----------------------------------------------------------
+Some parts of the source code are left blank because there's no known public
+documentation about them, and known implementations aren't compatible with the
+GPL license used by Mupen64Plus.
+
+Those are in src/memory/pif.c and src/r4300/r4300.c (search for "TODO").
+
+Filling them is left as an exercise to the reader.
+
+(If you don't know where to start, then maybe this fork isn't for you).
+
 Mupen64Plus-Core README
 -----------------------
 
