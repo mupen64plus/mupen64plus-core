@@ -18,7 +18,7 @@ All of these functions should only be called from within the video plugin; they 
 |This function should be called before any other Video Extension functions.
 |-
 |Usage
-|This function should be called from within the InitiateGFX() video plugin function call.  The default SDL implementation of this function simply calls SDL_InitSubSystem(SDL_INIT_VIDEO).  It does not open a rendering window or switch video modes.
+|This function should be called from within the RomOpen() video plugin function call.  The default SDL implementation of this function simply calls SDL_InitSubSystem(SDL_INIT_VIDEO).  It does not open a rendering window or switch video modes.
 |}
 <br />
 {| border="1"
@@ -29,7 +29,7 @@ All of these functions should only be called from within the video plugin; they 
 |N/A
 |-
 |Usage
-|This function closes any open rendering window and shuts down the video system.  The default SDL implementation of this function calls SDL_QuitSubSystem(SDL_INIT_VIDEO).  This function should be called from within the RomClose() video plugin function.
+|This function closes any open rendering window and shuts down the video system.  The default SDL implementation of this function calls SDL_QuitSubSystem(SDL_INIT_VIDEO).  This function should be called from within the RomClosed() video plugin function.
 |}
 <br />
 
