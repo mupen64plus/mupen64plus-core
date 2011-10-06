@@ -354,7 +354,7 @@ endif
 
 ifeq ($(LIRC), 1)
   SOURCE += $(SRCDIR)/main/lirc.c
-  LIBS += -llirc_client
+  LDLIBS += -llirc_client
 endif
 
 ifeq ($(DEBUGGER), 1)
