@@ -84,12 +84,25 @@ static osd_message_t *l_msgPause = NULL;
 /*********************************************************************************************************
 * helper functions
 */
-char *get_savespath(void)
+const char *get_savespath(void)
 {
     static char path[1024];
+    const char *savestatepath = NULL;
+    m64p_handle CoreHandle = NULL;
 
-    snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
-    path[1023] = 0;
+    /* try to get the SaveStatePath string variable in the Core configuration section */
+    if (ConfigOpenSection("Core", &CoreHandle) == M64ERR_SUCCESS)
+    {
+        savestatepath = ConfigGetParamString(CoreHandle, "SaveStatePath");
+    }
+
+    if (!savestatepath || (strlen(savestatepath) == 0)) {
+        snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
+        path[1023] = 0;
+    } else {
+        snprintf(path, 1024, "%s%c", savestatepath, OSAL_DIR_SEPARATOR);
+        path[1023] = 0;
+    }
 
     /* create directory if it doesn't exist */
     osal_mkdirp(path, 0700);
