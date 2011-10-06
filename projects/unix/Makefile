@@ -285,9 +285,6 @@ SOURCE = \
 	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/adler32.c \
-	$(SRCDIR)/main/zip/ioapi.c \
-	$(SRCDIR)/main/zip/zip.c \
-	$(SRCDIR)/main/zip/unzip.c \
 	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \
@@ -356,6 +353,17 @@ ifeq ($(LIRC), 1)
   SOURCE += $(SRCDIR)/main/lirc.c
   LDLIBS += -llirc_client
 endif
+
+ifeq ($(shell pkg-config --modversion minizip 2>/dev/null),)
+  SOURCE += \
+	$(SRCDIR)/main/zip/ioapi.c \
+	$(SRCDIR)/main/zip/zip.c \
+	$(SRCDIR)/main/zip/unzip.c
+else
+  CFLAGS += $(shell pkg-config --cflags minizip) -DLIBMINIZIP
+  LDLIBS +=  $(shell pkg-config --libs minizip)
+endif
+
 
 ifeq ($(DEBUGGER), 1)
   SOURCE += \

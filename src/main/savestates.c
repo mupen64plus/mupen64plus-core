@@ -43,8 +43,13 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 
-#include "main/zip/unzip.h"
-#include "main/zip/zip.h"
+#ifdef LIBMINIZIP
+    #include <unzip.h>
+    #include <zip.h>
+#else
+    #include "main/zip/unzip.h"
+    #include "main/zip/zip.h"
+#endif
 
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_version = 0x00010000;  /* 1.0 */
