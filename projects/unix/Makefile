@@ -133,6 +133,7 @@ ifeq ($(OS), LINUX)
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 endif
 ifeq ($(OS), OSX)
+  CFLAGS += -DUSE_FILE32API
   TARGET = libmupen64plus.dylib
   LDFLAGS += -bundle -read_only_relocs suppress
   LDLIBS += -ldl -framework OpenGL
