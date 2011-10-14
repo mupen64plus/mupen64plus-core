@@ -327,8 +327,6 @@ void main_draw_volume_osd(void)
     else
     {
         sprintf(msgString, "%s: %s", "Volume", volString);
-        if (msgString[strlen(msgString) - 1] == '%')
-            strcat(msgString, "%");
     }
 
     // create a new message or update an existing one
