@@ -216,6 +216,12 @@ void osd_init(int width, int height)
 {
     const char *fontpath;
 
+    if (!OGLFT::Init_FT())
+    {
+        DebugMessage(M64MSG_ERROR, "Could not initialize freetype library.");
+        return;
+    }
+
     fontpath = ConfigGetSharedDataFilepath(FONT_FILENAME);
 
     l_font = new OGLFT::Monochrome(fontpath, (float) height / 35.0f);  // make font size proportional to screen height
@@ -269,6 +275,9 @@ void osd_exit(void)
         free(msg);
     }
     list_delete(&l_messageQueue);
+
+    // shut down the Freetype library
+    OGLFT::Uninit_FT();
 
     // reset initialized flag
     l_OsdInitialized = 0;
