@@ -66,5 +66,11 @@ m64p_error main_get_screen_width(int *width);
 m64p_error main_get_screen_height(int *height);
 m64p_error main_read_screen(void *pixels, int bFront);
 
+m64p_error main_volume_up(void);
+m64p_error main_volume_down(void);
+m64p_error main_volume_get_level(int *level);
+m64p_error main_volume_set_level(int level);
+m64p_error main_volume_mute(void);
+
 #endif /* __MAIN_H__ */
 

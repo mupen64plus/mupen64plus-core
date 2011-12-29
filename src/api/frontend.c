@@ -310,6 +310,28 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (ParamInt < 0 || ParamInt > 1)
                 return M64ERR_INPUT_INVALID;
             return main_read_screen(ParamPtr, ParamInt);
+        case M64CMD_VOLUME_UP:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            return main_volume_up();
+        case M64CMD_VOLUME_DOWN:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            return main_volume_down();
+        case M64CMD_VOLUME_GET_LEVEL:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;    
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            return main_volume_get_level((int *)ParamPtr);
+        case M64CMD_VOLUME_SET_LEVEL:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            return main_volume_set_level(ParamInt);
+        case M64CMD_VOLUME_MUTE:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            return main_volume_mute();
         default:
             return M64ERR_INPUT_INVALID;
     }

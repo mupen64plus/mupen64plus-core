@@ -22,8 +22,6 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#include <SDL.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

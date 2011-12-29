@@ -244,20 +244,11 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyScreenshot)
                         DebugMessage(M64MSG_WARNING, "TODO XXX update screenshot taking code.");
                     else if (cmd == joyMute)
-                    {
-                        volumeMute();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_mute();
                     else if (cmd == joyDecrease)
-                    {
-                        volumeDown();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_down();
                     else if (cmd == joyIncrease)
-                    {
-                        volumeUp();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_up();
                     else if (cmd == joyForward)
                         main_set_fastforward(1);
                 }
@@ -381,20 +372,11 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdPause))
         main_toggle_pause();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdMute))
-    {
-        volumeMute();
-        main_draw_volume_osd();
-    }
+        main_volume_mute();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdIncrease))
-    {
-        volumeUp();
-        main_draw_volume_osd();
-    }
+        main_volume_up();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdDecrease))
-    {
-        volumeDown();
-        main_draw_volume_osd();
-    }
+        main_volume_down();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdForward))
     {
         main_set_fastforward(1);

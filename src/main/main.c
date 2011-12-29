@@ -442,6 +442,41 @@ m64p_error main_read_screen(void *pixels, int bFront)
     return M64ERR_SUCCESS;
 }
 
+m64p_error main_volume_up(void)
+{
+    volumeUp();
+    main_draw_volume_osd();
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_volume_down(void)
+{
+    volumeDown();
+    main_draw_volume_osd();
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_volume_get_level(int *level)
+{
+    *level = volumeGetLevel();
+    main_draw_volume_osd();
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_volume_set_level(int level)
+{
+    volumeSetLevel(level);
+    main_draw_volume_osd();
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_volume_mute(void)
+{
+    volumeMute();
+    main_draw_volume_osd();
+    return M64ERR_SUCCESS;
+}
+
 /*********************************************************************************************************
 * global functions, callbacks from the r4300 core or from other plugins
 */
