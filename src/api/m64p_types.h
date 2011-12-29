@@ -51,6 +51,7 @@
 typedef void * m64p_handle;
 
 typedef void (*m64p_frame_callback)(unsigned int FrameIndex);
+typedef void (*m64p_input_callback)(void);
 
 typedef enum {
   M64TYPE_INT = 1,
@@ -146,7 +147,8 @@ typedef enum {
   M64CMD_VOLUME_DOWN,
   M64CMD_VOLUME_GET_LEVEL,
   M64CMD_VOLUME_SET_LEVEL,
-  M64CMD_VOLUME_MUTE
+  M64CMD_VOLUME_MUTE,
+  M64CMD_SET_INPUT_CALLBACK
 } m64p_command;
 
 typedef struct {

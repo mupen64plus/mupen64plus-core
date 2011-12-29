@@ -332,6 +332,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             return main_volume_mute();
+        case M64CMD_SET_INPUT_CALLBACK:
+            g_InputCallback = (m64p_input_callback) ParamPtr;
+            return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
     }

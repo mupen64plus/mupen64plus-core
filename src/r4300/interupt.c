@@ -373,10 +373,14 @@ void gen_interupt(void)
                 cheat_apply_cheats(ENTRY_VI);
             }
             updateScreen();
+
 #ifdef WITH_LIRC
             lircCheckInput();
 #endif
             SDL_PumpEvents();
+            if (g_InputCallback != NULL)
+                g_InputCallback();
+
             refresh_stat();
 
             // if paused, poll for input events
@@ -391,6 +395,8 @@ void gen_interupt(void)
 #ifdef WITH_LIRC
                     lircCheckInput();
 #endif //WITH_LIRC
+                    if (g_InputCallback != NULL)
+                        g_InputCallback();
                 }
             }
 

@@ -31,6 +31,7 @@ extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
 
 extern m64p_frame_callback g_FrameCallback;
+extern m64p_input_callback g_InputCallback;
 
 const char* get_savespath(void);
 
