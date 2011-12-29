@@ -49,7 +49,6 @@
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
-#include "osd/screenshot.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300.h"
 
@@ -69,7 +68,6 @@ m64p_frame_callback g_FrameCallback = NULL;
 
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
-int         g_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
@@ -181,7 +179,6 @@ void main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
     ConfigSetDefaultBool(g_CoreConfig, "EnableDebugger", 0, "Activate the R4300 debugger when ROM execution begins, if core was built with Debugger support");
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
-    ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
 
@@ -338,13 +335,6 @@ void main_draw_volume_osd(void)
     }
 }
 
-/* this function could be called as a result of a keypress, joystick/button movement,
-   LIRC command, or 'testshots' command-line option timer */
-void main_take_next_screenshot(void)
-{
-    g_TakeScreenshot = l_CurrentFrame + 1;
-}
-
 void main_state_set_slot(int slot)
 {
     if (slot < 0 || slot > 9)
@@ -431,18 +421,36 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
     return M64ERR_SUCCESS;
 }
 
+m64p_error main_get_screen_width(int *width)
+{
+    int height_trash;
+    readScreen(NULL, width, &height_trash, 0);
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_get_screen_height(int *height)
+{
+    int width_trash;
+    readScreen(NULL, &width_trash, height, 0);
+    return M64ERR_SUCCESS;
+}
+
+m64p_error main_read_screen(void *pixels, int bFront)
+{
+    int width_trash, height_trash;
+    readScreen(pixels, &width_trash, &height_trash, bFront);
+    return M64ERR_SUCCESS;
+}
+
 /*********************************************************************************************************
 * global functions, callbacks from the r4300 core or from other plugins
 */
 
 static void video_plugin_render_callback(void)
 {
-    // if the flag is set to take a screenshot, then grab it now
-    if (g_TakeScreenshot != 0)
-    {
-        TakeScreenshot(g_TakeScreenshot - 1);  // current frame number +1 is in g_TakeScreenshot
-        g_TakeScreenshot = 0; // reset flag
-    }
+	// Call the UI frame callback, if any
+    if (g_FrameCallback != NULL)
+        (*g_FrameCallback)(l_CurrentFrame);
 
     // if the OSD is enabled, then draw it now
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
@@ -453,9 +461,6 @@ static void video_plugin_render_callback(void)
 
 void new_frame(void)
 {
-    if (g_FrameCallback != NULL)
-        (*g_FrameCallback)(l_CurrentFrame);
-
     /* advance the current frame */
     l_CurrentFrame++;
 
@@ -569,7 +574,7 @@ m64p_error main_run(void)
         osd_init(width, height);
     }
 
-    // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
+    // setup rendering callback from video plugin to the core, for UI callback and On-Screen-Display
     setRenderingCallback(video_plugin_render_callback);
 
 #ifdef WITH_LIRC

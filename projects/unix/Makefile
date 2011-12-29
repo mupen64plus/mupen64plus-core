@@ -167,9 +167,6 @@ endif
 ifeq ($(shell which pkg-config 2>/dev/null),)
   $(error pkg-config not found)
 endif
-ifeq ($(shell pkg-config --modversion libpng 2>/dev/null),)
-  $(error No libpng development libraries found!)
-endif
 ifeq ($(shell pkg-config --modversion zlib 2>/dev/null),)
   $(error No zlib development libraries found!)
 endif
@@ -182,8 +179,8 @@ endif
 ifeq ($(shell pkg-config --modversion glu 2>/dev/null),)
   $(error No OpenGL utility development libraries found!)
 endif
-CFLAGS += $(shell pkg-config --cflags libpng zlib freetype2 gl glu)
-LDLIBS +=  $(shell pkg-config --libs libpng zlib freetype2 gl glu)
+CFLAGS += $(shell pkg-config --cflags zlib freetype2 gl glu)
+LDLIBS +=  $(shell pkg-config --libs zlib freetype2 gl glu)
 
 # test for presence of SDL
 ifeq ($(shell which sdl-config 2>/dev/null),)
@@ -319,8 +316,7 @@ SOURCE = \
 	$(SRCDIR)/r4300/regimm.c \
 	$(SRCDIR)/r4300/tlb.c \
 	$(SRCDIR)/osd/OGLFT.cpp \
-	$(SRCDIR)/osd/osd.cpp \
-	$(SRCDIR)/osd/screenshot.cpp
+	$(SRCDIR)/osd/osd.cpp
 
 # source files for optional features
 ifneq ($(NO_ASM), 1)

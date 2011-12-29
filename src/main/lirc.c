@@ -111,7 +111,7 @@ void lircCheckInput(void)
                     main_draw_volume_osd();
                 }
                 else if(strcmp(c, "SCREENSHOT") == 0)
-                    main_take_next_screenshot();
+                    DebugMessage(M64MSG_WARNING, "TODO XXX update screenshot taking code.");
                 else if(strcmp(c, "SPEED+") == 0)
                     main_speedup(5);
                 else if(strcmp(c, "SPEED-") == 0)

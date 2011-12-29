@@ -28,7 +28,6 @@
 extern m64p_handle g_CoreConfig;
 
 extern int g_MemHasBeenBSwapped;
-extern int g_TakeScreenshot;
 extern int g_EmulatorRunning;
 
 extern m64p_frame_callback g_FrameCallback;
@@ -55,7 +54,6 @@ void main_set_speedlimiter(int enable);
 int main_get_speedlimiter(void);
 
 void main_draw_volume_osd(void);
-void main_take_next_screenshot(void);
 
 void main_state_set_slot(int slot);
 void main_state_inc_slot(void);
@@ -63,6 +61,10 @@ void main_state_load(const char *filename);
 void main_state_save(int format_pj64, const char *filename);
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval);
+
+m64p_error main_get_screen_width(int *width);
+m64p_error main_get_screen_height(int *height);
+m64p_error main_read_screen(void *pixels, int bFront);
 
 #endif /* __MAIN_H__ */
 

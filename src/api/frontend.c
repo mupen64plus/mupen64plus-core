@@ -42,7 +42,6 @@
 #include "main/rom.h"
 #include "main/savestates.h"
 #include "main/version.h"
-#include "osd/screenshot.h"
 #include "plugin/plugin.h"
 
 /* some local state variables */
@@ -152,7 +151,6 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (rval == M64ERR_SUCCESS)
             {
                 l_ROMOpen = 1;
-                ScreenshotRomOpen();
                 cheat_init();
             }
             return rval;
@@ -290,10 +288,28 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             g_FrameCallback = (m64p_frame_callback) ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
+            DebugMessage(M64MSG_WARNING, "M64CMD_TAKE_NEXT_SCREENSHOT is deprecated. Please update your user interface.");
+            return M64ERR_INVALID_STATE;
+        case M64CMD_GET_SCREEN_WIDTH:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            main_take_next_screenshot();
-            return M64ERR_SUCCESS;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            return main_get_screen_width((int *)ParamPtr);
+        case M64CMD_GET_SCREEN_HEIGHT:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            return main_get_screen_height((int *)ParamPtr);
+        case M64CMD_READ_SCREEN:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            if (ParamInt < 0 || ParamInt > 1)
+                return M64ERR_INPUT_INVALID;
+            return main_read_screen(ParamPtr, ParamInt);
         default:
             return M64ERR_INPUT_INVALID;
     }

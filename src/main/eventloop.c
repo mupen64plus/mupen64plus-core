@@ -242,7 +242,7 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyIncrement)
                         main_state_inc_slot();
                     else if (cmd == joyScreenshot)
-                        main_take_next_screenshot();
+                        DebugMessage(M64MSG_WARNING, "TODO XXX update screenshot taking code.");
                     else if (cmd == joyMute)
                     {
                         volumeMute();
@@ -377,7 +377,7 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdSpeedup))
         main_speedup(5);
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdScreenshot))
-        main_take_next_screenshot();    /* screenshot will be taken at the end of frame rendering */
+        DebugMessage(M64MSG_WARNING, "TODO XXX update screenshot taking code.");
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdPause))
         main_toggle_pause();
     else if (keysym == ConfigGetParamInt(g_CoreConfig, kbdMute))
