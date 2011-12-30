@@ -43,6 +43,7 @@ void main_message(m64p_msg_level level, unsigned int osd_corner, const char *for
 
 m64p_error main_run(void);
 void main_stop(void);
+void main_soft_reset(void);
 int  main_is_paused(void);
 void main_toggle_pause(void);
 void main_advance_one(void);
@@ -62,6 +63,9 @@ void main_state_load(const char *filename);
 void main_state_save(int format_pj64, const char *filename);
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval);
+
+void main_send_sdl_keyup(int keysym, int keymod);
+void main_send_sdl_keydown(int keysym, int keymod);
 
 m64p_error main_get_screen_width(int *width);
 m64p_error main_get_screen_height(int *height);

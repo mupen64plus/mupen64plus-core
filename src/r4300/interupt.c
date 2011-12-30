@@ -377,7 +377,6 @@ void gen_interupt(void)
 #ifdef WITH_LIRC
             lircCheckInput();
 #endif
-            SDL_PumpEvents();
             if (g_InputCallback != NULL)
                 g_InputCallback();
 
@@ -391,7 +390,6 @@ void gen_interupt(void)
                 while(rompause)
                 {
                     SDL_Delay(10);
-                    SDL_PumpEvents();
 #ifdef WITH_LIRC
                     lircCheckInput();
 #endif //WITH_LIRC

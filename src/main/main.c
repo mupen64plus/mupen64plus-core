@@ -41,7 +41,6 @@
 #include "api/vidext.h"
 
 #include "main.h"
-#include "eventloop.h"
 #include "rom.h"
 #include "savestates.h"
 
@@ -51,6 +50,7 @@
 #include "osd/osd.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300.h"
+#include "r4300/interupt.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -182,9 +182,6 @@ void main_set_core_defaults(void)
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
-
-    /* set config parameters for keyboard and joystick commands */
-    event_set_core_defaults();
 }
 
 void main_speeddown(int percent)
@@ -422,6 +419,16 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
     return M64ERR_SUCCESS;
 }
 
+void main_send_sdl_keyup(int keysym, int keymod)
+{
+    keyUp(keysym, keymod);
+}
+
+void main_send_sdl_keydown(int keysym, int keymod)
+{
+    keyDown(keysym, keymod);
+}
+
 m64p_error main_get_screen_width(int *width)
 {
     int height_trash;
@@ -598,9 +605,6 @@ m64p_error main_run(void)
         romClosed_audio(); romClosed_gfx(); free_memory(); return M64ERR_PLUGIN_FAIL;
     }
 
-    /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
-    event_initialize();
-
     /* initialize the on-screen display */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -697,6 +701,13 @@ void main_stop(void)
     }
 #endif        
 }
+
+void main_soft_reset(void)
+{
+    add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
+    add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
+}
+
 
 /*********************************************************************************************************
 * main function

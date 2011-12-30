@@ -37,7 +37,6 @@
 #include "vidext.h"
 
 #include "main/cheat.h"
-#include "main/eventloop.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/savestates.h"
@@ -270,19 +269,26 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INPUT_INVALID;
             savestates_select_slot(ParamInt);
             return M64ERR_SUCCESS;
+        /* Note that those commands now send the keydown/keyup messages directly
+         * to the input plugin, instead of executing the associated with it.
+         * Which is logical considering that:
+         * - keys can be remapped
+         * - keys are now handled by the UI, which is the only component which
+         *   should be sending key signals.
+         */
         case M64CMD_SEND_SDL_KEYDOWN:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             keysym = ParamInt & 0xffff;
             keymod = (ParamInt >> 16) & 0xffff;
-            event_sdl_keydown(keysym, keymod);
+            main_send_sdl_keydown(keysym, keymod);
             return M64ERR_SUCCESS;
         case M64CMD_SEND_SDL_KEYUP:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             keysym = ParamInt & 0xffff;
             keymod = (ParamInt >> 16) & 0xffff;
-            event_sdl_keyup(keysym, keymod);
+            main_send_sdl_keyup(keysym, keymod);
             return M64ERR_SUCCESS;
         case M64CMD_SET_FRAME_CALLBACK:
             g_FrameCallback = (m64p_frame_callback) ParamPtr;
@@ -334,6 +340,11 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             return main_volume_mute();
         case M64CMD_SET_INPUT_CALLBACK:
             g_InputCallback = (m64p_input_callback) ParamPtr;
+            return M64ERR_SUCCESS;
+        case M64CMD_SOFT_RESET:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            main_soft_reset();
             return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
