@@ -246,6 +246,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 case M64CORE_SPEED_LIMITER:
                     main_set_speedlimiter(iVal);
                     return M64ERR_SUCCESS;
+                case M64CORE_GAMESHARK_BUTTON:
+                    main_set_gameshark_button(iVal);
+                    return M64ERR_SUCCESS;
                 default:
                     return M64ERR_INPUT_INVALID;
             }
@@ -345,6 +348,11 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             main_soft_reset();
+            return M64ERR_SUCCESS;
+        case M64CMD_ADVANCE_FRAME:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            main_advance_one();
             return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;

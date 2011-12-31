@@ -37,11 +37,6 @@
 #include "util.h" // list utilities
 #include "ini_reader.h"
 
-int event_gameshark_active()
-{
-    return 1; // TODO XXX add frontend api
-}
-
 // local definitions
 #define CHEAT_CODE_MAGIC_VALUE 0xDEAD0000
 
@@ -243,7 +238,7 @@ void cheat_apply_cheats(int entry)
                                 (code->address & 0xFF000000) == 0xD9000000 ||
                                 (code->address & 0xFF000000) == 0xDA000000 ||
                                 (code->address & 0xFF000000) == 0xDB000000) &&
-                               !event_gameshark_active())
+                               !main_get_gameshark_button())
                             {
                                 // skip next code
                                 if(node2->next != NULL)
@@ -280,7 +275,7 @@ void cheat_apply_cheats(int entry)
                                 (code->address & 0xFF000000) == 0xA8000000 ||
                                 (code->address & 0xFF000000) == 0xA9000000)
                         {
-                            if(event_gameshark_active())
+                            if(main_get_gameshark_button())
                                 execute_cheat(code->address, code->value, NULL);
                         }
                         // normal cheat code

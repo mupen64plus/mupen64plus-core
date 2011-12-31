@@ -75,6 +75,7 @@ static int   l_CurrentFrame = 0;         // frame counter
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
 static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to keep speed at real-time
+static int   l_GamesharkButton = 0;      // true if gameshark button is pressed
 
 static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
@@ -254,15 +255,22 @@ void main_set_fastforward(int enable)
 
 void main_set_speedlimiter(int enable)
 {
-    if (enable)
-        l_MainSpeedLimit = 1;
-    else
-        l_MainSpeedLimit = 0;
+    l_MainSpeedLimit = enable ? 1 : 0;
 }
 
 int main_get_speedlimiter(void)
 {
     return l_MainSpeedLimit ? 1 : 0;
+}
+
+void main_set_gameshark_button(int enable)
+{
+    l_GamesharkButton = enable ? 1 : 0;
+}
+
+int main_get_gameshark_button(void)
+{
+    return l_GamesharkButton ? 1 : 0;
 }
 
 int main_is_paused(void)
@@ -293,7 +301,7 @@ void main_toggle_pause(void)
         DebugMessage(M64MSG_STATUS, "Emulation paused.");
         l_msgPause = osd_new_message(OSD_MIDDLE_CENTER, "Paused");
         osd_message_set_static(l_msgPause);
-	osd_message_set_user_managed(l_msgPause);
+        osd_message_set_user_managed(l_msgPause);
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 
@@ -411,6 +419,9 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
             break;
         case M64CORE_SPEED_LIMITER:
             *rval = l_MainSpeedLimit;
+            break;
+        case M64CORE_GAMESHARK_BUTTON:
+            *rval = main_get_gameshark_button();
             break;
         default:
             return M64ERR_INPUT_INVALID;
