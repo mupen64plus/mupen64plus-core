@@ -57,10 +57,6 @@
 #include "debugger/debugger.h"
 #endif
 
-#ifdef WITH_LIRC
-#include "lirc.h"
-#endif //WITH_LIRC
-
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
@@ -628,10 +624,6 @@ m64p_error main_run(void)
     // setup rendering callback from video plugin to the core, for UI callback and On-Screen-Display
     setRenderingCallback(video_plugin_render_callback);
 
-#ifdef WITH_LIRC
-    lircStart();
-#endif // WITH_LIRC
-
 #ifdef DBG
     if (ConfigGetParamBool(g_CoreConfig, "EnableDebugger"))
         init_debugger();
@@ -649,10 +641,6 @@ m64p_error main_run(void)
     r4300_execute();
 
     /* now begin to shut down */
-#ifdef WITH_LIRC
-    lircStop();
-#endif // WITH_LIRC
-
 #ifdef DBG
     if (g_DebuggerActive)
         destroy_debugger();

@@ -229,9 +229,6 @@ else
   endif
 endif
 # 3. other options given to the makefile on the command line
-ifeq ($(LIRC), 1)
-  CFLAGS += -DWITH_LIRC
-endif
 ifeq ($(DEBUGGER), 1)
   CFLAGS += -DDBG
 endif
@@ -348,11 +345,6 @@ else
   SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
 endif
 
-ifeq ($(LIRC), 1)
-  SOURCE += $(SRCDIR)/main/lirc.c
-  LDLIBS += -llirc_client
-endif
-
 ifeq ($(shell pkg-config --modversion minizip 2>/dev/null),)
   SOURCE += \
 	$(SRCDIR)/main/zip/ioapi.c \
@@ -389,7 +381,6 @@ targets:
 	@echo "    uninstall     == Uninstall Mupen64Plus core library"
 	@echo "  Build Options:"
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
-	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
