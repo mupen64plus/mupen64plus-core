@@ -58,11 +58,13 @@ typedef struct _config_section {
   struct _config_section *next;
   } config_section;
 
+typedef config_section *config_list;
+
 /* local variables */
-static int      l_ConfigInit = 0;
-static int      l_SaveConfigOnExit = 0;
-static char    *l_DataDirOverride = NULL;
-static config_section *l_SectionHead = NULL;
+static int         l_ConfigInit = 0;
+static int         l_SaveConfigOnExit = 0;
+static char       *l_DataDirOverride = NULL;
+static config_list l_ConfigListActive = NULL;
 
 /* --------------- */
 /* local functions */
@@ -276,7 +278,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
             current_section->next = NULL;
             lastcomment = NULL;
             if (last_section == NULL)
-                l_SectionHead = current_section;
+                l_ConfigListActive = current_section;
             else
                 last_section->next = current_section;
             line = nextline;
@@ -351,7 +353,7 @@ m64p_error ConfigShutdown(void)
     }
 
     /* free all of the malloc'd blocks */
-    curr_section = l_SectionHead;
+    curr_section = l_ConfigListActive;
     while (curr_section != NULL)
     {
         config_section *next_section = curr_section->next;
@@ -372,7 +374,7 @@ m64p_error ConfigShutdown(void)
         curr_section = next_section;
     }
 
-    l_SectionHead = NULL;
+    l_ConfigListActive = NULL;
     return M64ERR_SUCCESS;
 }
 
@@ -390,7 +392,7 @@ EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallb
         return M64ERR_INPUT_ASSERT;
 
     /* just walk through the section list, making a callback for each section name */
-    curr_section = l_SectionHead;
+    curr_section = l_ConfigListActive;
     while (curr_section != NULL)
     {
         (*SectionListCallback)(context, curr_section->name);
@@ -410,7 +412,7 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the section list, looking for a case-insensitive name match */
-    curr_section = l_SectionHead;
+    curr_section = l_ConfigListActive;
     while (curr_section != NULL)
     {
         if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
@@ -432,11 +434,11 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     new_section->next = NULL;
 
     /* add section to the end of the list */
-    if (l_SectionHead == NULL)
-        l_SectionHead = new_section;
+    if (l_ConfigListActive == NULL)
+        l_ConfigListActive = new_section;
     else
     {
-        curr_section = l_SectionHead;
+        curr_section = l_ConfigListActive;
         while (curr_section->next != NULL)
             curr_section = curr_section->next;
         curr_section->next = new_section;
@@ -506,7 +508,7 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
     fprintf(fPtr, "# This file is automatically read and written by the Mupen64Plus Core library\n");
 
     /* write out all of the config parameters */
-    curr_section = l_SectionHead;
+    curr_section = l_ConfigListActive;
     while (curr_section != NULL)
     {
         config_var *curr_var = curr_section->first_var;
@@ -546,14 +548,14 @@ EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
 
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
-    if (l_SectionHead == NULL)
+    if (l_ConfigListActive == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* find the named section and pull it out of the list */
-    curr_section = l_SectionHead;
-    if (osal_insensitive_strcmp(l_SectionHead->name, SectionName) == 0)
+    curr_section = l_ConfigListActive;
+    if (osal_insensitive_strcmp(l_ConfigListActive->name, SectionName) == 0)
     {
-        l_SectionHead = l_SectionHead->next;
+        l_ConfigListActive = l_ConfigListActive->next;
     }
     else
     {
