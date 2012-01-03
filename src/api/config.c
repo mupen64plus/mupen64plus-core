@@ -157,6 +157,7 @@ static void append_var_to_section(config_section *section, config_var *var)
 
 m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride)
 {
+    m64p_error rval;
     const char *configpath = NULL;
     char *filepath;
     long filelen, pathlen;
@@ -262,25 +263,15 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         /* handle section definition line */
         if (strlen(line) > 2 && line[0] == '[' && line[strlen(line)-1] == ']')
         {
-            config_section *last_section = current_section;
             line++;
             line[strlen(line)-1] = 0;
-            current_section = (config_section *) malloc(sizeof(config_section));
-            if (current_section == NULL)
+            rval = ConfigOpenSection(line, (m64p_handle *) &current_section);
+            if (rval != M64ERR_SUCCESS)
             {
                 free(configtext);
-                return M64ERR_NO_MEMORY;
+                return rval;
             }
-            current_section->magic = SECTION_MAGIC;
-            strncpy(current_section->name, line, 63);
-            current_section->name[63] = 0;
-            current_section->first_var = NULL;
-            current_section->next = NULL;
             lastcomment = NULL;
-            if (last_section == NULL)
-                l_ConfigListActive = current_section;
-            else
-                last_section->next = current_section;
             line = nextline;
             continue;
         }
@@ -442,7 +433,7 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     else
     {
         curr_section = l_ConfigListActive;
-        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) <= 0)
+        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) >= 0)
             curr_section = curr_section->next;
         new_section->next = curr_section->next;
         curr_section->next = new_section;
