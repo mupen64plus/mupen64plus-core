@@ -661,6 +661,72 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
     return (write_configlist_file());
 }
 
+EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
+{
+    config_section *curr_section, *new_section;
+
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (SectionName == NULL || strlen(SectionName) < 1)
+        return M64ERR_INPUT_ASSERT;
+
+    /* walk through the Active section list, looking for a case-insensitive name match */
+    curr_section = l_ConfigListActive;
+    while (curr_section != NULL)
+    {
+        if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
+            break;
+        curr_section = curr_section->next;
+    }
+    if (curr_section == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    /* duplicate this section */
+    new_section = section_deepcopy(curr_section);
+    if (new_section == NULL)
+        return M64ERR_NO_MEMORY;
+
+    /* update config section that's in the Saved list with the new one */
+    if (l_ConfigListSaved == NULL || osal_insensitive_strcmp(SectionName, l_ConfigListSaved->name) < 0)
+    {
+        /* the saved section is new and goes at the beginning of the list */
+        new_section->next = l_ConfigListSaved;
+        l_ConfigListSaved = new_section;
+    }
+    else if (osal_insensitive_strcmp(SectionName, l_ConfigListSaved->name) == 0)
+    {
+        /* the saved section replaces the first section in the list */
+        new_section->next = l_ConfigListSaved->next;
+        delete_section_vars(l_ConfigListSaved);
+        free(l_ConfigListSaved);
+        l_ConfigListSaved = new_section;
+    }
+    else
+    {
+        curr_section = l_ConfigListSaved;
+        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) > 0)
+            curr_section = curr_section->next;
+        if (curr_section->next == NULL || osal_insensitive_strcmp(SectionName, curr_section->next->name) < 0)
+        {
+            /* the saved section is new and goes after the curr_section */
+            new_section->next = curr_section->next;
+            curr_section->next = new_section;
+        }
+        else
+        {
+            /* the saved section replaces curr_section->next */
+            config_section *old_section = curr_section->next;
+            new_section->next = old_section->next;
+            delete_section_vars(old_section);
+            free(old_section);
+            curr_section->next = new_section;
+        }
+    }
+
+    /* write the saved config list out to a file */
+    return (write_configlist_file());
+}
+
 /* ------------------------------------------------------- */
 /* Modifier functions, exported outside of the Core        */
 /* ------------------------------------------------------- */
