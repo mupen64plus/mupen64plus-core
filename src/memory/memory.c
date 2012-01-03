@@ -2724,6 +2724,8 @@ void write_ai(void)
       case 0x4:
     ai_register.ai_len = word;
     aiLenChanged();
+    if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        g_AudioCallback();
     switch(ROM_HEADER->Country_code&0xFF)
       {
        case 0x44:
@@ -2822,6 +2824,8 @@ void write_aib(void)
       + ((*address_low&3)^S8) ) = cpu_byte;
     ai_register.ai_len = temp;
     aiLenChanged();
+    if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        g_AudioCallback();
     switch(ROM_HEADER->Country_code&0xFF)
       {
        case 0x44:
@@ -2898,6 +2902,8 @@ void write_aih(void)
                 + ((*address_low&3)^S16) )) = hword;
     ai_register.ai_len = temp;
     aiLenChanged();
+    if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        g_AudioCallback();
     switch(ROM_HEADER->Country_code&0xFF)
       {
        case 0x44:
@@ -2966,6 +2972,8 @@ void write_aid(void)
     ai_register.ai_dram_addr = (unsigned int) (dword >> 32);
     ai_register.ai_len = (unsigned int) (dword & 0xFFFFFFFF);
     aiLenChanged();
+    if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        g_AudioCallback();
     switch(ROM_HEADER->Country_code&0xFF)
       {
        case 0x44:

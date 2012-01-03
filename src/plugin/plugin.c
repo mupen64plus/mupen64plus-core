@@ -101,6 +101,7 @@ int  (*volumeGetLevel)() = dummyaudio_VolumeGetLevel;
 void (*volumeSetLevel)(int level) = dummyaudio_VolumeSetLevel;
 void (*volumeMute)() = dummyaudio_VolumeMute;
 const char * (*volumeGetString)() = dummyaudio_VolumeGetString;
+void (*readSamples)(void *samples, int *nSamples, int *frequency) = dummyaudio_ReadSamples;
 
 void (*controllerCommand)(int Control, unsigned char *Command) = dummyinput_ControllerCommand;
 void (*getKeys)(int Control, BUTTONS *Keys) = dummyinput_GetKeys;
@@ -288,6 +289,7 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
         volumeSetLevel = dummyaudio_VolumeSetLevel;
         volumeMute = dummyaudio_VolumeMute;
         volumeGetString = dummyaudio_VolumeGetString;
+        readSamples = dummyaudio_ReadSamples;
         l_AudioAttached = 0;
     }
     else
@@ -312,9 +314,10 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
         volumeSetLevel = (ptr_VolumeSetLevel) osal_dynlib_getproc(plugin_handle, "VolumeSetLevel");
         volumeMute = (ptr_VolumeMute) osal_dynlib_getproc(plugin_handle, "VolumeMute");
         volumeGetString = (ptr_VolumeGetString) osal_dynlib_getproc(plugin_handle, "VolumeGetString");
+        readSamples = (ptr_ReadSamples) osal_dynlib_getproc(plugin_handle, "ReadSamples");
         if (getVersion == NULL || aiDacrateChanged == NULL || aiLenChanged == NULL || initiateAudio == NULL || processAList == NULL ||
             romOpen_audio == NULL || romClosed_audio == NULL || setSpeedFactor == NULL || volumeUp == NULL || volumeDown == NULL ||
-            volumeGetLevel == NULL || volumeSetLevel == NULL || volumeMute == NULL || volumeGetString == NULL)
+            volumeGetLevel == NULL || volumeSetLevel == NULL || volumeMute == NULL || volumeGetString == NULL || readSamples == NULL)
         {
             DebugMessage(M64MSG_ERROR, "broken Audio plugin; function(s) not found.");
             return M64ERR_INPUT_INVALID;

@@ -90,4 +90,11 @@ const char *dummyaudio_VolumeGetString(void)
     return "disabled";
 }
 
+void dummyaudio_ReadSamples(void *samples, int *nSamples, int *frequency)
+{
+    if (nSamples != NULL)
+        *nSamples = 0;
 
+    if (frequency != NULL)
+        *frequency = 44100;
+}

@@ -72,6 +72,7 @@ extern ptr_VolumeGetLevel    volumeGetLevel;
 extern ptr_VolumeSetLevel    volumeSetLevel;
 extern ptr_VolumeMute        volumeMute;
 extern ptr_VolumeGetString   volumeGetString;
+extern ptr_ReadSamples       readSamples;
 
 /* input plugin function pointers */
 extern ptr_ControllerCommand   controllerCommand;

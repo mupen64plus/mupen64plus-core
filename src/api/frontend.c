@@ -354,6 +354,30 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             main_advance_one();
             return M64ERR_SUCCESS;
+        case M64CMD_SET_AUDIO_CALLBACK:
+            g_AudioCallback = (m64p_audio_callback) ParamPtr;
+            return M64ERR_SUCCESS;
+        case M64CMD_GET_AUDIO_FREQUENCY:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            readSamples(NULL, NULL, (int *)ParamPtr);
+            return M64ERR_SUCCESS;
+        case M64CMD_GET_AUDIO_SAMPLES:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            readSamples(NULL, (int *)ParamPtr, NULL);
+            return M64ERR_SUCCESS;
+        case M64CMD_READ_AUDIO_SAMPLES:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            readSamples(ParamPtr, NULL, NULL);
+            return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
     }
