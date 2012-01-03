@@ -433,14 +433,18 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     new_section->first_var = NULL;
     new_section->next = NULL;
 
-    /* add section to the end of the list */
-    if (l_ConfigListActive == NULL)
+    /* add section to list in alphabetical order */
+    if (l_ConfigListActive == NULL || osal_insensitive_strcmp(SectionName, l_ConfigListActive->name) < 0)
+    {
+        new_section->next = l_ConfigListActive;
         l_ConfigListActive = new_section;
+    }
     else
     {
         curr_section = l_ConfigListActive;
-        while (curr_section->next != NULL)
+        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) <= 0)
             curr_section = curr_section->next;
+        new_section->next = curr_section->next;
         curr_section->next = new_section;
     }
 
