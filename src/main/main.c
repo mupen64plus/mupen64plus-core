@@ -43,6 +43,8 @@
 #include "main.h"
 #include "rom.h"
 #include "savestates.h"
+#include "reset.h"
+#include "util.h"
 
 #include "memory/memory.h"
 #include "osal/files.h"
@@ -93,10 +95,10 @@ const char *get_savespath(void)
     }
 
     if (!savestatepath || (strlen(savestatepath) == 0)) {
-        snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
+        snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATORS[0]);
         path[1023] = 0;
     } else {
-        snprintf(path, 1024, "%s%c", savestatepath, OSAL_DIR_SEPARATOR);
+        snprintf(path, 1024, "%s%c", savestatepath, OSAL_DIR_SEPARATORS[0]);
         path[1023] = 0;
     }
 
@@ -120,43 +122,6 @@ void main_message(m64p_msg_level level, unsigned int corner, const char *format,
         osd_new_message((enum osd_corner) corner, "%s", buffer);
     /* send message to front-end */
     DebugMessage(level, "%s", buffer);
-}
-
-
-/*********************************************************************************************************
-* timer functions
-*/
-static float VILimit = 60.0;
-static double VILimitMilliseconds = 1000.0/60.0;
-
-static int GetVILimit(void)
-{
-    switch (ROM_HEADER->Country_code&0xFF)
-    {
-        // PAL codes
-        case 0x44:
-        case 0x46:
-        case 0x49:
-        case 0x50:
-        case 0x53:
-        case 0x55:
-        case 0x58:
-        case 0x59:
-            return 50;
-            break;
-
-        // NTSC codes
-        case 0x37:
-        case 0x41:
-        case 0x45:
-        case 0x4a:
-            return 60;
-            break;
-
-        // Fallback for unknown codes
-        default:
-            return 60;
-    }
 }
 
 /*********************************************************************************************************
@@ -333,7 +298,7 @@ void main_draw_volume_osd(void)
         osd_update_message(l_msgVol, "%s", msgString);
     else {
         l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, "%s", msgString);
-	osd_message_set_user_managed(l_msgVol);
+        osd_message_set_user_managed(l_msgVol);
     }
 }
 
@@ -386,9 +351,6 @@ void main_state_save(int format_pj64, const char *filename)
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval)
 {
-    if (rval == NULL)
-        return M64ERR_INPUT_ASSERT;
-
     switch (param)
     {
         case M64CORE_EMU_STATE:
@@ -424,6 +386,66 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
     }
 
     return M64ERR_SUCCESS;
+}
+
+m64p_error main_core_state_set(m64p_core_param param, int val)
+{
+    switch (param)
+    {
+        case M64CORE_EMU_STATE:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (val == M64EMU_STOPPED)
+            {        
+                /* this stop function is asynchronous.  The emulator may not terminate until later */
+                main_stop();
+                return M64ERR_SUCCESS;
+            }
+            else if (val == M64EMU_RUNNING)
+            {
+                if (main_is_paused())
+                    main_toggle_pause();
+                return M64ERR_SUCCESS;
+            }
+            else if (val == M64EMU_PAUSED)
+            {    
+                if (!main_is_paused())
+                    main_toggle_pause();
+                return M64ERR_SUCCESS;
+            }
+            return M64ERR_INPUT_INVALID;
+        case M64CORE_VIDEO_MODE:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            if (val == M64VIDEO_WINDOWED)
+            {
+                if (VidExt_InFullscreenMode())
+                    changeWindow(); // in video plugin
+                return M64ERR_SUCCESS;
+            }
+            else if (val == M64VIDEO_FULLSCREEN)
+            {
+                if (!VidExt_InFullscreenMode())
+                    changeWindow(); // in video plugin
+                return M64ERR_SUCCESS;
+            }
+            return M64ERR_INPUT_INVALID;
+        case M64CORE_SAVESTATE_SLOT:
+            if (val < 0 || val > 9)
+                return M64ERR_INPUT_INVALID;
+            savestates_select_slot(val);
+            return M64ERR_SUCCESS;
+        case M64CORE_SPEED_FACTOR:
+            if (!g_EmulatorRunning)
+                return M64ERR_INVALID_STATE;
+            main_speedset(val);
+            return M64ERR_SUCCESS;
+        case M64CORE_SPEED_LIMITER:
+            main_set_speedlimiter(val);
+            return M64ERR_SUCCESS;
+        default:
+            return M64ERR_INPUT_INVALID;
+    }
 }
 
 void main_send_sdl_keyup(int keysym, int keymod)
@@ -498,7 +520,7 @@ m64p_error main_volume_mute(void)
 
 static void video_plugin_render_callback(void)
 {
-	// Call the UI frame callback, if any
+    // Call the UI frame callback, if any
     if (g_FrameCallback != NULL)
         (*g_FrameCallback)(l_CurrentFrame);
 
@@ -576,8 +598,7 @@ void new_vi(void)
 */
 m64p_error main_run(void)
 {
-    VILimit = (float) GetVILimit();
-    VILimitMilliseconds = (double) 1000.0/VILimit; 
+    double VILimitMilliseconds = 1000.0 / ROM_SETTINGS.vilimit;
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -651,7 +672,7 @@ m64p_error main_run(void)
         osd_exit();
     }
 
-    romClosed_RSP();
+    romClosed_rsp();
     romClosed_input();
     romClosed_audio();
     romClosed_gfx();

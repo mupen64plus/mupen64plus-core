@@ -39,6 +39,7 @@
 #include "main/cheat.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "main/reset.h"
 #include "main/savestates.h"
 #include "main/version.h"
 #include "plugin/plugin.h"
@@ -66,6 +67,12 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
                      VERSION_PRINTF_SPLIT(APIVersion), VERSION_PRINTF_SPLIT(FRONTEND_API_VERSION));
         return M64ERR_INCOMPATIBLE;
     }
+
+    /* set up the default (dummy) plugins */
+    plugin_connect(M64PLUGIN_GFX, NULL);
+    plugin_connect(M64PLUGIN_AUDIO, NULL);
+    plugin_connect(M64PLUGIN_INPUT, NULL);
+    plugin_connect(M64PLUGIN_CORE, NULL);
 
     /* next, start up the configuration handling code by loading and parsing the config file */
     if (ConfigInit(ConfigPath, DataPath) != M64ERR_SUCCESS)
@@ -132,7 +139,7 @@ EXPORT m64p_error CALL CoreDetachPlugin(m64p_plugin_type PluginType)
 EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *ParamPtr)
 {
     m64p_error rval;
-    int keysym, keymod, iVal;
+    int keysym, keymod;
 
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
@@ -190,68 +197,23 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             /* this stop function is asynchronous.  The emulator may not terminate until later */
-            main_stop();
-            return M64ERR_SUCCESS;
+            return main_core_state_set(M64CORE_EMU_STATE, M64EMU_STOPPED);
         case M64CMD_PAUSE:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            if (!main_is_paused())
-                main_toggle_pause();
-            return M64ERR_SUCCESS;
+            return main_core_state_set(M64CORE_EMU_STATE, M64EMU_PAUSED);
         case M64CMD_RESUME:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            if (main_is_paused())
-                main_toggle_pause();
-            return M64ERR_SUCCESS;
+            return main_core_state_set(M64CORE_EMU_STATE, M64EMU_RUNNING);
         case M64CMD_CORE_STATE_QUERY:
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
             return main_core_state_query((m64p_core_param) ParamInt, (int *) ParamPtr);
         case M64CMD_CORE_STATE_SET:
             if (ParamPtr == NULL)
                 return M64ERR_INPUT_ASSERT;
-            iVal = *((int *) ParamPtr);
-            switch (ParamInt)
-            {
-                case M64CORE_EMU_STATE:  // recursively call myself to handle this
-                    if (iVal == M64EMU_STOPPED)
-                        return CoreDoCommand(M64CMD_STOP, 0, NULL);
-                    else if (iVal == M64EMU_RUNNING)
-                        return CoreDoCommand(M64CMD_RESUME, 0, NULL);
-                    else if (iVal == M64EMU_PAUSED)
-                        return CoreDoCommand(M64CMD_PAUSE, 0, NULL);
-                    return M64ERR_INPUT_INVALID;
-                case M64CORE_VIDEO_MODE:  // handle this command directly
-                    if (!g_EmulatorRunning)
-                        return M64ERR_INVALID_STATE;
-                    if (iVal == M64VIDEO_WINDOWED)
-                    {
-                        if (VidExt_InFullscreenMode())
-                            changeWindow(); // in video plugin
-                        return M64ERR_SUCCESS;
-                    }
-                    else if (iVal == M64VIDEO_FULLSCREEN)
-                    {
-                        if (!VidExt_InFullscreenMode())
-                            changeWindow(); // in video plugin
-                        return M64ERR_SUCCESS;
-                    }
-                    return M64ERR_INPUT_INVALID;
-                case M64CORE_SAVESTATE_SLOT:  // recursively call myself to handle this
-                    return CoreDoCommand(M64CMD_STATE_SET_SLOT, iVal, NULL);
-                case M64CORE_SPEED_FACTOR:  // handle this command directly
-                    if (!g_EmulatorRunning)
-                        return M64ERR_INVALID_STATE;
-                    main_speedset(iVal);
-                    return M64ERR_SUCCESS;
-                case M64CORE_SPEED_LIMITER:
-                    main_set_speedlimiter(iVal);
-                    return M64ERR_SUCCESS;
-                case M64CORE_GAMESHARK_BUTTON:
-                    main_set_gameshark_button(iVal);
-                    return M64ERR_SUCCESS;
-                default:
-                    return M64ERR_INPUT_INVALID;
-            }
+            return main_core_state_set((m64p_core_param) ParamInt, *((int *)ParamPtr));
         case M64CMD_STATE_LOAD:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
@@ -268,10 +230,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 main_state_save(0, (char *) ParamPtr);  /* save a mupen64plus state file */
             return M64ERR_SUCCESS;
         case M64CMD_STATE_SET_SLOT:
-            if (ParamInt < 0 || ParamInt > 9)
-                return M64ERR_INPUT_INVALID;
-            savestates_select_slot(ParamInt);
-            return M64ERR_SUCCESS;
+            return main_core_state_set(M64CORE_SAVESTATE_SLOT, ParamInt);
         /* Note that those commands now send the keydown/keyup messages directly
          * to the input plugin, instead of executing the associated with it.
          * Which is logical considering that:
@@ -347,7 +306,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_SOFT_RESET:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            main_soft_reset();
+            reset_soft();
             return M64ERR_SUCCESS;
         case M64CMD_ADVANCE_FRAME:
             if (!g_EmulatorRunning)

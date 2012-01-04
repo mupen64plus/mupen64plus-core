@@ -74,44 +74,42 @@ static int search_dir_file(char *destpath, const char *path, const char *filenam
 }
 
 /* global functions */
-
 int osal_mkdirp(const char *dirpath, int mode)
 {
     struct _stat fileinfo;
     size_t dirpathlen = strlen(dirpath);
-    char *currpath = _strdup(dirpath);
+    size_t currpathlen = dirpathlen + 1;
+    char *currpath = malloc(currpathlen + 1);
+    size_t i;
 
-    /* first, remove sub-dirs on the end (by replacing slashes with NULL chars) until we find an existing directory */
-    while (strlen(currpath) > 1 && _stat(currpath, &fileinfo) != 0)
+    strcpy(currpath, dirpath);
+    currpath[currpathlen - 1] = '\0';
+    currpath[currpathlen] = '\0';
+    // End with a separator so the full path gets processed in the loop
+    if (strchr(OSAL_DIR_SEPARATORS, dirpath[dirpathlen - 1]))
+        currpath[currpathlen - 1] = OSAL_DIR_SEPARATORS[0];
+
+    
+    for (i = 0; i < currpathlen; i++)
     {
-        char *lastslash = strrchr(currpath, '\\');
-        if (lastslash == NULL)
+        if (strchr(OSAL_DIR_SEPARATORS, currpath[i]))
         {
-            free(currpath);
-            return 1; /* error: we never found an existing directory, this path is bad */
+            // Temporally terminate the string, and make the directory.
+            char tmp = currpath[i+1];
+            currpath[i+1] = '\0';
+            if (_stat(currpath, &fileinfo) != 0)
+            {
+                if (_mkdir(currpath, mode) != 0)
+                {
+                    free(currpath);
+                    return 1;
+                }
+            }
+            currpath[i+1] = tmp;
         }
-        *lastslash = 0;
     }
 
-    /* then walk up the path chain, creating directories along the way */
-    do
-    {
-        if (currpath[strlen(currpath)-1] != '\\' && _stat(currpath, &fileinfo) != 0)
-        {
-            if (_mkdir(currpath) != 0)
-            {
-                DebugMessage(M64MSG_ERROR, "MKDIR failed for '%s'.", currpath);
-                free(currpath);
-                return 2;        /* mkdir failed */
-            }
-        }
-        if (strlen(currpath) == dirpathlen)
-            break;
-        else
-            currpath[strlen(currpath)] = '\\';
-    } while (1);
-    
-    free(currpath);        
+    free(currpath);
     return 0;
 }
 

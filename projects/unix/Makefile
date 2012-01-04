@@ -281,6 +281,7 @@ SOURCE = \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
+	$(SRCDIR)/main/reset.c \
 	$(SRCDIR)/main/adler32.c \
 	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/flashram.c \

@@ -23,7 +23,7 @@
 #ifndef PLUGIN_H
 #define PLUGIN_H
 
-#include "api/m64p_types.h"
+#include "api/m64p_common.h"
 #include "api/m64p_plugin.h"
 
 extern m64p_error plugin_connect(m64p_plugin_type, m64p_dynlib_handle plugin_handle);
@@ -39,18 +39,19 @@ extern CONTROL Controls[4];
 #define INPUT_API_MAJOR_VERSION 0x20000
 
 /* video plugin function pointers */
-extern ptr_ChangeWindow    changeWindow;
-extern ptr_InitiateGFX     initiateGFX;
-extern ptr_MoveScreen      moveScreen;
-extern ptr_ProcessDList    processDList;
-extern ptr_ProcessRDPList  processRDPList;
-extern ptr_RomClosed       romClosed_gfx;
-extern ptr_RomOpen         romOpen_gfx;
-extern ptr_ShowCFB         showCFB;
-extern ptr_UpdateScreen    updateScreen;
-extern ptr_ViStatusChanged viStatusChanged;
-extern ptr_ViWidthChanged  viWidthChanged;
-extern ptr_ReadScreen2     readScreen;
+extern ptr_PluginGetVersion getVersion_gfx;
+extern ptr_ChangeWindow     changeWindow;
+extern ptr_InitiateGFX      initiateGFX;
+extern ptr_MoveScreen       moveScreen;
+extern ptr_ProcessDList     processDList;
+extern ptr_ProcessRDPList   processRDPList;
+extern ptr_RomClosed        romClosed_gfx;
+extern ptr_RomOpen          romOpen_gfx;
+extern ptr_ShowCFB          showCFB;
+extern ptr_UpdateScreen     updateScreen;
+extern ptr_ViStatusChanged  viStatusChanged;
+extern ptr_ViWidthChanged   viWidthChanged;
+extern ptr_ReadScreen2      readScreen;
 extern ptr_SetRenderingCallback setRenderingCallback;
 
 /* frame buffer plugin spec extension */
@@ -59,6 +60,7 @@ extern ptr_FBWrite         fBWrite;
 extern ptr_FBGetFrameBufferInfo fBGetFrameBufferInfo;
 
 /* audio plugin function pointers */
+extern ptr_PluginGetVersion  getVersion_audio;
 extern ptr_AiDacrateChanged  aiDacrateChanged;
 extern ptr_AiLenChanged      aiLenChanged;
 extern ptr_InitiateAudio     initiateAudio;
@@ -72,8 +74,10 @@ extern ptr_VolumeGetLevel    volumeGetLevel;
 extern ptr_VolumeSetLevel    volumeSetLevel;
 extern ptr_VolumeMute        volumeMute;
 extern ptr_VolumeGetString   volumeGetString;
+extern ptr_ReadSamples       readSamples;
 
 /* input plugin function pointers */
+extern ptr_PluginGetVersion    getVersion_input;
 extern ptr_ControllerCommand   controllerCommand;
 extern ptr_GetKeys             getKeys;
 extern ptr_InitiateControllers initiateControllers;
@@ -84,9 +88,10 @@ extern ptr_SDL_KeyDown         keyDown;
 extern ptr_SDL_KeyUp           keyUp;
 
 /* RSP plugin function pointers */
+extern ptr_PluginGetVersion    getVersion_rsp;
 extern ptr_DoRspCycles         doRspCycles;
 extern ptr_InitiateRSP         initiateRSP;
-extern ptr_RomClosed           romClosed_RSP;
+extern ptr_RomClosed           romClosed_rsp;
 
 #endif
 

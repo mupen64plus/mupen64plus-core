@@ -32,7 +32,9 @@
 #include "main/rom.h"
 #include "main/main.h"
 #include "main/savestates.h"
+#include "main/reset.h"
 #include "main/cheat.h"
+#include "main/input_movie.h"
 #include "osd/osd.h"
 #include "plugin/plugin.h"
 
@@ -326,6 +328,13 @@ void gen_interupt(void)
         savestates_job &= ~LOADSTATE;
         return;
     }
+
+    if (reset_hard_job)
+    {
+        reset_hard();
+        reset_hard_job = 0;
+        return;
+    }
    
     if (skip_jump)
     {
@@ -560,7 +569,8 @@ void gen_interupt(void)
                         blocks[i] = NULL;
                     }
                 }
-                // re-initialize
+                // clear all the compiled instruction blocks and re-initialize
+                free_blocks();
                 init_blocks();
                 // jump to the start
                 ErrorEPC = PC->addr;

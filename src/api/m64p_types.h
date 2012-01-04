@@ -163,6 +163,13 @@ typedef struct {
 /* Structures to hold ROM image information  */
 /* ----------------------------------------- */
 
+typedef enum
+{
+    SYSTEM_NTSC = 0,
+    SYSTEM_PAL,
+    SYSTEM_MPAL
+} m64p_system_type;
+
 typedef struct
 {
    unsigned char init_PI_BSB_DOM1_LAT_REG;  /* 0x00 */
@@ -174,12 +181,13 @@ typedef struct
    unsigned int Release;                    /* 0x0C */
    unsigned int CRC1;                       /* 0x10 */
    unsigned int CRC2;                       /* 0x14 */
-   unsigned int Unknown[2];                 /* 0x18 */
-   unsigned char Name[20];                  /* 0x20 */
-   unsigned int unknown;                    /* 0x34 */
-   unsigned int Manufacturer_ID;            /* 0x38 */
-   unsigned short Cartridge_ID;             /* 0x3C - Game serial number  */
-   unsigned short Country_code;             /* 0x3E */
+   unsigned char Unused1[8];                /* 0x18 */
+   char Name[20];                           /* 0x20 */
+   unsigned char Unused2[7];                /* 0x34 */
+   char Manufacturer_ID;                    /* 0x3B */
+   char Cartridge_ID[2];                    /* 0x3C - Game serial number  */
+   char Country_code;                       /* 0x3E */
+   unsigned char Unused3;                   /* 0x3F */
 } m64p_rom_header;
 
 typedef struct
@@ -190,6 +198,9 @@ typedef struct
    unsigned char status;  /* Rom status on a scale from 0-5. */
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
+
+   int systemtype;
+   int vilimit;
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

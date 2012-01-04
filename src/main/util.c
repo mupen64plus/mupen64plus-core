@@ -81,10 +81,18 @@ char* strnstrip(char* string, int size)
 
 /** file utilities **/
 
+/** file_exists
+ *    checks if the file specified by filename exists.
+ */
+int file_exists(const char *filename)
+{
+    return access(filename, 0 /* F_OK, check for existence */) == 0;
+}
+
 /** copyfile
  *    copies file at src to a new file dest. If dest exists, its contents will be truncated and replaced.
  */
-int copyfile(char *src, char *dest)
+int copyfile(const char *src, const char *dest)
 {
     FILE *to, *from;
     char c;
@@ -123,6 +131,50 @@ int copyfile(char *src, char *dest)
     fclose(from);
     fclose(to);
 
+    return 0;
+}
+
+/** read_from_file
+ *    opens a file and reads the specified number of bytes.
+ *    returns zero on success, nonzero on failure
+ */
+int read_from_file(const char *filename, void *data, size_t size)
+{
+    FILE *f = fopen(filename, "rb");
+    if (f == NULL)
+    {
+        return -1;
+    }
+
+    if (fread(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return -1;
+    }
+
+    fclose(f);
+    return 0;
+}
+
+/** write_to_file
+ *    opens a file and writes the specified number of bytes.
+ *    returns zero on sucess, nonzero on failure
+ */ 
+int write_to_file(const char *filename, const void *data, size_t size)
+{
+    FILE *f = fopen(filename, "wb");
+    if (f == NULL)
+    {
+        return -1;
+    }
+
+    if (fwrite(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return -1;
+    }
+
+    fclose(f);
     return 0;
 }
 
@@ -381,7 +433,7 @@ list_node_t *list_find_node(list_t list, void *data)
     return node;
 }
 
-void countrycodestring(unsigned short countrycode, char *string)
+void countrycodestring(char countrycode, char *string)
 {
     switch (countrycode)
     {
@@ -422,7 +474,7 @@ void countrycodestring(unsigned short countrycode, char *string)
         break;
 
     case 0x55: case 0x59:  /* Australia */
-        sprintf(string, "Australia (0x%2.2X)", countrycode);
+        sprintf(string, "Australia (0x%02X)", countrycode);
         break;
 
     case 0x50: case 0x58: case 0x20:
@@ -574,10 +626,10 @@ char* dirfrompath(const char* string)
     stringlength = strlen(string);
 
     for(counter = stringlength; counter > 0; --counter)
-        {
-        if (string[counter-1] == '/')
+    {
+        if (strchr(OSAL_DIR_SEPARATORS, string[counter-1]))
             break;
-        }
+    }
 
     buffer = (char*)malloc((counter+1)*sizeof(char));
     snprintf(buffer, counter+1, "%s", string);

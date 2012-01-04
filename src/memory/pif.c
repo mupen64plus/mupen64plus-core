@@ -36,10 +36,139 @@
 #include "api/debugger.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "main/util.h"
+#include "main/input_movie.h"
 #include "plugin/plugin.h"
 
-static unsigned char eeprom[0x800];
-static unsigned char mempack[4][0x8000];
+unsigned char eeprom[0x800];
+unsigned char mempack[4][0x8000];
+
+static void format_eeprom()
+{
+    memset(eeprom, 0, sizeof(eeprom));
+}
+
+char *get_eeprom_path(void)
+{
+    char *filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
+    strcpy(filename, get_savespath());
+    strcat(filename, ROM_SETTINGS.goodname);
+    strcat(filename, ".eep");
+    return filename;
+}
+
+static void read_eeprom_file(void)
+{
+    static int EepromFileWarningSent = 0;
+
+    char *filename = get_eeprom_path();
+
+    format_eeprom();
+    if (read_from_file(filename, eeprom, sizeof(eeprom)) != 0)
+    {
+        if (!EepromFileWarningSent)
+        {
+            DebugMessage(M64MSG_WARNING, "couldn't read 2kb eeprom file '%s'", filename);
+            EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
+        }
+    }
+
+    free(filename);
+}
+
+static void write_eeprom_file(void)
+{
+    char *filename = get_eeprom_path();
+    if (write_to_file(filename, eeprom, sizeof(eeprom)) != 0)
+    {
+        DebugMessage(M64MSG_WARNING, "couldn't write 2kb eeprom file '%s'", filename);
+    }
+    free(filename);
+}
+
+static void format_mempacks(void)
+{
+   unsigned char init[] =
+     {
+    0x81,0x01,0x02,0x03, 0x04,0x05,0x06,0x07, 0x08,0x09,0x0a,0x0b, 0x0c,0x0d,0x0e,0x0f,
+    0x10,0x11,0x12,0x13, 0x14,0x15,0x16,0x17, 0x18,0x19,0x1a,0x1b, 0x1c,0x1d,0x1e,0x1f,
+    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
+    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
+    0x00,0x71,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03
+     };
+   int i,j;
+   for (i=0; i<4; i++)
+     {
+    for (j=0; j<0x8000; j+=2)
+      {
+         mempack[
+i][
+j] = 0;
+         mempack[i][j+1] = 0x03;
+      }
+    memcpy(mempack[i], init, 272);
+     }
+}
+
+void eeprom_changed(void)
+{
+    write_eeprom_file();
+}
+
+char *get_mempack_path(void)
+{
+    char *filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
+    strcpy(filename, get_savespath());
+    strcat(filename, ROM_SETTINGS.goodname);
+    strcat(filename, ".mpk");
+    return filename;    
+}
+
+static void read_mempack_file(void)
+{
+    static int MpkFileWarningSent = 0;
+
+    char *filename = get_mempack_path();
+
+    format_mempacks();
+    if (read_from_file(filename, mempack, sizeof(mempack)) != 0)
+    {
+        if (!MpkFileWarningSent)
+        {
+            DebugMessage(M64MSG_WARNING, "couldn't read 4*32kb mempack file '%s'", filename);
+            MpkFileWarningSent = 1;
+        }
+    }
+
+    free(filename);
+}
+
+static void write_mempack_file(void)
+{
+    char *filename = get_mempack_path();
+    if (write_to_file(filename, mempack, sizeof(mempack)) != 0)
+    {
+        DebugMessage(M64MSG_WARNING, "couldn't write 4*32kb mempack file '%s'", filename);
+    }
+    free(filename);
+}
+
+void mempack_changed(void)
+{
+    write_mempack_file();
+}
 
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
@@ -62,7 +191,6 @@ static unsigned char byte2bcd(int n)
 
 static void EepromCommand(unsigned char *Command)
 {
-    static int EepromFileWarningSent = 0;
     time_t curtime_time;
     struct tm curtime;
 
@@ -88,65 +216,15 @@ static void EepromCommand(unsigned char *Command)
     break;
       case 4: // read
       {
-         char *filename;
-         FILE *f;
-         filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-         strcpy(filename, get_savespath());
-         strcat(filename, ROM_SETTINGS.goodname);
-         strcat(filename, ".eep");
-         f = fopen(filename, "rb");
-         if (f == NULL)
-         {
-             if (!EepromFileWarningSent)
-                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
-             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
-             memset(eeprom, 0, 0x800);
-         }
-         else
-         {
-             if (fread(eeprom, 1, 0x800, f) != 0x800)
-                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
-             fclose(f);
-         }
-         free(filename);
+         read_eeprom_file();
          memcpy(&Command[4], eeprom + Command[3]*8, 8);
       }
     break;
       case 5: // write
       {
-         char *filename;
-         FILE *f;
-         filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-         strcpy(filename, get_savespath());
-         strcat(filename, ROM_SETTINGS.goodname);
-         strcat(filename, ".eep");
-         f = fopen(filename, "rb");
-         if (f == NULL)
-         {
-             if (!EepromFileWarningSent)
-                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
-             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
-             memset(eeprom, 0, 0x800);
-         }
-         else
-         {
-             if (fread(eeprom, 1, 0x800, f) != 0x800)
-                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
-             fclose(f);
-         }
+         read_eeprom_file();
          memcpy(eeprom + Command[3]*8, &Command[4], 8);
-         f = fopen(filename, "wb");
-         if (f == NULL)
-         {
-             DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", filename);
-         }
-         else
-         {
-             if (fwrite(eeprom, 1, 0x800, f) != 0x800)
-                 DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
-             fclose(f);
-         }
-         free(filename);
+         write_eeprom_file();
       }
     break;
       case 6:
@@ -191,40 +269,6 @@ static void EepromCommand(unsigned char *Command)
     break;
       default:
     DebugMessage(M64MSG_ERROR, "unknown command in EepromCommand(): %x", Command[2]);
-     }
-}
-
-static void format_mempacks(void)
-{
-   unsigned char init[] =
-     {
-    0x81,0x01,0x02,0x03, 0x04,0x05,0x06,0x07, 0x08,0x09,0x0a,0x0b, 0x0c,0x0d,0x0e,0x0f,
-    0x10,0x11,0x12,0x13, 0x14,0x15,0x16,0x17, 0x18,0x19,0x1a,0x1b, 0x1c,0x1d,0x1e,0x1f,
-    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-    0x00,0x71,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03
-     };
-   int i,j;
-   for (i=0; i<4; i++)
-     {
-    for (j=0; j<0x8000; j+=2)
-      {
-         mempack[i][j] = 0;
-         mempack[i][j+1] = 0x03;
-      }
-    memcpy(mempack[i], init, 272);
      }
 }
 
@@ -280,8 +324,6 @@ static void internal_ReadController(int Control, unsigned char *Command)
 
 static void internal_ControllerCommand(int Control, unsigned char *Command)
 {
-    int MpkFileWarningSent = 0;
-
    switch (Command[2])
      {
       case 0x00: // check
@@ -330,33 +372,7 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                 address &= 0xFFE0;
                 if (address <= 0x7FE0)
                   {
-                 char *filename;
-                 FILE *f;
-                 filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-                 strcpy(filename, get_savespath());
-                 strcat(filename, ROM_SETTINGS.goodname);
-                 strcat(filename, ".mpk");
-                 f = fopen(filename, "rb");
-                 if (f == NULL)
-                 {
-                     if (!MpkFileWarningSent)
-                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
-                     MpkFileWarningSent = 1;
-                     format_mempacks();
-                 }
-                 else
-                 {
-                     if (fread(mempack[0], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 1st 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[1], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 2nd 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[2], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 3rd 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[3], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 4th 32kb mempack in file '%s'", filename);
-                     fclose(f);
-                 }
-                 free(filename);
+                 read_mempack_file();
                  memcpy(&Command[5], &mempack[Control][address], 0x20);
                   }
                 else
@@ -393,51 +409,9 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                 address &= 0xFFE0;
                 if (address <= 0x7FE0)
                   {
-                 char *filename;
-                 FILE *f;
-                 filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-                 strcpy(filename, get_savespath());
-                 strcat(filename, ROM_SETTINGS.goodname);
-                 strcat(filename, ".mpk");
-                 f = fopen(filename, "rb");
-                 if (f == NULL)
-                 {
-                     if (!MpkFileWarningSent)
-                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
-                     MpkFileWarningSent = 1;
-                     format_mempacks();
-                 }
-                 else
-                 {
-                     if (fread(mempack[0], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 1st 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[1], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 2nd 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[2], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 3rd 32kb mempack in file '%s'", filename);
-                     else if (fread(mempack[3], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fread() failed for 4th 32kb mempack in file '%s'", filename);
-                     fclose(f);
-                 }
+                 read_mempack_file();
                  memcpy(&mempack[Control][address], &Command[5], 0x20);
-                 f = fopen(filename, "wb");
-                 if (f == NULL)
-                 {
-                     DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for writing", filename);
-                 }
-                 else
-                 {
-                     if (fwrite(mempack[0], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 1st 32kb memory pack in file '%s'", filename);
-                     else if (fwrite(mempack[1], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 2nd 32kb memory pack in file '%s'", filename);
-                     else if (fwrite(mempack[2], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 3rd 32kb memory pack in file '%s'", filename);
-                     else if (fwrite(mempack[3], 1, 0x8000, f) != 0x8000)
-                         DebugMessage(M64MSG_WARNING, "fwrite() failed for 4th 32kb memory pack in file '%s'", filename);
-                     fclose(f);
-                 }
-                 free(filename);
+                 write_mempack_file();
                   }
                 Command[0x25] = mempack_crc(&Command[5]);
              }

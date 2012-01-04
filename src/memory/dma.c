@@ -41,8 +41,53 @@
 #include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "main/util.h"
 
-static unsigned char sram[0x8000];
+unsigned char sram[0x8000];
+
+char *get_sram_path(void)
+{
+    char *filename = (char *) malloc(strlen(get_savespath())+strlen(ROM_SETTINGS.goodname)+4+1);
+    strcpy(filename, get_savespath());
+    strcat(filename, ROM_SETTINGS.goodname);
+    strcat(filename, ".sra");
+    return filename;
+}
+
+static void format_sram()
+{
+    memset(sram, 0, sizeof(sram));
+}
+
+static void read_sram_file(void)
+{
+    char *filename = get_sram_path();
+
+    format_sram();
+    if (read_from_file(filename, sram, sizeof(sram)) != 0)
+    {
+        DebugMessage(M64MSG_WARNING, "couldn't read 32kb sram file '%s'", filename);
+    }
+
+    free(filename);
+}
+
+static void write_sram_file(void)
+{
+    char *filename = get_sram_path();
+
+    if (write_to_file(filename, sram, sizeof(sram)) != 0)
+    {
+        DebugMessage(M64MSG_WARNING, "couldn't write 32kb sram file '%s'", filename);
+    }
+
+    free(filename);
+}
+
+void sram_changed(void)
+{
+    write_sram_file();
+}
 
 void dma_pi_read(void)
 {
@@ -53,44 +98,13 @@ void dma_pi_read(void)
     {
         if (use_flashram != 1)
         {
-            char *filename;
-            FILE *f;
-            filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
-            strcpy(filename, get_savespath());
-            strcat(filename, ROM_SETTINGS.goodname);
-            strcat(filename, ".sra");
-            f = fopen(filename, "rb");
-            if (f == NULL)
-            {
-                DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
-                memset(sram, 0, 0x8000);
-            }
-            else
-            {
-                if (fread(sram, 1, 0x8000, f) != 0x8000)
-                {
-                    DebugMessage(M64MSG_WARNING, "fread() failed on 32kb read from sram file '%s'", filename);
-                    memset(sram, 0, 0x8000);
-                }
-                fclose(f);
-            }
+            read_sram_file();
             for (i=0; i < (pi_register.pi_rd_len_reg & 0xFFFFFF)+1; i++)
             {
                 sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8] =
                 ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
             }
-            f = fopen(filename, "wb");
-            if (f == NULL)
-            {
-                 DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for writing.", filename);
-            }
-            else
-            {
-                if (fwrite(sram, 1, 0x8000, f) != 0x8000)
-                    DebugMessage(M64MSG_WARNING, "frwite() failed on 32kb write to sram file '%s'", filename);
-                fclose(f);
-            }
-            free(filename);
+            write_sram_file();
             use_flashram = -1;
         }
         else
@@ -120,29 +134,9 @@ void dma_pi_write(void)
         {
             if (use_flashram != 1)
             {
-                char *filename;
-                FILE *f;
                 int i;
                 
-                filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
-                strcpy(filename, get_savespath());
-                strcat(filename, ROM_SETTINGS.goodname);
-                strcat(filename, ".sra");
-                f = fopen(filename, "rb");
-                if (f == NULL)
-                {
-                    DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
-                    memset(sram, 0, 0x8000);
-                }
-                else
-                {
-                    if (fread(sram, 1, 0x8000, f) != 0x8000)
-                        DebugMessage(M64MSG_WARNING, "fread() failed on 32kb read to sram file '%s'", filename);
-                    fclose(f);
-                }
-                
-                free(filename);
-                
+                read_sram_file();                
                 for (i=0; i<(int)(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
                 {
                     ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=

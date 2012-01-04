@@ -140,46 +140,42 @@ static int search_dir_file(char *destpath, const char *path, const char *filenam
 int osal_mkdirp(const char *dirpath, int mode)
 {
     struct stat fileinfo;
-    int dirpathlen = strlen(dirpath);
-    char *currpath = strdup(dirpath);
+    size_t dirpathlen = strlen(dirpath);
+    size_t currpathlen = dirpathlen + 1;
+    char *currpath = malloc(currpathlen + 1);
+    size_t i;
 
-    /* first, break the path into pieces by replacing all of the slashes wil NULL chars */
-    while (strlen(currpath) > 1)
-    {
-        char *lastslash = strrchr(currpath, '/');
-        if (lastslash == NULL)
-            break;
-        *lastslash = 0;
-    }
+    strcpy(currpath, dirpath);
+    currpath[currpathlen - 1] = '\0';
+    currpath[currpathlen] = '\0';
+    // End with a separator so the full path gets processed in the loop
+    if (strchr(OSAL_DIR_SEPARATORS, dirpath[dirpathlen - 1]))
+        currpath[currpathlen - 1] = OSAL_DIR_SEPARATORS[0];
+
     
-    /* then re-assemble the path from left to right until we get to a directory that doesn't exist */
-    while (strlen(currpath) < dirpathlen)
+    for (i = 0; i < currpathlen; i++)
     {
-        if (strlen(currpath) > 0 && stat(currpath, &fileinfo) != 0)
-            break;
-        currpath[strlen(currpath)] = '/';
-    }
-
-    /* then walk up the path chain, creating directories along the way */
-    do
-    {
-        if (stat(currpath, &fileinfo) != 0)
+        if (strchr(OSAL_DIR_SEPARATORS, currpath[i]))
         {
-            if (mkdir(currpath, mode) != 0)
+            // Temporally terminate the string, and make the directory.
+            char tmp = currpath[i+1];
+            currpath[i+1] = '\0';
+            if (stat(currpath, &fileinfo) != 0)
             {
-                free(currpath);
-                return 1;        /* mkdir failed */
+                if (mkdir(currpath, mode) != 0)
+                {
+                    free(currpath);
+                    return 1;
+                }
             }
+            currpath[i+1] = tmp;
         }
-        if (strlen(currpath) == dirpathlen)
-            break;
-        else
-            currpath[strlen(currpath)] = '/';
-    } while (1);
-    
-    free(currpath);        
+    }
+
+    free(currpath);
     return 0;
 }
+
 
 const char * osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch)
 {
