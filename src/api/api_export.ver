@@ -15,6 +15,7 @@ ConfigListParameters;
 ConfigListSections;
 ConfigOpenSection;
 ConfigSaveFile;
+ConfigSaveSection;
 ConfigSetDefaultBool;
 ConfigSetDefaultFloat;
 ConfigSetDefaultInt;

@@ -67,11 +67,20 @@ EXPORT m64p_error CALL ConfigListParameters(m64p_handle, void *, void (*)(void *
 
 /* ConfigSaveFile()
  *
- * This function saves the Mupen64Plus configuration file to disk.
+ * This function saves the entire current Mupen64Plus configuration to disk.
  */
 typedef m64p_error (*ptr_ConfigSaveFile)(void);
 #if defined(M64P_CORE_PROTOTYPES)
 EXPORT m64p_error CALL ConfigSaveFile(void);
+#endif
+
+/* ConfigSaveSection()
+ *
+ * This function saves one section of the current Mupen64Plus configuration to disk.
+ */
+typedef m64p_error (*ptr_ConfigSaveSection)(const char *);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL ConfigSaveSection(const char *);
 #endif
 
 /* ConfigDeleteSection()
