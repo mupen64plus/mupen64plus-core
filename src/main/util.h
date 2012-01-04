@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+
 /** file utilities **/
 int file_exists(const char *filename);
 int copyfile(const char *src, const char *dest);

@@ -45,6 +45,9 @@
 unsigned int next_vi;
 int vi_field=0;
 static int vi_counter=0;
+
+int interupt_unsafe_state = 0;
+
 typedef struct _interupt_queue
 {
    int type;
@@ -321,18 +324,22 @@ void gen_interupt(void)
         vi_counter = 0; // debug
         dyna_stop();
     }
-    if (savestates_job & LOADSTATE) 
-    {
-        savestates_load();
-        savestates_job &= ~LOADSTATE;
-        return;
-    }
 
-    if (reset_hard_job)
+    if (!interupt_unsafe_state)
     {
-        reset_hard();
-        reset_hard_job = 0;
-        return;
+        if (savestates_job & LOADSTATE) 
+        {
+            savestates_load();
+            savestates_job &= ~LOADSTATE;
+            return;
+        }
+
+        if (reset_hard_job)
+        {
+            reset_hard();
+            reset_hard_job = 0;
+            return;
+        }
     }
    
     if (skip_jump)
@@ -592,19 +599,22 @@ void gen_interupt(void)
 
     exception_general();
 
-    if(savestates_job & SAVESTATE)
+    if (!interupt_unsafe_state)
     {
-        if(savestates_job & SAVEPJ64STATE)
+        if(savestates_job & SAVESTATE)
         {
-            if(savestates_save_pj64() != -1)
+            if(savestates_job & SAVEPJ64STATE)
             {
-            savestates_job &= ~(SAVESTATE+SAVEPJ64STATE);
+                if(savestates_save_pj64() != -1)
+                {
+                savestates_job &= ~(SAVESTATE+SAVEPJ64STATE);
+                }
             }
-        }
-        else
-        {
-            savestates_save();
-            savestates_job &= ~SAVESTATE;
+            else
+            {
+                savestates_save();
+                savestates_job &= ~SAVESTATE;
+            }
         }
     }
 }

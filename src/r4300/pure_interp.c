@@ -1064,7 +1064,9 @@ static void MTC0(void)
     break;
       case 9:    // Count
     update_count();
+    interupt_unsafe_state = 1;
     if (next_interupt <= Count) gen_interupt();
+    interupt_unsafe_state = 0;
     debug_count += Count;
     translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
     Count = (unsigned int) rrt & 0xFFFFFFFF;
@@ -1090,7 +1092,9 @@ static void MTC0(void)
     interp_addr+=4;
     check_interupt();
     update_count();
+    interupt_unsafe_state = 1;
     if (next_interupt <= Count) gen_interupt();
+    interupt_unsafe_state = 0;
     interp_addr-=4;
     break;
       case 13:   // Cause
