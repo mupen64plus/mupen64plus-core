@@ -21,6 +21,10 @@
 
 extern int use_flashram;
 
+extern unsigned char flashram[0x20000];
+void flashram_changed(void);
+
+char *get_flashram_path(void);
 void init_flashram(void);
 void flashram_command(unsigned int command);
 unsigned int flashram_status(void);

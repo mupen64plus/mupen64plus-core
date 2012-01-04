@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.h                                           *
+ *   Mupen64plus - reset.h                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2009 Richard Goedeken                                   *
+ *   Copyright (C) 2011 CasualJames                                        *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,24 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#if !defined(DUMMY_INPUT_H)
-#define DUMMY_INPUT_H
+#ifndef __RESET_H__
+#define __RESET_H__
 
-#include "api/m64p_plugin.h"
+/* For hard reset, set reset_hard_job and next interrupt will cause hard reset.
+ * For soft reset, call reset_soft() at any time. */
+extern int reset_hard_job;
+void reset_hard();
+void reset_soft();
 
-extern m64p_error dummyinput_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
-                                              int *APIVersion, const char **PluginNamePtr, int *Capabilities);
-extern void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo);
-extern void dummyinput_GetKeys(int Control, BUTTONS * Keys );
-extern void dummyinput_ControllerCommand(int Control, unsigned char *Command);
-extern void dummyinput_GetKeys(int Control, BUTTONS * Keys);
-extern void dummyinput_InitiateControllers(CONTROL_INFO ControlInfo);
-extern void dummyinput_ReadController(int Control, unsigned char *Command);
-extern int  dummyinput_RomOpen(void);
-extern void dummyinput_RomClosed(void);
-extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
-extern void dummyinput_SDL_KeyUp(int keymod, int keysym);
-
-#endif /* DUMMY_INPUT_H */
-
-
+#endif /* __RESET_H__ */

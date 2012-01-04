@@ -51,6 +51,7 @@ extern unsigned int jump_to_address;
 extern int no_compiled_jump;
 
 void init_blocks(void);
+void free_blocks(void);
 void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);

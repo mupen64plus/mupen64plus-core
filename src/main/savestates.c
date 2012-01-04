@@ -123,9 +123,9 @@ char* savestates_get_filename(void)
 
 char* savestates_get_pj64_filename(void)
 {
-    size_t length = strlen((char*)ROM_HEADER->nom)+8+1;
+    size_t length = strlen((char*)ROM_HEADER->Name)+8+1;
     char* filename = (char*)malloc(length);
-    snprintf(filename, length, "%s.pj%d.zip", (char*)ROM_HEADER->nom, slot);
+    snprintf(filename, length, "%s.pj%d.zip", (char*)ROM_HEADER->Name, slot);
     return filename;
 }
 

@@ -445,6 +445,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\reset.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\osd\screenshot.cpp"
 				>
 			</File>
@@ -706,6 +710,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\savestates.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\reset.h"
 				>
 			</File>
 			<File

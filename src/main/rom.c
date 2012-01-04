@@ -160,7 +160,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     memcpy(ROM_HEADER, rom, sizeof(rom_header));
 
     /* Remove trailing whitespace from ROM name. */
-    trim((char*)ROM_HEADER->nom);
+    trim(ROM_HEADER->Name);
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != &empty_entry ||
@@ -175,7 +175,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     }
     else
     {
-        strcpy(ROM_SETTINGS.goodname, (char*)ROM_HEADER->nom);
+        strcpy(ROM_SETTINGS.goodname, ROM_HEADER->Name);
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
         ROM_SETTINGS.savetype = NONE;
         ROM_SETTINGS.status = 0;
@@ -183,20 +183,24 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = 0;
     }
 
+    /* Also set some useful properties to ROM_SETTINGS */
+    ROM_SETTINGS.systemtype = rom_country_code_to_system_type(ROM_HEADER->Country_code);
+    ROM_SETTINGS.vilimit = rom_country_code_to_vi_limit(ROM_HEADER->Country_code);
+
     /* print out a bunch of info about the ROM */
     DebugMessage(M64MSG_INFO, "Goodname: %s", ROM_SETTINGS.goodname);
-    DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->nom);
+    DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->Name);
     imagestring(imagetype, buffer);
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
-    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl(ROM_HEADER->CRC1), sl(ROM_HEADER->CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
     DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
-    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl((unsigned int)ROM_HEADER->ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %x", sl((unsigned int)ROM_HEADER->Release));
-    if(sl(ROM_HEADER->Manufacturer_ID) == 'N')
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl(ROM_HEADER->ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %x", sl(ROM_HEADER->Release));
+    if(ROM_HEADER->Manufacturer_ID == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
-        DebugMessage(M64MSG_INFO, "Manufacturer: %x", (unsigned int)(ROM_HEADER->Manufacturer_ID));
+        DebugMessage(M64MSG_INFO, "Manufacturer: %x", ROM_HEADER->Manufacturer_ID);
     DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER->Cartridge_ID);
     countrycodestring(ROM_HEADER->Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
@@ -205,7 +209,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     //Prepare Hack for GOLDENEYE
     isGoldeneyeRom = 0;
-    if(strncmp((char *) ROM_HEADER->nom, "GOLDENEYE",9) == 0)
+    if(strncmp(ROM_HEADER->Name, "GOLDENEYE",9) == 0)
        isGoldeneyeRom = 1;
 
     return M64ERR_SUCCESS;
@@ -230,6 +234,50 @@ m64p_error close_rom(void)
     DebugMessage(M64MSG_STATUS, "Rom closed.");
 
     return M64ERR_SUCCESS;
+}
+
+/********************************************************************************************/
+/* ROM utility functions */
+
+// Get the system type associated to a ROM country code.
+m64p_system_type rom_country_code_to_system_type(char country_code)
+{
+    switch (country_code)
+    {
+        // PAL codes
+        case 0x44:
+        case 0x46:
+        case 0x49:
+        case 0x50:
+        case 0x53:
+        case 0x55:
+        case 0x58:
+        case 0x59:
+            return SYSTEM_PAL;
+
+        // NTSC codes
+        case 0x37:
+        case 0x41:
+        case 0x45:
+        case 0x4a:
+        default: // Fallback for unknown codes
+            return SYSTEM_NTSC;
+    }
+}
+
+// Get the VI (vertical interrupt) limit associated to a ROM country code.
+int rom_country_code_to_vi_limit(char country_code)
+{
+    switch (rom_country_code_to_system_type(country_code))
+    {
+        case SYSTEM_PAL:
+        case SYSTEM_MPAL:
+            return 50;
+
+        case SYSTEM_NTSC:
+        default:
+            return 60;
+    }
 }
 
 /********************************************************************************************/
