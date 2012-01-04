@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
+#include <string.h>
 
 /** file utilities **/
 int file_exists(const char *filename);
