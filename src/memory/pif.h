@@ -24,11 +24,13 @@
 
 extern unsigned char eeprom[0x800];
 extern unsigned char mempack[4][0x8000];
-void eeprom_changed(void);
-void mempack_changed(void);
+void eeprom_format(void);
+void eeprom_read_file(void);
+void eeprom_write_file(void);
+void mempack_format(void);
+void mempack_read_file(void);
+void mempack_write_file(void);
 
-char *get_eeprom_path(void);
-char *get_mempack_path(void);
 void update_pif_write(void);
 void update_pif_read(void);
 

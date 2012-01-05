@@ -45,7 +45,7 @@
 
 unsigned char sram[0x8000];
 
-char *get_sram_path(void)
+static char *get_sram_path(void)
 {
     char *filename = (char *) malloc(strlen(get_savespath())+strlen(ROM_SETTINGS.goodname)+4+1);
     strcpy(filename, get_savespath());
@@ -54,16 +54,16 @@ char *get_sram_path(void)
     return filename;
 }
 
-static void format_sram()
+void sram_format(void)
 {
     memset(sram, 0, sizeof(sram));
 }
 
-static void read_sram_file(void)
+void sram_read_file(void)
 {
     char *filename = get_sram_path();
 
-    format_sram();
+    sram_format();
     if (read_from_file(filename, sram, sizeof(sram)) != 0)
     {
         DebugMessage(M64MSG_WARNING, "couldn't read 32kb sram file '%s'", filename);
@@ -72,7 +72,7 @@ static void read_sram_file(void)
     free(filename);
 }
 
-static void write_sram_file(void)
+void sram_write_file(void)
 {
     char *filename = get_sram_path();
 
@@ -84,11 +84,6 @@ static void write_sram_file(void)
     free(filename);
 }
 
-void sram_changed(void)
-{
-    write_sram_file();
-}
-
 void dma_pi_read(void)
 {
     unsigned int i;
@@ -98,13 +93,13 @@ void dma_pi_read(void)
     {
         if (use_flashram != 1)
         {
-            read_sram_file();
+            sram_read_file();
             for (i=0; i < (pi_register.pi_rd_len_reg & 0xFFFFFF)+1; i++)
             {
                 sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8] =
                 ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
             }
-            write_sram_file();
+            sram_write_file();
             use_flashram = -1;
         }
         else
@@ -136,7 +131,7 @@ void dma_pi_write(void)
             {
                 int i;
                 
-                read_sram_file();                
+                sram_read_file();                
                 for (i=0; i<(int)(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
                 {
                     ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=

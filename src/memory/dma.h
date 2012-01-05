@@ -23,9 +23,10 @@
 #define DMA_H
 
 extern unsigned char sram[0x8000];
-void sram_changed(void);
+void sram_format(void);
+void sram_read_file(void);
+void sram_write_file(void);
 
-char *get_sram_path(void);
 void dma_pi_write(void);
 void dma_pi_read(void);
 void dma_si_write(void);

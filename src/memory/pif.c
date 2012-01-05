@@ -42,12 +42,7 @@
 unsigned char eeprom[0x800];
 unsigned char mempack[4][0x8000];
 
-static void format_eeprom()
-{
-    memset(eeprom, 0, sizeof(eeprom));
-}
-
-char *get_eeprom_path(void)
+static char *get_eeprom_path(void)
 {
     char *filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
     strcpy(filename, get_savespath());
@@ -56,13 +51,18 @@ char *get_eeprom_path(void)
     return filename;
 }
 
-static void read_eeprom_file(void)
+void eeprom_format(void)
+{
+    memset(eeprom, 0, sizeof(eeprom));
+}
+
+void eeprom_read_file(void)
 {
     static int EepromFileWarningSent = 0;
 
     char *filename = get_eeprom_path();
 
-    format_eeprom();
+    eeprom_format();
     if (read_from_file(filename, eeprom, sizeof(eeprom)) != 0)
     {
         if (!EepromFileWarningSent)
@@ -75,7 +75,7 @@ static void read_eeprom_file(void)
     free(filename);
 }
 
-static void write_eeprom_file(void)
+void eeprom_write_file(void)
 {
     char *filename = get_eeprom_path();
     if (write_to_file(filename, eeprom, sizeof(eeprom)) != 0)
@@ -85,7 +85,16 @@ static void write_eeprom_file(void)
     free(filename);
 }
 
-static void format_mempacks(void)
+static char *get_mempack_path(void)
+{
+    char *filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
+    strcpy(filename, get_savespath());
+    strcat(filename, ROM_SETTINGS.goodname);
+    strcat(filename, ".mpk");
+    return filename;    
+}
+
+void mempack_format(void)
 {
    unsigned char init[] =
    {
@@ -119,27 +128,13 @@ static void format_mempacks(void)
     }
 }
 
-void eeprom_changed(void)
-{
-    write_eeprom_file();
-}
-
-char *get_mempack_path(void)
-{
-    char *filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-    strcpy(filename, get_savespath());
-    strcat(filename, ROM_SETTINGS.goodname);
-    strcat(filename, ".mpk");
-    return filename;    
-}
-
-static void read_mempack_file(void)
+void mempack_read_file(void)
 {
     static int MpkFileWarningSent = 0;
 
     char *filename = get_mempack_path();
 
-    format_mempacks();
+    mempack_format();
     if (read_from_file(filename, mempack, sizeof(mempack)) != 0)
     {
         if (!MpkFileWarningSent)
@@ -152,7 +147,7 @@ static void read_mempack_file(void)
     free(filename);
 }
 
-static void write_mempack_file(void)
+void mempack_write_file(void)
 {
     char *filename = get_mempack_path();
     if (write_to_file(filename, mempack, sizeof(mempack)) != 0)
@@ -160,11 +155,6 @@ static void write_mempack_file(void)
         DebugMessage(M64MSG_WARNING, "couldn't write 4*32kb mempack file '%s'", filename);
     }
     free(filename);
-}
-
-void mempack_changed(void)
-{
-    write_mempack_file();
 }
 
 //#define DEBUG_PIF
@@ -213,15 +203,15 @@ static void EepromCommand(unsigned char *Command)
     break;
       case 4: // read
       {
-         read_eeprom_file();
+         eeprom_read_file();
          memcpy(&Command[4], eeprom + Command[3]*8, 8);
       }
     break;
       case 5: // write
       {
-         read_eeprom_file();
+         eeprom_read_file();
          memcpy(eeprom + Command[3]*8, &Command[4], 8);
-         write_eeprom_file();
+         eeprom_write_file();
       }
     break;
       case 6:
@@ -369,7 +359,7 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                 address &= 0xFFE0;
                 if (address <= 0x7FE0)
                   {
-                 read_mempack_file();
+                 mempack_read_file();
                  memcpy(&Command[5], &mempack[Control][address], 0x20);
                   }
                 else
@@ -406,9 +396,9 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                 address &= 0xFFE0;
                 if (address <= 0x7FE0)
                   {
-                 read_mempack_file();
+                 mempack_read_file();
                  memcpy(&mempack[Control][address], &Command[5], 0x20);
-                 write_mempack_file();
+                 mempack_write_file();
                   }
                 Command[0x25] = mempack_crc(&Command[5]);
              }
