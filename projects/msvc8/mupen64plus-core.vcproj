@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="mupen64plus-core"
 	ProjectGUID="{92D3FEB9-2129-41C5-8577-BCD7D961EF41}"
 	RootNamespace="mupen64pluscore"
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\src;&quot;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include&quot;"
+				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -119,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\src;&quot;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include&quot;"
+				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
