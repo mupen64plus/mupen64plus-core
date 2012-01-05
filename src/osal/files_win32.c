@@ -99,7 +99,7 @@ int osal_mkdirp(const char *dirpath, int mode)
             currpath[i+1] = '\0';
             if (_stat(currpath, &fileinfo) != 0)
             {
-                if (_mkdir(currpath, mode) != 0)
+                if (_mkdir(currpath) != 0)
                 {
                     free(currpath);
                     return 1;

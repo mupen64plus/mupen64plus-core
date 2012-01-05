@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="mupen64plus-core"
 	ProjectGUID="{92D3FEB9-2129-41C5-8577-BCD7D961EF41}"
 	RootNamespace="mupen64pluscore"
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\libpng-1.2.37\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
+				AdditionalIncludeDirectories="..\..\src;&quot;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				AdditionalDependencies="shell32.lib opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
 				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -119,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\libpng-1.2.37\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
+				AdditionalIncludeDirectories="..\..\src;&quot;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include&quot;;&quot;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				AdditionalDependencies="shell32.lib opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
 				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -297,10 +297,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\eventloop.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\r4300\exception.c"
 				>
 			</File>
@@ -373,10 +369,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\lirc.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\main\main.c"
 				>
 			</File>
@@ -433,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\reset.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\rjump.c"
 				>
 			</File>
@@ -442,14 +438,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\savestates.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\reset.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\osd\screenshot.cpp"
 				>
 			</File>
 			<File
@@ -549,11 +537,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\debugger\debugger.h"
+				RelativePath="..\..\src\api\debugger.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\api\debugger.h"
+				RelativePath="..\..\src\debugger\debugger.h"
 				>
 			</File>
 			<File
@@ -578,10 +566,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\dynamiclib.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\eventloop.h"
 				>
 			</File>
 			<File
@@ -610,10 +594,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\zip\ioapi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\lirc.h"
 				>
 			</File>
 			<File
@@ -705,19 +685,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\reset.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\rom.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\main\savestates.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\reset.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\osd\screenshot.h"
 				>
 			</File>
 			<File
