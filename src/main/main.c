@@ -62,6 +62,9 @@
 #include "lirc.h"
 #endif //WITH_LIRC
 
+/* version number for Core config section */
+#define CONFIG_PARAM_VERSION 1.00
+
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
@@ -167,9 +170,36 @@ static int GetVILimit(void)
 * global functions, for adjusting the core emulator behavior
 */
 
-void main_set_core_defaults(void)
+int main_set_core_defaults(void)
 {
+    float fConfigParamsVersion;
+    int bSaveConfig = 0;
+
+    if (ConfigGetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fConfigParamsVersion, sizeof(float)) != M64ERR_SUCCESS)
+    {
+        DebugMessage(M64MSG_WARNING, "No version number in 'Core' config section. Setting defaults.");
+        ConfigDeleteSection("Core");
+        ConfigOpenSection("Core", &g_CoreConfig);
+        bSaveConfig = 1;
+    }
+    else if (((int) fConfigParamsVersion) != ((int) CONFIG_PARAM_VERSION))
+    {
+        DebugMessage(M64MSG_WARNING, "Incompatible version %.2f in 'Core' config section: current is %.2f. Setting defaults.", fConfigParamsVersion, (float) CONFIG_PARAM_VERSION);
+        ConfigDeleteSection("Core");
+        ConfigOpenSection("Core", &g_CoreConfig);
+        bSaveConfig = 1;
+    }
+    else if (CONFIG_PARAM_VERSION > fConfigParamsVersion)
+    {
+        /* handle upgrades */
+        float fVersion = CONFIG_PARAM_VERSION;
+        ConfigSetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fVersion);
+        DebugMessage(M64MSG_INFO, "Updating parameter set version in 'Core' config section to %.2f", fVersion);
+        bSaveConfig = 1;
+    }
+
     /* parameters controlling the operation of the core */
+    ConfigSetDefaultFloat(g_CoreConfig, "Version", CONFIG_PARAM_VERSION,  "Mupen64Plus Core config parameter set version number.  Please don't change");
     ConfigSetDefaultBool(g_CoreConfig, "OnScreenDisplay", 1, "Draw on-screen display if True, otherwise don't draw OSD");
 #if defined(DYNAREC)
     ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 2, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
@@ -185,8 +215,11 @@ void main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
 
+    if (bSaveConfig)
+        ConfigSaveSection("Core");
+
     /* set config parameters for keyboard and joystick commands */
-    event_set_core_defaults();
+    return event_set_core_defaults();
 }
 
 void main_speeddown(int percent)

@@ -38,7 +38,7 @@ const char* get_savespath(void);
 void new_frame(void);
 void new_vi(void);
 
-void main_set_core_defaults(void);
+int  main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
 
 m64p_error main_run(void);
