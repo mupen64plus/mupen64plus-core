@@ -55,8 +55,8 @@ void dma_pi_read(void)
         {
             char *filename;
             FILE *f;
-            filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
-            strcpy(filename, get_savespath());
+            filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
+            strcpy(filename, get_savesrampath());
             strcat(filename, ROM_SETTINGS.goodname);
             strcat(filename, ".sra");
             f = fopen(filename, "rb");
@@ -124,8 +124,8 @@ void dma_pi_write(void)
                 FILE *f;
                 int i;
                 
-                filename = (char *) malloc(strlen(get_savespath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
-                strcpy(filename, get_savespath());
+                filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
+                strcpy(filename, get_savesrampath());
                 strcat(filename, ROM_SETTINGS.goodname);
                 strcat(filename, ".sra");
                 f = fopen(filename, "rb");

@@ -63,7 +63,7 @@
 #endif //WITH_LIRC
 
 /* version number for Core config section */
-#define CONFIG_PARAM_VERSION 1.00
+#define CONFIG_PARAM_VERSION 1.01
 
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
@@ -85,25 +85,18 @@ static osd_message_t *l_msgFF = NULL;
 static osd_message_t *l_msgPause = NULL;
 
 /*********************************************************************************************************
-* helper functions
+* static functions
 */
-const char *get_savespath(void)
+
+static const char *get_savepathdefault(const char *configpath)
 {
     static char path[1024];
-    const char *savestatepath = NULL;
-    m64p_handle CoreHandle = NULL;
 
-    /* try to get the SaveStatePath string variable in the Core configuration section */
-    if (ConfigOpenSection("Core", &CoreHandle) == M64ERR_SUCCESS)
-    {
-        savestatepath = ConfigGetParamString(CoreHandle, "SaveStatePath");
-    }
-
-    if (!savestatepath || (strlen(savestatepath) == 0)) {
+    if (!configpath || (strlen(configpath) == 0)) {
         snprintf(path, 1024, "%ssave%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
         path[1023] = 0;
     } else {
-        snprintf(path, 1024, "%s%c", savestatepath, OSAL_DIR_SEPARATOR);
+        snprintf(path, 1024, "%s%c", configpath, OSAL_DIR_SEPARATOR);
         path[1023] = 0;
     }
 
@@ -111,6 +104,24 @@ const char *get_savespath(void)
     osal_mkdirp(path, 0700);
 
     return path;
+}
+
+
+/*********************************************************************************************************
+* helper functions
+*/
+
+
+const char *get_savestatepath(void)
+{
+    /* try to get the SaveStatePath string variable in the Core configuration section */
+    return get_savepathdefault(ConfigGetParamString(g_CoreConfig, "SaveStatePath"));
+}
+
+const char *get_savesrampath(void)
+{
+    /* try to get the SaveSRAMPath string variable in the Core configuration section */
+    return get_savepathdefault(ConfigGetParamString(g_CoreConfig, "SaveSRAMPath"));
 }
 
 void main_message(m64p_msg_level level, unsigned int corner, const char *format, ...)
@@ -173,7 +184,7 @@ static int GetVILimit(void)
 int main_set_core_defaults(void)
 {
     float fConfigParamsVersion;
-    int bSaveConfig = 0;
+    int bSaveConfig = 0, bUpgrade = 0;
 
     if (ConfigGetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fConfigParamsVersion, sizeof(float)) != M64ERR_SUCCESS)
     {
@@ -191,10 +202,10 @@ int main_set_core_defaults(void)
     }
     else if (CONFIG_PARAM_VERSION > fConfigParamsVersion)
     {
-        /* handle upgrades */
         float fVersion = CONFIG_PARAM_VERSION;
         ConfigSetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fVersion);
         DebugMessage(M64MSG_INFO, "Updating parameter set version in 'Core' config section to %.2f", fVersion);
+        bUpgrade = 1;
         bSaveConfig = 1;
     }
 
@@ -212,8 +223,20 @@ int main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "EnableDebugger", 0, "Activate the R4300 debugger when ROM execution begins, if core was built with Debugger support");
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
     ConfigSetDefaultString(g_CoreConfig, "ScreenshotPath", "", "Path to directory where screenshots are saved. If this is blank, the default value of ${UserConfigPath}/screenshot will be used");
-    ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where save states are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
+    ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where emulator save states (snapshots) are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
+    ConfigSetDefaultString(g_CoreConfig, "SaveSRAMPath", "", "Path to directory where SRAM/EEPROM data (in-game saves) are stored. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
+
+    /* handle upgrades */
+    if (bUpgrade)
+    {
+        if (fConfigParamsVersion < 1.01f)
+        {  // added separate SaveSRAMPath parameter in v1.01
+            const char *pccSaveStatePath = ConfigGetParamString(g_CoreConfig, "SaveStatePath");
+            if (pccSaveStatePath != NULL)
+                ConfigSetParameter(g_CoreConfig, "SaveSRAMPath", M64TYPE_STRING, pccSaveStatePath);
+        }
+    }
 
     if (bSaveConfig)
         ConfigSaveSection("Core");
