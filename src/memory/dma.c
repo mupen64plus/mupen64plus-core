@@ -62,7 +62,7 @@ void dma_pi_read(void)
             f = fopen(filename, "rb");
             if (f == NULL)
             {
-                DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
+                DebugMessage(M64MSG_VERBOSE, "couldn't open sram file '%s' for reading", filename);
                 memset(sram, 0, 0x8000);
             }
             else
@@ -131,7 +131,7 @@ void dma_pi_write(void)
                 f = fopen(filename, "rb");
                 if (f == NULL)
                 {
-                    DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for reading", filename);
+                    DebugMessage(M64MSG_VERBOSE, "couldn't open sram file '%s' for reading", filename);
                     memset(sram, 0, 0x8000);
                 }
                 else
