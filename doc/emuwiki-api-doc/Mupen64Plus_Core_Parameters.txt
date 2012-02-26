@@ -45,7 +45,11 @@ These are standard parameters which are used by the Mupen64Plus Core library.  T
 |-
 |SaveStatePath
 |M64TYPE_STRING
-|Path to directory where save states are saved.  If this is blank, the default value of "<tt>GetConfigUserDataPath()</tt>"/save will be used.
+|Path to directory where emulator save states (snapshots) are saved.  If this is blank, the default value of "<tt>GetConfigUserDataPath()</tt>"/save will be used.
+|-
+|SaveSRAMPath
+|M64TYPE_STRING
+|Path to directory where SRAM/EEPROM data (in-game saves) are stored.  If this is blank, the default value of "<tt>GetConfigUserDataPath()</tt>"/save will be used.
 |-
 |SharedDataPath
 |M64TYPE_STRING
