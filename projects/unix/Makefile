@@ -41,6 +41,7 @@ ifeq ("$(UNAME)","FreeBSD")
 endif
 ifeq ("$(UNAME)","OpenBSD")
   OS = FREEBSD
+  CFLAGS += -DUSE_FILE32API
   $(warning OS type "$(UNAME)" not officially supported.')
 endif
 ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
