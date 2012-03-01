@@ -62,7 +62,6 @@ static unsigned char byte2bcd(int n)
 
 static void EepromCommand(unsigned char *Command)
 {
-    static int EepromFileWarningSent = 0;
     time_t curtime_time;
     struct tm curtime;
 
@@ -97,9 +96,7 @@ static void EepromCommand(unsigned char *Command)
          f = fopen(filename, "rb");
          if (f == NULL)
          {
-             if (!EepromFileWarningSent)
-                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
-             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
+             DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", filename);
              memset(eeprom, 0, 0x800);
          }
          else
@@ -123,9 +120,7 @@ static void EepromCommand(unsigned char *Command)
          f = fopen(filename, "rb");
          if (f == NULL)
          {
-             if (!EepromFileWarningSent)
-                 DebugMessage(M64MSG_INFO, "couldn't open eeprom file '%s' for reading", filename);
-             EepromFileWarningSent = 1; /* this is to avoid spamming the console the first time a game is run */
+             DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", filename);
              memset(eeprom, 0, 0x800);
          }
          else
@@ -280,7 +275,6 @@ static void internal_ReadController(int Control, unsigned char *Command)
 
 static void internal_ControllerCommand(int Control, unsigned char *Command)
 {
-    int MpkFileWarningSent = 0;
 
    switch (Command[2])
      {
@@ -339,9 +333,7 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                  f = fopen(filename, "rb");
                  if (f == NULL)
                  {
-                     if (!MpkFileWarningSent)
-                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
-                     MpkFileWarningSent = 1;
+                     DebugMessage(M64MSG_VERBOSE, "couldn't open memory pack file '%s' for reading", filename);
                      format_mempacks();
                  }
                  else
@@ -402,9 +394,7 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
                  f = fopen(filename, "rb");
                  if (f == NULL)
                  {
-                     if (!MpkFileWarningSent)
-                         DebugMessage(M64MSG_INFO, "couldn't open memory pack file '%s' for reading", filename);
-                     MpkFileWarningSent = 1;
+                     DebugMessage(M64MSG_VERBOSE, "couldn't open memory pack file '%s' for reading", filename);
                      format_mempacks();
                  }
                  else
