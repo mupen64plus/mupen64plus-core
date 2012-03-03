@@ -64,6 +64,7 @@ typedef config_section *config_list;
 static int         l_ConfigInit = 0;
 static int         l_SaveConfigOnExit = 0;
 static char       *l_DataDirOverride = NULL;
+static char       *l_ConfigDirOverride = NULL;
 static config_list l_ConfigListActive = NULL;
 static config_list l_ConfigListSaved = NULL;
 
@@ -377,15 +378,20 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         strcpy(l_DataDirOverride, DataDirOverride);
     }
 
-    /* get the full pathname to the config file and try to open it */
+    /* if a config directory was specified, make a copy of it */
     if (ConfigDirOverride != NULL)
-        configpath = ConfigDirOverride;
-    else
     {
-        configpath = ConfigGetUserConfigPath();
-        if (configpath == NULL)
-            return M64ERR_FILES;
+        l_ConfigDirOverride = (char *) malloc(strlen(ConfigDirOverride) + 1);
+        if (l_ConfigDirOverride == NULL)
+            return M64ERR_NO_MEMORY;
+        strcpy(l_ConfigDirOverride, ConfigDirOverride);
     }
+
+
+    /* get the full pathname to the config file and try to open it */
+    configpath = ConfigGetUserConfigPath();
+    if (configpath == NULL)
+        return M64ERR_FILES;
 
     filepath = (char *) malloc(strlen(configpath) + 32);
     if (filepath == NULL)
@@ -541,6 +547,11 @@ m64p_error ConfigShutdown(void)
     {
         free(l_DataDirOverride);
         l_DataDirOverride = NULL;
+    }
+    if (l_ConfigDirOverride != NULL)
+    {
+        free(l_ConfigDirOverride);
+        l_ConfigDirOverride = NULL;
     }
 
     /* free all of the memory in the 2 lists */
@@ -1511,7 +1522,10 @@ EXPORT const char * CALL ConfigGetSharedDataFilepath(const char *filename)
 
 EXPORT const char * CALL ConfigGetUserConfigPath(void)
 {
-  return osal_get_user_configpath();
+    if (l_ConfigDirOverride != NULL)
+        return l_ConfigDirOverride;
+    else
+        return osal_get_user_configpath();
 }
 
 EXPORT const char * CALL ConfigGetUserDataPath(void)
