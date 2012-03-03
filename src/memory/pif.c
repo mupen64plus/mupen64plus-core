@@ -50,7 +50,6 @@ void print_pif(void)
         DebugMessage(M64MSG_INFO, "%x %x %x %x | %x %x %x %x",
                      PIF_RAMb[i*8+0], PIF_RAMb[i*8+1],PIF_RAMb[i*8+2], PIF_RAMb[i*8+3],
                      PIF_RAMb[i*8+4], PIF_RAMb[i*8+5],PIF_RAMb[i*8+6], PIF_RAMb[i*8+7]);
-    getchar();
 }
 #endif
 
@@ -68,6 +67,9 @@ static void EepromCommand(unsigned char *Command)
     switch (Command[2])
     {
     case 0: // check
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "EepromCommand() check size");
+#endif
         if (Command[1] != 3)
         {
             Command[1] |= 0x40;
@@ -89,6 +91,9 @@ static void EepromCommand(unsigned char *Command)
     {
         char *filename;
         FILE *f;
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "EepromCommand() read 8-byte block %i", Command[3]);
+#endif
         filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname)+4+1);
         strcpy(filename, get_savesrampath());
         strcat(filename, ROM_SETTINGS.goodname);
@@ -113,6 +118,9 @@ static void EepromCommand(unsigned char *Command)
     {
         char *filename;
         FILE *f;
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "EepromCommand() write 8-byte block %i", Command[3]);
+#endif
         filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname)+4+1);
         strcpy(filename, get_savesrampath());
         strcat(filename, ROM_SETTINGS.goodname);
@@ -145,12 +153,18 @@ static void EepromCommand(unsigned char *Command)
     }
     break;
     case 6:
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "EepromCommand() RTC status query");
+#endif
         // RTCstatus query
         Command[3] = 0x00;
         Command[4] = 0x10;
         Command[5] = 0x00;
         break;
     case 7:
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "EepromCommand() read RTC block %i", Command[3]);
+#endif
         // read RTC block
         switch (Command[3]) {	// block number
         case 0:
@@ -246,6 +260,9 @@ static void internal_ReadController(int Control, unsigned char *Command)
     switch (Command[2])
     {
     case 1:
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 1 read buttons", Control);
+#endif
         if (Controls[Control].Present)
         {
             BUTTONS Keys;
@@ -257,6 +274,9 @@ static void internal_ReadController(int Control, unsigned char *Command)
         }
         break;
     case 2: // read controller pack
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 2 read controller pack (in Input plugin)", Control);
+#endif
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
@@ -264,6 +284,9 @@ static void internal_ReadController(int Control, unsigned char *Command)
         }
         break;
     case 3: // write controller pack
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 3 write controller pack (in Input plugin)", Control);
+#endif
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
@@ -278,10 +301,13 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
 
     switch (Command[2])
     {
-    case 0x00: // check
-    case 0xFF:
+    case 0x00: // read status
+    case 0xFF: // reset
         if ((Command[1] & 0x80))
             break;
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command %02x check pack present", Control, Command[2]);
+#endif
         if (Controls[Control].Present)
         {
             Command[3] = 0x05;
@@ -303,6 +329,9 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
             Command[1] |= 0x80;
         break;
     case 0x01:
+#ifdef DEBUG_PIF
+        DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 1 check controller present", Control);
+#endif
         if (!Controls[Control].Present)
             Command[1] |= 0x80;
         break;
@@ -314,6 +343,9 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
             case PLUGIN_MEMPAK:
             {
                 int address = (Command[3] << 8) | Command[4];
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 read mempack address %04x", Control, address);
+#endif
                 if (address == 0x8001)
                 {
                     memset(&Command[5], 0, 0x20);
@@ -360,9 +392,15 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
             }
             break;
             case PLUGIN_RAW:
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 controllerCommand (in Input plugin)", Control);
+#endif
                 if (controllerCommand) controllerCommand(Control, Command);
                 break;
             default:
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 (no pack plugged in)", Control);
+#endif
                 memset(&Command[5], 0, 0x20);
                 Command[0x25] = 0;
             }
@@ -378,6 +416,9 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
             case PLUGIN_MEMPAK:
             {
                 int address = (Command[3] << 8) | Command[4];
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 write mempack address %04x", Control, address);
+#endif
                 if (address == 0x8001)
                     Command[0x25] = mempack_crc(&Command[5]);
                 else
@@ -434,9 +475,15 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
             }
             break;
             case PLUGIN_RAW:
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 controllerCommand (in Input plugin)", Control);
+#endif
                 if (controllerCommand) controllerCommand(Control, Command);
                 break;
             default:
+#ifdef DEBUG_PIF
+                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 (no pack plugged in)", Control);
+#endif
                 Command[0x25] = mempack_crc(&Command[5]);
             }
         }
@@ -450,15 +497,14 @@ void update_pif_write(void)
 {
     char challenge[30], response[30];
     int i=0, channel=0;
-#ifdef DEBUG_PIF
-    DebugMessage(M64MSG_INFO, "update_pif_write()");
-    print_pif();
-#endif
     if (PIF_RAMb[0x3F] > 1)
     {
         switch (PIF_RAMb[0x3F])
         {
         case 0x02:
+#ifdef DEBUG_PIF
+            DebugMessage(M64MSG_INFO, "update_pif_write() pif_ram[0x3f] = 2 - CIC challenge");
+#endif
             // format the 'challenge' message into 30 nibbles for X-Scale's CIC code
             for (i = 0; i < 15; i++)
             {
@@ -476,6 +522,9 @@ void update_pif_write(void)
             PIF_RAMb[63] = 0;
             break;
         case 0x08:
+#ifdef DEBUG_PIF
+            DebugMessage(M64MSG_INFO, "update_pif_write() pif_ram[0x3f] = 8");
+#endif
             PIF_RAMb[0x3F] = 0;
             break;
         default:
@@ -518,18 +567,11 @@ void update_pif_write(void)
     }
     //PIF_RAMb[0x3F] = 0;
     controllerCommand(-1, NULL);
-#ifdef DEBUG_PIF
-    print_pif();
-#endif
 }
 
 void update_pif_read(void)
 {
     int i=0, channel=0;
-#ifdef DEBUG_PIF
-    DebugMessage(M64MSG_INFO, "update_pif_read()");
-    print_pif();
-#endif
     while (i<0x40)
     {
         switch (PIF_RAMb[i])
@@ -567,8 +609,5 @@ void update_pif_read(void)
         i++;
     }
     readController(-1, NULL);
-#ifdef DEBUG_PIF
-    print_pif();
-#endif
 }
 
