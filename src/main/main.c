@@ -200,7 +200,7 @@ int main_set_core_defaults(void)
         ConfigOpenSection("Core", &g_CoreConfig);
         bSaveConfig = 1;
     }
-    else if (CONFIG_PARAM_VERSION > fConfigParamsVersion)
+    else if ((CONFIG_PARAM_VERSION - fConfigParamsVersion) >= 0.0001f)
     {
         float fVersion = CONFIG_PARAM_VERSION;
         ConfigSetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fVersion);
