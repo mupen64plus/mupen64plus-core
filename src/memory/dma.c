@@ -275,45 +275,53 @@ void dma_pi_write(void)
 
 void dma_sp_write(void)
 {
-    unsigned int i;
+    unsigned int i,j;
 
-    if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
-    {
-        for (i=0; i<((sp_register.sp_rd_len_reg & 0xFFF)+1); i++)
-        {
-            ((unsigned char *)(SP_IMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8]=
-                ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8];
+    unsigned int l = sp_register.sp_rd_len_reg;
+
+    unsigned int length = ((l & 0xfff) | 7) + 1;
+    unsigned int count = ((l >> 12) & 0xff) + 1;
+    unsigned int skip = ((l >> 20) & 0xfff);
+ 
+    unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
+    unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
+
+    unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+    unsigned char *dram = (unsigned char*)rdram;
+
+    for(j=0; j<count; j++) {
+        for(i=0; i<length; i++) {
+            spmem[memaddr^S8] = dram[dramaddr^S8];
+            memaddr++;
+            dramaddr++;
         }
-    }
-    else
-    {
-        for (i=0; i<((sp_register.sp_rd_len_reg & 0xFFF)+1); i++)
-        {
-            ((unsigned char *)(SP_DMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8]=
-                ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8];
-        }
+        dramaddr+=skip;
     }
 }
 
 void dma_sp_read(void)
 {
-    unsigned int i;
+    unsigned int i,j;
 
-    if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
-    {
-        for (i=0; i<((sp_register.sp_wr_len_reg & 0xFFF)+1); i++)
-        {
-            ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8]=
-                ((unsigned char *)(SP_IMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8];
+    unsigned int l = sp_register.sp_wr_len_reg;
+
+    unsigned int length = ((l & 0xfff) | 7) + 1;
+    unsigned int count = ((l >> 12) & 0xff) + 1;
+    unsigned int skip = ((l >> 20) & 0xfff);
+
+    unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
+    unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
+
+    unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+    unsigned char *dram = (unsigned char*)rdram;
+
+    for(j=0; j<count; j++) {
+        for(i=0; i<length; i++) {
+            dram[dramaddr^S8] = spmem[memaddr^S8];
+            memaddr++;
+            dramaddr++;
         }
-    }
-    else
-    {
-        for (i=0; i<((sp_register.sp_wr_len_reg & 0xFFF)+1); i++)
-        {
-            ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8]=
-                ((unsigned char *)(SP_DMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8];
-        }
+        dramaddr+=skip;
     }
 }
 
