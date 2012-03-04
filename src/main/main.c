@@ -72,10 +72,10 @@ m64p_frame_callback g_FrameCallback = NULL;
 
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
-int         g_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
+static int   l_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
 static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to keep speed at real-time
@@ -398,7 +398,7 @@ void main_draw_volume_osd(void)
    LIRC command, or 'testshots' command-line option timer */
 void main_take_next_screenshot(void)
 {
-    g_TakeScreenshot = l_CurrentFrame + 1;
+    l_TakeScreenshot = l_CurrentFrame + 1;
 }
 
 void main_state_set_slot(int slot)
@@ -491,17 +491,24 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
 * global functions, callbacks from the r4300 core or from other plugins
 */
 
-static void video_plugin_render_callback(void)
+static void video_plugin_render_callback(int bScreenRedrawn)
 {
+    int bOSD = ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay");
+
     // if the flag is set to take a screenshot, then grab it now
-    if (g_TakeScreenshot != 0)
+    if (l_TakeScreenshot != 0)
     {
-        TakeScreenshot(g_TakeScreenshot - 1);  // current frame number +1 is in g_TakeScreenshot
-        g_TakeScreenshot = 0; // reset flag
+        // if the OSD is enabled, and the screen has not been recently redrawn, then we cannot take a screenshot now because
+        // it contains the OSD text.  Wait until the next redraw
+        if (!bOSD || bScreenRedrawn)
+        {
+            TakeScreenshot(l_TakeScreenshot - 1);  // current frame number +1 is in l_TakeScreenshot
+            l_TakeScreenshot = 0; // reset flag
+        }
     }
 
     // if the OSD is enabled, then draw it now
-    if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
+    if (bOSD)
     {
         osd_render();
     }
