@@ -202,7 +202,7 @@ int main_set_core_defaults(void)
     }
     else if ((CONFIG_PARAM_VERSION - fConfigParamsVersion) >= 0.0001f)
     {
-        float fVersion = CONFIG_PARAM_VERSION;
+        float fVersion = (float) CONFIG_PARAM_VERSION;
         ConfigSetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fVersion);
         DebugMessage(M64MSG_INFO, "Updating parameter set version in 'Core' config section to %.2f", fVersion);
         bUpgrade = 1;
@@ -210,7 +210,7 @@ int main_set_core_defaults(void)
     }
 
     /* parameters controlling the operation of the core */
-    ConfigSetDefaultFloat(g_CoreConfig, "Version", CONFIG_PARAM_VERSION,  "Mupen64Plus Core config parameter set version number.  Please don't change");
+    ConfigSetDefaultFloat(g_CoreConfig, "Version", (float) CONFIG_PARAM_VERSION,  "Mupen64Plus Core config parameter set version number.  Please don't change");
     ConfigSetDefaultBool(g_CoreConfig, "OnScreenDisplay", 1, "Draw on-screen display if True, otherwise don't draw OSD");
 #if defined(DYNAREC)
     ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 2, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
