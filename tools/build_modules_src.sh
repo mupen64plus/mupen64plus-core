@@ -32,7 +32,7 @@ modules='mupen64plus-core mupen64plus-core-norom mupen64plus-ui-console mupen64p
 for modname in ${modules}; do
   echo "************************************ Downloading and packaging module source code: ${modname}"
   rm -rf "tmp"
-  EXCLUDE="--exclude .hgtags --exclude .hg --exclude .hgignore"
+  EXCLUDE="--exclude .hgtags --exclude .hg_archival.txt --exclude .hgignore"
   TARTAG=""
   if [ "$modname" = "mupen64plus-core-norom" ]; then
     modname="mupen64plus-core"
