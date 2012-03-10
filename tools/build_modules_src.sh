@@ -24,21 +24,26 @@
 set -e
 
 if [ $# -lt 2 ]; then
-    echo "Usage: build_modules_src.sh <tag-name> <build-name> [-norom]"
+    echo "Usage: build_modules_src.sh <tag-name> <build-name>"
     exit 1
 fi
 
-modules='mupen64plus-core mupen64plus-ui-console mupen64plus-audio-sdl mupen64plus-input-sdl mupen64plus-rsp-hle mupen64plus-video-rice'
+modules='mupen64plus-core mupen64plus-core-norom mupen64plus-ui-console mupen64plus-audio-sdl mupen64plus-input-sdl mupen64plus-rsp-hle mupen64plus-video-rice'
 for modname in ${modules}; do
-  OUTPUTDIR="${modname}-$2"
   echo "************************************ Downloading and packaging module source code: ${modname}"
   rm -rf "tmp"
-  hg clone --noupdate "http://bitbucket.org/richard42/$modname" "tmp"
-  EXCLUDE="--exclude tmp/.hgtags --exclude tmp/.hg_archival.txt tmp/.hgignore"
-  if [ $# -eq 3 -a "$3" = "-norom" -a "$modname" = "mupen64plus-core" ]; then
-    EXCLUDE="${EXCLUDE} --exclude tmp/roms"
+  EXCLUDE="--exclude .hgtags --exclude .hg --exclude .hgignore"
+  TARTAG=""
+  if [ "$modname" = "mupen64plus-core-norom" ]; then
+    modname="mupen64plus-core"
+    EXCLUDE="${EXCLUDE} --exclude roms"
+    TARTAG="-norom"
   fi
-  hg --repository tmp archive --no-decode --type tar --prefix "${OUTPUTDIR}/" ${EXCLUDE} -r $1 "${OUTPUTDIR}.tar"
-  gzip -n -f "${OUTPUTDIR}.tar"
+  OUTPUTDIR="${modname}-$2"
+  hg clone --noupdate "http://bitbucket.org/richard42/$modname" "tmp"
+  cd tmp
+  hg archive --no-decode --type tar --prefix "${OUTPUTDIR}/" ${EXCLUDE} -r $1 "../${OUTPUTDIR}${TARTAG}.tar"
+  cd ..
+  gzip -n -f "${OUTPUTDIR}${TARTAG}.tar"
   rm -rf "tmp"
 done
