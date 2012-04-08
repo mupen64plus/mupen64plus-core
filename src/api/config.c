@@ -98,22 +98,13 @@ static void strip_whitespace(char *string)
 
 static int is_numeric(const char *string)
 {
-    int dots = 0;
+    char chTemp[16];
+    float fTemp;
+    int rval = sscanf(string, "%f%8s", &fTemp, chTemp);
 
-    if (*string == '-') string++;
-
-    while (*string != 0)
-    {
-        char ch = *string++;
-        if (ch >= '0' && ch <= '9')
-            continue;
-        else if (ch == '.' && dots == 0)
-            dots++;
-        else
-            return 0;
-    }
-
-    return 1; /* true, input is numeric */
+    /* I want to find exactly one matched input item: a number with no garbage on the end */
+    /* I use sscanf() instead of a custom loop because this routine must handle locales in which the decimal separator is not '.' */
+    return (rval == 1);
 }
 
 static config_var *find_section_var(config_section *section, const char *ParamName)
