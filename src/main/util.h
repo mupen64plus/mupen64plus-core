@@ -31,7 +31,6 @@ extern "C" {
 /** file utilities **/
 int isfile(char *path);
 int isdir(char *path);
-int copyfile(char *src, char *dest);
 
 /** linked list utilities **/
 typedef struct _list_node {
@@ -47,26 +46,12 @@ list_node_t *list_append(list_t *list, void *data);
 void countrycodestring(unsigned short int countrycode, char *string);
 void list_node_delete(list_t *list, list_node_t *node);
 void list_delete(list_t *list);
-void list_node_move_front(list_t *list, list_node_t *node);
-void list_node_move_back(list_t *list, list_node_t *node);
-void *list_nth_node_data(list_t list, int n);
-list_node_t *list_first_node(list_t list);
-void *list_first_data(list_t list);
-list_node_t *list_last_node(list_t list);
-void *list_last_data(list_t list);
-int list_empty(list_t list);
-int list_length(list_t list);
 list_node_t *list_find_node(list_t list, void *data);
 char* dirfrompath(const char* string);
 
 /* GUI utilities */
 void countrycodestring(unsigned short countrycode, char *string);
-void compressionstring(unsigned char compressiontype, char *string);
 void imagestring(unsigned char imagetype, char *string);
-void cicstring(unsigned char cic, char *string);
-void rumblestring(unsigned char rumble, char *string);
-void savestring(unsigned char savetype, char *string);
-void playersstring(unsigned char players, char *string);
 
 // cycles through each listnode in list setting curr_node to current node.
 #define list_foreach(list, curr_node) \
@@ -74,8 +59,6 @@ void playersstring(unsigned char players, char *string);
 
 /** string utilities **/
 char *trim(char *str);
-char *strnstrip(char* string, int size);
-list_t tokenize_string(const char *string, const char* delim);
 
 #ifdef __cplusplus
 }

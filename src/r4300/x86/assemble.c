@@ -172,16 +172,6 @@ void jump_end_rel32(void)
   code_length = jump_end;
 }
 
-void push_reg32(int reg32)
-{
-   put8(0x50+reg32);
-}
-
-void pop_reg32(int reg32)
-{
-   put8(0x58+reg32);
-}
-
 void mov_eax_memoffs32(unsigned int *memoffs32)
 {
    put8(0xA1);
@@ -192,40 +182,6 @@ void mov_memoffs32_eax(unsigned int *memoffs32)
 {
    put8(0xA3);
    put32((unsigned int)(memoffs32));
-}
-
-void mov_ax_memoffs16(unsigned short *memoffs16)
-{
-   put8(0x66);
-   put8(0xA1);
-   put32((unsigned int)(memoffs16));
-}
-
-void mov_memoffs16_ax(unsigned short *memoffs16)
-{
-   put8(0x66);
-   put8(0xA3);
-   put32((unsigned int)(memoffs16));
-}
-
-void mov_al_memoffs8(unsigned char *memoffs8)
-{
-   put8(0xA0);
-   put32((unsigned int)(memoffs8));
-}
-
-void mov_memoffs8_al(unsigned char *memoffs8)
-{
-   put8(0xA2);
-   put32((unsigned int)(memoffs8));
-}
-
-void mov_m8_imm8(unsigned char *m8, unsigned char imm8)
-{
-   put8(0xC6);
-   put8(0x05);
-   put32((unsigned int)(m8));
-   put8(imm8);
 }
 
 void mov_m8_reg8(unsigned char *m8, int reg8)
@@ -299,12 +255,6 @@ void test_m32_imm32(unsigned int *m32, unsigned int imm32)
    put8(0x05);
    put32((unsigned int)m32);
    put32(imm32);
-}
-
-void cmp_al_imm8(unsigned char imm8)
-{
-   put8(0x3C);
-   put8(imm8);
 }
 
 void add_m32_reg32(unsigned int *m32, int reg32)
@@ -412,86 +362,10 @@ void jp_rj(unsigned char saut)
    put8(saut);
 }
 
-void je_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x84);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
 void je_near_rj(unsigned int saut)
 {
    put8(0x0F);
    put8(0x84);
-   put32(saut);
-}
-
-void jl_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x8C);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
-void jl_near_rj(unsigned int saut)
-{
-   put8(0x0F);
-   put8(0x8C);
-   put32(saut);
-}
-
-void jne_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x85);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
-void jne_near_rj(unsigned int saut)
-{
-   put8(0x0F);
-   put8(0x85);
-   put32(saut);
-}
-
-void jge_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x8D);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
-void jge_near_rj(unsigned int saut)
-{
-   put8(0x0F);
-   put8(0x8D);
-   put32(saut);
-}
-
-void jg_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x8F);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
-void jle_near(unsigned int mi_addr)
-{
-   put8(0x0F);
-   put8(0x8E);
-   put32(0);
-   add_jump(code_length-4, mi_addr);
-}
-
-void jle_near_rj(unsigned int saut)
-{
-   put8(0x0F);
-   put8(0x8E);
    put32(saut);
 }
 
@@ -501,26 +375,10 @@ void mov_reg32_imm32(int reg32, unsigned int imm32)
    put32(imm32);
 }
 
-void jmp_imm(int saut)
-{
-   put8(0xE9);
-   put32(saut);
-}
-
 void jmp_imm_short(char saut)
 {
    put8(0xEB);
    put8(saut);
-}
-
-void dec_reg32(int reg32)
-{
-   put8(0x48+reg32);
-}
-
-void inc_reg32(int reg32)
-{
-   put8(0x40+reg32);
 }
 
 void or_m32_imm32(unsigned int *m32, unsigned int imm32)
@@ -529,20 +387,6 @@ void or_m32_imm32(unsigned int *m32, unsigned int imm32)
    put8(0x0D);
    put32((unsigned int)(m32));
    put32(imm32);
-}
-
-void or_m32_reg32(unsigned int *m32, unsigned int reg32)
-{
-   put8(0x09);
-   put8((reg32 << 3) | 5);
-   put32((unsigned int)(m32));
-}
-
-void or_reg32_m32(unsigned int reg32, unsigned int *m32)
-{
-   put8(0x0B);
-   put8((reg32 << 3) | 5);
-   put32((unsigned int)(m32));
 }
 
 void or_reg32_reg32(unsigned int reg1, unsigned int reg2)
@@ -565,40 +409,10 @@ void and_m32_imm32(unsigned int *m32, unsigned int imm32)
    put32(imm32);
 }
 
-void and_reg32_m32(unsigned int reg32, unsigned int *m32)
-{
-   put8(0x23);
-   put8((reg32 << 3) | 5);
-   put32((unsigned int)(m32));
-}
-
 void xor_reg32_reg32(unsigned int reg1, unsigned int reg2)
 {
    put8(0x31);
    put8(0xC0 | (reg2 << 3) | reg1);
-}
-
-void xor_reg32_m32(unsigned int reg32, unsigned int *m32)
-{
-   put8(0x33);
-   put8((reg32 << 3) | 5);
-   put32((unsigned int)(m32));
-}
-
-void add_m32_imm32(unsigned int *m32, unsigned int imm32)
-{
-   put8(0x81);
-   put8(0x05);
-   put32((unsigned int)(m32));
-   put32(imm32);
-}
-
-void add_m32_imm8(unsigned int *m32, unsigned char imm8)
-{
-   put8(0x83);
-   put8(0x05);
-   put32((unsigned int)(m32));
-   put8(imm8);
 }
 
 void sub_m32_imm32(unsigned int *m32, unsigned int imm32)
@@ -607,19 +421,6 @@ void sub_m32_imm32(unsigned int *m32, unsigned int imm32)
    put8(0x2D);
    put32((unsigned int)(m32));
    put32(imm32);
-}
-
-void push_imm32(unsigned int imm32)
-{
-   put8(0x68);
-   put32(imm32);
-}
-
-void add_reg32_imm8(unsigned int reg32, unsigned char imm8)
-{
-   put8(0x83);
-   put8(0xC0+reg32);
-   put8(imm8);
 }
 
 void add_reg32_imm32(unsigned int reg32, unsigned int imm32)
@@ -642,22 +443,6 @@ void cmp_m32_imm32(unsigned int *m32, unsigned int imm32)
    put8(0x3D);
    put32((unsigned int)(m32));
    put32(imm32);
-}
-
-void cmp_m32_imm8(unsigned int *m32, unsigned char imm8)
-{
-   put8(0x83);
-   put8(0x3D);
-   put32((unsigned int)(m32));
-   put8(imm8);
-}
-
-void cmp_m8_imm8(unsigned char *m8, unsigned char imm8)
-{
-   put8(0x80);
-   put8(0x3D);
-   put32((unsigned int)(m8));
-   put8(imm8);
 }
 
 void cmp_eax_imm32(unsigned int imm32)
@@ -686,17 +471,6 @@ void cdq(void)
    put8(0x99);
 }
 
-void cwde(void)
-{
-   put8(0x98);
-}
-
-void cbw(void)
-{
-   put8(0x66);
-   put8(0x98);
-}
-
 void mov_m32_reg32(unsigned int *m32, unsigned int reg32)
 {
    put8(0x89);
@@ -704,22 +478,10 @@ void mov_m32_reg32(unsigned int *m32, unsigned int reg32)
    put32((unsigned int)(m32));
 }
 
-void ret(void)
-{
-   put8(0xC3);
-}
-
 void call_reg32(unsigned int reg32)
 {
    put8(0xFF);
    put8(0xD0+reg32);
-}
-
-void call_m32(unsigned int *m32)
-{
-   put8(0xFF);
-   put8(0x15);
-   put32((unsigned int)(m32));
 }
 
 void shr_reg32_imm8(unsigned int reg32, unsigned char imm8)
@@ -791,13 +553,6 @@ void mul_m32(unsigned int *m32)
    put32((unsigned int)(m32));
 }
 
-void imul_m32(unsigned int *m32)
-{
-   put8(0xF7);
-   put8(0x2D);
-   put32((unsigned int)(m32));
-}
-
 void imul_reg32(unsigned int reg32)
 {
    put8(0xF7);
@@ -822,20 +577,6 @@ void div_reg32(unsigned int reg32)
    put8(0xF0+reg32);
 }
 
-void idiv_m32(unsigned int *m32)
-{
-   put8(0xF7);
-   put8(0x3D);
-   put32((unsigned int)(m32));
-}
-
-void div_m32(unsigned int *m32)
-{
-   put8(0xF7);
-   put8(0x35);
-   put32((unsigned int)(m32));
-}
-
 void add_reg32_reg32(unsigned int reg1, unsigned int reg2)
 {
    put8(0x01);
@@ -855,13 +596,6 @@ void add_reg32_m32(unsigned int reg32, unsigned int *m32)
    put32((unsigned int)(m32));
 }
 
-void adc_reg32_m32(unsigned int reg32, unsigned int *m32)
-{
-   put8(0x13);
-   put8((reg32 << 3) | 5);
-   put32((unsigned int)(m32));
-}
-
 void adc_reg32_imm32(unsigned int reg32, unsigned int imm32)
 {
    put8(0x81);
@@ -873,13 +607,6 @@ void jmp_reg32(unsigned int reg32)
 {
    put8(0xFF);
    put8(0xE0 + reg32);
-}
-
-void jmp_m32(unsigned int *m32)
-{
-   put8(0xFF);
-   put8(0x25);
-   put32((unsigned int)(m32));
 }
 
 void mov_reg32_preg32(unsigned int reg1, unsigned int reg2)
@@ -909,34 +636,11 @@ void mov_reg32_preg32pimm32(int reg1, int reg2, unsigned int imm32)
    put32(imm32);
 }
 
-void mov_reg32_preg32x4preg32(int reg1, int reg2, int reg3)
-{
-   put8(0x8B);
-   put8((reg1 << 3) | 4);
-   put8(0x80 | (reg2 << 3) | reg3);
-}
-
-void mov_reg32_preg32x4preg32pimm32(int reg1, int reg2, int reg3, unsigned int imm32)
-{
-   put8(0x8B);
-   put8((reg1 << 3) | 0x84);
-   put8(0x80 | (reg2 << 3) | reg3);
-   put32(imm32);
-}
-
 void mov_reg32_preg32x4pimm32(int reg1, int reg2, unsigned int imm32)
 {
    put8(0x8B);
    put8((reg1 << 3) | 4);
    put8(0x80 | (reg2 << 3) | 5);
-   put32(imm32);
-}
-
-void mov_preg32preg32pimm32_reg8(int reg1, int reg2, unsigned int imm32, int reg8)
-{
-   put8(0x88);
-   put8(0x84 | (reg8 << 3));
-   put8((reg2 << 3) | reg1);
    put32(imm32);
 }
 
@@ -1017,52 +721,6 @@ void or_reg32_imm32(int reg32, unsigned int imm32)
    put32(imm32);
 }
 
-void and_reg32_imm8(int reg32, unsigned char imm8)
-{
-   put8(0x83);
-   put8(0xE0 + reg32);
-   put8(imm8);
-}
-
-void and_ax_imm16(unsigned short imm16)
-{
-   put8(0x66);
-   put8(0x25);
-   put16(imm16);
-}
-
-void and_al_imm8(unsigned char imm8)
-{
-   put8(0x24);
-   put8(imm8);
-}
-
-void or_ax_imm16(unsigned short imm16)
-{
-   put8(0x66);
-   put8(0x0D);
-   put16(imm16);
-}
-
-void or_eax_imm32(unsigned int imm32)
-{
-   put8(0x0D);
-   put32(imm32);
-}
-
-void xor_ax_imm16(unsigned short imm16)
-{
-   put8(0x66);
-   put8(0x35);
-   put16(imm16);
-}
-
-void xor_al_imm8(unsigned char imm8)
-{
-   put8(0x34);
-   put8(imm8);
-}
-
 void xor_reg32_imm32(int reg32, unsigned int imm32)
 {
    put8(0x81);
@@ -1075,11 +733,6 @@ void xor_reg8_imm8(int reg8, unsigned char imm8)
    put8(0x80);
    put8(0xF0 + reg8);
    put8(imm8);
-}
-
-void nop(void)
-{
-   put8(0x90);
 }
 
 void mov_reg32_reg32(unsigned int reg1, unsigned int reg2)
@@ -1103,13 +756,6 @@ void movsx_reg32_m8(int reg32, unsigned char *m8)
    put32((unsigned int)(m8));
 }
 
-void movsx_reg32_reg8(int reg32, int reg8)
-{
-   put8(0x0F);
-   put8(0xBE);
-   put8((reg32 << 3) | reg8 | 0xC0);
-}
-
 void movsx_reg32_8preg32pimm32(int reg1, int reg2, unsigned int imm32)
 {
    put8(0x0F);
@@ -1124,13 +770,6 @@ void movsx_reg32_16preg32pimm32(int reg1, int reg2, unsigned int imm32)
    put8(0xBF);
    put8((reg1 << 3) | reg2 | 0x80);
    put32(imm32);
-}
-
-void movsx_reg32_reg16(int reg32, int reg16)
-{
-   put8(0x0F);
-   put8(0xBF);
-   put8((reg32 << 3) | reg16 | 0xC0);
 }
 
 void movsx_reg32_m16(int reg32, unsigned short *m16)
@@ -1196,36 +835,16 @@ void fmul_preg32_dword(int reg32)
    put8(0x08 + reg32);
 }
 
-void fcomp_preg32_dword(int reg32)
-{
-   put8(0xD8);
-   put8(0x18 + reg32);
-}
-
 void fistp_preg32_dword(int reg32)
 {
    put8(0xDB);
    put8(0x18 + reg32);
 }
 
-void fistp_m32(unsigned int *m32)
-{
-   put8(0xDB);
-   put8(0x1D);
-   put32((unsigned int)(m32));
-}
-
 void fistp_preg32_qword(int reg32)
 {
    put8(0xDF);
    put8(0x38 + reg32);
-}
-
-void fistp_m64(unsigned long long *m64)
-{
-   put8(0xDF);
-   put8(0x3D);
-   put32((unsigned int)(m64));
 }
 
 void fld_preg32_qword(int reg32)

@@ -36,7 +36,6 @@
 #include "rom.h"
 #include "eventloop.h"
 #include "util.h" // list utilities
-#include "ini_reader.h"
 
 // local definitions
 #define CHEAT_CODE_MAGIC_VALUE 0xDEAD0000

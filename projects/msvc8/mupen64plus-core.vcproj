@@ -361,10 +361,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\main\ini_reader.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\r4300\interupt.c"
 				>
 			</File>
@@ -590,10 +586,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\memory\flashram.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\main\ini_reader.h"
 				>
 			</File>
 			<File

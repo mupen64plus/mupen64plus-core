@@ -321,11 +321,6 @@ void main_set_speedlimiter(int enable)
         l_MainSpeedLimit = 0;
 }
 
-int main_get_speedlimiter(void)
-{
-    return l_MainSpeedLimit ? 1 : 0;
-}
-
 int main_is_paused(void)
 {
     return (g_EmulatorRunning && rompause);

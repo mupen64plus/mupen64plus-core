@@ -144,7 +144,6 @@ extern romdatabase_entry empty_entry;
 
 void romdatabase_open(void);
 void romdatabase_close(void);
-romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 /* Should be used by current cheat system (isn't), when cheat system is
  * migrated to md5s, will be fully depreciated.
  */

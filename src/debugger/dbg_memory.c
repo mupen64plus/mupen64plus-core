@@ -32,6 +32,46 @@
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 #include "main/rom.h"
+ 
+/* Following are the breakpoint functions for memory access calls.  See debugger/memory.h
+ * These macros generate the memory breakpoint function calls.*/
+MEMBREAKALL_local(nothing);
+MEMBREAKALL_local(nomem);
+MEMBREAKALL(rdram);
+MEMBREAKALL(rdramFB);
+MEMBREAKALL_local(rdramreg);
+MEMBREAKALL_local(rsp_mem);
+MEMBREAKALL_local(rsp_reg);
+MEMBREAKALL_local(rsp);
+MEMBREAKALL_local(dp);
+MEMBREAKALL_local(dps);
+MEMBREAKALL_local(mi);
+MEMBREAKALL_local(vi);
+MEMBREAKALL_local(ai);
+MEMBREAKALL_local(pi);
+MEMBREAKALL_local(ri);
+MEMBREAKALL_local(si);
+MEMBREAKALL_local(pif);
+
+static MEMBREAKREAD(read_flashram_status, 4);
+static MEMBREAKREAD(read_flashram_statusb, 1);
+static MEMBREAKREAD(read_flashram_statush, 2);
+static MEMBREAKREAD(read_flashram_statusd, 8);
+static MEMBREAKWRITE(write_flashram_dummy, 4);
+static MEMBREAKWRITE(write_flashram_dummyb, 1);
+static MEMBREAKWRITE(write_flashram_dummyh, 2);
+static MEMBREAKWRITE(write_flashram_dummyd, 8);
+static MEMBREAKWRITE(write_flashram_command, 4);
+static MEMBREAKWRITE(write_flashram_commandb, 1);
+static MEMBREAKWRITE(write_flashram_commandh, 2);
+static MEMBREAKWRITE(write_flashram_commandd, 8);
+
+static MEMBREAKREAD(read_rom, 4);
+static MEMBREAKREAD(read_romb, 1);
+static MEMBREAKREAD(read_romh, 2);
+static MEMBREAKREAD(read_romd, 8);
+
+static MEMBREAKWRITE(write_rom, 8);
 
 #if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
 
@@ -215,11 +255,6 @@ int get_has_recompiled(uint32 addr)
 
 #define CHECK_MEM(address)
 
-char* get_recompiled(uint32 addr, int index)
-{
-    return NULL;
-}
-
 int get_num_recompiled(uint32 addr)
 {
     return 0;
@@ -251,13 +286,6 @@ void init_host_disassembler(void)
 }
 
 #endif
-
-
-void update_memory(void){
-  int i;
-  for(i=0; i<0x10000; i++)
-    get_memory_flags(i*0x10000);
-}
 
 uint64 read_memory_64(uint32 addr)
 {
@@ -935,43 +963,3 @@ void deactivate_memory_break_write(uint32 addr) {
     else
         DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_write(): %x", writefunc);
 }
-
-/* Following are the breakpoint functions for memory access calls.  See debugger/memory.h
- * These macros generate the memory breakpoint function calls.*/
-MEMBREAKALL(nothing);
-MEMBREAKALL(nomem);
-MEMBREAKALL(rdram);
-MEMBREAKALL(rdramFB);
-MEMBREAKALL(rdramreg);
-MEMBREAKALL(rsp_mem);
-MEMBREAKALL(rsp_reg);
-MEMBREAKALL(rsp);
-MEMBREAKALL(dp);
-MEMBREAKALL(dps);
-MEMBREAKALL(mi);
-MEMBREAKALL(vi);
-MEMBREAKALL(ai);
-MEMBREAKALL(pi);
-MEMBREAKALL(ri);
-MEMBREAKALL(si);
-MEMBREAKALL(pif);
-
-MEMBREAKREAD(read_flashram_status, 4);
-MEMBREAKREAD(read_flashram_statusb, 1);
-MEMBREAKREAD(read_flashram_statush, 2);
-MEMBREAKREAD(read_flashram_statusd, 8);
-MEMBREAKWRITE(write_flashram_dummy, 4);
-MEMBREAKWRITE(write_flashram_dummyb, 1);
-MEMBREAKWRITE(write_flashram_dummyh, 2);
-MEMBREAKWRITE(write_flashram_dummyd, 8);
-MEMBREAKWRITE(write_flashram_command, 4);
-MEMBREAKWRITE(write_flashram_commandb, 1);
-MEMBREAKWRITE(write_flashram_commandh, 2);
-MEMBREAKWRITE(write_flashram_commandd, 8);
-
-MEMBREAKREAD(read_rom, 4);
-MEMBREAKREAD(read_romb, 1);
-MEMBREAKREAD(read_romh, 2);
-MEMBREAKREAD(read_romd, 8);
-
-MEMBREAKWRITE(write_rom, 8);

@@ -76,65 +76,6 @@ unsigned int virtual_to_physical_address(unsigned int addresse, int w)
     TLB_refill_exception(addresse,w);
     //return 0x80000000;
     return 0x00000000;
-    /*int i;
-    for (i=0; i<32; i++)
-      {
-     if ((tlb_e[i].vpn2 & ~(tlb_e[i].mask))
-         == ((addresse >> 13) & ~(tlb_e[i].mask)))
-       {
-          if (tlb_e[i].g || (tlb_e[i].asid == (EntryHi & 0xFF)))
-            {
-           if (addresse & tlb_e[i].check_parity_mask)
-             {
-                if (tlb_e[i].v_odd)
-              {
-                 if (tlb_e[i].d_odd && w)
-                   {
-                  TLB_mod_exception();
-                  return 0;
-                   }
-                 return ((addresse & ((tlb_e[i].mask << 12)|0xFFF))
-                     | ((tlb_e[i].pfn_odd << 12) &
-                        ~((tlb_e[i].mask << 12)|0xFFF))
-                     | 0x80000000);
-              }
-                else
-              {
-                 TLB_invalid_exception();
-                 return 0;
-              }
-             }
-           else
-             {
-                if (tlb_e[i].v_even)
-              {
-                 if (tlb_e[i].d_even && w)
-                   {
-                  TLB_mod_exception();
-                  return 0;
-                   }
-                 return ((addresse & ((tlb_e[i].mask << 12)|0xFFF))
-                     | ((tlb_e[i].pfn_even << 12) &
-                        ~((tlb_e[i].mask << 12)|0xFFF))
-                     | 0x80000000);
-              }
-                else
-              {
-                 TLB_invalid_exception();
-                 return 0;
-              }
-             }
-            }
-          else
-            {
-           TLB_refill_exception(addresse,w);
-            }
-       }
-      }
-    BadVAddr = addresse;
-    TLB_refill_exception(addresse,w);
-    //printf("TLB refill exception\n");
-    return 0x80000000;*/
 }
 
 int probe_nop(unsigned int address)

@@ -51,6 +51,9 @@
     #include "main/zip/zip.h"
 #endif
 
+static void savestates_load_pj64(void);
+static char* savestates_get_filename(void);
+
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_version = 0x00010000;  /* 1.0 */
 static const int pj64_magic = 0x23D8A6C8;
@@ -93,12 +96,6 @@ void savestates_set_autoinc_slot(int b)
     autoinc_save_slot = b;
 }
 
-/* Returns save state slot autoincrement on or off. */
-int savestates_get_autoinc_slot(void)
-{
-    return autoinc_save_slot != 0;
-}
-
 void savestates_inc_slot(void)
 {
     if(++slot>9)
@@ -113,7 +110,7 @@ void savestates_select_filename(const char* fn)
    strcpy(fname, fn);
 }
 
-char* savestates_get_filename(void)
+static char* savestates_get_filename(void)
 {
     size_t length = strlen(ROM_SETTINGS.goodname)+4+1;
     char* filename = (char*)malloc(length);
@@ -121,7 +118,7 @@ char* savestates_get_filename(void)
     return filename;
 }
 
-char* savestates_get_pj64_filename(void)
+static char* savestates_get_pj64_filename(void)
 {
     size_t length = strlen((char*)ROM_HEADER->nom)+8+1;
     char* filename = (char*)malloc(length);
@@ -520,7 +517,7 @@ int savestates_save_pj64(void)
     return 1;
 }
 
-void savestates_load_pj64(void)
+static void savestates_load_pj64(void)
 {
     char *file, *filename, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;

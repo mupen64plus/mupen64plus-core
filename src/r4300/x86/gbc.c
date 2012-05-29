@@ -28,7 +28,7 @@
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 
-void genbc1f_test(void)
+static void genbc1f_test(void)
 {
    test_m32_imm32((unsigned int*)&FCR31, 0x800000);
    jne_rj(12);
@@ -94,7 +94,7 @@ void genbc1f_idle(void)
 #endif
 }
 
-void genbc1t_test(void)
+static void genbc1t_test(void)
 {
    test_m32_imm32((unsigned int*)&FCR31, 0x800000);
    je_rj(12);

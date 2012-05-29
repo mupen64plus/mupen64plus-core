@@ -35,7 +35,6 @@ extern int code_length;
 extern int max_code_length;
 extern unsigned char **inst_pointer;
 extern precomp_block* dst_block;
-extern int jump_marker;
 extern unsigned long *return_address;
 extern int fast_memory;
 extern int src;   /* opcode of r4300 instruction being recompiled */
@@ -200,10 +199,8 @@ void genteq(void);
 void gendsrl(void);
 void gendsrl32(void);
 void genbltz_idle(void);
-void genbltz_test(void);
 void genbltz_out(void);
 void genbgez_idle(void);
-void genbgez_test(void);
 void genbgez_out(void);
 void genbltzl_idle(void);
 void genbltzl_out(void);
