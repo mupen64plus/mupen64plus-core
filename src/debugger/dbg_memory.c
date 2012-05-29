@@ -464,7 +464,7 @@ int get_memory_type(uint32 addr){
   else if((readfunc == read_mi) || (readfunc == read_mi_break))
     return MEM_MI;
   else
-    DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger get_memory_type(): %x", readfunc);
+    DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger get_memory_type(): %p", readfunc);
   return MEM_NOMEM;
 }
 
@@ -586,7 +586,7 @@ void activate_memory_break_read(uint32 addr) {
         readmemd[addr >> 16] = read_romd_break;
    }
    else
-        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_read(): %x", readfunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_read(): %p", readfunc);
 }
 
 void deactivate_memory_break_read(uint32 addr) {
@@ -707,7 +707,7 @@ void deactivate_memory_break_read(uint32 addr) {
         readmemd[addr >> 16] = read_romd;
     }
     else
-        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_read(): %x", readfunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_read(): %p", readfunc);
 }
 
 void activate_memory_break_write(uint32 addr) {
@@ -834,7 +834,7 @@ void activate_memory_break_write(uint32 addr) {
         writememd[addr >> 16] = write_nothingd_break;
    }
    else
-        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_write(): %x", writefunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger activate_memory_break_write(): %p", writefunc);
 }
 
 void deactivate_memory_break_write(uint32 addr) {
@@ -961,5 +961,5 @@ void deactivate_memory_break_write(uint32 addr) {
         writememd[addr >> 16] = write_nothingd;
     }
     else
-        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_write(): %x", writefunc);
+        DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger deactivate_memory_break_write(): %p", writefunc);
 }
