@@ -412,6 +412,7 @@ targets:
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
+	@echo "    LTO=1         == enable experimental build with link-time optimization"
 	@echo "    V=1           == show verbose compiler output"
 
 all: $(TARGET)
@@ -443,6 +444,11 @@ CFLAGS += -MD
 -include $(OBJECTS:.o=.d)
 
 CXXFLAGS += $(CFLAGS)
+ifeq ($(LTO), 1)
+  CFLAGS += -flto
+  CXXFLAGS += -flto
+  LDFLAGS += -fuse-linker-plugin $(CXXFLAGS)
+endif
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
