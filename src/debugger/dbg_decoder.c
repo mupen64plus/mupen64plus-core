@@ -283,7 +283,6 @@ db_disasm_insn ( struct r4k_dis_t * state,
                  bool altfmt               )
 {
     char * rel;
-    bool bdslot = false;
     InstFmt i;
 
     i.word = insn;
@@ -343,7 +342,6 @@ db_disasm_insn ( struct r4k_dis_t * state,
             case OP_JR:
             case OP_JALR:
                     db_printf(state, "%s", r4k_str_reg_name[i.RType.rs]);
-                    bdslot = true;
                     break;
             case OP_MTLO:
             case OP_MTHI:
@@ -427,7 +425,6 @@ db_disasm_insn ( struct r4k_dis_t * state,
                 r4k_str_reg_name[i.IType.rt]);
     pr_displ:
             print_addr( state, loc + 4 + ((short)i.IType.imm << 2) );
-            bdslot = true;
             break;
 
     case OP_COP0:
@@ -561,7 +558,6 @@ db_disasm_insn ( struct r4k_dis_t * state,
     case OP_JAL:
             db_printf(state, "%-16s", r4k_str_op_name[i.JType.op]);
             print_addr(state, (loc & 0xF0000000) | (i.JType.target << 2));
-            bdslot = true;
             break;
     
     case OP_LDC1:
