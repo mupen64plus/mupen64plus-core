@@ -572,15 +572,6 @@ void osd_delete_message(osd_message_t *msg)
     free(msg);
 }
 
-// set "corner" of the screen that message appears in.
-extern "C"
-void osd_message_set_corner(osd_message_t *msg, enum osd_corner corner)
-{
-    if (!l_OsdInitialized || !msg) return;
-
-    msg->corner = corner;
-}
-
 // set message so it doesn't automatically expire in a certain number of frames.
 extern "C"
 void osd_message_set_static(osd_message_t *msg)

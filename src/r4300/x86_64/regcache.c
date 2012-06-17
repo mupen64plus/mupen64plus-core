@@ -94,6 +94,13 @@ void free_all_registers(void)
 #endif
 }
 
+static void simplify_access(void)
+{
+   int i;
+   dst->local_addr = code_length;
+   for(i=0; i<8; i++) dst->reg_cache_infos.needed_registers[i] = NULL;
+}
+
 void free_registers_move_start(void)
 {
   /* flush all dirty registers and clear needed_registers table */
@@ -143,54 +150,6 @@ void free_register(int reg)
 
   last_access[reg] = NULL;
   free_since[reg] = dst+1;
-}
-
-void flush_registers(void)
-{
-  precomp_instr *last;
-  int i;
-
-  for (i=0; i<8; i++)
-  {
-    if (last_access[i] && dirty[i])
-    {
-      last = last_access[i]+1;
-      while (last <= dst)
-      {
-        last->reg_cache_infos.needed_registers[i] = reg_content[i];
-        last++;
-      }
-      last_access[i] = dst;
-      if (is64bits[i])
-      {
-        mov_m64rel_xreg64((unsigned long long *) reg_content[i], i);
-      }
-      else
-      {
-        movsxd_reg64_reg32(i, i);
-        mov_m64rel_xreg64((unsigned long long *) reg_content[i], i);
-      }
-      dirty[i] = 0;
-    }
-  }
-}
-
-void reload_registers(void)
-{
-  int i;
-
-  for (i=0; i<8; i++)
-  {
-    if (last_access[i])
-    {
-      if (reg_content[i] == r0)
-        xor_reg64_reg64(i, i);
-      else if (is64bits[i])
-        mov_xreg64_m64rel(i, reg_content[i]);
-      else
-        mov_xreg32_m32rel(i, (unsigned int *) reg_content[i]);
-    }
-  }
 }
 
 void stack_save_registers(void)
@@ -645,7 +604,7 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
 // 0xC3 ret
 // total : 84 bytes
 
-void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_block* block)
+static void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_block* block)
 {
    int i;
 
@@ -720,12 +679,5 @@ void build_wrappers(precomp_instr *instr, int start, int end, precomp_block* blo
            }
       }
      }
-}
-
-void simplify_access(void)
-{
-   int i;
-   dst->local_addr = code_length;
-   for(i=0; i<8; i++) dst->reg_cache_infos.needed_registers[i] = NULL;
 }
 

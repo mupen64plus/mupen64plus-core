@@ -48,7 +48,7 @@ int stop, llbit, rompause;
 long long int reg[32], hi, lo;
 long long int local_rs, local_rt;
 unsigned int reg_cop0[32];
-int local_rs32, local_rt32;
+int local_rs32;
 unsigned int jump_target;
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];

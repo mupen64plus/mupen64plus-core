@@ -35,7 +35,7 @@ m64p_error dummyrsp_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVe
         *PluginVersion = 0x00010000;
 
     if (APIVersion != NULL)
-        *APIVersion = RSP_API_MAJOR_VERSION;
+        *APIVersion = RSP_API_VERSION;
 
     if (PluginNamePtr != NULL)
         *PluginNamePtr = "Mupen64Plus-NoRSP";

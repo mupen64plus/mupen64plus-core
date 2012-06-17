@@ -30,6 +30,7 @@
 #include "api/m64p_types.h"
 
 #include "main/rom.h"
+#include "main/version.h"
 #include "memory/memory.h"
 
 #include "osal/dynamiclib.h"
@@ -59,6 +60,23 @@ static void EmptyFunc(void)
 {
 }
 
+// code to handle backwards-compatibility to video plugins with API_VERSION < 02.1.0.  This API version introduced a boolean
+// flag in the rendering callback, which told the core whether or not the current screen has been freshly redrawn since the
+// last time the callback was called.
+static void                     (*l_mainRenderCallback)(int) = NULL;
+static ptr_SetRenderingCallback   l_old1SetRenderingCallback = NULL;
+
+static void backcompat_videoRenderCallback(int unused)  // this function will be called by the video plugin as the render callback
+{
+    if (l_mainRenderCallback != NULL)
+        l_mainRenderCallback(1);  // assume screen is always freshly redrawn (otherwise screenshots won't work w/ OSD enabled)
+}
+
+static void backcompat_setRenderCallbackIntercept(void (*callback)(int))
+{
+    l_mainRenderCallback = callback;
+}
+
 static void plugin_disconnect_gfx(void)
 {
     getVersion_gfx = dummyvideo_PluginGetVersion;
@@ -79,6 +97,7 @@ static void plugin_disconnect_gfx(void)
     fBWrite = dummyvideo_FBWrite;
     fBGetFrameBufferInfo = dummyvideo_FBGetFrameBufferInfo;
     l_GfxAttached = 0;
+    l_mainRenderCallback = NULL;
 }
 
 static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
@@ -121,14 +140,22 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 
         /* check the version info */
         (*getVersion_gfx)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_GFX || (APIVersion & 0xffff0000) != GFX_API_MAJOR_VERSION)
+        if (PluginType != M64PLUGIN_GFX || (APIVersion & 0xffff0000) != (GFX_API_VERSION & 0xffff0000))
         {
             DebugMessage(M64MSG_ERROR, "incompatible Video plugin");
             plugin_disconnect_gfx();
             return M64ERR_INCOMPATIBLE;
         }
 
-        l_GfxAttached = 1;
+        /* handle backwards-compatibility */
+        if (APIVersion < 0x020100)
+        {
+            DebugMessage(M64MSG_WARNING, "Fallback for Video plugin API (%02i.%02i.%02i) < 2.1.0. Screenshots may contain On Screen Display text", VERSION_PRINTF_SPLIT(APIVersion));
+            // tell the video plugin to make its rendering callback to me (it's old, and doesn't have the bScreenRedrawn flag)
+            setRenderingCallback(backcompat_videoRenderCallback);
+            l_old1SetRenderingCallback = setRenderingCallback; // save this just for future use
+            setRenderingCallback = (ptr_SetRenderingCallback) backcompat_setRenderCallbackIntercept;
+        }
     }
     else
         plugin_disconnect_gfx();
@@ -233,7 +260,7 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
 
         /* check the version info */
         (*getVersion_audio)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_AUDIO || (APIVersion & 0xffff0000) != AUDIO_API_MAJOR_VERSION)
+        if (PluginType != M64PLUGIN_AUDIO || (APIVersion & 0xffff0000) != (AUDIO_API_VERSION & 0xffff0000))
         {
             DebugMessage(M64MSG_ERROR, "incompatible Audio plugin");
             plugin_disconnect_audio();
@@ -314,7 +341,7 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
 
         /* check the version info */
         (*getVersion_input)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_INPUT || (APIVersion & 0xffff0000) != INPUT_API_MAJOR_VERSION)
+        if (PluginType != M64PLUGIN_INPUT || (APIVersion & 0xffff0000) != (INPUT_API_VERSION & 0xffff0000))
         {
             DebugMessage(M64MSG_ERROR, "incompatible Input plugin");
             plugin_disconnect_input();
@@ -381,7 +408,7 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
 
         /* check the version info */
         (*getVersion_rsp)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
-        if (PluginType != M64PLUGIN_RSP || (APIVersion & 0xffff0000) != RSP_API_MAJOR_VERSION)
+        if (PluginType != M64PLUGIN_RSP || (APIVersion & 0xffff0000) != (RSP_API_VERSION & 0xffff0000))
         {
             DebugMessage(M64MSG_ERROR, "incompatible RSP plugin");
             plugin_disconnect_rsp();
@@ -541,3 +568,4 @@ m64p_error plugin_check(void)
 
     return M64ERR_SUCCESS;
 }
+

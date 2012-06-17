@@ -36,7 +36,7 @@ m64p_error dummyvideo_PluginGetVersion(m64p_plugin_type *PluginType, int *Plugin
         *PluginVersion = 0x00010000;
 
     if (APIVersion != NULL)
-        *APIVersion = GFX_API_MAJOR_VERSION;
+        *APIVersion = GFX_API_VERSION;
 
     if (PluginNamePtr != NULL)
         *PluginNamePtr = "Mupen64Plus-NoVideo";
@@ -106,7 +106,7 @@ void dummyvideo_ReadScreen2 (void *dest, int *width, int *height, int front)
 
 }
 
-void dummyvideo_SetRenderingCallback(void (*callback)(void))
+void dummyvideo_SetRenderingCallback(void (*callback)(int))
 {
 
 }

@@ -48,9 +48,9 @@ unsigned int interp_addr;
 unsigned int op;
 static int skip;
 
-void prefetch(void);
+static void prefetch(void);
 
-extern void (*interp_ops[64])(void);
+static void (*interp_ops[64])(void);
 
 extern unsigned int next_vi;
 
@@ -2936,7 +2936,7 @@ static void SD(void)
    write_dword_in_memory();
 }
 
-void (*interp_ops[64])(void) =
+static void (*interp_ops[64])(void) =
 {
    SPECIAL, REGIMM, J   , JAL  , BEQ , BNE , BLEZ , BGTZ ,
    ADDI   , ADDIU , SLTI, SLTIU, ANDI, ORI , XORI , LUI  ,
@@ -2948,7 +2948,7 @@ void (*interp_ops[64])(void) =
    SC     , SWC1  , NI  , NI   , NI  , SDC1, NI   , SD
 };
 
-void prefetch(void)
+static void prefetch(void)
 {
    if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
      {

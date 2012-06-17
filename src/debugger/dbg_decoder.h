@@ -50,12 +50,6 @@ struct r4k_dis_t
 }
 R4kDis;
 
-extern void r4k_dis_init ( R4kDis *, void *, void *, void *, void *, void *, void * );
-extern int r4k_disassemble ( R4kDis *, uint32_t, uint32_t, char * );
-extern int r4k_disassemble_quick ( uint32_t, uint32_t, char * );
-extern int r4k_disassemble_split ( R4kDis *, uint32_t, uint32_t, char **, char ** );
-extern int r4k_disassemble_split_quick ( uint32_t, uint32_t, char **, char ** );
-
 extern void r4300_decode_op ( uint32, char *, char *, int );
 
 

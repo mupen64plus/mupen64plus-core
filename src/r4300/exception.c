@@ -30,24 +30,6 @@
 
 extern unsigned int interp_addr;
 
-void address_error_exception(void)
-{
-   DebugMessage(M64MSG_ERROR, "address_error_exception");
-   stop=1;
-}
-
-void TLB_invalid_exception(void)
-{
-   if (delay_slot)
-   {
-     skip_jump = 1;
-     DebugMessage(M64MSG_ERROR, "delay slot - TLB refill exception");
-     stop=1;
-   }
-   DebugMessage(M64MSG_ERROR, "TLB invalid exception");
-   stop=1;
-}
-
 void TLB_refill_exception(unsigned int address, int w)
 {
    int usual_handler = 0, i;
@@ -131,24 +113,6 @@ void TLB_refill_exception(unsigned int address, int w)
          next_interupt = 0;
       }
      }
-}
-
-void TLB_mod_exception(void)
-{
-   DebugMessage(M64MSG_ERROR, "TLB mod exception");
-   stop=1;
-}
-
-void integer_overflow_exception(void)
-{
-   DebugMessage(M64MSG_ERROR, "integer overflow exception");
-   stop=1;
-}
-
-void coprocessor_unusable_exception(void)
-{
-   DebugMessage(M64MSG_ERROR, "coprocessor_unusable_exception");
-   stop=1;
 }
 
 void exception_general(void)

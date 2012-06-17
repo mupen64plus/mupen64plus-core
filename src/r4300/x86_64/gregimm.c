@@ -33,7 +33,7 @@
 
 #include "memory/memory.h"
 
-void genbltz_test(void)
+static void genbltz_test(void)
 {
   int rs_64bit = is64((unsigned int *)dst->f.i.rs);
    
@@ -118,7 +118,7 @@ void genbltz_idle(void)
 #endif
 }
 
-void genbgez_test(void)
+static void genbgez_test(void)
 {
   int rs_64bit = is64((unsigned int *)dst->f.i.rs);
    

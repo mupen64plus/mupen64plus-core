@@ -37,6 +37,9 @@
 #include "r4300.h"
 #include "ops.h"
 
+static void *malloc_exec(size_t size);
+static void free_exec(void *ptr, size_t length);
+
 // global variables :
 precomp_instr *dst; // destination structure for the recompiled instruction
 int code_length; // current real recompiled code length
@@ -2630,7 +2633,7 @@ void prefetch_opcode(unsigned int op)
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/
-void *malloc_exec(size_t size)
+static void *malloc_exec(size_t size)
 {
 #if defined(WIN32)
 	return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
@@ -2674,7 +2677,7 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize)
 /**********************************************************************
  **************** frees memory with executable bit set ****************
  **********************************************************************/
-void free_exec(void *ptr, size_t length)
+static void free_exec(void *ptr, size_t length)
 {
 #if defined(WIN32)
 	VirtualFree(ptr, 0, MEM_RELEASE);

@@ -34,7 +34,8 @@ extern m64p_frame_callback g_FrameCallback;
 extern m64p_input_callback g_InputCallback;
 extern m64p_audio_callback g_AudioCallback;
 
-const char* get_savespath(void);
+const char* get_savestatepath(void);
+const char* get_savesrampath(void);
 
 void new_frame(void);
 void new_vi(void);
@@ -53,7 +54,6 @@ void main_speeddown(int percent);
 void main_speedset(int percent);
 void main_set_fastforward(int enable);
 void main_set_speedlimiter(int enable);
-int main_get_speedlimiter(void);
 
 void main_set_gameshark_button(int enable);
 int main_get_gameshark_button(void);

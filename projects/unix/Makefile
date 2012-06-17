@@ -41,6 +41,7 @@ ifeq ("$(UNAME)","FreeBSD")
 endif
 ifeq ("$(UNAME)","OpenBSD")
   OS = FREEBSD
+  CFLAGS += -DIOAPI_NO_64
   $(warning OS type "$(UNAME)" not officially supported.')
 endif
 ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
@@ -133,7 +134,6 @@ ifeq ($(OS), LINUX)
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 endif
 ifeq ($(OS), OSX)
-  CFLAGS += -DUSE_FILE32API
   TARGET = libmupen64plus.dylib
   LDFLAGS += -bundle -read_only_relocs suppress
   LDLIBS += -ldl -framework OpenGL
@@ -279,7 +279,6 @@ SOURCE = \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/md5.c \
 	$(SRCDIR)/main/rom.c \
-	$(SRCDIR)/main/ini_reader.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/reset.c \
 	$(SRCDIR)/main/adler32.c \
@@ -400,6 +399,7 @@ targets:
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
+	@echo "    LTO=1         == enable experimental build with link-time optimization"
 	@echo "    V=1           == show verbose compiler output"
 
 all: $(TARGET)
@@ -431,6 +431,11 @@ CFLAGS += -MD
 -include $(OBJECTS:.o=.d)
 
 CXXFLAGS += $(CFLAGS)
+ifeq ($(LTO), 1)
+  CFLAGS += -flto
+  CXXFLAGS += -flto
+  LDFLAGS += -fuse-linker-plugin $(CXXFLAGS)
+endif
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.c

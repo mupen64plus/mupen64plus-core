@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - gcop0.c                                                 *
+ *   Mupen64plus - assemble_struct.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,24 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
+#ifndef __ASSEMBLE_STRUCT_H__
+#define __ASSEMBLE_STRUCT_H__
 
-#include "assemble.h"
-
-#include "r4300/recomp.h"
-#include "r4300/recomph.h"
-#include "r4300/r4300.h"
-#include "r4300/ops.h"
-
-//static unsigned int pMFC0 = (unsigned int)(MFC0);
-void genmfc0(void)
+typedef struct _reg_cache_struct
 {
-    gencallinterp((unsigned int)MFC0, 0);
-}
+   int need_map;
+   void *needed_registers[8];
+   unsigned char jump_wrapper[62];
+   int need_cop1_check;
+} reg_cache_struct;
 
-//static unsigned int pMTC0 = (unsigned int)(MTC0);
-void genmtc0(void)
-{
-    gencallinterp((unsigned int)MTC0, 0);
-}
-
+#endif /* __ASSEMBLE_STRUCT_H__ */

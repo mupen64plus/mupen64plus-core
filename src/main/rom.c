@@ -44,6 +44,8 @@
 
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
+static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
+
 static _romdatabase g_romdatabase;
 romdatabase_entry empty_entry;
 
@@ -546,7 +548,7 @@ void romdatabase_close(void)
         }
 }
 
-romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
+static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 {
     romdatabase_search* search;
 

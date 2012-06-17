@@ -35,7 +35,7 @@ m64p_error dummyaudio_PluginGetVersion(m64p_plugin_type *PluginType, int *Plugin
         *PluginVersion = 0x00010000;
 
     if (APIVersion != NULL)
-        *APIVersion = AUDIO_API_MAJOR_VERSION;
+        *APIVersion = AUDIO_API_VERSION;
 
     if (PluginNamePtr != NULL)
         *PluginNamePtr = "Mupen64Plus-NoAudio";

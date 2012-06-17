@@ -37,103 +37,6 @@
 #include "osal/files.h"
 #include "osal/preproc.h"
 
-/** trim
- *    Removes leading and trailing whitespace from str. Function modifies str
- *    and also returns modified string.
- */
-char *trim(char *str)
-{
-    unsigned int i;
-    char *p = str;
-
-    while (isspace(*p))
-        p++;
-
-    if (str != p)
-        {
-        for (i = 0; i <= strlen(p); ++i)
-            str[i]=p[i];
-        }
-
-    p = str + strlen(str) - 1;
-    if (p > str)
-    {
-        while (isspace(*p))
-            p--;
-        p[1] = '\0';
-    }
-
-    return str;
-}
-
-char* strnstrip(char* string, int size)
-{
-    int counter, place;
-    for (counter = place = 0; counter < size && string[counter] != '\0'; counter++)
-        {
-        string[place] = string[counter];
-        if (string[counter] != ' ')
-            place++;
-        }
-    string[place] = '\0';
-    return string;
-}
-
-/** file utilities **/
-
-/** file_exists
- *    checks if the file specified by filename exists.
- */
-int file_exists(const char *filename)
-{
-    return access(filename, 0 /* F_OK, check for existence */) == 0;
-}
-
-/** copyfile
- *    copies file at src to a new file dest. If dest exists, its contents will be truncated and replaced.
- */
-int copyfile(const char *src, const char *dest)
-{
-    FILE *to, *from;
-    char c;
-
-    if((from = fopen(src, "r")) == NULL)
-        return -1;
-
-    if((to = fopen(dest, "w")) == NULL)
-    {
-        fclose(from);
-        return -2;
-    }
-
-    while(!feof(from))
-    {
-        c = fgetc(from);
-        if(ferror(from))
-        {
-            fclose(from);
-            fclose(to);
-            unlink(dest);
-            return -3;
-        }
-        if(!feof(from))
-            fputc(c, to);
-
-        if(ferror(to))
-        {
-            fclose(from);
-            fclose(to);
-            unlink(dest);
-            return -4;
-        }
-    }
-
-    fclose(from);
-    fclose(to);
-
-    return 0;
-}
-
 /** read_from_file
  *    opens a file and reads the specified number of bytes.
  *    returns zero on success, nonzero on failure
@@ -176,6 +79,43 @@ int write_to_file(const char *filename, const void *data, size_t size)
 
     fclose(f);
     return 0;
+}
+
+/** trim
+ *    Removes leading and trailing whitespace from str. Function modifies str
+ *    and also returns modified string.
+ */
+char *trim(char *str)
+{
+    unsigned int i;
+    char *p = str;
+
+    while (isspace(*p))
+        p++;
+
+    if (str != p)
+        {
+        for (i = 0; i <= strlen(p); ++i)
+            str[i]=p[i];
+        }
+
+    p = str + strlen(str) - 1;
+    if (p > str)
+    {
+        while (isspace(*p))
+            p--;
+        p[1] = '\0';
+    }
+
+    return str;
+}
+
+/** list_empty
+ *    Returns 1 if list is empty, else 0.
+ */
+static int list_empty(list_t list)
+{
+    return list == NULL;
 }
 
 /** linked list functions **/
@@ -292,132 +232,6 @@ void list_delete(list_t *list)
     *list = NULL;
 }
 
-/** list_node_move_front
- *    Moves the given node to the first position of list. It is assumed that
- *    node is an element of list.
- */
-void list_node_move_front(list_t *list, list_node_t *node)
-{
-    if(node == NULL ||
-       *list == NULL ||
-       node == *list)
-        return;
-
-    node->prev->next = node->next;
-    if(node->next != NULL)
-        node->next->prev = node->prev;
-    node->prev = NULL;
-    node->next = *list;
-    (*list)->prev = node;
-    *list = node;
-}
-
-/** list_node_move_back
- *    Moves the given node to the last position of list. It is assumed that
- *    node is an element of list.
- */
-void list_node_move_back(list_t *list, list_node_t *node)
-{
-    list_node_t *tmp;
-
-    tmp = list_last_node(*list);
-
-    if(node == NULL ||
-       *list == NULL ||
-       node == tmp)
-        return;
-
-    node->next->prev = node->prev;
-    if(node->prev != NULL)
-        node->prev->next = node->next;
-    else
-        *list = node->next; // first node is being moved, update list pointer
-    tmp->next = node;
-    node->prev = tmp;
-    node->next = NULL;
-}
-
-/** list_nth_node_data
- *    Returns the nth node in list. If n is out of range, NULL is returned.
- */
-void *list_nth_node_data(list_t list, int n)
-{
-    list_node_t *curr = NULL;
-
-    list_foreach(list, curr)
-    {
-        if(n-- == 0)
-            break;
-    }
-
-    return curr != NULL ? curr->data : curr;
-}
-
-/** list_first_node
- *    Returns the first node in list.
- */
-list_node_t *list_first_node(list_t list)
-{
-    return list;
-}
-
-/** list_first_data
- *    Returns the data pointer of the first node in list.
- */
-void *list_first_data(list_t list)
-{
-    if(list) return list->data;
-    return NULL;
-}
-
-/** list_last_node
- *    Returns the last node in list.
- */
-list_node_t *list_last_node(list_t list)
-{
-    if(list != NULL)
-    {
-        while(list->next != NULL)
-            list = list->next;
-    }
-
-    return list;
-}
-
-/** list_last_data
- *    Returns the data pointer of the last node in list.
- */
-void *list_last_data(list_t list)
-{
-    list_node_t *node = list_last_node(list);
-    if(node) return node->data;
-    return NULL;
-}
-
-/** list_empty
- *    Returns 1 if list is empty, else 0.
- */
-int list_empty(list_t list)
-{
-    return list == NULL;
-}
-
-/** list_length
- *    Returns the number of elements in list
- */
-int list_length(list_t list)
-{
-    int len = 0;
-    list_node_t *curr;
-
-    list_foreach(list, curr)
-    {
-        len++;
-    }
-
-    return len;
-}
-
 /** list_find_node
  *    Searches the given list for a node whose data pointer matches the given data pointer.
  *    If found, returns a pointer to the node, else, returns NULL.
@@ -488,33 +302,6 @@ void countrycodestring(char countrycode, char *string)
     }
 }
 
-void compressionstring(unsigned char compressiontype, char *string)
-{
-    switch (compressiontype)
-    {
-    case UNCOMPRESSED:
-        strcpy(string, "Uncompressed");
-        break;
-    case ZIP_COMPRESSION:
-        strcpy(string, "Zip");
-        break;
-    case GZIP_COMPRESSION:
-        strcpy(string, "Gzip");
-        break;
-    case BZIP2_COMPRESSION:
-        strcpy(string, "Bzip2");
-        break;
-    case LZMA_COMPRESSION:
-        strcpy(string, "LZMA");
-        break;
-    case SZIP_COMPRESSION:
-        strcpy(string, "7zip");
-        break;
-    default:
-        string[0] = '\0';
-    }
-}
-
 void imagestring(unsigned char imagetype, char *string)
 {
     switch (imagetype)
@@ -531,91 +318,6 @@ void imagestring(unsigned char imagetype, char *string)
     default:
         string[0] = '\0';
     }
-}
-
-void cicstring(unsigned char cic, char *string)
-{
-    switch (cic)
-    {
-    case CIC_NUS_6101:
-        strcpy(string, "CIC-NUS-6101");
-        break;
-    case CIC_NUS_6102:
-        strcpy(string, "CIC-NUS-6102");
-        break;
-    case CIC_NUS_6103:
-        strcpy(string, "CIC-NUS-6103");
-        break;
-    case CIC_NUS_6105:
-        strcpy(string, "CIC-NUS-6105");
-        break;
-    case CIC_NUS_6106:
-        strcpy(string, "CIC-NUS-6106");
-        break;
-    default:
-        string[0] = '\0';
-    }
-}
-
-void rumblestring(unsigned char rumble, char *string)
-{
-    switch (rumble)
-    {
-    case 1:
-        strcpy(string, "Yes");
-        break;
-    case 0:
-        strcpy(string, "No");
-        break;
-    default:
-        string[0] = '\0';
-    }
-}
-
-void savestring(unsigned char savetype, char *string)
-{
-    switch (savetype)
-    {
-    case EEPROM_4KB:
-        strcpy(string, "Eeprom 4KB");
-        break;
-    case EEPROM_16KB:
-        strcpy(string, "Eeprom 16KB");
-        break;
-    case SRAM:
-        strcpy(string, "SRAM");
-        break;
-    case FLASH_RAM:
-        strcpy(string, "Flash RAM");
-        break;
-    case CONTROLLER_PACK:
-        strcpy(string, "Controller Pack");
-        break;
-    case NONE:
-        strcpy(string, "None");
-        break;
-    default:
-        string[0] = '\0';
-    }
-}
-
-void playersstring(unsigned char players, char *string)
-{
-    unsigned short netplay=0;
-
-    if (players > 7)
-        {
-        string[0] = '\0';
-        return;
-        }
-
-    if (players > 4)
-        {
-        players-=3;
-        netplay=1;
-        }
-
-    sprintf(string, "%d %s", players, (netplay) ? "Netplay" : "");
 }
 
 char* dirfrompath(const char* string)
@@ -637,28 +339,3 @@ char* dirfrompath(const char* string)
 
     return buffer;
 }
-
-list_t tokenize_string(const char *string, const char* delim)
-{
-    list_t list = NULL;
-    char *token = NULL, *wrk = NULL;
-    char buf[4096]; // some of those strings are really long
-    strncpy(buf, string, 4096);
-
-    token = strtok(buf, delim);
-    if (token)
-    {
-        wrk = (char *) malloc(strlen(token) + 1);
-        strcpy(wrk, token);
-        list_append(&list, wrk);
-    }
-
-    while ((token = strtok(NULL, delim)))
-    {
-        wrk = (char *) malloc(strlen(token) + 1);
-        strcpy(wrk, token);
-        list_append(&list, wrk);
-    }
-    return list;
-}
-

@@ -29,8 +29,6 @@ extern "C" {
 #include <string.h>
 
 /** file utilities **/
-int file_exists(const char *filename);
-int copyfile(const char *src, const char *dest);
 int read_from_file(const char *filename, void *data, size_t size);
 int write_to_file(const char *filename, const void *data, size_t size);
 
@@ -47,26 +45,12 @@ list_node_t *list_prepend(list_t *list, void *data);
 list_node_t *list_append(list_t *list, void *data);
 void list_node_delete(list_t *list, list_node_t *node);
 void list_delete(list_t *list);
-void list_node_move_front(list_t *list, list_node_t *node);
-void list_node_move_back(list_t *list, list_node_t *node);
-void *list_nth_node_data(list_t list, int n);
-list_node_t *list_first_node(list_t list);
-void *list_first_data(list_t list);
-list_node_t *list_last_node(list_t list);
-void *list_last_data(list_t list);
-int list_empty(list_t list);
-int list_length(list_t list);
 list_node_t *list_find_node(list_t list, void *data);
 char* dirfrompath(const char* string);
 
 /* GUI utilities */
 void countrycodestring(char countrycode, char *string);
-void compressionstring(unsigned char compressiontype, char *string);
 void imagestring(unsigned char imagetype, char *string);
-void cicstring(unsigned char cic, char *string);
-void rumblestring(unsigned char rumble, char *string);
-void savestring(unsigned char savetype, char *string);
-void playersstring(unsigned char players, char *string);
 
 // cycles through each listnode in list setting curr_node to current node.
 #define list_foreach(list, curr_node) \
@@ -74,8 +58,6 @@ void playersstring(unsigned char players, char *string);
 
 /** string utilities **/
 char *trim(char *str);
-char *strnstrip(char* string, int size);
-list_t tokenize_string(const char *string, const char* delim);
 
 /** endianness macros **/
 #define SWAP16(x) \

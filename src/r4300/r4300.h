@@ -33,7 +33,7 @@ extern int stop, llbit, rompause;
 extern long long int reg[32], hi, lo;
 extern long long int local_rs, local_rt;
 extern unsigned int reg_cop0[32];
-extern int local_rs32, local_rt32;
+extern int local_rs32;
 extern unsigned int jump_target;
 extern double *reg_cop1_double[32];
 extern float *reg_cop1_simple[32];
