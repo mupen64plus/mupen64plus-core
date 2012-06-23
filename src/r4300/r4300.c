@@ -1757,7 +1757,7 @@ void r4300_reset_soft(void)
 
    switch(ROM_SETTINGS.systemtype)
      {
-      case SYSTEM_NTSC:
+      case SYSTEM_PAL:
     switch (CIC_Chip) {
      case 2:
        reg[5] = 0xFFFFFFFFC0F1D859LL;
@@ -1782,7 +1782,7 @@ void r4300_reset_soft(void)
     reg[23]= 0x0000000000000006LL;
     reg[31]= 0xFFFFFFFFA4001554LL;
     break;
-      case SYSTEM_PAL:
+      case SYSTEM_NTSC:
       default:
     switch (CIC_Chip) {
      case 2:

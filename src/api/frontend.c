@@ -338,6 +338,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INPUT_ASSERT;
             readSamples(ParamPtr, NULL, NULL);
             return M64ERR_SUCCESS;
+        case M64CMD_SET_VI_CALLBACK:
+            g_ViCallback = (m64p_vi_callback) ParamPtr;
+            return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
     }

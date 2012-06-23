@@ -33,6 +33,7 @@ extern int g_EmulatorRunning;
 extern m64p_frame_callback g_FrameCallback;
 extern m64p_input_callback g_InputCallback;
 extern m64p_audio_callback g_AudioCallback;
+extern m64p_vi_callback    g_ViCallback;
 
 const char* get_savestatepath(void);
 const char* get_savesrampath(void);
