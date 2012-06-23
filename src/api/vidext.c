@@ -264,14 +264,14 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
-	/* TODO:
-	 * SDL_WM_ToggleFullScreen doesn't work under Windows and others
-	 * (see http://wiki.libsdl.org/moin.cgi/FAQWindows for explanation).
-	 * Instead, we should call SDL_SetVideoMode with the SDL_FULLSCREEN flag.
-	 * (see http://sdl.beuc.net/sdl.wiki/SDL_SetVideoMode), but on Windows
-	 * this resets the OpenGL context and video plugins don't support it yet.
-	 * Uncomment the next line to test it: */
-	//return VidExt_SetVideoMode(l_pScreen->w, l_pScreen->h, l_pScreen->format->BitsPerPixel, l_Fullscreen ? M64VIDEO_WINDOWED : M64VIDEO_FULLSCREEN);
+    /* TODO:
+     * SDL_WM_ToggleFullScreen doesn't work under Windows and others
+     * (see http://wiki.libsdl.org/moin.cgi/FAQWindows for explanation).
+     * Instead, we should call SDL_SetVideoMode with the SDL_FULLSCREEN flag.
+     * (see http://sdl.beuc.net/sdl.wiki/SDL_SetVideoMode), but on Windows
+     * this resets the OpenGL context and video plugins don't support it yet.
+     * Uncomment the next line to test it: */
+    //return VidExt_SetVideoMode(l_pScreen->w, l_pScreen->h, l_pScreen->format->BitsPerPixel, l_Fullscreen ? M64VIDEO_WINDOWED : M64VIDEO_FULLSCREEN);
     if (SDL_WM_ToggleFullScreen(l_pScreen) == 1)
     {
         l_Fullscreen = !l_Fullscreen;
