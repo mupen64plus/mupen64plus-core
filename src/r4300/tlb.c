@@ -28,9 +28,10 @@
 #include "interupt.h"
 
 #include "api/callbacks.h"
-#include "main/adler32.h"
 #include "main/md5.h"
 #include "memory/memory.h"
+
+#include <zlib.h> // For adler32()
 
 void TLBR(void)
 {
