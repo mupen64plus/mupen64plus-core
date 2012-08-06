@@ -204,6 +204,7 @@ typedef struct
 
    int systemtype;
    int vilimit;
+   char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

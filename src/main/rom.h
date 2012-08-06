@@ -34,29 +34,8 @@ m64p_error close_rom(void);
 extern unsigned char* rom;
 extern int rom_size;
 
-typedef struct _rom_header
-{
-   unsigned char init_PI_BSB_DOM1_LAT_REG;  /* 0x00 */
-   unsigned char init_PI_BSB_DOM1_PGS_REG;  /* 0x01 */
-   unsigned char init_PI_BSB_DOM1_PWD_REG;  /* 0x02 */
-   unsigned char init_PI_BSB_DOM1_PGS_REG2; /* 0x03 */
-   unsigned int ClockRate;                  /* 0x04 */
-   unsigned int PC;                         /* 0x08 */
-   unsigned int Release;                    /* 0x0C */
-   unsigned int CRC1;                       /* 0x10 */
-   unsigned int CRC2;                       /* 0x14 */
-   unsigned char Unused1[8];                /* 0x18 */
-   char Name[20];                           /* 0x20 */
-   unsigned char Unused2[7];                /* 0x34 */
-   char Manufacturer_ID;                    /* 0x3B */
-   char Cartridge_ID[2];                    /* 0x3C - Game serial number  */
-   char Country_code;                       /* 0x3E */
-   unsigned char Unused3;                   /* 0x3F */
-} rom_header;
-
 extern unsigned char isGoldeneyeRom;
 
-extern rom_header*       ROM_HEADER;
 extern m64p_rom_settings ROM_SETTINGS;
 
 /* Supported rom compressiontypes. */

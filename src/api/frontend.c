@@ -43,6 +43,7 @@
 #include "main/rom.h"
 #include "main/savestates.h"
 #include "main/version.h"
+#include "main/util.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
 #include "r4300/reset.h"
@@ -175,13 +176,16 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             cheat_uninit();
             return close_rom();
         case M64CMD_ROM_GET_HEADER:
-            if (!l_ROMOpen || ROM_HEADER == NULL)
+            if (!l_ROMOpen)
                 return M64ERR_INVALID_STATE;
             if (ParamPtr == NULL)
                 return M64ERR_INPUT_ASSERT;
-            if (sizeof(rom_header) < ParamInt)
-                ParamInt = sizeof(rom_header);
-            memcpy(ParamPtr, ROM_HEADER, ParamInt);
+            if (sizeof(m64p_rom_header) < ParamInt)
+                ParamInt = sizeof(m64p_rom_header);
+            memcpy(ParamPtr, rom, ParamInt);
+            // Mupen64Plus used to keep a m64p_rom_header with a clean ROM name
+            // Keep returning a clean ROM name for backwards compatibility
+            trim((char *)ParamPtr + 0x20); // Name field
             return M64ERR_SUCCESS;
         case M64CMD_ROM_GET_SETTINGS:
             if (!l_ROMOpen)

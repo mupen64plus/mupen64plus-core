@@ -84,7 +84,7 @@ static void savestates_get_path(char **filepath, char **filename, int is_pj64)
     {
         char *my_filename;
         if (is_pj64)
-            my_filename = formatstr("%s.pj%d.zip", ROM_HEADER->Name, slot);
+            my_filename = formatstr("%s.pj%d.zip", ROM_SETTINGS.headername, slot);
         else
             my_filename = formatstr("%s.st%d", ROM_SETTINGS.goodname, slot);
 
