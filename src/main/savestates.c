@@ -63,7 +63,7 @@ int savestates_job = 0;
 
 static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
-static char fname[1024] = {0};
+static char *fname = NULL;
 
 /* Returns path information of the currently selected savestate.
  *   filepath: Will recieve the full path of the savestate. Can be NULL.
@@ -72,7 +72,7 @@ static char fname[1024] = {0};
  */
 static void savestates_get_path(char **filepath, char **filename, int is_pj64)
 {
-    if(fname[0] != 0) /* A specific path was given. */
+    if(fname != NULL) /* A specific path was given. */
     {
         if (filepath != NULL)
             *filepath = strdup(fname);
@@ -143,9 +143,14 @@ void savestates_inc_slot(void)
 
 void savestates_select_filename(const char* fn)
 {
-   if(strlen(fn) >= sizeof(fname))
-       return;
-   strcpy(fname, fn);
+    if (fname != NULL)
+    {
+        free(fname);
+        fname = NULL;
+    }
+
+    if (fn != NULL)
+        fname = strdup(fn);
 }
 
 void savestates_save(void)
@@ -159,7 +164,7 @@ void savestates_save(void)
         savestates_inc_slot();
 
     savestates_get_path(&file, &filename, 0);
-    fname[0] = 0; // Forget given savestate path (if any)
+    savestates_select_filename(NULL); // Forget given savefile path (if any)
 
     f = gzopen(file, "wb");
     free(file);
@@ -272,7 +277,8 @@ void savestates_load(void)
         return;
         }
 
-    fname[0] = 0; // Forget given savestate path (if any)
+    savestates_select_filename(NULL); // Forget given savefile path (if any)
+
     /* Read savestate file version in big-endian order. */
     gzread(f, inbuf, 4);
     version = inbuf[0];
@@ -367,7 +373,7 @@ void savestates_load(void)
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
     free(filename);
-    fname[0] = 0;
+    savestates_select_filename(NULL); // Forget given savefile path (if any)
 }
 
 int savestates_save_pj64(void)
@@ -390,7 +396,7 @@ int savestates_save_pj64(void)
     }
 
     savestates_get_path(&file, &filename, 1);
-    fname[0] = 0; // Forget given savestate path (if any)
+    savestates_select_filename(NULL); // Forget given savefile path (if any)
 
     zipfile = zipOpen(file, APPEND_STATUS_CREATE);
     if(zipfile == NULL)
@@ -508,7 +514,7 @@ static void savestates_load_pj64(void)
     TLB_pj64 tlb_pj64;
 
     savestates_get_path(&file, &filename, 1);
-    fname[0] = 0; // Forget given savestate path (if any)
+    savestates_select_filename(NULL); // Forget given savefile path (if any)
 
     /* Open the .zip file. */
     zipstatefile = unzOpen(file);
@@ -810,7 +816,6 @@ static void savestates_load_pj64(void)
         last_addr = PC->addr;
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
-    fname[0] = 0;
 
     clean_and_exit:
         if (file != NULL)
