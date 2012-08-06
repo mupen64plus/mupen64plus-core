@@ -113,16 +113,18 @@ char *trim(char *str);
  * Returns the result in a malloc'd string. */
 char* formatstr(const char* fmt, ...);
 
+typedef enum _ini_line_type
+{
+    INI_BLANK,
+    INI_COMMENT,
+    INI_SECTION,
+    INI_PROPERTY,
+    INI_TRASH
+} ini_line_type;
+
 typedef struct _ini_line
 {
-    enum ini_line_type
-    {
-        INI_BLANK,
-        INI_COMMENT,
-        INI_SECTION,
-        INI_PROPERTY,
-        INI_TRASH
-    } type;
+    ini_line_type type;
     char *name;
     char *value;
 } ini_line;

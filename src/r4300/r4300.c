@@ -1901,7 +1901,7 @@ void r4300_execute(void)
         if (!actual->block || !actual->code)
             return;
 
-        code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
+        code =  (void(*)(void)) (actual->code+(actual->block[0x40/4].local_addr));
         dyna_start(code);
         PC++;
 #if defined(PROFILE_R4300)

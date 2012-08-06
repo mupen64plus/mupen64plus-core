@@ -821,6 +821,7 @@ EXPORT m64p_error CALL ConfigSaveFile(void)
 EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
 {
     config_section *curr_section, *new_section;
+    config_section **insertion_point;
 
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
@@ -838,7 +839,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
         return M64ERR_NO_MEMORY;
 
     /* update config section that's in the Saved list with the new one */
-    config_section **insertion_point = find_alpha_section_link(&l_ConfigListSaved, SectionName);
+    insertion_point = find_alpha_section_link(&l_ConfigListSaved, SectionName);
     if (*insertion_point != NULL && osal_insensitive_strcmp((*insertion_point)->name, SectionName) == 0)
     {
         /* the section exists in the saved list and will be replaced */

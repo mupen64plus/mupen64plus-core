@@ -434,7 +434,7 @@ int savestates_save_pj64(void)
         tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
     }
 
-    #define CHECKZIPWRITE(zip, ptr, size) zipWriteInFileInZip(zip, ptr, size) == size
+    #define CHECKZIPWRITE(zip, ptr, size) (zipWriteInFileInZip(zip, ptr, size) == size)
 
     if (!CHECKZIPWRITE(zipfile, &pj64_magic,                     4) ||
         !CHECKZIPWRITE(zipfile, &SaveRDRAMSize,                  4) ||
@@ -459,7 +459,7 @@ int savestates_save_pj64(void)
         !CHECKZIPWRITE(zipfile, &sp_register.sp_dma_busy_reg,    4) || 
         !CHECKZIPWRITE(zipfile, &sp_register.sp_semaphore_reg,   4) || 
         !CHECKZIPWRITE(zipfile, &rsp_register.rsp_pc,            4) ||
-        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_ibist          4) ||
+        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_ibist,         4) ||
         !CHECKZIPWRITE(zipfile, &dpc_register.dpc_start,         4) || 
         !CHECKZIPWRITE(zipfile, &dpc_register.dpc_end,           4) || 
         !CHECKZIPWRITE(zipfile, &dpc_register.dpc_current,       4) || 
