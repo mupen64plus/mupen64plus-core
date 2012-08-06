@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - savestates.c                                            *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2009 Olejl Tillin9                                      *
  *   Copyright (C) 2008 Richard42 Tillin9                                  *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -381,7 +382,6 @@ int savestates_save_pj64(void)
     int retval;
     TLB_pj64 tlb_pj64[32];
     zipFile zipfile = NULL;
-    size_t length;
 
     unsigned int dummy = 0;
     unsigned int SaveRDRAMSize = 0x800000;
@@ -434,54 +434,62 @@ int savestates_save_pj64(void)
         tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
     }
 
-    length = zipWriteInFileInZip(zipfile, &pj64_magic,                     4);
-    length = zipWriteInFileInZip(zipfile, &SaveRDRAMSize,                  4);
-    length = zipWriteInFileInZip(zipfile, rom,                             0x40);
-    length = zipWriteInFileInZip(zipfile, &vi_timer,                       4);
-    length = zipWriteInFileInZip(zipfile, &addr,                           4);
-    length = zipWriteInFileInZip(zipfile, reg,                             32*8);
-    length = zipWriteInFileInZip(zipfile, reg_cop1_fgr_64,                 32*8);
-    length = zipWriteInFileInZip(zipfile, reg_cop0,                        32*4);
-    length = zipWriteInFileInZip(zipfile, &FCR0,                           4);
-    length = zipWriteInFileInZip(zipfile, &dummy,                          4*30);
-    length = zipWriteInFileInZip(zipfile, &FCR31,                          4);
-    length = zipWriteInFileInZip(zipfile, &hi,                             8);
-    length = zipWriteInFileInZip(zipfile, &lo,                             8);
-    length = zipWriteInFileInZip(zipfile, &rdram_register,                 sizeof(RDRAM_register));
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_mem_addr_reg,    4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_dram_addr_reg,   4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_rd_len_reg,      4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_wr_len_reg,      4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_status_reg,      4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_dma_full_reg,    4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_dma_busy_reg,    4);
-    length = zipWriteInFileInZip(zipfile, &sp_register.sp_semaphore_reg,   4);
-    length = zipWriteInFileInZip(zipfile, &dummy,                          4); // SP_PC_REG
-    length = zipWriteInFileInZip(zipfile, &dummy,                          4); // SP_IBIST_REG
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_start,         4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_end,           4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_current,       4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_status,        4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_clock,         4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_bufbusy,       4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_pipebusy,      4);
-    length = zipWriteInFileInZip(zipfile, &dpc_register.dpc_tmem,          4);
-    length = zipWriteInFileInZip(zipfile, &dummy,                          4); // ?
-    length = zipWriteInFileInZip(zipfile, &dummy,                          4); // ?
-    length = zipWriteInFileInZip(zipfile, &MI_register.mi_init_mode_reg,   4); //TODO Secial handling in pj64
-    length = zipWriteInFileInZip(zipfile, &MI_register.mi_version_reg,     4);
-    length = zipWriteInFileInZip(zipfile, &MI_register.mi_intr_reg,        4);
-    length = zipWriteInFileInZip(zipfile, &MI_register.mi_intr_mask_reg,   4);
-    length = zipWriteInFileInZip(zipfile, &vi_register,                    4*14);
-    length = zipWriteInFileInZip(zipfile, &ai_register,                    4*6);
-    length = zipWriteInFileInZip(zipfile, &pi_register,                    sizeof(PI_register));
-    length = zipWriteInFileInZip(zipfile, &ri_register,                    sizeof(RI_register));
-    length = zipWriteInFileInZip(zipfile, &si_register,                    sizeof(SI_register));
-    length = zipWriteInFileInZip(zipfile, tlb_pj64,                        sizeof(TLB_pj64)*32);
-    length = zipWriteInFileInZip(zipfile, PIF_RAM,                         0x40);
-    length = zipWriteInFileInZip(zipfile, rdram,                           0x800000);
-    length = zipWriteInFileInZip(zipfile, SP_DMEM,                         0x1000);
-    length = zipWriteInFileInZip(zipfile, SP_IMEM,                         0x1000);
+    #define CHECKZIPWRITE(zip, ptr, size) zipWriteInFileInZip(zip, ptr, size) == size
+
+    if (!CHECKZIPWRITE(zipfile, &pj64_magic,                     4) ||
+        !CHECKZIPWRITE(zipfile, &SaveRDRAMSize,                  4) ||
+        !CHECKZIPWRITE(zipfile, rom,                             0x40) || 
+        !CHECKZIPWRITE(zipfile, &vi_timer,                       4) || 
+        !CHECKZIPWRITE(zipfile, &addr,                           4) || 
+        !CHECKZIPWRITE(zipfile, reg,                             32*8) || 
+        !CHECKZIPWRITE(zipfile, reg_cop1_fgr_64,                 32*8) || 
+        !CHECKZIPWRITE(zipfile, reg_cop0,                        32*4) || 
+        !CHECKZIPWRITE(zipfile, &FCR0,                           4) || 
+        !CHECKZIPWRITE(zipfile, &dummy,                          4*30) || 
+        !CHECKZIPWRITE(zipfile, &FCR31,                          4) || 
+        !CHECKZIPWRITE(zipfile, &hi,                             8) || 
+        !CHECKZIPWRITE(zipfile, &lo,                             8) || 
+        !CHECKZIPWRITE(zipfile, &rdram_register,                 sizeof(RDRAM_register)) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_mem_addr_reg,    4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_dram_addr_reg,   4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_rd_len_reg,      4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_wr_len_reg,      4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_status_reg,      4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_dma_full_reg,    4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_dma_busy_reg,    4) || 
+        !CHECKZIPWRITE(zipfile, &sp_register.sp_semaphore_reg,   4) || 
+        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_pc,            4) ||
+        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_ibist          4) ||
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_start,         4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_end,           4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_current,       4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_status,        4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_clock,         4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_bufbusy,       4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_pipebusy,      4) || 
+        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_tmem,          4) || 
+        !CHECKZIPWRITE(zipfile, &dummy,                          4) ||  // ?
+        !CHECKZIPWRITE(zipfile, &dummy,                          4) ||  // ?
+        !CHECKZIPWRITE(zipfile, &MI_register.mi_init_mode_reg,   4) ||  //TODO Secial handling in pj64
+        !CHECKZIPWRITE(zipfile, &MI_register.mi_version_reg,     4) || 
+        !CHECKZIPWRITE(zipfile, &MI_register.mi_intr_reg,        4) || 
+        !CHECKZIPWRITE(zipfile, &MI_register.mi_intr_mask_reg,   4) || 
+        !CHECKZIPWRITE(zipfile, &vi_register,                    4*14) || 
+        !CHECKZIPWRITE(zipfile, &ai_register,                    4*6) || 
+        !CHECKZIPWRITE(zipfile, &pi_register,                    sizeof(PI_register)) || 
+        !CHECKZIPWRITE(zipfile, &ri_register,                    sizeof(RI_register)) || 
+        !CHECKZIPWRITE(zipfile, &si_register,                    sizeof(SI_register)) || 
+        !CHECKZIPWRITE(zipfile, tlb_pj64,                        sizeof(TLB_pj64)*32) || 
+        !CHECKZIPWRITE(zipfile, PIF_RAM,                         0x40) || 
+        !CHECKZIPWRITE(zipfile, rdram,                           0x800000) || 
+        !CHECKZIPWRITE(zipfile, SP_DMEM,                         0x1000) || 
+        !CHECKZIPWRITE(zipfile, SP_IMEM,                         0x1000))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not write state file %s", filename);
+        goto clean_and_exit;
+    }
+
+    #undef CHECKZIPWRITE
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
 
@@ -601,8 +609,8 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, &sp_register.sp_dma_full_reg, 4);
     unzReadCurrentFile(zipstatefile, &sp_register.sp_dma_busy_reg, 4);
     unzReadCurrentFile(zipstatefile, &sp_register.sp_semaphore_reg, 4);
-    unzReadCurrentFile(zipstatefile, &value, 4); // SP_PC_REG -> Not part of mupen savestate. Dummy read.
-    unzReadCurrentFile(zipstatefile, &value, 4); // SP_IBIST_REG -> Not part of mupen savestate. Dummy read.
+    unzReadCurrentFile(zipstatefile, &rsp_register.rsp_pc, 4);
+    unzReadCurrentFile(zipstatefile, &rsp_register.rsp_ibist, 4);
 
     w_sp = &sp_register.w_sp_status_reg; // Only done to reduce the amount
     sp = &sp_register.sp_status_reg;     // of character in the below ifs / elses
@@ -802,7 +810,7 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, SP_IMEM, 0x1000);
 
     // TODO: The following is not available in PJ64 savestate. Keep the values as is.
-    // rsp_register.rsp_pc = 0; rsp_register.rsp_ibist = 0; dps_register.dps_tbist = 0; dps_register.dps_test_mode = 0;
+    // dps_register.dps_tbist = 0; dps_register.dps_test_mode = 0;
     // dps_register.dps_buftest_addr = 0; dps_register.dps_buftest_data = 0; llbit = 0;
 
     // No flashram info in pj64 savestate.

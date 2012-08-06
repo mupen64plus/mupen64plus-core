@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - savestates.h                                            *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2009 Olejl Tillin9                                      *
  *   Copyright (C) 2008 Richard42 Tillin9                                  *
  *   Copyright (C) 2002 Hacktarux                                          *
