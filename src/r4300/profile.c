@@ -26,16 +26,39 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 
-static unsigned long long int time_in_section[5];
-static unsigned long long int last_start[5];
+static long long int time_in_section[5];
+static long long int last_start[5];
 
+#ifdef WIN32
+#include <windows.h>
+static long long int get_time(void)
+{
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+	return counter.QuadPart;
+}
+
+static long long int time_to_nsec(long long int time)
+{
+	static LARGE_INTEGER freq = { 0 };
+	if (freq.QuadPart == 0)
+		QueryPerformanceFrequency(&freq);
+	return time * 1000000000 / freq.QuadPart;
+}
+#else
 #include <time.h>
-static unsigned long long int get_time(void)
+static long long int get_time(void)
 {
    struct timespec ts;
    clock_gettime(CLOCK_MONOTONIC, &ts);
-   return (unsigned long long int)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+   return (long long int)ts.tv_sec * 1000000000 + ts.tv_nsec;
 }
+
+static long long int time_to_nsec(long long int time)
+{
+	return time;
+}
+#endif
 
 void start_section(int section_type)
 {
@@ -44,26 +67,26 @@ void start_section(int section_type)
 
 void end_section(int section_type)
 {
-   unsigned long long int end = get_time();
+   long long int end = get_time();
    time_in_section[section_type] += end - last_start[section_type];
 }
 
 void refresh_stat()
 {
-   unsigned long long int curr_time = get_time();
-   if(curr_time - last_start[ALL_SECTION] >= 2000000000ULL)
+   long long int curr_time = get_time();
+   if(time_to_nsec(curr_time - last_start[ALL_SECTION]) >= 2000000000)
    {
       time_in_section[ALL_SECTION] = curr_time - last_start[ALL_SECTION];
       DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
-         100.0f * (float)time_in_section[GFX_SECTION] / time_in_section[ALL_SECTION],
-         100.0f * (float)time_in_section[AUDIO_SECTION] / time_in_section[ALL_SECTION],
-         100.0f * (float)time_in_section[COMPILER_SECTION] / time_in_section[ALL_SECTION],
-         100.0f * (float)time_in_section[IDLE_SECTION] / time_in_section[ALL_SECTION]);
-      DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%lli ns",
-         time_in_section[GFX_SECTION],
-         time_in_section[AUDIO_SECTION],
-         time_in_section[COMPILER_SECTION],
-         time_in_section[IDLE_SECTION]);
+         100.0 * (double)time_in_section[GFX_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[AUDIO_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[COMPILER_SECTION] / time_in_section[ALL_SECTION],
+         100.0 * (double)time_in_section[IDLE_SECTION] / time_in_section[ALL_SECTION]);
+      DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%llins",
+         time_to_nsec(time_in_section[GFX_SECTION]),
+         time_to_nsec(time_in_section[AUDIO_SECTION]),
+         time_to_nsec(time_in_section[COMPILER_SECTION]),
+         time_to_nsec(time_in_section[IDLE_SECTION]));
       time_in_section[GFX_SECTION] = 0;
       time_in_section[AUDIO_SECTION] = 0;
       time_in_section[COMPILER_SECTION] = 0;
