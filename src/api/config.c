@@ -222,27 +222,23 @@ static config_section * section_deepcopy(config_section *orig_section, config_se
         /* allocate memory and copy string values */
         if (orig_var->val_string != NULL)
         {
-            int len = strlen(orig_var->val_string);
-            new_var->val_string = (char *) malloc(len + 1);
+            new_var->val_string = strdup(orig_var->val_string);
             if (new_var->val_string == NULL)
             {
                 delete_section_vars(new_section);
                 free(new_section);
                 return NULL;
             }
-            memcpy(new_var->val_string, orig_var->val_string, len + 1);
         }
         if (orig_var->comment != NULL)
         {
-            int len = strlen(orig_var->comment);
-            new_var->comment = (char *) malloc(len + 1);
+            new_var->comment = strdup(orig_var->comment);
             if (new_var->comment == NULL)
             {
                 delete_section_vars(new_section);
                 free(new_section);
                 return NULL;
             }
-            memcpy(new_var->comment, orig_var->comment, len + 1);
         }
         /* add the new variable to the new section */
         if (last_new_var == NULL)
@@ -1004,10 +1000,9 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
         case M64TYPE_STRING:
             if (var->val_string != NULL)
                 free(var->val_string);
-            var->val_string = (char *) malloc(strlen((char *) ParamValue) + 1);
+            var->val_string = strdup(ParamValue);
             if (var->val_string == NULL)
                 return M64ERR_NO_MEMORY;
-            memcpy(var->val_string, ParamValue, strlen((char *) ParamValue) + 1);
             break;
         default:
             /* this is logically impossible because of the ParamType check at the top of this function */
