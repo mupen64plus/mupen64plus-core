@@ -2157,7 +2157,7 @@ static size_t get_block_memsize(const precomp_block *block)
 /**********************************************************************
  ******************** initialize an empty block ***********************
  **********************************************************************/
-void init_block(int *source, precomp_block *block)
+void init_block(precomp_block *block)
 {
   int i, length, already_exist = 1;
   static int init_length;
@@ -2298,7 +2298,7 @@ void init_block(int *source, precomp_block *block)
       blocks[paddr>>12]->start = paddr & ~0xFFF;
       blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
     }
-    init_block(NULL, blocks[paddr>>12]);
+    init_block(blocks[paddr>>12]);
     
     paddr += block->end - block->start - 4;
     invalid_code[paddr>>12] = 0;
@@ -2312,7 +2312,7 @@ void init_block(int *source, precomp_block *block)
       blocks[paddr>>12]->start = paddr & ~0xFFF;
       blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
     }
-    init_block(NULL, blocks[paddr>>12]);
+    init_block(blocks[paddr>>12]);
   }
   else
   {
@@ -2328,7 +2328,7 @@ void init_block(int *source, precomp_block *block)
         blocks[(block->start+0x20000000)>>12]->start = (block->start+0x20000000) & ~0xFFF;
         blocks[(block->start+0x20000000)>>12]->end = ((block->start+0x20000000) & ~0xFFF) + 0x1000;
       }
-      init_block(NULL, blocks[(block->start+0x20000000)>>12]);
+      init_block(blocks[(block->start+0x20000000)>>12]);
     }
     if (block->start >= 0xa0000000 && block->end < 0xc0000000 && invalid_code[(block->start-0x20000000)>>12])
     {
@@ -2342,7 +2342,7 @@ void init_block(int *source, precomp_block *block)
         blocks[(block->start-0x20000000)>>12]->start = (block->start-0x20000000) & ~0xFFF;
         blocks[(block->start-0x20000000)>>12]->end = ((block->start-0x20000000) & ~0xFFF) + 0x1000;
       }
-      init_block(NULL, blocks[(block->start-0x20000000)>>12]);
+      init_block(blocks[(block->start-0x20000000)>>12]);
     }
   }
   end_section(COMPILER_SECTION);

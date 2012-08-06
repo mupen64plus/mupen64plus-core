@@ -1387,32 +1387,28 @@ void SD(void)
 
 void NOTCOMPILED(void)
 {
+  unsigned int paddr = PC->addr;
+
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
-   if ((PC->addr>>16) == 0xa400)
-     recompile_block((int *) SP_DMEM, blocks[0xa4000000>>12], PC->addr);
+   if (paddr < 0x80000000 || paddr >= 0xc0000000)
+       paddr = virtual_to_physical_address(paddr, 2);
+
+   if (paddr)
+   {
+      unsigned int blk_addr = (paddr-(PC->addr-blocks[PC->addr>>12]->start));
+      if (paddr >= 0xa4000000 && paddr <= 0xa4001000)
+         recompile_block((int *) SP_DMEM + ((blk_addr&0xFFF)>>2), blocks[PC->addr >> 12], PC->addr);
+      else if ((paddr & 0x1FFFFFFF) >= 0x10000000)
+         recompile_block((int *) rom+(((blk_addr & 0x1FFFFFFF) - 0x10000000)>>2), blocks[PC->addr >> 12], PC->addr);
+      else
+         recompile_block((int *) rdram+((blk_addr & 0x1FFFFFFF)>>2), blocks[PC->addr >> 12], PC->addr);
+   }
    else
-     {
-    unsigned int paddr = 0;
-    if (PC->addr >= 0x80000000 && PC->addr < 0xc0000000)
-      paddr = PC->addr;
-    else
-      paddr = virtual_to_physical_address(PC->addr, 2);
-    if (paddr)
-      {
-         if ((paddr & 0x1FFFFFFF) >= 0x10000000)
-           {
-          recompile_block((int *) rom+((((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF) - 0x10000000)>>2),
-                  blocks[PC->addr>>12], PC->addr);
-           }
-         else
-           recompile_block((int *) rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
-                   blocks[PC->addr>>12], PC->addr);
-      }
-    else DebugMessage(M64MSG_ERROR, "not compiled exception");
-     }
+      DebugMessage(M64MSG_ERROR, "not compiled exception");
+
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
@@ -1481,8 +1477,7 @@ void jump_to_func(void)
       }
     blocks[addr>>12]->start = addr & ~0xFFF;
     blocks[addr>>12]->end = (addr & ~0xFFF) + 0x1000;
-    init_block((int *) rdram+(((paddr-(addr-blocks[addr>>12]->start)) & 0x1FFFFFFF)>>2),
-           blocks[addr>>12]);
+    init_block(blocks[addr>>12]);
      }
    PC=actual->block+((addr-actual->start)>>2);
    
@@ -1628,7 +1623,7 @@ void init_blocks(void)
    blocks[0xa4000000>>12]->start = 0xa4000000;
    blocks[0xa4000000>>12]->end = 0xa4001000;
    actual=blocks[0xa4000000>>12];
-   init_block((int *) SP_DMEM, blocks[0xa4000000>>12]);
+   init_block(blocks[0xa4000000>>12]);
    PC=actual->block+(0x40/4);
 /*#ifdef DBG //should only be needed by dynamic recompiler
    if (g_DebuggerActive) // debugger shows initial state (before 1st instruction).

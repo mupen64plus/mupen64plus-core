@@ -87,7 +87,7 @@ typedef struct _precomp_block
 } precomp_block;
 
 void recompile_block(int *source, precomp_block *block, unsigned int func);
-void init_block(int *source, precomp_block *block);
+void init_block(precomp_block *block);
 void free_block(precomp_block *block);
 void recompile_opcode(void);
 void prefetch_opcode(unsigned int op);
@@ -99,7 +99,7 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 extern precomp_instr *dst; /* precomp_instr structure for instruction being recompiled */
 
 #if defined(__x86_64__)
-    #include "x86_64/assemble.h"
+  #include "x86_64/assemble.h"
   #include "x86_64/regcache.h"
 #else
   #include "x86/assemble.h"
