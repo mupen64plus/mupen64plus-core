@@ -393,12 +393,18 @@ void main_state_load(const char *filename)
     controllerCommand(2, StopRumble);
     controllerCommand(3, StopRumble);
 
-    savestates_set_job(savestates_job_load, savestates_type_unknown, NULL);
+    if (filename == NULL) // Save to slot
+        savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
+    else
+        savestates_set_job(savestates_job_load, savestates_type_unknown, filename);
 }
 
 void main_state_save(int format, const char *filename)
 {
-    savestates_set_job(savestates_job_save, (savestates_type)format, filename);
+    if (filename == NULL) // Save to slot
+        savestates_set_job(savestates_job_save, savestates_type_m64p, NULL);
+    else // Save to file
+        savestates_set_job(savestates_job_save, (savestates_type)format, filename);
 }
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval)

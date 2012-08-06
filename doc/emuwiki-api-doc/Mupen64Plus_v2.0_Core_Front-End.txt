@@ -143,7 +143,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |-
 |M64CMD_STATE_SAVE
 |This command will save a state file.  If '''<tt>ParamPtr</tt>''' is not NULL, this function will save a state file to a full pathname specified by this pointer.  Otherwise ('''<tt>ParamPtr</tt>''' is NULL), it will save to the current slot.
-|'''<tt>ParamInt</tt>''' If 1, a Mupen64Plus state file will be saved.  If 2, a Project64 state file will be saved.'''<br /><tt>ParamPtr</tt>''' Pointer to string containing state file path and name, or NULL<br />
+|'''<tt>ParamInt</tt>''' This parameter can only be used if '''<tt>ParamPtr</tt>''' is not NULL. If 1, a Mupen64Plus state file will be saved.  If 2, a Project64 compressed state file will be saved. If 3, a Project64 uncompressed state file will be saved. '''<br /><tt>ParamPtr</tt>''' Pointer to string containing state file path and name, or NULL<br />
 |The emulator must be currently running or paused.  This command will execute asynchronously.
 |-
 |M64CMD_STATE_SET_SLOT

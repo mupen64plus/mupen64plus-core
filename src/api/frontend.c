@@ -237,7 +237,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_STATE_SAVE:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            if (ParamInt < 1 || ParamInt > 3)
+            if (ParamPtr != NULL && (ParamInt < 1 || ParamInt > 3))
                 return M64ERR_INPUT_INVALID;
             main_state_save(ParamInt, (char *) ParamPtr);
             return M64ERR_SUCCESS;

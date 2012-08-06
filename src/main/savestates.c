@@ -726,6 +726,7 @@ static void savestates_save_m64p(char *filepath)
 static int savestates_save_pj64(char *filepath, void *handle,
                                 int (*write_func)(void *, const void *, size_t))
 {
+    // TODO fpr shuffle
     unsigned int i, vi_timer, addr;
     TLB_pj64 tlb_pj64[32];
     unsigned int dummy = 0;
@@ -754,6 +755,9 @@ static int savestates_save_pj64(char *filepath, void *handle,
         tlb_pj64[i].BreakDownEntryLo1.D      = (unsigned int) tlb_e[i].d_odd;
         tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
     }
+
+    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(0x04000000, 0);
 
     if (!write_func(handle, &pj64_magic,                     4) ||
         !write_func(handle, &SaveRDRAMSize,                  4) ||
@@ -806,6 +810,9 @@ static int savestates_save_pj64(char *filepath, void *handle,
     {
         return 0;
     }
+
+    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(0x04000000, 0);
 
     return 1;
 }
