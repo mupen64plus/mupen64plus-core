@@ -331,10 +331,9 @@ void gen_interupt(void)
 
     if (!interupt_unsafe_state)
     {
-        if (savestates_job & LOADSTATE) 
+        if (savestates_get_job() == savestates_job_load)
         {
             savestates_load();
-            savestates_job &= ~LOADSTATE;
             return;
         }
 
@@ -616,20 +615,10 @@ void gen_interupt(void)
 
     if (!interupt_unsafe_state)
     {
-        if(savestates_job & SAVESTATE)
+        if (savestates_get_job() == savestates_job_save)
         {
-            if(savestates_job & SAVEPJ64STATE)
-            {
-                if(savestates_save_pj64() != -1)
-                {
-                    savestates_job &= ~(SAVESTATE+SAVEPJ64STATE);
-                }
-            }
-            else
-            {
-                savestates_save();
-                savestates_job &= ~SAVESTATE;
-            }
+            savestates_save();
+            return;
         }
     }
 }

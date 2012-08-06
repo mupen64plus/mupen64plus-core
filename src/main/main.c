@@ -388,26 +388,17 @@ static unsigned char StopRumble[64] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00, 0x00,
 
 void main_state_load(const char *filename)
 {
-
-    if (filename != NULL)
-        savestates_select_filename(filename);
-
     controllerCommand(0, StopRumble);
     controllerCommand(1, StopRumble);
     controllerCommand(2, StopRumble);
     controllerCommand(3, StopRumble);
 
-    savestates_job |= LOADSTATE;
+    savestates_set_job(savestates_job_load, savestates_type_unknown, NULL);
 }
 
-void main_state_save(int format_pj64, const char *filename)
+void main_state_save(int format, const char *filename)
 {
-    if (filename != NULL)
-        savestates_select_filename(filename);
-
-    savestates_job |= SAVESTATE;
-    if (format_pj64)
-        savestates_job |= SAVEPJ64STATE;
+    savestates_set_job(savestates_job_save, (savestates_type)format, filename);
 }
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval)

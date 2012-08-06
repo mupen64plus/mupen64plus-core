@@ -88,9 +88,9 @@ void lircCheckInput(void)
                 DebugMessage(M64MSG_VERBOSE, "LIRC Execing command \"%s\"", c);
 
                 if(strcmp(c, "SAVE") == 0)
-                    savestates_job |= SAVESTATE;
+                    main_state_save(1, NULL); /* save in mupen64plus format using current slot */
                 else if(strcmp(c, "LOAD") == 0)
-                    savestates_job |= LOADSTATE;
+                    main_state_load(NULL); /* load using current slot */
                 else if(strcmp(c, "QUIT") == 0)
                     main_stop();
                 else if(strcmp(c, "FULLSCREEN") == 0)

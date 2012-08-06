@@ -104,7 +104,7 @@ EXPORT m64p_error CALL CoreShutdown(void)
     /* close down some core sub-systems */
     romdatabase_close();
     ConfigShutdown();
-    savestates_select_filename(NULL); // Force memory release
+    savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
 
     /* tell SDL to shut down */
     SDL_Quit();
@@ -237,12 +237,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_STATE_SAVE:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            if (ParamInt < 1 || ParamInt > 2)
+            if (ParamInt < 1 || ParamInt > 3)
                 return M64ERR_INPUT_INVALID;
-            if (ParamInt == 2)
-                main_state_save(1, (char *) ParamPtr);  /* save a pj64 state file */
-            else
-                main_state_save(0, (char *) ParamPtr);  /* save a mupen64plus state file */
+            main_state_save(ParamInt, (char *) ParamPtr);
             return M64ERR_SUCCESS;
         case M64CMD_STATE_SET_SLOT:
             if (ParamInt < 0 || ParamInt > 9)

@@ -243,7 +243,7 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyPause)
                         main_toggle_pause();
                     else if (cmd == joySave)
-                        main_state_save(0, NULL); /* save in mupen64plus format using current slot */
+                        main_state_save(1, NULL); /* save in mupen64plus format using current slot */
                     else if (cmd == joyLoad)
                         main_state_load(NULL); /* load using current slot */
                     else if (cmd == joyIncrement)

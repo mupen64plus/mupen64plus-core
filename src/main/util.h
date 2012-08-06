@@ -91,8 +91,8 @@ void imagestring(unsigned char imagetype, char *string);
 char* dirfrompath(const char* path);
 
 /* Extracts the full file name (with extension) from a path string.
- * Returns a malloc'd string with the file name. */
-char* namefrompath(const char* path);
+ * Returns the same string, advanced until the file name. */
+const char* namefrompath(const char* path);
 
 /* Creates a path string by joining two path strings.
  * The given path strings may or may not start or end with a path separator.

@@ -53,53 +53,91 @@
     #include "main/zip/zip.h"
 #endif
 
-static void savestates_load_pj64(void);
-
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010000;  /* 1.0 */
 static const int pj64_magic = 0x23D8A6C8;
 
-int savestates_job = 0;
+static savestates_job job = savestates_job_nothing;
+static savestates_type type = savestates_type_unknown;
+static char *fname = NULL;
 
 static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
-static char *fname = NULL;
 
-/* Returns path information of the currently selected savestate.
- *   filepath: Will recieve the full path of the savestate. Can be NULL.
- *   filename: Will recieve the file name of the savestate. Can be NULL.
- *   is_pj64: Set to nonzero to generate Project64 savestate paths.
- */
-static void savestates_get_path(char **filepath, char **filename, int is_pj64)
+typedef struct _TLB_pj64
+{
+    unsigned int _EntryDefined;
+
+    struct _BreakDownPageMask
+    {
+        unsigned int zero : 13;
+        unsigned int Mask : 12;
+        unsigned int zero2 : 7;
+    } BreakDownPageMask;
+
+    struct _BreakDownEntryHi
+    {
+        unsigned int ASID : 8;
+        unsigned int Zero : 4;
+        unsigned int G : 1;
+        unsigned int VPN2 : 19;
+    } BreakDownEntryHi;
+
+    struct _BreakDownEntryLo0 
+    {
+        unsigned int GLOBAL: 1;
+        unsigned int V : 1;
+        unsigned int D : 1;
+        unsigned int C : 3;
+        unsigned int PFN : 20;
+        unsigned int ZERO: 6;
+    } BreakDownEntryLo0;
+
+    struct _BreakDownEntryLo1 
+    {
+        unsigned int GLOBAL: 1;
+        unsigned int V : 1;
+        unsigned int D : 1;
+        unsigned int C : 3;
+        unsigned int PFN : 20;
+        unsigned int ZERO: 6;
+    } BreakDownEntryLo1;
+} TLB_pj64;
+
+/* Returns the malloc'd full path of the currently selected savestate. */
+static char *savestates_generate_path(savestates_type type)
 {
     if(fname != NULL) /* A specific path was given. */
     {
-        if (filepath != NULL)
-            *filepath = strdup(fname);
-
-        if (filename != NULL)
-            *filename = namefrompath(fname);
+        return strdup(fname);
     }
     else /* Use the selected savestate slot */
     {
-        char *my_filename;
-        if (is_pj64)
-            my_filename = formatstr("%s.pj%d.zip", ROM_PARAMS.headername, slot);
-        else
-            my_filename = formatstr("%s.st%d", ROM_SETTINGS.goodname, slot);
-
-        if (filepath != NULL)
+        char *filename;
+        switch (type)
         {
-            if (my_filename != NULL)
-                *filepath = formatstr("%s%s", get_savestatepath(), my_filename);
-            else
-                *filepath = NULL;
+            case savestates_type_m64p:
+                filename = formatstr("%s.st%d", ROM_SETTINGS.goodname, slot);
+                break;
+            case savestates_type_pj64_zip:
+                filename = formatstr("%s.pj%d.zip", ROM_PARAMS.headername, slot);
+                break;
+            case savestates_type_pj64_unc:
+                filename = formatstr("%s.pj%d", ROM_PARAMS.headername, slot);
+                break;
+            default:
+                filename = NULL;
+                break;
         }
 
         if (filename != NULL)
-            *filename = my_filename;
+        {
+            char *filepath = formatstr("%s%s", get_savestatepath(), filename);
+            free(filename);
+            return filepath;
+        }
         else
-            free(my_filename);
+            return NULL;
     }
 }
 
@@ -113,10 +151,9 @@ void savestates_select_slot(unsigned int s)
 
     if(rom)
     {
-        char* filename;
-        savestates_get_path(NULL, &filename, 0);
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state file: %s", filename);
-        free(filename);
+        char* filepath = savestates_generate_path(savestates_type_m64p);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state file: %s", namefrompath(filepath));
+        free(filepath);
     }
     else
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
@@ -141,7 +178,12 @@ void savestates_inc_slot(void)
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
-void savestates_select_filename(const char* fn)
+savestates_job savestates_get_job(void)
+{
+    return job;
+}
+
+void savestates_set_job(savestates_job j, savestates_type t, const char *fn)
 {
     if (fname != NULL)
     {
@@ -149,135 +191,40 @@ void savestates_select_filename(const char* fn)
         fname = NULL;
     }
 
+    job = j;
+    type = t;
     if (fn != NULL)
         fname = strdup(fn);
 }
 
-void savestates_save(void)
+void savestates_clear_job(void)
 {
-    char *filename, *file, buffer[1024];
-    unsigned char outbuf[4];
-    gzFile f;
-    int queuelength;
-
-    if(autoinc_save_slot)
-        savestates_inc_slot();
-
-    savestates_get_path(&file, &filename, 0);
-    savestates_select_filename(NULL); // Forget given savefile path (if any)
-
-    f = gzopen(file, "wb");
-    free(file);
-
-    if (f==NULL)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filename);
-        free(filename);
-        return;
-    }
-
-    /* Write magic number. */
-    gzwrite(f, savestate_magic, 8);
-
-    /* Write savestate file version in big-endian. */
-    outbuf[0] = (savestate_latest_version >> 24) & 0xff;
-    outbuf[1] = (savestate_latest_version >> 16) & 0xff;
-    outbuf[2] = (savestate_latest_version >>  8) & 0xff;
-    outbuf[3] = (savestate_latest_version >>  0) & 0xff;
-    gzwrite(f, outbuf, 4);
-
-    gzwrite(f, ROM_SETTINGS.MD5, 32);
-
-    gzwrite(f, &rdram_register, sizeof(RDRAM_register));
-    gzwrite(f, &MI_register, sizeof(mips_register));
-    gzwrite(f, &pi_register, sizeof(PI_register));
-    gzwrite(f, &sp_register, sizeof(SP_register));
-    gzwrite(f, &rsp_register, sizeof(RSP_register));
-    gzwrite(f, &si_register, sizeof(SI_register));
-    gzwrite(f, &vi_register, sizeof(VI_register));
-    gzwrite(f, &ri_register, sizeof(RI_register));
-    gzwrite(f, &ai_register, sizeof(AI_register));
-    gzwrite(f, &dpc_register, sizeof(DPC_register));
-    gzwrite(f, &dps_register, sizeof(DPS_register));
-    gzwrite(f, rdram, 0x800000);
-    gzwrite(f, SP_DMEM, 0x1000);
-    gzwrite(f, SP_IMEM, 0x1000);
-    gzwrite(f, PIF_RAM, 0x40);
-
-    save_flashram_infos(buffer);
-    gzwrite(f, buffer, 24);
-
-    gzwrite(f, tlb_LUT_r, 0x100000*4);
-    gzwrite(f, tlb_LUT_w, 0x100000*4);
-
-    gzwrite(f, &llbit, 4);
-    gzwrite(f, reg, 32*8);
-    gzwrite(f, reg_cop0, 32*4);
-    gzwrite(f, &lo, 8);
-    gzwrite(f, &hi, 8);
-
-    if ((Status & 0x04000000) == 0)
-    {   // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
-        gzwrite(f, reg_cop1_fgr_64, 32*8);
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
-    }
-    else
-    {
-        gzwrite(f, reg_cop1_fgr_64, 32*8);
-    }
-
-    gzwrite(f, &FCR0, 4);
-    gzwrite(f, &FCR31, 4);
-    gzwrite(f, tlb_e, 32*sizeof(tlb));
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        gzwrite(f, &interp_addr, 4);
-    else
-        gzwrite(f, &PC->addr, 4);
-
-    gzwrite(f, &next_interupt, 4);
-    gzwrite(f, &next_vi, 4);
-    gzwrite(f, &vi_field, 4);
-
-    queuelength = save_eventqueue_infos(buffer);
-    gzwrite(f, buffer, queuelength);
-
-    gzclose(f);
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
-    free(filename);
+    savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
 }
 
-void savestates_load(void)
+static int savestates_load_m64p(char *filepath)
 {
-    char *filename, *file, buffer[1024];
+    char buffer[1024];
     unsigned char inbuf[4];
     gzFile f;
     int queuelength, version;
 
-    savestates_get_path(&file, &filename, 0);
-
-    f = gzopen(file, "rb");
-    free(file);
+    f = gzopen(filepath, "rb");
 
     if(f==NULL)
     {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filename);
-        free(filename);
-        return;
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
+        return 0;
     }
 
     /* Read and check Mupen64Plus magic number. */
     gzread(f, buffer, 8);
     if(strncmp(buffer, savestate_magic, 8)!=0)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate. Checking if in Project64 format...", filename);
-        free(filename);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate.", filepath);
         gzclose(f);
-        savestates_load_pj64();
-        return;
+        return 0;
         }
-
-    savestates_select_filename(NULL); // Forget given savefile path (if any)
 
     /* Read savestate file version in big-endian order. */
     gzread(f, inbuf, 4);
@@ -288,18 +235,16 @@ void savestates_load(void)
     if(version != 0x00010000)
         {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
-        free(filename);
         gzclose(f);
-        return;
+        return 0;
         }
 
     gzread(f, buffer, 32);
     if(memcmp(buffer, ROM_SETTINGS.MD5, 32))
         {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
-        free(filename);
         gzclose(f);
-        return;
+        return 0;
         }
 
     gzread(f, &rdram_register, sizeof(RDRAM_register));
@@ -371,196 +316,50 @@ void savestates_load(void)
     else
         last_addr = PC->addr;
 
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
-    free(filename);
-    savestates_select_filename(NULL); // Forget given savefile path (if any)
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
+
+    return 1;
 }
 
-int savestates_save_pj64(void)
+static int savestates_load_pj64(char *filepath, void *handle,
+                                int (*read_func)(void *, void *, size_t))
 {
-    char *file = NULL, *filename = NULL;
-    unsigned int i, vi_timer, addr;
-    int retval;
-    TLB_pj64 tlb_pj64[32];
-    zipFile zipfile = NULL;
-
-    unsigned int dummy = 0;
-    unsigned int SaveRDRAMSize = 0x800000;
-
-    /* Continue only if VI / COMPARE
-       Otherwise try again in a little while. */
-    if (get_next_event_type() > COMPARE_INT)
-    {
-        return -1;
-    }
-
-    savestates_get_path(&file, &filename, 1);
-    savestates_select_filename(NULL); // Forget given savefile path (if any)
-
-    zipfile = zipOpen(file, APPEND_STATUS_CREATE);
-    if(zipfile == NULL)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filename);
-        goto clean_and_exit;
-    }
-
-    retval = zipOpenNewFileInZip(zipfile, filename, NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
-    if(retval != ZIP_OK)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not create state file: %s", filename);
-        goto clean_and_exit;
-    }
-
-    vi_timer = get_event(VI_INT) - reg_cop0[9]; /* Subtract current Count according to how PJ64 stores the timer. */
-
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        addr = interp_addr;
-    else
-        addr = PC->addr;
-
-    for (i=0; i < 32;i++)
-    {
-        tlb_pj64[i].BreakDownPageMask.Mask   = (unsigned int) tlb_e[i].mask;
-        tlb_pj64[i].BreakDownEntryHi.VPN2    = (unsigned int) tlb_e[i].vpn2;
-        tlb_pj64[i].BreakDownEntryLo0.GLOBAL = (unsigned int) tlb_e[i].g;
-        tlb_pj64[i].BreakDownEntryLo1.GLOBAL = (unsigned int) tlb_e[i].g;
-        tlb_pj64[i].BreakDownEntryHi.ASID    = (unsigned int) tlb_e[i].asid;
-        tlb_pj64[i].BreakDownEntryLo0.PFN    = (unsigned int) tlb_e[i].pfn_even;
-        tlb_pj64[i].BreakDownEntryLo0.C      = (unsigned int) tlb_e[i].c_even;
-        tlb_pj64[i].BreakDownEntryLo0.D      = (unsigned int) tlb_e[i].d_even;
-        tlb_pj64[i].BreakDownEntryLo0.V      = (unsigned int) tlb_e[i].v_even;
-        tlb_pj64[i].BreakDownEntryLo1.PFN    = (unsigned int) tlb_e[i].pfn_odd;
-        tlb_pj64[i].BreakDownEntryLo1.C      = (unsigned int) tlb_e[i].c_odd;
-        tlb_pj64[i].BreakDownEntryLo1.D      = (unsigned int) tlb_e[i].d_odd;
-        tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
-    }
-
-    #define CHECKZIPWRITE(zip, ptr, size) (zipWriteInFileInZip(zip, ptr, size) == size)
-
-    if (!CHECKZIPWRITE(zipfile, &pj64_magic,                     4) ||
-        !CHECKZIPWRITE(zipfile, &SaveRDRAMSize,                  4) ||
-        !CHECKZIPWRITE(zipfile, rom,                             0x40) || 
-        !CHECKZIPWRITE(zipfile, &vi_timer,                       4) || 
-        !CHECKZIPWRITE(zipfile, &addr,                           4) || 
-        !CHECKZIPWRITE(zipfile, reg,                             32*8) || 
-        !CHECKZIPWRITE(zipfile, reg_cop1_fgr_64,                 32*8) || 
-        !CHECKZIPWRITE(zipfile, reg_cop0,                        32*4) || 
-        !CHECKZIPWRITE(zipfile, &FCR0,                           4) || 
-        !CHECKZIPWRITE(zipfile, &dummy,                          4*30) || 
-        !CHECKZIPWRITE(zipfile, &FCR31,                          4) || 
-        !CHECKZIPWRITE(zipfile, &hi,                             8) || 
-        !CHECKZIPWRITE(zipfile, &lo,                             8) || 
-        !CHECKZIPWRITE(zipfile, &rdram_register,                 sizeof(RDRAM_register)) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_mem_addr_reg,    4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_dram_addr_reg,   4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_rd_len_reg,      4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_wr_len_reg,      4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_status_reg,      4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_dma_full_reg,    4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_dma_busy_reg,    4) || 
-        !CHECKZIPWRITE(zipfile, &sp_register.sp_semaphore_reg,   4) || 
-        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_pc,            4) ||
-        !CHECKZIPWRITE(zipfile, &rsp_register.rsp_ibist,         4) ||
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_start,         4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_end,           4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_current,       4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_status,        4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_clock,         4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_bufbusy,       4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_pipebusy,      4) || 
-        !CHECKZIPWRITE(zipfile, &dpc_register.dpc_tmem,          4) || 
-        !CHECKZIPWRITE(zipfile, &dummy,                          4) ||  // ?
-        !CHECKZIPWRITE(zipfile, &dummy,                          4) ||  // ?
-        !CHECKZIPWRITE(zipfile, &MI_register.mi_init_mode_reg,   4) ||  //TODO Secial handling in pj64
-        !CHECKZIPWRITE(zipfile, &MI_register.mi_version_reg,     4) || 
-        !CHECKZIPWRITE(zipfile, &MI_register.mi_intr_reg,        4) || 
-        !CHECKZIPWRITE(zipfile, &MI_register.mi_intr_mask_reg,   4) || 
-        !CHECKZIPWRITE(zipfile, &vi_register,                    4*14) || 
-        !CHECKZIPWRITE(zipfile, &ai_register,                    4*6) || 
-        !CHECKZIPWRITE(zipfile, &pi_register,                    sizeof(PI_register)) || 
-        !CHECKZIPWRITE(zipfile, &ri_register,                    sizeof(RI_register)) || 
-        !CHECKZIPWRITE(zipfile, &si_register,                    sizeof(SI_register)) || 
-        !CHECKZIPWRITE(zipfile, tlb_pj64,                        sizeof(TLB_pj64)*32) || 
-        !CHECKZIPWRITE(zipfile, PIF_RAM,                         0x40) || 
-        !CHECKZIPWRITE(zipfile, rdram,                           0x800000) || 
-        !CHECKZIPWRITE(zipfile, SP_DMEM,                         0x1000) || 
-        !CHECKZIPWRITE(zipfile, SP_IMEM,                         0x1000))
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not write state file %s", filename);
-        goto clean_and_exit;
-    }
-
-    #undef CHECKZIPWRITE
-
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
-
-    clean_and_exit:
-        if (filename != NULL)
-            free(filename);
-        if (file != NULL)
-            free(file);
-        if (zipfile != NULL)
-        {
-            zipCloseFileInZip(zipfile); // This may fail, but we don't care
-            zipClose(zipfile, "");
-        }
-        return 1;
-}
-
-static void savestates_load_pj64(void)
-{
-    char *file = NULL, *filename = NULL, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
+    char buffer[1024], RomHeader[64];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;
     int i;
-    unzFile zipstatefile = NULL;
-    unz_file_info fileinfo;
     TLB_pj64 tlb_pj64;
 
-    savestates_get_path(&file, &filename, 1);
-    savestates_select_filename(NULL); // Forget given savefile path (if any)
-
-    /* Open the .zip file. */
-    zipstatefile = unzOpen(file);
-    if (zipstatefile == NULL ||
-        unzGoToFirstFile(zipstatefile) != UNZ_OK ||
-        unzGetCurrentFileInfo(zipstatefile, &fileinfo, szFileName, 255, szExtraField, 255, szComment, 255) != UNZ_OK ||
-        unzOpenCurrentFile(zipstatefile) != UNZ_OK)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not open state file: %s", file);
-        goto clean_and_exit;
-    }
-
     /* Read and check Project64 magic number. */
-    unzReadCurrentFile(zipstatefile, &magic, 4);
+    read_func(handle, &magic, 4);
     if (magic!=pj64_magic)
     {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", file);
-        goto clean_and_exit;
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", filepath);
+        return 0;
     }
 
-    unzReadCurrentFile(zipstatefile, &SaveRDRAMSize, 4);
+    read_func(handle, &SaveRDRAMSize, 4);
 
-    unzReadCurrentFile(zipstatefile, RomHeader, 0x40);
+    read_func(handle, RomHeader, 0x40);
     if(memcmp(RomHeader, rom, 0x40)!=0) 
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
-        goto clean_and_exit;
+        return 0;
     }
 
     // vi_timer
-    unzReadCurrentFile(zipstatefile, &vi_timer,4);
+    read_func(handle, &vi_timer,4);
 
     // Program Counter
-    unzReadCurrentFile(zipstatefile, &last_addr, 4);
+    read_func(handle, &last_addr, 4);
 
     // GPR
-    unzReadCurrentFile(zipstatefile, reg,8*32);
+    read_func(handle, reg,8*32);
 
     // FPR
-    unzReadCurrentFile(zipstatefile, reg_cop1_fgr_64,8*32);
+    read_func(handle, reg_cop1_fgr_64,8*32);
 
     // CP0
-    unzReadCurrentFile(zipstatefile, reg_cop0, 4*32);
+    read_func(handle, reg_cop0, 4*32);
 
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
@@ -580,78 +379,78 @@ static void savestates_load_pj64(void)
     load_eventqueue_infos(buffer);
 
     // FPCR
-    unzReadCurrentFile(zipstatefile, &FCR0,4);
-    unzReadCurrentFile(zipstatefile, &buffer,120);   // Dummy read.
-    unzReadCurrentFile(zipstatefile, &FCR31,4);
+    read_func(handle, &FCR0,4);
+    read_func(handle, &buffer,120);   // Dummy read.
+    read_func(handle, &FCR31,4);
 
     // hi / lo
-    unzReadCurrentFile(zipstatefile,&hi,8);
-    unzReadCurrentFile(zipstatefile,&lo,8);
+    read_func(handle,&hi,8);
+    read_func(handle,&lo,8);
 
     // rdram register
-    unzReadCurrentFile(zipstatefile, &rdram_register, sizeof(RDRAM_register));
+    read_func(handle, &rdram_register, sizeof(RDRAM_register));
 
     // sp_register
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_mem_addr_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_dram_addr_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_rd_len_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_wr_len_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_status_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_dma_full_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_dma_busy_reg, 4);
-    unzReadCurrentFile(zipstatefile, &sp_register.sp_semaphore_reg, 4);
-    unzReadCurrentFile(zipstatefile, &rsp_register.rsp_pc, 4);
-    unzReadCurrentFile(zipstatefile, &rsp_register.rsp_ibist, 4);
+    read_func(handle, &sp_register.sp_mem_addr_reg, 4);
+    read_func(handle, &sp_register.sp_dram_addr_reg, 4);
+    read_func(handle, &sp_register.sp_rd_len_reg, 4);
+    read_func(handle, &sp_register.sp_wr_len_reg, 4);
+    read_func(handle, &sp_register.sp_status_reg, 4);
+    read_func(handle, &sp_register.sp_dma_full_reg, 4);
+    read_func(handle, &sp_register.sp_dma_busy_reg, 4);
+    read_func(handle, &sp_register.sp_semaphore_reg, 4);
+    read_func(handle, &rsp_register.rsp_pc, 4);
+    read_func(handle, &rsp_register.rsp_ibist, 4);
 
     make_w_sp_status_reg();
 
     // dpc_register
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_start, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_end, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_current, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_status, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_clock, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_bufbusy, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_pipebusy, 4);
-    unzReadCurrentFile(zipstatefile, &dpc_register.dpc_tmem, 4);
-    unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
-    unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
+    read_func(handle, &dpc_register.dpc_start, 4);
+    read_func(handle, &dpc_register.dpc_end, 4);
+    read_func(handle, &dpc_register.dpc_current, 4);
+    read_func(handle, &dpc_register.dpc_status, 4);
+    read_func(handle, &dpc_register.dpc_clock, 4);
+    read_func(handle, &dpc_register.dpc_bufbusy, 4);
+    read_func(handle, &dpc_register.dpc_pipebusy, 4);
+    read_func(handle, &dpc_register.dpc_tmem, 4);
+    read_func(handle, &value, 4); // Dummy read
+    read_func(handle, &value, 4); // Dummy read
 
     make_w_dpc_status();
 
     // mi_register
-    unzReadCurrentFile(zipstatefile, &MI_register.mi_init_mode_reg, 4);
-    unzReadCurrentFile(zipstatefile, &MI_register.mi_version_reg, 4);
-    unzReadCurrentFile(zipstatefile, &MI_register.mi_intr_reg, 4);
-    unzReadCurrentFile(zipstatefile, &MI_register.mi_intr_mask_reg, 4);
+    read_func(handle, &MI_register.mi_init_mode_reg, 4);
+    read_func(handle, &MI_register.mi_version_reg, 4);
+    read_func(handle, &MI_register.mi_intr_reg, 4);
+    read_func(handle, &MI_register.mi_intr_mask_reg, 4);
 
     make_w_mi_init_mode_reg();
     make_w_mi_intr_mask_reg();
 
     // vi_register 
-    unzReadCurrentFile(zipstatefile, &vi_register, 4*14);
+    read_func(handle, &vi_register, 4*14);
     update_vi_status(vi_register.vi_status);
     update_vi_width(vi_register.vi_width);
 
     // ai_register
-    unzReadCurrentFile(zipstatefile, &ai_register, 4*6);
+    read_func(handle, &ai_register, 4*6);
     update_ai_dacrate(ai_register.ai_dacrate);
 
     // pi_register
-    unzReadCurrentFile(zipstatefile, &pi_register, sizeof(PI_register));
+    read_func(handle, &pi_register, sizeof(PI_register));
 
     // ri_register
-    unzReadCurrentFile(zipstatefile, &ri_register, sizeof(RI_register));
+    read_func(handle, &ri_register, sizeof(RI_register));
 
     // si_register
-    unzReadCurrentFile(zipstatefile, &si_register, sizeof(SI_register));
+    read_func(handle, &si_register, sizeof(SI_register));
 
     // tlb
     memset(tlb_LUT_r, 0, 0x400000);
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
-        unzReadCurrentFile(zipstatefile, &tlb_pj64, sizeof(TLB_pj64));
+        read_func(handle, &tlb_pj64, sizeof(TLB_pj64));
         tlb_e[i].mask = (short) tlb_pj64.BreakDownPageMask.Mask;
         tlb_e[i].vpn2 = tlb_pj64.BreakDownEntryHi.VPN2;
         tlb_e[i].g = (char) tlb_pj64.BreakDownEntryLo0.GLOBAL & tlb_pj64.BreakDownEntryLo1.GLOBAL;
@@ -678,17 +477,17 @@ static void savestates_load_pj64(void)
     }
 
     // pif ram
-    unzReadCurrentFile(zipstatefile, PIF_RAM, 0x40);
+    read_func(handle, PIF_RAM, 0x40);
 
     // RDRAM
     memset(rdram, 0, 0x800000);
-    unzReadCurrentFile(zipstatefile, rdram, SaveRDRAMSize);
+    read_func(handle, rdram, SaveRDRAMSize);
 
     // DMEM
-    unzReadCurrentFile(zipstatefile, SP_DMEM, 0x1000);
+    read_func(handle, SP_DMEM, 0x1000);
 
     // IMEM
-    unzReadCurrentFile(zipstatefile, SP_IMEM, 0x1000);
+    read_func(handle, SP_IMEM, 0x1000);
 
     // The following values should not matter because we don't have any AI interrupt
     // ai_register.next_delay = 0; ai_register.next_len = 0;
@@ -710,14 +509,406 @@ static void savestates_load_pj64(void)
         jump_to(last_addr);
     }
 
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
-
-    clean_and_exit:
-        if (file != NULL)
-            free(file);
-        if (filename != NULL)
-            free(filename);
-        if (zipstatefile != NULL)
-            unzClose(zipstatefile);
+    return 1;
 }
 
+static int read_data_from_zip(void *zip, void *buffer, size_t length)
+{
+    return unzReadCurrentFile((unzFile)zip, buffer, (unsigned)length) == length;
+}
+
+static int savestates_load_pj64_zip(char *filepath)
+{
+    char szFileName[256], szExtraField[256], szComment[256];
+    unzFile zipstatefile = NULL;
+    unz_file_info fileinfo;
+    int ret = 0;
+
+    /* Open the .zip file. */
+    zipstatefile = unzOpen(filepath);
+    if (zipstatefile == NULL ||
+        unzGoToFirstFile(zipstatefile) != UNZ_OK ||
+        unzGetCurrentFileInfo(zipstatefile, &fileinfo, szFileName, 255, szExtraField, 255, szComment, 255) != UNZ_OK ||
+        unzOpenCurrentFile(zipstatefile) != UNZ_OK)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not open state file: %s", filepath);
+        goto clean_and_exit;
+    }
+
+    if (!savestates_load_pj64(filepath, zipstatefile, read_data_from_zip))
+        goto clean_and_exit;
+
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
+    ret = 1;
+
+    clean_and_exit:
+        if (zipstatefile != NULL)
+            unzClose(zipstatefile);
+        return ret;
+}
+
+static int read_data_from_file(void *file, void *buffer, size_t length)
+{
+    return fread(buffer, 1, length, file) == length;
+}
+
+static int savestates_load_pj64_unc(char *filepath)
+{
+    FILE *f;
+
+    /* Open the file. */
+    f = fopen(filepath, "rb");
+    if (f == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
+        return 0;
+    }
+
+    if (!savestates_load_pj64(filepath, f, read_data_from_file))
+    {
+        fclose(f);
+        return 0;
+    }
+
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
+    fclose(f);
+    return 1;
+}
+
+savestates_type savestates_detect_type(void)
+{
+    char magic[4];
+    FILE *f = fopen(fname, "rb");
+    if (f == NULL)
+    {
+        DebugMessage(M64MSG_STATUS, "Could not open state file %s\n", fname);
+        return savestates_type_unknown;
+    }
+
+    if (fread(magic, 1, 4, f) != 4)
+    {
+        fclose(f);
+        DebugMessage(M64MSG_STATUS, "Could not read from state file %s\n", fname);
+        return savestates_type_unknown;
+    }
+
+    fclose(f);
+
+    if (magic[0] == 0x1f && magic[1] == 0x8b) // GZIP header
+        return savestates_type_m64p;
+    else if (strncmp(magic, "PK\x03\x04", 4) == 0) // ZIP header
+        return savestates_type_pj64_zip;
+    else if (*((int *)magic) == pj64_magic) // PJ64 header
+        return savestates_type_pj64_unc;
+    else
+    {
+        DebugMessage(M64MSG_STATUS, "Unknown state file type %s\n", fname);
+        return savestates_type_unknown;
+    }
+}
+
+int savestates_load(void)
+{
+    char *filepath;
+    int ret = 0;
+
+    if (fname != NULL && type == savestates_type_unknown)
+        type = savestates_detect_type();
+    else if (fname == NULL) // Always load slots in M64P format
+        type = savestates_type_m64p;
+
+    filepath = savestates_generate_path(type);
+    if (filepath != NULL)
+    {
+        switch (type)
+        {
+            case savestates_type_m64p: ret = savestates_load_m64p(filepath); break;
+            case savestates_type_pj64_zip: ret = savestates_load_pj64_zip(filepath); break;
+            case savestates_type_pj64_unc: ret = savestates_load_pj64_unc(filepath); break;
+            default: ret = 0; break;
+        }
+        free(filepath);
+    }
+
+    savestates_clear_job();
+
+    return ret;
+}
+
+static void savestates_save_m64p(char *filepath)
+{
+    char buffer[1024];
+    unsigned char outbuf[4];
+    gzFile f;
+    int queuelength;
+
+    if(autoinc_save_slot)
+        savestates_inc_slot();
+
+    f = gzopen(filepath, "wb");
+
+    if (f==NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
+        return;
+    }
+
+    /* Write magic number. */
+    gzwrite(f, savestate_magic, 8);
+
+    /* Write savestate file version in big-endian. */
+    outbuf[0] = (savestate_latest_version >> 24) & 0xff;
+    outbuf[1] = (savestate_latest_version >> 16) & 0xff;
+    outbuf[2] = (savestate_latest_version >>  8) & 0xff;
+    outbuf[3] = (savestate_latest_version >>  0) & 0xff;
+    gzwrite(f, outbuf, 4);
+
+    gzwrite(f, ROM_SETTINGS.MD5, 32);
+
+    gzwrite(f, &rdram_register, sizeof(RDRAM_register));
+    gzwrite(f, &MI_register, sizeof(mips_register));
+    gzwrite(f, &pi_register, sizeof(PI_register));
+    gzwrite(f, &sp_register, sizeof(SP_register));
+    gzwrite(f, &rsp_register, sizeof(RSP_register));
+    gzwrite(f, &si_register, sizeof(SI_register));
+    gzwrite(f, &vi_register, sizeof(VI_register));
+    gzwrite(f, &ri_register, sizeof(RI_register));
+    gzwrite(f, &ai_register, sizeof(AI_register));
+    gzwrite(f, &dpc_register, sizeof(DPC_register));
+    gzwrite(f, &dps_register, sizeof(DPS_register));
+    gzwrite(f, rdram, 0x800000);
+    gzwrite(f, SP_DMEM, 0x1000);
+    gzwrite(f, SP_IMEM, 0x1000);
+    gzwrite(f, PIF_RAM, 0x40);
+
+    save_flashram_infos(buffer);
+    gzwrite(f, buffer, 24);
+
+    gzwrite(f, tlb_LUT_r, 0x100000*4);
+    gzwrite(f, tlb_LUT_w, 0x100000*4);
+
+    gzwrite(f, &llbit, 4);
+    gzwrite(f, reg, 32*8);
+    gzwrite(f, reg_cop0, 32*4);
+    gzwrite(f, &lo, 8);
+    gzwrite(f, &hi, 8);
+
+    if ((Status & 0x04000000) == 0)
+    {   // FR bit == 0 means 32-bit (MIPS I) FGR mode
+        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
+        gzwrite(f, reg_cop1_fgr_64, 32*8);
+        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
+    }
+    else
+    {
+        gzwrite(f, reg_cop1_fgr_64, 32*8);
+    }
+
+    gzwrite(f, &FCR0, 4);
+    gzwrite(f, &FCR31, 4);
+    gzwrite(f, tlb_e, 32*sizeof(tlb));
+    if(r4300emu == CORE_PURE_INTERPRETER)
+        gzwrite(f, &interp_addr, 4);
+    else
+        gzwrite(f, &PC->addr, 4);
+
+    gzwrite(f, &next_interupt, 4);
+    gzwrite(f, &next_vi, 4);
+    gzwrite(f, &vi_field, 4);
+
+    queuelength = save_eventqueue_infos(buffer);
+    gzwrite(f, buffer, queuelength);
+
+    gzclose(f);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
+}
+
+static int savestates_save_pj64(char *filepath, void *handle,
+                                int (*write_func)(void *, const void *, size_t))
+{
+    unsigned int i, vi_timer, addr;
+    TLB_pj64 tlb_pj64[32];
+    unsigned int dummy = 0;
+    unsigned int SaveRDRAMSize = 0x800000;
+
+    vi_timer = get_event(VI_INT) - reg_cop0[9]; /* Subtract current Count according to how PJ64 stores the timer. */
+
+    if(r4300emu == CORE_PURE_INTERPRETER)
+        addr = interp_addr;
+    else
+        addr = PC->addr;
+
+    for (i=0; i < 32;i++)
+    {
+        tlb_pj64[i].BreakDownPageMask.Mask   = (unsigned int) tlb_e[i].mask;
+        tlb_pj64[i].BreakDownEntryHi.VPN2    = (unsigned int) tlb_e[i].vpn2;
+        tlb_pj64[i].BreakDownEntryLo0.GLOBAL = (unsigned int) tlb_e[i].g;
+        tlb_pj64[i].BreakDownEntryLo1.GLOBAL = (unsigned int) tlb_e[i].g;
+        tlb_pj64[i].BreakDownEntryHi.ASID    = (unsigned int) tlb_e[i].asid;
+        tlb_pj64[i].BreakDownEntryLo0.PFN    = (unsigned int) tlb_e[i].pfn_even;
+        tlb_pj64[i].BreakDownEntryLo0.C      = (unsigned int) tlb_e[i].c_even;
+        tlb_pj64[i].BreakDownEntryLo0.D      = (unsigned int) tlb_e[i].d_even;
+        tlb_pj64[i].BreakDownEntryLo0.V      = (unsigned int) tlb_e[i].v_even;
+        tlb_pj64[i].BreakDownEntryLo1.PFN    = (unsigned int) tlb_e[i].pfn_odd;
+        tlb_pj64[i].BreakDownEntryLo1.C      = (unsigned int) tlb_e[i].c_odd;
+        tlb_pj64[i].BreakDownEntryLo1.D      = (unsigned int) tlb_e[i].d_odd;
+        tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
+    }
+
+    if (!write_func(handle, &pj64_magic,                     4) ||
+        !write_func(handle, &SaveRDRAMSize,                  4) ||
+        !write_func(handle, rom,                             0x40) || 
+        !write_func(handle, &vi_timer,                       4) || 
+        !write_func(handle, &addr,                           4) || 
+        !write_func(handle, reg,                             32*8) || 
+        !write_func(handle, reg_cop1_fgr_64,                 32*8) || 
+        !write_func(handle, reg_cop0,                        32*4) || 
+        !write_func(handle, &FCR0,                           4) || 
+        !write_func(handle, &dummy,                          4*30) || 
+        !write_func(handle, &FCR31,                          4) || 
+        !write_func(handle, &hi,                             8) || 
+        !write_func(handle, &lo,                             8) || 
+        !write_func(handle, &rdram_register,                 sizeof(RDRAM_register)) || 
+        !write_func(handle, &sp_register.sp_mem_addr_reg,    4) || 
+        !write_func(handle, &sp_register.sp_dram_addr_reg,   4) || 
+        !write_func(handle, &sp_register.sp_rd_len_reg,      4) || 
+        !write_func(handle, &sp_register.sp_wr_len_reg,      4) || 
+        !write_func(handle, &sp_register.sp_status_reg,      4) || 
+        !write_func(handle, &sp_register.sp_dma_full_reg,    4) || 
+        !write_func(handle, &sp_register.sp_dma_busy_reg,    4) || 
+        !write_func(handle, &sp_register.sp_semaphore_reg,   4) || 
+        !write_func(handle, &rsp_register.rsp_pc,            4) ||
+        !write_func(handle, &rsp_register.rsp_ibist,         4) ||
+        !write_func(handle, &dpc_register.dpc_start,         4) || 
+        !write_func(handle, &dpc_register.dpc_end,           4) || 
+        !write_func(handle, &dpc_register.dpc_current,       4) || 
+        !write_func(handle, &dpc_register.dpc_status,        4) || 
+        !write_func(handle, &dpc_register.dpc_clock,         4) || 
+        !write_func(handle, &dpc_register.dpc_bufbusy,       4) || 
+        !write_func(handle, &dpc_register.dpc_pipebusy,      4) || 
+        !write_func(handle, &dpc_register.dpc_tmem,          4) || 
+        !write_func(handle, &dummy,                          4) ||  // ?
+        !write_func(handle, &dummy,                          4) ||  // ?
+        !write_func(handle, &MI_register.mi_init_mode_reg,   4) ||  //TODO Secial handling in pj64
+        !write_func(handle, &MI_register.mi_version_reg,     4) || 
+        !write_func(handle, &MI_register.mi_intr_reg,        4) || 
+        !write_func(handle, &MI_register.mi_intr_mask_reg,   4) || 
+        !write_func(handle, &vi_register,                    4*14) || 
+        !write_func(handle, &ai_register,                    4*6) || 
+        !write_func(handle, &pi_register,                    sizeof(PI_register)) || 
+        !write_func(handle, &ri_register,                    sizeof(RI_register)) || 
+        !write_func(handle, &si_register,                    sizeof(SI_register)) || 
+        !write_func(handle, tlb_pj64,                        sizeof(TLB_pj64)*32) || 
+        !write_func(handle, PIF_RAM,                         0x40) || 
+        !write_func(handle, rdram,                           0x800000) || 
+        !write_func(handle, SP_DMEM,                         0x1000) || 
+        !write_func(handle, SP_IMEM,                         0x1000))
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+static int write_data_to_zip(void *zip, const void *buffer, size_t length)
+{
+    return zipWriteInFileInZip((zipFile)zip, buffer, (unsigned)length) == ZIP_OK;
+}
+
+static int savestates_save_pj64_zip(char *filepath)
+{
+    int retval;
+    zipFile zipfile = NULL;
+
+    zipfile = zipOpen(filepath, APPEND_STATUS_CREATE);
+    if(zipfile == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filepath);
+        goto clean_and_exit;
+    }
+
+    retval = zipOpenNewFileInZip(zipfile, namefrompath(filepath), NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+    if(retval != ZIP_OK)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not create state file: %s", filepath);
+        goto clean_and_exit;
+    }
+
+    if (!savestates_save_pj64(filepath, zipfile, write_data_to_zip))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not write state file %s", filepath);
+        goto clean_and_exit;
+    }
+
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
+
+    clean_and_exit:
+        if (zipfile != NULL)
+        {
+            zipCloseFileInZip(zipfile); // This may fail, but we don't care
+            zipClose(zipfile, "");
+        }
+        return 1;
+}
+
+static int write_data_to_file(void *file, const void *buffer, size_t length)
+{
+    return fwrite(buffer, 1, length, (FILE *)file) == length;
+}
+
+static int savestates_save_pj64_unc(char *filepath)
+{
+    FILE *f;
+
+    f = fopen(filepath, "wb");
+    if (f == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filepath);
+        return 0;
+    }
+
+    if (!savestates_save_pj64(filepath, f, write_data_to_file))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "File write error. Could not write state file %s", filepath);
+        fclose(f);
+        return 0;
+    }
+
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
+    fclose(f);
+    return 1;
+}
+
+int savestates_save(void)
+{
+    char *filepath;
+    int ret = 0;
+
+    /* Can only save PJ64 savestates on VI / COMPARE interrupt.
+       Otherwise try again in a little while. */
+    if ((type == savestates_type_pj64_zip ||
+         type == savestates_type_pj64_unc) &&
+        get_next_event_type() > COMPARE_INT)
+        return 0;
+
+    if (fname != NULL && type == savestates_type_unknown)
+        type = savestates_type_m64p;
+    else if (fname == NULL) // Always save slots in M64P format
+        type = savestates_type_m64p;
+
+    filepath = savestates_generate_path(type);
+    if (filepath != NULL)
+    {
+        switch (type)
+        {
+            case savestates_type_m64p: savestates_save_m64p(filepath); ret = 1; break;
+            case savestates_type_pj64_zip: ret = savestates_save_pj64_zip(filepath); break;
+            case savestates_type_pj64_unc: ret = savestates_save_pj64_unc(filepath); break;
+            default: ret = 0; break;
+        }
+        free(filepath);
+    }
+
+    savestates_clear_job();
+    return ret;
+}

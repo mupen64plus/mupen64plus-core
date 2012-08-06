@@ -339,14 +339,14 @@ char* dirfrompath(const char* path)
         return (char*) calloc(1, sizeof(char)); // Empty string
 }
 
-char* namefrompath(const char* path)
+const char* namefrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
     
     if (last_separator_ptr != NULL)
-        return strdup(last_separator_ptr + 1);
+        return last_separator_ptr + 1;
     else
-        return strdup(path);
+        return path;
 }
 
 static int is_path_separator(char c)

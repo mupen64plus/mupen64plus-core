@@ -63,7 +63,7 @@ void main_take_next_screenshot(void);
 void main_state_set_slot(int slot);
 void main_state_inc_slot(void);
 void main_state_load(const char *filename);
-void main_state_save(int format_pj64, const char *filename);
+void main_state_save(int format, const char *filename);
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval);
 m64p_error main_core_state_set(m64p_core_param param, int val);
