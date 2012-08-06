@@ -563,6 +563,7 @@ m64p_error main_reset(int do_hard_reset)
         reset_hard_job |= 1;
     else
         reset_soft();
+    return M64ERR_SUCCESS;
 }
 
 /*********************************************************************************************************
