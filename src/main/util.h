@@ -29,19 +29,33 @@ extern "C" {
 
 #include <string.h>
 
-/** file utilities **/
+/**********************
+     File utilities
+ **********************/
+
 typedef enum _file_status
 {
+    file_ok,
     file_open_error,
     file_read_error,
-    file_write_error,
-    file_ok
+    file_write_error
 } file_status_t;
 
+/** read_from_file
+ *    opens a file and reads the specified number of bytes.
+ *    returns zero on success, nonzero on failure
+ */
 file_status_t read_from_file(const char *filename, void *data, size_t size);
+
+/** write_to_file
+ *    opens a file and writes the specified number of bytes.
+ *    returns zero on sucess, nonzero on failure
+ */ 
 file_status_t write_to_file(const char *filename, const void *data, size_t size);
 
-/** linked list utilities **/
+/**********************
+  Linked list utilities
+ **********************/
 typedef struct _list_node {
     void *data;
     struct _list_node *prev;
@@ -56,19 +70,47 @@ void list_node_delete(list_t *list, list_node_t *node);
 void list_delete(list_t *list);
 list_node_t *list_find_node(list_t list, void *data);
 
-char* dirfrompath(const char* path);
-char* namefrompath(const char* path);
-
-/* GUI utilities */
-void countrycodestring(char countrycode, char *string);
-void imagestring(unsigned char imagetype, char *string);
-
 // cycles through each listnode in list setting curr_node to current node.
 #define list_foreach(list, curr_node) \
     for((curr_node) = (list); (curr_node) != NULL; (curr_node) = (curr_node)->next)
 
-/** string utilities **/
+/**********************
+     GUI utilities
+ **********************/
+void countrycodestring(char countrycode, char *string);
+void imagestring(unsigned char imagetype, char *string);
+
+/**********************
+     Path utilities
+ **********************/
+
+/* Extracts the directory string (part before the file name) from a path string.
+ * Returns a malloc'd string with the directory string.
+ * If there's no directory string in the path, returns a malloc'd empty string.
+ * (This is done so that path = dirfrompath(path) + namefrompath(path)). */
+char* dirfrompath(const char* path);
+
+/* Extracts the full file name (with extension) from a path string.
+ * Returns a malloc'd string with the file name. */
+char* namefrompath(const char* path);
+
+/* Creates a path string by joining two path strings.
+ * The given path strings may or may not start or end with a path separator.
+ * Returns a malloc'd string with the resulting path. */
+char* combinepath(const char* first, const char *second);
+
+/**********************
+    String utilities
+ **********************/
+
+/** trim
+ *    Removes leading and trailing whitespace from str. Function modifies str
+ *    and also returns modified string.
+ */
 char *trim(char *str);
+
+/* Formats an string, using the same syntax as printf.
+ * Returns the result in a malloc'd string. */
 char* formatstr(const char* fmt, ...);
 
 #ifdef __cplusplus

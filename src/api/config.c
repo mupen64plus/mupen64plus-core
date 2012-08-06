@@ -23,9 +23,9 @@
  * outside of the core library.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "m64p_types.h"
@@ -265,12 +265,10 @@ static m64p_error write_configlist_file(void)
     if (configpath == NULL)
         return M64ERR_FILES;
 
-    filepath = (char *) malloc(strlen(configpath) + 32);
+    filepath = combinepath(configpath, MUPEN64PLUS_CFG_NAME);
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    strcpy(filepath, configpath);
-    strcat(filepath, MUPEN64PLUS_CFG_NAME);
     fPtr = fopen(filepath, "wb"); 
     if (fPtr == NULL)
     {
@@ -323,7 +321,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     m64p_error rval;
     const char *configpath = NULL;
     char *filepath;
-    long filelen, pathlen;
+    long filelen;
     FILE *fPtr;
     char *configtext;
 
@@ -337,39 +335,28 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     /* if a data directory was specified, make a copy of it */
     if (DataDirOverride != NULL)
     {
-        l_DataDirOverride = (char *) malloc(strlen(DataDirOverride) + 1);
+        l_DataDirOverride = strdup(DataDirOverride);
         if (l_DataDirOverride == NULL)
             return M64ERR_NO_MEMORY;
-        strcpy(l_DataDirOverride, DataDirOverride);
     }
 
     /* if a config directory was specified, make a copy of it */
     if (ConfigDirOverride != NULL)
     {
-        l_ConfigDirOverride = (char *) malloc(strlen(ConfigDirOverride) + 1);
+        l_ConfigDirOverride = strdup(ConfigDirOverride);
         if (l_ConfigDirOverride == NULL)
             return M64ERR_NO_MEMORY;
-        strcpy(l_ConfigDirOverride, ConfigDirOverride);
     }
-
 
     /* get the full pathname to the config file and try to open it */
     configpath = ConfigGetUserConfigPath();
     if (configpath == NULL)
         return M64ERR_FILES;
 
-    filepath = (char *) malloc(strlen(configpath) + 32);
+    filepath = combinepath(configpath, MUPEN64PLUS_CFG_NAME);
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    strcpy(filepath, configpath);
-    pathlen = strlen(filepath);
-    if (!strchr(OSAL_DIR_SEPARATORS, filepath[pathlen - 1]))
-    {
-        filepath[pathlen] = OSAL_DIR_SEPARATORS[0];
-        filepath[pathlen + 1] = 0;
-    }
-    strcat(filepath, MUPEN64PLUS_CFG_NAME);
     fPtr = fopen(filepath, "rb");
     if (fPtr == NULL)
     {

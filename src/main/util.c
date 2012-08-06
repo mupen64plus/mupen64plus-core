@@ -39,10 +39,10 @@
 #include "osal/files.h"
 #include "osal/preproc.h"
 
-/** read_from_file
- *    opens a file and reads the specified number of bytes.
- *    returns zero on success, nonzero on failure
- */
+/**********************
+     File utilities
+ **********************/
+
 file_status_t read_from_file(const char *filename, void *data, size_t size)
 {
     FILE *f = fopen(filename, "rb");
@@ -61,10 +61,6 @@ file_status_t read_from_file(const char *filename, void *data, size_t size)
     return file_ok;
 }
 
-/** write_to_file
- *    opens a file and writes the specified number of bytes.
- *    returns zero on sucess, nonzero on failure
- */ 
 file_status_t write_to_file(const char *filename, const void *data, size_t size)
 {
     FILE *f = fopen(filename, "wb");
@@ -83,34 +79,9 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
     return file_ok;
 }
 
-/** trim
- *    Removes leading and trailing whitespace from str. Function modifies str
- *    and also returns modified string.
- */
-char *trim(char *str)
-{
-    unsigned int i;
-    char *p = str;
-
-    while (isspace(*p))
-        p++;
-
-    if (str != p)
-        {
-        for (i = 0; i <= strlen(p); ++i)
-            str[i]=p[i];
-        }
-
-    p = str + strlen(str) - 1;
-    if (p > str)
-    {
-        while (isspace(*p))
-            p--;
-        p[1] = '\0';
-    }
-
-    return str;
-}
+/**********************
+  Linked list utilities
+ **********************/
 
 /** list_empty
  *    Returns 1 if list is empty, else 0.
@@ -249,6 +220,9 @@ list_node_t *list_find_node(list_t list, void *data)
     return node;
 }
 
+/**********************
+     GUI utilities
+ **********************/
 void countrycodestring(char countrycode, char *string)
 {
     switch (countrycode)
@@ -322,6 +296,10 @@ void imagestring(unsigned char imagetype, char *string)
     }
 }
 
+/**********************
+     Path utilities
+ **********************/
+
 /* Looks for an instance of ANY of the characters in 'needles' in 'haystack',
  * starting from the end of 'haystack'. Returns a pointer to the last position
  * of some character on 'needles' on 'haystack'. If not found, returns NULL.
@@ -342,10 +320,6 @@ static const char* strpbrk_reverse(const char* needles, const char* haystack)
     return haystack + counter - 1;
 }
 
-/* Extracts the directory string (part before the file name) from a path string.
- * Returns a malloc'd string with the directory string.
- * If there's no directory string in the path, returns a malloc'd empty string.
- * (This is done so that path = dirfrompath(path) + namefrompath(path)). */
 char* dirfrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
@@ -366,8 +340,6 @@ char* dirfrompath(const char* path)
         return calloc(1, sizeof(char)); // Empty string
 }
 
-/* Extracts the full file name (with extension) from a path string.
- * Returns a malloc'd string with the file name. */
 char* namefrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
@@ -376,6 +348,55 @@ char* namefrompath(const char* path)
         return strdup(last_separator_ptr + 1);
     else
         return strdup(path);
+}
+
+static int is_path_separator(char c)
+{
+    return strchr(OSAL_DIR_SEPARATORS, c) != NULL;
+}
+
+char* combinepath(const char* first, const char *second)
+{
+    size_t len_first = strlen(first), off_second = 0;
+
+	if (first == NULL || second == NULL)
+		return NULL;
+
+    while (is_path_separator(first[len_first-1]))
+        len_first--;
+
+    while (is_path_separator(second[off_second]))
+        off_second++;
+
+    return formatstr("%.*s%c%s", (int) len_first, first, OSAL_DIR_SEPARATORS[0], second + off_second);
+}
+
+/**********************
+    String utilities
+ **********************/
+char *trim(char *str)
+{
+    unsigned int i;
+    char *p = str;
+
+    while (isspace(*p))
+        p++;
+
+    if (str != p)
+        {
+        for (i = 0; i <= strlen(p); ++i)
+            str[i]=p[i];
+        }
+
+    p = str + strlen(str) - 1;
+    if (p > str)
+    {
+        while (isspace(*p))
+            p--;
+        p[1] = '\0';
+    }
+
+    return str;
 }
 
 char *formatstr(const char *fmt, ...)
