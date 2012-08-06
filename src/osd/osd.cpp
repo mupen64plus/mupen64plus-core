@@ -555,7 +555,7 @@ static void osd_remove_message(osd_message_t *msg)
 
     if (msg->text) {
         free(msg->text);
-	msg->text = NULL;
+        msg->text = NULL;
     }
 
     node = list_find_node(l_messageQueue, msg);

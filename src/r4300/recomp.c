@@ -1197,246 +1197,246 @@ static void (*recomp_s[64])(void) =
 static void RADD_D(void)
 {
    dst->ops = ADD_D;
-   recompile_standard_cf_type();
    recomp_func = genadd_d;
+   recompile_standard_cf_type();
 }
 
 static void RSUB_D(void)
 {
    dst->ops = SUB_D;
-   recompile_standard_cf_type();
    recomp_func = gensub_d;
+   recompile_standard_cf_type();
 }
 
 static void RMUL_D(void)
 {
    dst->ops = MUL_D;
-   recompile_standard_cf_type();
    recomp_func = genmul_d;
+   recompile_standard_cf_type();
 }
 
 static void RDIV_D(void)
 {
    dst->ops = DIV_D;
-   recompile_standard_cf_type();
    recomp_func = gendiv_d;
+   recompile_standard_cf_type();
 }
 
 static void RSQRT_D(void)
 {
    dst->ops = SQRT_D;
-   recompile_standard_cf_type();
    recomp_func = gensqrt_d;
+   recompile_standard_cf_type();
 }
 
 static void RABS_D(void)
 {
    dst->ops = ABS_D;
-   recompile_standard_cf_type();
    recomp_func = genabs_d;
+   recompile_standard_cf_type();
 }
 
 static void RMOV_D(void)
 {
    dst->ops = MOV_D;
-   recompile_standard_cf_type();
    recomp_func = genmov_d;
+   recompile_standard_cf_type();
 }
 
 static void RNEG_D(void)
 {
    dst->ops = NEG_D;
-   recompile_standard_cf_type();
    recomp_func = genneg_d;
+   recompile_standard_cf_type();
 }
 
 static void RROUND_L_D(void)
 {
    dst->ops = ROUND_L_D;
-   recompile_standard_cf_type();
    recomp_func = genround_l_d;
+   recompile_standard_cf_type();
 }
 
 static void RTRUNC_L_D(void)
 {
    dst->ops = TRUNC_L_D;
-   recompile_standard_cf_type();
    recomp_func = gentrunc_l_d;
+   recompile_standard_cf_type();
 }
 
 static void RCEIL_L_D(void)
 {
    dst->ops = CEIL_L_D;
-   recompile_standard_cf_type();
    recomp_func = genceil_l_d;
+   recompile_standard_cf_type();
 }
 
 static void RFLOOR_L_D(void)
 {
    dst->ops = FLOOR_L_D;
-   recompile_standard_cf_type();
    recomp_func = genfloor_l_d;
+   recompile_standard_cf_type();
 }
 
 static void RROUND_W_D(void)
 {
    dst->ops = ROUND_W_D;
-   recompile_standard_cf_type();
    recomp_func = genround_w_d;
+   recompile_standard_cf_type();
 }
 
 static void RTRUNC_W_D(void)
 {
    dst->ops = TRUNC_W_D;
-   recompile_standard_cf_type();
    recomp_func = gentrunc_w_d;
+   recompile_standard_cf_type();
 }
 
 static void RCEIL_W_D(void)
 {
    dst->ops = CEIL_W_D;
-   recompile_standard_cf_type();
    recomp_func = genceil_w_d;
+   recompile_standard_cf_type();
 }
 
 static void RFLOOR_W_D(void)
 {
    dst->ops = FLOOR_W_D;
-   recompile_standard_cf_type();
    recomp_func = genfloor_w_d;
+   recompile_standard_cf_type();
 }
 
 static void RCVT_S_D(void)
 {
    dst->ops = CVT_S_D;
-   recompile_standard_cf_type();
    recomp_func = gencvt_s_d;
+   recompile_standard_cf_type();
 }
 
 static void RCVT_W_D(void)
 {
    dst->ops = CVT_W_D;
-   recompile_standard_cf_type();
    recomp_func = gencvt_w_d;
+   recompile_standard_cf_type();
 }
 
 static void RCVT_L_D(void)
 {
    dst->ops = CVT_L_D;
-   recompile_standard_cf_type();
    recomp_func = gencvt_l_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_F_D(void)
 {
    dst->ops = C_F_D;
-   recompile_standard_cf_type();
    recomp_func = genc_f_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_UN_D(void)
 {
    dst->ops = C_UN_D;
-   recompile_standard_cf_type();
    recomp_func = genc_un_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_EQ_D(void)
 {
    dst->ops = C_EQ_D;
-   recompile_standard_cf_type();
    recomp_func = genc_eq_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_UEQ_D(void)
 {
    dst->ops = C_UEQ_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ueq_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_OLT_D(void)
 {
    dst->ops = C_OLT_D;
-   recompile_standard_cf_type();
    recomp_func = genc_olt_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_ULT_D(void)
 {
    dst->ops = C_ULT_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ult_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_OLE_D(void)
 {
    dst->ops = C_OLE_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ole_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_ULE_D(void)
 {
    dst->ops = C_ULE_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ule_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_SF_D(void)
 {
    dst->ops = C_SF_D;
-   recompile_standard_cf_type();
    recomp_func = genc_sf_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_NGLE_D(void)
 {
    dst->ops = C_NGLE_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ngle_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_SEQ_D(void)
 {
    dst->ops = C_SEQ_D;
-   recompile_standard_cf_type();
    recomp_func = genc_seq_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_NGL_D(void)
 {
    dst->ops = C_NGL_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ngl_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_LT_D(void)
 {
    dst->ops = C_LT_D;
-   recompile_standard_cf_type();
    recomp_func = genc_lt_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_NGE_D(void)
 {
    dst->ops = C_NGE_D;
-   recompile_standard_cf_type();
    recomp_func = genc_nge_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_LE_D(void)
 {
    dst->ops = C_LE_D;
-   recompile_standard_cf_type();
    recomp_func = genc_le_d;
+   recompile_standard_cf_type();
 }
 
 static void RC_NGT_D(void)
 {
    dst->ops = C_NGT_D;
-   recompile_standard_cf_type();
    recomp_func = genc_ngt_d;
+   recompile_standard_cf_type();
 }
 
 static void (*recomp_d[64])(void) =
@@ -1458,15 +1458,15 @@ static void (*recomp_d[64])(void) =
 static void RCVT_S_W(void)
 {
    dst->ops = CVT_S_W;
-   recompile_standard_cf_type();
    recomp_func = gencvt_s_w;
+   recompile_standard_cf_type();
 }
 
 static void RCVT_D_W(void)
 {
    dst->ops = CVT_D_W;
-   recompile_standard_cf_type();
    recomp_func = gencvt_d_w;
+   recompile_standard_cf_type();
 }
 
 static void (*recomp_w[64])(void) =
@@ -1488,15 +1488,15 @@ static void (*recomp_w[64])(void) =
 static void RCVT_S_L(void)
 {
    dst->ops = CVT_S_L;
-   recompile_standard_cf_type();
    recomp_func = gencvt_s_l;
+   recompile_standard_cf_type();
 }
 
 static void RCVT_D_L(void)
 {
    dst->ops = CVT_D_L;
-   recompile_standard_cf_type();
    recomp_func = gencvt_d_l;
+   recompile_standard_cf_type();
 }
 
 static void (*recomp_l[64])(void) =
@@ -2006,62 +2006,62 @@ static void RLWU(void)
 static void RSB(void)
 {
    dst->ops = SB;
-   recompile_standard_i_type();
    recomp_func = gensb;
+   recompile_standard_i_type();
 }
 
 static void RSH(void)
 {
    dst->ops = SH;
-   recompile_standard_i_type();
    recomp_func = gensh;
+   recompile_standard_i_type();
 }
 
 static void RSWL(void)
 {
    dst->ops = SWL;
-   recompile_standard_i_type();
    recomp_func = genswl;
+   recompile_standard_i_type();
 }
 
 static void RSW(void)
 {
    dst->ops = SW;
-   recompile_standard_i_type();
    recomp_func = gensw;
+   recompile_standard_i_type();
 }
 
 static void RSDL(void)
 {
    dst->ops = SDL;
-   recompile_standard_i_type();
    recomp_func = gensdl;
+   recompile_standard_i_type();
 }
 
 static void RSDR(void)
 {
    dst->ops = SDR;
-   recompile_standard_i_type();
    recomp_func = gensdr;
+   recompile_standard_i_type();
 }
 
 static void RSWR(void)
 {
    dst->ops = SWR;
-   recompile_standard_i_type();
    recomp_func = genswr;
+   recompile_standard_i_type();
 }
 
 static void RCACHE(void)
 {
-   dst->ops = CACHE;
    recomp_func = gencache;
+   dst->ops = CACHE;
 }
 
 static void RLL(void)
 {
-   dst->ops = LL;
    recomp_func = genll;
+   dst->ops = LL;
    recompile_standard_i_type();
    if(dst->f.i.rt == reg) RNOP();
 }
@@ -2069,22 +2069,22 @@ static void RLL(void)
 static void RLWC1(void)
 {
    dst->ops = LWC1;
-   recompile_standard_lf_type();
    recomp_func = genlwc1;
+   recompile_standard_lf_type();
 }
 
 static void RLLD(void)
 {
    dst->ops = NI;
-   recompile_standard_i_type();
    recomp_func = genni;
+   recompile_standard_i_type();
 }
 
 static void RLDC1(void)
 {
    dst->ops = LDC1;
-   recompile_standard_lf_type();
    recomp_func = genldc1;
+   recompile_standard_lf_type();
 }
 
 static void RLD(void)
@@ -2106,29 +2106,29 @@ static void RSC(void)
 static void RSWC1(void)
 {
    dst->ops = SWC1;
-   recompile_standard_lf_type();
    recomp_func = genswc1;
+   recompile_standard_lf_type();
 }
 
 static void RSCD(void)
 {
    dst->ops = NI;
-   recompile_standard_i_type();
    recomp_func = genni;
+   recompile_standard_i_type();
 }
 
 static void RSDC1(void)
 {
    dst->ops = SDC1;
-   recompile_standard_lf_type();
    recomp_func = gensdc1;
+   recompile_standard_lf_type();
 }
 
 static void RSD(void)
 {
    dst->ops = SD;
-   recompile_standard_i_type();
    recomp_func = gensd;
+   recompile_standard_i_type();
 }
 
 static void (*recomp_ops[64])(void) =
@@ -2619,7 +2619,7 @@ void prefetch_opcode(unsigned int op)
 static void *malloc_exec(size_t size)
 {
 #if defined(WIN32)
-	return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+   return VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #elif defined(__GNUC__)
 
    #ifndef  MAP_ANONYMOUS
@@ -2663,7 +2663,7 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize)
 static void free_exec(void *ptr, size_t length)
 {
 #if defined(WIN32)
-	VirtualFree(ptr, 0, MEM_RELEASE);
+   VirtualFree(ptr, 0, MEM_RELEASE);
 #elif defined(__GNUC__)
    munmap(ptr, length);
 #else

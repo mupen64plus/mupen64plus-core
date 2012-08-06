@@ -352,7 +352,7 @@ void main_draw_volume_osd(void)
         osd_update_message(l_msgVol, "%s", msgString);
     else {
         l_msgVol = osd_new_message(OSD_MIDDLE_CENTER, "%s", msgString);
-	osd_message_set_user_managed(l_msgVol);
+        osd_message_set_user_managed(l_msgVol);
     }
 }
 
