@@ -85,17 +85,28 @@ static int is_numeric(const char *string)
     return (rval == 1);
 }
 
+static config_section *find_section(config_list list, const char *ParamName)
+{
+    /* walk through the linked list of sections in the list */
+    config_section *curr_sec;
+    for (curr_sec = list; curr_sec != NULL; curr_sec = curr_sec->next)
+    {
+        if (osal_insensitive_strcmp(ParamName, curr_sec->name) == 0)
+            return curr_sec;
+    }
+
+    /* couldn't find this section parameter */
+    return NULL;
+    
+
 static config_var *find_section_var(config_section *section, const char *ParamName)
 {
     /* walk through the linked list of variables in the section */
-    config_var *curr_var = section->first_var;
-    while (curr_var != NULL)
+    config_var *curr_var;
+    for (curr_var = section->first_var; curr_var != NULL; curr_var = curr_var->next)
     {
         if (osal_insensitive_strcmp(ParamName, curr_var->name) == 0)
-        {
             return curr_var;
-        }
-        curr_var = curr_var->next;
     }
 
     /* couldn't find this configuration parameter */
@@ -372,7 +383,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     filelen = ftell(fPtr);
     fseek(fPtr, 0L, SEEK_SET);
 
-    configtext = (char *) malloc(filelen + 16);
+    configtext = (char *) malloc(filelen + 1);
     if (configtext == NULL)
     {
         fclose(fPtr);
@@ -547,15 +558,11 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the section list, looking for a case-insensitive name match */
-    curr_section = l_ConfigListActive;
-    while (curr_section != NULL)
+    curr_section = find_section(l_ConfigListActive, SectionName);
+    if (curr_section != NULL)
     {
-        if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
-        {
-            *ConfigSectionHandle = curr_section;
-            return M64ERR_SUCCESS;
-        }
-        curr_section = curr_section->next;
+        *ConfigSectionHandle = curr_section;
+        return M64ERR_SUCCESS;
     }
 
     /* didn't find the section, so create new one */
@@ -651,13 +658,7 @@ EXPORT int CALL ConfigHasUnsavedChanges(const char *SectionName)
     }
 
     /* walk through the Active section list, looking for a case-insensitive name match with input string */
-    input_section = l_ConfigListActive;
-    while (input_section != NULL)
-    {
-        if (osal_insensitive_strcmp(SectionName, input_section->name) == 0)
-            break;
-        input_section = input_section->next;
-    }
+    input_section = find_section(l_ConfigListActive, SectionName);
     if (input_section == NULL)
     {
         DebugMessage(M64MSG_ERROR, "ConfigHasUnsavedChanges(): section name '%s' not found!", SectionName);
@@ -665,16 +666,12 @@ EXPORT int CALL ConfigHasUnsavedChanges(const char *SectionName)
     }
 
     /* walk through the Saved section list, looking for a case-insensitive name match */
-    curr_section = l_ConfigListSaved;
-    while (curr_section != NULL)
-    {
-        if (osal_insensitive_strcmp(input_section->name, curr_section->name) == 0)
-            break;
-        curr_section = curr_section->next;
-    }
-    /* if this section isn't present in saved list, then it has been newly created */
+    curr_section = find_section(l_ConfigListSaved, SectionName);
     if (curr_section == NULL)
+    {
+        /* if this section isn't present in saved list, then it has been newly created */
         return 1;
+    }
 
     /* compare all of the variables in the two sections. They are expected to be in the same order */
     active_var = input_section->first_var;
@@ -808,13 +805,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the Active section list, looking for a case-insensitive name match */
-    curr_section = l_ConfigListActive;
-    while (curr_section != NULL)
-    {
-        if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
-            break;
-        curr_section = curr_section->next;
-    }
+    curr_section = find_section(l_ConfigListActive, SectionName);
     if (curr_section == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
@@ -875,27 +866,17 @@ EXPORT m64p_error CALL ConfigRevertChanges(const char *SectionName)
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the Active section list, looking for a case-insensitive name match with input string */
-    input_section = l_ConfigListActive;
-    while (input_section != NULL)
-    {
-        if (osal_insensitive_strcmp(SectionName, input_section->name) == 0)
-            break;
-        input_section = input_section->next;
-    }
+    input_section = find_section(l_ConfigListActive, SectionName);
     if (input_section == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* walk through the Saved section list, looking for a case-insensitive name match */
-    curr_section = l_ConfigListSaved;
-    while (curr_section != NULL)
-    {
-        if (osal_insensitive_strcmp(SectionName, curr_section->name) == 0)
-            break;
-        curr_section = curr_section->next;
-    }
-    /* if this section isn't present in saved list, then it has been newly created */
+    curr_section = find_section(l_ConfigListSaved, SectionName);
     if (curr_section == NULL)
+    {
+        /* if this section isn't present in saved list, then it has been newly created */
         return M64ERR_INPUT_NOT_FOUND;
+    }
 
     /* we need to save the "next" pointer in the active section, because this will get blown away by the deepcopy */
     temp_next_ptr = input_section->next;
