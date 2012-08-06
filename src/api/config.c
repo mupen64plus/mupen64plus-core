@@ -1098,10 +1098,9 @@ EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, cons
         var->comment = NULL;
     else
     {
-        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
+        var->comment = strdup(ParamHelp);
         if (var->comment == NULL)
             return M64ERR_NO_MEMORY;
-        strcpy(var->comment, ParamHelp);
     }
     var->next = NULL;
     append_var_to_section(section, var);
@@ -1142,10 +1141,9 @@ EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, co
         var->comment = NULL;
     else
     {
-        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
+        var->comment = strdup(ParamHelp);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
-        strcpy(var->comment, ParamHelp);
     }
     var->next = NULL;
     append_var_to_section(section, var);
@@ -1186,10 +1184,9 @@ EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, con
         var->comment = NULL;
     else
     {
-        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
+        var->comment = strdup(ParamHelp);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
-        strcpy(var->comment, ParamHelp);
     }
     var->next = NULL;
     append_var_to_section(section, var);
@@ -1224,18 +1221,16 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
     strncpy(var->name, ParamName, 63);
     var->name[63] = 0;
     var->type = M64TYPE_STRING;
-    var->val_string = (char *) malloc(strlen(ParamValue) + 1);
+    var->val_string = strdup(ParamValue);
     if (var->val_string == NULL)
         return M64ERR_NO_MEMORY;
-    strcpy(var->val_string, ParamValue);
     if (ParamHelp == NULL)  
         var->comment = NULL;
     else
     {
-        var->comment = (char *) malloc(strlen(ParamHelp) + 1);
+        var->comment = strdup(ParamHelp);
         if (var->comment == NULL)   
             return M64ERR_NO_MEMORY;
-        strcpy(var->comment, ParamHelp);
     }
     var->next = NULL;
     append_var_to_section(section, var);
