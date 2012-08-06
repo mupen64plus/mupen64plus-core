@@ -32,6 +32,7 @@
 #include "api/m64p_config.h"
 #include "plugin/plugin.h"
 #include "r4300/interupt.h"
+#include "r4300/reset.h"
 
 /* version number for CoreEvents config section */
 #define CONFIG_PARAM_VERSION 1.00
@@ -412,10 +413,7 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdIncrement))
         main_state_inc_slot();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdReset))
-    {
-        add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
-        add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
-    }
+        reset_soft();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdSpeeddown))
         main_speeddown(5);
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdSpeedup))

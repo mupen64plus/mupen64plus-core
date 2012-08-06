@@ -442,6 +442,8 @@ ini_line ini_parse_line(char **lineptr)
 
     if (line[0] == '#' || line[0] == ';')
     {
+        line++;
+
         l.type = INI_COMMENT;
         l.name = NULL;
         l.value = line;
@@ -460,12 +462,9 @@ ini_line ini_parse_line(char **lineptr)
         char *name = line, *value = equal + 1;
         *equal = '\0';
 
-        trim(name);
-        trim(value);
-
         l.type = INI_PROPERTY;
-        l.name = name;
-        l.value = value;
+        l.name = trim(name);
+        l.value = trim(value);
     }
     else
     {
