@@ -72,6 +72,7 @@ void set_fpr_pointers(int newStatus);
 
 // profiling
 
+#define ALL_SECTION 0
 #define GFX_SECTION 1
 #define AUDIO_SECTION 2
 #define COMPILER_SECTION 3

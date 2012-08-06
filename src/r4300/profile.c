@@ -51,22 +51,25 @@ void end_section(int section_type)
 void refresh_stat()
 {
    unsigned long long int curr_time = get_time();
-   if(curr_time - last_start[0] >= 2000000000ULL)
-     {
-    time_in_section[0] = curr_time - last_start[0];
-    DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
-           100.0f * (float)time_in_section[1] / (float)time_in_section[0],
-           100.0f * (float)time_in_section[2] / (float)time_in_section[0],
-           100.0f * (float)time_in_section[3] / (float)time_in_section[0],
-           100.0f * (float)time_in_section[4] / (float)time_in_section[0]);
-    DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%lli ns",
-           time_in_section[1], time_in_section[2], time_in_section[3], time_in_section[4]);
-    time_in_section[1] = 0;
-    time_in_section[2] = 0;
-    time_in_section[3] = 0;
-    time_in_section[4] = 0;
-    last_start[0] = curr_time;
-     }
+   if(curr_time - last_start[ALL_SECTION] >= 2000000000ULL)
+   {
+      time_in_section[ALL_SECTION] = curr_time - last_start[ALL_SECTION];
+      DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
+         100.0f * (float)time_in_section[GFX_SECTION] / time_in_section[ALL_SECTION],
+         100.0f * (float)time_in_section[AUDIO_SECTION] / time_in_section[ALL_SECTION],
+         100.0f * (float)time_in_section[COMPILER_SECTION] / time_in_section[ALL_SECTION],
+         100.0f * (float)time_in_section[IDLE_SECTION] / time_in_section[ALL_SECTION]);
+      DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%lli ns",
+         time_in_section[GFX_SECTION],
+         time_in_section[AUDIO_SECTION],
+         time_in_section[COMPILER_SECTION],
+         time_in_section[IDLE_SECTION]);
+      time_in_section[GFX_SECTION] = 0;
+      time_in_section[AUDIO_SECTION] = 0;
+      time_in_section[COMPILER_SECTION] = 0;
+      time_in_section[IDLE_SECTION] = 0;
+      last_start[ALL_SECTION] = curr_time;
+   }
 }
 
 #endif
