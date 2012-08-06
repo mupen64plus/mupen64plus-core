@@ -146,7 +146,7 @@ static void append_var_to_section(config_section *section, config_var *var)
     last_var->next = var;
 }
 
-static void delete_section_vars(config_section *pSection)
+static void delete_section(config_section *pSection)
 {
     config_var *curr_var;
 
@@ -163,6 +163,8 @@ static void delete_section_vars(config_section *pSection)
         free(curr_var);
         curr_var = next_var;
     }
+
+    free(pSection);
 }
 
 static void delete_list(config_list *pConfigList)
@@ -171,18 +173,18 @@ static void delete_list(config_list *pConfigList)
     while (curr_section != NULL)
     {
         config_section *next_section = curr_section->next;
-        /* delete all the variables in this section */
-        delete_section_vars(curr_section);
         /* delete the section itself */
-        free(curr_section);
+        delete_section(curr_section);
+
         curr_section = next_section;
     }
 
     *pConfigList = NULL;
 }
 
-static config_section * section_deepcopy(config_section *orig_section, config_section *new_section)
+static config_section * section_deepcopy(config_section *orig_section)
 {
+    config_section *new_section;
     config_var *orig_var, *last_new_var;
 
     /* Input validation */
@@ -190,8 +192,7 @@ static config_section * section_deepcopy(config_section *orig_section, config_se
         return NULL;
 
     /* create and copy section struct */
-    if (new_section == NULL)
-        new_section = (config_section *) malloc(sizeof(config_section));
+    new_section = (config_section *) malloc(sizeof(config_section));
     if (new_section == NULL)
         return NULL;
     new_section->magic = SECTION_MAGIC;
@@ -208,8 +209,7 @@ static config_section * section_deepcopy(config_section *orig_section, config_se
         config_var *new_var = (config_var *) malloc(sizeof(config_var));
         if (new_var == NULL)
         {
-            delete_section_vars(new_section);
-            free(new_section);
+            delete_section(new_section);
             return NULL;
         }
         memcpy(new_var->name, orig_var->name, 64);
@@ -233,8 +233,7 @@ static config_section * section_deepcopy(config_section *orig_section, config_se
                     new_var->val.string = strdup(orig_var->val.string);
                     if (new_var->val.string == NULL)
                     {
-                        delete_section_vars(new_section);
-                        free(new_section);
+                        delete_section(new_section);
                         return NULL;
                     }
                 }
@@ -252,8 +251,7 @@ static config_section * section_deepcopy(config_section *orig_section, config_se
             new_var->comment = strdup(orig_var->comment);
             if (new_var->comment == NULL)
             {
-                delete_section_vars(new_section);
-                free(new_section);
+                delete_section(new_section);
                 return NULL;
             }
         }
@@ -281,7 +279,7 @@ static void copy_configlist_active_to_saved(void)
     /* duplicate all of the config sections in the Active list, adding them to the Saved list */
     while (curr_section != NULL)
     {
-        config_section *new_section = section_deepcopy(curr_section, NULL);
+        config_section *new_section = section_deepcopy(curr_section);
         if (new_section == NULL) break;
         if (last_section == NULL)
             l_ConfigListSaved = new_section;
@@ -778,8 +776,7 @@ EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
     next_section = (*curr_section_link)->next;
 
     /* delete the named section */
-    delete_section_vars(*curr_section_link);
-    free(*curr_section_link);
+    delete_section(*curr_section_link);
 
     /* fix the pointer to point to the next section after the deleted one */
     *curr_section_link = next_section;
@@ -814,7 +811,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* duplicate this section */
-    new_section = section_deepcopy(curr_section, NULL);
+    new_section = section_deepcopy(curr_section);
     if (new_section == NULL)
         return M64ERR_NO_MEMORY;
 
@@ -829,8 +826,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
     {
         /* the saved section replaces the first section in the list */
         new_section->next = l_ConfigListSaved->next;
-        delete_section_vars(l_ConfigListSaved);
-        free(l_ConfigListSaved);
+        delete_section(l_ConfigListSaved);
         l_ConfigListSaved = new_section;
     }
     else
@@ -849,8 +845,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
             /* the saved section replaces curr_section->next */
             config_section *old_section = curr_section->next;
             new_section->next = old_section->next;
-            delete_section_vars(old_section);
-            free(old_section);
+            delete_section(old_section);
             curr_section->next = new_section;
         }
     }
@@ -861,7 +856,7 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
 
 EXPORT m64p_error CALL ConfigRevertChanges(const char *SectionName)
 {
-    config_section *input_section, *curr_section, *new_section, *temp_next_ptr;
+    config_section **active_section_link, *active_section, *saved_section, *new_section;
 
     /* check input conditions */
     if (!l_ConfigInit)
@@ -870,30 +865,31 @@ EXPORT m64p_error CALL ConfigRevertChanges(const char *SectionName)
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the Active section list, looking for a case-insensitive name match with input string */
-    input_section = find_section(l_ConfigListActive, SectionName);
-    if (input_section == NULL)
+    active_section_link = find_section_link(&l_ConfigListActive, SectionName);
+    active_section = *active_section_link;
+    if (active_section == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* walk through the Saved section list, looking for a case-insensitive name match */
-    curr_section = find_section(l_ConfigListSaved, SectionName);
-    if (curr_section == NULL)
+    saved_section = find_section(l_ConfigListSaved, SectionName);
+    if (saved_section == NULL)
     {
         /* if this section isn't present in saved list, then it has been newly created */
         return M64ERR_INPUT_NOT_FOUND;
     }
 
-    /* we need to save the "next" pointer in the active section, because this will get blown away by the deepcopy */
-    temp_next_ptr = input_section->next;
-    /* delete the variables from the Active section */
-    delete_section_vars(input_section);
-    /* copy all of the section data from the Saved section to the Active one */
-    new_section = section_deepcopy(curr_section, input_section);
+    /* copy the section as it is on the disk */
+    new_section = section_deepcopy(saved_section);
     if (new_section == NULL)
-        return M64ERR_NO_MEMORY;  /* it's very bad if this happens, because original data from Active section has been deleted */
-    /* new_section should be == to input_section.  now put the "next" pointer back */
-    input_section->next = temp_next_ptr;
+        return M64ERR_NO_MEMORY;
 
-    /* should be good to go */
+    /* replace active_section with saved_section in the linked list */
+    *active_section_link = new_section;
+    new_section->next = active_section->next;
+
+    /* release memory associated with active_section */
+    delete_section(active_section);
+
     return M64ERR_SUCCESS;
 }
 
