@@ -174,6 +174,14 @@ static void append_var_to_section(config_section *section, config_var *var)
     last_var->next = var;
 }
 
+static void delete_var(config_var *var)
+{
+    if (curr_var->type == M64TYPE_STRING)
+        free(curr_var->val.string);
+    free(curr_var->comment);
+    free(curr_var);
+}
+
 static void delete_section(config_section *pSection)
 {
     config_var *curr_var;
@@ -181,16 +189,8 @@ static void delete_section(config_section *pSection)
     if (pSection == NULL)
         return;
 
-    curr_var = pSection->first_var;
-    while (curr_var != NULL)
-    {
-        config_var *next_var = curr_var->next;
-        if (curr_var->type == M64TYPE_STRING)
-            free(curr_var->val.string);
-        free(curr_var->comment);
-        free(curr_var);
-        curr_var = next_var;
-    }
+    for (curr_var = pSection->first_var; curr_var != NULL; curr_var = curr_var->next)
+        delete_var(curr_var);
 
     free(pSection);
 }
@@ -1191,7 +1191,7 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
     var->val.string = strdup(ParamValue);
     if (var->val.string == NULL)
     {
-        free(var);
+        delete_var(var);
         return M64ERR_NO_MEMORY;
     }
     var->next = NULL;
