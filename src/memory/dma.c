@@ -47,11 +47,7 @@ static unsigned char sram[0x8000];
 
 static char *get_sram_path(void)
 {
-    char *filename = (char *) malloc(strlen(get_savesrampath())+strlen(ROM_SETTINGS.goodname)+4+1);
-    strcpy(filename, get_savesrampath());
-    strcat(filename, ROM_SETTINGS.goodname);
-    strcat(filename, ".sra");
-    return filename;
+    return formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 static void sram_format(void)

@@ -44,11 +44,7 @@ static unsigned char mempack[4][0x8000];
 
 static char *get_eeprom_path(void)
 {
-    char *filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-    strcpy(filename, get_savesrampath());
-    strcat(filename, ROM_SETTINGS.goodname);
-    strcat(filename, ".eep");
-    return filename;
+    return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 static void eeprom_format(void)
@@ -95,11 +91,7 @@ static void eeprom_write_file(void)
 
 static char *get_mempack_path(void)
 {
-    char *filename = (char *) malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname)+4+1);
-    strcpy(filename, get_savesrampath());
-    strcat(filename, ROM_SETTINGS.goodname);
-    strcat(filename, ".mpk");
-    return filename;    
+    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 static void mempack_format(void)

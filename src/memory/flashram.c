@@ -52,11 +52,7 @@ static unsigned int erase_offset, write_pointer;
 
 static char *get_flashram_path(void)
 {
-    char *filename = malloc(strlen(get_savesrampath()) + strlen(ROM_SETTINGS.goodname) + 4 + 1);
-    strcpy(filename, get_savesrampath());
-    strcat(filename, ROM_SETTINGS.goodname);
-    strcat(filename, ".fla");
-    return filename;
+    return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 static void flashram_format(void)
