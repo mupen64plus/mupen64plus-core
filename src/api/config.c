@@ -97,6 +97,7 @@ static config_section *find_section(config_list list, const char *ParamName)
 
     /* couldn't find this section parameter */
     return NULL;
+}
     
 
 static config_var *find_section_var(config_section *section, const char *ParamName)
