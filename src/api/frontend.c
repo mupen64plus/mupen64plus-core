@@ -182,7 +182,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INPUT_ASSERT;
             if (sizeof(m64p_rom_header) < ParamInt)
                 ParamInt = sizeof(m64p_rom_header);
-            memcpy(ParamPtr, rom, ParamInt);
+            memcpy(ParamPtr, &ROM_HEADER, ParamInt);
             // Mupen64Plus used to keep a m64p_rom_header with a clean ROM name
             // Keep returning a clean ROM name for backwards compatibility
             if (ParamInt >= 0x20)

@@ -55,7 +55,7 @@ int rom_size = 0;
 
 unsigned char isGoldeneyeRom = 0;
 
-m64p_rom_header  *ROM_HEADER;
+m64p_rom_header   ROM_HEADER;
 rom_params        ROM_PARAMS;
 m64p_rom_settings ROM_SETTINGS;
 
@@ -144,7 +144,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     memcpy(rom, romimage, size);
     swap_rom(rom, &imagetype, rom_size);
 
-    ROM_HEADER = (m64p_rom_header *)rom;
+    memcpy(&ROM_HEADER, rom, sizeof(m64p_rom_header));
 
     /* Calculate MD5 hash  */
     md5_init(&state);
@@ -156,17 +156,17 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     strcpy(ROM_SETTINGS.MD5, buffer);
 
     /* add some useful properties to ROM_PARAMS */
-    ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER->Country_code);
+    ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
     ROM_PARAMS.vilimit = rom_system_type_to_vi_limit(ROM_PARAMS.systemtype);
     ROM_PARAMS.aidacrate = rom_system_type_to_ai_dac_rate(ROM_PARAMS.systemtype);
 
-    memcpy(ROM_PARAMS.headername, ROM_HEADER->Name, 20);
+    memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
     ROM_PARAMS.headername[20] = '\0';
     trim(ROM_PARAMS.headername); /* Remove trailing whitespace from ROM name. */
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
-        (entry=ini_search_by_crc(sl(ROM_HEADER->CRC1),sl(ROM_HEADER->CRC2))) != NULL)
+        (entry=ini_search_by_crc(sl(ROM_HEADER.CRC1),sl(ROM_HEADER.CRC2))) != NULL)
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -187,22 +187,22 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* print out a bunch of info about the ROM */
     DebugMessage(M64MSG_INFO, "Goodname: %s", ROM_SETTINGS.goodname);
-    DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER->Name);
+    DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER.Name);
     imagestring(imagetype, buffer);
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
-    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl(ROM_HEADER->CRC1), sl(ROM_HEADER->CRC2));
+    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl(ROM_HEADER.CRC1), sl(ROM_HEADER.CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
     DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
-    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl(ROM_HEADER->ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %x", sl(ROM_HEADER->Release));
-    if(ROM_HEADER->Manufacturer_ID == 'N')
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl(ROM_HEADER.ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %x", sl(ROM_HEADER.Release));
+    if(sl(ROM_HEADER.Manufacturer_ID) == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
-        DebugMessage(M64MSG_INFO, "Manufacturer: %x", ROM_HEADER->Manufacturer_ID);
-    DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER->Cartridge_ID);
-    countrycodestring(ROM_HEADER->Country_code, buffer);
+        DebugMessage(M64MSG_INFO, "Manufacturer: %x", sl(ROM_HEADER.Manufacturer_ID));
+    DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER.Cartridge_ID);
+    countrycodestring(ROM_HEADER.Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
-    DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER->PC));
+    DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER.PC));
     DebugMessage(M64MSG_VERBOSE, "Save type: %d", ROM_SETTINGS.savetype);
 
     //Prepare Hack for GOLDENEYE
