@@ -75,7 +75,7 @@ static void user_flush_data(png_structp png_write)
 * Other Local (static) functions
 */
 
-static int SaveRGBBufferToFile(char *filename, unsigned char *buf, int width, int height, int pitch)
+static int SaveRGBBufferToFile(const char *filename, const unsigned char *buf, int width, int height, int pitch)
 {
     int i;
 

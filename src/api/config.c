@@ -214,8 +214,13 @@ static void delete_section(config_section *pSection)
     if (pSection == NULL)
         return;
 
-    for (curr_var = pSection->first_var; curr_var != NULL; curr_var = curr_var->next)
+    curr_var = pSection->first_var;
+    while (curr_var != NULL)
+    {
+        config_var *next_var = curr_var->next;
         delete_var(curr_var);
+        curr_var = next_var;
+    }
 
     free(pSection->name);
     free(pSection);
@@ -496,7 +501,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
             nextline = end;
         *nextline++ = 0;
         /* strip the whitespace and handle comment */
-        line = trim(line);
+        trim(line);
         if (strlen(line) < 1)
         {
             line = nextline;
@@ -505,7 +510,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         if (line[0] == '#')
         {
             line++;
-            line = trim(line);
+            trim(line);
             lastcomment = line;
             line = nextline;
             continue;
@@ -535,8 +540,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         varname = line;
         varvalue = pivot + 1;
         *pivot = 0;
-        varname = trim(varname);
-        varvalue = trim(varvalue);
+        trim(varname);
+        trim(varvalue);
         if (varvalue[0] == '"' && varvalue[strlen(varvalue)-1] == '"')
         {
             varvalue++;
