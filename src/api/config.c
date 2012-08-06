@@ -112,6 +112,34 @@ static config_section *find_section(config_list list, const char *ParamName)
     return *find_section_link(&list, ParamName);
 }
 
+static config_var *config_var_create(const char *ParamName, const char *ParamHelp)
+{
+    config_var *var = malloc(sizeof(config_var));
+    if (var == NULL)
+        return NULL;
+
+    strncpy(var->name, ParamName, 63);
+    var->name[63] = 0;
+
+    var->type = M64TYPE_INT;
+    var->val.integer = 0;
+
+    if (ParamHelp != NULL)
+    {
+        var->comment = strdup(ParamHelp);
+        if (var->comment == NULL)
+        {
+            free(var);
+            return NULL;
+        }
+    }
+    else
+        var->comment = NULL;
+
+    var->next = NULL;
+    return var;
+}
+
 static config_var *find_section_var(config_section *section, const char *ParamName)
 {
     /* walk through the linked list of variables in the section */
@@ -206,16 +234,14 @@ static config_section * section_deepcopy(config_section *orig_section)
     last_new_var = NULL;
     while (orig_var != NULL)
     {
-        config_var *new_var = (config_var *) malloc(sizeof(config_var));
+        config_var *new_var = config_var_create(orig_var->name, orig_var->comment);
         if (new_var == NULL)
         {
             delete_section(new_section);
             return NULL;
         }
-        memcpy(new_var->name, orig_var->name, 64);
-        new_var->name[63] = 0;
-        new_var->type = orig_var->type;
 
+        new_var->type = orig_var->type;
         switch (orig_var->type)
         {
             case M64TYPE_INT:
@@ -243,18 +269,6 @@ static config_section * section_deepcopy(config_section *orig_section)
                 break;
         }
 
-        new_var->comment = NULL;
-        new_var->next = NULL;
-        /* allocate memory and copy string values */
-        if (orig_var->comment != NULL)
-        {
-            new_var->comment = strdup(orig_var->comment);
-            if (new_var->comment == NULL)
-            {
-                delete_section(new_section);
-                return NULL;
-            }
-        }
         /* add the new variable to the new section */
         if (last_new_var == NULL)
             new_section->first_var = new_var;
@@ -917,15 +931,9 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
     var = find_section_var(section, ParamName);
     if (var == NULL)
     {
-        var = (config_var *) malloc(sizeof(config_var));
+        var = config_var_create(ParamName, NULL);
         if (var == NULL)
             return M64ERR_NO_MEMORY;
-        strncpy(var->name, ParamName, 63);
-        var->name[63] = 0;
-        var->type = M64TYPE_INT;
-        var->val.integer = 0;
-        var->comment = NULL;
-        var->next = NULL;
         append_var_to_section(section, var);
     }
 
@@ -1083,22 +1091,11 @@ EXPORT m64p_error CALL ConfigSetDefaultInt(m64p_handle ConfigSectionHandle, cons
         return M64ERR_SUCCESS;
 
     /* otherwise create a new config_var object and add it to this section */
-    var = (config_var *) malloc(sizeof(config_var));
+    var = config_var_create(ParamName, ParamHelp);
     if (var == NULL)
         return M64ERR_NO_MEMORY;
-    strncpy(var->name, ParamName, 63);
-    var->name[63] = 0;
     var->type = M64TYPE_INT;
     var->val.integer = ParamValue;
-    if (ParamHelp == NULL)
-        var->comment = NULL;
-    else
-    {
-        var->comment = strdup(ParamHelp);
-        if (var->comment == NULL)
-            return M64ERR_NO_MEMORY;
-    }
-    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -1125,22 +1122,11 @@ EXPORT m64p_error CALL ConfigSetDefaultFloat(m64p_handle ConfigSectionHandle, co
         return M64ERR_SUCCESS;
 
     /* otherwise create a new config_var object and add it to this section */
-    var = (config_var *) malloc(sizeof(config_var));
+    var = config_var_create(ParamName, ParamHelp);
     if (var == NULL)
         return M64ERR_NO_MEMORY;
-    strncpy(var->name, ParamName, 63);
-    var->name[63] = 0;
     var->type = M64TYPE_FLOAT;
     var->val.number = ParamValue;
-    if (ParamHelp == NULL)  
-        var->comment = NULL;
-    else
-    {
-        var->comment = strdup(ParamHelp);
-        if (var->comment == NULL)   
-            return M64ERR_NO_MEMORY;
-    }
-    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -1167,22 +1153,11 @@ EXPORT m64p_error CALL ConfigSetDefaultBool(m64p_handle ConfigSectionHandle, con
         return M64ERR_SUCCESS;
 
     /* otherwise create a new config_var object and add it to this section */
-    var = (config_var *) malloc(sizeof(config_var));
+    var = config_var_create(ParamName, ParamHelp);
     if (var == NULL)
         return M64ERR_NO_MEMORY;
-    strncpy(var->name, ParamName, 63);
-    var->name[63] = 0;
     var->type = M64TYPE_BOOL;
     var->val.integer = ParamValue ? 1 : 0;
-    if (ParamHelp == NULL)  
-        var->comment = NULL;
-    else
-    {
-        var->comment = strdup(ParamHelp);
-        if (var->comment == NULL)   
-            return M64ERR_NO_MEMORY;
-    }
-    var->next = NULL;
     append_var_to_section(section, var);
 
     return M64ERR_SUCCESS;
@@ -1209,22 +1184,15 @@ EXPORT m64p_error CALL ConfigSetDefaultString(m64p_handle ConfigSectionHandle, c
         return M64ERR_SUCCESS;
 
     /* otherwise create a new config_var object and add it to this section */
-    var = (config_var *) malloc(sizeof(config_var));
+    var = config_var_create(ParamName, ParamHelp);
     if (var == NULL)
         return M64ERR_NO_MEMORY;
-    strncpy(var->name, ParamName, 63);
-    var->name[63] = 0;
     var->type = M64TYPE_STRING;
     var->val.string = strdup(ParamValue);
     if (var->val.string == NULL)
-        return M64ERR_NO_MEMORY;
-    if (ParamHelp == NULL)  
-        var->comment = NULL;
-    else
     {
-        var->comment = strdup(ParamHelp);
-        if (var->comment == NULL)   
-            return M64ERR_NO_MEMORY;
+        free(var);
+        return M64ERR_NO_MEMORY;
     }
     var->next = NULL;
     append_var_to_section(section, var);
