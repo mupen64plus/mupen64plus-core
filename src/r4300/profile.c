@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - profile.c                                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -19,56 +20,52 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef PROFILE
 #include "r4300.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 
-#ifdef PROFILE
-#include <sys/time.h>
+static unsigned long long int time_in_section[5];
+static unsigned long long int last_start[5];
 
-static unsigned int time_in_section[5];
-static unsigned int last_start[5];
-static unsigned int last_refresh;
+#include <time.h>
+static unsigned long long int get_time(void)
+{
+   struct timespec ts;
+   clock_gettime(CLOCK_MONOTONIC, &ts);
+   return (unsigned long long int)ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+}
 
 void start_section(int section_type)
 {
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   last_start[section_type] = 
-     ((tv.tv_sec % 1000000) * 1000) + (tv.tv_usec / 1000);
+   last_start[section_type] = get_time();
 }
 
 void end_section(int section_type)
 {
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   unsigned int end =
-     ((tv.tv_sec % 1000000) * 1000) + (tv.tv_usec / 1000);
+   unsigned long long int end = get_time();
    time_in_section[section_type] += end - last_start[section_type];
 }
 
 void refresh_stat()
 {
-   struct timeval tv;
-   gettimeofday(&tv, NULL);
-   if(tv.tv_sec - last_refresh >= 2)
+   unsigned long long int curr_time = get_time();
+   if(curr_time - last_start[0] >= 2000000000ULL)
      {
-    unsigned int end =
-      ((tv.tv_sec % 1000000) * 1000) + (tv.tv_usec / 1000);
-    time_in_section[0] = end - last_start[0];
+    time_in_section[0] = curr_time - last_start[0];
     DebugMessage(M64MSG_INFO, "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%",
            100.0f * (float)time_in_section[1] / (float)time_in_section[0],
            100.0f * (float)time_in_section[2] / (float)time_in_section[0],
            100.0f * (float)time_in_section[3] / (float)time_in_section[0],
            100.0f * (float)time_in_section[4] / (float)time_in_section[0]);
-    fflush(stdout);
+    DebugMessage(M64MSG_INFO, "gfx=%llins - audio=%llins - compiler %llins - idle=%lli ns",
+           time_in_section[1], time_in_section[2], time_in_section[3], time_in_section[4]);
     time_in_section[1] = 0;
     time_in_section[2] = 0;
     time_in_section[3] = 0;
     time_in_section[4] = 0;
-    last_start[0] = end;
-    last_refresh = tv.tv_sec;
+    last_start[0] = curr_time;
      }
 }
 

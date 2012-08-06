@@ -247,6 +247,10 @@ endif
 ifeq ($(DBG_COUNT), 1)
   CFLAGS += -DCOUNT_INSTR
 endif
+ifeq ($(DBG_TIMING), 1)
+  CFLAGS += -DPROFILE
+  LDFLAGS += -lrt
+endif
 ifeq ($(DBG_PROFILE), 1)
   CFLAGS += -DPROFILE_R4300
 endif
@@ -411,6 +415,7 @@ targets:
 	@echo "    DBG_CORE=1    == print debugging info in r4300 core"
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
+	@echo "    DBG_TIMING=1  == print timing data"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
 	@echo "    LTO=1         == enable experimental build with link-time optimization"
 	@echo "    V=1           == show verbose compiler output"
