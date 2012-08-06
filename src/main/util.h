@@ -68,49 +68,6 @@ void imagestring(unsigned char imagetype, char *string);
 /** string utilities **/
 char *trim(char *str);
 
-/** endianness macros **/
-#define SWAP16(x) \
-( \
-((x & 0xFF00) >> 8) | \
-((x & 0x00FF) << 8) \
-)
-
-#define SWAP32(x) \
-( \
-((x & 0x000000FF) << 24) | \
-((x & 0x0000FF00) <<  8) | \
-((x & 0x00FF0000) >>  8) | \
-((x & 0xFF000000) >> 24) \
-)
-
-#define SWAP64(x) \
-( \
-((x & 0xFF00000000000000ULL) >> 56) | \
-((x & 0x00FF000000000000ULL) >> 40) | \
-((x & 0x0000FF0000000000ULL) >> 24) | \
-((x & 0x000000FF00000000ULL) >> 8) | \
-((x & 0x00000000FF000000ULL) << 8) | \
-((x & 0x0000000000FF0000ULL) << 24) | \
-((x & 0x000000000000FF00ULL) << 40) | \
-((x & 0x00000000000000FFULL) << 56) \
-)
-
-#ifdef M64P_BIG_ENDIAN
-#define BE16(x) (x)
-#define BE32(x) (x)
-#define BE64(x) (x)
-#define LE16(x) SWAP16(x)
-#define LE32(x) SWAP32(x)
-#define LE64(x) SWAP64(x)
-#else
-#define BE16(x) SWAP16(x)
-#define BE32(x) SWAP32(x)
-#define BE64(x) SWAP64(x)
-#define LE16(x) (x)
-#define LE32(x) (x)
-#define LE64(x) (x)
-#endif
-
 #ifdef __cplusplus
 }
 #endif

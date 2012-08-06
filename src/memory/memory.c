@@ -2796,7 +2796,7 @@ void write_aib(void)
           + ((*address_low&3)^S8) ) = cpu_byte;
         ai_register.ai_len = temp;
         aiLenChanged();
-        if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        if (g_AudioCallback != NULL)
             g_AudioCallback();
         switch (ROM_SETTINGS.systemtype)
         {
@@ -2864,7 +2864,7 @@ void write_aih(void)
                             + ((*address_low&3)^S16) )) = hword;
         ai_register.ai_len = temp;
         aiLenChanged();
-        if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+        if (g_AudioCallback != NULL)
             g_AudioCallback();
         switch (ROM_SETTINGS.systemtype)
         {
