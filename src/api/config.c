@@ -494,84 +494,58 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     *end = 0;
     while (line < end)
     {
-        char *pivot, *varname, *varvalue;
-        /* get the pointer to the next line, and null-terminate this line */
-        char *nextline = strchr(line, '\n');
-        if (nextline == NULL)
-            nextline = end;
-        *nextline++ = 0;
-        /* strip the whitespace and handle comment */
-        trim(line);
-        if (strlen(line) < 1)
+        ini_line l = ini_parse_line(&line);
+        switch (l.type)
         {
-            line = nextline;
-            continue;
+            case INI_COMMENT:
+                lastcomment = l.value;
+                break;
+
+            case INI_SECTION:
+                rval = ConfigOpenSection(l.name, (m64p_handle *) &current_section);
+                if (rval != M64ERR_SUCCESS)
+                {
+                    free(configtext);
+                    return rval;
+                }
+                lastcomment = NULL;
+                break;
+
+            case INI_PROPERTY:
+                if (l.value[0] == '"' && l.value[strlen(l.value)-1] == '"')
+                {
+                    l.value++;
+                    l.value[strlen(l.value)-1] = 0;
+                    ConfigSetDefaultString((m64p_handle) current_section, l.name, l.value, lastcomment);
+                }
+                else if (osal_insensitive_strcmp(l.value, "false") == 0)
+                {
+                    ConfigSetDefaultBool((m64p_handle) current_section, l.name, 0, lastcomment);
+                }
+                else if (osal_insensitive_strcmp(l.value, "true") == 0)
+                {
+                    ConfigSetDefaultBool((m64p_handle) current_section, l.name, 1, lastcomment);
+                }
+                else if (is_numeric(l.value))
+                {
+                    int val_int = (int) strtol(l.value, NULL, 10);
+                    float val_float = (float) strtod(l.value, NULL);
+                    if ((val_float - val_int) != 0.0)
+                        ConfigSetDefaultFloat((m64p_handle) current_section, l.name, val_float, lastcomment);
+                    else
+                        ConfigSetDefaultInt((m64p_handle) current_section, l.name, val_int, lastcomment);
+                }
+                else
+                {
+                    /* assume that it's a string */
+                    ConfigSetDefaultString((m64p_handle) current_section, l.name, l.value, lastcomment);
+                }
+                lastcomment = NULL;
+                break;
+
+            default:
+                break;
         }
-        if (line[0] == '#')
-        {
-            line++;
-            trim(line);
-            lastcomment = line;
-            line = nextline;
-            continue;
-        }
-        /* handle section definition line */
-        if (strlen(line) > 2 && line[0] == '[' && line[strlen(line)-1] == ']')
-        {
-            line++;
-            line[strlen(line)-1] = 0;
-            rval = ConfigOpenSection(line, (m64p_handle *) &current_section);
-            if (rval != M64ERR_SUCCESS)
-            {
-                free(configtext);
-                return rval;
-            }
-            lastcomment = NULL;
-            line = nextline;
-            continue;
-        }
-        /* handle variable definition */
-        pivot = strchr(line, '=');
-        if (current_section == NULL || pivot == NULL)
-        {
-            line = nextline;
-            continue;
-        }
-        varname = line;
-        varvalue = pivot + 1;
-        *pivot = 0;
-        trim(varname);
-        trim(varvalue);
-        if (varvalue[0] == '"' && varvalue[strlen(varvalue)-1] == '"')
-        {
-            varvalue++;
-            varvalue[strlen(varvalue)-1] = 0;
-            ConfigSetDefaultString((m64p_handle) current_section, varname, varvalue, lastcomment);
-        }
-        else if (osal_insensitive_strcmp(varvalue, "false") == 0)
-        {
-            ConfigSetDefaultBool((m64p_handle) current_section, varname, 0, lastcomment);
-        }
-        else if (osal_insensitive_strcmp(varvalue, "true") == 0)
-        {
-            ConfigSetDefaultBool((m64p_handle) current_section, varname, 1, lastcomment);
-        }
-        else if (is_numeric(varvalue))
-        {
-            int val_int = (int) strtol(varvalue, NULL, 10);
-            float val_float = (float) strtod(varvalue, NULL);
-            if ((val_float - val_int) != 0.0)
-                ConfigSetDefaultFloat((m64p_handle) current_section, varname, val_float, lastcomment);
-            else
-                ConfigSetDefaultInt((m64p_handle) current_section, varname, val_int, lastcomment);
-        }
-        else
-        {
-            /* assume that it's a string */
-            ConfigSetDefaultString((m64p_handle) current_section, varname, varvalue, lastcomment);
-        }
-        lastcomment = NULL;
-        line = nextline;
     }
 
     /* release memory used for config file text */

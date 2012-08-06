@@ -426,3 +426,53 @@ char *formatstr(const char *fmt, ...)
 
 	return NULL;
 }
+
+ini_line ini_parse_line(char **lineptr)
+{
+    char *line = *lineptr, *endline = strchr(*lineptr, '\n'), *equal;
+    ini_line l;
+
+    // Null terminate the current line and point to the next line
+    if (endline != NULL)
+        *endline = '\0';
+    *lineptr = line + strlen(line) + 1;
+
+    // Parse the line contents
+    trim(line);
+
+    if (line[0] == '#' || line[0] == ';')
+    {
+        l.type = INI_COMMENT;
+        l.name = NULL;
+        l.value = line;
+    }
+    else if (line[0] == '[' && line[strlen(line)-1] == ']')
+    {
+        line[strlen(line)-1] = '\0';
+        line++;
+
+        l.type = INI_SECTION;
+        l.name = trim(line);
+        l.value = NULL;
+    }
+    else if ((equal = strchr(line, '=')) != NULL)
+    {
+        char *name = line, *value = equal + 1;
+        *equal = '\0';
+
+        trim(name);
+        trim(value);
+
+        l.type = INI_PROPERTY;
+        l.name = name;
+        l.value = value;
+    }
+    else
+    {
+        l.type = (*line == '\0') ? INI_BLANK : INI_TRASH;
+        l.name = NULL;
+        l.value = NULL;
+    }
+
+    return l;
+}

@@ -129,7 +129,7 @@ typedef struct _romdatabase_search
 
 typedef struct
 {
-    char* comment;
+    int have_database;
     romdatabase_search* crc_lists[256];
     romdatabase_search* md5_lists[256];
     romdatabase_search* list;
