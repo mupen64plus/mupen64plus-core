@@ -319,26 +319,6 @@ static const char* strpbrk_reverse(const char* needles, const char* haystack)
     return haystack + counter - 1;
 }
 
-char* dirfrompath(const char* path)
-{
-    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
-    if (last_separator_ptr != NULL)
-    {
-        size_t dirlen = last_separator_ptr + 1 - path; // Not including terminator
-
-        char* buffer = (char*) malloc(dirlen + 1);
-        if (buffer != NULL)
-        {
-            strncpy(buffer, path, dirlen);
-            buffer[dirlen] = 0;
-        }
-
-        return buffer;
-    }
-    else
-        return (char*) calloc(1, sizeof(char)); // Empty string
-}
-
 const char* namefrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);

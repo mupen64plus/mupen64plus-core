@@ -84,12 +84,6 @@ void imagestring(unsigned char imagetype, char *string);
      Path utilities
  **********************/
 
-/* Extracts the directory string (part before the file name) from a path string.
- * Returns a malloc'd string with the directory string.
- * If there's no directory string in the path, returns a malloc'd empty string.
- * (This is done so that path = dirfrompath(path) + namefrompath(path)). */
-char* dirfrompath(const char* path);
-
 /* Extracts the full file name (with extension) from a path string.
  * Returns the same string, advanced until the file name. */
 const char* namefrompath(const char* path);
