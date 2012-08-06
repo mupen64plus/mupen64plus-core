@@ -251,20 +251,11 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyScreenshot)
                         main_take_next_screenshot();
                     else if (cmd == joyMute)
-                    {
-                        volumeMute();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_mute();
                     else if (cmd == joyDecrease)
-                    {
-                        volumeDown();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_down();
                     else if (cmd == joyIncrease)
-                    {
-                        volumeUp();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_up();
                     else if (cmd == joyForward)
                         main_set_fastforward(1);
                 }
@@ -394,13 +385,9 @@ void event_sdl_keydown(int keysym, int keymod)
 {
     /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
     if (keysym == SDLK_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
-    {
         changeWindow();
-    }
     else if (keysym >= SDLK_0 && keysym <= SDLK_9)
-    {
         main_state_set_slot(keysym - SDLK_0);
-    }
     /* check all of the configurable commands */
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdStop))
         main_stop();
@@ -423,32 +410,17 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdPause))
         main_toggle_pause();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdMute))
-    {
-        volumeMute();
-        main_draw_volume_osd();
-    }
+        main_volume_mute();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdIncrease))
-    {
-        volumeUp();
-        main_draw_volume_osd();
-    }
+        main_volume_up();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdDecrease))
-    {
-        volumeDown();
-        main_draw_volume_osd();
-    }
+        main_volume_down();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdForward))
-    {
         main_set_fastforward(1);
-    }
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdAdvance))
-    {
         main_advance_one();
-    }
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdGameshark))
-    {
         KbdGamesharkPressed = 1;
-    }
     else
     {
         /* pass all other keypresses to the input plugin */

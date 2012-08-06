@@ -96,20 +96,11 @@ void lircCheckInput(void)
                 else if(strcmp(c, "FULLSCREEN") == 0)
                     changeWindow();
                 else if(strcmp(c, "MUTE") == 0)
-                {
-                    volumeMute();
-                    main_draw_volume_osd();
-                }
+                    main_volume_mute();
                 else if(strcmp(c, "VOL+") == 0)
-                {
-                    volumeUp();
-                    main_draw_volume_osd();
-                }
+                    main_volume_up();
                 else if(strcmp(c, "VOL-") == 0)
-                {
-                    volumeDown();
-                    main_draw_volume_osd();
-                }
+                    main_volume_down();
                 else if(strcmp(c, "SCREENSHOT") == 0)
                     main_take_next_screenshot();
                 else if(strcmp(c, "SPEED+") == 0)
