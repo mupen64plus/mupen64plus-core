@@ -291,24 +291,21 @@ int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
 /********************************************************************************************/
 /* INI Rom database functions */
 
+static unsigned char char2hex(char c)
+{
+    c = tolower(c);
+    if(c >= '0' && c <= '9')
+        return c - '0';
+    else if(c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    else
+        return 0;
+}
+
 /* Convert two letters representing hexidecimal to the appropriate value: 00->0 - FF->255. */
 static unsigned char hexconvert(const char* bigraph)
 {
-    unsigned char returnvalue = 0;
-    char character;
-    int digits;
-
-    for(digits = 2; digits > 0; --digits)
-        {
-        returnvalue = returnvalue << 4;
-        character = *bigraph++ | 0x20;
-        if(character>='0'&&character<='9')
-            returnvalue += character - '0';
-        else if(character>='a'&&character<='f')
-            returnvalue += character - 'a' + 10;
-        }
-
-    return returnvalue;
+    return (char2hex(bigraph[0]) << 4) | char2hex(bigraph[1]);
 }
 
 /* Helper function, identify the space of a line before an = sign. */
