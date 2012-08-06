@@ -97,10 +97,28 @@ static int is_numeric(const char *string)
  */
 static config_section **find_section_link(config_list *list, const char *ParamName)
 {
-    config_section **curr_sec_link = list;
+    config_section **curr_sec_link;
     for (curr_sec_link = list; *curr_sec_link != NULL; curr_sec_link = &(*curr_sec_link)->next)
     {
         if (osal_insensitive_strcmp(ParamName, (*curr_sec_link)->name) == 0)
+            break;
+    }
+
+    return curr_sec_link;
+}
+
+/* This function is similar to the previous function, but instead it returns a
+ * pointer to the pointer to the next section whose name is alphabetically
+ * greater than or equal to 'ParamName'.
+ *
+ * Useful for inserting a section in its alphabetical position.
+ */
+static config_section **find_alpha_section_link(config_list *list, const char *ParamName)
+{
+    config_section **curr_sec_link;
+    for (curr_sec_link = list; *curr_sec_link != NULL; curr_sec_link = &(*curr_sec_link)->next)
+    {
+        if (osal_insensitive_strcmp((*curr_sec_link)->name, ParamName) >= 0)
             break;
     }
 
@@ -616,7 +634,8 @@ EXPORT m64p_error CALL ConfigListSections(void *context, void (*SectionListCallb
 
 EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *ConfigSectionHandle)
 {
-    config_section *curr_section, *new_section;
+    config_section **curr_section;
+    config_section *new_section;
 
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
@@ -624,10 +643,10 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
         return M64ERR_INPUT_ASSERT;
 
     /* walk through the section list, looking for a case-insensitive name match */
-    curr_section = find_section(l_ConfigListActive, SectionName);
-    if (curr_section != NULL)
+    curr_section = find_alpha_section_link(&l_ConfigListActive, SectionName);
+    if (*curr_section != NULL && osal_insensitive_strcmp(SectionName, (*curr_section)->name) == 0)
     {
-        *ConfigSectionHandle = curr_section;
+        *ConfigSectionHandle = *curr_section;
         return M64ERR_SUCCESS;
     }
 
@@ -637,19 +656,8 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
         return M64ERR_NO_MEMORY;
 
     /* add section to list in alphabetical order */
-    if (l_ConfigListActive == NULL || osal_insensitive_strcmp(SectionName, l_ConfigListActive->name) < 0)
-    {
-        new_section->next = l_ConfigListActive;
-        l_ConfigListActive = new_section;
-    }
-    else
-    {
-        curr_section = l_ConfigListActive;
-        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) >= 0)
-            curr_section = curr_section->next;
-        new_section->next = curr_section->next;
-        curr_section->next = new_section;
-    }
+    new_section->next = *curr_section;
+    *curr_section = new_section;
 
     *ConfigSectionHandle = new_section;
     return M64ERR_SUCCESS;
@@ -851,38 +859,19 @@ EXPORT m64p_error CALL ConfigSaveSection(const char *SectionName)
         return M64ERR_NO_MEMORY;
 
     /* update config section that's in the Saved list with the new one */
-    if (l_ConfigListSaved == NULL || osal_insensitive_strcmp(SectionName, l_ConfigListSaved->name) < 0)
+    config_section **insertion_point = find_alpha_section_link(&l_ConfigListSaved, SectionName);
+    if (*insertion_point != NULL && osal_insensitive_strcmp((*insertion_point)->name, SectionName) == 0)
     {
-        /* the saved section is new and goes at the beginning of the list */
-        new_section->next = l_ConfigListSaved;
-        l_ConfigListSaved = new_section;
-    }
-    else if (osal_insensitive_strcmp(SectionName, l_ConfigListSaved->name) == 0)
-    {
-        /* the saved section replaces the first section in the list */
-        new_section->next = l_ConfigListSaved->next;
-        delete_section(l_ConfigListSaved);
-        l_ConfigListSaved = new_section;
+        /* the section exists in the saved list and will be replaced */
+        new_section->next = (*insertion_point)->next;
+        delete_section(*insertion_point);
+        *insertion_point = new_section;
     }
     else
     {
-        curr_section = l_ConfigListSaved;
-        while (curr_section->next != NULL && osal_insensitive_strcmp(SectionName, curr_section->next->name) > 0)
-            curr_section = curr_section->next;
-        if (curr_section->next == NULL || osal_insensitive_strcmp(SectionName, curr_section->next->name) < 0)
-        {
-            /* the saved section is new and goes after the curr_section */
-            new_section->next = curr_section->next;
-            curr_section->next = new_section;
-        }
-        else
-        {
-            /* the saved section replaces curr_section->next */
-            config_section *old_section = curr_section->next;
-            new_section->next = old_section->next;
-            delete_section(old_section);
-            curr_section->next = new_section;
-        }
+        /* the section didn't exist in the saved list and has to be inserted */
+        new_section->next = *insertion_point;
+        *insertion_point = new_section;
     }
 
     /* write the saved config list out to a file */
