@@ -33,6 +33,8 @@
 #include "config.h"
 #include "callbacks.h"
 
+#include "main/util.h"
+
 #include "osal/files.h"
 #include "osal/preproc.h"
 
@@ -71,30 +73,6 @@ static config_list l_ConfigListSaved = NULL;
 /* --------------- */
 /* local functions */
 /* --------------- */
-static void strip_whitespace(char *string)
-{
-    char *start = string;
-    char *end = string + strlen(string) - 1;
-    int newlen;
-
-    while (*start == ' ' || *start == '\t' || *start == '\r' || *start == '\n')
-        start++;
-
-    while (end > string && (*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n'))
-        end--;
-
-    if (start > end)
-    {
-        string[0] = 0;
-        return;
-    }
-
-    newlen = end - start + 1;
-    memmove(string, start, newlen);
-    string[newlen] = 0;
-
-    return;
-}
 
 static int is_numeric(const char *string)
 {
@@ -436,7 +414,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
             nextline = end;
         *nextline++ = 0;
         /* strip the whitespace and handle comment */
-        strip_whitespace(line);
+        line = trim(line);
         if (strlen(line) < 1)
         {
             line = nextline;
@@ -445,7 +423,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         if (line[0] == '#')
         {
             line++;
-            strip_whitespace(line);
+            line = trim(line);
             lastcomment = line;
             line = nextline;
             continue;
@@ -475,8 +453,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         varname = line;
         varvalue = pivot + 1;
         *pivot = 0;
-        strip_whitespace(varname);
-        strip_whitespace(varvalue);
+        varname = trim(varname);
+        varvalue = trim(varvalue);
         if (varvalue[0] == '"' && varvalue[strlen(varvalue)-1] == '"')
         {
             varvalue++;
@@ -1000,7 +978,7 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
         case M64TYPE_STRING:
             if (var->val_string != NULL)
                 free(var->val_string);
-            var->val_string = strdup(ParamValue);
+            var->val_string = strdup((char *)ParamValue);
             if (var->val_string == NULL)
                 return M64ERR_NO_MEMORY;
             break;
