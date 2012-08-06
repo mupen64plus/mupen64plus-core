@@ -46,7 +46,6 @@
 #include "main/util.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
-#include "r4300/reset.h"
 
 /* some local state variables */
 static int l_CoreInit = 0;
@@ -304,25 +303,19 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_VOLUME_SET_LEVEL:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
+            if (ParamInt < 0 || ParamInt > 100)
+                return M64ERR_INPUT_INVALID;
             return main_volume_set_level(ParamInt);
         case M64CMD_VOLUME_MUTE:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
             return main_volume_mute();
-        case M64CMD_SET_AUDIO_CALLBACK:
-            g_AudioCallback = (m64p_audio_callback) ParamPtr;
-            return M64ERR_SUCCESS;
-        case M64CMD_SET_INPUT_CALLBACK:
-            g_InputCallback = (m64p_input_callback) ParamPtr;
-            return M64ERR_SUCCESS;
-        case M64CMD_SET_VI_CALLBACK:
-            g_ViCallback = (m64p_vi_callback) ParamPtr;
-            return M64ERR_SUCCESS;
-        case M64CMD_SOFT_RESET:
+        case M64CMD_RESET:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            reset_soft();
-            return M64ERR_SUCCESS;
+            if (ParamInt < 0 || ParamInt > 1)
+                return M64ERR_INPUT_INVALID;
+            return main_reset(ParamInt);
         case M64CMD_ADVANCE_FRAME:
             if (!g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
