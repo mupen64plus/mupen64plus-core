@@ -388,7 +388,7 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     entry = ini_search_by_crc(Crc1, Crc2);
-    if (entry == &empty_entry)
+    if (entry == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
     strncpy(RomSettings->goodname, entry->goodname, 255);

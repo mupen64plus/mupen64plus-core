@@ -135,8 +135,6 @@ typedef struct
     romdatabase_search* list;
 } _romdatabase;
 
-extern romdatabase_entry empty_entry;
-
 void romdatabase_open(void);
 void romdatabase_close(void);
 /* Should be used by current cheat system (isn't), when cheat system is
