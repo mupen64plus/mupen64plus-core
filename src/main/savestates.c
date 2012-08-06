@@ -575,20 +575,20 @@ static int savestates_load_pj64_unc(char *filepath)
     return 1;
 }
 
-savestates_type savestates_detect_type(void)
+savestates_type savestates_detect_type(char *filepath)
 {
     char magic[4];
-    FILE *f = fopen(fname, "rb");
+    FILE *f = fopen(filepath, "rb");
     if (f == NULL)
     {
-        DebugMessage(M64MSG_STATUS, "Could not open state file %s\n", fname);
+        DebugMessage(M64MSG_STATUS, "Could not open state file %s\n", filepath);
         return savestates_type_unknown;
     }
 
     if (fread(magic, 1, 4, f) != 4)
     {
         fclose(f);
-        DebugMessage(M64MSG_STATUS, "Could not read from state file %s\n", fname);
+        DebugMessage(M64MSG_STATUS, "Could not read from state file %s\n", filepath);
         return savestates_type_unknown;
     }
 
@@ -602,7 +602,7 @@ savestates_type savestates_detect_type(void)
         return savestates_type_pj64_unc;
     else
     {
-        DebugMessage(M64MSG_STATUS, "Unknown state file type %s\n", fname);
+        DebugMessage(M64MSG_STATUS, "Unknown state file type %s\n", filepath);
         return savestates_type_unknown;
     }
 }
@@ -613,7 +613,7 @@ int savestates_load(void)
     int ret = 0;
 
     if (fname != NULL && type == savestates_type_unknown)
-        type = savestates_detect_type();
+        type = savestates_detect_type(fname);
     else if (fname == NULL) // Always load slots in M64P format
         type = savestates_type_m64p;
 
