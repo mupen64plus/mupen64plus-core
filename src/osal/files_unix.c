@@ -139,40 +139,41 @@ static int search_dir_file(char *destpath, const char *path, const char *filenam
 
 int osal_mkdirp(const char *dirpath, int mode)
 {
+    char *mypath, *currpath;
     struct stat fileinfo;
-    size_t dirpathlen = strlen(dirpath);
-    size_t currpathlen = dirpathlen + 1;
-    char *currpath = malloc(currpathlen + 1);
-    size_t i;
 
-    strcpy(currpath, dirpath);
+    // Terminate quickly if the path already exists
+    if (stat(dirpath, &fileinfo) == 0 && S_ISDIR(fileinfo.st_mode))
+        return 0;
 
-    // End with a separator so the full path gets processed in the loop
-    currpath[currpathlen - 1] = '\0';
-    currpath[currpathlen] = '\0';
-    if (!strchr(OSAL_DIR_SEPARATORS, dirpath[dirpathlen - 1]))
-        currpath[currpathlen - 1] = OSAL_DIR_SEPARATORS[0];
-    
-    for (i = 0; i < currpathlen; i++)
+    // Create partial paths
+    mypath = currpath = strdup(dirpath);
+    if (mypath == NULL)
+        return 1;
+
+    while ((currpath = strpbrk(currpath + 1, OSAL_DIR_SEPARATORS)) != NULL)
     {
-        if (strchr(OSAL_DIR_SEPARATORS, currpath[i]))
+        *currpath = '\0';
+        if (stat(mypath, &fileinfo) != 0)
         {
-            // Temporally terminate the string, and make the directory.
-            char tmp = currpath[i+1];
-            currpath[i+1] = '\0';
-            if (stat(currpath, &fileinfo) != 0)
-            {
-                if (mkdir(currpath, mode) != 0)
-                {
-                    free(currpath);
-                    return 1;
-                }
-            }
-            currpath[i+1] = tmp;
+            if (mkdir(mypath, mode) != 0)
+                break;
         }
+        else
+        {
+            if (!S_ISDIR(fileinfo.st_mode))
+                break;
+        }
+        *currpath = OSAL_DIR_SEPARATORS[0];
     }
+    free(mypath);
+    if (currpath != NULL)
+        return 1;
 
-    free(currpath);
+    // Create full path
+    if (stat(dirpath, &fileinfo) != 0 && mkdir(dirpath, mode) != 0)
+        return 1;
+
     return 0;
 }
 

@@ -77,40 +77,41 @@ static int search_dir_file(char *destpath, const char *path, const char *filenam
 
 int osal_mkdirp(const char *dirpath, int mode)
 {
+    char *mypath, *currpath;
     struct _stat fileinfo;
-    size_t dirpathlen = strlen(dirpath);
-    size_t currpathlen = dirpathlen + 1;
-    char *currpath = malloc(currpathlen + 1);
-    size_t i;
 
-    strcpy(currpath, dirpath);
+    // Terminate quickly if the path already exists
+    if (_stat(dirpath, &fileinfo) == 0 && (fileinfo.st_mode & _S_IFDIR))
+        return 0;
 
-    // End with a separator so the full path gets processed in the loop
-    currpath[currpathlen - 1] = '\0';
-    currpath[currpathlen] = '\0';
-    if (!strchr(OSAL_DIR_SEPARATORS, dirpath[dirpathlen - 1]))
-        currpath[currpathlen - 1] = OSAL_DIR_SEPARATORS[0];
+    // Create partial paths
+    mypath = currpath = strdup(dirpath);
+    if (mypath == NULL)
+        return 1;
 
-    for (i = 0; i < currpathlen; i++)
+    while ((currpath = strpbrk(currpath + 1, OSAL_DIR_SEPARATORS)) != NULL)
     {
-        if (strchr(OSAL_DIR_SEPARATORS, currpath[i]))
+        *currpath = '\0';
+        if (_stat(mypath, &fileinfo) != 0)
         {
-            // Temporally terminate the string, and make the directory.
-            char tmp = currpath[i+1];
-            currpath[i+1] = '\0';
-            if (_stat(currpath, &fileinfo) != 0)
-            {
-                if (_mkdir(currpath) != 0)
-                {
-                    free(currpath);
-                    return 1;
-                }
-            }
-            currpath[i+1] = tmp;
+            if (_mkdir(mypath) != 0)
+                break;
         }
+        else
+        {
+            if (!(fileinfo.st_mode & _S_IFDIR))
+                break;
+        }
+        *currpath = OSAL_DIR_SEPARATORS[0];
     }
-    
-    free(currpath);
+    free(mypath);
+    if (currpath != NULL)
+        return 1;
+
+    // Create full path
+    if (_stat(dirpath, &fileinfo) != 0 && _mkdir(dirpath) != 0)
+        return 1;
+
     return 0;
 }
 
