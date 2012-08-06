@@ -32,7 +32,63 @@
 
 unsigned int tlb_LUT_r[0x100000];
 unsigned int tlb_LUT_w[0x100000];
-extern unsigned int interp_addr;
+
+void tlb_unmap(tlb *entry)
+{
+    unsigned int i;
+
+    if (entry->v_even)
+    {
+        for (i=entry->start_even; i<entry->end_even; i += 0x1000)
+            tlb_LUT_r[i>>12] = 0;
+        if (entry->d_even)
+            for (i=entry->start_even; i<entry->end_even; i += 0x1000)
+                tlb_LUT_w[i>>12] = 0;
+    }
+
+    if (entry->v_odd)
+    {
+        for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
+            tlb_LUT_r[i>>12] = 0;
+        if (entry->d_odd)
+            for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
+                tlb_LUT_w[i>>12] = 0;
+    }
+}
+
+void tlb_map(tlb *entry)
+{
+    unsigned int i;
+
+    if (entry->v_even)
+    {
+        if (entry->start_even < entry->end_even &&
+            !(entry->start_even >= 0x80000000 && entry->end_even < 0xC0000000) &&
+            entry->phys_even < 0x20000000)
+        {
+            for (i=entry->start_even;i<entry->end_even;i+=0x1000)
+                tlb_LUT_r[i>>12] = 0x80000000 | (entry->phys_even + (i - entry->start_even) + 0xFFF);
+            if (entry->d_even)
+                for (i=entry->start_even;i<entry->end_even;i+=0x1000)
+                    tlb_LUT_w[i>>12] = 0x80000000 | (entry->phys_even + (i - entry->start_even) + 0xFFF);
+        }
+    }
+
+    if (entry->v_odd)
+    {
+        if (entry->start_odd < entry->end_odd &&
+            !(entry->start_odd >= 0x80000000 && entry->end_odd < 0xC0000000) &&
+            entry->phys_odd < 0x20000000)
+        {
+            for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
+                tlb_LUT_r[i>>12] = 0x80000000 | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
+            if (entry->d_odd)
+                for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
+                    tlb_LUT_w[i>>12] = 0x80000000 | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
+        }
+    }
+}
+
 unsigned int virtual_to_physical_address(unsigned int addresse, int w)
 {
     if (addresse >= 0x7f000000 && addresse < 0x80000000 && isGoldeneyeRom)

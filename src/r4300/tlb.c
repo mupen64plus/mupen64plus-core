@@ -81,11 +81,7 @@ static void TLBWrite(unsigned int idx)
           for (j=0; j<16; j++) blocks[i]->md5[j] = 0;*/
           blocks[i]->adler32 = 0;
            }
-         tlb_LUT_r[i] = 0;
       }
-    if (tlb_e[idx].d_even)
-      for (i=tlb_e[idx].start_even>>12; i<=tlb_e[idx].end_even>>12; i++)
-        tlb_LUT_w[i] = 0;
      }
    if (tlb_e[idx].v_odd)
      {
@@ -116,12 +112,11 @@ static void TLBWrite(unsigned int idx)
           for (j=0; j<16; j++) blocks[i]->md5[j] = 0;*/
           blocks[i]->adler32 = 0;
            }
-         tlb_LUT_r[i] = 0;
       }
-    if (tlb_e[idx].d_odd)
-      for (i=tlb_e[idx].start_odd>>12; i<=tlb_e[idx].end_odd>>12; i++)
-        tlb_LUT_w[i] = 0;
      }
+
+   tlb_unmap(&tlb_e[idx]);
+
    tlb_e[idx].g = (EntryLo0 & EntryLo1 & 1);
    tlb_e[idx].pfn_even = (EntryLo0 & 0x3FFFFFC0) >> 6;
    tlb_e[idx].pfn_odd = (EntryLo1 & 0x3FFFFFC0) >> 6;
@@ -141,22 +136,16 @@ static void TLBWrite(unsigned int idx)
      (tlb_e[idx].mask << 12) + 0xFFF;
    tlb_e[idx].phys_even = tlb_e[idx].pfn_even << 12;
    
+
+   tlb_e[idx].start_odd = tlb_e[idx].end_even+1;
+   tlb_e[idx].end_odd = tlb_e[idx].start_odd+
+     (tlb_e[idx].mask << 12) + 0xFFF;
+   tlb_e[idx].phys_odd = tlb_e[idx].pfn_odd << 12;
+   
+   tlb_map(&tlb_e[idx]);
+
    if (tlb_e[idx].v_even)
-     {
-    if (tlb_e[idx].start_even < tlb_e[idx].end_even &&
-        !(tlb_e[idx].start_even >= 0x80000000 &&
-        tlb_e[idx].end_even < 0xC0000000) &&
-        tlb_e[idx].phys_even < 0x20000000)
-      {
-         for (i=tlb_e[idx].start_even;i<tlb_e[idx].end_even;i+=0x1000)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[idx].phys_even + (i - tlb_e[idx].start_even) + 0xFFF);
-         if (tlb_e[idx].d_even)
-           for (i=tlb_e[idx].start_even;i<tlb_e[idx].end_even;i+=0x1000)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[idx].phys_even + (i - tlb_e[idx].start_even) + 0xFFF);
-      }
-    
+     {    
     for (i=tlb_e[idx].start_even>>12; i<=tlb_e[idx].end_even>>12; i++)
       {
          /*if (blocks[i] && (blocks[i]->md5[0] || blocks[i]->md5[1] ||
@@ -183,27 +172,9 @@ static void TLBWrite(unsigned int idx)
            }
       }
      }
-   tlb_e[idx].start_odd = tlb_e[idx].end_even+1;
-   tlb_e[idx].end_odd = tlb_e[idx].start_odd+
-     (tlb_e[idx].mask << 12) + 0xFFF;
-   tlb_e[idx].phys_odd = tlb_e[idx].pfn_odd << 12;
-   
+
    if (tlb_e[idx].v_odd)
-     {
-    if (tlb_e[idx].start_odd < tlb_e[idx].end_odd &&
-        !(tlb_e[idx].start_odd >= 0x80000000 &&
-        tlb_e[idx].end_odd < 0xC0000000) &&
-        tlb_e[idx].phys_odd < 0x20000000)
-      {
-         for (i=tlb_e[idx].start_odd;i<tlb_e[idx].end_odd;i+=0x1000)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[idx].phys_odd + (i - tlb_e[idx].start_odd) + 0xFFF);
-         if (tlb_e[idx].d_odd)
-           for (i=tlb_e[idx].start_odd;i<tlb_e[idx].end_odd;i+=0x1000)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[idx].phys_odd + (i - tlb_e[idx].start_odd) + 0xFFF);
-      }
-    
+     {    
     for (i=tlb_e[idx].start_odd>>12; i<=tlb_e[idx].end_odd>>12; i++)
       {
          /*if (blocks[i] && (blocks[i]->md5[0] || blocks[i]->md5[1] ||
