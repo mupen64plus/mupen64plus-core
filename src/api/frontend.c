@@ -188,7 +188,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (ParamInt >= 0x20)
             {
                 int size = (ParamInt >= 0x20 + 20) ? 20 : (ParamInt - 0x20);
-                memcpy((char *)ParamPtr + 0x20, ROM_SETTINGS.headername, size);
+                memcpy((char *)ParamPtr + 0x20, ROM_PARAMS.headername, size);
             }
             return M64ERR_SUCCESS;
         case M64CMD_ROM_GET_SETTINGS:

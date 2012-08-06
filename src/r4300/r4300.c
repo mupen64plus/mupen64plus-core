@@ -1755,7 +1755,7 @@ void r4300_reset_soft(void)
       CIC_Chip = 2;
    }
 
-   switch(ROM_SETTINGS.systemtype)
+   switch(ROM_PARAMS.systemtype)
      {
       case SYSTEM_PAL:
     switch (CIC_Chip) {

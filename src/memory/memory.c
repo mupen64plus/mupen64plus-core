@@ -2726,7 +2726,7 @@ void write_ai(void)
         aiLenChanged();
         if (g_AudioCallback != NULL)
             g_AudioCallback();
-        switch (ROM_SETTINGS.systemtype)
+        switch (ROM_PARAMS.systemtype)
         {
         case SYSTEM_PAL:
         {
@@ -2778,7 +2778,7 @@ void write_ai(void)
 void update_ai_dacrate(unsigned int word)
 {
     ai_register.ai_dacrate = word;
-    aiDacrateChanged(ROM_SETTINGS.systemtype);
+    aiDacrateChanged(ROM_PARAMS.systemtype);
 }
 
 void write_aib(void)
@@ -2798,7 +2798,7 @@ void write_aib(void)
         aiLenChanged();
         if (g_AudioCallback != NULL)
             g_AudioCallback();
-        switch (ROM_SETTINGS.systemtype)
+        switch (ROM_PARAMS.systemtype)
         {
         case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*vi_register.vi_delay*50)/49656530);
@@ -2866,7 +2866,7 @@ void write_aih(void)
         aiLenChanged();
         if (g_AudioCallback != NULL)
             g_AudioCallback();
-        switch (ROM_SETTINGS.systemtype)
+        switch (ROM_PARAMS.systemtype)
         {
         case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
@@ -2926,7 +2926,7 @@ void write_aid(void)
         aiLenChanged();
         if (g_AudioCallback != NULL)
             g_AudioCallback();
-        switch (ROM_SETTINGS.systemtype)
+        switch (ROM_PARAMS.systemtype)
         {
         case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*

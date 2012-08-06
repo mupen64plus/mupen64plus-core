@@ -36,6 +36,15 @@ extern int rom_size;
 
 extern unsigned char isGoldeneyeRom;
 
+typedef struct _rom_params
+{
+   m64p_system_type systemtype;
+   int vilimit;
+   char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
+} rom_params;
+
+extern m64p_rom_header  *ROM_HEADER;
+extern rom_params        ROM_PARAMS;
 extern m64p_rom_settings ROM_SETTINGS;
 
 /* Supported rom compressiontypes. */

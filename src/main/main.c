@@ -613,7 +613,7 @@ void new_vi(void)
     static unsigned int CalculatedTime ;
     static int VI_Counter = 0;
 
-    double VILimitMilliseconds = 1000.0 / ROM_SETTINGS.vilimit;
+    double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
     int time;
 

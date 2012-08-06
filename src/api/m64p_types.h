@@ -201,10 +201,6 @@ typedef struct
    unsigned char status;  /* Rom status on a scale from 0-5. */
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
-
-   int systemtype;
-   int vilimit;
-   char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */
