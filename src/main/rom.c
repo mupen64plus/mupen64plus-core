@@ -159,7 +159,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER->Country_code);
-    ROM_PARAMS.vilimit = rom_country_code_to_vi_limit(ROM_HEADER->Country_code);
+    ROM_PARAMS.vilimit = rom_system_type_to_vi_limit(ROM_PARAMS.systemtype);
+    ROM_PARAMS.aidacrate = rom_system_type_to_ai_dac_rate(ROM_PARAMS.systemtype);
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER->Name, 20);
     ROM_PARAMS.headername[20] = '\0';
@@ -258,10 +259,10 @@ m64p_system_type rom_country_code_to_system_type(char country_code)
     }
 }
 
-// Get the VI (vertical interrupt) limit associated to a ROM country code.
-int rom_country_code_to_vi_limit(char country_code)
+// Get the VI (vertical interrupt) limit associated to a ROM system type.
+int rom_system_type_to_vi_limit(m64p_system_type system_type)
 {
-    switch (rom_country_code_to_system_type(country_code))
+    switch (system_type)
     {
         case SYSTEM_PAL:
         case SYSTEM_MPAL:
@@ -270,6 +271,20 @@ int rom_country_code_to_vi_limit(char country_code)
         case SYSTEM_NTSC:
         default:
             return 60;
+    }
+}
+
+int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
+{
+    switch (system_type)
+    {
+        case SYSTEM_PAL:
+            return 49656530;
+        case SYSTEM_MPAL:
+            return 48628316;
+        case SYSTEM_NTSC:
+        default:
+            return 48681812;
     }
 }
 
