@@ -87,20 +87,30 @@ static int is_numeric(const char *string)
     return (rval == 1);
 }
 
-static config_section *find_section(config_list list, const char *ParamName)
+/* This function returns a pointer to the pointer of the requested section
+ * (i.e. a pointer the next field of the previous element, or to the first node).
+ *
+ * If there's no section named 'ParamName', returns the pointer to the next
+ * field of the last element in the list (such that derefencing it is NULL).
+ *
+ * Useful for operations that need to modify the links, e.g. deleting a section.
+ */
+static config_section **find_section_link(config_list *list, const char *ParamName)
 {
-    /* walk through the linked list of sections in the list */
-    config_section *curr_sec;
-    for (curr_sec = list; curr_sec != NULL; curr_sec = curr_sec->next)
+    config_section **curr_sec_link = list;
+    for (curr_sec_link = list; *curr_sec_link != NULL; curr_sec_link = &(*curr_sec_link)->next)
     {
-        if (osal_insensitive_strcmp(ParamName, curr_sec->name) == 0)
-            return curr_sec;
+        if (osal_insensitive_strcmp(ParamName, (*curr_sec_link)->name) == 0)
+            break;
     }
 
-    /* couldn't find this section parameter */
-    return NULL;
+    return curr_sec_link;
 }
-    
+
+static config_section *find_section(config_list list, const char *ParamName)
+{
+    return *find_section_link(&list, ParamName);
+}
 
 static config_var *find_section_var(config_section *section, const char *ParamName)
 {
@@ -149,8 +159,7 @@ static void delete_section_vars(config_section *pSection)
         config_var *next_var = curr_var->next;
         if (curr_var->type == M64TYPE_STRING)
             free(curr_var->val.string);
-        if (curr_var->comment != NULL)
-            free(curr_var->comment);
+        free(curr_var->comment);
         free(curr_var);
         curr_var = next_var;
     }
@@ -753,7 +762,8 @@ EXPORT int CALL ConfigHasUnsavedChanges(const char *SectionName)
 
 EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
 {
-    config_section *curr_section;
+    config_section **curr_section_link;
+    config_section *next_section;
 
     if (!l_ConfigInit)
         return M64ERR_NOT_INIT;
@@ -761,33 +771,18 @@ EXPORT m64p_error CALL ConfigDeleteSection(const char *SectionName)
         return M64ERR_INPUT_NOT_FOUND;
 
     /* find the named section and pull it out of the list */
-    curr_section = l_ConfigListActive;
-    if (osal_insensitive_strcmp(l_ConfigListActive->name, SectionName) == 0)
-    {
-        l_ConfigListActive = l_ConfigListActive->next;
-    }
-    else
-    {
-        while (curr_section != NULL)
-        {
-            config_section *next_section = curr_section->next;
-            if (next_section == NULL)
-                return M64ERR_INPUT_NOT_FOUND;
-            if (osal_insensitive_strcmp(next_section->name, SectionName) == 0)
-            {
-                curr_section->next = next_section->next;
-                curr_section = next_section;
-                break;
-            }
-            curr_section = next_section;
-        }
-    }
+    curr_section_link = find_section_link(&l_ConfigListActive, SectionName);
+    if (*curr_section_link == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
 
-    /* delete all the variables in this section */
-    delete_section_vars(curr_section);
+    next_section = (*curr_section_link)->next;
 
-    /* delete the section itself */
-    free(curr_section);
+    /* delete the named section */
+    delete_section_vars(*curr_section_link);
+    free(*curr_section_link);
+
+    /* fix the pointer to point to the next section after the deleted one */
+    *curr_section_link = next_section;
 
     return M64ERR_SUCCESS;
 }
@@ -952,8 +947,7 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
             var->val.integer = (*((int *) ParamValue) != 0);
             break;
         case M64TYPE_STRING:
-            if (var->val.string != NULL)
-                free(var->val.string);
+            free(var->val.string);
             var->val.string = strdup((char *)ParamValue);
             if (var->val.string == NULL)
                 return M64ERR_NO_MEMORY;
