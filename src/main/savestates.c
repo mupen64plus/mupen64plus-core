@@ -377,7 +377,6 @@ int savestates_save_pj64(void)
     int retval;
     TLB_pj64 tlb_pj64[32];
     zipFile zipfile = NULL;
-    zip_fileinfo zipfi;
     size_t length;
 
     unsigned int dummy = 0;
@@ -400,7 +399,7 @@ int savestates_save_pj64(void)
         goto clean_and_exit;
     }
 
-    retval = zipOpenNewFileInZip(zipfile, filename, &zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
+    retval = zipOpenNewFileInZip(zipfile, filename, NULL, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
     if(retval != ZIP_OK)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not create state file: %s", filename);

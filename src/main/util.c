@@ -378,8 +378,6 @@ char* namefrompath(const char* path)
         return strdup(path);
 }
 
-
-
 char *formatstr(const char *fmt, ...)
 {
 	int size = 128, ret;
