@@ -38,6 +38,7 @@
 
 #include "memory/memory.h"
 #include "memory/flashram.h"
+#include "memory/tlb.h"
 #include "r4300/macros.h"
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
@@ -510,13 +511,9 @@ static void savestates_load_pj64(void)
 {
     char *file = NULL, *filename = NULL, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;
-    int queuelength, i;
+    int i;
     unzFile zipstatefile = NULL;
     unz_file_info fileinfo;
-
-    unsigned int *sp, *w_sp;
-    unsigned int *dpc, *w_dpc;
-    unsigned int *mi, *w_mi;
     TLB_pj64 tlb_pj64;
 
     savestates_get_path(&file, &filename, 1);
@@ -554,17 +551,7 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, &vi_timer,4);
 
     // Program Counter
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        unzReadCurrentFile(zipstatefile, &interp_addr,4);
-    else
-    {
-        unzReadCurrentFile(zipstatefile, &queuelength,4);
-        for (i = 0; i < 0x100000; i++)
-        {
-            invalid_code[i] = 1;
-        }
-        jump_to(queuelength);
-    }
+    unzReadCurrentFile(zipstatefile, &last_addr, 4);
 
     // GPR
     unzReadCurrentFile(zipstatefile, reg,8*32);
@@ -576,15 +563,19 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, reg_cop0, 4*32);
 
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
+    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(0x04000000, 0);
 
     // Initialze the interupts
     vi_timer += reg_cop0[9]; // Add current Count
-    next_interupt = vi_timer;
+    next_interupt = (Compare < vi_timer) ? Compare : vi_timer;
     next_vi = vi_timer;
     vi_field = 0;
     *((unsigned int*)&buffer[0]) = VI_INT;
     *((unsigned int*)&buffer[4]) = vi_timer;
-    *((unsigned int*)&buffer[8]) = 0xFFFFFFFF;
+    *((unsigned int*)&buffer[8]) = COMPARE_INT;
+    *((unsigned int*)&buffer[12]) = Compare;
+    *((unsigned int*)&buffer[16]) = 0xFFFFFFFF;
 
     load_eventqueue_infos(buffer);
 
@@ -612,35 +603,7 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, &rsp_register.rsp_pc, 4);
     unzReadCurrentFile(zipstatefile, &rsp_register.rsp_ibist, 4);
 
-    w_sp = &sp_register.w_sp_status_reg; // Only done to reduce the amount
-    sp = &sp_register.sp_status_reg;     // of character in the below ifs / elses
-    *w_sp = 0;
-    if ((*sp & 0x0001) == 0) { *w_sp |= 0x0000001; }
-    else                     { *w_sp |= 0x0000002; }
-    if ((*sp & 0x0002) == 0) { *w_sp |= 0x0000004; }
-    if ((*sp & 0x001c) == 0) { *w_sp |= 0x0000008; } // TODO: Unsecure if this is correct
-    else                     { *w_sp |= 0x0000010; } // TODO:  --- " ---
-    if ((*sp & 0x0020) == 0) { *w_sp |= 0x0000020; }
-    else                     { *w_sp |= 0x0000040; }
-    if ((*sp & 0x0040) == 0) { *w_sp |= 0x0000080; }
-    else                     { *w_sp |= 0x0000100; }
-    if ((*sp & 0x0080) == 0) { *w_sp |= 0x0000200; }
-    else                     { *w_sp |= 0x0000400; }
-    if ((*sp & 0x0100) == 0) { *w_sp |= 0x0000800; }
-    else                     { *w_sp |= 0x0001000; }
-    if ((*sp & 0x0200) == 0) { *w_sp |= 0x0002000; }
-    else                     { *w_sp |= 0x0004000; }
-    if ((*sp & 0x0400) == 0) { *w_sp |= 0x0008000; }
-    else                     { *w_sp |= 0x0010000; }
-    if ((*sp & 0x0800) == 0) { *w_sp |= 0x0020000; }
-    else                     { *w_sp |= 0x0040000; }
-    if ((*sp & 0x1000) == 0) { *w_sp |= 0x0080000; }
-    else                     { *w_sp |= 0x0100000; }
-    if ((*sp & 0x2000) == 0) { *w_sp |= 0x0200000; }
-    else                     { *w_sp |= 0x0400000; }
-    if ((*sp & 0x4000) == 0) { *w_sp |= 0x0800000; }
-    else                     { *w_sp |= 0x1000000; }
-    update_SP();
+    make_w_sp_status_reg();
 
     // dpc_register
     unzReadCurrentFile(zipstatefile, &dpc_register.dpc_start, 4);
@@ -653,61 +616,26 @@ static void savestates_load_pj64(void)
     unzReadCurrentFile(zipstatefile, &dpc_register.dpc_tmem, 4);
     unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
     unzReadCurrentFile(zipstatefile, &value, 4); // Dummy read
-    w_dpc = &dpc_register.w_dpc_status;
-    dpc = &dpc_register.dpc_status;
-    *w_dpc = 0;
-    if ((*dpc & 0x0001) == 0) { *w_dpc |= 0x0000001; }
-    else                      { *w_dpc |= 0x0000002; }
-    if ((*dpc & 0x0002) == 0) { *w_dpc |= 0x0000004; }
-    else                      { *w_dpc |= 0x0000008; }
-    if ((*dpc & 0x0004) == 0) { *w_dpc |= 0x0000010; }
-    else                      { *w_dpc |= 0x0000020; }
-    update_DPC();
+
+    make_w_dpc_status();
 
     // mi_register
     unzReadCurrentFile(zipstatefile, &MI_register.mi_init_mode_reg, 4);
     unzReadCurrentFile(zipstatefile, &MI_register.mi_version_reg, 4);
     unzReadCurrentFile(zipstatefile, &MI_register.mi_intr_reg, 4);
     unzReadCurrentFile(zipstatefile, &MI_register.mi_intr_mask_reg, 4);
-    MI_register.w_mi_init_mode_reg = MI_register.mi_init_mode_reg & 0x7F;
-    if ((MI_register.mi_init_mode_reg & 0x080) == 0)
-        { MI_register.w_mi_init_mode_reg |= 0x0000080;
-    } else {
-        MI_register.w_mi_init_mode_reg |= 0x0000100;
-    }
-    if ((MI_register.mi_init_mode_reg & 0x200) == 0) {
-        MI_register.w_mi_init_mode_reg |= 0x0001000;
-    } else {
-        MI_register.w_mi_init_mode_reg |= 0x0002000;
-    }
-    // TODO: Unsecure about 'clear DP interrupt' (MI_register.w_mi_init_mode_reg[11])
-    update_MI_intr_mask_reg();
-    w_mi = (unsigned int *) &MI_register.w_mi_intr_mask_reg;
-    mi = (unsigned int *) &MI_register.mi_intr_mask_reg;
-    *w_mi = 0;
-    if ((*mi & 0x01) == 0) { *w_mi |= 0x0000001; }
-    else                   { *w_mi |= 0x0000002; }
-    if ((*mi & 0x02) == 0) { *w_mi |= 0x0000004; }
-    else                   { *w_mi |= 0x0000008; }
-    if ((*mi & 0x04) == 0) { *w_mi |= 0x0000010; }
-    else                   { *w_mi |= 0x0000020; }
-    if ((*mi & 0x08) == 0) { *w_mi |= 0x0000040; }
-    else                   { *w_mi |= 0x0000080; }
-    if ((*mi & 0x10) == 0) { *w_mi |= 0x0000100; }
-    else                   { *w_mi |= 0x0000200; }
-    if ((*mi & 0x20) == 0) { *w_mi |= 0x0000400; }
-    else                   { *w_mi |= 0x0000800; }
-    update_MI_init_mode_reg();
+
+    make_w_mi_init_mode_reg();
+    make_w_mi_intr_mask_reg();
 
     // vi_register 
     unzReadCurrentFile(zipstatefile, &vi_register, 4*14);
+    update_vi_status(vi_register.vi_status);
+    update_vi_width(vi_register.vi_width);
 
     // ai_register
     unzReadCurrentFile(zipstatefile, &ai_register, 4*6);
-
-    // TODO: Not avialable in PJ64 savestate. Leave it as is.
-    // ai_register.next_delay = 0; ai_register.next_len = 0;
-    // ai_register.current_delay = 0; ai_register.current_len = 0;
+    update_ai_dacrate(ai_register.ai_dacrate);
 
     // pi_register
     unzReadCurrentFile(zipstatefile, &pi_register, sizeof(PI_register));
@@ -723,8 +651,6 @@ static void savestates_load_pj64(void)
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
-        unsigned int j;
-
         unzReadCurrentFile(zipstatefile, &tlb_pj64, sizeof(TLB_pj64));
         tlb_e[i].mask = (short) tlb_pj64.BreakDownPageMask.Mask;
         tlb_e[i].vpn2 = tlb_pj64.BreakDownEntryHi.VPN2;
@@ -748,52 +674,7 @@ static void savestates_load_pj64(void)
         tlb_e[i].end_odd = (unsigned int) tlb_e[i].start_odd + (tlb_e[i].mask << 12) + 0xFFF;;
         tlb_e[i].phys_odd = (unsigned int) tlb_e[i].pfn_odd << 12;
 
-        if (tlb_e[i].v_even)
-        {
-            if (tlb_e[i].start_even < tlb_e[i].end_even &&
-                !(tlb_e[i].start_even >= 0x80000000 && tlb_e[i].end_even < 0xC0000000) &&
-                tlb_e[i].phys_even < 0x20000000)
-            {
-                for (j=tlb_e[i].start_even;j<tlb_e[i].end_even;j++)
-                    tlb_LUT_r[j>>12] = 0x80000000 | (tlb_e[i].phys_even + 
-                                                     (j - tlb_e[i].start_even));
-                if (tlb_e[i].d_even)
-                    for (j=tlb_e[i].start_even;j<tlb_e[i].end_even;j++)
-                        tlb_LUT_w[j>>12] = 0x80000000 | (tlb_e[i].phys_even + (j - tlb_e[i].start_even));
-            }
-            for (j=tlb_e[i].start_even>>12; j<=tlb_e[i].end_even>>12; j++)
-            {
-                if(blocks[j] && blocks[j]->adler32)
-                {
-                    if(blocks[j]->adler32 == 
-                       adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[j]&0x7FF000)/4],0x1000))
-                        invalid_code[j] = 0;
-                }
-            }
-        }
-
-        if (tlb_e[i].v_odd)
-        {
-            if (tlb_e[i].start_odd < tlb_e[i].end_odd &&
-                !(tlb_e[i].start_odd >= 0x80000000 &&
-                  tlb_e[i].end_odd < 0xC0000000) &&
-                tlb_e[i].phys_odd < 0x20000000)
-            {
-                for (j=tlb_e[i].start_odd;j<tlb_e[i].end_odd;j++)
-                    tlb_LUT_r[j>>12] = 0x80000000 | (tlb_e[i].phys_odd + (j - tlb_e[i].start_odd));
-                if (tlb_e[i].d_odd)
-                    for (j=tlb_e[i].start_odd;j<tlb_e[i].end_odd;j++)
-                        tlb_LUT_w[j>>12] = 0x80000000 | (tlb_e[i].phys_odd + (j - tlb_e[i].start_odd));
-            }
-            for (j=tlb_e[i].start_odd>>12; j<=tlb_e[i].end_odd>>12; j++)
-            {
-                if(blocks[j] && blocks[j]->adler32)
-                {
-                    if(blocks[j]->adler32 == adler32(0,(const Bytef*)&rdram[(tlb_LUT_r[j]&0x7FF000)/4],0x1000))
-                        invalid_code[j] = 0;
-                }
-            }
-        }
+        tlb_map(&tlb_e[i]);
     }
 
     // pif ram
@@ -809,7 +690,11 @@ static void savestates_load_pj64(void)
     // IMEM
     unzReadCurrentFile(zipstatefile, SP_IMEM, 0x1000);
 
-    // TODO: The following is not available in PJ64 savestate. Keep the values as is.
+    // The following values should not matter because we don't have any AI interrupt
+    // ai_register.next_delay = 0; ai_register.next_len = 0;
+    // ai_register.current_delay = 0; ai_register.current_len = 0;
+
+    // The following is not available in PJ64 savestate. Keep the values as is.
     // dps_register.dps_tbist = 0; dps_register.dps_test_mode = 0;
     // dps_register.dps_buftest_addr = 0; dps_register.dps_buftest_data = 0; llbit = 0;
 
@@ -817,9 +702,13 @@ static void savestates_load_pj64(void)
     init_flashram();
 
     if(r4300emu == CORE_PURE_INTERPRETER)
-        last_addr = interp_addr;
+        interp_addr = last_addr;
     else
-        last_addr = PC->addr;
+    {
+        for (i = 0; i < 0x100000; i++)
+            invalid_code[i] = 1;
+        jump_to(last_addr);
+    }
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
 

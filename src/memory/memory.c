@@ -1010,7 +1010,7 @@ void free_memory(void)
 {
 }
 
-void update_MI_init_mode_reg(void)
+void make_mi_init_mode_reg(void)
 {
     MI_register.init_length = MI_register.w_mi_init_mode_reg & 0x7F;
     if (MI_register.w_mi_init_mode_reg & 0x80)
@@ -1021,11 +1021,6 @@ void update_MI_init_mode_reg(void)
         MI_register.ebus_test_mode = 0;
     if (MI_register.w_mi_init_mode_reg & 0x400)
         MI_register.ebus_test_mode = 1;
-    if (MI_register.w_mi_init_mode_reg & 0x800)
-    {
-        MI_register.mi_intr_reg &= 0xFFFFFFDF;
-        check_interupt();
-    }
     if (MI_register.w_mi_init_mode_reg & 0x1000)
         MI_register.RDRAM_reg_mode=0;
     if (MI_register.w_mi_init_mode_reg & 0x2000)
@@ -1037,7 +1032,39 @@ void update_MI_init_mode_reg(void)
                                    );
 }
 
-void update_MI_intr_mask_reg(void)
+void make_w_mi_init_mode_reg(void)
+{
+    MI_register.w_mi_init_mode_reg = MI_register.mi_init_mode_reg & 0x7F;
+    if ((MI_register.mi_init_mode_reg & 0x080) == 0)
+        MI_register.w_mi_init_mode_reg |= 0x0000080;
+    else
+        MI_register.w_mi_init_mode_reg |= 0x0000100;
+
+    if ((MI_register.mi_init_mode_reg & 0x100) == 0)
+        MI_register.w_mi_init_mode_reg |= 0x0000200;
+    else
+        MI_register.w_mi_init_mode_reg |= 0x0000400;
+
+    if ((MI_register.mi_init_mode_reg & 0x200) == 0)
+        MI_register.w_mi_init_mode_reg |= 0x0001000;
+    else
+        MI_register.w_mi_init_mode_reg |= 0x0002000;
+
+    make_mi_init_mode_reg(); // To update the flags
+}
+
+void update_MI_init_mode_reg(void)
+{
+    make_mi_init_mode_reg();
+
+    if (MI_register.w_mi_init_mode_reg & 0x800)
+    {
+        MI_register.mi_intr_reg &= 0xFFFFFFDF;
+        check_interupt();
+    }
+}
+
+void make_mi_intr_mask_reg(void)
 {
     if (MI_register.w_mi_intr_mask_reg & 0x1)   MI_register.SP_intr_mask = 0;
     if (MI_register.w_mi_intr_mask_reg & 0x2)   MI_register.SP_intr_mask = 1;
@@ -1060,8 +1087,48 @@ void update_MI_intr_mask_reg(void)
                                    );
 }
 
+void make_w_mi_intr_mask_reg(void)
+{
+    MI_register.w_mi_intr_mask_reg = 0;
+    if ((MI_register.mi_intr_mask_reg & 0x01) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000001;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000002;
+    
+    if ((MI_register.mi_intr_mask_reg & 0x02) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000004;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000008;
+    
+    if ((MI_register.mi_intr_mask_reg & 0x04) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000010;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000020;
+    
+    if ((MI_register.mi_intr_mask_reg & 0x08) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000040;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000080;
+    
+    if ((MI_register.mi_intr_mask_reg & 0x10) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000100;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000200;
+    
+    if ((MI_register.mi_intr_mask_reg & 0x20) == 0)
+        MI_register.w_mi_intr_mask_reg |= 0x0000400;
+    else
+        MI_register.w_mi_intr_mask_reg |= 0x0000800;
+    
+    make_mi_intr_mask_reg(); // To update the flags
+}
 
-void update_SP(void)
+void update_MI_intr_mask_reg(void)
+{
+    make_mi_intr_mask_reg();
+}
+
+void make_sp_status_reg(void)
 {
     if (sp_register.w_sp_status_reg & 0x1)
         sp_register.halt = 0;
@@ -1069,18 +1136,6 @@ void update_SP(void)
         sp_register.halt = 1;
     if (sp_register.w_sp_status_reg & 0x4)
         sp_register.broke = 0;
-    if (sp_register.w_sp_status_reg & 0x8)
-    {
-        MI_register.mi_intr_reg &= 0xFFFFFFFE;
-        check_interupt();
-    }
-
-    if (sp_register.w_sp_status_reg & 0x10)
-    {
-        MI_register.mi_intr_reg |= 1;
-        check_interupt();
-    }
-
     if (sp_register.w_sp_status_reg & 0x20)
         sp_register.single_step = 0;
     if (sp_register.w_sp_status_reg & 0x40)
@@ -1136,6 +1191,92 @@ void update_SP(void)
                                  (sp_register.signal5 << 12) |
                                  (sp_register.signal6 << 13) |
                                  (sp_register.signal7 << 14));
+}
+
+void make_w_sp_status_reg(void)
+{
+    sp_register.w_sp_status_reg = 0;
+
+    if ((sp_register.sp_status_reg & 0x0001) == 0)
+        sp_register.w_sp_status_reg |= 0x0000001;
+    else
+        sp_register.w_sp_status_reg |= 0x0000002;
+
+    if ((sp_register.sp_status_reg & 0x0002) == 0)
+        sp_register.w_sp_status_reg |= 0x0000004;
+
+    if ((sp_register.sp_status_reg & 0x001c) == 0) // TODO: Unsecure if this is correct
+        sp_register.w_sp_status_reg |= 0x0000008;
+    else
+        sp_register.w_sp_status_reg |= 0x0000010;
+
+    if ((sp_register.sp_status_reg & 0x0020) == 0)
+        sp_register.w_sp_status_reg |= 0x0000020;
+    else
+        sp_register.w_sp_status_reg |= 0x0000040;
+
+    if ((sp_register.sp_status_reg & 0x0040) == 0)
+        sp_register.w_sp_status_reg |= 0x0000080;
+    else
+        sp_register.w_sp_status_reg |= 0x0000100;
+    if ((sp_register.sp_status_reg & 0x0080) == 0)
+        sp_register.w_sp_status_reg |= 0x0000200;
+    else
+        sp_register.w_sp_status_reg |= 0x0000400;
+
+    if ((sp_register.sp_status_reg & 0x0100) == 0)
+        sp_register.w_sp_status_reg |= 0x0000800;
+    else
+        sp_register.w_sp_status_reg |= 0x0001000;
+
+    if ((sp_register.sp_status_reg & 0x0200) == 0)
+        sp_register.w_sp_status_reg |= 0x0002000;
+    else
+        sp_register.w_sp_status_reg |= 0x0004000;
+
+    if ((sp_register.sp_status_reg & 0x0400) == 0)
+        sp_register.w_sp_status_reg |= 0x0008000;
+    else
+        sp_register.w_sp_status_reg |= 0x0010000;
+
+    if ((sp_register.sp_status_reg & 0x0800) == 0)
+        sp_register.w_sp_status_reg |= 0x0020000;
+    else
+        sp_register.w_sp_status_reg |= 0x0040000;
+
+    if ((sp_register.sp_status_reg & 0x1000) == 0)
+        sp_register.w_sp_status_reg |= 0x0080000;
+    else
+        sp_register.w_sp_status_reg |= 0x0100000;
+
+    if ((sp_register.sp_status_reg & 0x2000) == 0)
+        sp_register.w_sp_status_reg |= 0x0200000;
+    else
+        sp_register.w_sp_status_reg |= 0x0400000;
+
+    if ((sp_register.sp_status_reg & 0x4000) == 0)
+        sp_register.w_sp_status_reg |= 0x0800000;
+    else
+        sp_register.w_sp_status_reg |= 0x1000000;
+
+    make_sp_status_reg(); // To update the flags
+}
+
+void update_SP(void)
+{
+    make_sp_status_reg();
+
+    if (sp_register.w_sp_status_reg & 0x8)
+    {
+        MI_register.mi_intr_reg &= 0xFFFFFFFE;
+        check_interupt();
+    }
+
+    if (sp_register.w_sp_status_reg & 0x10)
+    {
+        MI_register.mi_intr_reg |= 1;
+        check_interupt();
+    }
 
     //if (get_event(SP_INT)) return;
     if (!(sp_register.w_sp_status_reg & 0x1) &&
@@ -1394,7 +1535,7 @@ void update_SP(void)
     }
 }
 
-void update_DPC(void)
+void make_dpc_status(void)
 {
     if (dpc_register.w_dpc_status & 0x1)
         dpc_register.xbus_dmem_dma = 0;
@@ -1420,6 +1561,33 @@ void update_DPC(void)
                                (dpc_register.end_valid << 9) |
                                (dpc_register.start_valid << 10)
                               );
+}
+
+void make_w_dpc_status(void)
+{
+    dpc_register.w_dpc_status = 0;
+
+    if ((dpc_register.dpc_status & 0x0001) == 0)
+        dpc_register.w_dpc_status |= 0x0000001;
+    else
+        dpc_register.w_dpc_status |= 0x0000002;
+
+    if ((dpc_register.dpc_status & 0x0002) == 0)
+        dpc_register.w_dpc_status |= 0x0000004;
+    else
+        dpc_register.w_dpc_status |= 0x0000008;
+
+    if ((dpc_register.dpc_status & 0x0004) == 0)
+        dpc_register.w_dpc_status |= 0x0000010;
+    else
+        dpc_register.w_dpc_status |= 0x0000020;
+
+    make_dpc_status(); // To update the flags
+}
+
+void update_DPC(void)
+{
+    make_dpc_status();
 }
 
 void read_nothing(void)
