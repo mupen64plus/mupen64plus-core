@@ -150,22 +150,22 @@ static void GetBaseFilepath(char *filepath, int maxlen)
     filepath[maxlen-24] = 0;
     if (strlen(filepath) == 0)
     {
-        snprintf(filepath, maxlen - 24, "%sscreenshot%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATOR);
+        snprintf(filepath, maxlen - 24, "%sscreenshot%c", ConfigGetUserDataPath(), OSAL_DIR_SEPARATORS[0]);
         osal_mkdirp(filepath, 0700);
     }
 
     /* make sure there is a slash on the end of the pathname */
     int pathlen = strlen(filepath);
-    if (pathlen > 0 && filepath[pathlen-1] != OSAL_DIR_SEPARATOR)
+    if (pathlen > 0 && !strchr(OSAL_DIR_SEPARATORS, filepath[pathlen-1]))
     {
-        filepath[pathlen] = OSAL_DIR_SEPARATOR;
-        filepath[pathlen+1] = 0;
+        filepath[pathlen] = OSAL_DIR_SEPARATORS[0];
+        filepath[pathlen+1] = '\0';
     }
 
     // add the game's name to the end, convert to lowercase, convert spaces to underscores
     char *pch = filepath + strlen(filepath);
     char ch;
-    strncpy(pch, (char*) ROM_HEADER->nom, 20);
+    strncpy(pch, ROM_HEADER->Name, 20);
     pch[20] = '\0';
     do
     {

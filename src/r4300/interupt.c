@@ -40,6 +40,7 @@
 #include "r4300.h"
 #include "macros.h"
 #include "exception.h"
+#include "reset.h"
 
 #ifdef WITH_LIRC
 #include "main/lirc.h"
@@ -48,6 +49,9 @@
 unsigned int next_vi;
 int vi_field=0;
 static int vi_counter=0;
+
+int interupt_unsafe_state = 0;
+
 typedef struct _interupt_queue
 {
    int type;
@@ -324,11 +328,22 @@ void gen_interupt(void)
         vi_counter = 0; // debug
         dyna_stop();
     }
-    if (savestates_job & LOADSTATE) 
+
+    if (!interupt_unsafe_state)
     {
-        savestates_load();
-        savestates_job &= ~LOADSTATE;
-        return;
+        if (savestates_job & LOADSTATE) 
+        {
+            savestates_load();
+            savestates_job &= ~LOADSTATE;
+            return;
+        }
+
+        if (reset_hard_job)
+        {
+            reset_hard();
+            reset_hard_job = 0;
+            return;
+        }
     }
    
     if (skip_jump)
@@ -377,6 +392,9 @@ void gen_interupt(void)
             lircCheckInput();
 #endif
             SDL_PumpEvents();
+            if (g_InputCallback != NULL)
+                g_InputCallback();
+
             refresh_stat();
 
             // if paused, poll for input events
@@ -391,6 +409,8 @@ void gen_interupt(void)
 #ifdef WITH_LIRC
                     lircCheckInput();
 #endif //WITH_LIRC
+                    if (g_InputCallback != NULL)
+                        g_InputCallback();
                 }
             }
 
@@ -433,6 +453,8 @@ void gen_interupt(void)
             lircCheckInput();
 #endif //WITH_LIRC
             SDL_PumpEvents();
+            if (g_InputCallback != NULL)
+                g_InputCallback();
             PIF_RAMb[0x3F] = 0x0;
             remove_interupt_event();
             MI_register.mi_intr_reg |= 0x02;
@@ -568,7 +590,8 @@ void gen_interupt(void)
                         blocks[i] = NULL;
                     }
                 }
-                // re-initialize
+                // clear all the compiled instruction blocks and re-initialize
+                free_blocks();
                 init_blocks();
                 // jump to the start
                 ErrorEPC = PC->addr;
@@ -591,19 +614,22 @@ void gen_interupt(void)
 
     exception_general();
 
-    if(savestates_job & SAVESTATE)
+    if (!interupt_unsafe_state)
     {
-        if(savestates_job & SAVEPJ64STATE)
+        if(savestates_job & SAVESTATE)
         {
-            if(savestates_save_pj64() != -1)
+            if(savestates_job & SAVEPJ64STATE)
             {
-            savestates_job &= ~(SAVESTATE+SAVEPJ64STATE);
+                if(savestates_save_pj64() != -1)
+                {
+                    savestates_job &= ~(SAVESTATE+SAVEPJ64STATE);
+                }
             }
-        }
-        else
-        {
-            savestates_save();
-            savestates_job &= ~SAVESTATE;
+            else
+            {
+                savestates_save();
+                savestates_job &= ~SAVESTATE;
+            }
         }
     }
 }

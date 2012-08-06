@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - util.c                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -25,6 +26,7 @@
  *  -Doubly-linked list
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -35,6 +37,50 @@
 #include "util.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
+
+/** read_from_file
+ *    opens a file and reads the specified number of bytes.
+ *    returns zero on success, nonzero on failure
+ */
+file_status_t read_from_file(const char *filename, void *data, size_t size)
+{
+    FILE *f = fopen(filename, "rb");
+    if (f == NULL)
+    {
+        return file_open_error;
+    }
+
+    if (fread(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_read_error;
+    }
+
+    fclose(f);
+    return file_ok;
+}
+
+/** write_to_file
+ *    opens a file and writes the specified number of bytes.
+ *    returns zero on sucess, nonzero on failure
+ */ 
+file_status_t write_to_file(const char *filename, const void *data, size_t size)
+{
+    FILE *f = fopen(filename, "wb");
+    if (f == NULL)
+    {
+        return file_open_error;
+    }
+
+    if (fwrite(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_read_error;
+    }
+
+    fclose(f);
+    return file_ok;
+}
 
 /** trim
  *    Removes leading and trailing whitespace from str. Function modifies str
@@ -202,7 +248,7 @@ list_node_t *list_find_node(list_t list, void *data)
     return node;
 }
 
-void countrycodestring(unsigned short countrycode, char *string)
+void countrycodestring(char countrycode, char *string)
 {
     switch (countrycode)
     {
@@ -243,7 +289,7 @@ void countrycodestring(unsigned short countrycode, char *string)
         break;
 
     case 0x55: case 0x59:  /* Australia */
-        sprintf(string, "Australia (0x%2.2X)", countrycode);
+        sprintf(string, "Australia (0x%02X)", countrycode);
         break;
 
     case 0x50: case 0x58: case 0x20:
@@ -284,7 +330,7 @@ char* dirfrompath(const char* string)
 
     for(counter = stringlength; counter > 0; --counter)
         {
-        if (string[counter-1] == '/')
+        if (strchr(OSAL_DIR_SEPARATORS, string[counter-1]))
             break;
         }
 

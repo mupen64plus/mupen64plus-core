@@ -390,9 +390,9 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
 
     strcpy(filepath, configpath);
     pathlen = strlen(filepath);
-    if (filepath[pathlen - 1] != OSAL_DIR_SEPARATOR)
+    if (!strchr(OSAL_DIR_SEPARATORS, filepath[pathlen - 1]))
     {
-        filepath[pathlen] = OSAL_DIR_SEPARATOR;
+        filepath[pathlen] = OSAL_DIR_SEPARATORS[0];
         filepath[pathlen + 1] = 0;
     }
     strcat(filepath, MUPEN64PLUS_CFG_NAME);

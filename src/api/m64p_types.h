@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-core - m64p_types.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -51,6 +52,9 @@
 typedef void * m64p_handle;
 
 typedef void (*m64p_frame_callback)(unsigned int FrameIndex);
+typedef void (*m64p_input_callback)(void);
+typedef void (*m64p_audio_callback)(void);
+typedef void (*m64p_vi_callback)(void);
 
 typedef enum {
   M64TYPE_INT = 1,
@@ -138,7 +142,20 @@ typedef enum {
   M64CMD_SEND_SDL_KEYUP,
   M64CMD_SET_FRAME_CALLBACK,
   M64CMD_TAKE_NEXT_SCREENSHOT,
-  M64CMD_CORE_STATE_SET
+  M64CMD_CORE_STATE_SET,
+  M64CMD_GET_SCREEN_WIDTH,
+  M64CMD_GET_SCREEN_HEIGHT,
+  M64CMD_READ_SCREEN,
+  M64CMD_VOLUME_UP,
+  M64CMD_VOLUME_DOWN,
+  M64CMD_VOLUME_GET_LEVEL,
+  M64CMD_VOLUME_SET_LEVEL,
+  M64CMD_VOLUME_MUTE,
+  M64CMD_SET_AUDIO_CALLBACK,
+  M64CMD_SET_INPUT_CALLBACK,
+  M64CMD_SET_VI_CALLBACK,
+  M64CMD_SOFT_RESET,
+  M64CMD_ADVANCE_FRAME
 } m64p_command;
 
 typedef struct {
@@ -149,6 +166,13 @@ typedef struct {
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */
 /* ----------------------------------------- */
+
+typedef enum
+{
+    SYSTEM_NTSC = 0,
+    SYSTEM_PAL,
+    SYSTEM_MPAL
+} m64p_system_type;
 
 typedef struct
 {
@@ -177,6 +201,9 @@ typedef struct
    unsigned char status;  /* Rom status on a scale from 0-5. */
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
+
+   int systemtype;
+   int vilimit;
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

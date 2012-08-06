@@ -45,13 +45,13 @@ typedef struct _rom_header
    unsigned int Release;                    /* 0x0C */
    unsigned int CRC1;                       /* 0x10 */
    unsigned int CRC2;                       /* 0x14 */
-   unsigned int Unknown[2];                 /* 0x18 */
-   unsigned char nom[20];                   /* 0x20 */
-   unsigned int unknown;                    /* 0x34 */
-   unsigned int Manufacturer_ID;            /* 0x38 */
-   unsigned short Cartridge_ID;             /* 0x3C - Game serial number  */
-   unsigned short Country_code;             /* 0x3E */
-   unsigned int Boot_Code[1008];            /* 0x40 */
+   unsigned char Unused1[8];                /* 0x18 */
+   char Name[20];                           /* 0x20 */
+   unsigned char Unused2[7];                /* 0x34 */
+   char Manufacturer_ID;                    /* 0x3B */
+   char Cartridge_ID[2];                    /* 0x3C - Game serial number  */
+   char Country_code;                       /* 0x3E */
+   unsigned char Unused3;                   /* 0x3F */
 } rom_header;
 
 extern unsigned char isGoldeneyeRom;
@@ -98,6 +98,11 @@ enum
     CONTROLLER_PACK,
     NONE
 };
+
+/* ROM utility functions */
+
+m64p_system_type rom_country_code_to_system_type(char country_code);
+int rom_country_code_to_vi_limit(char country_code);
 
 /* Rom INI database structures and functions */
 

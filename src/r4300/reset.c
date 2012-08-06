@@ -1,7 +1,10 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dummy_input.h                                           *
+ *   Mupen64plus - reset.c                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2009 Richard Goedeken                                   *
+ *   Copyright (C) 2011 CasualJames                                        *
+ *   Copyright (C) 2008-2009 Richard Goedeken                              *
+ *   Copyright (C) 2008 Ebenblues Nmn Okaygo Tillin9                       *
+ *   Hard reset based on code by hacktarux.                                *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,24 +22,42 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#if !defined(DUMMY_INPUT_H)
-#define DUMMY_INPUT_H
+#include "r4300/reset.h"
+#include "r4300/r4300.h"
+#include "r4300/interupt.h"
+#include "memory/memory.h"
 
-#include "api/m64p_plugin.h"
+int reset_hard_job = 0;
 
-extern m64p_error dummyinput_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
-                                              int *APIVersion, const char **PluginNamePtr, int *Capabilities);
-extern void dummyinput_InitiateControllers (CONTROL_INFO ControlInfo);
-extern void dummyinput_GetKeys(int Control, BUTTONS * Keys );
-extern void dummyinput_ControllerCommand(int Control, unsigned char *Command);
-extern void dummyinput_GetKeys(int Control, BUTTONS * Keys);
-extern void dummyinput_InitiateControllers(CONTROL_INFO ControlInfo);
-extern void dummyinput_ReadController(int Control, unsigned char *Command);
-extern int  dummyinput_RomOpen(void);
-extern void dummyinput_RomClosed(void);
-extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
-extern void dummyinput_SDL_KeyUp(int keymod, int keysym);
+void reset_hard(void)
+{
+    init_memory(0);
+    r4300_reset_hard();
+    r4300_reset_soft();
+    last_addr = 0xa4000040;
+    next_interupt = 624999;
+    init_interupt();
+    if(r4300emu == CORE_PURE_INTERPRETER)
+    {
+        interp_addr = last_addr;
+    }
+    else
+    {
+        /* TODO
+         * The following code *should* work and avoid free_blocks() and init_blocks(),
+         * but it doesn't unless the last line is added (which causes a memory leak).
+        int i;
+        for (i=0; i<0x100000; i++)
+            invalid_code[i] = 1;
+        blocks[0xa4000000>>12]->block = NULL; */
+        free_blocks();
+        init_blocks();
+        jump_to(last_addr);
+    }
+}
 
-#endif /* DUMMY_INPUT_H */
-
-
+void reset_soft(void)
+{
+    add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
+    add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
+}

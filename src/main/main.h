@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - main.h                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Blight                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -31,6 +32,9 @@ extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
 
 extern m64p_frame_callback g_FrameCallback;
+extern m64p_input_callback g_InputCallback;
+extern m64p_audio_callback g_AudioCallback;
+extern m64p_vi_callback    g_ViCallback;
 
 const char* get_savestatepath(void);
 const char* get_savesrampath(void);
@@ -62,6 +66,17 @@ void main_state_load(const char *filename);
 void main_state_save(int format_pj64, const char *filename);
 
 m64p_error main_core_state_query(m64p_core_param param, int *rval);
+m64p_error main_core_state_set(m64p_core_param param, int val);
+
+m64p_error main_get_screen_width(int *width);
+m64p_error main_get_screen_height(int *height);
+m64p_error main_read_screen(void *pixels, int bFront);
+
+m64p_error main_volume_up(void);
+m64p_error main_volume_down(void);
+m64p_error main_volume_get_level(int *level);
+m64p_error main_volume_set_level(int level);
+m64p_error main_volume_mute(void);
 
 #endif /* __MAIN_H__ */
 

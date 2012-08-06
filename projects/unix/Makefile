@@ -317,6 +317,7 @@ SOURCE = \
 	$(SRCDIR)/r4300/special.c \
 	$(SRCDIR)/r4300/regimm.c \
 	$(SRCDIR)/r4300/tlb.c \
+	$(SRCDIR)/r4300/reset.c \
 	$(SRCDIR)/osd/OGLFT.cpp \
 	$(SRCDIR)/osd/osd.cpp \
 	$(SRCDIR)/osd/screenshot.cpp

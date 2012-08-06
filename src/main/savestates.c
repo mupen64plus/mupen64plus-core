@@ -55,7 +55,7 @@ static void savestates_load_pj64(void);
 static char* savestates_get_filename(void);
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_version = 0x00010000;  /* 1.0 */
+static const int savestate_latest_version = 0x00010000;  /* 1.0 */
 static const int pj64_magic = 0x23D8A6C8;
 
 extern unsigned int interp_addr;
@@ -120,9 +120,9 @@ static char* savestates_get_filename(void)
 
 static char* savestates_get_pj64_filename(void)
 {
-    size_t length = strlen((char*)ROM_HEADER->nom)+8+1;
+    size_t length = strlen(ROM_HEADER->Name)+8+1;
     char* filename = (char*)malloc(length);
-    snprintf(filename, length, "%s.pj%d.zip", (char*)ROM_HEADER->nom, slot);
+    snprintf(filename, length, "%s.pj%d.zip", ROM_HEADER->Name, slot);
     return filename;
 }
 
@@ -170,10 +170,10 @@ void savestates_save(void)
     gzwrite(f, savestate_magic, 8);
 
     /* Write savestate file version in big-endian. */
-    outbuf[0] = (savestate_version >> 24) & 0xff;
-    outbuf[1] = (savestate_version >> 16) & 0xff;
-    outbuf[2] = (savestate_version >>  8) & 0xff;
-    outbuf[3] = (savestate_version >>  0) & 0xff;
+    outbuf[0] = (savestate_latest_version >> 24) & 0xff;
+    outbuf[1] = (savestate_latest_version >> 16) & 0xff;
+    outbuf[2] = (savestate_latest_version >>  8) & 0xff;
+    outbuf[3] = (savestate_latest_version >>  0) & 0xff;
     gzwrite(f, outbuf, 4);
 
     gzwrite(f, ROM_SETTINGS.MD5, 32);
@@ -243,7 +243,7 @@ void savestates_load(void)
     unsigned char inbuf[4];
     gzFile f;
     size_t length;
-    int queuelength, i;
+    int queuelength, version;
 
     if(fname[0]!=0)  /* A specific filename was given. */
         {
@@ -287,13 +287,13 @@ void savestates_load(void)
     fname[0] = 0;
     /* Read savestate file version in big-endian order. */
     gzread(f, inbuf, 4);
-    i =            inbuf[0];
-    i = (i << 8) | inbuf[1];
-    i = (i << 8) | inbuf[2];
-    i = (i << 8) | inbuf[3];
-    if(i!=savestate_version)
+    version = inbuf[0];
+    version = (version << 8) | inbuf[1];
+    version = (version << 8) | inbuf[2];
+    version = (version << 8) | inbuf[3];
+    if(version != 0x00010000)
         {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) doesn't match current version (%08x).", i, savestate_version);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
         free(filename);
         gzclose(f);
         return;

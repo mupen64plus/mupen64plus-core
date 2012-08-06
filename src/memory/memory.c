@@ -2724,26 +2724,18 @@ void write_ai(void)
     case 0x4:
         ai_register.ai_len = word;
         aiLenChanged();
-        switch (ROM_HEADER->Country_code&0xFF)
+        if (g_AudioCallback != NULL)
+            g_AudioCallback();
+        switch (ROM_SETTINGS.systemtype)
         {
-        case 0x44:
-        case 0x46:
-        case 0x49:
-        case 0x50:
-        case 0x53:
-        case 0x55:
-        case 0x58:
-        case 0x59:
+        case SYSTEM_PAL:
         {
             unsigned int f = 49656530/(ai_register.ai_dacrate+1);
             if (f)
                 delay = (unsigned int) (((unsigned long long)ai_register.ai_len * vi_register.vi_delay*50)/(f*4));
         }
         break;
-        case 0x37:
-        case 0x41:
-        case 0x45:
-        case 0x4a:
+        case SYSTEM_NTSC:
         {
             unsigned int f = 48681812/(ai_register.ai_dacrate+1);
             if (f)
@@ -2786,25 +2778,7 @@ void write_ai(void)
 void update_ai_dacrate(unsigned int word)
 {
     ai_register.ai_dacrate = word;
-    switch (ROM_HEADER->Country_code&0xFF)
-    {
-    case 0x44:
-    case 0x46:
-    case 0x49:
-    case 0x50:
-    case 0x53:
-    case 0x55:
-    case 0x58:
-    case 0x59:
-        aiDacrateChanged(SYSTEM_PAL);
-        break;
-    case 0x37:
-    case 0x41:
-    case 0x45:
-    case 0x4a:
-        aiDacrateChanged(SYSTEM_NTSC);
-        break;
-    }
+    aiDacrateChanged(ROM_SETTINGS.systemtype);
 }
 
 void write_aib(void)
@@ -2822,22 +2796,14 @@ void write_aib(void)
           + ((*address_low&3)^S8) ) = cpu_byte;
         ai_register.ai_len = temp;
         aiLenChanged();
-        switch (ROM_HEADER->Country_code&0xFF)
+        if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+            g_AudioCallback();
+        switch (ROM_SETTINGS.systemtype)
         {
-        case 0x44:
-        case 0x46:
-        case 0x49:
-        case 0x50:
-        case 0x53:
-        case 0x55:
-        case 0x58:
-        case 0x59:
+        case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*vi_register.vi_delay*50)/49656530);
             break;
-        case 0x37:
-        case 0x41:
-        case 0x45:
-        case 0x4a:
+        case SYSTEM_NTSC:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
                                      vi_register.vi_delay*60)/48681812);
             break;
@@ -2898,23 +2864,15 @@ void write_aih(void)
                             + ((*address_low&3)^S16) )) = hword;
         ai_register.ai_len = temp;
         aiLenChanged();
-        switch (ROM_HEADER->Country_code&0xFF)
+        if (g_AudioCallback != NULL) // TODO XXX move to audio plugin?
+            g_AudioCallback();
+        switch (ROM_SETTINGS.systemtype)
         {
-        case 0x44:
-        case 0x46:
-        case 0x49:
-        case 0x50:
-        case 0x53:
-        case 0x55:
-        case 0x58:
-        case 0x59:
+        case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
                                      vi_register.vi_delay*50)/49656530);
             break;
-        case 0x37:
-        case 0x41:
-        case 0x45:
-        case 0x4a:
+        case SYSTEM_NTSC:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
                                      vi_register.vi_delay*60)/48681812);
             break;
@@ -2966,23 +2924,15 @@ void write_aid(void)
         ai_register.ai_dram_addr = (unsigned int) (dword >> 32);
         ai_register.ai_len = (unsigned int) (dword & 0xFFFFFFFF);
         aiLenChanged();
-        switch (ROM_HEADER->Country_code&0xFF)
+        if (g_AudioCallback != NULL)
+            g_AudioCallback();
+        switch (ROM_SETTINGS.systemtype)
         {
-        case 0x44:
-        case 0x46:
-        case 0x49:
-        case 0x50:
-        case 0x53:
-        case 0x55:
-        case 0x58:
-        case 0x59:
+        case SYSTEM_PAL:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
                                      vi_register.vi_delay*50)/49656530);
             break;
-        case 0x37:
-        case 0x41:
-        case 0x45:
-        case 0x4a:
+        case SYSTEM_NTSC:
             delay = (unsigned int) (((unsigned long long)ai_register.ai_len*(ai_register.ai_dacrate+1)*
                                      vi_register.vi_delay*60)/48681812);
             break;
