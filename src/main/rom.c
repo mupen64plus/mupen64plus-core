@@ -308,15 +308,9 @@ static unsigned char hexconvert(const char* bigraph)
 
 static void parse_md5(const char *str, unsigned char *md5)
 {
-    char hashtemp[3] = { 0, 0, 0 };
     int counter;
-
     for (counter=0; counter < 16; ++counter)
-    {
-        hashtemp[0] = str[counter*2+0];
-        hashtemp[1] = str[counter*2+1];
-        md5[counter] = hexconvert(hashtemp);
-    }
+        md5[counter] = hexconvert(str + counter*2);
 }
 
 void romdatabase_open(void)
