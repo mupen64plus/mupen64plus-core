@@ -31,6 +31,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 #include <sys/stat.h>
 
 #include "rom.h"
@@ -321,22 +322,98 @@ void imagestring(unsigned char imagetype, char *string)
     }
 }
 
-char* dirfrompath(const char* string)
+/* Looks for an instance of ANY of the characters in 'needles' in 'haystack',
+ * starting from the end of 'haystack'. Returns a pointer to the last position
+ * of some character on 'needles' on 'haystack'. If not found, returns NULL.
+ */
+static const char* strpbrk_reverse(const char* needles, const char* haystack)
 {
-    int stringlength, counter;
-    char* buffer;
+    size_t stringlength = strlen(haystack), counter;
 
-    stringlength = strlen(string);
-
-    for(counter = stringlength; counter > 0; --counter)
-        {
-        if (strchr(OSAL_DIR_SEPARATORS, string[counter-1]))
+    for (counter = stringlength; counter > 0; --counter)
+    {
+        if (strchr(needles, haystack[counter-1]))
             break;
+    }
+
+    if (counter == 0)
+        return NULL;
+
+    return haystack + counter - 1;
+}
+
+/* Extracts the directory string (part before the file name) from a path string.
+ * Returns a malloc'd string with the directory string.
+ * If there's no directory string in the path, returns a malloc'd empty string.
+ * (This is done so that path = dirfrompath(path) + namefrompath(path)). */
+char* dirfrompath(const char* path)
+{
+    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
+    if (last_separator_ptr != NULL)
+    {
+        size_t dirlen = last_separator_ptr + 1 - path; // Not including terminator
+
+        char* buffer = malloc(dirlen + 1);
+        if (buffer != NULL)
+        {
+            strncpy(buffer, path, dirlen);
+            buffer[dirlen] = 0;
         }
 
-    buffer = (char*)malloc((counter+1)*sizeof(char));
-    snprintf(buffer, counter+1, "%s", string);
-    buffer[counter] = '\0';
+        return buffer;
+    }
+    else
+        return calloc(1, sizeof(char)); // Empty string
+}
 
-    return buffer;
+/* Extracts the full file name (with extension) from a path string.
+ * Returns a malloc'd string with the file name. */
+char* namefrompath(const char* path)
+{
+    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
+    
+    if (last_separator_ptr != NULL)
+        return strdup(last_separator_ptr + 1);
+    else
+        return strdup(path);
+}
+
+
+
+char *formatstr(const char *fmt, ...)
+{
+	int size = 128, ret;
+	char *str = malloc(size), *newstr;
+	va_list args;
+
+	/* There are two implementations of vsnprintf we have to deal with:
+	 * C99 version: Returns the number of characters which would have been written
+	 *              if the buffer had been large enough, and -1 on failure.
+	 * Windows version: Returns the number of characters actually written,
+	 *                  and -1 on failure or truncation.
+	 * NOTE: An implementation equivalent to the Windows one appears in glibc <2.1.
+	 */
+	while (str != NULL)
+	{
+		va_start(args, fmt);
+		ret = vsnprintf(str, size, fmt, args);
+		va_end(args);
+
+		// Successful result?
+		if (ret >= 0 && ret < size)
+			return str;
+
+		// Increment the capacity of the buffer
+		if (ret >= size)
+			size = ret + 1; // C99 version: We got the needed buffer size
+		else
+			size *= 2; // Windows version: Keep guessing
+
+		newstr = realloc(str, size);
+		if (newstr == NULL)
+			free(str);
+		str = newstr;
+	}
+
+	return NULL;
 }

@@ -52,7 +52,6 @@
 #endif
 
 static void savestates_load_pj64(void);
-static char* savestates_get_filename(void);
 
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010000;  /* 1.0 */
@@ -66,6 +65,44 @@ static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
 static char fname[1024] = {0};
 
+/* Returns path information of the currently selected savestate.
+ *   filepath: Will recieve the full path of the savestate. Can be NULL.
+ *   filename: Will recieve the file name of the savestate. Can be NULL.
+ *   is_pj64: Set to nonzero to generate Project64 savestate paths.
+ */
+static void savestates_get_path(char **filepath, char **filename, int is_pj64)
+{
+    if(fname[0] != 0) /* A specific path was given. */
+    {
+        if (filepath != NULL)
+            *filepath = strdup(fname);
+
+        if (filename != NULL)
+            *filename = namefrompath(fname);
+    }
+    else /* Use the selected savestate slot */
+    {
+        char *my_filename;
+        if (is_pj64)
+            my_filename = formatstr("%s.pj%d.zip", ROM_HEADER->Name, slot);
+        else
+            my_filename = formatstr("%s.st%d", ROM_SETTINGS.goodname, slot);
+
+        if (filepath != NULL)
+        {
+            if (my_filename != NULL)
+                *filepath = formatstr("%s%s", get_savestatepath(), my_filename);
+            else
+                *filepath = NULL;
+        }
+
+        if (filename != NULL)
+            *filename = my_filename;
+        else
+            free(my_filename);
+    }
+}
+
 void savestates_select_slot(unsigned int s)
 {
     if(s>9||s==slot)
@@ -75,11 +112,12 @@ void savestates_select_slot(unsigned int s)
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 
     if(rom)
-        {
-        char* filename = savestates_get_filename();
+    {
+        char* filename;
+        savestates_get_path(NULL, &filename, 0);
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state file: %s", filename);
         free(filename);
-        }
+    }
     else
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
 }
@@ -110,51 +148,18 @@ void savestates_select_filename(const char* fn)
    strcpy(fname, fn);
 }
 
-static char* savestates_get_filename(void)
-{
-    size_t length = strlen(ROM_SETTINGS.goodname)+4+1;
-    char* filename = (char*)malloc(length);
-    snprintf(filename, length, "%s.st%d", ROM_SETTINGS.goodname, slot);
-    return filename;
-}
-
-static char* savestates_get_pj64_filename(void)
-{
-    size_t length = strlen(ROM_HEADER->Name)+8+1;
-    char* filename = (char*)malloc(length);
-    snprintf(filename, length, "%s.pj%d.zip", ROM_HEADER->Name, slot);
-    return filename;
-}
-
 void savestates_save(void)
 {
     char *filename, *file, buffer[1024];
     unsigned char outbuf[4];
     gzFile f;
-    size_t length;
     int queuelength;
 
     if(autoinc_save_slot)
         savestates_inc_slot();
 
-    if(fname[0]!=0)  /* A specific filename was given. */
-        {
-        char *handle;
-        file = malloc(strlen(fname)+1);
-        filename = malloc(strlen(fname)+1);
-        strcpy(file, fname);
-        handle = dirfrompath(file);
-        strcpy(filename, fname+strlen(handle));
-        free(handle);
-        fname[0] = 0;
-        }
-    else
-        {
-        filename = savestates_get_filename();
-        length = strlen(get_savestatepath())+strlen(filename)+1;
-        file = malloc(length);
-        snprintf(file, length, "%s%s", get_savestatepath(), filename);
-        }
+    savestates_get_path(&file, &filename, 0);
+    fname[0] = 0; // Forget given savestate path (if any)
 
     f = gzopen(file, "wb");
     free(file);
@@ -242,26 +247,9 @@ void savestates_load(void)
     char *filename, *file, buffer[1024];
     unsigned char inbuf[4];
     gzFile f;
-    size_t length;
     int queuelength, version;
 
-    if(fname[0]!=0)  /* A specific filename was given. */
-        {
-        char *handle;
-        file = malloc(strlen(fname)+1);
-        filename = malloc(strlen(fname)+1);
-        strcpy(file, fname);
-        handle = dirfrompath(file);
-        strcpy(filename, fname+strlen(handle));
-        free(handle);
-        }
-    else
-        {
-        filename = savestates_get_filename();
-        length = strlen(get_savestatepath())+strlen(filename)+1;
-        file = malloc(length);
-        snprintf(file, length, "%s%s", get_savestatepath(), filename);
-        }
+    savestates_get_path(&file, &filename, 0);
 
     f = gzopen(file, "rb");
     free(file);
@@ -284,7 +272,7 @@ void savestates_load(void)
         return;
         }
 
-    fname[0] = 0;
+    fname[0] = 0; // Forget given savestate path (if any)
     /* Read savestate file version in big-endian order. */
     gzread(f, inbuf, 4);
     version = inbuf[0];
@@ -384,58 +372,40 @@ void savestates_load(void)
 
 int savestates_save_pj64(void)
 {
-    char *file, *filename;
+    char *file = NULL, *filename = NULL;
     unsigned int i, vi_timer, addr;
     int retval;
-    size_t length;
     TLB_pj64 tlb_pj64[32];
-    zipFile zipfile;
+    zipFile zipfile = NULL;
     zip_fileinfo zipfi;
+    size_t length;
 
     unsigned int dummy = 0;
     unsigned int SaveRDRAMSize = 0x800000;
 
     /* Continue only if VI / COMPARE
-    Otherwise try again in a little while. */
+       Otherwise try again in a little while. */
     if (get_next_event_type() > COMPARE_INT)
-       { return -1; }
+    {
+        return -1;
+    }
 
-    if(fname[0]!=0)  /* A specific filename was given. */
-        {
-        char *handle;
-        file = malloc(strlen(fname)+1);
-        filename = malloc(strlen(fname)+1);
-        strcpy(file, fname);
-        handle = dirfrompath(file);
-        strcpy(filename, fname+strlen(handle));
-        free(handle);
-        }
-    else
-        {
-        filename = savestates_get_pj64_filename();
-        length = strlen(get_savestatepath())+strlen(filename)+1;
-        file = malloc(length);
-        snprintf(file, length, "%s%s", get_savestatepath(), filename);
-        }
+    savestates_get_path(&file, &filename, 1);
+    fname[0] = 0; // Forget given savestate path (if any)
 
     zipfile = zipOpen(file, APPEND_STATUS_CREATE);
-    free(file);
-
-    if(zipfile==NULL)
-        {
+    if(zipfile == NULL)
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filename);
-        free(filename);
-        return -2;
-        }
+        goto clean_and_exit;
+    }
 
     retval = zipOpenNewFileInZip(zipfile, filename, &zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, Z_DEFAULT_COMPRESSION);
-    if(retval!=ZIP_OK)
-        {
-        zipClose(zipfile, "");
+    if(retval != ZIP_OK)
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not create state file: %s", filename);
-        free(filename);
-        return -3;
-        }
+        goto clean_and_exit;
+    }
 
     vi_timer = get_event(VI_INT) - reg_cop0[9]; /* Subtract current Count according to how PJ64 stores the timer. */
 
@@ -445,7 +415,7 @@ int savestates_save_pj64(void)
         addr = PC->addr;
 
     for (i=0; i < 32;i++)
-        {
+    {
         tlb_pj64[i].BreakDownPageMask.Mask   = (unsigned int) tlb_e[i].mask;
         tlb_pj64[i].BreakDownEntryHi.VPN2    = (unsigned int) tlb_e[i].vpn2;
         tlb_pj64[i].BreakDownEntryLo0.GLOBAL = (unsigned int) tlb_e[i].g;
@@ -459,7 +429,7 @@ int savestates_save_pj64(void)
         tlb_pj64[i].BreakDownEntryLo1.C      = (unsigned int) tlb_e[i].c_odd;
         tlb_pj64[i].BreakDownEntryLo1.D      = (unsigned int) tlb_e[i].d_odd;
         tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
-        }
+    }
 
     length = zipWriteInFileInZip(zipfile, &pj64_magic,                     4);
     length = zipWriteInFileInZip(zipfile, &SaveRDRAMSize,                  4);
@@ -510,21 +480,27 @@ int savestates_save_pj64(void)
     length = zipWriteInFileInZip(zipfile, SP_DMEM,                         0x1000);
     length = zipWriteInFileInZip(zipfile, SP_IMEM,                         0x1000);
 
-    zipCloseFileInZip(zipfile);
-    zipClose(zipfile, "");
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", filename);
-    free(filename);
-    return 1;
+
+    clean_and_exit:
+        if (filename != NULL)
+            free(filename);
+        if (file != NULL)
+            free(file);
+        if (zipfile != NULL)
+        {
+            zipCloseFileInZip(zipfile); // This may fail, but we don't care
+            zipClose(zipfile, "");
+        }
+        return 1;
 }
 
 static void savestates_load_pj64(void)
 {
-    char *file, *filename, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
+    char *file = NULL, *filename = NULL, buffer[1024], RomHeader[64], szFileName[256], szExtraField[256], szComment[256];
     unsigned int magic, value, vi_timer, SaveRDRAMSize;
-    unsigned char exit = 1;
     int queuelength, i;
-    size_t length;
-    unzFile zipstatefile;
+    unzFile zipstatefile = NULL;
     unz_file_info fileinfo;
 
     unsigned int *sp, *w_sp;
@@ -532,68 +508,36 @@ static void savestates_load_pj64(void)
     unsigned int *mi, *w_mi;
     TLB_pj64 tlb_pj64;
 
-    if(fname[0]!=0)  /* A specific filename was given. */
-        {
-        char *handle;
-        file = malloc(strlen(fname)+1);
-        filename = malloc(strlen(fname)+1);
-        strcpy(file, fname);
-        handle = dirfrompath(file);
-        strcpy(filename, fname+strlen(handle));
-        free(handle);
-        }
-    else
-        {
-        filename = savestates_get_pj64_filename();
-        length = strlen(get_savestatepath())+strlen(filename)+1;
-        file = malloc(length);
-        snprintf(file, length, "%s%s", get_savestatepath(), filename);
-        }
+    savestates_get_path(&file, &filename, 1);
+    fname[0] = 0; // Forget given savestate path (if any)
 
-    zipstatefile = unzOpen(file); /*Open the .zip file. */
-    if(zipstatefile!=NULL)
-        {
-        if(unzGoToFirstFile(zipstatefile)==UNZ_OK)
-            {
-            if(unzGetCurrentFileInfo(zipstatefile, &fileinfo, szFileName, 255, szExtraField, 255, szComment, 255)==UNZ_OK)
-                {
-                if(unzOpenCurrentFile(zipstatefile)==UNZ_OK)
-                    {
-                    if(fileinfo.uncompressed_size>=4)
-                        exit = 0;
-                    }
-                }
-            }
-        }
-
-    if(exit)
-        {
-        unzClose(zipstatefile);
+    /* Open the .zip file. */
+    zipstatefile = unzOpen(file);
+    if (zipstatefile == NULL ||
+        unzGoToFirstFile(zipstatefile) != UNZ_OK ||
+        unzGetCurrentFileInfo(zipstatefile, &fileinfo, szFileName, 255, szExtraField, 255, szComment, 255) != UNZ_OK ||
+        unzOpenCurrentFile(zipstatefile) != UNZ_OK)
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not open state file: %s", file);
-        free(file);
-        return;
-        }
+        goto clean_and_exit;
+    }
 
     /* Read and check Project64 magic number. */
     unzReadCurrentFile(zipstatefile, &magic, 4);
     if (magic!=pj64_magic)
-        {
-        unzClose(zipstatefile);
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", file);
-        free(file);
-        return;
-        }
+        goto clean_and_exit;
+    }
 
     unzReadCurrentFile(zipstatefile, &SaveRDRAMSize, 4);
 
     unzReadCurrentFile(zipstatefile, RomHeader, 0x40);
     if(memcmp(RomHeader, rom, 0x40)!=0) 
-        {
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
-        unzClose(zipstatefile);
-        free(file);
-        return;
-        }
+        goto clean_and_exit;
+    }
 
     // vi_timer
     unzReadCurrentFile(zipstatefile, &vi_timer,4);
@@ -602,12 +546,14 @@ static void savestates_load_pj64(void)
     if(r4300emu == CORE_PURE_INTERPRETER)
         unzReadCurrentFile(zipstatefile, &interp_addr,4);
     else
-        {
+    {
         unzReadCurrentFile(zipstatefile, &queuelength,4);
         for (i = 0; i < 0x100000; i++)
-            { invalid_code[i] = 1; }
-        jump_to(queuelength);
+        {
+            invalid_code[i] = 1;
         }
+        jump_to(queuelength);
+    }
 
     // GPR
     unzReadCurrentFile(zipstatefile, reg,8*32);
@@ -765,7 +711,7 @@ static void savestates_load_pj64(void)
     memset(tlb_LUT_r, 0, 0x400000);
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
-        {
+    {
         unsigned int j;
 
         unzReadCurrentFile(zipstatefile, &tlb_pj64, sizeof(TLB_pj64));
@@ -859,14 +805,20 @@ static void savestates_load_pj64(void)
     // No flashram info in pj64 savestate.
     init_flashram();
 
-    unzClose(zipstatefile);
     if(r4300emu == CORE_PURE_INTERPRETER)
         last_addr = interp_addr;
     else
         last_addr = PC->addr;
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", filename);
-    free(filename);
     fname[0] = 0;
+
+    clean_and_exit:
+        if (file != NULL)
+            free(file);
+        if (filename != NULL)
+            free(filename);
+        if (zipstatefile != NULL)
+            unzClose(zipstatefile);
 }
 

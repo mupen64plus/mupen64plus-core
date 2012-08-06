@@ -55,7 +55,9 @@ list_node_t *list_append(list_t *list, void *data);
 void list_node_delete(list_t *list, list_node_t *node);
 void list_delete(list_t *list);
 list_node_t *list_find_node(list_t list, void *data);
-char* dirfrompath(const char* string);
+
+char* dirfrompath(const char* path);
+char* namefrompath(const char* path);
 
 /* GUI utilities */
 void countrycodestring(char countrycode, char *string);
@@ -67,6 +69,7 @@ void imagestring(unsigned char imagetype, char *string);
 
 /** string utilities **/
 char *trim(char *str);
+char* formatstr(const char* fmt, ...);
 
 #ifdef __cplusplus
 }
