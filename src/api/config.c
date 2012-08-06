@@ -44,7 +44,7 @@
 #define SECTION_MAGIC 0xDBDC0580
 
 typedef struct _config_var {
-  char                  name[64];
+  char                 *name;
   m64p_type             type;
   union {
     int integer;
@@ -57,7 +57,7 @@ typedef struct _config_var {
 
 typedef struct _config_section {
   int                     magic;
-  char                    name[64];
+  char                   *name;
   struct _config_var     *first_var;
   struct _config_section *next;
   } config_section;
@@ -114,12 +114,17 @@ static config_section *find_section(config_list list, const char *ParamName)
 
 static config_var *config_var_create(const char *ParamName, const char *ParamHelp)
 {
-    config_var *var = malloc(sizeof(config_var));
-    if (var == NULL)
+    config_var *var = (config_var *) malloc(sizeof(config_var));
+
+    if (var == NULL || ParamName == NULL)
         return NULL;
 
-    strncpy(var->name, ParamName, 63);
-    var->name[63] = 0;
+    var->name = strdup(ParamName);
+    if (var->name == NULL)
+    {
+        free(var);
+        return NULL;
+    }
 
     var->type = M64TYPE_INT;
     var->val.integer = 0;
@@ -129,6 +134,7 @@ static config_var *config_var_create(const char *ParamName, const char *ParamHel
         var->comment = strdup(ParamHelp);
         if (var->comment == NULL)
         {
+            free(var->name);
             free(var);
             return NULL;
         }
@@ -178,6 +184,7 @@ static void delete_var(config_var *var)
 {
     if (var->type == M64TYPE_STRING)
         free(var->val.string);
+    free(var->name);
     free(var->comment);
     free(var);
 }
@@ -192,6 +199,7 @@ static void delete_section(config_section *pSection)
     for (curr_var = pSection->first_var; curr_var != NULL; curr_var = curr_var->next)
         delete_var(curr_var);
 
+    free(pSection->name);
     free(pSection);
 }
 
@@ -210,6 +218,29 @@ static void delete_list(config_list *pConfigList)
     *pConfigList = NULL;
 }
 
+static config_section *config_section_create(const char *ParamName)
+{
+    config_section *sec;
+
+    if (ParamName == NULL)
+        return NULL;
+
+    sec = (config_section *) malloc(sizeof(config_section));
+    if (sec == NULL)
+        return NULL;
+
+    sec->magic = SECTION_MAGIC;
+    sec->name = strdup(ParamName);
+    if (sec->name == NULL)
+    {
+        free(sec);
+        return NULL;
+    }
+    sec->first_var = NULL;
+    sec->next = NULL;
+    return sec;
+}
+
 static config_section * section_deepcopy(config_section *orig_section)
 {
     config_section *new_section;
@@ -220,14 +251,9 @@ static config_section * section_deepcopy(config_section *orig_section)
         return NULL;
 
     /* create and copy section struct */
-    new_section = (config_section *) malloc(sizeof(config_section));
+    new_section = config_section_create(orig_section->name);
     if (new_section == NULL)
         return NULL;
-    new_section->magic = SECTION_MAGIC;
-    memcpy(new_section->name, orig_section->name, 64);
-    new_section->name[63] = 0;
-    new_section->first_var = NULL;
-    new_section->next = NULL;
 
     /* create and copy all section variables */
     orig_var = orig_section->first_var;
@@ -606,14 +632,9 @@ EXPORT m64p_error CALL ConfigOpenSection(const char *SectionName, m64p_handle *C
     }
 
     /* didn't find the section, so create new one */
-    new_section = (config_section *) malloc(sizeof(config_section));
+    new_section = config_section_create(SectionName);
     if (new_section == NULL)
         return M64ERR_NO_MEMORY;
-    new_section->magic = SECTION_MAGIC;
-    strncpy(new_section->name, SectionName, 63);
-    new_section->name[63] = 0;
-    new_section->first_var = NULL;
-    new_section->next = NULL;
 
     /* add section to list in alphabetical order */
     if (l_ConfigListActive == NULL || osal_insensitive_strcmp(SectionName, l_ConfigListActive->name) < 0)
@@ -718,7 +739,7 @@ EXPORT int CALL ConfigHasUnsavedChanges(const char *SectionName)
     saved_var = curr_section->first_var;
     while (active_var != NULL && saved_var != NULL)
     {
-        if (strncmp(active_var->name, saved_var->name, 64) != 0)
+        if (strcmp(active_var->name, saved_var->name) != 0)
             return 1;
         if (active_var->type != saved_var->type)
             return 1;
