@@ -57,8 +57,6 @@ static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010000;  /* 1.0 */
 static const int pj64_magic = 0x23D8A6C8;
 
-extern unsigned int interp_addr;
-
 int savestates_job = 0;
 
 static unsigned int slot = 0;

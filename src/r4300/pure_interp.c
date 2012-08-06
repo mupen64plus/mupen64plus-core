@@ -52,8 +52,6 @@ static void prefetch(void);
 
 static void (*interp_ops[64])(void);
 
-extern unsigned int next_vi;
-
 static void NI(void)
 {
    DebugMessage(M64MSG_ERROR, "NI:%x", (unsigned int)op);
