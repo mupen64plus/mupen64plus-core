@@ -144,7 +144,7 @@ int osal_mkdirp(const char *dirpath, int mode)
 
     // Terminate quickly if the path already exists
     if (stat(dirpath, &fileinfo) == 0 && S_ISDIR(fileinfo.st_mode))
-        return 1;
+        return 0;
 
     // Create partial paths
     mypath = currpath = strdup(dirpath);

@@ -45,6 +45,10 @@
   #endif
 #endif
 
+/* Create a directory path recursively.
+ * Returns zero on success, nonzero on failure.
+ * Note that, unlike mkdir(), this function succeeds if the path already exists.
+ */
 extern int osal_mkdirp(const char *dirpath, int mode);
 
 extern const char * osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch);
