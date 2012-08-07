@@ -539,7 +539,6 @@ m64p_error main_volume_down(void)
 m64p_error main_volume_get_level(int *level)
 {
     *level = volumeGetLevel();
-    main_draw_volume_osd();
     return M64ERR_SUCCESS;
 }
 

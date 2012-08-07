@@ -577,7 +577,7 @@ static int savestates_load_pj64_unc(char *filepath)
 
 savestates_type savestates_detect_type(char *filepath)
 {
-    char magic[4];
+    unsigned char magic[4];
     FILE *f = fopen(filepath, "rb");
     if (f == NULL)
     {
@@ -596,7 +596,7 @@ savestates_type savestates_detect_type(char *filepath)
 
     if (magic[0] == 0x1f && magic[1] == 0x8b) // GZIP header
         return savestates_type_m64p;
-    else if (strncmp(magic, "PK\x03\x04", 4) == 0) // ZIP header
+    else if (memcmp(magic, "PK\x03\x04", 4) == 0) // ZIP header
         return savestates_type_pj64_zip;
     else if (*((int *)magic) == pj64_magic) // PJ64 header
         return savestates_type_pj64_unc;
