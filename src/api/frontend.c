@@ -103,7 +103,7 @@ EXPORT m64p_error CALL CoreShutdown(void)
     /* close down some core sub-systems */
     romdatabase_close();
     ConfigShutdown();
-    savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
+    savestates_clear_job();
 
     /* tell SDL to shut down */
     SDL_Quit();
