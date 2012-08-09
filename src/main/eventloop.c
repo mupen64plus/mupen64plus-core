@@ -32,6 +32,7 @@
 #include "api/m64p_config.h"
 #include "plugin/plugin.h"
 #include "r4300/interupt.h"
+#include "r4300/reset.h"
 
 /* version number for CoreEvents config section */
 #define CONFIG_PARAM_VERSION 1.00
@@ -242,7 +243,7 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyPause)
                         main_toggle_pause();
                     else if (cmd == joySave)
-                        main_state_save(0, NULL); /* save in mupen64plus format using current slot */
+                        main_state_save(1, NULL); /* save in mupen64plus format using current slot */
                     else if (cmd == joyLoad)
                         main_state_load(NULL); /* load using current slot */
                     else if (cmd == joyIncrement)
@@ -250,20 +251,11 @@ static int event_sdl_filter(const SDL_Event *event)
                     else if (cmd == joyScreenshot)
                         main_take_next_screenshot();
                     else if (cmd == joyMute)
-                    {
-                        volumeMute();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_mute();
                     else if (cmd == joyDecrease)
-                    {
-                        volumeDown();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_down();
                     else if (cmd == joyIncrease)
-                    {
-                        volumeUp();
-                        main_draw_volume_osd();
-                    }
+                        main_volume_up();
                     else if (cmd == joyForward)
                         main_set_fastforward(1);
                 }
@@ -393,13 +385,9 @@ void event_sdl_keydown(int keysym, int keymod)
 {
     /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
     if (keysym == SDLK_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
-    {
         changeWindow();
-    }
     else if (keysym >= SDLK_0 && keysym <= SDLK_9)
-    {
         main_state_set_slot(keysym - SDLK_0);
-    }
     /* check all of the configurable commands */
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdStop))
         main_stop();
@@ -412,10 +400,7 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdIncrement))
         main_state_inc_slot();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdReset))
-    {
-        add_interupt_event(HW2_INT, 0);  /* Hardware 2 Interrupt immediately */
-        add_interupt_event(NMI_INT, 50000000);  /* Non maskable Interrupt after 1/2 second */
-    }
+        reset_soft();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdSpeeddown))
         main_speeddown(5);
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdSpeedup))
@@ -425,32 +410,17 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdPause))
         main_toggle_pause();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdMute))
-    {
-        volumeMute();
-        main_draw_volume_osd();
-    }
+        main_volume_mute();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdIncrease))
-    {
-        volumeUp();
-        main_draw_volume_osd();
-    }
+        main_volume_up();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdDecrease))
-    {
-        volumeDown();
-        main_draw_volume_osd();
-    }
+        main_volume_down();
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdForward))
-    {
         main_set_fastforward(1);
-    }
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdAdvance))
-    {
         main_advance_one();
-    }
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdGameshark))
-    {
         KbdGamesharkPressed = 1;
-    }
     else
     {
         /* pass all other keypresses to the input plugin */

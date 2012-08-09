@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - util.c                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -25,45 +26,61 @@
  *  -Doubly-linked list
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <stdarg.h>
 
 #include "rom.h"
 #include "util.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 
-/** trim
- *    Removes leading and trailing whitespace from str. Function modifies str
- *    and also returns modified string.
- */
-char *trim(char *str)
+/**********************
+     File utilities
+ **********************/
+
+file_status_t read_from_file(const char *filename, void *data, size_t size)
 {
-    unsigned int i;
-    char *p = str;
-
-    while (isspace(*p))
-        p++;
-
-    if (str != p)
-        {
-        for (i = 0; i <= strlen(p); ++i)
-            str[i]=p[i];
-        }
-
-    p = str + strlen(str) - 1;
-    if (p > str)
+    FILE *f = fopen(filename, "rb");
+    if (f == NULL)
     {
-        while (isspace(*p))
-            p--;
-        p[1] = '\0';
+        return file_open_error;
     }
 
-    return str;
+    if (fread(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_read_error;
+    }
+
+    fclose(f);
+    return file_ok;
 }
+
+file_status_t write_to_file(const char *filename, const void *data, size_t size)
+{
+    FILE *f = fopen(filename, "wb");
+    if (f == NULL)
+    {
+        return file_open_error;
+    }
+
+    if (fwrite(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_read_error;
+    }
+
+    fclose(f);
+    return file_ok;
+}
+
+/**********************
+  Linked list utilities
+ **********************/
 
 /** list_empty
  *    Returns 1 if list is empty, else 0.
@@ -202,7 +219,10 @@ list_node_t *list_find_node(list_t list, void *data)
     return node;
 }
 
-void countrycodestring(unsigned short countrycode, char *string)
+/**********************
+     GUI utilities
+ **********************/
+void countrycodestring(char countrycode, char *string)
 {
     switch (countrycode)
     {
@@ -243,7 +263,7 @@ void countrycodestring(unsigned short countrycode, char *string)
         break;
 
     case 0x55: case 0x59:  /* Australia */
-        sprintf(string, "Australia (0x%2.2X)", countrycode);
+        sprintf(string, "Australia (0x%02X)", countrycode);
         break;
 
     case 0x50: case 0x58: case 0x20:
@@ -275,22 +295,163 @@ void imagestring(unsigned char imagetype, char *string)
     }
 }
 
-char* dirfrompath(const char* string)
+/**********************
+     Path utilities
+ **********************/
+
+/* Looks for an instance of ANY of the characters in 'needles' in 'haystack',
+ * starting from the end of 'haystack'. Returns a pointer to the last position
+ * of some character on 'needles' on 'haystack'. If not found, returns NULL.
+ */
+static const char* strpbrk_reverse(const char* needles, const char* haystack)
 {
-    int stringlength, counter;
-    char* buffer;
+    size_t stringlength = strlen(haystack), counter;
 
-    stringlength = strlen(string);
-
-    for(counter = stringlength; counter > 0; --counter)
-        {
-        if (string[counter-1] == '/')
+    for (counter = stringlength; counter > 0; --counter)
+    {
+        if (strchr(needles, haystack[counter-1]))
             break;
-        }
+    }
 
-    buffer = (char*)malloc((counter+1)*sizeof(char));
-    snprintf(buffer, counter+1, "%s", string);
-    buffer[counter] = '\0';
+    if (counter == 0)
+        return NULL;
 
-    return buffer;
+    return haystack + counter - 1;
+}
+
+const char* namefrompath(const char* path)
+{
+    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
+    
+    if (last_separator_ptr != NULL)
+        return last_separator_ptr + 1;
+    else
+        return path;
+}
+
+static int is_path_separator(char c)
+{
+    return strchr(OSAL_DIR_SEPARATORS, c) != NULL;
+}
+
+char* combinepath(const char* first, const char *second)
+{
+    size_t len_first = strlen(first), off_second = 0;
+
+    if (first == NULL || second == NULL)
+        return NULL;
+
+    while (is_path_separator(first[len_first-1]))
+        len_first--;
+
+    while (is_path_separator(second[off_second]))
+        off_second++;
+
+    return formatstr("%.*s%c%s", (int) len_first, first, OSAL_DIR_SEPARATORS[0], second + off_second);
+}
+
+/**********************
+    String utilities
+ **********************/
+char *trim(char *str)
+{
+    char *start = str, *end = str + strlen(str);
+
+    while (start < end && isspace(*start))
+        start++;
+
+    while (end > start && isspace(*(end-1)))
+        end--;
+
+    memmove(str, start, end - start);
+    str[end - start] = '\0';
+
+    return str;
+}
+
+char *formatstr(const char *fmt, ...)
+{
+	int size = 128, ret;
+	char *str = (char *)malloc(size), *newstr;
+	va_list args;
+
+	/* There are two implementations of vsnprintf we have to deal with:
+	 * C99 version: Returns the number of characters which would have been written
+	 *              if the buffer had been large enough, and -1 on failure.
+	 * Windows version: Returns the number of characters actually written,
+	 *                  and -1 on failure or truncation.
+	 * NOTE: An implementation equivalent to the Windows one appears in glibc <2.1.
+	 */
+	while (str != NULL)
+	{
+		va_start(args, fmt);
+		ret = vsnprintf(str, size, fmt, args);
+		va_end(args);
+
+		// Successful result?
+		if (ret >= 0 && ret < size)
+			return str;
+
+		// Increment the capacity of the buffer
+		if (ret >= size)
+			size = ret + 1; // C99 version: We got the needed buffer size
+		else
+			size *= 2; // Windows version: Keep guessing
+
+		newstr = (char *)realloc(str, size);
+		if (newstr == NULL)
+			free(str);
+		str = newstr;
+	}
+
+	return NULL;
+}
+
+ini_line ini_parse_line(char **lineptr)
+{
+    char *line = *lineptr, *endline = strchr(*lineptr, '\n'), *equal;
+    ini_line l;
+
+    // Null terminate the current line and point to the next line
+    if (endline != NULL)
+        *endline = '\0';
+    *lineptr = line + strlen(line) + 1;
+
+    // Parse the line contents
+    trim(line);
+
+    if (line[0] == '#' || line[0] == ';')
+    {
+        line++;
+
+        l.type = INI_COMMENT;
+        l.name = NULL;
+        l.value = line;
+    }
+    else if (line[0] == '[' && line[strlen(line)-1] == ']')
+    {
+        line[strlen(line)-1] = '\0';
+        line++;
+
+        l.type = INI_SECTION;
+        l.name = trim(line);
+        l.value = NULL;
+    }
+    else if ((equal = strchr(line, '=')) != NULL)
+    {
+        char *name = line, *value = equal + 1;
+        *equal = '\0';
+
+        l.type = INI_PROPERTY;
+        l.name = trim(name);
+        l.value = trim(value);
+    }
+    else
+    {
+        l.type = (*line == '\0') ? INI_BLANK : INI_TRASH;
+        l.name = NULL;
+        l.value = NULL;
+    }
+
+    return l;
 }

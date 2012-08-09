@@ -41,7 +41,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\libpng-1.2.37\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;inline=__inline"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				AdditionalDependencies="shell32.lib opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
 				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -120,7 +120,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.14\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.3\include;..\..\..\mupen64plus-win32-deps\libpng-1.2.37\include;..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;inline=__inline"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
+				AdditionalDependencies="shell32.lib opengl32.lib glu32.lib ..\..\..\mupen64plus-win32-deps\SDL-1.2.14\lib\SDL.lib ..\..\..\mupen64plus-win32-deps\zlib-1.2.3\lib\zlib.lib ..\..\..\mupen64plus-win32-deps\libpng-1.2.37\lib\libpng.lib ..\..\..\mupen64plus-win32-deps\freetype-2.3.5-1\lib\freetype.lib"
 				OutputFile="$(OutDir)\mupen64plus.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -182,10 +182,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath="..\..\src\main\adler32.c"
-				>
-			</File>
 			<File
 				RelativePath="..\..\src\r4300\x86\assemble.c"
 				>
@@ -429,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\reset.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\rjump.c"
 				>
 			</File>
@@ -496,10 +496,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\src\main\adler32.h"
-				>
-			</File>
 			<File
 				RelativePath="..\..\src\r4300\x86\assemble.h"
 				>
@@ -690,6 +686,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\x86\regcache.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\reset.h"
 				>
 			</File>
 			<File

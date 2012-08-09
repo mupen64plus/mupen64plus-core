@@ -36,11 +36,6 @@ extern "C" {
 #define PLUGIN_TANSFER_PAK          4 /* not implemeted for non raw data */
 #define PLUGIN_RAW                  5 /* the controller plugin is passed in raw data */
 
-/*** Audio plugin system types ***/
-#define SYSTEM_NTSC                 0
-#define SYSTEM_PAL                  1
-#define SYSTEM_MPAL                 2
-
 /***** Structures *****/
 typedef struct {
     unsigned char * RDRAM;

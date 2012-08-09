@@ -52,8 +52,6 @@ static void prefetch(void);
 
 static void (*interp_ops[64])(void);
 
-extern unsigned int next_vi;
-
 static void NI(void)
 {
    DebugMessage(M64MSG_ERROR, "NI:%x", (unsigned int)op);
@@ -806,163 +804,48 @@ static void TLBR(void)
    interp_addr+=4;
 }
 
+static void TLBWrite(unsigned int idx)
+{   
+   tlb_unmap(&tlb_e[idx]);
+
+   tlb_e[idx].g = (EntryLo0 & EntryLo1 & 1);
+   tlb_e[idx].pfn_even = (EntryLo0 & 0x3FFFFFC0) >> 6;
+   tlb_e[idx].pfn_odd = (EntryLo1 & 0x3FFFFFC0) >> 6;
+   tlb_e[idx].c_even = (EntryLo0 & 0x38) >> 3;
+   tlb_e[idx].c_odd = (EntryLo1 & 0x38) >> 3;
+   tlb_e[idx].d_even = (EntryLo0 & 0x4) >> 2;
+   tlb_e[idx].d_odd = (EntryLo1 & 0x4) >> 2;
+   tlb_e[idx].v_even = (EntryLo0 & 0x2) >> 1;
+   tlb_e[idx].v_odd = (EntryLo1 & 0x2) >> 1;
+   tlb_e[idx].asid = (EntryHi & 0xFF);
+   tlb_e[idx].vpn2 = (EntryHi & 0xFFFFE000) >> 13;
+   //tlb_e[idx].r = (EntryHi & 0xC000000000000000LL) >> 62;
+   tlb_e[idx].mask = (PageMask & 0x1FFE000) >> 13;
+   
+   tlb_e[idx].start_even = tlb_e[idx].vpn2 << 13;
+   tlb_e[idx].end_even = tlb_e[idx].start_even+
+     (tlb_e[idx].mask << 12) + 0xFFF;
+   tlb_e[idx].phys_even = tlb_e[idx].pfn_even << 12;
+   
+   tlb_e[idx].start_odd = tlb_e[idx].end_even+1;
+   tlb_e[idx].end_odd = tlb_e[idx].start_odd+
+     (tlb_e[idx].mask << 12) + 0xFFF;
+   tlb_e[idx].phys_odd = tlb_e[idx].pfn_odd << 12;
+   
+   tlb_map(&tlb_e[idx]);
+}
+
 static void TLBWI(void)
 {
-   unsigned int i;
-   
-   if (tlb_e[Index&0x3F].v_even)
-     {
-    for (i=tlb_e[Index&0x3F].start_even; i<tlb_e[Index&0x3F].end_even; i++)
-      tlb_LUT_r[i>>12] = 0;
-    if (tlb_e[Index&0x3F].d_even)
-      for (i=tlb_e[Index&0x3F].start_even; i<tlb_e[Index&0x3F].end_even; i++)
-        tlb_LUT_w[i>>12] = 0;
-     }
-   if (tlb_e[Index&0x3F].v_odd)
-     {
-    for (i=tlb_e[Index&0x3F].start_odd; i<tlb_e[Index&0x3F].end_odd; i++)
-      tlb_LUT_r[i>>12] = 0;
-    if (tlb_e[Index&0x3F].d_odd)
-      for (i=tlb_e[Index&0x3F].start_odd; i<tlb_e[Index&0x3F].end_odd; i++)
-        tlb_LUT_w[i>>12] = 0;
-     }
-   tlb_e[Index&0x3F].g = (EntryLo0 & EntryLo1 & 1);
-   tlb_e[Index&0x3F].pfn_even = (EntryLo0 & 0x3FFFFFC0) >> 6;
-   tlb_e[Index&0x3F].pfn_odd = (EntryLo1 & 0x3FFFFFC0) >> 6;
-   tlb_e[Index&0x3F].c_even = (EntryLo0 & 0x38) >> 3;
-   tlb_e[Index&0x3F].c_odd = (EntryLo1 & 0x38) >> 3;
-   tlb_e[Index&0x3F].d_even = (EntryLo0 & 0x4) >> 2;
-   tlb_e[Index&0x3F].d_odd = (EntryLo1 & 0x4) >> 2;
-   tlb_e[Index&0x3F].v_even = (EntryLo0 & 0x2) >> 1;
-   tlb_e[Index&0x3F].v_odd = (EntryLo1 & 0x2) >> 1;
-   tlb_e[Index&0x3F].asid = (EntryHi & 0xFF);
-   tlb_e[Index&0x3F].vpn2 = (EntryHi & 0xFFFFE000) >> 13;
-   //tlb_e[Index&0x3F].r = (EntryHi & 0xC000000000000000LL) >> 62;
-   tlb_e[Index&0x3F].mask = (PageMask & 0x1FFE000) >> 13;
-   
-   tlb_e[Index&0x3F].start_even = tlb_e[Index&0x3F].vpn2 << 13;
-   tlb_e[Index&0x3F].end_even = tlb_e[Index&0x3F].start_even+
-     (tlb_e[Index&0x3F].mask << 12) + 0xFFF;
-   tlb_e[Index&0x3F].phys_even = tlb_e[Index&0x3F].pfn_even << 12;
-   
-   if (tlb_e[Index&0x3F].v_even)
-     {
-    if (tlb_e[Index&0x3F].start_even < tlb_e[Index&0x3F].end_even &&
-        !(tlb_e[Index&0x3F].start_even >= 0x80000000 &&
-        tlb_e[Index&0x3F].end_even < 0xC0000000) &&
-        tlb_e[Index&0x3F].phys_even < 0x20000000)
-      {
-         for (i=tlb_e[Index&0x3F].start_even;i<tlb_e[Index&0x3F].end_even;i++)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[Index&0x3F].phys_even + (i - tlb_e[Index&0x3F].start_even));
-         if (tlb_e[Index&0x3F].d_even)
-           for (i=tlb_e[Index&0x3F].start_even;i<tlb_e[Index&0x3F].end_even;i++)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[Index&0x3F].phys_even + (i - tlb_e[Index&0x3F].start_even));
-      }
-     }
-   
-   tlb_e[Index&0x3F].start_odd = tlb_e[Index&0x3F].end_even+1;
-   tlb_e[Index&0x3F].end_odd = tlb_e[Index&0x3F].start_odd+
-     (tlb_e[Index&0x3F].mask << 12) + 0xFFF;
-   tlb_e[Index&0x3F].phys_odd = tlb_e[Index&0x3F].pfn_odd << 12;
-   
-   if (tlb_e[Index&0x3F].v_odd)
-     {
-    if (tlb_e[Index&0x3F].start_odd < tlb_e[Index&0x3F].end_odd &&
-        !(tlb_e[Index&0x3F].start_odd >= 0x80000000 &&
-        tlb_e[Index&0x3F].end_odd < 0xC0000000) &&
-        tlb_e[Index&0x3F].phys_odd < 0x20000000)
-      {
-         for (i=tlb_e[Index&0x3F].start_odd;i<tlb_e[Index&0x3F].end_odd;i++)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[Index&0x3F].phys_odd + (i - tlb_e[Index&0x3F].start_odd));
-         if (tlb_e[Index&0x3F].d_odd)
-           for (i=tlb_e[Index&0x3F].start_odd;i<tlb_e[Index&0x3F].end_odd;i++)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[Index&0x3F].phys_odd + (i - tlb_e[Index&0x3F].start_odd));
-      }
-     }
+   TLBWrite(Index&0x3F);
    interp_addr+=4;
 }
 
 static void TLBWR(void)
 {
-   unsigned int i;
    update_count();
    Random = (Count/2 % (32 - Wired)) + Wired;
-   if (tlb_e[Random].v_even)
-     {
-    for (i=tlb_e[Random].start_even; i<tlb_e[Random].end_even; i++)
-      tlb_LUT_r[i>>12] = 0;
-    if (tlb_e[Random].d_even)
-      for (i=tlb_e[Random].start_even; i<tlb_e[Random].end_even; i++)
-        tlb_LUT_w[i>>12] = 0;
-     }
-   if (tlb_e[Random].v_odd)
-     {
-    for (i=tlb_e[Random].start_odd; i<tlb_e[Random].end_odd; i++)
-      tlb_LUT_r[i>>12] = 0;
-    if (tlb_e[Random].d_odd)
-      for (i=tlb_e[Random].start_odd; i<tlb_e[Random].end_odd; i++)
-        tlb_LUT_w[i>>12] = 0;
-     }
-   tlb_e[Random].g = (EntryLo0 & EntryLo1 & 1);
-   tlb_e[Random].pfn_even = (EntryLo0 & 0x3FFFFFC0) >> 6;
-   tlb_e[Random].pfn_odd = (EntryLo1 & 0x3FFFFFC0) >> 6;
-   tlb_e[Random].c_even = (EntryLo0 & 0x38) >> 3;
-   tlb_e[Random].c_odd = (EntryLo1 & 0x38) >> 3;
-   tlb_e[Random].d_even = (EntryLo0 & 0x4) >> 2;
-   tlb_e[Random].d_odd = (EntryLo1 & 0x4) >> 2;
-   tlb_e[Random].v_even = (EntryLo0 & 0x2) >> 1;
-   tlb_e[Random].v_odd = (EntryLo1 & 0x2) >> 1;
-   tlb_e[Random].asid = (EntryHi & 0xFF);
-   tlb_e[Random].vpn2 = (EntryHi & 0xFFFFE000) >> 13;
-   //tlb_e[Random].r = (EntryHi & 0xC000000000000000LL) >> 62;
-   tlb_e[Random].mask = (PageMask & 0x1FFE000) >> 13;
-   
-   tlb_e[Random].start_even = tlb_e[Random].vpn2 << 13;
-   tlb_e[Random].end_even = tlb_e[Random].start_even+
-     (tlb_e[Random].mask << 12) + 0xFFF;
-   tlb_e[Random].phys_even = tlb_e[Random].pfn_even << 12;
-   
-   if (tlb_e[Random].v_even)
-     {
-    if (tlb_e[Random].start_even < tlb_e[Random].end_even &&
-        !(tlb_e[Random].start_even >= 0x80000000 &&
-        tlb_e[Random].end_even < 0xC0000000) &&
-        tlb_e[Random].phys_even < 0x20000000)
-      {
-         for (i=tlb_e[Random].start_even;i<tlb_e[Random].end_even;i++)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[Random].phys_even + (i - tlb_e[Random].start_even));
-         if (tlb_e[Random].d_even)
-           for (i=tlb_e[Random].start_even;i<tlb_e[Random].end_even;i++)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[Random].phys_even + (i - tlb_e[Random].start_even));
-      }
-     }
-   tlb_e[Random].start_odd = tlb_e[Random].end_even+1;
-   tlb_e[Random].end_odd = tlb_e[Random].start_odd+
-     (tlb_e[Random].mask << 12) + 0xFFF;
-   tlb_e[Random].phys_odd = tlb_e[Random].pfn_odd << 12;
-   
-   if (tlb_e[Random].v_odd)
-     {
-    if (tlb_e[Random].start_odd < tlb_e[Random].end_odd &&
-        !(tlb_e[Random].start_odd >= 0x80000000 &&
-        tlb_e[Random].end_odd < 0xC0000000) &&
-        tlb_e[Random].phys_odd < 0x20000000)
-      {
-         for (i=tlb_e[Random].start_odd;i<tlb_e[Random].end_odd;i++)
-           tlb_LUT_r[i>>12] = 0x80000000 | 
-           (tlb_e[Random].phys_odd + (i - tlb_e[Random].start_odd));
-         if (tlb_e[Random].d_odd)
-           for (i=tlb_e[Random].start_odd;i<tlb_e[Random].end_odd;i++)
-         tlb_LUT_w[i>>12] = 0x80000000 | 
-           (tlb_e[Random].phys_odd + (i - tlb_e[Random].start_odd));
-      }
-     }
+   TLBWrite(Random);
    interp_addr+=4;
 }
 
@@ -1064,7 +947,9 @@ static void MTC0(void)
     break;
       case 9:    // Count
     update_count();
+    interupt_unsafe_state = 1;
     if (next_interupt <= Count) gen_interupt();
+    interupt_unsafe_state = 0;
     debug_count += Count;
     translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
     Count = (unsigned int) rrt & 0xFFFFFFFF;
@@ -1090,7 +975,9 @@ static void MTC0(void)
     interp_addr+=4;
     check_interupt();
     update_count();
+    interupt_unsafe_state = 1;
     if (next_interupt <= Count) gen_interupt();
+    interupt_unsafe_state = 0;
     interp_addr-=4;
     break;
       case 13:   // Cause

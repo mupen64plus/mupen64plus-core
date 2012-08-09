@@ -1387,32 +1387,28 @@ void SD(void)
 
 void NOTCOMPILED(void)
 {
+  unsigned int paddr = PC->addr;
+
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
-   if ((PC->addr>>16) == 0xa400)
-     recompile_block((int *) SP_DMEM, blocks[0xa4000000>>12], PC->addr);
+   if (paddr < 0x80000000 || paddr >= 0xc0000000)
+       paddr = virtual_to_physical_address(paddr, 2);
+
+   if (paddr)
+   {
+      unsigned int blk_addr = (paddr-(PC->addr-blocks[PC->addr>>12]->start));
+      if (paddr >= 0xa4000000 && paddr <= 0xa4001000)
+         recompile_block((int *) SP_DMEM + ((blk_addr&0xFFF)>>2), blocks[PC->addr >> 12], PC->addr);
+      else if ((paddr & 0x1FFFFFFF) >= 0x10000000)
+         recompile_block((int *) rom+(((blk_addr & 0x1FFFFFFF) - 0x10000000)>>2), blocks[PC->addr >> 12], PC->addr);
+      else
+         recompile_block((int *) rdram+((blk_addr & 0x1FFFFFFF)>>2), blocks[PC->addr >> 12], PC->addr);
+   }
    else
-     {
-    unsigned int paddr = 0;
-    if (PC->addr >= 0x80000000 && PC->addr < 0xc0000000)
-      paddr = PC->addr;
-    else
-      paddr = virtual_to_physical_address(PC->addr, 2);
-    if (paddr)
-      {
-         if ((paddr & 0x1FFFFFFF) >= 0x10000000)
-           {
-          recompile_block((int *) rom+((((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF) - 0x10000000)>>2),
-                  blocks[PC->addr>>12], PC->addr);
-           }
-         else
-           recompile_block((int *) rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
-                   blocks[PC->addr>>12], PC->addr);
-      }
-    else DebugMessage(M64MSG_ERROR, "not compiled exception");
-     }
+      DebugMessage(M64MSG_ERROR, "not compiled exception");
+
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
@@ -1481,8 +1477,7 @@ void jump_to_func(void)
       }
     blocks[addr>>12]->start = addr & ~0xFFF;
     blocks[addr>>12]->end = (addr & ~0xFFF) + 0x1000;
-    init_block((int *) rdram+(((paddr-(addr-blocks[addr>>12]->start)) & 0x1FFFFFFF)>>2),
-           blocks[addr>>12]);
+    init_block(blocks[addr>>12]);
      }
    PC=actual->block+((addr-actual->start)>>2);
    
@@ -1628,12 +1623,26 @@ void init_blocks(void)
    blocks[0xa4000000>>12]->start = 0xa4000000;
    blocks[0xa4000000>>12]->end = 0xa4001000;
    actual=blocks[0xa4000000>>12];
-   init_block((int *) SP_DMEM, blocks[0xa4000000>>12]);
+   init_block(blocks[0xa4000000>>12]);
    PC=actual->block+(0x40/4);
 /*#ifdef DBG //should only be needed by dynamic recompiler
    if (g_DebuggerActive) // debugger shows initial state (before 1st instruction).
      update_debugger(PC->addr);
 #endif*/
+}
+
+void free_blocks(void)
+{
+   int i;
+   for (i=0; i<0x100000; i++)
+   {
+        if (blocks[i])
+        {
+            free_block(blocks[i]);
+            free(blocks[i]);
+            blocks[i] = NULL;
+        }
+    }
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */
@@ -1741,16 +1750,9 @@ void r4300_reset_soft(void)
       CIC_Chip = 2;
    }
 
-   switch(ROM_HEADER->Country_code&0xFF)
+   switch(ROM_PARAMS.systemtype)
      {
-      case 0x44:
-      case 0x46:
-      case 0x49:
-      case 0x50:
-      case 0x53:
-      case 0x55:
-      case 0x58:
-      case 0x59:
+      case SYSTEM_PAL:
     switch (CIC_Chip) {
      case 2:
        reg[5] = 0xFFFFFFFFC0F1D859LL;
@@ -1775,10 +1777,7 @@ void r4300_reset_soft(void)
     reg[23]= 0x0000000000000006LL;
     reg[31]= 0xFFFFFFFFA4001554LL;
     break;
-      case 0x37:
-      case 0x41:
-      case 0x45:
-      case 0x4A:
+      case SYSTEM_NTSC:
       default:
     switch (CIC_Chip) {
      case 2:
@@ -1897,7 +1896,7 @@ void r4300_execute(void)
         if (!actual->block || !actual->code)
             return;
 
-        code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
+        code =  (void(*)(void)) (actual->code+(actual->block[0x40/4].local_addr));
         dyna_start(code);
         PC++;
 #if defined(PROFILE_R4300)
@@ -1946,15 +1945,7 @@ void r4300_execute(void)
 
     debug_count+= Count;
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
-    for (i=0; i<0x100000; i++)
-    {
-        if (blocks[i])
-        {
-            free_block(blocks[i]);
-            free(blocks[i]);
-            blocks[i] = NULL;
-        }
-    }
+    free_blocks();
     if (r4300emu == CORE_PURE_INTERPRETER) free(PC);
 
     /* print instruction counts */

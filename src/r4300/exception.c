@@ -28,8 +28,6 @@
 #include "macros.h"
 #include "recomph.h"
 
-extern unsigned int interp_addr;
-
 void TLB_refill_exception(unsigned int address, int w)
 {
    int usual_handler = 0, i;

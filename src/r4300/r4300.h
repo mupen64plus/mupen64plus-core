@@ -51,6 +51,7 @@ extern unsigned int jump_to_address;
 extern int no_compiled_jump;
 
 void init_blocks(void);
+void free_blocks(void);
 void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);
@@ -71,6 +72,7 @@ void set_fpr_pointers(int newStatus);
 
 // profiling
 
+#define ALL_SECTION 0
 #define GFX_SECTION 1
 #define AUDIO_SECTION 2
 #define COMPILER_SECTION 3

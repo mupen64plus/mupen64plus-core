@@ -247,6 +247,10 @@ endif
 ifeq ($(DBG_COUNT), 1)
   CFLAGS += -DCOUNT_INSTR
 endif
+ifeq ($(DBG_TIMING), 1)
+  CFLAGS += -DPROFILE
+  LDFLAGS += -lrt
+endif
 ifeq ($(DBG_PROFILE), 1)
   CFLAGS += -DPROFILE_R4300
 endif
@@ -287,7 +291,6 @@ SOURCE = \
 	$(SRCDIR)/main/md5.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
-	$(SRCDIR)/main/adler32.c \
 	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \
@@ -317,6 +320,7 @@ SOURCE = \
 	$(SRCDIR)/r4300/special.c \
 	$(SRCDIR)/r4300/regimm.c \
 	$(SRCDIR)/r4300/tlb.c \
+	$(SRCDIR)/r4300/reset.c \
 	$(SRCDIR)/osd/OGLFT.cpp \
 	$(SRCDIR)/osd/osd.cpp \
 	$(SRCDIR)/osd/screenshot.cpp
@@ -411,6 +415,7 @@ targets:
 	@echo "    DBG_CORE=1    == print debugging info in r4300 core"
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
+	@echo "    DBG_TIMING=1  == print timing data"
 	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
 	@echo "    LTO=1         == enable experimental build with link-time optimization"
 	@echo "    V=1           == show verbose compiler output"
