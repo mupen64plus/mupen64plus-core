@@ -103,6 +103,22 @@ char* combinepath(const char* first, const char *second);
  */
 char *trim(char *str);
 
+/* Converts an string to an integer.
+ * Returns 1 on success, 0 on failure. 'result' is undefined on failure.
+ *
+ * The following conditions cause this function to fail:
+ * - Empty string
+ * - Leading characters (including whitespace)
+ * - Trailing characters (including whitespace)
+ * - Overflow or underflow.
+ */
+int string_to_int(const char *str, int *result);
+
+/* Converts an string of hexadecimal characters to a byte array.
+ * 'output_size' is the number of bytes (hex digraphs) to convert.
+ * Returns 1 on success, 0 on failure. 'output' is undefined on failure. */
+int parse_hex(const char *str, unsigned char *output, size_t output_size);
+
 /* Formats an string, using the same syntax as printf.
  * Returns the result in a malloc'd string. */
 char* formatstr(const char* fmt, ...);
