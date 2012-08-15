@@ -157,7 +157,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
             setRenderingCallback = (ptr_SetRenderingCallback) backcompat_setRenderCallbackIntercept;
         }
 
-	l_GfxAttached = 1;
+        l_GfxAttached = 1;
     }
     else
         plugin_disconnect_gfx();
