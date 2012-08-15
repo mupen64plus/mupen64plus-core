@@ -318,8 +318,10 @@ void romdatabase_open(void)
     for(counter = 0; counter < 255; ++counter)
         g_romdatabase.md5_lists[counter] = NULL;
     g_romdatabase.list = NULL;
+
     next_search = &g_romdatabase.list;
 
+    /* Parse ROM database file */
     for (lineno = 1; fgets(buffer, 255, fPtr) != NULL; lineno++)
     {
         char *line = buffer;
@@ -390,21 +392,11 @@ void romdatabase_open(void)
             }
             else if(!strcmp(l.name, "RefMD5"))
             {
-                /* Lookup reference MD5 and replace non-default entries. */
-                romdatabase_entry *ref;
-
-                search->entry.refmd5 = (md5_byte_t*)malloc(16*sizeof(md5_byte_t));
-                if (parse_hex(l.value, search->entry.refmd5, 16) &&
-                    (ref = ini_search_by_md5(search->entry.refmd5))!=NULL)
+                md5_byte_t md5[16];
+                if (parse_hex(l.value, md5, 16))
                 {
-                    if(ref->savetype!=DEFAULT)
-                        search->entry.savetype = ref->savetype;
-                    if(ref->status!=0)
-                        search->entry.status = ref->status;
-                    if(ref->players!=DEFAULT)
-                        search->entry.players = ref->players;
-                    if(ref->rumble!=DEFAULT)
-                        search->entry.rumble = ref->rumble;
+                    search->entry.refmd5 = (md5_byte_t*)malloc(16*sizeof(md5_byte_t));
+                    memcpy(search->entry.refmd5, md5, 16);
                 }
                 else
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid RefMD5 on line %i", lineno);
@@ -460,6 +452,28 @@ void romdatabase_open(void)
     }
 
     fclose(fPtr);
+
+    /* Resolve RefMD5 references */
+    for (search = g_romdatabase.list; search != NULL; search = search->next_entry)
+    {
+        if (search->entry.refmd5 != NULL)
+        {
+            romdatabase_entry *ref = ini_search_by_md5(search->entry.refmd5);
+            if (ref != NULL)
+            {
+                if(ref->savetype!=DEFAULT)
+                    search->entry.savetype = ref->savetype;
+                if(ref->status!=0)
+                    search->entry.status = ref->status;
+                if(ref->players!=DEFAULT)
+                    search->entry.players = ref->players;
+                if(ref->rumble!=DEFAULT)
+                    search->entry.rumble = ref->rumble;
+            }
+            else
+                DebugMessage(M64MSG_WARNING, "ROM Database: Error solving RefMD5s");
+        }
+    }
 }
 
 void romdatabase_close(void)
