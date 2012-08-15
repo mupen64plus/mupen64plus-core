@@ -386,7 +386,7 @@ void gen_interupt(void)
             {
                 cheat_apply_cheats(ENTRY_VI);
             }
-            updateScreen();
+            gfx.updateScreen();
 #ifdef WITH_LIRC
             lircCheckInput();
 #endif
@@ -397,7 +397,7 @@ void gen_interupt(void)
             // if paused, poll for input events
             if(rompause)
             {
-                osd_render();  // draw Paused message in case updateScreen didn't do it
+                osd_render();  // draw Paused message in case gfx.updateScreen didn't do it
                 VidExt_GL_SwapBuffers();
                 while(rompause)
                 {

@@ -310,7 +310,7 @@ static void internal_ReadController(int Control, unsigned char *Command)
         if (Controls[Control].Present)
         {
             BUTTONS Keys;
-            getKeys(Control, &Keys);
+            input.getKeys(Control, &Keys);
             *((unsigned int *)(Command + 3)) = Keys.Value;
 #ifdef COMPARE_CORE
             CoreCompareDataSync(4, Command+3);
@@ -324,7 +324,8 @@ static void internal_ReadController(int Control, unsigned char *Command)
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (controllerCommand) readController(Control, Command);
+                if (input.controllerCommand)
+                    input.readController(Control, Command);
         }
         break;
     case 3: // write controller pack
@@ -334,7 +335,8 @@ static void internal_ReadController(int Control, unsigned char *Command)
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (controllerCommand) readController(Control, Command);
+                if (input.controllerCommand)
+                    input.readController(Control, Command);
         }
         break;
     }
@@ -414,7 +416,8 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
 #ifdef DEBUG_PIF
                 DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 controllerCommand (in Input plugin)", Control);
 #endif
-                if (controllerCommand) controllerCommand(Control, Command);
+                if (input.controllerCommand)
+                    input.controllerCommand(Control, Command);
                 break;
             default:
 #ifdef DEBUG_PIF
@@ -457,7 +460,8 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
 #ifdef DEBUG_PIF
                 DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 controllerCommand (in Input plugin)", Control);
 #endif
-                if (controllerCommand) controllerCommand(Control, Command);
+                if (input.controllerCommand)
+                    input.controllerCommand(Control, Command);
                 break;
             default:
 #ifdef DEBUG_PIF
@@ -528,7 +532,7 @@ void update_pif_write(void)
                 {
                     if (Controls[channel].Present &&
                             Controls[channel].RawData)
-                        controllerCommand(channel, &PIF_RAMb[i]);
+                        input.controllerCommand(channel, &PIF_RAMb[i]);
                     else
                         internal_ControllerCommand(channel, &PIF_RAMb[i]);
                 }
@@ -545,7 +549,7 @@ void update_pif_write(void)
         i++;
     }
     //PIF_RAMb[0x3F] = 0;
-    controllerCommand(-1, NULL);
+    input.controllerCommand(-1, NULL);
 }
 
 void update_pif_read(void)
@@ -575,7 +579,7 @@ void update_pif_read(void)
                 {
                     if (Controls[channel].Present &&
                             Controls[channel].RawData)
-                        readController(channel, &PIF_RAMb[i]);
+                        input.readController(channel, &PIF_RAMb[i]);
                     else
                         internal_ReadController(channel, &PIF_RAMb[i]);
                 }
@@ -587,6 +591,6 @@ void update_pif_read(void)
         }
         i++;
     }
-    readController(-1, NULL);
+    input.readController(-1, NULL);
 }
 

@@ -219,7 +219,7 @@ void main_speeddown(int percent)
     {
         l_SpeedFactor -= percent;
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
-        setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        audio.setSpeedFactor(l_SpeedFactor);
         StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
     }
 }
@@ -230,7 +230,7 @@ void main_speedup(int percent)
     {
         l_SpeedFactor += percent;
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
-        setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        audio.setSpeedFactor(l_SpeedFactor);
         StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
     }
 }
@@ -247,7 +247,7 @@ void main_speedset(int percent)
     // set speed
     l_SpeedFactor = percent;
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "%s %d%%", "Playback speed:", l_SpeedFactor);
-    setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+    audio.setSpeedFactor(l_SpeedFactor);
     StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
 }
 
@@ -261,7 +261,7 @@ void main_set_fastforward(int enable)
         ff_state = 1; /* activate fast-forward */
         SavedSpeedFactor = l_SpeedFactor;
         l_SpeedFactor = 250;
-        setSpeedFactor(l_SpeedFactor);  /* call to audio plugin */
+        audio.setSpeedFactor(l_SpeedFactor);
         StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
         // set fast-forward indicator
         l_msgFF = osd_new_message(OSD_TOP_RIGHT, "Fast Forward");
@@ -272,7 +272,7 @@ void main_set_fastforward(int enable)
     {
         ff_state = 0; /* de-activate fast-forward */
         l_SpeedFactor = SavedSpeedFactor;
-        setSpeedFactor(l_SpeedFactor);  // call to audio plugin
+        audio.setSpeedFactor(l_SpeedFactor);
         StateChanged(M64CORE_SPEED_FACTOR, l_SpeedFactor);
         // remove message
         osd_delete_message(l_msgFF);
@@ -335,7 +335,7 @@ void main_draw_volume_osd(void)
     const char *volString;
 
     // this calls into the audio plugin
-    volString = volumeGetString();
+    volString = audio.volumeGetString();
     if (volString == NULL)
     {
         strcpy(msgString, "Volume Not Supported.");
@@ -386,10 +386,10 @@ static unsigned char StopRumble[64] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00, 0x00,
 
 void main_state_load(const char *filename)
 {
-    controllerCommand(0, StopRumble);
-    controllerCommand(1, StopRumble);
-    controllerCommand(2, StopRumble);
-    controllerCommand(3, StopRumble);
+    input.controllerCommand(0, StopRumble);
+    input.controllerCommand(1, StopRumble);
+    input.controllerCommand(2, StopRumble);
+    input.controllerCommand(3, StopRumble);
 
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
@@ -473,13 +473,13 @@ m64p_error main_core_state_set(m64p_core_param param, int val)
             if (val == M64VIDEO_WINDOWED)
             {
                 if (VidExt_InFullscreenMode())
-                    changeWindow(); // in video plugin
+                    gfx.changeWindow();
                 return M64ERR_SUCCESS;
             }
             else if (val == M64VIDEO_FULLSCREEN)
             {
                 if (!VidExt_InFullscreenMode())
-                    changeWindow(); // in video plugin
+                    gfx.changeWindow();
                 return M64ERR_SUCCESS;
             }
             return M64ERR_INPUT_INVALID;
@@ -504,54 +504,54 @@ m64p_error main_core_state_set(m64p_core_param param, int val)
 m64p_error main_get_screen_width(int *width)
 {
     int height_trash;
-    readScreen(NULL, width, &height_trash, 0);
+    gfx.readScreen(NULL, width, &height_trash, 0);
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_get_screen_height(int *height)
 {
     int width_trash;
-    readScreen(NULL, &width_trash, height, 0);
+    gfx.readScreen(NULL, &width_trash, height, 0);
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_read_screen(void *pixels, int bFront)
 {
     int width_trash, height_trash;
-    readScreen(pixels, &width_trash, &height_trash, bFront);
+    gfx.readScreen(pixels, &width_trash, &height_trash, bFront);
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_volume_up(void)
 {
-    volumeUp();
+    audio.volumeUp();
     main_draw_volume_osd();
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_volume_down(void)
 {
-    volumeDown();
+    audio.volumeDown();
     main_draw_volume_osd();
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_volume_get_level(int *level)
 {
-    *level = volumeGetLevel();
+    *level = audio.volumeGetLevel();
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_volume_set_level(int level)
 {
-    volumeSetLevel(level);
+    audio.volumeSetLevel(level);
     main_draw_volume_osd();
     return M64ERR_SUCCESS;
 }
 
 m64p_error main_volume_mute(void)
 {
-    volumeMute();
+    audio.volumeMute();
     main_draw_volume_osd();
     return M64ERR_SUCCESS;
 }
@@ -683,17 +683,17 @@ m64p_error main_run(void)
     }
 
     // Attach rom to plugins
-    if (!romOpen_gfx())
+    if (!gfx.romOpen())
     {
         free_memory(); return M64ERR_PLUGIN_FAIL;
     }
-    if (!romOpen_audio())
+    if (!audio.romOpen())
     {
-        romClosed_gfx(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
     }
-    if (!romOpen_input())
+    if (!input.romOpen())
     {
-        romClosed_audio(); romClosed_gfx(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        audio.romClosed(); gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
     }
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
@@ -704,12 +704,12 @@ m64p_error main_run(void)
     {
         // init on-screen display
         int width = 640, height = 480;
-        readScreen(NULL, &width, &height, 0); // read screen to get width and height
+        gfx.readScreen(NULL, &width, &height, 0); // read screen to get width and height
         osd_init(width, height);
     }
 
     // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
-    setRenderingCallback(video_plugin_render_callback);
+    gfx.setRenderingCallback(video_plugin_render_callback);
 
 #ifdef WITH_LIRC
     lircStart();
@@ -746,10 +746,10 @@ m64p_error main_run(void)
         osd_exit();
     }
 
-    romClosed_rsp();
-    romClosed_input();
-    romClosed_audio();
-    romClosed_gfx();
+    rsp.romClosed();
+    input.romClosed();
+    audio.romClosed();
+    gfx.romClosed();
     free_memory();
 
     // clean up
