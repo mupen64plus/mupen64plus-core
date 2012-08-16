@@ -55,7 +55,7 @@
 
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010000;  /* 1.0 */
-static const int pj64_magic = 0x23D8A6C8;
+static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
 static savestates_type type = savestates_type_unknown;
@@ -207,23 +207,21 @@ static void to_little_endian(void *buffer, size_t length, size_t count)
     buff += count*sizeof(type);
 
 #define PUTDATA(buff, type, value) \
-    { type x = value; PUTARRAY(&x, buff, type, 1); }
+    do { type x = value; PUTARRAY(&x, buff, type, 1); } while(0)
 
 
 static int savestates_load_m64p(char *filepath)
 {
-    char buffer[1024];
-    unsigned char inbuf[4];
+    unsigned char header[44];
     gzFile f;
     int version;
     int i;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
-    char eventQueue[1024];
+    char queue[1024];
 
     f = gzopen(filepath, "rb");
-
     if(f==NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
@@ -231,40 +229,60 @@ static int savestates_load_m64p(char *filepath)
     }
 
     /* Read and check Mupen64Plus magic number. */
-    gzread(f, buffer, 8); // TODO check
-    if(strncmp(buffer, savestate_magic, 8)!=0)
-        {
+    if (gzread(f, header, 44) != 44)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read header from state file %s", filepath);
+        gzclose(f);
+        return 0;
+    }
+    curr = header;
+
+    if(strncmp((char *)curr, savestate_magic, 8)!=0)
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate.", filepath);
         gzclose(f);
         return 0;
-        }
+    }
+    curr += 8;
 
-    /* Read savestate file version in big-endian order. */
-    gzread(f, inbuf, 4); // TODO check
-    version = inbuf[0];
-    version = (version << 8) | inbuf[1];
-    version = (version << 8) | inbuf[2];
-    version = (version << 8) | inbuf[3];
+    version = *curr++;
+    version = (version << 8) | *curr++;
+    version = (version << 8) | *curr++;
+    version = (version << 8) | *curr++;
     if(version != 0x00010000)
-        {
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
         gzclose(f);
         return 0;
-        }
+    }
 
-    gzread(f, buffer, 32); // TODO check
-    if(memcmp(buffer, ROM_SETTINGS.MD5, 32))
-        {
+    if(memcmp((char *)curr, ROM_SETTINGS.MD5, 32))
+    {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
         gzclose(f);
         return 0;
-        }
+    }
+    curr += 32;
 
     /* Read the rest of the savestate */
     savestateSize = 16788244;
-    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO free
-    gzread(f, savestateData, savestateSize);
-    gzread(f, eventQueue, sizeof(eventQueue));
+    savestateData = curr = (unsigned char *)malloc(savestateSize);
+    if (savestateData == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to load state.");
+        gzclose(f);
+        return 0;
+    }
+    if (gzread(f, savestateData, savestateSize) != savestateSize ||
+        (gzread(f, queue, sizeof(queue)) % 4) != 0)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate data from %s", filepath);
+        free(savestateData);
+        gzclose(f);
+        return 0;
+    }
+
+    gzclose(f);
 
     // Parse savestate
     rdram_register.rdram_config = GETDATA(curr, unsigned int);
@@ -466,27 +484,28 @@ static int savestates_load_m64p(char *filepath)
     if(r4300emu == CORE_PURE_INTERPRETER)
         interp_addr = GETDATA(curr, unsigned int);
     else
-        {
+    {
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
         jump_to(GETDATA(curr, unsigned int));
-        }
+    }
 
     next_interupt = GETDATA(curr, unsigned int);
     next_vi = GETDATA(curr, unsigned int);
     vi_field = GETDATA(curr, unsigned int);
 
-    to_little_endian(eventQueue, 4, 256);
-    load_eventqueue_infos(eventQueue);
+    // assert(savestateData+savestateSize == curr)
 
-    gzclose(f);
+    to_little_endian(queue, 4, 256);
+    load_eventqueue_infos(queue);
+
     if(r4300emu == CORE_PURE_INTERPRETER)
         last_addr = interp_addr;
     else
         last_addr = PC->addr;
 
+    free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
-
     return 1;
 }
 
@@ -501,29 +520,46 @@ static int savestates_load_pj64(char *filepath, void *handle,
     unsigned char RomHeader[0x40];
 
     size_t savestateSize;
-    unsigned char *savestateData, *curr; // TODO free
+    unsigned char *savestateData, *curr;
 
     /* Read and check Project64 magic number. */
-    read_func(handle, header, 8); // TODO check
+    if (!read_func(handle, header, 8))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read header from Project64 savestate %s", filepath);
+        return 0;
+    }
+
     curr = header;
-    if (GETDATA(curr, unsigned int) != pj64_magic)
+    if (memcmp(curr, pj64_magic, 4) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", filepath);
         return 0;
     }
+    curr += 4;
 
     SaveRDRAMSize = GETDATA(curr, unsigned int);
 
     /* Read the rest of the savestate into memory. */
     savestateSize = SaveRDRAMSize + 0x2754;
-    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO check
-    read_func(handle, savestateData, savestateSize); // TODO check
+    savestateData = curr = (unsigned char *)malloc(savestateSize);
+    if (savestateData == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to load state.");
+        return 0;
+    }
+    if (!read_func(handle, savestateData, savestateSize))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read savestate data from Project64 savestate %s", filepath);
+        free(savestateData);
+        return 0;
+    }
 
     // check ROM header
     COPYARRAY(RomHeader, curr, unsigned int, 0x40/4);
     if(memcmp(RomHeader, rom, 0x40) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
+        free(savestateData);
         return 0;
     }
 
@@ -749,6 +785,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
         jump_to(last_addr);
     }
 
+    // assert(savestateData+savestateSize == curr)
+
+    free(savestateData);
     return 1;
 }
 
@@ -838,7 +877,7 @@ savestates_type savestates_detect_type(char *filepath)
         return savestates_type_m64p;
     else if (memcmp(magic, "PK\x03\x04", 4) == 0) // ZIP header
         return savestates_type_pj64_zip;
-    else if (*((int *)magic) == pj64_magic) // PJ64 header TODO endianness!
+    else if (memcmp(magic, pj64_magic, 4) == 0) // PJ64 header
         return savestates_type_pj64_unc;
     else
     {
@@ -852,13 +891,10 @@ int savestates_load(void)
     char *filepath;
     int ret = 0;
 
-    // TODOXXX
-    //savestates_set_job(savestates_job_load, savestates_type_pj64_unc, "/tmp/sstate2.unc");
-
     if (fname != NULL && type == savestates_type_unknown)
         type = savestates_detect_type(fname);
     else if (fname == NULL) // Always load slots in M64P format
-        type = savestates_type_m64p;
+        type = savestates_type_pj64_zip;
 
     filepath = savestates_generate_path(type);
     if (filepath != NULL)
@@ -878,124 +914,310 @@ int savestates_load(void)
     return ret;
 }
 
-static void savestates_save_m64p(char *filepath)
+static int savestates_save_m64p(char *filepath)
 {
-    char buffer[1024];
     unsigned char outbuf[4];
     gzFile f;
+    int i;
+
+    char queue[1024];
     int queuelength;
+
+    size_t savestateSize;
+    char *savestateData, *curr;
 
     if(autoinc_save_slot)
         savestates_inc_slot();
 
+    queuelength = save_eventqueue_infos(queue);
+
+    // Allocate memory for the save state data
+    savestateSize = 16788288 + queuelength;
+    savestateData = curr = malloc(savestateSize);
+    if (savestateData == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to save state.");
+        return 0;
+    }
+
+    // Write the save state data to memory
+    PUTARRAY(savestate_magic, curr, unsigned char, 8);
+
+    outbuf[0] = (savestate_latest_version >> 24) & 0xff;
+    outbuf[1] = (savestate_latest_version >> 16) & 0xff;
+    outbuf[2] = (savestate_latest_version >>  8) & 0xff;
+    outbuf[3] = (savestate_latest_version >>  0) & 0xff;
+    PUTARRAY(outbuf, curr, unsigned char, 4);
+
+    PUTARRAY(ROM_SETTINGS.MD5, curr, char, 32);
+
+    PUTDATA(curr, unsigned int, rdram_register.rdram_config);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_device_id);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_delay);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_mode);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ref_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ref_row);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ras_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_min_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_addr_select);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_device_manuf);
+
+    PUTDATA(curr, unsigned int, MI_register.w_mi_init_mode_reg);
+    PUTDATA(curr, unsigned int, MI_register.mi_init_mode_reg);
+    PUTDATA(curr, unsigned char, MI_register.init_length);
+    PUTDATA(curr, unsigned char, MI_register.init_mode);
+    PUTDATA(curr, unsigned char, MI_register.ebus_test_mode);
+    PUTDATA(curr, unsigned char, MI_register.RDRAM_reg_mode);
+    PUTDATA(curr, unsigned int, MI_register.mi_version_reg);
+    PUTDATA(curr, unsigned int, MI_register.mi_intr_reg);
+    PUTDATA(curr, unsigned int, MI_register.mi_intr_mask_reg);
+    PUTDATA(curr, unsigned int, MI_register.w_mi_intr_mask_reg);
+    PUTDATA(curr, unsigned char, MI_register.SP_intr_mask);
+    PUTDATA(curr, unsigned char, MI_register.SI_intr_mask);
+    PUTDATA(curr, unsigned char, MI_register.AI_intr_mask);
+    PUTDATA(curr, unsigned char, MI_register.VI_intr_mask);
+    PUTDATA(curr, unsigned char, MI_register.PI_intr_mask);
+    PUTDATA(curr, unsigned char, MI_register.DP_intr_mask);
+    PUTDATA(curr, unsigned short, 0); // Padding from old implementation
+
+    PUTDATA(curr, unsigned int, pi_register.pi_dram_addr_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_cart_addr_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_rd_len_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_wr_len_reg);
+    PUTDATA(curr, unsigned int, pi_register.read_pi_status_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_lat_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pwd_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pgs_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_rls_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_lat_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pwd_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pgs_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_rls_reg);
+
+    PUTDATA(curr, unsigned int, sp_register.sp_mem_addr_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_dram_addr_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_rd_len_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_wr_len_reg);
+    PUTDATA(curr, unsigned int, sp_register.w_sp_status_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_status_reg);
+    PUTDATA(curr, unsigned char, sp_register.halt);
+    PUTDATA(curr, unsigned char, sp_register.broke);
+    PUTDATA(curr, unsigned char, sp_register.dma_busy);
+    PUTDATA(curr, unsigned char, sp_register.dma_full);
+    PUTDATA(curr, unsigned char, sp_register.io_full);
+    PUTDATA(curr, unsigned char, sp_register.single_step);
+    PUTDATA(curr, unsigned char, sp_register.intr_break);
+    PUTDATA(curr, unsigned char, sp_register.signal0);
+    PUTDATA(curr, unsigned char, sp_register.signal1);
+    PUTDATA(curr, unsigned char, sp_register.signal2);
+    PUTDATA(curr, unsigned char, sp_register.signal3);
+    PUTDATA(curr, unsigned char, sp_register.signal4);
+    PUTDATA(curr, unsigned char, sp_register.signal5);
+    PUTDATA(curr, unsigned char, sp_register.signal6);
+    PUTDATA(curr, unsigned char, sp_register.signal7);
+    PUTDATA(curr, unsigned char, 0);
+    PUTDATA(curr, unsigned int, sp_register.sp_dma_full_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_dma_busy_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_semaphore_reg);
+
+    PUTDATA(curr, unsigned int, rsp_register.rsp_pc);
+    PUTDATA(curr, unsigned int, rsp_register.rsp_ibist);
+
+    PUTDATA(curr, unsigned int, si_register.si_dram_addr);
+    PUTDATA(curr, unsigned int, si_register.si_pif_addr_rd64b);
+    PUTDATA(curr, unsigned int, si_register.si_pif_addr_wr64b);
+    PUTDATA(curr, unsigned int, si_register.si_stat);
+
+    PUTDATA(curr, unsigned int, vi_register.vi_status);
+    PUTDATA(curr, unsigned int, vi_register.vi_origin);
+    PUTDATA(curr, unsigned int, vi_register.vi_width);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_intr);
+    PUTDATA(curr, unsigned int, vi_register.vi_current);
+    PUTDATA(curr, unsigned int, vi_register.vi_burst);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_sync);
+    PUTDATA(curr, unsigned int, vi_register.vi_h_sync);
+    PUTDATA(curr, unsigned int, vi_register.vi_leap);
+    PUTDATA(curr, unsigned int, vi_register.vi_h_start);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_start);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_burst);
+    PUTDATA(curr, unsigned int, vi_register.vi_x_scale);
+    PUTDATA(curr, unsigned int, vi_register.vi_y_scale);
+    PUTDATA(curr, unsigned int, vi_register.vi_delay);
+
+    PUTDATA(curr, unsigned int, ri_register.ri_mode);
+    PUTDATA(curr, unsigned int, ri_register.ri_config);
+    PUTDATA(curr, unsigned int, ri_register.ri_current_load);
+    PUTDATA(curr, unsigned int, ri_register.ri_select);
+    PUTDATA(curr, unsigned int, ri_register.ri_refresh);
+    PUTDATA(curr, unsigned int, ri_register.ri_latency);
+    PUTDATA(curr, unsigned int, ri_register.ri_error);
+    PUTDATA(curr, unsigned int, ri_register.ri_werror);
+
+    PUTDATA(curr, unsigned int, ai_register.ai_dram_addr);
+    PUTDATA(curr, unsigned int, ai_register.ai_len);
+    PUTDATA(curr, unsigned int, ai_register.ai_control);
+    PUTDATA(curr, unsigned int, ai_register.ai_status);
+    PUTDATA(curr, unsigned int, ai_register.ai_dacrate);
+    PUTDATA(curr, unsigned int, ai_register.ai_bitrate);
+    PUTDATA(curr, unsigned int, ai_register.next_delay);
+    PUTDATA(curr, unsigned int, ai_register.next_len);
+    PUTDATA(curr, unsigned int, ai_register.current_delay);
+    PUTDATA(curr, unsigned int, ai_register.current_len);
+
+    PUTDATA(curr, unsigned int, dpc_register.dpc_start);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_end);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_current);
+    PUTDATA(curr, unsigned int, dpc_register.w_dpc_status);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_status);
+    PUTDATA(curr, unsigned char, dpc_register.xbus_dmem_dma);
+    PUTDATA(curr, unsigned char, dpc_register.freeze);
+    PUTDATA(curr, unsigned char, dpc_register.flush);
+    PUTDATA(curr, unsigned char, dpc_register.start_glck);
+    PUTDATA(curr, unsigned char, dpc_register.tmem_busy);
+    PUTDATA(curr, unsigned char, dpc_register.pipe_busy);
+    PUTDATA(curr, unsigned char, dpc_register.cmd_busy);
+    PUTDATA(curr, unsigned char, dpc_register.cbuf_busy);
+    PUTDATA(curr, unsigned char, dpc_register.dma_busy);
+    PUTDATA(curr, unsigned char, dpc_register.end_valid);
+    PUTDATA(curr, unsigned char, dpc_register.start_valid);
+    PUTDATA(curr, unsigned char, 0);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_clock);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_bufbusy);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_pipebusy);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_tmem);
+
+    PUTDATA(curr, unsigned int, dps_register.dps_tbist);
+    PUTDATA(curr, unsigned int, dps_register.dps_test_mode);
+    PUTDATA(curr, unsigned int, dps_register.dps_buftest_addr);
+    PUTDATA(curr, unsigned int, dps_register.dps_buftest_data);
+
+    PUTARRAY(rdram, curr, unsigned int, 0x800000/4);
+    PUTARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
+    PUTARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
+    PUTARRAY(PIF_RAM, curr, unsigned char, 0x40);
+
+    PUTDATA(curr, int, flashram_info.use_flashram);
+    PUTDATA(curr, int, flashram_info.mode);
+    PUTDATA(curr, unsigned long long, flashram_info.status);
+    PUTDATA(curr, unsigned int, flashram_info.erase_offset);
+    PUTDATA(curr, unsigned int, flashram_info.write_pointer);
+
+    PUTARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
+    PUTARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
+
+    PUTDATA(curr, unsigned int, llbit);
+    PUTARRAY(reg, curr, long long int, 32);
+    PUTARRAY(reg_cop0, curr, unsigned int, 32);
+    PUTDATA(curr, long long int, lo);
+    PUTDATA(curr, long long int, hi);
+
+    if ((Status & 0x04000000) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
+        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
+    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    if ((Status & 0x04000000) == 0)
+        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
+
+    PUTDATA(curr, int, FCR0);
+    PUTDATA(curr, int, FCR31);
+    for (i = 0; i < 32; i++)
+    {
+        PUTDATA(curr, short, tlb_e[i].mask);
+        PUTDATA(curr, short, 0);
+        PUTDATA(curr, int, tlb_e[i].vpn2);
+        PUTDATA(curr, char, tlb_e[i].g);
+        PUTDATA(curr, unsigned char, tlb_e[i].asid);
+        PUTDATA(curr, short, 0);
+        PUTDATA(curr, int, tlb_e[i].pfn_even);
+        PUTDATA(curr, char, tlb_e[i].c_even);
+        PUTDATA(curr, char, tlb_e[i].d_even);
+        PUTDATA(curr, char, tlb_e[i].v_even);
+        PUTDATA(curr, char, 0);
+        PUTDATA(curr, int, tlb_e[i].pfn_odd);
+        PUTDATA(curr, char, tlb_e[i].c_odd);
+        PUTDATA(curr, char, tlb_e[i].d_odd);
+        PUTDATA(curr, char, tlb_e[i].v_odd);
+        PUTDATA(curr, char, tlb_e[i].r);
+   
+        PUTDATA(curr, unsigned int, tlb_e[i].start_even);
+        PUTDATA(curr, unsigned int, tlb_e[i].end_even);
+        PUTDATA(curr, unsigned int, tlb_e[i].phys_even);
+        PUTDATA(curr, unsigned int, tlb_e[i].start_odd);
+        PUTDATA(curr, unsigned int, tlb_e[i].end_odd);
+        PUTDATA(curr, unsigned int, tlb_e[i].phys_odd);
+    }
+    if(r4300emu == CORE_PURE_INTERPRETER)
+        PUTDATA(curr, unsigned int, interp_addr);
+    else
+        PUTDATA(curr, unsigned int, PC->addr);
+
+    PUTDATA(curr, unsigned int, next_interupt);
+    PUTDATA(curr, unsigned int, next_vi);
+    PUTDATA(curr, unsigned int, vi_field);
+
+    to_little_endian(queue, 4, queuelength/4);
+    PUTARRAY(queue, curr, char, queuelength);
+
+    // assert(curr == savestateData + savestateSize)
+
+    // Write the state to a GZIP file
     f = gzopen(filepath, "wb");
 
     if (f==NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
-        return;
+        free(savestateData);
+        return 0;
     }
 
-    /* Write magic number. */
-    gzwrite(f, savestate_magic, 8);
-
-    /* Write savestate file version in big-endian. */
-    outbuf[0] = (savestate_latest_version >> 24) & 0xff;
-    outbuf[1] = (savestate_latest_version >> 16) & 0xff;
-    outbuf[2] = (savestate_latest_version >>  8) & 0xff;
-    outbuf[3] = (savestate_latest_version >>  0) & 0xff;
-    gzwrite(f, outbuf, 4);
-
-    gzwrite(f, ROM_SETTINGS.MD5, 32);
-
-    gzwrite(f, &rdram_register, sizeof(RDRAM_register));
-    gzwrite(f, &MI_register, sizeof(mips_register));
-    gzwrite(f, &pi_register, sizeof(PI_register));
-    gzwrite(f, &sp_register, sizeof(SP_register));
-    gzwrite(f, &rsp_register, sizeof(RSP_register));
-    gzwrite(f, &si_register, sizeof(SI_register));
-    gzwrite(f, &vi_register, sizeof(VI_register));
-    gzwrite(f, &ri_register, sizeof(RI_register));
-    gzwrite(f, &ai_register, sizeof(AI_register));
-    gzwrite(f, &dpc_register, sizeof(DPC_register));
-    gzwrite(f, &dps_register, sizeof(DPS_register));
-    gzwrite(f, rdram, 0x800000);
-    gzwrite(f, SP_DMEM, 0x1000);
-    gzwrite(f, SP_IMEM, 0x1000);
-    gzwrite(f, PIF_RAM, 0x40);
-
-    save_flashram_infos(buffer);
-    gzwrite(f, buffer, 24);
-
-    gzwrite(f, tlb_LUT_r, 0x100000*4);
-    gzwrite(f, tlb_LUT_w, 0x100000*4);
-
-    gzwrite(f, &llbit, 4);
-    gzwrite(f, reg, 32*8);
-    gzwrite(f, reg_cop0, 32*4);
-    gzwrite(f, &lo, 8);
-    gzwrite(f, &hi, 8);
-
-    if ((Status & 0x04000000) == 0)
-    {   // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
-        gzwrite(f, reg_cop1_fgr_64, 32*8);
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
-    }
-    else
+    if (gzwrite(f, savestateData, savestateSize) != savestateSize)
     {
-        gzwrite(f, reg_cop1_fgr_64, 32*8);
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not write data to state file: %s", filepath);
+        gzclose(f);
+        free(savestateData);
+        return 0;
     }
-
-    gzwrite(f, &FCR0, 4);
-    gzwrite(f, &FCR31, 4);
-    gzwrite(f, tlb_e, 32*sizeof(tlb));
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        gzwrite(f, &interp_addr, 4);
-    else
-        gzwrite(f, &PC->addr, 4);
-
-    gzwrite(f, &next_interupt, 4);
-    gzwrite(f, &next_vi, 4);
-    gzwrite(f, &vi_field, 4);
-
-    queuelength = save_eventqueue_infos(buffer);
-    gzwrite(f, buffer, queuelength);
 
     gzclose(f);
+    free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
+    return 1;
 }
 
 static int savestates_save_pj64(char *filepath, void *handle,
                                 int (*write_func)(void *, const void *, size_t))
 {
-    // TODO fpr shuffle
-    unsigned int i, vi_timer, addr;
+    unsigned int i, addr;
     unsigned int SaveRDRAMSize = 0x800000;
 
-    size_t savestateSize = 8 + SaveRDRAMSize + 0x2754;
+    size_t savestateSize;
     unsigned char *savestateData, *curr;
-
-    vi_timer = get_event(VI_INT) - reg_cop0[9]; /* Subtract current Count according to how PJ64 stores the timer. */
 
     if(r4300emu == CORE_PURE_INTERPRETER)
         addr = interp_addr;
     else
         addr = PC->addr;
 
-    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
+    // Allocate memory for the save state data
+    savestateSize = 8 + SaveRDRAMSize + 0x2754;
+    savestateData = curr = (unsigned char *)malloc(savestateSize);
+    if (savestateData == NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to save state.");
+        return 0;
+    }
 
-    // TODO report overflow dummywrite FCR
-    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO free
-
-    PUTDATA(curr, unsigned int, pj64_magic);
+    // Write the save state data in memory
+    PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, unsigned int, get_event(VI_INT) - reg_cop0[9]); // vi_timer
     PUTDATA(curr, unsigned int, addr);
     PUTARRAY(reg, curr, long long int, 32);
+    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(0x04000000, 0);
     PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(0x04000000, 0);
     PUTARRAY(reg_cop0, curr, unsigned int, 32);
     PUTDATA(curr, int, FCR0);
     for (i = 0; i < 30; i++)
@@ -1095,6 +1317,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
 
     for (i=0; i < 32;i++)
     {
+        // From TLBR
         unsigned int EntryDefined, MyPageMask, MyEntryHi, MyEntryLo0, MyEntryLo1;
         EntryDefined = 1;
         MyPageMask = tlb_e[i].mask << 13;
@@ -1106,11 +1329,11 @@ static int savestates_save_pj64(char *filepath, void *handle,
          | (tlb_e[i].d_odd << 2) | (tlb_e[i].v_odd << 1)
            | tlb_e[i].g;
 
-        PUTDATA(curr, unsigned int, EntryDefined)
-        PUTDATA(curr, unsigned int, MyPageMask)
-        PUTDATA(curr, unsigned int, MyEntryHi)
-        PUTDATA(curr, unsigned int, MyEntryLo0)
-        PUTDATA(curr, unsigned int, MyEntryLo1)
+        PUTDATA(curr, unsigned int, EntryDefined);
+        PUTDATA(curr, unsigned int, MyPageMask);
+        PUTDATA(curr, unsigned int, MyEntryHi);
+        PUTDATA(curr, unsigned int, MyEntryLo0);
+        PUTDATA(curr, unsigned int, MyEntryLo1);
     }
 
     PUTARRAY(PIF_RAM, curr, unsigned char, 0x40);
@@ -1119,14 +1342,16 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
     PUTARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
 
-    printf("%d\n", curr - savestateData);
-
+    // Write the save state data to the output
     if (!write_func(handle, savestateData, savestateSize))
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Couldn't write data to Project64 state file %s.", filepath);
+        free(savestateData);
         return 0;
+    }
 
-    if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
-
+    // assert(savestateData+savestateSize == curr)
+    free(savestateData);
     return 1;
 }
 
@@ -1155,10 +1380,7 @@ static int savestates_save_pj64_zip(char *filepath)
     }
 
     if (!savestates_save_pj64(filepath, zipfile, write_data_to_zip))
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Zip error. Could not write state file %s", filepath);
         goto clean_and_exit;
-    }
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
 
@@ -1189,7 +1411,6 @@ static int savestates_save_pj64_unc(char *filepath)
 
     if (!savestates_save_pj64(filepath, f, write_data_to_file))
     {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "File write error. Could not write state file %s", filepath);
         fclose(f);
         return 0;
     }
@@ -1204,9 +1425,6 @@ int savestates_save(void)
     char *filepath;
     int ret = 0;
 
-    // TODOXXX
-    //savestates_set_job(savestates_job_save, savestates_type_pj64_unc, "/tmp/sstate2.unc");
-
     /* Can only save PJ64 savestates on VI / COMPARE interrupt.
        Otherwise try again in a little while. */
     if ((type == savestates_type_pj64_zip ||
@@ -1217,14 +1435,14 @@ int savestates_save(void)
     if (fname != NULL && type == savestates_type_unknown)
         type = savestates_type_m64p;
     else if (fname == NULL) // Always save slots in M64P format
-        type = savestates_type_m64p;
+        type = savestates_type_pj64_zip;
 
     filepath = savestates_generate_path(type);
     if (filepath != NULL)
     {
         switch (type)
         {
-            case savestates_type_m64p: savestates_save_m64p(filepath); ret = 1; break;
+            case savestates_type_m64p: ret = savestates_save_m64p(filepath); break;
             case savestates_type_pj64_zip: ret = savestates_save_pj64_zip(filepath); break;
             case savestates_type_pj64_unc: ret = savestates_save_pj64_unc(filepath); break;
             default: ret = 0; break;

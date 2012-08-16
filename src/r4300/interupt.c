@@ -321,8 +321,7 @@ void check_interupt(void)
 }
 
 void gen_interupt(void)
-{
-
+{   
     if (stop == 1)
     {
         vi_counter = 0; // debug
