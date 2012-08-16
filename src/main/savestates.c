@@ -64,46 +64,6 @@ static char *fname = NULL;
 static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
 
-typedef struct _TLB_pj64
-{
-    unsigned int _EntryDefined;
-
-    struct _BreakDownPageMask
-    {
-        unsigned int zero : 13;
-        unsigned int Mask : 12;
-        unsigned int zero2 : 7;
-    } BreakDownPageMask;
-
-    struct _BreakDownEntryHi
-    {
-        unsigned int ASID : 8;
-        unsigned int Zero : 4;
-        unsigned int G : 1;
-        unsigned int VPN2 : 19;
-    } BreakDownEntryHi;
-
-    struct _BreakDownEntryLo0 
-    {
-        unsigned int GLOBAL: 1;
-        unsigned int V : 1;
-        unsigned int D : 1;
-        unsigned int C : 3;
-        unsigned int PFN : 20;
-        unsigned int ZERO: 6;
-    } BreakDownEntryLo0;
-
-    struct _BreakDownEntryLo1 
-    {
-        unsigned int GLOBAL: 1;
-        unsigned int V : 1;
-        unsigned int D : 1;
-        unsigned int C : 3;
-        unsigned int PFN : 20;
-        unsigned int ZERO: 6;
-    } BreakDownEntryLo1;
-} TLB_pj64;
-
 /* Returns the malloc'd full path of the currently selected savestate. */
 static char *savestates_generate_path(savestates_type type)
 {
@@ -240,6 +200,15 @@ static void to_little_endian(void *buffer, size_t length, size_t count)
 #define COPYARRAY(dst, buff, type, count) \
     memcpy(dst, GETARRAY(buff, type, count), sizeof(type)*count)
 #define GETDATA(buff, type) *GETARRAY(buff, type, 1)
+
+#define PUTARRAY(src, buff, type, count) \
+    memcpy(buff, src, sizeof(type)*count); \
+    to_little_endian(buff, sizeof(type), count); \
+    buff += count*sizeof(type);
+
+#define PUTDATA(buff, type, value) \
+    { type x = value; PUTARRAY(&x, buff, type, 1); }
+
 
 static int savestates_load_m64p(char *filepath)
 {
@@ -464,8 +433,9 @@ static int savestates_load_m64p(char *filepath)
     COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
     if ((Status & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(0x04000000, 0);
-    FCR0 = GETDATA(curr, unsigned int);
-    FCR31 = GETDATA(curr, unsigned int);
+    FCR0 = GETDATA(curr, int);
+    FCR31 = GETDATA(curr, int);
+
     for (i = 0; i < 32; i++)
     {
         tlb_e[i].mask = GETDATA(curr, short);
@@ -492,6 +462,7 @@ static int savestates_load_m64p(char *filepath)
         tlb_e[i].end_odd = GETDATA(curr, unsigned int);
         tlb_e[i].phys_odd = GETDATA(curr, unsigned int);
     }
+
     if(r4300emu == CORE_PURE_INTERPRETER)
         interp_addr = GETDATA(curr, unsigned int);
     else
@@ -589,9 +560,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(buffer);
 
     // FPCR
-    FCR0 = GETDATA(curr, unsigned int);
+    FCR0 = GETDATA(curr, int);
     curr += 30 * 4; // FCR1...FCR30 not supported
-    FCR31 = GETDATA(curr, unsigned int);
+    FCR31 = GETDATA(curr, int);
 
     // hi / lo
     hi = GETDATA(curr, long long int);
@@ -867,7 +838,7 @@ savestates_type savestates_detect_type(char *filepath)
         return savestates_type_m64p;
     else if (memcmp(magic, "PK\x03\x04", 4) == 0) // ZIP header
         return savestates_type_pj64_zip;
-    else if (*((int *)magic) == pj64_magic) // PJ64 header
+    else if (*((int *)magic) == pj64_magic) // PJ64 header TODO endianness!
         return savestates_type_pj64_unc;
     else
     {
@@ -880,6 +851,9 @@ int savestates_load(void)
 {
     char *filepath;
     int ret = 0;
+
+    // TODOXXX
+    //savestates_set_job(savestates_job_load, savestates_type_pj64_unc, "/tmp/sstate2.unc");
 
     if (fname != NULL && type == savestates_type_unknown)
         type = savestates_detect_type(fname);
@@ -997,9 +971,10 @@ static int savestates_save_pj64(char *filepath, void *handle,
 {
     // TODO fpr shuffle
     unsigned int i, vi_timer, addr;
-    TLB_pj64 tlb_pj64[32];
-    unsigned int dummy = 0;
     unsigned int SaveRDRAMSize = 0x800000;
+
+    size_t savestateSize = 8 + SaveRDRAMSize + 0x2754;
+    unsigned char *savestateData, *curr;
 
     vi_timer = get_event(VI_INT) - reg_cop0[9]; /* Subtract current Count according to how PJ64 stores the timer. */
 
@@ -1008,77 +983,146 @@ static int savestates_save_pj64(char *filepath, void *handle,
     else
         addr = PC->addr;
 
-    for (i=0; i < 32;i++)
-    {
-        tlb_pj64[i].BreakDownPageMask.Mask   = (unsigned int) tlb_e[i].mask;
-        tlb_pj64[i].BreakDownEntryHi.VPN2    = (unsigned int) tlb_e[i].vpn2;
-        tlb_pj64[i].BreakDownEntryLo0.GLOBAL = (unsigned int) tlb_e[i].g;
-        tlb_pj64[i].BreakDownEntryLo1.GLOBAL = (unsigned int) tlb_e[i].g;
-        tlb_pj64[i].BreakDownEntryHi.ASID    = (unsigned int) tlb_e[i].asid;
-        tlb_pj64[i].BreakDownEntryLo0.PFN    = (unsigned int) tlb_e[i].pfn_even;
-        tlb_pj64[i].BreakDownEntryLo0.C      = (unsigned int) tlb_e[i].c_even;
-        tlb_pj64[i].BreakDownEntryLo0.D      = (unsigned int) tlb_e[i].d_even;
-        tlb_pj64[i].BreakDownEntryLo0.V      = (unsigned int) tlb_e[i].v_even;
-        tlb_pj64[i].BreakDownEntryLo1.PFN    = (unsigned int) tlb_e[i].pfn_odd;
-        tlb_pj64[i].BreakDownEntryLo1.C      = (unsigned int) tlb_e[i].c_odd;
-        tlb_pj64[i].BreakDownEntryLo1.D      = (unsigned int) tlb_e[i].d_odd;
-        tlb_pj64[i].BreakDownEntryLo1.V      = (unsigned int) tlb_e[i].v_odd;
-    }
-
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(0x04000000, 0);
 
-    if (!write_func(handle, &pj64_magic,                     4) ||
-        !write_func(handle, &SaveRDRAMSize,                  4) ||
-        !write_func(handle, rom,                             0x40) || 
-        !write_func(handle, &vi_timer,                       4) || 
-        !write_func(handle, &addr,                           4) || 
-        !write_func(handle, reg,                             32*8) || 
-        !write_func(handle, reg_cop1_fgr_64,                 32*8) || 
-        !write_func(handle, reg_cop0,                        32*4) || 
-        !write_func(handle, &FCR0,                           4) || 
-        !write_func(handle, &dummy,                          4*30) || 
-        !write_func(handle, &FCR31,                          4) || 
-        !write_func(handle, &hi,                             8) || 
-        !write_func(handle, &lo,                             8) || 
-        !write_func(handle, &rdram_register,                 sizeof(RDRAM_register)) || 
-        !write_func(handle, &sp_register.sp_mem_addr_reg,    4) || 
-        !write_func(handle, &sp_register.sp_dram_addr_reg,   4) || 
-        !write_func(handle, &sp_register.sp_rd_len_reg,      4) || 
-        !write_func(handle, &sp_register.sp_wr_len_reg,      4) || 
-        !write_func(handle, &sp_register.sp_status_reg,      4) || 
-        !write_func(handle, &sp_register.sp_dma_full_reg,    4) || 
-        !write_func(handle, &sp_register.sp_dma_busy_reg,    4) || 
-        !write_func(handle, &sp_register.sp_semaphore_reg,   4) || 
-        !write_func(handle, &rsp_register.rsp_pc,            4) ||
-        !write_func(handle, &rsp_register.rsp_ibist,         4) ||
-        !write_func(handle, &dpc_register.dpc_start,         4) || 
-        !write_func(handle, &dpc_register.dpc_end,           4) || 
-        !write_func(handle, &dpc_register.dpc_current,       4) || 
-        !write_func(handle, &dpc_register.dpc_status,        4) || 
-        !write_func(handle, &dpc_register.dpc_clock,         4) || 
-        !write_func(handle, &dpc_register.dpc_bufbusy,       4) || 
-        !write_func(handle, &dpc_register.dpc_pipebusy,      4) || 
-        !write_func(handle, &dpc_register.dpc_tmem,          4) || 
-        !write_func(handle, &dummy,                          4) ||  // ?
-        !write_func(handle, &dummy,                          4) ||  // ?
-        !write_func(handle, &MI_register.mi_init_mode_reg,   4) ||  //TODO Secial handling in pj64
-        !write_func(handle, &MI_register.mi_version_reg,     4) || 
-        !write_func(handle, &MI_register.mi_intr_reg,        4) || 
-        !write_func(handle, &MI_register.mi_intr_mask_reg,   4) || 
-        !write_func(handle, &vi_register,                    4*14) || 
-        !write_func(handle, &ai_register,                    4*6) || 
-        !write_func(handle, &pi_register,                    sizeof(PI_register)) || 
-        !write_func(handle, &ri_register,                    sizeof(RI_register)) || 
-        !write_func(handle, &si_register,                    sizeof(SI_register)) || 
-        !write_func(handle, tlb_pj64,                        sizeof(TLB_pj64)*32) || 
-        !write_func(handle, PIF_RAM,                         0x40) || 
-        !write_func(handle, rdram,                           0x800000) || 
-        !write_func(handle, SP_DMEM,                         0x1000) || 
-        !write_func(handle, SP_IMEM,                         0x1000))
+    // TODO report overflow dummywrite FCR
+    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO free
+
+    PUTDATA(curr, unsigned int, pj64_magic);
+    PUTDATA(curr, unsigned int, SaveRDRAMSize);
+    PUTARRAY(rom, curr, unsigned int, 0x40/4);
+    PUTDATA(curr, unsigned int, get_event(VI_INT) - reg_cop0[9]); // vi_timer
+    PUTDATA(curr, unsigned int, addr);
+    PUTARRAY(reg, curr, long long int, 32);
+    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    PUTARRAY(reg_cop0, curr, unsigned int, 32);
+    PUTDATA(curr, int, FCR0);
+    for (i = 0; i < 30; i++)
+        PUTDATA(curr, int, 0); // FCR1-30 not implemented
+    PUTDATA(curr, int, FCR31);
+    PUTDATA(curr, long long int, hi);
+    PUTDATA(curr, long long int, lo);
+
+    PUTDATA(curr, unsigned int, rdram_register.rdram_config);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_device_id);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_delay);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_mode);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ref_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ref_row);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_ras_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_min_interval);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_addr_select);
+    PUTDATA(curr, unsigned int, rdram_register.rdram_device_manuf);
+
+    PUTDATA(curr, unsigned int, sp_register.sp_mem_addr_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_dram_addr_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_rd_len_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_wr_len_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_status_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_dma_full_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_dma_busy_reg);
+    PUTDATA(curr, unsigned int, sp_register.sp_semaphore_reg);
+
+    PUTDATA(curr, unsigned int, rsp_register.rsp_pc);
+    PUTDATA(curr, unsigned int, rsp_register.rsp_ibist);
+
+    PUTDATA(curr, unsigned int, dpc_register.dpc_start);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_end);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_current);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_status);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_clock);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_bufbusy);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_pipebusy);
+    PUTDATA(curr, unsigned int, dpc_register.dpc_tmem);
+    PUTDATA(curr, unsigned int, 0); // ?
+    PUTDATA(curr, unsigned int, 0); // ?
+
+    PUTDATA(curr, unsigned int, MI_register.mi_init_mode_reg); //TODO Secial handling in pj64
+    PUTDATA(curr, unsigned int, MI_register.mi_version_reg);
+    PUTDATA(curr, unsigned int, MI_register.mi_intr_reg);
+    PUTDATA(curr, unsigned int, MI_register.mi_intr_mask_reg);
+
+    PUTDATA(curr, unsigned int, vi_register.vi_status);
+    PUTDATA(curr, unsigned int, vi_register.vi_origin);
+    PUTDATA(curr, unsigned int, vi_register.vi_width);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_intr);
+    PUTDATA(curr, unsigned int, vi_register.vi_current);
+    PUTDATA(curr, unsigned int, vi_register.vi_burst);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_sync);
+    PUTDATA(curr, unsigned int, vi_register.vi_h_sync);
+    PUTDATA(curr, unsigned int, vi_register.vi_leap);
+    PUTDATA(curr, unsigned int, vi_register.vi_h_start);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_start);
+    PUTDATA(curr, unsigned int, vi_register.vi_v_burst);
+    PUTDATA(curr, unsigned int, vi_register.vi_x_scale);
+    PUTDATA(curr, unsigned int, vi_register.vi_y_scale);
+
+    PUTDATA(curr, unsigned int, ai_register.ai_dram_addr);
+    PUTDATA(curr, unsigned int, ai_register.ai_len);
+    PUTDATA(curr, unsigned int, ai_register.ai_control);
+    PUTDATA(curr, unsigned int, ai_register.ai_status);
+    PUTDATA(curr, unsigned int, ai_register.ai_dacrate);
+    PUTDATA(curr, unsigned int, ai_register.ai_bitrate);
+
+    PUTDATA(curr, unsigned int, pi_register.pi_dram_addr_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_cart_addr_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_rd_len_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_wr_len_reg);
+    PUTDATA(curr, unsigned int, pi_register.read_pi_status_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_lat_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pwd_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pgs_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_rls_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_lat_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pwd_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pgs_reg);
+    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_rls_reg);
+
+    PUTDATA(curr, unsigned int, ri_register.ri_mode);
+    PUTDATA(curr, unsigned int, ri_register.ri_config);
+    PUTDATA(curr, unsigned int, ri_register.ri_current_load);
+    PUTDATA(curr, unsigned int, ri_register.ri_select);
+    PUTDATA(curr, unsigned int, ri_register.ri_refresh);
+    PUTDATA(curr, unsigned int, ri_register.ri_latency);
+    PUTDATA(curr, unsigned int, ri_register.ri_error);
+    PUTDATA(curr, unsigned int, ri_register.ri_werror);
+
+    PUTDATA(curr, unsigned int, si_register.si_dram_addr);
+    PUTDATA(curr, unsigned int, si_register.si_pif_addr_rd64b);
+    PUTDATA(curr, unsigned int, si_register.si_pif_addr_wr64b);
+    PUTDATA(curr, unsigned int, si_register.si_stat);
+
+    for (i=0; i < 32;i++)
     {
-        return 0;
+        unsigned int EntryDefined, MyPageMask, MyEntryHi, MyEntryLo0, MyEntryLo1;
+        EntryDefined = 1;
+        MyPageMask = tlb_e[i].mask << 13;
+        MyEntryHi = ((tlb_e[i].vpn2 << 13) | tlb_e[i].asid);
+        MyEntryLo0 = (tlb_e[i].pfn_even << 6) | (tlb_e[i].c_even << 3)
+         | (tlb_e[i].d_even << 2) | (tlb_e[i].v_even << 1)
+           | tlb_e[i].g;
+        MyEntryLo1 = (tlb_e[i].pfn_odd << 6) | (tlb_e[i].c_odd << 3)
+         | (tlb_e[i].d_odd << 2) | (tlb_e[i].v_odd << 1)
+           | tlb_e[i].g;
+
+        PUTDATA(curr, unsigned int, EntryDefined)
+        PUTDATA(curr, unsigned int, MyPageMask)
+        PUTDATA(curr, unsigned int, MyEntryHi)
+        PUTDATA(curr, unsigned int, MyEntryLo0)
+        PUTDATA(curr, unsigned int, MyEntryLo1)
     }
+
+    PUTARRAY(PIF_RAM, curr, unsigned char, 0x40);
+
+    PUTARRAY(rdram, curr, unsigned int, SaveRDRAMSize/4);
+    PUTARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
+    PUTARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
+
+    printf("%d\n", curr - savestateData);
+
+    if (!write_func(handle, savestateData, savestateSize))
+        return 0;
 
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(0x04000000, 0);
@@ -1159,6 +1203,9 @@ int savestates_save(void)
 {
     char *filepath;
     int ret = 0;
+
+    // TODOXXX
+    //savestates_set_job(savestates_job_save, savestates_type_pj64_unc, "/tmp/sstate2.unc");
 
     /* Can only save PJ64 savestates on VI / COMPARE interrupt.
        Otherwise try again in a little while. */
