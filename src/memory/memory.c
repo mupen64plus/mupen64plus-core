@@ -995,7 +995,7 @@ int init_memory(int DoByteSwap)
         writememd[0xb000+i] = write_nothingd;
     }
 
-    use_flashram = 0;
+    flashram_info.use_flashram = 0;
     init_flashram();
 
     frameBufferInfos[0].addr = 0;
@@ -3497,10 +3497,10 @@ void write_sid(void)
 
 void read_flashram_status(void)
 {
-    if (use_flashram != -1 && *address_low == 0)
+    if (flashram_info.use_flashram != -1 && *address_low == 0)
     {
         *rdword = flashram_status();
-        use_flashram = 1;
+        flashram_info.use_flashram = 1;
     }
     else
         DebugMessage(M64MSG_ERROR, "unknown read in read_flashram_status()");
@@ -3539,10 +3539,10 @@ void write_flashram_dummyd(void)
 
 void write_flashram_command(void)
 {
-    if (use_flashram != -1 && *address_low == 0)
+    if (flashram_info.use_flashram != -1 && *address_low == 0)
     {
         flashram_command(word);
-        use_flashram = 1;
+        flashram_info.use_flashram = 1;
     }
     else
         DebugMessage(M64MSG_ERROR, "unknown write in write_flashram_command()");

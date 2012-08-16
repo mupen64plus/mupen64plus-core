@@ -19,7 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-extern int use_flashram;
+typedef struct _flashram_info
+{
+	int use_flashram;
+	int mode;
+	unsigned long long status;
+	unsigned int erase_offset, write_pointer;
+} Flashram_info;
+
+extern Flashram_info flashram_info;
 
 void init_flashram(void);
 void flashram_command(unsigned int command);

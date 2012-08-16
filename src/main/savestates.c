@@ -202,12 +202,56 @@ void savestates_clear_job(void)
     savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
 }
 
+
+static void block_endian_swap(void *buffer, size_t length, size_t count)
+{
+    size_t i;
+    if (length == 2)
+    {
+        unsigned short *pun = (unsigned short *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = (pun[i] >> 8) || (pun[i] << 8);
+    }
+    else if (length == 4)
+    {
+        unsigned int *pun = (unsigned int *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = __builtin_bswap32(pun[i]);
+    }
+    else if (length == 8)
+    {
+        unsigned long long *pun = (unsigned long long *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = __builtin_bswap64(pun[i]);
+    }
+}
+
+static void to_little_endian(void *buffer, size_t length, size_t count)
+{
+    #ifdef M64P_BIG_ENDIAN
+    block_endian_swap(buffer, length, count);
+    #endif
+}
+
+#define GETARRAY(buff, type, count) \
+    (to_little_endian(buff, sizeof(type),count), \
+     buff += count*sizeof(type), \
+     (type *)(buff-count*sizeof(type)))
+#define COPYARRAY(dst, buff, type, count) \
+    memcpy(dst, GETARRAY(buff, type, count), sizeof(type)*count)
+#define GETDATA(buff, type) *GETARRAY(buff, type, 1)
+
 static int savestates_load_m64p(char *filepath)
 {
     char buffer[1024];
     unsigned char inbuf[4];
     gzFile f;
-    int queuelength, version;
+    int version;
+    int i;
+
+    size_t savestateSize;
+    unsigned char *savestateData, *curr;
+    char eventQueue[1024];
 
     f = gzopen(filepath, "rb");
 
@@ -218,7 +262,7 @@ static int savestates_load_m64p(char *filepath)
     }
 
     /* Read and check Mupen64Plus magic number. */
-    gzread(f, buffer, 8);
+    gzread(f, buffer, 8); // TODO check
     if(strncmp(buffer, savestate_magic, 8)!=0)
         {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate.", filepath);
@@ -227,7 +271,7 @@ static int savestates_load_m64p(char *filepath)
         }
 
     /* Read savestate file version in big-endian order. */
-    gzread(f, inbuf, 4);
+    gzread(f, inbuf, 4); // TODO check
     version = inbuf[0];
     version = (version << 8) | inbuf[1];
     version = (version << 8) | inbuf[2];
@@ -239,7 +283,7 @@ static int savestates_load_m64p(char *filepath)
         return 0;
         }
 
-    gzread(f, buffer, 32);
+    gzread(f, buffer, 32); // TODO check
     if(memcmp(buffer, ROM_SETTINGS.MD5, 32))
         {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
@@ -247,68 +291,222 @@ static int savestates_load_m64p(char *filepath)
         return 0;
         }
 
-    gzread(f, &rdram_register, sizeof(RDRAM_register));
-    gzread(f, &MI_register, sizeof(mips_register));
-    gzread(f, &pi_register, sizeof(PI_register));
-    gzread(f, &sp_register, sizeof(SP_register));
-    gzread(f, &rsp_register, sizeof(RSP_register));
-    gzread(f, &si_register, sizeof(SI_register));
-    gzread(f, &vi_register, sizeof(VI_register));
+    /* Read the rest of the savestate */
+    savestateSize = 16788244;
+    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO free
+    gzread(f, savestateData, savestateSize);
+    gzread(f, eventQueue, sizeof(eventQueue));
+
+    // Parse savestate
+    rdram_register.rdram_config = GETDATA(curr, unsigned int);
+    rdram_register.rdram_device_id = GETDATA(curr, unsigned int);
+    rdram_register.rdram_delay = GETDATA(curr, unsigned int);
+    rdram_register.rdram_mode = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ref_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ref_row = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ras_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_min_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_addr_select = GETDATA(curr, unsigned int);
+    rdram_register.rdram_device_manuf = GETDATA(curr, unsigned int);
+
+    MI_register.w_mi_init_mode_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_init_mode_reg = GETDATA(curr, unsigned int);
+    MI_register.init_length = GETDATA(curr, unsigned char);
+    MI_register.init_mode = GETDATA(curr, unsigned char);
+    MI_register.ebus_test_mode = GETDATA(curr, unsigned char);
+    MI_register.RDRAM_reg_mode = GETDATA(curr, unsigned char);
+    MI_register.mi_version_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_intr_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_intr_mask_reg = GETDATA(curr, unsigned int);
+    MI_register.w_mi_intr_mask_reg = GETDATA(curr, unsigned int);
+    MI_register.SP_intr_mask = GETDATA(curr, unsigned char);
+    MI_register.SI_intr_mask = GETDATA(curr, unsigned char);
+    MI_register.AI_intr_mask = GETDATA(curr, unsigned char);
+    MI_register.VI_intr_mask = GETDATA(curr, unsigned char);
+    MI_register.PI_intr_mask = GETDATA(curr, unsigned char);
+    MI_register.DP_intr_mask = GETDATA(curr, unsigned char);
+    curr += 2; // Padding from old implementation
+
+    pi_register.pi_dram_addr_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_cart_addr_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_rd_len_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_wr_len_reg = GETDATA(curr, unsigned int);
+    pi_register.read_pi_status_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_lat_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_pwd_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_pgs_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_rls_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_lat_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_pwd_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_pgs_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_rls_reg = GETDATA(curr, unsigned int);
+
+    sp_register.sp_mem_addr_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_dram_addr_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_rd_len_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_wr_len_reg = GETDATA(curr, unsigned int);
+    sp_register.w_sp_status_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_status_reg = GETDATA(curr, unsigned int);
+    sp_register.halt = GETDATA(curr, unsigned char);
+    sp_register.broke = GETDATA(curr, unsigned char);
+    sp_register.dma_busy = GETDATA(curr, unsigned char);
+    sp_register.dma_full = GETDATA(curr, unsigned char);
+    sp_register.io_full = GETDATA(curr, unsigned char);
+    sp_register.single_step = GETDATA(curr, unsigned char);
+    sp_register.intr_break = GETDATA(curr, unsigned char);
+    sp_register.signal0 = GETDATA(curr, unsigned char);
+    sp_register.signal1 = GETDATA(curr, unsigned char);
+    sp_register.signal2 = GETDATA(curr, unsigned char);
+    sp_register.signal3 = GETDATA(curr, unsigned char);
+    sp_register.signal4 = GETDATA(curr, unsigned char);
+    sp_register.signal5 = GETDATA(curr, unsigned char);
+    sp_register.signal6 = GETDATA(curr, unsigned char);
+    sp_register.signal7 = GETDATA(curr, unsigned char);
+    curr++; // Padding from old implementation
+    sp_register.sp_dma_full_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_dma_busy_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_semaphore_reg = GETDATA(curr, unsigned int);
+
+    rsp_register.rsp_pc = GETDATA(curr, unsigned int);
+    rsp_register.rsp_ibist = GETDATA(curr, unsigned int);
+
+    si_register.si_dram_addr = GETDATA(curr, unsigned int);
+    si_register.si_pif_addr_rd64b = GETDATA(curr, unsigned int);
+    si_register.si_pif_addr_wr64b = GETDATA(curr, unsigned int);
+    si_register.si_stat = GETDATA(curr, unsigned int);
+
+    vi_register.vi_status = GETDATA(curr, unsigned int);
+    vi_register.vi_origin = GETDATA(curr, unsigned int);
+    vi_register.vi_width = GETDATA(curr, unsigned int);
+    vi_register.vi_v_intr = GETDATA(curr, unsigned int);
+    vi_register.vi_current = GETDATA(curr, unsigned int);
+    vi_register.vi_burst = GETDATA(curr, unsigned int);
+    vi_register.vi_v_sync = GETDATA(curr, unsigned int);
+    vi_register.vi_h_sync = GETDATA(curr, unsigned int);
+    vi_register.vi_leap = GETDATA(curr, unsigned int);
+    vi_register.vi_h_start = GETDATA(curr, unsigned int);
+    vi_register.vi_v_start = GETDATA(curr, unsigned int);
+    vi_register.vi_v_burst = GETDATA(curr, unsigned int);
+    vi_register.vi_x_scale = GETDATA(curr, unsigned int);
+    vi_register.vi_y_scale = GETDATA(curr, unsigned int);
+    vi_register.vi_delay = GETDATA(curr, unsigned int);
     update_vi_status(vi_register.vi_status);
     update_vi_width(vi_register.vi_width);
-    gzread(f, &ri_register, sizeof(RI_register));
-    gzread(f, &ai_register, sizeof(AI_register));
+
+    ri_register.ri_mode = GETDATA(curr, unsigned int);
+    ri_register.ri_config = GETDATA(curr, unsigned int);
+    ri_register.ri_current_load = GETDATA(curr, unsigned int);
+    ri_register.ri_select = GETDATA(curr, unsigned int);
+    ri_register.ri_refresh = GETDATA(curr, unsigned int);
+    ri_register.ri_latency = GETDATA(curr, unsigned int);
+    ri_register.ri_error = GETDATA(curr, unsigned int);
+    ri_register.ri_werror = GETDATA(curr, unsigned int);
+
+    ai_register.ai_dram_addr = GETDATA(curr, unsigned int);
+    ai_register.ai_len = GETDATA(curr, unsigned int);
+    ai_register.ai_control = GETDATA(curr, unsigned int);
+    ai_register.ai_status = GETDATA(curr, unsigned int);
+    ai_register.ai_dacrate = GETDATA(curr, unsigned int);
+    ai_register.ai_bitrate = GETDATA(curr, unsigned int);
+    ai_register.next_delay = GETDATA(curr, unsigned int);
+    ai_register.next_len = GETDATA(curr, unsigned int);
+    ai_register.current_delay = GETDATA(curr, unsigned int);
+    ai_register.current_len = GETDATA(curr, unsigned int);
     update_ai_dacrate(ai_register.ai_dacrate);
-    gzread(f, &dpc_register, sizeof(DPC_register));
-    gzread(f, &dps_register, sizeof(DPS_register));
-    gzread(f, rdram, 0x800000);
-    gzread(f, SP_DMEM, 0x1000);
-    gzread(f, SP_IMEM, 0x1000);
-    gzread(f, PIF_RAM, 0x40);
 
-    gzread(f, buffer, 24);
-    load_flashram_infos(buffer);
+    dpc_register.dpc_start = GETDATA(curr, unsigned int);
+    dpc_register.dpc_end = GETDATA(curr, unsigned int);
+    dpc_register.dpc_current = GETDATA(curr, unsigned int);
+    dpc_register.w_dpc_status = GETDATA(curr, unsigned int);
+    dpc_register.dpc_status = GETDATA(curr, unsigned int);
+    dpc_register.xbus_dmem_dma = GETDATA(curr, unsigned char);
+    dpc_register.freeze = GETDATA(curr, unsigned char);
+    dpc_register.flush = GETDATA(curr, unsigned char);
+    dpc_register.start_glck = GETDATA(curr, unsigned char);
+    dpc_register.tmem_busy = GETDATA(curr, unsigned char);
+    dpc_register.pipe_busy = GETDATA(curr, unsigned char);
+    dpc_register.cmd_busy = GETDATA(curr, unsigned char);
+    dpc_register.cbuf_busy = GETDATA(curr, unsigned char);
+    dpc_register.dma_busy = GETDATA(curr, unsigned char);
+    dpc_register.end_valid = GETDATA(curr, unsigned char);
+    dpc_register.start_valid = GETDATA(curr, unsigned char);
+    curr++;
+    dpc_register.dpc_clock = GETDATA(curr, unsigned int);
+    dpc_register.dpc_bufbusy = GETDATA(curr, unsigned int);
+    dpc_register.dpc_pipebusy = GETDATA(curr, unsigned int);
+    dpc_register.dpc_tmem = GETDATA(curr, unsigned int);
 
-    gzread(f, tlb_LUT_r, 0x100000*4);
-    gzread(f, tlb_LUT_w, 0x100000*4);
+    dps_register.dps_tbist = GETDATA(curr, unsigned int);
+    dps_register.dps_test_mode = GETDATA(curr, unsigned int);
+    dps_register.dps_buftest_addr = GETDATA(curr, unsigned int);
+    dps_register.dps_buftest_data = GETDATA(curr, unsigned int);
 
-    gzread(f, &llbit, 4);
-    gzread(f, reg, 32*8);
-    gzread(f, reg_cop0, 32*4);
+    COPYARRAY(rdram, curr, unsigned int, 0x800000/4);
+    COPYARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
+    COPYARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
+    COPYARRAY(PIF_RAM, curr, unsigned char, 0x40);
+
+    flashram_info.use_flashram = GETDATA(curr, int);
+    flashram_info.mode = GETDATA(curr, int);
+    flashram_info.status = GETDATA(curr, unsigned long long);
+    flashram_info.erase_offset = GETDATA(curr, unsigned int);
+    flashram_info.write_pointer = GETDATA(curr, unsigned int);
+
+    COPYARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
+    COPYARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
+
+    llbit = GETDATA(curr, unsigned int);
+    COPYARRAY(reg, curr, long long int, 32);
+    COPYARRAY(reg_cop0, curr, unsigned int, 32);
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
-    gzread(f, &lo, 8);
-    gzread(f, &hi, 8);
-    gzread(f, reg_cop1_fgr_64, 32*8);
+    lo = GETDATA(curr, long long int);
+    hi = GETDATA(curr, long long int);
+    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
     if ((Status & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(0x04000000, 0);
-    gzread(f, &FCR0, 4);
-    gzread(f, &FCR31, 4);
-    gzread(f, tlb_e, 32*sizeof(tlb));
+    FCR0 = GETDATA(curr, unsigned int);
+    FCR31 = GETDATA(curr, unsigned int);
+    for (i = 0; i < 32; i++)
+    {
+        tlb_e[i].mask = GETDATA(curr, short);
+        curr += 2;
+        tlb_e[i].vpn2 = GETDATA(curr, int);
+        tlb_e[i].g = GETDATA(curr, char);
+        tlb_e[i].asid = GETDATA(curr, unsigned char);
+        curr += 2;
+        tlb_e[i].pfn_even = GETDATA(curr, int);
+        tlb_e[i].c_even = GETDATA(curr, char);
+        tlb_e[i].d_even = GETDATA(curr, char);
+        tlb_e[i].v_even = GETDATA(curr, char);
+        curr++;
+        tlb_e[i].pfn_odd = GETDATA(curr, int);
+        tlb_e[i].c_odd = GETDATA(curr, char);
+        tlb_e[i].d_odd = GETDATA(curr, char);
+        tlb_e[i].v_odd = GETDATA(curr, char);
+        tlb_e[i].r = GETDATA(curr, char);
+   
+        tlb_e[i].start_even = GETDATA(curr, unsigned int);
+        tlb_e[i].end_even = GETDATA(curr, unsigned int);
+        tlb_e[i].phys_even = GETDATA(curr, unsigned int);
+        tlb_e[i].start_odd = GETDATA(curr, unsigned int);
+        tlb_e[i].end_odd = GETDATA(curr, unsigned int);
+        tlb_e[i].phys_odd = GETDATA(curr, unsigned int);
+    }
     if(r4300emu == CORE_PURE_INTERPRETER)
-        gzread(f, &interp_addr, 4);
+        interp_addr = GETDATA(curr, unsigned int);
     else
         {
-        int i;
-        gzread(f, &queuelength, 4);
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
-        jump_to(queuelength);
+        jump_to(GETDATA(curr, unsigned int));
         }
 
-    gzread(f, &next_interupt, 4);
-    gzread(f, &next_vi, 4);
-    gzread(f, &vi_field, 4);
+    next_interupt = GETDATA(curr, unsigned int);
+    next_vi = GETDATA(curr, unsigned int);
+    vi_field = GETDATA(curr, unsigned int);
 
-    queuelength = 0;
-    while(1)
-        {
-        gzread(f, buffer+queuelength, 4);
-        if(*((unsigned int*)&buffer[queuelength])==0xFFFFFFFF)
-            break;
-        gzread(f, buffer+queuelength+4, 4);
-        queuelength += 8;
-        }
-    load_eventqueue_infos(buffer);
+    to_little_endian(eventQueue, 4, 256);
+    load_eventqueue_infos(eventQueue);
 
     gzclose(f);
     if(r4300emu == CORE_PURE_INTERPRETER)
@@ -324,42 +522,54 @@ static int savestates_load_m64p(char *filepath)
 static int savestates_load_pj64(char *filepath, void *handle,
                                 int (*read_func)(void *, void *, size_t))
 {
-    char buffer[1024], RomHeader[64];
-    unsigned int magic, value, vi_timer, SaveRDRAMSize;
+    char buffer[1024];
+    unsigned int vi_timer, SaveRDRAMSize;
     int i;
-    TLB_pj64 tlb_pj64;
+
+    unsigned char header[8];
+    unsigned char RomHeader[0x40];
+
+    size_t savestateSize;
+    unsigned char *savestateData, *curr; // TODO free
 
     /* Read and check Project64 magic number. */
-    read_func(handle, &magic, 4);
-    if (magic!=pj64_magic)
+    read_func(handle, header, 8); // TODO check
+    curr = header;
+    if (GETDATA(curr, unsigned int) != pj64_magic)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Project64 savestate. Unrecognized file format.", filepath);
         return 0;
     }
 
-    read_func(handle, &SaveRDRAMSize, 4);
+    SaveRDRAMSize = GETDATA(curr, unsigned int);
 
-    read_func(handle, RomHeader, 0x40);
-    if(memcmp(RomHeader, rom, 0x40)!=0) 
+    /* Read the rest of the savestate into memory. */
+    savestateSize = SaveRDRAMSize + 0x2754;
+    savestateData = curr = (unsigned char *)malloc(savestateSize); // TODO check
+    read_func(handle, savestateData, savestateSize); // TODO check
+
+    // check ROM header
+    COPYARRAY(RomHeader, curr, unsigned int, 0x40/4);
+    if(memcmp(RomHeader, rom, 0x40) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
         return 0;
     }
 
     // vi_timer
-    read_func(handle, &vi_timer,4);
+    vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    read_func(handle, &last_addr, 4);
+    last_addr = GETDATA(curr, unsigned int);
 
     // GPR
-    read_func(handle, reg,8*32);
+    COPYARRAY(reg, curr, long long int, 32);
 
     // FPR
-    read_func(handle, reg_cop1_fgr_64,8*32);
+    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
 
     // CP0
-    read_func(handle, reg_cop0, 4*32);
+    COPYARRAY(reg_cop0, curr, unsigned int, 32);
 
     set_fpr_pointers(Status);  // Status is reg_cop0[12]
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
@@ -379,115 +589,174 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(buffer);
 
     // FPCR
-    read_func(handle, &FCR0,4);
-    read_func(handle, &buffer,120);   // Dummy read.
-    read_func(handle, &FCR31,4);
+    FCR0 = GETDATA(curr, unsigned int);
+    curr += 30 * 4; // FCR1...FCR30 not supported
+    FCR31 = GETDATA(curr, unsigned int);
 
     // hi / lo
-    read_func(handle,&hi,8);
-    read_func(handle,&lo,8);
+    hi = GETDATA(curr, long long int);
+    lo = GETDATA(curr, long long int);
 
     // rdram register
-    read_func(handle, &rdram_register, sizeof(RDRAM_register));
+    rdram_register.rdram_config = GETDATA(curr, unsigned int);
+    rdram_register.rdram_device_id = GETDATA(curr, unsigned int);
+    rdram_register.rdram_delay = GETDATA(curr, unsigned int);
+    rdram_register.rdram_mode = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ref_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ref_row = GETDATA(curr, unsigned int);
+    rdram_register.rdram_ras_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_min_interval = GETDATA(curr, unsigned int);
+    rdram_register.rdram_addr_select = GETDATA(curr, unsigned int);
+    rdram_register.rdram_device_manuf = GETDATA(curr, unsigned int);
 
     // sp_register
-    read_func(handle, &sp_register.sp_mem_addr_reg, 4);
-    read_func(handle, &sp_register.sp_dram_addr_reg, 4);
-    read_func(handle, &sp_register.sp_rd_len_reg, 4);
-    read_func(handle, &sp_register.sp_wr_len_reg, 4);
-    read_func(handle, &sp_register.sp_status_reg, 4);
-    read_func(handle, &sp_register.sp_dma_full_reg, 4);
-    read_func(handle, &sp_register.sp_dma_busy_reg, 4);
-    read_func(handle, &sp_register.sp_semaphore_reg, 4);
-    read_func(handle, &rsp_register.rsp_pc, 4);
-    read_func(handle, &rsp_register.rsp_ibist, 4);
+    sp_register.sp_mem_addr_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_dram_addr_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_rd_len_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_wr_len_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_status_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_dma_full_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_dma_busy_reg = GETDATA(curr, unsigned int);
+    sp_register.sp_semaphore_reg = GETDATA(curr, unsigned int);
+    rsp_register.rsp_pc = GETDATA(curr, unsigned int);
+    rsp_register.rsp_ibist = GETDATA(curr, unsigned int);
 
     make_w_sp_status_reg();
 
     // dpc_register
-    read_func(handle, &dpc_register.dpc_start, 4);
-    read_func(handle, &dpc_register.dpc_end, 4);
-    read_func(handle, &dpc_register.dpc_current, 4);
-    read_func(handle, &dpc_register.dpc_status, 4);
-    read_func(handle, &dpc_register.dpc_clock, 4);
-    read_func(handle, &dpc_register.dpc_bufbusy, 4);
-    read_func(handle, &dpc_register.dpc_pipebusy, 4);
-    read_func(handle, &dpc_register.dpc_tmem, 4);
-    read_func(handle, &value, 4); // Dummy read
-    read_func(handle, &value, 4); // Dummy read
+    dpc_register.dpc_start = GETDATA(curr, unsigned int);
+    dpc_register.dpc_end = GETDATA(curr, unsigned int);
+    dpc_register.dpc_current = GETDATA(curr, unsigned int);
+    dpc_register.dpc_status = GETDATA(curr, unsigned int);
+    dpc_register.dpc_clock = GETDATA(curr, unsigned int);
+    dpc_register.dpc_bufbusy = GETDATA(curr, unsigned int);
+    dpc_register.dpc_pipebusy = GETDATA(curr, unsigned int);
+    dpc_register.dpc_tmem = GETDATA(curr, unsigned int);
+    (void)GETDATA(curr, unsigned int); // Dummy read
+    (void)GETDATA(curr, unsigned int); // Dummy read
 
     make_w_dpc_status();
 
     // mi_register
-    read_func(handle, &MI_register.mi_init_mode_reg, 4);
-    read_func(handle, &MI_register.mi_version_reg, 4);
-    read_func(handle, &MI_register.mi_intr_reg, 4);
-    read_func(handle, &MI_register.mi_intr_mask_reg, 4);
+    MI_register.mi_init_mode_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_version_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_intr_reg = GETDATA(curr, unsigned int);
+    MI_register.mi_intr_mask_reg = GETDATA(curr, unsigned int);
 
     make_w_mi_init_mode_reg();
     make_w_mi_intr_mask_reg();
 
-    // vi_register 
-    read_func(handle, &vi_register, 4*14);
+    // vi_register
+    vi_register.vi_status = GETDATA(curr, unsigned int);
+    vi_register.vi_origin = GETDATA(curr, unsigned int);
+    vi_register.vi_width = GETDATA(curr, unsigned int);
+    vi_register.vi_v_intr = GETDATA(curr, unsigned int);
+    vi_register.vi_current = GETDATA(curr, unsigned int);
+    vi_register.vi_burst = GETDATA(curr, unsigned int);
+    vi_register.vi_v_sync = GETDATA(curr, unsigned int);
+    vi_register.vi_h_sync = GETDATA(curr, unsigned int);
+    vi_register.vi_leap = GETDATA(curr, unsigned int);
+    vi_register.vi_h_start = GETDATA(curr, unsigned int);
+    vi_register.vi_v_start = GETDATA(curr, unsigned int);
+    vi_register.vi_v_burst = GETDATA(curr, unsigned int);
+    vi_register.vi_x_scale = GETDATA(curr, unsigned int);
+    vi_register.vi_y_scale = GETDATA(curr, unsigned int);
+    // TODO vi delay?
     update_vi_status(vi_register.vi_status);
     update_vi_width(vi_register.vi_width);
 
     // ai_register
-    read_func(handle, &ai_register, 4*6);
+    ai_register.ai_dram_addr = GETDATA(curr, unsigned int);
+    ai_register.ai_len = GETDATA(curr, unsigned int);
+    ai_register.ai_control = GETDATA(curr, unsigned int);
+    ai_register.ai_status = GETDATA(curr, unsigned int);
+    ai_register.ai_dacrate = GETDATA(curr, unsigned int);
+    ai_register.ai_bitrate = GETDATA(curr, unsigned int);
     update_ai_dacrate(ai_register.ai_dacrate);
 
     // pi_register
+    pi_register.pi_dram_addr_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_cart_addr_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_rd_len_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_wr_len_reg = GETDATA(curr, unsigned int);
+    pi_register.read_pi_status_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_lat_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_pwd_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_pgs_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom1_rls_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_lat_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_pwd_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_pgs_reg = GETDATA(curr, unsigned int);
+    pi_register.pi_bsd_dom2_rls_reg = GETDATA(curr, unsigned int);
     read_func(handle, &pi_register, sizeof(PI_register));
 
     // ri_register
-    read_func(handle, &ri_register, sizeof(RI_register));
+    ri_register.ri_mode = GETDATA(curr, unsigned int);
+    ri_register.ri_config = GETDATA(curr, unsigned int);
+    ri_register.ri_current_load = GETDATA(curr, unsigned int);
+    ri_register.ri_select = GETDATA(curr, unsigned int);
+    ri_register.ri_refresh = GETDATA(curr, unsigned int);
+    ri_register.ri_latency = GETDATA(curr, unsigned int);
+    ri_register.ri_error = GETDATA(curr, unsigned int);
+    ri_register.ri_werror = GETDATA(curr, unsigned int);
 
     // si_register
-    read_func(handle, &si_register, sizeof(SI_register));
+    si_register.si_dram_addr = GETDATA(curr, unsigned int);
+    si_register.si_pif_addr_rd64b = GETDATA(curr, unsigned int);
+    si_register.si_pif_addr_wr64b = GETDATA(curr, unsigned int);
+    si_register.si_stat = GETDATA(curr, unsigned int);
 
     // tlb
     memset(tlb_LUT_r, 0, 0x400000);
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
-        read_func(handle, &tlb_pj64, sizeof(TLB_pj64));
-        tlb_e[i].mask = (short) tlb_pj64.BreakDownPageMask.Mask;
-        tlb_e[i].vpn2 = tlb_pj64.BreakDownEntryHi.VPN2;
-        tlb_e[i].g = (char) tlb_pj64.BreakDownEntryLo0.GLOBAL & tlb_pj64.BreakDownEntryLo1.GLOBAL;
-        tlb_e[i].asid = (unsigned char) tlb_pj64.BreakDownEntryHi.ASID;
-        tlb_e[i].pfn_even = tlb_pj64.BreakDownEntryLo0.PFN;
-        tlb_e[i].c_even = (char) tlb_pj64.BreakDownEntryLo0.C;
-        tlb_e[i].d_even = (char) tlb_pj64.BreakDownEntryLo0.D;
-        tlb_e[i].v_even = (char) tlb_pj64.BreakDownEntryLo0.V;
-        tlb_e[i].pfn_odd = tlb_pj64.BreakDownEntryLo1.PFN;
-        tlb_e[i].c_odd = (char) tlb_pj64.BreakDownEntryLo1.C;
-        tlb_e[i].d_odd = (char) tlb_pj64.BreakDownEntryLo1.D;
-        tlb_e[i].v_odd = (char) tlb_pj64.BreakDownEntryLo1.V;
+        unsigned int MyEntryDefined = GETDATA(curr, unsigned int);
+        unsigned int MyPageMask = GETDATA(curr, unsigned int);
+        unsigned int MyEntryHi = GETDATA(curr, unsigned int);
+        unsigned int MyEntryLo0 = GETDATA(curr, unsigned int);
+        unsigned int MyEntryLo1 = GETDATA(curr, unsigned int);
 
         // This is copied from TLBWI instruction
-        // tlb_e[i].r = 0;
-        tlb_e[i].start_even = (unsigned int) tlb_e[i].vpn2 << 13;
-        tlb_e[i].end_even = (unsigned int) tlb_e[i].start_even + (tlb_e[i].mask << 12) + 0xFFF;
-        tlb_e[i].phys_even = (unsigned int) tlb_e[i].pfn_even << 12;;
-        tlb_e[i].start_odd = (unsigned int) tlb_e[i].end_even + 1;
-        tlb_e[i].end_odd = (unsigned int) tlb_e[i].start_odd + (tlb_e[i].mask << 12) + 0xFFF;;
-        tlb_e[i].phys_odd = (unsigned int) tlb_e[i].pfn_odd << 12;
+        tlb_e[i].g = (MyEntryLo0 & MyEntryLo1 & 1);
+        tlb_e[i].pfn_even = (MyEntryLo0 & 0x3FFFFFC0) >> 6;
+        tlb_e[i].pfn_odd = (MyEntryLo1 & 0x3FFFFFC0) >> 6;
+        tlb_e[i].c_even = (MyEntryLo0 & 0x38) >> 3;
+        tlb_e[i].c_odd = (MyEntryLo1 & 0x38) >> 3;
+        tlb_e[i].d_even = (MyEntryLo0 & 0x4) >> 2;
+        tlb_e[i].d_odd = (MyEntryLo1 & 0x4) >> 2;
+        tlb_e[i].v_even = (MyEntryLo0 & 0x2) >> 1;
+        tlb_e[i].v_odd = (MyEntryLo1 & 0x2) >> 1;
+        tlb_e[i].asid = (MyEntryHi & 0xFF);
+        tlb_e[i].vpn2 = (MyEntryHi & 0xFFFFE000) >> 13;
+        //tlb_e[i].r = (MyEntryHi & 0xC000000000000000LL) >> 62;
+        tlb_e[i].mask = (MyPageMask & 0x1FFE000) >> 13;
+           
+        tlb_e[i].start_even = tlb_e[i].vpn2 << 13;
+        tlb_e[i].end_even = tlb_e[i].start_even+
+          (tlb_e[i].mask << 12) + 0xFFF;
+        tlb_e[i].phys_even = tlb_e[i].pfn_even << 12;
+           
+        tlb_e[i].start_odd = tlb_e[i].end_even+1;
+        tlb_e[i].end_odd = tlb_e[i].start_odd+
+          (tlb_e[i].mask << 12) + 0xFFF;
+        tlb_e[i].phys_odd = tlb_e[i].pfn_odd << 12;
 
         tlb_map(&tlb_e[i]);
     }
 
     // pif ram
-    read_func(handle, PIF_RAM, 0x40);
+    COPYARRAY(PIF_RAM, curr, unsigned char, 0x40);
 
     // RDRAM
     memset(rdram, 0, 0x800000);
-    read_func(handle, rdram, SaveRDRAMSize);
+    COPYARRAY(rdram, curr, unsigned int, SaveRDRAMSize/4);
 
     // DMEM
-    read_func(handle, SP_DMEM, 0x1000);
+    COPYARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
 
     // IMEM
-    read_func(handle, SP_IMEM, 0x1000);
+    COPYARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
 
     // The following values should not matter because we don't have any AI interrupt
     // ai_register.next_delay = 0; ai_register.next_len = 0;
