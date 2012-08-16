@@ -308,21 +308,6 @@ int init_memory(int DoByteSwap)
     sp_register.sp_wr_len_reg=0;
     sp_register.sp_status_reg=1;
     sp_register.w_sp_status_reg=0;
-    sp_register.halt=1;
-    sp_register.broke=0;
-    sp_register.dma_busy=0;
-    sp_register.dma_full=0;
-    sp_register.io_full=0;
-    sp_register.single_step=0;
-    sp_register.intr_break=0;
-    sp_register.signal0=0;
-    sp_register.signal1=0;
-    sp_register.signal2=0;
-    sp_register.signal3=0;
-    sp_register.signal4=0;
-    sp_register.signal5=0;
-    sp_register.signal6=0;
-    sp_register.signal7=0;
     sp_register.sp_dma_full_reg=0;
     sp_register.sp_dma_busy_reg=0;
     sp_register.sp_semaphore_reg=0;
@@ -1130,67 +1115,63 @@ void update_MI_intr_mask_reg(void)
 
 void make_sp_status_reg(void)
 {
-    if (sp_register.w_sp_status_reg & 0x1)
-        sp_register.halt = 0;
-    if (sp_register.w_sp_status_reg & 0x2)
-        sp_register.halt = 1;
-    if (sp_register.w_sp_status_reg & 0x4)
-        sp_register.broke = 0;
-    if (sp_register.w_sp_status_reg & 0x20)
-        sp_register.single_step = 0;
-    if (sp_register.w_sp_status_reg & 0x40)
-        sp_register.single_step = 1;
-    if (sp_register.w_sp_status_reg & 0x80)
-        sp_register.intr_break = 0;
-    if (sp_register.w_sp_status_reg & 0x100)
-        sp_register.intr_break = 1;
-    if (sp_register.w_sp_status_reg & 0x200)
-        sp_register.signal0 = 0;
-    if (sp_register.w_sp_status_reg & 0x400)
-        sp_register.signal0 = 1;
-    if (sp_register.w_sp_status_reg & 0x800)
-        sp_register.signal1 = 0;
-    if (sp_register.w_sp_status_reg & 0x1000)
-        sp_register.signal1 = 1;
-    if (sp_register.w_sp_status_reg & 0x2000)
-        sp_register.signal2 = 0;
-    if (sp_register.w_sp_status_reg & 0x4000)
-        sp_register.signal2 = 1;
-    if (sp_register.w_sp_status_reg & 0x8000)
-        sp_register.signal3 = 0;
-    if (sp_register.w_sp_status_reg & 0x10000)
-        sp_register.signal3 = 1;
-    if (sp_register.w_sp_status_reg & 0x20000)
-        sp_register.signal4 = 0;
-    if (sp_register.w_sp_status_reg & 0x40000)
-        sp_register.signal4 = 1;
-    if (sp_register.w_sp_status_reg & 0x80000)
-        sp_register.signal5 = 0;
-    if (sp_register.w_sp_status_reg & 0x100000)
-        sp_register.signal5 = 1;
-    if (sp_register.w_sp_status_reg & 0x200000)
-        sp_register.signal6 = 0;
-    if (sp_register.w_sp_status_reg & 0x400000)
-        sp_register.signal6 = 1;
-    if (sp_register.w_sp_status_reg & 0x800000)
-        sp_register.signal7 = 0;
-    if (sp_register.w_sp_status_reg & 0x1000000)
-        sp_register.signal7 = 1;
-    sp_register.sp_status_reg = ((sp_register.halt) |
-                                 (sp_register.broke << 1) |
-                                 (sp_register.dma_busy << 2) |
-                                 (sp_register.dma_full << 3) |
-                                 (sp_register.io_full << 4) |
-                                 (sp_register.single_step << 5) |
-                                 (sp_register.intr_break << 6) |
-                                 (sp_register.signal0 << 7) |
-                                 (sp_register.signal1 << 8) |
-                                 (sp_register.signal2 << 9) |
-                                 (sp_register.signal3 << 10) |
-                                 (sp_register.signal4 << 11) |
-                                 (sp_register.signal5 << 12) |
-                                 (sp_register.signal6 << 13) |
-                                 (sp_register.signal7 << 14));
+    if (sp_register.w_sp_status_reg & 0x1) // clear halt
+        sp_register.sp_status_reg &= ~0x1;
+    if (sp_register.w_sp_status_reg & 0x2) // set halt
+        sp_register.sp_status_reg |= 0x1;
+
+    if (sp_register.w_sp_status_reg & 0x4) // clear broke
+        sp_register.sp_status_reg &= ~0x2;
+
+    if (sp_register.w_sp_status_reg & 0x20) // clear single step
+        sp_register.sp_status_reg &= ~0x20;
+    if (sp_register.w_sp_status_reg & 0x40) // set single step
+        sp_register.sp_status_reg |= 0x20;
+
+    if (sp_register.w_sp_status_reg & 0x80) // clear interrupt on break
+        sp_register.sp_status_reg &= ~0x40;
+    if (sp_register.w_sp_status_reg & 0x100) // set interrupt on break
+        sp_register.sp_status_reg |= 0x40;
+
+    if (sp_register.w_sp_status_reg & 0x200) // clear signal 0
+        sp_register.sp_status_reg &= ~0x80;
+    if (sp_register.w_sp_status_reg & 0x400) // set signal 0
+        sp_register.sp_status_reg |= 0x80;
+
+    if (sp_register.w_sp_status_reg & 0x800) // clear signal 1
+        sp_register.sp_status_reg &= ~0x100;
+    if (sp_register.w_sp_status_reg & 0x1000) // set signal 1
+        sp_register.sp_status_reg |= 0x100;
+
+    if (sp_register.w_sp_status_reg & 0x2000) // clear signal 2
+        sp_register.sp_status_reg &= ~0x200;
+    if (sp_register.w_sp_status_reg & 0x4000) // set signal 2
+        sp_register.sp_status_reg |= 0x200;
+
+    if (sp_register.w_sp_status_reg & 0x8000) // clear signal 3
+        sp_register.sp_status_reg &= ~0x400;
+    if (sp_register.w_sp_status_reg & 0x10000) // set signal 3
+        sp_register.sp_status_reg |= 0x400;
+
+    if (sp_register.w_sp_status_reg & 0x20000) // clear signal 4
+        sp_register.sp_status_reg &= ~0x800;
+    if (sp_register.w_sp_status_reg & 0x40000) // set signal 4
+        sp_register.sp_status_reg |= 0x800;
+
+    if (sp_register.w_sp_status_reg & 0x80000) // clear signal 5
+        sp_register.sp_status_reg &= ~0x1000;
+    if (sp_register.w_sp_status_reg & 0x100000) // set signal 5
+        sp_register.sp_status_reg |= 0x1000;
+
+    if (sp_register.w_sp_status_reg & 0x200000) // clear signal 6
+        sp_register.sp_status_reg &= ~0x2000;
+    if (sp_register.w_sp_status_reg & 0x400000) // set signal 6
+        sp_register.sp_status_reg |= 0x2000;
+
+    if (sp_register.w_sp_status_reg & 0x800000) // clear signal 7
+        sp_register.sp_status_reg &= ~0x4000;
+    if (sp_register.w_sp_status_reg & 0x1000000) // set signal 7
+        sp_register.sp_status_reg |= 0x4000;
 }
 
 void make_w_sp_status_reg(void)
@@ -1258,8 +1239,6 @@ void make_w_sp_status_reg(void)
         sp_register.w_sp_status_reg |= 0x0800000;
     else
         sp_register.w_sp_status_reg |= 0x1000000;
-
-    make_sp_status_reg(); // To update the flags
 }
 
 void update_SP(void)
@@ -1281,7 +1260,7 @@ void update_SP(void)
     //if (get_event(SP_INT)) return;
     if (!(sp_register.w_sp_status_reg & 0x1) &&
             !(sp_register.w_sp_status_reg & 0x4)) return;
-    if (!sp_register.halt && !sp_register.broke)
+    if (!(sp_register.sp_status_reg & 0x3)) // !halt && !broke
     {
         int save_pc = rsp_register.rsp_pc & ~0xFFF;
         if (SP_DMEM[0xFC0/4] == 1)

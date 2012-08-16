@@ -334,22 +334,7 @@ static int savestates_load_m64p(char *filepath)
     sp_register.sp_wr_len_reg = GETDATA(curr, unsigned int);
     sp_register.w_sp_status_reg = GETDATA(curr, unsigned int);
     sp_register.sp_status_reg = GETDATA(curr, unsigned int);
-    sp_register.halt = GETDATA(curr, unsigned char);
-    sp_register.broke = GETDATA(curr, unsigned char);
-    sp_register.dma_busy = GETDATA(curr, unsigned char);
-    sp_register.dma_full = GETDATA(curr, unsigned char);
-    sp_register.io_full = GETDATA(curr, unsigned char);
-    sp_register.single_step = GETDATA(curr, unsigned char);
-    sp_register.intr_break = GETDATA(curr, unsigned char);
-    sp_register.signal0 = GETDATA(curr, unsigned char);
-    sp_register.signal1 = GETDATA(curr, unsigned char);
-    sp_register.signal2 = GETDATA(curr, unsigned char);
-    sp_register.signal3 = GETDATA(curr, unsigned char);
-    sp_register.signal4 = GETDATA(curr, unsigned char);
-    sp_register.signal5 = GETDATA(curr, unsigned char);
-    sp_register.signal6 = GETDATA(curr, unsigned char);
-    sp_register.signal7 = GETDATA(curr, unsigned char);
-    curr++; // Padding from old implementation
+    curr += 16; // Duplicated SP flags and padding from old implementation
     sp_register.sp_dma_full_reg = GETDATA(curr, unsigned int);
     sp_register.sp_dma_busy_reg = GETDATA(curr, unsigned int);
     sp_register.sp_semaphore_reg = GETDATA(curr, unsigned int);
@@ -894,7 +879,7 @@ int savestates_load(void)
     if (fname != NULL && type == savestates_type_unknown)
         type = savestates_detect_type(fname);
     else if (fname == NULL) // Always load slots in M64P format
-        type = savestates_type_pj64_zip;
+        type = savestates_type_m64p;
 
     filepath = savestates_generate_path(type);
     if (filepath != NULL)
@@ -1000,21 +985,21 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, sp_register.sp_wr_len_reg);
     PUTDATA(curr, unsigned int, sp_register.w_sp_status_reg);
     PUTDATA(curr, unsigned int, sp_register.sp_status_reg);
-    PUTDATA(curr, unsigned char, sp_register.halt);
-    PUTDATA(curr, unsigned char, sp_register.broke);
-    PUTDATA(curr, unsigned char, sp_register.dma_busy);
-    PUTDATA(curr, unsigned char, sp_register.dma_full);
-    PUTDATA(curr, unsigned char, sp_register.io_full);
-    PUTDATA(curr, unsigned char, sp_register.single_step);
-    PUTDATA(curr, unsigned char, sp_register.intr_break);
-    PUTDATA(curr, unsigned char, sp_register.signal0);
-    PUTDATA(curr, unsigned char, sp_register.signal1);
-    PUTDATA(curr, unsigned char, sp_register.signal2);
-    PUTDATA(curr, unsigned char, sp_register.signal3);
-    PUTDATA(curr, unsigned char, sp_register.signal4);
-    PUTDATA(curr, unsigned char, sp_register.signal5);
-    PUTDATA(curr, unsigned char, sp_register.signal6);
-    PUTDATA(curr, unsigned char, sp_register.signal7);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x1) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x2) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x4) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x8) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x10) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x20) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x40) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x80) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x100) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x200) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x400) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x800) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x1000) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x2000) != 0);
+    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x4000) != 0);
     PUTDATA(curr, unsigned char, 0);
     PUTDATA(curr, unsigned int, sp_register.sp_dma_full_reg);
     PUTDATA(curr, unsigned int, sp_register.sp_dma_busy_reg);
@@ -1435,7 +1420,7 @@ int savestates_save(void)
     if (fname != NULL && type == savestates_type_unknown)
         type = savestates_type_m64p;
     else if (fname == NULL) // Always save slots in M64P format
-        type = savestates_type_pj64_zip;
+        type = savestates_type_m64p;
 
     filepath = savestates_generate_path(type);
     if (filepath != NULL)
