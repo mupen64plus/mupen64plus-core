@@ -76,20 +76,14 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
 
 void NI(void)
 {
-   DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", (int)PC->addr);
-   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
-     DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
-   else
-     DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
+   DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", PC->addr);
+   DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", PC->addr, *fast_mem_access(PC->addr));
    stop=1;
 }
 
 void RESERVED(void)
 {
-   if (PC->addr >= 0xa4000000 && PC->addr < 0xa4001000)
-     DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)SP_DMEM[(PC->addr-0xa4000000)/4]);
-   else
-     DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", (int)PC->addr, (int)rdram[(PC->addr-0x80000000)/4]);
+   DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", PC->addr, *fast_mem_access(PC->addr));
    stop=1;
 }
 
@@ -1387,25 +1381,13 @@ void SD(void)
 
 void NOTCOMPILED(void)
 {
-  unsigned int paddr = PC->addr;
-
+   unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
-   if (paddr < 0x80000000 || paddr >= 0xc0000000)
-       paddr = virtual_to_physical_address(paddr, 2);
-
-   if (paddr)
-   {
-      unsigned int blk_addr = (paddr-(PC->addr-blocks[PC->addr>>12]->start));
-      if (paddr >= 0xa4000000 && paddr <= 0xa4001000)
-         recompile_block((int *) SP_DMEM + ((blk_addr&0xFFF)>>2), blocks[PC->addr >> 12], PC->addr);
-      else if ((paddr & 0x1FFFFFFF) >= 0x10000000)
-         recompile_block((int *) rom+(((blk_addr & 0x1FFFFFFF) - 0x10000000)>>2), blocks[PC->addr >> 12], PC->addr);
-      else
-         recompile_block((int *) rdram+((blk_addr & 0x1FFFFFFF)>>2), blocks[PC->addr >> 12], PC->addr);
-   }
+   if (mem != NULL)
+      recompile_block((int *)mem, blocks[PC->addr >> 12], PC->addr);
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 

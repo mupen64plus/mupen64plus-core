@@ -3650,3 +3650,21 @@ void write_pifd(void)
     }
 }
 
+unsigned int *fast_mem_access(unsigned int address)
+{
+    /* This code is performance critical, specially on pure interpreter mode.
+     * Removing error checking saves some time, but the emulator may crash. */
+    if (address < 0x80000000 || address >= 0xc0000000)
+        address = virtual_to_physical_address(address, 2);
+
+    if ((address & 0x1FFFFFFF) >= 0x10000000)
+        return (unsigned int *)rom + ((address & 0x1FFFFFFF) - 0x10000000)/4;
+    else if ((address & 0x1FFFFFFF) < 0x800000)
+        return (unsigned int *)rdram + (address & 0x1FFFFFFF)/4;
+    else if (address >= 0xa4000000 && address <= 0xa4001000)
+        return (unsigned int *)SP_DMEM + (address & 0xFFF)/4;
+    else if ((address >= 0xa4001000 && address <= 0xa4002000))
+        return (unsigned int *)SP_IMEM + (address & 0xFFF)/4;
+    else
+        return NULL;
+}

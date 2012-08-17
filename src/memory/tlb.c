@@ -136,27 +136,6 @@ unsigned int virtual_to_physical_address(unsigned int addresse, int w)
 
 int probe_nop(unsigned int address)
 {
-    unsigned int a;
-    if (address < 0x80000000 || address > 0xc0000000)
-    {
-        if (tlb_LUT_r[address>>12])
-            a = (tlb_LUT_r[address>>12]&0xFFFFF000)|(address&0xFFF);
-        else
-            return 0;
-    }
-    else
-        a = address;
-
-    if (a >= 0xa4000000 && a < 0xa4001000)
-    {
-        if (!SP_DMEM[(a&0xFFF)/4]) return 1;
-        else return 0;
-    }
-    else if (a >= 0x80000000 && a < 0x80800000)
-    {
-        if (!rdram[(a&0x7FFFFF)/4]) return 1;
-        else return 0;
-    }
-    else return 0;
+    return *fast_mem_access(address) == 0;
 }
 

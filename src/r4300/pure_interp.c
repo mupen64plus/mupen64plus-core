@@ -2833,45 +2833,17 @@ static void (*interp_ops[64])(void) =
 
 static void prefetch(void)
 {
-   if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
-     {
-    if ((interp_addr >= 0x80000000) && (interp_addr < 0x80800000))
-      {
-         op = rdram[(interp_addr&0xFFFFFF)/4];
-         prefetch_opcode(op);
-      }
-    else if ((interp_addr >= 0xa4000000) && (interp_addr < 0xa4001000))
-      {
-         op = SP_DMEM[(interp_addr&0xFFF)/4];
-         prefetch_opcode(op);
-      }
-    else if ((interp_addr > 0xb0000000))
-      {
-         op = ((unsigned int*)rom)[(interp_addr & 0xFFFFFFF)/4];
-         prefetch_opcode(op);
-      }
-    else
-      {
-         DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
-         stop=1;
-      }
-     }
-   else
-     {
-    unsigned int addr = interp_addr, phys;
-    phys = virtual_to_physical_address(interp_addr, 2);
-    if (phys != 0x00000000) interp_addr = phys;
-    else 
-      {
-         prefetch();
-         //tlb_used = 0;
-         return;
-      }
-    //tlb_used = 1;
-    prefetch();
-    //tlb_used = 0;
-    interp_addr = addr;
-     }
+  unsigned int *mem = fast_mem_access(interp_addr);
+  if (mem != NULL)
+  {
+     op = *mem;
+     prefetch_opcode(op);
+  }
+  else
+  {
+     DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
+     stop=1;
+  }
 }
 
 void pure_interpreter(void)
