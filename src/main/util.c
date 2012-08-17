@@ -475,7 +475,7 @@ ini_line ini_parse_line(char **lineptr)
 
         l.type = INI_COMMENT;
         l.name = NULL;
-        l.value = line;
+        l.value = trim(line);
     }
     else if (line[0] == '[' && line[strlen(line)-1] == ']')
     {
