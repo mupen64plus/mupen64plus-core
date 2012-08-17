@@ -170,7 +170,7 @@ static void block_endian_swap(void *buffer, size_t length, size_t count)
     {
         unsigned short *pun = (unsigned short *)buffer;
         for (i = 0; i < count; i++)
-            pun[i] = (pun[i] >> 8) || (pun[i] << 8);
+            pun[i] = __builtin_bswap16(pun[i]);
     }
     else if (length == 4)
     {

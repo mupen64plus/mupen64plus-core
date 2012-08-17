@@ -1020,7 +1020,7 @@ void update_MI_init_mode_reg(void)
 
     if (MI_register.w_mi_init_mode_reg & 0x800)
     {
-        MI_register.mi_intr_reg &= 0xFFFFFFDF;
+        MI_register.mi_intr_reg &= ~0x20;
         check_interupt();
     }
 }
@@ -1214,7 +1214,7 @@ void update_SP(void)
 
     if (sp_register.w_sp_status_reg & 0x8)
     {
-        MI_register.mi_intr_reg &= 0xFFFFFFFE;
+        MI_register.mi_intr_reg &= ~1;
         check_interupt();
     }
 
@@ -2606,7 +2606,7 @@ void write_vi(void)
         return;
         break;
     case 0x10:
-        MI_register.mi_intr_reg &= 0xFFFFFFF7;
+        MI_register.mi_intr_reg &= ~0x8;
         check_interupt();
         return;
         break;
@@ -2661,7 +2661,7 @@ void write_vib(void)
     case 0x11:
     case 0x12:
     case 0x13:
-        MI_register.mi_intr_reg &= 0xFFFFFFF7;
+        MI_register.mi_intr_reg &= ~0x8;
         check_interupt();
         return;
         break;
@@ -2699,7 +2699,7 @@ void write_vih(void)
         break;
     case 0x10:
     case 0x12:
-        MI_register.mi_intr_reg &= 0xFFFFFFF7;
+        MI_register.mi_intr_reg &= ~0x8;
         check_interupt();
         return;
         break;
@@ -2729,7 +2729,7 @@ void write_vid(void)
         return;
         break;
     case 0x10:
-        MI_register.mi_intr_reg &= 0xFFFFFFF7;
+        MI_register.mi_intr_reg &= ~0x8;
         check_interupt();
         vi_register.vi_burst = (unsigned int) (dword & 0xFFFFFFFF);
         return;
@@ -2848,7 +2848,7 @@ void write_ai(void)
         return;
         break;
     case 0xc:
-        MI_register.mi_intr_reg &= 0xFFFFFFFB;
+        MI_register.mi_intr_reg &= ~0x4;
         check_interupt();
         return;
         break;
@@ -2909,7 +2909,7 @@ void write_aib(void)
     case 0xd:
     case 0xe:
     case 0xf:
-        MI_register.mi_intr_reg &= 0xFFFFFFFB;
+        MI_register.mi_intr_reg &= ~0x4;
         check_interupt();
         return;
         break;
@@ -2966,7 +2966,7 @@ void write_aih(void)
         break;
     case 0xc:
     case 0xe:
-        MI_register.mi_intr_reg &= 0xFFFFFFFB;
+        MI_register.mi_intr_reg &= ~0x4;
         check_interupt();
         return;
         break;
@@ -3017,7 +3017,7 @@ void write_aid(void)
         break;
     case 0x8:
         ai_register.ai_control = (unsigned int) (dword >> 32);
-        MI_register.mi_intr_reg &= 0xFFFFFFFB;
+        MI_register.mi_intr_reg &= ~0x4;
         check_interupt();
         return;
         break;
@@ -3072,7 +3072,7 @@ void write_pi(void)
         return;
         break;
     case 0x10:
-        if (word & 2) MI_register.mi_intr_reg &= 0xFFFFFFEF;
+        if (word & 2) MI_register.mi_intr_reg &= ~0x10;
         check_interupt();
         return;
         break;
@@ -3117,7 +3117,7 @@ void write_pib(void)
     case 0x11:
     case 0x12:
     case 0x13:
-        if (word) MI_register.mi_intr_reg &= 0xFFFFFFEF;
+        if (word) MI_register.mi_intr_reg &= ~0x10;
         check_interupt();
         return;
         break;
@@ -3172,7 +3172,7 @@ void write_pih(void)
         break;
     case 0x10:
     case 0x12:
-        if (word) MI_register.mi_intr_reg &= 0xFFFFFFEF;
+        if (word) MI_register.mi_intr_reg &= ~0x10;
         check_interupt();
         return;
         break;
@@ -3215,7 +3215,7 @@ void write_pid(void)
         return;
         break;
     case 0x10:
-        if (word) MI_register.mi_intr_reg &= 0xFFFFFFEF;
+        if (word) MI_register.mi_intr_reg &= ~0x10;
         check_interupt();
         *readpi[*address_low+4] = (unsigned int) (dword & 0xFF);
         return;
@@ -3321,7 +3321,7 @@ void write_si(void)
         return;
         break;
     case 0x18:
-        MI_register.mi_intr_reg &= 0xFFFFFFFD;
+        MI_register.mi_intr_reg &= ~0x2;
         si_register.si_stat &= ~0x1000;
         check_interupt();
         return;
@@ -3363,7 +3363,7 @@ void write_sib(void)
     case 0x19:
     case 0x1a:
     case 0x1b:
-        MI_register.mi_intr_reg &= 0xFFFFFFFD;
+        MI_register.mi_intr_reg &= ~0x2;
         si_register.si_stat &= ~0x1000;
         check_interupt();
         return;
@@ -3397,7 +3397,7 @@ void write_sih(void)
         break;
     case 0x18:
     case 0x1a:
-        MI_register.mi_intr_reg &= 0xFFFFFFFD;
+        MI_register.mi_intr_reg &= ~0x2;
         si_register.si_stat &= ~0x1000;
         check_interupt();
         return;
@@ -3421,7 +3421,7 @@ void write_sid(void)
         return;
         break;
     case 0x18:
-        MI_register.mi_intr_reg &= 0xFFFFFFFD;
+        MI_register.mi_intr_reg &= ~0x2;
         si_register.si_stat &= ~0x1000;
         check_interupt();
         return;
