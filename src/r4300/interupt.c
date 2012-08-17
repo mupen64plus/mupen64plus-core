@@ -507,7 +507,8 @@ void gen_interupt(void)
 
         case SP_INT:
             remove_interupt_event();
-            sp_register.sp_status_reg |= 0x303;
+            sp_register.sp_status_reg |= 0x203;
+            // sp_register.sp_status_reg |= 0x303;
     
             if (!(sp_register.sp_status_reg & 0x40)) return; // !intr_on_break
             MI_register.mi_intr_reg |= 0x01;

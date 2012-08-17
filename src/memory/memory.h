@@ -97,17 +97,6 @@ typedef struct _DPC_register
    unsigned int dpc_current;
    unsigned int w_dpc_status;
    unsigned int dpc_status;
-   char xbus_dmem_dma;
-   char freeze;
-   char flush;
-   char start_glck;
-   char tmem_busy;
-   char pipe_busy;
-   char cmd_busy;
-   char cbuf_busy;
-   char dma_busy;
-   char end_valid;
-   char start_valid;
    unsigned int dpc_clock;
    unsigned int dpc_bufbusy;
    unsigned int dpc_pipebusy;
@@ -126,20 +115,10 @@ typedef struct _mips_register
 {
    unsigned int w_mi_init_mode_reg;
    unsigned int mi_init_mode_reg;
-   char init_length;
-   char init_mode;
-   char ebus_test_mode;
-   char RDRAM_reg_mode;
    unsigned int mi_version_reg;
    unsigned int mi_intr_reg;
    unsigned int mi_intr_mask_reg;
    unsigned int w_mi_intr_mask_reg;
-   char SP_intr_mask;
-   char SI_intr_mask;
-   char AI_intr_mask;
-   char VI_intr_mask;
-   char PI_intr_mask;
-   char DP_intr_mask;
 } mips_register;
 
 typedef struct _VI_register
