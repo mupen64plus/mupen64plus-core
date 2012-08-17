@@ -95,24 +95,6 @@ static void flashram_write_file(void)
     free(filename);
 }
 
-void save_flashram_infos(char *buf)
-{
-    memcpy(buf+0 , &flashram_info.use_flashram , 4);
-    memcpy(buf+4 , &flashram_info.mode         , 4);
-    memcpy(buf+8 , &flashram_info.status       , 8);
-    memcpy(buf+16, &flashram_info.erase_offset , 4);
-    memcpy(buf+20, &flashram_info.write_pointer, 4);
-}
-
-void load_flashram_infos(char *buf)
-{
-    memcpy(&flashram_info.use_flashram , buf+0 , 4);
-    memcpy(&flashram_info.mode         , buf+4 , 4);
-    memcpy(&flashram_info.status       , buf+8 , 8);
-    memcpy(&flashram_info.erase_offset , buf+16, 4);
-    memcpy(&flashram_info.write_pointer, buf+20, 4);
-}
-
 void init_flashram(void)
 {
     flashram_info.mode = NOPES_MODE;
