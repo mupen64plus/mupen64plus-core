@@ -1082,10 +1082,7 @@ void make_w_sp_status_reg(void)
     if ((sp_register.sp_status_reg & 0x0002) == 0)
         sp_register.w_sp_status_reg |= 0x0000004;
 
-    if ((sp_register.sp_status_reg & 0x001c) == 0) // TODO: Unsecure if this is correct
-        sp_register.w_sp_status_reg |= 0x0000008;
-    else
-        sp_register.w_sp_status_reg |= 0x0000010;
+    // TODO: should the interupt bits be set under any circumstance?
 
     if ((sp_register.sp_status_reg & 0x0020) == 0)
         sp_register.w_sp_status_reg |= 0x0000020;

@@ -597,6 +597,7 @@ void gen_interupt(void)
             return;
 
         default:
+            DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", q->type);
             remove_interupt_event();
             break;
     }
