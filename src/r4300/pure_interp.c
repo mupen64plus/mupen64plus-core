@@ -60,6 +60,16 @@ static void (*interp_ops[64])(void);
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
+      if (take_jump && jump_target == interp_addr && probe_nop(interp_addr+4)) \
+      { \
+         update_count(); \
+         skip = next_interupt - Count; \
+         if (skip > 3)  \
+         { \
+            Count += (skip & 0xFFFFFFFC); \
+            return; \
+         } \
+      } \
       if (!likely || take_jump) \
       { \
         interp_addr += 4; \
@@ -256,17 +266,17 @@ static void (*interp_ops[64])(void) =
 
 static void prefetch(void)
 {
-  unsigned int *mem = fast_mem_access(interp_addr);
-  if (mem != NULL)
-  {
-     op = *mem;
-     prefetch_opcode(op);
-  }
-  else
-  {
-     DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
-     stop=1;
-  }
+   unsigned int *mem = fast_mem_access(interp_addr);
+   if (mem != NULL)
+   {
+      op = *mem;
+      prefetch_opcode(op);
+   }
+   else
+   {
+      DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
+      stop=1;
+   }
 }
 
 void pure_interpreter(void)
