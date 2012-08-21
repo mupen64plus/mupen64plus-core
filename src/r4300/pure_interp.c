@@ -55,11 +55,13 @@ static void (*interp_ops[64])(void);
 #define PCADDR interp_addr
 #define ADD_TO_PC(x) interp_addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(void)
-#define DECLARE_JUMP(name, destination, condition, link, likely) \
+#define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(void) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
+      long long int *link_register = (link); \
+      if (cop1 && check_cop1_unusable()) return; \
       if (take_jump && jump_target == interp_addr && probe_nop(interp_addr+4)) \
       { \
          update_count(); \
@@ -80,10 +82,10 @@ static void (*interp_ops[64])(void);
         delay_slot=0; \
         if (take_jump && !skip_jump) \
         { \
-          if (link) \
+          if (link_register != &reg[0]) \
           { \
-              reg[31]=interp_addr; \
-              sign_extended(reg[31]); \
+              *link_register=interp_addr; \
+              sign_extended(*link_register); \
           } \
           interp_addr = jump_target; \
         } \

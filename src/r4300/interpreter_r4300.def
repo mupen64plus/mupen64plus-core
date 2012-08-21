@@ -19,12 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-DECLARE_JUMP(J,   (PC->f.j.inst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, 0, 0)
-DECLARE_JUMP(JAL, (PC->f.j.inst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, 1, 0)
-DECLARE_JUMP(BEQ,     PCADDR + (iimmediate+1)*4, irs == irt, 0, 0)
-DECLARE_JUMP(BNE,     PCADDR + (iimmediate+1)*4, irs != irt, 0, 0)
-DECLARE_JUMP(BLEZ,    PCADDR + (iimmediate+1)*4, irs <= 0,   0, 0)
-DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    0, 0)
+DECLARE_JUMP(J,   (PC->f.j.inst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, &reg[0],  0, 0)
+DECLARE_JUMP(JAL, (PC->f.j.inst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, &reg[31], 0, 0)
+DECLARE_JUMP(BEQ,     PCADDR + (iimmediate+1)*4, irs == irt, &reg[0], 0, 0)
+DECLARE_JUMP(BNE,     PCADDR + (iimmediate+1)*4, irs != irt, &reg[0], 0, 0)
+DECLARE_JUMP(BLEZ,    PCADDR + (iimmediate+1)*4, irs <= 0,   &reg[0], 0, 0)
+DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    &reg[0], 0, 0)
 
 DECLARE_INSTRUCTION(ADDI)
 {
@@ -80,10 +80,10 @@ DECLARE_INSTRUCTION(LUI)
    ADD_TO_PC(1);
 }
 
-DECLARE_JUMP(BEQL,    PCADDR + (iimmediate+1)*4, irs == irt, 0, 1)
-DECLARE_JUMP(BNEL,    PCADDR + (iimmediate+1)*4, irs != irt, 0, 1)
-DECLARE_JUMP(BLEZL,   PCADDR + (iimmediate+1)*4, irs <= 0,   0, 1)
-DECLARE_JUMP(BGTZL,   PCADDR + (iimmediate+1)*4, irs > 0,    0, 1)
+DECLARE_JUMP(BEQL,    PCADDR + (iimmediate+1)*4, irs == irt, &reg[0], 1, 0)
+DECLARE_JUMP(BNEL,    PCADDR + (iimmediate+1)*4, irs != irt, &reg[0], 1, 0)
+DECLARE_JUMP(BLEZL,   PCADDR + (iimmediate+1)*4, irs <= 0,   &reg[0], 1, 0)
+DECLARE_JUMP(BGTZL,   PCADDR + (iimmediate+1)*4, irs > 0,    &reg[0], 1, 0)
 
 DECLARE_INSTRUCTION(DADDI)
 {

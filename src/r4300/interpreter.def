@@ -31,12 +31,14 @@
  * Declares an instruction function which is not a jump.
  * Followed by a block of code.
  *
- * DECLARE_JUMP(name, destination, condition, link, likely)
+ * DECLARE_JUMP(name, destination, condition, link, likely, cop1)
  * name is the name of the jump or branch instruction.
  * destination is the destination memory address of the jump.
  * If condition is nonzero, the jump is taken.
- * If link is nonzero, the return address (PC+8) is written to R31 ($RA).
+ * link is a pointer to a variable where (PC+8) is written unconditionally.
+ *     To avoid linking, pass &reg[0]
  * If likely is nonzero, the delay slot is only executed if the jump is taken.
+ * If cop1 is nonzero, a COP1 unusable check will be done.
  */
 
 DECLARE_INSTRUCTION(NI)

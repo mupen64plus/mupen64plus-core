@@ -136,11 +136,13 @@ Used by dynarec only, check should be unnecessary
  *               not being determined until the instruction runs,
  *               we're only going to use the FUNCNAME_OUT() version.
  */
-#define DECLARE_JUMP(name, destination, condition, link, likely) \
+#define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    void name(void) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
+      long long int *link_register = (link); \
+      if (cop1 && check_cop1_unusable()) return; \
       if (!likely || take_jump) \
       { \
          PC++; \
@@ -151,12 +153,12 @@ Used by dynarec only, check should be unnecessary
          delay_slot=0; \
          if (take_jump && !skip_jump) \
          { \
-           if (link) \
-           { \
-               reg[31]=PC->addr; \
-               sign_extended(reg[31]); \
-           } \
-           PC=actual->block+((jump_target-actual->start)>>2); \
+            if (link_register != &reg[0]) \
+            { \
+               *link_register=interp_addr; \
+               sign_extended(*link_register); \
+            } \
+            PC=actual->block+((jump_target-actual->start)>>2); \
          } \
       } \
       else \
@@ -171,23 +173,25 @@ Used by dynarec only, check should be unnecessary
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
+      long long int *link_register = (link); \
+      if (cop1 && check_cop1_unusable()) return; \
       if (!likely || take_jump) \
       { \
-        PC++; \
-        delay_slot=1; \
-        UPDATE_DEBUGGER(); \
-        PC->ops(); \
-        update_count(); \
-        delay_slot=0; \
-        if (take_jump && !skip_jump) \
-        { \
-          if (link) \
-          { \
-              reg[31]=PC->addr; \
-              sign_extended(reg[31]); \
-          } \
-          jump_to(jump_target); \
-        } \
+         PC++; \
+         delay_slot=1; \
+         UPDATE_DEBUGGER(); \
+         PC->ops(); \
+         update_count(); \
+         delay_slot=0; \
+         if (take_jump && !skip_jump) \
+         { \
+            if (link_register != &reg[0]) \
+            { \
+               *link_register=interp_addr; \
+               sign_extended(*link_register); \
+            } \
+            jump_to(jump_target); \
+         } \
       } \
       else \
       { \
@@ -201,6 +205,7 @@ Used by dynarec only, check should be unnecessary
    { \
       const int take_jump = (condition); \
       int skip; \
+      if (cop1 && check_cop1_unusable()) return; \
       if (take_jump) \
       { \
          update_count(); \
