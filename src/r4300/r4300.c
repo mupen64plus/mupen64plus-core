@@ -155,7 +155,7 @@ Used by dynarec only, check should be unnecessary
          { \
             if (link_register != &reg[0]) \
             { \
-               *link_register=interp_addr; \
+               *link_register=PC->addr; \
                sign_extended(*link_register); \
             } \
             PC=actual->block+((jump_target-actual->start)>>2); \
@@ -187,7 +187,7 @@ Used by dynarec only, check should be unnecessary
          { \
             if (link_register != &reg[0]) \
             { \
-               *link_register=interp_addr; \
+               *link_register=PC->addr; \
                sign_extended(*link_register); \
             } \
             jump_to(jump_target); \
