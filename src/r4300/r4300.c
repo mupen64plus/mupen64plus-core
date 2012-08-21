@@ -65,53 +65,9 @@ precomp_block *blocks[0x100000], *actual;
 int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
     ceil_mode = 0xB3F, floor_mode = 0x73F;
 
-/*#define check_memory() \
-   if (!invalid_code[address>>12]) \
-       invalid_code[address>>12] = 1;*/
-
-#define check_memory() \
-   if (!invalid_code[address>>12]) \
-       if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED) \
-     invalid_code[address>>12] = 1;
-
-void FIN_BLOCK(void)
-{
-   if (!delay_slot)
-     {
-    jump_to((PC-1)->addr+4);
-/*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-Used by dynarec only, check should be unnecessary
-*/
-    PC->ops();
-    if (r4300emu == CORE_DYNAREC) dyna_jump();
-     }
-   else
-     {
-    precomp_block *blk = actual;
-    precomp_instr *inst = PC;
-    jump_to((PC-1)->addr+4);
-    
-/*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-Used by dynarec only, check should be unnecessary
-*/
-    if (!skip_jump)
-      {
-         PC->ops();
-         actual = blk;
-         PC = inst+1;
-      }
-    else
-      PC->ops();
-    
-    if (r4300emu == CORE_DYNAREC) dyna_jump();
-     }
-}
-
-// TODOXXX
+// -----------------------------------------------------------
+// Cached interpreter functions (and fallback for dynarec).
+// -----------------------------------------------------------
 #ifdef DBG
 #define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(PC->addr)
 #else
@@ -216,7 +172,55 @@ Used by dynarec only, check should be unnecessary
       else name(); \
    }
 
+#define CHECK_MEMORY() \
+   if (!invalid_code[address>>12]) \
+      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != NOTCOMPILED) \
+         invalid_code[address>>12] = 1;
+
+//#define CHECK_R0_WRITE(r) { if (r == &reg[0]) { PC++; return } }
+#define CHECK_R0_WRITE(r)
+
 #include "interpreter.def"
+
+// -----------------------------------------------------------
+// Flow control 'fake' instructions
+// -----------------------------------------------------------
+void FIN_BLOCK(void)
+{
+   if (!delay_slot)
+     {
+    jump_to((PC-1)->addr+4);
+/*#ifdef DBG
+            if (g_DebuggerActive) update_debugger(PC->addr);
+#endif
+Used by dynarec only, check should be unnecessary
+*/
+    PC->ops();
+    if (r4300emu == CORE_DYNAREC) dyna_jump();
+     }
+   else
+     {
+    precomp_block *blk = actual;
+    precomp_instr *inst = PC;
+    jump_to((PC-1)->addr+4);
+    
+/*#ifdef DBG
+            if (g_DebuggerActive) update_debugger(PC->addr);
+#endif
+Used by dynarec only, check should be unnecessary
+*/
+    if (!skip_jump)
+      {
+         PC->ops();
+         actual = blk;
+         PC = inst+1;
+      }
+    else
+      PC->ops();
+    
+    if (r4300emu == CORE_DYNAREC) dyna_jump();
+     }
+}
 
 void NOTCOMPILED(void)
 {

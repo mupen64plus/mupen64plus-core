@@ -39,10 +39,6 @@
 #include "debugger/debugger.h"
 #endif
 
-#define check_r0_rd() { if (PC->f.r.rd == reg) { interp_addr+=4; return; } }
-#define check_r0_rt() { if (PC->f.r.rt == reg) { interp_addr+=4; return; } }
-#define check_r0_irt() { if (PC->f.i.rt == reg) { interp_addr+=4; return; } }
-
 unsigned int interp_addr;
 unsigned int op;
 static int skip;
@@ -51,7 +47,6 @@ static void prefetch(void);
 
 static void (*interp_ops[64])(void);
 
-#define check_memory(x) // TODOXXX
 #define PCADDR interp_addr
 #define ADD_TO_PC(x) interp_addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(void)
@@ -97,7 +92,9 @@ static void (*interp_ops[64])(void);
       } \
       last_addr = interp_addr; \
       if (next_interupt <= Count) gen_interupt(); \
-   } \
+   }
+#define CHECK_MEMORY(x)
+#define CHECK_R0_WRITE(r) { if (r == &reg[0]) { interp_addr+=4; return; } }
 
 #include "interpreter.def"
 

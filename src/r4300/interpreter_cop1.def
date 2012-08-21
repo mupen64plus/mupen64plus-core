@@ -29,6 +29,7 @@ DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, (FCR31 & 0x800000)!=0, &reg[0], 1
 DECLARE_INSTRUCTION(MFC1)
 {
    if (check_cop1_unusable()) return;
+   CHECK_R0_WRITE(PC->f.r.rt);
    rrt32 = *((int*)reg_cop1_simple[rfs]);
    sign_extended(rrt);
    ADD_TO_PC(1);
@@ -37,6 +38,7 @@ DECLARE_INSTRUCTION(MFC1)
 DECLARE_INSTRUCTION(DMFC1)
 {
    if (check_cop1_unusable()) return;
+   CHECK_R0_WRITE(PC->f.r.rt);
    rrt = *((long long*)reg_cop1_double[rfs]);
    ADD_TO_PC(1);
 }
@@ -44,16 +46,17 @@ DECLARE_INSTRUCTION(DMFC1)
 DECLARE_INSTRUCTION(CFC1)
 {  
    if (check_cop1_unusable()) return;
+   CHECK_R0_WRITE(PC->f.r.rt);
    if (rfs==31)
-     {
-    rrt32 = FCR31;
-    sign_extended(rrt);
-     }
+   {
+      rrt32 = FCR31;
+      sign_extended(rrt);
+   }
    if (rfs==0)
-     {
-    rrt32 = FCR0;
-    sign_extended(rrt);
-     }
+   {
+      rrt32 = FCR0;
+      sign_extended(rrt);
+   }
    ADD_TO_PC(1);
 }
 
@@ -75,22 +78,24 @@ DECLARE_INSTRUCTION(CTC1)
 {
    if (check_cop1_unusable()) return;
    if (rfs==31)
-     FCR31 = rrt32;
+      FCR31 = rrt32;
    switch((FCR31 & 3))
-     {
-      case 0:
-    rounding_mode = 0x33F; // Round to nearest, or to even if equidistant
-    break;
-      case 1:
-    rounding_mode = 0xF3F; // Truncate (toward 0)
-    break;
-      case 2:
-    rounding_mode = 0xB3F; // Round up (toward +infinity) 
-    break;
-      case 3:
-    rounding_mode = 0x73F; // Round down (toward -infinity) 
-    break;
-     }
+   {
+   case 0:
+      rounding_mode = 0x33F; // Round to nearest, or to even if equidistant
+      break;
+    case 1:
+      rounding_mode = 0xF3F; // Truncate (toward 0)
+      break;
+    case 2:
+      rounding_mode = 0xB3F; // Round up (toward +infinity) 
+      break;
+    case 3:
+      rounding_mode = 0x73F; // Round down (toward -infinity) 
+      break;
+   }
+   //if ((FCR31 >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
+   //                 (int)((FCR31 >> 7) & 0x1F));
    ADD_TO_PC(1);
 }
 
@@ -119,6 +124,15 @@ DECLARE_INSTRUCTION(MUL_D)
 DECLARE_INSTRUCTION(DIV_D)
 {
    if (check_cop1_unusable()) return;
+   if((FCR31 & 0x400) && *reg_cop1_double[cfft] == 0)
+   {
+      //FCR31 |= 0x8020;
+      /*FCR31 |= 0x8000;
+      Cause = 15 << 2;
+      exception_general();*/
+      DebugMessage(M64MSG_ERROR, "DIV_D by 0");
+      //return;
+   }
    div_d(reg_cop1_double[cffs], reg_cop1_double[cfft], reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
@@ -416,6 +430,10 @@ DECLARE_INSTRUCTION(MUL_S)
 DECLARE_INSTRUCTION(DIV_S)
 {  
    if (check_cop1_unusable()) return;
+   if((FCR31 & 0x400) && *reg_cop1_simple[cfft] == 0)
+   {
+     DebugMessage(M64MSG_ERROR, "DIV_S by 0");
+   }
    div_s(reg_cop1_simple[cffs], reg_cop1_simple[cfft], reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }

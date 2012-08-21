@@ -26,6 +26,7 @@ DECLARE_INSTRUCTION(NOP)
 
 DECLARE_INSTRUCTION(SLL)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (unsigned int)(rrt32) << rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -33,6 +34,7 @@ DECLARE_INSTRUCTION(SLL)
 
 DECLARE_INSTRUCTION(SRL)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (unsigned int)rrt32 >> rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -40,6 +42,7 @@ DECLARE_INSTRUCTION(SRL)
 
 DECLARE_INSTRUCTION(SRA)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (signed int)rrt32 >> rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -47,6 +50,7 @@ DECLARE_INSTRUCTION(SRA)
 
 DECLARE_INSTRUCTION(SLLV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (unsigned int)(rrt32) << (rrs32&0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -54,6 +58,7 @@ DECLARE_INSTRUCTION(SLLV)
 
 DECLARE_INSTRUCTION(SRLV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (unsigned int)rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -61,6 +66,7 @@ DECLARE_INSTRUCTION(SRLV)
 
 DECLARE_INSTRUCTION(SRAV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = (signed int)rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -82,6 +88,7 @@ DECLARE_INSTRUCTION(SYNC)
 
 DECLARE_INSTRUCTION(MFHI)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = hi;
    ADD_TO_PC(1);
 }
@@ -94,6 +101,7 @@ DECLARE_INSTRUCTION(MTHI)
 
 DECLARE_INSTRUCTION(MFLO)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = lo;
    ADD_TO_PC(1);
 }
@@ -106,18 +114,21 @@ DECLARE_INSTRUCTION(MTLO)
 
 DECLARE_INSTRUCTION(DSLLV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrt << (rrs32&0x3F);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRLV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = (unsigned long long)rrt >> (rrs32 & 0x3F);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRAV)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = (long long)rrt >> (rrs32 & 0x3F);
    ADD_TO_PC(1);
 }
@@ -265,6 +276,7 @@ DECLARE_INSTRUCTION(DDIVU)
 
 DECLARE_INSTRUCTION(ADD)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = rrs32 + rrt32;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -272,6 +284,7 @@ DECLARE_INSTRUCTION(ADD)
 
 DECLARE_INSTRUCTION(ADDU)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = rrs32 + rrt32;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -279,6 +292,7 @@ DECLARE_INSTRUCTION(ADDU)
 
 DECLARE_INSTRUCTION(SUB)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = rrs32 - rrt32;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -286,6 +300,7 @@ DECLARE_INSTRUCTION(SUB)
 
 DECLARE_INSTRUCTION(SUBU)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd32 = rrs32 - rrt32;
    sign_extended(rrd);
    ADD_TO_PC(1);
@@ -293,30 +308,35 @@ DECLARE_INSTRUCTION(SUBU)
 
 DECLARE_INSTRUCTION(AND)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs & rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(OR)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs | rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(XOR)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs ^ rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(NOR)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = ~(rrs | rrt);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SLT)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    if (rrs < rrt) rrd = 1;
    else rrd = 0;
    ADD_TO_PC(1);
@@ -324,6 +344,7 @@ DECLARE_INSTRUCTION(SLT)
 
 DECLARE_INSTRUCTION(SLTU)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    if ((unsigned long long)rrs < (unsigned long long)rrt) 
      rrd = 1;
    else rrd = 0;
@@ -332,24 +353,28 @@ DECLARE_INSTRUCTION(SLTU)
 
 DECLARE_INSTRUCTION(DADD)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs + rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADDU)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs + rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSUB)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs - rrt;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSUBU)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrs - rrt;
    ADD_TO_PC(1);
 }
@@ -366,36 +391,42 @@ DECLARE_INSTRUCTION(TEQ)
 
 DECLARE_INSTRUCTION(DSLL)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrt << rsa;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRL)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = (unsigned long long)rrt >> rsa;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRA)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrt >> rsa;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSLL32)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = rrt << (32+rsa);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRL32)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = (unsigned long long int)rrt >> (32+rsa);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRA32)
 {
+   CHECK_R0_WRITE(PC->f.r.rd);
    rrd = (signed long long int)rrt >> (32+rsa);
    ADD_TO_PC(1);
 }
