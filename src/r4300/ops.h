@@ -34,7 +34,7 @@ void SLTI(void);
 void BEQL(void);
 void ANDI(void);
 void XORI(void);
-void JR(void);
+void JR_OUT(void);
 void SRL(void);
 void BNEL(void);
 void BEQ(void);
@@ -137,7 +137,7 @@ void SUB(void);
 void CVT_W_S(void);
 void DIVU(void);
 
-void JALR(void);
+void JALR_OUT(void);
 void SDC1(void);
 void C_EQ_S(void);
 void SUB_S(void);

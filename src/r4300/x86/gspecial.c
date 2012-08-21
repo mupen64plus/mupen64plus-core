@@ -154,7 +154,7 @@ void gensrav(void)
 void genjr(void)
 {
 #ifdef INTERPRET_JR
-   gencallinterp((unsigned int)JR, 1);
+   gencallinterp((unsigned int)JR_OUT, 1);
 #else
    static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff =
@@ -167,7 +167,7 @@ void genjr(void)
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)JR, 1);
+    gencallinterp((unsigned int)JR_OUT, 1);
     return;
      }
    
@@ -220,7 +220,7 @@ void genjr(void)
 void genjalr(void)
 {
 #ifdef INTERPRET_JALR
-   gencallinterp((unsigned int)JALR, 0);
+   gencallinterp((unsigned int)JALR_OUT, 0);
 #else
    static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff =
@@ -233,7 +233,7 @@ void genjalr(void)
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)JALR, 1);
+    gencallinterp((unsigned int)JALR_OUT, 1);
     return;
      }
    

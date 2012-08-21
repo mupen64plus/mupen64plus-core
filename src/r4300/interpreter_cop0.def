@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - cop0.h                                                  *
+ *   Mupen64plus - interpreter_cop0.def                                    *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,15 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-
-#include "r4300.h"
-#include "macros.h"
-#include "ops.h"
-#include "interupt.h"
-
-void MFC0(void)
+DECLARE_INSTRUCTION(MFC0)
 {
    switch(PC->f.r.nrd)
    {
@@ -38,10 +30,10 @@ void MFC0(void)
         rrt32 = reg_cop0[PC->f.r.nrd];
         sign_extended(rrt);
    }
-   PC++;
+   ADD_TO_PC(1);
 }
 
-void MTC0(void)
+DECLARE_INSTRUCTION(MTC0)
 {
   switch(PC->f.r.nrd)
   {
@@ -100,13 +92,13 @@ void MTC0(void)
           set_fpr_pointers((unsigned int) rrt);
       }
       Status = (unsigned int) rrt;
-      PC++;
+      ADD_TO_PC(1);
       check_interupt();
       update_count();
       interupt_unsafe_state = 1;
       if (next_interupt <= Count) gen_interupt();
       interupt_unsafe_state = 0;
-      PC--;
+      ADD_TO_PC(-1);
       break;
     case 13:   // Cause
       if (rrt!=0)
@@ -142,6 +134,5 @@ void MTC0(void)
       DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", PC->f.r.nrd);
       stop=1;
   }
-  PC++;
+  ADD_TO_PC(1);
 }
-

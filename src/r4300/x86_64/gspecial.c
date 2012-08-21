@@ -180,7 +180,7 @@ void genjr(void)
    inc_m32rel(&instr_count[61]);
 #endif
 #ifdef INTERPRET_JR
-   gencallinterp((unsigned long long)JR, 1);
+   gencallinterp((unsigned long long)JR_OUT, 1);
 #else
    static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff = (unsigned int) offsetof(precomp_instr, local_addr);
@@ -190,7 +190,7 @@ void genjr(void)
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned long long)JR, 1);
+    gencallinterp((unsigned long long)JR_OUT, 1);
     return;
      }
    
@@ -249,7 +249,7 @@ void genjalr(void)
    inc_m32rel(&instr_count[62]);
 #endif
 #ifdef INTERPRET_JALR
-   gencallinterp((unsigned long long)JALR, 0);
+   gencallinterp((unsigned long long)JALR_OUT, 0);
 #else
    static unsigned int precomp_instr_size = sizeof(precomp_instr);
    unsigned int diff = (unsigned int) offsetof(precomp_instr, local_addr);
@@ -259,7 +259,7 @@ void genjalr(void)
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned long long)JALR, 1);
+    gencallinterp((unsigned long long)JALR_OUT, 1);
     return;
      }
    

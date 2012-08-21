@@ -177,14 +177,14 @@ static void RSRAV(void)
 
 static void RJR(void)
 {
-   dst->ops = JR;
+   dst->ops = JR_OUT;
    recomp_func = genjr;
    recompile_standard_i_type();
 }
 
 static void RJALR(void)
 {
-   dst->ops = JALR;
+   dst->ops = JALR_OUT;
    recomp_func = genjalr;
    recompile_standard_r_type();
 }
@@ -2439,7 +2439,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
                 block->end   <  0x80000000)) finished = 2;
     if (dst->ops == ERET || finished == 1) finished = 2;
     if (/*i >= length &&*/ 
-        (dst->ops == J || dst->ops == J_OUT || dst->ops == JR) &&
+        (dst->ops == J || dst->ops == J_OUT || dst->ops == JR_OUT) &&
         !(i >= (length-1) && (block->start >= 0xc0000000 ||
                   block->end   <  0x80000000)))
       finished = 1;
@@ -2533,8 +2533,8 @@ static int is_jump(void)
        dst->ops == BGTZL ||
        dst->ops == BGTZL_OUT ||
        dst->ops == BGTZL_IDLE ||
-       dst->ops == JR ||
-       dst->ops == JALR ||
+       dst->ops == JR_OUT ||
+       dst->ops == JALR_OUT ||
        dst->ops == BLTZ ||
        dst->ops == BLTZ_OUT ||
        dst->ops == BLTZ_IDLE ||
