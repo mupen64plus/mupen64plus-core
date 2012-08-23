@@ -1011,6 +1011,7 @@ void r4300_execute(void)
         fclose(pfProfile);
         pfProfile = NULL;
 #endif
+        free_blocks();
     }
 #endif
     else /* if (r4300emu == CORE_INTERPRETER) */
@@ -1036,12 +1037,12 @@ void r4300_execute(void)
 #endif
             PC->ops();
         }
+
+        free_blocks();
     }
 
     debug_count+= Count;
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
-    free_blocks();
-    if (r4300emu == CORE_PURE_INTERPRETER) free(PC);
 
     /* print instruction counts */
 #if defined(COUNT_INSTR)

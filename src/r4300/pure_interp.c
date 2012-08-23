@@ -42,7 +42,6 @@
 
 unsigned int interp_addr;
 unsigned int op;
-static int skip;
 
 static void prefetch(void);
 
@@ -417,5 +416,5 @@ void pure_interpreter(void)
 #endif
      PC->ops();
    }
-   PC->addr = interp_addr;
+   free(PC);
 }
