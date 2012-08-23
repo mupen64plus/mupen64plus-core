@@ -2402,7 +2402,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     
     SRC = source + i;
     src = source[i];
-    if (!source[i+1]) check_nop = 1; else check_nop = 0;
+    check_nop = source[i+1] == 0;
     dst = block->block + i;
     dst->addr = block->start + i*4;
     dst->reg_cache_infos.need_map = 0;
@@ -2608,10 +2608,11 @@ void recompile_opcode(void)
 /**********************************************************************
  ************** decode one opcode (for the interpreter) ***************
  **********************************************************************/
-void prefetch_opcode(unsigned int op)
+void prefetch_opcode(unsigned int op, unsigned int nextop)
 {
    dst = PC;
    src = op;
+   check_nop = nextop == 0;
    recomp_ops[((src >> 26) & 0x3F)]();
 }
 

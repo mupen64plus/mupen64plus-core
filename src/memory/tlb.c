@@ -133,9 +133,3 @@ unsigned int virtual_to_physical_address(unsigned int addresse, int w)
     //return 0x80000000;
     return 0x00000000;
 }
-
-int probe_nop(unsigned int address)
-{
-    return *fast_mem_access(address) == 0;
-}
-

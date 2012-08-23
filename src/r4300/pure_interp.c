@@ -56,16 +56,6 @@ static void prefetch(void);
       const unsigned int jump_target = (destination); \
       long long int *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (take_jump && jump_target == interp_addr && probe_nop(interp_addr+4)) \
-      { \
-         update_count(); \
-         skip = next_interupt - Count; \
-         if (skip > 3)  \
-         { \
-            Count += (skip & 0xFFFFFFFC); \
-            return; \
-         } \
-      } \
       if (!likely || take_jump) \
       { \
         interp_addr += 4; \
@@ -91,9 +81,22 @@ static void prefetch(void);
       } \
       last_addr = interp_addr; \
       if (next_interupt <= Count) gen_interupt(); \
+   } \
+   static void name##_IDLE(void) \
+   { \
+      const int take_jump = (condition); \
+      int skip; \
+      if (cop1 && check_cop1_unusable()) return; \
+      if (take_jump) \
+      { \
+         update_count(); \
+         skip = next_interupt - Count; \
+         if (skip > 3) Count += (skip & 0xFFFFFFFC); \
+         else name(); \
+      } \
+      else name(); \
    }
 #define CHECK_MEMORY(x)
-#define CHECK_R0_WRITE(r) { if (r == &reg[0]) { interp_addr+=4; return; } }
 
 #include "interpreter.def"
 
@@ -166,67 +169,67 @@ static cpu_instruction_table pure_interpreter_table = {
 
    J,
    J, // _OUT (unused)
-   J, // _IDLE (TODO)
+   J_IDLE,
    JAL,
    JAL, // _OUT (unused)
-   JAL, // _IDLE (TODO)
+   JAL_IDLE,
    JR,
    JALR,
    BEQ,
    BEQ, // _OUT (unused)
-   BEQ, // _IDLE (TODO)
+   BEQ_IDLE,
    BNE,
    BNE, // _OUT (unused)
-   BNE, // _IDLE (TODO)
+   BNE_IDLE,
    BLEZ,
    BLEZ, // _OUT (unused)
-   BLEZ, // _IDLE (TODO)
+   BLEZ_IDLE,
    BGTZ,
    BGTZ, // _OUT (unused)
-   BGTZ, // _IDLE (TODO)
+   BGTZ_IDLE,
    BLTZ,
    BLTZ, // _OUT (unused)
-   BLTZ, // _IDLE (TODO)
+   BLTZ_IDLE,
    BGEZ,
    BGEZ, // _OUT (unused)
-   BGEZ, // _IDLE (TODO)
+   BGEZ_IDLE,
    BLTZAL,
    BLTZAL, // _OUT (unused)
-   BLTZAL, // _IDLE (TODO)
+   BLTZAL_IDLE,
    BGEZAL,
    BGEZAL, // _OUT (unused)
-   BGEZAL, // _IDLE (TODO)
+   BGEZAL_IDLE,
 
    BEQL,
    BEQL, // _OUT (unused)
-   BEQL, // _IDLE (TODO)
+   BEQL_IDLE,
    BNEL,
    BNEL, // _OUT (unused)
-   BNEL, // _IDLE (TODO)
+   BNEL_IDLE,
    BLEZL,
    BLEZL, // _OUT (unused)
-   BLEZL, // _IDLE (TODO)
+   BLEZL_IDLE,
    BGTZL,
    BGTZL, // _OUT (unused)
-   BGTZL, // _IDLE (TODO)
+   BGTZL_IDLE,
    BLTZL,
    BLTZL, // _OUT (unused)
-   BLTZL, // _IDLE (TODO)
+   BLTZL_IDLE,
    BGEZL,
    BGEZL, // _OUT (unused)
-   BGEZL, // _IDLE (TODO)
+   BGEZL_IDLE,
    BLTZALL,
    BLTZALL, // _OUT (unused)
-   BLTZALL, // _IDLE (TODO)
+   BLTZALL_IDLE,
    BGEZALL,
    BGEZALL, // _OUT (unused)
-   BGEZALL, // _IDLE (TODO)
+   BGEZALL_IDLE,
    BC1TL,
    BC1TL, // _OUT (unused)
-   BC1TL, // _IDLE (TODO)
+   BC1TL_IDLE,
    BC1FL,
    BC1FL, // _OUT (unused)
-   BC1FL, // _IDLE (TODO)
+   BC1FL_IDLE,
 
    SLL,
    SRL,
@@ -263,10 +266,10 @@ static cpu_instruction_table pure_interpreter_table = {
    CFC1,
    BC1T,
    BC1T, // _OUT (unused)
-   BC1T, // _IDLE (TODO)
+   BC1T_IDLE,
    BC1F,
    BC1F, // _OUT (unused)
-   BC1F, // _IDLE (TODO)
+   BC1F_IDLE,
 
    DMFC1,
    DMTC1,
@@ -379,8 +382,8 @@ static void prefetch(void)
    unsigned int *mem = fast_mem_access(interp_addr);
    if (mem != NULL)
    {
-      op = *mem;
-      prefetch_opcode(op);
+      PC->addr = interp_addr;
+      prefetch_opcode(mem[0], mem[1]);
    }
    else
    {
@@ -410,7 +413,6 @@ void pure_interpreter(void)
      CoreCompareCallback();
 #endif
 #ifdef DBG
-     PC->addr = interp_addr;
      if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
      PC->ops();
