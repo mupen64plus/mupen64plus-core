@@ -31,12 +31,12 @@
 //static unsigned int pMFC0 = (unsigned int)(MFC0);
 void genmfc0(void)
 {
-    gencallinterp((unsigned int)MFC0, 0);
+    gencallinterp((unsigned int)cached_interpreter_table.MFC0, 0);
 }
 
 //static unsigned int pMTC0 = (unsigned int)(MTC0);
 void genmtc0(void)
 {
-    gencallinterp((unsigned int)MTC0, 0);
+    gencallinterp((unsigned int)cached_interpreter_table.MTC0, 0);
 }
 

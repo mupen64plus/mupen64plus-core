@@ -322,7 +322,7 @@ void gennotcompiled(void)
         sub_m32_imm32((unsigned int*)(&return_address), 4);
     }
     mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst));
-    mov_reg32_imm32(EAX, (unsigned int)NOTCOMPILED);
+    mov_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED);
     call_reg32(EAX);
 }
 
@@ -389,17 +389,17 @@ void gendelayslot(void)
 
 void genni(void)
 {
-   gencallinterp((unsigned int)NI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.NI, 0);
 }
 
 void genreserved(void)
 {
-   gencallinterp((unsigned int)RESERVED, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.RESERVED, 0);
 }
 
 void genfin_block(void)
 {
-   gencallinterp((unsigned int)FIN_BLOCK, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.FIN_BLOCK, 0);
 }
 
 void gencheck_interupt_reg(void) // addr is in EAX
@@ -420,14 +420,14 @@ void gennop(void)
 void genj(void)
 {
 #ifdef INTERPRET_J
-   gencallinterp((unsigned int)J, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.J, 1);
 #else
    unsigned int naddr;
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)J, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.J, 1);
     return;
      }
    
@@ -443,14 +443,14 @@ void genj(void)
 void genj_out(void)
 {
 #ifdef INTERPRET_J_OUT
-   gencallinterp((unsigned int)J_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.J_OUT, 1);
 #else
    unsigned int naddr;
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)J_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.J_OUT, 1);
     return;
      }
    
@@ -469,12 +469,12 @@ void genj_out(void)
 void genj_idle(void)
 {
 #ifdef INTERPRET_J_IDLE
-   gencallinterp((unsigned int)J_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.J_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)J_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.J_IDLE, 1);
     return;
      }
    
@@ -493,14 +493,14 @@ void genj_idle(void)
 void genjal(void)
 {
 #ifdef INTERPRET_JAL
-   gencallinterp((unsigned int)JAL, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.JAL, 1);
 #else
    unsigned int naddr;
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)JAL, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.JAL, 1);
     return;
      }
    
@@ -523,14 +523,14 @@ void genjal(void)
 void genjal_out(void)
 {
 #ifdef INTERPRET_JAL_OUT
-   gencallinterp((unsigned int)JAL_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.JAL_OUT, 1);
 #else
    unsigned int naddr;
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)JAL_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.JAL_OUT, 1);
     return;
      }
    
@@ -556,12 +556,12 @@ void genjal_out(void)
 void genjal_idle(void)
 {
 #ifdef INTERPRET_JAL_IDLE
-   gencallinterp((unsigned int)JAL_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.JAL_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)JAL_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.JAL_IDLE, 1);
     return;
      }
    
@@ -598,12 +598,12 @@ void gentest(void)
 void genbeq(void)
 {
 #ifdef INTERPRET_BEQ
-   gencallinterp((unsigned int)BEQ, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQ, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQ, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQ, 1);
     return;
      }
    
@@ -637,12 +637,12 @@ void gentest_out(void)
 void genbeq_out(void)
 {
 #ifdef INTERPRET_BEQ_OUT
-   gencallinterp((unsigned int)BEQ_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQ_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQ_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQ_OUT, 1);
     return;
      }
    
@@ -678,12 +678,12 @@ void gentest_idle(void)
 void genbeq_idle(void)
 {
 #ifdef INTERPRET_BEQ_IDLE
-   gencallinterp((unsigned int)BEQ_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQ_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
     return;
      }
    
@@ -696,12 +696,12 @@ void genbeq_idle(void)
 void genbne(void)
 {
 #ifdef INTERPRET_BNE
-   gencallinterp((unsigned int)BNE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNE, 1);
     return;
      }
    
@@ -714,12 +714,12 @@ void genbne(void)
 void genbne_out(void)
 {
 #ifdef INTERPRET_BNE_OUT
-   gencallinterp((unsigned int)BNE_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNE_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNE_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNE_OUT, 1);
     return;
      }
    
@@ -732,12 +732,12 @@ void genbne_out(void)
 void genbne_idle(void)
 {
 #ifdef INTERPRET_BNE_IDLE
-   gencallinterp((unsigned int)BNE_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNE_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNE_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNE_IDLE, 1);
     return;
      }
    
@@ -750,12 +750,12 @@ void genbne_idle(void)
 void genblez(void)
 {
 #ifdef INTERPRET_BLEZ
-   gencallinterp((unsigned int)BLEZ, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZ, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZ, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZ, 1);
     return;
      }
    
@@ -768,12 +768,12 @@ void genblez(void)
 void genblez_out(void)
 {
 #ifdef INTERPRET_BLEZ_OUT
-   gencallinterp((unsigned int)BLEZ_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZ_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
     return;
      }
    
@@ -786,12 +786,12 @@ void genblez_out(void)
 void genblez_idle(void)
 {
 #ifdef INTERPRET_BLEZ_IDLE
-   gencallinterp((unsigned int)BLEZ_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZ_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
     return;
      }
    
@@ -804,12 +804,12 @@ void genblez_idle(void)
 void genbgtz(void)
 {
 #ifdef INTERPRET_BGTZ
-   gencallinterp((unsigned int)BGTZ, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZ, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZ, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZ, 1);
     return;
      }
    
@@ -822,12 +822,12 @@ void genbgtz(void)
 void genbgtz_out(void)
 {
 #ifdef INTERPRET_BGTZ_OUT
-   gencallinterp((unsigned int)BGTZ_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZ_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
     return;
      }
    
@@ -840,12 +840,12 @@ void genbgtz_out(void)
 void genbgtz_idle(void)
 {
 #ifdef INTERPRET_BGTZ_IDLE
-   gencallinterp((unsigned int)BGTZ_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZ_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
     return;
      }
    
@@ -858,7 +858,7 @@ void genbgtz_idle(void)
 void genaddi(void)
 {
 #ifdef INTERPRET_ADDI
-   gencallinterp((unsigned int)ADDI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.ADDI, 0);
 #else
    int rs = allocate_register((unsigned int *)dst->f.i.rs);
    int rt = allocate_register_w((unsigned int *)dst->f.i.rt);
@@ -871,7 +871,7 @@ void genaddi(void)
 void genaddiu(void)
 {
 #ifdef INTERPRET_ADDIU
-   gencallinterp((unsigned int)ADDIU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.ADDIU, 0);
 #else
    int rs = allocate_register((unsigned int *)dst->f.i.rs);
    int rt = allocate_register_w((unsigned int *)dst->f.i.rt);
@@ -884,7 +884,7 @@ void genaddiu(void)
 void genslti(void)
 {
 #ifdef INTERPRET_SLTI
-   gencallinterp((unsigned int)SLTI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SLTI, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -905,7 +905,7 @@ void genslti(void)
 void gensltiu(void)
 {
 #ifdef INTERPRET_SLTIU
-   gencallinterp((unsigned int)SLTIU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SLTIU, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -926,7 +926,7 @@ void gensltiu(void)
 void genandi(void)
 {
 #ifdef INTERPRET_ANDI
-   gencallinterp((unsigned int)ANDI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.ANDI, 0);
 #else
    int rs = allocate_register((unsigned int *)dst->f.i.rs);
    int rt = allocate_register_w((unsigned int *)dst->f.i.rt);
@@ -939,7 +939,7 @@ void genandi(void)
 void genori(void)
 {
 #ifdef INTERPRET_ORI
-   gencallinterp((unsigned int)ORI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.ORI, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -955,7 +955,7 @@ void genori(void)
 void genxori(void)
 {
 #ifdef INTERPRET_XORI
-   gencallinterp((unsigned int)XORI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.XORI, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -971,7 +971,7 @@ void genxori(void)
 void genlui(void)
 {
 #ifdef INTERPRET_LUI
-   gencallinterp((unsigned int)LUI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LUI, 0);
 #else
    int rt = allocate_register_w((unsigned int *)dst->f.i.rt);
    
@@ -1002,12 +1002,12 @@ void gentestl(void)
 void genbeql(void)
 {
 #ifdef INTERPRET_BEQL
-   gencallinterp((unsigned int)BEQL, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQL, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQL, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQL, 1);
     return;
      }
    
@@ -1043,12 +1043,12 @@ void gentestl_out(void)
 void genbeql_out(void)
 {
 #ifdef INTERPRET_BEQL_OUT
-   gencallinterp((unsigned int)BEQL_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQL_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQL_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQL_OUT, 1);
     return;
      }
    
@@ -1061,12 +1061,12 @@ void genbeql_out(void)
 void genbeql_idle(void)
 {
 #ifdef INTERPRET_BEQL_IDLE
-   gencallinterp((unsigned int)BEQL_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BEQL_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
     return;
      }
    
@@ -1079,12 +1079,12 @@ void genbeql_idle(void)
 void genbnel(void)
 {
 #ifdef INTERPRET_BNEL
-   gencallinterp((unsigned int)BNEL, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNEL, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNEL, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNEL, 1);
     return;
      }
    
@@ -1097,12 +1097,12 @@ void genbnel(void)
 void genbnel_out(void)
 {
 #ifdef INTERPRET_BNEL_OUT
-   gencallinterp((unsigned int)BNEL_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNEL_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNEL_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNEL_OUT, 1);
     return;
      }
    
@@ -1115,12 +1115,12 @@ void genbnel_out(void)
 void genbnel_idle(void)
 {
 #ifdef INTERPRET_BNEL_IDLE
-   gencallinterp((unsigned int)BNEL_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BNEL_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
     return;
      }
    
@@ -1133,12 +1133,12 @@ void genbnel_idle(void)
 void genblezl(void)
 {
 #ifdef INTERPRET_BLEZL
-   gencallinterp((unsigned int)BLEZL, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZL, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZL, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZL, 1);
     return;
      }
    
@@ -1151,12 +1151,12 @@ void genblezl(void)
 void genblezl_out(void)
 {
 #ifdef INTERPRET_BLEZL_OUT
-   gencallinterp((unsigned int)BLEZL_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZL_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
     return;
      }
    
@@ -1169,12 +1169,12 @@ void genblezl_out(void)
 void genblezl_idle(void)
 {
 #ifdef INTERPRET_BLEZL_IDLE
-   gencallinterp((unsigned int)BLEZL_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BLEZL_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
     return;
      }
    
@@ -1187,12 +1187,12 @@ void genblezl_idle(void)
 void genbgtzl(void)
 {
 #ifdef INTERPRET_BGTZL
-   gencallinterp((unsigned int)BGTZL, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZL, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZL, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZL, 1);
     return;
      }
    
@@ -1205,12 +1205,12 @@ void genbgtzl(void)
 void genbgtzl_out(void)
 {
 #ifdef INTERPRET_BGTZL_OUT
-   gencallinterp((unsigned int)BGTZL_OUT, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZL_OUT, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
     return;
      }
    
@@ -1223,12 +1223,12 @@ void genbgtzl_out(void)
 void genbgtzl_idle(void)
 {
 #ifdef INTERPRET_BGTZL_IDLE
-   gencallinterp((unsigned int)BGTZL_IDLE, 1);
+   gencallinterp((unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
 #else
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
      {
-    gencallinterp((unsigned int)BGTZL_IDLE, 1);
+    gencallinterp((unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
     return;
      }
    
@@ -1241,7 +1241,7 @@ void genbgtzl_idle(void)
 void gendaddi(void)
 {
 #ifdef INTERPRET_DADDI
-   gencallinterp((unsigned int)DADDI, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.DADDI, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -1258,7 +1258,7 @@ void gendaddi(void)
 void gendaddiu(void)
 {
 #ifdef INTERPRET_DADDIU
-   gencallinterp((unsigned int)DADDIU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.DADDIU, 0);
 #else
    int rs1 = allocate_64_register1((unsigned int *)dst->f.i.rs);
    int rs2 = allocate_64_register2((unsigned int *)dst->f.i.rs);
@@ -1274,18 +1274,18 @@ void gendaddiu(void)
 
 void genldl(void)
 {
-   gencallinterp((unsigned int)LDL, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LDL, 0);
 }
 
 void genldr(void)
 {
-   gencallinterp((unsigned int)LDR, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LDR, 0);
 }
 
 void genlb(void)
 {
 #ifdef INTERPRET_LB
-   gencallinterp((unsigned int)LB, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LB, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1325,7 +1325,7 @@ void genlb(void)
 void genlh(void)
 {
 #ifdef INTERPRET_LH
-   gencallinterp((unsigned int)LH, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LH, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1364,13 +1364,13 @@ void genlh(void)
 
 void genlwl(void)
 {
-   gencallinterp((unsigned int)LWL, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LWL, 0);
 }
 
 void genlw(void)
 {
 #ifdef INTERPRET_LW
-   gencallinterp((unsigned int)LW, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LW, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1409,7 +1409,7 @@ void genlw(void)
 void genlbu(void)
 {
 #ifdef INTERPRET_LBU
-   gencallinterp((unsigned int)LBU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LBU, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1451,7 +1451,7 @@ void genlbu(void)
 void genlhu(void)
 {
 #ifdef INTERPRET_LHU
-   gencallinterp((unsigned int)LHU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LHU, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1492,13 +1492,13 @@ void genlhu(void)
 
 void genlwr(void)
 {
-   gencallinterp((unsigned int)LWR, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LWR, 0);
 }
 
 void genlwu(void)
 {
 #ifdef INTERPRET_LWU
-   gencallinterp((unsigned int)LWU, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LWU, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1539,7 +1539,7 @@ void genlwu(void)
 void gensb(void)
 {
 #ifdef INTERPRET_SB
-   gencallinterp((unsigned int)SB, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SB, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1587,7 +1587,7 @@ void gensb(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -1596,7 +1596,7 @@ void gensb(void)
 void gensh(void)
 {
 #ifdef INTERPRET_SH
-   gencallinterp((unsigned int)SH, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SH, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1644,7 +1644,7 @@ void gensh(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -1652,13 +1652,13 @@ void gensh(void)
 
 void genswl(void)
 {
-   gencallinterp((unsigned int)SWL, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SWL, 0);
 }
 
 void gensw(void)
 {
 #ifdef INTERPRET_SW
-   gencallinterp((unsigned int)SW, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SW, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1705,7 +1705,7 @@ void gensw(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -1713,17 +1713,17 @@ void gensw(void)
 
 void gensdl(void)
 {
-   gencallinterp((unsigned int)SDL, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SDL, 0);
 }
 
 void gensdr(void)
 {
-   gencallinterp((unsigned int)SDR, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SDR, 0);
 }
 
 void genswr(void)
 {
-   gencallinterp((unsigned int)SWR, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SWR, 0);
 }
 
 void gencheck_cop1_unusable(void)
@@ -1743,7 +1743,7 @@ void gencheck_cop1_unusable(void)
 void genlwc1(void)
 {
 #ifdef INTERPRET_LWC1
-   gencallinterp((unsigned int)LWC1, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LWC1, 0);
 #else
    gencheck_cop1_unusable();
    
@@ -1782,7 +1782,7 @@ void genlwc1(void)
 void genldc1(void)
 {
 #ifdef INTERPRET_LDC1
-   gencallinterp((unsigned int)LDC1, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LDC1, 0);
 #else
    gencheck_cop1_unusable();
    
@@ -1827,7 +1827,7 @@ void gencache(void)
 void genld(void)
 {
 #ifdef INTERPRET_LD
-   gencallinterp((unsigned int)LD, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LD, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -1868,7 +1868,7 @@ void genld(void)
 void genswc1(void)
 {
 #ifdef INTERPRET_SWC1
-   gencallinterp((unsigned int)SWC1, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SWC1, 0);
 #else
    gencheck_cop1_unusable();
    
@@ -1916,7 +1916,7 @@ void genswc1(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -1925,7 +1925,7 @@ void genswc1(void)
 void gensdc1(void)
 {
 #ifdef INTERPRET_SDC1
-   gencallinterp((unsigned int)SDC1, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SDC1, 0);
 #else
    gencheck_cop1_unusable();
    
@@ -1976,7 +1976,7 @@ void gensdc1(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -1985,7 +1985,7 @@ void gensdc1(void)
 void gensd(void)
 {
 #ifdef INTERPRET_SD
-   gencallinterp((unsigned int)SD, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SD, 0);
 #else
    free_all_registers();
    simplify_access();
@@ -2036,7 +2036,7 @@ void gensd(void)
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
    mul_reg32(EDX); // 2
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&dst->ops - (int)dst); // 7
-   cmp_reg32_imm32(EAX, (unsigned int)NOTCOMPILED); // 6
+   cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
    mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
 #endif
@@ -2044,11 +2044,11 @@ void gensd(void)
 
 void genll(void)
 {
-   gencallinterp((unsigned int)LL, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.LL, 0);
 }
 
 void gensc(void)
 {
-   gencallinterp((unsigned int)SC, 0);
+   gencallinterp((unsigned int)cached_interpreter_table.SC, 0);
 }
 

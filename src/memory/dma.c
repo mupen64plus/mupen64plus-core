@@ -211,14 +211,16 @@ void dma_pi_write(void)
 
             if (!invalid_code[rdram_address1>>12])
             {
-                if (blocks[rdram_address1>>12]->block[(rdram_address1&0xFFF)/4].ops != NOTCOMPILED)
+                if (blocks[rdram_address1>>12]->block[(rdram_address1&0xFFF)/4].ops !=
+                    current_instruction_table.NOTCOMPILED)
                 {
                     invalid_code[rdram_address1>>12] = 1;
                 }
             }
             if (!invalid_code[rdram_address2>>12])
             {
-                if (blocks[rdram_address2>>12]->block[(rdram_address2&0xFFF)/4].ops != NOTCOMPILED)
+                if (blocks[rdram_address2>>12]->block[(rdram_address2&0xFFF)/4].ops !=
+                    current_instruction_table.NOTCOMPILED)
                 {
                     invalid_code[rdram_address2>>12] = 1;
                 }
