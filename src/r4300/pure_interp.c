@@ -30,7 +30,7 @@
 #include "osal/preproc.h"
 
 #include "r4300.h"
-#include "ops2.h"
+#include "ops.h"
 #include "exception.h"
 #include "macros.h"
 #include "interupt.h"
