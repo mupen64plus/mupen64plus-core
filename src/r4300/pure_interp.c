@@ -46,8 +46,6 @@ static int skip;
 
 static void prefetch(void);
 
-static void (*interp_ops[64])(void);
-
 #define PCADDR interp_addr
 #define ADD_TO_PC(x) interp_addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(void)
@@ -73,7 +71,7 @@ static void (*interp_ops[64])(void);
         interp_addr += 4; \
         delay_slot=1; \
         prefetch(); \
-        interp_ops[((op >> 26) & 0x3F)](); \
+        PC->ops(); \
         update_count(); \
         delay_slot=0; \
         if (take_jump && !skip_jump) \
@@ -376,171 +374,6 @@ static cpu_instruction_table pure_interpreter_table = {
    NULL, // NOTCOMPILED2
 };
 
-static void (*interp_special[64])(void) =
-{
-   SLL , NI   , SRL , SRA , SLLV   , NI    , SRLV  , SRAV  ,
-   JR  , JALR , NI  , NI  , SYSCALL, NI    , NI    , SYNC  ,
-   MFHI, MTHI , MFLO, MTLO, DSLLV  , NI    , DSRLV , DSRAV ,
-   MULT, MULTU, DIV , DIVU, DMULT  , DMULTU, DDIV  , DDIVU ,
-   ADD , ADDU , SUB , SUBU, AND    , OR    , XOR   , NOR   ,
-   NI  , NI   , SLT , SLTU, DADD   , DADDU , DSUB  , DSUBU ,
-   NI  , NI   , NI  , NI  , TEQ    , NI    , NI    , NI    ,
-   DSLL, NI   , DSRL, DSRA, DSLL32 , NI    , DSRL32, DSRA32
-};
-
-static void (*interp_regimm[32])(void) =
-{
-   BLTZ  , BGEZ  , BLTZL  , BGEZL  , NI, NI, NI, NI,
-   NI    , NI    , NI     , NI     , NI, NI, NI, NI,
-   BLTZAL, BGEZAL, BLTZALL, BGEZALL, NI, NI, NI, NI,
-   NI    , NI    , NI     , NI     , NI, NI, NI, NI
-};
-
-static void (*interp_tlb[64])(void) =
-{
-   NI  , TLBR, TLBWI, NI, NI, NI, TLBWR, NI,
-   TLBP, NI  , NI   , NI, NI, NI, NI   , NI,
-   NI  , NI  , NI   , NI, NI, NI, NI   , NI,
-   ERET, NI  , NI   , NI, NI, NI, NI   , NI,
-   NI  , NI  , NI   , NI, NI, NI, NI   , NI,
-   NI  , NI  , NI   , NI, NI, NI, NI   , NI,
-   NI  , NI  , NI   , NI, NI, NI, NI   , NI,
-   NI  , NI  , NI   , NI, NI, NI, NI   , NI
-};
-
-static void TLB(void)
-{
-   interp_tlb[(op & 0x3F)]();
-}
-
-static void (*interp_cop0[32])(void) =
-{
-   MFC0, NI, NI, NI, MTC0, NI, NI, NI,
-   NI  , NI, NI, NI, NI  , NI, NI, NI,
-   TLB , NI, NI, NI, NI  , NI, NI, NI,
-   NI  , NI, NI, NI, NI  , NI, NI, NI
-};
-
-static void (*interp_cop1_bc[4])(void) =
-{
-   BC1F , BC1T,
-   BC1FL, BC1TL
-};
-
-static void (*interp_cop1_s[64])(void) =
-{
-ADD_S    ,SUB_S    ,MUL_S   ,DIV_S    ,SQRT_S   ,ABS_S    ,MOV_S   ,NEG_S    ,
-ROUND_L_S,TRUNC_L_S,CEIL_L_S,FLOOR_L_S,ROUND_W_S,TRUNC_W_S,CEIL_W_S,FLOOR_W_S,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-NI       ,CVT_D_S  ,NI      ,NI       ,CVT_W_S  ,CVT_L_S  ,NI      ,NI       ,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-C_F_S    ,C_UN_S   ,C_EQ_S  ,C_UEQ_S  ,C_OLT_S  ,C_ULT_S  ,C_OLE_S ,C_ULE_S  ,
-C_SF_S   ,C_NGLE_S ,C_SEQ_S ,C_NGL_S  ,C_LT_S   ,C_NGE_S  ,C_LE_S  ,C_NGT_S
-};
-
-static void (*interp_cop1_d[64])(void) =
-{
-ADD_D    ,SUB_D    ,MUL_D   ,DIV_D    ,SQRT_D   ,ABS_D    ,MOV_D   ,NEG_D    ,
-ROUND_L_D,TRUNC_L_D,CEIL_L_D,FLOOR_L_D,ROUND_W_D,TRUNC_W_D,CEIL_W_D,FLOOR_W_D,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-CVT_S_D  ,NI       ,NI      ,NI       ,CVT_W_D  ,CVT_L_D  ,NI      ,NI       ,
-NI       ,NI       ,NI      ,NI       ,NI       ,NI       ,NI      ,NI       ,
-C_F_D    ,C_UN_D   ,C_EQ_D  ,C_UEQ_D  ,C_OLT_D  ,C_ULT_D  ,C_OLE_D ,C_ULE_D  ,
-C_SF_D   ,C_NGLE_D ,C_SEQ_D ,C_NGL_D  ,C_LT_D   ,C_NGE_D  ,C_LE_D  ,C_NGT_D
-};
-
-static void (*interp_cop1_w[64])(void) =
-{
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   CVT_S_W, CVT_D_W, NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI
-};
-
-static void (*interp_cop1_l[64])(void) =
-{
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   CVT_S_L, CVT_D_L, NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI,
-   NI     , NI     , NI, NI, NI, NI, NI, NI
-};
-
-static void BC(void)
-{
-   interp_cop1_bc[(op >> 16) & 3]();
-}
-
-static void S(void)
-{
-   interp_cop1_s[(op & 0x3F)]();
-}
-
-static void D(void)
-{
-   interp_cop1_d[(op & 0x3F)]();
-}
-
-static void W(void)
-{
-   interp_cop1_w[(op & 0x3F)]();
-}
-
-static void L(void)
-{
-   interp_cop1_l[(op & 0x3F)]();
-}
-
-static void (*interp_cop1[32])(void) =
-{
-   MFC1, DMFC1, CFC1, NI, MTC1, DMTC1, CTC1, NI,
-   BC  , NI   , NI  , NI, NI  , NI   , NI  , NI,
-   S   , D    , NI  , NI, W   , L    , NI  , NI,
-   NI  , NI   , NI  , NI, NI  , NI   , NI  , NI
-};
-
-static void SPECIAL(void)
-{
-   interp_special[(op & 0x3F)]();
-}
-
-static void REGIMM(void)
-{
-   interp_regimm[((op >> 16) & 0x1F)]();
-}
-
-static void COP0(void)
-{
-   interp_cop0[((op >> 21) & 0x1F)]();
-}
-
-static void COP1(void)
-{
-   if (check_cop1_unusable()) return;
-   interp_cop1[((op >> 21) & 0x1F)]();
-}
-
-static void (*interp_ops[64])(void) =
-{
-   SPECIAL, REGIMM, J   , JAL  , BEQ , BNE , BLEZ , BGTZ ,
-   ADDI   , ADDIU , SLTI, SLTIU, ANDI, ORI , XORI , LUI  ,
-   COP0   , COP1  , NI  , NI   , BEQL, BNEL, BLEZL, BGTZL,
-   DADDI  , DADDIU, LDL , LDR  , NI  , NI  , NI   , NI   ,
-   LB     , LH    , LWL , LW   , LBU , LHU , LWR  , LWU  ,
-   SB     , SH    , SWL , SW   , SDL , SDR , SWR  , CACHE,
-   LL     , LWC1  , NI  , NI   , NI  , LDC1, NI   , LD   ,
-   SC     , SWC1  , NI  , NI   , NI  , SDC1, NI   , SD
-};
-
 static void prefetch(void)
 {
    unsigned int *mem = fast_mem_access(interp_addr);
@@ -568,6 +401,8 @@ void pure_interpreter(void)
            update_debugger(PC->addr);
 #endif*/
 
+   current_instruction_table = pure_interpreter_table;
+
    while (!stop)
    {
      prefetch();
@@ -578,7 +413,7 @@ void pure_interpreter(void)
      PC->addr = interp_addr;
      if (g_DebuggerActive) update_debugger(PC->addr);
 #endif
-     interp_ops[((op >> 26) & 0x3F)]();
+     PC->ops();
    }
    PC->addr = interp_addr;
 }
