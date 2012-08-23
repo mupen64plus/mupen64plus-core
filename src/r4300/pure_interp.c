@@ -40,13 +40,13 @@
 #include "debugger/debugger.h"
 #endif
 
-unsigned int interp_addr;
+static precomp_instr interp_PC;
 unsigned int op;
 
 static void prefetch(void);
 
-#define PCADDR interp_addr
-#define ADD_TO_PC(x) interp_addr += x*4;
+#define PCADDR interp_PC.addr
+#define ADD_TO_PC(x) interp_PC.addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(void)
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(void) \
@@ -57,7 +57,7 @@ static void prefetch(void);
       if (cop1 && check_cop1_unusable()) return; \
       if (!likely || take_jump) \
       { \
-        interp_addr += 4; \
+        interp_PC.addr += 4; \
         delay_slot=1; \
         prefetch(); \
         PC->ops(); \
@@ -67,18 +67,18 @@ static void prefetch(void);
         { \
           if (link_register != &reg[0]) \
           { \
-              *link_register=interp_addr; \
+              *link_register=interp_PC.addr; \
               sign_extended(*link_register); \
           } \
-          interp_addr = jump_target; \
+          interp_PC.addr = jump_target; \
         } \
       } \
       else \
       { \
-         interp_addr += 8; \
+         interp_PC.addr += 8; \
          update_count(); \
       } \
-      last_addr = interp_addr; \
+      last_addr = interp_PC.addr; \
       if (next_interupt <= Count) gen_interupt(); \
    } \
    static void name##_IDLE(void) \
@@ -378,25 +378,23 @@ static cpu_instruction_table pure_interpreter_table = {
 
 static void prefetch(void)
 {
-   unsigned int *mem = fast_mem_access(interp_addr);
+   unsigned int *mem = fast_mem_access(interp_PC.addr);
    if (mem != NULL)
    {
-      PC->addr = interp_addr;
       prefetch_opcode(mem[0], mem[1]);
    }
    else
    {
-      DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", (int)interp_addr);
+      DebugMessage(M64MSG_ERROR, "prefetch() execute address :%x", PC->addr);
       stop=1;
    }
 }
 
 void pure_interpreter(void)
 {
-   interp_addr = 0xa4000040;
    stop=0;
-   PC = (precomp_instr *) malloc(sizeof(precomp_instr));
-   PC->addr = last_addr = interp_addr;
+   PC = &interp_PC;
+   PC->addr = last_addr = 0xa4000040;
 
 /*#ifdef DBG
          if (g_DebuggerActive)
@@ -416,5 +414,4 @@ void pure_interpreter(void)
 #endif
      PC->ops();
    }
-   free(PC);
 }

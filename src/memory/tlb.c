@@ -127,7 +127,7 @@ unsigned int virtual_to_physical_address(unsigned int addresse, int w)
         if (tlb_LUT_r[addresse>>12])
             return (tlb_LUT_r[addresse>>12]&0xFFFFF000)|(addresse&0xFFF);
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, interp_addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, PC->addr);
     //getchar();
     TLB_refill_exception(addresse,w);
     //return 0x80000000;

@@ -675,20 +675,8 @@ int check_cop1_unusable(void)
 
 void update_count(void)
 {
-   if (r4300emu == CORE_PURE_INTERPRETER)
-     {
-    Count = Count + (interp_addr - last_addr)/2;
-    last_addr = interp_addr;
-     }
-   else
-     {
-    if (PC->addr < last_addr)
-      {
-         DebugMessage(M64MSG_ERROR, "PC->addr < last_addr");
-      }
     Count = Count + (PC->addr - last_addr)/2;
     last_addr = PC->addr;
-     }
 #ifdef COMPARE_CORE
    if (delay_slot)
      CoreCompareCallback();

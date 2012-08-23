@@ -352,16 +352,15 @@ void gen_interupt(void)
             next_interupt = 0;
         if (r4300emu == CORE_PURE_INTERPRETER)
         {
-             interp_addr = skip_jump;
-             last_addr = interp_addr;
+             PC->addr = skip_jump;
         }
         else
         {
             unsigned int dest = skip_jump;
             skip_jump=0;
             jump_to(dest);
-            last_addr = PC->addr;
         }
+        last_addr = PC->addr;
         skip_jump=0;
         return;
     } 
@@ -562,9 +561,8 @@ void gen_interupt(void)
             if (r4300emu == CORE_PURE_INTERPRETER) /* pure interpreter only */
             {
                 // set ErrorEPC with last instruction address and set next instruction address to reset vector
-                ErrorEPC = interp_addr;
-                interp_addr = 0xa4000040;
-                last_addr = interp_addr;
+                ErrorEPC = PC->addr;
+                PC->addr = 0xa4000040;
             }
             else  /* decode-cached interpreter or dynamic recompiler */
             {
@@ -585,8 +583,8 @@ void gen_interupt(void)
                 // jump to the start
                 ErrorEPC = PC->addr;
                 jump_to(0xa4000040);
-                last_addr = PC->addr;
             }
+            last_addr = PC->addr;
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
             if(delay_slot==1 || delay_slot==3)
             {

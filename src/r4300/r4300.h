@@ -45,7 +45,7 @@ extern unsigned long long int debug_count;
 extern unsigned int r4300emu;
 extern unsigned int next_interupt, CIC_Chip;
 extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
-extern unsigned int last_addr, interp_addr;
+extern unsigned int last_addr;
 extern char invalid_code[0x100000];
 extern unsigned int jump_to_address;
 extern int no_compiled_jump;

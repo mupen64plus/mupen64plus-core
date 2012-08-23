@@ -447,7 +447,7 @@ static int savestates_load_m64p(char *filepath)
     }
 
     if(r4300emu == CORE_PURE_INTERPRETER)
-        interp_addr = GETDATA(curr, unsigned int);
+        PC->addr = GETDATA(curr, unsigned int);
     else
     {
         for (i = 0; i < 0x100000; i++)
@@ -464,10 +464,7 @@ static int savestates_load_m64p(char *filepath)
     to_little_endian(queue, 4, 256);
     load_eventqueue_infos(queue);
 
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        last_addr = interp_addr;
-    else
-        last_addr = PC->addr;
+    last_addr = PC->addr;
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -742,7 +739,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     init_flashram();
 
     if(r4300emu == CORE_PURE_INTERPRETER)
-        interp_addr = last_addr;
+        PC->addr = last_addr;
     else
     {
         for (i = 0; i < 0x100000; i++)
@@ -1110,10 +1107,7 @@ static int savestates_save_m64p(char *filepath)
         PUTDATA(curr, unsigned int, tlb_e[i].end_odd);
         PUTDATA(curr, unsigned int, tlb_e[i].phys_odd);
     }
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        PUTDATA(curr, unsigned int, interp_addr);
-    else
-        PUTDATA(curr, unsigned int, PC->addr);
+    PUTDATA(curr, unsigned int, PC->addr);
 
     PUTDATA(curr, unsigned int, next_interupt);
     PUTDATA(curr, unsigned int, next_vi);
@@ -1151,16 +1145,11 @@ static int savestates_save_m64p(char *filepath)
 static int savestates_save_pj64(char *filepath, void *handle,
                                 int (*write_func)(void *, const void *, size_t))
 {
-    unsigned int i, addr;
+    unsigned int i;
     unsigned int SaveRDRAMSize = 0x800000;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
-
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        addr = interp_addr;
-    else
-        addr = PC->addr;
 
     // Allocate memory for the save state data
     savestateSize = 8 + SaveRDRAMSize + 0x2754;
@@ -1176,7 +1165,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, unsigned int, get_event(VI_INT) - reg_cop0[9]); // vi_timer
-    PUTDATA(curr, unsigned int, addr);
+    PUTDATA(curr, unsigned int, PC->addr);
     PUTARRAY(reg, curr, long long int, 32);
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(0x04000000, 0);

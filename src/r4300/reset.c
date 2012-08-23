@@ -39,7 +39,7 @@ void reset_hard(void)
     init_interupt();
     if(r4300emu == CORE_PURE_INTERPRETER)
     {
-        interp_addr = last_addr;
+        PC->addr = last_addr;
     }
     else
     {
