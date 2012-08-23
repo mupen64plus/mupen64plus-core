@@ -164,9 +164,6 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
           current_instruction_table.NOTCOMPILED) \
          invalid_code[address>>12] = 1;
 
-// We already do R0 write checks on recomp.c
-#define CHECK_R0_WRITE(r)
-
 #include "interpreter.def"
 
 // -----------------------------------------------------------

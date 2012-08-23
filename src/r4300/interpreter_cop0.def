@@ -27,7 +27,6 @@ DECLARE_INSTRUCTION(MFC0)
         DebugMessage(M64MSG_ERROR, "MFC0 instruction reading un-implemented Random register");
         stop=1;
       default:
-        CHECK_R0_WRITE(PC->f.r.rt);
         rrt32 = reg_cop0[PC->f.r.nrd];
         sign_extended(rrt);
    }

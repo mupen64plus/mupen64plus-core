@@ -43,8 +43,6 @@
  * CHECK_MEMORY(): A snippet to be run after a store instruction,
  *                 to check if the store affected executable blocks.
  *                 The memory address of the store is in the 'address' global.
- *
- * CHECK_R0_WRITE(r): A snippet to check if an instruction tries to store to R0.
  */
 
 DECLARE_INSTRUCTION(NI)

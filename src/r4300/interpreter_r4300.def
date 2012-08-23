@@ -28,7 +28,6 @@ DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    &reg[0], 0, 0)
 
 DECLARE_INSTRUCTION(ADDI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    ADD_TO_PC(1);
@@ -36,7 +35,6 @@ DECLARE_INSTRUCTION(ADDI)
 
 DECLARE_INSTRUCTION(ADDIU)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt32 = irs32 + iimmediate;
    sign_extended(irt);
    ADD_TO_PC(1);
@@ -44,7 +42,6 @@ DECLARE_INSTRUCTION(ADDIU)
 
 DECLARE_INSTRUCTION(SLTI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    if (irs < iimmediate) irt = 1;
    else irt = 0;
    ADD_TO_PC(1);
@@ -52,7 +49,6 @@ DECLARE_INSTRUCTION(SLTI)
 
 DECLARE_INSTRUCTION(SLTIU)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    if ((unsigned long long)irs < (unsigned long long)((long long)iimmediate))
      irt = 1;
    else irt = 0;
@@ -61,28 +57,24 @@ DECLARE_INSTRUCTION(SLTIU)
 
 DECLARE_INSTRUCTION(ANDI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt = irs & (unsigned short)iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ORI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt = irs | (unsigned short)iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(XORI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt = irs ^ (unsigned short)iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(LUI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt32 = iimmediate << 16;
    sign_extended(irt);
    ADD_TO_PC(1);
@@ -95,14 +87,12 @@ DECLARE_JUMP(BGTZL,   PCADDR + (iimmediate+1)*4, irs > 0,    &reg[0], 1, 0)
 
 DECLARE_INSTRUCTION(DADDI)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt = irs + iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADDIU)
 {
-   CHECK_R0_WRITE(PC->f.i.rt);
    irt = irs + iimmediate;
    ADD_TO_PC(1);
 }
@@ -115,7 +105,6 @@ DECLARE_INSTRUCTION(LDL)
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
    unsigned long long int word = 0;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    switch ((lsaddr) & 7)
      {
@@ -181,7 +170,6 @@ DECLARE_INSTRUCTION(LDR)
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
    unsigned long long int word = 0;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    switch ((lsaddr) & 7)
      {
@@ -246,7 +234,6 @@ DECLARE_INSTRUCTION(LB)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -259,7 +246,6 @@ DECLARE_INSTRUCTION(LH)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -273,7 +259,6 @@ DECLARE_INSTRUCTION(LWL)
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
    unsigned long long int word = 0;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    switch ((lsaddr) & 3)
      {
@@ -312,7 +297,6 @@ DECLARE_INSTRUCTION(LW)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -325,7 +309,6 @@ DECLARE_INSTRUCTION(LBU)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -336,7 +319,6 @@ DECLARE_INSTRUCTION(LHU)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -348,7 +330,6 @@ DECLARE_INSTRUCTION(LWR)
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
    unsigned long long int word = 0;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    switch ((lsaddr) & 3)
      {
@@ -386,7 +367,6 @@ DECLARE_INSTRUCTION(LWU)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -718,7 +698,6 @@ DECLARE_INSTRUCTION(LL)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -759,7 +738,6 @@ DECLARE_INSTRUCTION(LD)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
    rdword = (unsigned long long *) lsrtp;
@@ -770,7 +748,6 @@ DECLARE_INSTRUCTION(SC)
 {
    const unsigned int lsaddr = (unsigned int)(iimmediate + irs32);
    long long int *lsrtp = PC->f.i.rt;
-   CHECK_R0_WRITE(PC->f.i.rt);
    ADD_TO_PC(1);
    if(llbit)
    {
