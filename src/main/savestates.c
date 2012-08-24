@@ -446,14 +446,12 @@ static int savestates_load_m64p(char *filepath)
         tlb_e[i].phys_odd = GETDATA(curr, unsigned int);
     }
 
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        PC->addr = GETDATA(curr, unsigned int);
-    else
+    if(r4300emu != CORE_PURE_INTERPRETER)
     {
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
-        jump_to(GETDATA(curr, unsigned int));
     }
+    generic_jump_to(GETDATA(curr, unsigned int)); // PC
 
     next_interupt = GETDATA(curr, unsigned int);
     next_vi = GETDATA(curr, unsigned int);
@@ -738,14 +736,12 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     init_flashram();
 
-    if(r4300emu == CORE_PURE_INTERPRETER)
-        PC->addr = last_addr;
-    else
+    if(r4300emu != CORE_PURE_INTERPRETER)
     {
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
-        jump_to(last_addr);
     }
+    generic_jump_to(last_addr);
 
     // assert(savestateData+savestateSize == curr)
 

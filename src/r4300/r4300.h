@@ -63,7 +63,12 @@ int check_cop1_unusable(void);
 void shuffle_fpr_data(int oldStatus, int newStatus);
 void set_fpr_pointers(int newStatus);
 
+/* Jumps to the given address. This is for the cached interpreter / dynarec. */
 #define jump_to(a) { jump_to_address = a; jump_to_func(); }
+
+/* Jump to the given address. This works for all r4300 emulator, but is slower.
+ * Use this for common code which can be executed from any r4300 emulator. */ 
+void generic_jump_to(unsigned int address);
 
 // r4300 emulators
 #define CORE_PURE_INTERPRETER 0
@@ -71,7 +76,6 @@ void set_fpr_pointers(int newStatus);
 #define CORE_DYNAREC          2
 
 // profiling
-
 #define ALL_SECTION 0
 #define GFX_SECTION 1
 #define AUDIO_SECTION 2

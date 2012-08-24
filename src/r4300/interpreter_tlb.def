@@ -240,8 +240,7 @@ DECLARE_INSTRUCTION(ERET)
    else
    {
      Status &= 0xFFFFFFFD;
-     if (r4300emu == CORE_PURE_INTERPRETER) PC->addr = EPC;
-     else jump_to(EPC);
+     generic_jump_to(EPC);
    }
    llbit = 0;
    check_interupt();

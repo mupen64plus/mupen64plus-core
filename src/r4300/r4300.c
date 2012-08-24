@@ -578,6 +578,14 @@ void jump_to_func(void)
 }
 #undef addr
 
+void generic_jump_to(unsigned int address)
+{
+   if (r4300emu == CORE_PURE_INTERPRETER)
+      PC->addr = address;
+   else
+      jump_to(address);
+}
+
 /* Refer to Figure 6-2 on page 155 and explanation on page B-11
    of MIPS R4000 Microprocessor User's Manual (Second Edition)
    by Joe Heinrich.
@@ -1061,4 +1069,3 @@ void r4300_execute(void)
     }
 #endif
 }
-

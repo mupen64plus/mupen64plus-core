@@ -346,22 +346,15 @@ void gen_interupt(void)
    
     if (skip_jump)
     {
+        unsigned int dest = skip_jump;
+        skip_jump = 0;
+
         if (q->count > Count || (Count - q->count) < 0x80000000)
             next_interupt = q->count;
         else
             next_interupt = 0;
-        if (r4300emu == CORE_PURE_INTERPRETER)
-        {
-             PC->addr = skip_jump;
-        }
-        else
-        {
-            unsigned int dest = skip_jump;
-            skip_jump=0;
-            jump_to(dest);
-        }
-        last_addr = PC->addr;
-        skip_jump=0;
+        
+        generic_jump_to(dest);
         return;
     } 
 
@@ -558,32 +551,16 @@ void gen_interupt(void)
             // clear the audio status register so that subsequent write_ai() calls will work properly
             ai_register.ai_status = 0;
             // reset the r4300 internal state
-            if (r4300emu == CORE_PURE_INTERPRETER) /* pure interpreter only */
+            if (r4300emu != CORE_PURE_INTERPRETER)
             {
-                // set ErrorEPC with last instruction address and set next instruction address to reset vector
-                ErrorEPC = PC->addr;
-                PC->addr = 0xa4000040;
-            }
-            else  /* decode-cached interpreter or dynamic recompiler */
-            {
-                int i;
-                // clear all the compiled instruction blocks
-                for (i=0; i<0x100000; i++)
-                {
-                    if (blocks[i])
-                    {
-                        free_block(blocks[i]);
-                        free(blocks[i]);
-                        blocks[i] = NULL;
-                    }
-                }
                 // clear all the compiled instruction blocks and re-initialize
                 free_blocks();
                 init_blocks();
-                // jump to the start
-                ErrorEPC = PC->addr;
-                jump_to(0xa4000040);
             }
+
+            // set ErrorEPC with last instruction address and set next instruction address to reset vector
+            ErrorEPC = PC->addr;
+            generic_jump_to(0xa4000040);
             last_addr = PC->addr;
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
             if(delay_slot==1 || delay_slot==3)

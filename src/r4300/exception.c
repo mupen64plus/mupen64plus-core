@@ -40,8 +40,7 @@ void TLB_refill_exception(unsigned int address, int w)
    EntryHi = address & 0xFFFFE000;
    if (Status & 0x2) // Test de EXL
      {
-    if (r4300emu == CORE_PURE_INTERPRETER) PC->addr = 0x80000180;
-    else jump_to(0x80000180);
+    generic_jump_to(0x80000180);
     if(delay_slot==1 || delay_slot==3) Cause |= 0x80000000;
     else Cause &= 0x7FFFFFFF;
      }
@@ -72,13 +71,11 @@ void TLB_refill_exception(unsigned int address, int w)
       }
     if (usual_handler)
       {
-         if (r4300emu == CORE_PURE_INTERPRETER) PC->addr = 0x80000180;
-         else jump_to(0x80000180);
+         generic_jump_to(0x80000180);
       }
     else
       {
-         if (r4300emu == CORE_PURE_INTERPRETER) PC->addr = 0x80000000;
-         else jump_to(0x80000000);
+         generic_jump_to(0x80000000);
       }
      }
    if(delay_slot==1 || delay_slot==3)
@@ -92,8 +89,7 @@ void TLB_refill_exception(unsigned int address, int w)
      }
    if(w != 2) EPC-=4;
    
-   if (r4300emu == CORE_PURE_INTERPRETER) last_addr = PC->addr;
-   else last_addr = PC->addr;
+   last_addr = PC->addr;
    
    if (r4300emu == CORE_DYNAREC) 
      {
@@ -117,8 +113,7 @@ void exception_general(void)
    update_count();
    Status |= 2;
    
-   if (r4300emu != CORE_PURE_INTERPRETER) EPC = PC->addr;
-   else EPC = PC->addr;
+   EPC = PC->addr;
    
    if(delay_slot==1 || delay_slot==3)
      {
@@ -129,10 +124,7 @@ void exception_general(void)
      {
     Cause &= 0x7FFFFFFF;
      }
-   if (r4300emu == CORE_PURE_INTERPRETER)
-    PC->addr = 0x80000180;
-   else
-    jump_to(0x80000180);
+   generic_jump_to(0x80000180);
    last_addr = PC->addr;
    if (r4300emu == CORE_DYNAREC)
      {

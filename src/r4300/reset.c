@@ -37,11 +37,7 @@ void reset_hard(void)
     last_addr = 0xa4000040;
     next_interupt = 624999;
     init_interupt();
-    if(r4300emu == CORE_PURE_INTERPRETER)
-    {
-        PC->addr = last_addr;
-    }
-    else
+    if(r4300emu != CORE_PURE_INTERPRETER)
     {
         /* TODO
          * The following code *should* work and avoid free_blocks() and init_blocks(),
@@ -52,8 +48,8 @@ void reset_hard(void)
         blocks[0xa4000000>>12]->block = NULL; */
         free_blocks();
         init_blocks();
-        jump_to(last_addr);
     }
+    generic_jump_to(last_addr);
 }
 
 void reset_soft(void)
