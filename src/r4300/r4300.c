@@ -781,7 +781,9 @@ void r4300_reset_hard(void)
     rounding_mode = 0x33F;
 }
 
-/* this soft reset function simulates the actions of the PIF ROM, which may vary by region */
+/* this soft reset function simulates the actions of the PIF ROM, which may vary by region
+ * TODO: accurately simulate the effects of the PIF ROM in the case of a soft reset
+ *       (e.g. Goldeneye crashes) */
 void r4300_reset_soft(void)
 {
     long long CRC = 0;

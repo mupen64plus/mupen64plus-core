@@ -550,6 +550,8 @@ void gen_interupt(void)
             init_interupt();
             // clear the audio status register so that subsequent write_ai() calls will work properly
             ai_register.ai_status = 0;
+            // set ErrorEPC with the last instruction address
+            ErrorEPC = PC->addr;
             // reset the r4300 internal state
             if (r4300emu != CORE_PURE_INTERPRETER)
             {
@@ -557,9 +559,7 @@ void gen_interupt(void)
                 free_blocks();
                 init_blocks();
             }
-
-            // set ErrorEPC with last instruction address and set next instruction address to reset vector
-            ErrorEPC = PC->addr;
+            // set next instruction address to reset vector
             generic_jump_to(0xa4000040);
             last_addr = PC->addr;
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
