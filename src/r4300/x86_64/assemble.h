@@ -67,7 +67,6 @@ extern long long int reg[32];
 #define BH 7
 
 extern int branch_taken;
-extern int dynarec_stack_initialized;
 
 void jump_start_rel8(void);
 void jump_end_rel8(void);

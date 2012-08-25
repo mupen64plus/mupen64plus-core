@@ -30,8 +30,6 @@
 #include "r4300/ops.h"
 #include "r4300/recomph.h"
 
-extern int dynarec_stack_initialized;  /* in gr4300.c */
-
 void dyna_jump(void)
 {
     if (stop == 1)
@@ -72,6 +70,18 @@ void dyna_start(void (*code)(void))
      "1:                       \n"
      " pop  %%rax              \n"
      " mov  %%rax, %[save_rip] \n"
+
+     /* TODOXXX test.
+        sub_reg64_imm32(RSP, 0x18); // fixme why is this here, how does stack get re-adjusted?
+        mov_reg64_reg64(RAX, RSP);
+        sub_reg64_imm32(RAX, 8);
+        mov_memoffs64_rax((unsigned long long *)(&return_address));
+     */
+     "sub $0x18, %%rsp         \n"
+     "mov %%rsp, %%rax         \n"
+     "sub $8, %%rax            \n"
+     "mov %%rax, %[return_address]\n"
+
      " call *%%rbx             \n"
      "2:                       \n"
      " mov  %[save_rsp], %%rsp \n"
@@ -81,14 +91,11 @@ void dyna_start(void (*code)(void))
      " pop  %%r13              \n"
      " pop  %%r12              \n"
      " pop  %%rbx              \n"
-     : [save_rsp]"=m"(save_rsp), [save_rip]"=m"(save_rip)
+     : [save_rsp]"=m"(save_rsp), [save_rip]"=m"(save_rip), [return_address]"=m"(return_address)
      : "b" (code), [reg]"m"(*reg)
      : "%rax", "memory"
      );
 #endif
-
-    /* clear flag; stack is back to normal */
-    dynarec_stack_initialized = 0;
 
     /* clear the registers so we don't return here a second time; that would be a bug */
     save_rsp=0;

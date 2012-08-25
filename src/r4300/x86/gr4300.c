@@ -40,7 +40,6 @@ static precomp_instr fake_instr;
 static int eax, ebx, ecx, edx, esp, ebp, esi, edi;
 
 int branch_taken;
-int dynarec_stack_initialized = 0;
 
 /* static functions */
 
@@ -312,15 +311,7 @@ void gennotcompiled(void)
 {
     free_all_registers();
     simplify_access();
-   
-    if (dst->addr == 0xa4000040 && dynarec_stack_initialized == 0)
-    {
-        dynarec_stack_initialized = 1;
-        sub_reg32_imm32(ESP, 0x10); /* save 16 bytes of padding just in case */
-        and_reg32_imm32(ESP, 0xfffffff0); /* align stack on 16-byte boundary for OSX */
-        mov_m32_reg32((unsigned int*)(&return_address), ESP);
-        sub_m32_imm32((unsigned int*)(&return_address), 4);
-    }
+
     mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst));
     mov_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED);
     call_reg32(EAX);

@@ -186,9 +186,6 @@
 				RelativePath="..\..\src\r4300\x86\assemble.c"
 				>
 			</File>
-			<File
-				RelativePath="..\..\src\r4300\bc.c"
-				>
 			</File>
 			<File
 				RelativePath="..\..\src\api\callbacks.c"
@@ -204,30 +201,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\api\config.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop0.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop1.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop1_d.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop1_l.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop1_s.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\cop1_w.c"
 				>
 			</File>
 			<File
@@ -443,32 +416,6 @@
 			<File
 				RelativePath="..\..\src\osd\screenshot.cpp"
 				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\special.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\r4300\tlb.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\src\memory\tlb.c"

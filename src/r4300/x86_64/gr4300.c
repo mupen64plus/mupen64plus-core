@@ -80,7 +80,6 @@ static precomp_instr fake_instr;
 static long long debug_reg_storage[8];
 
 int branch_taken = 0;
-int dynarec_stack_initialized = 0;
 
 /* static functions */
 
@@ -291,14 +290,6 @@ void gennotcompiled(void)
 {
    free_registers_move_start();
 
-    if (dst->addr == 0xa4000040 && dynarec_stack_initialized == 0)
-    {
-        dynarec_stack_initialized = 1;
-        sub_reg64_imm32(RSP, 0x18); // fixme why is this here, how does stack get re-adjusted?
-        mov_reg64_reg64(RAX, RSP);
-        sub_reg64_imm32(RAX, 8);
-        mov_memoffs64_rax((unsigned long long *)(&return_address));
-    }
     mov_reg64_imm64(RAX, (unsigned long long) dst);
     mov_memoffs64_rax((unsigned long long *) &PC); /* RIP-relative will not work here */
     mov_reg64_imm64(RAX, (unsigned long long) cached_interpreter_table.NOTCOMPILED);

@@ -699,25 +699,10 @@ void init_blocks(void)
 {
    int i;
    for (i=0; i<0x100000; i++)
-     {
-    invalid_code[i] = 1;
-    blocks[i] = NULL;
-     }
-   blocks[0xa4000000>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-   invalid_code[0xa4000000>>12] = 1;
-   blocks[0xa4000000>>12]->code = NULL;
-   blocks[0xa4000000>>12]->block = NULL;
-   blocks[0xa4000000>>12]->jumps_table = NULL;
-   blocks[0xa4000000>>12]->riprel_table = NULL;
-   blocks[0xa4000000>>12]->start = 0xa4000000;
-   blocks[0xa4000000>>12]->end = 0xa4001000;
-   actual=blocks[0xa4000000>>12];
-   init_block(blocks[0xa4000000>>12]);
-   PC=actual->block+(0x40/4);
-/*#ifdef DBG //should only be needed by dynamic recompiler
-   if (g_DebuggerActive) // debugger shows initial state (before 1st instruction).
-     update_debugger(PC->addr);
-#endif*/
+   {
+      invalid_code[i] = 1;
+      blocks[i] = NULL;
+   }
 }
 
 void free_blocks(void)
@@ -948,6 +933,17 @@ void r4300_reset_soft(void)
 
 }
 
+static void dynarec_setup_code(void)
+{
+   // The dynarec jumps here after we call dyna_start and it prepares
+   // Here we need to prepare the initial code block and jump to it
+   jump_to(0xa4000040);
+
+   // Prevent segfault on failed jump_to
+   if (!actual->block || !actual->code)
+      dyna_stop();
+}
+
 void r4300_execute(void)
 {
     unsigned int i;
@@ -978,17 +974,11 @@ void r4300_execute(void)
 #if defined(DYNAREC)
     else if (r4300emu >= 2)
     {
-        void (*code)(void);
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300emu = CORE_DYNAREC;
         init_blocks();
 
-        /* Prevent segfault on failed init_blocks */
-        if (!actual->block || !actual->code)
-            return;
-
-        code =  (void(*)(void)) (actual->code+(actual->block[0x40/4].local_addr));
-        dyna_start(code);
+        dyna_start(dynarec_setup_code);
         PC++;
 #if defined(PROFILE_R4300)
         pfProfile = fopen("instructionaddrs.dat", "ab");
@@ -1015,8 +1005,9 @@ void r4300_execute(void)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300emu = CORE_INTERPRETER;
         init_blocks();
+        jump_to(0xa4000040);
 
-        /* Prevent segfault on failed init_blocks */
+        /* Prevent segfault on failed jump_to */
         if (!actual->block)
             return;
 

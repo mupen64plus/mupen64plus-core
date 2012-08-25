@@ -49,9 +49,6 @@ precomp_block *dst_block; // the current block that we are recompiling
 int src; // the current recompiled instruction
 int fast_memory;
 
-unsigned long *return_address; // that's where the dynarec will restart when
-                               // going back from a C function
-
 static void (*recomp_func)(void); // pointer to the dynarec's generator
                                   // function for the latest decoded opcode
 
