@@ -81,6 +81,46 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
 }
 
 /**********************
+   Byte swap utilities
+ **********************/
+void swap_buffer(void *buffer, size_t length, size_t count)
+{
+    size_t i;
+    if (length == 2)
+    {
+        unsigned short *pun = (unsigned short *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = swap16(pun[i]);
+    }
+    else if (length == 4)
+    {
+        unsigned int *pun = (unsigned int *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = swap32(pun[i]);
+    }
+    else if (length == 8)
+    {
+        unsigned long long *pun = (unsigned long long *)buffer;
+        for (i = 0; i < count; i++)
+            pun[i] = swap64(pun[i]);
+    }
+}
+
+void to_little_endian_buffer(void *buffer, size_t length, size_t count)
+{
+    #ifdef M64P_BIG_ENDIAN
+    swap_buffer(buffer, length, count);
+    #endif
+}
+
+void to_big_endian_buffer(void *buffer, size_t length, size_t count)
+{
+    #ifndef M64P_BIG_ENDIAN
+    swap_buffer(buffer, length, count);
+    #endif
+}
+
+/**********************
   Linked list utilities
  **********************/
 

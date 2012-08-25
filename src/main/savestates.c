@@ -162,39 +162,8 @@ void savestates_clear_job(void)
     savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
 }
 
-
-static void block_endian_swap(void *buffer, size_t length, size_t count)
-{
-    size_t i;
-    if (length == 2)
-    {
-        unsigned short *pun = (unsigned short *)buffer;
-        for (i = 0; i < count; i++)
-            pun[i] = __builtin_bswap16(pun[i]);
-    }
-    else if (length == 4)
-    {
-        unsigned int *pun = (unsigned int *)buffer;
-        for (i = 0; i < count; i++)
-            pun[i] = __builtin_bswap32(pun[i]);
-    }
-    else if (length == 8)
-    {
-        unsigned long long *pun = (unsigned long long *)buffer;
-        for (i = 0; i < count; i++)
-            pun[i] = __builtin_bswap64(pun[i]);
-    }
-}
-
-static void to_little_endian(void *buffer, size_t length, size_t count)
-{
-    #ifdef M64P_BIG_ENDIAN
-    block_endian_swap(buffer, length, count);
-    #endif
-}
-
 #define GETARRAY(buff, type, count) \
-    (to_little_endian(buff, sizeof(type),count), \
+    (to_little_endian_buffer(buff, sizeof(type),count), \
      buff += count*sizeof(type), \
      (type *)(buff-count*sizeof(type)))
 #define COPYARRAY(dst, buff, type, count) \
@@ -203,12 +172,11 @@ static void to_little_endian(void *buffer, size_t length, size_t count)
 
 #define PUTARRAY(src, buff, type, count) \
     memcpy(buff, src, sizeof(type)*count); \
-    to_little_endian(buff, sizeof(type), count); \
+    to_little_endian_buffer(buff, sizeof(type), count); \
     buff += count*sizeof(type);
 
 #define PUTDATA(buff, type, value) \
     do { type x = value; PUTARRAY(&x, buff, type, 1); } while(0)
-
 
 static int savestates_load_m64p(char *filepath)
 {
@@ -459,7 +427,7 @@ static int savestates_load_m64p(char *filepath)
 
     // assert(savestateData+savestateSize == curr)
 
-    to_little_endian(queue, 4, 256);
+    to_little_endian_buffer(queue, 4, 256);
     load_eventqueue_infos(queue);
 
     last_addr = PC->addr;
@@ -678,7 +646,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
-        unsigned int MyEntryDefined = GETDATA(curr, unsigned int);
+        (void)GETDATA(curr, unsigned int); // Dummy read - EntryDefined
         unsigned int MyPageMask = GETDATA(curr, unsigned int);
         unsigned int MyEntryHi = GETDATA(curr, unsigned int);
         unsigned int MyEntryLo0 = GETDATA(curr, unsigned int);
@@ -1109,7 +1077,7 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, next_vi);
     PUTDATA(curr, unsigned int, vi_field);
 
-    to_little_endian(queue, 4, queuelength/4);
+    to_little_endian_buffer(queue, 4, queuelength/4);
     PUTARRAY(queue, curr, char, queuelength);
 
     // assert(curr == savestateData + savestateSize)
