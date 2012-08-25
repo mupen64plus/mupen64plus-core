@@ -236,7 +236,7 @@ void dma_pi_write(void)
         }
     }
 
-    if ((debug_count+Count) < 0x100000)
+    if (Count < 0x100000)
     {
 
         switch (CIC_Chip)
