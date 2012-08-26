@@ -76,10 +76,10 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
 
 #define PCADDR PC->addr
 #define ADD_TO_PC(x) PC += x;
-#define DECLARE_INSTRUCTION(name) void name(void)
+#define DECLARE_INSTRUCTION(name) static void name(void)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
-   void name(void) \
+   static void name(void) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
@@ -111,7 +111,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
       last_addr = PC->addr; \
       if (next_interupt <= Count) gen_interupt(); \
    } \
-   void name##_OUT(void) \
+   static void name##_OUT(void) \
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
@@ -143,7 +143,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
       last_addr = PC->addr; \
       if (next_interupt <= Count) gen_interupt(); \
    } \
-   void name##_IDLE(void) \
+   static void name##_IDLE(void) \
    { \
       const int take_jump = (condition); \
       int skip; \
@@ -165,6 +165,13 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
          invalid_code[address>>12] = 1;
 
 #include "interpreter.def"
+
+// two functions are defined from the macros above but never used
+// these prototype declarations will prevent a warning
+#if defined(__GNUC__)
+  void JR_IDLE(void) __attribute__((used));
+  void JALR_IDLE(void) __attribute__((used));
+#endif
 
 // -----------------------------------------------------------
 // Flow control 'fake' instructions
@@ -948,7 +955,9 @@ static void dynarec_setup_code(void)
 
 void r4300_execute(void)
 {
+#if defined(COUNT_INSTR) || (defined(DYNAREC) && defined(PROFILE_R4300))
     unsigned int i;
+#endif
 
     current_instruction_table = cached_interpreter_table;
 
