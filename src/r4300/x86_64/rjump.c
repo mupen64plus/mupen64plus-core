@@ -74,10 +74,11 @@ void dyna_start(void (*code)(void))
      " pop  %%rax              \n"
      " mov  %%rax, %[save_rip] \n"
 
-     "sub $0x10, %%rsp         \n"
-     "mov %%rsp, %%rax         \n"
-     "sub $8, %%rax            \n"
-     "mov %%rax, %[return_address]\n"
+     " sub $0x10, %%rsp        \n"
+     " and $-16, %%rsp         \n" /* ensure that stack is 16-byte aligned */
+     " mov %%rsp, %%rax        \n"
+     " sub $8, %%rax           \n"
+     " mov %%rax, %[return_address]\n"
 
      " call *%%rbx             \n"
      "2:                       \n"
