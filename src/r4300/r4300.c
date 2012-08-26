@@ -942,6 +942,7 @@ void r4300_reset_soft(void)
 
 }
 
+#if !defined(NO_ASM)
 static void dynarec_setup_code(void)
 {
    // The dynarec jumps here after we call dyna_start and it prepares
@@ -952,6 +953,7 @@ static void dynarec_setup_code(void)
    if (!actual->block || !actual->code)
       dyna_stop();
 }
+#endif
 
 void r4300_execute(void)
 {

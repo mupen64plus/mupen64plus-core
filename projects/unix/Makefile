@@ -401,7 +401,7 @@ targets:
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
 	@echo "    DEBUG=1       == add debugging symbols to binaries"
-	@echo "    DEBUGGER=1    == build graphical debugger"
+	@echo "    DEBUGGER=1    == build debugger API into core for front-ends.  runs slower."
 	@echo "    DBG_CORE=1    == print debugging info in r4300 core"
 	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
 	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
