@@ -239,7 +239,7 @@ DECLARE_INSTRUCTION(ERET)
    }
    else
    {
-     Status &= 0xFFFFFFFD;
+     Status &= ~0x2;
      generic_jump_to(EPC);
    }
    llbit = 0;

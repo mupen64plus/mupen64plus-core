@@ -1311,7 +1311,7 @@ void update_SP(void)
             //gfx.processDList();
             rsp_register.rsp_pc &= 0xFFF;
             start_section(GFX_SECTION);
-            rsp.doRspCycles(100);
+            rsp.doRspCycles(0xFFFFFFFF);
             end_section(GFX_SECTION);
             rsp_register.rsp_pc |= save_pc;
             new_frame();
@@ -1439,7 +1439,7 @@ void update_SP(void)
             //audio.processAList();
             rsp_register.rsp_pc &= 0xFFF;
             start_section(AUDIO_SECTION);
-            rsp.doRspCycles(100);
+            rsp.doRspCycles(0xFFFFFFFF);
             end_section(AUDIO_SECTION);
             rsp_register.rsp_pc |= save_pc;
 
@@ -1452,7 +1452,7 @@ void update_SP(void)
         else
         {
             rsp_register.rsp_pc &= 0xFFF;
-            rsp.doRspCycles(100);
+            rsp.doRspCycles(0xFFFFFFFF);
             rsp_register.rsp_pc |= save_pc;
 
             MI_register.mi_intr_reg &= ~0x1;
