@@ -1248,11 +1248,13 @@ static void do_SP_Task(void)
         rsp_register.rsp_pc |= save_pc;
         new_frame();
 
+        update_count();
+        if (MI_register.mi_intr_reg & 0x1)
+            add_interupt_event(SP_INT, 1000);
+        if (MI_register.mi_intr_reg & 0x20)
+            add_interupt_event(DP_INT, 1000);
         MI_register.mi_intr_reg &= ~0x21;
         sp_register.sp_status_reg &= ~0x303;
-        update_count();
-        add_interupt_event(SP_INT, 1000);
-        add_interupt_event(DP_INT, 1000);
 
         // protecting new frame buffers
         if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
@@ -1375,11 +1377,12 @@ static void do_SP_Task(void)
         end_section(AUDIO_SECTION);
         rsp_register.rsp_pc |= save_pc;
 
+        update_count();
+        if (MI_register.mi_intr_reg & 0x1)
+            add_interupt_event(SP_INT, 4000/*500*/);
         MI_register.mi_intr_reg &= ~0x1;
         sp_register.sp_status_reg &= ~0x303;
-        update_count();
-        //add_interupt_event(SP_INT, 500);
-        add_interupt_event(SP_INT, 4000);
+        
     }
     else
     {
@@ -1387,10 +1390,11 @@ static void do_SP_Task(void)
         rsp.doRspCycles(0xFFFFFFFF);
         rsp_register.rsp_pc |= save_pc;
 
+        update_count();
+        if (MI_register.mi_intr_reg & 0x1)
+            add_interupt_event(SP_INT, 0/*100*/);
         MI_register.mi_intr_reg &= ~0x1;
         sp_register.sp_status_reg &= ~0x203;
-        update_count();
-        add_interupt_event(SP_INT, 0/*100*/);
     }
 }
 
