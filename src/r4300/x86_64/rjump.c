@@ -30,6 +30,9 @@
 #include "r4300/ops.h"
 #include "r4300/recomph.h"
 
+// that's where the dynarec will restart when going back from a C function
+static unsigned long *return_address;
+
 void dyna_jump(void)
 {
     if (stop == 1)
@@ -71,16 +74,11 @@ void dyna_start(void (*code)(void))
      " pop  %%rax              \n"
      " mov  %%rax, %[save_rip] \n"
 
-     /* TODOXXX test.
-        sub_reg64_imm32(RSP, 0x18); // fixme why is this here, how does stack get re-adjusted?
-        mov_reg64_reg64(RAX, RSP);
-        sub_reg64_imm32(RAX, 8);
-        mov_memoffs64_rax((unsigned long long *)(&return_address));
-     */
-     "sub $0x18, %%rsp         \n"
-     "mov %%rsp, %%rax         \n"
-     "sub $8, %%rax            \n"
-     "mov %%rax, %[return_address]\n"
+     " sub $0x10, %%rsp        \n"
+     " and $-16, %%rsp         \n" /* ensure that stack is 16-byte aligned */
+     " mov %%rsp, %%rax        \n"
+     " sub $8, %%rax           \n"
+     " mov %%rax, %[return_address]\n"
 
      " call *%%rbx             \n"
      "2:                       \n"

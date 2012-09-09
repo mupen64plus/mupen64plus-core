@@ -89,7 +89,7 @@ void *opaddr_recompiled[564];
 disassemble_info dis_info;
 
 #define CHECK_MEM(address) \
-   if (!invalid_code[(address) >> 12] && blocks[(address) >> 12]->block[((address) & 0xFFF) / 4].ops != NOTCOMPILED) \
+   if (!invalid_code[(address) >> 12] && blocks[(address) >> 12]->block[((address) & 0xFFF) / 4].ops != current_instruction_table.NOTCOMPILED) \
      invalid_code[(address) >> 12] = 1;
 
 void process_opcode_out(void *strm, const char *fmt, ...){
@@ -154,7 +154,7 @@ void decode_recompiled(uint32 addr)
     if(blocks[addr>>12] == NULL)
         return;
 
-    if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == NOTCOMPILED)
+    if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
     //      recompile_block((int *) SP_DMEM, blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");

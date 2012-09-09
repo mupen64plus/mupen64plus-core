@@ -2111,7 +2111,7 @@ void genswc1(void)
    mov_reg32_reg32(ECX, EBX); // 2
    mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
    mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(precomp_block, block)); // 7
-   mov_reg64_imm64(RDI, (unsigned long long) NOTCOMPILED); // 10
+   mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
@@ -2250,7 +2250,7 @@ void gensd(void)
    mov_reg32_reg32(ECX, EBX); // 2
    mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
    mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(precomp_block, block)); // 7
-   mov_reg64_imm64(RDI, (unsigned long long) NOTCOMPILED); // 10
+   mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(precomp_instr)); // 5
