@@ -36,6 +36,7 @@ cd ${TEMPDIR}/source
 
 echo "************************************ Downloading Mupen64Plus module source code"
 hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-core
+hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-rom
 hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-ui-console
 hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-audio-sdl
 hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-input-sdl

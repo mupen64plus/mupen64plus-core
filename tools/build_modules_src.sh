@@ -28,17 +28,12 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-modules='mupen64plus-core mupen64plus-core-norom mupen64plus-ui-console mupen64plus-audio-sdl mupen64plus-input-sdl mupen64plus-rsp-hle mupen64plus-video-rice'
+modules='mupen64plus-core mupen64plus-rom mupen64plus-ui-console mupen64plus-audio-sdl mupen64plus-input-sdl mupen64plus-rsp-hle mupen64plus-video-rice'
 for modname in ${modules}; do
   echo "************************************ Downloading and packaging module source code: ${modname}"
   rm -rf "tmp"
   EXCLUDE="--exclude .hgtags --exclude .hg_archival.txt --exclude .hgignore"
   TARTAG=""
-  if [ "$modname" = "mupen64plus-core-norom" ]; then
-    modname="mupen64plus-core"
-    EXCLUDE="${EXCLUDE} --exclude roms"
-    TARTAG="-norom"
-  fi
   OUTPUTDIR="${modname}-$2"
   hg clone --noupdate "http://bitbucket.org/richard42/$modname" "tmp"
   cd tmp
