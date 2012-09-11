@@ -137,6 +137,8 @@ static config_var *config_var_create(const char *ParamName, const char *ParamHel
     if (var == NULL || ParamName == NULL)
         return NULL;
 
+    memset(var, sizeof(*var), 0);
+
     var->name = strdup(ParamName);
     if (var->name == NULL)
     {
@@ -927,6 +929,16 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
         append_var_to_section(section, var);
     }
 
+    /* cleanup old values */
+    switch (var->type)
+    {
+        case M64TYPE_STRING:
+            free(var->val.string);
+	    break;
+        default:
+            break;
+    }
+
     /* set this parameter's value */
     var->type = ParamType;
     switch(ParamType)
@@ -941,7 +953,6 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
             var->val.integer = (*((int *) ParamValue) != 0);
             break;
         case M64TYPE_STRING:
-            free(var->val.string);
             var->val.string = strdup((char *)ParamValue);
             if (var->val.string == NULL)
                 return M64ERR_NO_MEMORY;
