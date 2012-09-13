@@ -137,7 +137,7 @@ static config_var *config_var_create(const char *ParamName, const char *ParamHel
     if (var == NULL || ParamName == NULL)
         return NULL;
 
-    memset(var, sizeof(*var), 0);
+    memset(var, 0, sizeof(config_var));
 
     var->name = strdup(ParamName);
     if (var->name == NULL)
