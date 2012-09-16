@@ -176,14 +176,8 @@ endif
 ifeq ($(shell pkg-config --modversion freetype2 2>/dev/null),)
   $(error No FreeType 2 development libraries found!)
 endif
-ifeq ($(shell pkg-config --modversion gl 2>/dev/null),)
-  $(error No OpenGL development libraries found!)
-endif
-ifeq ($(shell pkg-config --modversion glu 2>/dev/null),)
-  $(error No OpenGL utility development libraries found!)
-endif
-CFLAGS += $(shell pkg-config --cflags libpng zlib freetype2 gl glu)
-LDLIBS +=  $(shell pkg-config --libs libpng zlib freetype2 gl glu)
+CFLAGS += $(shell pkg-config --cflags libpng zlib freetype2)
+LDLIBS +=  $(shell pkg-config --libs libpng zlib freetype2)
 
 # test for presence of SDL
 ifeq ($(shell which sdl-config 2>/dev/null),)
@@ -191,6 +185,20 @@ ifeq ($(shell which sdl-config 2>/dev/null),)
 endif
 CFLAGS	+= $(shell sdl-config --cflags)
 LDLIBS	+= $(shell sdl-config --libs)
+
+OSD ?= 1
+ifeq ($(OSD), 1)
+  CFLAGS += -DM64P_OSD
+  ifeq ($(shell pkg-config --modversion gl 2>/dev/null),)
+    $(error No OpenGL development libraries found!)
+  endif
+  ifeq ($(shell pkg-config --modversion glu 2>/dev/null),)
+    $(error No OpenGL utility development libraries found!)
+  endif
+
+  CFLAGS += $(shell pkg-config --cflags gl glu)
+  LDLIBS +=  $(shell pkg-config --libs gl glu)
+endif
 
 # set base program pointers and flags
 CC       ?= gcc
@@ -311,9 +319,13 @@ SOURCE = \
 	$(SRCDIR)/r4300/pure_interp.c \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \
-	$(SRCDIR)/osd/OGLFT.cpp \
-	$(SRCDIR)/osd/osd.cpp \
 	$(SRCDIR)/osd/screenshot.cpp
+
+ifeq ($(OSD), 1)
+SOURCE += \
+	$(SRCDIR)/osd/OGLFT.cpp \
+	$(SRCDIR)/osd/osd.cpp
+endif
 
 # source files for optional features
 ifneq ($(NO_ASM), 1)
@@ -392,6 +404,7 @@ targets:
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
+	@echo "    OSD=(1|0)     == Enable/disable build of OpenGL On-screen display"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
