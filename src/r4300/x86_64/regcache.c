@@ -152,32 +152,6 @@ void free_register(int reg)
   free_since[reg] = dst+1;
 }
 
-void stack_save_registers(void)
-{
-  int i;
-
-  for (i=0; i<8; i++)
-  {
-    if (last_access[i])
-    {
-      push_reg64(i);
-    }
-  }
-}
-
-void stack_load_registers(void)
-{
-  int i;
-
-  for (i=7; i>=0; i--)
-  {
-    if (last_access[i])
-    {
-      pop_reg64(i);
-    }
-  }
-}
-
 int lru_register(void)
 {
    unsigned long oldest_access = 0xFFFFFFFFFFFFFFFFULL;
