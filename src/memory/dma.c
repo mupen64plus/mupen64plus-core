@@ -34,6 +34,7 @@
 #include "r4300/interupt.h"
 #include "r4300/macros.h"
 #include "r4300/ops.h"
+#include "../r4300/new_dynarec/new_dynarec.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
@@ -217,6 +218,9 @@ void dma_pi_write(void)
                 {
                     invalid_code[rdram_address1>>12] = 1;
                 }
+#ifdef NEW_DYNAREC
+                invalidate_block(rdram_address1>>12);
+#endif
             }
             if (!invalid_code[rdram_address2>>12])
             {

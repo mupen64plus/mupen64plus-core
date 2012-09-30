@@ -44,6 +44,7 @@
 #include "r4300/interupt.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
+#include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef LIBMINIZIP
     #include <unzip.h>
@@ -414,12 +415,18 @@ static int savestates_load_m64p(char *filepath)
         tlb_e[i].phys_odd = GETDATA(curr, unsigned int);
     }
 
+#ifdef NEW_DYNAREC
+    pcaddr = GETDATA(curr, unsigned int);
+    pending_exception = 1;
+    invalidate_all_pages();
+#else
     if(r4300emu != CORE_PURE_INTERPRETER)
     {
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
     }
     generic_jump_to(GETDATA(curr, unsigned int)); // PC
+#endif
 
     next_interupt = GETDATA(curr, unsigned int);
     next_vi = GETDATA(curr, unsigned int);
@@ -430,7 +437,11 @@ static int savestates_load_m64p(char *filepath)
     to_little_endian_buffer(queue, 4, 256);
     load_eventqueue_infos(queue);
 
+#ifdef NEW_DYNAREC
+    last_addr = pcaddr;
+#else
     last_addr = PC->addr;
+#endif
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -704,12 +715,18 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     init_flashram();
 
+#ifdef NEW_DYNAREC
+    pcaddr = GETDATA(curr, unsigned int);
+    pending_exception = 1;
+    invalidate_all_pages();
+#else
     if(r4300emu != CORE_PURE_INTERPRETER)
     {
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
     }
     generic_jump_to(last_addr);
+#endif
 
     // assert(savestateData+savestateSize == curr)
 
@@ -1071,7 +1088,11 @@ static int savestates_save_m64p(char *filepath)
         PUTDATA(curr, unsigned int, tlb_e[i].end_odd);
         PUTDATA(curr, unsigned int, tlb_e[i].phys_odd);
     }
+#ifdef NEW_DYNAREC
+    PUTDATA(curr, unsigned int, pcaddr);
+#else
     PUTDATA(curr, unsigned int, PC->addr);
+#endif
 
     PUTDATA(curr, unsigned int, next_interupt);
     PUTDATA(curr, unsigned int, next_vi);
@@ -1129,7 +1150,11 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, unsigned int, get_event(VI_INT) - reg_cop0[9]); // vi_timer
+#ifdef NEW_DYNAREC
+    PUTDATA(curr, unsigned int, pcaddr);
+#else
     PUTDATA(curr, unsigned int, PC->addr);
+#endif
     PUTARRAY(reg, curr, long long int, 32);
     if ((Status & 0x04000000) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(0x04000000, 0);
