@@ -174,7 +174,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
 // -----------------------------------------------------------
 // Flow control 'fake' instructions
 // -----------------------------------------------------------
-void FIN_BLOCK(void)
+static void FIN_BLOCK(void)
 {
    if (!delay_slot)
      {
