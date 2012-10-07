@@ -88,12 +88,6 @@ enum
     NONE
 };
 
-/* ROM utility functions */
-
-m64p_system_type rom_country_code_to_system_type(char country_code);
-int rom_system_type_to_vi_limit(m64p_system_type system_type);
-int rom_system_type_to_ai_dac_rate(m64p_system_type system_type);
-
 /* Rom INI database structures and functions */
 
 /* The romdatabase contains the items mupen64plus indexes for each rom. These
