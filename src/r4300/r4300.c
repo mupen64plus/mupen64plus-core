@@ -211,7 +211,7 @@ Used by dynarec only, check should be unnecessary
      }
 }
 
-void NOTCOMPILED(void)
+static void NOTCOMPILED(void)
 {
    unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
 #ifdef CORE_DBG
@@ -234,7 +234,7 @@ called before NOTCOMPILED would have been executed
      dyna_jump();
 }
 
-void NOTCOMPILED2(void)
+static void NOTCOMPILED2(void)
 {
    NOTCOMPILED();
 }
