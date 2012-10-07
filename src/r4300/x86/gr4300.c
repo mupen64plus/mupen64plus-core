@@ -37,7 +37,9 @@
 extern unsigned int op;
 
 static precomp_instr fake_instr;
+#ifdef COMPARE_CORE
 static int eax, ebx, ecx, edx, esp, ebp, esi, edi;
+#endif
 
 int branch_taken;
 
@@ -323,6 +325,7 @@ void genlink_subblock(void)
    jmp(dst->addr+4);
 }
 
+#ifdef COMPARE_CORE
 void gendebug(void)
 {
    free_all_registers();
@@ -349,6 +352,7 @@ void gendebug(void)
    mov_reg32_m32(ESI, (unsigned int*)&esi);
    mov_reg32_m32(EDI, (unsigned int*)&edi);
 }
+#endif
 
 void gencallinterp(unsigned long addr, int jump)
 {
