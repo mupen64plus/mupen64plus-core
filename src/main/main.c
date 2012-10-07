@@ -235,7 +235,7 @@ void main_speedup(int percent)
     }
 }
 
-void main_speedset(int percent)
+static void main_speedset(int percent)
 {
     if (percent < 1 || percent > 1000)
     {
@@ -281,12 +281,12 @@ void main_set_fastforward(int enable)
 
 }
 
-void main_set_speedlimiter(int enable)
+static void main_set_speedlimiter(int enable)
 {
     l_MainSpeedLimit = enable ? 1 : 0;
 }
 
-int main_is_paused(void)
+static int main_is_paused(void)
 {
     return (g_EmulatorRunning && rompause);
 }
@@ -329,7 +329,7 @@ void main_advance_one(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 }
 
-void main_draw_volume_osd(void)
+static void main_draw_volume_osd(void)
 {
     char msgString[64];
     const char *volString;
