@@ -993,7 +993,7 @@ void make_w_mi_init_mode_reg(void)
         MI_register.w_mi_init_mode_reg |= 0x0002000;
 }
 
-void update_MI_init_mode_reg(void)
+static void update_MI_init_mode_reg(void)
 {
     MI_register.mi_init_mode_reg &= ~0x7F; // init_length
     MI_register.mi_init_mode_reg |= MI_register.w_mi_init_mode_reg & 0x7F;
@@ -1054,7 +1054,7 @@ void make_w_mi_intr_mask_reg(void)
         MI_register.w_mi_intr_mask_reg |= 0x0000800;
 }
 
-void update_MI_intr_mask_reg(void)
+static void update_MI_intr_mask_reg(void)
 {
     if (MI_register.w_mi_intr_mask_reg & 0x1)   MI_register.mi_intr_mask_reg &= ~0x1; // clear SP mask
     if (MI_register.w_mi_intr_mask_reg & 0x2)   MI_register.mi_intr_mask_reg |= 0x1; // set SP mask
@@ -1398,7 +1398,7 @@ static void do_SP_Task(void)
     }
 }
 
-void update_SP(void)
+static void update_SP(void)
 {
     if (sp_register.w_sp_status_reg & 0x1) // clear halt
         sp_register.sp_status_reg &= ~0x1;
@@ -1497,7 +1497,7 @@ void make_w_dpc_status(void)
         dpc_register.w_dpc_status |= 0x0000020;
 }
 
-void update_DPC(void)
+static void update_DPC(void)
 {
     if (dpc_register.w_dpc_status & 0x1) // clear xbus_dmem_dma
         dpc_register.dpc_status &= ~0x1;
