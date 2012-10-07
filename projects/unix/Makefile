@@ -173,11 +173,8 @@ endif
 ifeq ($(shell pkg-config --modversion zlib 2>/dev/null),)
   $(error No zlib development libraries found!)
 endif
-ifeq ($(shell pkg-config --modversion freetype2 2>/dev/null),)
-  $(error No FreeType 2 development libraries found!)
-endif
-CFLAGS += $(shell pkg-config --cflags libpng zlib freetype2)
-LDLIBS +=  $(shell pkg-config --libs libpng zlib freetype2)
+CFLAGS += $(shell pkg-config --cflags libpng zlib)
+LDLIBS +=  $(shell pkg-config --libs libpng zlib)
 
 # test for presence of SDL
 ifeq ($(shell which sdl-config 2>/dev/null),)
@@ -189,6 +186,9 @@ LDLIBS	+= $(shell sdl-config --libs)
 OSD ?= 1
 ifeq ($(OSD), 1)
   CFLAGS += -DM64P_OSD
+  ifeq ($(shell pkg-config --modversion freetype2 2>/dev/null),)
+    $(error No FreeType 2 development libraries found!)
+  endif
   ifeq ($(shell pkg-config --modversion gl 2>/dev/null),)
     $(error No OpenGL development libraries found!)
   endif
@@ -196,8 +196,8 @@ ifeq ($(OSD), 1)
     $(error No OpenGL utility development libraries found!)
   endif
 
-  CFLAGS += $(shell pkg-config --cflags gl glu)
-  LDLIBS +=  $(shell pkg-config --libs gl glu)
+  CFLAGS += $(shell pkg-config --cflags gl glu freetype2)
+  LDLIBS +=  $(shell pkg-config --libs gl glu freetype2)
 endif
 
 # set base program pointers and flags
