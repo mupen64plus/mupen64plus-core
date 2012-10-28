@@ -21,6 +21,13 @@
 
 #include <stdlib.h>
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
+
+#include <sys/mman.h>
+
 #include "api/m64p_types.h"
 
 #include "memory.h"
@@ -120,6 +127,13 @@ static FrameBufferInfo frameBufferInfos[6];
 static char framebufferRead[0x800];
 static int firstFrameBufferSetting;
 
+// uncomment to output count of calls to write_rdram():
+//#define COUNT_WRITE_RDRAM_CALLS 1
+
+#if defined( COUNT_WRITE_RDRAM_CALLS )
+	int writerdram_count = 1;
+#endif
+
 int init_memory(int DoByteSwap)
 {
     int i;
@@ -146,6 +160,7 @@ int init_memory(int DoByteSwap)
 
     //init RDRAM
     for (i=0; i<(0x800000/4); i++) rdram[i]=0;
+
     for (i=0; i</*0x40*/0x80; i++)
     {
         readmem[(0x8000+i)] = read_rdram;
@@ -1741,6 +1756,10 @@ void read_rdramFBd(void)
 
 void write_rdram(void)
 {
+#if defined( COUNT_WRITE_RDRAM_CALLS )
+	printf( "write_rdram, word=%i, count: %i", word, writerdram_count );
+	writerdram_count++;
+#endif
     *((unsigned int *)(rdramb + (address & 0xFFFFFF))) = word;
 }
 

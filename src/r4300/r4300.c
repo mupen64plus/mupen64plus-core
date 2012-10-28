@@ -36,6 +36,7 @@
 #include "macros.h"
 #include "recomp.h"
 #include "recomph.h"
+#include "new_dynarec/new_dynarec.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -590,7 +591,11 @@ void generic_jump_to(unsigned int address)
    if (r4300emu == CORE_PURE_INTERPRETER)
       PC->addr = address;
    else
+#ifdef NEW_DYNAREC
+      last_addr = pcaddr;
+#else
       jump_to(address);
+#endif
 }
 
 /* Refer to Figure 6-2 on page 155 and explanation on page B-11
@@ -690,8 +695,16 @@ int check_cop1_unusable(void)
 
 void update_count(void)
 {
-    Count = Count + (PC->addr - last_addr)/2;
-    last_addr = PC->addr;
+#ifdef NEW_DYNAREC
+    if (r4300emu != CORE_DYNAREC)
+    {
+#endif
+        Count = Count + (PC->addr - last_addr)/2;
+        last_addr = PC->addr;
+#ifdef NEW_DYNAREC
+    }
+#endif
+
 #ifdef COMPARE_CORE
    if (delay_slot)
      CoreCompareCallback();
@@ -991,8 +1004,14 @@ void r4300_execute(void)
         r4300emu = CORE_DYNAREC;
         init_blocks();
 
+#ifdef NEW_DYNAREC
+        new_dynarec_init();
+        new_dyna_start();
+        new_dynarec_cleanup();
+#else
         dyna_start(dynarec_setup_code);
         PC++;
+#endif
 #if defined(PROFILE_R4300)
         pfProfile = fopen("instructionaddrs.dat", "ab");
         for (i=0; i<0x100000; i++)

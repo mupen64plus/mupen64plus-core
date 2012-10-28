@@ -41,6 +41,7 @@
 #include "macros.h"
 #include "exception.h"
 #include "reset.h"
+#include "new_dynarec/new_dynarec.h"
 
 #ifdef WITH_LIRC
 #include "main/lirc.h"
@@ -578,7 +579,15 @@ void gen_interupt(void)
             break;
     }
 
+#ifdef NEW_DYNAREC
+    EPC = pcaddr;
+    pcaddr = 0x80000180;
+    Status |= 2;
+    Cause &= 0x7FFFFFFF;
+    pending_exception=1;
+#else
     exception_general();
+#endif
 
     if (!interupt_unsafe_state)
     {
