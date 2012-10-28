@@ -326,16 +326,6 @@ static inline void setb_reg8(unsigned int reg8)
    put8(0xC0 | reg8);
 }
 
-static inline void push_reg64(unsigned int reg64)
-{
-   put8(0x50 + reg64);
-}
-
-static inline void pop_reg64(unsigned int reg64)
-{
-   put8(0x58 + reg64);
-}
-
 static inline void test_m32rel_imm32(unsigned int *m32, unsigned int imm32)
 {
    int offset = rel_r15_offset(m32, "test_m32rel_imm32");

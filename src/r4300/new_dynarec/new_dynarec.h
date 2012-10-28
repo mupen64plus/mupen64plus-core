@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - regcache.c                                              *
+ *   Mupen64plus - r4300.h                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,28 +19,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __REGCACHE_H__
-#define __REGCACHE_H__
+#ifndef NEW_DYNAREC_H
+#define NEW_DYNAREC_H
 
-#include "r4300/recomp.h"
+#define NEW_DYNAREC_X86 1
+#define NEW_DYNAREC_AMD64 2
+#define NEW_DYNAREC_ARM 3
 
-void init_cache(precomp_instr* start);
-void free_registers_move_start(void);
-void free_all_registers(void);
-void free_register(int reg);
-int is64(unsigned int *addr);
-int lru_register(void);
-int lru_base_register(void);
-void set_register_state(int reg, unsigned int *addr, int dirty, int is64bits);
-int lock_register(int reg);
-void unlock_register(int reg);
-int allocate_register_32(unsigned int *addr);
-int allocate_register_64(unsigned long long *addr);
-int allocate_register_32_w(unsigned int *addr);
-int allocate_register_64_w(unsigned long long *addr);
-void allocate_register_32_manually(int reg, unsigned int *addr);
-void allocate_register_32_manually_w(int reg, unsigned int *addr);
-void build_wrappers(precomp_instr*, int, int, precomp_block*);
+extern int pcaddr;
+extern int pending_exception;
 
-#endif /* __REGCACHE_H__ */
+void invalidate_all_pages(void);
+void invalidate_block(u_int block);
+void new_dynarec_init(void);
+void new_dyna_start(void);
+void new_dynarec_cleanup(void);
 
+#endif /* NEW_DYNAREC_H */

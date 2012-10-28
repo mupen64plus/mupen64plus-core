@@ -354,6 +354,18 @@ ifneq ($(DYNAREC), )
     $(SRCDIR)/r4300/$(DYNAREC)/gtlb.c \
     $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
     $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
+
+  ifeq ($(NEW_DYNAREC), 1)
+    ifeq ($(DYNAREC), x86)
+      CFLAGS += -DNEW_DYNAREC=1
+    else
+      $(error NEW_DYNAREC is only supported on 32 bit x86)
+    endif
+
+    SOURCE += \
+      $(SRCDIR)/r4300/new_dynarec/linkage_$(DYNAREC).s \
+      $(SRCDIR)/r4300/new_dynarec/new_dynarec.c
+  endif
 else
   SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
 endif
@@ -386,6 +398,7 @@ endif
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
+OBJECTS += $(patsubst $(SRCDIR)/%.s, $(OBJDIR)/%.o, $(filter %.s, $(SOURCE)))
 OBJDIRS = $(dir $(OBJECTS))
 $(shell $(MKDIR) $(OBJDIRS))
 
@@ -405,6 +418,7 @@ targets:
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)     == Enable/disable build of OpenGL On-screen display"
+	@echo "    NEW_DYNAREC=1 == Replace dynamic recompiler with Ari64's experimental dynarec"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
@@ -459,6 +473,9 @@ ifeq ($(LTO), 1)
 endif
 
 # standard build rules
+$(OBJDIR)/%.o: $(SRCDIR)/%.s
+	$(COMPILE.c) -o $@ $<
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	$(COMPILE.c) -o $@ $<
 

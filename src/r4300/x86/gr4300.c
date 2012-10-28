@@ -657,9 +657,10 @@ void gentest_idle(void)
    
    mov_reg32_m32(reg, (unsigned int *)(&next_interupt));
    sub_reg32_m32(reg, (unsigned int *)(&Count));
-   cmp_reg32_imm8(reg, 3);
-   jbe_rj(12);
+   cmp_reg32_imm8(reg, 5);
+   jbe_rj(18);
    
+   sub_reg32_imm32(reg, 2); // 6
    and_reg32_imm32(reg, 0xFFFFFFFC); // 6
    add_m32_reg32((unsigned int *)(&Count), reg); // 6
    
@@ -984,7 +985,7 @@ void gentestl(void)
    
    jump_end_rel32();
 
-   genupdate_count(dst->addr-4);
+   genupdate_count(dst->addr+4);
    mov_m32_imm32(&last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
@@ -1025,7 +1026,7 @@ void gentestl_out(void)
    
    jump_end_rel32();
 
-   genupdate_count(dst->addr-4);
+   genupdate_count(dst->addr+4);
    mov_m32_imm32(&last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);

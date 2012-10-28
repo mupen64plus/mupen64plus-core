@@ -34,6 +34,7 @@
 #include "r4300/interupt.h"
 #include "r4300/macros.h"
 #include "r4300/ops.h"
+#include "../r4300/new_dynarec/new_dynarec.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
@@ -211,15 +212,20 @@ void dma_pi_write(void)
 
             if (!invalid_code[rdram_address1>>12])
             {
-                if (blocks[rdram_address1>>12]->block[(rdram_address1&0xFFF)/4].ops !=
+                if (!blocks[rdram_address1>>12] ||
+                    blocks[rdram_address1>>12]->block[(rdram_address1&0xFFF)/4].ops !=
                     current_instruction_table.NOTCOMPILED)
                 {
                     invalid_code[rdram_address1>>12] = 1;
                 }
+#ifdef NEW_DYNAREC
+                invalidate_block(rdram_address1>>12);
+#endif
             }
             if (!invalid_code[rdram_address2>>12])
             {
-                if (blocks[rdram_address2>>12]->block[(rdram_address2&0xFFF)/4].ops !=
+                if (!blocks[rdram_address1>>12] ||
+                    blocks[rdram_address2>>12]->block[(rdram_address2&0xFFF)/4].ops !=
                     current_instruction_table.NOTCOMPILED)
                 {
                     invalid_code[rdram_address2>>12] = 1;
