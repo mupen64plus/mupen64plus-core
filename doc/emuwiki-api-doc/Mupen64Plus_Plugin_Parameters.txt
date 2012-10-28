@@ -34,8 +34,8 @@ These are standard parameters which are used by the Mupen64Plus plugins.  The be
 |Size of secondary buffer in samples. This is SDL's hardware buffer.
 |-
 |RESAMPLE
-|M64TYPE_INT
-|Audio resampling algorithm.  1 = unfiltered, 2 = SINC resampling (Best Quality, requires libsamplerate)
+|M64TYPE_STRING
+|Audio resampling algorithm.  "trivial" for fastest, lowest-quality algorithm.  If compiled with SPEEX support, this can be "speex-fixed-0" to "speex-fixed-10".  If compiled with libsrc support, this can be "src-sinc-best-quality", "src-sinc-medium-quality", "src-sinc-fastest", "src-zero-order-hold", or "src-linear".
 |-
 |VOLUME_CONTROL_TYPE
 |M64TYPE_INT
