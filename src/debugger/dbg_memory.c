@@ -78,21 +78,21 @@ static MEMBREAKWRITE(write_rom, 8);
 #include <dis-asm.h>
 #include <stdarg.h>
 
-int  lines_recompiled;
-uint32 addr_recompiled;
-int  num_decoded;
+static int  lines_recompiled;
+static uint32 addr_recompiled;
+static int  num_decoded;
 
-char opcode_recompiled[564][MAX_DISASSEMBLY];
-char args_recompiled[564][MAX_DISASSEMBLY*4];
-void *opaddr_recompiled[564];
+static char opcode_recompiled[564][MAX_DISASSEMBLY];
+static char args_recompiled[564][MAX_DISASSEMBLY*4];
+static void *opaddr_recompiled[564];
 
-disassemble_info dis_info;
+static disassemble_info dis_info;
 
 #define CHECK_MEM(address) \
    if (!invalid_code[(address) >> 12] && blocks[(address) >> 12]->block[((address) & 0xFFF) / 4].ops != current_instruction_table.NOTCOMPILED) \
      invalid_code[(address) >> 12] = 1;
 
-void process_opcode_out(void *strm, const char *fmt, ...){
+static void process_opcode_out(void *strm, const char *fmt, ...){
   va_list ap;
   va_start(ap, fmt);
   char *arg;
@@ -121,7 +121,7 @@ void process_opcode_out(void *strm, const char *fmt, ...){
 
 // Callback function that will be called by libopcodes to read the 
 // bytes to disassemble ('read_memory_func' member of 'disassemble_info').
-int read_memory_func(bfd_vma memaddr, bfd_byte *myaddr, 
+static int read_memory_func(bfd_vma memaddr, bfd_byte *myaddr, 
                             unsigned int length, disassemble_info *info) {
   char* from = (char*)(long)(memaddr);
   char* to =   (char*)myaddr;
@@ -145,7 +145,7 @@ void init_host_disassembler(void){
   dis_info.read_memory_func = read_memory_func;
 }
 
-void decode_recompiled(uint32 addr)
+static void decode_recompiled(uint32 addr)
 {
     unsigned char *assemb, *end_addr;
 

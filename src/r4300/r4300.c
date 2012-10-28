@@ -47,10 +47,8 @@ unsigned int r4300emu = 0;
 int no_compiled_jump = 0;
 int stop, llbit, rompause;
 long long int reg[32], hi, lo;
-long long int local_rs, local_rt;
+long long int local_rs;
 unsigned int reg_cop0[32];
-int local_rs32;
-unsigned int jump_target;
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
 long long int reg_cop1_fgr_64[32];
@@ -177,7 +175,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
 // -----------------------------------------------------------
 // Flow control 'fake' instructions
 // -----------------------------------------------------------
-void FIN_BLOCK(void)
+static void FIN_BLOCK(void)
 {
    if (!delay_slot)
      {
@@ -214,7 +212,7 @@ Used by dynarec only, check should be unnecessary
      }
 }
 
-void NOTCOMPILED(void)
+static void NOTCOMPILED(void)
 {
    unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
 #ifdef CORE_DBG
@@ -237,7 +235,7 @@ called before NOTCOMPILED would have been executed
      dyna_jump();
 }
 
-void NOTCOMPILED2(void)
+static void NOTCOMPILED2(void)
 {
    NOTCOMPILED();
 }

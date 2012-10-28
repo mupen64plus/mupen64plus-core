@@ -59,6 +59,10 @@ m64p_rom_header   ROM_HEADER;
 rom_params        ROM_PARAMS;
 m64p_rom_settings ROM_SETTINGS;
 
+static m64p_system_type rom_country_code_to_system_type(char country_code);
+static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type);
+static int rom_system_type_to_vi_limit(m64p_system_type system_type);
+
 /* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
 static int is_valid_rom(const unsigned char *buffer)
 {
@@ -232,7 +236,7 @@ m64p_error close_rom(void)
 /* ROM utility functions */
 
 // Get the system type associated to a ROM country code.
-m64p_system_type rom_country_code_to_system_type(char country_code)
+static m64p_system_type rom_country_code_to_system_type(char country_code)
 {
     switch (country_code)
     {
@@ -258,7 +262,7 @@ m64p_system_type rom_country_code_to_system_type(char country_code)
 }
 
 // Get the VI (vertical interrupt) limit associated to a ROM system type.
-int rom_system_type_to_vi_limit(m64p_system_type system_type)
+static int rom_system_type_to_vi_limit(m64p_system_type system_type)
 {
     switch (system_type)
     {
@@ -272,7 +276,7 @@ int rom_system_type_to_vi_limit(m64p_system_type system_type)
     }
 }
 
-int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
+static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
 {
     switch (system_type)
     {

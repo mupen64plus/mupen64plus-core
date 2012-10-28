@@ -797,7 +797,7 @@ static int savestates_load_pj64_unc(char *filepath)
     return 1;
 }
 
-savestates_type savestates_detect_type(char *filepath)
+static savestates_type savestates_detect_type(char *filepath)
 {
     unsigned char magic[4];
     FILE *f = fopen(filepath, "rb");

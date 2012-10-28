@@ -383,15 +383,11 @@ void write_pifh(void);
 void write_pifd(void);
 
 void make_w_sp_status_reg(void);
-void update_SP(void);
 void make_w_dpc_status(void);
-void update_DPC(void);
 void make_w_mi_init_mode_reg(void);
-void update_MI_init_mode_reg(void);
 void update_MI_intr_mode_reg(void);
 void update_MI_init_mask_reg(void);
 void make_w_mi_intr_mask_reg(void);
-void update_MI_intr_mask_reg(void);
 void update_ai_dacrate(unsigned int word);
 void update_vi_status(unsigned int word);
 void update_vi_width(unsigned int word);

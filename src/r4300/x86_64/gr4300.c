@@ -77,7 +77,9 @@ char instr_typename[][20] = { "Load", "Store", "Data move/convert", "32-bit math
 extern unsigned int op;
 
 static precomp_instr fake_instr;
+#ifdef COMPARE_CORE
 static long long debug_reg_storage[8];
+#endif
 
 int branch_taken = 0;
 
@@ -302,6 +304,7 @@ void genlink_subblock(void)
    jmp(dst->addr+4);
 }
 
+#ifdef COMPARE_CORE
 void gendebug(void)
 {
    free_all_registers();
@@ -333,6 +336,7 @@ void gendebug(void)
    mov_reg64_preg64pimm8(RBX, RAX,  8);
    mov_reg64_preg64(RAX, RAX);
 }
+#endif
 
 void gencallinterp(unsigned long addr, int jump)
 {

@@ -186,7 +186,6 @@ void gensc(void);
 void gennotcompiled(void);
 void genjal_idle(void);
 void genjal_out(void);
-void gendebug(void);
 void genbeq_out(void);
 void gensyscall(void);
 void gensync(void);
@@ -300,6 +299,10 @@ void gentestl(void);
 void gentestl_out(void);
 void gencheck_cop1_unusable(void);
 void genll(void);
+
+#ifdef COMPARE_CORE
+void gendebug(void);
+#endif
 
 #endif
 

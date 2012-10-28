@@ -380,6 +380,8 @@ ifeq ($(shell pkg-config --modversion minizip 2>/dev/null),)
 	$(SRCDIR)/main/zip/ioapi.c \
 	$(SRCDIR)/main/zip/zip.c \
 	$(SRCDIR)/main/zip/unzip.c
+
+  CFLAGS += -DNOCRYPT -DNOUNCRYPT
 else
   CFLAGS += $(shell pkg-config --cflags minizip) -DLIBMINIZIP
   LDLIBS +=  $(shell pkg-config --libs minizip)
