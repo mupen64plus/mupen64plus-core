@@ -46,6 +46,7 @@
 #include "main/rom.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
+#include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -76,8 +77,10 @@ unsigned char *SP_IMEMb = (unsigned char*)(SP_DMEM+0x1000/4);
 unsigned int PIF_RAM[0x40/4];
 unsigned char *PIF_RAMb = (unsigned char *)(PIF_RAM);
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
 unsigned int address = 0;
+#endif
 // *address_low = the lower 16 bit of the address :
 #ifdef M64P_BIG_ENDIAN
 static unsigned short *address_low = (unsigned short *)(&address)+1;

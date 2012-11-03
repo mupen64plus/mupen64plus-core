@@ -40,6 +40,8 @@
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
 #include "assem_x86.h"
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM
+#include "assem_arm.h"
 #else
 #error Unsupported dynarec architecture
 #endif
@@ -224,6 +226,9 @@ void fp_exception();
 void fp_exception_ds();
 void jump_syscall();
 void jump_eret();
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+static void invalidate_addr(u_int addr);
+#endif
 
 // TLB
 void TLBWI_new();
@@ -904,7 +909,8 @@ static void mult64(uint64_t m1,uint64_t m2)
      }
 }
 
-/*static void multu64(uint64_t m1,uint64_t m2)
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+static void multu64(uint64_t m1,uint64_t m2)
 {
    unsigned long long int op1, op2, op3, op4;
    unsigned long long int result1, result2, result3, result4;
@@ -930,7 +936,8 @@ static void mult64(uint64_t m1,uint64_t m2)
    
   //printf("TRACE: dmultu %8x%8x %8x%8x\n",(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                      ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
-}*/
+}
+#endif
 
 static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
 {
@@ -957,6 +964,8 @@ static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
 #include "assem_x86.c"
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM
+#include "assem_arm.c"
 #else
 #error Unsupported dynarec architecture
 #endif
@@ -1094,7 +1103,10 @@ static void ll_kill_pointers(struct ll_entry *head,int addr,int shift)
        (((ptr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==(addr>>shift)))
     {
       inv_debug("EXP: Kill pointer at %x (%x)\n",(int)head->addr,head->vaddr);
-      kill_pointer(head->addr);
+      u_int host_addr=kill_pointer(head->addr);
+      #if NEW_DYNAREC == NEW_DYNAREC_ARM
+        needs_clear_cache[(host_addr-(u_int)base_addr)>>17]|=1<<(((host_addr-(u_int)base_addr)>>12)&31);
+      #endif
     }
     head=head->next;
   }
@@ -1118,7 +1130,10 @@ static void invalidate_page(u_int page)
   jump_out[page]=0;
   while(head!=NULL) {
     inv_debug("INVALIDATE: kill pointer to %x (%x)\n",head->vaddr,(int)head->addr);
-    kill_pointer(head->addr);
+    u_int host_addr=kill_pointer(head->addr);
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+      needs_clear_cache[(host_addr-(u_int)base_addr)>>17]|=1<<(((host_addr-(u_int)base_addr)>>12)&31);
+    #endif
     next=head->next;
     free(head);
     head=next;
@@ -1171,6 +1186,9 @@ void invalidate_block(u_int block)
   for(first=page+1;first<last;first++) {
     invalidate_page(first);
   }
+  #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    do_clear_cache();
+  #endif
   
   // Don't trap writes
   invalid_code[block]=1;
@@ -1188,6 +1206,14 @@ void invalidate_block(u_int block)
   memset(mini_ht,-1,sizeof(mini_ht));
   #endif
 }
+
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+static void invalidate_addr(u_int addr)
+{
+  invalidate_block(addr>>12);
+}
+#endif
+
 // This is called when loading a save state.
 // Anything could have changed, so invalidate everything.
 void invalidate_all_pages()
@@ -1200,6 +1226,10 @@ void invalidate_all_pages()
       restore_candidate[(page&2047)>>3]|=1<<(page&7);
       restore_candidate[((page&2047)>>3)+256]|=1<<(page&7);
     }
+  #if NEW_DYNAREC == NEW_DYNAREC_ARM
+  __clear_cache((void *)base_addr,(void *)base_addr+(1<<TARGET_SIZE_2));
+  //cacheflush((void *)base_addr,(void *)base_addr+(1<<TARGET_SIZE_2),0);
+  #endif
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
   #endif
@@ -2034,6 +2064,11 @@ static void memdebug(int i)
     rlist();
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     printf("TRACE: %x\n",(&i)[-1]);
+    #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    int j;
+    printf("TRACE: %x \n",(&j)[10]);
+    printf("TRACE: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n",(&j)[1],(&j)[2],(&j)[3],(&j)[4],(&j)[5],(&j)[6],(&j)[7],(&j)[8],(&j)[9],(&j)[10],(&j)[11],(&j)[12],(&j)[13],(&j)[14],(&j)[15],(&j)[16],(&j)[17],(&j)[18],(&j)[19],(&j)[20]);
     #endif
     //fflush(stdout);
   }
@@ -2960,6 +2995,15 @@ static void load_assemble(int i,struct regstat *i_regs)
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
         emit_writeword(HOST_CCREG,(int)&Count);
         #endif
+        #if NEW_DYNAREC == NEW_DYNAREC_ARM
+        if(get_reg(i_regs->regmap,CCREG)<0)
+          emit_loadreg(CCREG,0);
+        else
+          emit_mov(HOST_CCREG,0);
+        emit_add(0,ECX,0);
+        emit_addimm(0,2*ccadj[i],0);
+        emit_writeword(0,(int)&Count);
+        #endif
     emit_call((int)memdebug);
     //emit_popa();
     restore_regs(0x100f);
@@ -3132,6 +3176,9 @@ static void store_assemble(int i,struct regstat *i_regs)
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     emit_pusha();
     #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    save_regs(0x100f);
+    #endif
         emit_readword((int)&last_count,ECX);
         #if NEW_DYNAREC == NEW_DYNAREC_X86
         if(get_reg(i_regs->regmap,CCREG)<0)
@@ -3140,9 +3187,21 @@ static void store_assemble(int i,struct regstat *i_regs)
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
         emit_writeword(HOST_CCREG,(int)&Count);
         #endif
+        #if NEW_DYNAREC == NEW_DYNAREC_ARM
+        if(get_reg(i_regs->regmap,CCREG)<0)
+          emit_loadreg(CCREG,0);
+        else
+          emit_mov(HOST_CCREG,0);
+        emit_add(0,ECX,0);
+        emit_addimm(0,2*ccadj[i],0);
+        emit_writeword(0,(int)&Count);
+        #endif
     emit_call((int)memdebug);
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     emit_popa();
+    #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    restore_regs(0x100f);
     #endif
   }
 */
@@ -7505,10 +7564,17 @@ void new_dynarec_init()
 
   printf("Init new dynarec\n");
 
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+  if ((base_addr = mmap ((u_char *)BASE_ADDR, 1<<TARGET_SIZE_2,
+            PROT_READ | PROT_WRITE | PROT_EXEC,
+            MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+            -1, 0)) <= 0) {printf("mmap() failed\n");}
+#else
   if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_PRIVATE | MAP_ANONYMOUS,
             -1, 0)) <= 0) {printf("mmap() failed\n");}
+#endif
   out=(u_char *)base_addr;
 
   rdword=&readmem_dword;
@@ -10339,6 +10405,9 @@ int new_recompile_block(int addr)
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     printf("pre: eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7]);
     #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    printf("pre: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d\n",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][4],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7],regmap_pre[i][8],regmap_pre[i][9],regmap_pre[i][10],regmap_pre[i][12]);
+    #endif
     printf("needs: ");
     if(needed_reg[i]&1) printf("eax ");
     if((needed_reg[i]>>1)&1) printf("ecx ");
@@ -10381,6 +10450,22 @@ int new_recompile_block(int addr)
     if((regs[i].wasdirty>>6)&1) printf("esi ");
     if((regs[i].wasdirty>>7)&1) printf("edi ");
     #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    printf("entry: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d\n",regs[i].regmap_entry[0],regs[i].regmap_entry[1],regs[i].regmap_entry[2],regs[i].regmap_entry[3],regs[i].regmap_entry[4],regs[i].regmap_entry[5],regs[i].regmap_entry[6],regs[i].regmap_entry[7],regs[i].regmap_entry[8],regs[i].regmap_entry[9],regs[i].regmap_entry[10],regs[i].regmap_entry[12]);
+    printf("dirty: ");
+    if(regs[i].wasdirty&1) printf("r0 ");
+    if((regs[i].wasdirty>>1)&1) printf("r1 ");
+    if((regs[i].wasdirty>>2)&1) printf("r2 ");
+    if((regs[i].wasdirty>>3)&1) printf("r3 ");
+    if((regs[i].wasdirty>>4)&1) printf("r4 ");
+    if((regs[i].wasdirty>>5)&1) printf("r5 ");
+    if((regs[i].wasdirty>>6)&1) printf("r6 ");
+    if((regs[i].wasdirty>>7)&1) printf("r7 ");
+    if((regs[i].wasdirty>>8)&1) printf("r8 ");
+    if((regs[i].wasdirty>>9)&1) printf("r9 ");
+    if((regs[i].wasdirty>>10)&1) printf("r10 ");
+    if((regs[i].wasdirty>>12)&1) printf("r12 ");
+    #endif
     printf("\n");
     disassemble_inst(i);
     //printf ("ccadj[%d] = %d\n",i,ccadj[i]);
@@ -10394,6 +10479,21 @@ int new_recompile_block(int addr)
     if((regs[i].dirty>>6)&1) printf("esi ");
     if((regs[i].dirty>>7)&1) printf("edi ");
     #endif
+    #if NEW_DYNAREC == NEW_DYNAREC_ARM
+    printf("r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",regs[i].regmap[0],regs[i].regmap[1],regs[i].regmap[2],regs[i].regmap[3],regs[i].regmap[4],regs[i].regmap[5],regs[i].regmap[6],regs[i].regmap[7],regs[i].regmap[8],regs[i].regmap[9],regs[i].regmap[10],regs[i].regmap[12]);
+    if(regs[i].dirty&1) printf("r0 ");
+    if((regs[i].dirty>>1)&1) printf("r1 ");
+    if((regs[i].dirty>>2)&1) printf("r2 ");
+    if((regs[i].dirty>>3)&1) printf("r3 ");
+    if((regs[i].dirty>>4)&1) printf("r4 ");
+    if((regs[i].dirty>>5)&1) printf("r5 ");
+    if((regs[i].dirty>>6)&1) printf("r6 ");
+    if((regs[i].dirty>>7)&1) printf("r7 ");
+    if((regs[i].dirty>>8)&1) printf("r8 ");
+    if((regs[i].dirty>>9)&1) printf("r9 ");
+    if((regs[i].dirty>>10)&1) printf("r10 ");
+    if((regs[i].dirty>>12)&1) printf("r12 ");
+    #endif
     printf("\n");
     if(regs[i].isconst) {
       printf("constants: ");
@@ -10405,6 +10505,20 @@ int new_recompile_block(int addr)
       if((regs[i].isconst>>5)&1) printf("ebp=%x ",(int)constmap[i][5]);
       if((regs[i].isconst>>6)&1) printf("esi=%x ",(int)constmap[i][6]);
       if((regs[i].isconst>>7)&1) printf("edi=%x ",(int)constmap[i][7]);
+      #endif
+      #if NEW_DYNAREC == NEW_DYNAREC_ARM
+      if(regs[i].isconst&1) printf("r0=%x ",(int)constmap[i][0]);
+      if((regs[i].isconst>>1)&1) printf("r1=%x ",(int)constmap[i][1]);
+      if((regs[i].isconst>>2)&1) printf("r2=%x ",(int)constmap[i][2]);
+      if((regs[i].isconst>>3)&1) printf("r3=%x ",(int)constmap[i][3]);
+      if((regs[i].isconst>>4)&1) printf("r4=%x ",(int)constmap[i][4]);
+      if((regs[i].isconst>>5)&1) printf("r5=%x ",(int)constmap[i][5]);
+      if((regs[i].isconst>>6)&1) printf("r6=%x ",(int)constmap[i][6]);
+      if((regs[i].isconst>>7)&1) printf("r7=%x ",(int)constmap[i][7]);
+      if((regs[i].isconst>>8)&1) printf("r8=%x ",(int)constmap[i][8]);
+      if((regs[i].isconst>>9)&1) printf("r9=%x ",(int)constmap[i][9]);
+      if((regs[i].isconst>>10)&1) printf("r10=%x ",(int)constmap[i][10]);
+      if((regs[i].isconst>>12)&1) printf("r12=%x ",(int)constmap[i][12]);
       #endif
       printf("\n");
     }
@@ -10439,6 +10553,21 @@ int new_recompile_block(int addr)
       if((branch_regs[i].dirty>>5)&1) printf("ebp ");
       if((branch_regs[i].dirty>>6)&1) printf("esi ");
       if((branch_regs[i].dirty>>7)&1) printf("edi ");
+      #endif
+      #if NEW_DYNAREC == NEW_DYNAREC_ARM
+      printf("branch(%d): r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[4],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7],branch_regs[i].regmap[8],branch_regs[i].regmap[9],branch_regs[i].regmap[10],branch_regs[i].regmap[12]);
+      if(branch_regs[i].dirty&1) printf("r0 ");
+      if((branch_regs[i].dirty>>1)&1) printf("r1 ");
+      if((branch_regs[i].dirty>>2)&1) printf("r2 ");
+      if((branch_regs[i].dirty>>3)&1) printf("r3 ");
+      if((branch_regs[i].dirty>>4)&1) printf("r4 ");
+      if((branch_regs[i].dirty>>5)&1) printf("r5 ");
+      if((branch_regs[i].dirty>>6)&1) printf("r6 ");
+      if((branch_regs[i].dirty>>7)&1) printf("r7 ");
+      if((branch_regs[i].dirty>>8)&1) printf("r8 ");
+      if((branch_regs[i].dirty>>9)&1) printf("r9 ");
+      if((branch_regs[i].dirty>>10)&1) printf("r10 ");
+      if((branch_regs[i].dirty>>12)&1) printf("r12 ");
       #endif
       printf(" 32:");
       for(r=0;r<=CCREG;r++) {
@@ -10757,7 +10886,12 @@ int new_recompile_block(int addr)
   //printf("shadow buffer: %x-%x\n",(int)copy,(int)copy+slen*4);
   memcpy(copy,source,slen*4);
   copy+=slen*4;
-  
+
+  #if NEW_DYNAREC == NEW_DYNAREC_ARM
+  __clear_cache((void *)beginning,out);
+  //cacheflush((void *)beginning,out,0);
+  #endif
+
   // If we're within 256K of the end of the buffer,
   // start over from the beginning. (Is 256K enough?)
   if(out > (u_char *)(base_addr+(1<<TARGET_SIZE_2)-MAX_OUTPUT_BLOCK_SIZE-JUMP_TABLE_SIZE))
@@ -10818,6 +10952,10 @@ int new_recompile_block(int addr)
         break;
       case 3:
         // Clear jump_out
+        #if NEW_DYNAREC == NEW_DYNAREC_ARM
+        if((expirep&2047)==0) 
+          do_clear_cache();
+        #endif
         ll_remove_matching_addrs(jump_out+(expirep&2047),base,shift);
         ll_remove_matching_addrs(jump_out+2048+(expirep&2047),base,shift);
         break;

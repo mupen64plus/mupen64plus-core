@@ -45,19 +45,23 @@
 
 unsigned int r4300emu = 0;
 int no_compiled_jump = 0;
-int stop, llbit, rompause;
+int llbit, rompause;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+int stop;
 long long int reg[32], hi, lo;
-long long int local_rs;
 unsigned int reg_cop0[32];
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
-long long int reg_cop1_fgr_64[32];
 int FCR0, FCR31;
+unsigned int next_interupt;
+precomp_instr *PC;
+#endif
+long long int local_rs;
+long long int reg_cop1_fgr_64[32];
 tlb tlb_e[32];
 unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
 unsigned long long int debug_count = 0;
-unsigned int next_interupt, CIC_Chip;
-precomp_instr *PC;
+unsigned int CIC_Chip;
 char invalid_code[0x100000];
 
 precomp_block *blocks[0x100000], *actual;

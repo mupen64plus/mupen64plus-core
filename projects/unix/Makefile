@@ -85,6 +85,16 @@ ifneq ("$(filter ppc64 powerpc64,$(HOST_CPU))","")
   NO_ASM := 1
   $(warning Architecture "$(HOST_CPU)" not officially supported.')
 endif
+ifneq ("$(filter arm%,$(HOST_CPU))","")
+  ifeq ("$(filter arm%b,$(HOST_CPU))","")
+    CPU := ARM
+    ARCH_DETECTED := 32BITS
+    PIC ?= 1
+    NEW_DYNAREC := 1
+    CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+    $(warning Architecture "$(HOST_CPU)" not officially supported.')
+  endif
+endif
 ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
@@ -336,34 +346,48 @@ ifneq ($(NO_ASM), 1)
       DYNAREC = x86
     endif
   endif
+  ifeq ($(CPU), ARM)
+    ifeq ($(ARCH_DETECTED), 32BITS)
+      DYNAREC = arm
+    endif
+  endif
 endif
 ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
-  SOURCE += \
-    $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop0.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop1.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop1_d.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop1_l.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop1_s.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gcop1_w.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gr4300.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gregimm.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gspecial.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/gtlb.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
-    $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
+
+  ifeq ($(DYNAREC), x86)
+    SOURCE += \
+      $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop0.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop1.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_d.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_l.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_s.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_w.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gr4300.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gregimm.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gspecial.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/gtlb.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
+      $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
+  else
+    SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
+  endif
 
   ifeq ($(NEW_DYNAREC), 1)
     ifeq ($(DYNAREC), x86)
       CFLAGS += -DNEW_DYNAREC=1
     else
-      $(error NEW_DYNAREC is only supported on 32 bit x86)
+      ifeq ($(DYNAREC), arm)
+        CFLAGS += -DNEW_DYNAREC=3
+      else
+        $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
+      endif
     endif
 
     SOURCE += \
-      $(SRCDIR)/r4300/new_dynarec/linkage_$(DYNAREC).s \
+      $(SRCDIR)/r4300/new_dynarec/linkage_$(DYNAREC).S \
       $(SRCDIR)/r4300/new_dynarec/new_dynarec.c
   endif
 else
@@ -400,7 +424,7 @@ endif
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
-OBJECTS += $(patsubst $(SRCDIR)/%.s, $(OBJDIR)/%.o, $(filter %.s, $(SOURCE)))
+OBJECTS += $(patsubst $(SRCDIR)/%.S, $(OBJDIR)/%.o, $(filter %.S, $(SOURCE)))
 OBJDIRS = $(dir $(OBJECTS))
 $(shell $(MKDIR) $(OBJDIRS))
 
@@ -475,7 +499,7 @@ ifeq ($(LTO), 1)
 endif
 
 # standard build rules
-$(OBJDIR)/%.o: $(SRCDIR)/%.s
+$(OBJDIR)/%.o: $(SRCDIR)/%.S
 	$(COMPILE.c) -o $@ $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
