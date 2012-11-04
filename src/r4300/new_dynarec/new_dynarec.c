@@ -126,7 +126,7 @@ static int stubcount;
 static int literalcount;
 static int is_delayslot;
 static int cop1_usable;
-static u_char *out;
+u_char *out;
 struct ll_entry *jump_in[4096];
 static struct ll_entry *jump_out[4096];
 struct ll_entry *jump_dirty[4096];
