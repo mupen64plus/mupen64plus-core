@@ -227,13 +227,13 @@ static u_int jump_table_symbols[] = {
   (int)neg_d
 };
 
-unsigned int needs_clear_cache[1<<(TARGET_SIZE_2-17)];
+static unsigned int needs_clear_cache[1<<(TARGET_SIZE_2-17)];
 
 #define JUMP_TABLE_SIZE (sizeof(jump_table_symbols)*2)
 
 /* Linker */
 
-void set_jump_target(int addr,u_int target)
+static void set_jump_target(int addr,u_int target)
 {
   u_char *ptr=(u_char *)addr;
   u_int *ptr2=(u_int *)ptr;
@@ -267,7 +267,8 @@ void set_jump_target(int addr,u_int target)
 // This optionally copies the instruction from the target of the branch into
 // the space before the branch.  Works, but the difference in speed is
 // usually insignificant.
-void set_jump_target_fillslot(int addr,u_int target,int copy)
+/*
+static void set_jump_target_fillslot(int addr,u_int target,int copy)
 {
   u_char *ptr=(u_char *)addr;
   u_int *ptr2=(u_int *)ptr;
@@ -296,16 +297,17 @@ void set_jump_target_fillslot(int addr,u_int target,int copy)
     *ptr2=(*ptr2&0xFF000000)|(((target-(u_int)ptr2-8)<<6)>>8);
   }
 }
+*/
 
 /* Literal pool */
-void add_literal(int addr,int val)
+static void add_literal(int addr,int val)
 {
   literals[literalcount][0]=addr;
   literals[literalcount][1]=val;
   literalcount++; 
 } 
 
-void *kill_pointer(void *stub)
+static void *kill_pointer(void *stub)
 {
   int *ptr=(int *)(stub+4);
   assert((*ptr&0x0ff00000)==0x05900000);
@@ -316,7 +318,7 @@ void *kill_pointer(void *stub)
   return i_ptr;
 }
 
-int get_pointer(void *stub)
+static int get_pointer(void *stub)
 {
   //printf("get_pointer(%x)\n",(int)stub);
   int *ptr=(int *)(stub+4);
@@ -330,7 +332,7 @@ int get_pointer(void *stub)
 
 // Find the "clean" entry point from a "dirty" entry point
 // by skipping past the call to verify_code
-u_int get_clean_addr(int addr)
+static u_int get_clean_addr(int addr)
 {
   int *ptr=(int *)addr;
   #ifdef ARMv5_ONLY
@@ -385,7 +387,7 @@ static int verify_dirty(void *addr)
 
 // This doesn't necessarily find all clean entry points, just
 // guarantees that it's not dirty
-int isclean(int addr)
+static int isclean(int addr)
 {
   #ifdef ARMv5_ONLY
   int *ptr=((u_int *)addr)+4;
@@ -400,7 +402,7 @@ int isclean(int addr)
   return 1;
 }
 
-void get_bounds(int addr,u_int *start,u_int *end)
+static void get_bounds(int addr,u_int *start,u_int *end)
 {
   u_int *ptr=(u_int *)addr;
   #ifdef ARMv5_ONLY
@@ -435,7 +437,7 @@ void get_bounds(int addr,u_int *start,u_int *end)
 
 // Note: registers are allocated clean (unmodified state)
 // if you intend to modify the register, you must call dirty_reg().
-void alloc_reg(struct regstat *cur,int i,signed char reg)
+static void alloc_reg(struct regstat *cur,int i,signed char reg)
 {
   int r,hr;
   int preferred_reg = (reg&7);
@@ -600,7 +602,7 @@ void alloc_reg(struct regstat *cur,int i,signed char reg)
   printf("This shouldn't happen (alloc_reg)");exit(1);
 }
 
-void alloc_reg64(struct regstat *cur,int i,signed char reg)
+static void alloc_reg64(struct regstat *cur,int i,signed char reg)
 {
   int preferred_reg = 8+(reg&1);
   int r,hr;
@@ -769,7 +771,7 @@ void alloc_reg64(struct regstat *cur,int i,signed char reg)
 // Allocate a temporary register.  This is done without regard to
 // dirty status or whether the register we request is on the unneeded list
 // Note: This will only allocate one register, even if called multiple times
-void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
+static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
 {
   int r,hr;
   int preferred_reg = -1;
@@ -889,7 +891,7 @@ void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
   printf("This shouldn't happen");exit(1);
 }
 // Allocate a specific ARM register.
-void alloc_arm_reg(struct regstat *cur,int i,signed char reg,char hr)
+static void alloc_arm_reg(struct regstat *cur,int i,signed char reg,char hr)
 {
   int n;
   int dirty=0;
@@ -910,7 +912,7 @@ void alloc_arm_reg(struct regstat *cur,int i,signed char reg,char hr)
 }
 
 // Alloc cycle count into dedicated register
-void alloc_cc(struct regstat *cur,int i)
+static void alloc_cc(struct regstat *cur,int i)
 {
   alloc_arm_reg(cur,i,CCREG,HOST_CCREG);
 }
@@ -920,7 +922,7 @@ void alloc_cc(struct regstat *cur,int i)
 
 /* Assembler */
 
-char regname[16][4] = {
+static char regname[16][4] = {
  "r0",
  "r1",
  "r2",
@@ -938,11 +940,11 @@ char regname[16][4] = {
  "lr",
  "pc"};
 
-void output_byte(u_char byte)
+static void output_byte(u_char byte)
 {
   *(out++)=byte;
 }
-void output_modrm(u_char mod,u_char rm,u_char ext)
+static void output_modrm(u_char mod,u_char rm,u_char ext)
 {
   assert(mod<4);
   assert(rm<8);
@@ -950,27 +952,20 @@ void output_modrm(u_char mod,u_char rm,u_char ext)
   u_char byte=(mod<<6)|(ext<<3)|rm;
   *(out++)=byte;
 }
-void output_sib(u_char scale,u_char index,u_char base)
-{
-  assert(scale<4);
-  assert(index<8);
-  assert(base<8);
-  u_char byte=(scale<<6)|(index<<3)|base;
-  *(out++)=byte;
-}
-void output_w32(u_int word)
+
+static void output_w32(u_int word)
 {
   *((u_int *)out)=word;
   out+=4;
 }
-u_int rd_rn_rm(u_int rd, u_int rn, u_int rm)
+static u_int rd_rn_rm(u_int rd, u_int rn, u_int rm)
 {
   assert(rd<16);
   assert(rn<16);
   assert(rm<16);
   return((rn<<16)|(rd<<12)|rm);
 }
-u_int rd_rn_imm_shift(u_int rd, u_int rn, u_int imm, u_int shift)
+static u_int rd_rn_imm_shift(u_int rd, u_int rn, u_int imm, u_int shift)
 {
   assert(rd<16);
   assert(rn<16);
@@ -978,7 +973,7 @@ u_int rd_rn_imm_shift(u_int rd, u_int rn, u_int imm, u_int shift)
   assert((shift&1)==0);
   return((rn<<16)|(rd<<12)|(((32-shift)&30)<<7)|imm);
 }
-u_int genimm(u_int imm,u_int *encoded)
+static u_int genimm(u_int imm,u_int *encoded)
 {
   if(imm==0) {*encoded=0;return 1;}
   int i=32;
@@ -992,7 +987,7 @@ u_int genimm(u_int imm,u_int *encoded)
   }
   return 0;
 }
-u_int genjmp(u_int addr)
+static u_int genjmp(u_int addr)
 {
   if(addr<4) return 0;
   int offset=addr-(int)out-8;
@@ -1011,96 +1006,96 @@ u_int genjmp(u_int addr)
   return ((u_int)offset>>2)&0xffffff;
 }
 
-void emit_mov(int rs,int rt)
+static void emit_mov(int rs,int rt)
 {
   assem_debug("mov %s,%s\n",regname[rt],regname[rs]);
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs));
 }
 
-void emit_movs(int rs,int rt)
+static void emit_movs(int rs,int rt)
 {
   assem_debug("movs %s,%s\n",regname[rt],regname[rs]);
   output_w32(0xe1b00000|rd_rn_rm(rt,0,rs));
 }
 
-void emit_add(int rs1,int rs2,int rt)
+static void emit_add(int rs1,int rs2,int rt)
 {
   assem_debug("add %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0800000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_adds(int rs1,int rs2,int rt)
+static void emit_adds(int rs1,int rs2,int rt)
 {
   assem_debug("adds %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0900000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_adcs(int rs1,int rs2,int rt)
+static void emit_adcs(int rs1,int rs2,int rt)
 {
   assem_debug("adcs %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0b00000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_sbc(int rs1,int rs2,int rt)
+static void emit_sbc(int rs1,int rs2,int rt)
 {
   assem_debug("sbc %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0c00000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_sbcs(int rs1,int rs2,int rt)
+static void emit_sbcs(int rs1,int rs2,int rt)
 {
   assem_debug("sbcs %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0d00000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_neg(int rs, int rt)
+static void emit_neg(int rs, int rt)
 {
   assem_debug("rsb %s,%s,#0\n",regname[rt],regname[rs]);
   output_w32(0xe2600000|rd_rn_rm(rt,rs,0));
 }
 
-void emit_negs(int rs, int rt)
+static void emit_negs(int rs, int rt)
 {
   assem_debug("rsbs %s,%s,#0\n",regname[rt],regname[rs]);
   output_w32(0xe2700000|rd_rn_rm(rt,rs,0));
 }
 
-void emit_sub(int rs1,int rs2,int rt)
+static void emit_sub(int rs1,int rs2,int rt)
 {
   assem_debug("sub %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0400000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_subs(int rs1,int rs2,int rt)
+static void emit_subs(int rs1,int rs2,int rt)
 {
   assem_debug("subs %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0500000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_zeroreg(int rt)
+static void emit_zeroreg(int rt)
 {
   assem_debug("mov %s,#0\n",regname[rt]);
   output_w32(0xe3a00000|rd_rn_rm(rt,0,0));
 }
 
-void emit_loadlp(u_int imm,u_int rt)
+static void emit_loadlp(u_int imm,u_int rt)
 {
   add_literal((int)out,imm);
   assem_debug("ldr %s,pc+? [=%x]\n",regname[rt],imm);
   output_w32(0xe5900000|rd_rn_rm(rt,15,0));
 }
-void emit_movw(u_int imm,u_int rt)
+static void emit_movw(u_int imm,u_int rt)
 {
   assert(imm<65536);
   assem_debug("movw %s,#%d (0x%x)\n",regname[rt],imm,imm);
   output_w32(0xe3000000|rd_rn_rm(rt,0,0)|(imm&0xfff)|((imm<<4)&0xf0000));
 }
-void emit_movt(u_int imm,u_int rt)
+static void emit_movt(u_int imm,u_int rt)
 {
   assem_debug("movt %s,#%d (0x%x)\n",regname[rt],imm&0xffff0000,imm&0xffff0000);
   output_w32(0xe3400000|rd_rn_rm(rt,0,0)|((imm>>16)&0xfff)|((imm>>12)&0xf0000));
 }
-void emit_movimm(u_int imm,u_int rt)
+static void emit_movimm(u_int imm,u_int rt)
 {
   u_int armval;
   if(genimm(imm,&armval)) {
@@ -1127,13 +1122,13 @@ void emit_movimm(u_int imm,u_int rt)
     #endif
   }
 }
-void emit_pcreladdr(u_int rt)
+static void emit_pcreladdr(u_int rt)
 {
   assem_debug("add %s,pc,#?\n",regname[rt]);
   output_w32(0xe2800000|rd_rn_rm(rt,15,0));
 }
 
-void emit_loadreg(int r, int hr)
+static void emit_loadreg(int r, int hr)
 {
   if((r&63)==0)
     emit_zeroreg(hr);
@@ -1154,7 +1149,7 @@ void emit_loadreg(int r, int hr)
     output_w32(0xe5900000|rd_rn_rm(hr,FP,0)|offset);
   }
 }
-void emit_storereg(int r, int hr)
+static void emit_storereg(int r, int hr)
 {
   int addr=((int)reg)+((r&63)<<3)+((r&64)>>4);
   if((r&63)==HIREG) addr=(int)&hi+((r&64)>>4);
@@ -1167,13 +1162,13 @@ void emit_storereg(int r, int hr)
   output_w32(0xe5800000|rd_rn_rm(hr,FP,0)|offset);
 }
 
-void emit_test(int rs, int rt)
+static void emit_test(int rs, int rt)
 {
   assem_debug("tst %s,%s\n",regname[rs],regname[rt]);
   output_w32(0xe1100000|rd_rn_rm(0,rs,rt));
 }
 
-void emit_testimm(int rs,int imm)
+static void emit_testimm(int rs,int imm)
 {
   u_int armval;
   assem_debug("tst %s,#%d\n",regname[rs],imm);
@@ -1181,36 +1176,36 @@ void emit_testimm(int rs,int imm)
   output_w32(0xe3100000|rd_rn_rm(0,rs,0)|armval);
 }
 
-void emit_not(int rs,int rt)
+static void emit_not(int rs,int rt)
 {
   assem_debug("mvn %s,%s\n",regname[rt],regname[rs]);
   output_w32(0xe1e00000|rd_rn_rm(rt,0,rs));
 }
 
-void emit_and(u_int rs1,u_int rs2,u_int rt)
+static void emit_and(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("and %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0000000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_or(u_int rs1,u_int rs2,u_int rt)
+static void emit_or(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("orr %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe1800000|rd_rn_rm(rt,rs1,rs2));
 }
-void emit_or_and_set_flags(int rs1,int rs2,int rt)
+static void emit_or_and_set_flags(int rs1,int rs2,int rt)
 {
   assem_debug("orrs %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe1900000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_xor(u_int rs1,u_int rs2,u_int rt)
+static void emit_xor(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("eor %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0200000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_addimm(u_int rs,int imm,u_int rt)
+static void emit_addimm(u_int rs,int imm,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1238,7 +1233,7 @@ void emit_addimm(u_int rs,int imm,u_int rt)
   else if(rs!=rt) emit_mov(rs,rt);
 }
 
-void emit_addimm_and_set_flags(int imm,int rt)
+static void emit_addimm_and_set_flags(int imm,int rt)
 {
   assert(imm>-65536&&imm<65536);
   u_int armval;
@@ -1260,49 +1255,37 @@ void emit_addimm_and_set_flags(int imm,int rt)
     output_w32(0xe2900000|rd_rn_imm_shift(rt,rt,imm&0xff,0));
   }
 }
-void emit_addimm_no_flags(u_int imm,u_int rt)
+
+#ifndef RAM_OFFSET
+static void emit_addimm_no_flags(u_int imm,u_int rt)
 {
   emit_addimm(rt,imm,rt);
 }
+#endif
 
-void emit_addnop(u_int r)
+static void emit_addnop(u_int r)
 {
   assert(r<16);
   assem_debug("add %s,%s,#0 (nop)\n",regname[r],regname[r]);
   output_w32(0xe2800000|rd_rn_rm(r,r,0));
 }
 
-void emit_adcimm(u_int rs,int imm,u_int rt)
+static void emit_adcimm(u_int rs,int imm,u_int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
   assem_debug("adc %s,%s,#%d\n",regname[rt],regname[rs],imm);
   output_w32(0xe2a00000|rd_rn_rm(rt,rs,0)|armval);
 }
-/*void emit_sbcimm(int imm,u_int rt)
+/*static void emit_sbcimm(int imm,u_int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
   assem_debug("sbc %s,%s,#%d\n",regname[rt],regname[rt],imm);
   output_w32(0xe2c00000|rd_rn_rm(rt,rt,0)|armval);
 }*/
-void emit_sbbimm(int imm,u_int rt)
-{
-  assem_debug("sbb $%d,%%%s\n",imm,regname[rt]);
-  assert(rt<8);
-  if(imm<128&&imm>=-128) {
-    output_byte(0x83);
-    output_modrm(3,rt,3);
-    output_byte(imm);
-  }
-  else
-  {
-    output_byte(0x81);
-    output_modrm(3,rt,3);
-    output_w32(imm);
-  }
-}
-void emit_rscimm(int rs,int imm,u_int rt)
+
+static void emit_rscimm(int rs,int imm,u_int rt)
 {
   assert(0);
   u_int armval;
@@ -1311,7 +1294,7 @@ void emit_rscimm(int rs,int imm,u_int rt)
   output_w32(0xe2e00000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
+static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
 {
   // TODO: if(genimm(imm,&armval)) ...
   // else
@@ -1319,15 +1302,16 @@ void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
   emit_adds(HOST_TEMPREG,rsl,rtl);
   emit_adcimm(rsh,0,rth);
 }
-
-void emit_sbb(int rs1,int rs2)
+#ifdef INVERTED_CARRY
+static void emit_sbb(int rs1,int rs2)
 {
   assem_debug("sbb %%%s,%%%s\n",regname[rs2],regname[rs1]);
   output_byte(0x19);
   output_modrm(3,rs1,rs2);
 }
+#endif
 
-void emit_andimm(int rs,int imm,int rt)
+static void emit_andimm(int rs,int imm,int rt)
 {
   u_int armval;
   if(imm==0) {
@@ -1363,7 +1347,7 @@ void emit_andimm(int rs,int imm,int rt)
   }
 }
 
-void emit_orimm(int rs,int imm,int rt)
+static void emit_orimm(int rs,int imm,int rt)
 {
   u_int armval;
   if(imm==0) {
@@ -1380,7 +1364,7 @@ void emit_orimm(int rs,int imm,int rt)
   }
 }
 
-void emit_xorimm(int rs,int imm,int rt)
+static void emit_xorimm(int rs,int imm,int rt)
 {
   u_int armval;
   if(imm==0) {
@@ -1397,7 +1381,7 @@ void emit_xorimm(int rs,int imm,int rt)
   }
 }
 
-void emit_shlimm(int rs,u_int imm,int rt)
+static void emit_shlimm(int rs,u_int imm,int rt)
 {
   assert(imm>0);
   assert(imm<32);
@@ -1406,7 +1390,7 @@ void emit_shlimm(int rs,u_int imm,int rt)
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|(imm<<7));
 }
 
-void emit_shrimm(int rs,u_int imm,int rt)
+static void emit_shrimm(int rs,u_int imm,int rt)
 {
   assert(imm>0);
   assert(imm<32);
@@ -1414,7 +1398,7 @@ void emit_shrimm(int rs,u_int imm,int rt)
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x20|(imm<<7));
 }
 
-void emit_sarimm(int rs,u_int imm,int rt)
+static void emit_sarimm(int rs,u_int imm,int rt)
 {
   assert(imm>0);
   assert(imm<32);
@@ -1422,7 +1406,7 @@ void emit_sarimm(int rs,u_int imm,int rt)
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x40|(imm<<7));
 }
 
-void emit_rorimm(int rs,u_int imm,int rt)
+static void emit_rorimm(int rs,u_int imm,int rt)
 {
   assert(imm>0);
   assert(imm<32);
@@ -1430,7 +1414,7 @@ void emit_rorimm(int rs,u_int imm,int rt)
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x60|(imm<<7));
 }
 
-void emit_shldimm(int rs,int rs2,u_int imm,int rt)
+static void emit_shldimm(int rs,int rs2,u_int imm,int rt)
 {
   assem_debug("shld %%%s,%%%s,%d\n",regname[rt],regname[rs2],imm);
   assert(imm>0);
@@ -1442,7 +1426,7 @@ void emit_shldimm(int rs,int rs2,u_int imm,int rt)
   output_w32(0xe1800020|rd_rn_rm(rt,rt,rs2)|((32-imm)<<7));
 }
 
-void emit_shrdimm(int rs,int rs2,u_int imm,int rt)
+static void emit_shrdimm(int rs,int rs2,u_int imm,int rt)
 {
   assem_debug("shrd %%%s,%%%s,%d\n",regname[rt],regname[rs2],imm);
   assert(imm>0);
@@ -1454,7 +1438,7 @@ void emit_shrdimm(int rs,int rs2,u_int imm,int rt)
   output_w32(0xe1800000|rd_rn_rm(rt,rt,rs2)|((32-imm)<<7));
 }
 
-void emit_shl(u_int rs,u_int shift,u_int rt)
+static void emit_shl(u_int rs,u_int shift,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1463,7 +1447,7 @@ void emit_shl(u_int rs,u_int shift,u_int rt)
   assem_debug("lsl %s,%s,%s\n",regname[rt],regname[rs],regname[shift]);
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x10|(shift<<8));
 }
-void emit_shr(u_int rs,u_int shift,u_int rt)
+static void emit_shr(u_int rs,u_int shift,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1471,7 +1455,7 @@ void emit_shr(u_int rs,u_int shift,u_int rt)
   assem_debug("lsr %s,%s,%s\n",regname[rt],regname[rs],regname[shift]);
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x30|(shift<<8));
 }
-void emit_sar(u_int rs,u_int shift,u_int rt)
+static void emit_sar(u_int rs,u_int shift,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1479,33 +1463,8 @@ void emit_sar(u_int rs,u_int shift,u_int rt)
   assem_debug("asr %s,%s,%s\n",regname[rt],regname[rs],regname[shift]);
   output_w32(0xe1a00000|rd_rn_rm(rt,0,rs)|0x50|(shift<<8));
 }
-void emit_shlcl(int r)
-{
-  assem_debug("shl %%%s,%%cl\n",regname[r]);
-  assert(0);
-}
-void emit_shrcl(int r)
-{
-  assem_debug("shr %%%s,%%cl\n",regname[r]);
-  assert(0);
-}
-void emit_sarcl(int r)
-{
-  assem_debug("sar %%%s,%%cl\n",regname[r]);
-  assert(0);
-}
 
-void emit_shldcl(int r1,int r2)
-{
-  assem_debug("shld %%%s,%%%s,%%cl\n",regname[r1],regname[r2]);
-  assert(0);
-}
-void emit_shrdcl(int r1,int r2)
-{
-  assem_debug("shrd %%%s,%%%s,%%cl\n",regname[r1],regname[r2]);
-  assert(0);
-}
-void emit_orrshl(u_int rs,u_int shift,u_int rt)
+static void emit_orrshl(u_int rs,u_int shift,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1513,7 +1472,7 @@ void emit_orrshl(u_int rs,u_int shift,u_int rt)
   assem_debug("orr %s,%s,%s,lsl %s\n",regname[rt],regname[rt],regname[rs],regname[shift]);
   output_w32(0xe1800000|rd_rn_rm(rt,rt,rs)|0x10|(shift<<8));
 }
-void emit_orrshr(u_int rs,u_int shift,u_int rt)
+static void emit_orrshr(u_int rs,u_int shift,u_int rt)
 {
   assert(rs<16);
   assert(rt<16);
@@ -1522,7 +1481,7 @@ void emit_orrshr(u_int rs,u_int shift,u_int rt)
   output_w32(0xe1800000|rd_rn_rm(rt,rt,rs)|0x30|(shift<<8));
 }
 
-void emit_cmpimm(int rs,int imm)
+static void emit_cmpimm(int rs,int imm)
 {
   u_int armval;
   if(genimm(imm,&armval)) {
@@ -1552,85 +1511,70 @@ void emit_cmpimm(int rs,int imm)
   }
 }
 
-void emit_cmovne(u_int *addr,int rt)
-{
-  assem_debug("cmovne %x,%%%s",(int)addr,regname[rt]);
-  assert(0);
-}
-void emit_cmovl(u_int *addr,int rt)
-{
-  assem_debug("cmovl %x,%%%s",(int)addr,regname[rt]);
-  assert(0);
-}
-void emit_cmovs(u_int *addr,int rt)
-{
-  assem_debug("cmovs %x,%%%s",(int)addr,regname[rt]);
-  assert(0);
-}
-void emit_cmovne_imm(int imm,int rt)
+static void emit_cmovne_imm(int imm,int rt)
 {
   assem_debug("movne %s,#%d\n",regname[rt],imm);
   u_int armval;
   assert(genimm(imm,&armval));
   output_w32(0x13a00000|rd_rn_rm(rt,0,0)|armval);
 }
-void emit_cmovl_imm(int imm,int rt)
+static void emit_cmovl_imm(int imm,int rt)
 {
   assem_debug("movlt %s,#%d\n",regname[rt],imm);
   u_int armval;
   assert(genimm(imm,&armval));
   output_w32(0xb3a00000|rd_rn_rm(rt,0,0)|armval);
 }
-void emit_cmovb_imm(int imm,int rt)
+static void emit_cmovb_imm(int imm,int rt)
 {
   assem_debug("movcc %s,#%d\n",regname[rt],imm);
   u_int armval;
   assert(genimm(imm,&armval));
   output_w32(0x33a00000|rd_rn_rm(rt,0,0)|armval);
 }
-void emit_cmovs_imm(int imm,int rt)
+static void emit_cmovs_imm(int imm,int rt)
 {
   assem_debug("movmi %s,#%d\n",regname[rt],imm);
   u_int armval;
   assert(genimm(imm,&armval));
   output_w32(0x43a00000|rd_rn_rm(rt,0,0)|armval);
 }
-void emit_cmove_reg(int rs,int rt)
+static void emit_cmove_reg(int rs,int rt)
 {
   assem_debug("moveq %s,%s\n",regname[rt],regname[rs]);
   output_w32(0x01a00000|rd_rn_rm(rt,0,rs));
 }
-void emit_cmovne_reg(int rs,int rt)
+static void emit_cmovne_reg(int rs,int rt)
 {
   assem_debug("movne %s,%s\n",regname[rt],regname[rs]);
   output_w32(0x11a00000|rd_rn_rm(rt,0,rs));
 }
-void emit_cmovl_reg(int rs,int rt)
+static void emit_cmovl_reg(int rs,int rt)
 {
   assem_debug("movlt %s,%s\n",regname[rt],regname[rs]);
   output_w32(0xb1a00000|rd_rn_rm(rt,0,rs));
 }
-void emit_cmovs_reg(int rs,int rt)
+static void emit_cmovs_reg(int rs,int rt)
 {
   assem_debug("movmi %s,%s\n",regname[rt],regname[rs]);
   output_w32(0x41a00000|rd_rn_rm(rt,0,rs));
 }
 
-void emit_slti32(int rs,int imm,int rt)
+static void emit_slti32(int rs,int imm,int rt)
 {
   if(rs!=rt) emit_zeroreg(rt);
   emit_cmpimm(rs,imm);
   if(rs==rt) emit_movimm(0,rt);
   emit_cmovl_imm(1,rt);
 }
-void emit_sltiu32(int rs,int imm,int rt)
+static void emit_sltiu32(int rs,int imm,int rt)
 {
   if(rs!=rt) emit_zeroreg(rt);
   emit_cmpimm(rs,imm);
   if(rs==rt) emit_movimm(0,rt);
   emit_cmovb_imm(1,rt);
 }
-void emit_slti64_32(int rsh,int rsl,int imm,int rt)
+static void emit_slti64_32(int rsh,int rsl,int imm,int rt)
 {
   assert(rsh!=rt);
   emit_slti32(rsl,imm,rt);
@@ -1647,7 +1591,7 @@ void emit_slti64_32(int rsh,int rsl,int imm,int rt)
     emit_cmovl_imm(1,rt);
   }
 }
-void emit_sltiu64_32(int rsh,int rsl,int imm,int rt)
+static void emit_sltiu64_32(int rsh,int rsl,int imm,int rt)
 {
   assert(rsh!=rt);
   emit_sltiu32(rsl,imm,rt);
@@ -1663,26 +1607,26 @@ void emit_sltiu64_32(int rsh,int rsl,int imm,int rt)
   }
 }
 
-void emit_cmp(int rs,int rt)
+static void emit_cmp(int rs,int rt)
 {
   assem_debug("cmp %s,%s\n",regname[rs],regname[rt]);
   output_w32(0xe1500000|rd_rn_rm(0,rs,rt));
 }
-void emit_set_gz32(int rs, int rt)
+static void emit_set_gz32(int rs, int rt)
 {
   //assem_debug("set_gz32\n");
   emit_cmpimm(rs,1);
   emit_movimm(1,rt);
   emit_cmovl_imm(0,rt);
 }
-void emit_set_nz32(int rs, int rt)
+static void emit_set_nz32(int rs, int rt)
 {
   //assem_debug("set_nz32\n");
   if(rs!=rt) emit_movs(rs,rt);
   else emit_test(rs,rs);
   emit_cmovne_imm(1,rt);
 }
-void emit_set_gz64_32(int rsh, int rsl, int rt)
+static void emit_set_gz64_32(int rsh, int rsl, int rt)
 {
   //assem_debug("set_gz64\n");
   emit_set_gz32(rsl,rt);
@@ -1690,13 +1634,13 @@ void emit_set_gz64_32(int rsh, int rsl, int rt)
   emit_cmovne_imm(1,rt);
   emit_cmovs_imm(0,rt);
 }
-void emit_set_nz64_32(int rsh, int rsl, int rt)
+static void emit_set_nz64_32(int rsh, int rsl, int rt)
 {
   //assem_debug("set_nz64\n");
   emit_or_and_set_flags(rsh,rsl,rt);
   emit_cmovne_imm(1,rt);
 }
-void emit_set_if_less32(int rs1, int rs2, int rt)
+static void emit_set_if_less32(int rs1, int rs2, int rt)
 {
   //assem_debug("set if less (%%%s,%%%s),%%%s\n",regname[rs1],regname[rs2],regname[rt]);
   if(rs1!=rt&&rs2!=rt) emit_zeroreg(rt);
@@ -1704,7 +1648,7 @@ void emit_set_if_less32(int rs1, int rs2, int rt)
   if(rs1==rt||rs2==rt) emit_movimm(0,rt);
   emit_cmovl_imm(1,rt);
 }
-void emit_set_if_carry32(int rs1, int rs2, int rt)
+static void emit_set_if_carry32(int rs1, int rs2, int rt)
 {
   //assem_debug("set if carry (%%%s,%%%s),%%%s\n",regname[rs1],regname[rs2],regname[rt]);
   if(rs1!=rt&&rs2!=rt) emit_zeroreg(rt);
@@ -1712,7 +1656,7 @@ void emit_set_if_carry32(int rs1, int rs2, int rt)
   if(rs1==rt||rs2==rt) emit_movimm(0,rt);
   emit_cmovb_imm(1,rt);
 }
-void emit_set_if_less64_32(int u1, int l1, int u2, int l2, int rt)
+static void emit_set_if_less64_32(int u1, int l1, int u2, int l2, int rt)
 {
   //assem_debug("set if less64 (%%%s,%%%s,%%%s,%%%s),%%%s\n",regname[u1],regname[l1],regname[u2],regname[l2],regname[rt]);
   assert(u1!=rt);
@@ -1722,7 +1666,7 @@ void emit_set_if_less64_32(int u1, int l1, int u2, int l2, int rt)
   emit_sbcs(u1,u2,HOST_TEMPREG);
   emit_cmovl_imm(1,rt);
 }
-void emit_set_if_carry64_32(int u1, int l1, int u2, int l2, int rt)
+static void emit_set_if_carry64_32(int u1, int l1, int u2, int l2, int rt)
 {
   //assem_debug("set if carry64 (%%%s,%%%s,%%%s,%%%s),%%%s\n",regname[u1],regname[l1],regname[u2],regname[l2],regname[rt]);
   assert(u1!=rt);
@@ -1733,110 +1677,91 @@ void emit_set_if_carry64_32(int u1, int l1, int u2, int l2, int rt)
   emit_cmovb_imm(1,rt);
 }
 
-void emit_call(int a)
+static void emit_call(int a)
 {
   assem_debug("bl %x (%x+%x)\n",a,(int)out,a-(int)out-8);
   u_int offset=genjmp(a);
   output_w32(0xeb000000|offset);
 }
-void emit_jmp(int a)
+static void emit_jmp(int a)
 {
   assem_debug("b %x (%x+%x)\n",a,(int)out,a-(int)out-8);
   u_int offset=genjmp(a);
   output_w32(0xea000000|offset);
 }
-void emit_jne(int a)
+static void emit_jne(int a)
 {
   assem_debug("bne %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x1a000000|offset);
 }
-void emit_jeq(int a)
+static void emit_jeq(int a)
 {
   assem_debug("beq %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x0a000000|offset);
 }
-void emit_js(int a)
+static void emit_js(int a)
 {
   assem_debug("bmi %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x4a000000|offset);
 }
-void emit_jns(int a)
+static void emit_jns(int a)
 {
   assem_debug("bpl %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x5a000000|offset);
 }
-void emit_jl(int a)
+static void emit_jl(int a)
 {
   assem_debug("blt %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0xba000000|offset);
 }
-void emit_jge(int a)
+static void emit_jge(int a)
 {
   assem_debug("bge %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0xaa000000|offset);
 }
-void emit_jno(int a)
+static void emit_jno(int a)
 {
   assem_debug("bvc %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x7a000000|offset);
 }
-void emit_jc(int a)
-{
-  assem_debug("bcs %x\n",a);
-  u_int offset=genjmp(a);
-  output_w32(0x2a000000|offset);
-}
-void emit_jcc(int a)
+
+static void emit_jcc(int a)
 {
   assem_debug("bcc %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x3a000000|offset);
 }
 
-void emit_pushimm(int imm)
-{
-  assem_debug("push $%x\n",imm);
-  assert(0);
-}
-void emit_pusha()
-{
-  assem_debug("pusha\n");
-  assert(0);
-}
-void emit_popa()
-{
-  assem_debug("popa\n");
-  assert(0);
-}
-void emit_pushreg(u_int r)
+static void emit_pushreg(u_int r)
 {
   assem_debug("push %%%s\n",regname[r]);
   assert(0);
 }
-void emit_popreg(u_int r)
+static void emit_popreg(u_int r)
 {
   assem_debug("pop %%%s\n",regname[r]);
   assert(0);
 }
-void emit_callreg(u_int r)
+/*
+static void emit_callreg(u_int r)
 {
   assem_debug("call *%%%s\n",regname[r]);
   assert(0);
 }
-void emit_jmpreg(u_int r)
+static void emit_jmpreg(u_int r)
 {
   assem_debug("mov pc,%s\n",regname[r]);
   output_w32(0xe1a00000|rd_rn_rm(15,0,r));
 }
-
-void emit_readword_indexed(int offset, int rs, int rt)
+*/
+static void emit_readword_indexed(int offset, int rs, int rt)
 {
   assert(offset>-4096&&offset<4096);
   assem_debug("ldr %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -1846,12 +1771,12 @@ void emit_readword_indexed(int offset, int rs, int rt)
     output_w32(0xe5100000|rd_rn_rm(rt,rs,0)|(-offset));
   }
 }
-void emit_readword_dualindexedx4(int rs1, int rs2, int rt)
+static void emit_readword_dualindexedx4(int rs1, int rs2, int rt)
 {
   assem_debug("ldr %s,%s,%s lsl #2\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7900000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-void emit_readword_indexed_tlb(int addr, int rs, int map, int rt)
+static void emit_readword_indexed_tlb(int addr, int rs, int map, int rt)
 {
   if(map<0) emit_readword_indexed(addr, rs, rt);
   else {
@@ -1859,7 +1784,7 @@ void emit_readword_indexed_tlb(int addr, int rs, int map, int rt)
     emit_readword_dualindexedx4(rs, map, rt);
   }
 }
-void emit_readdword_indexed_tlb(int addr, int rs, int map, int rh, int rl)
+static void emit_readdword_indexed_tlb(int addr, int rs, int map, int rh, int rl)
 {
   if(map<0) {
     if(rh>=0) emit_readword_indexed(addr, rs, rh);
@@ -1871,7 +1796,7 @@ void emit_readdword_indexed_tlb(int addr, int rs, int map, int rh, int rl)
     emit_readword_indexed_tlb(addr, rs, HOST_TEMPREG, rl);
   }
 }
-void emit_movsbl_indexed(int offset, int rs, int rt)
+static void emit_movsbl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-256&&offset<256);
   assem_debug("ldrsb %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -1881,7 +1806,7 @@ void emit_movsbl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000d0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
-void emit_movsbl_indexed_tlb(int addr, int rs, int map, int rt)
+static void emit_movsbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   if(map<0) emit_movsbl_indexed(addr, rs, rt);
   else {
@@ -1897,7 +1822,7 @@ void emit_movsbl_indexed_tlb(int addr, int rs, int map, int rt)
     }
   }
 }
-void emit_movswl_indexed(int offset, int rs, int rt)
+static void emit_movswl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-256&&offset<256);
   assem_debug("ldrsh %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -1907,7 +1832,7 @@ void emit_movswl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000f0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
-void emit_movzbl_indexed(int offset, int rs, int rt)
+static void emit_movzbl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-4096&&offset<4096);
   assem_debug("ldrb %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -1917,12 +1842,12 @@ void emit_movzbl_indexed(int offset, int rs, int rt)
     output_w32(0xe5500000|rd_rn_rm(rt,rs,0)|(-offset));
   }
 }
-void emit_movzbl_dualindexedx4(int rs1, int rs2, int rt)
+static void emit_movzbl_dualindexedx4(int rs1, int rs2, int rt)
 {
   assem_debug("ldrb %s,%s,%s lsl #2\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7d00000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-void emit_movzbl_indexed_tlb(int addr, int rs, int map, int rt)
+static void emit_movzbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   if(map<0) emit_movzbl_indexed(addr, rs, rt);
   else {
@@ -1934,7 +1859,7 @@ void emit_movzbl_indexed_tlb(int addr, int rs, int map, int rt)
     }
   }
 }
-void emit_movzwl_indexed(int offset, int rs, int rt)
+static void emit_movzwl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-256&&offset<256);
   assem_debug("ldrh %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -1944,53 +1869,51 @@ void emit_movzwl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
-void emit_readword(int addr, int rt)
+static void emit_readword(int addr, int rt)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<4096);
   assem_debug("ldr %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe5900000|rd_rn_rm(rt,FP,0)|offset);
 }
-void emit_movsbl(int addr, int rt)
+static void emit_movsbl(int addr, int rt)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<256);
   assem_debug("ldrsb %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe1d000d0|rd_rn_rm(rt,FP,0)|((offset<<4)&0xf00)|(offset&0xf));
 }
-void emit_movswl(int addr, int rt)
+static void emit_movswl(int addr, int rt)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<256);
   assem_debug("ldrsh %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe1d000f0|rd_rn_rm(rt,FP,0)|((offset<<4)&0xf00)|(offset&0xf));
 }
-void emit_movzbl(int addr, int rt)
+static void emit_movzbl(int addr, int rt)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<4096);
   assem_debug("ldrb %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe5d00000|rd_rn_rm(rt,FP,0)|offset);
 }
-void emit_movzwl(int addr, int rt)
+static void emit_movzwl(int addr, int rt)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<256);
   assem_debug("ldrh %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe1d000b0|rd_rn_rm(rt,FP,0)|((offset<<4)&0xf00)|(offset&0xf));
 }
-void emit_movzwl_reg(int rs, int rt)
+
+/*
+static void emit_movzwl_reg(int rs, int rt)
 {
   assem_debug("movzwl %%%s,%%%s\n",regname[rs]+1,regname[rt]);
   assert(0);
 }
+*/
 
-void emit_xchg(int rs, int rt)
-{
-  assem_debug("xchg %%%s,%%%s\n",regname[rs],regname[rt]);
-  assert(0);
-}
-void emit_writeword_indexed(int rt, int offset, int rs)
+static void emit_writeword_indexed(int rt, int offset, int rs)
 {
   assert(offset>-4096&&offset<4096);
   assem_debug("str %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -2000,12 +1923,12 @@ void emit_writeword_indexed(int rt, int offset, int rs)
     output_w32(0xe5000000|rd_rn_rm(rt,rs,0)|(-offset));
   }
 }
-void emit_writeword_dualindexedx4(int rt, int rs1, int rs2)
+static void emit_writeword_dualindexedx4(int rt, int rs1, int rs2)
 {
   assem_debug("str %s,%s,%s lsl #2\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7800000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
 {
   if(map<0) emit_writeword_indexed(rt, addr, rs);
   else {
@@ -2013,7 +1936,7 @@ void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
     emit_writeword_dualindexedx4(rt, rs, map);
   }
 }
-void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int temp)
+static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int temp)
 {
   if(map<0) {
     if(rh>=0) emit_writeword_indexed(rh, addr, rs);
@@ -2029,7 +1952,7 @@ void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int 
     }
   }
 }
-void emit_writehword_indexed(int rt, int offset, int rs)
+static void emit_writehword_indexed(int rt, int offset, int rs)
 {
   assert(offset>-256&&offset<256);
   assem_debug("strh %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -2039,7 +1962,7 @@ void emit_writehword_indexed(int rt, int offset, int rs)
     output_w32(0xe14000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
-void emit_writebyte_indexed(int rt, int offset, int rs)
+static void emit_writebyte_indexed(int rt, int offset, int rs)
 {
   assert(offset>-4096&&offset<4096);
   assem_debug("strb %s,%s+%d\n",regname[rt],regname[rs],offset);
@@ -2049,12 +1972,12 @@ void emit_writebyte_indexed(int rt, int offset, int rs)
     output_w32(0xe5400000|rd_rn_rm(rt,rs,0)|(-offset));
   }
 }
-void emit_writebyte_dualindexedx4(int rt, int rs1, int rs2)
+static void emit_writebyte_dualindexedx4(int rt, int rs1, int rs2)
 {
   assem_debug("strb %s,%s,%s lsl #2\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7c00000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
 {
   if(map<0) emit_writebyte_indexed(rt, addr, rs);
   else {
@@ -2066,49 +1989,37 @@ void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
     }
   }
 }
-void emit_writeword(int rt, int addr)
+static void emit_writeword(int rt, int addr)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<4096);
   assem_debug("str %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe5800000|rd_rn_rm(rt,FP,0)|offset);
 }
-void emit_writehword(int rt, int addr)
+static void emit_writehword(int rt, int addr)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<256);
   assem_debug("strh %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe1c000b0|rd_rn_rm(rt,FP,0)|((offset<<4)&0xf00)|(offset&0xf));
 }
-void emit_writebyte(int rt, int addr)
+static void emit_writebyte(int rt, int addr)
 {
   u_int offset = addr-(u_int)&dynarec_local;
   assert(offset<4096);
   assem_debug("strb %s,fp+%d\n",regname[rt],offset);
   output_w32(0xe5c00000|rd_rn_rm(rt,FP,0)|offset);
 }
-void emit_writeword_imm(int imm, int addr)
-{
-  assem_debug("movl $%x,%x\n",imm,addr);
-  assert(0);
-}
-void emit_writebyte_imm(int imm, int addr)
-{
-  assem_debug("movb $%x,%x\n",imm,addr);
-  assert(0);
-}
 
-void emit_mul(int rs)
+/*
+static void emit_mul(int rs)
 {
   assem_debug("mul %%%s\n",regname[rs]);
   assert(0);
 }
-void emit_imul(int rs)
-{
-  assem_debug("imul %%%s\n",regname[rs]);
-  assert(0);
-}
-void emit_umull(u_int rs1, u_int rs2, u_int hi, u_int lo)
+*/
+
+static void emit_umull(u_int rs1, u_int rs2, u_int hi, u_int lo)
 {
   assem_debug("umull %s, %s, %s, %s\n",regname[lo],regname[hi],regname[rs1],regname[rs2]);
   assert(rs1<16);
@@ -2117,7 +2028,7 @@ void emit_umull(u_int rs1, u_int rs2, u_int hi, u_int lo)
   assert(lo<16);
   output_w32(0xe0800090|(hi<<16)|(lo<<12)|(rs2<<8)|rs1);
 }
-void emit_smull(u_int rs1, u_int rs2, u_int hi, u_int lo)
+static void emit_smull(u_int rs1, u_int rs2, u_int hi, u_int lo)
 {
   assem_debug("smull %s, %s, %s, %s\n",regname[lo],regname[hi],regname[rs1],regname[rs2]);
   assert(rs1<16);
@@ -2127,35 +2038,19 @@ void emit_smull(u_int rs1, u_int rs2, u_int hi, u_int lo)
   output_w32(0xe0c00090|(hi<<16)|(lo<<12)|(rs2<<8)|rs1);
 }
 
-void emit_div(int rs)
-{
-  assem_debug("div %%%s\n",regname[rs]);
-  assert(0);
-}
-void emit_idiv(int rs)
-{
-  assem_debug("idiv %%%s\n",regname[rs]);
-  assert(0);
-}
-void emit_cdq()
-{
-  assem_debug("cdq\n");
-  assert(0);
-}
-
-void emit_clz(int rs,int rt)
+static void emit_clz(int rs,int rt)
 {
   assem_debug("clz %s,%s\n",regname[rt],regname[rs]);
   output_w32(0xe16f0f10|rd_rn_rm(rt,0,rs));
 }
 
-void emit_subcs(int rs1,int rs2,int rt)
+static void emit_subcs(int rs1,int rs2,int rt)
 {
   assem_debug("subcs %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0x20400000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_shrcc_imm(int rs,u_int imm,int rt)
+static void emit_shrcc_imm(int rs,u_int imm,int rt)
 {
   assert(imm>0);
   assert(imm<32);
@@ -2163,73 +2058,67 @@ void emit_shrcc_imm(int rs,u_int imm,int rt)
   output_w32(0x31a00000|rd_rn_rm(rt,0,rs)|0x20|(imm<<7));
 }
 
-void emit_negmi(int rs, int rt)
+static void emit_negmi(int rs, int rt)
 {
   assem_debug("rsbmi %s,%s,#0\n",regname[rt],regname[rs]);
   output_w32(0x42600000|rd_rn_rm(rt,rs,0));
 }
 
-void emit_negsmi(int rs, int rt)
-{
-  assem_debug("rsbsmi %s,%s,#0\n",regname[rt],regname[rs]);
-  output_w32(0x42700000|rd_rn_rm(rt,rs,0));
-}
-
-void emit_orreq(u_int rs1,u_int rs2,u_int rt)
+static void emit_orreq(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("orreq %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0x01800000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_orrne(u_int rs1,u_int rs2,u_int rt)
+static void emit_orrne(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("orrne %s,%s,%s\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0x11800000|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_bic_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_bic_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("bic %s,%s,%s lsl %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0xe1C00000|rd_rn_rm(rt,rs1,rs2)|0x10|(shift<<8));
 }
 
-void emit_biceq_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_biceq_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("biceq %s,%s,%s lsl %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0x01C00000|rd_rn_rm(rt,rs1,rs2)|0x10|(shift<<8));
 }
 
-void emit_bicne_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_bicne_lsl(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("bicne %s,%s,%s lsl %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0x11C00000|rd_rn_rm(rt,rs1,rs2)|0x10|(shift<<8));
 }
 
-void emit_bic_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_bic_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("bic %s,%s,%s lsr %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0xe1C00000|rd_rn_rm(rt,rs1,rs2)|0x30|(shift<<8));
 }
 
-void emit_biceq_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_biceq_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("biceq %s,%s,%s lsr %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0x01C00000|rd_rn_rm(rt,rs1,rs2)|0x30|(shift<<8));
 }
 
-void emit_bicne_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
+static void emit_bicne_lsr(u_int rs1,u_int rs2,u_int shift,u_int rt)
 {
   assem_debug("bicne %s,%s,%s lsr %s\n",regname[rt],regname[rs1],regname[rs2],regname[shift]);
   output_w32(0x11C00000|rd_rn_rm(rt,rs1,rs2)|0x30|(shift<<8));
 }
 
-void emit_teq(int rs, int rt)
+static void emit_teq(int rs, int rt)
 {
   assem_debug("teq %s,%s\n",regname[rs],regname[rt]);
   output_w32(0xe1300000|rd_rn_rm(0,rs,rt));
 }
 
-void emit_rsbimm(int rs, int imm, int rt)
+static void emit_rsbimm(int rs, int imm, int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2238,7 +2127,7 @@ void emit_rsbimm(int rs, int imm, int rt)
 }
 
 // Load 2 immediates optimizing for small code size
-void emit_mov2imm_compact(int imm1,u_int rt1,int imm2,u_int rt2)
+static void emit_mov2imm_compact(int imm1,u_int rt1,int imm2,u_int rt2)
 {
   emit_movimm(imm1,rt1);
   u_int armval;
@@ -2254,7 +2143,7 @@ void emit_mov2imm_compact(int imm1,u_int rt1,int imm2,u_int rt2)
 
 // Conditionally select one of two immediates, optimizing for small code size
 // This will only be called if HAVE_CMOV_IMM is defined
-void emit_cmov2imm_e_ne_compact(int imm1,int imm2,u_int rt)
+static void emit_cmov2imm_e_ne_compact(int imm1,int imm2,u_int rt)
 {
   u_int armval;
   if(genimm(imm2-imm1,&armval)) {
@@ -2287,14 +2176,16 @@ void emit_cmov2imm_e_ne_compact(int imm1,int imm2,u_int rt)
   }
 }
 
+#if !defined(HOST_IMM8)
 // special case for checking invalid_code
-void emit_cmpmem_indexedsr12_imm(int addr,int r,int imm)
+static void emit_cmpmem_indexedsr12_imm(int addr,int r,int imm)
 {
   assert(0);
 }
+#endif
 
 // special case for checking invalid_code
-void emit_cmpmem_indexedsr12_reg(int base,int r,int imm)
+static void emit_cmpmem_indexedsr12_reg(int base,int r,int imm)
 {
   assert(imm<128&&imm>=0);
   assert(r>=0&&r<16);
@@ -2304,21 +2195,22 @@ void emit_cmpmem_indexedsr12_reg(int base,int r,int imm)
 }
 
 // special case for tlb mapping
-void emit_addsr12(int rs1,int rs2,int rt)
+static void emit_addsr12(int rs1,int rs2,int rt)
 {
   assem_debug("add %s,%s,%s lsr #12\n",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe0800620|rd_rn_rm(rt,rs1,rs2));
 }
 
-void emit_callne(int a)
+static void emit_callne(int a)
 {
   assem_debug("blne %x\n",a);
   u_int offset=genjmp(a);
   output_w32(0x1b000000|offset);
 }
 
+#ifdef IMM_PREFETCH
 // Used to preload hash table entries
-void emit_prefetch(void *addr)
+static void emit_prefetch(void *addr)
 {
   assem_debug("prefetch %x\n",(int)addr);
   output_byte(0x0F);
@@ -2326,183 +2218,187 @@ void emit_prefetch(void *addr)
   output_modrm(0,5,1);
   output_w32((int)addr);
 }
-void emit_prefetchreg(int r)
+#endif
+
+#ifdef REG_PREFETCH
+static void emit_prefetchreg(int r)
 {
   assem_debug("pld %s\n",regname[r]);
   output_w32(0xf5d0f000|rd_rn_rm(0,r,0));
 }
+#endif
 
 // Special case for mini_ht
-void emit_ldreq_indexed(int rs, u_int offset, int rt)
+static void emit_ldreq_indexed(int rs, u_int offset, int rt)
 {
   assert(offset<4096);
   assem_debug("ldreq %s,[%s, #%d]\n",regname[rt],regname[rs],offset);
   output_w32(0x05900000|rd_rn_rm(rt,rs,0)|offset);
 }
 
-void emit_flds(int r,int sr)
+static void emit_flds(int r,int sr)
 {
   assem_debug("flds s%d,[%s]\n",sr,regname[r]);
   output_w32(0xed900a00|((sr&14)<<11)|((sr&1)<<22)|(r<<16));
 } 
 
-void emit_vldr(int r,int vr)
+static void emit_vldr(int r,int vr)
 {
   assem_debug("vldr d%d,[%s]\n",vr,regname[r]);
   output_w32(0xed900b00|(vr<<12)|(r<<16));
 } 
 
-void emit_fsts(int sr,int r)
+static void emit_fsts(int sr,int r)
 {
   assem_debug("fsts s%d,[%s]\n",sr,regname[r]);
   output_w32(0xed800a00|((sr&14)<<11)|((sr&1)<<22)|(r<<16));
 } 
 
-void emit_vstr(int vr,int r)
+static void emit_vstr(int vr,int r)
 {
   assem_debug("vstr d%d,[%s]\n",vr,regname[r]);
   output_w32(0xed800b00|(vr<<12)|(r<<16));
 } 
 
-void emit_ftosizs(int s,int d)
+static void emit_ftosizs(int s,int d)
 {
   assem_debug("ftosizs s%d,s%d\n",d,s);
   output_w32(0xeebd0ac0|((d&14)<<11)|((d&1)<<22)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_ftosizd(int s,int d)
+static void emit_ftosizd(int s,int d)
 {
   assem_debug("ftosizd s%d,d%d\n",d,s);
   output_w32(0xeebd0bc0|((d&14)<<11)|((d&1)<<22)|(s&7));
 } 
 
-void emit_fsitos(int s,int d)
+static void emit_fsitos(int s,int d)
 {
   assem_debug("fsitos s%d,s%d\n",d,s);
   output_w32(0xeeb80ac0|((d&14)<<11)|((d&1)<<22)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fsitod(int s,int d)
+static void emit_fsitod(int s,int d)
 {
   assem_debug("fsitod d%d,s%d\n",d,s);
   output_w32(0xeeb80bc0|((d&7)<<12)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fcvtds(int s,int d)
+static void emit_fcvtds(int s,int d)
 {
   assem_debug("fcvtds d%d,s%d\n",d,s);
   output_w32(0xeeb70ac0|((d&7)<<12)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fcvtsd(int s,int d)
+static void emit_fcvtsd(int s,int d)
 {
   assem_debug("fcvtsd s%d,d%d\n",d,s);
   output_w32(0xeeb70bc0|((d&14)<<11)|((d&1)<<22)|(s&7));
 } 
 
-void emit_fsqrts(int s,int d)
+static void emit_fsqrts(int s,int d)
 {
   assem_debug("fsqrts d%d,s%d\n",d,s);
   output_w32(0xeeb10ac0|((d&14)<<11)|((d&1)<<22)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fsqrtd(int s,int d)
+static void emit_fsqrtd(int s,int d)
 {
   assem_debug("fsqrtd s%d,d%d\n",d,s);
   output_w32(0xeeb10bc0|((d&7)<<12)|(s&7));
 } 
 
-void emit_fabss(int s,int d)
+static void emit_fabss(int s,int d)
 {
   assem_debug("fabss d%d,s%d\n",d,s);
   output_w32(0xeeb00ac0|((d&14)<<11)|((d&1)<<22)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fabsd(int s,int d)
+static void emit_fabsd(int s,int d)
 {
   assem_debug("fabsd s%d,d%d\n",d,s);
   output_w32(0xeeb00bc0|((d&7)<<12)|(s&7));
 } 
 
-void emit_fnegs(int s,int d)
+static void emit_fnegs(int s,int d)
 {
   assem_debug("fnegs d%d,s%d\n",d,s);
   output_w32(0xeeb10a40|((d&14)<<11)|((d&1)<<22)|((s&14)>>1)|((s&1)<<5));
 } 
 
-void emit_fnegd(int s,int d)
+static void emit_fnegd(int s,int d)
 {
   assem_debug("fnegd s%d,d%d\n",d,s);
   output_w32(0xeeb10b40|((d&7)<<12)|(s&7));
 } 
 
-void emit_fadds(int s1,int s2,int d)
+static void emit_fadds(int s1,int s2,int d)
 {
   assem_debug("fadds s%d,s%d,s%d\n",d,s1,s2);
   output_w32(0xee300a00|((d&14)<<11)|((d&1)<<22)|((s1&14)<<15)|((s1&1)<<7)|((s2&14)>>1)|((s2&1)<<5));
 } 
 
-void emit_faddd(int s1,int s2,int d)
+static void emit_faddd(int s1,int s2,int d)
 {
   assem_debug("faddd d%d,d%d,d%d\n",d,s1,s2);
   output_w32(0xee300b00|((d&7)<<12)|((s1&7)<<16)|(s2&7));
 } 
 
-void emit_fsubs(int s1,int s2,int d)
+static void emit_fsubs(int s1,int s2,int d)
 {
   assem_debug("fsubs s%d,s%d,s%d\n",d,s1,s2);
   output_w32(0xee300a40|((d&14)<<11)|((d&1)<<22)|((s1&14)<<15)|((s1&1)<<7)|((s2&14)>>1)|((s2&1)<<5));
 } 
 
-void emit_fsubd(int s1,int s2,int d)
+static void emit_fsubd(int s1,int s2,int d)
 {
   assem_debug("fsubd d%d,d%d,d%d\n",d,s1,s2);
   output_w32(0xee300b40|((d&7)<<12)|((s1&7)<<16)|(s2&7));
 } 
 
-void emit_fmuls(int s1,int s2,int d)
+static void emit_fmuls(int s1,int s2,int d)
 {
   assem_debug("fmuls s%d,s%d,s%d\n",d,s1,s2);
   output_w32(0xee200a00|((d&14)<<11)|((d&1)<<22)|((s1&14)<<15)|((s1&1)<<7)|((s2&14)>>1)|((s2&1)<<5));
 } 
 
-void emit_fmuld(int s1,int s2,int d)
+static void emit_fmuld(int s1,int s2,int d)
 {
   assem_debug("fmuld d%d,d%d,d%d\n",d,s1,s2);
   output_w32(0xee200b00|((d&7)<<12)|((s1&7)<<16)|(s2&7));
 } 
 
-void emit_fdivs(int s1,int s2,int d)
+static void emit_fdivs(int s1,int s2,int d)
 {
   assem_debug("fdivs s%d,s%d,s%d\n",d,s1,s2);
   output_w32(0xee800a00|((d&14)<<11)|((d&1)<<22)|((s1&14)<<15)|((s1&1)<<7)|((s2&14)>>1)|((s2&1)<<5));
 } 
 
-void emit_fdivd(int s1,int s2,int d)
+static void emit_fdivd(int s1,int s2,int d)
 {
   assem_debug("fdivd d%d,d%d,d%d\n",d,s1,s2);
   output_w32(0xee800b00|((d&7)<<12)|((s1&7)<<16)|(s2&7));
 } 
 
-void emit_fcmps(int x,int y)
+static void emit_fcmps(int x,int y)
 {
   assem_debug("fcmps s14, s15\n");
   output_w32(0xeeb47a67);
 } 
 
-void emit_fcmpd(int x,int y)
+static void emit_fcmpd(int x,int y)
 {
   assem_debug("fcmpd d6, d7\n");
   output_w32(0xeeb46b47);
 } 
 
-void emit_fmstat()
+static void emit_fmstat()
 {
   assem_debug("fmstat\n");
   output_w32(0xeef1fa10);
 } 
 
-void emit_bicne_imm(int rs,int imm,int rt)
+static void emit_bicne_imm(int rs,int imm,int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2510,7 +2406,7 @@ void emit_bicne_imm(int rs,int imm,int rt)
   output_w32(0x13c00000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_biccs_imm(int rs,int imm,int rt)
+static void emit_biccs_imm(int rs,int imm,int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2518,7 +2414,7 @@ void emit_biccs_imm(int rs,int imm,int rt)
   output_w32(0x23c00000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_bicvc_imm(int rs,int imm,int rt)
+static void emit_bicvc_imm(int rs,int imm,int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2526,7 +2422,7 @@ void emit_bicvc_imm(int rs,int imm,int rt)
   output_w32(0x73c00000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_bichi_imm(int rs,int imm,int rt)
+static void emit_bichi_imm(int rs,int imm,int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2534,7 +2430,7 @@ void emit_bichi_imm(int rs,int imm,int rt)
   output_w32(0x83c00000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_orrvs_imm(int rs,int imm,int rt)
+static void emit_orrvs_imm(int rs,int imm,int rt)
 {
   u_int armval;
   assert(genimm(imm,&armval));
@@ -2542,7 +2438,7 @@ void emit_orrvs_imm(int rs,int imm,int rt)
   output_w32(0x63800000|rd_rn_rm(rt,rs,0)|armval);
 }
 
-void emit_jno_unlikely(int a)
+static void emit_jno_unlikely(int a)
 {
   //emit_jno(a);
   assem_debug("addvc pc,pc,#? (%x)\n",/*a-(int)out-8,*/a);
@@ -2550,7 +2446,7 @@ void emit_jno_unlikely(int a)
 }
 
 // Save registers before function call
-void save_regs(u_int reglist)
+static void save_regs(u_int reglist)
 {
   reglist&=0x100f; // only save the caller-save registers, r0-r3, r12
   if(!reglist) return;
@@ -2564,7 +2460,7 @@ void save_regs(u_int reglist)
   output_w32(0xe88b0000|reglist);
 }
 // Restore registers after function call
-void restore_regs(u_int reglist)
+static void restore_regs(u_int reglist)
 {
   reglist&=0x100f; // only restore the caller-save registers, r0-r3, r12
   if(!reglist) return;
@@ -2579,7 +2475,7 @@ void restore_regs(u_int reglist)
 }
 
 // Write back consts using r14 so we don't disturb the other registers
-void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,int i)
+static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,int i)
 {
   int hr;
   for(hr=0;hr<HOST_REGS;hr++) {
@@ -2606,7 +2502,7 @@ void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,int i)
 
 /* Stubs/epilogue */
 
-void literal_pool(int n)
+static void literal_pool(int n)
 {
   if(!literalcount) return;
   if(n) {
@@ -2626,7 +2522,7 @@ void literal_pool(int n)
   literalcount=0;
 }
 
-void literal_pool_jumpover(int n)
+static void literal_pool_jumpover(int n)
 {
   if(!literalcount) return;
   if(n) {
@@ -2638,7 +2534,7 @@ void literal_pool_jumpover(int n)
   set_jump_target(jaddr,(int)out);
 }
 
-void emit_extjump2(int addr, int target, int linker)
+static void emit_extjump2(int addr, int target, int linker)
 {
   u_char *ptr=(u_char *)addr;
   assert((ptr[3]&0x0e)==0xa);
@@ -2659,16 +2555,16 @@ void emit_extjump2(int addr, int target, int linker)
   emit_jmp(linker);
 }
 
-void emit_extjump(int addr, int target)
+static void emit_extjump(int addr, int target)
 {
   emit_extjump2(addr, target, (int)dyna_linker);
 }
-void emit_extjump_ds(int addr, int target)
+static void emit_extjump_ds(int addr, int target)
 {
   emit_extjump2(addr, target, (int)dyna_linker_ds);
 }
 
-void do_readstub(int n)
+static void do_readstub(int n)
 {
   assem_debug("do_readstub %x\n",start+stubs[n][3]*4);
   literal_pool(256);
@@ -2760,7 +2656,7 @@ void do_readstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-void inline_readstub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_readstub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
 {
   int rs=get_reg(regmap,target);
   int rth=get_reg(regmap,target|64);
@@ -2837,7 +2733,7 @@ void inline_readstub(int type, int i, u_int addr, signed char regmap[], int targ
   }
 }
 
-void do_writestub(int n)
+static void do_writestub(int n)
 {
   assem_debug("do_writestub %x\n",start+stubs[n][3]*4);
   literal_pool(256);
@@ -2922,7 +2818,7 @@ void do_writestub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-void inline_writestub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_writestub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
 {
   int rs=get_reg(regmap,-1);
   int rth=get_reg(regmap,target|64);
@@ -2993,7 +2889,7 @@ void inline_writestub(int type, int i, u_int addr, signed char regmap[], int tar
   restore_regs(reglist);
 }
 
-void do_unalignedwritestub(int n)
+static void do_unalignedwritestub(int n)
 {
   set_jump_target(stubs[n][1],(int)out);
   output_w32(0xef000000);
@@ -3005,7 +2901,7 @@ void printregs(int edi,int esi,int ebp,int esp,int b,int d,int c,int a)
   printf("regs: %x %x %x %x %x %x %x (%x)\n",a,b,c,d,ebp,esi,edi,(&edi)[-1]);
 }
 
-void do_invstub(int n)
+static void do_invstub(int n)
 {
   literal_pool(20);
   u_int reglist=stubs[n][3];
@@ -3017,7 +2913,7 @@ void do_invstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-int do_dirty_stub(int i)
+static int do_dirty_stub(int i)
 {
   assem_debug("do_dirty_stub %x\n",start+i*4);
   // Careful about the code output here, verify_dirty needs to parse it.
@@ -3041,7 +2937,7 @@ int do_dirty_stub(int i)
   return entry;
 }
 
-void do_dirty_stub_ds()
+static void do_dirty_stub_ds()
 {
   // Careful about the code output here, verify_dirty needs to parse it.
   #ifdef ARMv5_ONLY
@@ -3059,7 +2955,7 @@ void do_dirty_stub_ds()
   emit_call((int)&verify_code_ds);
 }
 
-void do_cop1stub(int n)
+static void do_cop1stub(int n)
 {
   literal_pool(256);
   assem_debug("do_cop1stub %x\n",start+stubs[n][3]*4);
@@ -3082,7 +2978,7 @@ void do_cop1stub(int n)
 
 /* TLB */
 
-int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u_int addr)
+static int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u_int addr)
 {
   if(c) {
     if((signed int)addr>=(signed int)0xC0000000) {
@@ -3109,7 +3005,7 @@ int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u_int ad
   }
   return map;
 }
-int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
+static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
 {
   if(!c||(signed int)addr>=(signed int)0xC0000000) {
     emit_test(map,map);
@@ -3119,14 +3015,14 @@ int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
   return map;
 }
 
-void gen_tlb_addr_r(int ar, int map) {
+static void gen_tlb_addr_r(int ar, int map) {
   if(map>=0) {
     assem_debug("add %s,%s,%s lsl #2\n",regname[ar],regname[ar],regname[map]);
     output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
   }
 }
 
-int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
+static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 {
   if(c) {
     if(addr<0x80800000||addr>=0xC0000000) {
@@ -3151,7 +3047,7 @@ int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
   }
   return map;
 }
-void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
+static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
 {
   if(!c||addr<0x80800000||addr>=0xC0000000) {
     emit_testimm(map,0x40000000);
@@ -3160,7 +3056,7 @@ void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
   }
 }
 
-void gen_tlb_addr_w(int ar, int map) {
+static void gen_tlb_addr_w(int ar, int map) {
   if(map>=0) {
     assem_debug("add %s,%s,%s lsl #2\n",regname[ar],regname[ar],regname[map]);
     output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
@@ -3168,7 +3064,7 @@ void gen_tlb_addr_w(int ar, int map) {
 }
 
 // This reverses the above operation
-void gen_orig_addr_w(int ar, int map) {
+static void gen_orig_addr_w(int ar, int map) {
   if(map>=0) {
     assem_debug("sub %s,%s,%s lsl #2\n",regname[ar],regname[ar],regname[map]);
     output_w32(0xe0400100|rd_rn_rm(ar,ar,map));
@@ -3176,14 +3072,14 @@ void gen_orig_addr_w(int ar, int map) {
 }
 
 // Generate the address of the memory_map entry, relative to dynarec_local
-void generate_map_const(u_int addr,int reg) {
+static void generate_map_const(u_int addr,int reg) {
   //printf("generate_map_const(%x,%s)\n",addr,regname[reg]);
   emit_movimm((addr>>12)+(((u_int)memory_map-(u_int)&dynarec_local)>>2),reg);
 }
 
 /* Special assem */
 
-void shift_assemble_arm(int i,struct regstat *i_regs)
+static void shift_assemble_arm(int i,struct regstat *i_regs)
 {
   if(rt1[i]) {
     if(opcode2[i]<=0x07) // SLLV/SRLV/SRAV
@@ -3294,7 +3190,7 @@ void shift_assemble_arm(int i,struct regstat *i_regs)
 }
 #define shift_assemble shift_assemble_arm
 
-void loadlr_assemble_arm(int i,struct regstat *i_regs)
+static void loadlr_assemble_arm(int i,struct regstat *i_regs)
 {
   int s,th,tl,temp,temp2,addr,map=-1,cache=-1;
   int offset;
@@ -3435,7 +3331,7 @@ void loadlr_assemble_arm(int i,struct regstat *i_regs)
 }
 #define loadlr_assemble loadlr_assemble_arm
 
-void cop0_assemble(int i,struct regstat *i_regs)
+static void cop0_assemble(int i,struct regstat *i_regs)
 {
   if(opcode2[i]==0) // MFC0
   {
@@ -3540,7 +3436,7 @@ void cop0_assemble(int i,struct regstat *i_regs)
   }
 }
 
-void cop1_assemble(int i,struct regstat *i_regs)
+static void cop1_assemble(int i,struct regstat *i_regs)
 {
   // Check cop1 unusable
   if(!cop1_usable) {
@@ -3608,7 +3504,7 @@ void cop1_assemble(int i,struct regstat *i_regs)
   }
 }
 
-void fconv_assemble_arm(int i,struct regstat *i_regs)
+static void fconv_assemble_arm(int i,struct regstat *i_regs)
 {
   signed char temp=get_reg(i_regs->regmap,-1);
   assert(temp>=0);
@@ -3825,7 +3721,7 @@ void fconv_assemble_arm(int i,struct regstat *i_regs)
 }
 #define fconv_assemble fconv_assemble_arm
 
-void fcomp_assemble(int i,struct regstat *i_regs)
+static void fcomp_assemble(int i,struct regstat *i_regs)
 {
   signed char fs=get_reg(i_regs->regmap,FSREG);
   signed char temp=get_reg(i_regs->regmap,-1);
@@ -3953,7 +3849,7 @@ void fcomp_assemble(int i,struct regstat *i_regs)
   emit_loadreg(FSREG,fs);
 }
 
-void float_assemble(int i,struct regstat *i_regs)
+static void float_assemble(int i,struct regstat *i_regs)
 {
   signed char temp=get_reg(i_regs->regmap,-1);
   assert(temp>=0);
@@ -4146,7 +4042,7 @@ void float_assemble(int i,struct regstat *i_regs)
   }
 }
 
-void multdiv_assemble_arm(int i,struct regstat *i_regs)
+static void multdiv_assemble_arm(int i,struct regstat *i_regs)
 {
   //  case 0x18: MULT
   //  case 0x19: MULTU
@@ -4425,25 +4321,25 @@ void multdiv_assemble_arm(int i,struct regstat *i_regs)
 }
 #define multdiv_assemble multdiv_assemble_arm
 
-void do_preload_rhash(int r) {
+static void do_preload_rhash(int r) {
   // Don't need this for ARM.  On x86, this puts the value 0xf8 into the
   // register.  On ARM the hash can be done with a single instruction (below)
 }
 
-void do_preload_rhtbl(int ht) {
+static void do_preload_rhtbl(int ht) {
   emit_addimm(FP,(int)&mini_ht-(int)&dynarec_local,ht);
 }
 
-void do_rhash(int rs,int rh) {
+static void do_rhash(int rs,int rh) {
   emit_andimm(rs,0xf8,rh);
 }
 
-void do_miniht_load(int ht,int rh) {
+static void do_miniht_load(int ht,int rh) {
   assem_debug("ldr %s,[%s,%s]!\n",regname[rh],regname[ht],regname[rh]);
   output_w32(0xe7b00000|rd_rn_rm(rh,ht,rh));
 }
 
-void do_miniht_jump(int rs,int rh,int ht) {
+static void do_miniht_jump(int rs,int rh,int ht) {
   emit_cmp(rh,rs);
   emit_ldreq_indexed(ht,4,15);
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
@@ -4454,7 +4350,7 @@ void do_miniht_jump(int rs,int rh,int ht) {
   #endif
 }
 
-void do_miniht_insert(u_int return_address,int rt,int temp) {
+static void do_miniht_insert(u_int return_address,int rt,int temp) {
   #ifdef ARMv5_ONLY
   emit_movimm(return_address,rt); // PC into link register
   add_to_linker((int)out,return_address,1);
@@ -4475,7 +4371,7 @@ void do_miniht_insert(u_int return_address,int rt,int temp) {
 // This is useful where we have a 32-bit value in a register, and want to
 // keep it in a 32-bit register, but can't guarantee that it won't be read
 // as a 64-bit value later.
-void wb_sx(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32_pre,uint64_t is32,uint64_t u,uint64_t uu)
+static void wb_sx(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32_pre,uint64_t is32,uint64_t u,uint64_t uu)
 {
   if(is32_pre==is32) return;
   int hr,reg;
@@ -4495,7 +4391,7 @@ void wb_sx(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32_pr
   }
 }
 
-void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int dirty,uint64_t is32_pre,uint64_t u,uint64_t uu)
+static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int dirty,uint64_t is32_pre,uint64_t u,uint64_t uu)
 {
   //if(dirty_pre==dirty) return;
   int hr,reg,new_hr;
@@ -4524,7 +4420,7 @@ void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int dirty,
 
 
 /* using strd could possibly help but you'd have to allocate registers in pairs
-void wb_invalidate_arm(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32,uint64_t u,uint64_t uu)
+static void wb_invalidate_arm(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32,uint64_t u,uint64_t uu)
 {
   int hr;
   int wrote=-1;
@@ -4581,7 +4477,7 @@ void wb_invalidate_arm(signed char pre[],signed char entry[],uint64_t dirty,uint
 
 // Clearing the cache is rather slow on ARM Linux, so mark the areas
 // that need to be cleared, and then only clear these areas once.
-void do_clear_cache()
+static void do_clear_cache()
 {
   int i,j;
   for (i=0;i<(1<<(TARGET_SIZE_2-17));i++)
@@ -4613,7 +4509,7 @@ void do_clear_cache()
 }
 
 // CPU-architecture-specific initialization
-void arch_init() {
+static void arch_init() {
   rounding_modes[0]=0x0<<22; // round
   rounding_modes[1]=0x3<<22; // trunc
   rounding_modes[2]=0x1<<22; // ceil
