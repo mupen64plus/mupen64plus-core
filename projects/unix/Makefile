@@ -355,7 +355,7 @@ endif
 ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
 
-  ifeq ($(DYNAREC), x86)
+  ifeq ($(CPU), X86)
     SOURCE += \
       $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
       $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
