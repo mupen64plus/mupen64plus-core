@@ -89,10 +89,12 @@ static unsigned short *address_low = (unsigned short *)(&address);
 #endif
 
 // values that are being written are stored in these variables
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
 unsigned int word;
 unsigned char cpu_byte;
 unsigned short hword;
 unsigned long long int dword;
+#endif
 
 // addresse where the read value will be stored
 unsigned long long int* rdword;
