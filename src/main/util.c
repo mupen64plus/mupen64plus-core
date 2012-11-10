@@ -90,19 +90,19 @@ void swap_buffer(void *buffer, size_t length, size_t count)
     {
         unsigned short *pun = (unsigned short *)buffer;
         for (i = 0; i < count; i++)
-            pun[i] = swap16(pun[i]);
+            pun[i] = m64p_swap16(pun[i]);
     }
     else if (length == 4)
     {
         unsigned int *pun = (unsigned int *)buffer;
         for (i = 0; i < count; i++)
-            pun[i] = swap32(pun[i]);
+            pun[i] = m64p_swap32(pun[i]);
     }
     else if (length == 8)
     {
         unsigned long long *pun = (unsigned long long *)buffer;
         for (i = 0; i < count; i++)
-            pun[i] = swap64(pun[i]);
+            pun[i] = m64p_swap64(pun[i]);
     }
 }
 

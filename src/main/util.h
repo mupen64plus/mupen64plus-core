@@ -64,7 +64,7 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
  * added in relatively recent versions. In addition, GCC can detect the byte
  * swap code and optimize it with a high enough optimization level. */
 
-static inline unsigned short swap16(unsigned short x)
+static inline unsigned short m64p_swap16(unsigned short x)
 {
     #ifdef _MSC_VER
     return _byteswap_ushort(x);
@@ -74,7 +74,7 @@ static inline unsigned short swap16(unsigned short x)
     #endif
 }
 
-static inline unsigned int swap32(unsigned int x)
+static inline unsigned int m64p_swap32(unsigned int x)
 {
     #ifdef _MSC_VER
     return _byteswap_ulong(x); // long is always 32-bit in Windows
@@ -86,7 +86,7 @@ static inline unsigned int swap32(unsigned int x)
     #endif
 }
 
-static inline unsigned long long int swap64(unsigned long long int x)
+static inline unsigned long long int m64p_swap64(unsigned long long int x)
 {
     #ifdef _MSC_VER
     return _byteswap_uint64(x);
@@ -106,13 +106,13 @@ static inline unsigned long long int swap64(unsigned long long int x)
 #define big16(x) (x)
 #define big32(x) (x)
 #define big64(x) (x)
-#define little16(x) swap16(x)
-#define little32(x) swap32(x)
-#define little64(x) swap64(x)
+#define little16(x) m64p_swap16(x)
+#define little32(x) m64p_swap32(x)
+#define little64(x) m64p_swap64(x)
 #else
-#define big16(x) swap16(x)
-#define big32(x) swap32(x)
-#define big64(x) swap64(x)
+#define big16(x) m64p_swap16(x)
+#define big32(x) m64p_swap32(x)
+#define big64(x) m64p_swap64(x)
 #define little16(x) (x)
 #define little32(x) (x)
 #define little64(x) (x)
