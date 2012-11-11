@@ -212,6 +212,12 @@ extern int cycle_count;
 #define NOTTAKEN 2
 #define NULLDS 3
 
+/* bug-fix to implement __clear_cache (missing in Android; http://code.google.com/p/android/issues/detail?id=1803) */
+void __clear_cache_bugfix(char* begin, char *end);
+#ifdef ANDROID
+	#define __clear_cache __clear_cache_bugfix
+#endif
+
 // asm linkage
 int new_recompile_block(int addr);
 void *get_addr_ht(u_int vaddr);

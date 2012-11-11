@@ -1197,6 +1197,8 @@ breakpoint:
 	.size	breakpoint, .-breakpoint
 /*  The following bug-fix implements __clear_cache (missing in Android)  */
 	.align	2
+	.global	__clear_cache_bugfix
+	.hidden __clear_cache_bugfix
 	.type	__clear_cache_bugfix, %function
 __clear_cache_bugfix:
 	push    {r7, lr}
