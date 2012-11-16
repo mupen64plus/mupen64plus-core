@@ -12,7 +12,7 @@ These functions are present in all of the plugins.
 |'''<tt>m64p_error PluginStartup(m64p_dynlib_handle CoreLibHandle, void *Context, void (*DebugCallback)(void *Context, int level, const char *Message))</tt>'''
 |-
 |Input Parameters
-|'''<tt>CoreLibHandle</tt>''' Dynamic library handle (defined in [[Mupen64Plus v2.0 headers#core.h|core.h]]) corresponding with the core mupen64plus library.<br />
+|'''<tt>CoreLibHandle</tt>''' Dynamic library handle (defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]) corresponding with the core mupen64plus library.<br />
 '''<tt>Context</tt>''' Pointer which will be passed back to the '''<tt>DebugCallback</tt>''' function.  Can be NULL.<br />
 '''<tt>DebugCallback</tt>''' Pointer to function in front-end for receiving debug information and warnings from the plugin.  This function must be thread-safe.  Can be NULL.
 |-

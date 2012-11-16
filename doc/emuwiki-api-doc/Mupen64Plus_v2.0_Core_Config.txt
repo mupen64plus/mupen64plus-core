@@ -2,7 +2,7 @@
 
 = Mupen64Plus v2.0 Configuration API =
 
-Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which is an enumerated type defined in [[Mupen64Plus v2.0 headers#core.h|core.h]].  Front-end code should check the return value of each call to a libmupen64plus function.
+Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which is an enumerated type defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]].  Front-end code should check the return value of each call to a libmupen64plus function.
 
 == Selector Functions ==
 These functions are used by the front-end to discover the sections in the configuration file, open a section, discover parameters within a section, and find out if a section has been changed.
@@ -28,7 +28,7 @@ These functions are used by the front-end to discover the sections in the config
 |-
 |Input Parameters
 |'''<tt>SectionName</tt>''' Name of the Mupen64Plus configuration section to open.  This name is case-insensitive.  If no section exists with the given name, a new one will be created with no parameters.  This name may consist of any ASCII characters between 32 and 127 except brackets "[]".<br />
-'''<tt>ConfigSectionHandle</tt>''' This is a handle (defined in [[Mupen64Plus v2.0 headers#core.h|core.h]]) which is required to be used for subsequent calls to core configuration functions to list, retrieve, or set configuration parameters.
+'''<tt>ConfigSectionHandle</tt>''' This is a handle (defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]) which is required to be used for subsequent calls to core configuration functions to list, retrieve, or set configuration parameters.
 |-
 |Requirements
 |The Mupen64Plus library must already be initialized before calling this function.  The '''<tt>SectionName</tt>''' and '''<tt>ConfigSectionHandle</tt>''' pointers cannot be NULL.

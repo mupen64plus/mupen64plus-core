@@ -2,7 +2,7 @@
 
 = Mupen64Plus v2.0 Core<-->Front-End API =
 
-Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which is an enumerated type defined in [[Mupen64Plus v2.0 headers#core.h|core.h]].  Front-end code should check the return value of each call to a libmupen64plus function.
+Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which is an enumerated type defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]].  Front-end code should check the return value of each call to a libmupen64plus function.
 
 == Startup/Shutdown Functions ==
 {| border="1"
@@ -42,7 +42,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |-
 |Input Parameters
 |'''<tt>PluginType</tt>''' Enumerated type specifying the plugin type to attach to the core.  If this type of plugin is currently attached to the core, an error will be returned.<br />
-'''<tt>PluginLibHandle</tt>''' Dynamic library handle (defined in [[Mupen64Plus v2.0 headers#core.h|core.h]]) corresponding with the plugin object to attach.
+'''<tt>PluginLibHandle</tt>''' Dynamic library handle (defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]) corresponding with the plugin object to attach.
 |-
 |Requirements
 |Both the core library and the plugin library must already be initialized with the <tt>CoreStartup()/PluginStartup()</tt> functions, and a ROM must be open.  This function cannot be called while the emulator is running.  The plugins must be attached in the following order: Video, Audio, Input, RSP.
@@ -247,7 +247,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |'''<tt>m64p_error CoreOverrideVidExt(m64p_video_extension_functions *VideoFunctionStruct);</tt>'''
 |-
 |Input Parameters
-|'''<tt>VideoFunctionStruct</tt>''' Pointer to a structure (defined in [[Mupen64Plus v2.0 headers#vidext.h|vidext.h]]) containing pointers to the Front-end's custom Video Extension functions to override the default SDL functions
+|'''<tt>VideoFunctionStruct</tt>''' Pointer to a structure (defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]) containing pointers to the Front-end's custom Video Extension functions to override the default SDL functions
 |-
 |Requirements
 |The Mupen64Plus library must already be initialized before calling this function.  This function cannot be called while the emulator is running.
