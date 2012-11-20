@@ -277,36 +277,23 @@ static int verify_dirty(void *addr);
 // Uncomment this line to output the number of NOTCOMPILED blocks as they occur:
 //#define COUNT_NOTCOMPILEDS 1
 
-#define DEBUG_output_file "./DEBUG_PluginTestA_dynarec.txt"
-
-static FILE* file = NULL;
 #if defined (COUNT_NOTCOMPILEDS )
 	int notcompiledCount = 0;
 #endif
-static void log_to_file( char* format, ... )
-{
-    va_list args;
-    va_start( args, format );
-    if( file != NULL )
-    	vfprintf( file, format, args );
-    va_end( args );
-}
 static void nullf() {}
 
 #if defined( ASSEM_DEBUG )
-    #define assem_debug(...) log_to_file(__VA_ARGS__)
+    #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
     #define assem_debug nullf
 #endif
 #if defined( INV_DEBUG )
-    #define inv_debug(...) log_to_file(__VA_ARGS__)
+    #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
     #define inv_debug nullf
 #endif
 
-#define printf(...) log_to_file(__VA_ARGS__)
-
-#define log_message(...) log_to_file(__VA_ARGS__)
+#define log_message(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 
 static void tlb_hacks()
 {
@@ -340,7 +327,7 @@ static void tlb_hacks()
       if(mmap(ROM_COPY, 12582912,
               PROT_READ | PROT_WRITE,
               MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-              -1, 0) <= 0) {printf("mmap() failed\n");}
+              -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
       memcpy(ROM_COPY,rom,12582912);
       rom_addr=(u_int)ROM_COPY;
     }
@@ -364,11 +351,11 @@ void *get_addr(u_int vaddr)
   if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
-  //printf("TRACE: count=%d next=%d (get_addr %x,page %d)\n",Count,next_interupt,vaddr,page);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",Count,next_interupt,vaddr,page);
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-  //printf("TRACE: count=%d next=%d (get_addr match %x: %x)\n",Count,next_interupt,vaddr,(int)head->addr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
       u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
       ht_bin[3]=ht_bin[1];
       ht_bin[2]=ht_bin[0];
@@ -381,11 +368,11 @@ void *get_addr(u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //printf("TRACE: count=%d next=%d (get_addr match dirty %x: %x)\n",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
       if(verify_dirty(head->addr)) {
-        //printf("restore candidate: %x (%d) d=%d\n",vaddr,page,invalid_code[vaddr>>12]);
+        //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
         invalid_code[vaddr>>12]=0;
         memory_map[vaddr>>12]|=0x40000000;
         if(vpage<2048) {
@@ -412,7 +399,7 @@ void *get_addr(u_int vaddr)
     }
     head=head->next;
   }
-  //printf("TRACE: count=%d next=%d (get_addr no-match %x)\n",Count,next_interupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",Count,next_interupt,vaddr);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -427,7 +414,7 @@ void *get_addr(u_int vaddr)
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
 {
-  //printf("TRACE: count=%d next=%d (get_addr_ht %x)\n",Count,next_interupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",Count,next_interupt,vaddr);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -436,7 +423,7 @@ void *get_addr_ht(u_int vaddr)
 
 void *get_addr_32(u_int vaddr,u_int flags)
 {
-  //printf("TRACE: count=%d next=%d (get_addr_32 %x,flags %x)\n",Count,next_interupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",Count,next_interupt,vaddr,flags);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -450,7 +437,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //printf("TRACE: count=%d next=%d (get_addr_32 match %x: %x)\n",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
       if(head->reg32==0) {
         u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
         if(ht_bin[0]==-1) {
@@ -472,11 +459,11 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //printf("TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)\n",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
       if(verify_dirty(head->addr)) {
-        //printf("restore candidate: %x (%d) d=%d\n",vaddr,page,invalid_code[vaddr>>12]);
+        //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
         invalid_code[vaddr>>12]=0;
         memory_map[vaddr>>12]|=0x40000000;
         if(vpage<2048) {
@@ -506,7 +493,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
     }
     head=head->next;
   }
-  //printf("TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)\n",Count,next_interupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",Count,next_interupt,vaddr,flags);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -629,7 +616,7 @@ static uint64_t get_const(struct regstat *cur,signed char reg)
       return cur->constmap[hr];
     }
   }
-  printf("Unknown constant in r%d\n",reg);
+  DebugMessage(M64MSG_ERROR, "Unknown constant in r%d",reg);
   exit(1);
 }
 
@@ -859,14 +846,14 @@ static void div64(int64_t dividend,int64_t divisor)
 {
   lo=dividend/divisor;
   hi=dividend%divisor;
-  //printf("TRACE: ddiv %8x%8x %8x%8x\n" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
 }
 static void divu64(uint64_t dividend,uint64_t divisor)
 {
   lo=dividend/divisor;
   hi=dividend%divisor;
-  //printf("TRACE: ddivu %8x%8x %8x%8x\n",(int)reg[HIREG],(int)(reg[HIREG]>>32)
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
 }
 
@@ -940,7 +927,7 @@ static void multu64(uint64_t m1,uint64_t m2)
    lo = result1 | (result2 << 32);
    hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
    
-  //printf("TRACE: dmultu %8x%8x %8x%8x\n",(int)reg[HIREG],(int)(reg[HIREG]>>32)
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: dmultu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                      ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
 }
 #endif
@@ -1052,7 +1039,7 @@ static void *check_addr(u_int vaddr)
 
 static void remove_hash(int vaddr)
 {
-  //printf("remove hash: %x\n",vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "remove hash: %x",vaddr);
   u_int *ht_bin=hash_table[(((vaddr)>>16)^vaddr)&0xFFFF];
   if(ht_bin[2]==vaddr) {
     ht_bin[2]=ht_bin[3]=-1;
@@ -1159,12 +1146,12 @@ void invalidate_block(u_int block)
   first=last=page;
   struct ll_entry *head;
   head=jump_dirty[vpage];
-  //printf("page=%d vpage=%d\n",page,vpage);
+  //DebugMessage(M64MSG_VERBOSE, "page=%d vpage=%d",page,vpage);
   while(head!=NULL) {
     u_int start,end;
     if(vpage>2047||(head->vaddr>>12)==block) { // Ignore vaddr hash collision
       get_bounds((int)head->addr,&start,&end);
-      //printf("start: %x end: %x\n",start,end);
+      //DebugMessage(M64MSG_VERBOSE, "start: %x end: %x",start,end);
       if(page<2048&&start>=0x80000000&&end<0x80800000) {
         if(((start-(u_int)rdram)>>12)<=page&&((end-1-(u_int)rdram)>>12)>=page) {
           if((((start-(u_int)rdram)>>12)&2047)<first) first=((start-(u_int)rdram)>>12)&2047;
@@ -1180,7 +1167,7 @@ void invalidate_block(u_int block)
     }
     head=head->next;
   }
-  //printf("first=%d last=%d\n",first,last);
+  //DebugMessage(M64MSG_VERBOSE, "first=%d last=%d",first,last);
   invalidate_page(page);
   assert(first+5>page); // NB: this assumes MAXBLOCK<=4096 (4 pages)
   assert(last<page+5);
@@ -1279,7 +1266,7 @@ void clean_blocks(u_int page)
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         u_int start,end;
         if(verify_dirty(head->addr)) {
-          //printf("Possibly Restore %x (%x)\n",head->vaddr, (int)head->addr);
+          //DebugMessage(M64MSG_VERBOSE, "Possibly Restore %x (%x)",head->vaddr, (int)head->addr);
           u_int i;
           u_int inv=0;
           get_bounds((int)head->addr,&start,&end);
@@ -1290,7 +1277,7 @@ void clean_blocks(u_int page)
           }
           if((signed int)head->vaddr>=(signed int)0xC0000000) {
             u_int addr = (head->vaddr+(memory_map[head->vaddr>>12]<<2));
-            //printf("addr=%x start=%x end=%x\n",addr,start,end);
+            //DebugMessage(M64MSG_VERBOSE, "addr=%x start=%x end=%x",addr,start,end);
             if(addr<start||addr>=end) inv=1;
           }
           else if((signed int)head->vaddr>=(signed int)0x80800000) {
@@ -1302,7 +1289,7 @@ void clean_blocks(u_int page)
               u_int ppage=page;
               if(page<2048&&tlb_LUT_r[head->vaddr>>12]) ppage=(tlb_LUT_r[head->vaddr>>12]^0x80000000)>>12;
               inv_debug("INV: Restored %x (%x/%x)\n",head->vaddr, (int)head->addr, (int)clean_addr);
-              //printf("page=%x, addr=%x\n",page,head->vaddr);
+              //DebugMessage(M64MSG_VERBOSE, "page=%x, addr=%x",page,head->vaddr);
               //assert(head->vaddr>>12==(page|0x80000));
               ll_add_32(jump_in+ppage,head->vaddr,head->reg32,clean_addr);
               u_int *ht_bin=hash_table[((head->vaddr>>16)^head->vaddr)&0xFFFF];
@@ -1875,8 +1862,8 @@ static void delayslot_alloc(struct regstat *current,int i)
     case FJUMP:
     case SYSCALL:
     case SPAN:
-      assem_debug("jump in the delay slot.  this shouldn't happen.\n");//exit(1);
-      printf("Disabled speculative precompilation\n");
+      assem_debug("jump in the delay slot.  this shouldn't happen.");//exit(1);
+      DebugMessage(M64MSG_VERBOSE, "Disabled speculative precompilation");
       stop_after_jal=1;
       break;
     case IMM16:
@@ -2039,14 +2026,12 @@ static int rchecksum()
 static void rlist()
 {
   int i;
-  printf("TRACE: ");
+  DebugMessage(M64MSG_VERBOSE, "TRACE: ");
   for(i=0;i<32;i++)
-    printf("r%d:%8x%8x ",i,((int *)(reg+i))[1],((int *)(reg+i))[0]);
-  printf("\n");
-  printf("TRACE: ");
+    DebugMessage(M64MSG_VERBOSE, "r%d:%8x%8x ",i,((int *)(reg+i))[1],((int *)(reg+i))[0]);
+  DebugMessage(M64MSG_VERBOSE, "TRACE: ");
   for(i=0;i<32;i++)
-    printf("f%d:%8x%8x ",i,((int*)reg_cop1_simple[i])[1],*((int*)reg_cop1_simple[i]));
-  printf("\n");
+    DebugMessage(M64MSG_VERBOSE, "f%d:%8x%8x ",i,((int*)reg_cop1_simple[i])[1],*((int*)reg_cop1_simple[i]));
 }
 
 static void enabletrace()
@@ -2057,35 +2042,35 @@ static void enabletrace()
 
 static void memdebug(int i)
 {
-  //printf("TRACE: count=%d next=%d (checksum %x) lo=%8x%8x\n",Count,next_interupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
-  //printf("TRACE: count=%d next=%d (rchecksum %x)\n",Count,next_interupt,rchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",Count,next_interupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",Count,next_interupt,rchecksum());
   //rlist();
   //if(tracedebug) {
   //if(Count>=-2084597794) {
   if((signed int)Count>=-2084597794&&(signed int)Count<0) {
   //if(0) {
-    printf("TRACE: count=%d next=%d (checksum %x)\n",Count,next_interupt,mchecksum());
-    //printf("TRACE: count=%d next=%d (checksum %x) Status=%x\n",Count,next_interupt,mchecksum(),Status);
-    //printf("TRACE: count=%d next=%d (checksum %x) hi=%8x%8x\n",Count,next_interupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",Count,next_interupt,mchecksum());
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",Count,next_interupt,mchecksum(),Status);
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",Count,next_interupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
     rlist();
     #if NEW_DYNAREC == NEW_DYNAREC_X86
-    printf("TRACE: %x\n",(&i)[-1]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: %x",(&i)[-1]);
     #endif
     #if NEW_DYNAREC == NEW_DYNAREC_ARM
     int j;
-    printf("TRACE: %x \n",(&j)[10]);
-    printf("TRACE: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n",(&j)[1],(&j)[2],(&j)[3],(&j)[4],(&j)[5],(&j)[6],(&j)[7],(&j)[8],(&j)[9],(&j)[10],(&j)[11],(&j)[12],(&j)[13],(&j)[14],(&j)[15],(&j)[16],(&j)[17],(&j)[18],(&j)[19],(&j)[20]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: %x ",(&j)[10]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x",(&j)[1],(&j)[2],(&j)[3],(&j)[4],(&j)[5],(&j)[6],(&j)[7],(&j)[8],(&j)[9],(&j)[10],(&j)[11],(&j)[12],(&j)[13],(&j)[14],(&j)[15],(&j)[16],(&j)[17],(&j)[18],(&j)[19],(&j)[20]);
     #endif
     //fflush(stdout);
   }
-  //printf("TRACE: %x\n",(&i)[-1]);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: %x",(&i)[-1]);
 }
 #endif
 
 /* Debug:
 static void tlb_debug(u_int cause, u_int addr, u_int iaddr)
 {
-  printf("TLB Exception: instruction=%x addr=%x cause=%x\n",iaddr, addr, cause);
+  DebugMessage(M64MSG_VERBOSE, "TLB Exception: instruction=%x addr=%x cause=%x",iaddr, addr, cause);
 }
 end debug */
 
@@ -2747,7 +2732,7 @@ static void shiftimm_assemble(int i,struct regstat *i_regs)
 #ifndef shift_assemble
 void shift_assemble(int i,struct regstat *i_regs)
 {
-  printf("Need shift_assemble for this architecture.\n");
+  DebugMessage(M64MSG_ERROR, "Need shift_assemble for this architecture.");
   exit(1);
 }
 #endif
@@ -2775,8 +2760,8 @@ static void load_assemble(int i,struct regstat *i_regs)
   if(tl<0) tl=get_reg(i_regs->regmap,-1);
   if(offset||s<0||c) addr=tl;
   else addr=s;
-  //printf("load_assemble: c=%d\n",c);
-  //if(c) printf("load_assemble: const=%x\n",(int)constmap[i][s]+offset);
+  //DebugMessage(M64MSG_VERBOSE, "load_assemble: c=%d",c);
+  //if(c) DebugMessage(M64MSG_VERBOSE, "load_assemble: const=%x",(int)constmap[i][s]+offset);
   assert(tl>=0); // Even if the load is a NOP, we must check for pagefaults and I/O
   reglist&=~(1<<tl);
   if(th>=0) reglist&=~(1<<th);
@@ -3019,7 +3004,7 @@ static void load_assemble(int i,struct regstat *i_regs)
 #ifndef loadlr_assemble
 static void loadlr_assemble(int i,struct regstat *i_regs)
 {
-  printf("Need loadlr_assemble for this architecture.\n");
+  DebugMessage(M64MSG_ERROR, "Need loadlr_assemble for this architecture.");
   exit(1);
 }
 #endif
@@ -3648,7 +3633,7 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
 #ifndef multdiv_assemble
 void multdiv_assemble(int i,struct regstat *i_regs)
 {
-  printf("Need multdiv_assemble for this architecture.\n");
+  DebugMessage(M64MSG_ERROR, "Need multdiv_assemble for this architecture.");
   exit(1);
 }
 #endif
@@ -3678,7 +3663,7 @@ static void mov_assemble(int i,struct regstat *i_regs)
 #ifndef fconv_assemble
 void fconv_assemble(int i,struct regstat *i_regs)
 {
-  printf("Need fconv_assemble for this architecture.\n");
+  DebugMessage(M64MSG_ERROR, "Need fconv_assemble for this architecture.");
   exit(1);
 }
 #endif
@@ -3686,7 +3671,7 @@ void fconv_assemble(int i,struct regstat *i_regs)
 #if 0
 static void float_assemble(int i,struct regstat *i_regs)
 {
-  printf("Need float_assemble for this architecture.\n");
+  DebugMessage(M64MSG_ERROR, "Need float_assemble for this architecture.");
   exit(1);
 }
 #endif
@@ -3744,7 +3729,7 @@ static void ds_assemble(int i,struct regstat *i_regs)
     case CJUMP:
     case SJUMP:
     case FJUMP:
-      printf("Jump in the delay slot.  This is probably a bug.\n");
+      DebugMessage(M64MSG_VERBOSE, "Jump in the delay slot.  This is probably a bug.");
   }
   is_delayslot=0;
 }
@@ -3761,8 +3746,8 @@ static int internal_branch(uint64_t i_is32,int addr)
     // 64 -> 32 bit transition requires a recompile
     /*if(is32[t]&~unneeded_reg_upper[t]&~i_is32)
     {
-      if(requires_32bit[t]&~i_is32) printf("optimizable: no\n");
-      else printf("optimizable: yes\n");
+      if(requires_32bit[t]&~i_is32) DebugMessage(M64MSG_VERBOSE, "optimizable: no");
+      else DebugMessage(M64MSG_VERBOSE, "optimizable: yes");
     }*/
     //if(is32[t]&~unneeded_reg_upper[t]&~i_is32) return 0;
     if(requires_32bit[t]&~i_is32) return 0;
@@ -3874,8 +3859,8 @@ static void loop_preload(signed char pre[],signed char entry[])
       if(pre[hr]!=entry[hr]) {
         if(entry[hr]>=0) {
           if(get_reg(pre,entry[hr])<0) {
-            assem_debug("loop preload:\n");
-            //printf("loop preload: %d\n",hr);
+            assem_debug("loop preload:");
+            //DebugMessage(M64MSG_VERBOSE, "loop preload: %d",hr);
             if(entry[hr]==0) {
               emit_zeroreg(hr);
             }
@@ -3947,7 +3932,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
         if(!entry||entry[ra]!=rs1[i])
           emit_loadreg(rs1[i],ra);
         //if(!entry||entry[ra]!=rs1[i])
-        //  printf("poor load scheduling!\n");
+        //  DebugMessage(M64MSG_VERBOSE, "poor load scheduling!");
       }
       else if(c) {
         if(rm>=0) {
@@ -4125,13 +4110,13 @@ static int get_final_value(int hr, int i, int *value)
         #endif
         // Precompute load address
         *value=constmap[i][hr]+imm[i+1];
-        //printf("c=%x imm=%x\n",(int)constmap[i][hr],imm[i+1]);
+        //DebugMessage(M64MSG_VERBOSE, "c=%x imm=%x",(int)constmap[i][hr],imm[i+1]);
         return 1;
       }
     }
   }
   *value=constmap[i][hr];
-  //printf("c=%x\n",(int)constmap[i][hr]);
+  //DebugMessage(M64MSG_VERBOSE, "c=%x",(int)constmap[i][hr]);
   if(i==slen-1) return 1;
   if(reg<64) {
     return !((unneeded_reg[i+1]>>reg)&1);
@@ -4527,14 +4512,14 @@ static int match_bt(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty,int 
             {
               if(!((unneeded_reg[t]>>i_regmap[hr])&1))
               {
-                //printf("%x: dirty no match\n",addr);
+                //DebugMessage(M64MSG_VERBOSE, "%x: dirty no match",addr);
                 return 0;
               }
             }
           }
           if((((regs[t].was32^i_is32)&~unneeded_reg_upper[t])>>(i_regmap[hr]&63))&1)
           {
-            //printf("%x: is32 no match\n",addr);
+            //DebugMessage(M64MSG_VERBOSE, "%x: is32 no match",addr);
             return 0;
           }
         }
@@ -4575,8 +4560,8 @@ static void ds_assemble_entry(int i)
 {
   int t=(ba[i]-start)>>2;
   if(!instr_addr[t]) instr_addr[t]=(u_int)out;
-  assem_debug("Assemble delay slot at %x\n",ba[i]);
-  assem_debug("<->\n");
+  assem_debug("Assemble delay slot at %x",ba[i]);
+  assem_debug("<->");
   if(regs[t].regmap_entry[HOST_CCREG]==CCREG&&regs[t].regmap[HOST_CCREG]!=CCREG)
     wb_register(CCREG,regs[t].regmap_entry,regs[t].wasdirty,regs[t].was32);
   load_regs(regs[t].regmap_entry,regs[t].regmap,regs[t].was32,rs1[t],rs2[t]);
@@ -4627,14 +4612,14 @@ static void ds_assemble_entry(int i)
     case CJUMP:
     case SJUMP:
     case FJUMP:
-      printf("Jump in the delay slot.  This is probably a bug.\n");
+      DebugMessage(M64MSG_VERBOSE, "Jump in the delay slot.  This is probably a bug.");
   }
   store_regs_bt(regs[t].regmap,regs[t].is32,regs[t].dirty,ba[i]+4);
   load_regs_bt(regs[t].regmap,regs[t].is32,regs[t].dirty,ba[i]+4);
   if(internal_branch(regs[t].is32,ba[i]+4))
-    assem_debug("branch: internal\n");
+    assem_debug("branch: internal");
   else
-    assem_debug("branch: external\n");
+    assem_debug("branch: external");
   assert(internal_branch(regs[t].is32,ba[i]+4));
   add_to_linker((int)out,ba[i]+4,internal_branch(regs[t].is32,ba[i]+4));
   emit_jmp(0);
@@ -4687,7 +4672,7 @@ static void do_cc(int i,signed char i_regmap[],int *adj,int addr,int taken,int i
 static void do_ccstub(int n)
 {
   literal_pool(256);
-  assem_debug("do_ccstub %x\n",start+stubs[n][4]*4);
+  assem_debug("do_ccstub %x",start+stubs[n][4]*4);
   set_jump_target(stubs[n][1],(int)out);
   int i=stubs[n][4];
   if(stubs[n][6]==NULLDS) {
@@ -4897,7 +4882,7 @@ static void do_ccstub(int n)
       }
       emit_writeword(r,(int)&pcaddr);
     }
-    else {printf("Unknown branch type in do_ccstub\n");exit(1);}
+    else {DebugMessage(M64MSG_ERROR, "Unknown branch type in do_ccstub");exit(1);}
   }
   // Update cycle count
   assert(branch_regs[i].regmap[HOST_CCREG]==CCREG||branch_regs[i].regmap[HOST_CCREG]==-1);
@@ -4967,7 +4952,7 @@ static void ujump_assemble(int i,struct regstat *i_regs)
   #ifdef REG_PREFETCH
   signed char *i_regmap=i_regs->regmap;
   #endif
-  if(i==(ba[i]-start)>>2) assem_debug("idle loop\n");
+  if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   address_generation(i+1,i_regs,regs[i].regmap_entry);
   #ifdef REG_PREFETCH
   int temp=get_reg(branch_regs[i].regmap,PTEMP);
@@ -4992,7 +4977,7 @@ static void ujump_assemble(int i,struct regstat *i_regs)
     assert(rt1[i+1]!=31);
     assert(rt2[i+1]!=31);
     rt=get_reg(branch_regs[i].regmap,31);
-    assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+    assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
     //assert(rt>=0);
     return_address=start+i*4+8;
     if(rt>=0) {
@@ -5037,9 +5022,9 @@ static void ujump_assemble(int i,struct regstat *i_regs)
   if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
   load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
   if(internal_branch(branch_regs[i].is32,ba[i]))
-    assem_debug("branch: internal\n");
+    assem_debug("branch: internal");
   else
-    assem_debug("branch: external\n");
+    assem_debug("branch: external");
   if(internal_branch(branch_regs[i].is32,ba[i])&&is_ds[(ba[i]-start)>>2]) {
     ds_assemble_entry(i);
   }
@@ -5096,7 +5081,7 @@ static void rjump_assemble(int i,struct regstat *i_regs)
     assert(rt1[i+1]!=rt1[i]);
     assert(rt2[i+1]!=rt1[i]);
     rt=get_reg(branch_regs[i].regmap,rt1[i]);
-    assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+    assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
     assert(rt>=0);
     return_address=start+i*4+8;
     #ifdef REG_PREFETCH
@@ -5197,14 +5182,14 @@ static void cjump_assemble(int i,struct regstat *i_regs)
   int cc;
   int match;
   match=match_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-  assem_debug("match=%d\n",match);
+  assem_debug("match=%d",match);
   int s1h,s1l,s2h,s2l;
   int prev_cop1_usable=cop1_usable;
   int unconditional=0,nop=0;
   int only32=0;
   int invert=0;
   int internal=internal_branch(branch_regs[i].is32,ba[i]);
-  if(i==(ba[i]-start)>>2) assem_debug("idle loop\n");
+  if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   if(!match) invert=1;
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
   if(i>(ba[i]-start)>>2) invert=1;
@@ -5248,7 +5233,7 @@ static void cjump_assemble(int i,struct regstat *i_regs)
 
   if(ooo[i]) {
     // Out of order execution (delay slot first)
-    //printf("OOOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "OOOE");
     address_generation(i+1,i_regs,regs[i].regmap_entry);
     ds_assemble(i+1,i_regs);
     int adj;
@@ -5267,16 +5252,16 @@ static void cjump_assemble(int i,struct regstat *i_regs)
     if(unconditional) 
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
     //do_cc(i,branch_regs[i].regmap,&adj,unconditional?ba[i]:-1,unconditional);
-    //assem_debug("cycle count (adj)\n");
+    //assem_debug("cycle count (adj)");
     if(unconditional) {
       do_cc(i,branch_regs[i].regmap,&adj,ba[i],TAKEN,0);
       if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
         if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
         load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
         if(internal)
-          assem_debug("branch: internal\n");
+          assem_debug("branch: internal");
         else
-          assem_debug("branch: external\n");
+          assem_debug("branch: external");
         if(internal&&is_ds[(ba[i]-start)>>2]) {
           ds_assemble_entry(i);
         }
@@ -5337,7 +5322,7 @@ static void cjump_assemble(int i,struct regstat *i_regs)
         }
       } // if(!only32)
           
-      //printf("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      //DebugMessage(M64MSG_VERBOSE, "branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
       assert(s1l>=0);
       if(opcode[i]==4) // BEQ
       {
@@ -5404,9 +5389,9 @@ static void cjump_assemble(int i,struct regstat *i_regs)
           store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
           load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
           if(internal)
-            assem_debug("branch: internal\n");
+            assem_debug("branch: internal");
           else
-            assem_debug("branch: external\n");
+            assem_debug("branch: external");
           if(internal&&is_ds[(ba[i]-start)>>2]) {
             ds_assemble_entry(i);
           }
@@ -5427,9 +5412,9 @@ static void cjump_assemble(int i,struct regstat *i_regs)
   else
   {
     // In-order execution (branch first)
-    //if(likely[i]) printf("IOL\n");
+    //if(likely[i]) DebugMessage(M64MSG_VERBOSE, "IOL");
     //else
-    //printf("IOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "IOE");
     int taken=0,nottaken=0,nottaken1=0;
     if(!unconditional&&!nop) {
       if(!only32)
@@ -5467,7 +5452,7 @@ static void cjump_assemble(int i,struct regstat *i_regs)
         }
       } // if(!only32)
           
-      //printf("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      //DebugMessage(M64MSG_VERBOSE, "branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
       assert(s1l>=0);
       if((opcode[i]&0x2f)==4) // BEQ
       {
@@ -5507,7 +5492,7 @@ static void cjump_assemble(int i,struct regstat *i_regs)
     // branch taken
     if(!nop) {
       if(taken) set_jump_target(taken,(int)out);
-      assem_debug("1:\n");
+      assem_debug("1:");
       wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                     ds_unneeded,ds_unneeded_upper);
       // load regs
@@ -5523,13 +5508,13 @@ static void cjump_assemble(int i,struct regstat *i_regs)
       assert(cc==HOST_CCREG);
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-      assem_debug("cycle count (adj)\n");
+      assem_debug("cycle count (adj)");
       if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
       load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       if(internal)
-        assem_debug("branch: internal\n");
+        assem_debug("branch: internal");
       else
-        assem_debug("branch: external\n");
+        assem_debug("branch: external");
       if(internal&&is_ds[(ba[i]-start)>>2]) {
         ds_assemble_entry(i);
       }
@@ -5543,7 +5528,7 @@ static void cjump_assemble(int i,struct regstat *i_regs)
     if(!unconditional) {
       if(nottaken1) set_jump_target(nottaken1,(int)out);
       set_jump_target(nottaken,(int)out);
-      assem_debug("2:\n");
+      assem_debug("2:");
       if(!likely[i]) {
         wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                       ds_unneeded,ds_unneeded_upper);
@@ -5580,14 +5565,14 @@ static void sjump_assemble(int i,struct regstat *i_regs)
   int cc;
   int match;
   match=match_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-  assem_debug("smatch=%d\n",match);
+  assem_debug("smatch=%d",match);
   int s1h,s1l;
   int prev_cop1_usable=cop1_usable;
   int unconditional=0,nevertaken=0;
   int only32=0;
   int invert=0;
   int internal=internal_branch(branch_regs[i].is32,ba[i]);
-  if(i==(ba[i]-start)>>2) assem_debug("idle loop\n");
+  if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   if(!match) invert=1;
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
   if(i>(ba[i]-start)>>2) invert=1;
@@ -5620,7 +5605,7 @@ static void sjump_assemble(int i,struct regstat *i_regs)
 
   if(ooo[i]) {
     // Out of order execution (delay slot first)
-    //printf("OOOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "OOOE");
     address_generation(i+1,i_regs,regs[i].regmap_entry);
     ds_assemble(i+1,i_regs);
     int adj;
@@ -5639,7 +5624,7 @@ static void sjump_assemble(int i,struct regstat *i_regs)
       assert(rt1[i+1]!=31);
       assert(rt2[i+1]!=31);
       rt=get_reg(branch_regs[i].regmap,31);
-      assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      assem_debug("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
       if(rt>=0) {
         // Save the PC even if the branch is not taken
         return_address=start+i*4+8;
@@ -5654,16 +5639,16 @@ static void sjump_assemble(int i,struct regstat *i_regs)
     if(unconditional) 
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
     //do_cc(i,branch_regs[i].regmap,&adj,unconditional?ba[i]:-1,unconditional);
-    assem_debug("cycle count (adj)\n");
+    assem_debug("cycle count (adj)");
     if(unconditional) {
       do_cc(i,branch_regs[i].regmap,&adj,ba[i],TAKEN,0);
       if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
         if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
         load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
         if(internal)
-          assem_debug("branch: internal\n");
+          assem_debug("branch: internal");
         else
-          assem_debug("branch: external\n");
+          assem_debug("branch: external");
         if(internal&&is_ds[(ba[i]-start)>>2]) {
           ds_assemble_entry(i);
         }
@@ -5757,9 +5742,9 @@ static void sjump_assemble(int i,struct regstat *i_regs)
           store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
           load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
           if(internal)
-            assem_debug("branch: internal\n");
+            assem_debug("branch: internal");
           else
-            assem_debug("branch: external\n");
+            assem_debug("branch: external");
           if(internal&&is_ds[(ba[i]-start)>>2]) {
             ds_assemble_entry(i);
           }
@@ -5779,10 +5764,10 @@ static void sjump_assemble(int i,struct regstat *i_regs)
   else
   {
     // In-order execution (branch first)
-    //printf("IOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "IOE");
     int nottaken=0;
     if(!unconditional) {
-      //printf("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      //DebugMessage(M64MSG_VERBOSE, "branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
       if(!only32)
       {
         assert(s1h>=0);
@@ -5826,7 +5811,7 @@ static void sjump_assemble(int i,struct regstat *i_regs)
     ds_unneeded_upper|=1;
     // branch taken
     if(!nevertaken) {
-      //assem_debug("1:\n");
+      //assem_debug("1:");
       wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                     ds_unneeded,ds_unneeded_upper);
       // load regs
@@ -5842,13 +5827,13 @@ static void sjump_assemble(int i,struct regstat *i_regs)
       assert(cc==HOST_CCREG);
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-      assem_debug("cycle count (adj)\n");
+      assem_debug("cycle count (adj)");
       if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
       load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       if(internal)
-        assem_debug("branch: internal\n");
+        assem_debug("branch: internal");
       else
-        assem_debug("branch: external\n");
+        assem_debug("branch: external");
       if(internal&&is_ds[(ba[i]-start)>>2]) {
         ds_assemble_entry(i);
       }
@@ -5861,7 +5846,7 @@ static void sjump_assemble(int i,struct regstat *i_regs)
     cop1_usable=prev_cop1_usable;
     if(!unconditional) {
       set_jump_target(nottaken,(int)out);
-      assem_debug("1:\n");
+      assem_debug("1:");
       if(!likely[i]) {
         wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                       ds_unneeded,ds_unneeded_upper);
@@ -5898,12 +5883,12 @@ static void fjump_assemble(int i,struct regstat *i_regs)
   int cc;
   int match;
   match=match_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-  assem_debug("fmatch=%d\n",match);
+  assem_debug("fmatch=%d",match);
   int fs,cs;
   int eaddr;
   int invert=0;
   int internal=internal_branch(branch_regs[i].is32,ba[i]);
-  if(i==(ba[i]-start)>>2) assem_debug("idle loop\n");
+  if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   if(!match) invert=1;
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
   if(i>(ba[i]-start)>>2) invert=1;
@@ -5930,7 +5915,7 @@ static void fjump_assemble(int i,struct regstat *i_regs)
 
   if(ooo[i]) {
     // Out of order execution (delay slot first)
-    //printf("OOOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "OOOE");
     ds_assemble(i+1,i_regs);
     int adj;
     uint64_t bc_unneeded=branch_regs[i].u;
@@ -5946,7 +5931,7 @@ static void fjump_assemble(int i,struct regstat *i_regs)
     cc=get_reg(branch_regs[i].regmap,CCREG);
     assert(cc==HOST_CCREG);
     do_cc(i,branch_regs[i].regmap,&adj,-1,0,invert);
-    assem_debug("cycle count (adj)\n");
+    assem_debug("cycle count (adj)");
     if(1) {
       int nottaken=0;
       if(adj&&!invert) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
@@ -5983,9 +5968,9 @@ static void fjump_assemble(int i,struct regstat *i_regs)
         store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
         load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
         if(internal)
-          assem_debug("branch: internal\n");
+          assem_debug("branch: internal");
         else
-          assem_debug("branch: external\n");
+          assem_debug("branch: external");
         if(internal&&is_ds[(ba[i]-start)>>2]) {
           ds_assemble_entry(i);
         }
@@ -6004,10 +5989,10 @@ static void fjump_assemble(int i,struct regstat *i_regs)
   else
   {
     // In-order execution (branch first)
-    //printf("IOE\n");
+    //DebugMessage(M64MSG_VERBOSE, "IOE");
     int nottaken=0;
     if(1) {
-      //printf("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      //DebugMessage(M64MSG_VERBOSE, "branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
       if(1) {
         assert(fs>=0);
         emit_testimm(fs,0x800000);
@@ -6032,7 +6017,7 @@ static void fjump_assemble(int i,struct regstat *i_regs)
     ds_unneeded|=1;
     ds_unneeded_upper|=1;
     // branch taken
-    //assem_debug("1:\n");
+    //assem_debug("1:");
     wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                   ds_unneeded,ds_unneeded_upper);
     // load regs
@@ -6048,13 +6033,13 @@ static void fjump_assemble(int i,struct regstat *i_regs)
     assert(cc==HOST_CCREG);
     store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
     do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-    assem_debug("cycle count (adj)\n");
+    assem_debug("cycle count (adj)");
     if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
     load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
     if(internal)
-      assem_debug("branch: internal\n");
+      assem_debug("branch: internal");
     else
-      assem_debug("branch: external\n");
+      assem_debug("branch: external");
     if(internal&&is_ds[(ba[i]-start)>>2]) {
       ds_assemble_entry(i);
     }
@@ -6066,7 +6051,7 @@ static void fjump_assemble(int i,struct regstat *i_regs)
     // branch not taken
     if(1) { // <- FIXME (don't need this)
       set_jump_target(nottaken,(int)out);
-      assem_debug("1:\n");
+      assem_debug("1:");
       if(!likely[i]) {
         wb_invalidate(regs[i].regmap,branch_regs[i].regmap,regs[i].dirty,regs[i].is32,
                       ds_unneeded,ds_unneeded_upper);
@@ -6364,7 +6349,7 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
 // Assemble the delay slot for the above
 static void pagespan_ds()
 {
-  assem_debug("initial delay slot:\n");
+  assem_debug("initial delay slot:");
   u_int vaddr=start+1;
   u_int page=(0x80000000^vaddr)>>12;
   u_int vpage=page;
@@ -6428,7 +6413,7 @@ static void pagespan_ds()
     case CJUMP:
     case SJUMP:
     case FJUMP:
-      printf("Jump in the delay slot.  This is probably a bug.\n");
+      DebugMessage(M64MSG_VERBOSE, "Jump in the delay slot.  This is probably a bug.");
   }
   int btaddr=get_reg(regs[0].regmap,BTREG);
   if(btaddr<0) {
@@ -6468,7 +6453,7 @@ static void unneeded_registers(int istart,int iend,int r)
   }
   for (i=iend;i>=istart;i--)
   {
-    //printf("unneeded registers i=%d (%d,%d) r=%d\n",i,istart,iend,r);
+    //DebugMessage(M64MSG_VERBOSE, "unneeded registers i=%d (%d,%d) r=%d",i,istart,iend,r);
     if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
     {
       // If subroutine call, flag return address as a possible branch target
@@ -6678,25 +6663,24 @@ static void unneeded_registers(int istart,int iend,int r)
     unneeded_reg[i]=u;
     unneeded_reg_upper[i]=uu;
     /*
-    printf("ur (%d,%d) %x: ",istart,iend,start+i*4);
-    printf("U:");
+    DebugMessage(M64MSG_VERBOSE, "ur (%d,%d) %x: ",istart,iend,start+i*4);
+    DebugMessage(M64MSG_VERBOSE, "U:");
     int r;
     for(r=1;r<=CCREG;r++) {
       if((unneeded_reg[i]>>r)&1) {
-        if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf(" UU:");
+    DebugMessage(M64MSG_VERBOSE, " UU:");
     for(r=1;r<=CCREG;r++) {
       if(((unneeded_reg_upper[i]&~unneeded_reg[i])>>r)&1) {
-        if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
-    }
-    printf("\n");*/
+    }*/
   }
 }
 
@@ -7400,13 +7384,12 @@ static void clean_registers(int istart,int iend,int wr)
     wont_dirty[i]=wont_dirty_i;
     // Mark registers that won't be dirtied as not dirty
     if(wr) {
-      /*printf("wr (%d,%d) %x will:",istart,iend,start+i*4);
+      /*DebugMessage(M64MSG_VERBOSE, "wr (%d,%d) %x will:",istart,iend,start+i*4);
       for(r=0;r<HOST_REGS;r++) {
         if((will_dirty_i>>r)&1) {
-          printf(" r%d",r);
+          DebugMessage(M64MSG_VERBOSE, " r%d",r);
         }
-      }
-      printf("\n");*/
+      }*/
 
       //if(i==istart||(itype[i-1]!=RJUMP&&itype[i-1]!=UJUMP&&itype[i-1]!=CJUMP&&itype[i-1]!=SJUMP&&itype[i-1]!=FJUMP)) {
         regs[i].dirty|=will_dirty_i;
@@ -7419,7 +7402,7 @@ static void clean_registers(int istart,int iend,int wr)
               if(r!=EXCLUDE_REG) {
                 if(regs[i].regmap[r]==regmap_pre[i+2][r]) {
                   regs[i+2].wasdirty&=wont_dirty_i|~(1<<r);
-                }else {/*printf("i: %x (%d) mismatch(+2): %d\n",start+i*4,i,r); / *assert(!((wont_dirty_i>>r)&1));*/}
+                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+2): %d",start+i*4,i,r); / *assert(!((wont_dirty_i>>r)&1));*/}
               }
             }
           }
@@ -7431,7 +7414,7 @@ static void clean_registers(int istart,int iend,int wr)
               if(r!=EXCLUDE_REG) {
                 if(regs[i].regmap[r]==regmap_pre[i+1][r]) {
                   regs[i+1].wasdirty&=wont_dirty_i|~(1<<r);
-                }else {/*printf("i: %x (%d) mismatch(+1): %d\n",start+i*4,i,r);/ *assert(!((wont_dirty_i>>r)&1));*/}
+                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+1): %d",start+i*4,i,r);/ *assert(!((wont_dirty_i>>r)&1));*/}
               }
             }
           }
@@ -7474,7 +7457,7 @@ static void clean_registers(int istart,int iend,int wr)
             wont_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
           } else {
             wont_dirty_i|=1<<r;
-            /*printf("i: %x (%d) mismatch: %d\n",start+i*4,i,r);/ *assert(!((will_dirty>>r)&1));*/
+            /*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch: %d",start+i*4,i,r);/ *assert(!((will_dirty>>r)&1));*/
           }
         }
       }
@@ -7486,100 +7469,94 @@ static void clean_registers(int istart,int iend,int wr)
   /* disassembly */
 static void disassemble_inst(int i)
 {
-    if (bt[i]) printf("*"); else printf(" ");
+    if (bt[i]) DebugMessage(M64MSG_VERBOSE, "*"); else DebugMessage(M64MSG_VERBOSE, " ");
     switch(itype[i]) {
       case UJUMP:
-        printf (" %x: %s %8x\n",start+i*4,insn[i],ba[i]);break;
+        printf (" %x: %s %8x",start+i*4,insn[i],ba[i]);break;
       case CJUMP:
-        printf (" %x: %s r%d,r%d,%8x\n",start+i*4,insn[i],rs1[i],rs2[i],i?start+i*4+4+((signed int)((unsigned int)source[i]<<16)>>14):*ba);break;
+        printf (" %x: %s r%d,r%d,%8x",start+i*4,insn[i],rs1[i],rs2[i],i?start+i*4+4+((signed int)((unsigned int)source[i]<<16)>>14):*ba);break;
       case SJUMP:
-        printf (" %x: %s r%d,%8x\n",start+i*4,insn[i],rs1[i],start+i*4+4+((signed int)((unsigned int)source[i]<<16)>>14));break;
+        printf (" %x: %s r%d,%8x",start+i*4,insn[i],rs1[i],start+i*4+4+((signed int)((unsigned int)source[i]<<16)>>14));break;
       case FJUMP:
-        printf (" %x: %s %8x\n",start+i*4,insn[i],ba[i]);break;
+        printf (" %x: %s %8x",start+i*4,insn[i],ba[i]);break;
       case RJUMP:
         if ((opcode2[i]&1)&&rt1[i]!=31)
-          printf (" %x: %s r%d,r%d\n",start+i*4,insn[i],rt1[i],rs1[i]);
+          printf (" %x: %s r%d,r%d",start+i*4,insn[i],rt1[i],rs1[i]);
         else
-          printf (" %x: %s r%d\n",start+i*4,insn[i],rs1[i]);
+          printf (" %x: %s r%d",start+i*4,insn[i],rs1[i]);
         break;
       case SPAN:
-        printf (" %x: %s (pagespan) r%d,r%d,%8x\n",start+i*4,insn[i],rs1[i],rs2[i],ba[i]);break;
+        printf (" %x: %s (pagespan) r%d,r%d,%8x",start+i*4,insn[i],rs1[i],rs2[i],ba[i]);break;
       case IMM16:
         if(opcode[i]==0xf) //LUI
-          printf (" %x: %s r%d,%4x0000\n",start+i*4,insn[i],rt1[i],imm[i]&0xffff);
+          printf (" %x: %s r%d,%4x0000",start+i*4,insn[i],rt1[i],imm[i]&0xffff);
         else
-          printf (" %x: %s r%d,r%d,%d\n",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
+          printf (" %x: %s r%d,r%d,%d",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
         break;
       case LOAD:
       case LOADLR:
-        printf (" %x: %s r%d,r%d+%x\n",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
+        printf (" %x: %s r%d,r%d+%x",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
         break;
       case STORE:
       case STORELR:
-        printf (" %x: %s r%d,r%d+%x\n",start+i*4,insn[i],rs2[i],rs1[i],imm[i]);
+        printf (" %x: %s r%d,r%d+%x",start+i*4,insn[i],rs2[i],rs1[i],imm[i]);
         break;
       case ALU:
       case SHIFT:
-        printf (" %x: %s r%d,r%d,r%d\n",start+i*4,insn[i],rt1[i],rs1[i],rs2[i]);
+        printf (" %x: %s r%d,r%d,r%d",start+i*4,insn[i],rt1[i],rs1[i],rs2[i]);
         break;
       case MULTDIV:
-        printf (" %x: %s r%d,r%d\n",start+i*4,insn[i],rs1[i],rs2[i]);
+        printf (" %x: %s r%d,r%d",start+i*4,insn[i],rs1[i],rs2[i]);
         break;
       case SHIFTIMM:
-        printf (" %x: %s r%d,r%d,%d\n",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
+        printf (" %x: %s r%d,r%d,%d",start+i*4,insn[i],rt1[i],rs1[i],imm[i]);
         break;
       case MOV:
         if((opcode2[i]&0x1d)==0x10)
-          printf (" %x: %s r%d\n",start+i*4,insn[i],rt1[i]);
+          printf (" %x: %s r%d",start+i*4,insn[i],rt1[i]);
         else if((opcode2[i]&0x1d)==0x11)
-          printf (" %x: %s r%d\n",start+i*4,insn[i],rs1[i]);
+          printf (" %x: %s r%d",start+i*4,insn[i],rs1[i]);
         else
-          printf (" %x: %s\n",start+i*4,insn[i]);
+          printf (" %x: %s",start+i*4,insn[i]);
         break;
       case COP0:
         if(opcode2[i]==0)
-          printf (" %x: %s r%d,cpr0[%d]\n",start+i*4,insn[i],rt1[i],(source[i]>>11)&0x1f); // MFC0
+          printf (" %x: %s r%d,cpr0[%d]",start+i*4,insn[i],rt1[i],(source[i]>>11)&0x1f); // MFC0
         else if(opcode2[i]==4)
-          printf (" %x: %s r%d,cpr0[%d]\n",start+i*4,insn[i],rs1[i],(source[i]>>11)&0x1f); // MTC0
-        else printf (" %x: %s\n",start+i*4,insn[i]);
+          printf (" %x: %s r%d,cpr0[%d]",start+i*4,insn[i],rs1[i],(source[i]>>11)&0x1f); // MTC0
+        else printf (" %x: %s",start+i*4,insn[i]);
         break;
       case COP1:
         if(opcode2[i]<3)
-          printf (" %x: %s r%d,cpr1[%d]\n",start+i*4,insn[i],rt1[i],(source[i]>>11)&0x1f); // MFC1
+          printf (" %x: %s r%d,cpr1[%d]",start+i*4,insn[i],rt1[i],(source[i]>>11)&0x1f); // MFC1
         else if(opcode2[i]>3)
-          printf (" %x: %s r%d,cpr1[%d]\n",start+i*4,insn[i],rs1[i],(source[i]>>11)&0x1f); // MTC1
-        else printf (" %x: %s\n",start+i*4,insn[i]);
+          printf (" %x: %s r%d,cpr1[%d]",start+i*4,insn[i],rs1[i],(source[i]>>11)&0x1f); // MTC1
+        else printf (" %x: %s",start+i*4,insn[i]);
         break;
       case C1LS:
-        printf (" %x: %s cpr1[%d],r%d+%x\n",start+i*4,insn[i],(source[i]>>16)&0x1f,rs1[i],imm[i]);
+        printf (" %x: %s cpr1[%d],r%d+%x",start+i*4,insn[i],(source[i]>>16)&0x1f,rs1[i],imm[i]);
         break;
       default:
-        //printf (" %s %8x\n",insn[i],source[i]);
-        printf (" %x: %s\n",start+i*4,insn[i]);
+        //printf (" %s %8x",insn[i],source[i]);
+        printf (" %x: %s",start+i*4,insn[i]);
     }
 }
 #endif
 
 void new_dynarec_init()
 {
-    #if defined (ASSEM_DEBUG)
-        file = fopen( DEBUG_output_file, "w" );
-    #elif defined (INV_DEBUG)
-        file = fopen( DEBUG_output_file, "w" );
-    #endif
-
-  printf("Init new dynarec\n");
+  DebugMessage(M64MSG_INFO, "Init new dynarec");
 
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
   if ((base_addr = mmap ((u_char *)BASE_ADDR, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-            -1, 0)) <= 0) {printf("mmap() failed\n");}
+            -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
 #else
   if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_PRIVATE | MAP_ANONYMOUS,
-            -1, 0)) <= 0) {printf("mmap() failed\n");}
+            -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
 #endif
   out=(u_char *)base_addr;
 
@@ -7643,29 +7620,13 @@ void new_dynarec_init()
 
 void new_dynarec_cleanup()
 {
-    #if defined (ASSEM_DEBUG)
-		if( file != NULL)
-		{
-			printf( "Closing Debug output file" );
-			fclose( file );
-			file = NULL;
-		}
-    #elif defined (INV_DEBUG)
-		if( file != NULL )
-		{
-			printf( "Closing Debug output file" );
-			fclose( file );
-			file = NULL;
-		}
-    #endif
-
   int n;
-  if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {printf("munmap() failed\n");}
+  if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
   for(n=0;n<4096;n++) ll_clear(jump_in+n);
   for(n=0;n<4096;n++) ll_clear(jump_out+n);
   for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   #ifdef ROM_COPY
-  if (munmap (ROM_COPY, 67108864) < 0) {printf("munmap() failed\n");}
+  if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
   #endif
 }
 
@@ -7680,16 +7641,16 @@ int new_recompile_block(int addr)
   }
 */
   //if(Count==365117028) tracedebug=1;
-  assem_debug("NOTCOMPILED: addr = %x -> %x\n", (int)addr, (int)out);
+  assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
 #if defined (COUNT_NOTCOMPILEDS )
   notcompiledCount++;
   log_message( "notcompiledCount=%i", notcompiledCount );
 #endif
-  //printf("NOTCOMPILED: addr = %x -> %x\n", (int)addr, (int)out);
-  //printf("TRACE: count=%d next=%d (compile %x)\n",Count,next_interupt,addr);
+  //DebugMessage(M64MSG_VERBOSE, "NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",Count,next_interupt,addr);
   //if(debug) 
-  //printf("TRACE: count=%d next=%d (checksum %x)\n",Count,next_interupt,mchecksum());
-  //printf("fpu mapping=%x enabled=%x\n",(Status & 0x04000000)>>26,(Status & 0x20000000)>>29);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",Count,next_interupt,mchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(Status & 0x04000000)>>26,(Status & 0x20000000)>>29);
   /*if(Count>=312978186) {
     rlist();
   }*/
@@ -7705,7 +7666,7 @@ int new_recompile_block(int addr)
     pagelimit = 0x80800000;
   }
   else if ((signed int)addr >= (signed int)0xC0000000) {
-    //printf("addr=%x mm=%x\n",(u_int)addr,(memory_map[start>>12]<<2));
+    //DebugMessage(M64MSG_VERBOSE, "addr=%x mm=%x",(u_int)addr,(memory_map[start>>12]<<2));
     //if(tlb_LUT_r[start>>12])
       //source = (u_int *)(((int)rdram)+(tlb_LUT_r[start>>12]&0xFFFFF000)+(((int)addr)&0xFFF)-0x80000000);
     if((signed int)memory_map[start>>12]>=0) {
@@ -7714,22 +7675,22 @@ int new_recompile_block(int addr)
       int map=memory_map[start>>12];
       int i;
       for(i=0;i<5;i++) {
-        //printf("start: %x next: %x\n",map,memory_map[pagelimit>>12]);
+        //DebugMessage(M64MSG_VERBOSE, "start: %x next: %x",map,memory_map[pagelimit>>12]);
         if((map&0xBFFFFFFF)==(memory_map[pagelimit>>12]&0xBFFFFFFF)) pagelimit+=4096;
       }
-      assem_debug("pagelimit=%x\n",pagelimit);
-      assem_debug("mapping=%x (%x)\n",memory_map[start>>12],(memory_map[start>>12]<<2)+start);
+      assem_debug("pagelimit=%x",pagelimit);
+      assem_debug("mapping=%x (%x)",memory_map[start>>12],(memory_map[start>>12]<<2)+start);
     }
     else {
-      assem_debug("Compile at unmapped memory address: %x \n", (int)addr);
-      //assem_debug("start: %x next: %x\n",memory_map[start>>12],memory_map[(start+4096)>>12]);
+      assem_debug("Compile at unmapped memory address: %x ", (int)addr);
+      //assem_debug("start: %x next: %x",memory_map[start>>12],memory_map[(start+4096)>>12]);
       return 1; // Caller will invoke exception handler
     }
-    //printf("source= %x\n",(int)source);
+    //DebugMessage(M64MSG_VERBOSE, "source= %x",(int)source);
   }
   else {
-    //printf("Compile at bogus memory address: %x \n", (int)addr);
-    log_message("Compile at bogus memory address: %x \n", (int)addr);
+    //DebugMessage(M64MSG_VERBOSE, "Compile at bogus memory address: %x ", (int)addr);
+    log_message("Compile at bogus memory address: %x", (int)addr);
     exit(1);
   }
 
@@ -7748,7 +7709,7 @@ int new_recompile_block(int addr)
   int done=0;
   unsigned int type,op,op2;
 
-  //printf("addr = %x source = %x %x\n", addr,source,source[0]);
+  //DebugMessage(M64MSG_VERBOSE, "addr = %x source = %x %x", addr,source,source[0]);
   
   /* Pass 1 disassembly */
 
@@ -8270,7 +8231,7 @@ int new_recompile_block(int addr)
     // Stop if we're compiling junk
     if(itype[i]==NI&&opcode[i]==0x11) {
       done=stop_after_jal=1;
-      printf("Disabled speculative precompilation\n");
+      DebugMessage(M64MSG_VERBOSE, "Disabled speculative precompilation");
     }
   }
   slen=i;
@@ -8361,7 +8322,7 @@ int new_recompile_block(int addr)
           temp_is32&=p32[j];
       }
       if(temp_is32!=current.is32) {
-        //printf("dumping 32-bit regs (%x)\n",start+i*4);
+        //DebugMessage(M64MSG_VERBOSE, "dumping 32-bit regs (%x)",start+i*4);
         #ifndef DESTRUCTIVE_WRITEBACK
         if(ds)
         #endif
@@ -8372,7 +8333,7 @@ int new_recompile_block(int addr)
           {
             if((current.dirty>>hr)&((current.is32&~temp_is32)>>r)&1) {
               temp_is32|=1LL<<r;
-              //printf("restore %d\n",r);
+              //DebugMessage(M64MSG_VERBOSE, "restore %d",r);
             }
           }
         }
@@ -8401,7 +8362,7 @@ int new_recompile_block(int addr)
           temp_is32&=p32[j];
       }
       if(temp_is32!=current.is32) {
-        //printf("pre-dumping 32-bit regs (%x)\n",start+i*4);
+        //DebugMessage(M64MSG_VERBOSE, "pre-dumping 32-bit regs (%x)",start+i*4);
         for(hr=0;hr<HOST_REGS;hr++)
         {
           int r=current.regmap[hr];
@@ -8412,7 +8373,7 @@ int new_recompile_block(int addr)
               {
                 if(rs1[i]!=(r&63)&&rs2[i]!=(r&63))
                 {
-                  //printf("dump %d/r%d\n",hr,r);
+                  //DebugMessage(M64MSG_VERBOSE, "dump %d/r%d",hr,r);
                   current.regmap[hr]=-1;
                   if(get_reg(current.regmap,r|64)>=0) 
                     current.regmap[get_reg(current.regmap,r|64)]=-1;
@@ -8438,7 +8399,7 @@ int new_recompile_block(int addr)
           temp_is32&=p32[j];
       }
       if(temp_is32!=current.is32) {
-        //printf("pre-dumping 32-bit regs (%x)\n",start+i*4);
+        //DebugMessage(M64MSG_VERBOSE, "pre-dumping 32-bit regs (%x)",start+i*4);
         for(hr=0;hr<HOST_REGS;hr++)
         {
           int r=current.regmap[hr];
@@ -8447,7 +8408,7 @@ int new_recompile_block(int addr)
             if((current.dirty>>hr)&((current.is32&~temp_is32)>>(r&63))&1) {
               if(rs1[i]!=(r&63)&&rs2[i]!=(r&63)&&rs1[i+1]!=(r&63)&&rs2[i+1]!=(r&63))
               {
-                //printf("dump %d/r%d\n",hr,r);
+                //DebugMessage(M64MSG_VERBOSE, "dump %d/r%d",hr,r);
                 current.regmap[hr]=-1;
                 if(get_reg(current.regmap,r|64)>=0) 
                   current.regmap[get_reg(current.regmap,r|64)]=-1;
@@ -8478,7 +8439,7 @@ int new_recompile_block(int addr)
         current.uu&=~((1LL<<us1[i])|(1LL<<us2[i]));
         current.u|=1;
         current.uu|=1;
-      } else { printf("oops, branch at end of block with no delay slot\n");exit(1); }
+      } else { DebugMessage(M64MSG_ERROR, "oops, branch at end of block with no delay slot");exit(1); }
     }
     is_ds[i]=ds;
     if(ds) {
@@ -8570,7 +8531,7 @@ int new_recompile_block(int addr)
           delayslot_alloc(&current,i+1);
           //current.isconst=0; // DEBUG
           ds=1;
-          //printf("i=%d, isconst=%x\n",i,current.isconst);
+          //DebugMessage(M64MSG_VERBOSE, "i=%d, isconst=%x",i,current.isconst);
           break;
         case RJUMP:
           //current.isconst=0;
@@ -9286,7 +9247,7 @@ int new_recompile_block(int addr)
           for(hr=0;hr<HOST_REGS;hr++)
           {
             if(regmap_pre[i+2][hr]>=0&&get_reg(regs[i+2].regmap_entry,regmap_pre[i+2][hr])<0) nr&=~(1<<hr);
-            //if((regmap_entry[i+2][hr])>=0) if(!((nr>>hr)&1)) printf("%x-bogus(%d=%d)\n",start+i*4,hr,regmap_entry[i+2][hr]);
+            //if((regmap_entry[i+2][hr])>=0) if(!((nr>>hr)&1)) DebugMessage(M64MSG_VERBOSE, "%x-bogus(%d=%d)",start+i*4,hr,regmap_entry[i+2][hr]);
           }
         }
       }
@@ -9508,7 +9469,7 @@ int new_recompile_block(int addr)
                 if(regmap_pre[i+1][hr]!=regs[i].regmap[hr])
                 if(regs[i].regmap[hr]<64||!((regs[i].was32>>(regs[i].regmap[hr]&63))&1))
                 {
-                  printf("fail: %x (%d %d!=%d)\n",start+i*4,hr,regmap_pre[i+1][hr],regs[i].regmap[hr]);
+                  DebugMessage(M64MSG_VERBOSE, "fail: %x (%d %d!=%d)",start+i*4,hr,regmap_pre[i+1][hr],regs[i].regmap[hr]);
                   assert(regmap_pre[i+1][hr]==regs[i].regmap[hr]);
                 }
                 regmap_pre[i+1][hr]=-1;
@@ -9605,7 +9566,7 @@ int new_recompile_block(int addr)
               int r=f_regmap[hr];
               for(j=t;j<=i;j++)
               {
-                //printf("Test %x -> %x, %x %d/%d\n",start+i*4,ba[i],start+j*4,hr,r);
+                //DebugMessage(M64MSG_VERBOSE, "Test %x -> %x, %x %d/%d",start+i*4,ba[i],start+j*4,hr,r);
                 if(r<34&&((unneeded_reg[j]>>r)&1)) break;
                 if(r>63&&((unneeded_reg_upper[j]>>(r&63))&1)) break;
                 if(r>63) {
@@ -9617,7 +9578,7 @@ int new_recompile_block(int addr)
                   if(regs[j].is32&(1LL<<(r&63))) break;
                 }
                 if(regs[j].regmap[hr]==f_regmap[hr]&&(f_regmap[hr]&63)<TEMPREG) {
-                  //printf("Hit %x -> %x, %x %d/%d\n",start+i*4,ba[i],start+j*4,hr,r);
+                  //DebugMessage(M64MSG_VERBOSE, "Hit %x -> %x, %x %d/%d",start+i*4,ba[i],start+j*4,hr,r);
                   int k;
                   if(regs[i].regmap[hr]==-1&&branch_regs[i].regmap[hr]==-1) {
                     if(get_reg(regs[i+2].regmap,f_regmap[hr])>=0) break;
@@ -9628,15 +9589,15 @@ int new_recompile_block(int addr)
                     k=i;
                     while(k>1&&regs[k-1].regmap[hr]==-1) {
                       if(count_free_regs(regs[k-1].regmap)<=minimum_free_regs[k-1]) {
-                        //printf("no free regs for store %x\n",start+(k-1)*4);
+                        //DebugMessage(M64MSG_VERBOSE, "no free regs for store %x",start+(k-1)*4);
                         break;
                       }
                       if(get_reg(regs[k-1].regmap,f_regmap[hr])>=0) {
-                        //printf("no-match due to different register\n");
+                        //DebugMessage(M64MSG_VERBOSE, "no-match due to different register");
                         break;
                       }
                       if(itype[k-2]==UJUMP||itype[k-2]==RJUMP||itype[k-2]==CJUMP||itype[k-2]==SJUMP||itype[k-2]==FJUMP) {
-                        //printf("no-match due to branch\n");
+                        //DebugMessage(M64MSG_VERBOSE, "no-match due to branch");
                         break;
                       }
                       // call/ret fast path assumes no registers allocated
@@ -9655,12 +9616,12 @@ int new_recompile_block(int addr)
                     if(i<slen-1) {
                       if((regs[k].is32&(1LL<<f_regmap[hr]))!=
                         (regs[i+2].was32&(1LL<<f_regmap[hr]))) {
-                        //printf("bad match after branch\n");
+                        //DebugMessage(M64MSG_VERBOSE, "bad match after branch");
                         break;
                       }
                     }
                     if(regs[k-1].regmap[hr]==f_regmap[hr]&&regmap_pre[k][hr]==f_regmap[hr]) {
-                      //printf("Extend r%d, %x ->\n",hr,start+k*4);
+                      //DebugMessage(M64MSG_VERBOSE, "Extend r%d, %x ->",hr,start+k*4);
                       while(k<i) {
                         regs[k].regmap_entry[hr]=f_regmap[hr];
                         regs[k].regmap[hr]=f_regmap[hr];
@@ -9675,12 +9636,12 @@ int new_recompile_block(int addr)
                       }
                     }
                     else {
-                      //printf("Fail Extend r%d, %x ->\n",hr,start+k*4);
+                      //DebugMessage(M64MSG_VERBOSE, "Fail Extend r%d, %x ->",hr,start+k*4);
                       break;
                     }
                     assert(regs[i-1].regmap[hr]==f_regmap[hr]);
                     if(regs[i-1].regmap[hr]==f_regmap[hr]&&regmap_pre[i][hr]==f_regmap[hr]) {
-                      //printf("OK fill %x (r%d)\n",start+i*4,hr);
+                      //DebugMessage(M64MSG_VERBOSE, "OK fill %x (r%d)",start+i*4,hr);
                       regs[i].regmap_entry[hr]=f_regmap[hr];
                       regs[i].regmap[hr]=f_regmap[hr];
                       regs[i].wasdirty&=~(1<<hr);
@@ -9741,11 +9702,11 @@ int new_recompile_block(int addr)
                 if(regs[j].regmap[hr]>=0)
                   break;
                 if(get_reg(regs[j].regmap,f_regmap[hr])>=0) {
-                  //printf("no-match due to different register\n");
+                  //DebugMessage(M64MSG_VERBOSE, "no-match due to different register");
                   break;
                 }
                 if((regs[j+1].is32&(1LL<<f_regmap[hr]))!=(regs[j].is32&(1LL<<f_regmap[hr]))) {
-                  //printf("32/64 mismatch %x %d\n",start+j*4,hr);
+                  //DebugMessage(M64MSG_VERBOSE, "32/64 mismatch %x %d",start+j*4,hr);
                   break;
                 }
                 if(itype[j]==UJUMP||itype[j]==RJUMP||(source[j]>>16)==0x1000)
@@ -9763,12 +9724,12 @@ int new_recompile_block(int addr)
                       break;
                   }
                   if(get_reg(branch_regs[j].regmap,f_regmap[hr])>=0) {
-                    //printf("no-match due to different register (branch)\n");
+                    //DebugMessage(M64MSG_VERBOSE, "no-match due to different register (branch)");
                     break;
                   }
                 }
                 if(count_free_regs(regs[j].regmap)<=minimum_free_regs[j]) {
-                  //printf("No free regs for store %x\n",start+j*4);
+                  //DebugMessage(M64MSG_VERBOSE, "No free regs for store %x",start+j*4);
                   break;
                 }
                 if(f_regmap[hr]>=64) {
@@ -9815,13 +9776,13 @@ int new_recompile_block(int addr)
         for(j=i;j<slen-1;j++) {
           if(regs[j].regmap[HOST_CCREG]!=-1) break;
           if(count_free_regs(regs[j].regmap)<=minimum_free_regs[j]) {
-            //printf("no free regs for store %x\n",start+j*4);
+            //DebugMessage(M64MSG_VERBOSE, "no free regs for store %x",start+j*4);
             break;
           }
         }
         if(regs[j].regmap[HOST_CCREG]==CCREG) {
           int k=i;
-          //printf("Extend CC, %x -> %x\n",start+k*4,start+j*4);
+          //DebugMessage(M64MSG_VERBOSE, "Extend CC, %x -> %x",start+k*4,start+j*4);
           while(k<j) {
             regs[k].regmap_entry[HOST_CCREG]=CCREG;
             regs[k].regmap[HOST_CCREG]=CCREG;
@@ -9837,18 +9798,18 @@ int new_recompile_block(int addr)
         // Work backwards from the branch target
         if(j>i&&f_regmap[HOST_CCREG]==CCREG)
         {
-          //printf("Extend backwards\n");
+          //DebugMessage(M64MSG_VERBOSE, "Extend backwards");
           int k;
           k=i;
           while(regs[k-1].regmap[HOST_CCREG]==-1) {
             if(count_free_regs(regs[k-1].regmap)<=minimum_free_regs[k-1]) {
-              //printf("no free regs for store %x\n",start+(k-1)*4);
+              //DebugMessage(M64MSG_VERBOSE, "no free regs for store %x",start+(k-1)*4);
               break;
             }
             k--;
           }
           if(regs[k-1].regmap[HOST_CCREG]==CCREG) {
-            //printf("Extend CC, %x ->\n",start+k*4);
+            //DebugMessage(M64MSG_VERBOSE, "Extend CC, %x ->",start+k*4);
             while(k<=i) {
               regs[k].regmap_entry[HOST_CCREG]=CCREG;
               regs[k].regmap[HOST_CCREG]=CCREG;
@@ -9861,7 +9822,7 @@ int new_recompile_block(int addr)
             }
           }
           else {
-            //printf("Fail Extend CC, %x ->\n",start+k*4);
+            //DebugMessage(M64MSG_VERBOSE, "Fail Extend CC, %x ->",start+k*4);
           }
         }
       }
@@ -9939,7 +9900,7 @@ int new_recompile_block(int addr)
           loop_start[hr]=MAXBLOCK;
         }
         i++; // Skip delay slot too
-        //printf("skip delay slot: %x\n",start+i*4);
+        //DebugMessage(M64MSG_VERBOSE, "skip delay slot: %x",start+i*4);
       }
       else
       // Possible match
@@ -9965,7 +9926,7 @@ int new_recompile_block(int addr)
                   if(t==1||(t>1&&itype[t-2]!=UJUMP&&itype[t-2]!=RJUMP)||(t>1&&rt1[t-2]!=31)) { // call/ret assumes no registers allocated
                     // Score a point for hoisting loop invariant
                     if(t<loop_start[hr]) loop_start[hr]=t;
-                    //printf("set loop_start: i=%x j=%x (%x)\n",start+i*4,start+j*4,start+t*4);
+                    //DebugMessage(M64MSG_VERBOSE, "set loop_start: i=%x j=%x (%x)",start+i*4,start+j*4,start+t*4);
                     score[hr]++;
                     end[hr]=j;
                   }
@@ -10003,7 +9964,7 @@ int new_recompile_block(int addr)
           if(hr!=EXCLUDE_REG) {
             if(score[hr]>score[maxscore]) {
               maxscore=hr;
-              //printf("highest score: %d %d (%x->%x)\n",score[hr],hr,start+i*4,start+end[hr]*4);
+              //DebugMessage(M64MSG_VERBOSE, "highest score: %d %d (%x->%x)",score[hr],hr,start+i*4,start+end[hr]*4);
             }
           }
         }
@@ -10011,7 +9972,7 @@ int new_recompile_block(int addr)
         {
           if(i<loop_start[maxscore]) loop_start[maxscore]=i;
           for(j=loop_start[maxscore];j<slen&&j<=end[maxscore];j++) {
-            //if(regs[j].regmap[maxscore]>=0) {printf("oops: %x %x was %d=%d\n",loop_start[maxscore]*4+start,j*4+start,maxscore,regs[j].regmap[maxscore]);}
+            //if(regs[j].regmap[maxscore]>=0) {DebugMessage(M64MSG_ERROR, "oops: %x %x was %d=%d",loop_start[maxscore]*4+start,j*4+start,maxscore,regs[j].regmap[maxscore]);}
             assert(regs[j].regmap[maxscore]<0);
             if(j>loop_start[maxscore]) regs[j].regmap_entry[maxscore]=reg;
             regs[j].regmap[maxscore]=reg;
@@ -10380,211 +10341,202 @@ int new_recompile_block(int addr)
 #if defined( ASSEM_DEBUG )
   for(i=0;i<slen;i++)
   {
-    printf("U:");
+    DebugMessage(M64MSG_VERBOSE, "U:");
     int r;
     for(r=1;r<=CCREG;r++) {
       if((unneeded_reg[i]>>r)&1) {
-        if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf(" UU:");
+    DebugMessage(M64MSG_VERBOSE, " UU:");
     for(r=1;r<=CCREG;r++) {
       if(((unneeded_reg_upper[i]&~unneeded_reg[i])>>r)&1) {
-        if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf(" 32:");
+    DebugMessage(M64MSG_VERBOSE, " 32:");
     for(r=0;r<=CCREG;r++) {
       //if(((is32[i]>>r)&(~unneeded_reg[i]>>r))&1) {
       if((regs[i].was32>>r)&1) {
-        if(r==CCREG) printf(" CC");
-        else if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+        else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf("\n");
     #if NEW_DYNAREC == NEW_DYNAREC_X86
-    printf("pre: eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7]);
+    DebugMessage(M64MSG_VERBOSE, "pre: eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7]);
     #endif
     #if NEW_DYNAREC == NEW_DYNAREC_ARM
-    printf("pre: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d\n",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][4],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7],regmap_pre[i][8],regmap_pre[i][9],regmap_pre[i][10],regmap_pre[i][12]);
+    DebugMessage(M64MSG_VERBOSE, "pre: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d",regmap_pre[i][0],regmap_pre[i][1],regmap_pre[i][2],regmap_pre[i][3],regmap_pre[i][4],regmap_pre[i][5],regmap_pre[i][6],regmap_pre[i][7],regmap_pre[i][8],regmap_pre[i][9],regmap_pre[i][10],regmap_pre[i][12]);
     #endif
-    printf("needs: ");
-    if(needed_reg[i]&1) printf("eax ");
-    if((needed_reg[i]>>1)&1) printf("ecx ");
-    if((needed_reg[i]>>2)&1) printf("edx ");
-    if((needed_reg[i]>>3)&1) printf("ebx ");
-    if((needed_reg[i]>>5)&1) printf("ebp ");
-    if((needed_reg[i]>>6)&1) printf("esi ");
-    if((needed_reg[i]>>7)&1) printf("edi ");
-    printf("r:");
+    DebugMessage(M64MSG_VERBOSE, "needs: ");
+    if(needed_reg[i]&1) DebugMessage(M64MSG_VERBOSE, "eax ");
+    if((needed_reg[i]>>1)&1) DebugMessage(M64MSG_VERBOSE, "ecx ");
+    if((needed_reg[i]>>2)&1) DebugMessage(M64MSG_VERBOSE, "edx ");
+    if((needed_reg[i]>>3)&1) DebugMessage(M64MSG_VERBOSE, "ebx ");
+    if((needed_reg[i]>>5)&1) DebugMessage(M64MSG_VERBOSE, "ebp ");
+    if((needed_reg[i]>>6)&1) DebugMessage(M64MSG_VERBOSE, "esi ");
+    if((needed_reg[i]>>7)&1) DebugMessage(M64MSG_VERBOSE, "edi ");
+    DebugMessage(M64MSG_VERBOSE, "r:");
     for(r=0;r<=CCREG;r++) {
       //if(((requires_32bit[i]>>r)&(~unneeded_reg[i]>>r))&1) {
       if((requires_32bit[i]>>r)&1) {
-        if(r==CCREG) printf(" CC");
-        else if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+        else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf("\n");
-    /*printf("pr:");
+    /*DebugMessage(M64MSG_VERBOSE, "pr:");
     for(r=0;r<=CCREG;r++) {
       //if(((requires_32bit[i]>>r)&(~unneeded_reg[i]>>r))&1) {
       if((pr32[i]>>r)&1) {
-        if(r==CCREG) printf(" CC");
-        else if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+        else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    if(pr32[i]!=requires_32bit[i]) printf(" OOPS");
-    printf("\n");*/
+    if(pr32[i]!=requires_32bit[i]) DebugMessage(M64MSG_ERROR, " OOPS");*/
     #if NEW_DYNAREC == NEW_DYNAREC_X86
-    printf("entry: eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d\n",regs[i].regmap_entry[0],regs[i].regmap_entry[1],regs[i].regmap_entry[2],regs[i].regmap_entry[3],regs[i].regmap_entry[5],regs[i].regmap_entry[6],regs[i].regmap_entry[7]);
-    printf("dirty: ");
-    if(regs[i].wasdirty&1) printf("eax ");
-    if((regs[i].wasdirty>>1)&1) printf("ecx ");
-    if((regs[i].wasdirty>>2)&1) printf("edx ");
-    if((regs[i].wasdirty>>3)&1) printf("ebx ");
-    if((regs[i].wasdirty>>5)&1) printf("ebp ");
-    if((regs[i].wasdirty>>6)&1) printf("esi ");
-    if((regs[i].wasdirty>>7)&1) printf("edi ");
+    DebugMessage(M64MSG_VERBOSE, "entry: eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",regs[i].regmap_entry[0],regs[i].regmap_entry[1],regs[i].regmap_entry[2],regs[i].regmap_entry[3],regs[i].regmap_entry[5],regs[i].regmap_entry[6],regs[i].regmap_entry[7]);
+    DebugMessage(M64MSG_VERBOSE, "dirty: ");
+    if(regs[i].wasdirty&1) DebugMessage(M64MSG_VERBOSE, "eax ");
+    if((regs[i].wasdirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "ecx ");
+    if((regs[i].wasdirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "edx ");
+    if((regs[i].wasdirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "ebx ");
+    if((regs[i].wasdirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "ebp ");
+    if((regs[i].wasdirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "esi ");
+    if((regs[i].wasdirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "edi ");
     #endif
     #if NEW_DYNAREC == NEW_DYNAREC_ARM
-    printf("entry: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d\n",regs[i].regmap_entry[0],regs[i].regmap_entry[1],regs[i].regmap_entry[2],regs[i].regmap_entry[3],regs[i].regmap_entry[4],regs[i].regmap_entry[5],regs[i].regmap_entry[6],regs[i].regmap_entry[7],regs[i].regmap_entry[8],regs[i].regmap_entry[9],regs[i].regmap_entry[10],regs[i].regmap_entry[12]);
-    printf("dirty: ");
-    if(regs[i].wasdirty&1) printf("r0 ");
-    if((regs[i].wasdirty>>1)&1) printf("r1 ");
-    if((regs[i].wasdirty>>2)&1) printf("r2 ");
-    if((regs[i].wasdirty>>3)&1) printf("r3 ");
-    if((regs[i].wasdirty>>4)&1) printf("r4 ");
-    if((regs[i].wasdirty>>5)&1) printf("r5 ");
-    if((regs[i].wasdirty>>6)&1) printf("r6 ");
-    if((regs[i].wasdirty>>7)&1) printf("r7 ");
-    if((regs[i].wasdirty>>8)&1) printf("r8 ");
-    if((regs[i].wasdirty>>9)&1) printf("r9 ");
-    if((regs[i].wasdirty>>10)&1) printf("r10 ");
-    if((regs[i].wasdirty>>12)&1) printf("r12 ");
+    DebugMessage(M64MSG_VERBOSE, "entry: r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d",regs[i].regmap_entry[0],regs[i].regmap_entry[1],regs[i].regmap_entry[2],regs[i].regmap_entry[3],regs[i].regmap_entry[4],regs[i].regmap_entry[5],regs[i].regmap_entry[6],regs[i].regmap_entry[7],regs[i].regmap_entry[8],regs[i].regmap_entry[9],regs[i].regmap_entry[10],regs[i].regmap_entry[12]);
+    DebugMessage(M64MSG_VERBOSE, "dirty: ");
+    if(regs[i].wasdirty&1) DebugMessage(M64MSG_VERBOSE, "r0 ");
+    if((regs[i].wasdirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "r1 ");
+    if((regs[i].wasdirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "r2 ");
+    if((regs[i].wasdirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "r3 ");
+    if((regs[i].wasdirty>>4)&1) DebugMessage(M64MSG_VERBOSE, "r4 ");
+    if((regs[i].wasdirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "r5 ");
+    if((regs[i].wasdirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "r6 ");
+    if((regs[i].wasdirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "r7 ");
+    if((regs[i].wasdirty>>8)&1) DebugMessage(M64MSG_VERBOSE, "r8 ");
+    if((regs[i].wasdirty>>9)&1) DebugMessage(M64MSG_VERBOSE, "r9 ");
+    if((regs[i].wasdirty>>10)&1) DebugMessage(M64MSG_VERBOSE, "r10 ");
+    if((regs[i].wasdirty>>12)&1) DebugMessage(M64MSG_VERBOSE, "r12 ");
     #endif
-    printf("\n");
     disassemble_inst(i);
-    //printf ("ccadj[%d] = %d\n",i,ccadj[i]);
+    //printf ("ccadj[%d] = %d",i,ccadj[i]);
     #if NEW_DYNAREC == NEW_DYNAREC_X86
-    printf("eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d dirty: ",regs[i].regmap[0],regs[i].regmap[1],regs[i].regmap[2],regs[i].regmap[3],regs[i].regmap[5],regs[i].regmap[6],regs[i].regmap[7]);
-    if(regs[i].dirty&1) printf("eax ");
-    if((regs[i].dirty>>1)&1) printf("ecx ");
-    if((regs[i].dirty>>2)&1) printf("edx ");
-    if((regs[i].dirty>>3)&1) printf("ebx ");
-    if((regs[i].dirty>>5)&1) printf("ebp ");
-    if((regs[i].dirty>>6)&1) printf("esi ");
-    if((regs[i].dirty>>7)&1) printf("edi ");
+    DebugMessage(M64MSG_VERBOSE, "eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d dirty: ",regs[i].regmap[0],regs[i].regmap[1],regs[i].regmap[2],regs[i].regmap[3],regs[i].regmap[5],regs[i].regmap[6],regs[i].regmap[7]);
+    if(regs[i].dirty&1) DebugMessage(M64MSG_VERBOSE, "eax ");
+    if((regs[i].dirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "ecx ");
+    if((regs[i].dirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "edx ");
+    if((regs[i].dirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "ebx ");
+    if((regs[i].dirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "ebp ");
+    if((regs[i].dirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "esi ");
+    if((regs[i].dirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "edi ");
     #endif
     #if NEW_DYNAREC == NEW_DYNAREC_ARM
-    printf("r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",regs[i].regmap[0],regs[i].regmap[1],regs[i].regmap[2],regs[i].regmap[3],regs[i].regmap[4],regs[i].regmap[5],regs[i].regmap[6],regs[i].regmap[7],regs[i].regmap[8],regs[i].regmap[9],regs[i].regmap[10],regs[i].regmap[12]);
-    if(regs[i].dirty&1) printf("r0 ");
-    if((regs[i].dirty>>1)&1) printf("r1 ");
-    if((regs[i].dirty>>2)&1) printf("r2 ");
-    if((regs[i].dirty>>3)&1) printf("r3 ");
-    if((regs[i].dirty>>4)&1) printf("r4 ");
-    if((regs[i].dirty>>5)&1) printf("r5 ");
-    if((regs[i].dirty>>6)&1) printf("r6 ");
-    if((regs[i].dirty>>7)&1) printf("r7 ");
-    if((regs[i].dirty>>8)&1) printf("r8 ");
-    if((regs[i].dirty>>9)&1) printf("r9 ");
-    if((regs[i].dirty>>10)&1) printf("r10 ");
-    if((regs[i].dirty>>12)&1) printf("r12 ");
+    DebugMessage(M64MSG_VERBOSE, "r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",regs[i].regmap[0],regs[i].regmap[1],regs[i].regmap[2],regs[i].regmap[3],regs[i].regmap[4],regs[i].regmap[5],regs[i].regmap[6],regs[i].regmap[7],regs[i].regmap[8],regs[i].regmap[9],regs[i].regmap[10],regs[i].regmap[12]);
+    if(regs[i].dirty&1) DebugMessage(M64MSG_VERBOSE, "r0 ");
+    if((regs[i].dirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "r1 ");
+    if((regs[i].dirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "r2 ");
+    if((regs[i].dirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "r3 ");
+    if((regs[i].dirty>>4)&1) DebugMessage(M64MSG_VERBOSE, "r4 ");
+    if((regs[i].dirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "r5 ");
+    if((regs[i].dirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "r6 ");
+    if((regs[i].dirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "r7 ");
+    if((regs[i].dirty>>8)&1) DebugMessage(M64MSG_VERBOSE, "r8 ");
+    if((regs[i].dirty>>9)&1) DebugMessage(M64MSG_VERBOSE, "r9 ");
+    if((regs[i].dirty>>10)&1) DebugMessage(M64MSG_VERBOSE, "r10 ");
+    if((regs[i].dirty>>12)&1) DebugMessage(M64MSG_VERBOSE, "r12 ");
     #endif
-    printf("\n");
     if(regs[i].isconst) {
-      printf("constants: ");
+      DebugMessage(M64MSG_VERBOSE, "constants: ");
       #if NEW_DYNAREC == NEW_DYNAREC_X86
-      if(regs[i].isconst&1) printf("eax=%x ",(int)constmap[i][0]);
-      if((regs[i].isconst>>1)&1) printf("ecx=%x ",(int)constmap[i][1]);
-      if((regs[i].isconst>>2)&1) printf("edx=%x ",(int)constmap[i][2]);
-      if((regs[i].isconst>>3)&1) printf("ebx=%x ",(int)constmap[i][3]);
-      if((regs[i].isconst>>5)&1) printf("ebp=%x ",(int)constmap[i][5]);
-      if((regs[i].isconst>>6)&1) printf("esi=%x ",(int)constmap[i][6]);
-      if((regs[i].isconst>>7)&1) printf("edi=%x ",(int)constmap[i][7]);
+      if(regs[i].isconst&1) DebugMessage(M64MSG_VERBOSE, "eax=%x ",(int)constmap[i][0]);
+      if((regs[i].isconst>>1)&1) DebugMessage(M64MSG_VERBOSE, "ecx=%x ",(int)constmap[i][1]);
+      if((regs[i].isconst>>2)&1) DebugMessage(M64MSG_VERBOSE, "edx=%x ",(int)constmap[i][2]);
+      if((regs[i].isconst>>3)&1) DebugMessage(M64MSG_VERBOSE, "ebx=%x ",(int)constmap[i][3]);
+      if((regs[i].isconst>>5)&1) DebugMessage(M64MSG_VERBOSE, "ebp=%x ",(int)constmap[i][5]);
+      if((regs[i].isconst>>6)&1) DebugMessage(M64MSG_VERBOSE, "esi=%x ",(int)constmap[i][6]);
+      if((regs[i].isconst>>7)&1) DebugMessage(M64MSG_VERBOSE, "edi=%x ",(int)constmap[i][7]);
       #endif
       #if NEW_DYNAREC == NEW_DYNAREC_ARM
-      if(regs[i].isconst&1) printf("r0=%x ",(int)constmap[i][0]);
-      if((regs[i].isconst>>1)&1) printf("r1=%x ",(int)constmap[i][1]);
-      if((regs[i].isconst>>2)&1) printf("r2=%x ",(int)constmap[i][2]);
-      if((regs[i].isconst>>3)&1) printf("r3=%x ",(int)constmap[i][3]);
-      if((regs[i].isconst>>4)&1) printf("r4=%x ",(int)constmap[i][4]);
-      if((regs[i].isconst>>5)&1) printf("r5=%x ",(int)constmap[i][5]);
-      if((regs[i].isconst>>6)&1) printf("r6=%x ",(int)constmap[i][6]);
-      if((regs[i].isconst>>7)&1) printf("r7=%x ",(int)constmap[i][7]);
-      if((regs[i].isconst>>8)&1) printf("r8=%x ",(int)constmap[i][8]);
-      if((regs[i].isconst>>9)&1) printf("r9=%x ",(int)constmap[i][9]);
-      if((regs[i].isconst>>10)&1) printf("r10=%x ",(int)constmap[i][10]);
-      if((regs[i].isconst>>12)&1) printf("r12=%x ",(int)constmap[i][12]);
+      if(regs[i].isconst&1) DebugMessage(M64MSG_VERBOSE, "r0=%x ",(int)constmap[i][0]);
+      if((regs[i].isconst>>1)&1) DebugMessage(M64MSG_VERBOSE, "r1=%x ",(int)constmap[i][1]);
+      if((regs[i].isconst>>2)&1) DebugMessage(M64MSG_VERBOSE, "r2=%x ",(int)constmap[i][2]);
+      if((regs[i].isconst>>3)&1) DebugMessage(M64MSG_VERBOSE, "r3=%x ",(int)constmap[i][3]);
+      if((regs[i].isconst>>4)&1) DebugMessage(M64MSG_VERBOSE, "r4=%x ",(int)constmap[i][4]);
+      if((regs[i].isconst>>5)&1) DebugMessage(M64MSG_VERBOSE, "r5=%x ",(int)constmap[i][5]);
+      if((regs[i].isconst>>6)&1) DebugMessage(M64MSG_VERBOSE, "r6=%x ",(int)constmap[i][6]);
+      if((regs[i].isconst>>7)&1) DebugMessage(M64MSG_VERBOSE, "r7=%x ",(int)constmap[i][7]);
+      if((regs[i].isconst>>8)&1) DebugMessage(M64MSG_VERBOSE, "r8=%x ",(int)constmap[i][8]);
+      if((regs[i].isconst>>9)&1) DebugMessage(M64MSG_VERBOSE, "r9=%x ",(int)constmap[i][9]);
+      if((regs[i].isconst>>10)&1) DebugMessage(M64MSG_VERBOSE, "r10=%x ",(int)constmap[i][10]);
+      if((regs[i].isconst>>12)&1) DebugMessage(M64MSG_VERBOSE, "r12=%x ",(int)constmap[i][12]);
       #endif
-      printf("\n");
     }
-    printf(" 32:");
+    DebugMessage(M64MSG_VERBOSE, " 32:");
     for(r=0;r<=CCREG;r++) {
       if((regs[i].is32>>r)&1) {
-        if(r==CCREG) printf(" CC");
-        else if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+        else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    printf("\n");
-    /*printf(" p32:");
+    /*DebugMessage(M64MSG_VERBOSE, " p32:");
     for(r=0;r<=CCREG;r++) {
       if((p32[i]>>r)&1) {
-        if(r==CCREG) printf(" CC");
-        else if(r==HIREG) printf(" HI");
-        else if(r==LOREG) printf(" LO");
-        else printf(" r%d",r);
+        if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+        else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
       }
     }
-    if(p32[i]!=regs[i].is32) printf(" NO MATCH\n");
-    else printf("\n");*/
+    if(p32[i]!=regs[i].is32) DebugMessage(M64MSG_VERBOSE, " NO MATCH");*/
     if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP) {
       #if NEW_DYNAREC == NEW_DYNAREC_X86
-      printf("branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d dirty: ",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
-      if(branch_regs[i].dirty&1) printf("eax ");
-      if((branch_regs[i].dirty>>1)&1) printf("ecx ");
-      if((branch_regs[i].dirty>>2)&1) printf("edx ");
-      if((branch_regs[i].dirty>>3)&1) printf("ebx ");
-      if((branch_regs[i].dirty>>5)&1) printf("ebp ");
-      if((branch_regs[i].dirty>>6)&1) printf("esi ");
-      if((branch_regs[i].dirty>>7)&1) printf("edi ");
+      DebugMessage(M64MSG_VERBOSE, "branch(%d): eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d dirty: ",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7]);
+      if(branch_regs[i].dirty&1) DebugMessage(M64MSG_VERBOSE, "eax ");
+      if((branch_regs[i].dirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "ecx ");
+      if((branch_regs[i].dirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "edx ");
+      if((branch_regs[i].dirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "ebx ");
+      if((branch_regs[i].dirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "ebp ");
+      if((branch_regs[i].dirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "esi ");
+      if((branch_regs[i].dirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "edi ");
       #endif
       #if NEW_DYNAREC == NEW_DYNAREC_ARM
-      printf("branch(%d): r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[4],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7],branch_regs[i].regmap[8],branch_regs[i].regmap[9],branch_regs[i].regmap[10],branch_regs[i].regmap[12]);
-      if(branch_regs[i].dirty&1) printf("r0 ");
-      if((branch_regs[i].dirty>>1)&1) printf("r1 ");
-      if((branch_regs[i].dirty>>2)&1) printf("r2 ");
-      if((branch_regs[i].dirty>>3)&1) printf("r3 ");
-      if((branch_regs[i].dirty>>4)&1) printf("r4 ");
-      if((branch_regs[i].dirty>>5)&1) printf("r5 ");
-      if((branch_regs[i].dirty>>6)&1) printf("r6 ");
-      if((branch_regs[i].dirty>>7)&1) printf("r7 ");
-      if((branch_regs[i].dirty>>8)&1) printf("r8 ");
-      if((branch_regs[i].dirty>>9)&1) printf("r9 ");
-      if((branch_regs[i].dirty>>10)&1) printf("r10 ");
-      if((branch_regs[i].dirty>>12)&1) printf("r12 ");
+      DebugMessage(M64MSG_VERBOSE, "branch(%d): r0=%d r1=%d r2=%d r3=%d r4=%d r5=%d r6=%d r7=%d r8=%d r9=%d r10=%d r12=%d dirty: ",i,branch_regs[i].regmap[0],branch_regs[i].regmap[1],branch_regs[i].regmap[2],branch_regs[i].regmap[3],branch_regs[i].regmap[4],branch_regs[i].regmap[5],branch_regs[i].regmap[6],branch_regs[i].regmap[7],branch_regs[i].regmap[8],branch_regs[i].regmap[9],branch_regs[i].regmap[10],branch_regs[i].regmap[12]);
+      if(branch_regs[i].dirty&1) DebugMessage(M64MSG_VERBOSE, "r0 ");
+      if((branch_regs[i].dirty>>1)&1) DebugMessage(M64MSG_VERBOSE, "r1 ");
+      if((branch_regs[i].dirty>>2)&1) DebugMessage(M64MSG_VERBOSE, "r2 ");
+      if((branch_regs[i].dirty>>3)&1) DebugMessage(M64MSG_VERBOSE, "r3 ");
+      if((branch_regs[i].dirty>>4)&1) DebugMessage(M64MSG_VERBOSE, "r4 ");
+      if((branch_regs[i].dirty>>5)&1) DebugMessage(M64MSG_VERBOSE, "r5 ");
+      if((branch_regs[i].dirty>>6)&1) DebugMessage(M64MSG_VERBOSE, "r6 ");
+      if((branch_regs[i].dirty>>7)&1) DebugMessage(M64MSG_VERBOSE, "r7 ");
+      if((branch_regs[i].dirty>>8)&1) DebugMessage(M64MSG_VERBOSE, "r8 ");
+      if((branch_regs[i].dirty>>9)&1) DebugMessage(M64MSG_VERBOSE, "r9 ");
+      if((branch_regs[i].dirty>>10)&1) DebugMessage(M64MSG_VERBOSE, "r10 ");
+      if((branch_regs[i].dirty>>12)&1) DebugMessage(M64MSG_VERBOSE, "r12 ");
       #endif
-      printf(" 32:");
+      DebugMessage(M64MSG_VERBOSE, " 32:");
       for(r=0;r<=CCREG;r++) {
         if((branch_regs[i].is32>>r)&1) {
-          if(r==CCREG) printf(" CC");
-          else if(r==HIREG) printf(" HI");
-          else if(r==LOREG) printf(" LO");
-          else printf(" r%d",r);
+          if(r==CCREG) DebugMessage(M64MSG_VERBOSE, " CC");
+          else if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+          else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+          else DebugMessage(M64MSG_VERBOSE, " r%d",r);
         }
       }
-      printf("\n");
     }
   }
 #endif
@@ -10604,14 +10556,14 @@ int new_recompile_block(int addr)
   }
   for(i=0;i<slen;i++)
   {
-    //if(ds) printf("ds: ");
+    //if(ds) DebugMessage(M64MSG_VERBOSE, "ds: ");
 //    if((void*)assem_debug==(void*)printf) disassemble_inst(i);
 #if defined( ASSEM_DEBUG )
 	  disassemble_inst(i);
 #endif
     if(ds) {
       ds=0; // Skip delay slot
-      if(bt[i]) assem_debug("OOPS - branch into delay slot\n");
+      if(bt[i]) assem_debug("OOPS - branch into delay slot");
       instr_addr[i]=0;
     } else {
       #ifndef DESTRUCTIVE_WRITEBACK
@@ -10634,7 +10586,7 @@ int new_recompile_block(int addr)
       }
       // branch target entry point
       instr_addr[i]=(u_int)out;
-      assem_debug("<->\n");
+      assem_debug("<->");
       // load regs
       if(regs[i].regmap_entry[HOST_CCREG]==CCREG&&regs[i].regmap[HOST_CCREG]!=CCREG)
         wb_register(CCREG,regs[i].regmap_entry,regs[i].wasdirty,regs[i].was32);
@@ -10795,7 +10747,7 @@ int new_recompile_block(int addr)
   /* Pass 9 - Linker */
   for(i=0;i<linkcount;i++)
   {
-    assem_debug("%8x -> %8x\n",link_addr[i][0],link_addr[i][1]);
+    assem_debug("%8x -> %8x",link_addr[i][0],link_addr[i][1]);
     literal_pool(64);
     if(!link_addr[i][2])
     {
@@ -10840,8 +10792,8 @@ int new_recompile_block(int addr)
         //if(!(is32[i]&(~unneeded_reg_upper[i])&~(1LL<<CCREG)))
         if(!requires_32bit[i])
         {
-          assem_debug("%8x (%d) <- %8x\n",instr_addr[i],i,start+i*4);
-          assem_debug("jump_in: %x\n",start+i*4);
+          assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
+          assem_debug("jump_in: %x",start+i*4);
           ll_add(jump_dirty+vpage,vaddr,(void *)out);
           int entry_point=do_dirty_stub(i);
           ll_add(jump_in+page,vaddr,(void *)entry_point);
@@ -10860,10 +10812,10 @@ int new_recompile_block(int addr)
         else
         {
           u_int r=requires_32bit[i]|!!(requires_32bit[i]>>32);
-          assem_debug("%8x (%d) <- %8x\n",instr_addr[i],i,start+i*4);
-          assem_debug("jump_in: %x (restricted - %x)\n",start+i*4,r);
+          assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
+          assem_debug("jump_in: %x (restricted - %x)",start+i*4,r);
           //int entry_point=(int)out;
-          ////assem_debug("entry_point: %x\n",entry_point);
+          ////assem_debug("entry_point: %x",entry_point);
           //load_regs_entry(i);
           //if(entry_point==(int)out)
           //  entry_point=instr_addr[i];
@@ -10884,7 +10836,7 @@ int new_recompile_block(int addr)
   if(((u_int)out)&7) emit_addnop(13);
   #endif
   assert((u_int)out-beginning<MAX_OUTPUT_BLOCK_SIZE);
-  //printf("shadow buffer: %x-%x\n",(int)copy,(int)copy+slen*4);
+  //DebugMessage(M64MSG_VERBOSE, "shadow buffer: %x-%x",(int)copy,(int)copy+slen*4);
   memcpy(copy,source,slen*4);
   copy+=slen*4;
 
@@ -10907,7 +10859,7 @@ int new_recompile_block(int addr)
       j=(((u_int)i<<12)+(memory_map[i]<<2)-(u_int)rdram+(u_int)0x80000000)>>12;
       invalid_code[j]=0;
       memory_map[j]|=0x40000000;
-      //printf("write protect physical page: %x (virtual %x)\n",j<<12,start);
+      //DebugMessage(M64MSG_VERBOSE, "write protect physical page: %x (virtual %x)",j<<12,start);
     }
   }
   
@@ -10991,14 +10943,14 @@ void TLBWI_new(void)
     }
   }
   cached_interpreter_table.TLBWI();
-  //printf("TLBWI: index=%d\n",Index);
-  //printf("TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d\n",tlb_e[Index&0x3F].start_even,tlb_e[Index&0x3F].end_even,tlb_e[Index&0x3F].phys_even,tlb_e[Index&0x3F].v_even,tlb_e[Index&0x3F].d_even);
-  //printf("TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d\n",tlb_e[Index&0x3F].start_odd,tlb_e[Index&0x3F].end_odd,tlb_e[Index&0x3F].phys_odd,tlb_e[Index&0x3F].v_odd,tlb_e[Index&0x3F].d_odd);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",Index);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",tlb_e[Index&0x3F].start_even,tlb_e[Index&0x3F].end_even,tlb_e[Index&0x3F].phys_even,tlb_e[Index&0x3F].v_even,tlb_e[Index&0x3F].d_even);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",tlb_e[Index&0x3F].start_odd,tlb_e[Index&0x3F].end_odd,tlb_e[Index&0x3F].phys_odd,tlb_e[Index&0x3F].v_odd,tlb_e[Index&0x3F].d_odd);
   /* Combine tlb_LUT_r, tlb_LUT_w, and invalid_code into a single table
      for fast look up. */
   for (i=tlb_e[Index&0x3F].start_even>>12; i<=tlb_e[Index&0x3F].end_even>>12; i++)
   {
-    //printf("%x: r:%8x w:%8x\n",i,tlb_LUT_r[i],tlb_LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
@@ -11009,17 +10961,17 @@ void TLBWI_new(void)
         }else{
           assert(tlb_LUT_r[i]==tlb_LUT_w[i]);
         }
-        if(!using_tlb) printf("Enabled TLB");
+        if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
       else memory_map[i]=-1;
     }
-    //printf("memory_map[%x]: %8x (+%8x)\n",i,memory_map[i],memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
   for (i=tlb_e[Index&0x3F].start_odd>>12; i<=tlb_e[Index&0x3F].end_odd>>12; i++)
   {
-    //printf("%x: r:%8x w:%8x\n",i,tlb_LUT_r[i],tlb_LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
@@ -11030,13 +10982,13 @@ void TLBWI_new(void)
         }else{
           assert(tlb_LUT_r[i]==tlb_LUT_w[i]);
         }
-        if(!using_tlb) printf("Enabled TLB");
+        if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
       else memory_map[i]=-1;
     }
-    //printf("memory_map[%x]: %8x (+%8x)\n",i,memory_map[i],memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
 }
 
@@ -11070,7 +11022,7 @@ void TLBWR_new(void)
      for fast look up. */
   for (i=tlb_e[Random&0x3F].start_even>>12; i<=tlb_e[Random&0x3F].end_even>>12; i++)
   {
-    //printf("%x: r:%8x w:%8x\n",i,tlb_LUT_r[i],tlb_LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
@@ -11081,17 +11033,17 @@ void TLBWR_new(void)
         }else{
           assert(tlb_LUT_r[i]==tlb_LUT_w[i]);
         }
-        if(!using_tlb) printf("Enabled TLB");
+        if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
       else memory_map[i]=-1;
     }
-    //printf("memory_map[%x]: %8x (+%8x)\n",i,memory_map[i],memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
   for (i=tlb_e[Random&0x3F].start_odd>>12; i<=tlb_e[Random&0x3F].end_odd>>12; i++)
   {
-    //printf("%x: r:%8x w:%8x\n",i,tlb_LUT_r[i],tlb_LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
@@ -11102,12 +11054,12 @@ void TLBWR_new(void)
         }else{
           assert(tlb_LUT_r[i]==tlb_LUT_w[i]);
         }
-        if(!using_tlb) printf("Enabled TLB");
+        if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
       else memory_map[i]=-1;
     }
-    //printf("memory_map[%x]: %8x (+%8x)\n",i,memory_map[i],memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
 }
