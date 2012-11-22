@@ -42,7 +42,8 @@ typedef enum _savestates_type
 
 savestates_job savestates_get_job(void);
 void savestates_set_job(savestates_job j, savestates_type t, const char *fn);
-void savestates_clear_job(void);
+void savestates_init(void);
+void savestates_deinit(void);
 
 int savestates_load(void);
 int savestates_save(void);

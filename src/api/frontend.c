@@ -78,6 +78,8 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     plugin_connect(M64PLUGIN_INPUT, NULL);
     plugin_connect(M64PLUGIN_CORE, NULL);
 
+    savestates_init();
+
     /* next, start up the configuration handling code by loading and parsing the config file */
     if (ConfigInit(ConfigPath, DataPath) != M64ERR_SUCCESS)
         return M64ERR_INTERNAL;
@@ -106,8 +108,8 @@ EXPORT m64p_error CALL CoreShutdown(void)
     /* close down some core sub-systems */
     romdatabase_close();
     ConfigShutdown();
-    savestates_clear_job();
     workqueue_shutdown();
+    savestates_deinit();
 
     /* tell SDL to shut down */
     SDL_Quit();

@@ -24,6 +24,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <SDL_thread.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
@@ -35,6 +36,7 @@
 #include "main.h"
 #include "rom.h"
 #include "util.h"
+#include "workqueue.h"
 
 #include "memory/memory.h"
 #include "memory/flashram.h"
@@ -64,6 +66,15 @@ static char *fname = NULL;
 
 static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
+
+static SDL_mutex *savestates_lock;
+
+struct savestate_work {
+    char *filepath;
+    char *data;
+    size_t size;
+    struct work_struct work;
+};
 
 /* Returns the malloc'd full path of the currently selected savestate. */
 static char *savestates_generate_path(savestates_type type)
@@ -158,7 +169,7 @@ void savestates_set_job(savestates_job j, savestates_type t, const char *fn)
         fname = strdup(fn);
 }
 
-void savestates_clear_job(void)
+static void savestates_clear_job(void)
 {
     savestates_set_job(savestates_job_nothing, savestates_type_unknown, NULL);
 }
@@ -190,10 +201,13 @@ static int savestates_load_m64p(char *filepath)
     unsigned char *savestateData, *curr;
     char queue[1024];
 
+    SDL_LockMutex(savestates_lock);
+
     f = gzopen(filepath, "rb");
     if(f==NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
 
@@ -202,6 +216,7 @@ static int savestates_load_m64p(char *filepath)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read header from state file %s", filepath);
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
     curr = header;
@@ -210,6 +225,7 @@ static int savestates_load_m64p(char *filepath)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State file: %s is not a valid Mupen64plus savestate.", filepath);
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
     curr += 8;
@@ -222,6 +238,7 @@ static int savestates_load_m64p(char *filepath)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
 
@@ -229,6 +246,7 @@ static int savestates_load_m64p(char *filepath)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
     curr += 32;
@@ -240,6 +258,7 @@ static int savestates_load_m64p(char *filepath)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to load state.");
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
     if (gzread(f, savestateData, savestateSize) != savestateSize ||
@@ -248,10 +267,12 @@ static int savestates_load_m64p(char *filepath)
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate data from %s", filepath);
         free(savestateData);
         gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
         return 0;
     }
 
     gzclose(f);
+    SDL_UnlockMutex(savestates_lock);
 
     // Parse savestate
     rdram_register.rdram_config = GETDATA(curr, unsigned int);
@@ -857,17 +878,58 @@ int savestates_load(void)
     return ret;
 }
 
+static void savestates_save_m64p_work(struct work_struct *work)
+{
+    gzFile f;
+    struct savestate_work *save = container_of(work, struct savestate_work, work);
+
+    SDL_LockMutex(savestates_lock);
+
+    // Write the state to a GZIP file
+    f = gzopen(save->filepath, "wb");
+
+    if (f==NULL)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", save->filepath);
+        free(save->data);
+        return;
+    }
+
+    if (gzwrite(f, save->data, save->size) != save->size)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not write data to state file: %s", save->filepath);
+        gzclose(f);
+        free(save->data);
+        return;
+    }
+
+    gzclose(f);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(save->filepath));
+    free(save->data);
+    free(save->filepath);
+    free(save);
+
+    SDL_UnlockMutex(savestates_lock);
+}
+
 static int savestates_save_m64p(char *filepath)
 {
     unsigned char outbuf[4];
-    gzFile f;
     int i;
 
     char queue[1024];
     int queuelength;
 
-    size_t savestateSize;
-    char *savestateData, *curr;
+    struct savestate_work *save;
+    char *curr;
+
+    save = malloc(sizeof(*save));
+    if (!save) {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to save state.");
+        return 0;
+    }
+
+    save->filepath = strdup(filepath);
 
     if(autoinc_save_slot)
         savestates_inc_slot();
@@ -875,10 +937,12 @@ static int savestates_save_m64p(char *filepath)
     queuelength = save_eventqueue_infos(queue);
 
     // Allocate memory for the save state data
-    savestateSize = 16788288 + queuelength;
-    savestateData = curr = malloc(savestateSize);
-    if (savestateData == NULL)
+    save->size = 16788288 + queuelength;
+    save->data = curr = malloc(save->size);
+    if (save->data == NULL)
     {
+        free(save->filepath);
+        free(save);
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to save state.");
         return 0;
     }
@@ -1101,29 +1165,11 @@ static int savestates_save_m64p(char *filepath)
     to_little_endian_buffer(queue, 4, queuelength/4);
     PUTARRAY(queue, curr, char, queuelength);
 
-    // assert(curr == savestateData + savestateSize)
+    // assert(curr == save->data + save->size)
 
-    // Write the state to a GZIP file
-    f = gzopen(filepath, "wb");
+    init_work(&save->work, savestates_save_m64p_work);
+    queue_work(&save->work);
 
-    if (f==NULL)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
-        free(savestateData);
-        return 0;
-    }
-
-    if (gzwrite(f, savestateData, savestateSize) != savestateSize)
-    {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not write data to state file: %s", filepath);
-        gzclose(f);
-        free(savestateData);
-        return 0;
-    }
-
-    gzclose(f);
-    free(savestateData);
-    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(filepath));
     return 1;
 }
 
@@ -1395,4 +1441,19 @@ int savestates_save(void)
 
     savestates_clear_job();
     return ret;
+}
+
+void savestates_init(void)
+{
+    savestates_lock = SDL_CreateMutex();
+    if (!savestates_lock) {
+        DebugMessage(M64MSG_ERROR, "Could not create savestates list lock");
+        return;
+    }
+}
+
+void savestates_deinit(void)
+{
+    SDL_DestroyMutex(savestates_lock);
+    savestates_clear_job();
 }
