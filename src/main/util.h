@@ -125,27 +125,6 @@ void to_little_endian_buffer(void *buffer, size_t length, size_t count);
 void to_big_endian_buffer(void *buffer, size_t length, size_t count);
 
 /**********************
-  Linked list utilities
- **********************/
-typedef struct _list_node {
-    void *data;
-    struct _list_node *prev;
-    struct _list_node *next;
-} list_node_t;
-
-typedef list_node_t * list_t;
-
-list_node_t *list_prepend(list_t *list, void *data);
-list_node_t *list_append(list_t *list, void *data);
-void list_node_delete(list_t *list, list_node_t *node);
-void list_delete(list_t *list);
-list_node_t *list_find_node(list_t list, void *data);
-
-// cycles through each listnode in list setting curr_node to current node.
-#define list_foreach(list, curr_node) \
-    for((curr_node) = (list); (curr_node) != NULL; (curr_node) = (curr_node)->next)
-
-/**********************
      GUI utilities
  **********************/
 void countrycodestring(char countrycode, char *string);

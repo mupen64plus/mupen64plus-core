@@ -22,6 +22,8 @@
 #ifndef __OSD_H__
 #define __OSD_H__
 
+#include "main/list.h"
+
 /******************************************************************
    osd_corner
    0    1    2 |
@@ -76,6 +78,7 @@ typedef struct {
 #define OSD_INFINITE_TIMEOUT 0xffffffff
     unsigned int frames; // number of frames in this state
     int user_managed; // structure managed by caller and not to be freed by us
+    struct list_head list;
 } osd_message_t;
 
 enum { R, G, B }; // for referencing color array
