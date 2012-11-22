@@ -355,7 +355,22 @@ endif
 ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
 
-  ifeq ($(CPU), X86)
+  ifeq ($(NEW_DYNAREC), 1)
+    ifeq ($(DYNAREC), x86)
+      CFLAGS += -DNEW_DYNAREC=1
+    else
+      ifeq ($(DYNAREC), arm)
+        CFLAGS += -DNEW_DYNAREC=3
+      else
+        $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
+      endif
+    endif
+
+    SOURCE += \
+      $(SRCDIR)/r4300/empty_dynarec.c \
+      $(SRCDIR)/r4300/new_dynarec/linkage_$(DYNAREC).S \
+      $(SRCDIR)/r4300/new_dynarec/new_dynarec.c
+  else
     SOURCE += \
       $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
       $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
@@ -371,24 +386,6 @@ ifneq ($(DYNAREC), )
       $(SRCDIR)/r4300/$(DYNAREC)/gtlb.c \
       $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
       $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
-  else
-    SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
-  endif
-
-  ifeq ($(NEW_DYNAREC), 1)
-    ifeq ($(DYNAREC), x86)
-      CFLAGS += -DNEW_DYNAREC=1
-    else
-      ifeq ($(DYNAREC), arm)
-        CFLAGS += -DNEW_DYNAREC=3
-      else
-        $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
-      endif
-    endif
-
-    SOURCE += \
-      $(SRCDIR)/r4300/new_dynarec/linkage_$(DYNAREC).S \
-      $(SRCDIR)/r4300/new_dynarec/new_dynarec.c
   endif
 else
   SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
