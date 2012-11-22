@@ -21,6 +21,7 @@
 
 // On-screen Display
 #include <SDL_opengl.h>
+#include <SDL_thread.h>
 
 #include "OGLFT.h"
 #include "osd.h"
@@ -56,7 +57,9 @@ static void animation_fade(osd_message_t *);
 static void osd_remove_message(osd_message_t *msg);
 static osd_message_t * osd_message_valid(osd_message_t *testmsg);
 
-static float fCornerScroll[OSD_NUM_CORNERS]; 
+static float fCornerScroll[OSD_NUM_CORNERS];
+
+static SDL_mutex *osd_list_lock;
 
 // animation handlers
 static void (*l_animations[OSD_NUM_ANIM_TYPES])(osd_message_t *) = {
@@ -216,6 +219,12 @@ void osd_init(int width, int height)
 {
     const char *fontpath;
 
+    osd_list_lock = SDL_CreateMutex();
+    if (!osd_list_lock) {
+        DebugMessage(M64MSG_ERROR, "Could not create osd list lock");
+        return;
+    }
+
     if (!OGLFT::Init_FT())
     {
         DebugMessage(M64MSG_ERROR, "Could not initialize freetype library.");
@@ -265,13 +274,17 @@ void osd_exit(void)
     }
 
     // delete message queue
+    SDL_LockMutex(osd_list_lock);
     list_for_each_entry_safe(msg, safe, &l_messageQueue, list) {
         free(msg->text);
         free(msg);
     }
+    SDL_UnlockMutex(osd_list_lock);
 
     // shut down the Freetype library
     OGLFT::Uninit_FT();
+
+    SDL_DestroyMutex(osd_list_lock);
 
     // reset initialized flag
     l_OsdInitialized = 0;
@@ -350,6 +363,7 @@ void osd_render()
     for (i = 0; i < OSD_NUM_CORNERS; i++)
         fCornerPos[i] = 0.5f * l_fLineHeight;
 
+    SDL_LockMutex(osd_list_lock);
     list_for_each_entry_safe(msg, safe, &l_messageQueue, list) {
         // update message state
         if(msg->timeout[msg->state] != OSD_INFINITE_TIMEOUT &&
@@ -358,10 +372,12 @@ void osd_render()
             // if message is in last state, mark it for deletion and continue to the next message
             if(msg->state >= OSD_NUM_STATES - 1)
             {
-                if (msg->user_managed)
+                if (msg->user_managed) {
                     osd_remove_message(msg);
-                else
-                    osd_delete_message(msg);
+                } else {
+                    osd_remove_message(msg);
+                    free(msg);
+                }
 
                 continue;
             }
@@ -384,6 +400,7 @@ void osd_render()
         msg->yoffset -= get_message_offset(msg, fStartOffset);
         fCornerPos[msg->corner] += l_fLineHeight;
     }
+    SDL_UnlockMutex(osd_list_lock);
 
     // do the scrolling
     for (int i = 0; i < OSD_NUM_CORNERS; i++)
@@ -478,7 +495,9 @@ osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
     }
 
     // add to message queue
+    SDL_LockMutex(osd_list_lock);
     list_add(&msg->list, &l_messageQueue);
+    SDL_UnlockMutex(osd_list_lock);
 
     return msg;
 }
@@ -512,9 +531,11 @@ void osd_update_message(osd_message_t *msg, const char *fmt, ...)
         msg->state = OSD_DISPLAY;
         msg->frames = 0;
     }
-    
+
+    SDL_LockMutex(osd_list_lock);
     if (!osd_message_valid(msg))
         list_add(&msg->list, &l_messageQueue);
+    SDL_UnlockMutex(osd_list_lock);
 
 }
 
@@ -534,8 +555,10 @@ void osd_delete_message(osd_message_t *msg)
 {
     if (!l_OsdInitialized || !msg) return;
 
+    SDL_LockMutex(osd_list_lock);
     osd_remove_message(msg);
     free(msg);
+    SDL_UnlockMutex(osd_list_lock);
 }
 
 // set message so it doesn't automatically expire in a certain number of frames.
