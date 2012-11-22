@@ -71,6 +71,12 @@ static inline void list_del(struct list_head *entry)
     prev->next = next;
 }
 
+static inline void list_del_init(struct list_head *entry)
+{
+    list_del(entry);
+    INIT_LIST_HEAD(entry);
+}
+
 static inline int list_empty(const struct list_head *head)
 {
     return (head->next == head);
