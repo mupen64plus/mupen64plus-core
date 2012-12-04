@@ -47,6 +47,10 @@ endif
 ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
   OS = LINUX
 endif
+ifeq ("$(patsubst MINGW%,MINGW,$(UNAME))","MINGW")
+  OS = MINGW
+  CC = gcc
+endif
 ifeq ("$(OS)","NONE")
   $(error OS type "$(UNAME)" not supported.  Please file bug report at 'http://code.google.com/p/mupen64plus/issues')
 endif
@@ -160,6 +164,14 @@ ifeq ($(OS), OSX)
     endif
   endif
 endif
+ifeq ($(OS), MINGW)
+  TARGET = mupen64plus.dll
+  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols -Wl
+  LDLIBS += -lopengl32
+  # only export api symbols
+  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+endif
+
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
 endif
@@ -315,8 +327,6 @@ SOURCE = \
 	$(SRCDIR)/memory/n64_cic_nus_6105.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/memory/tlb.c \
-	$(SRCDIR)/osal/dynamiclib_unix.c \
-	$(SRCDIR)/osal/files_unix.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
@@ -330,6 +340,15 @@ SOURCE = \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \
 	$(SRCDIR)/osd/screenshot.cpp
+ifeq ("$(OS)","MINGW")
+SOURCE += \
+	$(SRCDIR)/osal/dynamiclib_win32.c \
+	$(SRCDIR)/osal/files_win32.c
+else
+SOURCE += \
+	$(SRCDIR)/osal/dynamiclib_unix.c \
+	$(SRCDIR)/osal/files_unix.c
+endif
 
 ifeq ($(OSD), 1)
 SOURCE += \

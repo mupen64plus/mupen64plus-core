@@ -24,7 +24,9 @@
 
 #if defined(__GNUC__)
 #include <unistd.h>
+#ifndef __MINGW32__
 #include <sys/mman.h>
+#endif
 #endif
 
 #include "api/m64p_types.h"
