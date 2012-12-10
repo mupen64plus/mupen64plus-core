@@ -27,7 +27,7 @@
 #define OSAL_FILES_H
 
 /* some file-related preprocessor definitions */
-#if defined(WIN32)
+#if defined(WIN32) && !defined(__MINGW32__)
   #include <io.h> // For _unlink()
   #define unlink _unlink
 
