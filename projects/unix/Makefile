@@ -166,7 +166,7 @@ ifeq ($(OS), OSX)
 endif
 ifeq ($(OS), MINGW)
   TARGET = mupen64plus.dll
-  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols -Wl
+  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
   LDLIBS += -lopengl32
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
