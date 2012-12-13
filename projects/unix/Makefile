@@ -108,6 +108,10 @@ CFLAGS += $(OPTFLAGS) -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
+# default configuration programs
+SDL_CONFIG ?= sdl-config
+PKG_CONFIG ?= pkg-config
+
 # Since we are building a shared library, we must compile with -fPIC on some architectures
 # On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
@@ -185,40 +189,40 @@ endif
 endif
 
 # test for essential build dependencies
-ifeq ($(shell which pkg-config 2>/dev/null),)
-  $(error pkg-config not found)
+ifeq ($(shell which $(PKG_CONFIG) 2>/dev/null),)
+  $(error $(PKG_CONFIG) not found)
 endif
-ifeq ($(shell pkg-config --modversion libpng 2>/dev/null),)
+ifeq ($(shell $(PKG_CONFIG) --modversion libpng 2>/dev/null),)
   $(error No libpng development libraries found!)
 endif
-ifeq ($(shell pkg-config --modversion zlib 2>/dev/null),)
+ifeq ($(shell $(PKG_CONFIG) --modversion zlib 2>/dev/null),)
   $(error No zlib development libraries found!)
 endif
-CFLAGS += $(shell pkg-config --cflags libpng zlib)
-LDLIBS +=  $(shell pkg-config --libs libpng zlib)
+CFLAGS += $(shell $(PKG_CONFIG) --cflags libpng zlib)
+LDLIBS +=  $(shell $(PKG_CONFIG) --libs libpng zlib)
 
 # test for presence of SDL
-ifeq ($(shell which sdl-config 2>/dev/null),)
+ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
   $(error No SDL development libraries found!)
 endif
-CFLAGS	+= $(shell sdl-config --cflags)
-LDLIBS	+= $(shell sdl-config --libs)
+CFLAGS	+= $(shell $(SDL_CONFIG) --cflags)
+LDLIBS	+= $(shell $(SDL_CONFIG) --libs)
 
 OSD ?= 1
 ifeq ($(OSD), 1)
   CFLAGS += -DM64P_OSD
-  ifeq ($(shell pkg-config --modversion freetype2 2>/dev/null),)
+  ifeq ($(shell $(PKG_CONFIG) --modversion freetype2 2>/dev/null),)
     $(error No FreeType 2 development libraries found!)
   endif
-  ifeq ($(shell pkg-config --modversion gl 2>/dev/null),)
+  ifeq ($(shell $(PKG_CONFIG) --modversion gl 2>/dev/null),)
     $(error No OpenGL development libraries found!)
   endif
-  ifeq ($(shell pkg-config --modversion glu 2>/dev/null),)
+  ifeq ($(shell $(PKG_CONFIG) --modversion glu 2>/dev/null),)
     $(error No OpenGL utility development libraries found!)
   endif
 
-  CFLAGS += $(shell pkg-config --cflags gl glu freetype2)
-  LDLIBS +=  $(shell pkg-config --libs gl glu freetype2)
+  CFLAGS += $(shell $(PKG_CONFIG) --cflags gl glu freetype2)
+  LDLIBS +=  $(shell $(PKG_CONFIG) --libs gl glu freetype2)
 endif
 
 # set base program pointers and flags
@@ -415,7 +419,7 @@ ifeq ($(LIRC), 1)
   LDLIBS += -llirc_client
 endif
 
-ifeq ($(shell pkg-config --modversion minizip 2>/dev/null),)
+ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
   SOURCE += \
 	$(SRCDIR)/main/zip/ioapi.c \
 	$(SRCDIR)/main/zip/zip.c \
@@ -423,8 +427,8 @@ ifeq ($(shell pkg-config --modversion minizip 2>/dev/null),)
 
   CFLAGS += -DNOCRYPT -DNOUNCRYPT
 else
-  CFLAGS += $(shell pkg-config --cflags minizip) -DLIBMINIZIP
-  LDLIBS +=  $(shell pkg-config --libs minizip)
+  CFLAGS += $(shell $(PKG_CONFIG) --cflags minizip) -DLIBMINIZIP
+  LDLIBS +=  $(shell $(PKG_CONFIG) --libs minizip)
 endif
 
 
