@@ -506,7 +506,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) ./_obj$(POSTFIX)
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR)
 
 # build dependency files
 CFLAGS += -MD
