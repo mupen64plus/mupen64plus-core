@@ -137,21 +137,21 @@ endif
 
 # set special flags per-system
 ifeq ($(OS), FREEBSD)
-  TARGET = libmupen64plus.so.2.0.0
-  SONAME = libmupen64plus.so.2
+  TARGET = libmupen64plus$(POSTFIX).so.2.0.0
+  SONAME = libmupen64plus$(POSTFIX).so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -L${LOCALBASE}/lib -lc
 endif
 ifeq ($(OS), LINUX)
-  TARGET = libmupen64plus.so.2.0.0
-  SONAME = libmupen64plus.so.2
+  TARGET = libmupen64plus$(POSTFIX).so.2.0.0
+  SONAME = libmupen64plus$(POSTFIX).so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -ldl
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 endif
 ifeq ($(OS), OSX)
-  TARGET = libmupen64plus.dylib
+  TARGET = libmupen64plus$(POSTFIX).dylib
   LDFLAGS += -bundle -read_only_relocs suppress
   LDLIBS += -ldl -framework OpenGL
   ifeq ($(CPU), X86)
@@ -168,7 +168,7 @@ ifeq ($(OS), OSX)
   endif
 endif
 ifeq ($(OS), MINGW)
-  TARGET = mupen64plus.dll
+  TARGET = mupen64plus$(POSTFIX).dll
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
   LDLIBS += -lopengl32
   # only export api symbols
@@ -307,7 +307,7 @@ ifeq ($(INCDIR),)
 endif
 
 SRCDIR = ../../src
-OBJDIR = _obj
+OBJDIR = _obj$(POSTFIX)
 
 # list of required source files for compilation
 SOURCE = \
@@ -465,6 +465,7 @@ targets:
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)     == Enable/disable build of OpenGL On-screen display"
 	@echo "    NEW_DYNAREC=1 == Replace dynamic recompiler with Ari64's experimental dynarec"
+	@echo "    POSTFIX=name  == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
@@ -505,7 +506,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) ./_obj
+	$(RM) -r $(TARGET) $(SONAME) ./_obj$(POSTFIX)
 
 # build dependency files
 CFLAGS += -MD
