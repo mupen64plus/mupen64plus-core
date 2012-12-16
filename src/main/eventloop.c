@@ -22,6 +22,31 @@
 
 #include <stdlib.h>
 #include <SDL.h>
+#if ! SDL_VERSION_ATLEAST(1,3,0)
+
+#define SDL_SCANCODE_ESCAPE SDLK_ESCAPE
+#define SDL_NUM_SCANCODES SDLK_LAST
+#define SDL_SCANCODE_F5 SDLK_F5
+#define SDL_SCANCODE_F7 SDLK_F7
+#define SDL_SCANCODE_F9 SDLK_F9
+#define SDL_SCANCODE_F10 SDLK_F10
+#define SDL_SCANCODE_F11 SDLK_F11
+#define SDL_SCANCODE_F12 SDLK_F12
+#define SDL_SCANCODE_P SDLK_p
+#define SDL_SCANCODE_M SDLK_m
+#define SDL_SCANCODE_RIGHTBRACKET SDLK_RIGHTBRACKET
+#define SDL_SCANCODE_LEFTBRACKET SDLK_LEFTBRACKET
+#define SDL_SCANCODE_F SDLK_f
+#define SDL_SCANCODE_SLASH SDLK_SLASH
+#define SDL_SCANCODE_G SDLK_g
+#define SDL_SCANCODE_RETURN SDLK_RETURN
+#define SDL_SCANCODE_0 SDLK_0
+#define SDL_SCANCODE_9 SDLK_9
+
+#define SDL_SetEventFilter(func, data) SDL_SetEventFilter(func)
+#define event_sdl_filter(userdata, event) event_sdl_filter(const event)
+
+#endif
 
 #define M64P_CORE_PROTOTYPES 1
 #include "main.h"
@@ -208,7 +233,7 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
 /*********************************************************************************************************
 * sdl event filter
 */
-static int event_sdl_filter(const SDL_Event *event)
+static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
 {
     int cmd, action;
 
@@ -220,10 +245,18 @@ static int event_sdl_filter(const SDL_Event *event)
             break;
 
         case SDL_KEYDOWN:
+#if SDL_VERSION_ATLEAST(1,3,0)
+            event_sdl_keydown(event->key.keysym.scancode, event->key.keysym.mod);
+#else
             event_sdl_keydown(event->key.keysym.sym, event->key.keysym.mod);
+#endif
             return 0;
         case SDL_KEYUP:
+#if SDL_VERSION_ATLEAST(1,3,0)
+            event_sdl_keyup(event->key.keysym.scancode, event->key.keysym.mod);
+#else
             event_sdl_keyup(event->key.keysym.sym, event->key.keysym.mod);
+#endif
             return 0;
 
         // if joystick action is detected, check if it's mapped to a special function
@@ -302,7 +335,7 @@ void event_initialize(void)
 
     /* set up SDL event filter and disable key repeat */
     SDL_EnableKeyRepeat(0, 0);
-    SDL_SetEventFilter(event_sdl_filter);
+    SDL_SetEventFilter(event_sdl_filter, NULL);
 }
 
 int event_set_core_defaults(void)
@@ -341,22 +374,22 @@ int event_set_core_defaults(void)
 
     ConfigSetDefaultFloat(l_CoreEventsConfig, "Version", CONFIG_PARAM_VERSION,  "Mupen64Plus CoreEvents config parameter set version number.  Please don't change this version number.");
     /* Keyboard presses mapped to core functions */
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdStop, SDLK_ESCAPE,          "SDL keysym for stopping the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdFullscreen, SDLK_LAST,      "SDL keysym for switching between fullscreen/windowed modes");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSave, SDLK_F5,              "SDL keysym for saving the emulator state");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdLoad, SDLK_F7,              "SDL keysym for loading the emulator state");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdIncrement, 0,               "SDL keysym for advancing the save state slot");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdReset, SDLK_F9,             "SDL keysym for resetting the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSpeeddown, SDLK_F10,        "SDL keysym for slowing down the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSpeedup, SDLK_F11,          "SDL keysym for speeding up the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdScreenshot, SDLK_F12,       "SDL keysym for taking a screenshot");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdPause, SDLK_p,              "SDL keysym for pausing the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdMute, SDLK_m,               "SDL keysym for muting/unmuting the sound");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdIncrease, SDLK_RIGHTBRACKET,"SDL keysym for increasing the volume");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdDecrease, SDLK_LEFTBRACKET, "SDL keysym for decreasing the volume");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdForward, SDLK_f,            "SDL keysym for temporarily going really fast");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdAdvance, SDLK_SLASH,        "SDL keysym for advancing by one frame when paused");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdGameshark, SDLK_g,          "SDL keysym for pressing the game shark button");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdStop, SDL_SCANCODE_ESCAPE,          "SDL keysym for stopping the emulator");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdFullscreen, SDL_NUM_SCANCODES,      "SDL keysym for switching between fullscreen/windowed modes");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSave, SDL_SCANCODE_F5,              "SDL keysym for saving the emulator state");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdLoad, SDL_SCANCODE_F7,              "SDL keysym for loading the emulator state");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdIncrement, 0,                       "SDL keysym for advancing the save state slot");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdReset, SDL_SCANCODE_F9,             "SDL keysym for resetting the emulator");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSpeeddown, SDL_SCANCODE_F10,        "SDL keysym for slowing down the emulator");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdSpeedup, SDL_SCANCODE_F11,          "SDL keysym for speeding up the emulator");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdScreenshot, SDL_SCANCODE_F12,       "SDL keysym for taking a screenshot");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdPause, SDL_SCANCODE_P,              "SDL keysym for pausing the emulator");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdMute, SDL_SCANCODE_M,               "SDL keysym for muting/unmuting the sound");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdIncrease, SDL_SCANCODE_RIGHTBRACKET,"SDL keysym for increasing the volume");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdDecrease, SDL_SCANCODE_LEFTBRACKET, "SDL keysym for decreasing the volume");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdForward, SDL_SCANCODE_F,            "SDL keysym for temporarily going really fast");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdAdvance, SDL_SCANCODE_SLASH,        "SDL keysym for advancing by one frame when paused");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdGameshark, SDL_SCANCODE_G,          "SDL keysym for pressing the game shark button");
     /* Joystick events mapped to core functions */
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyStop], "",       "Joystick event string for stopping the emulator");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyFullscreen], "", "Joystick event string for switching between fullscreen/windowed modes");
@@ -384,10 +417,10 @@ int event_set_core_defaults(void)
 void event_sdl_keydown(int keysym, int keymod)
 {
     /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
-    if (keysym == SDLK_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
+    if (keysym == SDL_SCANCODE_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
         gfx.changeWindow();
-    else if (keysym >= SDLK_0 && keysym <= SDLK_9)
-        main_state_set_slot(keysym - SDLK_0);
+    else if (keysym >= SDL_SCANCODE_0 && keysym <= SDL_SCANCODE_9)
+        main_state_set_slot(keysym - SDL_SCANCODE_0);
     /* check all of the configurable commands */
     else if (keysym == ConfigGetParamInt(l_CoreEventsConfig, kbdStop))
         main_stop();
