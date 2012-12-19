@@ -153,7 +153,7 @@ endif
 ifeq ($(OS), OSX)
   TARGET = libmupen64plus$(POSTFIX).dylib
   LDFLAGS += -bundle -read_only_relocs suppress
-  LDLIBS += -ldl -framework OpenGL
+  LDLIBS += -ldl
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
       CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
@@ -170,7 +170,6 @@ endif
 ifeq ($(OS), MINGW)
   TARGET = mupen64plus$(POSTFIX).dll
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
-  LDLIBS += -lopengl32
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 endif
@@ -214,15 +213,28 @@ ifeq ($(OSD), 1)
   ifeq ($(shell $(PKG_CONFIG) --modversion freetype2 2>/dev/null),)
     $(error No FreeType 2 development libraries found!)
   endif
-  ifeq ($(shell $(PKG_CONFIG) --modversion gl 2>/dev/null),)
-    $(error No OpenGL development libraries found!)
+
+  # search for OpenGL libraries
+  GL_LIBS=
+  ifeq ($(OS), OSX)
+    GL_LIBS = -framework OpenGL
   endif
-  ifeq ($(shell $(PKG_CONFIG) --modversion glu 2>/dev/null),)
-    $(error No OpenGL utility development libraries found!)
+  ifeq ($(OS), MINGW)
+    GL_LIBS = -lopengl32 -lglu32
+  endif
+  ifeq ("$(GL_LIBS)", "")
+    ifeq ($(shell $(PKG_CONFIG) --modversion gl 2>/dev/null),)
+      $(error No OpenGL development libraries found!)
+    endif
+    ifeq ($(shell $(PKG_CONFIG) --modversion glu 2>/dev/null),)
+      $(error No OpenGL utility development libraries found!)
+    endif
+    CFLAGS += $(shell $(PKG_CONFIG) --cflags gl glu)
+    GL_LIBS = $(shell $(PKG_CONFIG) --libs gl glu)
   endif
 
-  CFLAGS += $(shell $(PKG_CONFIG) --cflags gl glu freetype2)
-  LDLIBS +=  $(shell $(PKG_CONFIG) --libs gl glu freetype2)
+  CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2)
+  LDLIBS += $(shell $(PKG_CONFIG) --libs freetype2) $(GL_LIBS)
 endif
 
 # set base program pointers and flags
