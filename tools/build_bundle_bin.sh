@@ -56,28 +56,10 @@ tar xzvf source/mupen64plus-core/tools/m64p_helper_scripts.tar.gz
 mv "test" "${OUTPUTDIR}"
 
 echo "************************************ Creating archive"
-mkdir "${OUTPUTDIR}/doc"
-
-cd source
-for dirname in mupen64plus-*; do
-  if [ -f ${dirname}/README ]; then
-    cp ${dirname}/README "../${OUTPUTDIR}/doc/README-${dirname}"
-  fi
-  if [ -f ${dirname}/LICENSES ]; then
-    cp ${dirname}/LICENSES "../${OUTPUTDIR}/doc/LICENSES-${dirname}"
-  fi
-  if [ -f ${dirname}/RELEASE ]; then
-    cp ${dirname}/RELEASE "../${OUTPUTDIR}/doc/RELEASE-${dirname}"
-  fi
-done
-find mupen64plus-core/doc/ -maxdepth 1 -type f |while read filename; do cp "$filename" "../${OUTPUTDIR}/doc/"; done
-cp mupen64plus-core/tools/install_binary_bundle.sh "../${OUTPUTDIR}/install.sh"
-cp mupen64plus-core/tools/uninstall_binary_bundle.sh "../${OUTPUTDIR}/uninstall.sh"
-cp mupen64plus-ui-console/doc/* "../${OUTPUTDIR}/"
-cd ..
+cp source/mupen64plus-core/tools/install_binary_bundle.sh "${OUTPUTDIR}/install.sh"
+cp source/mupen64plus-core/tools/uninstall_binary_bundle.sh "${OUTPUTDIR}/uninstall.sh"
+cp source/mupen64plus-ui-console/doc/* "${OUTPUTDIR}/"
 
 tar c "${OUTPUTDIR}" --owner 0 --group 0 --numeric-owner | gzip -n > "../${OUTPUTDIR}.tar.gz"
 cd ..
 rm -rf "${TEMPDIR}"
-
-
