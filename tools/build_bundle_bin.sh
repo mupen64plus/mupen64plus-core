@@ -58,7 +58,6 @@ mv "test" "${OUTPUTDIR}"
 echo "************************************ Creating archive"
 cp source/mupen64plus-core/tools/install_binary_bundle.sh "${OUTPUTDIR}/install.sh"
 cp source/mupen64plus-core/tools/uninstall_binary_bundle.sh "${OUTPUTDIR}/uninstall.sh"
-cp source/mupen64plus-ui-console/doc/* "${OUTPUTDIR}/"
 
 tar c "${OUTPUTDIR}" --owner 0 --group 0 --numeric-owner | gzip -n > "../${OUTPUTDIR}.tar.gz"
 cd ..
