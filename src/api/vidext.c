@@ -33,6 +33,10 @@
 #include "vidext.h"
 #include "callbacks.h"
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+#include "vidext_sdl2_compat.h"
+#endif
+
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;

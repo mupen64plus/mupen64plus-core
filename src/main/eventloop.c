@@ -328,13 +328,21 @@ void event_initialize(void)
             int device = event_str[1] - '0';
             if (!SDL_WasInit(SDL_INIT_JOYSTICK))
                 SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+#if SDL_VERSION_ATLEAST(2,0,0)
+#warning SDL_JoystickOpened unsupported
+#else
             if (!SDL_JoystickOpened(device))
                 SDL_JoystickOpen(device);
+#endif
         }
     }
 
     /* set up SDL event filter and disable key repeat */
+#if SDL_VERSION_ATLEAST(2,0,0)
+#warning SDL_EnableKeyRepeat unsupported
+#else
     SDL_EnableKeyRepeat(0, 0);
+#endif
     SDL_SetEventFilter(event_sdl_filter, NULL);
 }
 
