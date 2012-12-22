@@ -37,6 +37,9 @@
 #include "eventloop.h"
 #include "list.h"
 
+#include <stdio.h>
+#include <string.h>
+
 // local definitions
 #define CHEAT_CODE_MAGIC_VALUE 0xDEAD0000
 
@@ -200,6 +203,29 @@ void cheat_apply_cheats(int entry)
     cheat_code_t *code;
     int skip;
     int execute_next;
+
+    // If game is Zelda OOT, apply subscreen delay fix
+    if (strncmp((char *)ROM_HEADER.Name, "THE LEGEND OF ZELDA", 19) == 0 && entry == ENTRY_VI) {
+        if (sl(ROM_HEADER.CRC1) == 0xEC7011B7 && sl(ROM_HEADER.CRC2) == 0x7616D72B) {
+            // Legend of Zelda, The - Ocarina of Time (U) + (J) (V1.0)
+            execute_cheat(0x801DA5CB, 0x0002, NULL);
+        } else if (sl(ROM_HEADER.CRC1) == 0xD43DA81F && sl(ROM_HEADER.CRC2) == 0x021E1E19) {
+            // Legend of Zelda, The - Ocarina of Time (U) + (J) (V1.1)
+            execute_cheat(0x801DA78B, 0x0002, NULL);
+        } else if (sl(ROM_HEADER.CRC1) == 0x693BA2AE && sl(ROM_HEADER.CRC2) == 0xB7F14E9F) {
+            // Legend of Zelda, The - Ocarina of Time (U) + (J) (V1.2)
+            execute_cheat(0x801DAE8B, 0x0002, NULL);
+        } else if (sl(ROM_HEADER.CRC1) == 0xB044B569 && sl(ROM_HEADER.CRC2) == 0x373C1985) {
+            // Legend of Zelda, The - Ocarina of Time (E) (V1.0)
+            execute_cheat(0x801D860B, 0x0002, NULL);
+        } else if (sl(ROM_HEADER.CRC1) == 0xB2055FBD && sl(ROM_HEADER.CRC2) == 0x0BAB4E0C) {
+            // Legend of Zelda, The - Ocarina of Time (E) (V1.1)
+            execute_cheat(0x801D864B, 0x0002, NULL);
+        } else {
+            // Legend of Zelda, The - Ocarina of Time Master Quest
+            execute_cheat(0x801D8F4B, 0x0002, NULL);
+        }
+    }
     
     if (list_empty(&active_cheats))
         return;
