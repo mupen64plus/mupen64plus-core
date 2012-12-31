@@ -31,7 +31,7 @@
 #include "r4300/recomph.h"
 
 // that's where the dynarec will restart when going back from a C function
-static unsigned long *return_address;
+static unsigned long long *return_address;
 
 void dyna_jump(void)
 {
@@ -42,13 +42,13 @@ void dyna_jump(void)
     }
 
     if (PC->reg_cache_infos.need_map)
-        *return_address = (unsigned long) (PC->reg_cache_infos.jump_wrapper);
+        *return_address = (unsigned long long) (PC->reg_cache_infos.jump_wrapper);
     else
-        *return_address = (unsigned long) (actual->code + PC->local_addr);
+        *return_address = (unsigned long long) (actual->code + PC->local_addr);
 }
 
-static long save_rsp = 0;
-static long save_rip = 0;
+static long long save_rsp = 0;
+static long long save_rip = 0;
 
 void dyna_start(void (*code)(void))
 {
@@ -57,7 +57,7 @@ void dyna_start(void (*code)(void))
   /* then call the code(), which should theoretically never return.  */
   /* When dyna_stop() sets the *return_address to the saved RIP, the emulator thread will come back here. */
   /* It will jump to label 2, restore the base and stack pointers, and exit this function */
-  DebugMessage(M64MSG_INFO, "R4300: starting 64-bit dynamic recompiler at: 0x%lx", (unsigned long) code);
+  DebugMessage(M64MSG_INFO, "R4300: starting 64-bit dynamic recompiler at: %p", code);
 #if defined(__GNUC__) && defined(__x86_64__)
   asm volatile
     (" push %%rbx              \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
@@ -106,7 +106,7 @@ void dyna_stop(void)
     DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");
   else
   {
-    *return_address = (unsigned long) save_rip;
+    *return_address = (unsigned long long) save_rip;
   }
 }
 
