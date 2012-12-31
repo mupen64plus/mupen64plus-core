@@ -186,7 +186,6 @@
 				RelativePath="..\..\src\r4300\x86\assemble.c"
 				>
 			</File>
-			</File>
 			<File
 				RelativePath="..\..\src\api\callbacks.c"
 				>
