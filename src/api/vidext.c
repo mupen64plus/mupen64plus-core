@@ -33,6 +33,10 @@
 #include "vidext.h"
 #include "callbacks.h"
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+#include "vidext_sdl2_compat.h"
+#endif
+
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {10, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
@@ -307,7 +311,11 @@ static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_GREEN_SIZE,   SDL_GL_GREEN_SIZE },
         { M64P_GL_BLUE_SIZE,    SDL_GL_BLUE_SIZE },
         { M64P_GL_ALPHA_SIZE,   SDL_GL_ALPHA_SIZE },
+#if SDL_VERSION_ATLEAST(1,3,0)
+        { M64P_GL_SWAP_CONTROL, SDL_RENDERER_PRESENTVSYNC },
+#else
         { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
+#endif
         { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
         { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }};
 static const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
