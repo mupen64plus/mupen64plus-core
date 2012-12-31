@@ -151,15 +151,27 @@ ifeq ($(OS), LINUX)
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
 endif
 ifeq ($(OS), OSX)
+  # Select the proper SDK
+  # Also, SDKs are stored in a different location since XCode 4.3
+  OSX_SDK ?= $(shell sw_vers -productVersion | cut -f1 -f2 -d .)
+  OSX_XCODEMAJ = $(shell xcodebuild -version | grep '[0-9]*\.[0-9]*' | cut -f2 -d ' ' | cut -f1 -d .)
+  OSX_XCODEMIN = $(shell xcodebuild -version | grep '[0-9]*\.[0-9]*' | cut -f2 -d ' ' | cut -f2 -d .)
+  OSX_XCODEGE43 = $(shell echo "`expr $(OSX_XCODEMAJ) \>= 4``expr $(OSX_XCODEMIN) \>= 3`")
+  ifeq ($(OSX_XCODEGE43), 11)
+    OSX_SYSROOT := /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs
+  else
+    OSX_SYSROOT := /Developer/SDKs
+  endif
+
   TARGET = libmupen64plus$(POSTFIX).dylib
   LDFLAGS += -bundle -read_only_relocs suppress
   LDLIBS += -ldl
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=$(OSX_SDK) -isysroot $(OSX_SYSROOT)/MacOSX$(OSX_SDK).sdk
       LDFLAGS += -arch x86_64
     else
-      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk
+      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=$(OSX_SDK) -isysroot $(OSX_SYSROOT)/MacOSX$(OSX_SDK).sdk
       LDFLAGS += -arch i686
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
