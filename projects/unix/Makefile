@@ -185,6 +185,7 @@ ifeq ($(OS), MINGW)
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  LDLIBS += -lpthread
 endif
 
 ifeq ($(CPU_ENDIANNESS), BIG)
