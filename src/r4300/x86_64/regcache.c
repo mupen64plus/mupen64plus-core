@@ -81,12 +81,12 @@ void free_all_registers(void)
 #if defined(PROFILE_R4300)
   if (flushed == 1)
   {
-    long x86addr = (long) ((*inst_pointer) + freestart);
+    long long x86addr = (long long) ((*inst_pointer) + freestart);
     int mipsop = -5;
     if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || /* -5 = regcache flushing */
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
-    x86addr = (long) ((*inst_pointer) + code_length);
+    x86addr = (long long) ((*inst_pointer) + code_length);
     if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
@@ -154,13 +154,13 @@ void free_register(int reg)
 
 int lru_register(void)
 {
-   unsigned long oldest_access = 0xFFFFFFFFFFFFFFFFULL;
+   unsigned long long oldest_access = 0xFFFFFFFFFFFFFFFFULL;
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && (unsigned long) last_access[i] < oldest_access)
+    if (i != ESP && (unsigned long long) last_access[i] < oldest_access)
       {
-         oldest_access = (unsigned long) last_access[i];
+         oldest_access = (unsigned long long) last_access[i];
          reg = i;
       }
      }
@@ -169,13 +169,13 @@ int lru_register(void)
 
 int lru_base_register(void) /* EBP cannot be used as a base register for SIB addressing byte */
 {
-   unsigned long oldest_access = 0xFFFFFFFFFFFFFFFFULL;
+   unsigned long long oldest_access = 0xFFFFFFFFFFFFFFFFULL;
    int i, reg = 0;
    for (i=0; i<8; i++)
      {
-    if (i != ESP && i != EBP && (unsigned long) last_access[i] < oldest_access)
+    if (i != ESP && i != EBP && (unsigned long long) last_access[i] < oldest_access)
       {
-         oldest_access = (unsigned long) last_access[i];
+         oldest_access = (unsigned long long) last_access[i];
          reg = i;
       }
      }
@@ -583,7 +583,7 @@ static void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_bl
    int i;
 
 #if defined(PROFILE_R4300)
-   long x86addr = (long) pCode;
+   long long x86addr = (long long) pCode;
    int mipsop = -4;
    if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
@@ -628,8 +628,8 @@ static void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_bl
        pCode += 4;
        if (riprel >= 0x7fffffffLL || riprel < -0x80000000LL)
        {
-         DebugMessage(M64MSG_ERROR, "build_wrapper error: reg[%i] offset too big for relative address from %lx to %lx",
-                i, (long) (&reg[0]), (long) instr->reg_cache_infos.needed_registers[i]);
+         DebugMessage(M64MSG_ERROR, "build_wrapper error: reg[%i] offset too big for relative address from %p to %p",
+                i, (&reg[0]), instr->reg_cache_infos.needed_registers[i]);
          asm(" int $3; ");
        }
      }

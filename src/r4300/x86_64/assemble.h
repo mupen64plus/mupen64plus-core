@@ -114,7 +114,7 @@ static inline int rel_r15_offset(void *dest, const char *op_name)
 
     if (llabs(rel_offset) > 0x7fffffff)
     {
-        DebugMessage(M64MSG_ERROR, "Error: destination %lx more than 2GB away from r15 base %lx in %s()", (long) dest, (long) reg, op_name);
+        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, reg, op_name);
         asm(" int $3; ");
     }
 

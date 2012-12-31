@@ -153,8 +153,8 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
       *((int *) (block->code + jmp_offset_loc)) = (int) jump_rel_offset;
       if (jump_rel_offset >= 0x7fffffffLL || jump_rel_offset < -0x80000000LL)
       {
-        DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big for relative jump from %lx to %lx", 
-               (long) (block->code + jmp_offset_loc + 4), (long) addr_dest);
+        DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big for relative jump from %p to %p",
+                     (block->code + jmp_offset_loc + 4), addr_dest);
         asm(" int $3; ");
       }
     }
@@ -170,8 +170,8 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
     long rip_rel_offset = (long) (riprel_table[i].global_dst - (rel_offset_ptr + 4 + riprel_table[i].extra_bytes));
     if (rip_rel_offset >= 0x7fffffffLL || rip_rel_offset < -0x80000000LL)
     {
-      DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big between mem target: %lx and code position: %lx",
-             (long) riprel_table[i].global_dst, (long) rel_offset_ptr);
+      DebugMessage(M64MSG_ERROR, "assembler pass2 error: offset too big between mem target: %p and code position: %p",
+                   riprel_table[i].global_dst, rel_offset_ptr);
       asm(" int $3; ");
     }
     *((int *) rel_offset_ptr) = (int) rip_rel_offset;
