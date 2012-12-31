@@ -60,7 +60,7 @@ rm -f "${SHAREDIR}"/doc/*
 rm -f "${SHAREDIR}/m64p_test_rom.v64"
 # Mupen64Plus-UI-Console
 rm -f "${BINDIR}/mupen64plus"
-rm -f "${MANDIR}/man6/mupen64plus.6.gz"
+rm -f "${MANDIR}/man6/mupen64plus.6"
 # Plugins
 rm -f "${PLUGINDIR}/mupen64plus-audio-sdl.so"
 rm -f "${PLUGINDIR}/mupen64plus-input-sdl.so"
