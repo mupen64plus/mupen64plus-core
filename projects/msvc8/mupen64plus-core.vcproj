@@ -393,10 +393,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\regimm.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\r4300\reset.c"
 				>
 			</File>
