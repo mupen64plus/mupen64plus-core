@@ -105,7 +105,8 @@ endif
 
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3
-CFLAGS += $(OPTFLAGS) -Wall -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -DM64P_PARALLEL
+WARNFLAGS ?= -Wall
+CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
@@ -488,6 +489,7 @@ targets:
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3)"
+	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
 	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)     == Enable/disable build of OpenGL On-screen display"
 	@echo "    NEW_DYNAREC=1 == Replace dynamic recompiler with Ari64's experimental dynarec"
