@@ -150,7 +150,7 @@ static cheat_t *find_or_create_cheat(const char *name)
     cheat_t *cheat;
     int found = 0;
 
-    list_for_each_entry(cheat, &active_cheats, list) {
+    list_for_each_entry(cheat, &active_cheats, cheat_t, list) {
         if (strcmp(cheat->name, name) == 0) {
             found = 1;
             break;
@@ -162,7 +162,7 @@ static cheat_t *find_or_create_cheat(const char *name)
         /* delete any pre-existing cheat codes */
         cheat_code_t *code, *safe;
 
-        list_for_each_entry_safe(code, safe, &cheat->cheat_codes, list) {
+        list_for_each_entry_safe(code, safe, &cheat->cheat_codes, cheat_code_t, list) {
              list_del(&code->list);
              free(code);
         }
@@ -236,14 +236,14 @@ void cheat_apply_cheats(int entry)
         return;
     }
 
-    list_for_each_entry(cheat, &active_cheats, list) {
+    list_for_each_entry(cheat, &active_cheats, cheat_t, list) {
         if (cheat->enabled)
         {
             cheat->was_enabled = 1;
             switch(entry)
             {
                 case ENTRY_BOOT:
-                    list_for_each_entry(code, &cheat->cheat_codes, list) {
+                    list_for_each_entry(code, &cheat->cheat_codes, cheat_code_t, list) {
                         // code should only be written once at boot time
                         if((code->address & 0xF0000000) == 0xF0000000)
                             execute_cheat(code->address, code->value, &code->old_value);
@@ -252,7 +252,7 @@ void cheat_apply_cheats(int entry)
                 case ENTRY_VI:
                     skip = 0;
                     execute_next = 0;
-                    list_for_each_entry(code, &cheat->cheat_codes, list) {
+                    list_for_each_entry(code, &cheat->cheat_codes, cheat_code_t, list) {
                         if (skip) {
                             skip = 0;
                             continue;
@@ -324,7 +324,7 @@ void cheat_apply_cheats(int entry)
             switch(entry)
             {
                 case ENTRY_VI:
-                    list_for_each_entry(code, &cheat->cheat_codes, list) {
+                    list_for_each_entry(code, &cheat->cheat_codes, cheat_code_t, list) {
                         // set memory back to old value and clear saved copy of old value
                         if(code->old_value != CHEAT_CODE_MAGIC_VALUE)
                         {
@@ -357,10 +357,10 @@ void cheat_delete_all(void)
         return;
     }
 
-    list_for_each_entry_safe(cheat, safe_cheat, &active_cheats, list) {
+    list_for_each_entry_safe(cheat, safe_cheat, &active_cheats, cheat_t, list) {
         free(cheat->name);
 
-        list_for_each_entry_safe(code, safe_code, &cheat->cheat_codes, list) {
+        list_for_each_entry_safe(code, safe_code, &cheat->cheat_codes, cheat_code_t, list) {
             list_del(&code->list);
             free(code);
         }
@@ -384,7 +384,7 @@ int cheat_set_enabled(const char *name, int enabled)
         return 0;
     }
 
-    list_for_each_entry(cheat, &active_cheats, list) {
+    list_for_each_entry(cheat, &active_cheats, cheat_t, list) {
         if (strcmp(name, cheat->name) == 0)
         {
             cheat->enabled = enabled;

@@ -678,11 +678,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
     memset(tlb_LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
+        unsigned int MyPageMask, MyEntryHi, MyEntryLo0, MyEntryLo1;
+
         (void)GETDATA(curr, unsigned int); // Dummy read - EntryDefined
-        unsigned int MyPageMask = GETDATA(curr, unsigned int);
-        unsigned int MyEntryHi = GETDATA(curr, unsigned int);
-        unsigned int MyEntryLo0 = GETDATA(curr, unsigned int);
-        unsigned int MyEntryLo1 = GETDATA(curr, unsigned int);
+        MyPageMask = GETDATA(curr, unsigned int);
+        MyEntryHi = GETDATA(curr, unsigned int);
+        MyEntryLo0 = GETDATA(curr, unsigned int);
+        MyEntryLo1 = GETDATA(curr, unsigned int);
 
         // This is copied from TLBWI instruction
         tlb_e[i].g = (MyEntryLo0 & MyEntryLo1 & 1);

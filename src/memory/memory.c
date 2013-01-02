@@ -23,10 +23,9 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <errno.h>
 
-#ifndef __MINGW32__
+#if !defined(WIN32)
 #include <sys/mman.h>
 #endif
 

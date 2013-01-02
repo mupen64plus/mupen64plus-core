@@ -154,7 +154,7 @@ void workqueue_shutdown(void)
         queue_work(work);
     }
 
-    list_for_each_entry_safe(thread, safe, &workqueue_mgmt.thread_list, list_mgmt) {
+    list_for_each_entry_safe(thread, safe, &workqueue_mgmt.thread_list, struct workqueue_thread, list_mgmt) {
         list_del(&thread->list_mgmt);
         SDL_WaitThread(thread->thread, &status);
         SDL_DestroyCond(thread->work_avail);

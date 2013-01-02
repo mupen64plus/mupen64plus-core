@@ -83,8 +83,7 @@ static inline int list_empty(const struct list_head *head)
 }
 
 #define container_of(ptr, type, member) \
-    ({ const typeof(((type*)0)->member) * __mptr = (ptr); \
-     (type *)((char *)__mptr - offsetof(type, member)); })
+    ((type *)((char *)(ptr) - offsetof(type, member)))
 
 #define list_entry(ptr, type, member) container_of(ptr, type, member)
 
@@ -94,21 +93,21 @@ static inline int list_empty(const struct list_head *head)
 #define list_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
-#define list_for_each_entry(pos, head, member) \
-    for (pos = list_entry((head)->next, typeof(*pos), member); \
+#define list_for_each_entry(pos, head, type, member) \
+    for (pos = list_entry((head)->next, type, member); \
          &pos->member != (head); \
-         pos = list_entry(pos->member.next, typeof(*pos), member))
+         pos = list_entry(pos->member.next, type, member))
 
 #define list_for_each_safe(pos, safe, head) \
     for (pos = (head)->next, safe = pos->next; pos != (head); \
          pos = safe, safe = pos->next)
 
-#define list_for_each_entry_safe(pos, safe, head, member) \
-    for (pos = list_entry((head)->next, typeof(*pos), member), \
-         safe = list_entry(pos->member.next, typeof(*pos), member); \
+#define list_for_each_entry_safe(pos, safe, head, type, member) \
+    for (pos = list_entry((head)->next, type, member), \
+         safe = list_entry(pos->member.next, type, member); \
          &pos->member != (head); \
          pos = safe, \
-         safe = list_entry(safe->member.next, typeof(*safe), member))
+         safe = list_entry(safe->member.next, type, member))
 
 #ifdef __cplusplus
 }
