@@ -33,7 +33,7 @@ extern "C" {
 #define PLUGIN_NONE                 1
 #define PLUGIN_MEMPAK               2
 #define PLUGIN_RUMBLE_PAK           3 /* not implemeted for non raw data */
-#define PLUGIN_TANSFER_PAK          4 /* not implemeted for non raw data */
+#define PLUGIN_TRANSFER_PAK         4 /* not implemeted for non raw data */
 #define PLUGIN_RAW                  5 /* the controller plugin is passed in raw data */
 
 /***** Structures *****/
