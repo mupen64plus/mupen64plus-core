@@ -295,7 +295,9 @@ else
     CFLAGS += -g
     INSTALL_STRIP_FLAG ?= 
   else
-    INSTALL_STRIP_FLAG ?= -s
+    ifneq ($(OS),OSX)
+      INSTALL_STRIP_FLAG ?= -s
+	endif
   endif
 endif
 # 3. other options given to the makefile on the command line
