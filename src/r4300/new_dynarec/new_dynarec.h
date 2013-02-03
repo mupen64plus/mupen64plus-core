@@ -22,6 +22,10 @@
 #ifndef NEW_DYNAREC_H
 #define NEW_DYNAREC_H
 
+#ifdef __APPLE__
+#include <sys/types.h>
+#endif
+
 #define NEW_DYNAREC_X86 1
 #define NEW_DYNAREC_AMD64 2
 #define NEW_DYNAREC_ARM 3
