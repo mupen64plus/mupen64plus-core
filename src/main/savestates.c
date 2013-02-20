@@ -896,6 +896,9 @@ int savestates_load(void)
         free(filepath);
     }
 
+    // deliver callback to indicate completion of state loading operation
+    StateChanged(M64CORE_STATE_LOADCOMPLETE, ret);
+
     savestates_clear_job();
 
     return ret;
@@ -1467,6 +1470,9 @@ int savestates_save(void)
         }
         free(filepath);
     }
+
+    // deliver callback to indicate completion of state saving operation
+    StateChanged(M64CORE_STATE_SAVECOMPLETE, ret);
 
     savestates_clear_job();
     return ret;
