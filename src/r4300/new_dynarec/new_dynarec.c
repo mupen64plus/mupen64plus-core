@@ -1096,7 +1096,7 @@ static void ll_kill_pointers(struct ll_entry *head,int addr,int shift)
        (((ptr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==(addr>>shift)))
     {
       inv_debug("EXP: Kill pointer at %x (%x)\n",(int)head->addr,head->vaddr);
-      u_int host_addr=kill_pointer(head->addr);
+      u_int host_addr=(int)kill_pointer(head->addr);
       #if NEW_DYNAREC == NEW_DYNAREC_ARM
         needs_clear_cache[(host_addr-(u_int)base_addr)>>17]|=1<<(((host_addr-(u_int)base_addr)>>12)&31);
       #endif
@@ -1123,7 +1123,7 @@ static void invalidate_page(u_int page)
   jump_out[page]=0;
   while(head!=NULL) {
     inv_debug("INVALIDATE: kill pointer to %x (%x)\n",head->vaddr,(int)head->addr);
-    u_int host_addr=kill_pointer(head->addr);
+    u_int host_addr=(int)kill_pointer(head->addr);
     #if NEW_DYNAREC == NEW_DYNAREC_ARM
       needs_clear_cache[(host_addr-(u_int)base_addr)>>17]|=1<<(((host_addr-(u_int)base_addr)>>12)&31);
     #endif

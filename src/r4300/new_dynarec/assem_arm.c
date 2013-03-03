@@ -4529,10 +4529,10 @@ static void arch_init() {
   rounding_modes[2]=0x1<<22; // ceil
   rounding_modes[3]=0x2<<22; // floor
 
-  jump_table_symbols[15] = cached_interpreter_table.MFC0;
-  jump_table_symbols[16] = cached_interpreter_table.MTC0;
-  jump_table_symbols[17] = cached_interpreter_table.TLBR;
-  jump_table_symbols[18] = cached_interpreter_table.TLBP;
+  jump_table_symbols[15] = (int) cached_interpreter_table.MFC0;
+  jump_table_symbols[16] = (int) cached_interpreter_table.MTC0;
+  jump_table_symbols[17] = (int) cached_interpreter_table.TLBR;
+  jump_table_symbols[18] = (int) cached_interpreter_table.TLBP;
 
   #ifdef RAM_OFFSET
   ram_offset=((int)rdram-(int)0x80000000)>>2;
