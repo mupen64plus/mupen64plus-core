@@ -327,7 +327,7 @@ static void internal_ReadController(int Control, unsigned char *Command)
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (input.controllerCommand)
+                if (input.readController)
                     input.readController(Control, Command);
         }
         break;
@@ -338,7 +338,7 @@ static void internal_ReadController(int Control, unsigned char *Command)
         if (Controls[Control].Present)
         {
             if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (input.controllerCommand)
+                if (input.readController)
                     input.readController(Control, Command);
         }
         break;
