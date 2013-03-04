@@ -82,8 +82,18 @@ static inline int list_empty(const struct list_head *head)
     return (head->next == head);
 }
 
+#ifdef __GNUC__
+
+#define container_of(ptr, type, member) ({ \
+    const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+    (type *)( (char *)__mptr - offsetof(type,member) );})
+
+#else
+
 #define container_of(ptr, type, member) \
     ((type *)((char *)(ptr) - offsetof(type, member)))
+
+#endif
 
 #define list_entry(ptr, type, member) container_of(ptr, type, member)
 
