@@ -200,6 +200,33 @@
  } m64p_dbg_mem_info;
  
  typedef enum {
+   M64P_MEM_NOMEM = 0,
+   M64P_MEM_NOTHING,
+   M64P_MEM_RDRAM,
+   M64P_MEM_RDRAMREG,
+   M64P_MEM_RSPMEM,
+   M64P_MEM_RSPREG,
+   M64P_MEM_RSP,
+   M64P_MEM_DP,
+   M64P_MEM_DPS,
+   M64P_MEM_VI,
+   M64P_MEM_AI,
+   M64P_MEM_PI,
+   M64P_MEM_RI,
+   M64P_MEM_SI,
+   M64P_MEM_FLASHRAMSTAT,
+   M64P_MEM_ROM,
+   M64P_MEM_PIF,
+   M64P_MEM_MI,
+   M64P_MEM_BREAKPOINT
+ } m64p_dbg_mem_type;
+ 
+ typedef enum {
+   M64P_MEM_FLAG_READABLE = 0x01,
+   M64P_MEM_FLAG_WRITABLE = 0x02
+ } m64p_dbg_mem_flags;
+ 
+ typedef enum {
    M64P_DBG_PTR_RDRAM = 1,
    M64P_DBG_PTR_PI_REG,
    M64P_DBG_PTR_SI_REG,
@@ -230,6 +257,8 @@
    M64P_BKP_CMD_DISABLE,
    M64P_BKP_CMD_CHECK
  } m64p_dbg_bkp_command;
+ 
+ #define M64P_MEM_INVALID        0xFFFFFFFF  // invalid memory read will return this
  
  #define BREAKPOINTS_MAX_NUMBER  128
  

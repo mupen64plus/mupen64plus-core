@@ -23,10 +23,6 @@
 #ifndef __DEBUGGER_MEMORY_H__
 #define __DEBUGGER_MEMORY_H__
 
-#define MEM_INVALID 0xFFFFFFFF
-#define MEM_FLAG_READABLE    0x01
-#define MEM_FLAG_WRITABLE    0x02
-
 #define MAX_DISASSEMBLY 64
 
 /* The following three macros create all the function calls for catching memory breakpoints
@@ -64,28 +60,6 @@
     static MEMBREAKWRITE( write_##name##b , 1); \
     static MEMBREAKWRITE( write_##name##h , 2); \
     static MEMBREAKWRITE( write_##name##d , 8);
-
-enum {
-  MEM_NOMEM = 0,
-  MEM_NOTHING,
-  MEM_RDRAM,
-  MEM_RDRAMREG,
-  MEM_RSPMEM,
-  MEM_RSPREG,
-  MEM_RSP,
-  MEM_DP,
-  MEM_DPS,
-  MEM_VI,
-  MEM_AI,
-  MEM_PI,
-  MEM_RI,
-  MEM_SI,
-  MEM_FLASHRAMSTAT,
-  MEM_ROM,
-  MEM_PIF,
-  MEM_MI,
-  MEM_BREAKPOINT
-};
 
 void init_host_disassembler(void);
 

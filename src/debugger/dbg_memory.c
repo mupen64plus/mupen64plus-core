@@ -316,23 +316,23 @@ void write_memory_64_unaligned(uint32 addr, uint64 value)
 uint32 read_memory_32(uint32 addr){
   switch(get_memory_type(addr))
     {
-    case MEM_NOMEM:
+    case M64P_MEM_NOMEM:
       if(tlb_LUT_r[addr>>12])
-    return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
-      return MEM_INVALID;
-    case MEM_RDRAM:
+        return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
+      return M64P_MEM_INVALID;
+    case M64P_MEM_RDRAM:
       return *((uint32 *)(rdramb + (addr & 0xFFFFFF)));
-    case MEM_RSPMEM:
+    case M64P_MEM_RSPMEM:
       if ((addr & 0xFFFF) < 0x1000)
-    return *((uint32 *)(SP_DMEMb + (addr&0xFFF)));
+        return *((uint32 *)(SP_DMEMb + (addr&0xFFF)));
       else if ((addr&0xFFFF) < 0x2000)
-    return *((uint32 *)(SP_IMEMb + (addr&0xFFF)));
+        return *((uint32 *)(SP_IMEMb + (addr&0xFFF)));
       else
-    return MEM_INVALID;
-    case MEM_ROM:
+        return M64P_MEM_INVALID;
+    case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
     default:
-      return MEM_INVALID;
+      return M64P_MEM_INVALID;
     }
 }
 
@@ -347,7 +347,7 @@ uint32 read_memory_32_unaligned(uint32 addr)
 void write_memory_32(uint32 addr, uint32 value){
   switch(get_memory_type(addr))
     {
-    case MEM_RDRAM:
+    case M64P_MEM_RDRAM:
       *((uint32 *)(rdramb + (addr & 0xFFFFFF))) = value;
       CHECK_MEM(addr)
       break;
@@ -400,25 +400,25 @@ uint32 get_memory_flags(uint32 addr){
   uint32 flags = 0;
 
   switch(type)
-    {
-    case MEM_NOMEM:
+  {
+    case M64P_MEM_NOMEM:
       if(tlb_LUT_r[addr>>12])
-    flags|=MEM_FLAG_READABLE;
+        flags|=M64P_MEM_FLAG_READABLE;
       break;
-    case MEM_RSPMEM:
+    case M64P_MEM_RSPMEM:
       if((addr & 0xFFFF) < 0x2000)
-    flags|=MEM_FLAG_READABLE;
+        flags|=M64P_MEM_FLAG_READABLE;
       break;
-    case MEM_RDRAM:
-    case MEM_ROM:
-      flags|=MEM_FLAG_READABLE;
-    }
+    case M64P_MEM_RDRAM:
+    case M64P_MEM_ROM:
+      flags|=M64P_MEM_FLAG_READABLE;
+  }
 
   switch(type)
-    {
-    case MEM_RDRAM:
-      flags|=MEM_FLAG_WRITABLE;
-    }
+  {
+    case M64P_MEM_RDRAM:
+      flags|=M64P_MEM_FLAG_WRITABLE;
+  }
 
   return flags;
 }
@@ -427,45 +427,45 @@ int get_memory_type(uint32 addr){
   void (*readfunc)() = readmem[addr >> 16];
 
   if((readfunc == read_nomem) || (readfunc == read_nomem_break))
-    return MEM_NOMEM;
+    return M64P_MEM_NOMEM;
   else if((readfunc == read_nothing) || (readfunc == read_nothing_break))
-    return MEM_NOTHING;
+    return M64P_MEM_NOTHING;
   else if((readfunc == read_rdram) || (readfunc == read_rdram_break))
-    return MEM_RDRAM;
+    return M64P_MEM_RDRAM;
   else if((readfunc == read_rdramreg) || (readfunc == read_rdramreg_break))
-    return MEM_RDRAMREG;
+    return M64P_MEM_RDRAMREG;
   else if((readfunc == read_rsp_mem) || (readfunc == read_rsp_mem_break))
-    return MEM_RSPMEM;
+    return M64P_MEM_RSPMEM;
   else if((readfunc == read_rsp_reg) || (readfunc == read_rsp_reg_break))
-    return MEM_RSPREG;
+    return M64P_MEM_RSPREG;
   else if((readfunc == read_rsp) || (readfunc == read_rsp_break))
-    return MEM_RSP;
+    return M64P_MEM_RSP;
   else if((readfunc == read_dp) || (readfunc == read_dp_break))
-    return MEM_DP;
+    return M64P_MEM_DP;
   else if((readfunc == read_dps) || (readfunc == read_dps_break))
-    return MEM_DPS;
+    return M64P_MEM_DPS;
   else if((readfunc == read_vi) || (readfunc == read_vi_break))
-    return MEM_VI;
+    return M64P_MEM_VI;
   else if((readfunc == read_ai) || (readfunc == read_ai_break))
-    return MEM_AI;
+    return M64P_MEM_AI;
   else if((readfunc == read_pi) || (readfunc == read_pi_break))
-    return MEM_PI;
+    return M64P_MEM_PI;
   else if((readfunc == read_ri) || (readfunc == read_ri_break))
-    return MEM_RI;
+    return M64P_MEM_RI;
   else if((readfunc == read_si) || (readfunc == read_si_break))
-    return MEM_SI;
+    return M64P_MEM_SI;
   else if((readfunc == read_flashram_status) ||
           (readfunc == read_flashram_status_break))
-    return MEM_FLASHRAMSTAT;
+    return M64P_MEM_FLASHRAMSTAT;
   else if((readfunc == read_rom) || (readfunc == read_rom_break))
-    return MEM_ROM;
+    return M64P_MEM_ROM;
   else if((readfunc == read_pif) || (readfunc == read_pif_break))
-    return MEM_PIF;
+    return M64P_MEM_PIF;
   else if((readfunc == read_mi) || (readfunc == read_mi_break))
-    return MEM_MI;
+    return M64P_MEM_MI;
   else
     DebugMessage(M64MSG_ERROR, "Unknown memory type in debugger get_memory_type(): %p", readfunc);
-  return MEM_NOMEM;
+  return M64P_MEM_NOMEM;
 }
 
 void activate_memory_break_read(uint32 addr) {
