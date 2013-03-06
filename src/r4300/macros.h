@@ -23,7 +23,7 @@
 #define MACROS_H
 
 #define sign_extended(a) a = (long long)((int)a)
-#define sign_extendedb(a) a = (long long)((char)a)
+#define sign_extendedb(a) a = (long long)((signed char)a)
 #define sign_extendedh(a) a = (long long)((short)a)
 
 #define rrt *PC->f.r.rt
