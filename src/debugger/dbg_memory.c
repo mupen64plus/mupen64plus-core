@@ -314,6 +314,8 @@ void write_memory_64_unaligned(uint32 addr, uint64 value)
 }
 
 uint32 read_memory_32(uint32 addr){
+  const uint32 addrlow = (addr & 0xFFFF);
+
   switch(get_memory_type(addr))
     {
     case M64P_MEM_NOMEM:
@@ -331,17 +333,66 @@ uint32 read_memory_32(uint32 addr){
         return M64P_MEM_INVALID;
     case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
+    case M64P_MEM_RDRAMREG:
+      if (addrlow < 0x28)
+        return *(readrdramreg[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_RSPREG:
+      if (addrlow < 0x20)
+        return *(readrspreg[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_RSP:
+      if (addrlow < 0x8)
+        return *(readrsp[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_DP:
+      if (addrlow < 0x20)
+        return *(readdp[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_DPS:
+      if (addrlow < 0x10)
+        return *(readdps[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_VI:
+      if (addrlow < 0x38)
+        return *(readvi[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_AI:
+      if (addrlow < 0x18)
+        return *(readai[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_PI:
+      if (addrlow < 0x34)
+        return *(readpi[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_RI:
+      if (addrlow < 0x20)
+        return *(readri[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_SI:
+      if (addrlow < 0x1c)
+        return *(readsi[addrlow&0xfffc]);
+      break;
+    case M64P_MEM_PIF:
+      if (addrlow >= 0x7C0 && addrlow <= 0x7FF)
+        return sl(*((unsigned int *)(PIF_RAMb + (addrlow & 0x7FF) - 0x7C0)));
+      break;
+    case M64P_MEM_MI:
+      if (addrlow < 0x10)
+        return *(readmi[addrlow&0xfffc]);
+      break;
     default:
-      return M64P_MEM_INVALID;
+      break;
     }
+    return M64P_MEM_INVALID;
 }
 
 uint32 read_memory_32_unaligned(uint32 addr)
 {
     uint8 i, b[4];
     
-    for(i=0; i<4; i++) b[i] = read_memory_32(addr + i);
-    return (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | b[0];
+    for(i=0; i<4; i++) b[i] = read_memory_8(addr + i);
+    return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
 }
 
 void write_memory_32(uint32 addr, uint32 value){
@@ -356,13 +407,11 @@ void write_memory_32(uint32 addr, uint32 value){
 
 void write_memory_32_unaligned(uint32 addr, uint32 value)
 {
-    write_memory_8(addr + 3, value >> 24);
-    write_memory_8(addr + 2, (value >> 16) & 0xFF);
-    write_memory_8(addr + 1, (value >> 8) & 0xFF);
-    write_memory_8(addr + 0, value & 0xFF);
+    write_memory_8(addr + 0, value >> 24);
+    write_memory_8(addr + 1, (value >> 16) & 0xFF);
+    write_memory_8(addr + 2, (value >> 8) & 0xFF);
+    write_memory_8(addr + 3, value & 0xFF);
 }
-
-
 
 //read_memory_16_unaligned and write_memory_16_unaligned don't exist because
 //read_memory_16 and write_memory_16 work unaligned already.
@@ -395,29 +444,85 @@ void write_memory_8(uint32 addr, uint8 value)
     write_memory_32(addr & ~3, word);
 }
 
-uint32 get_memory_flags(uint32 addr){
+uint32 get_memory_flags(uint32 addr)
+{
   int type=get_memory_type(addr);
+  const uint32 addrlow = (addr & 0xFFFF);
   uint32 flags = 0;
 
   switch(type)
   {
     case M64P_MEM_NOMEM:
       if(tlb_LUT_r[addr>>12])
-        flags|=M64P_MEM_FLAG_READABLE;
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_NOTHING:
+      if (((addr >> 16) == 0x8801 || (addr >> 16 == 0xA801)) && addrlow == 0)
+        flags = M64P_MEM_FLAG_WRITABLE_EMUONLY; // for flashram command
+      break;
+    case M64P_MEM_RDRAM:
+      flags = M64P_MEM_FLAG_WRITABLE;
+    case M64P_MEM_ROM:
+      flags |= M64P_MEM_FLAG_READABLE;
+      break;
+    case M64P_MEM_RDRAMREG:
+      if (addrlow < 0x28)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
       break;
     case M64P_MEM_RSPMEM:
-      if((addr & 0xFFFF) < 0x2000)
-        flags|=M64P_MEM_FLAG_READABLE;
+      if (addrlow < 0x2000)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
       break;
-    case M64P_MEM_RDRAM:
-    case M64P_MEM_ROM:
-      flags|=M64P_MEM_FLAG_READABLE;
-  }
-
-  switch(type)
-  {
-    case M64P_MEM_RDRAM:
-      flags|=M64P_MEM_FLAG_WRITABLE;
+    case M64P_MEM_RSPREG:
+      if (addrlow < 0x20)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_RSP:
+      if (addrlow) < 0x8)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_DP:
+      if (addrlow < 0x20)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_DPS:
+      if (addrlow < 0x10)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_VI:
+      if (addrlow < 0x38)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_AI:
+      if (addrlow < 0x18)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_PI:
+      if (addrlow < 0x34)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_RI:
+      if (addrlow < 0x20)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_SI:
+      if (addrlow < 0x1c)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_FLASHRAMSTAT:
+      if (addrlow == 0)
+        flags = M64P_MEM_FLAG_READABLE_EMUONLY;
+      break;
+    case M64P_MEM_PIF:
+      if (addrlow >= 0x7C0 && addrlow <= 0x7FF)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    case M64P_MEM_MI:
+      if (addrlow < 0x10)
+        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+      break;
+    default:
+      break;
   }
 
   return flags;

@@ -245,7 +245,9 @@ typedef enum {
 
 typedef enum {
   M64P_MEM_FLAG_READABLE = 0x01,
-  M64P_MEM_FLAG_WRITABLE = 0x02
+  M64P_MEM_FLAG_WRITABLE = 0x02,
+  M64P_MEM_FLAG_READABLE_EMUONLY = 0x04,  // the EMUONLY flags signify that emulated code can read/write here, but debugger cannot
+  M64P_MEM_FLAG_WRITABLE_EMUONLY = 0x08
 } m64p_dbg_mem_flags;
 
 typedef enum {
