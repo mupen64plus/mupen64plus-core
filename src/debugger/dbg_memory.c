@@ -478,7 +478,7 @@ uint32 get_memory_flags(uint32 addr)
         flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
       break;
     case M64P_MEM_RSP:
-      if (addrlow) < 0x8)
+      if (addrlow < 0x8)
         flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
       break;
     case M64P_MEM_DP:

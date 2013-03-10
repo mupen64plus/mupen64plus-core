@@ -57,6 +57,18 @@ extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
+extern unsigned int *readrdramreg[0x10000];
+extern unsigned int *readrspreg[0x10000];
+extern unsigned int *readrsp[0x10000];
+extern unsigned int *readmi[0x10000];
+extern unsigned int *readvi[0x10000];
+extern unsigned int *readai[0x10000];
+extern unsigned int *readpi[0x10000];
+extern unsigned int *readri[0x10000];
+extern unsigned int *readsi[0x10000];
+extern unsigned int *readdp[0x10000];
+extern unsigned int *readdps[0x10000];
+
 typedef struct _RDRAM_register
 {
    unsigned int rdram_config;
