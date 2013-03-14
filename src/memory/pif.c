@@ -23,9 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#if defined(__MINGW32__)
-#include <pthread.h> /* localtime_r on mingw */
-#endif
 
 #include "memory.h"
 #include "pif.h"
@@ -189,7 +186,7 @@ static unsigned char byte2bcd(int n)
 static void EepromCommand(unsigned char *Command)
 {
     time_t curtime_time;
-    struct tm curtime;
+    struct tm *curtime;
 
     switch (Command[2])
     {
@@ -258,19 +255,15 @@ static void EepromCommand(unsigned char *Command)
             break;
         case 2:
             time(&curtime_time);
-#if defined(WIN32) && !defined(__MINGW32__)
-            localtime_s(&curtime, &curtime_time);
-#else
-            localtime_r(&curtime_time, &curtime);
-#endif
-            Command[4] = byte2bcd(curtime.tm_sec);
-            Command[5] = byte2bcd(curtime.tm_min);
-            Command[6] = 0x80 + byte2bcd(curtime.tm_hour);
-            Command[7] = byte2bcd(curtime.tm_mday);
-            Command[8] = byte2bcd(curtime.tm_wday);
-            Command[9] = byte2bcd(curtime.tm_mon + 1);
-            Command[10] = byte2bcd(curtime.tm_year);
-            Command[11] = byte2bcd(curtime.tm_year / 100);
+            curtime = localtime(&curtime_time);
+            Command[4] = byte2bcd(curtime->tm_sec);
+            Command[5] = byte2bcd(curtime->tm_min);
+            Command[6] = 0x80 + byte2bcd(curtime->tm_hour);
+            Command[7] = byte2bcd(curtime->tm_mday);
+            Command[8] = byte2bcd(curtime->tm_wday);
+            Command[9] = byte2bcd(curtime->tm_mon + 1);
+            Command[10] = byte2bcd(curtime->tm_year);
+            Command[11] = byte2bcd(curtime->tm_year / 100);
             Command[12] = 0x00;	// status
             break;
         }
