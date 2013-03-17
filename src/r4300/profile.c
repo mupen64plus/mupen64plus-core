@@ -29,35 +29,36 @@
 static long long int time_in_section[5];
 static long long int last_start[5];
 
-#ifdef WIN32
-#include <windows.h>
-static long long int get_time(void)
-{
-	LARGE_INTEGER counter;
-	QueryPerformanceCounter(&counter);
-	return counter.QuadPart;
-}
+#if defined(WIN32) && !defined(__MINGW32__)
+  // timing
+  #include <windows.h>
+  static long long int get_time(void)
+  {
+      LARGE_INTEGER counter;
+      QueryPerformanceCounter(&counter);
+      return counter.QuadPart;
+  }
+  static long long int time_to_nsec(long long int time)
+  {
+      static LARGE_INTEGER freq = { 0 };
+      if (freq.QuadPart == 0)
+          QueryPerformanceFrequency(&freq);
+      return time * 1000000000 / freq.QuadPart;
+  }
 
-static long long int time_to_nsec(long long int time)
-{
-	static LARGE_INTEGER freq = { 0 };
-	if (freq.QuadPart == 0)
-		QueryPerformanceFrequency(&freq);
-	return time * 1000000000 / freq.QuadPart;
-}
-#else
-#include <time.h>
-static long long int get_time(void)
-{
-   struct timespec ts;
-   clock_gettime(CLOCK_MONOTONIC, &ts);
-   return (long long int)ts.tv_sec * 1000000000 + ts.tv_nsec;
-}
-
-static long long int time_to_nsec(long long int time)
-{
-	return time;
-}
+#else  /* Not WIN32 */
+  // timing
+  #include <time.h>
+  static long long int get_time(void)
+  {
+     struct timespec ts;
+     clock_gettime(CLOCK_MONOTONIC, &ts);
+     return (long long int)ts.tv_sec * 1000000000 + ts.tv_nsec;
+  }
+  static long long int time_to_nsec(long long int time)
+  {
+      return time;
+  }
 #endif
 
 void start_section(int section_type)

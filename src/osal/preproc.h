@@ -25,6 +25,12 @@
 #define OSAL_PREPROC_H
 
 #if defined(WIN32) && !defined(__MINGW32__)
+
+  // macros
+  #define OSAL_BREAKPOINT_INTERRUPT __asm{ int 3 };
+  #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA;
+
+  // string functions
   #define osal_insensitive_strcmp(x, y) _stricmp(x, y)
   #define snprintf _snprintf
   #define strdup _strdup
@@ -33,14 +39,17 @@
   #include <float.h>
   #define isnan _isnan
 
-  #define OSAL_BREAKPOINT_INTERRUPT __asm{ int 3 };
-  #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA;
 #else  /* Not WIN32 */
-  #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
 
+  // macros
   #define OSAL_BREAKPOINT_INTERRUPT asm(" int $3; ");
   #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)));
+
+  // string functions
+  #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
+
 #endif
+
 
 #endif /* OSAL_PREPROC_H */
 
