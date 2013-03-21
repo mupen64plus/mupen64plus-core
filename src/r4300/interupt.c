@@ -355,6 +355,7 @@ void gen_interupt(void)
         else
             next_interupt = 0;
         
+        last_addr = dest;
         generic_jump_to(dest);
         return;
     } 
@@ -561,9 +562,6 @@ void gen_interupt(void)
                 free_blocks();
                 init_blocks();
             }
-            // set next instruction address to reset vector
-            generic_jump_to(0xa4000040);
-            last_addr = PC->addr;
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
             if(delay_slot==1 || delay_slot==3)
             {
@@ -571,6 +569,9 @@ void gen_interupt(void)
             }
             delay_slot = 0;
             dyna_interp = 0;
+            // set next instruction address to reset vector
+            last_addr = 0xa4000040;
+            generic_jump_to(0xa4000040);
             return;
 
         default:
