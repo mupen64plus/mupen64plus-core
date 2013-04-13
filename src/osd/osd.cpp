@@ -336,6 +336,7 @@ void osd_render()
     // setup for drawing text
     glDisable(GL_FOG);
     glDisable(GL_LIGHTING);
+    glDisable(GL_ALPHA_TEST);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_SCISSOR_TEST);

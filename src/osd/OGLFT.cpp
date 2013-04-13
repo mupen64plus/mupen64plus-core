@@ -286,6 +286,17 @@ namespace OGLFT
                 bbox += char_bbox;
             }
         }
+        // make sure the origin is at 0,0
+        if (bbox.x_min_ != 0)
+        {
+            bbox.x_max_ -= bbox.x_min_;
+            bbox.x_min_ = 0;
+        }
+        if (bbox.y_min_ != 0)
+        {
+            bbox.y_max_ -= bbox.y_min_;
+            bbox.y_min_ = 0;
+        }
 
         return bbox;
     }
@@ -343,6 +354,17 @@ namespace OGLFT
                 BBox char_bbox = measure(s[i]);
                 bbox += char_bbox;
             }
+        }
+        // make sure the origin is at 0,0
+        if (bbox.x_min_ != 0)
+        {
+            bbox.x_max_ -= bbox.x_min_;
+            bbox.x_min_ = 0;
+        }
+        if (bbox.y_min_ != 0)
+        {
+            bbox.y_max_ -= bbox.y_min_;
+            bbox.y_min_ = 0;
         }
         return bbox;
     }
@@ -627,7 +649,7 @@ namespace OGLFT
 
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B], foreground_color_[A]);
 
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
 
         draw(c);
     }
@@ -640,7 +662,7 @@ namespace OGLFT
 
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B], foreground_color_[A]);
 
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
 
         draw(c);
     }
@@ -654,7 +676,7 @@ namespace OGLFT
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B],
                 foreground_color_[A]);
 
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
 
         draw(c);
     }
@@ -667,7 +689,7 @@ namespace OGLFT
 
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B], foreground_color_[A]);
 
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
 
         draw(c);
     }
@@ -757,7 +779,7 @@ namespace OGLFT
 
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B], foreground_color_[A]);
 
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
 
         draw(s);
 
@@ -814,7 +836,7 @@ namespace OGLFT
             glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B],
                         foreground_color_[A]);
 
-            glRasterPos2i(0, 0);
+            glRasterPos3i(0, 0, 0);
 
             draw(s);
 
@@ -912,7 +934,7 @@ namespace OGLFT
 
         glTranslatef(x, y, z);
         glColor4f(foreground_color_[R], foreground_color_[G], foreground_color_[B], foreground_color_[A]);
-        glRasterPos2i(0, 0);
+        glRasterPos3i(0, 0, 0);
         draw(s);
 
         if(horizontal_justification_!=ORIGIN||vertical_justification_!= BASELINE)
