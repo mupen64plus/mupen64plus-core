@@ -121,14 +121,7 @@ void savestates_select_slot(unsigned int s)
     ConfigSetParameter(g_CoreConfig, "CurrentSaveSlot", M64TYPE_INT, &s);
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 
-    if(rom)
-    {
-        char* filepath = savestates_generate_path(savestates_type_m64p);
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state file: %s", namefrompath(filepath));
-        free(filepath);
-    }
-    else
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
+    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
 }
 
 /* Returns the currently selected save slot. */
@@ -875,15 +868,61 @@ static savestates_type savestates_detect_type(char *filepath)
 
 int savestates_load(void)
 {
-    char *filepath;
+    FILE *fPtr = NULL;
+    char *filepath = NULL;
     int ret = 0;
 
-    if (fname != NULL && type == savestates_type_unknown)
-        type = savestates_detect_type(fname);
-    else if (fname == NULL) // Always load slots in M64P format
+    if (fname == NULL) // For slots, autodetect the savestate type
+    {
+        // try M64P type first
         type = savestates_type_m64p;
+        filepath = savestates_generate_path(type);
+        fPtr = fopen(filepath, "rb"); // can I open this?
+        if (fPtr == NULL)
+        {
+            free(filepath);
+            // try PJ64 zipped type second
+            type = savestates_type_pj64_zip;
+            filepath = savestates_generate_path(type);
+            fPtr = fopen(filepath, "rb"); // can I open this?
+            if (fPtr == NULL)
+            {
+                free(filepath);
+                // finally, try PJ64 uncompressed
+                type = savestates_type_pj64_unc;
+                filepath = savestates_generate_path(type);
+                fPtr = fopen(filepath, "rb"); // can I open this?
+                if (fPtr == NULL)
+                {
+                    free(filepath);
+                    filepath = NULL;
+                    main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "No Mupen64Plus/PJ64 state file found for slot %i", slot);
+                    type = savestates_type_unknown;
+                }
+            }
+        }
+    }
+    else // filename of state file to load was set explicitly in 'fname'
+    {
+        // detect type if unknown
+        if (type == savestates_type_unknown)
+        {
+            type = savestates_detect_type(fname);
+        }
+        filepath = savestates_generate_path(type);
+        if (filepath != NULL)
+            fPtr = fopen(filepath, "rb"); // can I open this?
+        if (fPtr == NULL)
+        {
+            if (filepath != NULL)
+                free(filepath);
+            filepath = NULL;
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
+        }
+    }
+    if (fPtr != NULL)
+        fclose(fPtr);
 
-    filepath = savestates_generate_path(type);
     if (filepath != NULL)
     {
         switch (type)
@@ -894,6 +933,7 @@ int savestates_load(void)
             default: ret = 0; break;
         }
         free(filepath);
+        filepath = NULL;
     }
 
     // deliver callback to indicate completion of state loading operation
