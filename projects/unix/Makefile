@@ -110,9 +110,6 @@ CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
-# default configuration programs
-PKG_CONFIG = $(CROSS_COMPILE)pkg-config
-
 # Since we are building a shared library, we must compile with -fPIC on some architectures
 # On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
@@ -198,24 +195,36 @@ endif
 endif
 
 # test for essential build dependencies
-ifeq ($(shell which $(PKG_CONFIG) 2>/dev/null),)
-  $(error $(PKG_CONFIG) not found)
+ifeq ($(origin PKG_CONFIG), undefined)
+  PKG_CONFIG = $(CROSS_COMPILE)pkg-config
+  ifeq ($(shell which $(PKG_CONFIG) 2>/dev/null),)
+    $(error $(PKG_CONFIG) not found)
+  endif
 endif
-ifeq ($(shell $(PKG_CONFIG) --modversion libpng 2>/dev/null),)
-  $(error No libpng development libraries found!)
-endif
+
 ifeq ($(OS), OSX) # use system zlib on OSX
   LDLIBS += -lz
-else
+endif
+
+ifeq ($(origin ZLIB_CFLAGS) $(origin ZLIB_LDLIBS), undefined undefined)
   ifeq ($(shell $(PKG_CONFIG) --modversion zlib 2>/dev/null),)
     $(error No zlib development libraries found!)
   endif
-  CFLAGS += $(shell $(PKG_CONFIG) --cflags zlib)
-  LDLIBS +=  $(shell $(PKG_CONFIG) --libs zlib)
+  ZLIB_CFLAGS += $(shell $(PKG_CONFIG) --cflags zlib)
+  ZLIB_LDLIBS +=  $(shell $(PKG_CONFIG) --libs zlib)
 endif
- 
-CFLAGS += $(shell $(PKG_CONFIG) --cflags libpng)
-LDLIBS +=  $(shell $(PKG_CONFIG) --libs libpng)
+CFLAGS += $(ZLIB_CFLAGS)
+LDLIBS += $(ZLIB_LDLIBS)
+
+ifeq ($(origin LIBPNG_CFLAGS) $(origin LIBPNG_LDLIBS), undefined undefined)
+  ifeq ($(shell $(PKG_CONFIG) --modversion libpng 2>/dev/null),)
+    $(error No libpng development libraries found!)
+  endif
+  LIBPNG_CFLAGS += $(shell $(PKG_CONFIG) --cflags libpng)
+  LIBPNG_LDLIBS +=  $(shell $(PKG_CONFIG) --libs libpng)
+endif
+CFLAGS += $(LIBPNG_CFLAGS)
+LDLIBS += $(LIBPNG_LDLIBS)
 
 # test for presence of SDL
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
@@ -232,31 +241,46 @@ LDLIBS += $(SDL_LDLIBS)
 OSD ?= 1
 ifeq ($(OSD), 1)
   CFLAGS += -DM64P_OSD
-  ifeq ($(shell $(PKG_CONFIG) --modversion freetype2 2>/dev/null),)
-    $(error No FreeType 2 development libraries found!)
+
+  ifeq ($(origin FREETYPE2_CFLAGS) $(origin FREETYPE2_LDLIBS), undefined undefined)
+    ifeq ($(shell $(PKG_CONFIG) --modversion freetype2 2>/dev/null),)
+      $(error No freetype2 development libraries found!)
+    endif
+    FREETYPE2_CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2)
+    FREETYPE2_LDLIBS +=  $(shell $(PKG_CONFIG) --libs freetype2)
   endif
+  CFLAGS += $(FREETYPE2_CFLAGS)
+  LDLIBS += $(FREETYPE2_LDLIBS)
 
   # search for OpenGL libraries
-  GL_LIBS=
   ifeq ($(OS), OSX)
-    GL_LIBS = -framework OpenGL
+    GL_LDLIBS = -framework OpenGL
+    GLU_LDLIBS = -framework OpenGL
   endif
   ifeq ($(OS), MINGW)
-    GL_LIBS = -lopengl32 -lglu32
+    GL_LDLIBS = -lopengl32
+    GLU_LDLIBS = -lglu32
   endif
-  ifeq ("$(GL_LIBS)", "")
+
+  ifeq ($(origin GL_CFLAGS) $(origin GL_LDLIBS), undefined undefined)
     ifeq ($(shell $(PKG_CONFIG) --modversion gl 2>/dev/null),)
       $(error No OpenGL development libraries found!)
     endif
+    GL_CFLAGS += $(shell $(PKG_CONFIG) --cflags gl)
+    GL_LDLIBS +=  $(shell $(PKG_CONFIG) --libs gl)
+  endif
+  CFLAGS += $(GL_CFLAGS)
+  LDLIBS += $(GL_LDLIBS)
+
+  ifeq ($(origin GLU_CFLAGS) $(origin GLU_LDLIBS), undefined undefined)
     ifeq ($(shell $(PKG_CONFIG) --modversion glu 2>/dev/null),)
       $(error No OpenGL utility development libraries found!)
     endif
-    CFLAGS += $(shell $(PKG_CONFIG) --cflags gl glu)
-    GL_LIBS = $(shell $(PKG_CONFIG) --libs gl glu)
+    GLU_CFLAGS += $(shell $(PKG_CONFIG) --cflags glu)
+    GLU_LDLIBS +=  $(shell $(PKG_CONFIG) --libs glu)
   endif
-
-  CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2)
-  LDLIBS += $(shell $(PKG_CONFIG) --libs freetype2) $(GL_LIBS)
+  CFLAGS += $(GLU_CFLAGS)
+  LDLIBS += $(GLU_LDLIBS)
 endif
 
 # set base program pointers and flags
