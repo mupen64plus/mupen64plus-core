@@ -111,7 +111,6 @@ CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
 # default configuration programs
-SDL_CONFIG = $(CROSS_COMPILE)sdl-config
 PKG_CONFIG = $(CROSS_COMPILE)pkg-config
 
 # Since we are building a shared library, we must compile with -fPIC on some architectures
@@ -219,11 +218,16 @@ CFLAGS += $(shell $(PKG_CONFIG) --cflags libpng)
 LDLIBS +=  $(shell $(PKG_CONFIG) --libs libpng)
 
 # test for presence of SDL
-ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-  $(error No SDL development libraries found!)
+ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
+  SDL_CONFIG = $(CROSS_COMPILE)sdl-config
+  ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
+    $(error No SDL development libraries found!)
+  endif
+  SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
+  SDL_LDLIBS += $(shell $(SDL_CONFIG) --libs)
 endif
-CFLAGS	+= $(shell $(SDL_CONFIG) --cflags)
-LDLIBS	+= $(shell $(SDL_CONFIG) --libs)
+CFLAGS += $(SDL_CFLAGS)
+LDLIBS += $(SDL_LDLIBS)
 
 OSD ?= 1
 ifeq ($(OSD), 1)
