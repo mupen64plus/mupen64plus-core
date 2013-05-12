@@ -203,7 +203,7 @@ ifeq ($(origin PKG_CONFIG), undefined)
 endif
 
 ifeq ($(OS), OSX) # use system zlib on OSX
-  LDLIBS += -lz
+  ZLIB_LDLIBS += -lz
 endif
 
 ifeq ($(origin ZLIB_CFLAGS) $(origin ZLIB_LDLIBS), undefined undefined)
