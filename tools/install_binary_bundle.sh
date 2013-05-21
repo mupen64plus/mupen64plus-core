@@ -2,7 +2,7 @@
 #
 # mupen64plus binary bundle install script
 #
-# Copyright 2007-2009 The Mupen64Plus Development Team
+# Copyright 2007-2013 The Mupen64Plus Development Team
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -89,8 +89,10 @@ $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-audio-sdl.so "${PLUGINDIR}"
 $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-input-sdl.so "${PLUGINDIR}"
 $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-rsp-hle.so "${PLUGINDIR}"
 $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-video-rice.so "${PLUGINDIR}"
+$INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-video-glide64mk2.so "${PLUGINDIR}"
 $INSTALL -m 0644 RiceVideoLinux.ini "${SHAREDIR}"
 $INSTALL -m 0644 InputAutoCfg.ini "${SHAREDIR}"
+$INSTALL -m 0644 Glide64mk2.ini "${SHAREDIR}"
 
 printf "Installation successful.\n"
 

@@ -2,7 +2,7 @@
 #
 # mupen64plus binary bundle uninstall script
 #
-# Copyright 2007-2009 The Mupen64Plus Development Team
+# Copyright 2007-2013 The Mupen64Plus Development Team
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -66,8 +66,10 @@ rm -f "${PLUGINDIR}/mupen64plus-audio-sdl.so"
 rm -f "${PLUGINDIR}/mupen64plus-input-sdl.so"
 rm -f "${PLUGINDIR}/mupen64plus-rsp-hle.so"
 rm -f "${PLUGINDIR}/mupen64plus-video-rice.so"
+rm -f "${PLUGINDIR}/mupen64plus-video-glide64mk2.so"
 rm -f "${SHAREDIR}/RiceVideoLinux.ini"
 rm -f "${SHAREDIR}/InputAutoCfg.ini"
+rm -f "${SHAREDIR}/Glide64mk2.ini"
 # get rid of the empty dirs
 rmdir --ignore-fail-on-non-empty "${SHAREDIR}/doc"
 rmdir --ignore-fail-on-non-empty "${SHAREDIR}"
