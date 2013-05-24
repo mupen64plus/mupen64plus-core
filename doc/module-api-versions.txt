@@ -172,3 +172,7 @@ Changelog:
      video frame has been re-drawn since the last time the render callback was called. This allows
      us to take screenshots without the On-Screen-Display text
 
+ - VIDEO_API_VERSION version 2.2.0:
+   - add (optional) ResizeVideoOutput function in video plugin.  If this function is not present
+     in video plugin, then resizing the output video window will not work.
+
