@@ -176,3 +176,13 @@ Changelog:
    - add (optional) ResizeVideoOutput function in video plugin.  If this function is not present
      in video plugin, then resizing the output video window will not work.
 
+ - VIDEXT_API_VERSION version 3.0.0:
+   - add VidExt_ResizeWindow() function in video extension.  This function is called by the video
+     plugin to notify the window manager (SDL if no video extension is registered by the front-end)
+     that the OpenGL render window size should change.
+   - add m64p_video_flags parameter to the VidExt_SetVideoMode() function.  Currently the flags are
+     only used to notify the window manager that resizing is supported by the video plugin, and it
+     should create a resizable window if possible.  This may be extended in the future to support
+     other features.
+
+

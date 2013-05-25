@@ -50,7 +50,7 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
     /* check input data */
     if (VideoFunctionStruct == NULL)
         return M64ERR_INPUT_ASSERT;
-    if (VideoFunctionStruct->Functions < 10)
+    if (VideoFunctionStruct->Functions < 11)
         return M64ERR_INPUT_INVALID;
 
     /* disable video extension if any of the function pointers are NULL */
@@ -63,10 +63,11 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
         VideoFunctionStruct->VidExtFuncGLGetAttr == NULL ||
         VideoFunctionStruct->VidExtFuncGLSwapBuf == NULL ||
         VideoFunctionStruct->VidExtFuncSetCaption == NULL ||
-        VideoFunctionStruct->VidExtFuncToggleFS == NULL)
+        VideoFunctionStruct->VidExtFuncToggleFS == NULL ||
+        VideoFunctionStruct->VidExtFuncResizeWindow == NULL)
     {
-        l_ExternalVideoFuncTable.Functions = 10;
-        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 10 * sizeof(void *));
+        l_ExternalVideoFuncTable.Functions = 11;
+        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 11 * sizeof(void *));
         l_VideoExtensionActive = 0;
         return M64ERR_SUCCESS;
     }
@@ -179,7 +180,7 @@ EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *
     return M64ERR_SUCCESS;
 }
 
-EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode)
+EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)
 {
     const SDL_VideoInfo *videoInfo;
     int videoFlags = 0;
@@ -187,7 +188,7 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
     {
-        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncSetMode)(Width, Height, BitsPerPixel, ScreenMode);
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncSetMode)(Width, Height, BitsPerPixel, ScreenMode, Flags);
         l_Fullscreen = (rval == M64ERR_SUCCESS && ScreenMode == M64VIDEO_FULLSCREEN);
         l_VideoOutputActive = (rval == M64ERR_SUCCESS);
         if (l_VideoOutputActive)
@@ -203,11 +204,19 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 
     /* Get SDL video flags to use */
     if (ScreenMode == M64VIDEO_WINDOWED)
+    {
         videoFlags = SDL_OPENGL;
+        if (Flags & M64VIDEOFLAG_SUPPORT_RESIZING)
+            videoFlags |= SDL_RESIZABLE;
+    }
     else if (ScreenMode == M64VIDEO_FULLSCREEN)
+    {
         videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
+    }
     else
+    {
         return M64ERR_INPUT_INVALID;
+    }
 
     if ((videoInfo = SDL_GetVideoInfo()) == NULL)
     {
@@ -241,6 +250,55 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     return M64ERR_SUCCESS;
 }
 
+EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
+{
+    const SDL_VideoInfo *videoInfo;
+    int videoFlags = 0;
+
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+    {
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncResizeWindow)(Width, Height);
+        if (rval == M64ERR_SUCCESS)
+        {
+            StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+        }
+        return rval;
+    }
+
+    if (!l_VideoOutputActive || !SDL_WasInit(SDL_INIT_VIDEO))
+        return M64ERR_NOT_INIT;
+
+    if (l_Fullscreen)
+    {
+        DebugMessage(M64MSG_ERROR, "VidExt_ResizeWindow() called in fullscreen mode.");
+        return M64ERR_INVALID_STATE;
+    }
+
+    /* Get SDL video flags to use */
+    videoFlags = SDL_OPENGL | SDL_RESIZABLE;
+    if ((videoInfo = SDL_GetVideoInfo()) == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_GetVideoInfo query failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+    if (videoInfo->hw_available)
+        videoFlags |= SDL_HWSURFACE;
+    else
+        videoFlags |= SDL_SWSURFACE;
+
+    /* set the mode */
+    l_pScreen = SDL_SetVideoMode(Width, Height, 0, videoFlags);
+    if (l_pScreen == NULL)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_SetVideoMode failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+    return M64ERR_SUCCESS;
+
+}
 EXPORT m64p_error CALL VidExt_SetCaption(const char *Title)
 {
     /* call video extension override if necessary */
