@@ -227,9 +227,9 @@ These core parameters may be read and/or written using the M64CMD_CORE_STATE_QUE
 |-
 |M64CORE_VIDEO_SIZE
 |Yes
-|No
+|Yes
 |<tt>(ScreenWidth << 16) + ScreenHeight</tt>
-|This parameter is read-only.
+|This parameter can only be read or written when the emulator is running or paused.  This parameter may be written by the front-end application in response to a window resizing event.  Upon receiving this command, the core will pass the new width and height to the ResizeVideoOutput function in the video plugin (video API v2.2.0).  If the video plugin supports resizing, it will update its viewport and then call the video extension function VidExt_ResizeWindow to update the window manager.
 |-
 |M64CORE_AUDIO_VOLUME
 |Yes

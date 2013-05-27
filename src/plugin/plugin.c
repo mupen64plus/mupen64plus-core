@@ -187,7 +187,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
         }
 
         /* set function pointers for optional functions */
-        if (!GET_FUNC(ptr_ResizeVideoOutput, gfx.resizeVideoOutput, "ResizeVideoOutput")) {}
+        gfx.resizeVideoOutput = (ptr_ResizeVideoOutput) osal_dynlib_getproc(plugin_handle, "ResizeVideoOutput");
 
         /* check the version info */
         (*gfx.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
@@ -207,7 +207,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
             l_old1SetRenderingCallback = gfx.setRenderingCallback; // save this just for future use
             gfx.setRenderingCallback = (ptr_SetRenderingCallback) backcompat_setRenderCallbackIntercept;
         }
-        if (APIVersion < 0x202000 || gfx.resizeVideoOutput == NULL)
+        if (APIVersion < 0x20200 || gfx.resizeVideoOutput == NULL)
         {
             DebugMessage(M64MSG_WARNING, "Fallback for Video plugin API (%02i.%02i.%02i) < 2.2.0. Resizable video will not work", VERSION_PRINTF_SPLIT(APIVersion));
             gfx.resizeVideoOutput = dummyvideo_ResizeVideoOutput;

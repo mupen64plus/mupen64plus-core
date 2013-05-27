@@ -259,6 +259,13 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
 #endif
             return 0;
 
+        case SDL_VIDEORESIZE:
+            // call the video plugin.  if the video plugin supports resizing, it will resize its viewport and call
+            // VidExt_ResizeWindow to update the window manager handling our opengl output window
+            gfx.resizeVideoOutput(event->resize.w, event->resize.h);
+            return 0;  // consumed the event
+            break;
+
         // if joystick action is detected, check if it's mapped to a special function
         case SDL_JOYAXISMOTION:
         case SDL_JOYBUTTONDOWN:

@@ -32,6 +32,7 @@
 #include "m64p_vidext.h"
 #include "vidext.h"
 #include "callbacks.h"
+#include "../osd/osd.h"
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 #include "vidext_sdl2_compat.h"
@@ -258,10 +259,15 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
     {
+        // shut down the OSD
+        osd_exit();
+        // re-create the OGL context
         m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncResizeWindow)(Width, Height);
         if (rval == M64ERR_SUCCESS)
         {
             StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+            // re-create the On-Screen Display
+            osd_init(Width, Height);
         }
         return rval;
     }
@@ -287,7 +293,10 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     else
         videoFlags |= SDL_SWSURFACE;
 
-    /* set the mode */
+    // destroy the On-Screen Display
+    osd_exit();
+
+    /* set the re-sizing the screen will create a new OpenGL context */
     l_pScreen = SDL_SetVideoMode(Width, Height, 0, videoFlags);
     if (l_pScreen == NULL)
     {
@@ -296,9 +305,11 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     }
 
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+    // re-create the On-Screen Display
+    osd_init(Width, Height);
     return M64ERR_SUCCESS;
-
 }
+
 EXPORT m64p_error CALL VidExt_SetCaption(const char *Title)
 {
     /* call video extension override if necessary */

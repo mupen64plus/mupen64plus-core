@@ -157,6 +157,10 @@ Changelog:
      - M64CORE_STATE_LOADCOMPLETE
      - M64CORE_STATE_SAVECOMPLETE
 
+ - FRONTEND_API_VERSION version 2.1.1:
+   - Core command M64CMD_CORE_STATE_SET will now accept M64CORE_VIDEO_SIZE parameter
+     - will call the video plugin function ResizeVideoOutput()
+
  - CONFIG_API_VERSION version 2.1.0:
    - add new function "ConfigSaveSection()" to save only a single config section to disk
 
