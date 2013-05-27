@@ -111,6 +111,29 @@ All of these functions should only be called from within the video plugin; they 
 |}
 <br />
 
+===Window Resizing===
+The window resizing functionality is particularly complicated, so here is a high-level description of the events which make it happen:
+
+====Without video extension:====
+# In VidExt_SetVideoMode(), check if M64VIDEOFLAG_SUPPORT_RESIZING is set
+#* if True, create SDL window with RESIZABLE attribute
+# Core receives SDL_RESIZE messages in SDL event loop
+# If present, Core calls ResizeVideoOutput function in video plugin
+# Video Plugin calls ResizeWindow function in Video Extension
+#* Core calls SDL_SetVideoMode()
+# Core emits M64CORE_VIDEO_SIZE state changed callback
+
+====With video extension:====
+# in Front-end SetVideoMode() callback
+#* if M64VIDEOFLAG_SUPPORT_RESIZING is set, create resizable window frame
+# Front-end GUI gets window resize notification
+# Front-end calls CoreDoCommand w/ M64CMD_CORE_STATE_SET, w/ M64CORE_VIDEO_SIZE
+# If present, Core calls ResizeVideoOutput function in video plugin
+# Video Plugin calls ResizeWindow function in Video Extension
+# Core emits M64CORE_VIDEO_SIZE state changed callback
+
+In the Core Video Extension function ResizeWindow, the SDL function SetVideoMode() is called.  This function will destroy the current OpenGL context and create a new one.  For this reason, any video plugin which supports resizable windows must completely reset its OpenGL state including uploading any textures, FBOs, programs, etc after calling the VidExt_ResizeWindow function.
+
 == OpenGL Functions ==
 {| border="1"
 |Prototype
