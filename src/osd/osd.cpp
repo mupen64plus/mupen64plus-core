@@ -276,12 +276,9 @@ void osd_exit(void)
     // delete message queue
     SDL_LockMutex(osd_list_lock);
     list_for_each_entry_safe(msg, safe, &l_messageQueue, osd_message_t, list) {
-        if (msg->user_managed) {
-            osd_remove_message(msg);
-        } else {
-            osd_remove_message(msg);
+        osd_remove_message(msg);
+        if (!msg->user_managed)
             free(msg);
-        }
     }
     SDL_UnlockMutex(osd_list_lock);
 
