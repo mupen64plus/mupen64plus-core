@@ -259,10 +259,11 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
     {
+        m64p_error rval;
         // shut down the OSD
         osd_exit();
         // re-create the OGL context
-        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncResizeWindow)(Width, Height);
+        rval = (*l_ExternalVideoFuncTable.VidExtFuncResizeWindow)(Width, Height);
         if (rval == M64ERR_SUCCESS)
         {
             StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
