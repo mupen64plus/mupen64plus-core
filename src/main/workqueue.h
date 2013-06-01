@@ -23,6 +23,7 @@
 #define __WORKQUEUE_H__
 
 #include "list.h"
+#include "osal/preproc.h"
 
 struct work_struct *work;
 typedef void (*work_func_t)(struct work_struct *work);
@@ -31,7 +32,7 @@ struct work_struct {
     struct list_head list;
 };
 
-static   void init_work(struct work_struct *work, work_func_t func)
+static osal_inline void init_work(struct work_struct *work, work_func_t func)
 {
     INIT_LIST_HEAD(&work->list);
     work->func = func;
@@ -45,16 +46,16 @@ int queue_work(struct work_struct *work);
 
 #else
 
-static   int workqueue_init(void)
+static osal_inline int workqueue_init(void)
 {
     return 0;
 }
 
-static   void workqueue_shutdown(void)
+static osal_inline void workqueue_shutdown(void)
 {
 }
 
-static   int queue_work(struct work_struct *work)
+static osal_inline int queue_work(struct work_struct *work)
 {
     work->func(work);
     return 0;
