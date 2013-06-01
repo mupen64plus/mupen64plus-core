@@ -31,7 +31,7 @@ struct work_struct {
     struct list_head list;
 };
 
-static inline void init_work(struct work_struct *work, work_func_t func)
+static   void init_work(struct work_struct *work, work_func_t func)
 {
     INIT_LIST_HEAD(&work->list);
     work->func = func;
@@ -45,16 +45,16 @@ int queue_work(struct work_struct *work);
 
 #else
 
-static inline int workqueue_init(void)
+static   int workqueue_init(void)
 {
     return 0;
 }
 
-static inline void workqueue_shutdown(void)
+static   void workqueue_shutdown(void)
 {
 }
 
-static inline int queue_work(struct work_struct *work)
+static   int queue_work(struct work_struct *work)
 {
     work->func(work);
     return 0;

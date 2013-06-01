@@ -85,7 +85,7 @@ int osal_mkdirp(const char *dirpath, int mode)
         return 0;
 
     // Create partial paths
-    mypath = currpath = strdup(dirpath);
+    mypath = currpath = _strdup(dirpath);
     if (mypath == NULL)
         return 1;
 
