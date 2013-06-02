@@ -20,6 +20,11 @@
 # 02110-1301, USA.
 #
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
 set -e
 
 export PATH=/bin:/usr/bin
@@ -71,13 +76,14 @@ rm -f "${SHAREDIR}/RiceVideoLinux.ini"
 rm -f "${SHAREDIR}/InputAutoCfg.ini"
 rm -f "${SHAREDIR}/Glide64mk2.ini"
 # get rid of the empty dirs
-rmdir --ignore-fail-on-non-empty "${SHAREDIR}/doc"
-rmdir --ignore-fail-on-non-empty "${SHAREDIR}"
-rmdir --ignore-fail-on-non-empty "${BINDIR}"
-rmdir --ignore-fail-on-non-empty "${LIBDIR}"
-rmdir --ignore-fail-on-non-empty "${PLUGINDIR}"
-rmdir --ignore-fail-on-non-empty "${MANDIR}/man6"
-rmdir --ignore-fail-on-non-empty "${MANDIR}"
+# ignore directories if they are really symbolic links
+[ ! -L "${SHAREDIR}/doc" ] && rmdir --ignore-fail-on-non-empty "${SHAREDIR}/doc"
+[ ! -L "${SHAREDIR}" ] && rmdir --ignore-fail-on-non-empty "${SHAREDIR}"
+[ ! -L "${BINDIR}" ] && rmdir --ignore-fail-on-non-empty "${BINDIR}"
+[ ! -L "${LIBDIR}" ] && rmdir --ignore-fail-on-non-empty "${LIBDIR}"
+[ ! -L "${PLUGINDIR}" ] && rmdir --ignore-fail-on-non-empty "${PLUGINDIR}"
+[ ! -L "${MANDIR}/man6" ] && rmdir --ignore-fail-on-non-empty "${MANDIR}/man6"
+[ ! -L "${MANDIR}" ] && rmdir --ignore-fail-on-non-empty "${MANDIR}"
 
 printf "Done.\n"
 
