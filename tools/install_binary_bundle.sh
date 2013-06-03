@@ -20,11 +20,6 @@
 # 02110-1301, USA.
 #
 
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 1>&2
-   exit 1
-fi
-
 set -e
 
 export PATH=/bin:/usr/bin
@@ -69,6 +64,28 @@ BINDIR="${3:-${PREFIX}/bin}"
 LIBDIR="${4:-${PREFIX}/lib}"
 PLUGINDIR="${5:-${PREFIX}/lib/mupen64plus}"
 MANDIR="${6:-${PREFIX}/share/man}"
+
+# simple check for permissions
+if [ -d "${SHAREDIR}" -a ! -w "${SHAREDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${SHAREDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
+if [ -d "${BINDIR}" -a ! -w "${BINDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${BINDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
+if [ -d "${LIBDIR}" -a ! -w "${LIBDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${LIBDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
+if [ -d "${PLUGINDIR}" -a ! -w "${PLUGINDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${PLUGINDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
+if [ -d "${MANDIR}" -a ! -w "${MANDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${MANDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
 
 printf "Installing Mupen64Plus Binary Bundle to ${PREFIX}\n"
 # Mupen64Plus-Core
