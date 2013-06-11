@@ -356,7 +356,7 @@ void event_initialize(void)
             if (!SDL_WasInit(SDL_INIT_JOYSTICK))
                 SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 #if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL_JoystickOpened unsupported
+            SDL_JoystickOpen(device);
 #else
             if (!SDL_JoystickOpened(device))
                 SDL_JoystickOpen(device);
