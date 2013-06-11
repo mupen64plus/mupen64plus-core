@@ -238,7 +238,7 @@ m64p_error close_rom(void)
 // Get the system type associated to a ROM country code.
 static m64p_system_type rom_country_code_to_system_type(unsigned short country_code)
 {
-    switch (country_code)
+    switch (country_code & 0xFF)
     {
         // PAL codes
         case 0x44:
