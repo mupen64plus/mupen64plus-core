@@ -246,6 +246,9 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
 
         case SDL_KEYDOWN:
 #if SDL_VERSION_ATLEAST(1,3,0)
+            if (event->key.repeat)
+                return 0;
+
             event_sdl_keydown(event->key.keysym.scancode, event->key.keysym.mod);
 #else
             event_sdl_keydown(event->key.keysym.sym, event->key.keysym.mod);
@@ -362,9 +365,7 @@ void event_initialize(void)
     }
 
     /* set up SDL event filter and disable key repeat */
-#if SDL_VERSION_ATLEAST(2,0,0)
-#warning SDL_EnableKeyRepeat unsupported
-#else
+#if !SDL_VERSION_ATLEAST(2,0,0)
     SDL_EnableKeyRepeat(0, 0);
 #endif
     SDL_SetEventFilter(event_sdl_filter, NULL);
