@@ -159,6 +159,7 @@
     <ClCompile Include="..\..\src\r4300\x86\rjump.c" />
     <ClCompile Include="..\..\src\main\rom.c" />
     <ClCompile Include="..\..\src\main\savestates.c" />
+    <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
     <ClCompile Include="..\..\src\memory\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
@@ -219,6 +220,7 @@
     <ClInclude Include="..\..\src\r4300\reset.h" />
     <ClInclude Include="..\..\src\main\rom.h" />
     <ClInclude Include="..\..\src\main\savestates.h" />
+    <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
     <ClInclude Include="..\..\src\memory\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
