@@ -53,7 +53,7 @@ echo "************************************ Building Mupen64Plus modules"
 cd ..
 tar xzvf source/mupen64plus-core/tools/m64p_helper_scripts.tar.gz
 
-./m64p_build.sh $@
+./m64p_build.sh COREDIR=/usr/local/lib/ $@
 mv "test" "${OUTPUTDIR}"
 
 echo "************************************ Creating archive"
