@@ -41,6 +41,14 @@
 #define SDL_SCANCODE_G SDLK_g
 #define SDL_SCANCODE_RETURN SDLK_RETURN
 #define SDL_SCANCODE_0 SDLK_0
+#define SDL_SCANCODE_1 SDLK_1
+#define SDL_SCANCODE_2 SDLK_2
+#define SDL_SCANCODE_3 SDLK_3
+#define SDL_SCANCODE_4 SDLK_4
+#define SDL_SCANCODE_5 SDLK_5
+#define SDL_SCANCODE_6 SDLK_6
+#define SDL_SCANCODE_7 SDLK_7
+#define SDL_SCANCODE_8 SDLK_8
 #define SDL_SCANCODE_9 SDLK_9
 #define SDL_SCANCODE_UNKNOWN SDLK_UNKNOWN
 
@@ -445,17 +453,47 @@ int event_set_core_defaults(void)
     return 1;
 }
 
+static int get_saveslot_from_keysym(int keysym)
+{
+    switch (keysym) {
+    case SDL_SCANCODE_0:
+        return 0;
+    case SDL_SCANCODE_1:
+        return 1;
+    case SDL_SCANCODE_2:
+        return 2;
+    case SDL_SCANCODE_3:
+        return 3;
+    case SDL_SCANCODE_4:
+        return 4;
+    case SDL_SCANCODE_5:
+        return 5;
+    case SDL_SCANCODE_6:
+        return 6;
+    case SDL_SCANCODE_7:
+        return 7;
+    case SDL_SCANCODE_8:
+        return 8;
+    case SDL_SCANCODE_9:
+        return 9;
+    default:
+        return -1;
+    }
+}
+
 /*********************************************************************************************************
 * sdl keyup/keydown handlers
 */
 
 void event_sdl_keydown(int keysym, int keymod)
 {
+    int slot;
+
     /* check for the only 2 hard-coded key commands: Alt-enter for fullscreen and 0-9 for save state slot */
     if (keysym == SDL_SCANCODE_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
         gfx.changeWindow();
-    else if (keysym >= SDL_SCANCODE_0 && keysym <= SDL_SCANCODE_9)
-        main_state_set_slot(keysym - SDL_SCANCODE_0);
+    else if ((slot = get_saveslot_from_keysym(keysym)) >= 0)
+        main_state_set_slot(slot);
     /* check all of the configurable commands */
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdStop)))
         main_stop();
