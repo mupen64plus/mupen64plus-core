@@ -529,25 +529,6 @@ SDL_CompatEventFilter(void *userdata, SDL_Event * event)
             SDL_PushEvent(&fake);
             break;
         }
-    case SDL_KEYDOWN:
-    case SDL_KEYUP:
-        {
-            Uint32 unicode = 0;
-            if (event->key.type == SDL_KEYDOWN && event->key.keysym.sym < 256) {
-                unicode = event->key.keysym.sym;
-                if (unicode >= 'a' && unicode <= 'z') {
-                    int shifted = !!(event->key.keysym.mod & KMOD_SHIFT);
-                    int capslock = !!(event->key.keysym.mod & KMOD_CAPS);
-                    if ((shifted ^ capslock) != 0) {
-                        unicode = SDL_toupper(unicode);
-                    }
-                }
-            }
-            if (unicode) {
-                event->key.keysym.unicode = unicode;
-            }
-            break;
-        }
     case SDL_TEXTINPUT:
         {
             /* FIXME: Generate an old style key repeat event if needed */
