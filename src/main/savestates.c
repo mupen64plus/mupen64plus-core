@@ -118,7 +118,7 @@ void savestates_select_slot(unsigned int s)
     if(s>9||s==slot)
         return;
     slot = s;
-    ConfigSetParameter(g_CoreConfig, "CurrentSaveSlot", M64TYPE_INT, &s);
+    ConfigSetParameter(g_CoreConfig, "CurrentStateSlot", M64TYPE_INT, &s);
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Selected state slot: %d", slot);
