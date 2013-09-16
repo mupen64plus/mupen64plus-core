@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include <SDL_opengl.h>
 #include <SDL.h>
 #include <png.h>
 
