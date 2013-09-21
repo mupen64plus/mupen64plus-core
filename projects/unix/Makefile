@@ -561,7 +561,7 @@ clean:
 	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR)
 
 # build dependency files
-CFLAGS += -MD
+CFLAGS += -MD -MP
 -include $(OBJECTS:.o=.d)
 
 CXXFLAGS += $(CFLAGS)
