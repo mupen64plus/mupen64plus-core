@@ -72,10 +72,8 @@ DECLARE_INSTRUCTION(MTC0)
       interupt_unsafe_state = 1;
       if (next_interupt <= Count) gen_interupt();
       interupt_unsafe_state = 0;
-      debug_count += Count;
       translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
       Count = (unsigned int) rrt & 0xFFFFFFFF;
-      debug_count -= Count;
       break;
     case 10:   // EntryHi
       EntryHi = (unsigned int) rrt & 0xFFFFE0FF;

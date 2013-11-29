@@ -39,7 +39,6 @@ extern long long int reg_cop1_fgr_64[32];
 extern int FCR0, FCR31;
 extern tlb tlb_e[32];
 extern unsigned int delay_slot, skip_jump, dyna_interp, op;
-extern unsigned long long int debug_count;
 extern unsigned int r4300emu;
 extern unsigned int next_interupt, CIC_Chip;
 extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;

@@ -60,7 +60,6 @@ long long int local_rs;
 long long int reg_cop1_fgr_64[32];
 tlb tlb_e[32];
 unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
-unsigned long long int debug_count = 0;
 unsigned int CIC_Chip;
 char invalid_code[0x100000];
 
@@ -982,7 +981,6 @@ void r4300_execute(void)
 
     current_instruction_table = cached_interpreter_table;
 
-    debug_count = 0;
     delay_slot=0;
     stop = 0;
     rompause = 0;
@@ -1066,7 +1064,6 @@ void r4300_execute(void)
         free_blocks();
     }
 
-    debug_count+= Count;
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
 
     /* print instruction counts */
