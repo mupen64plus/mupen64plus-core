@@ -44,20 +44,15 @@ static int eax, ebx, ecx, edx, esp, ebp, esi, edi;
 int branch_taken;
 
 /* static functions */
-
 static void genupdate_count(unsigned int addr)
 {
-#ifndef COMPARE_CORE
-#ifndef DBG
+#if !defined(COMPARE_CORE) && !defined(DBG)
    mov_reg32_imm32(EAX, addr);
    sub_reg32_m32(EAX, (unsigned int*)(&last_addr));
-   shr_reg32_imm8(EAX, 1);
+   shr_reg32_imm8(EAX, 2);
+   mov_reg32_m32(EDX, &count_per_op);
+   mul_reg32(EDX);
    add_m32_reg32((unsigned int*)(&Count), EAX);
-#else
-   mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)update_count);
-   call_reg32(EAX);
-#endif
 #else
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
    mov_reg32_imm32(EAX, (unsigned int)update_count);

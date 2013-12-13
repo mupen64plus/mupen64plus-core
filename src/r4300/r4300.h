@@ -46,6 +46,7 @@ extern unsigned int last_addr;
 extern char invalid_code[0x100000];
 extern unsigned int jump_to_address;
 extern int no_compiled_jump;
+extern unsigned int count_per_op;
 
 void init_blocks(void);
 void free_blocks(void);

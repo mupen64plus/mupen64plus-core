@@ -423,9 +423,9 @@ void gen_interupt(void)
     
         case COMPARE_INT:
             remove_interupt_event();
-            Count+=2;
+            Count+=count_per_op;
             add_interupt_event_count(COMPARE_INT, Compare);
-            Count-=2;
+            Count-=count_per_op;
     
             Cause = (Cause | 0x8000) & 0xFFFFFF83;
             if ((Status & 7) != 1) return;
