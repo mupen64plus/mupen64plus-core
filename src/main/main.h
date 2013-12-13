@@ -33,6 +33,8 @@ extern int g_EmulatorRunning;
 
 extern m64p_frame_callback g_FrameCallback;
 
+extern int delay_si;
+
 const char* get_savestatepath(void);
 const char* get_savesrampath(void);
 

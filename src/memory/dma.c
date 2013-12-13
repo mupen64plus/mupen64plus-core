@@ -45,6 +45,7 @@
 #include "main/util.h"
 
 static unsigned char sram[0x8000];
+int delay_si = 0;
 
 static char *get_sram_path(void)
 {
@@ -354,7 +355,14 @@ void dma_si_write(void)
 
     update_pif_write();
     update_count();
-    add_interupt_event(SI_INT, /*0x100*/0x900);
+
+    if (delay_si) {
+        add_interupt_event(SI_INT, /*0x100*/0x900);
+    } else {
+        MI_register.mi_intr_reg |= 0x02; // SI
+        si_register.si_stat |= 0x1000; // INTERRUPT
+        check_interupt();
+    }
 }
 
 void dma_si_read(void)
@@ -375,6 +383,13 @@ void dma_si_read(void)
     }
 
     update_count();
-    add_interupt_event(SI_INT, /*0x100*/0x900);
+
+    if (delay_si) {
+        add_interupt_event(SI_INT, /*0x100*/0x900);
+    } else {
+        MI_register.mi_intr_reg |= 0x02; // SI
+        si_register.si_stat |= 0x1000; // INTERRUPT
+        check_interupt();
+    }
 }
 
