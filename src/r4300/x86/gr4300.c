@@ -44,6 +44,7 @@ static int eax, ebx, ecx, edx, esp, ebp, esi, edi;
 int branch_taken;
 
 /* static functions */
+
 static void genupdate_count(unsigned int addr)
 {
 #if !defined(COMPARE_CORE) && !defined(DBG)

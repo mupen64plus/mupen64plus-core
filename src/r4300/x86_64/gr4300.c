@@ -84,9 +84,10 @@ static long long debug_reg_storage[8];
 int branch_taken = 0;
 
 /* static functions */
+
 static void genupdate_count(unsigned int addr)
 {
-#if !defined(COMPARE_CORE) && !defined(DBG) && 0
+#if !defined(COMPARE_CORE) && !defined(DBG)
    mov_reg32_imm32(EAX, addr);
    sub_xreg32_m32rel(EAX, (unsigned int*)(&last_addr));
    shr_reg32_imm8(EAX, 2);
