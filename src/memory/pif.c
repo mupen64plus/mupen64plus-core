@@ -49,7 +49,7 @@ static char *get_eeprom_path(void)
 
 static void eeprom_format(void)
 {
-    memset(eeprom, 0, sizeof(eeprom));
+    memset(eeprom, 0xff, sizeof(eeprom));
 }
 
 static void eeprom_read_file(void)
