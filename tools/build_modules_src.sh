@@ -32,13 +32,8 @@ modules='mupen64plus-core mupen64plus-rom mupen64plus-ui-console mupen64plus-aud
 for modname in ${modules}; do
   echo "************************************ Downloading and packaging module source code: ${modname}"
   rm -rf "tmp"
-  EXCLUDE="--exclude .hgtags --exclude .hg_archival.txt --exclude .hgignore"
-  TARTAG=""
   OUTPUTDIR="${modname}-$2"
-  hg clone --noupdate "http://bitbucket.org/richard42/$modname" "tmp"
-  cd tmp
-  hg archive --no-decode --type tar --prefix "${OUTPUTDIR}/" ${EXCLUDE} -r $1 "../${OUTPUTDIR}${TARTAG}.tar"
-  cd ..
-  gzip -n -f "${OUTPUTDIR}${TARTAG}.tar"
+  git clone --bare "https://github.com/mupen64plus/${modname}.git" "tmp"
+  git --git-dir="$(pwd)/tmp/" archive --format=tar --prefix="${OUTPUTDIR}/" $1 | gzip -n --best > "${OUTPUTDIR}.tar.gz"
   rm -rf "tmp"
 done
