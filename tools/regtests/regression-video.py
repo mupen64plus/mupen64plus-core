@@ -241,27 +241,27 @@ class RegTester:
         for modname in self.modulesAndParams:
             module = self.modulesAndParams[modname]
             if "url" not in module:
-                report += "Error: no Hg repository URL for module %s\n\n" % modname
+                report += "Error: no Git repository URL for module %s\n\n" % modname
                 return False
             modurl = module["url"]
             modfilename = modurl.split("/")[-1]
-            # call Hg to checkout Mupen64Plus source module
-            output = commands.getoutput("hg clone --cwd %s %s" % (srcdir, modurl))
+            # call Git to checkout Mupen64Plus source module
+            (status, output) = commands.getstatusoutput("git clone %s %s/%s" % (modurl, srcdir, modfilename))
             # parse the output
             lastline = output.split("\n")[-1]
-            if "0 files unresolved" not in lastline:
-                report += "Hg Error: %s\n\n" % lastline
+            if 0 != os.WEXITSTATUS(status):
+                report += "Git Error: %s\n\n" % lastline
                 return False
             # get the revision info
             RevFound = False
-            output = commands.getoutput("hg tip -R %s" % os.path.join(srcdir, modfilename))
+            output = commands.getoutput("git --git-dir=%s/.git log HEAD~1..HEAD" % os.path.join(srcdir, modfilename))
             for line in output.split('\n'):
                 words = line.split()
-                if len(words) == 2 and words[0] == 'changeset:':
-                    report += "Hg Checkout %s: changeset %s\n" % (modfilename, words[1])
+                if len(words) == 2 and words[0] == 'commit':
+                    report += "Git Checkout %s: changeset %s\n" % (modfilename, words[1])
                     RevFound = True
             if not RevFound:
-                report += "Hg Error: couldn't find revision information\n\n"
+                report += "Git Error: couldn't find revision information\n\n"
                 return False
         return True
 
