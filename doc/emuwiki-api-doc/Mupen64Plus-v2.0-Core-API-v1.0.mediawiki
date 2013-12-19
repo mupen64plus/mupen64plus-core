@@ -1,5 +1,3 @@
-[http://mupen64plus.retrouprising.com Project page]
-
 Please note: as of January 2011, this API is a work in progress.<br />
 The core Mupen64Plus v2.0 modules are complete, but work on GUI front-end applications is ongoing.
 
