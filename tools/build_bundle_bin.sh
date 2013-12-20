@@ -35,16 +35,16 @@ mkdir -p ${TEMPDIR}/source
 cd ${TEMPDIR}/source
 
 echo "************************************ Downloading Mupen64Plus module source code"
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-core
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-rom
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-ui-console
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-audio-sdl
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-input-sdl
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-rsp-hle
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-video-rice
-hg clone -r $1 http://bitbucket.org/richard42/mupen64plus-video-glide64mk2
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-core.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-rom.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-ui-console.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-audio-sdl.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-input-sdl.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-rsp-hle.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-video-rice.git
+git clone --branch $1 https://github.com/mupen64plus/mupen64plus-video-glide64mk2.git
 shift
-for dirname in ./mupen64plus-*; do rm -rf ${dirname}/.hg*; done
+for dirname in ./mupen64plus-*; do rm -rf ${dirname}/.git*; done
 
 OUTPUTDIR="mupen64plus-bundle-$1"
 shift
