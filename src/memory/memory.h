@@ -215,7 +215,7 @@ extern AI_register ai_register;
 extern DPC_register dpc_register;
 extern DPS_register dps_register;
 
-extern unsigned char *rdramb;
+extern unsigned char *const rdramb;
 
 #ifndef M64P_BIG_ENDIAN
 #define sl(mot) \
