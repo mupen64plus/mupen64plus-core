@@ -97,14 +97,14 @@ static void prefetch(void);
    }
 #define CHECK_MEMORY()
 
-#include "interpreter.def"
-
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
 #if defined(__GNUC__)
-  void JR_IDLE(void) __attribute__((used));
-  void JALR_IDLE(void) __attribute__((used));
+  static void JR_IDLE(void) __attribute__((used));
+  static void JALR_IDLE(void) __attribute__((used));
 #endif
+
+#include "interpreter.def"
 
 static cpu_instruction_table pure_interpreter_table = {
    LB,
