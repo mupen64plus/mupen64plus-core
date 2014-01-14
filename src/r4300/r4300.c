@@ -167,14 +167,14 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
           current_instruction_table.NOTCOMPILED) \
          invalid_code[address>>12] = 1;
 
-#include "interpreter.def"
-
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
 #if defined(__GNUC__)
-  void JR_IDLE(void) __attribute__((used));
-  void JALR_IDLE(void) __attribute__((used));
+  static void JR_IDLE(void) __attribute__((used));
+  static void JALR_IDLE(void) __attribute__((used));
 #endif
+
+#include "interpreter.def"
 
 // -----------------------------------------------------------
 // Flow control 'fake' instructions

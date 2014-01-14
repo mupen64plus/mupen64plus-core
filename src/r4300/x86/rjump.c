@@ -101,6 +101,15 @@ void dyna_start(void *code)
 #elif defined(__GNUC__) && defined(__i386__)
   #if defined(__PIC__)
     /* for -fPIC (shared libraries) */
+    #ifndef __GNUC_PREREQ
+    #  if defined __GNUC__ && defined __GNUC_MINOR__
+    #    define __GNUC_PREREQ(maj, min) \
+                ((__GNUC__ << 16) + __GNUC_MINOR__ >= ((maj) << 16) + (min))
+    #  else
+    #    define __GNUC_PREREQ(maj, min) 0
+    #  endif
+    #endif
+
     #if __GNUC_PREREQ (4, 7)
     #  define GET_PC_THUNK_STR(reg) "__x86.get_pc_thunk." #reg
     #else

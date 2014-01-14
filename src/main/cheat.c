@@ -281,9 +281,9 @@ void cheat_apply_cheats(int entry)
         if (subscreen_address) {
             execute_cheat(subscreen_address, 0x0002, NULL);
             if (credits_address[0]){
-                if (execute_cheat(credits_address[0], 0x0320, NULL));
+                if (execute_cheat(credits_address[0], 0x0320, NULL))
                     execute_cheat(credits_address[1], 0x0000, NULL);
-                if (execute_cheat(credits_address[2], 0xF809, NULL));
+                if (execute_cheat(credits_address[2], 0xF809, NULL))
                     execute_cheat(credits_address[3], 0x0000, NULL);
             }
         }
