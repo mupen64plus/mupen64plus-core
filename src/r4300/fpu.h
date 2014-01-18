@@ -69,7 +69,6 @@ M64P_FPU_INLINE void cvt_s_w(int *source,float *dest)
 }
 M64P_FPU_INLINE void cvt_d_w(int *source,double *dest)
 {
-  set_rounding();
   *dest = (double) *source;
 }
 M64P_FPU_INLINE void cvt_s_l(long long *source,float *dest)
@@ -84,7 +83,6 @@ M64P_FPU_INLINE void cvt_d_l(long long *source,double *dest)
 }
 M64P_FPU_INLINE void cvt_d_s(float *source,double *dest)
 {
-  set_rounding();
   *dest = (double) *source;
 }
 M64P_FPU_INLINE void cvt_s_d(double *source,float *dest)
