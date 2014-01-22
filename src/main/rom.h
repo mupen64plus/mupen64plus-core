@@ -42,6 +42,7 @@ typedef struct _rom_params
    int vilimit;
    int aidacrate;
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
+   unsigned char countperop;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -111,6 +112,7 @@ typedef struct
    unsigned char savetype;
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
+   unsigned char countperop;
 } romdatabase_entry;
 
 typedef struct _romdatabase_search

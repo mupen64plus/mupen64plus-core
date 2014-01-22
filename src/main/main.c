@@ -739,7 +739,7 @@ m64p_error main_run(void)
     delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
-        count_per_op = 2;
+        count_per_op = ROM_PARAMS.countperop;
 
     // initialize memory, and do byte-swapping if it's not been done yet
     if (g_MemHasBeenBSwapped == 0)
