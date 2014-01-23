@@ -45,7 +45,7 @@
 
 unsigned int r4300emu = 0;
 int no_compiled_jump = 0;
-unsigned int count_per_op = 2;
+unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
 int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
