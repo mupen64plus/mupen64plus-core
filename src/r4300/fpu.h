@@ -69,7 +69,6 @@ M64P_FPU_INLINE void cvt_s_w(int *source,float *dest)
 }
 M64P_FPU_INLINE void cvt_d_w(int *source,double *dest)
 {
-  set_rounding();
   *dest = (double) *source;
 }
 M64P_FPU_INLINE void cvt_s_l(long long *source,float *dest)
@@ -84,7 +83,6 @@ M64P_FPU_INLINE void cvt_d_l(long long *source,double *dest)
 }
 M64P_FPU_INLINE void cvt_d_s(float *source,double *dest)
 {
-  set_rounding();
   *dest = (double) *source;
 }
 M64P_FPU_INLINE void cvt_s_d(double *source,float *dest)
@@ -161,7 +159,6 @@ M64P_FPU_INLINE void floor_w_d(double *source,int *dest)
 
 M64P_FPU_INLINE void cvt_w_s(float *source,int *dest)
 {
-  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_w_s(source,dest);return;
@@ -172,7 +169,6 @@ M64P_FPU_INLINE void cvt_w_s(float *source,int *dest)
 }
 M64P_FPU_INLINE void cvt_w_d(double *source,int *dest)
 {
-  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_w_d(source,dest);return;
@@ -183,7 +179,6 @@ M64P_FPU_INLINE void cvt_w_d(double *source,int *dest)
 }
 M64P_FPU_INLINE void cvt_l_s(float *source,long long *dest)
 {
-  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_l_s(source,dest);return;
@@ -194,7 +189,6 @@ M64P_FPU_INLINE void cvt_l_s(float *source,long long *dest)
 }
 M64P_FPU_INLINE void cvt_l_d(double *source,long long *dest)
 {
-  set_rounding();
   switch(FCR31&3)
   {
     case 0: round_l_d(source,dest);return;
@@ -404,17 +398,14 @@ M64P_FPU_INLINE void sqrt_s(float *source,float *target)
 }
 M64P_FPU_INLINE void abs_s(float *source,float *target)
 {
-  set_rounding();
   *target=fabsf(*source);
 }
 M64P_FPU_INLINE void mov_s(float *source,float *target)
 {
-  set_rounding();
   *target=*source;
 }
 M64P_FPU_INLINE void neg_s(float *source,float *target)
 {
-  set_rounding();
   *target=-(*source);
 }
 M64P_FPU_INLINE void add_d(double *source1,double *source2,double *target)
@@ -444,16 +435,13 @@ M64P_FPU_INLINE void sqrt_d(double *source,double *target)
 }
 M64P_FPU_INLINE void abs_d(double *source,double *target)
 {
-  set_rounding();
   *target=fabs(*source);
 }
 M64P_FPU_INLINE void mov_d(double *source,double *target)
 {
-  set_rounding();
   *target=*source;
 }
 M64P_FPU_INLINE void neg_d(double *source,double *target)
 {
-  set_rounding();
   *target=-(*source);
 }
