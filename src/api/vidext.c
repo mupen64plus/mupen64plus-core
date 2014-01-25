@@ -123,6 +123,9 @@ EXPORT m64p_error CALL VidExt_Quit(void)
         return M64ERR_NOT_INIT;
 
     SDL_ShowCursor(SDL_ENABLE);
+#if SDL_VERSION_ATLEAST(2,0,0)
+    SDL2_DestroyWindow();
+#endif
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     l_pScreen = NULL;
     l_VideoOutputActive = 0;
