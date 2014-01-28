@@ -857,7 +857,7 @@ static void divu64(uint64_t dividend,uint64_t divisor)
   //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
 }
 
-static void mult64(uint64_t m1,uint64_t m2)
+static void mult64(int64_t m1,int64_t m2)
 {
    unsigned long long int op1, op2, op3, op4;
    unsigned long long int result1, result2, result3, result4;

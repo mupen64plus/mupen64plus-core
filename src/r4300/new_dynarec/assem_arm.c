@@ -1290,7 +1290,7 @@ static void emit_adcimm(u_int rs,int imm,u_int rt)
 
 static void emit_rscimm(int rs,int imm,u_int rt)
 {
-  assert(0);
+  // assert(0);
   u_int armval, ret;
   ret = genimm(imm,&armval);
   assert(ret);
@@ -4151,7 +4151,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
     {
       if(opcode2[i]==0x1C) // DMULT
       {
-        assert(opcode2[i]!=0x1C);
+        // assert(opcode2[i]!=0x1C);
         signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
         signed char m1l=get_reg(i_regs->regmap,rs1[i]);
         signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
@@ -4160,15 +4160,16 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(m2h>=0);
         assert(m1l>=0);
         assert(m2l>=0);
-        emit_pushreg(m2h);
-        emit_pushreg(m2l);
-        emit_pushreg(m1h);
-        emit_pushreg(m1l);
+        save_regs(0x100f);
+        if(m1l!=0) emit_mov(m1l,0);
+        if(m1h==0) emit_readword((int)&dynarec_local,1);
+        else if(m1h>1) emit_mov(m1h,1);
+        if(m2l<2) emit_readword((int)&dynarec_local+m2l*4,2);
+        else if(m2l>2) emit_mov(m2l,2);
+        if(m2h<3) emit_readword((int)&dynarec_local+m2h*4,3);
+        else if(m2h>3) emit_mov(m2h,3);
         emit_call((int)&mult64);
-        emit_popreg(m1l);
-        emit_popreg(m1h);
-        emit_popreg(m2l);
-        emit_popreg(m2h);
+        restore_regs(0x100f);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
