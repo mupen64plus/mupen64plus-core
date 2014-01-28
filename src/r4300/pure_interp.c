@@ -55,6 +55,11 @@ static void prefetch(void);
       const unsigned int jump_target = (destination); \
       long long int *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
+      if (link_register != &reg[0]) \
+      { \
+          *link_register=interp_PC.addr + 8; \
+          sign_extended(*link_register); \
+      } \
       if (!likely || take_jump) \
       { \
         interp_PC.addr += 4; \
@@ -65,11 +70,6 @@ static void prefetch(void);
         delay_slot=0; \
         if (take_jump && !skip_jump) \
         { \
-          if (link_register != &reg[0]) \
-          { \
-              *link_register=interp_PC.addr; \
-              sign_extended(*link_register); \
-          } \
           interp_PC.addr = jump_target; \
         } \
       } \

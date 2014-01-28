@@ -88,6 +88,11 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
       const unsigned int jump_target = (destination); \
       long long int *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
+      if (link_register != &reg[0]) \
+      { \
+         *link_register=PC->addr + 8; \
+         sign_extended(*link_register); \
+      } \
       if (!likely || take_jump) \
       { \
          PC++; \
@@ -98,11 +103,6 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
          delay_slot=0; \
          if (take_jump && !skip_jump) \
          { \
-            if (link_register != &reg[0]) \
-            { \
-               *link_register=PC->addr; \
-               sign_extended(*link_register); \
-            } \
             PC=actual->block+((jump_target-actual->start)>>2); \
          } \
       } \
@@ -120,6 +120,11 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
       const unsigned int jump_target = (destination); \
       long long int *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
+      if (link_register != &reg[0]) \
+      { \
+         *link_register=PC->addr + 8; \
+         sign_extended(*link_register); \
+      } \
       if (!likely || take_jump) \
       { \
          PC++; \
@@ -130,11 +135,6 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
          delay_slot=0; \
          if (take_jump && !skip_jump) \
          { \
-            if (link_register != &reg[0]) \
-            { \
-               *link_register=PC->addr; \
-               sign_extended(*link_register); \
-            } \
             jump_to(jump_target); \
          } \
       } \
