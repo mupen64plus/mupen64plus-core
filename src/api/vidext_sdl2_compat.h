@@ -55,6 +55,7 @@ typedef struct SDL_VideoInfo
 int initialized_video = 0;
 
 static SDL_Window *SDL_VideoWindow = NULL;
+static SDL_Surface *SDL_VideoSurface = NULL;
 static SDL_Surface *SDL_PublicSurface = NULL;
 static SDL_Rect SDL_VideoViewport;
 static char *wm_title = NULL;
@@ -192,10 +193,12 @@ SDL_WM_ToggleFullScreen(SDL_Surface * surface)
         if (SDL_SetWindowFullscreen(SDL_VideoWindow, 0) < 0) {
             return 0;
         }
+        SDL_PublicSurface->flags &= ~SDL_FULLSCREEN;
     } else {
         if (SDL_SetWindowFullscreen(SDL_VideoWindow, 1) < 0) {
             return 0;
         }
+        SDL_PublicSurface->flags |= SDL_FULLSCREEN;
     }
 
     /* Center the public surface in the window surface */
@@ -228,11 +231,18 @@ SDL_ResizeVideoMode(int width, int height, int bpp, Uint32 flags)
     if (flags != SDL_VideoFlags) {
         return -1;
     }
+    if (bpp != SDL_VideoSurface->format->BitsPerPixel) {
+        return -1;
+    }
+
     /* Resize the window */
     SDL_GetWindowSize(SDL_VideoWindow, &w, &h);
     if (w != width || h != height) {
         SDL_SetWindowSize(SDL_VideoWindow, width, height);
     }
+
+    SDL_VideoSurface->w = width;
+    SDL_VideoSurface->h = height;
 
     return 0;
 }
@@ -329,6 +339,11 @@ static void SDL2_DestroyWindow(void)
 {
     /* Destroy existing window */
     SDL_PublicSurface = NULL;
+    if (SDL_VideoSurface) {
+        SDL_VideoSurface->flags &= ~SDL_DONTFREE;
+        SDL_FreeSurface(SDL_VideoSurface);
+        SDL_VideoSurface = NULL;
+    }
     if (SDL_VideoContext) {
         /* SDL_GL_MakeCurrent(0, NULL); *//* Doesn't do anything */
         SDL_GL_DeleteContext(SDL_VideoContext);
@@ -348,6 +363,7 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
     int window_x = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
     int window_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
     Uint32 window_flags;
+    Uint32 surface_flags;
 
     if (!initialized_video) {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE) < 0) {
@@ -407,6 +423,20 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
     SDL_SetWindowIcon(SDL_VideoWindow, SDL_VideoIcon);
 
     window_flags = SDL_GetWindowFlags(SDL_VideoWindow);
+    surface_flags = 0;
+    if (window_flags & SDL_WINDOW_FULLSCREEN) {
+        surface_flags |= SDL_FULLSCREEN;
+    }
+    if ((window_flags & SDL_WINDOW_OPENGL) && (flags & SDL_OPENGL)) {
+        surface_flags |= SDL_OPENGL;
+    }
+    if (window_flags & SDL_WINDOW_RESIZABLE) {
+        surface_flags |= SDL_RESIZABLE;
+    }
+    if (window_flags & SDL_WINDOW_BORDERLESS) {
+        surface_flags |= SDL_NOFRAME;
+    }
+
     SDL_VideoFlags = flags;
 
     /* If we're in OpenGL mode, just create a stub surface and we're done! */
@@ -418,7 +448,13 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
         if (SDL_GL_MakeCurrent(SDL_VideoWindow, SDL_VideoContext) < 0) {
             return NULL;
         }
-        SDL_PublicSurface = SDL_GetWindowSurface(SDL_VideoWindow);
+        SDL_VideoSurface =
+            SDL_CreateRGBSurfaceFrom(NULL, width, height, bpp, 0, 0, 0, 0, 0);
+        if (!SDL_VideoSurface) {
+            return NULL;
+        }
+        SDL_VideoSurface->flags |= surface_flags;
+        SDL_PublicSurface = SDL_VideoSurface;
         return SDL_PublicSurface;
     }
 
