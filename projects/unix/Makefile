@@ -95,7 +95,11 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     ARCH_DETECTED := 32BITS
     PIC ?= 1
     NEW_DYNAREC := 1
-    CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+    ifeq ($(NEON), 1)
+        CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
+    else
+        CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+    endif
     $(warning Architecture "$(HOST_CPU)" not officially supported.')
   endif
 endif
@@ -512,6 +516,7 @@ targets:
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
+	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3 -flto)"
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
