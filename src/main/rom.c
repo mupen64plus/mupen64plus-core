@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stddef.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
@@ -294,6 +295,62 @@ static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
     }
 }
 
+static size_t romdatabase_resolve_round(void)
+{
+    romdatabase_search *entry;
+    romdatabase_entry *ref;
+    size_t skipped = 0;
+
+    /* Resolve RefMD5 references */
+    for (entry = g_romdatabase.list; entry; entry = entry->next_entry) {
+        if (!entry->entry.refmd5)
+            continue;
+
+        ref = ini_search_by_md5(entry->entry.refmd5);
+        if (!ref) {
+            DebugMessage(M64MSG_WARNING, "ROM Database: Error solving RefMD5s");
+            continue;
+        }
+
+        /* entry is not yet resolved, skip for now */
+        if (ref->refmd5) {
+            skipped++;
+            continue;
+        }
+
+        if (ref->savetype != DEFAULT)
+            entry->entry.savetype = ref->savetype;
+        if (ref->status != 0)
+            entry->entry.status = ref->status;
+        if (ref->players != DEFAULT)
+            entry->entry.players = ref->players;
+        if (ref->rumble != DEFAULT)
+            entry->entry.rumble = ref->rumble;
+        if (ref->countperop != COUNT_PER_OP_DEFAULT)
+            entry->entry.countperop = ref->countperop;
+
+        free(entry->entry.refmd5);
+        entry->entry.refmd5 = NULL;
+    }
+
+    return skipped;
+}
+
+static void romdatabase_resolve(void)
+{
+    size_t last_skipped = (size_t)~0ULL;
+    size_t skipped;
+
+    do {
+        skipped = romdatabase_resolve_round();
+        if (skipped == last_skipped) {
+            DebugMessage(M64MSG_ERROR, "Unable to resolve rom database entries (loop)");
+            break;
+        }
+        last_skipped = skipped;
+    } while (skipped > 0);
+}
+
 /********************************************************************************************/
 /* INI Rom database functions */
 
@@ -468,30 +525,7 @@ void romdatabase_open(void)
     }
 
     fclose(fPtr);
-
-    /* Resolve RefMD5 references */
-    for (search = g_romdatabase.list; search != NULL; search = search->next_entry)
-    {
-        if (search->entry.refmd5 != NULL)
-        {
-            romdatabase_entry *ref = ini_search_by_md5(search->entry.refmd5);
-            if (ref != NULL)
-            {
-                if(ref->savetype!=DEFAULT)
-                    search->entry.savetype = ref->savetype;
-                if(ref->status!=0)
-                    search->entry.status = ref->status;
-                if(ref->players!=DEFAULT)
-                    search->entry.players = ref->players;
-                if(ref->rumble!=DEFAULT)
-                    search->entry.rumble = ref->rumble;
-                if (ref->countperop != COUNT_PER_OP_DEFAULT)
-                    search->entry.countperop = ref->countperop;
-            }
-            else
-                DebugMessage(M64MSG_WARNING, "ROM Database: Error solving RefMD5s");
-        }
-    }
+    romdatabase_resolve();
 }
 
 void romdatabase_close(void)
