@@ -166,6 +166,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.vilimit = rom_system_type_to_vi_limit(ROM_PARAMS.systemtype);
     ROM_PARAMS.aidacrate = rom_system_type_to_ai_dac_rate(ROM_PARAMS.systemtype);
     ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+    ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
     ROM_PARAMS.headername[20] = '\0';
@@ -182,6 +183,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = entry->players;
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
+        ROM_PARAMS.cheats = entry->cheats;
     }
     else
     {
@@ -192,6 +194,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
         ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+        ROM_PARAMS.cheats = NULL;
     }
 
     /* print out a bunch of info about the ROM */
@@ -362,6 +365,13 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_COUNTEROP;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_CHEATS) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_CHEATS)) {
+            if (ref->cheats)
+                entry->entry.cheats = strdup(ref->cheats);
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -450,6 +460,7 @@ void romdatabase_open(void)
             search->entry.players = DEFAULT;
             search->entry.rumble = DEFAULT; 
             search->entry.countperop = COUNT_PER_OP_DEFAULT;
+            search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
             search->next_entry = NULL;
@@ -566,6 +577,36 @@ void romdatabase_open(void)
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid CountPerOp on line %i", lineno);
                 }
             }
+            else if(!strncmp(l.name, "Cheat", 5))
+            {
+                size_t len1 = 0, len2 = 0;
+                char *newcheat;
+
+                if (search->entry.cheats)
+                    len1 = strlen(search->entry.cheats);
+                if (l.value)
+                    len2 = strlen(l.value);
+
+                /* initial cheat */
+                if (len1 == 0 && len2 > 0)
+                    search->entry.cheats = strdup(l.value);
+
+                /* append cheat */
+                if (len1 != 0 && len2 > 0) {
+                    newcheat = malloc(len1 + 1 + len2 + 1);
+                    if (!newcheat) {
+                        DebugMessage(M64MSG_WARNING, "ROM Database: Failed to append cheat");
+                    } else {
+                        strcpy(newcheat, search->entry.cheats);
+                        strcat(newcheat, ";");
+                        strcat(newcheat, l.value);
+                        free(search->entry.cheats);
+                        search->entry.cheats = newcheat;
+                    }
+                }
+
+                search->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
+            }
             else
             {
                 DebugMessage(M64MSG_WARNING, "ROM Database: Unknown property on line %i", lineno);
@@ -592,6 +633,7 @@ void romdatabase_close(void)
             free(g_romdatabase.list->entry.goodname);
         if(g_romdatabase.list->entry.refmd5)
             free(g_romdatabase.list->entry.refmd5);
+        free(g_romdatabase.list->entry.cheats);
         free(g_romdatabase.list);
         g_romdatabase.list = search;
         }
