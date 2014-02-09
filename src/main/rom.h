@@ -25,6 +25,15 @@
 
 #include "api/m64p_types.h"
 #include "md5.h"
+#include <stdint.h>
+
+#define BIT(bitnr) (1ULL << (bitnr))
+#ifdef __GNUC__
+#define isset_bitmask(x, bitmask) ({ typeof(bitmask) _bitmask = (bitmask); \
+                                     (_bitmask & (x)) == _bitmask; })
+#else
+#define isset_bitmask(x, bitmask) (bitmask & (x)) == bitmask)
+#endif
 
 /* ROM Loading and Saving functions */
 
@@ -113,7 +122,19 @@ typedef struct
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char countperop;
+   uint32_t set_flags;
 } romdatabase_entry;
+
+enum romdatabase_entry_set_flags {
+    ROMDATABASE_ENTRY_NONE = 0,
+    ROMDATABASE_ENTRY_GOODNAME = BIT(0),
+    ROMDATABASE_ENTRY_CRC = BIT(1),
+    ROMDATABASE_ENTRY_STATUS = BIT(2),
+    ROMDATABASE_ENTRY_SAVETYPE = BIT(3),
+    ROMDATABASE_ENTRY_PLAYERS = BIT(4),
+    ROMDATABASE_ENTRY_RUMBLE = BIT(5),
+    ROMDATABASE_ENTRY_COUNTEROP = BIT(6),
+};
 
 typedef struct _romdatabase_search
 {

@@ -318,16 +318,49 @@ static size_t romdatabase_resolve_round(void)
             continue;
         }
 
-        if (ref->savetype != DEFAULT)
-            entry->entry.savetype = ref->savetype;
-        if (ref->status != 0)
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_GOODNAME) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_GOODNAME)) {
+            entry->entry.goodname = strdup(ref->goodname);
+            if (entry->entry.goodname)
+                entry->entry.set_flags |= ROMDATABASE_ENTRY_GOODNAME;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_CRC) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_CRC)) {
+            entry->entry.crc1 = ref->crc1;
+            entry->entry.crc2 = ref->crc2;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_CRC;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_STATUS) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_STATUS)) {
             entry->entry.status = ref->status;
-        if (ref->players != DEFAULT)
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_STATUS;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_SAVETYPE) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_SAVETYPE)) {
+            entry->entry.savetype = ref->savetype;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_PLAYERS) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_PLAYERS)) {
             entry->entry.players = ref->players;
-        if (ref->rumble != DEFAULT)
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_PLAYERS;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_RUMBLE) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_RUMBLE)) {
             entry->entry.rumble = ref->rumble;
-        if (ref->countperop != COUNT_PER_OP_DEFAULT)
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_RUMBLE;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_COUNTEROP) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_COUNTEROP)) {
             entry->entry.countperop = ref->countperop;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_COUNTEROP;
+        }
 
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
@@ -417,6 +450,7 @@ void romdatabase_open(void)
             search->entry.players = DEFAULT;
             search->entry.rumble = DEFAULT; 
             search->entry.countperop = COUNT_PER_OP_DEFAULT;
+            search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
             search->next_entry = NULL;
             search->next_crc = NULL;
@@ -438,6 +472,7 @@ void romdatabase_open(void)
             if(!strcmp(l.name, "GoodName"))
             {
                 search->entry.goodname = strdup(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_GOODNAME;
             }
             else if(!strcmp(l.name, "CRC"))
             {
@@ -449,6 +484,7 @@ void romdatabase_open(void)
                     index = search->entry.crc1 >> 24;
                     search->next_crc = g_romdatabase.crc_lists[index];
                     g_romdatabase.crc_lists[index] = search;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_CRC;
                 }
                 else
                 {
@@ -469,50 +505,66 @@ void romdatabase_open(void)
             }
             else if(!strcmp(l.name, "SaveType"))
             {
-                if(!strcmp(l.value, "Eeprom 4KB"))
+                if(!strcmp(l.value, "Eeprom 4KB")) {
                     search->entry.savetype = EEPROM_4KB;
-                else if(!strcmp(l.value, "Eeprom 16KB"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else if(!strcmp(l.value, "Eeprom 16KB")) {
                     search->entry.savetype = EEPROM_16KB;
-                else if(!strcmp(l.value, "SRAM"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else if(!strcmp(l.value, "SRAM")) {
                     search->entry.savetype = SRAM;
-                else if(!strcmp(l.value, "Flash RAM"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else if(!strcmp(l.value, "Flash RAM")) {
                     search->entry.savetype = FLASH_RAM;
-                else if(!strcmp(l.value, "Controller Pack"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else if(!strcmp(l.value, "Controller Pack")) {
                     search->entry.savetype = CONTROLLER_PACK;
-                else if(!strcmp(l.value, "None"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else if(!strcmp(l.value, "None")) {
                     search->entry.savetype = NONE;
-                else
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
+                } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid save type on line %i", lineno);
+                }
             }
             else if(!strcmp(l.name, "Status"))
             {
-                if (string_to_int(l.value, &value) && value >= 0 && value < 6)
+                if (string_to_int(l.value, &value) && value >= 0 && value < 6) {
                     search->entry.status = value;
-                else
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_STATUS;
+                } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid status on line %i", lineno);
+                }
             }
             else if(!strcmp(l.name, "Players"))
             {
-                if (string_to_int(l.value, &value) && value >= 0 && value < 8)
+                if (string_to_int(l.value, &value) && value >= 0 && value < 8) {
                     search->entry.players = value;
-                else
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_PLAYERS;
+                } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid player count on line %i", lineno);
+                }
             }
             else if(!strcmp(l.name, "Rumble"))
             {
-                if(!strcmp(l.value, "Yes"))
+                if(!strcmp(l.value, "Yes")) {
                     search->entry.rumble = 1;
-                else if(!strcmp(l.value, "No"))
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_RUMBLE;
+                } else if(!strcmp(l.value, "No")) {
                     search->entry.rumble = 0;
-                else
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_RUMBLE;
+                } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid rumble string on line %i", lineno);
+                }
             }
             else if(!strcmp(l.name, "CountPerOp"))
             {
-                if (string_to_int(l.value, &value) && value > 0 && value <= 4)
+                if (string_to_int(l.value, &value) && value > 0 && value <= 4) {
                     search->entry.countperop = value;
-                else
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_COUNTEROP;
+                } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid CountPerOp on line %i", lineno);
+                }
             }
             else
             {
