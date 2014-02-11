@@ -42,6 +42,7 @@
 #include "api/vidext.h"
 
 #include "main.h"
+#include "cheat.h"
 #include "eventloop.h"
 #include "rom.h"
 #include "savestates.h"
@@ -740,6 +741,7 @@ m64p_error main_run(void)
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
+    cheat_add_hacks();
 
     // initialize memory, and do byte-swapping if it's not been done yet
     if (g_MemHasBeenBSwapped == 0)
