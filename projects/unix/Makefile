@@ -360,6 +360,12 @@ endif
 ifeq ($(INCDIR),)
   INCDIR := $(PREFIX)/include/mupen64plus
 endif
+ifeq ($(ICONSDIR),)
+	ICONSDIR := $(PREFIX)/share/icons/hicolor
+endif
+ifeq ($(APPSDIR),)
+	APPSDIR := $(PREFIX)/share/applications
+endif
 
 SRCDIR = ../../src
 OBJDIR = _obj$(POSTFIX)
@@ -529,6 +535,8 @@ targets:
 	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
 	@echo "    LIBDIR=path   == path to install core library (default: PREFIX/lib)"
 	@echo "    INCDIR=path   == path to install core header files (default: PREFIX/include/mupen64plus)"
+	@echo "    APPSDIR=path  == path to install desktop file (default: PREFIX/share/applications)"
+	@echo "    ICONSDIR=path == path to install icon files (default: PREFIX/share/icons/hicolor)"
 	@echo "    DESTDIR=path  == path to prepend to all installation paths (only for packagers)"
 	@echo "  Debugging Options:"
 	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
@@ -547,7 +555,16 @@ install: $(TARGET)
 	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)"
 	$(INSTALL) -m 0644 $(INSTALL_STRIP_FLAG) $(TARGET) "$(DESTDIR)$(LIBDIR)"
 	$(INSTALL) -d "$(DESTDIR)$(SHAREDIR)"
-	$(INSTALL) -m 0644 ../../data/* "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/mupen64plus.cht "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/mupen64plus.ini "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/mupencheat.txt "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -m 0644 ../../data/font.ttf "$(DESTDIR)$(SHAREDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(APPSDIR)"
+	$(INSTALL) -m 0644 ../../data/mupen64plus.desktop "$(DESTDIR)$(APPSDIR)"
+	$(INSTALL) -d "$(DESTDIR)$(ICONSDIR)/48x48/apps"
+	$(INSTALL) -m 0644 ../../data/icons/48x48/apps/mupen64plus.png "$(DESTDIR)$(ICONSDIR)/48x48/apps"
+	$(INSTALL) -d "$(DESTDIR)$(ICONSDIR)/scalable/apps"
+	$(INSTALL) -m 0644 ../../data/icons/scalable/apps/mupen64plus.svg "$(DESTDIR)$(ICONSDIR)/scalable/apps"
 	$(INSTALL) -d "$(DESTDIR)$(INCDIR)"
 	$(INSTALL) -m 0644 ../../src/api/m64p_*.h "$(DESTDIR)$(INCDIR)"
 	-$(LDCONFIG) "$(DESTDIR)$(LIBDIR)"
@@ -561,6 +578,9 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupen64plus.ini"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/font.ttf"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
+	$(RM) "$(DESTDIR)$(APPSDIR)/mupen64plus.desktop"
+	$(RM) "$(DESTDIR)$(ICONSDIR)/48x48/apps/mupen64plus.png"
+	$(RM) "$(DESTDIR)$(ICONSDIR)/scalable/apps/mupen64plus.svg"
 
 clean:
 	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR)

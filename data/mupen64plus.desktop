@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Mupen64Plus
+GenericName=N64 Emulator
+Comment=Nintendo 64 emulator and plugins for Linux, Mac OSX, FreeBSD, and Windows
+Exec=mupen64plus %f
+Icon=mupen64plus
+MimeType=application/x-n64-rom;
+Categories=Game;Emulator;
