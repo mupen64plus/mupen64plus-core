@@ -1740,7 +1740,7 @@ gn Super Mario 64 Shindou Edition (J)
   8031DA6E 0008
  cn Infinite\Lives
   8031DA6D 0064
- cn Don't Hurt Mario\Monsters 
+ cn Don't Hurt Mario\Monsters
   A031D9E7 0001
  cn Funny Mario Options\Ostrich Mario
   cd Only Use This Code On Its Own,Do not use with any other Funny Mario Options.
@@ -3436,7 +3436,7 @@ gn Banjo-Kazooie
   813831B4 3DA6
   813831B6 F264
   813831C6 FF7F
- cn Secret Items 
+ cn Secret Items
   81283400 ???? FFFF:"Have All Collected",0000:"Have None"
  cn Do Shock Spring Jump From Anywhere
   cd Press A Button. Do not use with Take Off And Fly From Anywhere
@@ -5613,7 +5613,7 @@ gn Conker's Bad Fur Day (U)
   cd Press L Button to Levitate & Let go to come back down
   D0042A2D 0020
   810CCC74 41CB
- cn Matrix Mode (Anywhere) 
+ cn Matrix Mode (Anywhere)
   cd Press R to activate and then Right-C to exit.
   D1042A14 0010
   800BEA0C 0001
@@ -8729,7 +8729,7 @@ gn Goldeneye 007 (U)
   D0064F31 0020
   800D33ED 0050
   880D33ED 0000
- cn Replace Cradle with Citadell hidden level 
+ cn Replace Cradle with Citadell hidden level
   8002A8F7 0029
   8104468A 8970
   81044690 3F44
@@ -18887,7 +18887,7 @@ gn WWF No Mercy (U)
   D116C550 0000
   8116C552 0018
  cn Tables\Sabu Table
-  cd  Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
+  cd Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
   8116C49A 000C
   8116C49E 000C
   8116C4DC 43CC
@@ -19708,7 +19708,7 @@ gn GOLDENEYE
   80024337 001F
  cn All 64 Characters In Multi Player
   800266E7 0040
- cn Replace Cradle with Citadell hidden level 
+ cn Replace Cradle with Citadell hidden level
   80025E47 0029
   8103DB6A D9B4
   8103DB70 3F44
@@ -22203,7 +22203,7 @@ gn Glover
   812912A8 03E8
  cn Have Spell\Sticky Fingers Spell
   812912B2 03E8
- cn All levels unlocked 
+ cn All levels unlocked
   cd At the main menu, where it says:  Start, practice, options, &  time trial,  hold  D-pad up,   then the glove,  playing-with-the-ball icon, will  jump down into the lower left corner of the screen, then press the A button, and a level select screen will be available with all ordinary and boss levels, etc. available
   80298CFD 00A0
  cn Cheat Modifier\1
@@ -22543,7 +22543,7 @@ gn JET FORCE GEMINI
   80208B8C 00FF
   80208B8D 00FF
  cn All Single Player Levels Unlocked
-  cd  All Charcters
+  cd All Charcters
   80208AA0 00FF
   80208AA1 00FF
   80208B16 00FF
@@ -25823,7 +25823,7 @@ crc 20B53662-7B61899F-C:50
 gn South Park (E)
  cn Have Cheats Menu
   800D77D6 01FF
- cn Infinite Energy 
+ cn Infinite Energy
   802FD209 0064
  cn Infinite Credits
   802FD215 0064
@@ -25831,9 +25831,9 @@ gn South Park (E)
   802FD223 0064
  cn Infinite Suckers
   802FD222 0064
- cn Infinite Balls 
+ cn Infinite Balls
   802FD21F 0064
- cn Start with 9999 Monster Score 
+ cn Start with 9999 Monster Score
   812FD20E 270F
 
 crc 4F8AFC3A-F7912DF2-C:50
@@ -26383,7 +26383,7 @@ gn Superman (E)
   8122CDDC 42C8
  cn Infinite Options\X-Ray Vision
   8122CDE0 42C8
- cn For More Time Press D-pad up 
+ cn For More Time Press D-pad up
   D00EA380 0008
   8115F0D2 1724
   D00EA380 0008
@@ -28388,7 +28388,7 @@ gn WWF No Mercy (E)
   D116C550 0000
   8116C552 0018
  cn Tables\Sabu Table
-  cd  Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
+  cd Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
   8116C49A 000C
   8116C49E 000C
   8116C4DC 43CC
@@ -29335,7 +29335,7 @@ gn South Park
  cn Have Cheats Menu
   cd Go into the Cheats From the main Menu & put on the Ones you want
   810CF716 01FF
- cn Infinite Energy 
+ cn Infinite Energy
   802FD209 0064
  cn Infinite Credits
   802FD215 0064
@@ -29343,9 +29343,9 @@ gn South Park
   802FD223 0064
  cn Infinite Suckers
   802FD222 0064
- cn Infinite Balls 
+ cn Infinite Balls
   802FD21F 0064
- cn Start with 9999 Monster Score 
+ cn Start with 9999 Monster Score
   812FD20E 270F
 
 crc 782A9075-E552631D-C:44
