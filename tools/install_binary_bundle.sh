@@ -2,7 +2,7 @@
 #
 # mupen64plus binary bundle install script
 #
-# Copyright 2007-2013 The Mupen64Plus Development Team
+# Copyright 2007-2014 The Mupen64Plus Development Team
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -43,17 +43,19 @@ INSTALL_STRIP_FLAG="${INSTALL_STRIP_FLAG:=-s}"
 
 usage()
 {
-printf "usage: $(basename $0) [PREFIX] [SHAREDIR] [BINDIR] [LIBDIR] [PLUGINDIR] [MANDIR]
+printf "usage: $(basename $0) [PREFIX] [SHAREDIR] [BINDIR] [LIBDIR] [PLUGINDIR] [MANDIR] [APPSDIR] [ICONSDIR]
 \tPREFIX    - installation directories prefix (default: /usr/local)
 \tSHAREDIR  - path to Mupen64Plus shared data files (default: \$PREFIX/share/mupen64plus)
 \tBINDIR    - path to Mupen64Plus binary program files (default: \$PREFIX/bin)
 \tLIBDIR    - path to Mupen64Plus core library (default: \$PREFIX/lib)
 \tPLUGINDIR - path to Mupen64Plus plugin libraries (default: \$PREFIX/lib/mupen64plus)
 \tMANDIR    - path to manual files (default: \$PREFIX/share/man)
+\tAPPSDIR   - path to install desktop file (default: \$PREFIX/share/applications)
+\tICONSDIR  - path to install icon files (default: \$PREFIX/share/icons/hicolor)
 "
 }
 
-if [ $# -gt 6 ]; then
+if [ $# -gt 8 ]; then
 	usage
 	exit 1
 fi
@@ -64,6 +66,8 @@ BINDIR="${3:-${PREFIX}/bin}"
 LIBDIR="${4:-${PREFIX}/lib}"
 PLUGINDIR="${5:-${PREFIX}/lib/mupen64plus}"
 MANDIR="${6:-${PREFIX}/share/man}"
+APPSDIR="${7:-${PREFIX}/share/applications}"
+ICONSDIR="${8:-${PREFIX}/share/icons/hicolor}"
 
 # simple check for permissions
 if [ -d "${SHAREDIR}" -a ! -w "${SHAREDIR}" ]; then
@@ -86,6 +90,14 @@ if [ -d "${MANDIR}" -a ! -w "${MANDIR}" ]; then
 	printf "Error: you do not have permission to install at: ${MANDIR}\nMaybe you need to be root?\n"
 	exit 1
 fi
+if [ -d "${APPSDIR}" -a ! -w "${APPSDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${APPSDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
+if [ -d "${ICONSDIR}" -a ! -w "${ICONSDIR}" ]; then
+	printf "Error: you do not have permission to install at: ${ICONSDIR}\nMaybe you need to be root?\n"
+	exit 1
+fi
 
 printf "Installing Mupen64Plus Binary Bundle to ${PREFIX}\n"
 # Mupen64Plus-Core
@@ -105,6 +117,12 @@ $INSTALL -d -v "${BINDIR}"
 $INSTALL $GINSTALLFLAG -m 0755 mupen64plus "${BINDIR}"
 $INSTALL -d -v "${MANDIR}/man6"
 $INSTALL -m 0644 man6/mupen64plus.6 "${MANDIR}/man6"
+$INSTALL -d -v "${APPSDIR}"
+$INSTALL -m 0644 mupen64plus.desktop "${APPSDIR}"
+$INSTALL -d -v "${ICONSDIR}/48x48/apps"
+$INSTALL -m 0644 icons/48x48/apps/mupen64plus.png "${ICONSDIR}/48x48/apps"
+$INSTALL -d -v "${ICONSDIR}/scalable/apps"
+$INSTALL -m 0644 icons/scalable/apps/mupen64plus.svg "${ICONSDIR}/scalable/apps"
 # Plugins
 $INSTALL -d -v "${PLUGINDIR}"
 $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" mupen64plus-audio-sdl.so "${PLUGINDIR}"
