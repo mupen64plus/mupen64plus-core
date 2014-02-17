@@ -1137,7 +1137,7 @@ Cheat5_N=Here you can Choose Options with Mario with His Cap on & An Extra in Hi
 Cheat5_O=$30 Cap In Hand,$32 Invisible Mario Cap In Hand,$34 Metal Mario Cap In Hand,$36 Invisible Metal Mario Cap In Hand,$38 Flying Mario Cap In Hand
 Cheat6="Infinite\Energy & Breath",8031DA6E 0008
 Cheat7="Infinite\Lives",8031DA6D 0064
-Cheat8="Don't Hurt Mario\Monsters ",A031D9E7 0001
+Cheat8="Don't Hurt Mario\Monsters",A031D9E7 0001
 Cheat9="Funny Mario Options\Ostrich Mario",8031DC0C 0070
 Cheat10="Press GS For 255 Coins",8931DA68 00FF
 Cheat0_N=Only Use This Code On Its Own,Do not use with any other Funny Mario Options.
@@ -2121,7 +2121,7 @@ Cheat9="Infinite\Always Have All Jinjos",80385F7B 00FF
 Cheat11="Character Select",D0281251 0008,8037C2D3 0002,D0281251 0001,8037C2D3 0003,D0281251 0004,8037C2D3 0004,D0281251 0002,8037C2D3 0005,D0281251 0010,8037C2D3 0006,D0281251 0020,8037C2D3 0007
 Cheat14="Access All Moves",8037C3A0 0001,8037C3A1 007F,8037C3A2 00FF,8037C3A3 00FF
 Cheat15="Game 100% Complete",8137C3A0 001F,50000302 0000,8137C3A2 FFFF,50000602 0000,813832C0 FFFF,81383FCA 0064,81383FDC 0064,50000802 0000,813832F0 FFFF,81385FA0 0063,81385FC4 0063,81385FF0 0064,50000602 0000,81385FF2 6464,50001002 0000,813831A8 FFFF,813831B0 FF7F,813831B2 FFB0,813831B4 3DA6,813831B6 F264,813831C6 FF7F
-Cheat16="Secret Items ",81283400 ????
+Cheat16="Secret Items",81283400 ????
 Cheat16_O=$FFFF Have All Collected,$0000 Have None
 Cheat10="Have Zero Time all Levels",50000B04 0000,81386004 3000
 Cheat13="Take Off And Fly From Anywhere",8037C1D1 0002
@@ -3339,7 +3339,7 @@ Cheat16="Press L To Levitate\Player 1",D0042A15 0020,810CC2F0 41CB
 Cheat17="Press L To Levitate\Player 2",D0042A1D 0020,810CC61C 41CB
 Cheat18="Press L To Levitate\Player 3",D0042A25 0020,810CC948 41CB
 Cheat19="Press L To Levitate\Player 4",D0042A2D 0020,810CCC74 41CB
-Cheat20="Matrix Mode (Anywhere) ",D1042A14 0010,800BEA0C 0001,D1042A14 0010,810BE574 D202,D1042A14 0001,800BEA0C 0000,D1042A14 0001,810BE574 0000
+Cheat20="Matrix Mode (Anywhere)",D1042A14 0010,800BEA0C 0001,D1042A14 0010,810BE574 D202,D1042A14 0001,800BEA0C 0000,D1042A14 0001,810BE574 0000
 Cheat20_N=Press R to activate and then Right-C to exit.
 Cheat22="Weapon Select In Multi (On Pick Up)",80180873 00??
 Cheat22_O=$01 Sword,$02 Nothing,$03 Yellow Chain-Ssaw,$04 Throwing Knives,$05 Riffle,$06 Long Pistol with Sight,$07 Rocket Launcher,$08 Buck Shot,$0A High Powred Riffle With Scope,$0C Two Automatic Machine Guns,$13 Gas Mask
@@ -4536,11 +4536,6 @@ Cheat7_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 
 Cheat11_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
 Cheat15_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
 Cheat19_O=$01 Boulder,$02 Fish Eye Lens,$03 Boulder & Fish Eye Lens,$04 Magnify,$08 Anti-Gravity,$0A Anti-Gravity & Fish Eye Lens,$10 Wireframe,$11 Boulder & Wireframe,$20 Stealth Mode,$40 Ghost Mode,$80 Ugly Mode
-Cheat3_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
-Cheat7_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
-Cheat11_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
-Cheat15_O=$00 Raze,$01 Rana,$02 Khan,$03 Grimace,$04 Mooga,$05 Jolt,$06 Main,$07 Apollyon,$08 Roach,$09 Neon
-Cheat19_O=$01 Boulder,$02 Fish Eye Lens,$03 Boulder & Fish Eye Lens,$04 Magnify,$08 Anti-Gravity,$0A Anti-Gravity & Fish Eye Lens,$10 Wireframe,$11 Boulder & Wireframe,$20 Stealth Mode,$40 Ghost Mode,$80 Ugly Mode
 
 //----
 
@@ -4811,7 +4806,7 @@ Cheat15_N=All parts must be on for this code to work.this cheat allows you to pl
 Cheat16="All 64 Characters In Multi Player",8002B197 0040
 Cheat17="Secret Island on Dam Level",D0064F31 0020,800D33ED 0050,880D33ED 0000
 Cheat17_N=For the above code to work,Get to the 2nd guard tower & go down the ladder on the left hand side & to the end of the Dock, Press L & GS and you will be transfered in the water. Just keep walking straight & you will get to it. Obviously you can't actually climb ladders or anything, you will simply walkthrough anything on that Part, if you want to walk back to the Dock, when you come near it click the cheat back on & keep pressing  L & GS untill you are back on it.
-Cheat18="Replace Cradle with Citadell hidden level ",8002A8F7 0029,8104468A 8970,81044690 3F44,81044692 BDEA,81044694 3F80,81044696 0000,81044698 4219,8104469A D89D,80069F80 00C4
+Cheat18="Replace Cradle with Citadell hidden level",8002A8F7 0029,8104468A 8970,81044690 3F44,81044692 BDEA,81044694 3F80,81044696 0000,81044698 4219,8104469A D89D,80069F80 00C4
 
 //----
 
@@ -8699,7 +8694,7 @@ Cheat62="Player 2\Super Max\Air",800D5623 FFFF
 Cheat63="Player 2\Super Max\Balance",800D5624 FFFF
 Cheat64="Player 2\Super Max\Turning",800D5625 FFFF
 Cheat65="Player 1\Play As",800D03D4 00??
-Cheat65_O=$ 00 Tony Hawk,$ 01 Bob Burnquist,$ 02 Geoff Rowley,$ 03 Bucky Lasek,$ 04 Chad Muska,$ 05 Kareem Campbell,$ 06 Andrew Reynolds,$ 07 Rune Glifberg,$ 08 Jamie Thomas,$ 09 Elissa Steamer,$ 0A Officer Dick
+Cheat65_O=$00 Tony Hawk,$01 Bob Burnquist,$02 Geoff Rowley,$03 Bucky Lasek,$04 Chad Muska,$05 Kareem Campbell,$06 Andrew Reynolds,$07 Rune Glifberg,$08 Jamie Thomas,$09 Elissa Steamer,$0A Officer Dick
 Cheat66="Player 2\Play As",800D03D5 00??
 Cheat66_O=$00 Tony Hawk,$01 Bob Burnquist,$02 Geoff Rowley,$03 Bucky Lasek,$04 Chad Muska,$05 Kareem Campbell,$06 Andrew Reynolds,$07 Rune Glifberg,$08 Jamie Thomas,$09 Elissa Steamer,$0A Officer Dick
 Cheat67="Player 1\Have Perfect Balance",800DDB83 0001
@@ -9516,7 +9511,7 @@ Cheat102_N=Replaces: Farooq Spinebuster P2 runs into P1 and P1 delivers a RockBo
 Cheat103_N=Replaces: Underhook Belly to Belly P2 runs into P1 and P1 does a Tazplex to P2.
 Cheat104_N=You must use both parts for this cheat to work
 Cheat105_N=You must use both parts for this cheat to work
-Cheat106_N= Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
+Cheat106_N=Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
 
 //----
 
@@ -9849,7 +9844,7 @@ Cheat7_N=All parts must be on for this code to work.this cheat allows you to pla
 Cheat8_N=All parts must be on for this code to work.this cheat allows you to play the Facility Back Zone In Multiplayer
 Cheat5="Cradle in multiplayer",8002666D 0092,8002666F 0093,80026677 0029,80026673 0008,803230C5 0052,803230C6 0041,803230C7 0044,803230C8 004C,803230C9 0045
 Cheat5_N=Puts the cradle graphic in the levels screen where the facility normally is in the multiplayer levels screen.Warning it doesn't allow you to enter the multiplayer levels screen,it should automatically have selected cradle, which cannot be changed from the multiplayer menus
-Cheat10="Replace Cradle with Citadell hidden level ",80025E47 0029,8103DB6A D9B4,8103DB70 3F44,8103DB72 BDEA,8103DB74 3F80,8103DB76 0000,8103DB78 4219,8103DB7A D89D,81058EC0 C470
+Cheat10="Replace Cradle with Citadell hidden level",80025E47 0029,8103DB6A D9B4,8103DB70 3F44,8103DB72 BDEA,8103DB74 3F80,8103DB76 0000,8103DB78 4219,8103DB7A D89D,81058EC0 C470
 Cheat11="Secret Island on Dam Level",D004C2D1 0020,800BA78D 0050,880BA78D 0000
 Cheat11_N=For the above code to work,Get to the 2nd guard tower & go down the ladder on the left hand side & to the end of the Dock, Press L & GS and you will be transfered in the water. Just keep walking straight & you will get to it. Obviously you can't actually climb ladders or anything, you will simply walkthrough anything on that Part, if you want to walk back to the Dock, when you come near it click the cheat back on & keep pressing  L & GS untill you are back on it.
 
@@ -11338,7 +11333,7 @@ Cheat3="1000 Garibs",80291297 0064
 Cheat4="Have Spell\Speed Up Spell",812912B8 03E8
 Cheat5="Have Spell\Death Spell",812912A8 03E8
 Cheat6="Have Spell\Sticky Fingers Spell",812912B2 03E8
-Cheat7="All levels unlocked ",80298CFD 00A0
+Cheat7="All levels unlocked",80298CFD 00A0
 Cheat7_N=At the main menu, where it says:  Start, practice, options, &  time trial,  hold  D-pad up,   then the glove,  playing-with-the-ball icon, will  jump down into the lower left corner of the screen, then press the A button, and a level select screen will be available with all ordinary and boss levels, etc. available
 Cheat8="Cheat Modifier\1",80298CFE 00??
 Cheat8_O=$01 Low gravity,$02 Big ball,$03 Both of the above
@@ -11517,7 +11512,7 @@ Cheat28="Vela\All Single Player Levels Unlocked",80208AA0 00FF,80208AA1 00FF
 Cheat29="Juno\All Single Player Levels Unlocked",80208B16 00FF,80208B17 00FF
 Cheat30="Lupus\All Single Player Levels Unlocked",80208B8C 00FF,80208B8D 00FF
 Cheat31="All Single Player Levels Unlocked",80208AA0 00FF,80208AA1 00FF,80208B16 00FF,80208B17 00FF,80208B8C 00FF,80208B8D 00FF
-Cheat31_N= All Charcters
+Cheat31_N=All Charcters
 
 //----
 
@@ -13488,12 +13483,12 @@ Cheat7="Have All Snowboards",80204F3C 0001,81204F3E 0101,81204F40 0101
 [20B53662-7B61899F-C:50]
 Name=South Park (E)
 Cheat0="Have Cheats Menu",800D77D6 01FF
-Cheat1="Infinite Energy ",802FD209 0064
+Cheat1="Infinite Energy",802FD209 0064
 Cheat2="Infinite Credits",802FD215 0064
 Cheat3="Infinite Sponge Darts",802FD223 0064
 Cheat4="Infinite Suckers",802FD222 0064
-Cheat5="Infinite Balls ",802FD21F 0064
-Cheat6="Start with 9999 Monster Score ",812FD20E 270F
+Cheat5="Infinite Balls",802FD21F 0064
+Cheat6="Start with 9999 Monster Score",812FD20E 270F
 
 //----
 
@@ -13860,7 +13855,7 @@ Cheat1="Infinite Options\Health",8122CDD4 42C8
 Cheat2="Infinite Options\Laser Eye",8122CDE4 42C8
 Cheat3="Infinite Options\Running Boosts",8122CDDC 42C8
 Cheat4="Infinite Options\X-Ray Vision",8122CDE0 42C8
-Cheat5="For More Time Press D-pad up ",D00EA380 0008,8115F0D2 1724,D00EA380 0008,8115F0DA 003C
+Cheat5="For More Time Press D-pad up",D00EA380 0008,8115F0D2 1724,D00EA380 0008,8115F0DA 003C
 Cheat6="Level Select",D00EA380 0020,8117A378 0013,D00EA380 0020,8117A388 000F,81144727 0063
 
 //----
@@ -14404,7 +14399,7 @@ Cheat102_N=Replaces: Farooq Spinebuster P2 runs into P1 and P1 delivers a RockBo
 Cheat103_N=Replaces: Underhook Belly to Belly P2 runs into P1 and P1 does a Tazplex to P2.
 Cheat104_N=You must use both parts for this cheat to work
 Cheat105_N=You must use both parts for this cheat to work
-Cheat106_N= Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
+Cheat106_N=Breakable/Fixable/Rebreakable/Refixable press Z to break, C-right + Cdown to fix
 
 //----
 
@@ -14764,7 +14759,6 @@ Cheat9="Infinite\Purple Weapon",811921FA 0063
 Cheat10="Press GS For\Sabor Attacks\Sabor 1 Hit Kill",8924A23E 0001
 Cheat11="Infinite\Bonus Timer",801736DE 0025
 Cheat3_N=On the main menu Scroll down to make CHEATS visible to go into Level Select.For in-Game Cheats,Pause gameplay.
-Cheat4_O=$03 3 Lives,$63 99 Lives
 Cheat11_N=This is For All Timers on Bonus Levels
 
 //----
@@ -14923,7 +14917,6 @@ Cheat9="Infinite\Purple Weapon",811921FA 0063
 Cheat10="Press GS For\Sabor Attacks\Sabor 1 Hit Kill",8924A23E 0001
 Cheat11="Infinite\Bonus Timer",801736DE 0025
 Cheat3_N=On the main menu Scroll down to make CHEATS visible to go into Level Select.For in-Game Cheats,Pause gameplay.
-Cheat4_O=$03 3 Lives,$63 99 Lives
 Cheat11_N=This is For All Timers on Bonus Levels
 
 //----
@@ -14959,12 +14952,12 @@ Cheat14="Press L To Levitate",D0058EE4 0020,80075528 0041
 [91B66D42-16AC4E46-C:44]
 Name=South Park
 Cheat0="Have Cheats Menu",810CF716 01FF
-Cheat1="Infinite Energy ",802FD209 0064
+Cheat1="Infinite Energy",802FD209 0064
 Cheat2="Infinite Credits",802FD215 0064
 Cheat3="Infinite Sponge Darts",802FD223 0064
 Cheat4="Infinite Suckers",802FD222 0064
-Cheat5="Infinite Balls ",802FD21F 0064
-Cheat6="Start with 9999 Monster Score ",812FD20E 270F
+Cheat5="Infinite Balls",802FD21F 0064
+Cheat6="Start with 9999 Monster Score",812FD20E 270F
 Cheat0_N=Go into the Cheats From the main Menu & put on the Ones you want
 
 //----
