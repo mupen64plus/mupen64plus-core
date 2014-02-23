@@ -12101,39 +12101,6 @@ gn NFL Blitz 2001 (U)
   81DEC164 42C8
   81DEC166 0000
 
-crc E3AB4ED0-83040DD2-C:45
-gn NFL Quarterback Club 2000 (U)
- cn Max Clu
-  80075275 0063
- cn Max End
-  8007527D 0063
- cn Max Hnd
-  80075279 0063
- cn Max Rcg
-  80075273 0063
- cn Max Rng
-  8007526F 0063
- cn Max Scr
-  80075271 0063
- cn Max Spd
-  80075277 0063
- cn Home Team\No Time Outs
-  80054956 0000
- cn Away Team\No Time Outs Away
-  80054ED6 0000
- cn Infinite Creation Points
-  8107B36E 03E7
- cn Home Team\Infinite Time Outs
-  80054956 0003
- cn Away Team\Infinite Time Outs
-  80054ED6 0003
- cn Infinite Time To Choose Play
-  81081448 2800
- cn Max Acc
-  8007526D 0064
- cn Max Cat
-  8007527B 0063
-
 crc 28784622-FFB22985-C:45
 gn NFL Quarterback Club 2001 (U)
  cn Infinite Player Creation Pts
@@ -29565,8 +29532,6 @@ gn Turok 2 - Seeds of Evil (FGD)
   8113568C FFFF
   8113568E FFFF
 
-crc 2E0E7749-B8B49D59-C:58
-gn Turok 2 - Seeds of Evil (FGD)
 //--------------- Demo Cheat Codes
 //[3A089BBC-54AB2C06-C:0]
 gn Berney must die!
