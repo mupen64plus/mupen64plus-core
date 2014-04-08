@@ -557,7 +557,6 @@ uninstall:
 	$(RM) "$(DESTDIR)$(LIBDIR)/$(TARGET)"
 	if [ "$(SONAME)" != "" ]; then $(RM) "$(DESTDIR)$(LIBDIR)/$(SONAME)"; fi
 	$(RM) $(DESTDIR)$(INCDIR)/m64p_*.h
-	$(RM) "$(DESTDIR)$(SHAREDIR)/mupen64plus.cht"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupen64plus.ini"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/font.ttf"
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"

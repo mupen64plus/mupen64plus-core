@@ -87,7 +87,7 @@ printf "Uninstalling Mupen64Plus Binary Bundle from ${PREFIX}\n"
 rm -f "${LIBDIR}"/libmupen64plus.so*
 /sbin/ldconfig
 rm -f "${SHAREDIR}/font.ttf"
-rm -f "${SHAREDIR}/mupen64plus.cht"
+rm -f "${SHAREDIR}/mupencheat.txt"
 rm -f "${SHAREDIR}/mupen64plus.ini"
 rm -f "${SHAREDIR}"/doc/*
 # Mupen64Plus-ROM

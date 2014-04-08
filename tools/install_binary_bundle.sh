@@ -106,7 +106,7 @@ $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" libmupen64plus.so.2.* "${LIBDIR}"
 /sbin/ldconfig
 $INSTALL -d -v "${SHAREDIR}"
 $INSTALL -m 0644 font.ttf "${SHAREDIR}"
-$INSTALL -m 0644 mupen64plus.cht "${SHAREDIR}"
+$INSTALL -m 0644 mupencheat.txt "${SHAREDIR}"
 $INSTALL -m 0644 mupen64plus.ini "${SHAREDIR}"
 $INSTALL -d -v "${SHAREDIR}/doc"
 $INSTALL -m 0644 doc/* "${SHAREDIR}/doc"
