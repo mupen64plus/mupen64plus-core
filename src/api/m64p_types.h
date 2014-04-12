@@ -250,7 +250,7 @@ typedef enum {
 typedef enum {
   M64P_MEM_FLAG_READABLE = 0x01,
   M64P_MEM_FLAG_WRITABLE = 0x02,
-  M64P_MEM_FLAG_READABLE_EMUONLY = 0x04,  // the EMUONLY flags signify that emulated code can read/write here, but debugger cannot
+  M64P_MEM_FLAG_READABLE_EMUONLY = 0x04,  /* the EMUONLY flags signify that emulated code can read/write here, but debugger cannot */
   M64P_MEM_FLAG_WRITABLE_EMUONLY = 0x08
 } m64p_dbg_mem_flags;
 
@@ -286,7 +286,7 @@ typedef enum {
   M64P_BKP_CMD_CHECK
 } m64p_dbg_bkp_command;
 
-#define M64P_MEM_INVALID        0xFFFFFFFF  // invalid memory read will return this
+#define M64P_MEM_INVALID        0xFFFFFFFF  /* invalid memory read will return this */
 
 #define BREAKPOINTS_MAX_NUMBER  128
 
@@ -296,7 +296,7 @@ typedef enum {
 #define BPT_FLAG_READ           0x08
 #define BPT_FLAG_WRITE          0x10
 #define BPT_FLAG_EXEC           0x20
-#define BPT_FLAG_LOG            0x40 //Log to the console when this breakpoint hits.
+#define BPT_FLAG_LOG            0x40 /* Log to the console when this breakpoint hits */
 
 #define BPT_CHECK_FLAG(a, b)  ((a.flags & b) == b)
 #define BPT_SET_FLAG(a, b)    a.flags = (a.flags | b);
@@ -307,7 +307,9 @@ typedef struct _breakpoint {
     unsigned int address; 
     unsigned int endaddr;
     unsigned int flags;
-    //unsigned int condition;  //Placeholder for breakpoint condition
+#if 0 /* placeholder for breakpoint condition */
+    unsigned int condition;
+#endif
     } breakpoint;
 
 /* ------------------------------------------------- */
