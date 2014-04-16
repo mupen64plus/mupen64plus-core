@@ -35,13 +35,13 @@ enum timed_section
 };
 
 #ifdef PROFILE
-  void start_section(enum timed_section section);
-  void end_section(enum timed_section section);
-  void refresh_stat(void);
+  void timed_section_start(enum timed_section section);
+  void timed_section_end(enum timed_section section);
+  void timed_sections_refresh(void);
 #else
-  #define start_section(a)
-  #define end_section(a)
-  #define refresh_stat()
+  #define timed_section_start(a)
+  #define timed_section_end(a)
+  #define timed_sections_refresh()
 #endif
 
 #endif

@@ -386,7 +386,7 @@ void gen_interupt(void)
 #endif
             SDL_PumpEvents();
 
-            refresh_stat();
+            timed_sections_refresh();
 
             // if paused, poll for input events
             if(rompause)

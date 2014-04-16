@@ -62,18 +62,18 @@ static long long int last_start[NUM_TIMED_SECTIONS];
   }
 #endif
 
-void start_section(enum timed_section section)
+void timed_section_start(enum timed_section section)
 {
    last_start[section] = get_time();
 }
 
-void end_section(enum timed_section section)
+void timed_section_end(enum timed_section section)
 {
    long long int end = get_time();
    time_in_section[section] += end - last_start[section];
 }
 
-void refresh_stat()
+void timed_sections_refresh()
 {
    long long int curr_time = get_time();
    if(time_to_nsec(curr_time - last_start[TIMED_SECTION_ALL]) >= 2000000000)
