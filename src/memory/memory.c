@@ -1264,9 +1264,9 @@ static void do_SP_Task(void)
 
         //gfx.processDList();
         rsp_register.rsp_pc &= 0xFFF;
-        start_section(GFX_SECTION);
+        start_section(TIMED_SECTION_GFX);
         rsp.doRspCycles(0xFFFFFFFF);
-        end_section(GFX_SECTION);
+        end_section(TIMED_SECTION_GFX);
         rsp_register.rsp_pc |= save_pc;
         new_frame();
 
@@ -1394,9 +1394,9 @@ static void do_SP_Task(void)
     {
         //audio.processAList();
         rsp_register.rsp_pc &= 0xFFF;
-        start_section(AUDIO_SECTION);
+        start_section(TIMED_SECTION_AUDIO);
         rsp.doRspCycles(0xFFFFFFFF);
-        end_section(AUDIO_SECTION);
+        end_section(TIMED_SECTION_AUDIO);
         rsp_register.rsp_pc |= save_pc;
 
         update_count();

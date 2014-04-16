@@ -2161,7 +2161,7 @@ void init_block(precomp_block *block)
 {
   int i, length, already_exist = 1;
   static int init_length;
-  start_section(COMPILER_SECTION);
+  start_section(TIMED_SECTION_COMPILER);
 #ifdef CORE_DBG
   DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
 #endif
@@ -2345,7 +2345,7 @@ void init_block(precomp_block *block)
       init_block(blocks[(block->start-0x20000000)>>12]);
     }
   }
-  end_section(COMPILER_SECTION);
+  end_section(TIMED_SECTION_COMPILER);
 }
 
 void free_block(precomp_block *block)
@@ -2370,7 +2370,7 @@ void free_block(precomp_block *block)
 void recompile_block(int *source, precomp_block *block, unsigned int func)
 {
    int i, length, finished=0;
-   start_section(COMPILER_SECTION);
+   start_section(TIMED_SECTION_COMPILER);
    length = (block->end-block->start)/4;
    dst_block = block;
    
@@ -2498,7 +2498,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
    fclose(pfProfile);
    pfProfile = NULL;
 #endif
-   end_section(COMPILER_SECTION);
+   end_section(TIMED_SECTION_COMPILER);
 }
 
 static int is_jump(void)

@@ -24,15 +24,19 @@
 #ifndef PROFILE_H
 #define PROFILE_H
 
-#define ALL_SECTION 0
-#define GFX_SECTION 1
-#define AUDIO_SECTION 2
-#define COMPILER_SECTION 3
-#define IDLE_SECTION 4
+enum timed_section
+{
+    TIMED_SECTION_ALL,
+    TIMED_SECTION_GFX,
+    TIMED_SECTION_AUDIO,
+    TIMED_SECTION_COMPILER,
+    TIMED_SECTION_IDLE,
+    NUM_TIMED_SECTIONS
+};
 
 #ifdef PROFILE
-  void start_section(int section_type);
-  void end_section(int section_type);
+  void start_section(enum timed_section section);
+  void end_section(enum timed_section section);
   void refresh_stat(void);
 #else
   #define start_section(a)

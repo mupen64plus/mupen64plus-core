@@ -688,7 +688,7 @@ void new_vi(void)
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
     int time;
 
-    start_section(IDLE_SECTION);
+    start_section(TIMED_SECTION_IDLE);
     VI_Counter++;
 
 #ifdef DBG
@@ -723,7 +723,7 @@ void new_vi(void)
     }
     
     LastFPSTime = CurrentFPSTime ;
-    end_section(IDLE_SECTION);
+    end_section(TIMED_SECTION_IDLE);
 }
 
 /*********************************************************************************************************
