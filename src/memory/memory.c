@@ -44,6 +44,7 @@
 
 #include "api/callbacks.h"
 #include "main/main.h"
+#include "main/profile.h"
 #include "main/rom.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"

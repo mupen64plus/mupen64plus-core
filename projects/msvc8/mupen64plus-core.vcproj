@@ -373,7 +373,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\r4300\profile.c"
+				RelativePath="..\..\src\main\profile.c"
 				>
 			</File>
 			<File
@@ -620,6 +620,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\preproc.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\profile.h"
 				>
 			</File>
 			<File

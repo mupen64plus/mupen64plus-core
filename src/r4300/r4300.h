@@ -74,22 +74,5 @@ void generic_jump_to(unsigned int address);
 #define CORE_INTERPRETER      1
 #define CORE_DYNAREC          2
 
-// profiling
-#define ALL_SECTION 0
-#define GFX_SECTION 1
-#define AUDIO_SECTION 2
-#define COMPILER_SECTION 3
-#define IDLE_SECTION 4
-
-#ifdef PROFILE
-  void start_section(int section_type);
-  void end_section(int section_type);
-  void refresh_stat(void);
-#else
-  #define start_section(a)
-  #define end_section(a)
-  #define refresh_stat()
-#endif
-
 #endif /* R4300_H */
 

@@ -32,6 +32,7 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "memory/memory.h"
+#include "main/profile.h"
 
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes

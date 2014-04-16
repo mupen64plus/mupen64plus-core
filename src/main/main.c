@@ -44,6 +44,7 @@
 #include "main.h"
 #include "cheat.h"
 #include "eventloop.h"
+#include "profile.h"
 #include "rom.h"
 #include "savestates.h"
 #include "util.h"
