@@ -438,7 +438,8 @@ static char *strtok_compat(char *str, const char *delim, char **saveptr)
 
 static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
 {
-    char *input, *token, *saveptr;
+    char *saveptr = NULL;
+    char *input, *token;
     int num_codes;
     m64p_cheat_code *hackbuf;
     int ret;
@@ -482,7 +483,8 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
 int cheat_add_hacks(void)
 {
     char *cheat_raw = NULL;
-    char *input, *token, *saveptr;
+    char *saveptr = NULL;
+    char *input, *token;
     unsigned int i = 0;
     int num_codes;
     char cheatname[32];
