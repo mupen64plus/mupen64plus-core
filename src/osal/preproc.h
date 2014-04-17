@@ -43,7 +43,7 @@
 #else  /* Not WIN32 */
 
   // macros
-  #define OSAL_BREAKPOINT_INTERRUPT asm(" int $3; ");
+  #define OSAL_BREAKPOINT_INTERRUPT __asm__(" int $3; ");
   #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)))
   #define osal_inline inline
 
