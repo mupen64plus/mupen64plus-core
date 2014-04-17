@@ -28,7 +28,7 @@
 
   // macros
   #define OSAL_BREAKPOINT_INTERRUPT __asm{ int 3 };
-  #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA;
+  #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA
   #define osal_inline __inline
 
   // string functions
@@ -44,7 +44,7 @@
 
   // macros
   #define OSAL_BREAKPOINT_INTERRUPT asm(" int $3; ");
-  #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)));
+  #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)))
   #define osal_inline inline
 
   // string functions
