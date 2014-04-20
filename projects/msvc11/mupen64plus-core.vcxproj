@@ -150,7 +150,7 @@
     <ClCompile Include="..\..\src\osd\osd.cpp" />
     <ClCompile Include="..\..\src\memory\pif.c" />
     <ClCompile Include="..\..\src\plugin\plugin.c" />
-    <ClCompile Include="..\..\src\r4300\profile.c" />
+    <ClCompile Include="..\..\src\main\profile.c" />
     <ClCompile Include="..\..\src\r4300\pure_interp.c" />
     <ClCompile Include="..\..\src\r4300\r4300.c" />
     <ClCompile Include="..\..\src\r4300\recomp.c" />
@@ -213,6 +213,7 @@
     <ClInclude Include="..\..\src\memory\pif.h" />
     <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\osal\preproc.h" />
+    <ClInclude Include="..\..\src\main\profile.h" />
     <ClInclude Include="..\..\src\r4300\r4300.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />

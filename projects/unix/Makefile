@@ -377,6 +377,7 @@ SOURCE = \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/eventloop.c \
 	$(SRCDIR)/main/md5.c \
+	$(SRCDIR)/main/profile.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
@@ -395,7 +396,6 @@ SOURCE = \
 	$(SRCDIR)/r4300/r4300.c \
 	$(SRCDIR)/r4300/exception.c \
 	$(SRCDIR)/r4300/interupt.c \
-	$(SRCDIR)/r4300/profile.c \
 	$(SRCDIR)/r4300/pure_interp.c \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \

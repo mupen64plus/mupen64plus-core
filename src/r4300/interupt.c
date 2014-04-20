@@ -31,6 +31,7 @@
 #include "memory/memory.h"
 #include "main/rom.h"
 #include "main/main.h"
+#include "main/profile.h"
 #include "main/savestates.h"
 #include "main/cheat.h"
 #include "osd/osd.h"
@@ -385,7 +386,7 @@ void gen_interupt(void)
 #endif
             SDL_PumpEvents();
 
-            refresh_stat();
+            timed_sections_refresh();
 
             // if paused, poll for input events
             if(rompause)
