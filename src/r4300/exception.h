@@ -19,11 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef EXCEPTION_H
-#define EXCEPTION_H
+#ifndef M64P_R4300_EXCEPTION_H
+#define M64P_R4300_EXCEPTION_H
 
 void TLB_refill_exception(unsigned int addresse, int w);
 void exception_general(void);
 
-#endif //EXCEPTION_H
+#endif /* M64P_R4300_EXCEPTION_H */
 

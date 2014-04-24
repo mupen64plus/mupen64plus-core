@@ -19,6 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef M64P_R4300_OPS_H
+#define M64P_R4300_OPS_H
+
 typedef struct _cpu_instruction_table
 {
 	/* All jump/branch instructions (except JR and JALR) have three versions:
@@ -320,3 +323,5 @@ typedef struct _cpu_instruction_table
 
 extern const cpu_instruction_table cached_interpreter_table;
 extern cpu_instruction_table current_instruction_table;
+
+#endif /* M64P_R4300_OPS_H_*/

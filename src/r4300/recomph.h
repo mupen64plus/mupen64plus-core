@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef RECOMPH_H
-#define RECOMPH_H
+#ifndef M64P_R4300_RECOMPH_H
+#define M64P_R4300_RECOMPH_H
 
 #include "recomp.h"
 
@@ -304,5 +304,5 @@ void genll(void);
 void gendebug(void);
 #endif
 
-#endif
+#endif /* M64P_R4300_RECOMPH_H */
 

@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __REGCACHE_H__
-#define __REGCACHE_H__
+#ifndef M64P_R4300_REGCACHE_H
+#define M64P_R4300_REGCACHE_H
 
 #include "r4300/recomp.h"
 
@@ -43,5 +43,5 @@ void allocate_register_32_manually(int reg, unsigned int *addr);
 void allocate_register_32_manually_w(int reg, unsigned int *addr);
 void build_wrappers(precomp_instr*, int, int, precomp_block*);
 
-#endif /* __REGCACHE_H__ */
+#endif /* M64P_R4300_REGCACHE_H */
 

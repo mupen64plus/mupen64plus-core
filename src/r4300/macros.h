@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef MACROS_H
-#define MACROS_H
+#ifndef M64P_R4300_MACROS_H
+#define M64P_R4300_MACROS_H
 
 #define sign_extended(a) a = (long long)((int)a)
 #define sign_extendedb(a) a = (long long)((signed char)a)
@@ -86,5 +86,5 @@
 #define TagHi reg_cop0[29]
 #define ErrorEPC reg_cop0[30]
 
-#endif
+#endif /* M64P_R4300_MACROS_H */
 

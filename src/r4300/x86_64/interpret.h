@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __INTERPRET_H__
-#define __INTERPRET_H__
+#ifndef M64P_R4300_INTERPRET_H
+#define M64P_R4300_INTERPRET_H
 
 //#define INTERPRET_J
 //#define INTERPRET_J_OUT
@@ -236,5 +236,5 @@
 //#define INTERPRET_C_LE_S
 //#define INTERPRET_C_NGT_S
 
-#endif /* __INTERPRET_H__ */
+#endif /* M64P_R4300_INTERPRET_H */
 

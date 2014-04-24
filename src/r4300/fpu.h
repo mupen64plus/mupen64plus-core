@@ -19,6 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef M64P_R4300_FPU_H
+#define M64P_R4300_FPU_H
+
 #include <math.h>
 
 #include "r4300.h"
@@ -445,3 +448,5 @@ M64P_FPU_INLINE void neg_d(double *source,double *target)
 {
   *target=-(*source);
 }
+
+#endif /* M64P_R4300_FPU_H */
