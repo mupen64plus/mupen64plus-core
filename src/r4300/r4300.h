@@ -30,7 +30,6 @@ extern precomp_instr *PC;
 extern int stop, llbit, rompause;
 extern long long int reg[32], hi, lo;
 extern long long int local_rs;
-extern unsigned int reg_cop0[32];
 extern double *reg_cop1_double[32];
 extern float *reg_cop1_simple[32];
 extern long long int reg_cop1_fgr_64[32];
@@ -49,8 +48,6 @@ void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);
 void compare_core(void);
-void update_count(void);
-int check_cop1_unusable(void);
 void shuffle_fpr_data(int oldStatus, int newStatus);
 void set_fpr_pointers(int newStatus);
 

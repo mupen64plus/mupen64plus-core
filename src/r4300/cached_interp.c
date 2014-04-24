@@ -27,6 +27,7 @@
 #include "memory/memory.h"
 
 #include "r4300.h"
+#include "cp0.h"
 #include "ops.h"
 #include "exception.h"
 #include "interupt.h"

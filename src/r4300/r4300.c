@@ -31,10 +31,9 @@
 
 #include "r4300.h"
 #include "cached_interp.h"
+#include "cp0.h"
 #include "ops.h"
-#include "exception.h"
 #include "interupt.h"
-#include "macros.h"
 #include "pure_interp.h"
 #include "recomp.h"
 #include "recomph.h"
@@ -56,7 +55,6 @@ int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
 long long int reg[32], hi, lo;
-unsigned int reg_cop0[32];
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
 int FCR0, FCR31;
@@ -172,39 +170,6 @@ void set_fpr_pointers(int newStatus)
             reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i>>1]) + ((i & 1) ^ isBigEndian);
         }
     }
-}
-
-int check_cop1_unusable(void)
-{
-   if (!(Status & 0x20000000))
-     {
-    Cause = (11 << 2) | 0x10000000;
-    exception_general();
-    return 1;
-     }
-   return 0;
-}
-
-void update_count(void)
-{
-#ifdef NEW_DYNAREC
-    if (r4300emu != CORE_DYNAREC)
-    {
-#endif
-        Count += ((PC->addr - last_addr) >> 2) * count_per_op;
-        last_addr = PC->addr;
-#ifdef NEW_DYNAREC
-    }
-#endif
-
-#ifdef COMPARE_CORE
-   if (delay_slot)
-     CoreCompareCallback();
-#endif
-/*#ifdef DBG
-   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
-#endif
-*/
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */

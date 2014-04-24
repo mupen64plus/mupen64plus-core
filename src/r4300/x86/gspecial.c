@@ -29,7 +29,7 @@
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/macros.h"
+#include "r4300/cp0.h"
 #include "r4300/exception.h"
 
 void gensll(void)

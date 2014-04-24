@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - macros.h                                                *
+ *   Mupen64plus - cp0.c                                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,45 +19,58 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_MACROS_H
-#define M64P_R4300_MACROS_H
+#include "cp0.h"
 
-#define sign_extended(a) a = (long long)((int)a)
-#define sign_extendedb(a) a = (long long)((signed char)a)
-#define sign_extendedh(a) a = (long long)((short)a)
+#include "r4300.h"
+#include "exception.h"
 
-#define rrt *PC->f.r.rt
-#define rrd *PC->f.r.rd
-#define rfs PC->f.r.nrd
-#define rrs *PC->f.r.rs
-#define rsa PC->f.r.sa
-#define irt *PC->f.i.rt
-#define ioffset PC->f.i.immediate
-#define iimmediate PC->f.i.immediate
-#define irs *PC->f.i.rs
-#define ibase *PC->f.i.rs
-#define jinst_index PC->f.j.inst_index
-#define lfbase PC->f.lf.base
-#define lfft PC->f.lf.ft
-#define lfoffset PC->f.lf.offset
-#define cfft PC->f.cf.ft
-#define cffs PC->f.cf.fs
-#define cffd PC->f.cf.fd
+#include "new_dynarec/new_dynarec.h"
 
-// 32 bits macros
-#ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int*)PC->f.r.rt)
-#define rrd32 *((int*)PC->f.r.rd)
-#define rrs32 *((int*)PC->f.r.rs)
-#define irs32 *((int*)PC->f.i.rs)
-#define irt32 *((int*)PC->f.i.rt)
-#else
-#define rrt32 *((int*)PC->f.r.rt+1)
-#define rrd32 *((int*)PC->f.r.rd+1)
-#define rrs32 *((int*)PC->f.r.rs+1)
-#define irs32 *((int*)PC->f.i.rs+1)
-#define irt32 *((int*)PC->f.i.rt+1)
+#ifdef COMPARE_CORE
+#include "api/debugger.h"
 #endif
 
-#endif /* M64P_R4300_MACROS_H */
+#ifdef DBG
+#include "debugger/dbg_types.h"
+#include "debugger/debugger.h"
+#endif
+
+/* global variable */
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+unsigned int reg_cop0[32];
+#endif
+
+/* global functions */
+int check_cop1_unusable(void)
+{
+   if (!(Status & 0x20000000))
+     {
+    Cause = (11 << 2) | 0x10000000;
+    exception_general();
+    return 1;
+     }
+   return 0;
+}
+
+void update_count(void)
+{
+#ifdef NEW_DYNAREC
+    if (r4300emu != CORE_DYNAREC)
+    {
+#endif
+        Count += ((PC->addr - last_addr) >> 2) * count_per_op;
+        last_addr = PC->addr;
+#ifdef NEW_DYNAREC
+    }
+#endif
+
+#ifdef COMPARE_CORE
+   if (delay_slot)
+     CoreCompareCallback();
+#endif
+/*#ifdef DBG
+   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
+#endif
+*/
+}
 

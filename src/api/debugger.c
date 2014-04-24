@@ -38,6 +38,7 @@
 #include "debugger/debugger.h"
 #include "memory/memory.h"
 #include "r4300/r4300.h"
+#include "r4300/cp0.h"
 
 extern unsigned int op; /* this is in r4300/pure_interp.c */
 
