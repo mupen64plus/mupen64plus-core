@@ -214,6 +214,7 @@
     <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\osal\preproc.h" />
     <ClInclude Include="..\..\src\main\profile.h" />
+    <ClInclude Include="..\..\src\r4300\pure_interp.h" />
     <ClInclude Include="..\..\src\r4300\r4300.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />

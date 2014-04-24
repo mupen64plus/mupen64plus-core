@@ -34,6 +34,7 @@
 #include "exception.h"
 #include "interupt.h"
 #include "macros.h"
+#include "pure_interp.h"
 #include "recomp.h"
 #include "recomph.h"
 #include "new_dynarec/new_dynarec.h"

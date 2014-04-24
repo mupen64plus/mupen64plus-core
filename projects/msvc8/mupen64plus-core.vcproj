@@ -627,6 +627,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\pure_interp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\r4300.h"
 				>
 			</File>
