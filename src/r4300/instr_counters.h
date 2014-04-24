@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - g_cop1_l.c                                              *
+ *   Mupen64plus - instr_counters.h                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,46 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "assemble.h"
-#include "interpret.h"
-
-#include "r4300/recomph.h"
-#include "r4300/r4300.h"
-#include "r4300/ops.h"
+#ifndef M64P_R4300_INSTR_COUNTERS_H
+#define M64P_R4300_INSTR_COUNTERS_H
 
 #if defined(COUNT_INSTR)
-#include "r4300/instr_counters.h"
-#endif
+extern unsigned int instr_count[132];
 
-void gencvt_s_l(void)
-{
-#if defined(COUNT_INSTR)
-   inc_m32rel(&instr_count[117]);
-#endif
-#ifdef INTERPRET_CVT_S_L
-   gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_L, 0);
-#else
-   gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
-   fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.cf.fd]));
-   fstp_preg64_dword(RAX);
-#endif
-}
+void instr_counters_print(void);
+#endif /* COUNT_INSTR */
 
-void gencvt_d_l(void)
-{
-#if defined(COUNT_INSTR)
-   inc_m32rel(&instr_count[117]);
-#endif
-#ifdef INTERPRET_CVT_D_L
-   gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_L, 0);
-#else
-   gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
-   fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fd]));
-   fstp_preg64_qword(RAX);
-#endif
-}
-
+#endif /* M64P_R4300_INSTR_COUNTERS_H */

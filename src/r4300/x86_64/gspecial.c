@@ -33,6 +33,10 @@
 #include "r4300/macros.h"
 #include "r4300/exception.h"
 
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
+
 #if !defined(offsetof)
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
 #endif

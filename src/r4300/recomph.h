@@ -24,13 +24,6 @@
 
 #include "recomp.h"
 
-#if defined(COUNT_INSTR)
-extern unsigned int instr_count[132];
-extern unsigned int instr_type[131];
-extern char instr_name[][10];
-extern char instr_typename[][20];
-#endif
-
 extern int code_length;
 extern int max_code_length;
 extern unsigned char **inst_pointer;

@@ -34,6 +34,10 @@
 
 #include "memory/memory.h"
 
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
+
 static void genbltz_test(void)
 {
   int rs_64bit = is64((unsigned int *)dst->f.i.rs);

@@ -33,6 +33,10 @@
 
 #include "memory/memory.h"
 
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
+
 void genmfc1(void)
 {
 #if defined(COUNT_INSTR)

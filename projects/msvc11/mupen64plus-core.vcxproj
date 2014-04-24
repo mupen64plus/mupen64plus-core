@@ -140,6 +140,7 @@
     <ClCompile Include="..\..\src\r4300\x86\gregimm.c" />
     <ClCompile Include="..\..\src\r4300\x86\gspecial.c" />
     <ClCompile Include="..\..\src\r4300\x86\gtlb.c" />
+    <ClCompile Include="..\..\src\r4300\instr_counters.c" />
     <ClCompile Include="..\..\src\r4300\interupt.c" />
     <ClCompile Include="..\..\src\main\zip\ioapi.c" />
     <ClCompile Include="..\..\src\main\lirc.c" />
@@ -193,6 +194,7 @@
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
     <ClInclude Include="..\..\src\memory\flashram.h" />
+    <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\src\r4300\interupt.h" />
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />

@@ -30,6 +30,10 @@
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
+
 static void genbc1f_test(void)
 {
    test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
