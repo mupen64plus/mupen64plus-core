@@ -438,7 +438,7 @@ static void dynarec_setup_code(void)
 
 void r4300_execute(void)
 {
-#if defined(COUNT_INSTR) || (defined(DYNAREC) && defined(PROFILE_R4300))
+#if (defined(DYNAREC) && defined(PROFILE_R4300))
     unsigned int i;
 #endif
 
@@ -450,8 +450,7 @@ void r4300_execute(void)
 
     /* clear instruction counters */
 #if defined(COUNT_INSTR)
-    for (i = 0; i < 131; i++)
-        instr_count[i] = 0;
+    memset(instr_count, 0, 131*sizeof(instr_count[0]));
 #endif
 
     last_addr = 0xa4000040;
