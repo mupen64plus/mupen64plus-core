@@ -425,7 +425,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\tlb.c"
+				RelativePath="..\..\src\r4300\tlb.c"
 				>
 			</File>
 			<File
@@ -683,7 +683,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\tlb.h"
+				RelativePath="..\..\src\r4300\tlb.h"
 				>
 			</File>
 			<File

@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef TLB_H
-#define TLB_H
+#ifndef M64P_R4300_TLB_H
+#define M64P_R4300_TLB_H
 
 typedef struct _tlb
 {
@@ -53,5 +53,4 @@ void tlb_unmap(tlb *entry);
 void tlb_map(tlb *entry);
 unsigned int virtual_to_physical_address(unsigned int addresse, int w);
 
-#endif
-
+#endif /* M64P_R4300_TLB_H */

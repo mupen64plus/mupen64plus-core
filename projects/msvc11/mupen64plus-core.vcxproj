@@ -163,7 +163,7 @@
     <ClCompile Include="..\..\src\main\savestates.c" />
     <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
-    <ClCompile Include="..\..\src\memory\tlb.c" />
+    <ClCompile Include="..\..\src\r4300\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
     <ClCompile Include="..\..\src\main\util.c" />
     <ClCompile Include="..\..\src\api\vidext.c" />
@@ -228,7 +228,7 @@
     <ClInclude Include="..\..\src\main\savestates.h" />
     <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
-    <ClInclude Include="..\..\src\memory\tlb.h" />
+    <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
     <ClInclude Include="..\..\src\main\util.h" />
     <ClInclude Include="..\..\src\main\version.h" />
