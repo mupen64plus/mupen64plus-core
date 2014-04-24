@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - interpret.c                                             *
+ *   Mupen64plus - interpret.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *

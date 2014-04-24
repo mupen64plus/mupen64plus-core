@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - fpu.c                                                   *
+ *   Mupen64plus - fpu.h                                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2010 Ari64                                              *
  *                                                                         *

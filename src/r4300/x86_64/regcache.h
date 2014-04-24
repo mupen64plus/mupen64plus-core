@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - regcache.c                                              *
+ *   Mupen64plus - regcache.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *
