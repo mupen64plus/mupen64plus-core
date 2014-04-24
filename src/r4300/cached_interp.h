@@ -1,7 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - gcop0.c                                                 *
+ *   Mupen64plus - cached_interp.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -20,29 +19,24 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
+#ifndef M64P_R4300_CACHED_INTERP_H
+#define M64P_R4300_CACHED_INTERP_H
 
-#include "assemble.h"
+#include "ops.h"
+/* FIXME: use forward declaration for precomp_block */
+#include "recomp.h"
 
-#include "r4300/cached_interp.h"
-#include "r4300/recomp.h"
-#include "r4300/recomph.h"
-#include "r4300/r4300.h"
-#include "r4300/ops.h"
+extern char invalid_code[0x100000];
+extern precomp_block *blocks[0x100000];
+extern precomp_block *actual;
+extern unsigned int jump_to_address;
+extern const cpu_instruction_table cached_interpreter_table;
 
-void genmfc0(void)
-{
-#if defined(COUNT_INSTR)
-   inc_m32rel(&instr_count[109]);
-#endif
-    gencallinterp((unsigned long long)cached_interpreter_table.MFC0, 0);
-}
+void init_blocks(void);
+void free_blocks(void);
+void jump_to_func(void);
 
-void genmtc0(void)
-{
-#if defined(COUNT_INSTR)
-   inc_m32rel(&instr_count[110]);
-#endif
-    gencallinterp((unsigned long long)cached_interpreter_table.MTC0, 0);
-}
+/* Jumps to the given address. This is for the cached interpreter / dynarec. */
+#define jump_to(a) { jump_to_address = a; jump_to_func(); }
 
+#endif /* M64P_R4300_CACHED_INTERP_H */

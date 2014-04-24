@@ -394,6 +394,7 @@ SOURCE = \
 	$(SRCDIR)/plugin/dummy_input.c \
 	$(SRCDIR)/plugin/dummy_rsp.c \
 	$(SRCDIR)/r4300/r4300.c \
+	$(SRCDIR)/r4300/cached_interp.c \
 	$(SRCDIR)/r4300/exception.c \
 	$(SRCDIR)/r4300/interupt.c \
 	$(SRCDIR)/r4300/pure_interp.c \

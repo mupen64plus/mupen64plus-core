@@ -34,6 +34,7 @@
 #include "memory/memory.h"
 #include "main/profile.h"
 
+#include "cached_interp.h"
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
 #include "macros.h"

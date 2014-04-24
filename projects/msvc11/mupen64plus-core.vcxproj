@@ -103,6 +103,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\r4300\x86\assemble.c" />
+    <ClCompile Include="..\..\src\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\api\common.c" />
@@ -170,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\r4300\x86\assemble.h" />
+    <ClInclude Include="..\..\src\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\api\callbacks.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\api\config.h" />

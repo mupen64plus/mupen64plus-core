@@ -31,6 +31,7 @@
 #include "../r4300.h"
 #include "../ops.h"
 #include "../interupt.h"
+#include "../cached_interp.h"
 #include "new_dynarec.h"
 
 #include "../../memory/memory.h"

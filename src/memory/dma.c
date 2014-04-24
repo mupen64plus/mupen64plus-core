@@ -31,6 +31,7 @@
 #include "flashram.h"
 
 #include "r4300/r4300.h"
+#include "r4300/cached_interp.h"
 #include "r4300/interupt.h"
 #include "r4300/macros.h"
 #include "r4300/ops.h"

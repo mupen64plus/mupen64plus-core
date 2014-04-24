@@ -321,7 +321,6 @@ typedef struct _cpu_instruction_table
 	void (*NOTCOMPILED2)(void); // TODOXXX
 } cpu_instruction_table;
 
-extern const cpu_instruction_table cached_interpreter_table;
 extern cpu_instruction_table current_instruction_table;
 
 #endif /* M64P_R4300_OPS_H_*/

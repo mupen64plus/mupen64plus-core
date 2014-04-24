@@ -39,6 +39,7 @@
 
 #include "interupt.h"
 #include "r4300.h"
+#include "cached_interp.h"
 #include "macros.h"
 #include "exception.h"
 #include "reset.h"

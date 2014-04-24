@@ -187,6 +187,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\cached_interp.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\api\callbacks.c"
 				>
 			</File>
@@ -448,6 +452,10 @@
 			>
 			<File
 				RelativePath="..\..\src\r4300\x86\assemble.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\cached_interp.h"
 				>
 			</File>
 			<File
