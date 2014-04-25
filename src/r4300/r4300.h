@@ -44,7 +44,6 @@ extern cpu_instruction_table current_instruction_table;
 void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);
-void compare_core(void);
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */ 
