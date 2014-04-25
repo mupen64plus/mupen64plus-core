@@ -31,6 +31,7 @@
 
 #include "r4300.h"
 #include "cp0.h"
+#include "cp1.h"
 #include "cached_interp.h"
 #include "ops.h"
 #include "exception.h"

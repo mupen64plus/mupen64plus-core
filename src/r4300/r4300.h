@@ -30,15 +30,10 @@ extern precomp_instr *PC;
 extern int stop, llbit, rompause;
 extern long long int reg[32], hi, lo;
 extern long long int local_rs;
-extern double *reg_cop1_double[32];
-extern float *reg_cop1_simple[32];
-extern long long int reg_cop1_fgr_64[32];
-extern int FCR0, FCR31;
 extern tlb tlb_e[32];
 extern unsigned int delay_slot, skip_jump, dyna_interp;
 extern unsigned int r4300emu;
 extern unsigned int next_interupt, CIC_Chip;
-extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
 extern unsigned int last_addr;
 extern int no_compiled_jump;
 #define COUNT_PER_OP_DEFAULT 2
@@ -48,8 +43,6 @@ void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);
 void compare_core(void);
-void shuffle_fpr_data(int oldStatus, int newStatus);
-void set_fpr_pointers(int newStatus);
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */ 

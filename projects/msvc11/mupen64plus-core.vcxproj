@@ -109,6 +109,7 @@
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
     <ClCompile Include="..\..\src\r4300\cp0.c" />
+    <ClCompile Include="..\..\src\r4300\cp1.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
     <ClCompile Include="..\..\src\debugger\dbg_memory.c" />
@@ -178,6 +179,7 @@
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\api\config.h" />
     <ClInclude Include="..\..\src\r4300\cp0.h" />
+    <ClInclude Include="..\..\src\r4300\cp1.h" />
     <ClInclude Include="..\..\src\main\zip\crypt.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />
     <ClInclude Include="..\..\src\debugger\dbg_decoder.h" />

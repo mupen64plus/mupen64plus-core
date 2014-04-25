@@ -395,6 +395,7 @@ SOURCE = \
 	$(SRCDIR)/r4300/r4300.c \
 	$(SRCDIR)/r4300/cached_interp.c \
 	$(SRCDIR)/r4300/cp0.c \
+	$(SRCDIR)/r4300/cp1.c \
 	$(SRCDIR)/r4300/exception.c \
 	$(SRCDIR)/r4300/instr_counters.c \
 	$(SRCDIR)/r4300/interupt.c \

@@ -211,6 +211,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\cp1.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\debugger\dbg_breakpoints.c"
 				>
 			</File>
@@ -480,6 +484,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\cp0.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\cp1.h"
 				>
 			</File>
 			<File
