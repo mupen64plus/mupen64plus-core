@@ -40,6 +40,7 @@
 #include "r4300/r4300.h"
 #include "r4300/cp0.h"
 #include "r4300/cp1.h"
+#include "r4300/tlb.h"
 
 extern unsigned int op; /* this is in r4300/pure_interp.c */
 

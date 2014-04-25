@@ -40,6 +40,7 @@
 #include "cp0.h"
 #include "r4300.h"
 #include "ops.h"
+#include "tlb.h"
 
 static void *malloc_exec(size_t size);
 static void free_exec(void *ptr, size_t length);

@@ -31,6 +31,7 @@
 #include "../cp1.h"
 #include "../r4300.h"
 #include "../ops.h"
+#include "../tlb.h"
 #include "../interupt.h"
 #include "../cached_interp.h"
 #include "new_dynarec.h"

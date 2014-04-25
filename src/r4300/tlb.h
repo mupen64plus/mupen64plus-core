@@ -47,8 +47,10 @@ typedef struct _tlb
    unsigned int phys_odd;
 } tlb;
 
+extern tlb tlb_e[32];
 extern unsigned int tlb_LUT_r[0x100000];
 extern unsigned int tlb_LUT_w[0x100000];
+
 void tlb_unmap(tlb *entry);
 void tlb_map(tlb *entry);
 unsigned int virtual_to_physical_address(unsigned int addresse, int w);

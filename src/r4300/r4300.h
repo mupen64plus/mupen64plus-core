@@ -24,14 +24,12 @@
 
 #include "ops.h"
 #include "recomp.h"
-#include "tlb.h"
 
 extern precomp_instr *PC;
 
 extern int stop, llbit, rompause;
 extern long long int reg[32], hi, lo;
 extern long long int local_rs;
-extern tlb tlb_e[32];
 extern unsigned int delay_slot, skip_jump, dyna_interp;
 extern unsigned int r4300emu;
 extern unsigned int next_interupt, CIC_Chip;

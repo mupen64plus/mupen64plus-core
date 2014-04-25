@@ -37,6 +37,7 @@
 #include "exception.h"
 #include "macros.h"
 #include "interupt.h"
+#include "tlb.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"

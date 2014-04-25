@@ -24,6 +24,8 @@
 
 #include "main/rom.h"
 
+tlb tlb_e[32];
+
 unsigned int tlb_LUT_r[0x100000];
 unsigned int tlb_LUT_w[0x100000];
 

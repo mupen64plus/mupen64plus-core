@@ -34,6 +34,7 @@
 #include "interupt.h"
 #include "macros.h"
 #include "recomp.h"
+#include "tlb.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"

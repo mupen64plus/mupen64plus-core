@@ -38,6 +38,7 @@
 #include "pure_interp.h"
 #include "recomp.h"
 #include "recomph.h"
+#include "tlb.h"
 #include "new_dynarec/new_dynarec.h"
 
 #ifdef DBG
@@ -60,7 +61,6 @@ unsigned int next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
-tlb tlb_e[32];
 unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
 unsigned int CIC_Chip;
 

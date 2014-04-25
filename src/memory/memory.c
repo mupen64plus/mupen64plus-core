@@ -42,6 +42,7 @@
 #include "r4300/interupt.h"
 #include "r4300/recomph.h"
 #include "r4300/ops.h"
+#include "r4300/tlb.h"
 
 #include "api/callbacks.h"
 #include "main/main.h"
