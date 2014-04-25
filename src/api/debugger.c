@@ -42,7 +42,7 @@
 #include "r4300/cp1.h"
 #include "r4300/tlb.h"
 
-extern unsigned int op; /* this is in r4300/pure_interp.c */
+unsigned int op;
 
 /* local variables */
 static void (*callback_ui_init)(void) = NULL;

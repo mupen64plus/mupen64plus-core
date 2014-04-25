@@ -45,8 +45,6 @@
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
 #endif
 
-extern unsigned int op;
-
 static precomp_instr fake_instr;
 #ifdef COMPARE_CORE
 static long long debug_reg_storage[8];
@@ -278,6 +276,8 @@ void genlink_subblock(void)
 }
 
 #ifdef COMPARE_CORE
+extern unsigned int op; /* api/debugger.c */
+
 void gendebug(void)
 {
    free_all_registers();

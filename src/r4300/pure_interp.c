@@ -45,8 +45,6 @@
 #endif
 
 static precomp_instr interp_PC;
-/* FIXME: belongs to gr4300 module */
-unsigned int op;
 
 static void prefetch(void);
 
