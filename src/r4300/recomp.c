@@ -53,6 +53,7 @@ unsigned char **inst_pointer; // output buffer for recompiled code
 precomp_block *dst_block; // the current block that we are recompiling
 int src; // the current recompiled instruction
 int fast_memory;
+int no_compiled_jump = 0; /* use cached interpreter instead of recompiler for jumps */
 
 static void (*recomp_func)(void); // pointer to the dynarec's generator
                                   // function for the latest decoded opcode

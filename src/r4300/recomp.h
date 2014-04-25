@@ -98,6 +98,8 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
 extern precomp_instr *dst; /* precomp_instr structure for instruction being recompiled */
 
+extern int no_compiled_jump;
+
 #if defined(__x86_64__)
   #include "x86_64/assemble.h"
   #include "x86_64/regcache.h"
