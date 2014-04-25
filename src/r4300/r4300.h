@@ -22,6 +22,7 @@
 #ifndef M64P_R4300_R4300_H
 #define M64P_R4300_R4300_H
 
+#include "ops.h"
 #include "recomp.h"
 #include "tlb.h"
 
@@ -38,6 +39,7 @@ extern unsigned int last_addr;
 extern int no_compiled_jump;
 #define COUNT_PER_OP_DEFAULT 2
 extern unsigned int count_per_op;
+extern cpu_instruction_table current_instruction_table;
 
 void r4300_reset_hard(void);
 void r4300_reset_soft(void);
