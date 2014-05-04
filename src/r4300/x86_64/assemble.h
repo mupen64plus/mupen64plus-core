@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - assemble.c                                              *
+ *   Mupen64plus - assemble.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2007 Richard Goedeken (Richard42)                       *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __ASSEMBLE_H__
-#define __ASSEMBLE_H__
+#ifndef M64P_R4300_ASSEMBLE_H
+#define M64P_R4300_ASSEMBLE_H
 
 #include "osal/preproc.h"
 #include "r4300/recomph.h"
@@ -1179,5 +1179,5 @@ static inline void ffree_fpreg(int fpreg)
    put8(0xC0 + fpreg);
 }
 
-#endif /* __ASSEMBLE_H__ */
+#endif /* M64P_R4300_ASSEMBLE_H */
 

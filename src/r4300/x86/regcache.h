@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef REGCACHE_H
-#define REGCACHE_H
+#ifndef M64P_R4300_REGCACHE_H
+#define M64P_R4300_REGCACHE_H
 
 #include "r4300/recomp.h"
 
@@ -44,5 +44,5 @@ void force_32(int reg);
 int lru_register_exc1(int exc1);
 void simplify_access(void);
 
-#endif // REGCACHE_H
+#endif /* M64P_R4300_REGCACHE_H */
 

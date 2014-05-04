@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - exception.h                                             *
+ *   Mupen64plus - cp0.h                                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,11 +19,40 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_EXCEPTION_H
-#define M64P_R4300_EXCEPTION_H
+#ifndef M64P_R4300_CP0_H
+#define M64P_R4300_CP0_H
 
-void TLB_refill_exception(unsigned int addresse, int w);
-void exception_general(void);
+/* registers macros */
+#define Index reg_cop0[0]
+#define Random reg_cop0[1]
+#define EntryLo0 reg_cop0[2]
+#define EntryLo1 reg_cop0[3]
+#define Context reg_cop0[4]
+#define PageMask reg_cop0[5]
+#define Wired reg_cop0[6]
+#define BadVAddr reg_cop0[8]
+#define Count reg_cop0[9]
+#define EntryHi reg_cop0[10]
+#define Compare reg_cop0[11]
+#define Status reg_cop0[12]
+#define Cause reg_cop0[13]
+#define EPC reg_cop0[14]
+#define PRevID reg_cop0[15]
+#define Config reg_cop0[16]
+#define LLAddr reg_cop0[17]
+#define WatchLo reg_cop0[18]
+#define WatchHi reg_cop0[19]
+#define XContext reg_cop0[20]
+#define PErr reg_cop0[26]
+#define CacheErr reg_cop0[27]
+#define TagLo reg_cop0[28]
+#define TagHi reg_cop0[29]
+#define ErrorEPC reg_cop0[30]
 
-#endif /* M64P_R4300_EXCEPTION_H */
+extern unsigned int reg_cop0[32];
+
+int check_cop1_unusable(void);
+void update_count(void);
+
+#endif /* M64P_R4300_CP0_H */
 

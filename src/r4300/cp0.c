@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - exception.h                                             *
+ *   Mupen64plus - cp0.c                                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,11 +19,58 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_EXCEPTION_H
-#define M64P_R4300_EXCEPTION_H
+#include "cp0.h"
 
-void TLB_refill_exception(unsigned int addresse, int w);
-void exception_general(void);
+#include "r4300.h"
+#include "exception.h"
 
-#endif /* M64P_R4300_EXCEPTION_H */
+#include "new_dynarec/new_dynarec.h"
+
+#ifdef COMPARE_CORE
+#include "api/debugger.h"
+#endif
+
+#ifdef DBG
+#include "debugger/dbg_types.h"
+#include "debugger/debugger.h"
+#endif
+
+/* global variable */
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+unsigned int reg_cop0[32];
+#endif
+
+/* global functions */
+int check_cop1_unusable(void)
+{
+   if (!(Status & 0x20000000))
+     {
+    Cause = (11 << 2) | 0x10000000;
+    exception_general();
+    return 1;
+     }
+   return 0;
+}
+
+void update_count(void)
+{
+#ifdef NEW_DYNAREC
+    if (r4300emu != CORE_DYNAREC)
+    {
+#endif
+        Count += ((PC->addr - last_addr) >> 2) * count_per_op;
+        last_addr = PC->addr;
+#ifdef NEW_DYNAREC
+    }
+#endif
+
+#ifdef COMPARE_CORE
+   if (delay_slot)
+     CoreCompareCallback();
+#endif
+/*#ifdef DBG
+   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
+#endif
+*/
+}
 

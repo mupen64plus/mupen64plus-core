@@ -1,3 +1,6 @@
+#ifndef M64P_R4300_ASSEM_ARM_H
+#define M64P_R4300_ASSEM_ARM_H
+
 #define HOST_REGS 13
 #define HOST_CCREG 10
 #define HOST_BTREG 8
@@ -41,3 +44,5 @@ extern char extra_memory[33554432];
 #define BASE_ADDR ((int)(&extra_memory))
 //#define TARGET_SIZE_2 24 // 2^24 = 16 megabytes
 #define TARGET_SIZE_2 25 // 2^25 = 32 megabytes
+
+#endif /* M64P_R4300_ASSEM_ARM_H */

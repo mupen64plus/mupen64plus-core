@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - recomp.h                                                *
+ *   Mupen64plus - recomp.c                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -34,11 +34,13 @@
 #include "memory/memory.h"
 #include "main/profile.h"
 
+#include "cached_interp.h"
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
-#include "macros.h"
+#include "cp0.h"
 #include "r4300.h"
 #include "ops.h"
+#include "tlb.h"
 
 static void *malloc_exec(size_t size);
 static void free_exec(void *ptr, size_t length);

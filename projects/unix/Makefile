@@ -392,18 +392,22 @@ SOURCE = \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/n64_cic_nus_6105.c \
 	$(SRCDIR)/memory/pif.c \
-	$(SRCDIR)/memory/tlb.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
 	$(SRCDIR)/plugin/dummy_input.c \
 	$(SRCDIR)/plugin/dummy_rsp.c \
 	$(SRCDIR)/r4300/r4300.c \
+	$(SRCDIR)/r4300/cached_interp.c \
+	$(SRCDIR)/r4300/cp0.c \
+	$(SRCDIR)/r4300/cp1.c \
 	$(SRCDIR)/r4300/exception.c \
+	$(SRCDIR)/r4300/instr_counters.c \
 	$(SRCDIR)/r4300/interupt.c \
 	$(SRCDIR)/r4300/pure_interp.c \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \
+	$(SRCDIR)/r4300/tlb.c \
 	$(SRCDIR)/osd/screenshot.cpp
 ifeq ("$(OS)","MINGW")
 SOURCE += \
