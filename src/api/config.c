@@ -985,6 +985,9 @@ EXPORT m64p_error CALL ConfigSetParameterHelp(m64p_handle ConfigSectionHandle, c
     if (var == NULL)
         return M64ERR_INPUT_NOT_FOUND;
 
+    if (var->comment != NULL)
+        free(var->comment);
+
     var->comment = strdup(ParamHelp);
 
     return M64ERR_SUCCESS;
