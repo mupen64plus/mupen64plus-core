@@ -149,6 +149,21 @@ These functions should be used for reading or writing configuration values in mo
 |This function sets the value of one of the emulator's configuration parameters in the section which is represented by '''<tt>ConfigSectionHandle</tt>'''.
 |}
 <br />
+|Prototype
+|'''<tt>m64p_error ConfigSetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName, const char *ParamHelp)</tt>'''
+|-
+|Input Parameters
+|'''<tt>ConfigSectionHandle</tt>''' An <tt>m64p_handle</tt> given by the '''<tt>ConfigOpenSection</tt>''' function.<br />
+'''<tt>ParamName</tt>''' NULL-terminated string containing the name of the parameter whose help string is being set.  This name is case-insensitive.  This name may consist of any ASCII characters between 32 and 127 except the equals and hash signs, and may not end in a space.<br />
+'''<tt>ParamHelp</tt>''' NULL-terminated string containing some human-readable information about the usage of this parameter.  Can be NULL.<br />
+|-
+|Requirements
+|The Mupen64Plus library must already be initialized before calling this function.  The '''<tt>ConfigSectionHandle</tt>''' and '''<tt>ParamName</tt>''' pointers cannot be NULL.
+|-
+|Usage
+|This function sets the help string of one of the emulator's configuration parameters in the section which is represented by '''<tt>ConfigSectionHandle</tt>'''.
+|}
+<br />
 {| border="1"
 |Prototype
 |'''<tt>m64p_error ConfigGetParameter(m64p_handle ConfigSectionHandle, const char *ParamName, m64p_type ParamType, void *ParamValue, int MaxSize)</tt>'''
