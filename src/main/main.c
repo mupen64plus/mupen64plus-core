@@ -71,6 +71,8 @@
 /* version number for Core config section */
 #define CONFIG_PARAM_VERSION 1.01
 
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
+
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
@@ -682,6 +684,11 @@ void new_vi(void)
     static unsigned int LastFPSTime = 0;
     static unsigned int CounterTime = 0;
     static unsigned int CalculatedTime ;
+
+    static int VItimes[] = {0,0,0,0,0,0};
+    static unsigned int VItimesIndex = 0;
+    static int VItimesTotal = 0;
+
     static int VI_Counter = 0;
 
     double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
@@ -703,15 +710,21 @@ void new_vi(void)
     CurrentFPSTime = SDL_GetTicks();
     
     Dif = CurrentFPSTime - LastFPSTime;
-    
+
+    CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
+    time = (int)(CalculatedTime - CurrentFPSTime);
+
+    VItimesTotal -= VItimes[VItimesIndex];
+    VItimes[VItimesIndex++] = time;
+    VItimesTotal += time;
+    if (VItimesIndex == ARRAY_SIZE(VItimes)) VItimesIndex = 0;
+
     if (Dif < AdjustedLimit) 
     {
-        CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
-        time = (int)(CalculatedTime - CurrentFPSTime);
-        if (time > 0 && l_MainSpeedLimit)
+ 	if (VItimesTotal > 0 && l_MainSpeedLimit)
         {
-            DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", time);
-            SDL_Delay(time);
+            DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", VItimesTotal / ARRAY_SIZE(VItimes));
+            SDL_Delay(VItimesTotal / ARRAY_SIZE(VItimes));
         }
         CurrentFPSTime = CurrentFPSTime + time;
     }
