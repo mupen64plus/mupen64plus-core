@@ -114,6 +114,10 @@ static void clear_queue(void)
         queue_free(q);
         q = aux;
     }
+    for (i =0; i < QUEUE_SIZE; i++)
+    {
+       qstack[i] = &qbase[i];
+    }
 }
 
 /*static void print_queue(void)
@@ -332,6 +336,10 @@ void init_interupt(void)
     next_vi = next_interupt = 5000;
     vi_register.vi_delay = next_vi;
     vi_field = 0;
+    if (qbase != NULL) free(qbase);
+    qbase = (interupt_queue *) malloc(sizeof(interupt_queue) * QUEUE_SIZE );
+    memset(qbase,0,sizeof(interupt_queue) * QUEUE_SIZE );
+    qstackindex=0;
     clear_queue();
     add_interupt_event_count(VI_INT, next_vi);
     add_interupt_event_count(SPECIAL_INT, 0);
