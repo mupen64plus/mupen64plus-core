@@ -108,6 +108,7 @@ static void queue_free(interupt_queue *qToFree)
 
 static void clear_queue(void)
 {
+    int i;
     while(q != NULL)
     {
         interupt_queue *aux = q->next;
