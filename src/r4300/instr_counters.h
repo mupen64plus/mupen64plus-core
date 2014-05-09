@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - exception.h                                             *
+ *   Mupen64plus - instr_counters.h                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,11 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_EXCEPTION_H
-#define M64P_R4300_EXCEPTION_H
+#ifndef M64P_R4300_INSTR_COUNTERS_H
+#define M64P_R4300_INSTR_COUNTERS_H
 
-void TLB_refill_exception(unsigned int addresse, int w);
-void exception_general(void);
+#if defined(COUNT_INSTR)
+extern unsigned int instr_count[132];
 
-#endif /* M64P_R4300_EXCEPTION_H */
+void instr_counters_print(void);
+#endif /* COUNT_INSTR */
 
+#endif /* M64P_R4300_INSTR_COUNTERS_H */

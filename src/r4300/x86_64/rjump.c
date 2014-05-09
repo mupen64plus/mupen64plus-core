@@ -24,6 +24,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "r4300/cached_interp.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/macros.h"

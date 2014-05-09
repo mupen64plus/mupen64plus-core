@@ -23,6 +23,7 @@ ConfigSetDefaultFloat;
 ConfigSetDefaultInt;
 ConfigSetDefaultString;
 ConfigSetParameter;
+ConfigSetParameterHelp;
 CoreAddCheat;
 CoreAttachPlugin;
 CoreCheatEnabled;

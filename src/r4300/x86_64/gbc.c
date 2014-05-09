@@ -25,9 +25,15 @@
 #include "assemble.h"
 #include "interpret.h"
 
+#include "r4300/cached_interp.h"
 #include "r4300/recomph.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
+#include "r4300/cp1.h"
+
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
 
 static void genbc1f_test(void)
 {

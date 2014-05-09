@@ -26,15 +26,15 @@
 #include "api/debugger.h"
 
 #include "r4300/r4300.h"
-#include "r4300/macros.h"
+#include "r4300/cached_interp.h"
+#include "r4300/cp0.h"
+#include "r4300/cp1.h"
 #include "r4300/interupt.h"
 #include "r4300/ops.h"
 #include "r4300/recomph.h"
 #include "r4300/exception.h"
 
 #include "memory/memory.h"
-
-extern unsigned int op;
 
 static precomp_instr fake_instr;
 #ifdef COMPARE_CORE
@@ -322,6 +322,8 @@ void genlink_subblock(void)
 }
 
 #ifdef COMPARE_CORE
+extern unsigned int op; /* api/debugger.c */
+
 void gendebug(void)
 {
    free_all_registers();

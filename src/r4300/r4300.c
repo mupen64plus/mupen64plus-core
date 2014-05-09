@@ -30,17 +30,24 @@
 #include "main/rom.h"
 
 #include "r4300.h"
+#include "cached_interp.h"
+#include "cp0.h"
+#include "cp1.h"
 #include "ops.h"
-#include "exception.h"
 #include "interupt.h"
-#include "macros.h"
+#include "pure_interp.h"
 #include "recomp.h"
 #include "recomph.h"
+#include "tlb.h"
 #include "new_dynarec/new_dynarec.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
 #include "debugger/debugger.h"
+#endif
+
+#if defined(COUNT_INSTR)
+#include "instr_counters.h"
 #endif
 
 unsigned int r4300emu = 0;
@@ -50,537 +57,14 @@ int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
 long long int reg[32], hi, lo;
-unsigned int reg_cop0[32];
-float *reg_cop1_simple[32];
-double *reg_cop1_double[32];
-int FCR0, FCR31;
 unsigned int next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
-long long int reg_cop1_fgr_64[32];
-tlb tlb_e[32];
 unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
 unsigned int CIC_Chip;
-char invalid_code[0x100000];
-
-precomp_block *blocks[0x100000], *actual;
-int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
-    ceil_mode = 0xB3F, floor_mode = 0x73F;
-
-// -----------------------------------------------------------
-// Cached interpreter functions (and fallback for dynarec).
-// -----------------------------------------------------------
-#ifdef DBG
-#define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(PC->addr)
-#else
-#define UPDATE_DEBUGGER() do { } while(0)
-#endif
-
-#define PCADDR PC->addr
-#define ADD_TO_PC(x) PC += x;
-#define DECLARE_INSTRUCTION(name) static void name(void)
-
-#define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
-   static void name(void) \
-   { \
-      const int take_jump = (condition); \
-      const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
-      { \
-         *link_register=PC->addr + 8; \
-         sign_extended(*link_register); \
-      } \
-      if (!likely || take_jump) \
-      { \
-         PC++; \
-         delay_slot=1; \
-         UPDATE_DEBUGGER(); \
-         PC->ops(); \
-         update_count(); \
-         delay_slot=0; \
-         if (take_jump && !skip_jump) \
-         { \
-            PC=actual->block+((jump_target-actual->start)>>2); \
-         } \
-      } \
-      else \
-      { \
-         PC += 2; \
-         update_count(); \
-      } \
-      last_addr = PC->addr; \
-      if (next_interupt <= Count) gen_interupt(); \
-   } \
-   static void name##_OUT(void) \
-   { \
-      const int take_jump = (condition); \
-      const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
-      { \
-         *link_register=PC->addr + 8; \
-         sign_extended(*link_register); \
-      } \
-      if (!likely || take_jump) \
-      { \
-         PC++; \
-         delay_slot=1; \
-         UPDATE_DEBUGGER(); \
-         PC->ops(); \
-         update_count(); \
-         delay_slot=0; \
-         if (take_jump && !skip_jump) \
-         { \
-            jump_to(jump_target); \
-         } \
-      } \
-      else \
-      { \
-         PC += 2; \
-         update_count(); \
-      } \
-      last_addr = PC->addr; \
-      if (next_interupt <= Count) gen_interupt(); \
-   } \
-   static void name##_IDLE(void) \
-   { \
-      const int take_jump = (condition); \
-      int skip; \
-      if (cop1 && check_cop1_unusable()) return; \
-      if (take_jump) \
-      { \
-         update_count(); \
-         skip = next_interupt - Count; \
-         if (skip > 3) Count += (skip & 0xFFFFFFFC); \
-         else name(); \
-      } \
-      else name(); \
-   }
-
-#define CHECK_MEMORY() \
-   if (!invalid_code[address>>12]) \
-      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != \
-          current_instruction_table.NOTCOMPILED) \
-         invalid_code[address>>12] = 1;
-
-// two functions are defined from the macros above but never used
-// these prototype declarations will prevent a warning
-#if defined(__GNUC__)
-  static void JR_IDLE(void) __attribute__((used));
-  static void JALR_IDLE(void) __attribute__((used));
-#endif
-
-#include "interpreter.def"
-
-// -----------------------------------------------------------
-// Flow control 'fake' instructions
-// -----------------------------------------------------------
-static void FIN_BLOCK(void)
-{
-   if (!delay_slot)
-     {
-    jump_to((PC-1)->addr+4);
-/*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-Used by dynarec only, check should be unnecessary
-*/
-    PC->ops();
-    if (r4300emu == CORE_DYNAREC) dyna_jump();
-     }
-   else
-     {
-    precomp_block *blk = actual;
-    precomp_instr *inst = PC;
-    jump_to((PC-1)->addr+4);
-    
-/*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-Used by dynarec only, check should be unnecessary
-*/
-    if (!skip_jump)
-      {
-         PC->ops();
-         actual = blk;
-         PC = inst+1;
-      }
-    else
-      PC->ops();
-    
-    if (r4300emu == CORE_DYNAREC) dyna_jump();
-     }
-}
-
-static void NOTCOMPILED(void)
-{
-   unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
-#ifdef CORE_DBG
-   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
-#endif
-
-   if (mem != NULL)
-      recompile_block((int *)mem, blocks[PC->addr >> 12], PC->addr);
-   else
-      DebugMessage(M64MSG_ERROR, "not compiled exception");
-
-/*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
-#endif
-The preceeding update_debugger SHOULD be unnecessary since it should have been
-called before NOTCOMPILED would have been executed
-*/
-   PC->ops();
-   if (r4300emu == CORE_DYNAREC)
-     dyna_jump();
-}
-
-static void NOTCOMPILED2(void)
-{
-   NOTCOMPILED();
-}
-
-// -----------------------------------------------------------
-// Cached interpreter instruction table
-// -----------------------------------------------------------
-const cpu_instruction_table cached_interpreter_table = {
-   LB,
-   LBU,
-   LH,
-   LHU,
-   LW,
-   LWL,
-   LWR,
-   SB,
-   SH,
-   SW,
-   SWL,
-   SWR,
-
-   LD,
-   LDL,
-   LDR,
-   LL,
-   LWU,
-   SC,
-   SD,
-   SDL,
-   SDR,
-   SYNC,
-
-   ADDI,
-   ADDIU,
-   SLTI,
-   SLTIU,
-   ANDI,
-   ORI,
-   XORI,
-   LUI,
-
-   DADDI,
-   DADDIU,
-
-   ADD,
-   ADDU,
-   SUB,
-   SUBU,
-   SLT,
-   SLTU,
-   AND,
-   OR,
-   XOR,
-   NOR,
-
-   DADD,
-   DADDU,
-   DSUB,
-   DSUBU,
-
-   MULT,
-   MULTU,
-   DIV,
-   DIVU,
-   MFHI,
-   MTHI,
-   MFLO,
-   MTLO,
-
-   DMULT,
-   DMULTU,
-   DDIV,
-   DDIVU,
-
-   J,
-   J_OUT,
-   J_IDLE,
-   JAL,
-   JAL_OUT,
-   JAL_IDLE,
-   // Use the _OUT versions of JR and JALR, since we don't know
-   // until runtime if they're going to jump inside or outside the block
-   JR_OUT,
-   JALR_OUT,
-   BEQ,
-   BEQ_OUT,
-   BEQ_IDLE,
-   BNE,
-   BNE_OUT,
-   BNE_IDLE,
-   BLEZ,
-   BLEZ_OUT,
-   BLEZ_IDLE,
-   BGTZ,
-   BGTZ_OUT,
-   BGTZ_IDLE,
-   BLTZ,
-   BLTZ_OUT,
-   BLTZ_IDLE,
-   BGEZ,
-   BGEZ_OUT,
-   BGEZ_IDLE,
-   BLTZAL,
-   BLTZAL_OUT,
-   BLTZAL_IDLE,
-   BGEZAL,
-   BGEZAL_OUT,
-   BGEZAL_IDLE,
-
-   BEQL,
-   BEQL_OUT,
-   BEQL_IDLE,
-   BNEL,
-   BNEL_OUT,
-   BNEL_IDLE,
-   BLEZL,
-   BLEZL_OUT,
-   BLEZL_IDLE,
-   BGTZL,
-   BGTZL_OUT,
-   BGTZL_IDLE,
-   BLTZL,
-   BLTZL_OUT,
-   BLTZL_IDLE,
-   BGEZL,
-   BGEZL_OUT,
-   BGEZL_IDLE,
-   BLTZALL,
-   BLTZALL_OUT,
-   BLTZALL_IDLE,
-   BGEZALL,
-   BGEZALL_OUT,
-   BGEZALL_IDLE,
-   BC1TL,
-   BC1TL_OUT,
-   BC1TL_IDLE,
-   BC1FL,
-   BC1FL_OUT,
-   BC1FL_IDLE,
-
-   SLL,
-   SRL,
-   SRA,
-   SLLV,
-   SRLV,
-   SRAV,
-
-   DSLL,
-   DSRL,
-   DSRA,
-   DSLLV,
-   DSRLV,
-   DSRAV,
-   DSLL32,
-   DSRL32,
-   DSRA32,
-
-   MTC0,
-   MFC0,
-
-   TLBR,
-   TLBWI,
-   TLBWR,
-   TLBP,
-   CACHE,
-   ERET,
-
-   LWC1,
-   SWC1,
-   MTC1,
-   MFC1,
-   CTC1,
-   CFC1,
-   BC1T,
-   BC1T_OUT,
-   BC1T_IDLE,
-   BC1F,
-   BC1F_OUT,
-   BC1F_IDLE,
-
-   DMFC1,
-   DMTC1,
-   LDC1,
-   SDC1,
-
-   CVT_S_D,
-   CVT_S_W,
-   CVT_S_L,
-   CVT_D_S,
-   CVT_D_W,
-   CVT_D_L,
-   CVT_W_S,
-   CVT_W_D,
-   CVT_L_S,
-   CVT_L_D,
-
-   ROUND_W_S,
-   ROUND_W_D,
-   ROUND_L_S,
-   ROUND_L_D,
-
-   TRUNC_W_S,
-   TRUNC_W_D,
-   TRUNC_L_S,
-   TRUNC_L_D,
-
-   CEIL_W_S,
-   CEIL_W_D,
-   CEIL_L_S,
-   CEIL_L_D,
-
-   FLOOR_W_S,
-   FLOOR_W_D,
-   FLOOR_L_S,
-   FLOOR_L_D,
-
-   ADD_S,
-   ADD_D,
-
-   SUB_S,
-   SUB_D,
-
-   MUL_S,
-   MUL_D,
-
-   DIV_S,
-   DIV_D,
-   
-   ABS_S,
-   ABS_D,
-
-   MOV_S,
-   MOV_D,
-
-   NEG_S,
-   NEG_D,
-
-   SQRT_S,
-   SQRT_D,
-
-   C_F_S,
-   C_F_D,
-   C_UN_S,
-   C_UN_D,
-   C_EQ_S,
-   C_EQ_D,
-   C_UEQ_S,
-   C_UEQ_D,
-   C_OLT_S,
-   C_OLT_D,
-   C_ULT_S,
-   C_ULT_D,
-   C_OLE_S,
-   C_OLE_D,
-   C_ULE_S,
-   C_ULE_D,
-   C_SF_S,
-   C_SF_D,
-   C_NGLE_S,
-   C_NGLE_D,
-   C_SEQ_S,
-   C_SEQ_D,
-   C_NGL_S,
-   C_NGL_D,
-   C_LT_S,
-   C_LT_D,
-   C_NGE_S,
-   C_NGE_D,
-   C_LE_S,
-   C_LE_D,
-   C_NGT_S,
-   C_NGT_D,
-
-   SYSCALL,
-
-   TEQ,
-
-   NOP,
-   RESERVED,
-   NI,
-
-   FIN_BLOCK,
-   NOTCOMPILED,
-   NOTCOMPILED2
-};
 
 cpu_instruction_table current_instruction_table;
-
-static unsigned int update_invalid_addr(unsigned int addr)
-{
-   if (addr >= 0x80000000 && addr < 0xc0000000)
-     {
-    if (invalid_code[addr>>12]) invalid_code[(addr^0x20000000)>>12] = 1;
-    if (invalid_code[(addr^0x20000000)>>12]) invalid_code[addr>>12] = 1;
-    return addr;
-     }
-   else
-     {
-    unsigned int paddr = virtual_to_physical_address(addr, 2);
-    if (paddr)
-      {
-         unsigned int beg_paddr = paddr - (addr - (addr&~0xFFF));
-         update_invalid_addr(paddr);
-         if (invalid_code[(beg_paddr+0x000)>>12]) invalid_code[addr>>12] = 1;
-         if (invalid_code[(beg_paddr+0xFFC)>>12]) invalid_code[addr>>12] = 1;
-         if (invalid_code[addr>>12]) invalid_code[(beg_paddr+0x000)>>12] = 1;
-         if (invalid_code[addr>>12]) invalid_code[(beg_paddr+0xFFC)>>12] = 1;
-      }
-    return paddr;
-     }
-}
-
-#define addr jump_to_address
-unsigned int jump_to_address;
-void jump_to_func(void)
-{
-   unsigned int paddr;
-   if (skip_jump) return;
-   paddr = update_invalid_addr(addr);
-   if (!paddr) return;
-   actual = blocks[addr>>12];
-   if (invalid_code[addr>>12])
-     {
-    if (!blocks[addr>>12])
-      {
-         blocks[addr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-         actual = blocks[addr>>12];
-         blocks[addr>>12]->code = NULL;
-         blocks[addr>>12]->block = NULL;
-         blocks[addr>>12]->jumps_table = NULL;
-         blocks[addr>>12]->riprel_table = NULL;
-      }
-    blocks[addr>>12]->start = addr & ~0xFFF;
-    blocks[addr>>12]->end = (addr & ~0xFFF) + 0x1000;
-    init_block(blocks[addr>>12]);
-     }
-   PC=actual->block+((addr-actual->start)>>2);
-   
-   if (r4300emu == CORE_DYNAREC) dyna_jump();
-}
-#undef addr
 
 void generic_jump_to(unsigned int address)
 {
@@ -596,147 +80,6 @@ void generic_jump_to(unsigned int address)
       jump_to(address);
 #endif
    }
-}
-
-/* Refer to Figure 6-2 on page 155 and explanation on page B-11
-   of MIPS R4000 Microprocessor User's Manual (Second Edition)
-   by Joe Heinrich.
-*/
-void shuffle_fpr_data(int oldStatus, int newStatus)
-{
-#if defined(M64P_BIG_ENDIAN)
-    const int isBigEndian = 1;
-#else
-    const int isBigEndian = 0;
-#endif
-
-    if ((newStatus & 0x04000000) != (oldStatus & 0x04000000))
-    {
-        int i;
-        int temp_fgr_32[32];
-
-        // pack or unpack the FGR register data
-        if (newStatus & 0x04000000)
-        {   // switching into 64-bit mode
-            // retrieve 32 FPR values from packed 32-bit FGR registers
-            for (i = 0; i < 32; i++)
-            {
-                temp_fgr_32[i] = *((int *) &reg_cop1_fgr_64[i>>1] + ((i & 1) ^ isBigEndian));
-            }
-            // unpack them into 32 64-bit registers, taking the high 32-bits from their temporary place in the upper 16 FGRs
-            for (i = 0; i < 32; i++)
-            {
-                int high32 = *((int *) &reg_cop1_fgr_64[(i>>1)+16] + (i & 1));
-                *((int *) &reg_cop1_fgr_64[i] + isBigEndian)     = temp_fgr_32[i];
-                *((int *) &reg_cop1_fgr_64[i] + (isBigEndian^1)) = high32;
-            }
-        }
-        else
-        {   // switching into 32-bit mode
-            // retrieve the high 32 bits from each 64-bit FGR register and store in temp array
-            for (i = 0; i < 32; i++)
-            {
-                temp_fgr_32[i] = *((int *) &reg_cop1_fgr_64[i] + (isBigEndian^1));
-            }
-            // take the low 32 bits from each register and pack them together into 64-bit pairs
-            for (i = 0; i < 16; i++)
-            {
-                unsigned int least32 = *((unsigned int *) &reg_cop1_fgr_64[i*2] + isBigEndian);
-                unsigned int most32 = *((unsigned int *) &reg_cop1_fgr_64[i*2+1] + isBigEndian);
-                reg_cop1_fgr_64[i] = ((unsigned long long) most32 << 32) | (unsigned long long) least32;
-            }
-            // store the high bits in the upper 16 FGRs, which wont be accessible in 32-bit mode
-            for (i = 0; i < 32; i++)
-            {
-                *((int *) &reg_cop1_fgr_64[(i>>1)+16] + (i & 1)) = temp_fgr_32[i];
-            }
-        }
-    }
-}
-
-void set_fpr_pointers(int newStatus)
-{
-    int i;
-#if defined(M64P_BIG_ENDIAN)
-    const int isBigEndian = 1;
-#else
-    const int isBigEndian = 0;
-#endif
-
-    // update the FPR register pointers
-    if (newStatus & 0x04000000)
-    {
-        for (i = 0; i < 32; i++)
-        {
-            reg_cop1_double[i] = (double*) &reg_cop1_fgr_64[i];
-            reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i]) + isBigEndian;
-        }
-    }
-    else
-    {
-        for (i = 0; i < 32; i++)
-        {
-            reg_cop1_double[i] = (double*) &reg_cop1_fgr_64[i>>1];
-            reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i>>1]) + ((i & 1) ^ isBigEndian);
-        }
-    }
-}
-
-int check_cop1_unusable(void)
-{
-   if (!(Status & 0x20000000))
-     {
-    Cause = (11 << 2) | 0x10000000;
-    exception_general();
-    return 1;
-     }
-   return 0;
-}
-
-void update_count(void)
-{
-#ifdef NEW_DYNAREC
-    if (r4300emu != CORE_DYNAREC)
-    {
-#endif
-        Count += ((PC->addr - last_addr) >> 2) * count_per_op;
-        last_addr = PC->addr;
-#ifdef NEW_DYNAREC
-    }
-#endif
-
-#ifdef COMPARE_CORE
-   if (delay_slot)
-     CoreCompareCallback();
-#endif
-/*#ifdef DBG
-   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
-#endif
-*/
-}
-
-void init_blocks(void)
-{
-   int i;
-   for (i=0; i<0x100000; i++)
-   {
-      invalid_code[i] = 1;
-      blocks[i] = NULL;
-   }
-}
-
-void free_blocks(void)
-{
-   int i;
-   for (i=0; i<0x100000; i++)
-   {
-        if (blocks[i])
-        {
-            free_block(blocks[i]);
-            free(blocks[i]);
-            blocks[i] = NULL;
-        }
-    }
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */
@@ -970,7 +313,7 @@ static void dynarec_setup_code(void)
 
 void r4300_execute(void)
 {
-#if defined(COUNT_INSTR) || (defined(DYNAREC) && defined(PROFILE_R4300))
+#if (defined(DYNAREC) && defined(PROFILE_R4300))
     unsigned int i;
 #endif
 
@@ -982,8 +325,7 @@ void r4300_execute(void)
 
     /* clear instruction counters */
 #if defined(COUNT_INSTR)
-    for (i = 0; i < 131; i++)
-        instr_count[i] = 0;
+    memset(instr_count, 0, 131*sizeof(instr_count[0]));
 #endif
 
     last_addr = 0xa4000040;
@@ -1046,7 +388,7 @@ void r4300_execute(void)
         while (!stop)
         {
 #ifdef COMPARE_CORE
-            if (PC->ops == FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
+            if (PC->ops == cached_interpreter_table.FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
                 virtual_to_physical_address(PC->addr, 2);
             CoreCompareCallback();
 #endif
@@ -1064,29 +406,6 @@ void r4300_execute(void)
     /* print instruction counts */
 #if defined(COUNT_INSTR)
     if (r4300emu == CORE_DYNAREC)
-    {
-        unsigned int iTypeCount[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        unsigned int iTotal = 0;
-        char line[128], param[24];
-        DebugMessage(M64MSG_INFO, "Instruction counters:");
-        line[0] = 0;
-        for (i = 0; i < 131; i++)
-        {
-            sprintf(param, "%8s: %08i  ", instr_name[i], instr_count[i]);
-            strcat(line, param);
-            if (i % 5 == 4)
-            {
-                DebugMessage(M64MSG_INFO, "%s", line);
-                line[0] = 0;
-            }
-            iTypeCount[instr_type[i]] += instr_count[i];
-            iTotal += instr_count[i];
-        }
-        DebugMessage(M64MSG_INFO, "Instruction type summary (total instructions = %i)", iTotal);
-        for (i = 0; i < 11; i++)
-        {
-            DebugMessage(M64MSG_INFO, "%20s: %04.1f%% (%i)", instr_typename[i], (float) iTypeCount[i] * 100.0 / iTotal, iTypeCount[i]);
-        }
-    }
+        instr_counters_print();
 #endif
 }

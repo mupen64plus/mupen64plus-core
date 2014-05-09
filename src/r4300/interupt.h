@@ -19,6 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifndef M64P_R4300_INTERUPT_H
+#define M64P_R4300_INTERUPT_H
+
 void compare_interupt(void);
 void gen_dp(void);
 void init_interupt(void);
@@ -55,3 +58,4 @@ void load_eventqueue_infos(char *buf);
 #define HW2_INT     0x200
 #define NMI_INT     0x400
 
+#endif /* M64P_R4300_INTERUPT_H */

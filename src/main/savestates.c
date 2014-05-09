@@ -40,9 +40,11 @@
 
 #include "memory/memory.h"
 #include "memory/flashram.h"
-#include "memory/tlb.h"
-#include "r4300/macros.h"
+#include "r4300/tlb.h"
+#include "r4300/cp0.h"
+#include "r4300/cp1.h"
 #include "r4300/r4300.h"
+#include "r4300/cached_interp.h"
 #include "r4300/interupt.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"

@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef RECOMP_H
-#define RECOMP_H
+#ifndef M64P_R4300_RECOMP_H
+#define M64P_R4300_RECOMP_H
 
 #include <stddef.h>
 #if defined(__x86_64__)
@@ -106,5 +106,5 @@ extern precomp_instr *dst; /* precomp_instr structure for instruction being reco
   #include "x86/regcache.h"
 #endif
 
-#endif
+#endif /* M64P_R4300_RECOMP_H */
 

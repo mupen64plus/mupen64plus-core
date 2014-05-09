@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - exception.h                                             *
+ *   Mupen64plus - cached_interp.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,11 +19,24 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_EXCEPTION_H
-#define M64P_R4300_EXCEPTION_H
+#ifndef M64P_R4300_CACHED_INTERP_H
+#define M64P_R4300_CACHED_INTERP_H
 
-void TLB_refill_exception(unsigned int addresse, int w);
-void exception_general(void);
+#include "ops.h"
+/* FIXME: use forward declaration for precomp_block */
+#include "recomp.h"
 
-#endif /* M64P_R4300_EXCEPTION_H */
+extern char invalid_code[0x100000];
+extern precomp_block *blocks[0x100000];
+extern precomp_block *actual;
+extern unsigned int jump_to_address;
+extern const cpu_instruction_table cached_interpreter_table;
 
+void init_blocks(void);
+void free_blocks(void);
+void jump_to_func(void);
+
+/* Jumps to the given address. This is for the cached interpreter / dynarec. */
+#define jump_to(a) { jump_to_address = a; jump_to_func(); }
+
+#endif /* M64P_R4300_CACHED_INTERP_H */

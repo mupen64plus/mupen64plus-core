@@ -25,12 +25,17 @@
 #include "assemble.h"
 #include "interpret.h"
 
+#include "r4300/cached_interp.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/macros.h"
+#include "r4300/cp0.h"
 #include "r4300/exception.h"
+
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
 
 #if !defined(offsetof)
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
