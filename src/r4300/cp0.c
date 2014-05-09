@@ -19,9 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "cp0.h"
-
 #include "r4300.h"
+#include "cp0.h"
 #include "exception.h"
 
 #include "new_dynarec/new_dynarec.h"
