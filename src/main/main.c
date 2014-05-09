@@ -71,8 +71,6 @@
 /* version number for Core config section */
 #define CONFIG_PARAM_VERSION 1.01
 
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
-
 /** globals **/
 m64p_handle g_CoreConfig = NULL;
 
@@ -679,62 +677,60 @@ void new_frame(void)
 
 void new_vi(void)
 {
-    int Dif;
+    int FrameDuration;
     unsigned int CurrentFPSTime;
     static unsigned int LastFPSTime = 0;
-    static unsigned int CounterTime = 0;
-    static unsigned int CalculatedTime ;
-
-    static int VItimes[] = {0,0,0,0,0,0};
-    static unsigned int VItimesIndex = 0;
-    static int VItimesTotal = 0;
-
-    static int VI_Counter = 0;
+    static int VIDeltas[64];
+    static unsigned int VIDeltasIndex;
+    static int VITotalDelta;
 
     double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
-    int time;
+    int ThisFrameDelta, IntegratedDelta, TimeToWait;
 
     timed_section_start(TIMED_SECTION_IDLE);
-    VI_Counter++;
 
 #ifdef DBG
     if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
 #endif
 
+    // if this is the first frame, the initialize our data structures
     if(LastFPSTime == 0)
     {
-        LastFPSTime = CounterTime = SDL_GetTicks();
+        LastFPSTime = SDL_GetTicks();
+        memset(VIDeltas, 0, sizeof(VIDeltas));
+        VITotalDelta = 0;
+        VIDeltasIndex = 0;
         return;
     }
+
+    // calculate # of milliseconds that have passed since the last video interrupt
     CurrentFPSTime = SDL_GetTicks();
-    
-    Dif = CurrentFPSTime - LastFPSTime;
+    FrameDuration = CurrentFPSTime - LastFPSTime;
+    ThisFrameDelta = FrameDuration - AdjustedLimit;
 
-    CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
-    time = (int)(CalculatedTime - CurrentFPSTime);
-
-    VItimesTotal -= VItimes[VItimesIndex];
-    VItimes[VItimesIndex++] = time;
-    VItimesTotal += time;
-    if (VItimesIndex == ARRAY_SIZE(VItimes)) VItimesIndex = 0;
-
-    if (Dif < AdjustedLimit) 
+    // are we too fast?
+    if (ThisFrameDelta < 0)
     {
- 	if (VItimesTotal > 0 && l_MainSpeedLimit)
+        // calculate the total time error over the last 64 frames
+        IntegratedDelta = VITotalDelta  + ThisFrameDelta;
+        // if we are still too fast, and then speed limiter is on, then we should wait
+        if (IntegratedDelta < 0 && l_MainSpeedLimit)
         {
-            DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", VItimesTotal / ARRAY_SIZE(VItimes));
-            SDL_Delay(VItimesTotal / ARRAY_SIZE(VItimes));
+            TimeToWait = (IntegratedDelta > ThisFrameDelta) ? -IntegratedDelta : -ThisFrameDelta;
+            DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", TimeToWait);
+            SDL_Delay(TimeToWait);
+            // update our time delta for this frame, taking into account the time we just waited
+            ThisFrameDelta = (SDL_GetTicks() - LastFPSTime) - AdjustedLimit;
         }
-        CurrentFPSTime = CurrentFPSTime + time;
     }
 
-    if (CurrentFPSTime - CounterTime >= 1000.0 ) 
-    {
-        CounterTime = SDL_GetTicks();
-        VI_Counter = 0 ;
-    }
-    
+    // update our data structures
+    VITotalDelta -= VIDeltas[VIDeltasIndex];
+    VIDeltas[VIDeltasIndex] = ThisFrameDelta;
+    VIDeltasIndex = (VIDeltasIndex + 1) & 63;
+    VITotalDelta += ThisFrameDelta;
+
     LastFPSTime = CurrentFPSTime ;
     timed_section_end(TIMED_SECTION_IDLE);
 }
