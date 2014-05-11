@@ -99,6 +99,8 @@ This is the most complicated interface, because it involves 3 components: the vi
 * '''CONFIG_API_VERSION''' version 2.2.0:
 ** add new function "ConfigHasUnsavedChanges()" to determine if a given Section (or all sections) of the Mupen64Plus Core configuration file has been modified since it was last saved or loaded.
 ** add new function "ConfigRevertChanges()" to revert changes previously made to one section of the configuration file, so that it will match with the configuration at the last time that it was loaded from or saved to disk.
+* '''CONFIG_API_VERSION''' version 2.3.0:
+** add new function "ConfigSetParameterHelp()" sets the value of one of the emulator's configuration parameters.
 * '''VIDEO_API_VERSION''' version 2.1.0:
 ** video render callback function now takes a boolean (int) parameter, which specifies whether the video frame has been re-drawn since the last time the render callback was called. This allows us to take screenshots without the On-Screen-Display text
 * '''VIDEO_API_VERSION''' version 2.2.0:
