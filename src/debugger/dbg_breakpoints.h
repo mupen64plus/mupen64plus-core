@@ -25,10 +25,10 @@
 #include "../api/m64p_types.h"
 
 extern int g_NumBreakpoints;
-extern breakpoint g_Breakpoints[];
+extern m64p_breakpoint g_Breakpoints[];
 
 int add_breakpoint( uint32 address );
-int add_breakpoint_struct(breakpoint* newbp);
+int add_breakpoint_struct(m64p_breakpoint *newbp);
 void remove_breakpoint_by_address( uint32 address );
 void remove_breakpoint_by_num( int bpt );
 void enable_breakpoint( int breakpoint );
@@ -37,7 +37,7 @@ int check_breakpoints( uint32 address );
 int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uint32 flags );
 int lookup_breakpoint( uint32 address, uint32 size, uint32 flags );
 int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access);
-void replace_breakpoint_num( int, breakpoint* );
+void replace_breakpoint_num( int, m64p_breakpoint * );
 
 #endif  /* __BREAKPOINTS_H__ */
 

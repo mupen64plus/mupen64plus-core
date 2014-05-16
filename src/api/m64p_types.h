@@ -303,14 +303,11 @@ typedef enum {
 #define BPT_CLEAR_FLAG(a, b)  a.flags = (a.flags & (~b));
 #define BPT_TOGGLE_FLAG(a, b) a.flags = (a.flags ^ b);
 
-typedef struct _breakpoint {
-    unsigned int address; 
-    unsigned int endaddr;
-    unsigned int flags;
-#if 0 /* placeholder for breakpoint condition */
-    unsigned int condition;
-#endif
-    } breakpoint;
+typedef struct {
+  unsigned int address;
+  unsigned int endaddr;
+  unsigned int flags;
+} m64p_breakpoint;
 
 /* ------------------------------------------------- */
 /* Structures and Types for Core Video Extension API */
