@@ -31,7 +31,7 @@
 #include "api/callbacks.h"
 
 int g_NumBreakpoints=0;
-breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
+m64p_breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
 
 
 int add_breakpoint( uint32 address )
@@ -49,14 +49,14 @@ int add_breakpoint( uint32 address )
     return g_NumBreakpoints++;
 }
 
-int add_breakpoint_struct(breakpoint* newbp)
+int add_breakpoint_struct(m64p_breakpoint *newbp)
 {
      if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
         DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
         return -1;
     }
 
-    memcpy(&g_Breakpoints[g_NumBreakpoints], newbp, sizeof(breakpoint));
+    memcpy(&g_Breakpoints[g_NumBreakpoints], newbp, sizeof(m64p_breakpoint));
 
     if(BPT_CHECK_FLAG(g_Breakpoints[g_NumBreakpoints], BPT_FLAG_ENABLED))
     {
@@ -69,7 +69,7 @@ int add_breakpoint_struct(breakpoint* newbp)
 
 void enable_breakpoint( int bpt)
 {
-    breakpoint *curBpt = g_Breakpoints + bpt;
+    m64p_breakpoint *curBpt = g_Breakpoints + bpt;
     uint64 bptAddr;
     
     if(BPT_CHECK_FLAG((*curBpt), BPT_FLAG_READ)) {
@@ -89,7 +89,7 @@ void enable_breakpoint( int bpt)
 
 void disable_breakpoint( int bpt )
 {
-    breakpoint *curBpt = g_Breakpoints + bpt;
+    m64p_breakpoint *curBpt = g_Breakpoints + bpt;
     uint64 bptAddr;
 
     BPT_CLEAR_FLAG(g_Breakpoints[bpt], BPT_FLAG_ENABLED);
@@ -133,13 +133,13 @@ void remove_breakpoint_by_address( uint32 address )
         remove_breakpoint_by_num( bpt );
 }
 
-void replace_breakpoint_num( int bpt, breakpoint* copyofnew )
+void replace_breakpoint_num( int bpt, m64p_breakpoint *copyofnew )
 {
     
     if(BPT_CHECK_FLAG(g_Breakpoints[bpt], BPT_FLAG_ENABLED))
         disable_breakpoint( bpt );
 
-    memcpy(&(g_Breakpoints[bpt]), copyofnew, sizeof(breakpoint));
+    memcpy(&g_Breakpoints[bpt], copyofnew, sizeof(m64p_breakpoint));
 
     if(BPT_CHECK_FLAG(g_Breakpoints[bpt], BPT_FLAG_ENABLED))
     {

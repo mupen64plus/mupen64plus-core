@@ -214,18 +214,18 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 <br />
 {| border="1"
 |Prototype
-|'''<tt>int DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, void *ptr)</tt>'''
+|'''<tt>int DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, m64p_breakpoint *bkp)</tt>'''
 |-
 |Input Parameters
 |'''<tt>command</tt>''' Enumerated value specifying the breakpoint command to execute<br />
 '''<tt>index</tt>''' Purpose varies by command, see table below<br />
-'''<tt>ptr</tt>''' Purpose varies by command, see table below
+'''<tt>bkp</tt>''' Pointer to breakpoint for certain commands, see table below
 |-
 |Requirements
 |The Mupen64Plus library must be built with debugger support and must be initialized before calling this function.
 |-
 |Usage
-|This function is used to process common breakpoint commands, such as adding, removing, or searching the breakpoints.  The meanings of the '''<tt>index</tt>''' and '''<tt>ptr</tt>''' input parameters vary by command, and are given in the table below.  The '''<tt>m64p_dbg_bkp_command</tt>''' type is enumerated in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]].
+|This function is used to process common breakpoint commands, such as adding, removing, or searching the breakpoints.  The meanings of the '''<tt>index</tt>''' and '''<tt>bkp</tt>''' input parameters vary by command, and are given in the table below.  The '''<tt>m64p_dbg_bkp_command</tt>''' type is enumerated in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]].
 |}
 <br />
 {| border="1"

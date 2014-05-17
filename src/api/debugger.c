@@ -355,7 +355,7 @@ EXPORT int CALL DebugBreakpointLookup(unsigned int address, unsigned int size, u
 #endif
 }
 
-EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, void *ptr)
+EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, m64p_breakpoint *bkp)
 {
 #ifdef DBG
     switch (command)
@@ -363,9 +363,9 @@ EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned in
         case M64P_BKP_CMD_ADD_ADDR:
             return add_breakpoint(index);
         case M64P_BKP_CMD_ADD_STRUCT:
-            return add_breakpoint_struct((breakpoint *) ptr);
+            return add_breakpoint_struct(bkp);
         case M64P_BKP_CMD_REPLACE:
-            replace_breakpoint_num(index, (breakpoint *) ptr);
+            replace_breakpoint_num(index, bkp);
             return 0;
         case M64P_BKP_CMD_REMOVE_ADDR:
             remove_breakpoint_by_address(index);
