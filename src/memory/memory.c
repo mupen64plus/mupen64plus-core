@@ -1191,7 +1191,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0x8000+j] = read_rdram_break;
                             readmemb[0x8000+j] = read_rdramb_break;
@@ -1208,7 +1208,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0xa000+j] = read_rdram_break;
                             readmemb[0xa000+j] = read_rdramb_break;
@@ -1225,7 +1225,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0x8000+j] = write_rdram_break;
                             writememb[0x8000+j] = write_rdramb_break;
@@ -1242,7 +1242,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0xa000+j] = write_rdram_break;
                             writememb[0xa000+j] = write_rdramb_break;
@@ -1304,7 +1304,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0x8000+j] = read_rdramFB_break;
                             readmemb[0x8000+j] = read_rdramFBb_break;
@@ -1321,7 +1321,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0xa000+j] = read_rdramFB_break;
                             readmemb[0xa000+j] = read_rdramFBb_break;
@@ -1338,7 +1338,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0x8000+j] = write_rdramFB_break;
                             writememb[0x8000+j] = write_rdramFBb_break;
@@ -1355,7 +1355,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0xa000+j] = write_rdramFB_break;
                             writememb[0xa000+j] = write_rdramFBb_break;

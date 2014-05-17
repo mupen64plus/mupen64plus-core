@@ -268,13 +268,13 @@
  
  #define BREAKPOINTS_MAX_NUMBER  128
  
- #define BPT_FLAG_ENABLED        0x01
- #define BPT_FLAG_CONDITIONAL    0x02
- #define BPT_FLAG_COUNTER        0x04
- #define BPT_FLAG_READ           0x08
- #define BPT_FLAG_WRITE          0x10
- #define BPT_FLAG_EXEC           0x20
- #define BPT_FLAG_LOG            0x40 //Log to the console when this breakpoint hits.
+ typedef enum {
+   M64P_BKP_FLAG_ENABLED = 0x01,
+   M64P_BKP_FLAG_READ = 0x02,
+   M64P_BKP_FLAG_WRITE = 0x04,
+   M64P_BKP_FLAG_EXEC = 0x08,
+   M64P_BKP_FLAG_LOG = 0x10 /* Log to the console when this breakpoint hits. */
+ } m64p_dbg_bkp_flags;
  
  #define BPT_CHECK_FLAG(a, b)  ((a.flags & b) == b)
  #define BPT_SET_FLAG(a, b)    a.flags = (a.flags | b);

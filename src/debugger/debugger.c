@@ -74,9 +74,9 @@ void update_debugger(uint32 pc)
         bpt = check_breakpoints(pc);
         if( bpt!=-1 ) {
             run = 0;
-            
-            if(BPT_CHECK_FLAG(g_Breakpoints[bpt], BPT_FLAG_LOG))
-                log_breakpoint(pc, BPT_FLAG_EXEC, 0);
+
+            if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
+                log_breakpoint(pc, M64P_BKP_FLAG_EXEC, 0);
         }
     }
 
