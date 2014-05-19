@@ -194,6 +194,12 @@
  } m64p_dbg_state;
  
  typedef enum {
+   M64P_DBG_RUNSTATE_PAUSED = 0,
+   M64P_DBG_RUNSTATE_STEPPING,
+   M64P_DBG_RUNSTATE_RUNNING
+ } m64p_dbg_runstate;
+ 
+ typedef enum {
    M64P_DBG_MEM_TYPE = 1,
    M64P_DBG_MEM_FLAGS,
    M64P_DBG_MEM_HAS_RECOMPILED,

@@ -184,17 +184,15 @@ int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uin
     //It automatically stops and updates the debugger on hit, so the memory access
     //functions only need to call it and can discard the result.
     int bpt;
-    if(run == 2)
-    {
-        bpt=lookup_breakpoint( address, size, flags );
-        if(bpt != -1)
-        {
+    if (g_dbg_runstate == M64P_DBG_RUNSTATE_RUNNING) {
+        bpt = lookup_breakpoint(address, size, flags);
+        if (bpt != -1) {
             if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
                 log_breakpoint(pc, flags, address);
-            
-            run = 0;
+
+            g_dbg_runstate = M64P_DBG_RUNSTATE_PAUSED;
             update_debugger(pc);
-        
+
             return bpt;
         }
     }

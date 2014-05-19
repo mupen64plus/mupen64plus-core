@@ -106,10 +106,10 @@ EXPORT m64p_error CALL DebugSetCallbacks(void (*dbg_frontend_init)(void), void (
 #endif
 }
 
-EXPORT m64p_error CALL DebugSetRunState(int runstate)
+EXPORT m64p_error CALL DebugSetRunState(m64p_dbg_runstate runstate)
 {
 #ifdef DBG
-    run = runstate; /* in debugger/debugger.c */
+    g_dbg_runstate = runstate; /* in debugger/debugger.c */
     return M64ERR_SUCCESS;
 #else
     return M64ERR_UNSUPPORTED;
@@ -122,7 +122,7 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
     switch (statenum)
     {
         case M64P_DBG_RUN_STATE:
-            return run;
+            return g_dbg_runstate;
         case M64P_DBG_PREVIOUS_PC:
             return previousPC;
         case M64P_DBG_NUM_BREAKPOINTS:

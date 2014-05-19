@@ -38,10 +38,10 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 <br />
 {| border="1"
 |Prototype
-|'''<tt>m64p_error DebugSetRunState(int runstate)</tt>'''
+|'''<tt>m64p_error DebugSetRunState(m64p_dbg_runstate runstate)</tt>'''
 |-
 |Input Parameters
-|'''<tt>runstate</tt>''' 0 == pause, 1 == single instruction step, 2 == run
+|'''<tt>runstate</tt>''' An <tt>m64p_dbg_runstate</tt> enumerated type specifying the debugging state of the emulator. <tt>M64P_DBG_RUNSTATE_RUNNING</tt> continues execution until a breakpoint is hit or a different state is chosen. <tt>M64P_DBG_RUNSTATE_STEPPING</tt> enters a single step running mode that sends callbacks as each step is performed. <tt>M64P_DBG_RUNSTATE_PAUSED</tt> pauses execution to allow manual stepping.
 |-
 |Requirements
 |The Mupen64Plus library must be built with debugger support and must be initialized before calling this function.
