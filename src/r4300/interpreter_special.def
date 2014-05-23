@@ -71,7 +71,7 @@ DECLARE_JUMP(JALR, irs32, 1, PC->f.r.rd, 0, 0)
 
 DECLARE_INSTRUCTION(SYSCALL)
 {
-   Cause = 8 << 2;
+   g_cp0_regs[CP0_CAUSE_REG] = 8 << 2;
    exception_general();
 }
 

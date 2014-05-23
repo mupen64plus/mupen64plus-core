@@ -62,7 +62,7 @@ static void genupdate_count(unsigned int addr)
    shr_reg32_imm8(EAX, 2);
    mov_xreg32_m32rel(EDX, (void*)&count_per_op);
    mul_reg32(EDX);
-   add_m32rel_xreg32((unsigned int*)(&Count), EAX);
+   add_m32rel_xreg32((unsigned int*)(&g_cp0_regs[CP0_COUNT_REG]), EAX);
 #else
    mov_reg64_imm64(RAX, (unsigned long long) (dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&PC), RAX);
@@ -74,7 +74,7 @@ static void genupdate_count(unsigned int addr)
 static void gencheck_interupt(unsigned long long instr_structure)
 {
    mov_xreg32_m32rel(EAX, (void*)(&next_interupt));
-   cmp_xreg32_m32rel(EAX, (void*)&Count);
+   cmp_xreg32_m32rel(EAX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -89,7 +89,7 @@ static void gencheck_interupt(unsigned long long instr_structure)
 static void gencheck_interupt_out(unsigned int addr)
 {
    mov_xreg32_m32rel(EAX, (void*)(&next_interupt));
-   cmp_xreg32_m32rel(EAX, (void*)&Count);
+   cmp_xreg32_m32rel(EAX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -366,7 +366,7 @@ void genfin_block(void)
 void gencheck_interupt_reg(void) // addr is in EAX
 {
    mov_xreg32_m32rel(EBX, (void*)&next_interupt);
-   cmp_xreg32_m32rel(EBX, (void*)&Count);
+   cmp_xreg32_m32rel(EBX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -455,12 +455,12 @@ void genj_idle(void)
      }
    
    mov_xreg32_m32rel(EAX, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(EAX, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(12);
 
    and_eax_imm32(0xFFFFFFFC);  // 5
-   add_m32rel_xreg32((unsigned int *)(&Count), EAX); // 7
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX); // 7
 
    genj();
 #endif
@@ -552,12 +552,12 @@ void genjal_idle(void)
      }
    
    mov_xreg32_m32rel(EAX, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(EAX, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(12);
    
    and_eax_imm32(0xFFFFFFFC);  // 5
-   add_m32rel_xreg32((unsigned int *)(&Count), EAX); // 7
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX); // 7
   
    genjal();
 #endif
@@ -654,13 +654,13 @@ void gentest_idle(void)
    jump_start_rel32();
 
    mov_xreg32_m32rel(reg, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(reg, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(reg, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(reg, 3);
    jbe_rj(0);
    jump_start_rel8();
    
    and_reg32_imm32(reg, 0xFFFFFFFC);
-   add_m32rel_xreg32((unsigned int *)(&Count), reg);
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), reg);
    
    jump_end_rel8();
    jump_end_rel32();
@@ -1875,7 +1875,7 @@ void gencheck_cop1_unusable(void)
 {
    free_registers_move_start();
 
-   test_m32rel_imm32((unsigned int*)&Status, 0x20000000);
+   test_m32rel_imm32((unsigned int*)&g_cp0_regs[CP0_STATUS_REG], 0x20000000);
    jne_rj(0);
    jump_start_rel8();
 

@@ -36,15 +36,15 @@
 
 /* global variable */
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-unsigned int reg_cop0[32];
+unsigned int g_cp0_regs[CP0_REGS_COUNT];
 #endif
 
 /* global functions */
 int check_cop1_unusable(void)
 {
-   if (!(Status & 0x20000000))
+   if (!(g_cp0_regs[CP0_STATUS_REG] & 0x20000000))
      {
-    Cause = (11 << 2) | 0x10000000;
+    g_cp0_regs[CP0_CAUSE_REG] = (11 << 2) | 0x10000000;
     exception_general();
     return 1;
      }
@@ -57,7 +57,7 @@ void update_count(void)
     if (r4300emu != CORE_DYNAREC)
     {
 #endif
-        Count += ((PC->addr - last_addr) >> 2) * count_per_op;
+        g_cp0_regs[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
         last_addr = PC->addr;
 #ifdef NEW_DYNAREC
     }

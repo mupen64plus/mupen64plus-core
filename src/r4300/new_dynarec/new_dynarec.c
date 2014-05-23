@@ -354,11 +354,11 @@ void *get_addr(u_int vaddr)
   if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",Count,next_interupt,vaddr,page);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,page);
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
       ht_bin[3]=ht_bin[1];
       ht_bin[2]=ht_bin[0];
@@ -371,7 +371,7 @@ void *get_addr(u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
       if(verify_dirty(head->addr)) {
@@ -402,22 +402,22 @@ void *get_addr(u_int vaddr)
     }
     head=head->next;
   }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",Count,next_interupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
-  Status|=2;
-  Cause=(vaddr<<31)|0x8;
-  EPC=(vaddr&1)?vaddr-5:vaddr;
-  BadVAddr=(vaddr&~1);
-  Context=(Context&0xFF80000F)|((BadVAddr>>9)&0x007FFFF0);
-  EntryHi=BadVAddr&0xFFFFE000;
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=(vaddr<<31)|0x8;
+  g_cp0_regs[CP0_EPC_REG]=(vaddr&1)?vaddr-5:vaddr;
+  g_cp0_regs[CP0_BADVADDR_REG]=(vaddr&~1);
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
   return get_addr_ht(0x80000000);
 }
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",Count,next_interupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -426,7 +426,7 @@ void *get_addr_ht(u_int vaddr)
 
 void *get_addr_32(u_int vaddr,u_int flags)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",Count,next_interupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,flags);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -440,7 +440,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       if(head->reg32==0) {
         u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
         if(ht_bin[0]==-1) {
@@ -462,7 +462,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",Count,next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
       if(verify_dirty(head->addr)) {
@@ -496,16 +496,16 @@ void *get_addr_32(u_int vaddr,u_int flags)
     }
     head=head->next;
   }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",Count,next_interupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,flags);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
-  Status|=2;
-  Cause=(vaddr<<31)|0x8;
-  EPC=(vaddr&1)?vaddr-5:vaddr;
-  BadVAddr=(vaddr&~1);
-  Context=(Context&0xFF80000F)|((BadVAddr>>9)&0x007FFFF0);
-  EntryHi=BadVAddr&0xFFFFE000;
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=(vaddr<<31)|0x8;
+  g_cp0_regs[CP0_EPC_REG]=(vaddr&1)?vaddr-5:vaddr;
+  g_cp0_regs[CP0_BADVADDR_REG]=(vaddr&~1);
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
   return get_addr_ht(0x80000000);
 }
 
@@ -2045,16 +2045,16 @@ static void enabletrace()
 
 static void memdebug(int i)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",Count,next_interupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",Count,next_interupt,rchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",g_cp0_regs[CP0_COUNT_REG],next_interupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,rchecksum());
   //rlist();
   //if(tracedebug) {
-  //if(Count>=-2084597794) {
-  if((signed int)Count>=-2084597794&&(signed int)Count<0) {
+  //if(g_cp0_regs[CP0_COUNT_REG]>=-2084597794) {
+  if((signed int)g_cp0_regs[CP0_COUNT_REG]>=-2084597794&&(signed int)g_cp0_regs[CP0_COUNT_REG]<0) {
   //if(0) {
-    DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",Count,next_interupt,mchecksum());
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",Count,next_interupt,mchecksum(),Status);
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",Count,next_interupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,mchecksum());
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",g_cp0_regs[CP0_COUNT_REG],next_interupt,mchecksum(),g_cp0_regs[CP0_STATUS_REG]);
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",g_cp0_regs[CP0_COUNT_REG],next_interupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
     rlist();
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     DebugMessage(M64MSG_VERBOSE, "TRACE: %x",(&i)[-1]);
@@ -2987,7 +2987,7 @@ static void load_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&Count);
+        emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
         #endif
         #if NEW_DYNAREC == NEW_DYNAREC_ARM
         if(get_reg(i_regs->regmap,CCREG)<0)
@@ -2996,7 +2996,7 @@ static void load_assemble(int i,struct regstat *i_regs)
           emit_mov(HOST_CCREG,0);
         emit_add(0,ECX,0);
         emit_addimm(0,2*ccadj[i],0);
-        emit_writeword(0,(int)&Count);
+        emit_writeword(0,(int)&g_cp0_regs[CP0_COUNT_REG]);
         #endif
     emit_call((int)memdebug);
     //emit_popa();
@@ -3179,7 +3179,7 @@ static void store_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&Count);
+        emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
         #endif
         #if NEW_DYNAREC == NEW_DYNAREC_ARM
         if(get_reg(i_regs->regmap,CCREG)<0)
@@ -3188,7 +3188,7 @@ static void store_assemble(int i,struct regstat *i_regs)
           emit_mov(HOST_CCREG,0);
         emit_add(0,ECX,0);
         emit_addimm(0,2*ccadj[i],0);
-        emit_writeword(0,(int)&Count);
+        emit_writeword(0,(int)&g_cp0_regs[CP0_COUNT_REG]);
         #endif
     emit_call((int)memdebug);
     #if NEW_DYNAREC == NEW_DYNAREC_X86
@@ -3435,7 +3435,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&Count);
+        emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
     //restore_regs(0x100f);
@@ -3627,7 +3627,7 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&Count);
+        emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
   }*/
@@ -4916,9 +4916,9 @@ static void do_ccstub(int n)
   /* This works but uses a lot of memory...
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
-  emit_writeword(EAX,(int)&Count);
+  emit_writeword(EAX,(int)&g_cp0_regs[CP0_COUNT_REG]);
   emit_call((int)gen_interupt);
-  emit_readword((int)&Count,HOST_CCREG);
+  emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,EAX);
   emit_readword((int)&pending_exception,EBX);
   emit_writeword(EAX,(int)&last_count);
@@ -5164,7 +5164,7 @@ static void rjump_assemble(int i,struct regstat *i_regs)
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_writeword(HOST_CCREG,(int)&Count);
+  emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
 #endif
@@ -7643,18 +7643,18 @@ int new_recompile_block(int addr)
     for(n=0;n<=2048;n++) ll_clear(jump_dirty+n);
   }
 */
-  //if(Count==365117028) tracedebug=1;
+  //if(g_cp0_regs[CP0_COUNT_REG]==365117028) tracedebug=1;
   assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
 #if defined (COUNT_NOTCOMPILEDS )
   notcompiledCount++;
   log_message( "notcompiledCount=%i", notcompiledCount );
 #endif
   //DebugMessage(M64MSG_VERBOSE, "NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",Count,next_interupt,addr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,addr);
   //if(debug) 
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",Count,next_interupt,mchecksum());
-  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(Status & 0x04000000)>>26,(Status & 0x20000000)>>29);
-  /*if(Count>=312978186) {
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,mchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(g_cp0_regs[CP0_STATUS_REG] & 0x04000000)>>26,(g_cp0_regs[CP0_STATUS_REG] & 0x20000000)>>29);
+  /*if(g_cp0_regs[CP0_COUNT_REG]>=312978186) {
     rlist();
   }*/
   //rlist();
@@ -10925,10 +10925,10 @@ void TLBWI_new(void)
 {
   unsigned int i;
   /* Remove old entries */
-  unsigned int old_start_even=tlb_e[Index&0x3F].start_even;
-  unsigned int old_end_even=tlb_e[Index&0x3F].end_even;
-  unsigned int old_start_odd=tlb_e[Index&0x3F].start_odd;
-  unsigned int old_end_odd=tlb_e[Index&0x3F].end_odd;
+  unsigned int old_start_even=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_even;
+  unsigned int old_end_even=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_even;
+  unsigned int old_start_odd=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -10946,12 +10946,12 @@ void TLBWI_new(void)
     }
   }
   cached_interpreter_table.TLBWI();
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",Index);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",tlb_e[Index&0x3F].start_even,tlb_e[Index&0x3F].end_even,tlb_e[Index&0x3F].phys_even,tlb_e[Index&0x3F].v_even,tlb_e[Index&0x3F].d_even);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",tlb_e[Index&0x3F].start_odd,tlb_e[Index&0x3F].end_odd,tlb_e[Index&0x3F].phys_odd,tlb_e[Index&0x3F].v_odd,tlb_e[Index&0x3F].d_odd);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",g_cp0_regs[CP0_INDEX_REG]);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_even,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_even,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].phys_even,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].v_even,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].d_even);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_odd,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_odd,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].phys_odd,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].v_odd,tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].d_odd);
   /* Combine tlb_LUT_r, tlb_LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=tlb_e[Index&0x3F].start_even>>12; i<=tlb_e[Index&0x3F].end_even>>12; i++)
+  for (i=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_even>>12; i<=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -10972,7 +10972,7 @@ void TLBWI_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
-  for (i=tlb_e[Index&0x3F].start_odd>>12; i<=tlb_e[Index&0x3F].end_odd>>12; i++)
+  for (i=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=tlb_e[g_cp0_regs[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -10998,12 +10998,12 @@ void TLBWI_new(void)
 void TLBWR_new(void)
 {
   unsigned int i;
-  Random = (Count/2 % (32 - Wired)) + Wired;
+  g_cp0_regs[CP0_RANDOM_REG] = (g_cp0_regs[CP0_COUNT_REG]/2 % (32 - g_cp0_regs[CP0_WIRED_REG])) + g_cp0_regs[CP0_WIRED_REG];
   /* Remove old entries */
-  unsigned int old_start_even=tlb_e[Random&0x3F].start_even;
-  unsigned int old_end_even=tlb_e[Random&0x3F].end_even;
-  unsigned int old_start_odd=tlb_e[Random&0x3F].start_odd;
-  unsigned int old_end_odd=tlb_e[Random&0x3F].end_odd;
+  unsigned int old_start_even=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].start_even;
+  unsigned int old_end_even=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].end_even;
+  unsigned int old_start_odd=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -11023,7 +11023,7 @@ void TLBWR_new(void)
   cached_interpreter_table.TLBWR();
   /* Combine tlb_LUT_r, tlb_LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=tlb_e[Random&0x3F].start_even>>12; i<=tlb_e[Random&0x3F].end_even>>12; i++)
+  for (i=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11044,7 +11044,7 @@ void TLBWR_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
-  for (i=tlb_e[Random&0x3F].start_odd>>12; i<=tlb_e[Random&0x3F].end_odd>>12; i++)
+  for (i=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=tlb_e[g_cp0_regs[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,tlb_LUT_r[i],tlb_LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)

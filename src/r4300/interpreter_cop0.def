@@ -23,13 +23,13 @@ DECLARE_INSTRUCTION(MFC0)
 {
    switch(PC->f.r.nrd)
    {
-      case 1:
+      case CP0_RANDOM_REG:
         DebugMessage(M64MSG_ERROR, "MFC0 instruction reading un-implemented Random register");
         stop=1;
-      case 9:    // Count
+      case CP0_COUNT_REG:
         update_count();
       default:
-        rrt32 = reg_cop0[PC->f.r.nrd];
+        rrt32 = g_cp0_regs[PC->f.r.nrd];
         sign_extended(rrt);
    }
    ADD_TO_PC(1);
@@ -39,96 +39,95 @@ DECLARE_INSTRUCTION(MTC0)
 {
   switch(PC->f.r.nrd)
   {
-    case 0:    // Index
-      Index = (unsigned int) rrt & 0x8000003F;
-      if ((Index & 0x3F) > 31) 
+    case CP0_INDEX_REG:
+      g_cp0_regs[CP0_INDEX_REG] = (unsigned int) rrt & 0x8000003F;
+      if ((g_cp0_regs[CP0_INDEX_REG] & 0x3F) > 31)
       {
         DebugMessage(M64MSG_ERROR, "MTC0 instruction writing Index register with TLB index > 31");
         stop=1;
       }
       break;
-    case 1:    // Random
+    case CP0_RANDOM_REG:
       break;
-    case 2:    // EntryLo0
-      EntryLo0 = (unsigned int) rrt & 0x3FFFFFFF;
+    case CP0_ENTRYLO0_REG:
+      g_cp0_regs[CP0_ENTRYLO0_REG] = (unsigned int) rrt & 0x3FFFFFFF;
       break;
-    case 3:    // EntryLo1
-      EntryLo1 = (unsigned int) rrt & 0x3FFFFFFF;
+    case CP0_ENTRYLO1_REG:
+      g_cp0_regs[CP0_ENTRYLO1_REG] = (unsigned int) rrt & 0x3FFFFFFF;
       break;
-    case 4:    // Context
-      Context = ((unsigned int) rrt & 0xFF800000) | (Context & 0x007FFFF0);
+    case CP0_CONTEXT_REG:
+      g_cp0_regs[CP0_CONTEXT_REG] = ((unsigned int) rrt & 0xFF800000)
+                                  | (g_cp0_regs[CP0_CONTEXT_REG] & 0x007FFFF0);
       break;
-    case 5:    // PageMask
-      PageMask = (unsigned int) rrt & 0x01FFE000;
+    case CP0_PAGEMASK_REG:
+      g_cp0_regs[CP0_PAGEMASK_REG] = (unsigned int) rrt & 0x01FFE000;
       break;
-    case 6:    // Wired
-      Wired = (unsigned int) rrt;
-      Random = 31;
+    case CP0_WIRED_REG:
+      g_cp0_regs[CP0_WIRED_REG] = (unsigned int) rrt;
+      g_cp0_regs[CP0_RANDOM_REG] = 31;
       break;
-    case 8:    // BadVAddr
+    case CP0_BADVADDR_REG:
       break;
-    case 9:    // Count
+    case CP0_COUNT_REG:
       update_count();
       interupt_unsafe_state = 1;
-      if (next_interupt <= Count) gen_interupt();
+      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
       interupt_unsafe_state = 0;
       translate_event_queue((unsigned int) rrt & 0xFFFFFFFF);
-      Count = (unsigned int) rrt & 0xFFFFFFFF;
+      g_cp0_regs[CP0_COUNT_REG] = (unsigned int) rrt & 0xFFFFFFFF;
       break;
-    case 10:   // EntryHi
-      EntryHi = (unsigned int) rrt & 0xFFFFE0FF;
+    case CP0_ENTRYHI_REG:
+      g_cp0_regs[CP0_ENTRYHI_REG] = (unsigned int) rrt & 0xFFFFE0FF;
       break;
-    case 11:   // Compare
+    case CP0_COMPARE_REG:
       update_count();
       remove_event(COMPARE_INT);
       add_interupt_event_count(COMPARE_INT, (unsigned int)rrt);
-      Compare = (unsigned int) rrt;
-      Cause = Cause & 0xFFFF7FFF; //Timer interupt is clear
+      g_cp0_regs[CP0_COMPARE_REG] = (unsigned int) rrt;
+      g_cp0_regs[CP0_CAUSE_REG] &= 0xFFFF7FFF; //Timer interupt is clear
       break;
-    case 12:   // Status
-      if((rrt & 0x04000000) != (Status & 0x04000000))
+    case CP0_STATUS_REG:
+      if((rrt & 0x04000000) != (g_cp0_regs[CP0_STATUS_REG] & 0x04000000))
       {
-          shuffle_fpr_data(Status, (unsigned int) rrt);
+          shuffle_fpr_data(g_cp0_regs[CP0_STATUS_REG], (unsigned int) rrt);
           set_fpr_pointers((unsigned int) rrt);
       }
-      Status = (unsigned int) rrt;
+      g_cp0_regs[CP0_STATUS_REG] = (unsigned int) rrt;
       update_count();
       ADD_TO_PC(1);
       check_interupt();
       interupt_unsafe_state = 1;
-      if (next_interupt <= Count) gen_interupt();
+      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
       interupt_unsafe_state = 0;
       ADD_TO_PC(-1);
       break;
-    case 13:   // Cause
+    case CP0_CAUSE_REG:
       if (rrt!=0)
       {
          DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
          stop = 1;
       }
-      else Cause = (unsigned int) rrt;
+      else g_cp0_regs[CP0_CAUSE_REG] = (unsigned int) rrt;
       break;
-    case 14:   // EPC
-      EPC = (unsigned int) rrt;
+    case CP0_EPC_REG:
+      g_cp0_regs[CP0_EPC_REG] = (unsigned int) rrt;
       break;
-    case 15:  // PRevID
+    case CP0_PREVID_REG:
       break;
-    case 16:  // Config
-      Config = (unsigned int) rrt;
+    case CP0_CONFIG_REG:
+      g_cp0_regs[CP0_CONFIG_REG] = (unsigned int) rrt;
       break;
-    case 18:  // WatchLo
-      WatchLo = (unsigned int) rrt & 0xFFFFFFFF;
+    case CP0_WATCHLO_REG:
+      g_cp0_regs[CP0_WATCHLO_REG] = (unsigned int) rrt & 0xFFFFFFFF;
       break;
-    case 19:  // WatchHi
-      WatchHi = (unsigned int) rrt & 0xFFFFFFFF;
+    case CP0_WATCHHI_REG:
+      g_cp0_regs[CP0_WATCHHI_REG] = (unsigned int) rrt & 0xFFFFFFFF;
       break;
-    case 27:  // CacheErr
+    case CP0_TAGLO_REG:
+      g_cp0_regs[CP0_TAGLO_REG] = (unsigned int) rrt & 0x0FFFFFC0;
       break;
-    case 28:  // TagLo
-      TagLo = (unsigned int) rrt & 0x0FFFFFC0;
-      break;
-    case 29: // TagHi
-      TagHi =0;
+    case CP0_TAGHI_REG:
+      g_cp0_regs[CP0_TAGHI_REG] =0;
       break;
     default:
       DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", PC->f.r.nrd);
