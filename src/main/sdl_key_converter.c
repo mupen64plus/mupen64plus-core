@@ -337,8 +337,8 @@ uint16_t sdl_keysym2scancode(uint16_t keysym)
         0x00e2u, /* SDLK_LALT -> SDL_SCANCODE_LALT */
         0x0000u, /* SDLK_RMETA -> SDL_SCANCODE_UNKNOWN */
         0x0000u, /* SDLK_LMETA -> SDL_SCANCODE_UNKNOWN */
-        0x0000u, /* SDLK_LSUPER -> SDL_SCANCODE_UNKNOWN */
-        0x0000u, /* SDLK_RSUPER -> SDL_SCANCODE_UNKNOWN */
+        0x00e3u, /* SDLK_LSUPER -> SDL_SCANCODE_LGUI */
+        0x00e7u, /* SDLK_RSUPER -> SDL_SCANCODE_RGUI */
         0x0101u, /* SDLK_MODE -> SDL_SCANCODE_MODE */
         0x0000u, /* SDLK_COMPOSE -> SDL_SCANCODE_UNKNOWN */
         0x0075u, /* SDLK_HELP -> SDL_SCANCODE_HELP */
@@ -586,11 +586,11 @@ uint16_t sdl_scancode2keysym(uint16_t scancode)
         0x0132u, /* SDL_SCANCODE_LCTRL -> SDLK_LCTRL */
         0x0130u, /* SDL_SCANCODE_LSHIFT -> SDLK_LSHIFT */
         0x0134u, /* SDL_SCANCODE_LALT -> SDLK_LALT */
-        0x0000u, /* SDL_SCANCODE_LGUI -> SDLK_UNKNOWN */
+        0x0137u, /* SDL_SCANCODE_LGUI -> SDLK_LSUPER */
         0x0131u, /* SDL_SCANCODE_RCTRL -> SDLK_RCTRL */
         0x012fu, /* SDL_SCANCODE_RSHIFT -> SDLK_RSHIFT */
         0x0133u, /* SDL_SCANCODE_RALT -> SDLK_RALT */
-        0x0000u, /* SDL_SCANCODE_RGUI -> SDLK_UNKNOWN */
+        0x0138u, /* SDL_SCANCODE_RGUI -> SDLK_RSUPER */
         0x0000u, /* unassigned -> SDLK_UNKNOWN */
         0x0000u, /* unassigned -> SDLK_UNKNOWN */
         0x0000u, /* unassigned -> SDLK_UNKNOWN */
