@@ -22,34 +22,37 @@
 #ifndef M64P_R4300_CP0_H
 #define M64P_R4300_CP0_H
 
-/* registers macros */
-#define Index reg_cop0[0]
-#define Random reg_cop0[1]
-#define EntryLo0 reg_cop0[2]
-#define EntryLo1 reg_cop0[3]
-#define Context reg_cop0[4]
-#define PageMask reg_cop0[5]
-#define Wired reg_cop0[6]
-#define BadVAddr reg_cop0[8]
-#define Count reg_cop0[9]
-#define EntryHi reg_cop0[10]
-#define Compare reg_cop0[11]
-#define Status reg_cop0[12]
-#define Cause reg_cop0[13]
-#define EPC reg_cop0[14]
-#define PRevID reg_cop0[15]
-#define Config reg_cop0[16]
-#define LLAddr reg_cop0[17]
-#define WatchLo reg_cop0[18]
-#define WatchHi reg_cop0[19]
-#define XContext reg_cop0[20]
-#define PErr reg_cop0[26]
-#define CacheErr reg_cop0[27]
-#define TagLo reg_cop0[28]
-#define TagHi reg_cop0[29]
-#define ErrorEPC reg_cop0[30]
+enum {
+    CP0_INDEX_REG,
+    CP0_RANDOM_REG,
+    CP0_ENTRYLO0_REG,
+    CP0_ENTRYLO1_REG,
+    CP0_CONTEXT_REG,
+    CP0_PAGEMASK_REG,
+    CP0_WIRED_REG,
+    /* 7 is unused */
+    CP0_BADVADDR_REG = 8,
+    CP0_COUNT_REG,
+    CP0_ENTRYHI_REG,
+    CP0_COMPARE_REG,
+    CP0_STATUS_REG,
+    CP0_CAUSE_REG,
+    CP0_EPC_REG,
+    CP0_PREVID_REG,
+    CP0_CONFIG_REG,
+    CP0_LLADDR_REG,
+    CP0_WATCHLO_REG,
+    CP0_WATCHHI_REG,
+    CP0_XCONTEXT_REG,
+    /* 21 - 27 are unused */
+    CP0_TAGLO_REG = 28,
+    CP0_TAGHI_REG,
+    CP0_ERROREPC_REG,
+    /* 31 is unused */
+    CP0_REGS_COUNT = 32
+};
 
-extern unsigned int reg_cop0[32];
+extern unsigned int g_cp0_regs[CP0_REGS_COUNT];
 
 int check_cop1_unusable(void);
 void update_count(void);

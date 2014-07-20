@@ -48,8 +48,8 @@
 	.hidden reg_cop1_simple
 	.global	reg_cop1_double
 	.hidden reg_cop1_double
-	.global reg_cop0
-	.hidden reg_cop0
+	.global g_cp0_regs
+	.hidden g_cp0_regs
 	.global	FCR0
 	.hidden FCR0
 	.global	FCR31
@@ -159,10 +159,10 @@ hi = reg + 256
 lo = hi + 8
 	.type	lo, %object
 	.size	lo, 8
-reg_cop0 = lo + 8
-	.type	reg_cop0, %object
-	.size	reg_cop0, 128
-reg_cop1_simple = reg_cop0 + 128
+g_cp0_regs = lo + 8
+	.type	g_cp0_regs, %object
+	.size	g_cp0_regs, 128
+reg_cop1_simple = g_cp0_regs + 128
 	.type	reg_cop1_simple, %object
 	.size	reg_cop1_simple, 128
 reg_cop1_double = reg_cop1_simple + 128
@@ -297,21 +297,21 @@ exec_pagefault:
 	/* r0 = instruction pointer */
 	/* r1 = fault address */
 	/* r2 = cause */
-	ldr	r3, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	ldr	r3, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	mvn	r6, #0xF000000F
-	ldr	r4, [fp, #reg_cop0+16-dynarec_local] /* Context */
+	ldr	r4, [fp, #g_cp0_regs+16-dynarec_local] /* Context */
 	bic	r6, r6, #0x0F800000
-	str	r0, [fp, #reg_cop0+56-dynarec_local] /* EPC */
+	str	r0, [fp, #g_cp0_regs+56-dynarec_local] /* EPC */
 	orr	r3, r3, #2
-	str	r1, [fp, #reg_cop0+32-dynarec_local] /* BadVAddr */
+	str	r1, [fp, #g_cp0_regs+32-dynarec_local] /* BadVAddr */
 	bic	r4, r4, r6
-	str	r3, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	str	r3, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	and	r5, r6, r1, lsr #9
-	str	r2, [fp, #reg_cop0+52-dynarec_local] /* Cause */
+	str	r2, [fp, #g_cp0_regs+52-dynarec_local] /* Cause */
 	and	r1, r1, r6, lsl #9
-	str	r1, [fp, #reg_cop0+40-dynarec_local] /* EntryHi */
+	str	r1, [fp, #g_cp0_regs+40-dynarec_local] /* EntryHi */
 	orr	r4, r4, r5
-	str	r4, [fp, #reg_cop0+16-dynarec_local] /* Context */
+	str	r4, [fp, #g_cp0_regs+16-dynarec_local] /* Context */
 	mov	r0, #0x80000000
 	bl	get_addr_ht
 	mov	pc, r0
@@ -624,7 +624,7 @@ cc_interrupt:
 	str	r1, [fp, #pending_exception-dynarec_local]
 	and	r2, r2, r10, lsr #17
 	add	r3, fp, #restore_candidate-dynarec_local
-	str	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	str	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	ldr	r4, [r2, r3]
 	mov	r10, lr
 	tst	r4, r4
@@ -632,7 +632,7 @@ cc_interrupt:
 .E1:
 	bl	gen_interupt
 	mov	lr, r10
-	ldr	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	ldr	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	ldr	r0, [fp, #next_interupt-dynarec_local]
 	ldr	r1, [fp, #pending_exception-dynarec_local]
 	ldr	r2, [fp, #stop-dynarec_local]
@@ -671,7 +671,7 @@ do_interrupt:
 	ldr	r0, [fp, #pcaddr-dynarec_local]
 	bl	get_addr_ht
 	ldr	r1, [fp, #next_interupt-dynarec_local]
-	ldr	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	ldr	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	str	r1, [fp, #last_count-dynarec_local]
 	sub	r10, r10, r1
 	add	r10, r10, #2
@@ -684,13 +684,13 @@ do_interrupt:
 fp_exception:
 	mov	r2, #0x10000000
 .E7:
-	ldr	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	ldr	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	mov	r3, #0x80000000
-	str	r0, [fp, #reg_cop0+56-dynarec_local] /* EPC */
+	str	r0, [fp, #g_cp0_regs+56-dynarec_local] /* EPC */
 	orr	r1, #2
 	add	r2, r2, #0x2c
-	str	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
-	str	r2, [fp, #reg_cop0+52-dynarec_local] /* Cause */
+	str	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
+	str	r2, [fp, #g_cp0_regs+52-dynarec_local] /* Cause */
 	add	r0, r3, #0x180
 	bl	get_addr_ht
 	mov	pc, r0
@@ -708,13 +708,13 @@ fp_exception_ds:
 	.hidden jump_syscall
 	.type	jump_syscall, %function
 jump_syscall:
-	ldr	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	ldr	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	mov	r3, #0x80000000
-	str	r0, [fp, #reg_cop0+56-dynarec_local] /* EPC */
+	str	r0, [fp, #g_cp0_regs+56-dynarec_local] /* EPC */
 	orr	r1, #2
 	mov	r2, #0x20
-	str	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
-	str	r2, [fp, #reg_cop0+52-dynarec_local] /* Cause */
+	str	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
+	str	r2, [fp, #g_cp0_regs+52-dynarec_local] /* Cause */
 	add	r0, r3, #0x180
 	bl	get_addr_ht
 	mov	pc, r0
@@ -733,7 +733,7 @@ indirect_jump_indexed:
 indirect_jump:
 	ldr	r12, [fp, #last_count-dynarec_local]
 	add	r2, r2, r12 
-	str	r2, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	str	r2, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	mov	pc, r0
 	.size	indirect_jump, .-indirect_jump
 	.align	2
@@ -741,15 +741,15 @@ indirect_jump:
 	.hidden jump_eret
 	.type	jump_eret, %function
 jump_eret:
-	ldr	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	ldr	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	ldr	r0, [fp, #last_count-dynarec_local]
 	bic	r1, r1, #2
 	add	r10, r0, r10
-	str	r1, [fp, #reg_cop0+48-dynarec_local] /* Status */
-	str	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	str	r1, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
+	str	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	bl	check_interupt
 	ldr	r1, [fp, #next_interupt-dynarec_local]
-	ldr	r0, [fp, #reg_cop0+56-dynarec_local] /* EPC */
+	ldr	r0, [fp, #g_cp0_regs+56-dynarec_local] /* EPC */
 	str	r1, [fp, #last_count-dynarec_local]
 	subs	r10, r10, r1
 	bpl	.E11
@@ -795,7 +795,7 @@ new_dyna_start:
 	add	r0, r0, #0x40
 	bl	new_recompile_block
 	ldr	r0, [fp, #next_interupt-dynarec_local]
-	ldr	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	ldr	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	str	r0, [fp, #last_count-dynarec_local]
 	sub	r10, r10, r0
 	mov	pc, r4
@@ -1148,23 +1148,23 @@ tlb_exception:
 	/* r1 = cause */
 	/* r2 = address */
 	/* r3 = instr addr/flags */
-	ldr	r4, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	ldr	r4, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	add	r5, fp, #memory_map-dynarec_local
 	lsr	r6, r3, #12
 	orr	r1, r1, r3, lsl #31
 	orr	r4, r4, #2
 	ldr	r7, [r5, r6, lsl #2]
 	bic	r8, r3, #3
-	str	r4, [fp, #reg_cop0+48-dynarec_local] /* Status */
+	str	r4, [fp, #g_cp0_regs+48-dynarec_local] /* Status */
 	mov	r6, #0x6000000
-	str	r1, [fp, #reg_cop0+52-dynarec_local] /* Cause */
+	str	r1, [fp, #g_cp0_regs+52-dynarec_local] /* Cause */
 	orr	r6, r6, #0x22
 	ldr	r0, [r8, r7, lsl #2]
 	add	r4, r8, r1, asr #29
 	add	r5, fp, #reg-dynarec_local
-	str	r4, [fp, #reg_cop0+56-dynarec_local] /* EPC */
+	str	r4, [fp, #g_cp0_regs+56-dynarec_local] /* EPC */
 	mov	r7, #0xf8
-	ldr	r8, [fp, #reg_cop0+16-dynarec_local] /* Context */
+	ldr	r8, [fp, #g_cp0_regs+16-dynarec_local] /* Context */
 	lsl	r1, r0, #16
 	lsr	r4, r0,	#26
 	and	r7, r7, r0, lsr #18
@@ -1180,15 +1180,15 @@ tlb_exception:
 	add	r4, r2, r1, asr #16
 	add	r6, fp, #reg+4-dynarec_local
 	asr	r3, r2, #31
-	str	r4, [fp, #reg_cop0+32-dynarec_local] /* BadVAddr */
+	str	r4, [fp, #g_cp0_regs+32-dynarec_local] /* BadVAddr */
 	add	r0, r0, #0x180
 	and	r4, r9, r4, lsr #9
 	strne	r3, [r6, r7]
 	orr	r8, r8, r4
-	str	r8, [fp, #reg_cop0+16-dynarec_local] /* Context */
+	str	r8, [fp, #g_cp0_regs+16-dynarec_local] /* Context */
 	bl	get_addr_ht
 	ldr	r1, [fp, #next_interupt-dynarec_local]
-	ldr	r10, [fp, #reg_cop0+36-dynarec_local] /* Count */
+	ldr	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	str	r1, [fp, #last_count-dynarec_local]
 	sub	r10, r10, r1
 	mov	pc, r0	

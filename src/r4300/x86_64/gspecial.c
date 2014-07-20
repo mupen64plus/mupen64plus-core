@@ -333,7 +333,7 @@ void gensyscall(void)
 #else
    free_registers_move_start();
 
-   mov_m32rel_imm32(&Cause, 8 << 2);
+   mov_m32rel_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
    gencallinterp((unsigned long long)exception_general, 0);
 #endif
 }

@@ -51,7 +51,6 @@
 #endif
 
 unsigned int r4300emu = 0;
-int no_compiled_jump = 0;
 unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
 int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -91,7 +90,7 @@ void r4300_reset_hard(void)
     for (i = 0; i < 32; i++)
     {
         reg[i]=0;
-        reg_cop0[i]=0;
+        g_cp0_regs[i]=0;
         reg_cop1_fgr_64[i]=0;
 
         // --------------tlb------------------------
@@ -129,17 +128,17 @@ void r4300_reset_hard(void)
     FCR31=0;
 
     // set COP0 registers
-    Random = 31;
-    Status= 0x34000000;
-    set_fpr_pointers(Status);
-    Config= 0x6e463;
-    PRevID = 0xb00;
-    Count = 0x5000;
-    Cause = 0x5C;
-    Context = 0x7FFFF0;
-    EPC = 0xFFFFFFFF;
-    BadVAddr = 0xFFFFFFFF;
-    ErrorEPC = 0xFFFFFFFF;
+    g_cp0_regs[CP0_RANDOM_REG] = 31;
+    g_cp0_regs[CP0_STATUS_REG]= 0x34000000;
+    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
+    g_cp0_regs[CP0_CONFIG_REG]= 0x6e463;
+    g_cp0_regs[CP0_PREVID_REG] = 0xb00;
+    g_cp0_regs[CP0_COUNT_REG] = 0x5000;
+    g_cp0_regs[CP0_CAUSE_REG] = 0x5C;
+    g_cp0_regs[CP0_CONTEXT_REG] = 0x7FFFF0;
+    g_cp0_regs[CP0_EPC_REG] = 0xFFFFFFFF;
+    g_cp0_regs[CP0_BADVADDR_REG] = 0xFFFFFFFF;
+    g_cp0_regs[CP0_ERROREPC_REG] = 0xFFFFFFFF;
    
     rounding_mode = 0x33F;
 }

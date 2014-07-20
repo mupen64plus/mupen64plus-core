@@ -127,22 +127,22 @@ exec_pagefault:
 	/* eax = instruction pointer */
 	/* ebx = fault address */
 	/* ecx = cause */
-	mov	reg_cop0+48, %edx
+	mov	g_cp0_regs+48, %edx
 	add	$-12, %esp
-	mov	reg_cop0+16, %edi
+	mov	g_cp0_regs+16, %edi
 	or	$2, %edx
-	mov	%ebx, reg_cop0+32 /* BadVAddr */
+	mov	%ebx, g_cp0_regs+32 /* BadVAddr */
 	and	$0xFF80000F, %edi
-	mov	%edx, reg_cop0+48 /* Status */
-	mov	%ecx, reg_cop0+52 /* Cause */
-	mov	%eax, reg_cop0+56 /* EPC */
+	mov	%edx, g_cp0_regs+48 /* Status */
+	mov	%ecx, g_cp0_regs+52 /* Cause */
+	mov	%eax, g_cp0_regs+56 /* EPC */
 	mov	%ebx, %ecx
 	shr	$9, %ebx
 	and	$0xFFFFE000, %ecx
 	and	$0x007FFFF0, %ebx
-	mov	%ecx, reg_cop0+40 /* EntryHI */
+	mov	%ecx, g_cp0_regs+40 /* EntryHI */
 	or	%ebx, %edi
-	mov	%edi, reg_cop0+16 /* Context */
+	mov	%edi, g_cp0_regs+16 /* Context */
 	push	$0x80000000
 	call	get_addr_ht
 	add	$16, %esp
@@ -402,7 +402,7 @@ verify_code:
 cc_interrupt:
 	add	last_count, %esi
 	add	$-28, %esp /* Align stack */
-	mov	%esi, reg_cop0+36 /* Count */
+	mov	%esi, g_cp0_regs+36 /* Count */
 	shr	$19, %esi
 	movl	$0, pending_exception
 	and	$0x7f, %esi
@@ -410,7 +410,7 @@ cc_interrupt:
 	jne	.E4
 .E1:
 	call	gen_interupt
-	mov	reg_cop0+36, %esi
+	mov	g_cp0_regs+36, %esi
 	mov	next_interupt, %eax
 	mov	pending_exception, %ebx
 	mov	stop, %ecx
@@ -465,7 +465,7 @@ do_interrupt:
 	push	%edi
 	call	get_addr_ht
 	add	$16, %esp
-	mov	reg_cop0+36, %esi
+	mov	g_cp0_regs+36, %esi
 	mov	next_interupt, %ebx
 	mov	%ebx, last_count
 	sub	%ebx, %esi
@@ -479,12 +479,12 @@ do_interrupt:
 fp_exception:
 	mov	$0x1000002c, %edx
 .E7:
-	mov	reg_cop0+48, %ebx
+	mov	g_cp0_regs+48, %ebx
 	add	$-12, %esp
 	or	$2, %ebx
-	mov	%ebx, reg_cop0+48 /* Status */
-	mov	%edx, reg_cop0+52 /* Cause */
-	mov	%eax, reg_cop0+56 /* EPC */
+	mov	%ebx, g_cp0_regs+48 /* Status */
+	mov	%edx, g_cp0_regs+52 /* Cause */
+	mov	%eax, g_cp0_regs+56 /* EPC */
 	push    $0x80000180
 	call	get_addr_ht
 	add	$16, %esp
@@ -504,12 +504,12 @@ fp_exception_ds:
 	.type	jump_syscall, @function
 jump_syscall:
 	mov	$0x20, %edx
-	mov	reg_cop0+48, %ebx
+	mov	g_cp0_regs+48, %ebx
 	add	$-12, %esp
 	or	$2, %ebx
-	mov	%ebx, reg_cop0+48 /* Status */
-	mov	%edx, reg_cop0+52 /* Cause */
-	mov	%eax, reg_cop0+56 /* EPC */
+	mov	%ebx, g_cp0_regs+48 /* Status */
+	mov	%edx, g_cp0_regs+52 /* Cause */
+	mov	%eax, g_cp0_regs+56 /* EPC */
 	push    $0x80000180
 	call	get_addr_ht
 	mov	$16, %esp
@@ -520,17 +520,17 @@ jump_syscall:
 	.hidden jump_eret
 	.type	jump_eret, @function
 jump_eret:
-	mov	reg_cop0+48, %ebx /* Status */
+	mov	g_cp0_regs+48, %ebx /* Status */
 	add	last_count, %esi
 	and	$0xFFFFFFFD, %ebx
-	mov	%esi, reg_cop0+36 /* Count */
-	mov	%ebx, reg_cop0+48 /* Status */
+	mov	%esi, g_cp0_regs+36 /* Count */
+	mov	%ebx, g_cp0_regs+48 /* Status */
 	call	check_interupt
 	mov	next_interupt, %eax
-	mov	reg_cop0+36, %esi
+	mov	g_cp0_regs+36, %esi
 	mov	%eax, last_count
 	sub	%eax, %esi
-	mov	reg_cop0+56, %eax /* EPC */
+	mov	g_cp0_regs+56, %eax /* EPC */
 	jns	.E11
 .E8:
 	mov	$248, %ebx
@@ -583,7 +583,7 @@ new_dyna_start:
 	push	$0xa4000040
 	call	new_recompile_block
 	movl	next_interupt, %edi
-	movl	reg_cop0+36, %esi
+	movl	g_cp0_regs+36, %esi
 	movl	%edi, last_count
 	subl	%edi, %esi
 	jmp	*base_addr
@@ -872,7 +872,7 @@ tlb_exception:
 	pop	%ebx
 	pop	%ebp
 /* end debug */
-	mov	reg_cop0+48, %esi
+	mov	g_cp0_regs+48, %esi
 	mov	%ebp, %ecx
 	mov	%ebp, %edx
 	mov	%ebp, %edi
@@ -885,9 +885,9 @@ tlb_exception:
 	or	$2, %esi
 	mov	(%edx, %ecx, 4), %ecx
 	add	%ebp, %edx
-	mov	%esi, reg_cop0+48 /* Status */
-	mov	%eax, reg_cop0+52 /* Cause */
-	mov	%edx, reg_cop0+56 /* EPC */
+	mov	%esi, g_cp0_regs+48 /* Status */
+	mov	%eax, g_cp0_regs+52 /* Cause */
+	mov	%edx, g_cp0_regs+56 /* EPC */
 	add	$0x24, %esp
 	mov	$0x6000022, %edx
 	mov	%ecx, %ebp
@@ -897,13 +897,13 @@ tlb_exception:
 	sub	%eax, %ebx
 	and	$0x1f, %ebp
 	ror	%cl, %edx
-	mov	reg_cop0+16, %esi
+	mov	g_cp0_regs+16, %esi
 	cmovc	reg(,%ebp,8), %ebx
 	and	$0xFF80000F, %esi
 	mov	%ebx, reg(,%ebp,8)
 	add	%ebx, %eax
 	sar	$31, %ebx
-	mov	%eax, reg_cop0+32 /* BadVAddr */
+	mov	%eax, g_cp0_regs+32 /* BadVAddr */
 	shr	$9, %eax
 	test	$2, %edi
 	cmove	reg+4(,%ebp,8), %ebx
@@ -912,11 +912,11 @@ tlb_exception:
 	mov	%ebx, reg+4(,%ebp,8)
 	push	$0x80000180
 	or	%eax, %esi
-	mov	%esi, reg_cop0+16 /* Context */
+	mov	%esi, g_cp0_regs+16 /* Context */
 	call	get_addr_ht
 	add	$16, %esp
 	movl	next_interupt, %edi
-	movl	reg_cop0+36, %esi /* Count */
+	movl	g_cp0_regs+36, %esi /* Count */
 	movl	%edi, last_count
 	subl	%edi, %esi
 	jmp	*%eax

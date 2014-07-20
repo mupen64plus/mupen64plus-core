@@ -121,8 +121,8 @@ static void clear_queue(void)
 /*static void print_queue(void)
 {
     interupt_queue *aux;
-    //if (Count < 0x7000000) return;
-    DebugMessage(M64MSG_INFO, "------------------ 0x%x", (unsigned int)Count);
+    //if (g_cp0_regs[CP0_COUNT_REG] < 0x7000000) return;
+    DebugMessage(M64MSG_INFO, "------------------ 0x%x", (unsigned int)g_cp0_regs[CP0_COUNT_REG]);
     aux = q;
     while (aux != NULL)
     {
@@ -135,16 +135,16 @@ static int SPECIAL_done = 0;
 
 static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 {
-    if(evt1 - Count < 0x80000000)
+    if(evt1 - g_cp0_regs[CP0_COUNT_REG] < 0x80000000)
     {
-        if(evt2 - Count < 0x80000000)
+        if(evt2 - g_cp0_regs[CP0_COUNT_REG] < 0x80000000)
         {
-            if((evt1 - Count) < (evt2 - Count)) return 1;
+            if((evt1 - g_cp0_regs[CP0_COUNT_REG]) < (evt2 - g_cp0_regs[CP0_COUNT_REG])) return 1;
             else return 0;
         }
         else
         {
-            if((Count - evt2) < 0x10000000)
+            if((g_cp0_regs[CP0_COUNT_REG] - evt2) < 0x10000000)
             {
                 switch(type2)
                 {
@@ -164,12 +164,12 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 
 void add_interupt_event(int type, unsigned int delay)
 {
-    unsigned int count = Count + delay/**2*/;
+    unsigned int count = g_cp0_regs[CP0_COUNT_REG] + delay/**2*/;
     int special = 0;
     interupt_queue *aux = q;
    
     if(type == SPECIAL_INT /*|| type == COMPARE_INT*/) special = 1;
-    if(Count > 0x80000000) SPECIAL_done = 0;
+    if(g_cp0_regs[CP0_COUNT_REG] > 0x80000000) SPECIAL_done = 0;
    
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
@@ -225,7 +225,7 @@ void add_interupt_event(int type, unsigned int delay)
 
 void add_interupt_event_count(int type, unsigned int count)
 {
-    add_interupt_event(type, (count - Count)/*/2*/);
+    add_interupt_event(type, (count - g_cp0_regs[CP0_COUNT_REG])/*/2*/);
 }
 
 static void remove_interupt_event(void)
@@ -234,7 +234,7 @@ static void remove_interupt_event(void)
     if(q->type == SPECIAL_INT) SPECIAL_done = 1;
     queue_free(q);
     q = aux;
-    if (q != NULL && (q->count > Count || (Count - q->count) < 0x80000000))
+    if (q != NULL && (q->count > g_cp0_regs[CP0_COUNT_REG] || (g_cp0_regs[CP0_COUNT_REG] - q->count) < 0x80000000))
         next_interupt = q->count;
     else
         next_interupt = 0;
@@ -288,10 +288,10 @@ void translate_event_queue(unsigned int base)
     aux=q;
     while (aux != NULL)
     {
-        aux->count = (aux->count - Count)+base;
+        aux->count = (aux->count - g_cp0_regs[CP0_COUNT_REG])+base;
         aux = aux->next;
     }
-    add_interupt_event_count(COMPARE_INT, Compare);
+    add_interupt_event_count(COMPARE_INT, g_cp0_regs[CP0_COMPARE_REG]);
     add_interupt_event_count(SPECIAL_INT, 0);
 }
 
@@ -346,28 +346,28 @@ void init_interupt(void)
 void check_interupt(void)
 {
     if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-        Cause = (Cause | 0x400) & 0xFFFFFF83;
+        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
     else
-        Cause &= ~0x400;
-    if ((Status & 7) != 1) return;
-    if (Status & Cause & 0xFF00)
+        g_cp0_regs[CP0_CAUSE_REG] &= ~0x400;
+    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+    if (g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)
     {
         if(q == NULL)
         {
             q = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
             q->next = NULL;
-            q->count = Count;
+            q->count = g_cp0_regs[CP0_COUNT_REG];
             q->type = CHECK_INT;
         }
         else
         {
             interupt_queue* aux = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
             aux->next = q;
-            aux->count = Count;
+            aux->count = g_cp0_regs[CP0_COUNT_REG];
             aux->type = CHECK_INT;
             q = aux;
         }
-        next_interupt = Count;
+        next_interupt = g_cp0_regs[CP0_COUNT_REG];
     }
 }
 
@@ -400,7 +400,7 @@ void gen_interupt(void)
         unsigned int dest = skip_jump;
         skip_jump = 0;
 
-        if (q->count > Count || (Count - q->count) < 0x80000000)
+        if (q->count > g_cp0_regs[CP0_COUNT_REG] || (g_cp0_regs[CP0_COUNT_REG] - q->count) < 0x80000000)
             next_interupt = q->count;
         else
             next_interupt = 0;
@@ -413,7 +413,7 @@ void gen_interupt(void)
     switch(q->type)
     {
         case SPECIAL_INT:
-            if (Count > 0x10000000) return;
+            if (g_cp0_regs[CP0_COUNT_REG] > 0x10000000) return;
             remove_interupt_event();
             add_interupt_event_count(SPECIAL_INT, 0);
             return;
@@ -464,22 +464,22 @@ void gen_interupt(void)
     
             MI_register.mi_intr_reg |= 0x08;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                Cause = (Cause | 0x400) & 0xFFFFFF83;
+                g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
     
         case COMPARE_INT:
             remove_interupt_event();
-            Count+=count_per_op;
-            add_interupt_event_count(COMPARE_INT, Compare);
-            Count-=count_per_op;
+            g_cp0_regs[CP0_COUNT_REG]+=count_per_op;
+            add_interupt_event_count(COMPARE_INT, g_cp0_regs[CP0_COMPARE_REG]);
+            g_cp0_regs[CP0_COUNT_REG]-=count_per_op;
     
-            Cause = (Cause | 0x8000) & 0xFFFFFF83;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x8000) & 0xFFFFFF83;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
     
         case CHECK_INT:
@@ -496,11 +496,11 @@ void gen_interupt(void)
             MI_register.mi_intr_reg |= 0x02;
             si_register.si_stat |= 0x1000;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                Cause = (Cause | 0x400) & 0xFFFFFF83;
+                g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
     
         case PI_INT:
@@ -508,11 +508,11 @@ void gen_interupt(void)
             MI_register.mi_intr_reg |= 0x10;
             pi_register.read_pi_status_reg &= ~3;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                Cause = (Cause | 0x400) & 0xFFFFFF83;
+                g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
     
         case AI_INT:
@@ -527,11 +527,11 @@ void gen_interupt(void)
          
                 MI_register.mi_intr_reg |= 0x04;
                 if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                    Cause = (Cause | 0x400) & 0xFFFFFF83;
+                    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
                 else
                     return;
-                if ((Status & 7) != 1) return;
-                if (!(Status & Cause & 0xFF00)) return;
+                if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+                if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             }
             else
             {
@@ -541,11 +541,11 @@ void gen_interupt(void)
                 //-------
                 MI_register.mi_intr_reg |= 0x04;
                 if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                    Cause = (Cause | 0x400) & 0xFFFFFF83;
+                    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
                 else
                     return;
-                if ((Status & 7) != 1) return;
-                if (!(Status & Cause & 0xFF00)) return;
+                if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+                if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             }
             break;
 
@@ -557,11 +557,11 @@ void gen_interupt(void)
             if (!(sp_register.sp_status_reg & 0x40)) return; // !intr_on_break
             MI_register.mi_intr_reg |= 0x01;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                Cause = (Cause | 0x400) & 0xFFFFFF83;
+                g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
     
         case DP_INT:
@@ -570,19 +570,19 @@ void gen_interupt(void)
             dpc_register.dpc_status |= 0x81;
             MI_register.mi_intr_reg |= 0x20;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
-                Cause = (Cause | 0x400) & 0xFFFFFF83;
+                g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
-            if ((Status & 7) != 1) return;
-            if (!(Status & Cause & 0xFF00)) return;
+            if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
+            if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             break;
 
         case HW2_INT:
             // Hardware Interrupt 2 -- remove interrupt event from queue
             remove_interupt_event();
             // setup r4300 Status flags: reset TS, and SR, set IM2
-            Status = (Status & ~0x00380000) | 0x1000;
-            Cause = (Cause | 0x1000) & 0xFFFFFF83;
+            g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~0x00380000) | 0x1000;
+            g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x1000) & 0xFFFFFF83;
             /* the exception_general() call below will jump to the interrupt vector (0x80000180) and setup the
              * interpreter or dynarec
              */
@@ -592,18 +592,18 @@ void gen_interupt(void)
             // Non Maskable Interrupt -- remove interrupt event from queue
             remove_interupt_event();
             // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
-            Status = (Status & ~0x00380000) | 0x00500004;
-            Cause  = 0x00000000;
+            g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~0x00380000) | 0x00500004;
+            g_cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
             // simulate the soft reset code which would run from the PIF ROM
             r4300_reset_soft();
             // clear all interrupts, reset interrupt counters back to 0
-            Count = 0;
+            g_cp0_regs[CP0_COUNT_REG] = 0;
             vi_counter = 0;
             init_interupt();
             // clear the audio status register so that subsequent write_ai() calls will work properly
             ai_register.ai_status = 0;
             // set ErrorEPC with the last instruction address
-            ErrorEPC = PC->addr;
+            g_cp0_regs[CP0_ERROREPC_REG] = PC->addr;
             // reset the r4300 internal state
             if (r4300emu != CORE_PURE_INTERPRETER)
             {
@@ -614,7 +614,7 @@ void gen_interupt(void)
             // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
             if(delay_slot==1 || delay_slot==3)
             {
-                ErrorEPC-=4;
+                g_cp0_regs[CP0_ERROREPC_REG]-=4;
             }
             delay_slot = 0;
             dyna_interp = 0;
@@ -631,10 +631,10 @@ void gen_interupt(void)
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
-        EPC = pcaddr;
+        g_cp0_regs[CP0_EPC_REG] = pcaddr;
         pcaddr = 0x80000180;
-        Status |= 2;
-        Cause &= 0x7FFFFFFF;
+        g_cp0_regs[CP0_STATUS_REG] |= 2;
+        g_cp0_regs[CP0_CAUSE_REG] &= 0x7FFFFFFF;
         pending_exception=1;
     } else {
         exception_general();

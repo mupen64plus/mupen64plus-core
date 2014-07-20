@@ -330,7 +330,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_LO:
             return &lo;
         case M64P_CPU_REG_COP0:
-            return reg_cop0;
+            return g_cp0_regs;
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
             return reg_cop1_double;
         case M64P_CPU_REG_COP1_SIMPLE_PTR:

@@ -297,7 +297,7 @@ void gensyscall(void)
 #else
    free_all_registers();
    simplify_access();
-   mov_m32_imm32(&Cause, 8 << 2);
+   mov_m32_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
    gencallinterp((unsigned int)exception_general, 0);
 #endif
 }
