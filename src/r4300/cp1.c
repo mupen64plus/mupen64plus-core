@@ -25,6 +25,10 @@
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
 int FCR0, FCR31;
+#else
+extern float *reg_cop1_simple[32];
+extern double *reg_cop1_double[32];
+extern int FCR0, FCR31;
 #endif
 long long int reg_cop1_fgr_64[32];
 
