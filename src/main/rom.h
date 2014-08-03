@@ -32,7 +32,7 @@
 #define isset_bitmask(x, bitmask) ({ typeof(bitmask) _bitmask = (bitmask); \
                                      (_bitmask & (x)) == _bitmask; })
 #else
-#define isset_bitmask(x, bitmask) (bitmask & (x)) == bitmask)
+#define isset_bitmask(x, bitmask) ((bitmask & (x)) == bitmask)
 #endif
 
 /* ROM Loading and Saving functions */
