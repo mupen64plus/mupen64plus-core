@@ -169,10 +169,10 @@ void add_interupt_event(int type, unsigned int delay)
 {
     struct node* event;
     struct node* e;
-    unsigned int count = g_cp0_regs[CP0_COUNT_REG] + delay/**2*/;
+    unsigned int count = g_cp0_regs[CP0_COUNT_REG] + delay;
     int special = 0;
    
-    if(type == SPECIAL_INT /*|| type == COMPARE_INT*/) special = 1;
+    if(type == SPECIAL_INT) special = 1;
     if(g_cp0_regs[CP0_COUNT_REG] > 0x80000000) SPECIAL_done = 0;
    
     if (get_event(type)) {
@@ -226,7 +226,7 @@ void add_interupt_event(int type, unsigned int delay)
 
 void add_interupt_event_count(int type, unsigned int count)
 {
-    add_interupt_event(type, (count - g_cp0_regs[CP0_COUNT_REG])/*/2*/);
+    add_interupt_event(type, (count - g_cp0_regs[CP0_COUNT_REG]));
 }
 
 static void remove_interupt_event(void)
