@@ -182,6 +182,11 @@ void add_interupt_event_count(int type, unsigned int count)
    
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
+        /* FIXME: hack-fix for freezing in Perfect Dark
+         * http://code.google.com/p/mupen64plus/issues/detail?id=553
+         * https://github.com/mupen64plus-ae/mupen64plus-ae/commit/802d8f81d46705d64694d7a34010dc5f35787c7d
+         */
+        return;
     }
 
     event = alloc_node(&q.pool);
