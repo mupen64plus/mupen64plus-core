@@ -19,7 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
+#include <string.h>
 
 #include <SDL.h>
 
@@ -55,81 +55,84 @@ static int vi_counter=0;
 
 int interupt_unsafe_state = 0;
 
-typedef struct _interupt_queue
+struct interrupt_event
 {
-   int type;
-   unsigned int count;
-   struct _interupt_queue *next;
-} interupt_queue;
+    int type;
+    unsigned int count;
+};
 
-#define QUEUE_SIZE     8
 
-static interupt_queue *q = NULL;
-static interupt_queue *qstack[QUEUE_SIZE];
-static unsigned int qstackindex = 0;
-static interupt_queue *qbase = NULL;
+/***************************************************************************
+ * Pool of Single Linked List Nodes
+ **************************************************************************/
+#define POOL_CAPACITY 8
 
-static interupt_queue* queue_malloc(size_t Bytes)
+struct node
 {
-       if (qstackindex >= QUEUE_SIZE) // should never happen
-       {
-               static int bNotified = 0;
+    struct interrupt_event data;
+    struct node *next;
+};
 
-               if (!bNotified)
-               {
-                       DebugMessage(M64MSG_ERROR, "core interrupt queue too small!");
-                       bNotified = 1;
-               }
+struct pool
+{
+    struct node nodes[POOL_CAPACITY];
+    struct node* stack[POOL_CAPACITY];
+    size_t index;
+};
 
-               return malloc(Bytes);
-       }
-       interupt_queue* newQueue = qstack[qstackindex];
-       qstackindex ++;
+static struct node* alloc_node(struct pool* p);
+static void free_node(struct pool* p, struct node* node);
+static void clear_pool(struct pool* p);
 
-       return newQueue;
+
+/* node allocation/deallocation on a given pool */
+static struct node* alloc_node(struct pool* p)
+{
+    /* return NULL if pool is too small */
+    if (p->index >= POOL_CAPACITY)
+        return NULL;
+
+    return p->stack[p->index++];
 }
 
-static void queue_free(interupt_queue *qToFree)
+static void free_node(struct pool* p, struct node* node)
 {
-       if (qToFree < qbase || qToFree >= qbase + sizeof(interupt_queue) * QUEUE_SIZE)
-       {
-               free(qToFree); //must be a non-stack memory allocation
-               return;
-       }
-       #ifdef DBG_CORE       
-       if (qstackindex == 0 ) // should never happen
-       {
-               DebugMessage(M64MSG_ERROR, "Nothing to free");
-               return; 
-       }
-       #endif
-       qstackindex --;
-       qstack[qstackindex] = qToFree;
+    if (p->index == 0 || node == NULL)
+        return;
+
+    p->stack[--p->index] = node;
 }
+
+/* release all nodes */
+static void clear_pool(struct pool* p)
+{
+    size_t i;
+
+    for(i = 0; i < POOL_CAPACITY; ++i)
+        p->stack[i] = &p->nodes[i];
+
+    p->index = 0;
+}
+
+/***************************************************************************
+ * Interrupt Queue
+ **************************************************************************/
+
+struct interrupt_queue
+{
+    struct pool pool;
+    struct node* first;
+};
+
+static struct interrupt_queue q;
+
 
 static void clear_queue(void)
 {
-    int i;
-    q = NULL;
-    for (i =0; i < QUEUE_SIZE; i++)
-    {
-       qstack[i] = &qbase[i];
-    }
-    qstackindex = 0;
+    q.first = NULL;
+    clear_pool(&q.pool);
 }
 
-/*static void print_queue(void)
-{
-    interupt_queue *aux;
-    //if (g_cp0_regs[CP0_COUNT_REG] < 0x7000000) return;
-    DebugMessage(M64MSG_INFO, "------------------ 0x%x", (unsigned int)g_cp0_regs[CP0_COUNT_REG]);
-    aux = q;
-    while (aux != NULL)
-    {
-        DebugMessage(M64MSG_INFO, "Count:%x, %x", (unsigned int)aux->count, aux->type);
-        aux = aux->next;
-    }
-}*/
 
 static int SPECIAL_done = 0;
 
@@ -164,9 +167,10 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 
 void add_interupt_event(int type, unsigned int delay)
 {
+    struct node* event;
+    struct node* e;
     unsigned int count = g_cp0_regs[CP0_COUNT_REG] + delay/**2*/;
     int special = 0;
-    interupt_queue *aux = q;
    
     if(type == SPECIAL_INT /*|| type == COMPARE_INT*/) special = 1;
     if(g_cp0_regs[CP0_COUNT_REG] > 0x80000000) SPECIAL_done = 0;
@@ -174,52 +178,49 @@ void add_interupt_event(int type, unsigned int delay)
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
     }
-   
-    if (q == NULL)
+
+    event = alloc_node(&q.pool);
+    if (event == NULL)
     {
-        q = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-        q->next = NULL;
-        q->count = count;
-        q->type = type;
-        next_interupt = q->count;
-        //print_queue();
+        DebugMessage(M64MSG_ERROR, "Failed to allocate node for new interrupt event");
         return;
     }
-   
-    if(before_event(count, q->count, q->type) && !special)
+
+    event->data.count = count;
+    event->data.type = type;
+
+    if (q.first == NULL)
     {
-        q = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-        q->next = aux;
-        q->count = count;
-        q->type = type;
-        next_interupt = q->count;
-        //print_queue();
-        return;
+        q.first = event;
+        event->next = NULL;
+        next_interupt = q.first->data.count;
     }
-   
-    while (aux->next != NULL && (!before_event(count, aux->next->count, aux->next->type) || special))
-        aux = aux->next;
-   
-    if (aux->next == NULL)
+    else if (before_event(count, q.first->data.count, q.first->data.type) && !special)
     {
-        aux->next = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-        aux = aux->next;
-        aux->next = NULL;
-        aux->count = count;
-        aux->type = type;
+        event->next = q.first;
+        q.first = event;
+        next_interupt = q.first->data.count;
     }
     else
     {
-        interupt_queue *aux2;
-        if (type != SPECIAL_INT)
-            while(aux->next != NULL && aux->next->count == count)
-                aux = aux->next;
-        aux2 = aux->next;
-        aux->next = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-        aux = aux->next;
-        aux->next = aux2;
-        aux->count = count;
-        aux->type = type;
+        for(e = q.first;
+            e->next != NULL &&
+            (!before_event(count, e->next->data.count, e->next->data.type) || special);
+            e = e->next);
+
+        if (e->next == NULL)
+        {
+            e->next = event;
+            event->next = NULL;
+        }
+        else
+        {
+            if (type != SPECIAL_INT)
+                for(; e->next != NULL && e->next->data.count == count; e = e->next);
+
+            event->next = e->next;
+            e->next = event;
+        }
     }
 }
 
@@ -230,66 +231,82 @@ void add_interupt_event_count(int type, unsigned int count)
 
 static void remove_interupt_event(void)
 {
-    interupt_queue *aux = q->next;
-    if(q->type == SPECIAL_INT) SPECIAL_done = 1;
-    queue_free(q);
-    q = aux;
-    if (q != NULL && (q->count > g_cp0_regs[CP0_COUNT_REG] || (g_cp0_regs[CP0_COUNT_REG] - q->count) < 0x80000000))
-        next_interupt = q->count;
-    else
-        next_interupt = 0;
+    struct node* e;
+
+    if (q.first->data.type == SPECIAL_INT)
+        SPECIAL_done = 1;
+
+    e = q.first;
+    q.first = e->next;
+    free_node(&q.pool, e);
+
+    next_interupt = (q.first != NULL
+         && (q.first->data.count > g_cp0_regs[CP0_COUNT_REG]
+         || (g_cp0_regs[CP0_COUNT_REG] - q.first->data.count) < 0x80000000))
+        ? q.first->data.count
+        : 0;
 }
 
 unsigned int get_event(int type)
 {
-    interupt_queue *aux = q;
-    if (q == NULL) return 0;
-    if (q->type == type)
-        return q->count;
-    while (aux->next != NULL && aux->next->type != type)
-        aux = aux->next;
-    if (aux->next != NULL)
-        return aux->next->count;
-    return 0;
+    struct node* e = q.first;
+
+    if (e == NULL)
+        return 0;
+
+    if (e->data.type == type)
+        return e->data.count;
+
+    for(; e->next != NULL && e->next->data.type != type; e = e->next);
+
+    return (e->next != NULL)
+        ? e->next->data.count
+        : 0;
 }
 
 int get_next_event_type(void)
 {
-    if (q == NULL) return 0;
-    return q->type;
+    return (q.first == NULL)
+        ? 0
+        : q.first->data.type;
 }
 
 void remove_event(int type)
 {
-    interupt_queue *aux = q;
-    if (q == NULL) return;
-    if (q->type == type)
-    {
-        aux = aux->next;
-        queue_free(q);
-        q = aux;
+    struct node* to_del;
+    struct node* e = q.first;
+
+    if (e == NULL)
         return;
-    }
-    while (aux->next != NULL && aux->next->type != type)
-        aux = aux->next;
-    if (aux->next != NULL) // it's a type int
+
+    if (e->data.type == type)
     {
-        interupt_queue *aux2 = aux->next->next;
-        queue_free(aux->next);
-        aux->next = aux2;
+        q.first = e->next;
+        free_node(&q.pool, e);
+    }
+    else
+    {
+        for(; e->next != NULL && e->next->data.type != type; e = e->next);
+
+        if (e->next != NULL)
+        {
+            to_del = e->next;
+            e->next = to_del->next;
+            free_node(&q.pool, to_del);
+        }
     }
 }
 
 void translate_event_queue(unsigned int base)
 {
-    interupt_queue *aux;
+    struct node* e;
+
     remove_event(COMPARE_INT);
     remove_event(SPECIAL_INT);
-    aux=q;
-    while (aux != NULL)
+
+    for(e = q.first; e != NULL; e = e->next)
     {
-        aux->count = (aux->count - g_cp0_regs[CP0_COUNT_REG])+base;
-        aux = aux->next;
+        e->data.count = (e->data.count - g_cp0_regs[CP0_COUNT_REG]) + base;
     }
     add_interupt_event_count(COMPARE_INT, g_cp0_regs[CP0_COMPARE_REG]);
     add_interupt_event_count(SPECIAL_INT, 0);
@@ -297,20 +314,18 @@ void translate_event_queue(unsigned int base)
 
 int save_eventqueue_infos(char *buf)
 {
-    int len = 0;
-    interupt_queue *aux = q;
-    if (q == NULL)
+    int len;
+    struct node* e;
+
+    len = 0;
+
+    for(e = q.first; e != NULL; e = e->next)
     {
-        *((unsigned int*)&buf[0]) = 0xFFFFFFFF;
-        return 4;
-    }
-    while (aux != NULL)
-    {
-        memcpy(buf+len  , &aux->type , 4);
-        memcpy(buf+len+4, &aux->count, 4);
+        memcpy(buf + len    , &e->data.type , 4);
+        memcpy(buf + len + 4, &e->data.count, 4);
         len += 8;
-        aux = aux->next;
     }
+
     *((unsigned int*)&buf[len]) = 0xFFFFFFFF;
     return len+4;
 }
@@ -334,10 +349,7 @@ void init_interupt(void)
     next_vi = next_interupt = 5000;
     vi_register.vi_delay = next_vi;
     vi_field = 0;
-    if (qbase != NULL) free(qbase);
-    qbase = (interupt_queue *) malloc(sizeof(interupt_queue) * QUEUE_SIZE );
-    memset(qbase,0,sizeof(interupt_queue) * QUEUE_SIZE );
-    qstackindex=0;
+
     clear_queue();
     add_interupt_event_count(VI_INT, next_vi);
     add_interupt_event_count(SPECIAL_INT, 0);
@@ -345,6 +357,8 @@ void init_interupt(void)
 
 void check_interupt(void)
 {
+    struct node* event;
+
     if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
         g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
     else
@@ -352,22 +366,28 @@ void check_interupt(void)
     if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
     if (g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)
     {
-        if(q == NULL)
+        event = alloc_node(&q.pool);
+
+        if (event == NULL)
         {
-            q = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-            q->next = NULL;
-            q->count = g_cp0_regs[CP0_COUNT_REG];
-            q->type = CHECK_INT;
+            DebugMessage(M64MSG_ERROR, "Failed to allocate node for new interrupt event");
+            return;
+        }
+
+        event->data.count = next_interupt = g_cp0_regs[CP0_COUNT_REG];
+        event->data.type = CHECK_INT;
+
+        if (q.first == NULL)
+        {
+            q.first = event;
+            event->next = NULL;
         }
         else
         {
-            interupt_queue* aux = (interupt_queue *) queue_malloc(sizeof(interupt_queue));
-            aux->next = q;
-            aux->count = g_cp0_regs[CP0_COUNT_REG];
-            aux->type = CHECK_INT;
-            q = aux;
+            event->next = q.first;
+            q.first = event;
+
         }
-        next_interupt = g_cp0_regs[CP0_COUNT_REG];
     }
 }
 
@@ -400,17 +420,17 @@ void gen_interupt(void)
         unsigned int dest = skip_jump;
         skip_jump = 0;
 
-        if (q->count > g_cp0_regs[CP0_COUNT_REG] || (g_cp0_regs[CP0_COUNT_REG] - q->count) < 0x80000000)
-            next_interupt = q->count;
-        else
-            next_interupt = 0;
-        
+        next_interupt = (q.first->data.count > g_cp0_regs[CP0_COUNT_REG]
+                || (g_cp0_regs[CP0_COUNT_REG] - q.first->data.count) < 0x80000000)
+            ? q.first->data.count
+            : 0;
+
         last_addr = dest;
         generic_jump_to(dest);
         return;
     } 
 
-    switch(q->type)
+    switch(q.first->data.type)
     {
         case SPECIAL_INT:
             if (g_cp0_regs[CP0_COUNT_REG] > 0x10000000) return;
@@ -624,7 +644,7 @@ void gen_interupt(void)
             return;
 
         default:
-            DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", q->type);
+            DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", q.first->data.type);
             remove_interupt_event();
             break;
     }
