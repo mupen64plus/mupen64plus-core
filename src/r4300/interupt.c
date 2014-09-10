@@ -167,9 +167,13 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 
 void add_interupt_event(int type, unsigned int delay)
 {
+    add_interupt_event_count(type, g_cp0_regs[CP0_COUNT_REG] + delay);
+}
+
+void add_interupt_event_count(int type, unsigned int count)
+{
     struct node* event;
     struct node* e;
-    unsigned int count = g_cp0_regs[CP0_COUNT_REG] + delay;
     int special = 0;
    
     if(type == SPECIAL_INT) special = 1;
@@ -222,11 +226,6 @@ void add_interupt_event(int type, unsigned int delay)
             e->next = event;
         }
     }
-}
-
-void add_interupt_event_count(int type, unsigned int count)
-{
-    add_interupt_event(type, (count - g_cp0_regs[CP0_COUNT_REG]));
 }
 
 static void remove_interupt_event(void)
