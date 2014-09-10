@@ -174,9 +174,10 @@ void add_interupt_event_count(int type, unsigned int count)
 {
     struct node* event;
     struct node* e;
-    int special = 0;
+    int special;
+
+    special = (type == SPECIAL_INT);
    
-    if(type == SPECIAL_INT) special = 1;
     if(g_cp0_regs[CP0_COUNT_REG] > 0x80000000) SPECIAL_done = 0;
    
     if (get_event(type)) {
@@ -219,7 +220,7 @@ void add_interupt_event_count(int type, unsigned int count)
         }
         else
         {
-            if (type != SPECIAL_INT)
+            if (!special)
                 for(; e->next != NULL && e->next->data.count == count; e = e->next);
 
             event->next = e->next;
