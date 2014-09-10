@@ -22,8 +22,6 @@
 #ifndef M64P_R4300_INTERUPT_H
 #define M64P_R4300_INTERUPT_H
 
-void compare_interupt(void);
-void gen_dp(void);
 void init_interupt(void);
 
 extern int vi_field;
