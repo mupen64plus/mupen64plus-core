@@ -65,7 +65,7 @@ struct interrupt_event
 /***************************************************************************
  * Pool of Single Linked List Nodes
  **************************************************************************/
-#define POOL_CAPACITY 8
+#define POOL_CAPACITY 16
 
 struct node
 {
