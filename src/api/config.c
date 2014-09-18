@@ -56,7 +56,7 @@ typedef struct _config_var {
   } config_var;
 
 typedef struct _config_section {
-  int                     magic;
+  unsigned int            magic;
   char                   *name;
   struct _config_var     *first_var;
   struct _config_section *next;
