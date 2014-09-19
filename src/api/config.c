@@ -423,7 +423,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     m64p_error rval;
     const char *configpath = NULL;
     char *filepath;
-    long filelen;
+    long ftell_result;
+    size_t filelen;
     FILE *fPtr;
     char *configtext;
 
@@ -470,9 +471,23 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     free(filepath);
 
     /* read the entire config file */
-    fseek(fPtr, 0L, SEEK_END);
-    filelen = ftell(fPtr);
-    fseek(fPtr, 0L, SEEK_SET);
+    if (fseek(fPtr, 0L, SEEK_END) != 0)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
+    ftell_result = ftell(fPtr);
+    if (ftell_result == -1)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
+    filelen = (size_t)ftell_result;
+    if (fseek(fPtr, 0L, SEEK_SET) != 0)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
 
     configtext = (char *) malloc(filelen + 1);
     if (configtext == NULL)
