@@ -32,7 +32,7 @@ extern long long int reg[32], hi, lo;
 extern long long int local_rs;
 extern unsigned int delay_slot, skip_jump, dyna_interp;
 extern unsigned int r4300emu;
-extern unsigned int next_interupt, CIC_Chip;
+extern unsigned int next_interupt;
 extern unsigned int last_addr;
 #define COUNT_PER_OP_DEFAULT 2
 extern unsigned int count_per_op;

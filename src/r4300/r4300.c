@@ -61,7 +61,6 @@ precomp_instr *PC;
 #endif
 long long int local_rs;
 unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
-unsigned int CIC_Chip;
 
 cpu_instruction_table current_instruction_table;
 
@@ -143,158 +142,91 @@ void r4300_reset_hard(void)
     rounding_mode = 0x33F;
 }
 
-/* this soft reset function simulates the actions of the PIF ROM, which may vary by region
- * TODO: accurately simulate the effects of the PIF ROM in the case of a soft reset
- *       (e.g. Goldeneye crashes) */
+
+static unsigned int get_tv_type(void)
+{
+    switch(ROM_PARAMS.systemtype)
+    {
+    default:
+    case SYSTEM_NTSC: return 1;
+    case SYSTEM_PAL: return 0;
+    case SYSTEM_MPAL: return 2;
+    }
+}
+
+static unsigned int get_cic_seed(void)
+{
+    switch(CIC_Chip)
+    {
+        default:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", CIC_Chip);
+        case 1:
+        case 2:
+            return 0x3f;
+        case 3:
+            return 0x78;
+        case 5:
+            return 0x91;
+        case 6:
+            return 0x85;
+    }
+}
+
+/* Simulates end result of PIFBootROM execution */
 void r4300_reset_soft(void)
 {
-    long long CRC = 0;
-    unsigned int i;
+    unsigned int rom_type = 0;              /* 0:Cart, 1:DD */
+    unsigned int reset_type = 0;            /* 0:ColdReset, 1:NMI */
+    unsigned int s7 = 0;                    /* ??? */
+    unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
+    unsigned int cic_seed = get_cic_seed();
 
-    // copy boot code from ROM to SP_DMEM
-    memcpy((char *)SP_DMEM+0x40, rom+0x40, 0xFC0);
+    g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
+    g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-   // the following values are extracted from the pj64 source code
-   // thanks to Zilmar and Jabo
-   
-   reg[6] = 0xFFFFFFFFA4001F0CLL;
-   reg[7] = 0xFFFFFFFFA4001F08LL;
-   reg[8] = 0x00000000000000C0LL;
-   reg[10]= 0x0000000000000040LL;
-   reg[11]= 0xFFFFFFFFA4000040LL;
-   reg[29]= 0xFFFFFFFFA4001FF0LL;
-   
-    // figure out which ROM type is loaded
-   for (i = 0x40/4; i < (0x1000/4); i++)
-     CRC += SP_DMEM[i];
-   switch(CRC) {
-    case 0x000000D0027FDF31LL:
-    case 0x000000CFFB631223LL:
-      CIC_Chip = 1;
-      break;
-    case 0x000000D057C85244LL:
-      CIC_Chip = 2;
-      break;
-    case 0x000000D6497E414BLL:
-      CIC_Chip = 3;
-      break;
-    case 0x0000011A49F60E96LL:
-      CIC_Chip = 5;
-      break;
-    case 0x000000D6D5BE5580LL:
-      CIC_Chip = 6;
-      break;
-    default:
-      CIC_Chip = 2;
-   }
+    sp_register.sp_status_reg = 1;
+    rsp_register.rsp_pc = 0;
 
-   switch(ROM_PARAMS.systemtype)
-     {
-      case SYSTEM_PAL:
-    switch (CIC_Chip) {
-     case 2:
-       reg[5] = 0xFFFFFFFFC0F1D859LL;
-       reg[14]= 0x000000002DE108EALL;
-       break;
-     case 3:
-       reg[5] = 0xFFFFFFFFD4646273LL;
-       reg[14]= 0x000000001AF99984LL;
-       break;
-     case 5:
-       SP_IMEM[1] = 0xBDA807FC;
-       reg[5] = 0xFFFFFFFFDECAAAD1LL;
-       reg[14]= 0x000000000CF85C13LL;
-       reg[24]= 0x0000000000000002LL;
-       break;
-     case 6:
-       reg[5] = 0xFFFFFFFFB04DC903LL;
-       reg[14]= 0x000000001AF99984LL;
-       reg[24]= 0x0000000000000002LL;
-       break;
-    }
-    reg[23]= 0x0000000000000006LL;
-    reg[31]= 0xFFFFFFFFA4001554LL;
-    break;
-      case SYSTEM_NTSC:
-      default:
-    switch (CIC_Chip) {
-     case 2:
-       reg[5] = 0xFFFFFFFFC95973D5LL;
-       reg[14]= 0x000000002449A366LL;
-       break;
-     case 3:
-       reg[5] = 0xFFFFFFFF95315A28LL;
-       reg[14]= 0x000000005BACA1DFLL;
-       break;
-     case 5:
-       SP_IMEM[1] = 0x8DA807FC;
-       reg[5] = 0x000000005493FB9ALL;
-       reg[14]= 0xFFFFFFFFC2C20384LL;
-       break;
-     case 6:
-       reg[5] = 0xFFFFFFFFE067221FLL;
-       reg[14]= 0x000000005CD2B70FLL;
-       break;
-    }
-    reg[20]= 0x0000000000000001LL;
-    reg[24]= 0x0000000000000003LL;
-    reg[31]= 0xFFFFFFFFA4001550LL;
-     }
-   switch (CIC_Chip) {
-    case 1:
-      reg[22]= 0x000000000000003FLL;
-      break;
-    case 2:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x000000000EBDA536LL;
-      reg[3] = 0x000000000EBDA536LL;
-      reg[4] = 0x000000000000A536LL;
-      reg[12]= 0xFFFFFFFFED10D0B3LL;
-      reg[13]= 0x000000001402A4CCLL;
-      reg[15]= 0x000000003103E121LL;
-      reg[22]= 0x000000000000003FLL;
-      reg[25]= 0xFFFFFFFF9DEBB54FLL;
-      break;
-    case 3:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x0000000049A5EE96LL;
-      reg[3] = 0x0000000049A5EE96LL;
-      reg[4] = 0x000000000000EE96LL;
-      reg[12]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[13]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[15]= 0x0000000018B63D28LL;
-      reg[22]= 0x0000000000000078LL;
-      reg[25]= 0xFFFFFFFF825B21C9LL;
-      break;
-    case 5:
-      SP_IMEM[0] = 0x3C0DBFC0;
-      SP_IMEM[2] = 0x25AD07C0;
-      SP_IMEM[3] = 0x31080080;
-      SP_IMEM[4] = 0x5500FFFC;
-      SP_IMEM[5] = 0x3C0DBFC0;
-      SP_IMEM[6] = 0x8DA80024;
-      SP_IMEM[7] = 0x3C0BB000;
-      reg[2] = 0xFFFFFFFFF58B0FBFLL;
-      reg[3] = 0xFFFFFFFFF58B0FBFLL;
-      reg[4] = 0x0000000000000FBFLL;
-      reg[12]= 0xFFFFFFFF9651F81ELL;
-      reg[13]= 0x000000002D42AAC5LL;
-      reg[15]= 0x0000000056584D60LL;
-      reg[22]= 0x0000000000000091LL;
-      reg[25]= 0xFFFFFFFFCDCE565FLL;
-      break;
-    case 6:
-      reg[2] = 0xFFFFFFFFA95930A4LL;
-      reg[3] = 0xFFFFFFFFA95930A4LL;
-      reg[4] = 0x00000000000030A4LL;
-      reg[12]= 0xFFFFFFFFBCB59510LL;
-      reg[13]= 0xFFFFFFFFBCB59510LL;
-      reg[15]= 0x000000007A3C07F4LL;
-      reg[22]= 0x0000000000000085LL;
-      reg[25]= 0x00000000465E3F72LL;
-      break;
-   }
+    uint32_t bsd_dom1_config = *(uint32_t*)rom;
+    pi_register.pi_bsd_dom1_lat_reg = (bsd_dom1_config      ) & 0xff;
+    pi_register.pi_bsd_dom1_pwd_reg = (bsd_dom1_config >>  8) & 0xff;
+    pi_register.pi_bsd_dom1_pgs_reg = (bsd_dom1_config >> 16) & 0x0f;
+    pi_register.pi_bsd_dom1_rls_reg = (bsd_dom1_config >> 20) & 0x03;
+    pi_register.read_pi_status_reg = 0;
 
+    ai_register.ai_dram_addr = 0;
+    ai_register.ai_len = 0;
+
+    vi_register.vi_v_intr = 1023;
+    vi_register.vi_current = 0;
+    vi_register.vi_h_start = 0;
+
+    MI_register.mi_intr_reg &= ~(0x10 | 0x8 | 0x4 | 0x1);
+
+    memcpy((unsigned char*)SP_DMEM+0x40, rom+0x40, 0xfc0);
+
+    reg[19] = rom_type;     /* s3 */
+    reg[20] = tv_type;      /* s4 */
+    reg[21] = reset_type;   /* s5 */
+    reg[22] = cic_seed;     /* s6 */
+    reg[23] = s7;           /* s7 */
+
+    /* required by CIC x105 */
+    SP_IMEM[0] = 0x3c0dbfc0;
+    SP_IMEM[1] = 0x8da807fc;
+    SP_IMEM[2] = 0x25ad07c0;
+    SP_IMEM[3] = 0x31080080;
+    SP_IMEM[4] = 0x5500fffc;
+    SP_IMEM[5] = 0x3c0dbfc0;
+    SP_IMEM[6] = 0x8da80024;
+    SP_IMEM[7] = 0x3c0bb000;
+
+    /* required by CIC x105 */
+    reg[11] = 0xffffffffa4000040ULL; /* t3 */
+    reg[29] = 0xffffffffa4001ff0ULL; /* sp */
+    reg[31] = 0xffffffffa4001550ULL; /* ra */
+
+    /* ready to execute IPL3 */
 }
 
 #if !defined(NO_ASM)

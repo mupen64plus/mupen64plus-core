@@ -71,6 +71,8 @@ AI_register ai_register;
 DPC_register dpc_register;
 DPS_register dps_register;
 
+unsigned int CIC_Chip;
+
 ALIGN(16, unsigned int rdram[0x800000/4]);
 
 unsigned char *const rdramb = (unsigned char *)(rdram);
@@ -146,6 +148,7 @@ static int firstFrameBufferSetting;
 int init_memory(int DoByteSwap)
 {
     int i;
+    long long CRC = 0;
 
     if (DoByteSwap != 0)
     {
@@ -942,6 +945,27 @@ int init_memory(int DoByteSwap)
         writememh[0xb000+i] = write_nothingh;
         writememd[0x9000+i] = write_nothingd;
         writememd[0xb000+i] = write_nothingd;
+    }
+
+    // init CIC type
+    for (i = 0x40/4; i < (0x1000/4); i++)
+        CRC += ((uint32_t*)rom)[i];
+
+    switch(CRC)
+    {
+        default:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC type (%08x)! using CIC 6102.", CRC);
+        /* CIC 6102 */
+        case 0x000000D057C85244LL: CIC_Chip = 2; break;
+        /* CIC 6101 */
+        case 0x000000D0027FDF31LL:
+        case 0x000000CFFB631223LL: CIC_Chip = 1; break;
+        /* CIC 6103 */
+        case 0x000000D6497E414BLL: CIC_Chip = 3; break;
+        /* CIC 6105 */
+        case 0x0000011A49F60E96LL: CIC_Chip = 5; break;
+        /* CIC 6106 */
+        case 0x000000D6D5BE5580LL: CIC_Chip = 6; break;
     }
 
     //init PIF_RAM
