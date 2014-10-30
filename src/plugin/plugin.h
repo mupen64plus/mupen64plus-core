@@ -98,6 +98,7 @@ typedef struct _input_plugin_functions
 	ptr_RomOpen             romOpen;
 	ptr_SDL_KeyDown         keyDown;
 	ptr_SDL_KeyUp           keyUp;
+	ptr_RenderCallback      renderCallback;
 } input_plugin_functions;
 
 extern input_plugin_functions input;
