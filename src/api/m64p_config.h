@@ -120,6 +120,16 @@ typedef m64p_error (*ptr_ConfigSetParameter)(m64p_handle, const char *, m64p_typ
 EXPORT m64p_error CALL ConfigSetParameter(m64p_handle, const char *, m64p_type, const void *);
 #endif
 
+/* ConfigSetParameterHelp()
+ *
+ * This function sets the help string of one of the emulator's configuration
+ * parameters.
+ */
+typedef m64p_error (*ptr_ConfigSetParameterHelp)(m64p_handle, const char *, const char *);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL ConfigSetParameterHelp(m64p_handle, const char *, const char *);
+#endif
+
 /* ConfigGetParameter()
  *
  * This function retrieves the value of one of the emulator's parameters. 

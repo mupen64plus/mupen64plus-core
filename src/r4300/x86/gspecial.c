@@ -24,11 +24,12 @@
 #include "assemble.h"
 #include "interpret.h"
 
+#include "r4300/cached_interp.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/macros.h"
+#include "r4300/cp0.h"
 #include "r4300/exception.h"
 
 void gensll(void)
@@ -296,7 +297,7 @@ void gensyscall(void)
 #else
    free_all_registers();
    simplify_access();
-   mov_m32_imm32(&Cause, 8 << 2);
+   mov_m32_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
    gencallinterp((unsigned int)exception_general, 0);
 #endif
 }

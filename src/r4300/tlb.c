@@ -19,16 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <string.h>
+#include "tlb.h"
+#include "exception.h"
 
-#include "api/m64p_types.h"
-
-#include "memory.h"
-
-#include "r4300/r4300.h"
-#include "r4300/exception.h"
-#include "r4300/macros.h"
 #include "main/rom.h"
+
+tlb tlb_e[32];
 
 unsigned int tlb_LUT_r[0x100000];
 unsigned int tlb_LUT_w[0x100000];

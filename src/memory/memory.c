@@ -37,13 +37,16 @@
 #include "flashram.h"
 
 #include "r4300/r4300.h"
-#include "r4300/macros.h"
+#include "r4300/cached_interp.h"
+#include "r4300/cp0.h"
 #include "r4300/interupt.h"
 #include "r4300/recomph.h"
 #include "r4300/ops.h"
+#include "r4300/tlb.h"
 
 #include "api/callbacks.h"
 #include "main/main.h"
+#include "main/profile.h"
 #include "main/rom.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
@@ -67,6 +70,8 @@ RI_register ri_register;
 AI_register ai_register;
 DPC_register dpc_register;
 DPS_register dps_register;
+
+unsigned int CIC_Chip;
 
 ALIGN(16, unsigned int rdram[0x800000/4]);
 
@@ -143,6 +148,7 @@ static int firstFrameBufferSetting;
 int init_memory(int DoByteSwap)
 {
     int i;
+    long long CRC = 0;
 
     if (DoByteSwap != 0)
     {
@@ -941,6 +947,27 @@ int init_memory(int DoByteSwap)
         writememd[0xb000+i] = write_nothingd;
     }
 
+    // init CIC type
+    for (i = 0x40/4; i < (0x1000/4); i++)
+        CRC += ((uint32_t*)rom)[i];
+
+    switch(CRC)
+    {
+        default:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC type (%08x)! using CIC 6102.", CRC);
+        /* CIC 6102 */
+        case 0x000000D057C85244LL: CIC_Chip = 2; break;
+        /* CIC 6101 */
+        case 0x000000D0027FDF31LL:
+        case 0x000000CFFB631223LL: CIC_Chip = 1; break;
+        /* CIC 6103 */
+        case 0x000000D6497E414BLL: CIC_Chip = 3; break;
+        /* CIC 6105 */
+        case 0x0000011A49F60E96LL: CIC_Chip = 5; break;
+        /* CIC 6106 */
+        case 0x000000D6D5BE5580LL: CIC_Chip = 6; break;
+    }
+
     //init PIF_RAM
     readmem[0x9fc0] = read_pif;
     readmem[0xbfc0] = read_pif;
@@ -1188,7 +1215,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0x8000+j] = read_rdram_break;
                             readmemb[0x8000+j] = read_rdramb_break;
@@ -1205,7 +1232,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0xa000+j] = read_rdram_break;
                             readmemb[0xa000+j] = read_rdramb_break;
@@ -1222,7 +1249,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0x8000+j] = write_rdram_break;
                             writememb[0x8000+j] = write_rdramb_break;
@@ -1239,7 +1266,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0xa000+j] = write_rdram_break;
                             writememb[0xa000+j] = write_rdramb_break;
@@ -1263,9 +1290,9 @@ static void do_SP_Task(void)
 
         //gfx.processDList();
         rsp_register.rsp_pc &= 0xFFF;
-        start_section(GFX_SECTION);
+        timed_section_start(TIMED_SECTION_GFX);
         rsp.doRspCycles(0xFFFFFFFF);
-        end_section(GFX_SECTION);
+        timed_section_end(TIMED_SECTION_GFX);
         rsp_register.rsp_pc |= save_pc;
         new_frame();
 
@@ -1301,7 +1328,7 @@ static void do_SP_Task(void)
                     {
 #ifdef DBG
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0x8000+j] = read_rdramFB_break;
                             readmemb[0x8000+j] = read_rdramFBb_break;
@@ -1318,7 +1345,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_READ ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
                         {
                             readmem[0xa000+j] = read_rdramFB_break;
                             readmemb[0xa000+j] = read_rdramFBb_break;
@@ -1335,7 +1362,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0x8000+j] = write_rdramFB_break;
                             writememb[0x8000+j] = write_rdramFBb_break;
@@ -1352,7 +1379,7 @@ static void do_SP_Task(void)
 #ifdef DBG
                         }
                         if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              BPT_FLAG_ENABLED |  BPT_FLAG_WRITE ) != -1)
+                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
                         {
                             writemem[0xa000+j] = write_rdramFB_break;
                             writememb[0xa000+j] = write_rdramFBb_break;
@@ -1393,9 +1420,9 @@ static void do_SP_Task(void)
     {
         //audio.processAList();
         rsp_register.rsp_pc &= 0xFFF;
-        start_section(AUDIO_SECTION);
+        timed_section_start(TIMED_SECTION_AUDIO);
         rsp.doRspCycles(0xFFFFFFFF);
-        end_section(AUDIO_SECTION);
+        timed_section_end(TIMED_SECTION_AUDIO);
         rsp_register.rsp_pc |= save_pc;
 
         update_count();
@@ -2480,7 +2507,7 @@ void write_mi(void)
 
         check_interupt();
         update_count();
-        if (next_interupt <= Count) gen_interupt();
+        if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
         break;
     }
 }
@@ -2507,7 +2534,7 @@ void write_mib(void)
 
         check_interupt();
         update_count();
-        if (next_interupt <= Count) gen_interupt();
+        if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
         break;
     }
 }
@@ -2530,7 +2557,7 @@ void write_mih(void)
 
         check_interupt();
         update_count();
-        if (next_interupt <= Count) gen_interupt();
+        if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
         break;
     }
 }
@@ -2549,7 +2576,7 @@ void write_mid(void)
 
         check_interupt();
         update_count();
-        if (next_interupt <= Count) gen_interupt();
+        if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
         break;
     }
 }
@@ -2560,7 +2587,7 @@ void read_vi(void)
     {
     case 0x10:
         update_count();
-        vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
+        vi_register.vi_current = (vi_register.vi_delay-(next_vi-g_cp0_regs[CP0_COUNT_REG]))/1500;
         vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
         break;
     }
@@ -2576,7 +2603,7 @@ void read_vib(void)
     case 0x12:
     case 0x13:
         update_count();
-        vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
+        vi_register.vi_current = (vi_register.vi_delay-(next_vi-g_cp0_regs[CP0_COUNT_REG]))/1500;
         vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
         break;
     }
@@ -2591,7 +2618,7 @@ void read_vih(void)
     case 0x10:
     case 0x12:
         update_count();
-        vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
+        vi_register.vi_current = (vi_register.vi_delay-(next_vi-g_cp0_regs[CP0_COUNT_REG]))/1500;
         vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
         break;
     }
@@ -2605,7 +2632,7 @@ void read_vid(void)
     {
     case 0x10:
         update_count();
-        vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
+        vi_register.vi_current = (vi_register.vi_delay-(next_vi-g_cp0_regs[CP0_COUNT_REG]))/1500;
         vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
         break;
     }
@@ -2771,8 +2798,8 @@ void read_ai(void)
     {
     case 0x4:
         update_count();
-        if (ai_register.current_delay != 0 && get_event(AI_INT) != 0 && (get_event(AI_INT)-Count) < 0x80000000)
-            *rdword = ((get_event(AI_INT)-Count)*(long long)ai_register.current_len)/
+        if (ai_register.current_delay != 0 && get_event(AI_INT) != 0 && (get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG]) < 0x80000000)
+            *rdword = ((get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG])*(long long)ai_register.current_len)/
                       ai_register.current_delay;
         else
             *rdword = 0;
@@ -2793,7 +2820,7 @@ void read_aib(void)
     case 0x7:
         update_count();
         if (ai_register.current_delay != 0 && get_event(AI_INT) != 0)
-            len = (unsigned int) (((get_event(AI_INT) - Count) * (long long)ai_register.current_len) / ai_register.current_delay);
+            len = (unsigned int) (((get_event(AI_INT) - g_cp0_regs[CP0_COUNT_REG]) * (long long)ai_register.current_len) / ai_register.current_delay);
         else
             len = 0;
         *rdword = *((unsigned char*)&len + ((*address_low&3)^S8) );
@@ -2813,7 +2840,7 @@ void read_aih(void)
     case 0x6:
         update_count();
         if (ai_register.current_delay != 0 && get_event(AI_INT) != 0)
-            len = (unsigned int) (((get_event(AI_INT)-Count) * (long long)ai_register.current_len) / ai_register.current_delay);
+            len = (unsigned int) (((get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG]) * (long long)ai_register.current_len) / ai_register.current_delay);
         else
             len = 0;
         *rdword = *((unsigned short*)((unsigned char*)&len
@@ -2832,7 +2859,7 @@ void read_aid(void)
     case 0x0:
         update_count();
         if (ai_register.current_delay != 0 && get_event(AI_INT) != 0)
-            *rdword = ((get_event(AI_INT)-Count)*(long long)ai_register.current_len)/
+            *rdword = ((get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG])*(long long)ai_register.current_len)/
                       ai_register.current_delay;
         else
             *rdword = 0;

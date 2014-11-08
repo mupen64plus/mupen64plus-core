@@ -29,6 +29,11 @@
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 #include "r4300/macros.h"
+#include "r4300/cp1.h"
+
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
 
 void genadd_s(void)
 {

@@ -25,12 +25,17 @@
 #include "assemble.h"
 #include "interpret.h"
 
+#include "r4300/cached_interp.h"
 #include "r4300/recomph.h"
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/macros.h"
+#include "r4300/cp0.h"
 #include "r4300/exception.h"
+
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
 
 #if !defined(offsetof)
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
@@ -328,7 +333,7 @@ void gensyscall(void)
 #else
    free_registers_move_start();
 
-   mov_m32rel_imm32(&Cause, 8 << 2);
+   mov_m32rel_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
    gencallinterp((unsigned long long)exception_general, 0);
 #endif
 }

@@ -1,3 +1,6 @@
+#ifndef M64P_R4300_ASSEM_X86_H
+#define M64P_R4300_ASSEM_X86_H
+
 #define HOST_REGS 8
 #define HOST_CCREG 6
 #define HOST_BTREG 5
@@ -18,3 +21,5 @@ extern void *base_addr; // Code generator target address
 /* x86 calling convention:
    caller-save: %eax %ecx %edx
    callee-save: %ebp %ebx %esi %edi */
+
+#endif /* M64P_R4300_ASSEM_X86_H */

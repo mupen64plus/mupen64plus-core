@@ -189,9 +189,9 @@ EXPORT int CALL DebugBreakpointLookup(unsigned int, unsigned int, unsigned int);
  * removing, or searching the breakpoints. The meanings of the index and ptr
  * input parameters vary by command.
  */
-typedef int (*ptr_DebugBreakpointCommand)(m64p_dbg_bkp_command, unsigned int, void *);
+typedef int (*ptr_DebugBreakpointCommand)(m64p_dbg_bkp_command, unsigned int, m64p_breakpoint *);
 #if defined(M64P_CORE_PROTOTYPES)
-EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command, unsigned int, void *);
+EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command, unsigned int, m64p_breakpoint *);
 #endif
 
 #ifdef __cplusplus

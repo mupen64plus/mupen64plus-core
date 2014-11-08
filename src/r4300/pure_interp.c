@@ -30,10 +30,14 @@
 #include "osal/preproc.h"
 
 #include "r4300.h"
+#include "cp0.h"
+#include "cp1.h"
+#include "cached_interp.h"
 #include "ops.h"
 #include "exception.h"
 #include "macros.h"
 #include "interupt.h"
+#include "tlb.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -41,7 +45,6 @@
 #endif
 
 static precomp_instr interp_PC;
-unsigned int op;
 
 static void prefetch(void);
 
@@ -79,7 +82,7 @@ static void prefetch(void);
          update_count(); \
       } \
       last_addr = interp_PC.addr; \
-      if (next_interupt <= Count) gen_interupt(); \
+      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(void) \
    { \
@@ -89,8 +92,8 @@ static void prefetch(void);
       if (take_jump) \
       { \
          update_count(); \
-         skip = next_interupt - Count; \
-         if (skip > 3) Count += (skip & 0xFFFFFFFC); \
+         skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
+         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & 0xFFFFFFFC); \
          else name(); \
       } \
       else name(); \

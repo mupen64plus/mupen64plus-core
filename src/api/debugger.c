@@ -38,8 +38,11 @@
 #include "debugger/debugger.h"
 #include "memory/memory.h"
 #include "r4300/r4300.h"
+#include "r4300/cp0.h"
+#include "r4300/cp1.h"
+#include "r4300/tlb.h"
 
-extern unsigned int op; /* this is in r4300/pure_interp.c */
+unsigned int op;
 
 /* local variables */
 static void (*callback_ui_init)(void) = NULL;
@@ -327,7 +330,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_LO:
             return &lo;
         case M64P_CPU_REG_COP0:
-            return reg_cop0;
+            return g_cp0_regs;
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
             return reg_cop1_double;
         case M64P_CPU_REG_COP1_SIMPLE_PTR:
@@ -352,7 +355,7 @@ EXPORT int CALL DebugBreakpointLookup(unsigned int address, unsigned int size, u
 #endif
 }
 
-EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, void *ptr)
+EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, m64p_breakpoint *bkp)
 {
 #ifdef DBG
     switch (command)
@@ -360,9 +363,9 @@ EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned in
         case M64P_BKP_CMD_ADD_ADDR:
             return add_breakpoint(index);
         case M64P_BKP_CMD_ADD_STRUCT:
-            return add_breakpoint_struct((breakpoint *) ptr);
+            return add_breakpoint_struct(bkp);
         case M64P_BKP_CMD_REPLACE:
-            replace_breakpoint_num(index, (breakpoint *) ptr);
+            replace_breakpoint_num(index, bkp);
             return 0;
         case M64P_BKP_CMD_REMOVE_ADDR:
             remove_breakpoint_by_address(index);

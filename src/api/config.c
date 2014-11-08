@@ -56,7 +56,7 @@ typedef struct _config_var {
   } config_var;
 
 typedef struct _config_section {
-  int                     magic;
+  unsigned int            magic;
   char                   *name;
   struct _config_var     *first_var;
   struct _config_section *next;
@@ -423,7 +423,8 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     m64p_error rval;
     const char *configpath = NULL;
     char *filepath;
-    long filelen;
+    long ftell_result;
+    size_t filelen;
     FILE *fPtr;
     char *configtext;
 
@@ -470,9 +471,23 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     free(filepath);
 
     /* read the entire config file */
-    fseek(fPtr, 0L, SEEK_END);
-    filelen = ftell(fPtr);
-    fseek(fPtr, 0L, SEEK_SET);
+    if (fseek(fPtr, 0L, SEEK_END) != 0)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
+    ftell_result = ftell(fPtr);
+    if (ftell_result == -1)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
+    filelen = (size_t)ftell_result;
+    if (fseek(fPtr, 0L, SEEK_SET) != 0)
+    {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
 
     configtext = (char *) malloc(filelen + 1);
     if (configtext == NULL)
@@ -961,6 +976,34 @@ EXPORT m64p_error CALL ConfigSetParameter(m64p_handle ConfigSectionHandle, const
             /* this is logically impossible because of the ParamType check at the top of this function */
             break;
     }
+
+    return M64ERR_SUCCESS;
+}
+
+EXPORT m64p_error CALL ConfigSetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName, const char *ParamHelp)
+{
+    config_section *section;
+    config_var *var;
+
+    /* check input conditions */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+    if (ConfigSectionHandle == NULL || ParamName == NULL || ParamHelp == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    section = (config_section *) ConfigSectionHandle;
+    if (section->magic != SECTION_MAGIC)
+        return M64ERR_INPUT_INVALID;
+
+    /* if this parameter doesn't already exist, return an error */
+    var = find_section_var(section, ParamName);
+    if (var == NULL)
+        return M64ERR_INPUT_NOT_FOUND;
+
+    if (var->comment != NULL)
+        free(var->comment);
+
+    var->comment = strdup(ParamHelp);
 
     return M64ERR_SUCCESS;
 }

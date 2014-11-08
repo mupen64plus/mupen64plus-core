@@ -25,6 +25,15 @@
 
 #include "api/m64p_types.h"
 #include "md5.h"
+#include <stdint.h>
+
+#define BIT(bitnr) (1ULL << (bitnr))
+#ifdef __GNUC__
+#define isset_bitmask(x, bitmask) ({ typeof(bitmask) _bitmask = (bitmask); \
+                                     (_bitmask & (x)) == _bitmask; })
+#else
+#define isset_bitmask(x, bitmask) ((bitmask & (x)) == bitmask)
+#endif
 
 /* ROM Loading and Saving functions */
 
@@ -38,6 +47,7 @@ extern unsigned char isGoldeneyeRom;
 
 typedef struct _rom_params
 {
+   char *cheats;
    m64p_system_type systemtype;
    int vilimit;
    int aidacrate;
@@ -106,6 +116,7 @@ typedef struct
    char* goodname;
    md5_byte_t md5[16];
    md5_byte_t* refmd5;
+   char *cheats;
    unsigned int crc1;
    unsigned int crc2;
    unsigned char status; /* Rom status on a scale from 0-5. */
@@ -113,7 +124,20 @@ typedef struct
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char countperop;
+   uint32_t set_flags;
 } romdatabase_entry;
+
+enum romdatabase_entry_set_flags {
+    ROMDATABASE_ENTRY_NONE = 0,
+    ROMDATABASE_ENTRY_GOODNAME = BIT(0),
+    ROMDATABASE_ENTRY_CRC = BIT(1),
+    ROMDATABASE_ENTRY_STATUS = BIT(2),
+    ROMDATABASE_ENTRY_SAVETYPE = BIT(3),
+    ROMDATABASE_ENTRY_PLAYERS = BIT(4),
+    ROMDATABASE_ENTRY_RUMBLE = BIT(5),
+    ROMDATABASE_ENTRY_COUNTEROP = BIT(6),
+    ROMDATABASE_ENTRY_CHEATS = BIT(7)
+};
 
 typedef struct _romdatabase_search
 {

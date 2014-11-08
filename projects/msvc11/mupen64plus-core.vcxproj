@@ -103,10 +103,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\r4300\x86\assemble.c" />
+    <ClCompile Include="..\..\src\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
+    <ClCompile Include="..\..\src\r4300\cp0.c" />
+    <ClCompile Include="..\..\src\r4300\cp1.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
     <ClCompile Include="..\..\src\debugger\dbg_memory.c" />
@@ -139,6 +142,7 @@
     <ClCompile Include="..\..\src\r4300\x86\gregimm.c" />
     <ClCompile Include="..\..\src\r4300\x86\gspecial.c" />
     <ClCompile Include="..\..\src\r4300\x86\gtlb.c" />
+    <ClCompile Include="..\..\src\r4300\instr_counters.c" />
     <ClCompile Include="..\..\src\r4300\interupt.c" />
     <ClCompile Include="..\..\src\main\zip\ioapi.c" />
     <ClCompile Include="..\..\src\main\lirc.c" />
@@ -150,7 +154,7 @@
     <ClCompile Include="..\..\src\osd\osd.cpp" />
     <ClCompile Include="..\..\src\memory\pif.c" />
     <ClCompile Include="..\..\src\plugin\plugin.c" />
-    <ClCompile Include="..\..\src\r4300\profile.c" />
+    <ClCompile Include="..\..\src\main\profile.c" />
     <ClCompile Include="..\..\src\r4300\pure_interp.c" />
     <ClCompile Include="..\..\src\r4300\r4300.c" />
     <ClCompile Include="..\..\src\r4300\recomp.c" />
@@ -161,7 +165,7 @@
     <ClCompile Include="..\..\src\main\savestates.c" />
     <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
-    <ClCompile Include="..\..\src\memory\tlb.c" />
+    <ClCompile Include="..\..\src\r4300\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
     <ClCompile Include="..\..\src\main\util.c" />
     <ClCompile Include="..\..\src\api\vidext.c" />
@@ -170,9 +174,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\r4300\x86\assemble.h" />
+    <ClInclude Include="..\..\src\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\api\callbacks.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\api\config.h" />
+    <ClInclude Include="..\..\src\r4300\cp0.h" />
+    <ClInclude Include="..\..\src\r4300\cp1.h" />
     <ClInclude Include="..\..\src\main\zip\crypt.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />
     <ClInclude Include="..\..\src\debugger\dbg_decoder.h" />
@@ -191,6 +198,7 @@
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
     <ClInclude Include="..\..\src\memory\flashram.h" />
+    <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\src\r4300\interupt.h" />
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />
@@ -213,6 +221,8 @@
     <ClInclude Include="..\..\src\memory\pif.h" />
     <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\osal\preproc.h" />
+    <ClInclude Include="..\..\src\main\profile.h" />
+    <ClInclude Include="..\..\src\r4300\pure_interp.h" />
     <ClInclude Include="..\..\src\r4300\r4300.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />
@@ -222,7 +232,7 @@
     <ClInclude Include="..\..\src\main\savestates.h" />
     <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
-    <ClInclude Include="..\..\src\memory\tlb.h" />
+    <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
     <ClInclude Include="..\..\src\main\util.h" />
     <ClInclude Include="..\..\src\main\version.h" />

@@ -35,8 +35,8 @@
 int g_DebuggerActive = 0;    // whether the debugger is enabled or not
 int run;
 
-static SDL_cond  *debugger_done_cond;
-static SDL_mutex *mutex;
+// Holds the number of pending steps the debugger needs to perform.
+static SDL_sem *sem_pending_steps;
 
 uint32 previousPC;
 
@@ -51,16 +51,13 @@ void init_debugger()
 
     init_host_disassembler();
 
-    mutex = SDL_CreateMutex();
-    debugger_done_cond = SDL_CreateCond();
+    sem_pending_steps = SDL_CreateSemaphore(0);
 }
 
 void destroy_debugger()
 {
-    SDL_DestroyMutex(mutex);
-    mutex = NULL;
-    SDL_DestroyCond(debugger_done_cond);
-    debugger_done_cond = NULL;
+    SDL_DestroySemaphore(sem_pending_steps);
+    sem_pending_steps = NULL;
     g_DebuggerActive = 0;
 }
 
@@ -77,9 +74,9 @@ void update_debugger(uint32 pc)
         bpt = check_breakpoints(pc);
         if( bpt!=-1 ) {
             run = 0;
-            
-            if(BPT_CHECK_FLAG(g_Breakpoints[bpt], BPT_FLAG_LOG))
-                log_breakpoint(pc, BPT_FLAG_EXEC, 0);
+
+            if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
+                log_breakpoint(pc, M64P_BKP_FLAG_EXEC, 0);
         }
     }
 
@@ -87,10 +84,8 @@ void update_debugger(uint32 pc)
         DebuggerCallback(DEBUG_UI_UPDATE, pc);  /* call front-end to notify user interface to update */
     }
     if(run==0) {
-        // Emulation thread is blocked until a button is clicked.
-        SDL_mutexP(mutex);
-        SDL_CondWait(debugger_done_cond, mutex);
-        SDL_mutexV(mutex);
+        // The emulation thread is blocked until a step call via the API.
+        SDL_SemWait(sem_pending_steps);
     }
 
     previousPC = pc;
@@ -98,7 +93,7 @@ void update_debugger(uint32 pc)
 
 void debugger_step()
 {
-    SDL_CondSignal(debugger_done_cond);
+    SDL_SemPost(sem_pending_steps);
 }
 
 

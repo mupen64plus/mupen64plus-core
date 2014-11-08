@@ -27,7 +27,9 @@
 #include "api/debugger.h"
 
 #include "r4300/r4300.h"
-#include "r4300/macros.h"
+#include "r4300/cached_interp.h"
+#include "r4300/cp0.h"
+#include "r4300/cp1.h"
 #include "r4300/interupt.h"
 #include "r4300/ops.h"
 #include "r4300/recomph.h"
@@ -35,46 +37,13 @@
 
 #include "memory/memory.h"
 
+#if defined(COUNT_INSTR)
+#include "r4300/instr_counters.h"
+#endif
+
 #if !defined(offsetof)
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
 #endif
-
-#if defined(COUNT_INSTR)
-unsigned int instr_count[132];
-char instr_name[][10] =
-{
-  "reserved", "NI",     "J",      "JAL",    "BEQ",    "BNE",     "BLEZ",    "BGTZ",
-  "ADDI",     "ADDIU",  "SLTI",   "SLTIU",  "ANDI",   "ORI",     "XORI",    "LUI",
-  "BEQL",     "BNEL",   "BLEZL",  "BGTZL",  "DADDI",  "DADDIU",  "LDL",     "LDR",
-  "LB",       "LH",     "LW",     "LWL",    "LBU",    "LHU",     "LWU",     "LWR",
-  "SB",       "SH",     "SW",     "SWL",    "SWR",    "SDL",     "SDR",     "LWC1",
-  "LDC1",     "LD",     "LL",     "SWC1",   "SDC1",   "SD",      "SC",      "BLTZ",
-  "BGEZ",     "BLTZL",  "BGEZL",  "BLTZAL", "BGEZAL", "BLTZALL", "BGEZALL", "SLL",
-  "SRL",      "SRA",    "SLLV",   "SRLV",   "SRAV",   "JR",      "JALR",    "SYSCALL",
-  "MFHI",     "MTHI",   "MFLO",   "MTLO",   "DSLLV",  "DSRLV",   "DSRAV",   "MULT",
-  "MULTU",    "DIV",    "DIVU",   "DMULT",  "DMULTU", "DDIV",    "DDIVU",   "ADD",
-  "ADDU",     "SUB",    "SUBU",   "AND",    "OR",     "XOR",     "NOR",     "SLT",
-  "SLTU",     "DADD",   "DADDU",  "DSUB",   "DSUBU",  "DSLL",    "DSRL",    "DSRA",
-  "TEQ",      "DSLL32", "DSRL32", "DSRA32", "BC1F",   "BC1T",    "BC1FL",   "BC1TL",
-  "TLBWI",    "TLBP",   "TLBR",   "TLBWR",  "ERET",   "MFC0",    "MTC0",    "MFC1",
-  "DMFC1",    "CFC1",   "MTC1",   "DMTC1",  "CTC1",   "f.CVT",   "f.CMP",   "f.ADD",
-  "f.SUB",    "f.MUL",  "f.DIV",  "f.SQRT", "f.ABS",  "f.MOV",   "f.NEG",   "f.ROUND",
-  "f.TRUNC",  "f.CEIL", "f.FLOOR"
-};
-unsigned int instr_type[131] = {  9, 10,  6,  6,  7,  7,  7,  7,  3,  3,  4,  4,  3,  4,  4,  0,
-                                  7,  7,  7,  7,  4,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                                  1,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0,  1,  1,  1,  1,  7,
-                                  7,  7,  7,  7,  7,  7,  7,  3,  3,  3,  3,  3,  3,  6,  6, 10,
-                                  2,  2,  2,  2,  4,  4,  4,  3,  3,  3,  3,  4,  4,  4,  4,  3,
-                                  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
-                                  8,  4,  4,  4,  7,  7,  7,  7, 10, 10, 10, 10,  8,  2,  2,  2,
-                                  2,  2,  2,  2,  2,  2,  5,  5,  5,  5,  5,  5,  5,  2,  5,  5,
-                                  5,  5,  5 };
-char instr_typename[][20] = { "Load", "Store", "Data move/convert", "32-bit math", "64-bit math", "Float Math",
-                              "Jump", "Branch", "Exceptions", "Reserved", "Other" };
-#endif
-
-extern unsigned int op;
 
 static precomp_instr fake_instr;
 #ifdef COMPARE_CORE
@@ -93,7 +62,7 @@ static void genupdate_count(unsigned int addr)
    shr_reg32_imm8(EAX, 2);
    mov_xreg32_m32rel(EDX, (void*)&count_per_op);
    mul_reg32(EDX);
-   add_m32rel_xreg32((unsigned int*)(&Count), EAX);
+   add_m32rel_xreg32((unsigned int*)(&g_cp0_regs[CP0_COUNT_REG]), EAX);
 #else
    mov_reg64_imm64(RAX, (unsigned long long) (dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&PC), RAX);
@@ -105,7 +74,7 @@ static void genupdate_count(unsigned int addr)
 static void gencheck_interupt(unsigned long long instr_structure)
 {
    mov_xreg32_m32rel(EAX, (void*)(&next_interupt));
-   cmp_xreg32_m32rel(EAX, (void*)&Count);
+   cmp_xreg32_m32rel(EAX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -120,7 +89,7 @@ static void gencheck_interupt(unsigned long long instr_structure)
 static void gencheck_interupt_out(unsigned int addr)
 {
    mov_xreg32_m32rel(EAX, (void*)(&next_interupt));
-   cmp_xreg32_m32rel(EAX, (void*)&Count);
+   cmp_xreg32_m32rel(EAX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -307,6 +276,8 @@ void genlink_subblock(void)
 }
 
 #ifdef COMPARE_CORE
+extern unsigned int op; /* api/debugger.c */
+
 void gendebug(void)
 {
    free_all_registers();
@@ -395,7 +366,7 @@ void genfin_block(void)
 void gencheck_interupt_reg(void) // addr is in EAX
 {
    mov_xreg32_m32rel(EBX, (void*)&next_interupt);
-   cmp_xreg32_m32rel(EBX, (void*)&Count);
+   cmp_xreg32_m32rel(EBX, (void*)&g_cp0_regs[CP0_COUNT_REG]);
    ja_rj(0);
    jump_start_rel8();
 
@@ -484,12 +455,12 @@ void genj_idle(void)
      }
    
    mov_xreg32_m32rel(EAX, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(EAX, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(12);
 
    and_eax_imm32(0xFFFFFFFC);  // 5
-   add_m32rel_xreg32((unsigned int *)(&Count), EAX); // 7
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX); // 7
 
    genj();
 #endif
@@ -581,12 +552,12 @@ void genjal_idle(void)
      }
    
    mov_xreg32_m32rel(EAX, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(EAX, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(12);
    
    and_eax_imm32(0xFFFFFFFC);  // 5
-   add_m32rel_xreg32((unsigned int *)(&Count), EAX); // 7
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX); // 7
   
    genjal();
 #endif
@@ -683,13 +654,13 @@ void gentest_idle(void)
    jump_start_rel32();
 
    mov_xreg32_m32rel(reg, (unsigned int *)(&next_interupt));
-   sub_xreg32_m32rel(reg, (unsigned int *)(&Count));
+   sub_xreg32_m32rel(reg, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(reg, 3);
    jbe_rj(0);
    jump_start_rel8();
    
    and_reg32_imm32(reg, 0xFFFFFFFC);
-   add_m32rel_xreg32((unsigned int *)(&Count), reg);
+   add_m32rel_xreg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), reg);
    
    jump_end_rel8();
    jump_end_rel32();
@@ -1904,7 +1875,7 @@ void gencheck_cop1_unusable(void)
 {
    free_registers_move_start();
 
-   test_m32rel_imm32((unsigned int*)&Status, 0x20000000);
+   test_m32rel_imm32((unsigned int*)&g_cp0_regs[CP0_STATUS_REG], 0x20000000);
    jne_rj(0);
    jump_start_rel8();
 
