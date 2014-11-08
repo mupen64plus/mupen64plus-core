@@ -49,7 +49,6 @@ LOCAL_SRC_FILES :=                              \
     $(SRCDIR)/main/savestates.c                 \
     $(SRCDIR)/main/sdl_key_converter.c          \
     $(SRCDIR)/main/util.c                       \
-    $(SRCDIR)/main/workqueue.c                  \
     $(SRCDIR)/main/zip/ioapi.c                  \
     $(SRCDIR)/main/zip/unzip.c                  \
     $(SRCDIR)/main/zip/zip.c                    \
