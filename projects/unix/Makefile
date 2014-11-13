@@ -239,6 +239,12 @@ endif
 CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
 
+ifeq ($(USE_GLES), 1)
+  CFLAGS += -DUSE_GLES
+  # OSD uses non-ES code and breaks attribs of video plugins
+  OSD=0
+endif
+
 OSD ?= 1
 ifeq ($(OSD), 1)
   CFLAGS += -DM64P_OSD
@@ -254,6 +260,9 @@ ifeq ($(OSD), 1)
   LDLIBS += $(FREETYPE2_LDLIBS)
 
   # search for OpenGL libraries
+  ifeq ($(USE_GLES), 1)
+    GL_LDLIBS = -lGLESv2
+  endif
   ifeq ($(OS), OSX)
     GL_LDLIBS = -framework OpenGL
     GLU_LDLIBS = -framework OpenGL
@@ -525,6 +534,7 @@ targets:
 	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
+	@echo "    USE_GLES=1    == build against GLESv2 instead of OpenGL"
 	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3 -flto)"
