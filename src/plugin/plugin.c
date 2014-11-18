@@ -368,11 +368,6 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
 
-        if (!GET_FUNC(ptr_RenderCallback, input.renderCallback, "RenderCallback"))
-        {
-            DebugMessage(M64MSG_ERROR, "input plugin did not specify a render callback; there will be no on screen display by the input plugin.");
-        }
-
         /* check the version info */
         (*input.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_INPUT || (APIVersion & 0xffff0000) != (INPUT_API_VERSION & 0xffff0000))
@@ -380,6 +375,18 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             DebugMessage(M64MSG_ERROR, "incompatible Input plugin");
             plugin_disconnect_input();
             return M64ERR_INCOMPATIBLE;
+        }
+
+        if (APIVersion < 0x020001)
+        {
+            input.renderCallback = NULL; // not supported in earlier input plugins
+        }
+        else
+        {
+            if (!GET_FUNC(ptr_RenderCallback, input.renderCallback, "RenderCallback"))
+            {
+                DebugMessage(M64MSG_INFO, "input plugin did not specify a render callback; there will be no on screen display by the input plugin.");
+            }
         }
 
         l_InputAttached = 1;
