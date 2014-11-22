@@ -19,6 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "api/m64p_types.h"
 
 #include "memory.h"
@@ -1542,6 +1545,46 @@ static void update_DPC(void)
         dpc_register.dpc_status |= 0x4;
 }
 
+
+static void pre_framebuffer_read(uint32_t address)
+{
+    int i;
+    for (i=0; i<6; i++)
+    {
+        if (frameBufferInfos[i].addr)
+        {
+            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
+            unsigned int end = start + frameBufferInfos[i].width*
+                               frameBufferInfos[i].height*
+                               frameBufferInfos[i].size - 1;
+            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
+                    framebufferRead[(address & 0x7FFFFF)>>12])
+            {
+                gfx.fBRead(address);
+                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
+            }
+        }
+    }
+}
+
+static void pre_framebuffer_write(uint32_t address, size_t size)
+{
+    int i;
+    for (i=0; i<6; i++)
+    {
+        if (frameBufferInfos[i].addr)
+        {
+            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
+            unsigned int end = start + frameBufferInfos[i].width*
+                               frameBufferInfos[i].height*
+                               frameBufferInfos[i].size - 1;
+            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
+                gfx.fBWrite(address, size);
+        }
+    }
+}
+
+
 void read_nothing(void)
 {
     if (address == 0xa5000508) *rdword = 0xFFFFFFFF;
@@ -1674,89 +1717,25 @@ void read_rdramd(void)
 
 void read_rdramFB(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-                    framebufferRead[(address & 0x7FFFFF)>>12])
-            {
-                gfx.fBRead(address);
-                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
-            }
-        }
-    }
+    pre_framebuffer_read(address);
     read_rdram();
 }
 
 void read_rdramFBb(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-                    framebufferRead[(address & 0x7FFFFF)>>12])
-            {
-                gfx.fBRead(address);
-                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
-            }
-        }
-    }
+    pre_framebuffer_read(address);
     read_rdramb();
 }
 
 void read_rdramFBh(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-                    framebufferRead[(address & 0x7FFFFF)>>12])
-            {
-                gfx.fBRead(address);
-                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
-            }
-        }
-    }
+    pre_framebuffer_read(address);
     read_rdramh();
 }
 
 void read_rdramFBd(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-                    framebufferRead[(address & 0x7FFFFF)>>12])
-            {
-                gfx.fBRead(address);
-                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
-            }
-        }
-    }
+    pre_framebuffer_read(address);
     read_rdramd();
 }
 
@@ -1783,73 +1762,25 @@ void write_rdramd(void)
 
 void write_rdramFB(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address, 4);
-        }
-    }
+    pre_framebuffer_write(address, 4);
     write_rdram();
 }
 
 void write_rdramFBb(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address^S8, 1);
-        }
-    }
+    pre_framebuffer_write(address, 1);
     write_rdramb();
 }
 
 void write_rdramFBh(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address^S16, 2);
-        }
-    }
+    pre_framebuffer_write(address, 2);
     write_rdramh();
 }
 
 void write_rdramFBd(void)
 {
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address, 8);
-        }
-    }
+    pre_framebuffer_write(address, 8);
     write_rdramd();
 }
 
