@@ -22,6 +22,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include <stdint.h>
 #include "osal/preproc.h"
 
 #define read_word_in_memory() readmem[address>>16]()
@@ -39,7 +40,9 @@ extern unsigned char *SP_IMEMb;
 extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
 
-extern ALIGN(16, unsigned int rdram[0x800000/4]);
+enum { RDRAM_MAX_SIZE = 0x800000 };
+
+extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 
 extern unsigned int address, word;
 extern unsigned char cpu_byte;
@@ -212,8 +215,6 @@ extern RI_register ri_register;
 extern AI_register ai_register;
 extern DPC_register dpc_register;
 extern DPS_register dps_register;
-
-extern unsigned char *const rdramb;
 
 enum cic_type
 {

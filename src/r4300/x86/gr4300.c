@@ -1310,7 +1310,7 @@ void genlb(void)
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 3); // 3
-   movsx_reg32_8preg32pimm32(EAX, EBX, (unsigned int)rdram); // 7
+   movsx_reg32_8preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 7
    
    set_register_state(EAX, (unsigned int*)dst->f.i.rt, 1);
 #endif
@@ -1350,7 +1350,7 @@ void genlh(void)
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 2); // 3
-   movsx_reg32_16preg32pimm32(EAX, EBX, (unsigned int)rdram); // 7
+   movsx_reg32_16preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 7
    
    set_register_state(EAX, (unsigned int*)dst->f.i.rt, 1);
 #endif
@@ -1394,7 +1394,7 @@ void genlw(void)
    jmp_imm_short(12); // 2
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)rdram); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 6
    
    set_register_state(EAX, (unsigned int*)dst->f.i.rt, 1);
 #endif
@@ -1434,7 +1434,7 @@ void genlbu(void)
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 3); // 3
-   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)rdram); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 6
    
    and_eax_imm32(0xFF);
    
@@ -1476,7 +1476,7 @@ void genlhu(void)
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 2); // 3
-   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)rdram); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 6
    
    and_eax_imm32(0xFFFF);
    
@@ -1522,7 +1522,7 @@ void genlwu(void)
    jmp_imm_short(12); // 2
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)rdram); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 6
    
    xor_reg32_reg32(EBX, EBX);
    
@@ -1566,7 +1566,7 @@ void gensb(void)
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 3); // 3
-   mov_preg32pimm32_reg8(EBX, (unsigned int)rdram, CL); // 6
+   mov_preg32pimm32_reg8(EBX, (unsigned int)g_rdram, CL); // 6
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
@@ -1623,7 +1623,7 @@ void gensh(void)
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    xor_reg8_imm8(BL, 2); // 3
-   mov_preg32pimm32_reg16(EBX, (unsigned int)rdram, CX); // 7
+   mov_preg32pimm32_reg16(EBX, (unsigned int)g_rdram, CX); // 7
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
@@ -1684,7 +1684,7 @@ void gensw(void)
    
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_preg32pimm32_reg32(EBX, (unsigned int)rdram, ECX); // 6
+   mov_preg32pimm32_reg32(EBX, (unsigned int)g_rdram, ECX); // 6
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
@@ -1767,7 +1767,7 @@ void genlwc1(void)
    jmp_imm_short(20); // 2
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)rdram); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_rdram); // 6
    mov_reg32_m32(EBX, (unsigned int*)(&reg_cop1_simple[dst->f.lf.ft])); // 6
    mov_preg32_reg32(EBX, EAX); // 2
 #endif
@@ -1806,8 +1806,8 @@ void genldc1(void)
    jmp_imm_short(32); // 2
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_reg32_preg32pimm32(EAX, EBX, ((unsigned int)rdram)+4); // 6
-   mov_reg32_preg32pimm32(ECX, EBX, ((unsigned int)rdram)); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, ((unsigned int)g_rdram)+4); // 6
+   mov_reg32_preg32pimm32(ECX, EBX, ((unsigned int)g_rdram)); // 6
    mov_reg32_m32(EBX, (unsigned int*)(&reg_cop1_double[dst->f.lf.ft])); // 6
    mov_preg32_reg32(EBX, EAX); // 2
    mov_preg32pimm32_reg32(EBX, 4, ECX); // 6
@@ -1852,8 +1852,8 @@ void genld(void)
    jmp_imm_short(18); // 2
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_reg32_preg32pimm32(EAX, EBX, ((unsigned int)rdram)+4); // 6
-   mov_reg32_preg32pimm32(ECX, EBX, ((unsigned int)rdram)); // 6
+   mov_reg32_preg32pimm32(EAX, EBX, ((unsigned int)g_rdram)+4); // 6
+   mov_reg32_preg32pimm32(ECX, EBX, ((unsigned int)g_rdram)); // 6
    
    set_64_register_state(EAX, ECX, (unsigned int*)dst->f.i.rt, 1);
 #endif
@@ -1895,7 +1895,7 @@ void genswc1(void)
    
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_preg32pimm32_reg32(EBX, (unsigned int)rdram, ECX); // 6
+   mov_preg32pimm32_reg32(EBX, (unsigned int)g_rdram, ECX); // 6
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
@@ -1954,8 +1954,8 @@ void gensdc1(void)
    
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_preg32pimm32_reg32(EBX, ((unsigned int)rdram)+4, ECX); // 6
-   mov_preg32pimm32_reg32(EBX, ((unsigned int)rdram)+0, EDX); // 6
+   mov_preg32pimm32_reg32(EBX, ((unsigned int)g_rdram)+4, ECX); // 6
+   mov_preg32pimm32_reg32(EBX, ((unsigned int)g_rdram)+0, EDX); // 6
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
@@ -2014,8 +2014,8 @@ void gensd(void)
    
    mov_reg32_reg32(EAX, EBX); // 2
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
-   mov_preg32pimm32_reg32(EBX, ((unsigned int)rdram)+4, ECX); // 6
-   mov_preg32pimm32_reg32(EBX, ((unsigned int)rdram)+0, EDX); // 6
+   mov_preg32pimm32_reg32(EBX, ((unsigned int)g_rdram)+4, ECX); // 6
+   mov_preg32pimm32_reg32(EBX, ((unsigned int)g_rdram)+0, EDX); // 6
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);

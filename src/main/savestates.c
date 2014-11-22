@@ -378,7 +378,7 @@ static int savestates_load_m64p(char *filepath)
     dps_register.dps_buftest_addr = GETDATA(curr, unsigned int);
     dps_register.dps_buftest_data = GETDATA(curr, unsigned int);
 
-    COPYARRAY(rdram, curr, unsigned int, 0x800000/4);
+    COPYARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
     COPYARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
     COPYARRAY(PIF_RAM, curr, unsigned char, 0x40);
@@ -727,8 +727,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(PIF_RAM, curr, unsigned char, 0x40);
 
     // RDRAM
-    memset(rdram, 0, 0x800000);
-    COPYARRAY(rdram, curr, unsigned int, SaveRDRAMSize/4);
+    memset(g_rdram, 0, RDRAM_MAX_SIZE);
+    COPYARRAY(g_rdram, curr, uint32_t, SaveRDRAMSize/4);
 
     // DMEM
     COPYARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
@@ -1168,7 +1168,7 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, dps_register.dps_buftest_addr);
     PUTDATA(curr, unsigned int, dps_register.dps_buftest_data);
 
-    PUTARRAY(rdram, curr, unsigned int, 0x800000/4);
+    PUTARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
     PUTARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
     PUTARRAY(PIF_RAM, curr, unsigned char, 0x40);
@@ -1250,7 +1250,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
                                 int (*write_func)(void *, const void *, size_t))
 {
     unsigned int i;
-    unsigned int SaveRDRAMSize = 0x800000;
+    unsigned int SaveRDRAMSize = RDRAM_MAX_SIZE;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
@@ -1403,7 +1403,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
 
     PUTARRAY(PIF_RAM, curr, unsigned char, 0x40);
 
-    PUTARRAY(rdram, curr, unsigned int, SaveRDRAMSize/4);
+    PUTARRAY(g_rdram, curr, uint32_t, SaveRDRAMSize/4);
     PUTARRAY(SP_DMEM, curr, unsigned int, 0x1000/4);
     PUTARRAY(SP_IMEM, curr, unsigned int, 0x1000/4);
 

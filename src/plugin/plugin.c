@@ -225,7 +225,7 @@ static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
     gfx_info.HEADER = (unsigned char *) rom;
-    gfx_info.RDRAM = (unsigned char *) rdram;
+    gfx_info.RDRAM = (unsigned char *) g_rdram;
     gfx_info.DMEM = (unsigned char *) SP_DMEM;
     gfx_info.IMEM = (unsigned char *) SP_IMEM;
     gfx_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
@@ -317,7 +317,7 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.RDRAM = (unsigned char *) rdram;
+    audio_info.RDRAM = (unsigned char *) g_rdram;
     audio_info.DMEM = (unsigned char *) SP_DMEM;
     audio_info.IMEM = (unsigned char *) SP_IMEM;
     audio_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
@@ -463,7 +463,7 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_rsp(void)
 {
     /* fill in the RSP_INFO data structure */
-    rsp_info.RDRAM = (unsigned char *) rdram;
+    rsp_info.RDRAM = (unsigned char *) g_rdram;
     rsp_info.DMEM = (unsigned char *) SP_DMEM;
     rsp_info.IMEM = (unsigned char *) SP_IMEM;
     rsp_info.MI_INTR_REG = &MI_register.mi_intr_reg;

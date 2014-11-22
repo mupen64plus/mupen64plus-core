@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "api/m64p_types.h"
 
@@ -66,9 +67,8 @@ DPS_register dps_register;
 
 enum cic_type g_cic_type;
 
-ALIGN(16, unsigned int rdram[0x800000/4]);
+ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 
-unsigned char *const rdramb = (unsigned char *)(rdram);
 unsigned int SP_DMEM[0x1000/4*2];
 unsigned int *SP_IMEM = SP_DMEM+0x1000/4;
 unsigned char *SP_DMEMb = (unsigned char *)(SP_DMEM);
@@ -263,8 +263,8 @@ int init_memory(void)
         writememh[i] = write_nomemh;
     }
 
-    //init RDRAM
-    for (i=0; i<(0x800000/4); i++) rdram[i]=0;
+    /* init RDRAM */
+    memset(g_rdram, 0, RDRAM_MAX_SIZE);
 
     for (i=0; i</*0x40*/0x80; i++)
     {
@@ -1793,25 +1793,47 @@ void write_nomemd(void)
     write_dword_in_memory();
 }
 
+static inline uint32_t rdram_ram_address(uint32_t address)
+{
+    return (address & 0xffffff) >> 2;
+}
+
+static int read_rdram_ram(uint32_t address, uint32_t* value)
+{
+    uint32_t addr = rdram_ram_address(address);
+
+    *value = g_rdram[addr];
+
+    return 0;
+}
+
+static int write_rdram_ram(uint32_t address, uint32_t value, uint32_t mask)
+{
+    uint32_t addr = rdram_ram_address(address);
+
+    masked_write(&g_rdram[addr], value, mask);
+
+    return 0;
+}
+
 void read_rdram(void)
 {
-    *rdword = *((unsigned int *)(rdramb + (address & 0xFFFFFF)));
+    readw(read_rdram_ram, address, rdword);
 }
 
 void read_rdramb(void)
 {
-    *rdword = *(rdramb + ((address & 0xFFFFFF)^S8));
+    readb(read_rdram_ram, address, rdword);
 }
 
 void read_rdramh(void)
 {
-    *rdword = *((unsigned short *)(rdramb + ((address & 0xFFFFFF)^S16)));
+    readh(read_rdram_ram, address, rdword);
 }
 
 void read_rdramd(void)
 {
-    *rdword = ((unsigned long long int)(*(unsigned int *)(rdramb + (address & 0xFFFFFF))) << 32) |
-              ((*(unsigned int *)(rdramb + (address & 0xFFFFFF) + 4)));
+    readd(read_rdram_ram, address, rdword);
 }
 
 void read_rdramFB(void)
@@ -1840,23 +1862,22 @@ void read_rdramFBd(void)
 
 void write_rdram(void)
 {
-    *((unsigned int *)(rdramb + (address & 0xFFFFFF))) = word;
+    writew(write_rdram_ram, address, word);
 }
 
 void write_rdramb(void)
 {
-    *((rdramb + ((address & 0xFFFFFF)^S8))) = cpu_byte;
+    writeb(write_rdram_ram, address, cpu_byte);
 }
 
 void write_rdramh(void)
 {
-    *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S16))) = hword;
+    writeh(write_rdram_ram, address, hword);
 }
 
 void write_rdramd(void)
 {
-    *((unsigned int *)(rdramb + (address & 0xFFFFFF))) = (unsigned int) (dword >> 32);
-    *((unsigned int *)(rdramb + (address & 0xFFFFFF) + 4 )) = (unsigned int) (dword & 0xFFFFFFFF);
+    writed(write_rdram_ram, address, dword);
 }
 
 void write_rdramFB(void)
@@ -3735,8 +3756,8 @@ unsigned int *fast_mem_access(unsigned int address)
 
     address &= 0x1ffffffc;
 
-    if (address < 0x800000)
-        return (unsigned int*)((unsigned char*)rdram + address);
+    if (address < RDRAM_MAX_SIZE)
+        return (unsigned int*)((unsigned char*)g_rdram + address);
     else if (address >= 0x10000000)
         return (unsigned int*)((unsigned char*)rom + address - 0x10000000);
     else if ((address & 0xffffe000) == 0x04000000)
