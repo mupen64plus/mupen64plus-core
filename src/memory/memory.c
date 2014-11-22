@@ -138,12 +138,6 @@ static FrameBufferInfo frameBufferInfos[6];
 static char framebufferRead[0x800];
 static int firstFrameBufferSetting;
 
-// uncomment to output count of calls to write_rdram():
-//#define COUNT_WRITE_RDRAM_CALLS 1
-
-#if defined( COUNT_WRITE_RDRAM_CALLS )
-	int writerdram_count = 1;
-#endif
 
 int init_memory(int DoByteSwap)
 {
@@ -1785,10 +1779,6 @@ void read_rdramFBd(void)
 
 void write_rdram(void)
 {
-#if defined( COUNT_WRITE_RDRAM_CALLS )
-	printf( "write_rdram, word=%i, count: %i", word, writerdram_count );
-	writerdram_count++;
-#endif
     *((unsigned int *)(rdramb + (address & 0xFFFFFF))) = word;
 }
 
