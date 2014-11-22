@@ -129,17 +129,10 @@ static char framebufferRead[0x800];
 static int firstFrameBufferSetting;
 
 
-int init_memory(int DoByteSwap)
+int init_memory(void)
 {
     int i;
     long long CRC = 0;
-
-    if (DoByteSwap != 0)
-    {
-        //swap rom
-        unsigned int *roml = (unsigned int *) rom;
-        for (i=0; i<(rom_size/4); i++) roml[i] = sl(roml[i]);
-    }
 
     //init hash tables
     for (i=0; i<(0x10000); i++)

@@ -24,7 +24,6 @@
 
 #include "osal/preproc.h"
 
-int init_memory(int DoByteSwap);
 #define read_word_in_memory() readmem[address>>16]()
 #define read_byte_in_memory() readmemb[address>>16]()
 #define read_hword_in_memory() readmemh[address>>16]()
@@ -242,6 +241,8 @@ extern unsigned int CIC_Chip;
 #define Sh16 0
 
 #endif
+
+int init_memory(void);
 
 void read_nothing(void);
 void read_nothingh(void);
