@@ -318,6 +318,7 @@ void write_memory_64_unaligned(uint32 addr, uint64 value)
 }
 
 uint32 read_memory_32(uint32 addr){
+  uint32_t offset;
   const uint32 addrlow = (addr & 0xFFFF);
 
   switch(get_memory_type(addr))
@@ -338,8 +339,9 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
     case M64P_MEM_RDRAMREG:
-      if (addrlow < 0x28)
-        return *(readrdramreg[addrlow&0xfffc]);
+      offset = (addr & 0x3ff) >> 2;
+      if (offset < RDRAM_REGS_COUNT)
+          return g_rdram_regs[offset];
       break;
     case M64P_MEM_RSPREG:
       if (addrlow < 0x20)
