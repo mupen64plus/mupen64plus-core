@@ -1018,10 +1018,6 @@ int init_memory(int DoByteSwap)
     return 0;
 }
 
-void free_memory(void)
-{
-}
-
 void make_w_mi_init_mode_reg(void)
 {
     MI_register.w_mi_init_mode_reg = MI_register.mi_init_mode_reg & 0x7F;

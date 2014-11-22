@@ -773,15 +773,15 @@ m64p_error main_run(void)
     // Attach rom to plugins
     if (!gfx.romOpen())
     {
-        free_memory(); return M64ERR_PLUGIN_FAIL;
+        return M64ERR_PLUGIN_FAIL;
     }
     if (!audio.romOpen())
     {
-        gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
     }
     if (!input.romOpen())
     {
-        audio.romClosed(); gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        audio.romClosed(); gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
     }
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
@@ -838,7 +838,6 @@ m64p_error main_run(void)
     input.romClosed();
     audio.romClosed();
     gfx.romClosed();
-    free_memory();
 
     // clean up
     g_EmulatorRunning = 0;
