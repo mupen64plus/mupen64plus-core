@@ -33,10 +33,11 @@
 #define write_byte_in_memory() writememb[address >>16]()
 #define write_hword_in_memory() writememh[address >>16]()
 #define write_dword_in_memory() writememd[address >>16]()
-extern unsigned int SP_DMEM[0x1000/4*2];
-extern unsigned char *SP_DMEMb;
-extern unsigned int *SP_IMEM;
-extern unsigned char *SP_IMEMb;
+
+enum { SP_MEM_SIZE = 0x2000 };
+
+extern uint32_t g_sp_mem[SP_MEM_SIZE/4];
+
 extern unsigned int PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
 

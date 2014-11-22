@@ -203,7 +203,7 @@ void r4300_reset_soft(void)
 
     MI_register.mi_intr_reg &= ~(0x10 | 0x8 | 0x4 | 0x1);
 
-    memcpy((unsigned char*)SP_DMEM+0x40, rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_sp_mem+0x40, rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
@@ -212,14 +212,14 @@ void r4300_reset_soft(void)
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    SP_IMEM[0] = 0x3c0dbfc0;
-    SP_IMEM[1] = 0x8da807fc;
-    SP_IMEM[2] = 0x25ad07c0;
-    SP_IMEM[3] = 0x31080080;
-    SP_IMEM[4] = 0x5500fffc;
-    SP_IMEM[5] = 0x3c0dbfc0;
-    SP_IMEM[6] = 0x8da80024;
-    SP_IMEM[7] = 0x3c0bb000;
+    g_sp_mem[0x1000/4] = 0x3c0dbfc0;
+    g_sp_mem[0x1004/4] = 0x8da807fc;
+    g_sp_mem[0x1008/4] = 0x25ad07c0;
+    g_sp_mem[0x100c/4] = 0x31080080;
+    g_sp_mem[0x1010/4] = 0x5500fffc;
+    g_sp_mem[0x1014/4] = 0x3c0dbfc0;
+    g_sp_mem[0x1018/4] = 0x8da80024;
+    g_sp_mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = 0xffffffffa4000040ULL; /* t3 */

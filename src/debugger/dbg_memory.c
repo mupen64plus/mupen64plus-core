@@ -159,7 +159,7 @@ static void decode_recompiled(uint32 addr)
         return;
 
     if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
-    //      recompile_block((int *) SP_DMEM, blocks[addr>>12], addr);
+    //      recompile_block((int *) g_sp_mem, blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");
     strcpy(args_recompiled[0],"NOTCOMPILED");
@@ -330,12 +330,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RDRAM:
       return g_rdram[(addr & 0xffffff) >> 2];
     case M64P_MEM_RSPMEM:
-      if ((addr & 0xFFFF) < 0x1000)
-        return *((uint32 *)(SP_DMEMb + (addr&0xFFF)));
-      else if ((addr&0xFFFF) < 0x2000)
-        return *((uint32 *)(SP_IMEMb + (addr&0xFFF)));
-      else
-        return M64P_MEM_INVALID;
+      return g_sp_mem[(addr & 0x1fff) >> 2];
     case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
     case M64P_MEM_RDRAMREG:

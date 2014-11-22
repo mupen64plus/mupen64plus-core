@@ -300,7 +300,7 @@ void dma_sp_write(void)
     unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
     unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
 
-    unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+    unsigned char *spmem = (unsigned char*)g_sp_mem + (sp_register.sp_mem_addr_reg & 0x1000);
     unsigned char *dram = (unsigned char*)g_rdram;
 
     for(j=0; j<count; j++) {
@@ -326,7 +326,7 @@ void dma_sp_read(void)
     unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
     unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
 
-    unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+    unsigned char *spmem = (unsigned char*)g_sp_mem + (sp_register.sp_mem_addr_reg & 0x1000);
     unsigned char *dram = (unsigned char*)g_rdram;
 
     for(j=0; j<count; j++) {
