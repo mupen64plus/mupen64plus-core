@@ -155,6 +155,97 @@ static enum cic_type detect_cic_type(const void* ipl3)
     return 0;
 }
 
+typedef int (*readfn)(uint32_t,uint32_t*);
+typedef int (*writefn)(uint32_t,uint32_t,uint32_t);
+
+static inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
+{
+    *dst = (*dst & ~mask) | (value & mask);
+}
+
+static inline unsigned int bshift(uint32_t address)
+{
+    return ((address & 3) ^ 3) << 3;
+}
+
+static inline unsigned int hshift(uint32_t address)
+{
+    return ((address & 2) ^ 2) << 3;
+}
+
+static int readb(readfn read_word, uint32_t address, unsigned long long int* value)
+{
+    uint32_t w;
+    unsigned shift = bshift(address);
+    int result = read_word(address, &w);
+    *value = (w >> shift) & 0xff;
+
+    return result;
+}
+
+static int readh(readfn read_word, uint32_t address, unsigned long long int* value)
+{
+    uint32_t w;
+    unsigned shift = hshift(address);
+    int result = read_word(address, &w);
+    *value = (w >> shift) & 0xffff;
+
+    return result;
+}
+
+static int readw(readfn read_word, uint32_t address, unsigned long long int* value)
+{
+    uint32_t w;
+    int result = read_word(address, &w);
+    *value = w;
+
+    return result;
+}
+
+static int readd(readfn read_word, uint32_t address, unsigned long long int* value)
+{
+    uint32_t w[2];
+    int result =
+    read_word(address    , &w[0]);
+    read_word(address + 4, &w[1]);
+    *value = ((uint64_t)w[0] << 32) | w[1];
+
+    return result;
+}
+
+static int writeb(writefn write_word, uint32_t address, uint8_t value)
+{
+    unsigned int shift = bshift(address);
+    uint32_t w = (uint32_t)value << shift;
+    uint32_t mask = (uint32_t)0xff << shift;
+
+    return write_word(address, w, mask);
+}
+
+static int writeh(writefn write_word, uint32_t address, uint16_t value)
+{
+    unsigned int shift = hshift(address);
+    uint32_t w = (uint32_t)value << shift;
+    uint32_t mask = (uint32_t)0xffff << shift;
+
+    return write_word(address, w, mask);
+}
+
+static int writew(writefn write_word, uint32_t address, uint32_t value)
+{
+    return write_word(address, value, ~0U);
+}
+
+static int writed(writefn write_word, uint32_t address, uint64_t value)
+{
+    int result =
+    write_word(address    , value >> 32, ~0U);
+    write_word(address + 4, value      , ~0U);
+
+    return result;
+}
+
+
 int init_memory(void)
 {
     int i;
