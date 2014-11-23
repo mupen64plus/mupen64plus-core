@@ -124,22 +124,22 @@ enum dps_registers
 extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
 extern uint32_t g_dps_regs[DPS_REGS_COUNT];
 
-extern unsigned int *readmi[0x10000];
+enum mi_registers
+{
+    MI_INIT_MODE_REG,
+    MI_VERSION_REG,
+    MI_INTR_REG,
+    MI_INTR_MASK_REG,
+    MI_REGS_COUNT
+};
+
+extern uint32_t g_mi_regs[MI_REGS_COUNT];
+
 extern unsigned int *readvi[0x10000];
 extern unsigned int *readai[0x10000];
 extern unsigned int *readpi[0x10000];
 extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
-
-typedef struct _mips_register
-{
-   unsigned int w_mi_init_mode_reg;
-   unsigned int mi_init_mode_reg;
-   unsigned int mi_version_reg;
-   unsigned int mi_intr_reg;
-   unsigned int mi_intr_mask_reg;
-   unsigned int w_mi_intr_mask_reg;
-} mips_register;
 
 typedef struct _VI_register
 {
@@ -212,7 +212,6 @@ typedef struct _SI_register
 } SI_register;
 
 extern PI_register pi_register;
-extern mips_register MI_register;
 extern SI_register si_register;
 extern VI_register vi_register;
 extern RI_register ri_register;
@@ -411,10 +410,8 @@ void write_pifb(void);
 void write_pifh(void);
 void write_pifd(void);
 
-void make_w_mi_init_mode_reg(void);
 void update_MI_intr_mode_reg(void);
 void update_MI_init_mask_reg(void);
-void make_w_mi_intr_mask_reg(void);
 void update_ai_dacrate(unsigned int word);
 void update_vi_status(unsigned int word);
 void update_vi_width(unsigned int word);

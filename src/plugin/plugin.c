@@ -228,7 +228,7 @@ static m64p_error plugin_start_gfx(void)
     gfx_info.RDRAM = (unsigned char *) g_rdram;
     gfx_info.DMEM = (unsigned char *) g_sp_mem;
     gfx_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    gfx_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
+    gfx_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
     gfx_info.DPC_START_REG = &(g_dpc_regs[DPC_START_REG]);
     gfx_info.DPC_END_REG = &(g_dpc_regs[DPC_END_REG]);
     gfx_info.DPC_CURRENT_REG = &(g_dpc_regs[DPC_CURRENT_REG]);
@@ -320,7 +320,7 @@ static m64p_error plugin_start_audio(void)
     audio_info.RDRAM = (unsigned char *) g_rdram;
     audio_info.DMEM = (unsigned char *) g_sp_mem;
     audio_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    audio_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
+    audio_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
     audio_info.AI_DRAM_ADDR_REG = &(ai_register.ai_dram_addr);
     audio_info.AI_LEN_REG = &(ai_register.ai_len);
     audio_info.AI_CONTROL_REG = &(ai_register.ai_control);
@@ -466,7 +466,7 @@ static m64p_error plugin_start_rsp(void)
     rsp_info.RDRAM = (unsigned char *) g_rdram;
     rsp_info.DMEM = (unsigned char *) g_sp_mem;
     rsp_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    rsp_info.MI_INTR_REG = &MI_register.mi_intr_reg;
+    rsp_info.MI_INTR_REG = &g_mi_regs[MI_INTR_REG];
     rsp_info.SP_MEM_ADDR_REG = &g_sp_regs[SP_MEM_ADDR_REG];
     rsp_info.SP_DRAM_ADDR_REG = &g_sp_regs[SP_DRAM_ADDR_REG];
     rsp_info.SP_RD_LEN_REG = &g_sp_regs[SP_RD_LEN_REG];

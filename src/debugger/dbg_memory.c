@@ -383,8 +383,9 @@ uint32 read_memory_32(uint32 addr){
         return sl(*((unsigned int *)(PIF_RAMb + (addrlow & 0x7FF) - 0x7C0)));
       break;
     case M64P_MEM_MI:
-      if (addrlow < 0x10)
-        return *(readmi[addrlow&0xfffc]);
+      offset = (addr & 0xffff) >> 2;
+      if (offset < MI_REGS_COUNT)
+        return g_mi_regs[offset];
       break;
     default:
       break;

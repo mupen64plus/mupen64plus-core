@@ -360,7 +360,7 @@ void dma_si_write(void)
     if (delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        MI_register.mi_intr_reg |= 0x02; // SI
+        g_mi_regs[MI_INTR_REG] |= 0x02; // SI
         si_register.si_stat |= 0x1000; // INTERRUPT
         check_interupt();
     }
@@ -388,7 +388,7 @@ void dma_si_read(void)
     if (delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        MI_register.mi_intr_reg |= 0x02; // SI
+        g_mi_regs[MI_INTR_REG] |= 0x02; // SI
         si_register.si_stat |= 0x1000; // INTERRUPT
         check_interupt();
     }
