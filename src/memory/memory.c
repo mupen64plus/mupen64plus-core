@@ -78,12 +78,6 @@ uint8_t g_pif_ram[PIF_RAM_SIZE];
 // address : address of the read/write operation being done
 unsigned int address = 0;
 #endif
-// *address_low = the lower 16 bit of the address :
-#ifdef M64P_BIG_ENDIAN
-static unsigned short *address_low = (unsigned short *)(&address)+1;
-#else
-static unsigned short *address_low = (unsigned short *)(&address);
-#endif
 
 // values that are being written are stored in these variables
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -2558,7 +2552,7 @@ void write_sid(void)
 
 void read_flashram_status(void)
 {
-    if (flashram_info.use_flashram != -1 && *address_low == 0)
+    if (flashram_info.use_flashram != -1 && ((address & 0xffff) == 0))
     {
         *rdword = flashram_status();
         flashram_info.use_flashram = 1;
@@ -2600,7 +2594,7 @@ void write_flashram_dummyd(void)
 
 void write_flashram_command(void)
 {
-    if (flashram_info.use_flashram != -1 && *address_low == 0)
+    if (flashram_info.use_flashram != -1 && ((address & 0xffff) == 0))
     {
         flashram_command(word);
         flashram_info.use_flashram = 1;
