@@ -474,7 +474,7 @@ static m64p_error plugin_start_rsp(void)
     rsp_info.SP_STATUS_REG = &g_sp_regs[SP_STATUS_REG];
     rsp_info.SP_DMA_FULL_REG = &g_sp_regs[SP_DMA_FULL_REG];
     rsp_info.SP_DMA_BUSY_REG = &g_sp_regs[SP_DMA_BUSY_REG];
-    rsp_info.SP_PC_REG = &rsp_register.rsp_pc;
+    rsp_info.SP_PC_REG = &g_sp_regs2[SP_PC_REG];
     rsp_info.SP_SEMAPHORE_REG = &g_sp_regs[SP_SEMAPHORE_REG];
     rsp_info.DPC_START_REG = &dpc_register.dpc_start;
     rsp_info.DPC_END_REG = &dpc_register.dpc_end;

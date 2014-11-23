@@ -344,8 +344,9 @@ uint32 read_memory_32(uint32 addr){
         return g_sp_regs[offset];
       break;
     case M64P_MEM_RSP:
-      if (addrlow < 0x8)
-        return *(readrsp[addrlow&0xfffc]);
+      offset = (addr & 0xffff) >> 2;
+      if (offset < SP_REGS2_COUNT)
+        return g_sp_regs2[offset];
       break;
     case M64P_MEM_DP:
       if (addrlow < 0x20)

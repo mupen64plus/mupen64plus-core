@@ -186,7 +186,7 @@ void r4300_reset_soft(void)
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
     g_sp_regs[SP_STATUS_REG] = 1;
-    rsp_register.rsp_pc = 0;
+    g_sp_regs2[SP_PC_REG] = 0;
 
     pi_register.pi_bsd_dom1_lat_reg = (bsd_dom1_config      ) & 0xff;
     pi_register.pi_bsd_dom1_pwd_reg = (bsd_dom1_config >>  8) & 0xff;
