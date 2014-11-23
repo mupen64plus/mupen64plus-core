@@ -373,10 +373,10 @@ static int savestates_load_m64p(char *filepath)
     g_dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
     g_dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
 
-    dps_register.dps_tbist = GETDATA(curr, unsigned int);
-    dps_register.dps_test_mode = GETDATA(curr, unsigned int);
-    dps_register.dps_buftest_addr = GETDATA(curr, unsigned int);
-    dps_register.dps_buftest_data = GETDATA(curr, unsigned int);
+    g_dps_regs[DPS_TBIST_REG]        = GETDATA(curr, uint32_t);
+    g_dps_regs[DPS_TEST_MODE_REG]    = GETDATA(curr, uint32_t);
+    g_dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
+    g_dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
     COPYARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(g_sp_mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -733,8 +733,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // ai_register.current_delay = 0; ai_register.current_len = 0;
 
     // The following is not available in PJ64 savestate. Keep the values as is.
-    // dps_register.dps_tbist = 0; dps_register.dps_test_mode = 0;
-    // dps_register.dps_buftest_addr = 0; dps_register.dps_buftest_data = 0; llbit = 0;
+    // g_dps_regs[DPS_TBIST_REG] = 0; g_dps_regs[DPS_TEST_MODE_REG] = 0;
+    // g_dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dps_regs[DPS_BUFTEST_DATA_REG] = 0; llbit = 0;
 
     // No flashram info in pj64 savestate.
     init_flashram();
@@ -1155,10 +1155,10 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_dpc_regs[DPC_PIPEBUSY_REG]);
     PUTDATA(curr, uint32_t, g_dpc_regs[DPC_TMEM_REG]);
 
-    PUTDATA(curr, unsigned int, dps_register.dps_tbist);
-    PUTDATA(curr, unsigned int, dps_register.dps_test_mode);
-    PUTDATA(curr, unsigned int, dps_register.dps_buftest_addr);
-    PUTDATA(curr, unsigned int, dps_register.dps_buftest_data);
+    PUTDATA(curr, uint32_t, g_dps_regs[DPS_TBIST_REG]);
+    PUTDATA(curr, uint32_t, g_dps_regs[DPS_TEST_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dps_regs[DPS_BUFTEST_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_dps_regs[DPS_BUFTEST_DATA_REG]);
 
     PUTARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(g_sp_mem, curr, uint32_t, SP_MEM_SIZE/4);
