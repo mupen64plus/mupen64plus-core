@@ -1158,6 +1158,217 @@ void make_w_sp_status_reg(void)
         sp_register.w_sp_status_reg |= 0x1000000;
 }
 
+static void protect_framebuffers(void)
+{
+    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
+        gfx.fBGetFrameBufferInfo(frameBufferInfos);
+    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite
+            && frameBufferInfos[0].addr)
+    {
+        int i;
+        for (i=0; i<6; i++)
+        {
+            if (frameBufferInfos[i].addr)
+            {
+                int j;
+                int start = frameBufferInfos[i].addr & 0x7FFFFF;
+                int end = start + frameBufferInfos[i].width*
+                          frameBufferInfos[i].height*
+                          frameBufferInfos[i].size - 1;
+                int start1 = start;
+                int end1 = end;
+                start >>= 16;
+                end >>= 16;
+                for (j=start; j<=end; j++)
+                {
+#ifdef DBG
+                    if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                    {
+                        readmem[0x8000+j] = read_rdramFB_break;
+                        readmemb[0x8000+j] = read_rdramFBb_break;
+                        readmemh[0x8000+j] = read_rdramFBh_break;
+                        readmemd[0xa000+j] = read_rdramFBd_break;
+                    }
+                    else
+                    {
+#endif
+                        readmem[0x8000+j] = read_rdramFB;
+                        readmemb[0x8000+j] = read_rdramFBb;
+                        readmemh[0x8000+j] = read_rdramFBh;
+                        readmemd[0xa000+j] = read_rdramFBd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                    {
+                        readmem[0xa000+j] = read_rdramFB_break;
+                        readmemb[0xa000+j] = read_rdramFBb_break;
+                        readmemh[0xa000+j] = read_rdramFBh_break;
+                        readmemd[0x8000+j] = read_rdramFBd_break;
+                    }
+                    else
+                    {
+#endif
+                        readmem[0xa000+j] = read_rdramFB;
+                        readmemb[0xa000+j] = read_rdramFBb;
+                        readmemh[0xa000+j] = read_rdramFBh;
+                        readmemd[0x8000+j] = read_rdramFBd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                    {
+                        writemem[0x8000+j] = write_rdramFB_break;
+                        writememb[0x8000+j] = write_rdramFBb_break;
+                        writememh[0x8000+j] = write_rdramFBh_break;
+                        writememd[0x8000+j] = write_rdramFBd_break;
+                    }
+                    else
+                    {
+#endif
+                        writemem[0x8000+j] = write_rdramFB;
+                        writememb[0x8000+j] = write_rdramFBb;
+                        writememh[0x8000+j] = write_rdramFBh;
+                        writememd[0x8000+j] = write_rdramFBd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                    {
+                        writemem[0xa000+j] = write_rdramFB_break;
+                        writememb[0xa000+j] = write_rdramFBb_break;
+                        writememh[0xa000+j] = write_rdramFBh_break;
+                        writememd[0xa000+j] = write_rdramFBd_break;
+                    }
+                    else
+                    {
+#endif
+                        writemem[0xa000+j] = write_rdramFB;
+                        writememb[0xa000+j] = write_rdramFBb;
+                        writememh[0xa000+j] = write_rdramFBh;
+                        writememd[0xa000+j] = write_rdramFBd;
+#ifdef DBG
+                    }
+#endif
+                }
+                start <<= 4;
+                end <<= 4;
+                for (j=start; j<=end; j++)
+                {
+                    if (j>=start1 && j<=end1) framebufferRead[j]=1;
+                    else framebufferRead[j] = 0;
+                }
+
+                if (firstFrameBufferSetting)
+                {
+                    firstFrameBufferSetting = 0;
+                    fast_memory = 0;
+                    for (j=0; j<0x100000; j++)
+                        invalid_code[j] = 1;
+                }
+            }
+        }
+    }
+}
+
+static void unprotect_framebuffers(void)
+{
+    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite &&
+            frameBufferInfos[0].addr)
+    {
+        int i;
+        for (i=0; i<6; i++)
+        {
+            if (frameBufferInfos[i].addr)
+            {
+                int j;
+                int start = frameBufferInfos[i].addr & 0x7FFFFF;
+                int end = start + frameBufferInfos[i].width*
+                          frameBufferInfos[i].height*
+                          frameBufferInfos[i].size - 1;
+                start = start >> 16;
+                end = end >> 16;
+
+                for (j=start; j<=end; j++)
+                {
+#ifdef DBG
+                    if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                    {
+                        readmem[0x8000+j] = read_rdram_break;
+                        readmemb[0x8000+j] = read_rdramb_break;
+                        readmemh[0x8000+j] = read_rdramh_break;
+                        readmemd[0xa000+j] = read_rdramd_break;
+                    }
+                    else
+                    {
+#endif
+                        readmem[0x8000+j] = read_rdram;
+                        readmemb[0x8000+j] = read_rdramb;
+                        readmemh[0x8000+j] = read_rdramh;
+                        readmemd[0xa000+j] = read_rdramd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
+                    {
+                        readmem[0xa000+j] = read_rdram_break;
+                        readmemb[0xa000+j] = read_rdramb_break;
+                        readmemh[0xa000+j] = read_rdramh_break;
+                        readmemd[0x8000+j] = read_rdramd_break;
+                    }
+                    else
+                    {
+#endif
+                        readmem[0xa000+j] = read_rdram;
+                        readmemb[0xa000+j] = read_rdramb;
+                        readmemh[0xa000+j] = read_rdramh;
+                        readmemd[0x8000+j] = read_rdramd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                    {
+                        writemem[0x8000+j] = write_rdram_break;
+                        writememb[0x8000+j] = write_rdramb_break;
+                        writememh[0x8000+j] = write_rdramh_break;
+                        writememd[0x8000+j] = write_rdramd_break;
+                    }
+                    else
+                    {
+#endif
+                        writemem[0x8000+j] = write_rdram;
+                        writememb[0x8000+j] = write_rdramb;
+                        writememh[0x8000+j] = write_rdramh;
+                        writememd[0x8000+j] = write_rdramd;
+#ifdef DBG
+                    }
+                    if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
+                                          M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
+                    {
+                        writemem[0xa000+j] = write_rdram_break;
+                        writememb[0xa000+j] = write_rdramb_break;
+                        writememh[0xa000+j] = write_rdramh_break;
+                        writememd[0xa000+j] = write_rdramd_break;
+                    }
+                    else
+                    {
+#endif
+                        writemem[0xa000+j] = write_rdram;
+                        writememb[0xa000+j] = write_rdramb;
+                        writememh[0xa000+j] = write_rdramh;
+                        writememd[0xa000+j] = write_rdramd;
+#ifdef DBG
+                    }
+#endif
+                }
+            }
+        }
+    }
+}
+
+
 static void do_SP_Task(void)
 {
     int save_pc = rsp_register.rsp_pc & ~0xFFF;
@@ -1169,100 +1380,8 @@ static void do_SP_Task(void)
             // the task will be done when DP is unfreezed (see update_DPC)
             return;
         }
-        
-        // unprotecting old frame buffers
-        if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite &&
-                frameBufferInfos[0].addr)
-        {
-            int i;
-            for (i=0; i<6; i++)
-            {
-                if (frameBufferInfos[i].addr)
-                {
-                    int j;
-                    int start = frameBufferInfos[i].addr & 0x7FFFFF;
-                    int end = start + frameBufferInfos[i].width*
-                              frameBufferInfos[i].height*
-                              frameBufferInfos[i].size - 1;
-                    start = start >> 16;
-                    end = end >> 16;
 
-                    for (j=start; j<=end; j++)
-                    {
-#ifdef DBG
-                        if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
-                        {
-                            readmem[0x8000+j] = read_rdram_break;
-                            readmemb[0x8000+j] = read_rdramb_break;
-                            readmemh[0x8000+j] = read_rdramh_break;
-                            readmemd[0xa000+j] = read_rdramd_break;
-                        }
-                        else
-                        {
-#endif
-                            readmem[0x8000+j] = read_rdram;
-                            readmemb[0x8000+j] = read_rdramb;
-                            readmemh[0x8000+j] = read_rdramh;
-                            readmemd[0xa000+j] = read_rdramd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
-                        {
-                            readmem[0xa000+j] = read_rdram_break;
-                            readmemb[0xa000+j] = read_rdramb_break;
-                            readmemh[0xa000+j] = read_rdramh_break;
-                            readmemd[0x8000+j] = read_rdramd_break;
-                        }
-                        else
-                        {
-#endif
-                            readmem[0xa000+j] = read_rdram;
-                            readmemb[0xa000+j] = read_rdramb;
-                            readmemh[0xa000+j] = read_rdramh;
-                            readmemd[0x8000+j] = read_rdramd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
-                        {
-                            writemem[0x8000+j] = write_rdram_break;
-                            writememb[0x8000+j] = write_rdramb_break;
-                            writememh[0x8000+j] = write_rdramh_break;
-                            writememd[0x8000+j] = write_rdramd_break;
-                        }
-                        else
-                        {
-#endif
-                            writemem[0x8000+j] = write_rdram;
-                            writememb[0x8000+j] = write_rdramb;
-                            writememh[0x8000+j] = write_rdramh;
-                            writememd[0x8000+j] = write_rdramd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
-                        {
-                            writemem[0xa000+j] = write_rdram_break;
-                            writememb[0xa000+j] = write_rdramb_break;
-                            writememh[0xa000+j] = write_rdramh_break;
-                            writememd[0xa000+j] = write_rdramd_break;
-                        }
-                        else
-                        {
-#endif
-                            writemem[0xa000+j] = write_rdram;
-                            writememb[0xa000+j] = write_rdramb;
-                            writememh[0xa000+j] = write_rdramh;
-                            writememd[0xa000+j] = write_rdramd;
-#ifdef DBG
-                        }
-#endif
-                    }
-                }
-            }
-        }
+        unprotect_framebuffers();
 
         //gfx.processDList();
         rsp_register.rsp_pc &= 0xFFF;
@@ -1280,117 +1399,7 @@ static void do_SP_Task(void)
         MI_register.mi_intr_reg &= ~0x21;
         sp_register.sp_status_reg &= ~0x303;
 
-        // protecting new frame buffers
-        if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
-            gfx.fBGetFrameBufferInfo(frameBufferInfos);
-        if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite
-                && frameBufferInfos[0].addr)
-        {
-            int i;
-            for (i=0; i<6; i++)
-            {
-                if (frameBufferInfos[i].addr)
-                {
-                    int j;
-                    int start = frameBufferInfos[i].addr & 0x7FFFFF;
-                    int end = start + frameBufferInfos[i].width*
-                              frameBufferInfos[i].height*
-                              frameBufferInfos[i].size - 1;
-                    int start1 = start;
-                    int end1 = end;
-                    start >>= 16;
-                    end >>= 16;
-                    for (j=start; j<=end; j++)
-                    {
-#ifdef DBG
-                        if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
-                        {
-                            readmem[0x8000+j] = read_rdramFB_break;
-                            readmemb[0x8000+j] = read_rdramFBb_break;
-                            readmemh[0x8000+j] = read_rdramFBh_break;
-                            readmemd[0xa000+j] = read_rdramFBd_break;
-                        }
-                        else
-                        {
-#endif
-                            readmem[0x8000+j] = read_rdramFB;
-                            readmemb[0x8000+j] = read_rdramFBb;
-                            readmemh[0x8000+j] = read_rdramFBh;
-                            readmemd[0xa000+j] = read_rdramFBd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
-                        {
-                            readmem[0xa000+j] = read_rdramFB_break;
-                            readmemb[0xa000+j] = read_rdramFBb_break;
-                            readmemh[0xa000+j] = read_rdramFBh_break;
-                            readmemd[0x8000+j] = read_rdramFBd_break;
-                        }
-                        else
-                        {
-#endif
-                            readmem[0xa000+j] = read_rdramFB;
-                            readmemb[0xa000+j] = read_rdramFBb;
-                            readmemh[0xa000+j] = read_rdramFBh;
-                            readmemd[0x8000+j] = read_rdramFBd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0x80000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
-                        {
-                            writemem[0x8000+j] = write_rdramFB_break;
-                            writememb[0x8000+j] = write_rdramFBb_break;
-                            writememh[0x8000+j] = write_rdramFBh_break;
-                            writememd[0x8000+j] = write_rdramFBd_break;
-                        }
-                        else
-                        {
-#endif
-                            writemem[0x8000+j] = write_rdramFB;
-                            writememb[0x8000+j] = write_rdramFBb;
-                            writememh[0x8000+j] = write_rdramFBh;
-                            writememd[0x8000+j] = write_rdramFBd;
-#ifdef DBG
-                        }
-                        if (lookup_breakpoint(0xa0000000 + j * 0x10000, 0x10000,
-                                              M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
-                        {
-                            writemem[0xa000+j] = write_rdramFB_break;
-                            writememb[0xa000+j] = write_rdramFBb_break;
-                            writememh[0xa000+j] = write_rdramFBh_break;
-                            writememd[0xa000+j] = write_rdramFBd_break;
-                        }
-                        else
-                        {
-#endif
-                            writemem[0xa000+j] = write_rdramFB;
-                            writememb[0xa000+j] = write_rdramFBb;
-                            writememh[0xa000+j] = write_rdramFBh;
-                            writememd[0xa000+j] = write_rdramFBd;
-#ifdef DBG
-                        }
-#endif
-                    }
-                    start <<= 4;
-                    end <<= 4;
-                    for (j=start; j<=end; j++)
-                    {
-                        if (j>=start1 && j<=end1) framebufferRead[j]=1;
-                        else framebufferRead[j] = 0;
-                    }
-
-                    if (firstFrameBufferSetting)
-                    {
-                        firstFrameBufferSetting = 0;
-                        fast_memory = 0;
-                        for (j=0; j<0x100000; j++)
-                            invalid_code[j] = 1;
-                    }
-                }
-            }
-        }
+        protect_framebuffers();
     }
     else if (SP_DMEM[0xFC0/4] == 2)
     {
