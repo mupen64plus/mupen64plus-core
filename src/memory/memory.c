@@ -2626,36 +2626,59 @@ void write_flashram_commandd(void)
 
 static unsigned int lastwrite = 0;
 
-void read_rom(void)
+static inline uint32_t rom_address(uint32_t address)
 {
+    return (address & 0x03fffffc);
+}
+
+static int read_cart_rom(uint32_t address, uint32_t* value)
+{
+    uint32_t addr = rom_address(address);
+
     if (lastwrite)
     {
-        *rdword = lastwrite;
+        *value = lastwrite;
         lastwrite = 0;
     }
     else
-        *rdword = *((unsigned int *)(rom + (address & 0x03FFFFFF)));
+    {
+        *value = *(uint32_t*)(rom + addr);
+    }
+
+    return 0;
+}
+
+static int write_cart_rom(uint32_t address, uint32_t value, uint32_t mask)
+{
+    lastwrite = value & mask;
+
+    return 0;
+}
+
+
+void read_rom(void)
+{
+    readw(read_cart_rom, address, rdword);
 }
 
 void read_romb(void)
 {
-    *rdword = *(rom + ((address^S8) & 0x03FFFFFF));
+    readb(read_cart_rom, address, rdword);
 }
 
 void read_romh(void)
 {
-    *rdword = *((unsigned short *)(rom + ((address^S16) & 0x03FFFFFF)));
+    readh(read_cart_rom, address, rdword);
 }
 
 void read_romd(void)
 {
-    *rdword = ((unsigned long long)(*((unsigned int *)(rom+(address&0x03FFFFFF))))<<32)|
-              *((unsigned int *)(rom + ((address+4)&0x03FFFFFF)));
+    readd(read_cart_rom, address, rdword);
 }
 
 void write_rom(void)
 {
-    lastwrite = word;
+    writew(write_cart_rom, address, word);
 }
 
 void read_pif(void)
