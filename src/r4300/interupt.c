@@ -516,7 +516,7 @@ void gen_interupt(void)
             lircCheckInput();
 #endif //WITH_LIRC
             SDL_PumpEvents();
-            PIF_RAMb[0x3F] = 0x0;
+            g_pif_ram[0x3f] = 0x0;
             remove_interupt_event();
             g_mi_regs[MI_INTR_REG] |= 0x02;
             g_si_regs[SI_STATUS_REG] |= 0x1000;

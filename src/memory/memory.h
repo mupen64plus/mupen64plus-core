@@ -38,8 +38,9 @@ enum { SP_MEM_SIZE = 0x2000 };
 
 extern uint32_t g_sp_mem[SP_MEM_SIZE/4];
 
-extern unsigned int PIF_RAM[0x40/4];
-extern unsigned char *PIF_RAMb;
+enum { PIF_RAM_SIZE = 0x40 };
+
+extern uint8_t g_pif_ram[PIF_RAM_SIZE];
 
 enum { RDRAM_MAX_SIZE = 0x800000 };
 

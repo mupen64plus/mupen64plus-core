@@ -349,9 +349,9 @@ void dma_si_write(void)
         stop=1;
     }
 
-    for (i=0; i<(64/4); i++)
+    for (i = 0; i < PIF_RAM_SIZE; i += 4)
     {
-        PIF_RAM[i] = sl(g_rdram[g_si_regs[SI_DRAM_ADDR_REG]/4+i]);
+        *((uint32_t*)(&g_pif_ram[i])) = sl(g_rdram[(g_si_regs[SI_DRAM_ADDR_REG]+i)/4]);
     }
 
     update_pif_write();
@@ -378,9 +378,9 @@ void dma_si_read(void)
 
     update_pif_read();
 
-    for (i=0; i<(64/4); i++)
+    for (i = 0; i < PIF_RAM_SIZE; i += 4)
     {
-        g_rdram[g_si_regs[SI_DRAM_ADDR_REG]/4+i] = sl(PIF_RAM[i]);
+        g_rdram[(g_si_regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&g_pif_ram[i]));
     }
 
     update_count();
