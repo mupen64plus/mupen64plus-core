@@ -342,14 +342,14 @@ static int savestates_load_m64p(char *filepath)
     gfx.viStatusChanged();
     gfx.viWidthChanged();
 
-    ri_register.ri_mode = GETDATA(curr, unsigned int);
-    ri_register.ri_config = GETDATA(curr, unsigned int);
-    ri_register.ri_current_load = GETDATA(curr, unsigned int);
-    ri_register.ri_select = GETDATA(curr, unsigned int);
-    ri_register.ri_refresh = GETDATA(curr, unsigned int);
-    ri_register.ri_latency = GETDATA(curr, unsigned int);
-    ri_register.ri_error = GETDATA(curr, unsigned int);
-    ri_register.ri_werror = GETDATA(curr, unsigned int);
+    g_ri_regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
 
     g_ai_regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
     g_ai_regs[AI_LEN_REG]       = GETDATA(curr, uint32_t);
@@ -660,14 +660,14 @@ static int savestates_load_pj64(char *filepath, void *handle,
     read_func(handle, g_pi_regs, PI_REGS_COUNT*sizeof(g_pi_regs[0]));
 
     // ri_register
-    ri_register.ri_mode = GETDATA(curr, unsigned int);
-    ri_register.ri_config = GETDATA(curr, unsigned int);
-    ri_register.ri_current_load = GETDATA(curr, unsigned int);
-    ri_register.ri_select = GETDATA(curr, unsigned int);
-    ri_register.ri_refresh = GETDATA(curr, unsigned int);
-    ri_register.ri_latency = GETDATA(curr, unsigned int);
-    ri_register.ri_error = GETDATA(curr, unsigned int);
-    ri_register.ri_werror = GETDATA(curr, unsigned int);
+    g_ri_regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
+    g_ri_regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
 
     // si_register
     si_register.si_dram_addr = GETDATA(curr, unsigned int);
@@ -1111,14 +1111,14 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
     PUTDATA(curr, unsigned int, g_vi_delay);
 
-    PUTDATA(curr, unsigned int, ri_register.ri_mode);
-    PUTDATA(curr, unsigned int, ri_register.ri_config);
-    PUTDATA(curr, unsigned int, ri_register.ri_current_load);
-    PUTDATA(curr, unsigned int, ri_register.ri_select);
-    PUTDATA(curr, unsigned int, ri_register.ri_refresh);
-    PUTDATA(curr, unsigned int, ri_register.ri_latency);
-    PUTDATA(curr, unsigned int, ri_register.ri_error);
-    PUTDATA(curr, unsigned int, ri_register.ri_werror);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_CURRENT_LOAD_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_REFRESH_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_LATENCY_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_ERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_WERROR_REG]);
 
     PUTDATA(curr, uint32_t, g_ai_regs[AI_DRAM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_ai_regs[AI_LEN_REG]);
@@ -1355,14 +1355,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PGS_REG]);
     PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_RLS_REG]);
 
-    PUTDATA(curr, unsigned int, ri_register.ri_mode);
-    PUTDATA(curr, unsigned int, ri_register.ri_config);
-    PUTDATA(curr, unsigned int, ri_register.ri_current_load);
-    PUTDATA(curr, unsigned int, ri_register.ri_select);
-    PUTDATA(curr, unsigned int, ri_register.ri_refresh);
-    PUTDATA(curr, unsigned int, ri_register.ri_latency);
-    PUTDATA(curr, unsigned int, ri_register.ri_error);
-    PUTDATA(curr, unsigned int, ri_register.ri_werror);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_CURRENT_LOAD_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_REFRESH_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_LATENCY_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_ERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri_regs[RI_WERROR_REG]);
 
     PUTDATA(curr, unsigned int, si_register.si_dram_addr);
     PUTDATA(curr, unsigned int, si_register.si_pif_addr_rd64b);

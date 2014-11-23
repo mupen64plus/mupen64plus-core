@@ -54,6 +54,7 @@
 
 /* definitions of the rcp's structures and memory area */
 uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
+uint32_t g_ri_regs[RI_REGS_COUNT];
 uint32_t g_mi_regs[MI_REGS_COUNT];
 uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_sp_regs[SP_REGS_COUNT];
@@ -61,7 +62,6 @@ uint32_t g_sp_regs2[SP_REGS2_COUNT];
 SI_register si_register;
 uint32_t g_vi_regs[VI_REGS_COUNT];
 unsigned int g_vi_delay;
-RI_register ri_register;
 uint32_t g_ai_regs[AI_REGS_COUNT];
 struct ai_dma g_ai_fifo[2]; /* 0: current, 1:next */
 uint32_t g_dpc_regs[DPC_REGS_COUNT];
@@ -113,7 +113,6 @@ void (*writememd[0x10000])(void);
 void (*writememh[0x10000])(void);
 
 // memory sections
-unsigned int *readri[0x10000];
 unsigned int *readsi[0x10000];
 
 // the frameBufferInfos
@@ -699,7 +698,9 @@ int init_memory(void)
         writememd[0xa460+i] = write_nothingd;
     }
 
-    //init RI registers
+    /* init RI registers */
+    memset(g_ri_regs, 0, RI_REGS_COUNT*sizeof(g_ri_regs[0]));
+
     readmem[0x8470] = read_ri;
     readmem[0xa470] = read_ri;
     readmemb[0x8470] = read_rib;
@@ -716,24 +717,7 @@ int init_memory(void)
     writememh[0xa470] = write_rih;
     writememd[0x8470] = write_rid;
     writememd[0xa470] = write_rid;
-    ri_register.ri_mode = 0;
-    ri_register.ri_config = 0;
-    ri_register.ri_select = 0;
-    ri_register.ri_current_load = 0;
-    ri_register.ri_refresh = 0;
-    ri_register.ri_latency = 0;
-    ri_register.ri_error = 0;
-    ri_register.ri_werror = 0;
-    readri[0x0] = &ri_register.ri_mode;
-    readri[0x4] = &ri_register.ri_config;
-    readri[0x8] = &ri_register.ri_current_load;
-    readri[0xc] = &ri_register.ri_select;
-    readri[0x10] = &ri_register.ri_refresh;
-    readri[0x14] = &ri_register.ri_latency;
-    readri[0x18] = &ri_register.ri_error;
-    readri[0x1c] = &ri_register.ri_werror;
 
-    for (i=0x20; i<0x10000; i++) readri[i] = &trash;
     for (i=1; i<0x10; i++)
     {
         readmem[0x8470+i] = read_nothing;
@@ -2438,50 +2422,68 @@ void write_pid(void)
     writed(write_pi_regs, address, dword);
 }
 
+
+static inline uint32_t ri_reg(uint32_t address)
+{
+    return (address & 0xffff) >> 2;
+}
+
+static int read_ri_regs(uint32_t address, uint32_t* value)
+{
+    uint32_t reg = ri_reg(address);
+
+    *value = g_ri_regs[reg];
+
+    return 0;
+}
+
+static int write_ri_regs(uint32_t address, uint32_t value, uint32_t mask)
+{
+    uint32_t reg = ri_reg(address);
+
+    masked_write(&g_ri_regs[reg], value, mask);
+
+    return 0;
+}
+
 void read_ri(void)
 {
-    *rdword = *(readri[*address_low]);
+    readw(read_ri_regs, address, rdword);
 }
 
 void read_rib(void)
 {
-    *rdword = *((unsigned char*)readri[*address_low & 0xfffc]
-                + ((*address_low&3)^S8) );
+    readb(read_ri_regs, address, rdword);
 }
 
 void read_rih(void)
 {
-    *rdword = *((unsigned short*)((unsigned char*)readri[*address_low & 0xfffc]
-                                  + ((*address_low&3)^S16) ));
+    readh(read_ri_regs, address, rdword);
 }
 
 void read_rid(void)
 {
-    *rdword = ((unsigned long long int)(*readri[*address_low])<<32) |
-              *readri[*address_low+4];
+    readd(read_ri_regs, address, rdword);
 }
 
 void write_ri(void)
 {
-    *readri[*address_low] = word;
+    writew(write_ri_regs, address, word);
 }
 
 void write_rib(void)
 {
-    *((unsigned char*)readri[*address_low & 0xfffc]
-      + ((*address_low&3)^S8) ) = cpu_byte;
+    writeb(write_ri_regs, address, cpu_byte);
 }
 
 void write_rih(void)
 {
-    *((unsigned short*)((unsigned char*)readri[*address_low & 0xfffc]
-                        + ((*address_low&3)^S16) )) = hword;
+    writeh(write_ri_regs, address, hword);
 }
 
 void write_rid(void)
 {
-    *readri[*address_low] = (unsigned int) (dword >> 32);
-    *readri[*address_low+4] = (unsigned int) (dword & 0xFFFFFFFF);
+    writed(write_ri_regs, address, dword);
 }
 
 void read_si(void)
