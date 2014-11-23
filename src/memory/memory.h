@@ -99,27 +99,28 @@ enum sp_registers2
 extern uint32_t g_sp_regs[SP_REGS_COUNT];
 extern uint32_t g_sp_regs2[SP_REGS2_COUNT];
 
+enum dpc_registers
+{
+    DPC_START_REG,
+    DPC_END_REG,
+    DPC_CURRENT_REG,
+    DPC_STATUS_REG,
+    DPC_CLOCK_REG,
+    DPC_BUFBUSY_REG,
+    DPC_PIPEBUSY_REG,
+    DPC_TMEM_REG,
+    DPC_REGS_COUNT
+};
+
+extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
+
 extern unsigned int *readmi[0x10000];
 extern unsigned int *readvi[0x10000];
 extern unsigned int *readai[0x10000];
 extern unsigned int *readpi[0x10000];
 extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
-extern unsigned int *readdp[0x10000];
 extern unsigned int *readdps[0x10000];
-
-typedef struct _DPC_register
-{
-   unsigned int dpc_start;
-   unsigned int dpc_end;
-   unsigned int dpc_current;
-   unsigned int w_dpc_status;
-   unsigned int dpc_status;
-   unsigned int dpc_clock;
-   unsigned int dpc_bufbusy;
-   unsigned int dpc_pipebusy;
-   unsigned int dpc_tmem;
-} DPC_register;
 
 typedef struct _DPS_register
 {
@@ -215,7 +216,6 @@ extern SI_register si_register;
 extern VI_register vi_register;
 extern RI_register ri_register;
 extern AI_register ai_register;
-extern DPC_register dpc_register;
 extern DPS_register dps_register;
 
 enum cic_type
@@ -411,7 +411,6 @@ void write_pifb(void);
 void write_pifh(void);
 void write_pifd(void);
 
-void make_w_dpc_status(void);
 void make_w_mi_init_mode_reg(void);
 void update_MI_intr_mode_reg(void);
 void update_MI_init_mask_reg(void);

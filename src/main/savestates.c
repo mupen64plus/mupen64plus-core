@@ -362,16 +362,16 @@ static int savestates_load_m64p(char *filepath)
     ai_register.current_len = GETDATA(curr, unsigned int);
     update_ai_dacrate(ai_register.ai_dacrate);
 
-    dpc_register.dpc_start = GETDATA(curr, unsigned int);
-    dpc_register.dpc_end = GETDATA(curr, unsigned int);
-    dpc_register.dpc_current = GETDATA(curr, unsigned int);
-    dpc_register.w_dpc_status = GETDATA(curr, unsigned int);
-    dpc_register.dpc_status = GETDATA(curr, unsigned int);
+    g_dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
+    curr += 4; // Padding from old implementation
+    g_dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
     curr += 12; // Duplicated DPC flags and padding from old implementation
-    dpc_register.dpc_clock = GETDATA(curr, unsigned int);
-    dpc_register.dpc_bufbusy = GETDATA(curr, unsigned int);
-    dpc_register.dpc_pipebusy = GETDATA(curr, unsigned int);
-    dpc_register.dpc_tmem = GETDATA(curr, unsigned int);
+    g_dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
 
     dps_register.dps_tbist = GETDATA(curr, unsigned int);
     dps_register.dps_test_mode = GETDATA(curr, unsigned int);
@@ -597,18 +597,16 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_sp_regs2[SP_IBIST_REG] = GETDATA(curr, uint32_t);
 
     // dpc_register
-    dpc_register.dpc_start = GETDATA(curr, unsigned int);
-    dpc_register.dpc_end = GETDATA(curr, unsigned int);
-    dpc_register.dpc_current = GETDATA(curr, unsigned int);
-    dpc_register.dpc_status = GETDATA(curr, unsigned int);
-    dpc_register.dpc_clock = GETDATA(curr, unsigned int);
-    dpc_register.dpc_bufbusy = GETDATA(curr, unsigned int);
-    dpc_register.dpc_pipebusy = GETDATA(curr, unsigned int);
-    dpc_register.dpc_tmem = GETDATA(curr, unsigned int);
+    g_dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
+    g_dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
     (void)GETDATA(curr, unsigned int); // Dummy read
     (void)GETDATA(curr, unsigned int); // Dummy read
-
-    make_w_dpc_status();
 
     // mi_register
     MI_register.mi_init_mode_reg = GETDATA(curr, unsigned int);
@@ -1135,27 +1133,27 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, ai_register.current_delay);
     PUTDATA(curr, unsigned int, ai_register.current_len);
 
-    PUTDATA(curr, unsigned int, dpc_register.dpc_start);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_end);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_current);
-    PUTDATA(curr, unsigned int, dpc_register.w_dpc_status);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_status);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x1) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x2) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x4) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x8) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x10) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x20) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x40) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x80) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x100) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x200) != 0);
-    PUTDATA(curr, unsigned char, (dpc_register.dpc_status & 0x400) != 0);
-    PUTDATA(curr, unsigned char, 0);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_clock);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_bufbusy);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_pipebusy);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_tmem);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_START_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_END_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, 0); /* Padding from old implementation */
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_STATUS_REG]);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x1) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x2) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x4) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x8) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x10) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x20) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x40) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x80) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x100) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x200) != 0);
+    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x400) != 0);
+    PUTDATA(curr, uint8_t, 0);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CLOCK_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_BUFBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_PIPEBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_TMEM_REG]);
 
     PUTDATA(curr, unsigned int, dps_register.dps_tbist);
     PUTDATA(curr, unsigned int, dps_register.dps_test_mode);
@@ -1307,14 +1305,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_sp_regs2[SP_PC_REG]);
     PUTDATA(curr, uint32_t, g_sp_regs2[SP_IBIST_REG]);
 
-    PUTDATA(curr, unsigned int, dpc_register.dpc_start);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_end);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_current);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_status);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_clock);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_bufbusy);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_pipebusy);
-    PUTDATA(curr, unsigned int, dpc_register.dpc_tmem);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_START_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_END_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CLOCK_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_BUFBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_PIPEBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_TMEM_REG]);
     PUTDATA(curr, unsigned int, 0); // ?
     PUTDATA(curr, unsigned int, 0); // ?
 
