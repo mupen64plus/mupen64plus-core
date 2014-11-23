@@ -56,7 +56,7 @@
 uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
 mips_register MI_register;
 PI_register pi_register;
-SP_register sp_register;
+uint32_t g_sp_regs[SP_REGS_COUNT];
 RSP_register rsp_register;
 SI_register si_register;
 VI_register vi_register;
@@ -111,7 +111,6 @@ void (*writememd[0x10000])(void);
 void (*writememh[0x10000])(void);
 
 // memory sections
-unsigned int *readrspreg[0x10000];
 unsigned int *readrsp[0x10000];
 unsigned int *readmi[0x10000];
 unsigned int *readvi[0x10000];
@@ -382,7 +381,10 @@ int init_memory(void)
         writememd[0xa400+i] = write_nothingd;
     }
 
-    //init RSP registers
+    /* init RSP registers */
+    memset(g_sp_regs, 0, SP_REGS_COUNT*sizeof(g_sp_regs[0]));
+    g_sp_regs[SP_STATUS_REG] = 1;
+
     readmem[0x8404] = read_rsp_reg;
     readmem[0xa404] = read_rsp_reg;
     readmemb[0x8404] = read_rsp_regb;
@@ -399,25 +401,7 @@ int init_memory(void)
     writememh[0xa404] = write_rsp_regh;
     writememd[0x8404] = write_rsp_regd;
     writememd[0xa404] = write_rsp_regd;
-    sp_register.sp_mem_addr_reg=0;
-    sp_register.sp_dram_addr_reg=0;
-    sp_register.sp_rd_len_reg=0;
-    sp_register.sp_wr_len_reg=0;
-    sp_register.sp_status_reg=1;
-    sp_register.w_sp_status_reg=0;
-    sp_register.sp_dma_full_reg=0;
-    sp_register.sp_dma_busy_reg=0;
-    sp_register.sp_semaphore_reg=0;
-    readrspreg[0x0] = &sp_register.sp_mem_addr_reg;
-    readrspreg[0x4] = &sp_register.sp_dram_addr_reg;
-    readrspreg[0x8] = &sp_register.sp_rd_len_reg;
-    readrspreg[0xc] = &sp_register.sp_wr_len_reg;
-    readrspreg[0x10] = &sp_register.sp_status_reg;
-    readrspreg[0x14] = &sp_register.sp_dma_full_reg;
-    readrspreg[0x18] = &sp_register.sp_dma_busy_reg;
-    readrspreg[0x1c] = &sp_register.sp_semaphore_reg;
 
-    for (i=0x20; i<0x10000; i++) readrspreg[i] = &trash;
     for (i=5; i<8; i++)
     {
         readmem[0x8400+i] = read_nothing;
@@ -1166,70 +1150,6 @@ static void update_MI_intr_mask_reg(void)
     if (MI_register.w_mi_intr_mask_reg & 0x800) MI_register.mi_intr_mask_reg |= 0x20; // set DP mask
 }
 
-void make_w_sp_status_reg(void)
-{
-    sp_register.w_sp_status_reg = 0;
-
-    if ((sp_register.sp_status_reg & 0x0001) == 0)
-        sp_register.w_sp_status_reg |= 0x0000001;
-    else
-        sp_register.w_sp_status_reg |= 0x0000002;
-
-    if ((sp_register.sp_status_reg & 0x0002) == 0)
-        sp_register.w_sp_status_reg |= 0x0000004;
-
-    // TODO: should the interupt bits be set under any circumstance?
-
-    if ((sp_register.sp_status_reg & 0x0020) == 0)
-        sp_register.w_sp_status_reg |= 0x0000020;
-    else
-        sp_register.w_sp_status_reg |= 0x0000040;
-
-    if ((sp_register.sp_status_reg & 0x0040) == 0)
-        sp_register.w_sp_status_reg |= 0x0000080;
-    else
-        sp_register.w_sp_status_reg |= 0x0000100;
-    if ((sp_register.sp_status_reg & 0x0080) == 0)
-        sp_register.w_sp_status_reg |= 0x0000200;
-    else
-        sp_register.w_sp_status_reg |= 0x0000400;
-
-    if ((sp_register.sp_status_reg & 0x0100) == 0)
-        sp_register.w_sp_status_reg |= 0x0000800;
-    else
-        sp_register.w_sp_status_reg |= 0x0001000;
-
-    if ((sp_register.sp_status_reg & 0x0200) == 0)
-        sp_register.w_sp_status_reg |= 0x0002000;
-    else
-        sp_register.w_sp_status_reg |= 0x0004000;
-
-    if ((sp_register.sp_status_reg & 0x0400) == 0)
-        sp_register.w_sp_status_reg |= 0x0008000;
-    else
-        sp_register.w_sp_status_reg |= 0x0010000;
-
-    if ((sp_register.sp_status_reg & 0x0800) == 0)
-        sp_register.w_sp_status_reg |= 0x0020000;
-    else
-        sp_register.w_sp_status_reg |= 0x0040000;
-
-    if ((sp_register.sp_status_reg & 0x1000) == 0)
-        sp_register.w_sp_status_reg |= 0x0080000;
-    else
-        sp_register.w_sp_status_reg |= 0x0100000;
-
-    if ((sp_register.sp_status_reg & 0x2000) == 0)
-        sp_register.w_sp_status_reg |= 0x0200000;
-    else
-        sp_register.w_sp_status_reg |= 0x0400000;
-
-    if ((sp_register.sp_status_reg & 0x4000) == 0)
-        sp_register.w_sp_status_reg |= 0x0800000;
-    else
-        sp_register.w_sp_status_reg |= 0x1000000;
-}
-
 static void protect_framebuffers(void)
 {
     if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
@@ -1469,7 +1389,7 @@ static void do_SP_Task(void)
         if (MI_register.mi_intr_reg & 0x20)
             add_interupt_event(DP_INT, 1000);
         MI_register.mi_intr_reg &= ~0x21;
-        sp_register.sp_status_reg &= ~0x303;
+        g_sp_regs[SP_STATUS_REG] &= ~0x303;
 
         protect_framebuffers();
     }
@@ -1486,7 +1406,7 @@ static void do_SP_Task(void)
         if (MI_register.mi_intr_reg & 0x1)
             add_interupt_event(SP_INT, 4000/*500*/);
         MI_register.mi_intr_reg &= ~0x1;
-        sp_register.sp_status_reg &= ~0x303;
+        g_sp_regs[SP_STATUS_REG] &= ~0x303;
         
     }
     else
@@ -1499,86 +1419,86 @@ static void do_SP_Task(void)
         if (MI_register.mi_intr_reg & 0x1)
             add_interupt_event(SP_INT, 0/*100*/);
         MI_register.mi_intr_reg &= ~0x1;
-        sp_register.sp_status_reg &= ~0x203;
+        g_sp_regs[SP_STATUS_REG] &= ~0x203;
     }
 }
 
-static void update_SP(void)
+static void update_SP(uint32_t w)
 {
-    if (sp_register.w_sp_status_reg & 0x1) // clear halt
-        sp_register.sp_status_reg &= ~0x1;
-    if (sp_register.w_sp_status_reg & 0x2) // set halt
-        sp_register.sp_status_reg |= 0x1;
+    if (w & 0x1) // clear halt
+        g_sp_regs[SP_STATUS_REG] &= ~0x1;
+    if (w & 0x2) // set halt
+        g_sp_regs[SP_STATUS_REG] |= 0x1;
 
-    if (sp_register.w_sp_status_reg & 0x4) // clear broke
-        sp_register.sp_status_reg &= ~0x2;
+    if (w & 0x4) // clear broke
+        g_sp_regs[SP_STATUS_REG] &= ~0x2;
 
-    if (sp_register.w_sp_status_reg & 0x8) // clear SP interupt
+    if (w & 0x8) // clear SP interupt
     {
         MI_register.mi_intr_reg &= ~1;
         check_interupt();
     }
 
-    if (sp_register.w_sp_status_reg & 0x10) // set SP interupt
+    if (w & 0x10) // set SP interupt
     {
         MI_register.mi_intr_reg |= 1;
         check_interupt();
     }
 
-    if (sp_register.w_sp_status_reg & 0x20) // clear single step
-        sp_register.sp_status_reg &= ~0x20;
-    if (sp_register.w_sp_status_reg & 0x40) // set single step
-        sp_register.sp_status_reg |= 0x20;
+    if (w & 0x20) // clear single step
+        g_sp_regs[SP_STATUS_REG] &= ~0x20;
+    if (w & 0x40) // set single step
+        g_sp_regs[SP_STATUS_REG] |= 0x20;
 
-    if (sp_register.w_sp_status_reg & 0x80) // clear interrupt on break
-        sp_register.sp_status_reg &= ~0x40;
-    if (sp_register.w_sp_status_reg & 0x100) // set interrupt on break
-        sp_register.sp_status_reg |= 0x40;
+    if (w & 0x80) // clear interrupt on break
+        g_sp_regs[SP_STATUS_REG] &= ~0x40;
+    if (w & 0x100) // set interrupt on break
+        g_sp_regs[SP_STATUS_REG] |= 0x40;
 
-    if (sp_register.w_sp_status_reg & 0x200) // clear signal 0
-        sp_register.sp_status_reg &= ~0x80;
-    if (sp_register.w_sp_status_reg & 0x400) // set signal 0
-        sp_register.sp_status_reg |= 0x80;
+    if (w & 0x200) // clear signal 0
+        g_sp_regs[SP_STATUS_REG] &= ~0x80;
+    if (w & 0x400) // set signal 0
+        g_sp_regs[SP_STATUS_REG] |= 0x80;
 
-    if (sp_register.w_sp_status_reg & 0x800) // clear signal 1
-        sp_register.sp_status_reg &= ~0x100;
-    if (sp_register.w_sp_status_reg & 0x1000) // set signal 1
-        sp_register.sp_status_reg |= 0x100;
+    if (w & 0x800) // clear signal 1
+        g_sp_regs[SP_STATUS_REG] &= ~0x100;
+    if (w & 0x1000) // set signal 1
+        g_sp_regs[SP_STATUS_REG] |= 0x100;
 
-    if (sp_register.w_sp_status_reg & 0x2000) // clear signal 2
-        sp_register.sp_status_reg &= ~0x200;
-    if (sp_register.w_sp_status_reg & 0x4000) // set signal 2
-        sp_register.sp_status_reg |= 0x200;
+    if (w & 0x2000) // clear signal 2
+        g_sp_regs[SP_STATUS_REG] &= ~0x200;
+    if (w & 0x4000) // set signal 2
+        g_sp_regs[SP_STATUS_REG] |= 0x200;
 
-    if (sp_register.w_sp_status_reg & 0x8000) // clear signal 3
-        sp_register.sp_status_reg &= ~0x400;
-    if (sp_register.w_sp_status_reg & 0x10000) // set signal 3
-        sp_register.sp_status_reg |= 0x400;
+    if (w & 0x8000) // clear signal 3
+        g_sp_regs[SP_STATUS_REG] &= ~0x400;
+    if (w & 0x10000) // set signal 3
+        g_sp_regs[SP_STATUS_REG] |= 0x400;
 
-    if (sp_register.w_sp_status_reg & 0x20000) // clear signal 4
-        sp_register.sp_status_reg &= ~0x800;
-    if (sp_register.w_sp_status_reg & 0x40000) // set signal 4
-        sp_register.sp_status_reg |= 0x800;
+    if (w & 0x20000) // clear signal 4
+        g_sp_regs[SP_STATUS_REG] &= ~0x800;
+    if (w & 0x40000) // set signal 4
+        g_sp_regs[SP_STATUS_REG] |= 0x800;
 
-    if (sp_register.w_sp_status_reg & 0x80000) // clear signal 5
-        sp_register.sp_status_reg &= ~0x1000;
-    if (sp_register.w_sp_status_reg & 0x100000) // set signal 5
-        sp_register.sp_status_reg |= 0x1000;
+    if (w & 0x80000) // clear signal 5
+        g_sp_regs[SP_STATUS_REG] &= ~0x1000;
+    if (w & 0x100000) // set signal 5
+        g_sp_regs[SP_STATUS_REG] |= 0x1000;
 
-    if (sp_register.w_sp_status_reg & 0x200000) // clear signal 6
-        sp_register.sp_status_reg &= ~0x2000;
-    if (sp_register.w_sp_status_reg & 0x400000) // set signal 6
-        sp_register.sp_status_reg |= 0x2000;
+    if (w & 0x200000) // clear signal 6
+        g_sp_regs[SP_STATUS_REG] &= ~0x2000;
+    if (w & 0x400000) // set signal 6
+        g_sp_regs[SP_STATUS_REG] |= 0x2000;
 
-    if (sp_register.w_sp_status_reg & 0x800000) // clear signal 7
-        sp_register.sp_status_reg &= ~0x4000;
-    if (sp_register.w_sp_status_reg & 0x1000000) // set signal 7
-        sp_register.sp_status_reg |= 0x4000;
+    if (w & 0x800000) // clear signal 7
+        g_sp_regs[SP_STATUS_REG] &= ~0x4000;
+    if (w & 0x1000000) // set signal 7
+        g_sp_regs[SP_STATUS_REG] |= 0x4000;
 
     //if (get_event(SP_INT)) return;
-    if (!(sp_register.w_sp_status_reg & 0x1) &&
-            !(sp_register.w_sp_status_reg & 0x4)) return;
-    if (!(sp_register.sp_status_reg & 0x3)) // !halt && !broke
+    if (!(w & 0x1) &&
+            !(w & 0x4)) return;
+    if (!(g_sp_regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
         do_SP_Task();
 }
 
@@ -1614,7 +1534,7 @@ static void update_DPC(void)
         dpc_register.dpc_status &= ~0x2;
 
         // see do_SP_task for more info
-        if (!(sp_register.sp_status_reg & 0x3)) // !halt && !broke
+        if (!(g_sp_regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
             do_SP_Task();
     }
     if (dpc_register.w_dpc_status & 0x8) // set freeze
@@ -2007,187 +1927,95 @@ void write_rsp_memd(void)
     writed(write_rspmem, address, dword);
 }
 
-void read_rsp_reg(void)
+
+static inline uint32_t rsp_reg(uint32_t address)
 {
-    *rdword = *(readrspreg[*address_low]);
-    switch (*address_low)
+    return (address & 0xffff) >> 2;
+}
+
+static int read_rsp_regs(uint32_t address, uint32_t* value)
+{
+    uint32_t reg = rsp_reg(address);
+
+    *value = g_sp_regs[reg];
+
+    if (reg == SP_SEMAPHORE_REG)
     {
-    case 0x1c:
-        sp_register.sp_semaphore_reg = 1;
+        g_sp_regs[SP_SEMAPHORE_REG] = 1;
+    }
+
+    return 0;
+}
+
+static int write_rsp_regs(uint32_t address, uint32_t value, uint32_t mask)
+{
+    uint32_t reg = rsp_reg(address);
+
+    switch(reg)
+    {
+    case SP_STATUS_REG:
+        update_SP(value & mask);
+    case SP_DMA_FULL_REG:
+    case SP_DMA_BUSY_REG:
+        return 0;
+    }
+
+    masked_write(&g_sp_regs[reg], value, mask);
+
+    switch(reg)
+    {
+    case SP_RD_LEN_REG:
+        dma_sp_write();
+        break;
+    case SP_WR_LEN_REG:
+        dma_sp_read();
+        break;
+    case SP_SEMAPHORE_REG:
+        g_sp_regs[SP_SEMAPHORE_REG] = 0;
         break;
     }
+
+    return 0;
+}
+
+void read_rsp_reg(void)
+{
+    readw(read_rsp_regs, address, rdword);
 }
 
 void read_rsp_regb(void)
 {
-    *rdword = *((unsigned char*)readrspreg[*address_low & 0xfffc]
-                + ((*address_low&3)^S8) );
-    switch (*address_low)
-    {
-    case 0x1c:
-    case 0x1d:
-    case 0x1e:
-    case 0x1f:
-        sp_register.sp_semaphore_reg = 1;
-        break;
-    }
+    readb(read_rsp_regs, address, rdword);
 }
 
 void read_rsp_regh(void)
 {
-    *rdword = *((unsigned short*)((unsigned char*)readrspreg[*address_low & 0xfffc]
-                                  + ((*address_low&3)^S16) ));
-    switch (*address_low)
-    {
-    case 0x1c:
-    case 0x1e:
-        sp_register.sp_semaphore_reg = 1;
-        break;
-    }
+    readh(read_rsp_regs, address, rdword);
 }
 
 void read_rsp_regd(void)
 {
-    *rdword = ((unsigned long long int)(*readrspreg[*address_low])<<32) |
-              *readrspreg[*address_low+4];
-    switch (*address_low)
-    {
-    case 0x18:
-        sp_register.sp_semaphore_reg = 1;
-        break;
-    }
+    readd(read_rsp_regs, address, rdword);
 }
 
 void write_rsp_reg(void)
 {
-    switch (*address_low)
-    {
-    case 0x10:
-        sp_register.w_sp_status_reg = word;
-        update_SP();
-    case 0x14:
-    case 0x18:
-        return;
-        break;
-    }
-    *readrspreg[*address_low] = word;
-    switch (*address_low)
-    {
-    case 0x8:
-        dma_sp_write();
-        break;
-    case 0xc:
-        dma_sp_read();
-        break;
-    case 0x1c:
-        sp_register.sp_semaphore_reg = 0;
-        break;
-    }
+    writew(write_rsp_regs, address, word);
 }
 
 void write_rsp_regb(void)
 {
-    switch (*address_low)
-    {
-    case 0x10:
-    case 0x11:
-    case 0x12:
-    case 0x13:
-        *((unsigned char*)&sp_register.w_sp_status_reg
-          + ((*address_low&3)^S8) ) = cpu_byte;
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17:
-    case 0x18:
-    case 0x19:
-    case 0x1a:
-    case 0x1b:
-        return;
-        break;
-    }
-    *((unsigned char*)readrspreg[*address_low & 0xfffc]
-      + ((*address_low&3)^S8) ) = cpu_byte;
-    switch (*address_low)
-    {
-    case 0x8:
-    case 0x9:
-    case 0xa:
-    case 0xb:
-        dma_sp_write();
-        break;
-    case 0xc:
-    case 0xd:
-    case 0xe:
-    case 0xf:
-        dma_sp_read();
-        break;
-    case 0x1c:
-    case 0x1d:
-    case 0x1e:
-    case 0x1f:
-        sp_register.sp_semaphore_reg = 0;
-        break;
-    }
+    writeb(write_rsp_regs, address, cpu_byte);
 }
 
 void write_rsp_regh(void)
 {
-    switch (*address_low)
-    {
-    case 0x10:
-    case 0x12:
-        *((unsigned short*)((unsigned char*)&sp_register.w_sp_status_reg
-                            + ((*address_low&3)^S16) )) = hword;
-    case 0x14:
-    case 0x16:
-    case 0x18:
-    case 0x1a:
-        return;
-        break;
-    }
-    *((unsigned short*)((unsigned char*)readrspreg[*address_low & 0xfffc]
-                        + ((*address_low&3)^S16) )) = hword;
-    switch (*address_low)
-    {
-    case 0x8:
-    case 0xa:
-        dma_sp_write();
-        break;
-    case 0xc:
-    case 0xe:
-        dma_sp_read();
-        break;
-    case 0x1c:
-    case 0x1e:
-        sp_register.sp_semaphore_reg = 0;
-        break;
-    }
+    writeh(write_rsp_regs, address, hword);
 }
 
 void write_rsp_regd(void)
 {
-    switch (*address_low)
-    {
-    case 0x10:
-        sp_register.w_sp_status_reg = (unsigned int) (dword >> 32);
-        update_SP();
-        return;
-        break;
-    case 0x18:
-        sp_register.sp_semaphore_reg = 0;
-        return;
-        break;
-    }
-    *readrspreg[*address_low] = (unsigned int) (dword >> 32);
-    *readrspreg[*address_low+4] = (unsigned int) (dword & 0xFFFFFFFF);
-    switch (*address_low)
-    {
-    case 0x8:
-        dma_sp_write();
-        dma_sp_read();
-        break;
-    }
+    writed(write_rsp_regs, address, dword);
 }
 
 void read_rsp(void)

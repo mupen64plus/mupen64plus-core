@@ -76,7 +76,21 @@ extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
-extern unsigned int *readrspreg[0x10000];
+enum sp_registers
+{
+    SP_MEM_ADDR_REG,
+    SP_DRAM_ADDR_REG,
+    SP_RD_LEN_REG,
+    SP_WR_LEN_REG,
+    SP_STATUS_REG,
+    SP_DMA_FULL_REG,
+    SP_DMA_BUSY_REG,
+    SP_SEMAPHORE_REG,
+    SP_REGS_COUNT
+};
+
+extern uint32_t g_sp_regs[SP_REGS_COUNT];
+
 extern unsigned int *readrsp[0x10000];
 extern unsigned int *readmi[0x10000];
 extern unsigned int *readvi[0x10000];
@@ -86,19 +100,6 @@ extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
 extern unsigned int *readdp[0x10000];
 extern unsigned int *readdps[0x10000];
-
-typedef struct _SP_register
-{
-   unsigned int sp_mem_addr_reg;
-   unsigned int sp_dram_addr_reg;
-   unsigned int sp_rd_len_reg;
-   unsigned int sp_wr_len_reg;
-   unsigned int w_sp_status_reg;
-   unsigned int sp_status_reg;
-   unsigned int sp_dma_full_reg;
-   unsigned int sp_dma_busy_reg;
-   unsigned int sp_semaphore_reg;
-} SP_register;
 
 typedef struct _RSP_register
 {
@@ -209,7 +210,6 @@ typedef struct _SI_register
 
 extern PI_register pi_register;
 extern mips_register MI_register;
-extern SP_register sp_register;
 extern SI_register si_register;
 extern VI_register vi_register;
 extern RSP_register rsp_register;
@@ -411,7 +411,6 @@ void write_pifb(void);
 void write_pifh(void);
 void write_pifd(void);
 
-void make_w_sp_status_reg(void);
 void make_w_dpc_status(void);
 void make_w_mi_init_mode_reg(void);
 void update_MI_intr_mode_reg(void);

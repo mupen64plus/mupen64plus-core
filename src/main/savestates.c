@@ -304,16 +304,16 @@ static int savestates_load_m64p(char *filepath)
     pi_register.pi_bsd_dom2_pgs_reg = GETDATA(curr, unsigned int);
     pi_register.pi_bsd_dom2_rls_reg = GETDATA(curr, unsigned int);
 
-    sp_register.sp_mem_addr_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_dram_addr_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_rd_len_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_wr_len_reg = GETDATA(curr, unsigned int);
-    sp_register.w_sp_status_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_status_reg = GETDATA(curr, unsigned int);
+    g_sp_regs[SP_MEM_ADDR_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_RD_LEN_REG]    = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_WR_LEN_REG]    = GETDATA(curr, uint32_t);
+    curr += 4; /* Padding from old implementation */
+    g_sp_regs[SP_STATUS_REG]    = GETDATA(curr, uint32_t);
     curr += 16; // Duplicated SP flags and padding from old implementation
-    sp_register.sp_dma_full_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_dma_busy_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_semaphore_reg = GETDATA(curr, unsigned int);
+    g_sp_regs[SP_DMA_FULL_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_DMA_BUSY_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_SEMAPHORE_REG] = GETDATA(curr, uint32_t);
 
     rsp_register.rsp_pc = GETDATA(curr, unsigned int);
     rsp_register.rsp_ibist = GETDATA(curr, unsigned int);
@@ -585,18 +585,16 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_rdram_regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     // sp_register
-    sp_register.sp_mem_addr_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_dram_addr_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_rd_len_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_wr_len_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_status_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_dma_full_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_dma_busy_reg = GETDATA(curr, unsigned int);
-    sp_register.sp_semaphore_reg = GETDATA(curr, unsigned int);
+    g_sp_regs[SP_MEM_ADDR_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_RD_LEN_REG]    = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_WR_LEN_REG]    = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_STATUS_REG]    = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_DMA_FULL_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_DMA_BUSY_REG]  = GETDATA(curr, uint32_t);
+    g_sp_regs[SP_SEMAPHORE_REG] = GETDATA(curr, uint32_t);
     rsp_register.rsp_pc = GETDATA(curr, unsigned int);
     rsp_register.rsp_ibist = GETDATA(curr, unsigned int);
-
-    make_w_sp_status_reg();
 
     // dpc_register
     dpc_register.dpc_start = GETDATA(curr, unsigned int);
@@ -1067,31 +1065,31 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pgs_reg);
     PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_rls_reg);
 
-    PUTDATA(curr, unsigned int, sp_register.sp_mem_addr_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_dram_addr_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_rd_len_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_wr_len_reg);
-    PUTDATA(curr, unsigned int, sp_register.w_sp_status_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_status_reg);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x1) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x2) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x4) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x8) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x10) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x20) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x40) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x80) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x100) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x200) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x400) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x800) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x1000) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x2000) != 0);
-    PUTDATA(curr, unsigned char, (sp_register.sp_status_reg & 0x4000) != 0);
-    PUTDATA(curr, unsigned char, 0);
-    PUTDATA(curr, unsigned int, sp_register.sp_dma_full_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_dma_busy_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_semaphore_reg);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_MEM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_RD_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_WR_LEN_REG]);
+    PUTDATA(curr, uint32_t, 0); /* Padding from old implementation */
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_STATUS_REG]);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x1) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x2) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x4) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x8) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x10) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x20) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x40) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x80) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x100) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x200) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x400) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x800) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x1000) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x2000) != 0);
+    PUTDATA(curr, uint8_t, (g_sp_regs[SP_STATUS_REG] & 0x4000) != 0);
+    PUTDATA(curr, uint8_t, 0);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DMA_FULL_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DMA_BUSY_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_SEMAPHORE_REG]);
 
     PUTDATA(curr, unsigned int, rsp_register.rsp_pc);
     PUTDATA(curr, unsigned int, rsp_register.rsp_ibist);
@@ -1297,14 +1295,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_rdram_regs[RDRAM_ADDR_SELECT_REG]);
     PUTDATA(curr, uint32_t, g_rdram_regs[RDRAM_DEVICE_MANUF_REG]);
 
-    PUTDATA(curr, unsigned int, sp_register.sp_mem_addr_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_dram_addr_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_rd_len_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_wr_len_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_status_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_dma_full_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_dma_busy_reg);
-    PUTDATA(curr, unsigned int, sp_register.sp_semaphore_reg);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_MEM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_RD_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_WR_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DMA_FULL_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_DMA_BUSY_REG]);
+    PUTDATA(curr, uint32_t, g_sp_regs[SP_SEMAPHORE_REG]);
 
     PUTDATA(curr, unsigned int, rsp_register.rsp_pc);
     PUTDATA(curr, unsigned int, rsp_register.rsp_ibist);

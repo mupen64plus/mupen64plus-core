@@ -339,8 +339,9 @@ uint32 read_memory_32(uint32 addr){
           return g_rdram_regs[offset];
       break;
     case M64P_MEM_RSPREG:
-      if (addrlow < 0x20)
-        return *(readrspreg[addrlow&0xfffc]);
+      offset = (addr & 0xffff) >> 2;
+      if (offset < SP_REGS_COUNT)
+        return g_sp_regs[offset];
       break;
     case M64P_MEM_RSP:
       if (addrlow < 0x8)

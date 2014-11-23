@@ -576,10 +576,10 @@ void gen_interupt(void)
 
         case SP_INT:
             remove_interupt_event();
-            sp_register.sp_status_reg |= 0x203;
-            // sp_register.sp_status_reg |= 0x303;
+            g_sp_regs[SP_STATUS_REG] |= 0x203;
+            // g_sp_regs[SP_STATUS_REG] |= 0x303;
     
-            if (!(sp_register.sp_status_reg & 0x40)) return; // !intr_on_break
+            if (!(g_sp_regs[SP_STATUS_REG] & 0x40)) return; // !intr_on_break
             MI_register.mi_intr_reg |= 0x01;
             if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg)
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
