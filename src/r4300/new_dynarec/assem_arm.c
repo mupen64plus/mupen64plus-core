@@ -4435,7 +4435,7 @@ static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int
       if(((~u)>>(reg&63))&1) {
         if(reg>0) {
           if(((dirty_pre&~dirty)>>hr)&1) {
-            if(reg>0&&reg<34) {
+            if(reg>0&&reg<36) {
               emit_storereg(reg,hr);
               if( ((is32_pre&~uu)>>reg)&1 ) {
                 emit_sarimm(hr,31,HOST_TEMPREG);
