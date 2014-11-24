@@ -1032,6 +1032,12 @@ static void emit_adds(int rs1,int rs2,int rt)
   output_w32(0xe0900000|rd_rn_rm(rt,rs1,rs2));
 }
 
+static void emit_adc(int rs1,int rs2,int rt)
+{
+  assem_debug("adc %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe0a00000|rd_rn_rm(rt,rs1,rs2));
+}
+
 static void emit_adcs(int rs1,int rs2,int rt)
 {
   assem_debug("adcs %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);

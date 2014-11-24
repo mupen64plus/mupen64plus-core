@@ -2131,7 +2131,7 @@ static void alu_assemble(int i,struct regstat *i_regs)
             #else
             if(opcode2[i]&2) emit_sbc(s1h,s2h,th);
             #endif
-            else emit_add(s1h,s2h,th);
+            else emit_adc(s1h,s2h,th);
           }
         }
         else if(rs1[i]) {
