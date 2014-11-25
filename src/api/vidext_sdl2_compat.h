@@ -20,6 +20,21 @@
 */
 
 #include <SDL_surface.h>
+#include <SDL_config.h>
+
+#ifndef USE_GLES
+
+#ifndef SDL_VIDEO_OPENGL
+#error SDL is not build with OpenGL support. Try USE_GLES=1
+#endif
+
+#else // !USE_GLES
+
+#ifndef SDL_VIDEO_OPENGL_ES2
+#error SDL is not build with OpenGL ES2 support. Try USE_GLES=0
+#endif
+
+#endif // !USE_GLES
 
 typedef struct SDL_VideoInfo
 {
@@ -398,6 +413,14 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
     if (!SDL_GetEventFilter(NULL, NULL)) {
         SDL_SetEventFilter(SDL_CompatEventFilter, NULL);
     }
+
+#ifndef USE_GLES
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#else // !USE_GLES
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif // !USE_GLES
 
     /* Create a new window */
     window_flags = SDL_WINDOW_SHOWN;

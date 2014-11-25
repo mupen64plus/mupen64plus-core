@@ -5356,10 +5356,12 @@ static void cjump_assemble(int i,struct regstat *i_regs)
         emit_cmpimm(s1l,1);
         if(invert){
           nottaken=(int)out;
-          emit_jge(1);
+          if(only32) emit_jge(1);
+          else emit_jae(1);
         }else{
           add_to_linker((int)out,ba[i],internal);
-          emit_jl(0);
+          if(only32) emit_jl(0);
+          else emit_jb(0); 
         }
       }
       if(opcode[i]==7) // BGTZ
@@ -5367,10 +5369,12 @@ static void cjump_assemble(int i,struct regstat *i_regs)
         emit_cmpimm(s1l,1);
         if(invert){
           nottaken=(int)out;
-          emit_jl(1);
+          if(only32) emit_jl(1);
+          else emit_jb(1);
         }else{
           add_to_linker((int)out,ba[i],internal);
-          emit_jge(0);
+          if(only32) emit_jge(0);
+          else emit_jae(0);
         }
       }
       if(invert) {
@@ -5475,13 +5479,15 @@ static void cjump_assemble(int i,struct regstat *i_regs)
       {
         emit_cmpimm(s1l,1);
         nottaken=(int)out;
-        emit_jge(2);
+        if(only32) emit_jge(2);
+        else emit_jae(2);
       }
       if((opcode[i]&0x2f)==7) // BGTZ
       {
         emit_cmpimm(s1l,1);
         nottaken=(int)out;
-        emit_jl(2);
+        if(only32) emit_jl(2);
+        else emit_jb(2);
       }
     } // if(!unconditional)
     int adj;

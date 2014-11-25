@@ -36,7 +36,7 @@ extern CONTROL Controls[4];
 #define RSP_API_VERSION   0x20000
 #define GFX_API_VERSION   0x20200
 #define AUDIO_API_VERSION 0x20000
-#define INPUT_API_VERSION 0x20000
+#define INPUT_API_VERSION 0x20001
 
 /* video plugin function pointers */
 typedef struct _gfx_plugin_functions
@@ -98,6 +98,7 @@ typedef struct _input_plugin_functions
 	ptr_RomOpen             romOpen;
 	ptr_SDL_KeyDown         keyDown;
 	ptr_SDL_KeyUp           keyUp;
+	ptr_RenderCallback      renderCallback;
 } input_plugin_functions;
 
 extern input_plugin_functions input;

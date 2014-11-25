@@ -377,6 +377,18 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             return M64ERR_INCOMPATIBLE;
         }
 
+        if (APIVersion < 0x020001)
+        {
+            input.renderCallback = NULL; // not supported in earlier input plugins
+        }
+        else
+        {
+            if (!GET_FUNC(ptr_RenderCallback, input.renderCallback, "RenderCallback"))
+            {
+                DebugMessage(M64MSG_INFO, "input plugin did not specify a render callback; there will be no on screen display by the input plugin.");
+            }
+        }
+
         l_InputAttached = 1;
     }
     else
