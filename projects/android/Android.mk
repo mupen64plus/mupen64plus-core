@@ -90,6 +90,7 @@ LOCAL_CFLAGS :=         \
     -DIOAPI_NO_64       \
     -DNOCRYPT           \
     -DNOUNCRYPT         \
+    -DUSE_GLES=1        \
 
 LOCAL_LDFLAGS :=                                                    \
     -Wl,-Bsymbolic                                                  \
