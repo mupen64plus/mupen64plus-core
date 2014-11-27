@@ -1032,6 +1032,12 @@ static void emit_adds(int rs1,int rs2,int rt)
   output_w32(0xe0900000|rd_rn_rm(rt,rs1,rs2));
 }
 
+static void emit_adc(int rs1,int rs2,int rt)
+{
+  assem_debug("adc %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe0a00000|rd_rn_rm(rt,rs1,rs2));
+}
+
 static void emit_adcs(int rs1,int rs2,int rt)
 {
   assem_debug("adcs %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
@@ -4429,7 +4435,7 @@ static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int
       if(((~u)>>(reg&63))&1) {
         if(reg>0) {
           if(((dirty_pre&~dirty)>>hr)&1) {
-            if(reg>0&&reg<34) {
+            if(reg>0&&reg<36) {
               emit_storereg(reg,hr);
               if( ((is32_pre&~uu)>>reg)&1 ) {
                 emit_sarimm(hr,31,HOST_TEMPREG);

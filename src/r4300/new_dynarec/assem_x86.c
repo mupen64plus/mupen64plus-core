@@ -793,19 +793,32 @@ static void emit_add(int rs1,int rs2,int rt)
     output_byte(0x01);
     output_modrm(3,rs2,rs1);
   }else {
-    assem_debug("lea (%%%s,%%%s),%%%s",regname[rs1],regname[rs2],regname[rt]);
-    output_byte(0x8D);
-    if(rs1!=EBP) {
-      output_modrm(0,4,rt);
-      output_sib(0,rs2,rs1);
-    }else if(rs2!=EBP) {
-      output_modrm(0,4,rt);
-      output_sib(0,rs1,rs2);
-    }else /* lea 0(,%ebp,2) */{
-      output_modrm(0,4,rt);
-      output_sib(1,EBP,5);
-      output_w32(0);
-    }
+    assem_debug("mov %%%s,%%%s",regname[rs1],regname[rt]);
+    output_byte(0x89);
+    output_modrm(3,rt,rs1);
+    assem_debug("add %%%s,%%%s",regname[rs2],regname[rt]);
+    output_byte(0x01);
+    output_modrm(3,rt,rs2);
+  }
+}
+
+static void emit_adc(int rs1,int rs2,int rt)
+{
+  if(rs1==rt) {
+    assem_debug("adc %%%s,%%%s",regname[rs2],regname[rs1]);
+    output_byte(0x11);
+    output_modrm(3,rs1,rs2);
+  }else if(rs2==rt) {
+    assem_debug("adc %%%s,%%%s",regname[rs1],regname[rs2]);
+    output_byte(0x11);
+    output_modrm(3,rs2,rs1);
+  }else {
+    assem_debug("mov %%%s,%%%s",regname[rs1],regname[rt]);
+    output_byte(0x89);
+    output_modrm(3,rt,rs1);
+    assem_debug("adc %%%s,%%%s",regname[rs2],regname[rt]);
+    output_byte(0x11);
+    output_modrm(3,rt,rs2);
   }
 }
 
