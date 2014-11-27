@@ -1,5 +1,3 @@
-[http://mupen64plus.retrouprising.com Project page]
-
 == m64p_types.h ==
  /* ----------------------------------------- */
  /* Platform-specific stuff                   */

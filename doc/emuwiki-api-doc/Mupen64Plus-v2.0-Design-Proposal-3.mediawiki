@@ -1,5 +1,3 @@
-[http://mupen64plus.retrouprising.com Project page]
-
 == Primary Goal ==
 
 The primary goal of this re-architecture is to split this large project into smaller projects which may proceed to be developed independently of each other.  The advantages of the new architecture are:
