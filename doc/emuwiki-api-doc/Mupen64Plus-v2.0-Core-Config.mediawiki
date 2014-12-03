@@ -325,4 +325,3 @@ The special Get functions return the configuration value directly rather than wr
 |Usage
 |This function may be used by the plugins or front-end to get a path to the directory for storing user-specific caching data files.  Files in this directory may be deleted by the user to save space, so critical information should not be stored here.  This directory may be used to store files such as the ROM browser cache.
 |}
-
