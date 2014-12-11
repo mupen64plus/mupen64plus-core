@@ -180,6 +180,7 @@ void r4300_reset_soft(void)
     unsigned int s7 = 0;                    /* ??? */
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     unsigned int cic_seed = get_cic_seed();
+    uint32_t bsd_dom1_config = *(uint32_t*)rom;
 
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
@@ -187,7 +188,6 @@ void r4300_reset_soft(void)
     sp_register.sp_status_reg = 1;
     rsp_register.rsp_pc = 0;
 
-    uint32_t bsd_dom1_config = *(uint32_t*)rom;
     pi_register.pi_bsd_dom1_lat_reg = (bsd_dom1_config      ) & 0xff;
     pi_register.pi_bsd_dom1_pwd_reg = (bsd_dom1_config >>  8) & 0xff;
     pi_register.pi_bsd_dom1_pgs_reg = (bsd_dom1_config >> 16) & 0x0f;
