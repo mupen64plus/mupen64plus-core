@@ -512,7 +512,7 @@ jump_syscall:
 	mov	%eax, g_cp0_regs+56 /* EPC */
 	push    $0x80000180
 	call	get_addr_ht
-	mov	$16, %esp
+	add	$16, %esp
 	jmp	*%eax
 	.size	jump_syscall, .-jump_syscall
 
