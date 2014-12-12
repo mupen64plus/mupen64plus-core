@@ -1298,7 +1298,6 @@ static void emit_adcimm(u_int rs,int imm,u_int rt)
 
 static void emit_rscimm(int rs,int imm,u_int rt)
 {
-  assert(0);
   u_int armval, ret;
   ret = genimm(imm,&armval);
   assert(ret);
