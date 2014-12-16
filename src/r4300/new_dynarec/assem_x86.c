@@ -1166,6 +1166,37 @@ static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
   }
 }
 
+static void emit_sub64_32(int rs1l,int rs1h,int rs2l,int rs2h,int rtl,int rth)
+{
+  if((rs1l==rtl)&&(rs1h==rth)) {
+    assem_debug("sub %%%s,%%%s",regname[rs2l],regname[rs1l]);
+    output_byte(0x29);
+    output_modrm(3,rs1l,rs2l);
+    assem_debug("sbb %%%s,%%%s",regname[rs2h],regname[rs1h]);
+    output_byte(0x19);
+    output_modrm(3,rs1h,rs2h);
+  } else if((rs2l==rtl)&&(rs2h==rth)) {
+    emit_neg(rs2l,rs2l);
+    emit_adcimm(-1,rs2h);
+    assem_debug("add %%%s,%%%s",regname[rs1l],regname[rs2l]);
+    output_byte(0x01);
+    output_modrm(3,rs2l,rs1l);
+    emit_not(rs2h,rs2h);
+    assem_debug("adc %%%s,%%%s",regname[rs1h],regname[rs2h]);
+    output_byte(0x11);
+    output_modrm(3,rs2h,rs1h);
+  } else {
+    emit_mov(rs1l,rtl);
+    assem_debug("sub %%%s,%%%s",regname[rs2l],regname[rtl]);
+    output_byte(0x29);
+    output_modrm(3,rtl,rs2l);
+    emit_mov(rs1h,rth);
+    assem_debug("sbb %%%s,%%%s",regname[rs2h],regname[rth]);
+    output_byte(0x19);
+    output_modrm(3,rth,rs2h);
+  }
+}
+
 static void emit_sbb(int rs1,int rs2)
 {
   assem_debug("sbb %%%s,%%%s",regname[rs1],regname[rs2]);
