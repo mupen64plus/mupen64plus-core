@@ -95,6 +95,7 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     ARCH_DETECTED := 32BITS
     PIC ?= 1
     NEW_DYNAREC := 1
+    CFLAGS += -marm
     ifeq ($(NEON), 1)
         CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
     else

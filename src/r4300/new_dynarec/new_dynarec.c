@@ -2123,15 +2123,23 @@ static void alu_assemble(int i,struct regstat *i_regs)
         if(rs1[i]&&rs2[i]) {
           assert(s1l>=0);
           assert(s2l>=0);
-          if(opcode2[i]&2) emit_subs(s1l,s2l,tl);
-          else emit_adds(s1l,s2l,tl);
           if(th>=0) {
             #ifdef INVERTED_CARRY
-            if(opcode2[i]&2) {if(s1h!=th) emit_mov(s1h,th);emit_sbb(th,s2h);}
+            if(opcode2[i]&2) emit_sub64_32(s1l,s1h,s2l,s2h,tl,th);
             #else
-            if(opcode2[i]&2) emit_sbc(s1h,s2h,th);
+            if(opcode2[i]&2) {
+              emit_subs(s1l,s2l,tl);
+              emit_sbc(s1h,s2h,th);
+            }
             #endif
-            else emit_adc(s1h,s2h,th);
+            else {
+              emit_adds(s1l,s2l,tl);
+              emit_adc(s1h,s2h,th);
+            }
+          }
+          else {
+            if(opcode2[i]&2) emit_subs(s1l,s2l,tl);
+            else emit_adds(s1l,s2l,tl);
           }
         }
         else if(rs1[i]) {
