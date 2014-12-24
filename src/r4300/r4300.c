@@ -194,8 +194,8 @@ void r4300_reset_soft(void)
     pi_register.pi_bsd_dom1_rls_reg = (bsd_dom1_config >> 20) & 0x03;
     pi_register.read_pi_status_reg = 0;
 
-    ai_register.ai_dram_addr = 0;
-    ai_register.ai_len = 0;
+    g_ai_regs[AI_DRAM_ADDR_REG] = 0;
+    g_ai_regs[AI_LEN_REG] = 0;
 
     g_vi_regs[VI_V_INTR_REG] = 1023;
     g_vi_regs[VI_CURRENT_REG] = 0;

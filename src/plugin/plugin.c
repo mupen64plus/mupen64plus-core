@@ -321,12 +321,12 @@ static m64p_error plugin_start_audio(void)
     audio_info.DMEM = (unsigned char *) g_sp_mem;
     audio_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
     audio_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
-    audio_info.AI_DRAM_ADDR_REG = &(ai_register.ai_dram_addr);
-    audio_info.AI_LEN_REG = &(ai_register.ai_len);
-    audio_info.AI_CONTROL_REG = &(ai_register.ai_control);
+    audio_info.AI_DRAM_ADDR_REG = &(g_ai_regs[AI_DRAM_ADDR_REG]);
+    audio_info.AI_LEN_REG = &(g_ai_regs[AI_LEN_REG]);
+    audio_info.AI_CONTROL_REG = &(g_ai_regs[AI_CONTROL_REG]);
     audio_info.AI_STATUS_REG = &dummy;
-    audio_info.AI_DACRATE_REG = &(ai_register.ai_dacrate);
-    audio_info.AI_BITRATE_REG = &(ai_register.ai_bitrate);
+    audio_info.AI_DACRATE_REG = &(g_ai_regs[AI_DACRATE_REG]);
+    audio_info.AI_BITRATE_REG = &(g_ai_regs[AI_BITRATE_REG]);
     audio_info.CheckInterrupts = EmptyFunc;
 
     /* call the audio plugin */

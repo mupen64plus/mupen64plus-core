@@ -157,24 +157,29 @@ enum vi_registers
 extern uint32_t g_vi_regs[VI_REGS_COUNT];
 extern unsigned int g_vi_delay;
 
-extern unsigned int *readai[0x10000];
+enum ai_registers
+{
+    AI_DRAM_ADDR_REG,
+    AI_LEN_REG,
+    AI_CONTROL_REG,
+    AI_STATUS_REG,
+    AI_DACRATE_REG,
+    AI_BITRATE_REG,
+    AI_REGS_COUNT
+};
+
+struct ai_dma
+{
+    uint32_t length;
+    unsigned int delay;
+};
+
+extern uint32_t g_ai_regs[AI_REGS_COUNT];
+extern struct ai_dma g_ai_fifo[2];
+
 extern unsigned int *readpi[0x10000];
 extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
-
-typedef struct _AI_register
-{
-   unsigned int ai_dram_addr;
-   unsigned int ai_len;
-   unsigned int ai_control;
-   unsigned int ai_status;
-   unsigned int ai_dacrate;
-   unsigned int ai_bitrate;
-   unsigned int next_delay;
-   unsigned int next_len;
-   unsigned int current_delay;
-   unsigned int current_len;
-} AI_register;
 
 typedef struct _PI_register
 {
@@ -216,7 +221,6 @@ typedef struct _SI_register
 extern PI_register pi_register;
 extern SI_register si_register;
 extern RI_register ri_register;
-extern AI_register ai_register;
 
 enum cic_type
 {
@@ -413,7 +417,6 @@ void write_pifd(void);
 
 void update_MI_intr_mode_reg(void);
 void update_MI_init_mask_reg(void);
-void update_ai_dacrate(unsigned int word);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

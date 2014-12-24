@@ -541,14 +541,14 @@ void gen_interupt(void)
             break;
     
         case AI_INT:
-            if (ai_register.ai_status & 0x80000000) // full
+            if (g_ai_regs[AI_STATUS_REG] & 0x80000000) // full
             {
                 unsigned int ai_event = get_event(AI_INT);
                 remove_interupt_event();
-                ai_register.ai_status &= ~0x80000000;
-                ai_register.current_delay = ai_register.next_delay;
-                ai_register.current_len = ai_register.next_len;
-                add_interupt_event_count(AI_INT, ai_event+ai_register.next_delay);
+                g_ai_regs[AI_STATUS_REG] &= ~0x80000000;
+                g_ai_fifo[0].delay = g_ai_fifo[1].delay;
+                g_ai_fifo[0].length = g_ai_fifo[1].length;
+                add_interupt_event_count(AI_INT, ai_event+g_ai_fifo[1].delay);
          
                 g_mi_regs[MI_INTR_REG] |= 0x04;
                 if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
@@ -561,7 +561,7 @@ void gen_interupt(void)
             else
             {
                 remove_interupt_event();
-                ai_register.ai_status &= ~0x40000000;
+                g_ai_regs[AI_STATUS_REG] &= ~0x40000000;
 
                 //-------
                 g_mi_regs[MI_INTR_REG] |= 0x04;
@@ -626,7 +626,7 @@ void gen_interupt(void)
             vi_counter = 0;
             init_interupt();
             // clear the audio status register so that subsequent write_ai() calls will work properly
-            ai_register.ai_status = 0;
+            g_ai_regs[AI_STATUS_REG] = 0;
             // set ErrorEPC with the last instruction address
             g_cp0_regs[CP0_ERROREPC_REG] = PC->addr;
             // reset the r4300 internal state
