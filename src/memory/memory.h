@@ -211,17 +211,19 @@ enum pi_registers
 
 extern uint32_t g_pi_regs[PI_REGS_COUNT];
 
-extern unsigned int *readsi[0x10000];
-
-typedef struct _SI_register
+enum si_registers
 {
-   unsigned int si_dram_addr;
-   unsigned int si_pif_addr_rd64b;
-   unsigned int si_pif_addr_wr64b;
-   unsigned int si_stat;
-} SI_register;
+    SI_DRAM_ADDR_REG,
+    SI_PIF_ADDR_RD64B_REG,
+    SI_R2_REG, /* reserved */
+    SI_R3_REG, /* reserved */
+    SI_PIF_ADDR_WR64B_REG,
+    SI_R5_REG, /* reserved */
+    SI_STATUS_REG,
+    SI_REGS_COUNT
+};
 
-extern SI_register si_register;
+extern uint32_t g_si_regs[SI_REGS_COUNT];
 
 enum cic_type
 {

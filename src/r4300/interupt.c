@@ -519,7 +519,7 @@ void gen_interupt(void)
             PIF_RAMb[0x3F] = 0x0;
             remove_interupt_event();
             g_mi_regs[MI_INTR_REG] |= 0x02;
-            si_register.si_stat |= 0x1000;
+            g_si_regs[SI_STATUS_REG] |= 0x1000;
             if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else

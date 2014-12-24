@@ -379,8 +379,9 @@ uint32 read_memory_32(uint32 addr){
         return g_ri_regs[offset];
       break;
     case M64P_MEM_SI:
-      if (addrlow < 0x1c)
-        return *(readsi[addrlow&0xfffc]);
+      offset = (addr & 0xffff) >> 2;
+      if (offset < SI_REGS_COUNT)
+        return g_si_regs[offset];
       break;
     case M64P_MEM_PIF:
       if (addrlow >= 0x7C0 && addrlow <= 0x7FF)
