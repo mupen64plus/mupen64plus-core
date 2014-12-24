@@ -177,26 +177,28 @@ struct ai_dma
 extern uint32_t g_ai_regs[AI_REGS_COUNT];
 extern struct ai_dma g_ai_fifo[2];
 
-extern unsigned int *readpi[0x10000];
+enum pi_registers
+{
+    PI_DRAM_ADDR_REG,
+    PI_CART_ADDR_REG,
+    PI_RD_LEN_REG,
+    PI_WR_LEN_REG,
+    PI_STATUS_REG,
+    PI_BSD_DOM1_LAT_REG,
+    PI_BSD_DOM1_PWD_REG,
+    PI_BSD_DOM1_PGS_REG,
+    PI_BSD_DOM1_RLS_REG,
+    PI_BSD_DOM2_LAT_REG,
+    PI_BSD_DOM2_PWD_REG,
+    PI_BSD_DOM2_PGS_REG,
+    PI_BSD_DOM2_RLS_REG,
+    PI_REGS_COUNT
+};
+
+extern uint32_t g_pi_regs[PI_REGS_COUNT];
+
 extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
-
-typedef struct _PI_register
-{
-   unsigned int pi_dram_addr_reg;
-   unsigned int pi_cart_addr_reg;
-   unsigned int pi_rd_len_reg;
-   unsigned int pi_wr_len_reg;
-   unsigned int read_pi_status_reg;
-   unsigned int pi_bsd_dom1_lat_reg;
-   unsigned int pi_bsd_dom1_pwd_reg;
-   unsigned int pi_bsd_dom1_pgs_reg;
-   unsigned int pi_bsd_dom1_rls_reg;
-   unsigned int pi_bsd_dom2_lat_reg;
-   unsigned int pi_bsd_dom2_pwd_reg;
-   unsigned int pi_bsd_dom2_pgs_reg;
-   unsigned int pi_bsd_dom2_rls_reg;
-} PI_register;
 
 typedef struct _RI_register
 {
@@ -218,7 +220,6 @@ typedef struct _SI_register
    unsigned int si_stat;
 } SI_register;
 
-extern PI_register pi_register;
 extern SI_register si_register;
 extern RI_register ri_register;
 

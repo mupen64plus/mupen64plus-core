@@ -531,7 +531,7 @@ void gen_interupt(void)
         case PI_INT:
             remove_interupt_event();
             g_mi_regs[MI_INTR_REG] |= 0x10;
-            pi_register.read_pi_status_reg &= ~3;
+            g_pi_regs[PI_STATUS_REG] &= ~3;
             if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else

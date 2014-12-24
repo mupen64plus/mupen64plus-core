@@ -291,19 +291,19 @@ static int savestates_load_m64p(char *filepath)
     curr += 4; /* Padding from old implementation */
     curr += 8; // Duplicated MI intr flags and padding from old implementation
 
-    pi_register.pi_dram_addr_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_cart_addr_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_rd_len_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_wr_len_reg = GETDATA(curr, unsigned int);
-    pi_register.read_pi_status_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_lat_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_pwd_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_pgs_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_rls_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_lat_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_pwd_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_pgs_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_rls_reg = GETDATA(curr, unsigned int);
+    g_pi_regs[PI_DRAM_ADDR_REG]    = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_CART_ADDR_REG]    = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_RD_LEN_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_WR_LEN_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_STATUS_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_LAT_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_PWD_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_PGS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_RLS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_LAT_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_PWD_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_PGS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_RLS_REG] = GETDATA(curr, uint32_t);
 
     g_sp_regs[SP_MEM_ADDR_REG]  = GETDATA(curr, uint32_t);
     g_sp_regs[SP_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
@@ -644,20 +644,20 @@ static int savestates_load_pj64(char *filepath, void *handle,
     audio.aiDacrateChanged(ROM_PARAMS.systemtype);
 
     // pi_register
-    pi_register.pi_dram_addr_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_cart_addr_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_rd_len_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_wr_len_reg = GETDATA(curr, unsigned int);
-    pi_register.read_pi_status_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_lat_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_pwd_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_pgs_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom1_rls_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_lat_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_pwd_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_pgs_reg = GETDATA(curr, unsigned int);
-    pi_register.pi_bsd_dom2_rls_reg = GETDATA(curr, unsigned int);
-    read_func(handle, &pi_register, sizeof(PI_register));
+    g_pi_regs[PI_DRAM_ADDR_REG]    = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_CART_ADDR_REG]    = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_RD_LEN_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_WR_LEN_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_STATUS_REG]       = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_LAT_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_PWD_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_PGS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM1_RLS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_LAT_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_PWD_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_PGS_REG] = GETDATA(curr, uint32_t);
+    g_pi_regs[PI_BSD_DOM2_RLS_REG] = GETDATA(curr, uint32_t);
+    read_func(handle, g_pi_regs, PI_REGS_COUNT*sizeof(g_pi_regs[0]));
 
     // ri_register
     ri_register.ri_mode = GETDATA(curr, unsigned int);
@@ -1047,19 +1047,19 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x20) != 0);
     PUTDATA(curr, uint16_t, 0); // Padding from old implementation
 
-    PUTDATA(curr, unsigned int, pi_register.pi_dram_addr_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_cart_addr_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_rd_len_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_wr_len_reg);
-    PUTDATA(curr, unsigned int, pi_register.read_pi_status_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_lat_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pwd_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pgs_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_rls_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_lat_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pwd_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pgs_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_rls_reg);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_CART_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_RD_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_WR_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_LAT_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_PWD_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_PGS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_RLS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_LAT_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PWD_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PGS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_RLS_REG]);
 
     PUTDATA(curr, uint32_t, g_sp_regs[SP_MEM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_sp_regs[SP_DRAM_ADDR_REG]);
@@ -1341,19 +1341,19 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_ai_regs[AI_DACRATE_REG]);
     PUTDATA(curr, uint32_t, g_ai_regs[AI_BITRATE_REG]);
 
-    PUTDATA(curr, unsigned int, pi_register.pi_dram_addr_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_cart_addr_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_rd_len_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_wr_len_reg);
-    PUTDATA(curr, unsigned int, pi_register.read_pi_status_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_lat_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pwd_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_pgs_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom1_rls_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_lat_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pwd_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_pgs_reg);
-    PUTDATA(curr, unsigned int, pi_register.pi_bsd_dom2_rls_reg);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_CART_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_RD_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_WR_LEN_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_LAT_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_PWD_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_PGS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM1_RLS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_LAT_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PWD_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PGS_REG]);
+    PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_RLS_REG]);
 
     PUTDATA(curr, unsigned int, ri_register.ri_mode);
     PUTDATA(curr, unsigned int, ri_register.ri_config);
