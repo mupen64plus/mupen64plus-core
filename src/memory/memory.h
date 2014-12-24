@@ -215,7 +215,16 @@ extern DPS_register dps_register;
 
 extern unsigned char *const rdramb;
 
-extern unsigned int CIC_Chip;
+enum cic_type
+{
+    CIC_X101,
+    CIC_X102,
+    CIC_X103,
+    CIC_X105,
+    CIC_X106
+};
+
+extern enum cic_type g_cic_type;
 
 #ifndef M64P_BIG_ENDIAN
 #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))

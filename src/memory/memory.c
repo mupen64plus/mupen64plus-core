@@ -64,7 +64,7 @@ AI_register ai_register;
 DPC_register dpc_register;
 DPS_register dps_register;
 
-unsigned int CIC_Chip;
+enum cic_type g_cic_type;
 
 ALIGN(16, unsigned int rdram[0x800000/4]);
 
@@ -131,11 +131,33 @@ static FrameBufferInfo frameBufferInfos[6];
 static char framebufferRead[0x800];
 static int firstFrameBufferSetting;
 
+static enum cic_type detect_cic_type(const void* ipl3)
+{
+    size_t i;
+    unsigned long long crc = 0;
+
+    for (i = 0; i < 0xfc0/4; i++)
+        crc += ((uint32_t*)ipl3)[i];
+
+    switch(crc)
+    {
+        default:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC type (%08x)! using CIC 6102.", crc);
+        case 0x000000D057C85244LL: return CIC_X102;
+        case 0x000000D0027FDF31LL:
+        case 0x000000CFFB631223LL: return CIC_X101;
+        case 0x000000D6497E414BLL: return CIC_X103;
+        case 0x0000011A49F60E96LL: return CIC_X105;
+        case 0x000000D6D5BE5580LL: return CIC_X106;
+    }
+
+    /* never reached */
+    return 0;
+}
 
 int init_memory(void)
 {
     int i;
-    long long CRC = 0;
 
     //init hash tables
     for (i=0; i<(0x10000); i++)
@@ -927,26 +949,8 @@ int init_memory(void)
         writememd[0xb000+i] = write_nothingd;
     }
 
-    // init CIC type
-    for (i = 0x40/4; i < (0x1000/4); i++)
-        CRC += ((uint32_t*)rom)[i];
-
-    switch(CRC)
-    {
-        default:
-            DebugMessage(M64MSG_WARNING, "Unknown CIC type (%08x)! using CIC 6102.", CRC);
-        /* CIC 6102 */
-        case 0x000000D057C85244LL: CIC_Chip = 2; break;
-        /* CIC 6101 */
-        case 0x000000D0027FDF31LL:
-        case 0x000000CFFB631223LL: CIC_Chip = 1; break;
-        /* CIC 6103 */
-        case 0x000000D6497E414BLL: CIC_Chip = 3; break;
-        /* CIC 6105 */
-        case 0x0000011A49F60E96LL: CIC_Chip = 5; break;
-        /* CIC 6106 */
-        case 0x000000D6D5BE5580LL: CIC_Chip = 6; break;
-    }
+    /* init CIC type */
+    g_cic_type = detect_cic_type(rom + 0x40);
 
     //init PIF_RAM
     readmem[0x9fc0] = read_pif;

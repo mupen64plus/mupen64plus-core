@@ -156,18 +156,18 @@ static unsigned int get_tv_type(void)
 
 static unsigned int get_cic_seed(void)
 {
-    switch(CIC_Chip)
+    switch(g_cic_type)
     {
         default:
-            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", CIC_Chip);
-        case 1:
-        case 2:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", g_cic_type);
+        case CIC_X101:
+        case CIC_X102:
             return 0x3f;
-        case 3:
+        case CIC_X103:
             return 0x78;
-        case 5:
+        case CIC_X105:
             return 0x91;
-        case 6:
+        case CIC_X106:
             return 0x85;
     }
 }
