@@ -40,6 +40,7 @@
 
 #include "memory/memory.h"
 #include "memory/flashram.h"
+#include "plugin/plugin.h"
 #include "r4300/tlb.h"
 #include "r4300/cp0.h"
 #include "r4300/cp1.h"
@@ -323,23 +324,23 @@ static int savestates_load_m64p(char *filepath)
     si_register.si_pif_addr_wr64b = GETDATA(curr, unsigned int);
     si_register.si_stat = GETDATA(curr, unsigned int);
 
-    vi_register.vi_status = GETDATA(curr, unsigned int);
-    vi_register.vi_origin = GETDATA(curr, unsigned int);
-    vi_register.vi_width = GETDATA(curr, unsigned int);
-    vi_register.vi_v_intr = GETDATA(curr, unsigned int);
-    vi_register.vi_current = GETDATA(curr, unsigned int);
-    vi_register.vi_burst = GETDATA(curr, unsigned int);
-    vi_register.vi_v_sync = GETDATA(curr, unsigned int);
-    vi_register.vi_h_sync = GETDATA(curr, unsigned int);
-    vi_register.vi_leap = GETDATA(curr, unsigned int);
-    vi_register.vi_h_start = GETDATA(curr, unsigned int);
-    vi_register.vi_v_start = GETDATA(curr, unsigned int);
-    vi_register.vi_v_burst = GETDATA(curr, unsigned int);
-    vi_register.vi_x_scale = GETDATA(curr, unsigned int);
-    vi_register.vi_y_scale = GETDATA(curr, unsigned int);
-    vi_register.vi_delay = GETDATA(curr, unsigned int);
-    update_vi_status(vi_register.vi_status);
-    update_vi_width(vi_register.vi_width);
+    g_vi_regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi_delay = GETDATA(curr, unsigned int);
+    gfx.viStatusChanged();
+    gfx.viWidthChanged();
 
     ri_register.ri_mode = GETDATA(curr, unsigned int);
     ri_register.ri_config = GETDATA(curr, unsigned int);
@@ -615,23 +616,23 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_mi_regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
 
     // vi_register
-    vi_register.vi_status = GETDATA(curr, unsigned int);
-    vi_register.vi_origin = GETDATA(curr, unsigned int);
-    vi_register.vi_width = GETDATA(curr, unsigned int);
-    vi_register.vi_v_intr = GETDATA(curr, unsigned int);
-    vi_register.vi_current = GETDATA(curr, unsigned int);
-    vi_register.vi_burst = GETDATA(curr, unsigned int);
-    vi_register.vi_v_sync = GETDATA(curr, unsigned int);
-    vi_register.vi_h_sync = GETDATA(curr, unsigned int);
-    vi_register.vi_leap = GETDATA(curr, unsigned int);
-    vi_register.vi_h_start = GETDATA(curr, unsigned int);
-    vi_register.vi_v_start = GETDATA(curr, unsigned int);
-    vi_register.vi_v_burst = GETDATA(curr, unsigned int);
-    vi_register.vi_x_scale = GETDATA(curr, unsigned int);
-    vi_register.vi_y_scale = GETDATA(curr, unsigned int);
+    g_vi_regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi_regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
     // TODO vi delay?
-    update_vi_status(vi_register.vi_status);
-    update_vi_width(vi_register.vi_width);
+    gfx.viStatusChanged();
+    gfx.viWidthChanged();
 
     // ai_register
     ai_register.ai_dram_addr = GETDATA(curr, unsigned int);
@@ -1094,21 +1095,21 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, si_register.si_pif_addr_wr64b);
     PUTDATA(curr, unsigned int, si_register.si_stat);
 
-    PUTDATA(curr, unsigned int, vi_register.vi_status);
-    PUTDATA(curr, unsigned int, vi_register.vi_origin);
-    PUTDATA(curr, unsigned int, vi_register.vi_width);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_intr);
-    PUTDATA(curr, unsigned int, vi_register.vi_current);
-    PUTDATA(curr, unsigned int, vi_register.vi_burst);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_sync);
-    PUTDATA(curr, unsigned int, vi_register.vi_h_sync);
-    PUTDATA(curr, unsigned int, vi_register.vi_leap);
-    PUTDATA(curr, unsigned int, vi_register.vi_h_start);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_start);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_burst);
-    PUTDATA(curr, unsigned int, vi_register.vi_x_scale);
-    PUTDATA(curr, unsigned int, vi_register.vi_y_scale);
-    PUTDATA(curr, unsigned int, vi_register.vi_delay);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_ORIGIN_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_WIDTH_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_LEAP_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_X_SCALE_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
+    PUTDATA(curr, unsigned int, g_vi_delay);
 
     PUTDATA(curr, unsigned int, ri_register.ri_mode);
     PUTDATA(curr, unsigned int, ri_register.ri_config);
@@ -1318,20 +1319,20 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_REG]);
     PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_MASK_REG]);
 
-    PUTDATA(curr, unsigned int, vi_register.vi_status);
-    PUTDATA(curr, unsigned int, vi_register.vi_origin);
-    PUTDATA(curr, unsigned int, vi_register.vi_width);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_intr);
-    PUTDATA(curr, unsigned int, vi_register.vi_current);
-    PUTDATA(curr, unsigned int, vi_register.vi_burst);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_sync);
-    PUTDATA(curr, unsigned int, vi_register.vi_h_sync);
-    PUTDATA(curr, unsigned int, vi_register.vi_leap);
-    PUTDATA(curr, unsigned int, vi_register.vi_h_start);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_start);
-    PUTDATA(curr, unsigned int, vi_register.vi_v_burst);
-    PUTDATA(curr, unsigned int, vi_register.vi_x_scale);
-    PUTDATA(curr, unsigned int, vi_register.vi_y_scale);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_ORIGIN_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_WIDTH_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_LEAP_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_X_SCALE_REG]);
+    PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
 
     PUTDATA(curr, unsigned int, ai_register.ai_dram_addr);
     PUTDATA(curr, unsigned int, ai_register.ai_len);

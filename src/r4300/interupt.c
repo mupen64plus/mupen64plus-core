@@ -352,7 +352,7 @@ void init_interupt(void)
 {
     SPECIAL_done = 1;
     next_vi = next_interupt = 5000;
-    vi_register.vi_delay = next_vi;
+    g_vi_delay = next_vi;
     vi_field = 0;
 
     clear_queue();
@@ -478,10 +478,10 @@ void gen_interupt(void)
             }
 
             new_vi();
-            if (vi_register.vi_v_sync == 0) vi_register.vi_delay = 500000;
-            else vi_register.vi_delay = ((vi_register.vi_v_sync + 1)*1500);
-            next_vi += vi_register.vi_delay;
-            if (vi_register.vi_status&0x40) vi_field=1-vi_field;
+            if (g_vi_regs[VI_V_SYNC_REG] == 0) g_vi_delay = 500000;
+            else g_vi_delay = ((g_vi_regs[VI_V_SYNC_REG] + 1)*1500);
+            next_vi += g_vi_delay;
+            if (g_vi_regs[VI_STATUS_REG]&0x40) vi_field=1-vi_field;
             else vi_field=0;
 
             remove_interupt_event();

@@ -135,30 +135,32 @@ enum mi_registers
 
 extern uint32_t g_mi_regs[MI_REGS_COUNT];
 
-extern unsigned int *readvi[0x10000];
+enum vi_registers
+{
+    VI_STATUS_REG,
+    VI_ORIGIN_REG,
+    VI_WIDTH_REG,
+    VI_V_INTR_REG,
+    VI_CURRENT_REG,
+    VI_BURST_REG,
+    VI_V_SYNC_REG,
+    VI_H_SYNC_REG,
+    VI_LEAP_REG,
+    VI_H_START_REG,
+    VI_V_START_REG,
+    VI_V_BURST_REG,
+    VI_X_SCALE_REG,
+    VI_Y_SCALE_REG,
+    VI_REGS_COUNT
+};
+
+extern uint32_t g_vi_regs[VI_REGS_COUNT];
+extern unsigned int g_vi_delay;
+
 extern unsigned int *readai[0x10000];
 extern unsigned int *readpi[0x10000];
 extern unsigned int *readri[0x10000];
 extern unsigned int *readsi[0x10000];
-
-typedef struct _VI_register
-{
-   unsigned int vi_status;
-   unsigned int vi_origin;
-   unsigned int vi_width;
-   unsigned int vi_v_intr;
-   unsigned int vi_current;
-   unsigned int vi_burst;
-   unsigned int vi_v_sync;
-   unsigned int vi_h_sync;
-   unsigned int vi_leap;
-   unsigned int vi_h_start;
-   unsigned int vi_v_start;
-   unsigned int vi_v_burst;
-   unsigned int vi_x_scale;
-   unsigned int vi_y_scale;
-   unsigned int vi_delay;
-} VI_register;
 
 typedef struct _AI_register
 {
@@ -213,7 +215,6 @@ typedef struct _SI_register
 
 extern PI_register pi_register;
 extern SI_register si_register;
-extern VI_register vi_register;
 extern RI_register ri_register;
 extern AI_register ai_register;
 
@@ -413,8 +414,6 @@ void write_pifd(void);
 void update_MI_intr_mode_reg(void);
 void update_MI_init_mask_reg(void);
 void update_ai_dacrate(unsigned int word);
-void update_vi_status(unsigned int word);
-void update_vi_width(unsigned int word);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

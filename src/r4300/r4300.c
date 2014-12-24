@@ -197,9 +197,9 @@ void r4300_reset_soft(void)
     ai_register.ai_dram_addr = 0;
     ai_register.ai_len = 0;
 
-    vi_register.vi_v_intr = 1023;
-    vi_register.vi_current = 0;
-    vi_register.vi_h_start = 0;
+    g_vi_regs[VI_V_INTR_REG] = 1023;
+    g_vi_regs[VI_CURRENT_REG] = 0;
+    g_vi_regs[VI_H_START_REG] = 0;
 
     g_mi_regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
 

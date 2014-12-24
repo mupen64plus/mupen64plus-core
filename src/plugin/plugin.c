@@ -237,20 +237,20 @@ static m64p_error plugin_start_gfx(void)
     gfx_info.DPC_BUFBUSY_REG = &(g_dpc_regs[DPC_BUFBUSY_REG]);
     gfx_info.DPC_PIPEBUSY_REG = &(g_dpc_regs[DPC_PIPEBUSY_REG]);
     gfx_info.DPC_TMEM_REG = &(g_dpc_regs[DPC_TMEM_REG]);
-    gfx_info.VI_STATUS_REG = &(vi_register.vi_status);
-    gfx_info.VI_ORIGIN_REG = &(vi_register.vi_origin);
-    gfx_info.VI_WIDTH_REG = &(vi_register.vi_width);
-    gfx_info.VI_INTR_REG = &(vi_register.vi_v_intr);
-    gfx_info.VI_V_CURRENT_LINE_REG = &(vi_register.vi_current);
-    gfx_info.VI_TIMING_REG = &(vi_register.vi_burst);
-    gfx_info.VI_V_SYNC_REG = &(vi_register.vi_v_sync);
-    gfx_info.VI_H_SYNC_REG = &(vi_register.vi_h_sync);
-    gfx_info.VI_LEAP_REG = &(vi_register.vi_leap);
-    gfx_info.VI_H_START_REG = &(vi_register.vi_h_start);
-    gfx_info.VI_V_START_REG = &(vi_register.vi_v_start);
-    gfx_info.VI_V_BURST_REG = &(vi_register.vi_v_burst);
-    gfx_info.VI_X_SCALE_REG = &(vi_register.vi_x_scale);
-    gfx_info.VI_Y_SCALE_REG = &(vi_register.vi_y_scale);
+    gfx_info.VI_STATUS_REG = &(g_vi_regs[VI_STATUS_REG]);
+    gfx_info.VI_ORIGIN_REG = &(g_vi_regs[VI_ORIGIN_REG]);
+    gfx_info.VI_WIDTH_REG = &(g_vi_regs[VI_WIDTH_REG]);
+    gfx_info.VI_INTR_REG = &(g_vi_regs[VI_V_INTR_REG]);
+    gfx_info.VI_V_CURRENT_LINE_REG = &(g_vi_regs[VI_CURRENT_REG]);
+    gfx_info.VI_TIMING_REG = &(g_vi_regs[VI_BURST_REG]);
+    gfx_info.VI_V_SYNC_REG = &(g_vi_regs[VI_V_SYNC_REG]);
+    gfx_info.VI_H_SYNC_REG = &(g_vi_regs[VI_H_SYNC_REG]);
+    gfx_info.VI_LEAP_REG = &(g_vi_regs[VI_LEAP_REG]);
+    gfx_info.VI_H_START_REG = &(g_vi_regs[VI_H_START_REG]);
+    gfx_info.VI_V_START_REG = &(g_vi_regs[VI_V_START_REG]);
+    gfx_info.VI_V_BURST_REG = &(g_vi_regs[VI_V_BURST_REG]);
+    gfx_info.VI_X_SCALE_REG = &(g_vi_regs[VI_X_SCALE_REG]);
+    gfx_info.VI_Y_SCALE_REG = &(g_vi_regs[VI_Y_SCALE_REG]);
     gfx_info.CheckInterrupts = EmptyFunc;
 
     /* call the audio plugin */
