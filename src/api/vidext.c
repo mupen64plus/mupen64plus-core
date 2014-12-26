@@ -394,7 +394,13 @@ static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
 #endif
         { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
-        { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }};
+        { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }
+#if SDL_VERSION_ATLEAST(2,0,0)
+       ,{ M64P_GL_CONTEXT_MAJOR_VERSION, SDL_GL_CONTEXT_MAJOR_VERSION },
+        { M64P_GL_CONTEXT_MINOR_VERSION, SDL_GL_CONTEXT_MINOR_VERSION },
+        { M64P_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_MASK }
+#endif
+};
 static const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
 
 EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
@@ -407,6 +413,27 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
+
+    /* translate the GL context type mask if necessary */
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (Attr == M64P_GL_CONTEXT_PROFILE_MASK)
+    {
+        switch (Value)
+        {
+            case M64P_GL_CONTEXT_PROFILE_CORE:
+                Value = SDL_GL_CONTEXT_PROFILE_CORE;
+                break;
+            case M64P_GL_CONTEXT_PROFILE_COMPATIBILITY:
+                Value = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+                break;
+            case M64P_GL_CONTEXT_PROFILE_ES:
+                Value = SDL_GL_CONTEXT_PROFILE_ES;
+                break;
+            default:
+                Value = 0;
+        }
+    }
+#endif
 
     for (i = 0; i < mapSize; i++)
     {
@@ -439,6 +466,26 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
             int NewValue = 0;
             if (SDL_GL_GetAttribute(GLAttrMap[i].sdlAttr, &NewValue) != 0)
                 return M64ERR_SYSTEM_FAIL;
+            /* translate the GL context type mask if necessary */
+#if SDL_VERSION_ATLEAST(2,0,0)
+            if (Attr == M64P_GL_CONTEXT_PROFILE_MASK)
+            {
+                switch (NewValue)
+                {
+                    case SDL_GL_CONTEXT_PROFILE_CORE:
+                        NewValue = M64P_GL_CONTEXT_PROFILE_CORE;
+                        break;
+                    case SDL_GL_CONTEXT_PROFILE_COMPATIBILITY:
+                        NewValue = M64P_GL_CONTEXT_PROFILE_COMPATIBILITY;
+                        break;
+                    case SDL_GL_CONTEXT_PROFILE_ES:
+                        NewValue = M64P_GL_CONTEXT_PROFILE_ES;
+                        break;
+                    default:
+                        NewValue = 0;
+                }
+            }
+#endif
             *pValue = NewValue;
             return M64ERR_SUCCESS;
         }
