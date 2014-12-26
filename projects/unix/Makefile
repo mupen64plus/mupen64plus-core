@@ -157,7 +157,7 @@ ifeq ($(OS), OSX)
   OSX_SDK_PATH = $(OSX_SDK_ROOT)/$(shell ls $(OSX_SDK_ROOT) | tail -1)
 
   TARGET = libmupen64plus$(POSTFIX).dylib
-  LDFLAGS += -bundle -read_only_relocs suppress
+  LDFLAGS += -framework CoreFoundation -bundle -read_only_relocs suppress
   LDLIBS += -ldl
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
