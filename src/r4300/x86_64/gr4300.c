@@ -215,6 +215,12 @@ static void genbgtz_test(void)
      }
 }
 
+#if !defined(INTERPRET_LB) && \
+    !defined(INTERPRET_LH) && \
+    !defined(INTERPRET_LW) && \
+    !defined(INTERPRET_LBU) && \
+    !defined(INTERPRET_LHU) && \
+    !defined(INTERPRET_LWU)
 static void ld_register_alloc(int *pGpr1, int *pGpr2, int *pBase1, int *pBase2)
 {
    int gpr1, gpr2, base1, base2 = 0;
@@ -255,7 +261,7 @@ static void ld_register_alloc(int *pGpr1, int *pGpr2, int *pBase1, int *pBase2)
    *pBase1 = base1;
    *pBase2 = base2;
 }
-
+#endif
 
 /* global functions */
 
@@ -1324,7 +1330,9 @@ void genldr(void)
 
 void genlb(void)
 {
+#ifndef INTERPRET_LB
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[24]);
 #endif
@@ -1374,7 +1382,9 @@ void genlb(void)
 
 void genlh(void)
 {
+#ifndef INTERPRET_LH
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[25]);
 #endif
@@ -1432,7 +1442,9 @@ void genlwl(void)
 
 void genlw(void)
 {
+#ifndef INTERPRET_LW
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[26]);
 #endif
@@ -1482,7 +1494,9 @@ void genlw(void)
 
 void genlbu(void)
 {
+#ifndef INTERPRET_LBU
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[28]);
 #endif
@@ -1533,7 +1547,9 @@ void genlbu(void)
 
 void genlhu(void)
 {
+#ifndef INTERPRET_LHU
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[29]);
 #endif
@@ -1592,7 +1608,9 @@ void genlwr(void)
 
 void genlwu(void)
 {
+#ifndef INTERPRET_LWU
    int gpr1, gpr2, base1, base2 = 0;
+#endif
 #if defined(COUNT_INSTR)
    inc_m32rel(&instr_count[30]);
 #endif

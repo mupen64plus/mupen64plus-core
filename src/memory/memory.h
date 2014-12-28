@@ -25,15 +25,6 @@
 #include <stdint.h>
 #include "osal/preproc.h"
 
-#define read_word_in_memory() readmem[address>>16]()
-#define read_byte_in_memory() readmemb[address>>16]()
-#define read_hword_in_memory() readmemh[address>>16]()
-#define read_dword_in_memory() readmemd[address>>16]()
-#define write_word_in_memory() writemem[address>>16]()
-#define write_byte_in_memory() writememb[address >>16]()
-#define write_hword_in_memory() writememh[address >>16]()
-#define write_dword_in_memory() writememd[address >>16]()
-
 enum { SP_MEM_SIZE = 0x2000 };
 
 extern uint32_t g_sp_mem[SP_MEM_SIZE/4];
@@ -76,20 +67,6 @@ enum ri_registers
 
 extern uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
 extern uint32_t g_ri_regs[RI_REGS_COUNT];
-
-extern unsigned int address, word;
-extern unsigned char cpu_byte;
-extern unsigned short hword;
-extern unsigned long long dword, *rdword;
-
-extern void (*readmem[0x10000])(void);
-extern void (*readmemb[0x10000])(void);
-extern void (*readmemh[0x10000])(void);
-extern void (*readmemd[0x10000])(void);
-extern void (*writemem[0x10000])(void);
-extern void (*writememb[0x10000])(void);
-extern void (*writememh[0x10000])(void);
-extern void (*writememd[0x10000])(void);
 
 enum sp_registers
 {
@@ -266,24 +243,11 @@ int init_memory(void);
 
 void map_region(uint16_t region,
                 int type,
-                void (*read8)(void),
-                void (*read16)(void),
-                void (*read32)(void),
-                void (*read64)(void),
-                void (*write8)(void),
-                void (*write16)(void),
-                void (*write32)(void),
-                void (*write64)(void));
+                int (*read32)(uint32_t,uint32_t*),
+                int (*write32)(uint32_t,uint32_t,uint32_t));
 
-/* XXX: cannot make them static because of dynarec */
-void read_rdram(void);
-void read_rdramb(void);
-void read_rdramh(void);
-void read_rdramd(void);
-void write_rdram(void);
-void write_rdramb(void);
-void write_rdramh(void);
-void write_rdramd(void);
+int read_aligned_word(uint32_t address, uint32_t* value);
+int write_aligned_word(uint32_t address, uint32_t value, uint32_t mask);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
