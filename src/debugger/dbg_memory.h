@@ -25,42 +25,6 @@
 
 #define MAX_DISASSEMBLY 64
 
-/* The following three macros create all the function calls for catching memory breakpoints
- * these do not occur until after the PC is incremented, but jumps & branches are not yet taken.
- */
-
-#define MEMBREAKREAD(name,size) \
-    void name##_break(void) { \
-        check_breakpoints_on_mem_access((PC->addr)-0x4, address, size, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ); \
-        name (); \
-    }
-
-#define MEMBREAKWRITE(name,size) \
-    void name##_break(void) { \
-        check_breakpoints_on_mem_access((PC->addr)-0x4, address, size, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE); \
-        name (); \
-    }
-
-#define MEMBREAKALL(name) \
-    MEMBREAKREAD( read_##name , 4); \
-    MEMBREAKREAD( read_##name##b , 1); \
-    MEMBREAKREAD( read_##name##h , 2); \
-    MEMBREAKREAD( read_##name##d , 8); \
-    MEMBREAKWRITE( write_##name , 4); \
-    MEMBREAKWRITE( write_##name##b , 1); \
-    MEMBREAKWRITE( write_##name##h , 2); \
-    MEMBREAKWRITE( write_##name##d , 8);
-
-#define MEMBREAKALL_local(name) \
-    static MEMBREAKREAD( read_##name , 4); \
-    static MEMBREAKREAD( read_##name##b , 1); \
-    static MEMBREAKREAD( read_##name##h , 2); \
-    static MEMBREAKREAD( read_##name##d , 8); \
-    static MEMBREAKWRITE( write_##name , 4); \
-    static MEMBREAKWRITE( write_##name##b , 1); \
-    static MEMBREAKWRITE( write_##name##h , 2); \
-    static MEMBREAKWRITE( write_##name##d , 8);
-
 void init_host_disassembler(void);
 
 char* get_recompiled_opcode( uint32 address, int index );
@@ -82,31 +46,6 @@ void write_memory_16(uint32 addr, uint16 value);
 uint8 read_memory_8(uint32 addr);
 void write_memory_8(uint32 addr, uint8 value);
 uint32 get_memory_flags(uint32);
-int get_memory_type(uint32);
-
-void activate_memory_break_read(uint32 addr);
-void deactivate_memory_break_read(uint32 addr);
-void activate_memory_break_write(uint32 addr);
-void deactivate_memory_break_write(uint32 addr);
-
-/* Following are the prototypes for the memory breakpoint functions */
-void read_rdram_break(void);
-void read_rdramb_break(void);
-void read_rdramh_break(void);
-void read_rdramd_break(void);
-void read_rdramFB_break(void);
-void read_rdramFBb_break(void);
-void read_rdramFBh_break(void);
-void read_rdramFBd_break(void);
-
-void write_rdram_break(void);
-void write_rdramb_break(void);
-void write_rdramh_break(void);
-void write_rdramd_break(void);
-void write_rdramFB_break(void);
-void write_rdramFBb_break(void);
-void write_rdramFBh_break(void);
-void write_rdramFBd_break(void);
 
 #endif /* __DEBUGGER_MEMORY_H__ */
 

@@ -25,10 +25,11 @@
 #include "dbg_types.h"
 #include "debugger.h"
 #include "dbg_breakpoints.h"
-#include "dbg_memory.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+
+#include "memory/memory.h"
 
 int g_NumBreakpoints=0;
 m64p_breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
