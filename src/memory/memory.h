@@ -264,6 +264,26 @@ extern enum cic_type g_cic_type;
 
 int init_memory(void);
 
+void map_region_r(uint16_t region,
+                  void (*read8)(void),
+                  void (*read16)(void),
+                  void (*read32)(void),
+                  void (*read64)(void));
+void map_region_w(uint16_t region,
+                  void (*write8)(void),
+                  void (*write16)(void),
+                  void (*write32)(void),
+                  void (*write64)(void));
+void map_region(uint16_t region,
+                void (*read8)(void),
+                void (*read16)(void),
+                void (*read32)(void),
+                void (*read64)(void),
+                void (*write8)(void),
+                void (*write16)(void),
+                void (*write32)(void),
+                void (*write64)(void));
+
 void read_nothing(void);
 void read_nothingh(void);
 void read_nothingb(void);
