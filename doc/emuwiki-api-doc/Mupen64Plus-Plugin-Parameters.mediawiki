@@ -218,6 +218,18 @@ These are standard parameters which are used by the Mupen64Plus plugins.  The be
 |AnisotropicFiltering
 |M64TYPE_INT
 |Enable/Disable Anisotropic Filtering for Mipmapping (0=no filtering, 2-16=quality). This is uneffective if EnableMipmapping is false. If the given value is to high to be supported by your graphic card, the value will be the highest value your graphic card can support. Better result with Trilinear filtering
+|-
+|ForcePolygonOffset
+|M64TYPE_BOOL
+|If true, use polygon offset values specified below (default=False).  This can be used to eliminate stitching artifacts in textures and shadows, which are typically only a problem in mobile/embedded platforms (e.g. Android), where chipsets are inconsistent in their implementation of glPolygonOffset.
+|-
+|PolygonOffsetFactor
+|M64TYPE_FLOAT
+|Specifies a scale factor that is used to create a variable depth offset for each polygon.  Ignored if ForcePolygonOffset is False, and typically only relevant for mobile/embedded platforms.  This value is typically equal to PolygonOffsetUnits, and is found through trial and error.  Mario's shadow in Super Mario 64 is a good test case when tuning this value.  If the shadow flickers, use a larger magnitude for the float settings. Do not use a larger value than necessary to eliminate artifacts. As a guideline, typical values for mobile chipsets circa 2012-2014 are positive or negative values in the range 0.001 to 2.
+|-
+|PolygonOffsetUnits
+|M64TYPE_FLOAT
+|Is multiplied by an implementation-specific value to create a constant depth offset.  Ignored if ForcePolygonOffset is False, and typically only relevant for mobile/embedded platforms.  This value is typically equal to PolygonOffsetFactor, and is found through trial and error.  Mario's shadow in Super Mario 64 is a good test case when tuning this value.  If the shadow flickers, use a larger magnitude for the float settings. Do not use a larger value than necessary to eliminate artifacts. As a guideline, typical values for mobile chipsets circa 2012-2014 are positive or negative values in the range 0.001 to 2.
 |}
 
 === Input-SDL ===

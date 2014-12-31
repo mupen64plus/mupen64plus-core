@@ -1298,7 +1298,6 @@ static void emit_adcimm(u_int rs,int imm,u_int rt)
 
 static void emit_rscimm(int rs,int imm,u_int rt)
 {
-  // assert(0);
   u_int armval, ret;
   ret = genimm(imm,&armval);
   assert(ret);
@@ -4171,7 +4170,6 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
     {
       if(opcode2[i]==0x1C) // DMULT
       {
-        // assert(opcode2[i]!=0x1C);
         signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
         signed char m1l=get_reg(i_regs->regmap,rs1[i]);
         signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
