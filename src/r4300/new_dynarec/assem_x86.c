@@ -26,8 +26,13 @@ int branch_target;
 uint64_t readmem_dword;
 static precomp_instr fake_pc;
 u_int memory_map[1048576];
+#if defined(_MSC_VER)
+__declspec(align(8)) static u_int mini_ht[32][2];
+__declspec(align(4)) u_char restore_candidate[512];
+#else
 static u_int mini_ht[32][2]  __attribute__((aligned(8)));
 u_char restore_candidate[512]  __attribute__((aligned(4)));
+#endif
 
 void do_interrupt();
 void jump_vaddr_eax();
@@ -84,8 +89,9 @@ static void set_jump_target(int addr,int target)
   u_char *ptr=(u_char *)addr;
   if(*ptr==0x0f)
   {
+    u_int *ptr2;
     assert(ptr[1]>=0x80&&ptr[1]<=0x8f);
-    u_int *ptr2=(u_int *)(ptr+2);
+    ptr2=(u_int *)(ptr+2);
     *ptr2=target-(int)ptr2-4;
   }
   else if(*ptr==0xe8||*ptr==0xe9) {
@@ -94,21 +100,22 @@ static void set_jump_target(int addr,int target)
   }
   else
   {
+    u_int *ptr2;
     assert(*ptr==0xc7); /* mov immediate (store address) */
-    u_int *ptr2=(u_int *)(ptr+6);
+    ptr2=(u_int *)(ptr+6);
     *ptr2=target;
   }
 }
 
 static void *kill_pointer(void *stub)
 {
-  int *i_ptr=*((int **)(stub+6));
+  int *i_ptr=*((int **)((int)stub+6));
   *i_ptr=(int)stub-(int)i_ptr-4;
   return i_ptr;
 }
 static int get_pointer(void *stub)
 {
-  int *i_ptr=*((int **)(stub+6));
+  int *i_ptr=*((int **)((int)stub+6));
   return *i_ptr+(int)i_ptr+4;
 }
 
@@ -126,12 +133,13 @@ static u_int get_clean_addr(int addr)
 static int verify_dirty(void *addr)
 {
   u_char *ptr=(u_char *)addr;
+  u_int source, copy, len, verifier;
   assert(ptr[5]==0xB8);
-  u_int source=*(u_int *)(ptr+6);
-  u_int copy=*(u_int *)(ptr+11);
-  u_int len=*(u_int *)(ptr+16);
+  source=*(u_int *)(ptr+6);
+  copy=*(u_int *)(ptr+11);
+  len=*(u_int *)(ptr+16);
   assert(ptr[20]==0xE8); // call instruction
-  u_int verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
+  verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
   if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
     unsigned int page=source>>12;
     unsigned int map_value=memory_map[page];
@@ -161,12 +169,13 @@ static int isclean(int addr)
 static void get_bounds(int addr,u_int *start,u_int *end)
 {
   u_char *ptr=(u_char *)addr;
+  u_int source, len, verifier;
   assert(ptr[5]==0xB8);
-  u_int source=*(u_int *)(ptr+6);
+  source=*(u_int *)(ptr+6);
   //u_int copy=*(u_int *)(ptr+11);
-  u_int len=*(u_int *)(ptr+16);
+  len=*(u_int *)(ptr+16);
   assert(ptr[20]==0xE8); // call instruction
-  u_int verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
+  verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
   if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
     if(memory_map[source>>12]>=0x80000000) source = 0;
     else source = source+(memory_map[source>>12]<<2);
@@ -181,8 +190,9 @@ static void get_bounds(int addr,u_int *start,u_int *end)
 // if you intend to modify the register, you must call dirty_reg().
 static void alloc_reg(struct regstat *cur,int i,signed char reg)
 {
-  int r,hr;
+  int r,hr,j;
   int preferred_reg = (reg&3)+(reg>28)*4-(reg==32)+2*(reg==36)-(reg==40);
+  u_char hsn[MAXREG+1];
   
   // Don't allocate unused registers
   if((cur->u>>reg)&1) return;
@@ -275,9 +285,7 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
   
   // Ok, now we have to evict someone
   // Pick a register we hopefully won't need soon
-  u_char hsn[MAXREG+1];
   memset(hsn,10,sizeof(hsn));
-  int j;
   lsn(hsn,i,&preferred_reg);
   //DebugMessage(M64MSG_VERBOSE, "hsn(%x): %d %d %d %d %d %d %d",start+i*4,hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
   if(i>0) {
@@ -357,7 +365,8 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
 static void alloc_reg64(struct regstat *cur,int i,signed char reg)
 {
   int preferred_reg = 5+reg%3;
-  int r,hr;
+  int r,hr,j;
+  u_char hsn[MAXREG+1];
   
   // allocate the lower 32 bits
   alloc_reg(cur,i,reg);
@@ -450,9 +459,7 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
   
   // Ok, now we have to evict someone
   // Pick a register we hopefully won't need soon
-  u_char hsn[MAXREG+1];
   memset(hsn,10,sizeof(hsn));
-  int j;
   lsn(hsn,i,&preferred_reg);
   //DebugMessage(M64MSG_VERBOSE, "eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",cur->regmap[0],cur->regmap[1],cur->regmap[2],cur->regmap[3],cur->regmap[5],cur->regmap[6],cur->regmap[7]);
   //DebugMessage(M64MSG_VERBOSE, "hsn(%x): %d %d %d %d %d %d %d",start+i*4,hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
@@ -535,8 +542,9 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
 // Note: This will only allocate one register, even if called multiple times
 static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
 {
-  int r,hr;
+  int r,hr,j;
   int preferred_reg = -1;
+  u_char hsn[MAXREG+1];
   
   // see if it's already allocated
   for(hr=0;hr<HOST_REGS;hr++)
@@ -588,9 +596,7 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
   // Pick a register we hopefully won't need soon
   // TODO: we might want to follow unconditional jumps here
   // TODO: get rid of dupe code and make this into a function
-  u_char hsn[MAXREG+1];
   memset(hsn,10,sizeof(hsn));
-  int j;
   lsn(hsn,i,&preferred_reg);
   //DebugMessage(M64MSG_VERBOSE, "hsn: %d %d %d %d %d %d %d",hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
   if(i>0) {
@@ -739,7 +745,7 @@ static void multdiv_alloc_x86(struct regstat *current,int i)
 
 /* Assembler */
 
-static const char const regname[8][4] = {
+static const char regname[8][4] = {
  "eax",
  "ecx",
  "edx",
@@ -755,18 +761,20 @@ static void output_byte(u_char byte)
 }
 static void output_modrm(u_char mod,u_char rm,u_char ext)
 {
+  u_char byte;
   assert(mod<4);
   assert(rm<8);
   assert(ext<8);
-  u_char byte=(mod<<6)|(ext<<3)|rm;
+  byte=(mod<<6)|(ext<<3)|rm;
   *(out++)=byte;
 }
 static void output_sib(u_char scale,u_char index,u_char base)
 {
+  u_char byte;
   assert(scale<4);
   assert(index<8);
   assert(base<8);
-  u_char byte=(scale<<6)|(index<<3)|base;
+  byte=(scale<<6)|(index<<3)|base;
   *(out++)=byte;
 }
 static void output_w32(u_int word)
@@ -2626,8 +2634,6 @@ static void emit_extjump_ds(int addr, int target)
 
 static void do_readstub(int n)
 {
-  assem_debug("do_readstub %x",start+stubs[n][3]*4);
-  set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
   int rs=stubs[n][4];
@@ -2636,6 +2642,10 @@ static void do_readstub(int n)
   int addr=get_reg(i_regmap,AGEN1+(i&1));
   int rth,rt;
   int ds;
+  int ftable=0;
+  int real_rs, temp, cc;
+  assem_debug("do_readstub %x",start+stubs[n][3]*4);
+  set_jump_target(stubs[n][1],(int)out);
   if(itype[i]==C1LS||itype[i]==LOADLR) {
     rth=get_reg(i_regmap,FTEMP|64);
     rt=get_reg(i_regmap,FTEMP);
@@ -2647,7 +2657,6 @@ static void do_readstub(int n)
   if(addr<0) addr=rt;
   if(addr<0&&itype[i]!=C1LS&&itype[i]!=LOADLR) addr=get_reg(i_regmap,-1);
   assert(addr>=0);
-  int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
     ftable=(int)readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
@@ -2661,12 +2670,11 @@ static void do_readstub(int n)
   emit_movmem_indexedx4(ftable,addr,addr);
   emit_pusha();
   ds=i_regs!=&regs[i];
-  int real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)),i);
+  real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
+  if(!ds) load_all_consts(regs[i].regmap_entry,(int)regs[i].was32,(u_int)regs[i].wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)),i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)));
   
-  int temp;
-  int cc=get_reg(i_regmap,CCREG);
+  cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
     if(addr==HOST_CCREG)
     {
@@ -2696,7 +2704,7 @@ static void do_readstub(int n)
   // but not doing so causes random crashes...
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2725,13 +2733,14 @@ static void do_readstub(int n)
 
 static void inline_readstub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
 {
-  assem_debug("inline_readstub");
   int rs=get_reg(regmap,target);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int ftable=0;
+  int temp,cc;
+  assem_debug("inline_readstub");
   if(rs<0) rs=get_reg(regmap,-1);
   assert(rs>=0);
-  int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
     ftable=(int)readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
@@ -2752,12 +2761,11 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     // Write out the registers so the pagefault can be handled.  This is
     // a very rare case and likely represents a bug.
     int ds=regmap!=regs[i].regmap;
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,(int)regs[i].was32,(int)regs[i].wasdirty,i);
     if(!ds) wb_dirtys(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty);
     else wb_dirtys(branch_regs[i-1].regmap_entry,branch_regs[i-1].was32,branch_regs[i-1].wasdirty);
   }
-  int cc=get_reg(regmap,CCREG);
-  int temp;
+  cc=get_reg(regmap,CCREG);
   if(cc<0) {
     if(rs==HOST_CCREG)
     {
@@ -2791,7 +2799,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   // but not doing so causes random crashes...
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(adj+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2819,8 +2827,6 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
 
 static void do_writestub(int n)
 {
-  assem_debug("do_writestub %x",start+stubs[n][3]*4);
-  set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
   int rs=stubs[n][4];
@@ -2829,6 +2835,10 @@ static void do_writestub(int n)
   int addr=get_reg(i_regmap,AGEN1+(i&1));
   int rth,rt,r;
   int ds;
+  int ftable=0;
+  int real_rs, temp, cc;
+  assem_debug("do_writestub %x",start+stubs[n][3]*4);
+  set_jump_target(stubs[n][1],(int)out);
   if(itype[i]==C1LS) {
     rth=get_reg(i_regmap,FTEMP|64);
     rt=get_reg(i_regmap,r=FTEMP);
@@ -2840,7 +2850,6 @@ static void do_writestub(int n)
   assert(rt>=0);
   if(addr<0) addr=get_reg(i_regmap,-1);
   assert(addr>=0);
-  int ftable=0;
   if(type==STOREB_STUB)
     ftable=(int)writememb;
   if(type==STOREH_STUB)
@@ -2864,12 +2873,11 @@ static void do_writestub(int n)
   }
   emit_pusha();
   ds=i_regs!=&regs[i];
-  int real_rs=get_reg(i_regmap,rs1[i]);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)),i);
+  real_rs=get_reg(i_regmap,rs1[i]);
+  if(!ds) load_all_consts(regs[i].regmap_entry,(int)regs[i].was32,(int)regs[i].wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)),i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&~(1<<addr)&(real_rs<0?-1:~(1<<real_rs)));
   
-  int temp;
-  int cc=get_reg(i_regmap,CCREG);
+  cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
     if(addr==HOST_CCREG)
     {
@@ -2897,7 +2905,7 @@ static void do_writestub(int n)
   emit_callreg(addr);
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2910,13 +2918,14 @@ static void do_writestub(int n)
 
 static void inline_writestub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
 {
-  assem_debug("inline_writestub");
   int rs=get_reg(regmap,-1);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int ftable=0;
+  int temp, cc;
+  assem_debug("inline_writestub");
   assert(rs>=0);
   assert(rt>=0);
-  int ftable=0;
   if(type==STOREB_STUB)
     ftable=(int)writememb;
   if(type==STOREH_STUB)
@@ -2943,12 +2952,11 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     // Write out the registers so the pagefault can be handled.  This is
     // a very rare case and likely represents a bug.
     int ds=regmap!=regs[i].regmap;
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,(int)regs[i].was32,(int)regs[i].wasdirty,i);
     if(!ds) wb_dirtys(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty);
     else wb_dirtys(branch_regs[i-1].regmap_entry,branch_regs[i-1].was32,branch_regs[i-1].wasdirty);
   }
-  int cc=get_reg(regmap,CCREG);
-  int temp;
+  cc=get_reg(regmap,CCREG);
   if(cc<0) {
     if(rs==HOST_CCREG)
     {
@@ -2980,7 +2988,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_call(((u_int *)ftable)[addr>>16]);
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(adj+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -3006,6 +3014,7 @@ static void do_invstub(int n)
 
 static int do_dirty_stub(int i)
 {
+  int entry;
   assem_debug("do_dirty_stub %x",start+i*4);
   emit_pushimm(start+i*4);
   emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
@@ -3013,7 +3022,7 @@ static int do_dirty_stub(int i)
   emit_movimm(slen*4,ECX);
   emit_call((int)start<(int)0xC0000000?(int)&verify_code:(int)&verify_code_vm);
   emit_addimm(ESP,4,ESP);
-  int entry=(int)out;
+  entry=(int)out;
   load_regs_entry(i);
   if(entry==(int)out) entry=instr_addr[i];
   emit_jmp(instr_addr[i]);
@@ -3032,13 +3041,15 @@ static void do_dirty_stub_ds()
 
 static void do_cop1stub(int n)
 {
+  int i, ds;
+  struct regstat *i_regs;
   assem_debug("do_cop1stub %x",start+stubs[n][3]*4);
   set_jump_target(stubs[n][1],(int)out);
-  int i=stubs[n][3];
-  struct regstat *i_regs=(struct regstat *)stubs[n][5];
-  int ds=stubs[n][6];
+  i=stubs[n][3];
+  i_regs=(struct regstat *)stubs[n][5];
+  ds=stubs[n][6];
   if(!ds) {
-    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    load_all_consts(regs[i].regmap_entry,(int)regs[i].was32,(int)regs[i].wasdirty,i);
     //if(i_regs!=&regs[i]) DebugMessage(M64MSG_VERBOSE, "oops: regs[i]=%x i_regs=%x",(int)&regs[i],(int)i_regs);
   }
   //else {DebugMessage(M64MSG_VERBOSE, "fp exception in delay slot");}
@@ -3203,10 +3214,11 @@ static void shift_assemble_x86(int i,struct regstat *i_regs)
         }
         else
         {
+          int temp, real_th;
           // FIXME: What if shift==tl ?
           assert(shift!=tl);
-          int temp=get_reg(i_regs->regmap,-1);
-          int real_th=th;
+          temp=get_reg(i_regs->regmap,-1);
+          real_th=th;
           if(th<0&&opcode2[i]!=0x14) {th=temp;} // DSLLV doesn't need a temporary register
           assert(sl>=0);
           assert(sh>=0);
@@ -3327,7 +3339,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
     map=get_reg(i_regs->regmap,TLREG);
     assert(map>=0);
     reglist&=~(1<<map);
-    map=do_tlb_r(addr,temp2,map,-1,0,a,c?-1:temp,c,constmap[i][s]+offset);
+    map=do_tlb_r(addr,temp2,map,-1,0,a,c?-1:temp,c,(u_int)constmap[i][s]+offset);
     if(c) {
       if (opcode[i]==0x22||opcode[i]==0x26) {
         emit_movimm(((constmap[i][s]+offset)<<3)&24,temp); // LWL/LWR
@@ -3335,7 +3347,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
         emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
       }
     }
-    do_tlb_r_branch(map,c,constmap[i][s]+offset,&jaddr);
+    do_tlb_r_branch(map,c,(u_int)constmap[i][s]+offset,&jaddr);
   }
   if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
     if(!c||memtarget) {
@@ -3404,13 +3416,14 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
     }
   }
   if (opcode[i]==0x1A||opcode[i]==0x1B) { // LDL/LDR
+    int temp2h;
     if(s>=0) 
       if((i_regs->wasdirty>>s)&1)
         emit_storereg(rs1[i],s);
     if(get_reg(i_regs->regmap,rs1[i]|64)>=0) 
       if((i_regs->wasdirty>>get_reg(i_regs->regmap,rs1[i]|64))&1)
         emit_storereg(rs1[i]|64,get_reg(i_regs->regmap,rs1[i]|64));
-    int temp2h=get_reg(i_regs->regmap,FTEMP|64);
+    temp2h=get_reg(i_regs->regmap,FTEMP|64);
     if(!c||memtarget) {
       //if(th>=0) emit_readword_indexed((int)rdram-0x80000000,temp2,temp2h);
       //emit_readword_indexed((int)rdram-0x7FFFFFFC,temp2,temp2);
@@ -3504,7 +3517,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     if(copr==9||copr==11||copr==12) {
       emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((int)&next_interupt,ECX);
-      emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
+      emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_sub(HOST_CCREG,ECX,HOST_CCREG);
       emit_writeword(ECX,(int)&last_count);
       emit_storereg(CCREG,HOST_CCREG);
@@ -3551,10 +3564,11 @@ static void cop1_assemble(int i,struct regstat *i_regs)
 {
   // Check cop1 unusable
   if(!cop1_usable) {
+    int jaddr;
     signed char rs=get_reg(i_regs->regmap,CSREG);
     assert(rs>=0);
     emit_testimm(rs,0x20000000);
-    int jaddr=(int)out;
+    jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,rs,(int)i_regs,is_delayslot,0);
     cop1_usable=1;
@@ -3605,9 +3619,10 @@ static void cop1_assemble(int i,struct regstat *i_regs)
     assert(sl>=0);
     if(copr==31)
     {
+      char temp;
       emit_writeword(sl,(int)&FCR31);
       // Set the rounding mode
-      char temp=get_reg(i_regs->regmap,-1);
+      temp=get_reg(i_regs->regmap,-1);
       emit_movimm(3,temp);
       emit_and(sl,temp,temp);
       emit_fldcw_indexed((int)&rounding_modes,temp);
@@ -3621,10 +3636,11 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   assert(temp>=0);
   // Check cop1 unusable
   if(!cop1_usable) {
+    int jaddr;
     signed char rs=get_reg(i_regs->regmap,CSREG);
     assert(rs>=0);
     emit_testimm(rs,0x20000000);
-    int jaddr=(int)out;
+    jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,rs,(int)i_regs,is_delayslot,0);
     cop1_usable=1;
@@ -3878,10 +3894,11 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   assert(temp>=0);
   // Check cop1 unusable
   if(!cop1_usable) {
+    int jaddr;
     signed char cs=get_reg(i_regs->regmap,CSREG);
     assert(cs>=0);
     emit_testimm(cs,0x20000000);
-    int jaddr=(int)out;
+    jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,cs,(int)i_regs,is_delayslot,0);
     cop1_usable=1;
@@ -4002,10 +4019,11 @@ static void float_assemble(int i,struct regstat *i_regs)
   assert(temp>=0);
   // Check cop1 unusable
   if(!cop1_usable) {
+    int jaddr;
     signed char cs=get_reg(i_regs->regmap,CSREG);
     assert(cs>=0);
     emit_testimm(cs,0x20000000);
-    int jaddr=(int)out;
+    jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,cs,(int)i_regs,is_delayslot,0);
     cop1_usable=1;
@@ -4214,6 +4232,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         char m1l=get_reg(i_regs->regmap,rs1[i]);
         char m2h=get_reg(i_regs->regmap,rs2[i]|64);
         char m2l=get_reg(i_regs->regmap,rs2[i]);
+        char hih,hil,loh,lol;
         assert(m1h>=0);
         assert(m2h>=0);
         assert(m1l>=0);
@@ -4227,12 +4246,12 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_popreg(m1h);
         emit_popreg(m2l);
         emit_popreg(m2h);
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
+        hih=get_reg(i_regs->regmap,HIREG|64);
+        hil=get_reg(i_regs->regmap,HIREG);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
+        loh=get_reg(i_regs->regmap,LOREG|64);
+        lol=get_reg(i_regs->regmap,LOREG);
         if(loh>=0) emit_loadreg(LOREG|64,loh);
         if(lol>=0) emit_loadreg(LOREG,lol);
       }
@@ -4298,6 +4317,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         char d1l=get_reg(i_regs->regmap,rs1[i]);
         char d2h=get_reg(i_regs->regmap,rs2[i]|64);
         char d2l=get_reg(i_regs->regmap,rs2[i]);
+        char hih,hil,loh,lol;
         assert(d1h>=0);
         assert(d2h>=0);
         assert(d1l>=0);
@@ -4321,10 +4341,10 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_readword_indexed(8,ESP,d2l);
         emit_readword_indexed(12,ESP,d2h);
         emit_addimm(ESP,16,ESP);
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
+        hih=get_reg(i_regs->regmap,HIREG|64);
+        hil=get_reg(i_regs->regmap,HIREG);
+        loh=get_reg(i_regs->regmap,LOREG|64);
+        lol=get_reg(i_regs->regmap,LOREG);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
         if(loh>=0) emit_loadreg(LOREG|64,loh);
@@ -4336,6 +4356,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         char d1l=get_reg(i_regs->regmap,rs1[i]);
         char d2h=get_reg(i_regs->regmap,rs2[i]|64);
         char d2l=get_reg(i_regs->regmap,rs2[i]);
+        char hih,hil,loh,lol;
         assert(d1h>=0);
         assert(d2h>=0);
         assert(d1l>=0);
@@ -4359,10 +4380,10 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_readword_indexed(8,ESP,d2l);
         emit_readword_indexed(12,ESP,d2h);
         emit_addimm(ESP,16,ESP);
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
+        hih=get_reg(i_regs->regmap,HIREG|64);
+        hil=get_reg(i_regs->regmap,HIREG);
+        loh=get_reg(i_regs->regmap,LOREG|64);
+        lol=get_reg(i_regs->regmap,LOREG);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
         if(loh>=0) emit_loadreg(LOREG|64,loh);
