@@ -2857,12 +2857,12 @@ static void do_writestub(int n)
   if(type==STOREB_STUB)
     emit_writebyte(rt,(int)&cpu_byte);
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&hword);
+    emit_writehword(rt,(int)&cpu_hword);
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&word);
+    emit_writeword(rt,(int)&cpu_word);
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&dword);
-    emit_writeword(r?rth:rt,(int)&dword+4);
+    emit_writeword(rt,(int)&cpu_dword);
+    emit_writeword(r?rth:rt,(int)&cpu_dword+4);
   }
   emit_pusha();
   ds=i_regs!=&regs[i];
@@ -2931,12 +2931,12 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(type==STOREB_STUB)
     emit_writebyte(rt,(int)&cpu_byte);
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&hword);
+    emit_writehword(rt,(int)&cpu_hword);
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&word);
+    emit_writeword(rt,(int)&cpu_word);
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&dword);
-    emit_writeword(target?rth:rt,(int)&dword+4);
+    emit_writeword(rt,(int)&cpu_dword);
+    emit_writeword(target?rth:rt,(int)&cpu_dword+4);
   }
   emit_pusha();
   if((signed int)addr>=(signed int)0xC0000000) {

@@ -390,7 +390,7 @@ DECLARE_INSTRUCTION(SH)
    long long int *lsrtp = PC->f.i.rt;
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
-   hword = (unsigned short)(*lsrtp & 0xFFFF);
+   cpu_hword = (unsigned short)(*lsrtp & 0xFFFF);
    write_hword_in_memory();
    CHECK_MEMORY();
 }
@@ -405,7 +405,7 @@ DECLARE_INSTRUCTION(SWL)
      {
       case 0:
     address = ((unsigned int) lsaddr) & 0xFFFFFFFC;
-    word = (unsigned int)*lsrtp;
+    cpu_word = (unsigned int)*lsrtp;
     write_word_in_memory();
     CHECK_MEMORY();
     break;
@@ -415,7 +415,7 @@ DECLARE_INSTRUCTION(SWL)
     read_word_in_memory();
     if(address)
       {
-         word = ((unsigned int)*lsrtp >> 8) | ((unsigned int) old_word & 0xFF000000);
+         cpu_word = ((unsigned int)*lsrtp >> 8) | ((unsigned int) old_word & 0xFF000000);
          write_word_in_memory();
          CHECK_MEMORY();
       }
@@ -426,7 +426,7 @@ DECLARE_INSTRUCTION(SWL)
     read_word_in_memory();
     if(address)
       {
-         word = ((unsigned int)*lsrtp >> 16) | ((unsigned int) old_word & 0xFFFF0000);
+         cpu_word = ((unsigned int)*lsrtp >> 16) | ((unsigned int) old_word & 0xFFFF0000);
          write_word_in_memory();
          CHECK_MEMORY();
       }
@@ -446,7 +446,7 @@ DECLARE_INSTRUCTION(SW)
    long long int *lsrtp = PC->f.i.rt;
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
-   word = (unsigned int)(*lsrtp & 0xFFFFFFFF);
+   cpu_word = (unsigned int)(*lsrtp & 0xFFFFFFFF);
    write_word_in_memory();
    CHECK_MEMORY();
 }
@@ -461,7 +461,7 @@ DECLARE_INSTRUCTION(SDL)
      {
       case 0:
     address = ((unsigned int) lsaddr) & 0xFFFFFFF8;
-    dword = *lsrtp;
+    cpu_dword = *lsrtp;
     write_dword_in_memory();
     CHECK_MEMORY();
     break;
@@ -471,7 +471,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 8)|(old_word & 0xFF00000000000000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 8)|(old_word & 0xFF00000000000000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -482,7 +482,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 16)|(old_word & 0xFFFF000000000000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 16)|(old_word & 0xFFFF000000000000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -493,7 +493,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 24)|(old_word & 0xFFFFFF0000000000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 24)|(old_word & 0xFFFFFF0000000000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -504,7 +504,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 32)|(old_word & 0xFFFFFFFF00000000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 32)|(old_word & 0xFFFFFFFF00000000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -515,7 +515,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 40)|(old_word & 0xFFFFFFFFFF000000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 40)|(old_word & 0xFFFFFFFFFF000000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -526,7 +526,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 48)|(old_word & 0xFFFFFFFFFFFF0000LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 48)|(old_word & 0xFFFFFFFFFFFF0000LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -537,7 +537,7 @@ DECLARE_INSTRUCTION(SDL)
     read_dword_in_memory();
     if(address)
       {
-         dword = ((unsigned long long)*lsrtp >> 56)|(old_word & 0xFFFFFFFFFFFFFF00LL);
+         cpu_dword = ((unsigned long long)*lsrtp >> 56)|(old_word & 0xFFFFFFFFFFFFFF00LL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -559,7 +559,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 56) | (old_word & 0x00FFFFFFFFFFFFFFLL);
+         cpu_dword = (*lsrtp << 56) | (old_word & 0x00FFFFFFFFFFFFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -570,7 +570,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 48) | (old_word & 0x0000FFFFFFFFFFFFLL);
+         cpu_dword = (*lsrtp << 48) | (old_word & 0x0000FFFFFFFFFFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -581,7 +581,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 40) | (old_word & 0x000000FFFFFFFFFFLL);
+         cpu_dword = (*lsrtp << 40) | (old_word & 0x000000FFFFFFFFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -592,7 +592,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 32) | (old_word & 0x00000000FFFFFFFFLL);
+         cpu_dword = (*lsrtp << 32) | (old_word & 0x00000000FFFFFFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -603,7 +603,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 24) | (old_word & 0x0000000000FFFFFFLL);
+         cpu_dword = (*lsrtp << 24) | (old_word & 0x0000000000FFFFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -614,7 +614,7 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 16) | (old_word & 0x000000000000FFFFLL);
+         cpu_dword = (*lsrtp << 16) | (old_word & 0x000000000000FFFFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
@@ -625,14 +625,14 @@ DECLARE_INSTRUCTION(SDR)
     read_dword_in_memory();
     if(address)
       {
-         dword = (*lsrtp << 8) | (old_word & 0x00000000000000FFLL);
+         cpu_dword = (*lsrtp << 8) | (old_word & 0x00000000000000FFLL);
          write_dword_in_memory();
          CHECK_MEMORY();
       }
     break;
       case 7:
     address = ((unsigned int) lsaddr) & 0xFFFFFFF8;
-    dword = *lsrtp;
+    cpu_dword = *lsrtp;
     write_dword_in_memory();
     CHECK_MEMORY();
     break;
@@ -653,7 +653,7 @@ DECLARE_INSTRUCTION(SWR)
     read_word_in_memory();
     if(address)
       {
-         word = ((unsigned int)*lsrtp << 24) | ((unsigned int) old_word & 0x00FFFFFF);
+         cpu_word = ((unsigned int)*lsrtp << 24) | ((unsigned int) old_word & 0x00FFFFFF);
          write_word_in_memory();
          CHECK_MEMORY();
       }
@@ -664,7 +664,7 @@ DECLARE_INSTRUCTION(SWR)
     read_word_in_memory();
     if(address)
       {
-         word = ((unsigned int)*lsrtp << 16) | ((unsigned int) old_word & 0x0000FFFF);
+         cpu_word = ((unsigned int)*lsrtp << 16) | ((unsigned int) old_word & 0x0000FFFF);
          write_word_in_memory();
          CHECK_MEMORY();
       }
@@ -675,14 +675,14 @@ DECLARE_INSTRUCTION(SWR)
     read_word_in_memory();
     if(address)
       {
-         word = ((unsigned int)*lsrtp << 8) | ((unsigned int) old_word & 0x000000FF);
+         cpu_word = ((unsigned int)*lsrtp << 8) | ((unsigned int) old_word & 0x000000FF);
          write_word_in_memory();
          CHECK_MEMORY();
       }
     break;
       case 3:
     address = ((unsigned int) lsaddr) & 0xFFFFFFFC;
-    word = (unsigned int)*lsrtp;
+    cpu_word = (unsigned int)*lsrtp;
     write_word_in_memory();
     CHECK_MEMORY();
     break;
@@ -752,7 +752,7 @@ DECLARE_INSTRUCTION(SC)
    if(llbit)
    {
       address = (unsigned int) lsaddr;
-      word = (unsigned int)(*lsrtp & 0xFFFFFFFF);
+      cpu_word = (unsigned int)(*lsrtp & 0xFFFFFFFF);
       write_word_in_memory();
       CHECK_MEMORY();
       llbit = 0;
@@ -771,7 +771,7 @@ DECLARE_INSTRUCTION(SWC1)
    if (check_cop1_unusable()) return;
    ADD_TO_PC(1);
    address = (unsigned int) lslfaddr;
-   word = *((int*)reg_cop1_simple[lslfft]);
+   cpu_word = *((int*)reg_cop1_simple[lslfft]);
    write_word_in_memory();
    CHECK_MEMORY();
 }
@@ -783,7 +783,7 @@ DECLARE_INSTRUCTION(SDC1)
    if (check_cop1_unusable()) return;
    ADD_TO_PC(1);
    address = (unsigned int) lslfaddr;
-   dword = *((unsigned long long*)reg_cop1_double[lslfft]);
+   cpu_dword = *((unsigned long long*)reg_cop1_double[lslfft]);
    write_dword_in_memory();
    CHECK_MEMORY();
 }
@@ -794,7 +794,7 @@ DECLARE_INSTRUCTION(SD)
    long long int *lsrtp = PC->f.i.rt;
    ADD_TO_PC(1);
    address = (unsigned int) lsaddr;
-   dword = *lsrtp;
+   cpu_dword = *lsrtp;
    write_dword_in_memory();
    CHECK_MEMORY();
 }

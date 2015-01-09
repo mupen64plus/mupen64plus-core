@@ -83,12 +83,12 @@
 	.hidden address
 	.global	readmem_dword
 	.hidden readmem_dword
-	.global	dword
-	.hidden dword
-	.global	word
-	.hidden word
-	.global	hword
-	.hidden hword
+	.global	cpu_dword
+	.hidden cpu_dword
+	.global	cpu_word
+	.hidden cpu_word
+	.global	cpu_hword
+	.hidden cpu_hword
 	.global	cpu_byte
 	.hidden cpu_byte
 	.global	branch_target
@@ -141,19 +141,19 @@ address = invc_ptr + 4
 readmem_dword = address + 4
 	.type	readmem_dword, %object
 	.size	readmem_dword, 8
-dword = readmem_dword + 8
-	.type	dword, %object
-	.size	dword, 8
-word = dword + 8
-	.type	word, %object
-	.size	word, 4
-hword = word + 4
-	.type	hword, %object
-	.size	hword, 2
-cpu_byte = hword + 2
+cpu_dword = readmem_dword + 8
+	.type	cpu_dword, %object
+	.size	cpu_dword, 8
+cpu_word = cpu_dword + 8
+	.type	cpu_word, %object
+	.size	cpu_word, 4
+cpu_hword = cpu_word + 4
+	.type	cpu_hword, %object
+	.size	cpu_hword, 2
+cpu_byte = cpu_hword + 2
 	.type	cpu_byte, %object
 	.size	cpu_byte, 1 /* 1 byte free */
-FCR0 = hword + 4
+FCR0 = cpu_hword + 4
 	.type	FCR0, %object
 	.size	FCR0, 4
 FCR31 = FCR0 + 4
@@ -933,7 +933,7 @@ invalidate_addr_call:
 write_rdram_new:
 	ldr	r3, [fp, #ram_offset-dynarec_local]
 	ldr	r2, [fp, #address-dynarec_local]
-	ldr	r0, [fp, #word-dynarec_local]
+	ldr	r0, [fp, #cpu_word-dynarec_local]
 	str	r0, [r2, r3, lsl #2]
 	b	.E12
 	.size	write_rdram_new, .-write_rdram_new
@@ -956,7 +956,7 @@ write_rdramb_new:
 write_rdramh_new:
 	ldr	r3, [fp, #ram_offset-dynarec_local]
 	ldr	r2, [fp, #address-dynarec_local]
-	ldrh	r0, [fp, #hword-dynarec_local]
+	ldrh	r0, [fp, #cpu_hword-dynarec_local]
 	eor	r2, r2, #2
 	lsl	r3, r3, #2
 	strh	r0, [r2, r3]
@@ -969,9 +969,9 @@ write_rdramh_new:
 write_rdramd_new:
 	ldr	r3, [fp, #ram_offset-dynarec_local]
 	ldr	r2, [fp, #address-dynarec_local]
-/*	ldrd	r0, [fp, #dword-dynarec_local]*/
-	ldr	r0, [fp, #dword-dynarec_local]
-	ldr	r1, [fp, #dword+4-dynarec_local]
+/*	ldrd	r0, [fp, #cpu_dword-dynarec_local]*/
+	ldr	r0, [fp, #cpu_dword-dynarec_local]
+	ldr	r1, [fp, #cpu_dword+4-dynarec_local]
 	add	r3, r2, r3, lsl #2
 	str	r0, [r3, #4]
 	str	r1, [r3]
@@ -1078,7 +1078,7 @@ write_nomem_new:
 	mov	r1, #0xc
 	tst	r12, #0x40000000
 	bne	tlb_exception
-	ldr	r0, [fp, #word-dynarec_local]
+	ldr	r0, [fp, #cpu_word-dynarec_local]
 	str	r0, [r2, r12, lsl #2]
 	mov	pc, lr
 	.size	write_nomem_new, .-write_nomem_new
@@ -1122,7 +1122,7 @@ write_nomemh_new:
 	lsls	r12, #2
 	bcs	tlb_exception
 	eor	r2, r2, #2
-	ldrh	r0, [fp, #hword-dynarec_local]
+	ldrh	r0, [fp, #cpu_hword-dynarec_local]
 	strh	r0, [r2, r12]
 	mov	pc, lr
 	.size	write_nomemh_new, .-write_nomemh_new
@@ -1144,8 +1144,8 @@ write_nomemd_new:
 	lsls	r12, #2
 	bcs	tlb_exception
 	add	r3, r2, #4
-	ldr	r0, [fp, #dword+4-dynarec_local]
-	ldr	r1, [fp, #dword-dynarec_local]
+	ldr	r0, [fp, #cpu_dword+4-dynarec_local]
+	ldr	r1, [fp, #cpu_dword-dynarec_local]
 /*	strd	r0, [r2, r12]*/
 	str	r0, [r2, r12]
 	str	r1, [r3, r12]

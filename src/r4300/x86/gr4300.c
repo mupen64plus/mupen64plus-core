@@ -1612,7 +1612,7 @@ void gensh(void)
    
    mov_m32_imm32((unsigned int *)(&PC), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_m16_reg16((unsigned short *)(&hword), CX); // 7
+   mov_m16_reg16((unsigned short *)(&cpu_hword), CX); // 7
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)writememh); // 7
    call_reg32(EBX); // 2
@@ -1674,7 +1674,7 @@ void gensw(void)
    
    mov_m32_imm32((unsigned int *)(&PC), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_m32_reg32((unsigned int *)(&word), ECX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_word), ECX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)writemem); // 7
    call_reg32(EBX); // 2
@@ -1885,7 +1885,7 @@ void genswc1(void)
    
    mov_m32_imm32((unsigned int *)(&PC), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_m32_reg32((unsigned int *)(&word), ECX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_word), ECX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)writemem); // 7
    call_reg32(EBX); // 2
@@ -1943,8 +1943,8 @@ void gensdc1(void)
    
    mov_m32_imm32((unsigned int *)(&PC), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_m32_reg32((unsigned int *)(&dword), ECX); // 6
-   mov_m32_reg32((unsigned int *)(&dword)+1, EDX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_dword), ECX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_dword)+1, EDX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)writememd); // 7
    call_reg32(EBX); // 2
@@ -2003,8 +2003,8 @@ void gensd(void)
    
    mov_m32_imm32((unsigned int *)(&PC), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_m32_reg32((unsigned int *)(&dword), ECX); // 6
-   mov_m32_reg32((unsigned int *)(&dword)+1, EDX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_dword), ECX); // 6
+   mov_m32_reg32((unsigned int *)(&cpu_dword)+1, EDX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)writememd); // 7
    call_reg32(EBX); // 2
