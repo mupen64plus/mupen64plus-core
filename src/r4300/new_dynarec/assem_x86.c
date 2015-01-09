@@ -28,9 +28,12 @@ int branch_target;
 uint64_t readmem_dword;
 static precomp_instr fake_pc;
 u_int memory_map[1048576];
-static u_int mini_ht[32][2]  __attribute__((aligned(8)));
-u_char restore_candidate[512]  __attribute__((aligned(4)));
+ALIGN(8, static u_int mini_ht[32][2]);
+ALIGN(4, u_char restore_candidate[512]);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void do_interrupt();
 void jump_vaddr_eax();
 void jump_vaddr_ecx();
@@ -38,6 +41,9 @@ void jump_vaddr_edx();
 void jump_vaddr_ebx();
 void jump_vaddr_ebp();
 void jump_vaddr_edi();
+#ifdef __cplusplus
+}
+#endif
 
 static const u_int jump_vaddr_reg[8] = {
   (int)jump_vaddr_eax,
@@ -49,6 +55,9 @@ static const u_int jump_vaddr_reg[8] = {
   0,
   (int)jump_vaddr_edi };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 void invalidate_block_eax();
 void invalidate_block_ecx();
 void invalidate_block_edx();
@@ -56,6 +65,9 @@ void invalidate_block_ebx();
 void invalidate_block_ebp();
 void invalidate_block_esi();
 void invalidate_block_edi();
+#ifdef __cplusplus
+}
+#endif
 
 static const u_int invalidate_block_reg[8] = {
   (int)invalidate_block_eax,
@@ -104,13 +116,13 @@ static void set_jump_target(int addr,int target)
 
 static void *kill_pointer(void *stub)
 {
-  int *i_ptr=*((int **)(stub+6));
+  int *i_ptr=*((int **)((int)stub+6));
   *i_ptr=(int)stub-(int)i_ptr-4;
   return i_ptr;
 }
 static int get_pointer(void *stub)
 {
-  int *i_ptr=*((int **)(stub+6));
+  int *i_ptr=*((int **)((int)stub+6));
   return *i_ptr+(int)i_ptr+4;
 }
 
@@ -741,7 +753,7 @@ static void multdiv_alloc_x86(struct regstat *current,int i)
 
 /* Assembler */
 
-static const char const regname[8][4] = {
+static const char regname[8][4] = {
  "eax",
  "ecx",
  "edx",
@@ -2698,7 +2710,7 @@ static void do_readstub(int n)
   // but not doing so causes random crashes...
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2793,7 +2805,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   // but not doing so causes random crashes...
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(adj+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2899,7 +2911,7 @@ static void do_writestub(int n)
   emit_callreg(addr);
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -2982,7 +2994,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_call(((u_int *)ftable)[addr>>16]);
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(adj+1),HOST_CCREG);
+  emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
   emit_storereg(CCREG,HOST_CCREG);
@@ -3506,7 +3518,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     if(copr==9||copr==11||copr==12) {
       emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((int)&next_interupt,ECX);
-      emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
+      emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_sub(HOST_CCREG,ECX,HOST_CCREG);
       emit_writeword(ECX,(int)&last_count);
       emit_storereg(CCREG,HOST_CCREG);
