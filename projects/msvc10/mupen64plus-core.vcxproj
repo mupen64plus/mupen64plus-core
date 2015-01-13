@@ -343,11 +343,11 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath) -dWIN32</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">$(IntDir)linkage_x86.obj</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath) -dWIN32</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath) -dWIN32</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath) -dWIN32</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)linkage_x86.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)linkage_x86.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">$(IntDir)linkage_x86.obj</Outputs>

@@ -161,7 +161,7 @@ ifeq ($(OS), FREEBSD)
   SONAME = libmupen64plus$(POSTFIX).so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -L${LOCALBASE}/lib -lc
-  ASFLAGS = -f elf
+  ASFLAGS = -f elf -d ELF_TYPE
 endif
 ifeq ($(OS), LINUX)
   TARGET = libmupen64plus$(POSTFIX).so.2.0.0
@@ -170,7 +170,7 @@ ifeq ($(OS), LINUX)
   LDLIBS += -ldl
   # only export api symbols
   LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
-  ASFLAGS = -f elf
+  ASFLAGS = -f elf -d ELF_TYPE
 endif
 ifeq ($(OS), OSX)
   #xcode-select has been around since XCode 3.0, i.e. OS X 10.5
