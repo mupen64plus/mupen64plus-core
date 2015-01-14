@@ -53,6 +53,12 @@
 #define MAX_OUTPUT_BLOCK_SIZE 262144
 #define CLOCK_DIVIDER count_per_op
 
+uint32_t address;
+uint8_t cpu_byte;
+uint16_t hword;
+uint32_t word;
+uint64_t dword;
+
 void *base_addr;
 
 struct regstat
@@ -242,18 +248,10 @@ static void invalidate_addr(u_int addr);
 // TLB
 void TLBWI_new();
 void TLBWR_new();
-void read_nomem_new();
-void read_nomemb_new();
-void read_nomemh_new();
-void read_nomemd_new();
-void write_nomem_new();
-void write_nomemb_new();
-void write_nomemh_new();
-void write_nomemd_new();
-void write_rdram_new();
-void write_rdramb_new();
-void write_rdramh_new();
-void write_rdramd_new();
+int read_nomem_new(uint32_t,uint32_t*);
+int write_nomem_new(uint32_t,uint32_t,uint32_t);
+int read_rdram_new(uint32_t,uint32_t*);
+int write_rdram_new(uint32_t,uint32_t,uint32_t);
 extern u_int memory_map[1048576];
 
 // Needed by assembler
@@ -7577,7 +7575,6 @@ void new_dynarec_init()
 #endif
   out=(u_char *)base_addr;
 
-  rdword=&readmem_dword;
   fake_pc.f.r.rs=(long long int *)&readmem_dword;
   fake_pc.f.r.rt=(long long int *)&readmem_dword;
   fake_pc.f.r.rd=(long long int *)&readmem_dword;
@@ -7606,30 +7603,13 @@ void new_dynarec_init()
   for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
     memory_map[n]=-1;
   for(n=0;n<0x8000;n++) { // 0 .. 0x7FFFFFFF
-    writemem[n] = write_nomem_new;
-    writememb[n] = write_nomemb_new;
-    writememh[n] = write_nomemh_new;
-    writememd[n] = write_nomemd_new;
-    readmem[n] = read_nomem_new;
-    readmemb[n] = read_nomemb_new;
-    readmemh[n] = read_nomemh_new;
-    readmemd[n] = read_nomemd_new;
+    map_region(n, M64P_MEM_NOMEM, read_nomem_new, write_nomem_new);
   }
   for(n=0x8000;n<0x8080;n++) { // 0x80000000 .. 0x807FFFFF
-    writemem[n] = write_rdram_new;
-    writememb[n] = write_rdramb_new;
-    writememh[n] = write_rdramh_new;
-    writememd[n] = write_rdramd_new;
+    map_region(n, M64P_MEM_RDRAM, read_rdram_new, write_rdram_new);
   }
   for(n=0xC000;n<0x10000;n++) { // 0xC0000000 .. 0xFFFFFFFF
-    writemem[n] = write_nomem_new;
-    writememb[n] = write_nomemb_new;
-    writememh[n] = write_nomemh_new;
-    writememd[n] = write_nomemd_new;
-    readmem[n] = read_nomem_new;
-    readmemb[n] = read_nomemb_new;
-    readmemh[n] = read_nomemh_new;
-    readmemd[n] = read_nomemd_new;
+    map_region(n, M64P_MEM_NOMEM, read_nomem_new, write_nomem_new);
   }
   tlb_hacks();
   arch_init();
