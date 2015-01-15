@@ -759,29 +759,27 @@ m64p_error main_run(void)
         count_per_op = ROM_PARAMS.countperop;
     cheat_add_hacks();
 
-    // initialize memory, and do byte-swapping if it's not been done yet
+    /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)
     {
-        init_memory(1);
+        swap_buffer(rom, 4, rom_size/4);
         g_MemHasBeenBSwapped = 1;
     }
-    else
-    {
-        init_memory(0);
-    }
+
+    init_memory();
 
     // Attach rom to plugins
     if (!gfx.romOpen())
     {
-        free_memory(); return M64ERR_PLUGIN_FAIL;
+        return M64ERR_PLUGIN_FAIL;
     }
     if (!audio.romOpen())
     {
-        gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
     }
     if (!input.romOpen())
     {
-        audio.romClosed(); gfx.romClosed(); free_memory(); return M64ERR_PLUGIN_FAIL;
+        audio.romClosed(); gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
     }
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
@@ -838,7 +836,6 @@ m64p_error main_run(void)
     input.romClosed();
     audio.romClosed();
     gfx.romClosed();
-    free_memory();
 
     // clean up
     g_EmulatorRunning = 0;

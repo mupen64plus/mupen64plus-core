@@ -32,7 +32,7 @@ int reset_hard_job = 0;
 
 void reset_hard(void)
 {
-    init_memory(0);
+    init_memory();
     r4300_reset_hard();
     r4300_reset_soft();
     last_addr = 0xa4000040;

@@ -66,35 +66,35 @@ static SDL_mutex *cheat_mutex = NULL;
 // private functions
 static unsigned short read_address_16bit(unsigned int address)
 {
-    return *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S16)));
+    return *(unsigned short *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S16)));
 }
 
 static unsigned char read_address_8bit(unsigned int address)
 {
-    return *(unsigned char *)((rdramb + ((address & 0xFFFFFF)^S8)));
+    return *(unsigned char *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S8)));
 }
 
 static void update_address_16bit(unsigned int address, unsigned short new_value)
 {
-    *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S16))) = new_value;
+    *(unsigned short *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S16))) = new_value;
 }
 
 static void update_address_8bit(unsigned int address, unsigned char new_value)
 {
-    *(unsigned char *)((rdramb + ((address & 0xFFFFFF)^S8))) = new_value;
+    *(unsigned char *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S8))) = new_value;
 }
 
 static int address_equal_to_8bit(unsigned int address, unsigned char value)
 {
     unsigned char value_read;
-    value_read = *(unsigned char *)((rdramb + ((address & 0xFFFFFF)^S8)));
+    value_read = *(unsigned char *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S8)));
     return value_read == value;
 }
 
 static int address_equal_to_16bit(unsigned int address, unsigned short value)
 {
     unsigned short value_read;
-    value_read = *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S16)));
+    value_read = *(unsigned short *)(((unsigned char*)g_rdram + ((address & 0xFFFFFF)^S16)));
     return value_read == value;
 }
 

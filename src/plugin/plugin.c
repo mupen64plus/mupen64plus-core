@@ -225,32 +225,32 @@ static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
     gfx_info.HEADER = (unsigned char *) rom;
-    gfx_info.RDRAM = (unsigned char *) rdram;
-    gfx_info.DMEM = (unsigned char *) SP_DMEM;
-    gfx_info.IMEM = (unsigned char *) SP_IMEM;
-    gfx_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
-    gfx_info.DPC_START_REG = &(dpc_register.dpc_start);
-    gfx_info.DPC_END_REG = &(dpc_register.dpc_end);
-    gfx_info.DPC_CURRENT_REG = &(dpc_register.dpc_current);
-    gfx_info.DPC_STATUS_REG = &(dpc_register.dpc_status);
-    gfx_info.DPC_CLOCK_REG = &(dpc_register.dpc_clock);
-    gfx_info.DPC_BUFBUSY_REG = &(dpc_register.dpc_bufbusy);
-    gfx_info.DPC_PIPEBUSY_REG = &(dpc_register.dpc_pipebusy);
-    gfx_info.DPC_TMEM_REG = &(dpc_register.dpc_tmem);
-    gfx_info.VI_STATUS_REG = &(vi_register.vi_status);
-    gfx_info.VI_ORIGIN_REG = &(vi_register.vi_origin);
-    gfx_info.VI_WIDTH_REG = &(vi_register.vi_width);
-    gfx_info.VI_INTR_REG = &(vi_register.vi_v_intr);
-    gfx_info.VI_V_CURRENT_LINE_REG = &(vi_register.vi_current);
-    gfx_info.VI_TIMING_REG = &(vi_register.vi_burst);
-    gfx_info.VI_V_SYNC_REG = &(vi_register.vi_v_sync);
-    gfx_info.VI_H_SYNC_REG = &(vi_register.vi_h_sync);
-    gfx_info.VI_LEAP_REG = &(vi_register.vi_leap);
-    gfx_info.VI_H_START_REG = &(vi_register.vi_h_start);
-    gfx_info.VI_V_START_REG = &(vi_register.vi_v_start);
-    gfx_info.VI_V_BURST_REG = &(vi_register.vi_v_burst);
-    gfx_info.VI_X_SCALE_REG = &(vi_register.vi_x_scale);
-    gfx_info.VI_Y_SCALE_REG = &(vi_register.vi_y_scale);
+    gfx_info.RDRAM = (unsigned char *) g_rdram;
+    gfx_info.DMEM = (unsigned char *) g_sp_mem;
+    gfx_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
+    gfx_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
+    gfx_info.DPC_START_REG = &(g_dpc_regs[DPC_START_REG]);
+    gfx_info.DPC_END_REG = &(g_dpc_regs[DPC_END_REG]);
+    gfx_info.DPC_CURRENT_REG = &(g_dpc_regs[DPC_CURRENT_REG]);
+    gfx_info.DPC_STATUS_REG = &(g_dpc_regs[DPC_STATUS_REG]);
+    gfx_info.DPC_CLOCK_REG = &(g_dpc_regs[DPC_CLOCK_REG]);
+    gfx_info.DPC_BUFBUSY_REG = &(g_dpc_regs[DPC_BUFBUSY_REG]);
+    gfx_info.DPC_PIPEBUSY_REG = &(g_dpc_regs[DPC_PIPEBUSY_REG]);
+    gfx_info.DPC_TMEM_REG = &(g_dpc_regs[DPC_TMEM_REG]);
+    gfx_info.VI_STATUS_REG = &(g_vi_regs[VI_STATUS_REG]);
+    gfx_info.VI_ORIGIN_REG = &(g_vi_regs[VI_ORIGIN_REG]);
+    gfx_info.VI_WIDTH_REG = &(g_vi_regs[VI_WIDTH_REG]);
+    gfx_info.VI_INTR_REG = &(g_vi_regs[VI_V_INTR_REG]);
+    gfx_info.VI_V_CURRENT_LINE_REG = &(g_vi_regs[VI_CURRENT_REG]);
+    gfx_info.VI_TIMING_REG = &(g_vi_regs[VI_BURST_REG]);
+    gfx_info.VI_V_SYNC_REG = &(g_vi_regs[VI_V_SYNC_REG]);
+    gfx_info.VI_H_SYNC_REG = &(g_vi_regs[VI_H_SYNC_REG]);
+    gfx_info.VI_LEAP_REG = &(g_vi_regs[VI_LEAP_REG]);
+    gfx_info.VI_H_START_REG = &(g_vi_regs[VI_H_START_REG]);
+    gfx_info.VI_V_START_REG = &(g_vi_regs[VI_V_START_REG]);
+    gfx_info.VI_V_BURST_REG = &(g_vi_regs[VI_V_BURST_REG]);
+    gfx_info.VI_X_SCALE_REG = &(g_vi_regs[VI_X_SCALE_REG]);
+    gfx_info.VI_Y_SCALE_REG = &(g_vi_regs[VI_Y_SCALE_REG]);
     gfx_info.CheckInterrupts = EmptyFunc;
 
     /* call the audio plugin */
@@ -317,16 +317,16 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.RDRAM = (unsigned char *) rdram;
-    audio_info.DMEM = (unsigned char *) SP_DMEM;
-    audio_info.IMEM = (unsigned char *) SP_IMEM;
-    audio_info.MI_INTR_REG = &(MI_register.mi_intr_reg);
-    audio_info.AI_DRAM_ADDR_REG = &(ai_register.ai_dram_addr);
-    audio_info.AI_LEN_REG = &(ai_register.ai_len);
-    audio_info.AI_CONTROL_REG = &(ai_register.ai_control);
+    audio_info.RDRAM = (unsigned char *) g_rdram;
+    audio_info.DMEM = (unsigned char *) g_sp_mem;
+    audio_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
+    audio_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
+    audio_info.AI_DRAM_ADDR_REG = &(g_ai_regs[AI_DRAM_ADDR_REG]);
+    audio_info.AI_LEN_REG = &(g_ai_regs[AI_LEN_REG]);
+    audio_info.AI_CONTROL_REG = &(g_ai_regs[AI_CONTROL_REG]);
     audio_info.AI_STATUS_REG = &dummy;
-    audio_info.AI_DACRATE_REG = &(ai_register.ai_dacrate);
-    audio_info.AI_BITRATE_REG = &(ai_register.ai_bitrate);
+    audio_info.AI_DACRATE_REG = &(g_ai_regs[AI_DACRATE_REG]);
+    audio_info.AI_BITRATE_REG = &(g_ai_regs[AI_BITRATE_REG]);
     audio_info.CheckInterrupts = EmptyFunc;
 
     /* call the audio plugin */
@@ -463,27 +463,27 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_rsp(void)
 {
     /* fill in the RSP_INFO data structure */
-    rsp_info.RDRAM = (unsigned char *) rdram;
-    rsp_info.DMEM = (unsigned char *) SP_DMEM;
-    rsp_info.IMEM = (unsigned char *) SP_IMEM;
-    rsp_info.MI_INTR_REG = &MI_register.mi_intr_reg;
-    rsp_info.SP_MEM_ADDR_REG = &sp_register.sp_mem_addr_reg;
-    rsp_info.SP_DRAM_ADDR_REG = &sp_register.sp_dram_addr_reg;
-    rsp_info.SP_RD_LEN_REG = &sp_register.sp_rd_len_reg;
-    rsp_info.SP_WR_LEN_REG = &sp_register.sp_wr_len_reg;
-    rsp_info.SP_STATUS_REG = &sp_register.sp_status_reg;
-    rsp_info.SP_DMA_FULL_REG = &sp_register.sp_dma_full_reg;
-    rsp_info.SP_DMA_BUSY_REG = &sp_register.sp_dma_busy_reg;
-    rsp_info.SP_PC_REG = &rsp_register.rsp_pc;
-    rsp_info.SP_SEMAPHORE_REG = &sp_register.sp_semaphore_reg;
-    rsp_info.DPC_START_REG = &dpc_register.dpc_start;
-    rsp_info.DPC_END_REG = &dpc_register.dpc_end;
-    rsp_info.DPC_CURRENT_REG = &dpc_register.dpc_current;
-    rsp_info.DPC_STATUS_REG = &dpc_register.dpc_status;
-    rsp_info.DPC_CLOCK_REG = &dpc_register.dpc_clock;
-    rsp_info.DPC_BUFBUSY_REG = &dpc_register.dpc_bufbusy;
-    rsp_info.DPC_PIPEBUSY_REG = &dpc_register.dpc_pipebusy;
-    rsp_info.DPC_TMEM_REG = &dpc_register.dpc_tmem;
+    rsp_info.RDRAM = (unsigned char *) g_rdram;
+    rsp_info.DMEM = (unsigned char *) g_sp_mem;
+    rsp_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
+    rsp_info.MI_INTR_REG = &g_mi_regs[MI_INTR_REG];
+    rsp_info.SP_MEM_ADDR_REG = &g_sp_regs[SP_MEM_ADDR_REG];
+    rsp_info.SP_DRAM_ADDR_REG = &g_sp_regs[SP_DRAM_ADDR_REG];
+    rsp_info.SP_RD_LEN_REG = &g_sp_regs[SP_RD_LEN_REG];
+    rsp_info.SP_WR_LEN_REG = &g_sp_regs[SP_WR_LEN_REG];
+    rsp_info.SP_STATUS_REG = &g_sp_regs[SP_STATUS_REG];
+    rsp_info.SP_DMA_FULL_REG = &g_sp_regs[SP_DMA_FULL_REG];
+    rsp_info.SP_DMA_BUSY_REG = &g_sp_regs[SP_DMA_BUSY_REG];
+    rsp_info.SP_PC_REG = &g_sp_regs2[SP_PC_REG];
+    rsp_info.SP_SEMAPHORE_REG = &g_sp_regs[SP_SEMAPHORE_REG];
+    rsp_info.DPC_START_REG = &g_dpc_regs[DPC_START_REG];
+    rsp_info.DPC_END_REG = &g_dpc_regs[DPC_END_REG];
+    rsp_info.DPC_CURRENT_REG = &g_dpc_regs[DPC_CURRENT_REG];
+    rsp_info.DPC_STATUS_REG = &g_dpc_regs[DPC_STATUS_REG];
+    rsp_info.DPC_CLOCK_REG = &g_dpc_regs[DPC_CLOCK_REG];
+    rsp_info.DPC_BUFBUSY_REG = &g_dpc_regs[DPC_BUFBUSY_REG];
+    rsp_info.DPC_PIPEBUSY_REG = &g_dpc_regs[DPC_PIPEBUSY_REG];
+    rsp_info.DPC_TMEM_REG = &g_dpc_regs[DPC_TMEM_REG];
     rsp_info.CheckInterrupts = EmptyFunc;
     rsp_info.ProcessDlistList = gfx.processDList;
     rsp_info.ProcessAlistList = audio.processAList;

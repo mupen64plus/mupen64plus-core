@@ -156,18 +156,18 @@ static unsigned int get_tv_type(void)
 
 static unsigned int get_cic_seed(void)
 {
-    switch(CIC_Chip)
+    switch(g_cic_type)
     {
         default:
-            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", CIC_Chip);
-        case 1:
-        case 2:
+            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", g_cic_type);
+        case CIC_X101:
+        case CIC_X102:
             return 0x3f;
-        case 3:
+        case CIC_X103:
             return 0x78;
-        case 5:
+        case CIC_X105:
             return 0x91;
-        case 6:
+        case CIC_X106:
             return 0x85;
     }
 }
@@ -185,25 +185,25 @@ void r4300_reset_soft(void)
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-    sp_register.sp_status_reg = 1;
-    rsp_register.rsp_pc = 0;
+    g_sp_regs[SP_STATUS_REG] = 1;
+    g_sp_regs2[SP_PC_REG] = 0;
 
-    pi_register.pi_bsd_dom1_lat_reg = (bsd_dom1_config      ) & 0xff;
-    pi_register.pi_bsd_dom1_pwd_reg = (bsd_dom1_config >>  8) & 0xff;
-    pi_register.pi_bsd_dom1_pgs_reg = (bsd_dom1_config >> 16) & 0x0f;
-    pi_register.pi_bsd_dom1_rls_reg = (bsd_dom1_config >> 20) & 0x03;
-    pi_register.read_pi_status_reg = 0;
+    g_pi_regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
+    g_pi_regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
+    g_pi_regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
+    g_pi_regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
+    g_pi_regs[PI_STATUS_REG] = 0;
 
-    ai_register.ai_dram_addr = 0;
-    ai_register.ai_len = 0;
+    g_ai_regs[AI_DRAM_ADDR_REG] = 0;
+    g_ai_regs[AI_LEN_REG] = 0;
 
-    vi_register.vi_v_intr = 1023;
-    vi_register.vi_current = 0;
-    vi_register.vi_h_start = 0;
+    g_vi_regs[VI_V_INTR_REG] = 1023;
+    g_vi_regs[VI_CURRENT_REG] = 0;
+    g_vi_regs[VI_H_START_REG] = 0;
 
-    MI_register.mi_intr_reg &= ~(0x10 | 0x8 | 0x4 | 0x1);
+    g_mi_regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
 
-    memcpy((unsigned char*)SP_DMEM+0x40, rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_sp_mem+0x40, rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
@@ -212,14 +212,14 @@ void r4300_reset_soft(void)
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    SP_IMEM[0] = 0x3c0dbfc0;
-    SP_IMEM[1] = 0x8da807fc;
-    SP_IMEM[2] = 0x25ad07c0;
-    SP_IMEM[3] = 0x31080080;
-    SP_IMEM[4] = 0x5500fffc;
-    SP_IMEM[5] = 0x3c0dbfc0;
-    SP_IMEM[6] = 0x8da80024;
-    SP_IMEM[7] = 0x3c0bb000;
+    g_sp_mem[0x1000/4] = 0x3c0dbfc0;
+    g_sp_mem[0x1004/4] = 0x8da807fc;
+    g_sp_mem[0x1008/4] = 0x25ad07c0;
+    g_sp_mem[0x100c/4] = 0x31080080;
+    g_sp_mem[0x1010/4] = 0x5500fffc;
+    g_sp_mem[0x1014/4] = 0x3c0dbfc0;
+    g_sp_mem[0x1018/4] = 0x8da80024;
+    g_sp_mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = 0xffffffffa4000040ULL; /* t3 */
