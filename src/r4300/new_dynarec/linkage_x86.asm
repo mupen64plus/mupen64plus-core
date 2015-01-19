@@ -101,7 +101,7 @@ cextern hi
 cextern lo
 cextern invalidate_block
 cextern address
-cextern rdram
+cextern g_rdram
 cextern cpu_byte
 cextern cpu_hword
 cextern cpu_word
@@ -671,29 +671,29 @@ invalidate_block_call:
 write_rdram_new:
     mov     edi,    [address]
     mov     ecx,    [cpu_word]
-    mov     [rdram-0x80000000+edi],    ecx
+    mov     [g_rdram-0x80000000+edi],    ecx
     jmp     _E12
 
 write_rdramb_new:
     mov     edi,    [address]
     xor     edi,    3
     mov     cl,     BYTE [cpu_byte]
-    mov     BYTE [rdram-0x80000000+edi],    cl
+    mov     BYTE [g_rdram-0x80000000+edi],    cl
     jmp     _E12
 
 write_rdramh_new:
     mov     edi,    [address]
     xor     edi,    2
     mov     cx,     WORD [cpu_hword]
-    mov     WORD [rdram-0x80000000+edi],    cx
+    mov     WORD [g_rdram-0x80000000+edi],    cx
     jmp     _E12
 
 write_rdramd_new:
     mov     edi,    [address]
     mov     ecx,    [cpu_dword+4]
     mov     edx,    [cpu_dword+0]
-    mov     [rdram-0x80000000+edi],      ecx
-    mov     [rdram-0x80000000+4+edi],    edx
+    mov     [g_rdram-0x80000000+edi],      ecx
+    mov     [g_rdram-0x80000000+4+edi],    edx
     jmp     _E12
 
 
