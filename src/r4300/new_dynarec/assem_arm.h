@@ -13,6 +13,7 @@
 //#define REG_PREFETCH 1
 #define HAVE_CONDITIONAL_CALL 1
 #define RAM_OFFSET 1
+//#define HAVE_INTEGER_DIVIDE 1
 
 /* ARM calling convention:
    r0-r3, r12: caller-save
