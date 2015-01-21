@@ -198,6 +198,14 @@ static void write_pif(void);
 static void write_pifb(void);
 static void write_pifh(void);
 static void write_pifd(void);
+static void read_dd(void);
+static void read_ddb(void);
+static void read_ddh(void);
+static void read_ddd(void);
+static void write_dd(void);
+static void write_ddb(void);
+static void write_ddh(void);
+static void write_ddd(void);
 
 /* definitions of the rcp's structures and memory area */
 uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
@@ -687,7 +695,16 @@ int init_memory(void)
     /* map SI registers */
     map_region(0x8480, M64P_MEM_SI, RW(si));
     map_region(0xa480, M64P_MEM_SI, RW(si));
-    for(i = 0x481; i < 0x800; ++i)
+    for(i = 0x481; i < 0x500; ++i)
+    {
+        map_region(0x8000+i, M64P_MEM_NOTHING, RW(nothing));
+        map_region(0xa000+i, M64P_MEM_NOTHING, RW(nothing));
+    }
+
+    /* map DD regsiters */
+    map_region(0x8500, M64P_MEM_NOTHING, RW(dd));
+    map_region(0xa500, M64P_MEM_NOTHING, RW(dd));
+    for(i = 0x501; i < 0x800; ++i)
     {
         map_region(0x8000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xa000+i, M64P_MEM_NOTHING, RW(nothing));
@@ -1160,8 +1177,7 @@ static void pre_framebuffer_write(uint32_t address, size_t size)
 
 static void read_nothing(void)
 {
-    if (address == 0xa5000508) *rdword = 0xFFFFFFFF;
-    else *rdword = 0;
+    *rdword = 0;
 }
 
 static void read_nothingb(void)
@@ -2544,6 +2560,63 @@ static void write_pifh(void)
 static void write_pifd(void)
 {
     writed(write_pif_ram, NULL, address, dword);
+}
+
+/* HACK: just to get F-Zero to boot
+ * TODO: implement a real DD module
+ */
+static int read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
+{
+    *value = (address == 0xa5000508)
+           ? 0xffffffff
+           : 0x00000000;
+
+    return 0;
+}
+
+static int write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    return 0;
+}
+
+static void read_dd(void)
+{
+    readw(read_dd_regs, NULL, address, rdword);
+}
+
+static void read_ddb(void)
+{
+    readb(read_dd_regs, NULL, address, rdword);
+}
+
+static void read_ddh(void)
+{
+    readh(read_dd_regs, NULL, address, rdword);
+}
+
+static void read_ddd(void)
+{
+    readd(read_dd_regs, NULL, address, rdword);
+}
+
+static void write_dd(void)
+{
+    writew(write_dd_regs, NULL, address, word);
+}
+
+static void write_ddb(void)
+{
+    writeb(write_dd_regs, NULL, address, cpu_byte);
+}
+
+static void write_ddh(void)
+{
+    writeh(write_dd_regs, NULL, address, hword);
+}
+
+static void write_ddd(void)
+{
+    writed(write_dd_regs, NULL, address, dword);
 }
 
 unsigned int *fast_mem_access(unsigned int address)
