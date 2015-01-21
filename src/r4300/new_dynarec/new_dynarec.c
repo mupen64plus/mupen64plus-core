@@ -58,6 +58,7 @@ extern "C" {
 #if NEW_DYNAREC == NEW_DYNAREC_X86
 #include "assem_x86.h"
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
+#include "arm_cpu_features.h"
 #include "assem_arm.h"
 #else
 #error Unsupported dynarec architecture

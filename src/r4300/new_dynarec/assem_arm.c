@@ -2095,18 +2095,18 @@ static void emit_smlal(u_int rs1, u_int rs2, u_int hi, u_int lo)
   output_w32(0xe0e00090|(hi<<16)|(lo<<12)|(rs2<<8)|rs1);
 }
 
-#ifdef HAVE_INTEGER_DIVIDE
 static void emit_sdiv(u_int rs1,u_int rs2,u_int rt)
 {
+  assert(arm_cpu_features.IDIVa);
   assem_debug("sdiv %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe710f010|(rt<<16)|(rs2<<8)|rs1);
 }
 static void emit_udiv(u_int rs1,u_int rs2,u_int rt)
 {
+  assert(arm_cpu_features.IDIVa);
   assem_debug("udiv %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe730f010|(rt<<16)|(rs2<<8)|rs1);
 }
-#endif
 
 static void emit_clz(int rs,int rt)
 {
@@ -4166,32 +4166,36 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         signed char remainder=get_reg(i_regs->regmap,HIREG);
         assert(quotient>=0);
         assert(remainder>=0);
-#ifdef HAVE_INTEGER_DIVIDE
-        emit_test(d2,d2);
-        emit_jeq((int)out+16); // Division by zero
-        emit_sdiv(d1,d2,quotient);
-        emit_mul(quotient,d2,remainder);
-        emit_sub(d1,remainder,remainder);
-#else
-        emit_movs(d1,remainder);
-        emit_negmi(remainder,remainder);
-        emit_movs(d2,HOST_TEMPREG);
-        emit_jeq((int)out+52); // Division by zero
-        emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
-        emit_clz(HOST_TEMPREG,quotient);
-        emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
-        emit_orimm(quotient,1<<31,quotient);
-        emit_shr(quotient,quotient,quotient);
-        emit_cmp(remainder,HOST_TEMPREG);
-        emit_subcs(remainder,HOST_TEMPREG,remainder);
-        emit_adcs(quotient,quotient,quotient);
-        emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
-        emit_jcc((int)out-16); // -4
-        emit_teq(d1,d2);
-        emit_negmi(quotient,quotient);
-        emit_test(d1,d1);
-        emit_negmi(remainder,remainder);
-#endif
+
+        if(arm_cpu_features.IDIVa)
+        {
+          emit_test(d2,d2);
+          emit_jeq((int)out+16); // Division by zero
+          emit_sdiv(d1,d2,quotient);
+          emit_mul(quotient,d2,remainder);
+          emit_sub(d1,remainder,remainder);
+        }
+        else
+        {
+          emit_movs(d1,remainder);
+          emit_negmi(remainder,remainder);
+          emit_movs(d2,HOST_TEMPREG);
+          emit_jeq((int)out+52); // Division by zero
+          emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
+          emit_clz(HOST_TEMPREG,quotient);
+          emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
+          emit_orimm(quotient,1<<31,quotient);
+          emit_shr(quotient,quotient,quotient);
+          emit_cmp(remainder,HOST_TEMPREG);
+          emit_subcs(remainder,HOST_TEMPREG,remainder);
+          emit_adcs(quotient,quotient,quotient);
+          emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
+          emit_jcc((int)out-16); // -4
+          emit_teq(d1,d2);
+          emit_negmi(quotient,quotient);
+          emit_test(d1,d1);
+          emit_negmi(remainder,remainder);
+        }
       }
       if(opcode2[i]==0x1B) // DIVU
       {
@@ -4204,24 +4208,28 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(quotient>=0);
         assert(remainder>=0);
         emit_test(d2,d2);
-#ifdef HAVE_INTEGER_DIVIDE
-        emit_jeq((int)out+16); // Division by zero
-        emit_udiv(d1,d2,quotient);
-        emit_mul(quotient,d2,remainder);
-        emit_sub(d1,remainder,remainder);
-#else
-        emit_jeq((int)out+44); // Division by zero
-        emit_clz(d2,HOST_TEMPREG);
-        emit_movimm(1<<31,quotient);
-        emit_shl(d2,HOST_TEMPREG,d2);
-        emit_mov(d1,remainder);
-        emit_shr(quotient,HOST_TEMPREG,quotient);
-        emit_cmp(remainder,d2);
-        emit_subcs(remainder,d2,remainder);
-        emit_adcs(quotient,quotient,quotient);
-        emit_shrcc_imm(d2,1,d2);
-        emit_jcc((int)out-16); // -4
-#endif
+
+        if(arm_cpu_features.IDIVa)
+        {
+          emit_jeq((int)out+16); // Division by zero
+          emit_udiv(d1,d2,quotient);
+          emit_mul(quotient,d2,remainder);
+          emit_sub(d1,remainder,remainder);
+        }
+        else
+        {
+          emit_jeq((int)out+44); // Division by zero
+          emit_clz(d2,HOST_TEMPREG);
+          emit_movimm(1<<31,quotient);
+          emit_shl(d2,HOST_TEMPREG,d2);
+          emit_mov(d1,remainder);
+          emit_shr(quotient,HOST_TEMPREG,quotient);
+          emit_cmp(remainder,d2);
+          emit_subcs(remainder,d2,remainder);
+          emit_adcs(quotient,quotient,quotient);
+          emit_shrcc_imm(d2,1,d2);
+          emit_jcc((int)out-16); // -4
+        }
       }
     }
     else // 64-bit
@@ -4556,6 +4564,10 @@ static void do_clear_cache()
 
 // CPU-architecture-specific initialization
 static void arch_init() {
+
+  detect_arm_cpu_features();
+  print_arm_cpu_features();
+
   rounding_modes[0]=0x0<<22; // round
   rounding_modes[1]=0x3<<22; // trunc
   rounding_modes[2]=0x1<<22; // ceil
