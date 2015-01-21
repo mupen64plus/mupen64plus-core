@@ -1153,7 +1153,7 @@ static void pre_framebuffer_read(uint32_t address)
     }
 }
 
-static void pre_framebuffer_write(uint32_t address, size_t size)
+static void pre_framebuffer_write(uint32_t address)
 {
     int i;
     for (i=0; i<6; i++)
@@ -1165,7 +1165,7 @@ static void pre_framebuffer_write(uint32_t address, size_t size)
                                frameBufferInfos[i].height*
                                frameBufferInfos[i].size - 1;
             if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address, size);
+                gfx.fBWrite(address, 4);
         }
     }
 }
@@ -1310,28 +1310,36 @@ void read_rdramd(void)
     readd(read_rdram_ram, NULL, address, rdword);
 }
 
-static void read_rdramFB(void)
+static int read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
 {
     pre_framebuffer_read(address);
-    read_rdram();
+    return read_rdram_ram(opaque, address, value);
+}
+
+static int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    pre_framebuffer_write(address);
+    return write_rdram_ram(opaque, address, value, mask);
+}
+
+static void read_rdramFB(void)
+{
+    readw(read_rdram_fb, NULL, address, rdword);
 }
 
 static void read_rdramFBb(void)
 {
-    pre_framebuffer_read(address);
-    read_rdramb();
+    readb(read_rdram_fb, NULL, address, rdword);
 }
 
 static void read_rdramFBh(void)
 {
-    pre_framebuffer_read(address);
-    read_rdramh();
+    readh(read_rdram_fb, NULL, address, rdword);
 }
 
 static void read_rdramFBd(void)
 {
-    pre_framebuffer_read(address);
-    read_rdramd();
+    readd(read_rdram_fb, NULL, address, rdword);
 }
 
 void write_rdram(void)
@@ -1356,26 +1364,22 @@ void write_rdramd(void)
 
 static void write_rdramFB(void)
 {
-    pre_framebuffer_write(address, 4);
-    write_rdram();
+    writew(write_rdram_fb, NULL, address, word);
 }
 
 static void write_rdramFBb(void)
 {
-    pre_framebuffer_write(address, 1);
-    write_rdramb();
+    writeb(write_rdram_fb, NULL, address, cpu_byte);
 }
 
 static void write_rdramFBh(void)
 {
-    pre_framebuffer_write(address, 2);
-    write_rdramh();
+    writeh(write_rdram_fb, NULL, address, hword);
 }
 
 static void write_rdramFBd(void)
 {
-    pre_framebuffer_write(address, 8);
-    write_rdramd();
+    writed(write_rdram_fb, NULL, address, dword);
 }
 
 static inline uint32_t rdram_reg(uint32_t address)
