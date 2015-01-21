@@ -39,6 +39,7 @@
 #include "r4300/ops.h"
 #include "r4300/tlb.h"
 
+#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "main/main.h"
 #include "main/profile.h"
@@ -210,8 +211,6 @@ uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_sp_regs[SP_REGS_COUNT];
 uint32_t g_sp_regs2[SP_REGS2_COUNT];
 uint32_t g_si_regs[SI_REGS_COUNT];
-uint32_t g_ai_regs[AI_REGS_COUNT];
-struct ai_dma g_ai_fifo[2]; /* 0: current, 1:next */
 uint32_t g_dpc_regs[DPC_REGS_COUNT];
 uint32_t g_dps_regs[DPS_REGS_COUNT];
 
@@ -630,10 +629,6 @@ int init_memory(void)
         map_region(0xa440+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init AI registers */
-    memset(g_ai_regs, 0, AI_REGS_COUNT*sizeof(g_ai_regs[0]));
-    memset(g_ai_fifo, 0, 2*sizeof(g_ai_fifo[0]));
-
     /* map AI registers */
     map_region(0x8450, M64P_MEM_AI, RW(ai));
     map_region(0xa450, M64P_MEM_AI, RW(ai));
@@ -732,6 +727,7 @@ int init_memory(void)
     firstFrameBufferSetting = 1;
 
     init_r4300(&g_r4300);
+    init_ai(&g_ai);
     init_ri(&g_ri);
     init_vi(&g_vi);
 
@@ -1793,120 +1789,44 @@ static void write_vid(void)
 }
 
 
-static inline uint32_t ai_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = ai_reg(address);
-
-    if (reg == AI_LEN_REG)
-    {
-        update_count();
-        if (g_ai_fifo[0].delay != 0 && get_event(AI_INT) != 0 && (get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG]) < 0x80000000)
-            *value = ((get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG])*(long long)g_ai_fifo[0].length)/
-                      g_ai_fifo[0].delay;
-        else
-            *value = 0;
-    }
-    else
-    {
-        *value = g_ai_regs[reg];
-    }
-
-    return 0;
-}
-
-static int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = ai_reg(address);
-
-    unsigned int freq,delay=0;
-    switch (reg)
-    {
-    case AI_LEN_REG:
-        masked_write(&g_ai_regs[AI_LEN_REG], value, mask);
-        audio.aiLenChanged();
-
-        freq = ROM_PARAMS.aidacrate / (g_ai_regs[AI_DACRATE_REG]+1);
-        if (freq)
-            delay = (unsigned int) (((unsigned long long)g_ai_regs[AI_LEN_REG]*g_vi.delay*ROM_PARAMS.vilimit)/(freq*4));
-
-        if (g_ai_regs[AI_STATUS_REG] & 0x40000000) // busy
-        {
-            g_ai_fifo[1].delay = delay;
-            g_ai_fifo[1].length = g_ai_regs[AI_LEN_REG];
-            g_ai_regs[AI_STATUS_REG] |= 0x80000000;
-        }
-        else
-        {
-            g_ai_fifo[0].delay = delay;
-            g_ai_fifo[0].length = g_ai_regs[AI_LEN_REG];
-            update_count();
-            add_interupt_event(AI_INT, delay);
-            g_ai_regs[AI_STATUS_REG] |= 0x40000000;
-        }
-        return 0;
-
-    case AI_STATUS_REG:
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x4;
-        check_interupt();
-        return 0;
-
-    case AI_DACRATE_REG:
-        if ((g_ai_regs[AI_DACRATE_REG] & mask) != (value & mask))
-        {
-            masked_write(&g_ai_regs[AI_DACRATE_REG], value, mask);
-            audio.aiDacrateChanged(ROM_PARAMS.systemtype);
-        }
-        return 0;
-    }
-
-    masked_write(&g_ai_regs[reg], value, mask);
-
-    return 0;
-}
-
 static void read_ai(void)
 {
-    readw(read_ai_regs, NULL, address, rdword);
+    readw(read_ai_regs, &g_ai, address, rdword);
 }
 
 static void read_aib(void)
 {
-    readb(read_ai_regs, NULL, address, rdword);
+    readb(read_ai_regs, &g_ai, address, rdword);
 }
 
 static void read_aih(void)
 {
-    readh(read_ai_regs, NULL, address, rdword);
+    readh(read_ai_regs, &g_ai, address, rdword);
 }
 
 static void read_aid(void)
 {
-    readd(read_ai_regs, NULL, address, rdword);
+    readd(read_ai_regs, &g_ai, address, rdword);
 }
 
 static void write_ai(void)
 {
-    writew(write_ai_regs, NULL, address, word);
+    writew(write_ai_regs, &g_ai, address, word);
 }
 
 static void write_aib(void)
 {
-    writeb(write_ai_regs, NULL, address, cpu_byte);
+    writeb(write_ai_regs, &g_ai, address, cpu_byte);
 }
 
 static void write_aih(void)
 {
-    writeh(write_ai_regs, NULL, address, hword);
+    writeh(write_ai_regs, &g_ai, address, hword);
 }
 
 static void write_aid(void)
 {
-    writed(write_ai_regs, NULL, address, dword);
+    writed(write_ai_regs, &g_ai, address, dword);
 }
 
 

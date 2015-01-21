@@ -24,6 +24,7 @@
 #include <SDL.h>
 
 #define M64P_CORE_PROTOTYPES 1
+#include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/m64p_vidext.h"
@@ -543,14 +544,14 @@ void gen_interupt(void)
             break;
     
         case AI_INT:
-            if (g_ai_regs[AI_STATUS_REG] & 0x80000000) // full
+            if (g_ai.regs[AI_STATUS_REG] & 0x80000000) // full
             {
                 unsigned int ai_event = get_event(AI_INT);
                 remove_interupt_event();
-                g_ai_regs[AI_STATUS_REG] &= ~0x80000000;
-                g_ai_fifo[0].delay = g_ai_fifo[1].delay;
-                g_ai_fifo[0].length = g_ai_fifo[1].length;
-                add_interupt_event_count(AI_INT, ai_event+g_ai_fifo[1].delay);
+                g_ai.regs[AI_STATUS_REG] &= ~0x80000000;
+                g_ai.fifo[0].delay = g_ai.fifo[1].delay;
+                g_ai.fifo[0].length = g_ai.fifo[1].length;
+                add_interupt_event_count(AI_INT, ai_event+g_ai.fifo[1].delay);
          
                 g_r4300.mi.regs[MI_INTR_REG] |= 0x04;
                 if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
@@ -563,7 +564,7 @@ void gen_interupt(void)
             else
             {
                 remove_interupt_event();
-                g_ai_regs[AI_STATUS_REG] &= ~0x40000000;
+                g_ai.regs[AI_STATUS_REG] &= ~0x40000000;
 
                 //-------
                 g_r4300.mi.regs[MI_INTR_REG] |= 0x04;
@@ -628,7 +629,7 @@ void gen_interupt(void)
             vi_counter = 0;
             init_interupt();
             // clear the audio status register so that subsequent write_ai() calls will work properly
-            g_ai_regs[AI_STATUS_REG] = 0;
+            g_ai.regs[AI_STATUS_REG] = 0;
             // set ErrorEPC with the last instruction address
             g_cp0_regs[CP0_ERROREPC_REG] = PC->addr;
             // reset the r4300 internal state

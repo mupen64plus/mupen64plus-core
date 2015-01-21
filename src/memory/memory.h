@@ -103,26 +103,6 @@ enum dps_registers
 extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
 extern uint32_t g_dps_regs[DPS_REGS_COUNT];
 
-enum ai_registers
-{
-    AI_DRAM_ADDR_REG,
-    AI_LEN_REG,
-    AI_CONTROL_REG,
-    AI_STATUS_REG,
-    AI_DACRATE_REG,
-    AI_BITRATE_REG,
-    AI_REGS_COUNT
-};
-
-struct ai_dma
-{
-    uint32_t length;
-    unsigned int delay;
-};
-
-extern uint32_t g_ai_regs[AI_REGS_COUNT];
-extern struct ai_dma g_ai_fifo[2];
-
 enum pi_registers
 {
     PI_DRAM_ADDR_REG,

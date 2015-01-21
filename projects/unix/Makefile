@@ -381,6 +381,7 @@ OBJDIR = _obj$(POSTFIX)
 
 # list of required source files for compilation
 SOURCE = \
+	$(SRCDIR)/ai/ai_controller.c \
 	$(SRCDIR)/api/callbacks.c \
 	$(SRCDIR)/api/common.c \
 	$(SRCDIR)/api/config.c \

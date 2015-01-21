@@ -31,6 +31,7 @@
 #include "callbacks.h"
 #include "debugger.h"
 
+#include "ai/ai_controller.h"
 #include "debugger/dbg_types.h"
 #include "debugger/dbg_breakpoints.h"
 #include "debugger/dbg_decoder.h"
@@ -225,7 +226,7 @@ EXPORT void * CALL DebugMemGetPointer(m64p_dbg_memptr_type mem_ptr_type)
         case M64P_DBG_PTR_RI_REG:
             return g_ri.regs;
         case M64P_DBG_PTR_AI_REG:
-            return g_ai_regs;
+            return g_ai.regs;
         default:
             DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetPointer() called with invalid m64p_dbg_memptr_type");
             return NULL;

@@ -29,6 +29,7 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct ai_controller;
 struct ri_controller;
 struct vi_controller;
 
@@ -42,6 +43,7 @@ extern int g_EmulatorRunning;
 
 extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 
+extern struct ai_controller g_ai;
 extern struct ri_controller g_ri;
 extern struct vi_controller g_vi;
 

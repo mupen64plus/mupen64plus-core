@@ -26,6 +26,7 @@
 #include "dbg_memory.h"
 #include "dbg_breakpoints.h"
 
+#include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "main/main.h"
@@ -327,9 +328,9 @@ uint32 read_memory_32(uint32 addr){
         return g_vi.regs[offset];
       break;
     case M64P_MEM_AI:
-      offset = (addr & 0xffff) >> 2;
+      offset = ai_reg(addr);
       if (offset < AI_REGS_COUNT)
-        return g_ai_regs[offset];
+        return g_ai.regs[offset];
       break;
     case M64P_MEM_PI:
       offset = (addr & 0xffff) >> 2;

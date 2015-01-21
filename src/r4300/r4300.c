@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
@@ -196,8 +197,8 @@ void r4300_reset_soft(void)
     g_pi_regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
     g_pi_regs[PI_STATUS_REG] = 0;
 
-    g_ai_regs[AI_DRAM_ADDR_REG] = 0;
-    g_ai_regs[AI_LEN_REG] = 0;
+    g_ai.regs[AI_DRAM_ADDR_REG] = 0;
+    g_ai.regs[AI_LEN_REG] = 0;
 
     g_vi.regs[VI_V_INTR_REG] = 1023;
     g_vi.regs[VI_CURRENT_REG] = 0;
