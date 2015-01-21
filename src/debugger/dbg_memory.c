@@ -289,15 +289,15 @@ uint32 read_memory_32(uint32 addr){
         return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
-      return g_rdram[(addr & 0xffffff) >> 2];
+      return g_rdram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
       return g_sp_mem[(addr & 0x1fff) >> 2];
     case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
     case M64P_MEM_RDRAMREG:
-      offset = (addr & 0x3ff) >> 2;
+      offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
-          return g_rdram_regs[offset];
+          return g_ri.rdram.regs[offset];
       break;
     case M64P_MEM_RSPREG:
       offset = (addr & 0xffff) >> 2;

@@ -24,14 +24,21 @@
 #define __MAIN_H__
 
 #include "api/m64p_types.h"
+#include "osal/preproc.h"
+
+#include <stdint.h>
 
 struct ri_controller;
+
+enum { RDRAM_MAX_SIZE = 0x800000 };
 
 /* globals */
 extern m64p_handle g_CoreConfig;
 
 extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
+
+extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 
 extern struct ri_controller g_ri;
 

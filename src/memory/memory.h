@@ -23,7 +23,6 @@
 #define MEMORY_H
 
 #include <stdint.h>
-#include "osal/preproc.h"
 
 #define read_word_in_memory() readmem[address>>16]()
 #define read_byte_in_memory() readmemb[address>>16]()
@@ -41,27 +40,6 @@ extern uint32_t g_sp_mem[SP_MEM_SIZE/4];
 enum { PIF_RAM_SIZE = 0x40 };
 
 extern uint8_t g_pif_ram[PIF_RAM_SIZE];
-
-enum { RDRAM_MAX_SIZE = 0x800000 };
-
-extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
-
-enum rdram_registers
-{
-    RDRAM_CONFIG_REG,
-    RDRAM_DEVICE_ID_REG,
-    RDRAM_DELAY_REG,
-    RDRAM_MODE_REG,
-    RDRAM_REF_INTERVAL_REG,
-    RDRAM_REF_ROW_REG,
-    RDRAM_RAS_INTERVAL_REG,
-    RDRAM_MIN_INTERVAL_REG,
-    RDRAM_ADDR_SELECT_REG,
-    RDRAM_DEVICE_MANUF_REG,
-    RDRAM_REGS_COUNT
-};
-
-extern uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
 
 extern unsigned int address, word;
 extern unsigned char cpu_byte;

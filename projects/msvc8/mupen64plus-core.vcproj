@@ -401,6 +401,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\ri\rdram.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\recomp.c"
 				>
 			</File>
@@ -668,6 +672,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\r4300.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\ri\rdram.h"
 				>
 			</File>
 			<File

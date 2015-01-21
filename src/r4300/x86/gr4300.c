@@ -24,7 +24,8 @@
 #include "regcache.h"
 
 #include "api/debugger.h"
-
+#include "main/main.h"
+#include "memory/memory.h"
 #include "r4300/r4300.h"
 #include "r4300/cached_interp.h"
 #include "r4300/cp0.h"
@@ -33,8 +34,6 @@
 #include "r4300/ops.h"
 #include "r4300/recomph.h"
 #include "r4300/exception.h"
-
-#include "memory/memory.h"
 
 static precomp_instr fake_instr;
 #ifdef COMPARE_CORE

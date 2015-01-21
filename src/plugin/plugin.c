@@ -29,6 +29,7 @@
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 
+#include "main/main.h"
 #include "main/rom.h"
 #include "main/version.h"
 #include "memory/memory.h"

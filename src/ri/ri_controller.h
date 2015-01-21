@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "rdram.h"
+
 enum ri_registers
 {
     RI_MODE_REG,
@@ -40,12 +42,18 @@ enum ri_registers
 struct ri_controller
 {
     uint32_t regs[RI_REGS_COUNT];
+
+    struct rdram rdram;
 };
 
 static inline uint32_t ri_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
+
+void connect_ri(struct ri_controller* ri,
+                uint32_t* dram,
+                size_t dram_size);
 
 void init_ri(struct ri_controller* ri);
 

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - ri_controller.c                                         *
+ *   Mupen64plus - rdram.h                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,44 +19,54 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "ri_controller.h"
+#ifndef M64P_RI_RDRAM_H
+#define M64P_RI_RDRAM_H
 
-#include "memory/memory.h"
+#include <stddef.h>
+#include <stdint.h>
 
-#include <string.h>
-
-void connect_ri(struct ri_controller* ri,
-                uint32_t* dram,
-                size_t dram_size)
+enum rdram_registers
 {
-    connect_rdram(&ri->rdram, dram, dram_size);
+    RDRAM_CONFIG_REG,
+    RDRAM_DEVICE_ID_REG,
+    RDRAM_DELAY_REG,
+    RDRAM_MODE_REG,
+    RDRAM_REF_INTERVAL_REG,
+    RDRAM_REF_ROW_REG,
+    RDRAM_RAS_INTERVAL_REG,
+    RDRAM_MIN_INTERVAL_REG,
+    RDRAM_ADDR_SELECT_REG,
+    RDRAM_DEVICE_MANUF_REG,
+    RDRAM_REGS_COUNT
+};
+
+struct rdram
+{
+    uint32_t regs[RDRAM_REGS_COUNT];
+    uint32_t* dram;
+    size_t dram_size;
+};
+
+static inline uint32_t rdram_reg(uint32_t address)
+{
+    return (address & 0x3ff) >> 2;
 }
 
-void init_ri(struct ri_controller* ri)
+static inline uint32_t rdram_dram_address(uint32_t address)
 {
-    memset(ri->regs, 0, RI_REGS_COUNT*sizeof(uint32_t));
-
-    init_rdram(&ri->rdram);
+    return (address & 0xffffff) >> 2;
 }
 
+void connect_rdram(struct rdram* rdram,
+                   uint32_t* dram,
+                   size_t dram_size);
 
-int read_ri_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t reg = ri_reg(address);
+void init_rdram(struct rdram* rdram);
 
-    *value = ri->regs[reg];
+int read_rdram_regs(void* opaque, uint32_t address, uint32_t* value);
+int write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-    return 0;
-}
+int read_rdram_dram(void* opaque, uint32_t address, uint32_t* value);
+int write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-int write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t reg = ri_reg(address);
-
-    masked_write(&ri->regs[reg], value, mask);
-
-    return 0;
-}
-
+#endif

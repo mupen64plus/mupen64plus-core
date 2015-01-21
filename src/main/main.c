@@ -80,6 +80,7 @@ m64p_frame_callback g_FrameCallback = NULL;
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
+ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 struct ri_controller g_ri;
 
 /** static (local) variables **/
@@ -744,6 +745,14 @@ void new_vi(void)
     timed_section_end(TIMED_SECTION_IDLE);
 }
 
+static void connect_all(
+        struct ri_controller* ri,
+        uint32_t* dram,
+        size_t dram_size)
+{
+    connect_ri(ri, dram, dram_size);
+}
+
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
@@ -768,6 +777,8 @@ m64p_error main_run(void)
         swap_buffer(rom, 4, rom_size/4);
         g_MemHasBeenBSwapped = 1;
     }
+
+    connect_all(&g_ri, g_rdram, RDRAM_MAX_SIZE);
 
     init_memory();
 
