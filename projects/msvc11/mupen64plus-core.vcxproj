@@ -172,6 +172,7 @@
     <ClCompile Include="..\..\src\r4300\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
     <ClCompile Include="..\..\src\main\util.c" />
+    <ClCompile Include="..\..\src\vi\vi_controller.c" />
     <ClCompile Include="..\..\src\api\vidext.c" />
     <ClCompile Include="..\..\src\main\workqueue.c" />
     <ClCompile Include="..\..\src\main\zip\zip.c" />
@@ -243,6 +244,7 @@
     <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
     <ClInclude Include="..\..\src\main\util.h" />
+    <ClInclude Include="..\..\src\vi\vi_controller.h" />
     <ClInclude Include="..\..\src\main\version.h" />
     <ClInclude Include="..\..\src\api\vidext.h" />
     <ClInclude Include="..\..\src\main\workqueue.h" />

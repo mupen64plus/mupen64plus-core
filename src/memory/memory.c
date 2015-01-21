@@ -46,6 +46,7 @@
 #include "plugin/plugin.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "ri/ri_controller.h"
+#include "vi/vi_controller.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -209,8 +210,6 @@ uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_sp_regs[SP_REGS_COUNT];
 uint32_t g_sp_regs2[SP_REGS2_COUNT];
 uint32_t g_si_regs[SI_REGS_COUNT];
-uint32_t g_vi_regs[VI_REGS_COUNT];
-unsigned int g_vi_delay;
 uint32_t g_ai_regs[AI_REGS_COUNT];
 struct ai_dma g_ai_fifo[2]; /* 0: current, 1:next */
 uint32_t g_dpc_regs[DPC_REGS_COUNT];
@@ -622,9 +621,6 @@ int init_memory(void)
         map_region(0xa430+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init VI registers */
-    memset(g_vi_regs, 0, VI_REGS_COUNT*sizeof(g_vi_regs[0]));
-
     /* map VI registers */
     map_region(0x8440, M64P_MEM_VI, RW(vi));
     map_region(0xa440, M64P_MEM_VI, RW(vi));
@@ -737,6 +733,7 @@ int init_memory(void)
 
     init_r4300(&g_r4300);
     init_ri(&g_ri);
+    init_vi(&g_vi);
 
     DebugMessage(M64MSG_VERBOSE, "Memory initialized");
     return 0;
@@ -1755,98 +1752,44 @@ static void write_mid(void)
 }
 
 
-static inline uint32_t vi_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = vi_reg(address);
-
-    if (reg == VI_CURRENT_REG)
-    {
-        update_count();
-        g_vi_regs[VI_CURRENT_REG] = (g_vi_delay - (next_vi - g_cp0_regs[CP0_COUNT_REG]))/1500;
-        g_vi_regs[VI_CURRENT_REG] = (g_vi_regs[VI_CURRENT_REG] & (~1)) | vi_field;
-    }
-
-    *value = g_vi_regs[reg];
-
-    return 0;
-}
-
-static int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = vi_reg(address);
-
-    switch(reg)
-    {
-    case VI_STATUS_REG:
-        if ((g_vi_regs[VI_STATUS_REG] & mask) != (value & mask))
-        {
-            masked_write(&g_vi_regs[VI_STATUS_REG], value, mask);
-            gfx.viStatusChanged();
-        }
-        return 0;
-
-    case VI_WIDTH_REG:
-        if ((g_vi_regs[VI_WIDTH_REG] & mask) != (value & mask))
-        {
-            masked_write(&g_vi_regs[VI_WIDTH_REG], value, mask);
-            gfx.viWidthChanged();
-        }
-        return 0;
-
-    case VI_CURRENT_REG:
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x8;
-        check_interupt();
-        return 0;
-    }
-
-    masked_write(&g_vi_regs[reg], value, mask);
-
-    return 0;
-}
-
 static void read_vi(void)
 {
-    readw(read_vi_regs, NULL, address, rdword);
+    readw(read_vi_regs, &g_vi, address, rdword);
 }
 
 static void read_vib(void)
 {
-    readb(read_vi_regs, NULL, address, rdword);
+    readb(read_vi_regs, &g_vi, address, rdword);
 }
 
 static void read_vih(void)
 {
-    readh(read_vi_regs, NULL, address, rdword);
+    readh(read_vi_regs, &g_vi, address, rdword);
 }
 
 static void read_vid(void)
 {
-    readd(read_vi_regs, NULL, address, rdword);
+    readd(read_vi_regs, &g_vi, address, rdword);
 }
 
 static void write_vi(void)
 {
-    writew(write_vi_regs, NULL, address, word);
+    writew(write_vi_regs, &g_vi, address, word);
 }
 
 static void write_vib(void)
 {
-    writeb(write_vi_regs, NULL, address, cpu_byte);
+    writeb(write_vi_regs, &g_vi, address, cpu_byte);
 }
 
 static void write_vih(void)
 {
-    writeh(write_vi_regs, NULL, address, hword);
+    writeh(write_vi_regs, &g_vi, address, hword);
 }
 
 static void write_vid(void)
 {
-    writed(write_vi_regs, NULL, address, dword);
+    writed(write_vi_regs, &g_vi, address, dword);
 }
 
 
@@ -1889,7 +1832,7 @@ static int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_
 
         freq = ROM_PARAMS.aidacrate / (g_ai_regs[AI_DACRATE_REG]+1);
         if (freq)
-            delay = (unsigned int) (((unsigned long long)g_ai_regs[AI_LEN_REG]*g_vi_delay*ROM_PARAMS.vilimit)/(freq*4));
+            delay = (unsigned int) (((unsigned long long)g_ai_regs[AI_LEN_REG]*g_vi.delay*ROM_PARAMS.vilimit)/(freq*4));
 
         if (g_ai_regs[AI_STATUS_REG] & 0x40000000) // busy
         {

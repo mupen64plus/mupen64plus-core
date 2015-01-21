@@ -103,28 +103,6 @@ enum dps_registers
 extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
 extern uint32_t g_dps_regs[DPS_REGS_COUNT];
 
-enum vi_registers
-{
-    VI_STATUS_REG,
-    VI_ORIGIN_REG,
-    VI_WIDTH_REG,
-    VI_V_INTR_REG,
-    VI_CURRENT_REG,
-    VI_BURST_REG,
-    VI_V_SYNC_REG,
-    VI_H_SYNC_REG,
-    VI_LEAP_REG,
-    VI_H_START_REG,
-    VI_V_START_REG,
-    VI_V_BURST_REG,
-    VI_X_SCALE_REG,
-    VI_Y_SCALE_REG,
-    VI_REGS_COUNT
-};
-
-extern uint32_t g_vi_regs[VI_REGS_COUNT];
-extern unsigned int g_vi_delay;
-
 enum ai_registers
 {
     AI_DRAM_ADDR_REG,

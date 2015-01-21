@@ -461,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\vi\vi_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\api\vidext.c"
 				>
 			</File>
@@ -744,6 +748,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\version.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vi\vi_controller.h"
 				>
 			</File>
 			<File

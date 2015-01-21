@@ -422,6 +422,7 @@ SOURCE = \
 	$(SRCDIR)/r4300/tlb.c \
 	$(SRCDIR)/ri/rdram.c \
 	$(SRCDIR)/ri/ri_controller.c \
+	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp
 ifeq ("$(OS)","MINGW")
 SOURCE += \

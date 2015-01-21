@@ -36,6 +36,7 @@
 #include "main/cheat.h"
 #include "osd/osd.h"
 #include "plugin/plugin.h"
+#include "vi/vi_controller.h"
 
 #include "interupt.h"
 #include "r4300.h"
@@ -353,7 +354,7 @@ void init_interupt(void)
 {
     SPECIAL_done = 1;
     next_vi = next_interupt = 5000;
-    g_vi_delay = next_vi;
+    g_vi.delay = next_vi;
     vi_field = 0;
 
     clear_queue();
@@ -479,10 +480,10 @@ void gen_interupt(void)
             }
 
             new_vi();
-            if (g_vi_regs[VI_V_SYNC_REG] == 0) g_vi_delay = 500000;
-            else g_vi_delay = ((g_vi_regs[VI_V_SYNC_REG] + 1)*1500);
-            next_vi += g_vi_delay;
-            if (g_vi_regs[VI_STATUS_REG]&0x40) vi_field=1-vi_field;
+            if (g_vi.regs[VI_V_SYNC_REG] == 0) g_vi.delay = 500000;
+            else g_vi.delay = ((g_vi.regs[VI_V_SYNC_REG] + 1)*1500);
+            next_vi += g_vi.delay;
+            if (g_vi.regs[VI_STATUS_REG]&0x40) vi_field=1-vi_field;
             else vi_field=0;
 
             remove_interupt_event();

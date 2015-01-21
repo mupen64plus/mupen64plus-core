@@ -60,6 +60,7 @@
 #include "r4300/interupt.h"
 #include "r4300/reset.h"
 #include "ri/ri_controller.h"
+#include "vi/vi_controller.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -83,6 +84,7 @@ int         g_EmulatorRunning = 0;      // need separate boolean to tell if emul
 
 ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 struct ri_controller g_ri;
+struct vi_controller g_vi;
 struct r4300_core g_r4300;
 
 /** static (local) variables **/
@@ -750,10 +752,12 @@ void new_vi(void)
 static void connect_all(
         struct r4300_core* r4300,
         struct ri_controller* ri,
+        struct vi_controller* vi,
         uint32_t* dram,
         size_t dram_size)
 {
     connect_ri(ri, dram, dram_size);
+    connect_vi(vi, r4300);
 }
 
 /*********************************************************************************************************
@@ -781,7 +785,7 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
-    connect_all(&g_r4300, &g_ri, g_rdram, RDRAM_MAX_SIZE);
+    connect_all(&g_r4300, &g_ri, &g_vi, g_rdram, RDRAM_MAX_SIZE);
 
     init_memory();
 

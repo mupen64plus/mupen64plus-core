@@ -52,6 +52,7 @@
 #include "osd/osd.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "ri/ri_controller.h"
+#include "vi/vi_controller.h"
 
 #ifdef LIBMINIZIP
     #include <unzip.h>
@@ -326,21 +327,21 @@ static int savestates_load_m64p(char *filepath)
     g_si_regs[SI_PIF_ADDR_WR64B_REG] = GETDATA(curr, uint32_t);
     g_si_regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
 
-    g_vi_regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
-    g_vi_delay = GETDATA(curr, unsigned int);
+    g_vi.regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi.delay = GETDATA(curr, unsigned int);
     gfx.viStatusChanged();
     gfx.viWidthChanged();
 
@@ -618,20 +619,20 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_r4300.mi.regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
 
     // vi_register
-    g_vi_regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
-    g_vi_regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_WIDTH_REG]   = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_INTR_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_CURRENT_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_BURST_REG]   = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_H_SYNC_REG]  = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_LEAP_REG]    = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_H_START_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_START_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_V_BURST_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_X_SCALE_REG] = GETDATA(curr, uint32_t);
+    g_vi.regs[VI_Y_SCALE_REG] = GETDATA(curr, uint32_t);
     // TODO vi delay?
     gfx.viStatusChanged();
     gfx.viWidthChanged();
@@ -1097,21 +1098,21 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_WR64B_REG]);
     PUTDATA(curr, uint32_t, g_si_regs[SI_STATUS_REG]);
 
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_STATUS_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_ORIGIN_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_WIDTH_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_INTR_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_CURRENT_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_BURST_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_SYNC_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_SYNC_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_LEAP_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_START_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_START_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_BURST_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_X_SCALE_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
-    PUTDATA(curr, unsigned int, g_vi_delay);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_ORIGIN_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_WIDTH_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_H_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_LEAP_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_H_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_X_SCALE_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_Y_SCALE_REG]);
+    PUTDATA(curr, unsigned int, g_vi.delay);
 
     PUTDATA(curr, uint32_t, g_ri.regs[RI_MODE_REG]);
     PUTDATA(curr, uint32_t, g_ri.regs[RI_CONFIG_REG]);
@@ -1321,20 +1322,20 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_REG]);
     PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_MASK_REG]);
 
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_STATUS_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_ORIGIN_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_WIDTH_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_INTR_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_CURRENT_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_BURST_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_SYNC_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_SYNC_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_LEAP_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_H_START_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_START_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_V_BURST_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_X_SCALE_REG]);
-    PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_ORIGIN_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_WIDTH_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_H_SYNC_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_LEAP_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_H_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_START_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_V_BURST_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_X_SCALE_REG]);
+    PUTDATA(curr, uint32_t, g_vi.regs[VI_Y_SCALE_REG]);
 
     PUTDATA(curr, uint32_t, g_ai_regs[AI_DRAM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_ai_regs[AI_LEN_REG]);

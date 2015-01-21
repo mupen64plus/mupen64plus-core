@@ -38,6 +38,8 @@
 
 #include "r4300/r4300_core.h"
 
+#include "vi/vi_controller.h"
+
 #include "dummy_audio.h"
 #include "dummy_video.h"
 #include "dummy_input.h"
@@ -240,20 +242,20 @@ static m64p_error plugin_start_gfx(void)
     gfx_info.DPC_BUFBUSY_REG = &(g_dpc_regs[DPC_BUFBUSY_REG]);
     gfx_info.DPC_PIPEBUSY_REG = &(g_dpc_regs[DPC_PIPEBUSY_REG]);
     gfx_info.DPC_TMEM_REG = &(g_dpc_regs[DPC_TMEM_REG]);
-    gfx_info.VI_STATUS_REG = &(g_vi_regs[VI_STATUS_REG]);
-    gfx_info.VI_ORIGIN_REG = &(g_vi_regs[VI_ORIGIN_REG]);
-    gfx_info.VI_WIDTH_REG = &(g_vi_regs[VI_WIDTH_REG]);
-    gfx_info.VI_INTR_REG = &(g_vi_regs[VI_V_INTR_REG]);
-    gfx_info.VI_V_CURRENT_LINE_REG = &(g_vi_regs[VI_CURRENT_REG]);
-    gfx_info.VI_TIMING_REG = &(g_vi_regs[VI_BURST_REG]);
-    gfx_info.VI_V_SYNC_REG = &(g_vi_regs[VI_V_SYNC_REG]);
-    gfx_info.VI_H_SYNC_REG = &(g_vi_regs[VI_H_SYNC_REG]);
-    gfx_info.VI_LEAP_REG = &(g_vi_regs[VI_LEAP_REG]);
-    gfx_info.VI_H_START_REG = &(g_vi_regs[VI_H_START_REG]);
-    gfx_info.VI_V_START_REG = &(g_vi_regs[VI_V_START_REG]);
-    gfx_info.VI_V_BURST_REG = &(g_vi_regs[VI_V_BURST_REG]);
-    gfx_info.VI_X_SCALE_REG = &(g_vi_regs[VI_X_SCALE_REG]);
-    gfx_info.VI_Y_SCALE_REG = &(g_vi_regs[VI_Y_SCALE_REG]);
+    gfx_info.VI_STATUS_REG = &(g_vi.regs[VI_STATUS_REG]);
+    gfx_info.VI_ORIGIN_REG = &(g_vi.regs[VI_ORIGIN_REG]);
+    gfx_info.VI_WIDTH_REG = &(g_vi.regs[VI_WIDTH_REG]);
+    gfx_info.VI_INTR_REG = &(g_vi.regs[VI_V_INTR_REG]);
+    gfx_info.VI_V_CURRENT_LINE_REG = &(g_vi.regs[VI_CURRENT_REG]);
+    gfx_info.VI_TIMING_REG = &(g_vi.regs[VI_BURST_REG]);
+    gfx_info.VI_V_SYNC_REG = &(g_vi.regs[VI_V_SYNC_REG]);
+    gfx_info.VI_H_SYNC_REG = &(g_vi.regs[VI_H_SYNC_REG]);
+    gfx_info.VI_LEAP_REG = &(g_vi.regs[VI_LEAP_REG]);
+    gfx_info.VI_H_START_REG = &(g_vi.regs[VI_H_START_REG]);
+    gfx_info.VI_V_START_REG = &(g_vi.regs[VI_V_START_REG]);
+    gfx_info.VI_V_BURST_REG = &(g_vi.regs[VI_V_BURST_REG]);
+    gfx_info.VI_X_SCALE_REG = &(g_vi.regs[VI_X_SCALE_REG]);
+    gfx_info.VI_Y_SCALE_REG = &(g_vi.regs[VI_Y_SCALE_REG]);
     gfx_info.CheckInterrupts = EmptyFunc;
 
     /* call the audio plugin */
