@@ -173,18 +173,14 @@ static void write_si(void);
 static void write_sib(void);
 static void write_sih(void);
 static void write_sid(void);
-static void read_flashram_status(void);
-static void read_flashram_statusb(void);
-static void read_flashram_statush(void);
-static void read_flashram_statusd(void);
-static void write_flashram_dummy(void);
-static void write_flashram_dummyb(void);
-static void write_flashram_dummyh(void);
-static void write_flashram_dummyd(void);
-static void write_flashram_command(void);
-static void write_flashram_commandb(void);
-static void write_flashram_commandh(void);
-static void write_flashram_commandd(void);
+static void read_pi_flashram_status(void);
+static void read_pi_flashram_statusb(void);
+static void read_pi_flashram_statush(void);
+static void read_pi_flashram_statusd(void);
+static void write_pi_flashram_command(void);
+static void write_pi_flashram_commandb(void);
+static void write_pi_flashram_commandh(void);
+static void write_pi_flashram_commandd(void);
 static void read_rom(void);
 static void read_romb(void);
 static void read_romh(void);
@@ -711,10 +707,10 @@ int init_memory(void)
     }
 
     /* map flashram/sram */
-    map_region(0x8800, M64P_MEM_FLASHRAMSTAT, R(flashram_status), W(flashram_dummy));
-    map_region(0xa800, M64P_MEM_FLASHRAMSTAT, R(flashram_status), W(flashram_dummy));
-    map_region(0x8801, M64P_MEM_NOTHING, R(nothing), W(flashram_command));
-    map_region(0xa801, M64P_MEM_NOTHING, R(nothing), W(flashram_command));
+    map_region(0x8800, M64P_MEM_FLASHRAMSTAT, R(pi_flashram_status), W(nothing));
+    map_region(0xa800, M64P_MEM_FLASHRAMSTAT, R(pi_flashram_status), W(nothing));
+    map_region(0x8801, M64P_MEM_NOTHING, R(nothing), W(pi_flashram_command));
+    map_region(0xa801, M64P_MEM_NOTHING, R(nothing), W(pi_flashram_command));
     for(i = 0x802; i < 0x1000; ++i)
     {
         map_region(0x8000+i, M64P_MEM_NOTHING, RW(nothing));
@@ -2345,72 +2341,72 @@ static void write_sid(void)
     writed(write_si_regs, NULL, address, dword);
 }
 
-static void read_flashram_status(void)
+static int read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
 {
-    if (flashram_info.use_flashram != -1 && ((address & 0xffff) == 0))
+    if ((flashram_info.use_flashram == -1) || ((address & 0xffff) != 0))
     {
-        *rdword = flashram_status();
-        flashram_info.use_flashram = 1;
-    }
-    else
         DebugMessage(M64MSG_ERROR, "unknown read in read_flashram_status()");
-}
-
-static void read_flashram_statusb(void)
-{
-    DebugMessage(M64MSG_ERROR, "read_flashram_statusb() not implemented");
-}
-
-static void read_flashram_statush(void)
-{
-    DebugMessage(M64MSG_ERROR, "read_flashram_statush() not implemented");
-}
-
-static void read_flashram_statusd(void)
-{
-    DebugMessage(M64MSG_ERROR, "read_flashram_statusd() not implemented");
-}
-
-static void write_flashram_dummy(void)
-{
-}
-
-static void write_flashram_dummyb(void)
-{
-}
-
-static void write_flashram_dummyh(void)
-{
-}
-
-static void write_flashram_dummyd(void)
-{
-}
-
-static void write_flashram_command(void)
-{
-    if (flashram_info.use_flashram != -1 && ((address & 0xffff) == 0))
-    {
-        flashram_command(word);
-        flashram_info.use_flashram = 1;
+        return -1;
     }
-    else
+
+    flashram_info.use_flashram = 1;
+    *value = flashram_status();
+
+    return 0;
+}
+
+static int write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    if ((flashram_info.use_flashram == -1) || ((address & 0xffff) != 0))
+    {
         DebugMessage(M64MSG_ERROR, "unknown write in write_flashram_command()");
+        return -1;
+    }
+
+    flashram_info.use_flashram = 1;
+    flashram_command(value & mask);
+
+    return 0;
 }
 
-static void write_flashram_commandb(void)
+static void read_pi_flashram_status(void)
 {
-    DebugMessage(M64MSG_ERROR, "write_flashram_commandb() not implemented");
+    readw(read_flashram_status, NULL, address, rdword);
 }
 
-static void write_flashram_commandh(void)
+static void read_pi_flashram_statusb(void)
 {
-    DebugMessage(M64MSG_ERROR, "write_flashram_commandh() not implemented");
+    readb(read_flashram_status, NULL, address, rdword);
 }
 
-static void write_flashram_commandd(void)
+static void read_pi_flashram_statush(void)
 {
-    DebugMessage(M64MSG_ERROR, "write_flashram_commandd() not implemented");
+    readh(read_flashram_status, NULL, address, rdword);
+}
+
+static void read_pi_flashram_statusd(void)
+{
+    readd(read_flashram_status, NULL, address, rdword);
+}
+
+static void write_pi_flashram_command(void)
+{
+    writew(write_flashram_command, NULL, address, word);
+}
+
+static void write_pi_flashram_commandb(void)
+{
+    writeb(write_flashram_command, NULL, address, cpu_byte);
+}
+
+static void write_pi_flashram_commandh(void)
+{
+    writeh(write_flashram_command, NULL, address, hword);
+}
+
+static void write_pi_flashram_commandd(void)
+{
+    writed(write_flashram_command, NULL, address, dword);
 }
 
 static unsigned int lastwrite = 0;
