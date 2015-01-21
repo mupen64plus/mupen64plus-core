@@ -99,7 +99,11 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     ifeq ($(NEON), 1)
         CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
     else
+      ifeq ($(VFP), 1)
+        CFLAGS += -mfpu=vfp -mfloat-abi=hard
+      else
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+      endif
     endif
     $(warning Architecture "$(HOST_CPU)" not officially supported.')
   endif
