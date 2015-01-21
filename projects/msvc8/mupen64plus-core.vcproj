@@ -369,6 +369,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\mi_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\memory\n64_cic_nus_6105.c"
 				>
 			</File>
@@ -398,6 +402,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\r4300.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\r4300_core.c"
 				>
 			</File>
 			<File
@@ -635,6 +643,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\mi_controller.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\memory\n64_cic_nus_6105.h"
 				>
 			</File>
@@ -672,6 +684,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\r4300.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\r4300_core.h"
 				>
 			</File>
 			<File

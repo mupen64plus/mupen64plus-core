@@ -36,6 +36,8 @@
 
 #include "osal/dynamiclib.h"
 
+#include "r4300/r4300_core.h"
+
 #include "dummy_audio.h"
 #include "dummy_video.h"
 #include "dummy_input.h"
@@ -229,7 +231,7 @@ static m64p_error plugin_start_gfx(void)
     gfx_info.RDRAM = (unsigned char *) g_rdram;
     gfx_info.DMEM = (unsigned char *) g_sp_mem;
     gfx_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    gfx_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
+    gfx_info.MI_INTR_REG = &(g_r4300.mi.regs[MI_INTR_REG]);
     gfx_info.DPC_START_REG = &(g_dpc_regs[DPC_START_REG]);
     gfx_info.DPC_END_REG = &(g_dpc_regs[DPC_END_REG]);
     gfx_info.DPC_CURRENT_REG = &(g_dpc_regs[DPC_CURRENT_REG]);
@@ -321,7 +323,7 @@ static m64p_error plugin_start_audio(void)
     audio_info.RDRAM = (unsigned char *) g_rdram;
     audio_info.DMEM = (unsigned char *) g_sp_mem;
     audio_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    audio_info.MI_INTR_REG = &(g_mi_regs[MI_INTR_REG]);
+    audio_info.MI_INTR_REG = &(g_r4300.mi.regs[MI_INTR_REG]);
     audio_info.AI_DRAM_ADDR_REG = &(g_ai_regs[AI_DRAM_ADDR_REG]);
     audio_info.AI_LEN_REG = &(g_ai_regs[AI_LEN_REG]);
     audio_info.AI_CONTROL_REG = &(g_ai_regs[AI_CONTROL_REG]);
@@ -467,7 +469,7 @@ static m64p_error plugin_start_rsp(void)
     rsp_info.RDRAM = (unsigned char *) g_rdram;
     rsp_info.DMEM = (unsigned char *) g_sp_mem;
     rsp_info.IMEM = (unsigned char *) g_sp_mem + 0x1000;
-    rsp_info.MI_INTR_REG = &g_mi_regs[MI_INTR_REG];
+    rsp_info.MI_INTR_REG = &g_r4300.mi.regs[MI_INTR_REG];
     rsp_info.SP_MEM_ADDR_REG = &g_sp_regs[SP_MEM_ADDR_REG];
     rsp_info.SP_DRAM_ADDR_REG = &g_sp_regs[SP_DRAM_ADDR_REG];
     rsp_info.SP_RD_LEN_REG = &g_sp_regs[SP_RD_LEN_REG];

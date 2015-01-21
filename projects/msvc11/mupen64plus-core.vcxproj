@@ -149,6 +149,7 @@
     <ClCompile Include="..\..\src\main\main.c" />
     <ClCompile Include="..\..\src\main\md5.c" />
     <ClCompile Include="..\..\src\memory\memory.c" />
+    <ClCompile Include="..\..\src\r4300\mi_controller.c" />
     <ClCompile Include="..\..\src\memory\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="..\..\src\main\profile.c" />
     <ClCompile Include="..\..\src\r4300\pure_interp.c" />
     <ClCompile Include="..\..\src\r4300\r4300.c" />
+    <ClCompile Include="..\..\src\r4300\r4300_core.c" />
     <ClCompile Include="..\..\src\ri\rdram.c" />
     <ClCompile Include="..\..\src\r4300\recomp.c" />
     <ClCompile Include="..\..\src\r4300\x86\regcache.c" />
@@ -216,6 +218,7 @@
     <ClInclude Include="..\..\src\main\main.h" />
     <ClInclude Include="..\..\src\main\md5.h" />
     <ClInclude Include="..\..\src\memory\memory.h" />
+    <ClInclude Include="..\..\src\r4300\mi_controller.h" />
     <ClInclude Include="..\..\src\memory\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\osd\OGLFT.h" />
     <ClInclude Include="..\..\src\r4300\ops.h" />
@@ -226,6 +229,7 @@
     <ClInclude Include="..\..\src\main\profile.h" />
     <ClInclude Include="..\..\src\r4300\pure_interp.h" />
     <ClInclude Include="..\..\src\r4300\r4300.h" />
+    <ClInclude Include="..\..\src\r4300\r4300_core.h" />
     <ClInclude Include="..\..\src\ri\rdram.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />

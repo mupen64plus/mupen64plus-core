@@ -414,7 +414,9 @@ SOURCE = \
 	$(SRCDIR)/r4300/exception.c \
 	$(SRCDIR)/r4300/instr_counters.c \
 	$(SRCDIR)/r4300/interupt.c \
+	$(SRCDIR)/r4300/mi_controller.c \
 	$(SRCDIR)/r4300/pure_interp.c \
+	$(SRCDIR)/r4300/r4300_core.c \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \
 	$(SRCDIR)/r4300/tlb.c \

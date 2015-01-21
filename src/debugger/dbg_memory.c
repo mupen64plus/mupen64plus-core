@@ -33,6 +33,7 @@
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
 #include "r4300/r4300.h"
+#include "r4300/r4300_core.h"
 #include "r4300/ops.h"
 #include "r4300/tlb.h"
 #include "ri/ri_controller.h"
@@ -352,9 +353,9 @@ uint32 read_memory_32(uint32 addr){
       }
       break;
     case M64P_MEM_MI:
-      offset = (addr & 0xffff) >> 2;
+      offset = mi_reg(addr);
       if (offset < MI_REGS_COUNT)
-        return g_mi_regs[offset];
+        return g_r4300.mi.regs[offset];
       break;
     default:
       break;

@@ -45,6 +45,7 @@
 #include "r4300/cp0.h"
 #include "r4300/cp1.h"
 #include "r4300/r4300.h"
+#include "r4300/r4300_core.h"
 #include "r4300/cached_interp.h"
 #include "r4300/interupt.h"
 #include "osal/preproc.h"
@@ -284,11 +285,11 @@ static int savestates_load_m64p(char *filepath)
     g_ri.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     curr += 4; /* Padding from old implementation */
-    g_mi_regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
     curr += 4; // Duplicate MI init mode flags from old implementation
-    g_mi_regs[MI_VERSION_REG]   = GETDATA(curr, uint32_t);
-    g_mi_regs[MI_INTR_REG]      = GETDATA(curr, uint32_t);
-    g_mi_regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_VERSION_REG]   = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INTR_REG]      = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
     curr += 4; /* Padding from old implementation */
     curr += 8; // Duplicated MI intr flags and padding from old implementation
 
@@ -611,10 +612,10 @@ static int savestates_load_pj64(char *filepath, void *handle,
     (void)GETDATA(curr, unsigned int); // Dummy read
 
     // mi_register
-    g_mi_regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
-    g_mi_regs[MI_VERSION_REG]   = GETDATA(curr, uint32_t);
-    g_mi_regs[MI_INTR_REG]      = GETDATA(curr, uint32_t);
-    g_mi_regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_VERSION_REG]   = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INTR_REG]      = GETDATA(curr, uint32_t);
+    g_r4300.mi.regs[MI_INTR_MASK_REG] = GETDATA(curr, uint32_t);
 
     // vi_register
     g_vi_regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
@@ -1031,21 +1032,21 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_ri.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
 
     PUTDATA(curr, uint32_t, 0); // Padding from old implementation
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INIT_MODE_REG]);
-    PUTDATA(curr, uint8_t,  g_mi_regs[MI_INIT_MODE_REG] & 0x7F);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INIT_MODE_REG] & 0x80) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INIT_MODE_REG] & 0x100) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INIT_MODE_REG] & 0x200) != 0);
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_VERSION_REG]);
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_REG]);
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_MASK_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INIT_MODE_REG]);
+    PUTDATA(curr, uint8_t,  g_r4300.mi.regs[MI_INIT_MODE_REG] & 0x7F);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INIT_MODE_REG] & 0x80) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INIT_MODE_REG] & 0x100) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INIT_MODE_REG] & 0x200) != 0);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_VERSION_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_MASK_REG]);
     PUTDATA(curr, uint32_t, 0); //Padding from old implementation
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x1) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x2) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x4) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x8) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x10) != 0);
-    PUTDATA(curr, uint8_t, (g_mi_regs[MI_INTR_MASK_REG] & 0x20) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x1) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x2) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x4) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x8) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x10) != 0);
+    PUTDATA(curr, uint8_t, (g_r4300.mi.regs[MI_INTR_MASK_REG] & 0x20) != 0);
     PUTDATA(curr, uint16_t, 0); // Padding from old implementation
 
     PUTDATA(curr, uint32_t, g_pi_regs[PI_DRAM_ADDR_REG]);
@@ -1315,10 +1316,10 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, 0); // ?
     PUTDATA(curr, unsigned int, 0); // ?
 
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INIT_MODE_REG]); //TODO Secial handling in pj64
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_VERSION_REG]);
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_REG]);
-    PUTDATA(curr, uint32_t, g_mi_regs[MI_INTR_MASK_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INIT_MODE_REG]); //TODO Secial handling in pj64
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_VERSION_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_REG]);
+    PUTDATA(curr, uint32_t, g_r4300.mi.regs[MI_INTR_MASK_REG]);
 
     PUTDATA(curr, uint32_t, g_vi_regs[VI_STATUS_REG]);
     PUTDATA(curr, uint32_t, g_vi_regs[VI_ORIGIN_REG]);

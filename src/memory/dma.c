@@ -23,20 +23,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "api/m64p_types.h"
-
 #include "dma.h"
 #include "memory.h"
 #include "pif.h"
 #include "flashram.h"
 
-#include "r4300/r4300.h"
-#include "r4300/cached_interp.h"
-#include "r4300/interupt.h"
-#include "r4300/cp0.h"
-#include "r4300/ops.h"
-#include "../r4300/new_dynarec/new_dynarec.h"
-
+#include "api/m64p_types.h"
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
 #include "api/config.h"
@@ -44,6 +36,14 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/util.h"
+#include "r4300/r4300.h"
+#include "r4300/r4300_core.h"
+#include "r4300/cached_interp.h"
+#include "r4300/interupt.h"
+#include "r4300/cp0.h"
+#include "r4300/ops.h"
+#include "r4300/new_dynarec/new_dynarec.h"
+
 
 static unsigned char sram[0x8000];
 int delay_si = 0;
@@ -360,7 +360,7 @@ void dma_si_write(void)
     if (delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        g_mi_regs[MI_INTR_REG] |= 0x02; // SI
+        g_r4300.mi.regs[MI_INTR_REG] |= 0x02; // SI
         g_si_regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
         check_interupt();
     }
@@ -388,7 +388,7 @@ void dma_si_read(void)
     if (delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        g_mi_regs[MI_INTR_REG] |= 0x02; // SI
+        g_r4300.mi.regs[MI_INTR_REG] |= 0x02; // SI
         g_si_regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
         check_interupt();
     }

@@ -103,17 +103,6 @@ enum dps_registers
 extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
 extern uint32_t g_dps_regs[DPS_REGS_COUNT];
 
-enum mi_registers
-{
-    MI_INIT_MODE_REG,
-    MI_VERSION_REG,
-    MI_INTR_REG,
-    MI_INTR_MASK_REG,
-    MI_REGS_COUNT
-};
-
-extern uint32_t g_mi_regs[MI_REGS_COUNT];
-
 enum vi_registers
 {
     VI_STATUS_REG,

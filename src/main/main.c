@@ -56,6 +56,7 @@
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300.h"
+#include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
 #include "r4300/reset.h"
 #include "ri/ri_controller.h"
@@ -82,6 +83,7 @@ int         g_EmulatorRunning = 0;      // need separate boolean to tell if emul
 
 ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 struct ri_controller g_ri;
+struct r4300_core g_r4300;
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
@@ -746,6 +748,7 @@ void new_vi(void)
 }
 
 static void connect_all(
+        struct r4300_core* r4300,
         struct ri_controller* ri,
         uint32_t* dram,
         size_t dram_size)
@@ -778,7 +781,7 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
-    connect_all(&g_ri, g_rdram, RDRAM_MAX_SIZE);
+    connect_all(&g_r4300, &g_ri, g_rdram, RDRAM_MAX_SIZE);
 
     init_memory();
 
