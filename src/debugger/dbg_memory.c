@@ -28,12 +28,14 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "main/main.h"
+#include "main/rom.h"
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
 #include "r4300/tlb.h"
-#include "main/rom.h"
+#include "ri/ri_controller.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
 
@@ -333,9 +335,9 @@ uint32 read_memory_32(uint32 addr){
         return g_pi_regs[offset];
       break;
     case M64P_MEM_RI:
-      offset = (addr & 0xffff) >> 2;
+      offset = ri_reg(addr);
       if (offset < RI_REGS_COUNT)
-        return g_ri_regs[offset];
+        return g_ri.regs[offset];
       break;
     case M64P_MEM_SI:
       offset = (addr & 0xffff) >> 2;

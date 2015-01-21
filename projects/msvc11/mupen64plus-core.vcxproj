@@ -160,6 +160,7 @@
     <ClCompile Include="..\..\src\r4300\recomp.c" />
     <ClCompile Include="..\..\src\r4300\x86\regcache.c" />
     <ClCompile Include="..\..\src\r4300\reset.c" />
+    <ClCompile Include="..\..\src\ri\ri_controller.c" />
     <ClCompile Include="..\..\src\r4300\x86\rjump.c" />
     <ClCompile Include="..\..\src\main\rom.c" />
     <ClCompile Include="..\..\src\main\savestates.c" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\..\src\r4300\recomph.h" />
     <ClInclude Include="..\..\src\r4300\x86\regcache.h" />
     <ClInclude Include="..\..\src\r4300\reset.h" />
+    <ClInclude Include="..\..\src\ri\ri_controller.h" />
     <ClInclude Include="..\..\src\main\rom.h" />
     <ClInclude Include="..\..\src\main\savestates.h" />
     <ClInclude Include="..\..\src\main\sdl_key_converter.h" />

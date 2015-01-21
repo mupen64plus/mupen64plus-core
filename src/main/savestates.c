@@ -50,6 +50,7 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "r4300/new_dynarec/new_dynarec.h"
+#include "ri/ri_controller.h"
 
 #ifdef LIBMINIZIP
     #include <unzip.h>
@@ -342,14 +343,14 @@ static int savestates_load_m64p(char *filepath)
     gfx.viStatusChanged();
     gfx.viWidthChanged();
 
-    g_ri_regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
 
     g_ai_regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
     g_ai_regs[AI_LEN_REG]       = GETDATA(curr, uint32_t);
@@ -660,14 +661,14 @@ static int savestates_load_pj64(char *filepath, void *handle,
     read_func(handle, g_pi_regs, PI_REGS_COUNT*sizeof(g_pi_regs[0]));
 
     // ri_register
-    g_ri_regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
-    g_ri_regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_CURRENT_LOAD_REG] = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_SELECT_REG]       = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_REFRESH_REG]      = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_LATENCY_REG]      = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_ERROR_REG]        = GETDATA(curr, uint32_t);
+    g_ri.regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
 
     // si_register
     g_si_regs[SI_DRAM_ADDR_REG]      = GETDATA(curr, uint32_t);
@@ -1111,14 +1112,14 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_vi_regs[VI_Y_SCALE_REG]);
     PUTDATA(curr, unsigned int, g_vi_delay);
 
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_CURRENT_LOAD_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_REFRESH_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_LATENCY_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_ERROR_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_WERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_CURRENT_LOAD_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_REFRESH_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_LATENCY_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_ERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_WERROR_REG]);
 
     PUTDATA(curr, uint32_t, g_ai_regs[AI_DRAM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_ai_regs[AI_LEN_REG]);
@@ -1355,14 +1356,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_PGS_REG]);
     PUTDATA(curr, uint32_t, g_pi_regs[PI_BSD_DOM2_RLS_REG]);
 
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_CURRENT_LOAD_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_REFRESH_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_LATENCY_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_ERROR_REG]);
-    PUTDATA(curr, uint32_t, g_ri_regs[RI_WERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_CURRENT_LOAD_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_REFRESH_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_LATENCY_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_ERROR_REG]);
+    PUTDATA(curr, uint32_t, g_ri.regs[RI_WERROR_REG]);
 
     PUTDATA(curr, uint32_t, g_si_regs[SI_DRAM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_RD64B_REG]);

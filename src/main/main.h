@@ -25,11 +25,15 @@
 
 #include "api/m64p_types.h"
 
+struct ri_controller;
+
 /* globals */
 extern m64p_handle g_CoreConfig;
 
 extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
+
+extern struct ri_controller g_ri;
 
 extern m64p_frame_callback g_FrameCallback;
 

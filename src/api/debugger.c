@@ -36,11 +36,13 @@
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
 #include "debugger/debugger.h"
+#include "main/main.h"
 #include "memory/memory.h"
 #include "r4300/r4300.h"
 #include "r4300/cp0.h"
 #include "r4300/cp1.h"
 #include "r4300/tlb.h"
+#include "ri/ri_controller.h"
 
 unsigned int op;
 
@@ -220,7 +222,7 @@ EXPORT void * CALL DebugMemGetPointer(m64p_dbg_memptr_type mem_ptr_type)
         case M64P_DBG_PTR_VI_REG:
             return g_vi_regs;
         case M64P_DBG_PTR_RI_REG:
-            return g_ri_regs;
+            return g_ri.regs;
         case M64P_DBG_PTR_AI_REG:
             return g_ai_regs;
         default:

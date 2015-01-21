@@ -61,21 +61,7 @@ enum rdram_registers
     RDRAM_REGS_COUNT
 };
 
-enum ri_registers
-{
-    RI_MODE_REG,
-    RI_CONFIG_REG,
-    RI_CURRENT_LOAD_REG,
-    RI_SELECT_REG,
-    RI_REFRESH_REG,
-    RI_LATENCY_REG,
-    RI_ERROR_REG,
-    RI_WERROR_REG,
-    RI_REGS_COUNT
-};
-
 extern uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
-extern uint32_t g_ri_regs[RI_REGS_COUNT];
 
 extern unsigned int address, word;
 extern unsigned char cpu_byte;

@@ -45,6 +45,7 @@
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
 #include "r4300/new_dynarec/new_dynarec.h"
+#include "ri/ri_controller.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -205,7 +206,6 @@ static void write_ddd(void);
 
 /* definitions of the rcp's structures and memory area */
 uint32_t g_rdram_regs[RDRAM_REGS_COUNT];
-uint32_t g_ri_regs[RI_REGS_COUNT];
 uint32_t g_mi_regs[MI_REGS_COUNT];
 uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_sp_regs[SP_REGS_COUNT];
@@ -673,9 +673,6 @@ int init_memory(void)
         map_region(0xa460+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init RI registers */
-    memset(g_ri_regs, 0, RI_REGS_COUNT*sizeof(g_ri_regs[0]));
-
     /* map RI registers */
     map_region(0x8470, M64P_MEM_RI, RW(ri));
     map_region(0xa470, M64P_MEM_RI, RW(ri));
@@ -751,6 +748,8 @@ int init_memory(void)
     frameBufferInfos[0].addr = 0;
     fast_memory = 1;
     firstFrameBufferSetting = 1;
+
+    init_ri(&g_ri);
 
     DebugMessage(M64MSG_VERBOSE, "Memory initialized");
     return 0;
@@ -2197,67 +2196,44 @@ static void write_pid(void)
 }
 
 
-static inline uint32_t ri_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_ri_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = ri_reg(address);
-
-    *value = g_ri_regs[reg];
-
-    return 0;
-}
-
-static int write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = ri_reg(address);
-
-    masked_write(&g_ri_regs[reg], value, mask);
-
-    return 0;
-}
-
 static void read_ri(void)
 {
-    readw(read_ri_regs, NULL, address, rdword);
+    readw(read_ri_regs, &g_ri, address, rdword);
 }
 
 static void read_rib(void)
 {
-    readb(read_ri_regs, NULL, address, rdword);
+    readb(read_ri_regs, &g_ri, address, rdword);
 }
 
 static void read_rih(void)
 {
-    readh(read_ri_regs, NULL, address, rdword);
+    readh(read_ri_regs, &g_ri, address, rdword);
 }
 
 static void read_rid(void)
 {
-    readd(read_ri_regs, NULL, address, rdword);
+    readd(read_ri_regs, &g_ri, address, rdword);
 }
 
 static void write_ri(void)
 {
-    writew(write_ri_regs, NULL, address, word);
+    writew(write_ri_regs, &g_ri, address, word);
 }
 
 static void write_rib(void)
 {
-    writeb(write_ri_regs, NULL, address, cpu_byte);
+    writeb(write_ri_regs, &g_ri, address, cpu_byte);
 }
 
 static void write_rih(void)
 {
-    writeh(write_ri_regs, NULL, address, hword);
+    writeh(write_ri_regs, &g_ri, address, hword);
 }
 
 static void write_rid(void)
 {
-    writed(write_ri_regs, NULL, address, dword);
+    writed(write_ri_regs, &g_ri, address, dword);
 }
 
 

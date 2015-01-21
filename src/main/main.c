@@ -58,6 +58,7 @@
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
 #include "r4300/reset.h"
+#include "ri/ri_controller.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -78,6 +79,8 @@ m64p_frame_callback g_FrameCallback = NULL;
 
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
+
+struct ri_controller g_ri;
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
