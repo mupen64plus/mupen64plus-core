@@ -765,7 +765,7 @@ static void connect_all(
         uint32_t* dram,
         size_t dram_size)
 {
-    connect_rdp(dp, r4300, sp);
+    connect_rdp(dp, r4300, sp, ri);
     connect_rsp(sp, r4300, dp, ri);
     connect_ai(ai, r4300, vi);
     connect_ri(ri, dram, dram_size);

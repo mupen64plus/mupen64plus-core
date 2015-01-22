@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rdp_core.h                                              *
+ *   Mupen64plus - fb.h                                                    *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,73 +19,31 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_RDP_RDP_CORE_H
-#define M64P_RDP_RDP_CORE_H
+#ifndef M64P_RDP_FB_H
+#define M64P_RDP_FB_H
 
 #include <stdint.h>
 
-#include "fb.h"
+#include "api/m64p_plugin.h"
 
-struct r4300_core;
-struct rsp_core;
-struct ri_controller;
+struct rdp_core;
 
-enum dpc_registers
+enum { FB_INFOS_COUNT = 6 };
+enum { FB_DIRTY_PAGES_COUNT = 0x800 };
+
+struct fb
 {
-    DPC_START_REG,
-    DPC_END_REG,
-    DPC_CURRENT_REG,
-    DPC_STATUS_REG,
-    DPC_CLOCK_REG,
-    DPC_BUFBUSY_REG,
-    DPC_PIPEBUSY_REG,
-    DPC_TMEM_REG,
-    DPC_REGS_COUNT
+    unsigned char dirty_page[FB_DIRTY_PAGES_COUNT];
+    FrameBufferInfo infos[FB_INFOS_COUNT];
+    unsigned int once;
 };
 
-enum dps_registers
-{
-    DPS_TBIST_REG,
-    DPS_TEST_MODE_REG,
-    DPS_BUFTEST_ADDR_REG,
-    DPS_BUFTEST_DATA_REG,
-    DPS_REGS_COUNT
-};
+void init_fb(struct fb* fb);
 
+int read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
+int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-struct rdp_core
-{
-    uint32_t dpc_regs[DPC_REGS_COUNT];
-    uint32_t dps_regs[DPS_REGS_COUNT];
-
-    struct fb fb;
-
-    struct r4300_core* r4300;
-    struct rsp_core* sp;
-    struct ri_controller* ri;
-};
-
-static inline uint32_t dpc_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static inline uint32_t dps_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-void connect_rdp(struct rdp_core* dp,
-                 struct r4300_core* r4300,
-                 struct rsp_core* sp,
-                 struct ri_controller* ri);
-
-void init_rdp(struct rdp_core* dp);
-
-int read_dpc_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-int read_dps_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void protect_framebuffers(struct rdp_core* dp);
+void unprotect_framebuffers(struct rdp_core* dp);
 
 #endif

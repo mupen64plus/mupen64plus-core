@@ -139,7 +139,7 @@ void map_region(uint16_t region,
                 void (*write32)(void),
                 void (*write64)(void));
 
-/* XXX: cannot make them static because of dynarec */
+/* XXX: cannot make them static because of dynarec + rdp fb */
 void read_rdram(void);
 void read_rdramb(void);
 void read_rdramh(void);
@@ -148,10 +148,14 @@ void write_rdram(void);
 void write_rdramb(void);
 void write_rdramh(void);
 void write_rdramd(void);
-
-/* XXX: move that into the RDP subsystem */
-void protect_framebuffers(void);
-void unprotect_framebuffers(void);
+void read_rdramFB(void);
+void read_rdramFBb(void);
+void read_rdramFBh(void);
+void read_rdramFBd(void);
+void write_rdramFB(void);
+void write_rdramFBb(void);
+void write_rdramFBh(void);
+void write_rdramFBd(void);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

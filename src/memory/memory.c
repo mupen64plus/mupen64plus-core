@@ -74,14 +74,6 @@ static void write_nomem(void);
 static void write_nomemb(void);
 static void write_nomemh(void);
 static void write_nomemd(void);
-static void read_rdramFB(void);
-static void read_rdramFBb(void);
-static void read_rdramFBh(void);
-static void read_rdramFBd(void);
-static void write_rdramFB(void);
-static void write_rdramFBb(void);
-static void write_rdramFBh(void);
-static void write_rdramFBd(void);
 static void read_rdramreg(void);
 static void read_rdramregb(void);
 static void read_rdramregh(void);
@@ -243,11 +235,6 @@ void (*writemem[0x10000])(void);
 void (*writememb[0x10000])(void);
 void (*writememd[0x10000])(void);
 void (*writememh[0x10000])(void);
-
-// the frameBufferInfos
-static FrameBufferInfo frameBufferInfos[6];
-static char framebufferRead[0x800];
-static int firstFrameBufferSetting;
 
 static enum cic_type detect_cic_type(const void* ipl3)
 {
@@ -703,9 +690,7 @@ int init_memory(void)
     flashram_info.use_flashram = 0;
     init_flashram();
 
-    frameBufferInfos[0].addr = 0;
     fast_memory = 1;
-    firstFrameBufferSetting = 1;
 
     init_r4300(&g_r4300);
     init_rdp(&g_dp);
@@ -803,125 +788,12 @@ void map_region(uint16_t region,
 }
 
 
-void protect_framebuffers(void)
-{
-    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
-        gfx.fBGetFrameBufferInfo(frameBufferInfos);
-    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite
-            && frameBufferInfos[0].addr)
-    {
-        int i;
-        for (i=0; i<6; i++)
-        {
-            if (frameBufferInfos[i].addr)
-            {
-                int j;
-                int start = frameBufferInfos[i].addr & 0x7FFFFF;
-                int end = start + frameBufferInfos[i].width*
-                          frameBufferInfos[i].height*
-                          frameBufferInfos[i].size - 1;
-                int start1 = start;
-                int end1 = end;
-                start >>= 16;
-                end >>= 16;
-                for (j=start; j<=end; j++)
-                {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
-                }
-                start <<= 4;
-                end <<= 4;
-                for (j=start; j<=end; j++)
-                {
-                    if (j>=start1 && j<=end1) framebufferRead[j]=1;
-                    else framebufferRead[j] = 0;
-                }
-
-                if (firstFrameBufferSetting)
-                {
-                    firstFrameBufferSetting = 0;
-                    fast_memory = 0;
-                    for (j=0; j<0x100000; j++)
-                        invalid_code[j] = 1;
-                }
-            }
-        }
-    }
-}
-
-void unprotect_framebuffers(void)
-{
-    if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite &&
-            frameBufferInfos[0].addr)
-    {
-        int i;
-        for (i=0; i<6; i++)
-        {
-            if (frameBufferInfos[i].addr)
-            {
-                int j;
-                int start = frameBufferInfos[i].addr & 0x7FFFFF;
-                int end = start + frameBufferInfos[i].width*
-                          frameBufferInfos[i].height*
-                          frameBufferInfos[i].size - 1;
-                start = start >> 16;
-                end = end >> 16;
-
-                for (j=start; j<=end; j++)
-                {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdram));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdram));
-                }
-            }
-        }
-    }
-}
-
-
 static void invalidate_code(uint32_t address)
 {
     if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
         if (blocks[address>>12]->block[(address&0xFFF)/4].ops !=
             current_instruction_table.NOTCOMPILED)
             invalid_code[address>>12] = 1;
-}
-
-static void pre_framebuffer_read(uint32_t address)
-{
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-                    framebufferRead[(address & 0x7FFFFF)>>12])
-            {
-                gfx.fBRead(address);
-                framebufferRead[(address & 0x7FFFFF)>>12] = 0;
-            }
-        }
-    }
-}
-
-static void pre_framebuffer_write(uint32_t address)
-{
-    int i;
-    for (i=0; i<6; i++)
-    {
-        if (frameBufferInfos[i].addr)
-        {
-            unsigned int start = frameBufferInfos[i].addr & 0x7FFFFF;
-            unsigned int end = start + frameBufferInfos[i].width*
-                               frameBufferInfos[i].height*
-                               frameBufferInfos[i].size - 1;
-            if ((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
-                gfx.fBWrite(address, 4);
-        }
-    }
 }
 
 
@@ -1042,38 +914,6 @@ void read_rdramd(void)
     readd(read_rdram_dram, &g_ri, address, rdword);
 }
 
-static int read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
-{
-    pre_framebuffer_read(address);
-    return read_rdram_dram(&g_ri, address, value);
-}
-
-static int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    pre_framebuffer_write(address);
-    return write_rdram_dram(&g_ri, address, value, mask);
-}
-
-static void read_rdramFB(void)
-{
-    readw(read_rdram_fb, NULL, address, rdword);
-}
-
-static void read_rdramFBb(void)
-{
-    readb(read_rdram_fb, NULL, address, rdword);
-}
-
-static void read_rdramFBh(void)
-{
-    readh(read_rdram_fb, NULL, address, rdword);
-}
-
-static void read_rdramFBd(void)
-{
-    readd(read_rdram_fb, NULL, address, rdword);
-}
-
 void write_rdram(void)
 {
     writew(write_rdram_dram, &g_ri, address, word);
@@ -1094,24 +934,45 @@ void write_rdramd(void)
     writed(write_rdram_dram, &g_ri, address, dword);
 }
 
-static void write_rdramFB(void)
+
+void read_rdramFB(void)
 {
-    writew(write_rdram_fb, NULL, address, word);
+    readw(read_rdram_fb, &g_dp, address, rdword);
 }
 
-static void write_rdramFBb(void)
+void read_rdramFBb(void)
 {
-    writeb(write_rdram_fb, NULL, address, cpu_byte);
+    readb(read_rdram_fb, &g_dp, address, rdword);
 }
 
-static void write_rdramFBh(void)
+void read_rdramFBh(void)
 {
-    writeh(write_rdram_fb, NULL, address, hword);
+    readh(read_rdram_fb, &g_dp, address, rdword);
 }
 
-static void write_rdramFBd(void)
+void read_rdramFBd(void)
 {
-    writed(write_rdram_fb, NULL, address, dword);
+    readd(read_rdram_fb, &g_dp, address, rdword);
+}
+
+void write_rdramFB(void)
+{
+    writew(write_rdram_fb, &g_dp, address, word);
+}
+
+void write_rdramFBb(void)
+{
+    writeb(write_rdram_fb, &g_dp, address, cpu_byte);
+}
+
+void write_rdramFBh(void)
+{
+    writeh(write_rdram_fb, &g_dp, address, hword);
+}
+
+void write_rdramFBd(void)
+{
+    writed(write_rdram_fb, &g_dp, address, dword);
 }
 
 

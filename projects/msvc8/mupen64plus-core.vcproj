@@ -289,6 +289,10 @@
 				>
 			</File>
 			<File
+                RelativePath="..\..\src\rdp\fb.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\osal\files_win32.c"
 				>
 			</File>
@@ -588,6 +592,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\exception.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\rdp\fb.h"
 				>
 			</File>
 			<File

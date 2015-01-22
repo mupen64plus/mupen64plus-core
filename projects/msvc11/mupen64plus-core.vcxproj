@@ -129,6 +129,7 @@
     <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
     <ClCompile Include="..\..\src\r4300\exception.c" />
+    <ClCompile Include="..\..\src\rdp\fb.c" />
     <ClCompile Include="..\..\src\osal\files_win32.c" />
     <ClCompile Include="..\..\src\memory\flashram.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
@@ -205,6 +206,7 @@
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
     <ClInclude Include="..\..\src\r4300\exception.h" />
+    <ClInclude Include="..\..\src\rdp\fb.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
     <ClInclude Include="..\..\src\memory\flashram.h" />
     <ClInclude Include="..\..\src\r4300\instr_counters.h" />

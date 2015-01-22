@@ -277,7 +277,7 @@ void do_SP_Task(struct rsp_core* sp)
             return;
         }
 
-        unprotect_framebuffers();
+        unprotect_framebuffers(sp->dp);
 
         //gfx.processDList();
         sp->regs2[SP_PC_REG] &= 0xfff;
@@ -295,7 +295,7 @@ void do_SP_Task(struct rsp_core* sp)
         sp->r4300->mi.regs[MI_INTR_REG] &= ~0x21;
         sp->regs[SP_STATUS_REG] &= ~0x303;
 
-        protect_framebuffers();
+        protect_framebuffers(sp->dp);
     }
     else if (sp->mem[0xfc0/4] == 2)
     {
