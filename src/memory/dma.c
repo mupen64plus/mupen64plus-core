@@ -190,12 +190,12 @@ void dma_pi_write(void)
 
     longueur = (g_pi.regs[PI_WR_LEN_REG] & 0xFFFFFF)+1;
     i = (g_pi.regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF;
-    longueur = (i + (int) longueur) > rom_size ?
-               (rom_size - i) : longueur;
+    longueur = (i + (int) longueur) > g_rom_size ?
+               (g_rom_size - i) : longueur;
     longueur = (g_pi.regs[PI_DRAM_ADDR_REG] + longueur) > 0x7FFFFF ?
                (0x7FFFFF - g_pi.regs[PI_DRAM_ADDR_REG]) : longueur;
 
-    if (i>rom_size || g_pi.regs[PI_DRAM_ADDR_REG] > 0x7FFFFF)
+    if (i>g_rom_size || g_pi.regs[PI_DRAM_ADDR_REG] > 0x7FFFFF)
     {
         g_pi.regs[PI_STATUS_REG] |= 3;
         update_count();
@@ -211,7 +211,7 @@ void dma_pi_write(void)
             unsigned long rdram_address1 = g_pi.regs[PI_DRAM_ADDR_REG]+i+0x80000000;
             unsigned long rdram_address2 = g_pi.regs[PI_DRAM_ADDR_REG]+i+0xa0000000;
             ((unsigned char*)g_rdram)[(g_pi.regs[PI_DRAM_ADDR_REG]+i)^S8]=
-                rom[(((g_pi.regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
+                g_rom[(((g_pi.regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
 
             if (!invalid_code[rdram_address1>>12])
             {
@@ -241,7 +241,7 @@ void dma_pi_write(void)
         for (i=0; i<(int)longueur; i++)
         {
             ((unsigned char*)g_rdram)[(g_pi.regs[PI_DRAM_ADDR_REG]+i)^S8]=
-                rom[(((g_pi.regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
+                g_rom[(((g_pi.regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF)+i)^S8];
         }
     }
 

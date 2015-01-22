@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - pi_controller.c                                         *
+ *   Mupen64plus - cart_rom.c                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,76 +19,44 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "cart_rom.h"
 #include "pi_controller.h"
 
-/* XXX: move dma_pi_{read,write} here instead */
-#include "memory/dma.h"
-#include "memory/memory.h"
-#include "r4300/interupt.h"
-#include "r4300/r4300_core.h"
-
-#include <string.h>
-
-void connect_pi(struct pi_controller* pi,
-                struct r4300_core* r4300,
-                uint8_t* rom, size_t rom_size)
+void connect_cart_rom(struct cart_rom* cart_rom,
+                      uint8_t* rom, size_t rom_size)
 {
-    connect_cart_rom(&pi->cart_rom, rom, rom_size);
-
-    pi->r4300 = r4300;
+    cart_rom->rom = rom;
+    cart_rom->rom_size = rom_size;
 }
 
-void init_pi(struct pi_controller* pi)
+void init_cart_rom(struct cart_rom* cart_rom)
 {
-    memset(pi->regs, 0, PI_REGS_COUNT*sizeof(uint32_t));
+    cart_rom->last_write = 0;
 }
 
 
-int read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
+int read_cart_rom(void* opaque, uint32_t address, uint32_t* value)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
-    uint32_t reg = pi_reg(address);
+    uint32_t addr = rom_address(address);
 
-    *value = pi->regs[reg];
+    if (pi->cart_rom.last_write != 0)
+    {
+        *value = pi->cart_rom.last_write;
+        pi->cart_rom.last_write = 0;
+    }
+    else
+    {
+        *value = *(uint32_t*)(pi->cart_rom.rom + addr);
+    }
 
     return 0;
 }
 
-int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+int write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
-    uint32_t reg = pi_reg(address);
-
-    switch (reg)
-    {
-    case PI_RD_LEN_REG:
-        masked_write(&pi->regs[PI_RD_LEN_REG], value, mask);
-        dma_pi_read();
-        return 0;
-
-    case PI_WR_LEN_REG:
-        masked_write(&pi->regs[PI_WR_LEN_REG], value, mask);
-        dma_pi_write();
-        return 0;
-
-    case PI_STATUS_REG:
-        if (value & mask & 2) pi->r4300->mi.regs[MI_INTR_REG] &= ~0x10;
-        check_interupt();
-        return 0;
-
-    case PI_BSD_DOM1_LAT_REG:
-    case PI_BSD_DOM1_PWD_REG:
-    case PI_BSD_DOM1_PGS_REG:
-    case PI_BSD_DOM1_RLS_REG:
-    case PI_BSD_DOM2_LAT_REG:
-    case PI_BSD_DOM2_PWD_REG:
-    case PI_BSD_DOM2_PGS_REG:
-    case PI_BSD_DOM2_RLS_REG:
-        masked_write(&pi->regs[reg], value & 0xff, mask);
-        return 0;
-    }
-
-    masked_write(&pi->regs[reg], value, mask);
+    pi->cart_rom.last_write = value & mask;
 
     return 0;
 }

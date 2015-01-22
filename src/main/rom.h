@@ -40,8 +40,8 @@
 m64p_error open_rom(const unsigned char* romimage, unsigned int size);
 m64p_error close_rom(void);
 
-extern unsigned char* rom;
-extern int rom_size;
+extern unsigned char* g_rom;
+extern int g_rom_size;
 
 extern unsigned char isGoldeneyeRom;
 

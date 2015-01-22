@@ -530,7 +530,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // check ROM header
     COPYARRAY(RomHeader, curr, unsigned int, 0x40/4);
-    if(memcmp(RomHeader, rom, 0x40) != 0)
+    if(memcmp(RomHeader, g_rom, 0x40) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
         free(savestateData);
@@ -1263,7 +1263,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     // Write the save state data in memory
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
-    PUTARRAY(rom, curr, unsigned int, 0x40/4);
+    PUTARRAY(g_rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, unsigned int, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)

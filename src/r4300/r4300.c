@@ -185,7 +185,7 @@ void r4300_reset_soft(void)
     unsigned int s7 = 0;                    /* ??? */
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     unsigned int cic_seed = get_cic_seed();
-    uint32_t bsd_dom1_config = *(uint32_t*)rom;
+    uint32_t bsd_dom1_config = *(uint32_t*)g_rom;
 
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
@@ -208,7 +208,7 @@ void r4300_reset_soft(void)
 
     g_r4300.mi.regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
 
-    memcpy((unsigned char*)g_sp.mem+0x40, rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */

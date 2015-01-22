@@ -299,7 +299,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RSPMEM:
       return g_sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
-      return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
+      return *((uint32 *)(g_rom + rom_address(addr)));
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)

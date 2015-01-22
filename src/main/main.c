@@ -766,12 +766,14 @@ static void connect_all(
         struct ri_controller* ri,
         struct vi_controller* vi,
         uint32_t* dram,
-        size_t dram_size)
+        size_t dram_size,
+        uint8_t* rom,
+        size_t rom_size)
 {
     connect_rdp(dp, r4300, sp, ri);
     connect_rsp(sp, r4300, dp, ri);
     connect_ai(ai, r4300, vi);
-    connect_pi(pi, r4300);
+    connect_pi(pi, r4300, rom, rom_size);
     connect_ri(ri, dram, dram_size);
     connect_vi(vi, r4300);
 }
@@ -797,13 +799,14 @@ m64p_error main_run(void)
     /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)
     {
-        swap_buffer(rom, 4, rom_size/4);
+        swap_buffer(g_rom, 4, g_rom_size/4);
         g_MemHasBeenBSwapped = 1;
     }
 
     connect_all(&g_r4300, &g_dp, &g_sp,
                 &g_ai, &g_pi, &g_ri, &g_vi,
-                g_rdram, RDRAM_MAX_SIZE);
+                g_rdram, RDRAM_MAX_SIZE,
+                g_rom, g_rom_size);
 
     init_memory();
 

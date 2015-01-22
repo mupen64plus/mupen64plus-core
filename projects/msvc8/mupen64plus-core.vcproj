@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pi\cart_rom.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\cheat.c"
 				>
 			</File>
@@ -516,6 +520,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\api\callbacks.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pi\cart_rom.h"
 				>
 			</File>
 			<File

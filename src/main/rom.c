@@ -51,9 +51,9 @@ static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 static _romdatabase g_romdatabase;
 
 /* Global loaded rom memory space. */
-unsigned char* rom = NULL;
+unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
-int rom_size = 0;
+int g_rom_size = 0;
 
 unsigned char isGoldeneyeRom = 0;
 
@@ -129,7 +129,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     int i;
 
     /* check input requirements */
-    if (rom != NULL)
+    if (g_rom != NULL)
     {
         DebugMessage(M64MSG_ERROR, "open_rom(): previous ROM image was not freed");
         return M64ERR_INTERNAL;
@@ -143,18 +143,18 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
     /* allocate new buffer for ROM and copy into this buffer */
-    rom_size = size;
-    rom = (unsigned char *) malloc(size);
-    if (rom == NULL)
+    g_rom_size = size;
+    g_rom = (unsigned char *) malloc(size);
+    if (g_rom == NULL)
         return M64ERR_NO_MEMORY;
-    memcpy(rom, romimage, size);
-    swap_rom(rom, &imagetype, rom_size);
+    memcpy(g_rom, romimage, size);
+    swap_rom(g_rom, &imagetype, g_rom_size);
 
-    memcpy(&ROM_HEADER, rom, sizeof(m64p_rom_header));
+    memcpy(&ROM_HEADER, g_rom, sizeof(m64p_rom_header));
 
     /* Calculate MD5 hash  */
     md5_init(&state);
-    md5_append(&state, (const md5_byte_t*)rom, rom_size);
+    md5_append(&state, (const md5_byte_t*)g_rom, g_rom_size);
     md5_finish(&state, digest);
     for ( i = 0; i < 16; ++i )
         sprintf(buffer+i*2, "%02X", digest[i]);
@@ -204,7 +204,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
     DebugMessage(M64MSG_INFO, "CRC: %x %x", sl(ROM_HEADER.CRC1), sl(ROM_HEADER.CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
-    DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", rom_size, rom_size/1024/1024, rom_size/1024/1024*8);
+    DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", g_rom_size, g_rom_size/1024/1024, g_rom_size/1024/1024*8);
     DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl(ROM_HEADER.ClockRate));
     DebugMessage(M64MSG_INFO, "Version: %x", sl(ROM_HEADER.Release));
     if(sl(ROM_HEADER.Manufacturer_ID) == 'N')
@@ -227,11 +227,11 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
 m64p_error close_rom(void)
 {
-    if (rom == NULL)
+    if (g_rom == NULL)
         return M64ERR_INVALID_STATE;
 
-    free(rom);
-    rom = NULL;
+    free(g_rom);
+    g_rom = NULL;
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
