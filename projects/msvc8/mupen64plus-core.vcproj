@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+                RelativePath="..\..\src\rdp\rdp_core.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\ri\rdram.c"
 				>
 			</File>
@@ -704,6 +708,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\r4300_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\rdp\rdp_core.h"
 				>
 			</File>
 			<File

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rsp_core.h                                              *
+ *   Mupen64plus - rdp_core.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,80 +19,66 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_RSP_RSP_CORE_H
-#define M64P_RSP_RSP_CORE_H
+#ifndef M64P_RDP_RDP_CORE_H
+#define M64P_RDP_RDP_CORE_H
 
 #include <stdint.h>
 
 struct r4300_core;
-struct rdp_core;
-struct ri_controller;
+struct rsp_core;
 
-enum { SP_MEM_SIZE = 0x2000 };
-
-enum sp_registers
+enum dpc_registers
 {
-    SP_MEM_ADDR_REG,
-    SP_DRAM_ADDR_REG,
-    SP_RD_LEN_REG,
-    SP_WR_LEN_REG,
-    SP_STATUS_REG,
-    SP_DMA_FULL_REG,
-    SP_DMA_BUSY_REG,
-    SP_SEMAPHORE_REG,
-    SP_REGS_COUNT
+    DPC_START_REG,
+    DPC_END_REG,
+    DPC_CURRENT_REG,
+    DPC_STATUS_REG,
+    DPC_CLOCK_REG,
+    DPC_BUFBUSY_REG,
+    DPC_PIPEBUSY_REG,
+    DPC_TMEM_REG,
+    DPC_REGS_COUNT
 };
 
-enum sp_registers2
+enum dps_registers
 {
-    SP_PC_REG,
-    SP_IBIST_REG,
-    SP_REGS2_COUNT
+    DPS_TBIST_REG,
+    DPS_TEST_MODE_REG,
+    DPS_BUFTEST_ADDR_REG,
+    DPS_BUFTEST_DATA_REG,
+    DPS_REGS_COUNT
 };
 
 
-struct rsp_core
+struct rdp_core
 {
-    uint32_t mem[SP_MEM_SIZE/4];
-    uint32_t regs[SP_REGS_COUNT];
-    uint32_t regs2[SP_REGS2_COUNT];
+    uint32_t dpc_regs[DPC_REGS_COUNT];
+    uint32_t dps_regs[DPS_REGS_COUNT];
 
     struct r4300_core* r4300;
-    struct rdp_core* dp;
-    struct ri_controller* ri;
+    struct rsp_core* sp;
 };
 
-static inline uint32_t rsp_mem_address(uint32_t address)
-{
-    return (address & 0x1fff) >> 2;
-}
-
-static inline uint32_t rsp_reg(uint32_t address)
+static inline uint32_t dpc_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
-static inline uint32_t rsp_reg2(uint32_t address)
+static inline uint32_t dps_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
-void connect_rsp(struct rsp_core* sp,
+void connect_rdp(struct rdp_core* dp,
                  struct r4300_core* r4300,
-                 struct rdp_core* dp,
-                 struct ri_controller* ri);
+                 struct rsp_core* sp);
 
-void init_rsp(struct rsp_core* sp);
+void init_rdp(struct rdp_core* dp);
 
-int read_rsp_mem(void* opaque, uint32_t address, uint32_t* value);
-int write_rsp_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+int read_dpc_regs(void* opaque, uint32_t address, uint32_t* value);
+int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-int read_rsp_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-int read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value);
-int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void do_SP_Task(struct rsp_core* sp);
+int read_dps_regs(void* opaque, uint32_t address, uint32_t* value);
+int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #endif

@@ -28,6 +28,7 @@
 #include "r4300/cp0.h"
 #include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
+#include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 
 #include <string.h>
@@ -156,9 +157,11 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 
 void connect_rsp(struct rsp_core* sp,
                  struct r4300_core* r4300,
+                 struct rdp_core* dp,
                  struct ri_controller* ri)
 {
     sp->r4300 = r4300;
+    sp->dp = dp;
     sp->ri = ri;
 }
 
@@ -267,10 +270,10 @@ void do_SP_Task(struct rsp_core* sp)
 
     if (sp->mem[0xfc0/4] == 1)
     {
-        if (g_dpc_regs[DPC_STATUS_REG] & 0x2) // DP frozen (DK64, BC)
+        if (sp->dp->dpc_regs[DPC_STATUS_REG] & 0x2) // DP frozen (DK64, BC)
         {
             // don't do the task now
-            // the task will be done when DP is unfreezed (see update_DPC)
+            // the task will be done when DP is unfreezed (see update_dpc_status)
             return;
         }
 

@@ -46,6 +46,7 @@
 #include "main/rom.h"
 #include "plugin/plugin.h"
 #include "r4300/new_dynarec/new_dynarec.h"
+#include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
@@ -210,8 +211,6 @@ static void write_ddd(void);
 /* definitions of the rcp's structures and memory area */
 uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_si_regs[SI_REGS_COUNT];
-uint32_t g_dpc_regs[DPC_REGS_COUNT];
-uint32_t g_dps_regs[DPS_REGS_COUNT];
 
 enum cic_type g_cic_type;
 
@@ -575,9 +574,6 @@ int init_memory(void)
         map_region(0xa400+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init DPC registers */
-    memset(g_dpc_regs, 0, DPC_REGS_COUNT*sizeof(g_dpc_regs[0]));
-
     /* map DPC registers */
     map_region(0x8410, M64P_MEM_DP, RW(dp));
     map_region(0xa410, M64P_MEM_DP, RW(dp));
@@ -586,9 +582,6 @@ int init_memory(void)
         map_region(0x8410+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xa410+i, M64P_MEM_NOTHING, RW(nothing));
     }
-
-    /* init DPS registers */
-    memset(g_dps_regs, 0, DPS_REGS_COUNT*sizeof(g_dps_regs[0]));
 
     /* map DPS registers */
     map_region(0x8420, M64P_MEM_DPS, RW(dps));
@@ -715,6 +708,7 @@ int init_memory(void)
     firstFrameBufferSetting = 1;
 
     init_r4300(&g_r4300);
+    init_rdp(&g_dp);
     init_rsp(&g_sp);
     init_ai(&g_ai);
     init_ri(&g_ri);
@@ -883,30 +877,6 @@ void unprotect_framebuffers(void)
     }
 }
 
-
-static void update_DPC(uint32_t w)
-{
-    if (w & 0x1) // clear xbus_dmem_dma
-        g_dpc_regs[DPC_STATUS_REG] &= ~0x1;
-    if (w & 0x2) // set xbus_dmem_dma
-        g_dpc_regs[DPC_STATUS_REG] |= 0x1;
-
-    if (w & 0x4) // clear freeze
-    {
-        g_dpc_regs[DPC_STATUS_REG] &= ~0x2;
-
-        // see do_SP_task for more info
-        if (!(g_sp.regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
-            do_SP_Task(&g_sp);
-    }
-    if (w & 0x8) // set freeze
-        g_dpc_regs[DPC_STATUS_REG] |= 0x2;
-
-    if (w & 0x10) // clear flush
-        g_dpc_regs[DPC_STATUS_REG] &= ~0x4;
-    if (w & 0x20) // set flush
-        g_dpc_regs[DPC_STATUS_REG] |= 0x4;
-}
 
 static void invalidate_code(uint32_t address)
 {
@@ -1309,154 +1279,85 @@ static void write_rspreg2d(void)
 }
 
 
-static inline uint32_t dpc_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_dpc_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = dpc_reg(address);
-
-    *value = g_dpc_regs[reg];
-
-    return 0;
-}
-
-static int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = dpc_reg(address);
-
-    switch(reg)
-    {
-    case DPC_STATUS_REG:
-        update_DPC(value & mask);
-    case DPC_CURRENT_REG:
-    case DPC_CLOCK_REG:
-    case DPC_BUFBUSY_REG:
-    case DPC_PIPEBUSY_REG:
-    case DPC_TMEM_REG:
-        return 0;
-    }
-
-    masked_write(&g_dpc_regs[reg], value, mask);
-
-    switch(reg)
-    {
-    case DPC_START_REG:
-        g_dpc_regs[DPC_CURRENT_REG] = g_dpc_regs[DPC_START_REG];
-        break;
-    case DPC_END_REG:
-        gfx.processRDPList();
-        g_r4300.mi.regs[MI_INTR_REG] |= 0x20;
-        check_interupt();
-        break;
-    }
-
-    return 0;
-}
-
 static void read_dp(void)
 {
-    readw(read_dpc_regs, NULL, address, rdword);
+    readw(read_dpc_regs, &g_dp, address, rdword);
 }
 
 static void read_dpb(void)
 {
-    readb(read_dpc_regs, NULL, address, rdword);
+    readb(read_dpc_regs, &g_dp, address, rdword);
 }
 
 static void read_dph(void)
 {
-    readh(read_dpc_regs, NULL, address, rdword);
+    readh(read_dpc_regs, &g_dp, address, rdword);
 }
 
 static void read_dpd(void)
 {
-    readd(read_dpc_regs, NULL, address, rdword);
+    readd(read_dpc_regs, &g_dp, address, rdword);
 }
 
 static void write_dp(void)
 {
-    writew(write_dpc_regs, NULL, address, word);
+    writew(write_dpc_regs, &g_dp, address, word);
 }
 
 static void write_dpb(void)
 {
-    writeb(write_dpc_regs, NULL, address, cpu_byte);
+    writeb(write_dpc_regs, &g_dp, address, cpu_byte);
 }
 
 static void write_dph(void)
 {
-    writeh(write_dpc_regs, NULL, address, hword);
+    writeh(write_dpc_regs, &g_dp, address, hword);
 }
 
 static void write_dpd(void)
 {
-    writed(write_dpc_regs, NULL, address, dword);
+    writed(write_dpc_regs, &g_dp, address, dword);
 }
 
-static inline uint32_t dps_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_dps_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = dps_reg(address);
-
-    *value = g_dps_regs[reg];
-
-    return 0;
-}
-
-static int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = dps_reg(address);
-
-    masked_write(&g_dps_regs[reg], value, mask);
-
-    return 0;
-}
 
 static void read_dps(void)
 {
-    readw(read_dps_regs, NULL, address, rdword);
+    readw(read_dps_regs, &g_dp, address, rdword);
 }
 
 static void read_dpsb(void)
 {
-    readb(read_dps_regs, NULL, address, rdword);
+    readb(read_dps_regs, &g_dp, address, rdword);
 }
 
 static void read_dpsh(void)
 {
-    readh(read_dps_regs, NULL, address, rdword);
+    readh(read_dps_regs, &g_dp, address, rdword);
 }
 
 static void read_dpsd(void)
 {
-    readd(read_dps_regs, NULL, address, rdword);
+    readd(read_dps_regs, &g_dp, address, rdword);
 }
 
 static void write_dps(void)
 {
-    writew(write_dps_regs, NULL, address, word);
+    writew(write_dps_regs, &g_dp, address, word);
 }
 
 static void write_dpsb(void)
 {
-    writeb(write_dps_regs, NULL, address, cpu_byte);
+    writeb(write_dps_regs, &g_dp, address, cpu_byte);
 }
 
 static void write_dpsh(void)
 {
-    writeh(write_dps_regs, NULL, address, hword);
+    writeh(write_dps_regs, &g_dp, address, hword);
 }
 
 static void write_dpsd(void)
 {
-    writed(write_dps_regs, NULL, address, dword);
+    writed(write_dps_regs, &g_dp, address, dword);
 }
 
 

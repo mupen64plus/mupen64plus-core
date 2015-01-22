@@ -51,31 +51,6 @@ extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
-enum dpc_registers
-{
-    DPC_START_REG,
-    DPC_END_REG,
-    DPC_CURRENT_REG,
-    DPC_STATUS_REG,
-    DPC_CLOCK_REG,
-    DPC_BUFBUSY_REG,
-    DPC_PIPEBUSY_REG,
-    DPC_TMEM_REG,
-    DPC_REGS_COUNT
-};
-
-enum dps_registers
-{
-    DPS_TBIST_REG,
-    DPS_TEST_MODE_REG,
-    DPS_BUFTEST_ADDR_REG,
-    DPS_BUFTEST_DATA_REG,
-    DPS_REGS_COUNT
-};
-
-extern uint32_t g_dpc_regs[DPC_REGS_COUNT];
-extern uint32_t g_dps_regs[DPS_REGS_COUNT];
-
 enum pi_registers
 {
     PI_DRAM_ADDR_REG,

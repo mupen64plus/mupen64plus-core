@@ -52,6 +52,7 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "r4300/new_dynarec/new_dynarec.h"
+#include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
@@ -368,21 +369,21 @@ static int savestates_load_m64p(char *filepath)
     g_ai.fifo[0].length = GETDATA(curr, uint32_t);
     audio.aiDacrateChanged(ROM_PARAMS.systemtype);
 
-    g_dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
     curr += 4; // Padding from old implementation
-    g_dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
     curr += 12; // Duplicated DPC flags and padding from old implementation
-    g_dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
 
-    g_dps_regs[DPS_TBIST_REG]        = GETDATA(curr, uint32_t);
-    g_dps_regs[DPS_TEST_MODE_REG]    = GETDATA(curr, uint32_t);
-    g_dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
-    g_dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
+    g_dp.dps_regs[DPS_TBIST_REG]        = GETDATA(curr, uint32_t);
+    g_dp.dps_regs[DPS_TEST_MODE_REG]    = GETDATA(curr, uint32_t);
+    g_dp.dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
+    g_dp.dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
     COPYARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(g_sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -603,14 +604,14 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_sp.regs2[SP_IBIST_REG] = GETDATA(curr, uint32_t);
 
     // dpc_register
-    g_dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
-    g_dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_CURRENT_REG]  = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_STATUS_REG]   = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_CLOCK_REG]    = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_BUFBUSY_REG]  = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_PIPEBUSY_REG] = GETDATA(curr, uint32_t);
+    g_dp.dpc_regs[DPC_TMEM_REG]     = GETDATA(curr, uint32_t);
     (void)GETDATA(curr, unsigned int); // Dummy read
     (void)GETDATA(curr, unsigned int); // Dummy read
 
@@ -736,8 +737,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // g_ai.fifo[0].delay = 0; g_ai.fifo[0].length = 0;
 
     // The following is not available in PJ64 savestate. Keep the values as is.
-    // g_dps_regs[DPS_TBIST_REG] = 0; g_dps_regs[DPS_TEST_MODE_REG] = 0;
-    // g_dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dps_regs[DPS_BUFTEST_DATA_REG] = 0; llbit = 0;
+    // g_dp.dps_regs[DPS_TBIST_REG] = 0; g_dp.dps_regs[DPS_TEST_MODE_REG] = 0;
+    // g_dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; llbit = 0;
 
     // No flashram info in pj64 savestate.
     init_flashram();
@@ -1136,32 +1137,32 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, g_ai.fifo[0].delay);
     PUTDATA(curr, uint32_t    , g_ai.fifo[0].length);
 
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_START_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_END_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_START_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_END_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_CURRENT_REG]);
     PUTDATA(curr, uint32_t, 0); /* Padding from old implementation */
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_STATUS_REG]);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x1) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x2) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x4) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x8) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x10) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x20) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x40) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x80) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x100) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x200) != 0);
-    PUTDATA(curr, uint8_t, (g_dpc_regs[DPC_STATUS_REG] & 0x400) != 0);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_STATUS_REG]);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x1) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x2) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x4) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x8) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x10) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x20) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x40) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x80) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x100) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x200) != 0);
+    PUTDATA(curr, uint8_t, (g_dp.dpc_regs[DPC_STATUS_REG] & 0x400) != 0);
     PUTDATA(curr, uint8_t, 0);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CLOCK_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_BUFBUSY_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_PIPEBUSY_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_TMEM_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_CLOCK_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_BUFBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_PIPEBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_TMEM_REG]);
 
-    PUTDATA(curr, uint32_t, g_dps_regs[DPS_TBIST_REG]);
-    PUTDATA(curr, uint32_t, g_dps_regs[DPS_TEST_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_dps_regs[DPS_BUFTEST_ADDR_REG]);
-    PUTDATA(curr, uint32_t, g_dps_regs[DPS_BUFTEST_DATA_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dps_regs[DPS_TBIST_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dps_regs[DPS_TEST_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dps_regs[DPS_BUFTEST_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dps_regs[DPS_BUFTEST_DATA_REG]);
 
     PUTARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(g_sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1308,14 +1309,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_sp.regs2[SP_PC_REG]);
     PUTDATA(curr, uint32_t, g_sp.regs2[SP_IBIST_REG]);
 
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_START_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_END_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CURRENT_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_STATUS_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_CLOCK_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_BUFBUSY_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_PIPEBUSY_REG]);
-    PUTDATA(curr, uint32_t, g_dpc_regs[DPC_TMEM_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_START_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_END_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_CURRENT_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_CLOCK_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_BUFBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_PIPEBUSY_REG]);
+    PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_TMEM_REG]);
     PUTDATA(curr, unsigned int, 0); // ?
     PUTDATA(curr, unsigned int, 0); // ?
 

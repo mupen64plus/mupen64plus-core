@@ -37,6 +37,7 @@
 #include "main/cheat.h"
 #include "osd/osd.h"
 #include "plugin/plugin.h"
+#include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
 
@@ -595,8 +596,8 @@ void gen_interupt(void)
     
         case DP_INT:
             remove_interupt_event();
-            g_dpc_regs[DPC_STATUS_REG] &= ~2;
-            g_dpc_regs[DPC_STATUS_REG] |= 0x81;
+            g_dp.dpc_regs[DPC_STATUS_REG] &= ~2;
+            g_dp.dpc_regs[DPC_STATUS_REG] |= 0x81;
             g_r4300.mi.regs[MI_INTR_REG] |= 0x20;
             if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
