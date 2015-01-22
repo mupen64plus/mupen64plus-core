@@ -36,6 +36,7 @@
 #include "main/savestates.h"
 #include "main/cheat.h"
 #include "osd/osd.h"
+#include "pi/pi_controller.h"
 #include "plugin/plugin.h"
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
@@ -536,7 +537,7 @@ void gen_interupt(void)
         case PI_INT:
             remove_interupt_event();
             g_r4300.mi.regs[MI_INTR_REG] |= 0x10;
-            g_pi_regs[PI_STATUS_REG] &= ~3;
+            g_pi.regs[PI_STATUS_REG] &= ~3;
             if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else

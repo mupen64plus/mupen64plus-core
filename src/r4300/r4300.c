@@ -29,6 +29,7 @@
 #include "memory/memory.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "pi/pi_controller.h"
 #include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
 
@@ -192,11 +193,11 @@ void r4300_reset_soft(void)
     g_sp.regs[SP_STATUS_REG] = 1;
     g_sp.regs2[SP_PC_REG] = 0;
 
-    g_pi_regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
-    g_pi_regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
-    g_pi_regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
-    g_pi_regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
-    g_pi_regs[PI_STATUS_REG] = 0;
+    g_pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
+    g_pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
+    g_pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
+    g_pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
+    g_pi.regs[PI_STATUS_REG] = 0;
 
     g_ai.regs[AI_DRAM_ADDR_REG] = 0;
     g_ai.regs[AI_LEN_REG] = 0;

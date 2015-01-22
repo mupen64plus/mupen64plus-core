@@ -51,26 +51,6 @@ extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
-enum pi_registers
-{
-    PI_DRAM_ADDR_REG,
-    PI_CART_ADDR_REG,
-    PI_RD_LEN_REG,
-    PI_WR_LEN_REG,
-    PI_STATUS_REG,
-    PI_BSD_DOM1_LAT_REG,
-    PI_BSD_DOM1_PWD_REG,
-    PI_BSD_DOM1_PGS_REG,
-    PI_BSD_DOM1_RLS_REG,
-    PI_BSD_DOM2_LAT_REG,
-    PI_BSD_DOM2_PWD_REG,
-    PI_BSD_DOM2_PGS_REG,
-    PI_BSD_DOM2_RLS_REG,
-    PI_REGS_COUNT
-};
-
-extern uint32_t g_pi_regs[PI_REGS_COUNT];
-
 enum si_registers
 {
     SI_DRAM_ADDR_REG,

@@ -393,6 +393,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pi\pi_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\memory\pif.c"
 				>
 			</File>
@@ -688,6 +692,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osd\osd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pi\pi_controller.h"
 				>
 			</File>
 			<File

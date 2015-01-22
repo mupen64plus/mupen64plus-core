@@ -33,6 +33,7 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/util.h"
+#include "pi/pi_controller.h"
 
 Flashram_info flashram_info;
 
@@ -183,15 +184,15 @@ void dma_read_flashram(void)
     switch (flashram_info.mode)
     {
     case STATUS_MODE:
-        g_rdram[g_pi_regs[PI_DRAM_ADDR_REG]/4] = (unsigned int)(flashram_info.status >> 32);
-        g_rdram[g_pi_regs[PI_DRAM_ADDR_REG]/4+1] = (unsigned int)(flashram_info.status);
+        g_rdram[g_pi.regs[PI_DRAM_ADDR_REG]/4] = (unsigned int)(flashram_info.status >> 32);
+        g_rdram[g_pi.regs[PI_DRAM_ADDR_REG]/4+1] = (unsigned int)(flashram_info.status);
         break;
     case READ_MODE:
         flashram_read_file();
-        for (i=0; i<(g_pi_regs[PI_WR_LEN_REG] & 0x0FFFFFF)+1; i++)
+        for (i=0; i<(g_pi.regs[PI_WR_LEN_REG] & 0x0FFFFFF)+1; i++)
         {
-            ((unsigned char*)g_rdram)[(g_pi_regs[PI_DRAM_ADDR_REG]+i)^S8]=
-                flashram[(((g_pi_regs[PI_CART_ADDR_REG]-0x08000000)&0xFFFF)*2+i)^S8];
+            ((unsigned char*)g_rdram)[(g_pi.regs[PI_DRAM_ADDR_REG]+i)^S8]=
+                flashram[(((g_pi.regs[PI_CART_ADDR_REG]-0x08000000)&0xFFFF)*2+i)^S8];
         }
         break;
     default:
@@ -206,7 +207,7 @@ void dma_write_flashram(void)
     switch (flashram_info.mode)
     {
     case WRITE_MODE:
-        flashram_info.write_pointer = g_pi_regs[PI_DRAM_ADDR_REG];
+        flashram_info.write_pointer = g_pi.regs[PI_DRAM_ADDR_REG];
         break;
     default:
         DebugMessage(M64MSG_ERROR, "unknown dma_write_flashram: %x", flashram_info.mode);

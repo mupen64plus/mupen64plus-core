@@ -155,6 +155,7 @@
     <ClCompile Include="..\..\src\memory\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
+    <ClCompile Include="..\..\src\pi\pi_controller.c" />
     <ClCompile Include="..\..\src\memory\pif.c" />
     <ClCompile Include="..\..\src\plugin\plugin.c" />
     <ClCompile Include="..\..\src\main\profile.c" />
@@ -230,6 +231,7 @@
     <ClInclude Include="..\..\src\osd\OGLFT.h" />
     <ClInclude Include="..\..\src\r4300\ops.h" />
     <ClInclude Include="..\..\src\osd\osd.h" />
+    <ClInclude Include="..\..\src\pi\pi_controller.h" />
     <ClInclude Include="..\..\src\memory\pif.h" />
     <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\osal\preproc.h" />

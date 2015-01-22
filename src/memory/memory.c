@@ -44,6 +44,7 @@
 #include "main/main.h"
 #include "main/profile.h"
 #include "main/rom.h"
+#include "pi/pi_controller.h"
 #include "plugin/plugin.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "rdp/rdp_core.h"
@@ -201,7 +202,6 @@ static void write_ddh(void);
 static void write_ddd(void);
 
 /* definitions of the rcp's structures and memory area */
-uint32_t g_pi_regs[PI_REGS_COUNT];
 uint32_t g_si_regs[SI_REGS_COUNT];
 
 enum cic_type g_cic_type;
@@ -606,9 +606,6 @@ int init_memory(void)
         map_region(0xa450+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init PI registers */
-    memset(g_pi_regs, 0, PI_REGS_COUNT*sizeof(g_pi_regs[0]));
-
     /* map PI registers */
     map_region(0x8460, M64P_MEM_PI, RW(pi));
     map_region(0xa460, M64P_MEM_PI, RW(pi));
@@ -696,6 +693,7 @@ int init_memory(void)
     init_rdp(&g_dp);
     init_rsp(&g_sp);
     init_ai(&g_ai);
+    init_pi(&g_pi);
     init_ri(&g_ri);
     init_vi(&g_vi);
 
@@ -1345,97 +1343,44 @@ static void write_aid(void)
 }
 
 
-static inline uint32_t pi_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = pi_reg(address);
-
-    *value = g_pi_regs[reg];
-
-    return 0;
-}
-
-static int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = pi_reg(address);
-
-    switch (reg)
-    {
-    case PI_RD_LEN_REG:
-        masked_write(&g_pi_regs[PI_RD_LEN_REG], value, mask);
-        dma_pi_read();
-        return 0;
-
-    case PI_WR_LEN_REG:
-        masked_write(&g_pi_regs[PI_WR_LEN_REG], value, mask);
-        dma_pi_write();
-        return 0;
-
-    case PI_STATUS_REG:
-        if (value & mask & 2) g_r4300.mi.regs[MI_INTR_REG] &= ~0x10;
-        check_interupt();
-        return 0;
-
-    case PI_BSD_DOM1_LAT_REG:
-    case PI_BSD_DOM1_PWD_REG:
-    case PI_BSD_DOM1_PGS_REG:
-    case PI_BSD_DOM1_RLS_REG:
-    case PI_BSD_DOM2_LAT_REG:
-    case PI_BSD_DOM2_PWD_REG:
-    case PI_BSD_DOM2_PGS_REG:
-    case PI_BSD_DOM2_RLS_REG:
-        masked_write(&g_pi_regs[reg], value & 0xff, mask);
-        return 0;
-    }
-
-    masked_write(&g_pi_regs[reg], value, mask);
-
-    return 0;
-}
-
-
 static void read_pi(void)
 {
-    readw(read_pi_regs, NULL, address, rdword);
+    readw(read_pi_regs, &g_pi, address, rdword);
 }
 
 static void read_pib(void)
 {
-    readb(read_pi_regs, NULL, address, rdword);
+    readb(read_pi_regs, &g_pi, address, rdword);
 }
 
 static void read_pih(void)
 {
-    readh(read_pi_regs, NULL, address, rdword);
+    readh(read_pi_regs, &g_pi, address, rdword);
 }
 
 static void read_pid(void)
 {
-    readd(read_pi_regs, NULL, address, rdword);
+    readd(read_pi_regs, &g_pi, address, rdword);
 }
 
 static void write_pi(void)
 {
-    writew(write_pi_regs, NULL, address, word);
+    writew(write_pi_regs, &g_pi, address, word);
 }
 
 static void write_pib(void)
 {
-    writeb(write_pi_regs, NULL, address, cpu_byte);
+    writeb(write_pi_regs, &g_pi, address, cpu_byte);
 }
 
 static void write_pih(void)
 {
-    writeh(write_pi_regs, NULL, address, hword);
+    writeh(write_pi_regs, &g_pi, address, hword);
 }
 
 static void write_pid(void)
 {
-    writed(write_pi_regs, NULL, address, dword);
+    writed(write_pi_regs, &g_pi, address, dword);
 }
 
 

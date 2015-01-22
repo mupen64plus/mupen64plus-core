@@ -32,6 +32,7 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "memory/memory.h"
+#include "pi/pi_controller.h"
 #include "r4300/cached_interp.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
@@ -335,9 +336,9 @@ uint32 read_memory_32(uint32 addr){
         return g_ai.regs[offset];
       break;
     case M64P_MEM_PI:
-      offset = (addr & 0xffff) >> 2;
+      offset = pi_reg(addr);
       if (offset < PI_REGS_COUNT)
-        return g_pi_regs[offset];
+        return g_pi.regs[offset];
       break;
     case M64P_MEM_RI:
       offset = ri_reg(addr);
