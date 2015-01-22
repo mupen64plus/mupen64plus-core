@@ -40,6 +40,8 @@
 #include "../../main/main.h"
 #include "../../main/rom.h"
 
+#include "rsp/rsp_core.h"
+
 #include <sys/mman.h>
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
@@ -7676,7 +7678,7 @@ int new_recompile_block(int addr)
   start = (u_int)addr&~3;
   //assert(((u_int)addr&1)==0);
   if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
-    source = (u_int *)((u_int)g_sp_mem+start-0xa4000000);
+    source = (u_int *)((u_int)g_sp.mem+start-0xa4000000);
     pagelimit = 0xa4001000;
   }
   else if ((int)addr >= 0x80000000 && (int)addr < 0x80800000) {

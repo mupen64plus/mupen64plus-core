@@ -439,6 +439,10 @@
 			<File
 				RelativePath="..\..\src\main\rom.c"
 				>
+            </File>
+			<File
+				RelativePath="..\..\src\rsp\rsp_core.c"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\main\savestates.c"
@@ -728,6 +732,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\rom.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\rsp\rsp_core.h"
 				>
 			</File>
 			<File

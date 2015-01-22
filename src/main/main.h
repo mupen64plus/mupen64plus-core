@@ -29,6 +29,7 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct rsp_core;
 struct ai_controller;
 struct ri_controller;
 struct vi_controller;
@@ -48,6 +49,7 @@ extern struct ri_controller g_ri;
 extern struct vi_controller g_vi;
 
 extern struct r4300_core g_r4300;
+extern struct rsp_core g_sp;
 
 extern m64p_frame_callback g_FrameCallback;
 

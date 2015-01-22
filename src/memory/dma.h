@@ -26,8 +26,6 @@ void dma_pi_write(void);
 void dma_pi_read(void);
 void dma_si_write(void);
 void dma_si_read(void);
-void dma_sp_write(void);
-void dma_sp_read(void);
 
 #endif
 

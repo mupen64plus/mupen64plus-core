@@ -33,10 +33,6 @@
 #define write_hword_in_memory() writememh[address >>16]()
 #define write_dword_in_memory() writememd[address >>16]()
 
-enum { SP_MEM_SIZE = 0x2000 };
-
-extern uint32_t g_sp_mem[SP_MEM_SIZE/4];
-
 enum { PIF_RAM_SIZE = 0x40 };
 
 extern uint8_t g_pif_ram[PIF_RAM_SIZE];
@@ -54,29 +50,6 @@ extern void (*writemem[0x10000])(void);
 extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
-
-enum sp_registers
-{
-    SP_MEM_ADDR_REG,
-    SP_DRAM_ADDR_REG,
-    SP_RD_LEN_REG,
-    SP_WR_LEN_REG,
-    SP_STATUS_REG,
-    SP_DMA_FULL_REG,
-    SP_DMA_BUSY_REG,
-    SP_SEMAPHORE_REG,
-    SP_REGS_COUNT
-};
-
-enum sp_registers2
-{
-    SP_PC_REG,
-    SP_IBIST_REG,
-    SP_REGS2_COUNT
-};
-
-extern uint32_t g_sp_regs[SP_REGS_COUNT];
-extern uint32_t g_sp_regs2[SP_REGS2_COUNT];
 
 enum dpc_registers
 {
@@ -200,6 +173,10 @@ void write_rdram(void);
 void write_rdramb(void);
 void write_rdramh(void);
 void write_rdramd(void);
+
+/* XXX: move that into the RDP subsystem */
+void protect_framebuffers(void);
+void unprotect_framebuffers(void);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

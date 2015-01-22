@@ -47,6 +47,7 @@
 #include "plugin/plugin.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "ri/ri_controller.h"
+#include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
 
 #ifdef DBG
@@ -88,30 +89,30 @@ static void write_rdramreg(void);
 static void write_rdramregb(void);
 static void write_rdramregh(void);
 static void write_rdramregd(void);
-static void read_rsp_mem(void);
-static void read_rsp_memb(void);
-static void read_rsp_memh(void);
-static void read_rsp_memd(void);
-static void write_rsp_mem(void);
-static void write_rsp_memb(void);
-static void write_rsp_memh(void);
-static void write_rsp_memd(void);
-static void read_rsp_reg(void);
-static void read_rsp_regb(void);
-static void read_rsp_regh(void);
-static void read_rsp_regd(void);
-static void write_rsp_reg(void);
-static void write_rsp_regb(void);
-static void write_rsp_regh(void);
-static void write_rsp_regd(void);
-static void read_rsp(void);
-static void read_rspb(void);
-static void read_rsph(void);
-static void read_rspd(void);
-static void write_rsp(void);
-static void write_rspb(void);
-static void write_rsph(void);
-static void write_rspd(void);
+static void read_rspmem(void);
+static void read_rspmemb(void);
+static void read_rspmemh(void);
+static void read_rspmemd(void);
+static void write_rspmem(void);
+static void write_rspmemb(void);
+static void write_rspmemh(void);
+static void write_rspmemd(void);
+static void read_rspreg(void);
+static void read_rspregb(void);
+static void read_rspregh(void);
+static void read_rspregd(void);
+static void write_rspreg(void);
+static void write_rspregb(void);
+static void write_rspregh(void);
+static void write_rspregd(void);
+static void read_rspreg2(void);
+static void read_rspreg2b(void);
+static void read_rspreg2h(void);
+static void read_rspreg2d(void);
+static void write_rspreg2(void);
+static void write_rspreg2b(void);
+static void write_rspreg2h(void);
+static void write_rspreg2d(void);
 static void read_dp(void);
 static void read_dpb(void);
 static void read_dph(void);
@@ -208,15 +209,12 @@ static void write_ddd(void);
 
 /* definitions of the rcp's structures and memory area */
 uint32_t g_pi_regs[PI_REGS_COUNT];
-uint32_t g_sp_regs[SP_REGS_COUNT];
-uint32_t g_sp_regs2[SP_REGS2_COUNT];
 uint32_t g_si_regs[SI_REGS_COUNT];
 uint32_t g_dpc_regs[DPC_REGS_COUNT];
 uint32_t g_dps_regs[DPS_REGS_COUNT];
 
 enum cic_type g_cic_type;
 
-uint32_t g_sp_mem[SP_MEM_SIZE/4];
 uint8_t g_pif_ram[PIF_RAM_SIZE];
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -550,37 +548,27 @@ int init_memory(void)
         map_region(0xa3f0+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init RSP memory */
-    memset(g_sp_mem, 0, SP_MEM_SIZE);
-
     /* map RSP memory */
-    map_region(0x8400, M64P_MEM_RSPMEM, RW(rsp_mem));
-    map_region(0xa400, M64P_MEM_RSPMEM, RW(rsp_mem));
+    map_region(0x8400, M64P_MEM_RSPMEM, RW(rspmem));
+    map_region(0xa400, M64P_MEM_RSPMEM, RW(rspmem));
     for(i = 1; i < 0x4; ++i)
     {
         map_region(0x8400+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xa400+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init RSP registers */
-    memset(g_sp_regs, 0, SP_REGS_COUNT*sizeof(g_sp_regs[0]));
-    g_sp_regs[SP_STATUS_REG] = 1;
-
     /* map RSP registers (1) */
-    map_region(0x8404, M64P_MEM_RSPREG, RW(rsp_reg));
-    map_region(0xa404, M64P_MEM_RSPREG, RW(rsp_reg));
+    map_region(0x8404, M64P_MEM_RSPREG, RW(rspreg));
+    map_region(0xa404, M64P_MEM_RSPREG, RW(rspreg));
     for(i = 0x5; i < 0x8; ++i)
     {
         map_region(0x8400+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xa400+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init RSP registers (2) */
-    memset(g_sp_regs2, 0, SP_REGS2_COUNT*sizeof(g_sp_regs2[0]));
-
     /* map RSP registers (2) */
-    map_region(0x8408, M64P_MEM_RSP, RW(rsp));
-    map_region(0xa408, M64P_MEM_RSP, RW(rsp));
+    map_region(0x8408, M64P_MEM_RSP, RW(rspreg2));
+    map_region(0xa408, M64P_MEM_RSP, RW(rspreg2));
     for(i = 0x9; i < 0x10; ++i)
     {
         map_region(0x8400+i, M64P_MEM_NOTHING, RW(nothing));
@@ -727,6 +715,7 @@ int init_memory(void)
     firstFrameBufferSetting = 1;
 
     init_r4300(&g_r4300);
+    init_rsp(&g_sp);
     init_ai(&g_ai);
     init_ri(&g_ri);
     init_vi(&g_vi);
@@ -820,7 +809,7 @@ void map_region(uint16_t region,
 }
 
 
-static void protect_framebuffers(void)
+void protect_framebuffers(void)
 {
     if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
         gfx.fBGetFrameBufferInfo(frameBufferInfos);
@@ -866,7 +855,7 @@ static void protect_framebuffers(void)
     }
 }
 
-static void unprotect_framebuffers(void)
+void unprotect_framebuffers(void)
 {
     if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite &&
             frameBufferInfos[0].addr)
@@ -895,147 +884,6 @@ static void unprotect_framebuffers(void)
 }
 
 
-static void do_SP_Task(void)
-{
-    int save_pc = g_sp_regs2[SP_PC_REG] & ~0xFFF;
-    if (g_sp_mem[0xFC0/4] == 1)
-    {
-        if (g_dpc_regs[DPC_STATUS_REG] & 0x2) // DP frozen (DK64, BC)
-        {
-            // don't do the task now
-            // the task will be done when DP is unfreezed (see update_DPC)
-            return;
-        }
-
-        unprotect_framebuffers();
-
-        //gfx.processDList();
-        g_sp_regs2[SP_PC_REG] &= 0xFFF;
-        timed_section_start(TIMED_SECTION_GFX);
-        rsp.doRspCycles(0xFFFFFFFF);
-        timed_section_end(TIMED_SECTION_GFX);
-        g_sp_regs2[SP_PC_REG] |= save_pc;
-        new_frame();
-
-        update_count();
-        if (g_r4300.mi.regs[MI_INTR_REG] & 0x1)
-            add_interupt_event(SP_INT, 1000);
-        if (g_r4300.mi.regs[MI_INTR_REG] & 0x20)
-            add_interupt_event(DP_INT, 1000);
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x21;
-        g_sp_regs[SP_STATUS_REG] &= ~0x303;
-
-        protect_framebuffers();
-    }
-    else if (g_sp_mem[0xFC0/4] == 2)
-    {
-        //audio.processAList();
-        g_sp_regs2[SP_PC_REG] &= 0xFFF;
-        timed_section_start(TIMED_SECTION_AUDIO);
-        rsp.doRspCycles(0xFFFFFFFF);
-        timed_section_end(TIMED_SECTION_AUDIO);
-        g_sp_regs2[SP_PC_REG] |= save_pc;
-
-        update_count();
-        if (g_r4300.mi.regs[MI_INTR_REG] & 0x1)
-            add_interupt_event(SP_INT, 4000/*500*/);
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x1;
-        g_sp_regs[SP_STATUS_REG] &= ~0x303;
-        
-    }
-    else
-    {
-        g_sp_regs2[SP_PC_REG] &= 0xFFF;
-        rsp.doRspCycles(0xFFFFFFFF);
-        g_sp_regs2[SP_PC_REG] |= save_pc;
-
-        update_count();
-        if (g_r4300.mi.regs[MI_INTR_REG] & 0x1)
-            add_interupt_event(SP_INT, 0/*100*/);
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x1;
-        g_sp_regs[SP_STATUS_REG] &= ~0x203;
-    }
-}
-
-static void update_SP(uint32_t w)
-{
-    if (w & 0x1) // clear halt
-        g_sp_regs[SP_STATUS_REG] &= ~0x1;
-    if (w & 0x2) // set halt
-        g_sp_regs[SP_STATUS_REG] |= 0x1;
-
-    if (w & 0x4) // clear broke
-        g_sp_regs[SP_STATUS_REG] &= ~0x2;
-
-    if (w & 0x8) // clear SP interupt
-    {
-        g_r4300.mi.regs[MI_INTR_REG] &= ~1;
-        check_interupt();
-    }
-
-    if (w & 0x10) // set SP interupt
-    {
-        g_r4300.mi.regs[MI_INTR_REG] |= 1;
-        check_interupt();
-    }
-
-    if (w & 0x20) // clear single step
-        g_sp_regs[SP_STATUS_REG] &= ~0x20;
-    if (w & 0x40) // set single step
-        g_sp_regs[SP_STATUS_REG] |= 0x20;
-
-    if (w & 0x80) // clear interrupt on break
-        g_sp_regs[SP_STATUS_REG] &= ~0x40;
-    if (w & 0x100) // set interrupt on break
-        g_sp_regs[SP_STATUS_REG] |= 0x40;
-
-    if (w & 0x200) // clear signal 0
-        g_sp_regs[SP_STATUS_REG] &= ~0x80;
-    if (w & 0x400) // set signal 0
-        g_sp_regs[SP_STATUS_REG] |= 0x80;
-
-    if (w & 0x800) // clear signal 1
-        g_sp_regs[SP_STATUS_REG] &= ~0x100;
-    if (w & 0x1000) // set signal 1
-        g_sp_regs[SP_STATUS_REG] |= 0x100;
-
-    if (w & 0x2000) // clear signal 2
-        g_sp_regs[SP_STATUS_REG] &= ~0x200;
-    if (w & 0x4000) // set signal 2
-        g_sp_regs[SP_STATUS_REG] |= 0x200;
-
-    if (w & 0x8000) // clear signal 3
-        g_sp_regs[SP_STATUS_REG] &= ~0x400;
-    if (w & 0x10000) // set signal 3
-        g_sp_regs[SP_STATUS_REG] |= 0x400;
-
-    if (w & 0x20000) // clear signal 4
-        g_sp_regs[SP_STATUS_REG] &= ~0x800;
-    if (w & 0x40000) // set signal 4
-        g_sp_regs[SP_STATUS_REG] |= 0x800;
-
-    if (w & 0x80000) // clear signal 5
-        g_sp_regs[SP_STATUS_REG] &= ~0x1000;
-    if (w & 0x100000) // set signal 5
-        g_sp_regs[SP_STATUS_REG] |= 0x1000;
-
-    if (w & 0x200000) // clear signal 6
-        g_sp_regs[SP_STATUS_REG] &= ~0x2000;
-    if (w & 0x400000) // set signal 6
-        g_sp_regs[SP_STATUS_REG] |= 0x2000;
-
-    if (w & 0x800000) // clear signal 7
-        g_sp_regs[SP_STATUS_REG] &= ~0x4000;
-    if (w & 0x1000000) // set signal 7
-        g_sp_regs[SP_STATUS_REG] |= 0x4000;
-
-    //if (get_event(SP_INT)) return;
-    if (!(w & 0x1) &&
-            !(w & 0x4)) return;
-    if (!(g_sp_regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
-        do_SP_Task();
-}
-
 static void update_DPC(uint32_t w)
 {
     if (w & 0x1) // clear xbus_dmem_dma
@@ -1048,8 +896,8 @@ static void update_DPC(uint32_t w)
         g_dpc_regs[DPC_STATUS_REG] &= ~0x2;
 
         // see do_SP_task for more info
-        if (!(g_sp_regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
-            do_SP_Task();
+        if (!(g_sp.regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
+            do_SP_Task(&g_sp);
     }
     if (w & 0x8) // set freeze
         g_dpc_regs[DPC_STATUS_REG] |= 0x2;
@@ -1337,222 +1185,127 @@ static void write_rdramregd(void)
     writed(write_rdram_regs, &g_ri, address, dword);
 }
 
-static inline uint32_t rsp_mem_address(uint32_t address)
+
+static void read_rspmem(void)
 {
-    return (address & 0x1fff) >> 2;
+    readw(read_rsp_mem, &g_sp, address, rdword);
 }
 
-static int read_rspmem(void* opaque, uint32_t address, uint32_t* value)
+static void read_rspmemb(void)
 {
-    uint32_t addr = rsp_mem_address(address);
-
-    *value = g_sp_mem[addr];
-
-    return 0;
+    readb(read_rsp_mem, &g_sp, address, rdword);
 }
 
-static int write_rspmem(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+static void read_rspmemh(void)
 {
-    uint32_t addr = rsp_mem_address(address);
-
-    masked_write(&g_sp_mem[addr], value, mask);
-
-    return 0;
+    readh(read_rsp_mem, &g_sp, address, rdword);
 }
 
-static void read_rsp_mem(void)
+static void read_rspmemd(void)
 {
-    readw(read_rspmem, NULL, address, rdword);
+    readd(read_rsp_mem, &g_sp, address, rdword);
 }
 
-static void read_rsp_memb(void)
+static void write_rspmem(void)
 {
-    readb(read_rspmem, NULL, address, rdword);
+    writew(write_rsp_mem, &g_sp, address, word);
 }
 
-static void read_rsp_memh(void)
+static void write_rspmemb(void)
 {
-    readh(read_rspmem, NULL, address, rdword);
+    writeb(write_rsp_mem, &g_sp, address, cpu_byte);
 }
 
-static void read_rsp_memd(void)
+static void write_rspmemh(void)
 {
-    readd(read_rspmem, NULL, address, rdword);
+    writeh(write_rsp_mem, &g_sp, address, hword);
 }
 
-static void write_rsp_mem(void)
+static void write_rspmemd(void)
 {
-    writew(write_rspmem, NULL, address, word);
-}
-
-static void write_rsp_memb(void)
-{
-    writeb(write_rspmem, NULL, address, cpu_byte);
-}
-
-static void write_rsp_memh(void)
-{
-    writeh(write_rspmem, NULL, address, hword);
-}
-
-static void write_rsp_memd(void)
-{
-    writed(write_rspmem, NULL, address, dword);
+    writed(write_rsp_mem, &g_sp, address, dword);
 }
 
 
-static inline uint32_t rsp_reg(uint32_t address)
+static void read_rspreg(void)
 {
-    return (address & 0xffff) >> 2;
+    readw(read_rsp_regs, &g_sp, address, rdword);
 }
 
-static int read_rsp_regs(void* opaque, uint32_t address, uint32_t* value)
+static void read_rspregb(void)
 {
-    uint32_t reg = rsp_reg(address);
-
-    *value = g_sp_regs[reg];
-
-    if (reg == SP_SEMAPHORE_REG)
-    {
-        g_sp_regs[SP_SEMAPHORE_REG] = 1;
-    }
-
-    return 0;
+    readb(read_rsp_regs, &g_sp, address, rdword);
 }
 
-static int write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+static void read_rspregh(void)
 {
-    uint32_t reg = rsp_reg(address);
-
-    switch(reg)
-    {
-    case SP_STATUS_REG:
-        update_SP(value & mask);
-    case SP_DMA_FULL_REG:
-    case SP_DMA_BUSY_REG:
-        return 0;
-    }
-
-    masked_write(&g_sp_regs[reg], value, mask);
-
-    switch(reg)
-    {
-    case SP_RD_LEN_REG:
-        dma_sp_write();
-        break;
-    case SP_WR_LEN_REG:
-        dma_sp_read();
-        break;
-    case SP_SEMAPHORE_REG:
-        g_sp_regs[SP_SEMAPHORE_REG] = 0;
-        break;
-    }
-
-    return 0;
+    readh(read_rsp_regs, &g_sp, address, rdword);
 }
 
-static void read_rsp_reg(void)
+static void read_rspregd(void)
 {
-    readw(read_rsp_regs, NULL, address, rdword);
+    readd(read_rsp_regs, &g_sp, address, rdword);
 }
 
-static void read_rsp_regb(void)
+static void write_rspreg(void)
 {
-    readb(read_rsp_regs, NULL, address, rdword);
+    writew(write_rsp_regs, &g_sp, address, word);
 }
 
-static void read_rsp_regh(void)
+static void write_rspregb(void)
 {
-    readh(read_rsp_regs, NULL, address, rdword);
+    writeb(write_rsp_regs, &g_sp, address, cpu_byte);
 }
 
-static void read_rsp_regd(void)
+static void write_rspregh(void)
 {
-    readd(read_rsp_regs, NULL, address, rdword);
+    writeh(write_rsp_regs, &g_sp, address, hword);
 }
 
-static void write_rsp_reg(void)
+static void write_rspregd(void)
 {
-    writew(write_rsp_regs, NULL, address, word);
-}
-
-static void write_rsp_regb(void)
-{
-    writeb(write_rsp_regs, NULL, address, cpu_byte);
-}
-
-static void write_rsp_regh(void)
-{
-    writeh(write_rsp_regs, NULL, address, hword);
-}
-
-static void write_rsp_regd(void)
-{
-    writed(write_rsp_regs, NULL, address, dword);
+    writed(write_rsp_regs, &g_sp, address, dword);
 }
 
 
-static inline uint32_t rsp_reg2(uint32_t address)
+static void read_rspreg2(void)
 {
-    return (address & 0xffff) >> 2;
+    readw(read_rsp_regs2, &g_sp, address, rdword);
 }
 
-static int read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value)
+static void read_rspreg2b(void)
 {
-    uint32_t reg = rsp_reg2(address);
-
-    *value = g_sp_regs2[reg];
-
-    return 0;
+    readb(read_rsp_regs2, &g_sp, address, rdword);
 }
 
-static int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+static void read_rspreg2h(void)
 {
-    uint32_t reg = rsp_reg2(address);
-
-    masked_write(&g_sp_regs2[reg], value, mask);
-
-    return 0;
+    readh(read_rsp_regs2, &g_sp, address, rdword);
 }
 
-static void read_rsp(void)
+static void read_rspreg2d(void)
 {
-    readw(read_rsp_regs2, NULL, address, rdword);
+    readd(read_rsp_regs2, &g_sp, address, rdword);
 }
 
-static void read_rspb(void)
+static void write_rspreg2(void)
 {
-    readb(read_rsp_regs2, NULL, address, rdword);
+    writew(write_rsp_regs2, &g_sp, address, word);
 }
 
-static void read_rsph(void)
+static void write_rspreg2b(void)
 {
-    readh(read_rsp_regs2, NULL, address, rdword);
+    writeb(write_rsp_regs2, &g_sp, address, cpu_byte);
 }
 
-static void read_rspd(void)
+static void write_rspreg2h(void)
 {
-    readd(read_rsp_regs2, NULL, address, rdword);
+    writeh(write_rsp_regs2, &g_sp, address, hword);
 }
 
-static void write_rsp(void)
+static void write_rspreg2d(void)
 {
-    writew(write_rsp_regs2, NULL, address, word);
-}
-
-static void write_rspb(void)
-{
-    writeb(write_rsp_regs2, NULL, address, cpu_byte);
-}
-
-static void write_rsph(void)
-{
-    writeh(write_rsp_regs2, NULL, address, hword);
-}
-
-static void write_rspd(void)
-{
-    writed(write_rsp_regs2, NULL, address, dword);
+    writed(write_rsp_regs2, &g_sp, address, dword);
 }
 
 
@@ -2338,7 +2091,7 @@ unsigned int *fast_mem_access(unsigned int address)
     else if (address >= 0x10000000)
         return (unsigned int*)((unsigned char*)rom + address - 0x10000000);
     else if ((address & 0xffffe000) == 0x04000000)
-        return (unsigned int*)((unsigned char*)g_sp_mem + (address & 0x1ffc));
+        return (unsigned int*)((unsigned char*)g_sp.mem + (address & 0x1ffc));
     else
         return NULL;
 }

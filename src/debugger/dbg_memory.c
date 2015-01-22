@@ -37,6 +37,7 @@
 #include "r4300/r4300_core.h"
 #include "r4300/ops.h"
 #include "r4300/tlb.h"
+#include "rsp/rsp_core.h"
 #include "ri/ri_controller.h"
 #include "vi/vi_controller.h"
 
@@ -294,7 +295,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RDRAM:
       return g_rdram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
-      return g_sp_mem[(addr & 0x1fff) >> 2];
+      return g_sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
       return *((uint32 *)(rom + (addr & 0x03FFFFFF)));
     case M64P_MEM_RDRAMREG:
@@ -303,14 +304,14 @@ uint32 read_memory_32(uint32 addr){
           return g_ri.rdram.regs[offset];
       break;
     case M64P_MEM_RSPREG:
-      offset = (addr & 0xffff) >> 2;
+      offset = rsp_reg(addr);
       if (offset < SP_REGS_COUNT)
-        return g_sp_regs[offset];
+        return g_sp.regs[offset];
       break;
     case M64P_MEM_RSP:
-      offset = (addr & 0xffff) >> 2;
+      offset = rsp_reg2(addr);
       if (offset < SP_REGS2_COUNT)
-        return g_sp_regs2[offset];
+        return g_sp.regs2[offset];
       break;
     case M64P_MEM_DP:
       offset = (addr & 0xffff) >> 2;

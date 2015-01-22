@@ -29,6 +29,7 @@
 #include "memory/memory.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "rsp/rsp_core.h"
 #include "vi/vi_controller.h"
 
 #include "r4300.h"
@@ -188,8 +189,8 @@ void r4300_reset_soft(void)
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-    g_sp_regs[SP_STATUS_REG] = 1;
-    g_sp_regs2[SP_PC_REG] = 0;
+    g_sp.regs[SP_STATUS_REG] = 1;
+    g_sp.regs2[SP_PC_REG] = 0;
 
     g_pi_regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
     g_pi_regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
@@ -206,7 +207,7 @@ void r4300_reset_soft(void)
 
     g_r4300.mi.regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
 
-    memcpy((unsigned char*)g_sp_mem+0x40, rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_sp.mem+0x40, rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
@@ -215,14 +216,14 @@ void r4300_reset_soft(void)
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    g_sp_mem[0x1000/4] = 0x3c0dbfc0;
-    g_sp_mem[0x1004/4] = 0x8da807fc;
-    g_sp_mem[0x1008/4] = 0x25ad07c0;
-    g_sp_mem[0x100c/4] = 0x31080080;
-    g_sp_mem[0x1010/4] = 0x5500fffc;
-    g_sp_mem[0x1014/4] = 0x3c0dbfc0;
-    g_sp_mem[0x1018/4] = 0x8da80024;
-    g_sp_mem[0x101c/4] = 0x3c0bb000;
+    g_sp.mem[0x1000/4] = 0x3c0dbfc0;
+    g_sp.mem[0x1004/4] = 0x8da807fc;
+    g_sp.mem[0x1008/4] = 0x25ad07c0;
+    g_sp.mem[0x100c/4] = 0x31080080;
+    g_sp.mem[0x1010/4] = 0x5500fffc;
+    g_sp.mem[0x1014/4] = 0x3c0dbfc0;
+    g_sp.mem[0x1018/4] = 0x8da80024;
+    g_sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = 0xffffffffa4000040ULL; /* t3 */
