@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef MEMORY_H
-#define MEMORY_H
+#ifndef M64P_MEMORY_MEMORY_H
+#define M64P_MEMORY_MEMORY_H
 
 #include <stdint.h>
 
