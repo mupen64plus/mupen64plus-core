@@ -773,7 +773,7 @@ static void connect_all(
     connect_rdp(dp, r4300, sp, ri);
     connect_rsp(sp, r4300, dp, ri);
     connect_ai(ai, r4300, vi);
-    connect_pi(pi, r4300, rom, rom_size);
+    connect_pi(pi, r4300, ri, rom, rom_size);
     connect_ri(ri, dram, dram_size);
     connect_vi(vi, r4300);
 }

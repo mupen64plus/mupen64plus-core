@@ -31,11 +31,13 @@
 
 void connect_pi(struct pi_controller* pi,
                 struct r4300_core* r4300,
+                struct ri_controller* ri,
                 uint8_t* rom, size_t rom_size)
 {
     connect_cart_rom(&pi->cart_rom, rom, rom_size);
 
     pi->r4300 = r4300;
+    pi->ri = ri;
 }
 
 void init_pi(struct pi_controller* pi)

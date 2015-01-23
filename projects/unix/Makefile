@@ -405,6 +405,7 @@ SOURCE = \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/pi/cart_rom.c \
 	$(SRCDIR)/pi/pi_controller.c \
+	$(SRCDIR)/pi/sram.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \

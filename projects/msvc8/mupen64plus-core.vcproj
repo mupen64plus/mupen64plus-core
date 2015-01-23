@@ -473,6 +473,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pi\sram.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\tlb.c"
 				>
 			</File>
@@ -780,6 +784,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osd\screenshot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pi\sram.h"
 				>
 			</File>
 			<File
