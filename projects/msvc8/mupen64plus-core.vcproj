@@ -381,7 +381,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\n64_cic_nus_6105.c"
+				RelativePath="..\..\src\si\n64_cic_nus_6105.c"
 				>
 			</File>
 			<File
@@ -397,7 +397,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\pif.c"
+				RelativePath="..\..\src\si\pif.c"
 				>
 			</File>
 			<File
@@ -687,7 +687,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\n64_cic_nus_6105.h"
+				RelativePath="..\..\src\si\n64_cic_nus_6105.h"
 				>
 			</File>
 			<File
@@ -707,7 +707,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\pif.h"
+				RelativePath="..\..\src\si\pif.h"
 				>
 			</File>
 			<File

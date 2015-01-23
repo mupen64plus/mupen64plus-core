@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "memory.h"
 #include "pif.h"
 #include "n64_cic_nus_6105.h"
 
@@ -37,6 +36,7 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/util.h"
+#include "memory/memory.h"
 #include "plugin/plugin.h"
 
 static unsigned char eeprom[0x800];

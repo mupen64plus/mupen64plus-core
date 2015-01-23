@@ -20,12 +20,12 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "si_controller.h"
+#include "pif.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "main/main.h"
 #include "memory/memory.h"
-#include "memory/pif.h"
 #include "r4300/cp0.h"
 #include "r4300/interupt.h"
 #include "r4300/r4300.h"

@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef PIF_H
-#define PIF_H
+#ifndef M64P_SI_PIF_H
+#define M64P_SI_PIF_H
 
 void update_pif_write(void);
 void update_pif_read(void);

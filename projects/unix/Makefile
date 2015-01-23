@@ -399,8 +399,6 @@ SOURCE = \
 	$(SRCDIR)/main/sdl_key_converter.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/memory/memory.c \
-	$(SRCDIR)/memory/n64_cic_nus_6105.c \
-	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/pi/cart_rom.c \
 	$(SRCDIR)/pi/flashram.c \
 	$(SRCDIR)/pi/pi_controller.c \
@@ -428,6 +426,8 @@ SOURCE = \
 	$(SRCDIR)/ri/rdram.c \
 	$(SRCDIR)/ri/ri_controller.c \
 	$(SRCDIR)/rsp/rsp_core.c \
+	$(SRCDIR)/si/n64_cic_nus_6105.c \
+	$(SRCDIR)/si/pif.c \
 	$(SRCDIR)/si/si_controller.c \
 	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp
