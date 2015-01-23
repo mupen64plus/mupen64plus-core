@@ -352,11 +352,9 @@ uint32 read_memory_32(uint32 addr){
         return g_si.regs[offset];
       break;
     case M64P_MEM_PIF:
-      offset = ((addr & 0xffff) - 0x7c0);
+      offset = pif_ram_address(addr);
       if (offset < PIF_RAM_SIZE)
-      {
-        return sl((*((uint32_t*)&g_pif_ram[offset])));
-      }
+        return sl((*((uint32_t*)&g_si.pif.ram[offset])));
       break;
     case M64P_MEM_MI:
       offset = mi_reg(addr);

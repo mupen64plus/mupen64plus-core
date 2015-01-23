@@ -47,7 +47,6 @@
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
-#include "si/pif.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
@@ -201,8 +200,6 @@ static void write_ddh(void);
 static void write_ddd(void);
 
 enum cic_type g_cic_type;
-
-uint8_t g_pif_ram[PIF_RAM_SIZE];
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
@@ -664,9 +661,6 @@ int init_memory(void)
 
     /* init CIC type */
     g_cic_type = detect_cic_type(g_rom + 0x40);
-
-    /* init PIF RAM */
-    memset(g_pif_ram, 0, PIF_RAM_SIZE);
 
     /* map PIF RAM */
     map_region(0x9fc0, M64P_MEM_PIF, RW(pif));
@@ -1523,95 +1517,44 @@ static void write_rom(void)
 }
 
 
-static inline uint32_t pif_ram_address(uint32_t address)
-{
-    return ((address & 0xfffc) - 0x7c0);
-}
-
-static int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t addr = pif_ram_address(address);
-
-    if (addr >= PIF_RAM_SIZE)
-    {
-        DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08x", address);
-        *value = 0;
-        return -1;
-    }
-
-    memcpy(value, g_pif_ram + addr, sizeof(*value));
-    *value = sl(*value);
-
-    return 0;
-}
-
-static int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t addr = pif_ram_address(address);
-
-    if (addr >= PIF_RAM_SIZE)
-    {
-        DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08x", address);
-        return -1;
-    }
-
-    masked_write((uint32_t*)(&g_pif_ram[addr]), sl(value), sl(mask));
-
-    if ((addr == 0x3c) && (mask & 0xff))
-    {
-        if (g_pif_ram[0x3f] == 0x08)
-        {
-            g_pif_ram[0x3f] = 0;
-            update_count();
-            add_interupt_event(SI_INT, /*0x100*/0x900);
-        }
-        else
-        {
-            update_pif_write();
-        }
-    }
-
-    return 0;
-}
-
 static void read_pif(void)
 {
-    readw(read_pif_ram, NULL, address, rdword);
+    readw(read_pif_ram, &g_si, address, rdword);
 }
 
 static void read_pifb(void)
 {
-    readb(read_pif_ram, NULL, address, rdword);
+    readb(read_pif_ram, &g_si, address, rdword);
 }
 
 static void read_pifh(void)
 {
-    readh(read_pif_ram, NULL, address, rdword);
+    readh(read_pif_ram, &g_si, address, rdword);
 }
 
 static void read_pifd(void)
 {
-    readd(read_pif_ram, NULL, address, rdword);
+    readd(read_pif_ram, &g_si, address, rdword);
 }
 
 static void write_pif(void)
 {
-    writew(write_pif_ram, NULL, address, word);
+    writew(write_pif_ram, &g_si, address, word);
 }
 
 static void write_pifb(void)
 {
-    writeb(write_pif_ram, NULL, address, cpu_byte);
+    writeb(write_pif_ram, &g_si, address, cpu_byte);
 }
 
 static void write_pifh(void)
 {
-    writeh(write_pif_ram, NULL, address, hword);
+    writeh(write_pif_ram, &g_si, address, hword);
 }
 
 static void write_pifd(void)
 {
-    writed(write_pif_ram, NULL, address, dword);
+    writed(write_pif_ram, &g_si, address, dword);
 }
 
 /* HACK: just to get F-Zero to boot

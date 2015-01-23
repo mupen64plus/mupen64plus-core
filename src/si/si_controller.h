@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "pif.h"
+
 struct r4300_core;
 struct ri_controller;
 
@@ -42,6 +44,8 @@ enum si_registers
 struct si_controller
 {
     uint32_t regs[SI_REGS_COUNT];
+
+    struct pif pif;
 
     struct r4300_core* r4300;
     struct ri_controller* ri;

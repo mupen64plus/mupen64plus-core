@@ -20,7 +20,6 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "si_controller.h"
-#include "pif.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -47,10 +46,10 @@ static void dma_si_write(struct si_controller* si)
 
     for (i = 0; i < PIF_RAM_SIZE; i += 4)
     {
-        *((uint32_t*)(&g_pif_ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
+        *((uint32_t*)(&si->pif.ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
     }
 
-    update_pif_write();
+    update_pif_write(si);
     update_count();
 
     if (g_delay_si) {
@@ -72,11 +71,11 @@ static void dma_si_read(struct si_controller* si)
         stop=1;
     }
 
-    update_pif_read();
+    update_pif_read(si);
 
     for (i = 0; i < PIF_RAM_SIZE; i += 4)
     {
-        si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&g_pif_ram[i]));
+        si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
     }
 
     update_count();
@@ -102,6 +101,8 @@ void connect_si(struct si_controller* si,
 void init_si(struct si_controller* si)
 {
     memset(si->regs, 0, SI_REGS_COUNT*sizeof(uint32_t));
+
+    init_pif(&si->pif);
 }
 
 

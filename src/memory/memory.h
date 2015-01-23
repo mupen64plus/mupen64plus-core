@@ -33,10 +33,6 @@
 #define write_hword_in_memory() writememh[address >>16]()
 #define write_dword_in_memory() writememd[address >>16]()
 
-enum { PIF_RAM_SIZE = 0x40 };
-
-extern uint8_t g_pif_ram[PIF_RAM_SIZE];
-
 extern unsigned int address, word;
 extern unsigned char cpu_byte;
 extern unsigned short hword;

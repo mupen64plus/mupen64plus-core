@@ -22,8 +22,30 @@
 #ifndef M64P_SI_PIF_H
 #define M64P_SI_PIF_H
 
-void update_pif_write(void);
-void update_pif_read(void);
+#include <stdint.h>
+
+struct si_controller;
+
+enum { PIF_RAM_SIZE = 0x40 };
+
+struct pif
+{
+    uint8_t ram[PIF_RAM_SIZE];
+};
+
+static inline uint32_t pif_ram_address(uint32_t address)
+{
+    return ((address & 0xfffc) - 0x7c0);
+}
+
+
+void init_pif(struct pif* pif);
+
+int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
+int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void update_pif_write(struct si_controller* si);
+void update_pif_read(struct si_controller* si);
 
 #endif
 

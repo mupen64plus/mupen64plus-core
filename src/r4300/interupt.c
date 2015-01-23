@@ -523,7 +523,7 @@ void gen_interupt(void)
             lircCheckInput();
 #endif //WITH_LIRC
             SDL_PumpEvents();
-            g_pif_ram[0x3f] = 0x0;
+            g_si.pif.ram[0x3f] = 0x0;
             remove_interupt_event();
             g_r4300.mi.regs[MI_INTR_REG] |= 0x02;
             g_si.regs[SI_STATUS_REG] |= 0x1000;

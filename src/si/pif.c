@@ -26,9 +26,7 @@
 
 #include "pif.h"
 #include "n64_cic_nus_6105.h"
-
-#include "r4300/r4300.h"
-#include "r4300/interupt.h"
+#include "si_controller.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -38,6 +36,9 @@
 #include "main/util.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
+#include "r4300/cp0.h"
+#include "r4300/r4300.h"
+#include "r4300/interupt.h"
 
 static unsigned char eeprom[0x800];
 static unsigned char mempack[4][0x8000];
@@ -167,13 +168,13 @@ static void mempack_write_file(void)
 
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
-void print_pif(void)
+void print_pif(struct pif* pif)
 {
     int i;
     for (i=0; i<(64/8); i++)
         DebugMessage(M64MSG_INFO, "%x %x %x %x | %x %x %x %x",
-                     g_pif_ram[i*8+0], g_pif_ram[i*8+1],g_pif_ram[i*8+2], g_pif_ram[i*8+3],
-                     g_pif_ram[i*8+4], g_pif_ram[i*8+5],g_pif_ram[i*8+6], g_pif_ram[i*8+7]);
+                     pif->ram[i*8+0], pif->ram[i*8+1],pif->ram[i*8+2], pif->ram[i*8+3],
+                     pif->ram[i*8+4], pif->ram[i*8+5],pif->ram[i*8+6], pif->ram[i*8+7]);
 }
 #endif
 
@@ -472,13 +473,69 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
     }
 }
 
-void update_pif_write(void)
+void init_pif(struct pif* pif)
 {
+    memset(pif->ram, 0, PIF_RAM_SIZE);
+}
+
+int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
+{
+    struct si_controller* si = (struct si_controller*)opaque;
+    uint32_t addr = pif_ram_address(address);
+
+    if (addr >= PIF_RAM_SIZE)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08x", address);
+        *value = 0;
+        return -1;
+    }
+
+    memcpy(value, si->pif.ram + addr, sizeof(*value));
+    *value = sl(*value);
+
+    return 0;
+}
+
+int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    struct si_controller* si = (struct si_controller*)opaque;
+    uint32_t addr = pif_ram_address(address);
+
+    if (addr >= PIF_RAM_SIZE)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08x", address);
+        return -1;
+    }
+
+    masked_write((uint32_t*)(&si->pif.ram[addr]), sl(value), sl(mask));
+
+    if ((addr == 0x3c) && (mask & 0xff))
+    {
+        if (si->pif.ram[0x3f] == 0x08)
+        {
+            si->pif.ram[0x3f] = 0;
+            update_count();
+            add_interupt_event(SI_INT, /*0x100*/0x900);
+        }
+        else
+        {
+            update_pif_write(si);
+        }
+    }
+
+    return 0;
+}
+
+
+void update_pif_write(struct si_controller* si)
+{
+    struct pif* pif = &si->pif;
+
     char challenge[30], response[30];
     int i=0, channel=0;
-    if (g_pif_ram[0x3F] > 1)
+    if (pif->ram[0x3F] > 1)
     {
-        switch (g_pif_ram[0x3F])
+        switch (pif->ram[0x3F])
         {
         case 0x02:
 #ifdef DEBUG_PIF
@@ -487,35 +544,35 @@ void update_pif_write(void)
             // format the 'challenge' message into 30 nibbles for X-Scale's CIC code
             for (i = 0; i < 15; i++)
             {
-                challenge[i*2] =   (g_pif_ram[48+i] >> 4) & 0x0f;
-                challenge[i*2+1] =  g_pif_ram[48+i]       & 0x0f;
+                challenge[i*2] =   (pif->ram[48+i] >> 4) & 0x0f;
+                challenge[i*2+1] =  pif->ram[48+i]       & 0x0f;
             }
             // calculate the proper response for the given challenge (X-Scale's algorithm)
             n64_cic_nus_6105(challenge, response, CHL_LEN - 2);
-            g_pif_ram[46] = 0;
-            g_pif_ram[47] = 0;
+            pif->ram[46] = 0;
+            pif->ram[47] = 0;
             // re-format the 'response' into a byte stream
             for (i = 0; i < 15; i++)
             {
-                g_pif_ram[48+i] = (response[i*2] << 4) + response[i*2+1];
+                pif->ram[48+i] = (response[i*2] << 4) + response[i*2+1];
             }
             // the last byte (2 nibbles) is always 0
-            g_pif_ram[63] = 0;
+            pif->ram[63] = 0;
             break;
         case 0x08:
 #ifdef DEBUG_PIF
             DebugMessage(M64MSG_INFO, "update_pif_write() pif_ram[0x3f] = 8");
 #endif
-            g_pif_ram[0x3F] = 0;
+            pif->ram[0x3F] = 0;
             break;
         default:
-            DebugMessage(M64MSG_ERROR, "error in update_pif_write(): %x", g_pif_ram[0x3F]);
+            DebugMessage(M64MSG_ERROR, "error in update_pif_write(): %x", pif->ram[0x3F]);
         }
         return;
     }
     while (i<0x40)
     {
-        switch (g_pif_ram[i])
+        switch (pif->ram[i])
         {
         case 0x00:
             channel++;
@@ -524,21 +581,21 @@ void update_pif_write(void)
         case 0xFF:
             break;
         default:
-            if (!(g_pif_ram[i] & 0xC0))
+            if (!(pif->ram[i] & 0xC0))
             {
                 if (channel < 4)
                 {
                     if (Controls[channel].Present &&
                             Controls[channel].RawData)
-                        input.controllerCommand(channel, &g_pif_ram[i]);
+                        input.controllerCommand(channel, &pif->ram[i]);
                     else
-                        internal_ControllerCommand(channel, &g_pif_ram[i]);
+                        internal_ControllerCommand(channel, &pif->ram[i]);
                 }
                 else if (channel == 4)
-                    EepromCommand(&g_pif_ram[i]);
+                    EepromCommand(&pif->ram[i]);
                 else
                     DebugMessage(M64MSG_ERROR, "channel >= 4 in update_pif_write");
-                i += g_pif_ram[i] + (g_pif_ram[(i+1)] & 0x3F) + 1;
+                i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;
                 channel++;
             }
             else
@@ -546,16 +603,18 @@ void update_pif_write(void)
         }
         i++;
     }
-    //g_pif_ram[0x3F] = 0;
+    //pif->ram[0x3F] = 0;
     input.controllerCommand(-1, NULL);
 }
 
-void update_pif_read(void)
+void update_pif_read(struct si_controller* si)
 {
+    struct pif* pif = &si->pif;
+
     int i=0, channel=0;
     while (i<0x40)
     {
-        switch (g_pif_ram[i])
+        switch (pif->ram[i])
         {
         case 0x00:
             channel++;
@@ -571,17 +630,17 @@ void update_pif_read(void)
         case 0xB8:
             break;
         default:
-            if (!(g_pif_ram[i] & 0xC0))
+            if (!(pif->ram[i] & 0xC0))
             {
                 if (channel < 4)
                 {
                     if (Controls[channel].Present &&
                             Controls[channel].RawData)
-                        input.readController(channel, &g_pif_ram[i]);
+                        input.readController(channel, &pif->ram[i]);
                     else
-                        internal_ReadController(channel, &g_pif_ram[i]);
+                        internal_ReadController(channel, &pif->ram[i]);
                 }
-                i += g_pif_ram[i] + (g_pif_ram[(i+1)] & 0x3F) + 1;
+                i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;
                 channel++;
             }
             else
