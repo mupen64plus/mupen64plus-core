@@ -426,6 +426,7 @@ SOURCE = \
 	$(SRCDIR)/ri/rdram.c \
 	$(SRCDIR)/ri/ri_controller.c \
 	$(SRCDIR)/rsp/rsp_core.c \
+	$(SRCDIR)/si/cic.c \
 	$(SRCDIR)/si/n64_cic_nus_6105.c \
 	$(SRCDIR)/si/pif.c \
 	$(SRCDIR)/si/si_controller.c \

@@ -37,6 +37,7 @@
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
+#include "si/si_controller.h"
 
 #include <string.h>
 
@@ -168,7 +169,7 @@ static void dma_pi_write(struct pi_controller* pi)
     // (This is just a convenient way to run this code once at the beginning)
     if (pi->regs[PI_CART_ADDR_REG] == 0x10001000)
     {
-        switch (g_cic_type)
+        switch (g_si.pif.cic.version)
         {
         case CIC_X101:
         case CIC_X102:

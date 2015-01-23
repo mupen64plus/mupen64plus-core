@@ -207,6 +207,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\cic.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\api\common.c"
 				>
 			</File>
@@ -532,6 +536,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\cheat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\cic.h"
 				>
 			</File>
 			<File

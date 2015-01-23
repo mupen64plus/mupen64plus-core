@@ -199,8 +199,6 @@ static void write_ddb(void);
 static void write_ddh(void);
 static void write_ddd(void);
 
-enum cic_type g_cic_type;
-
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
 unsigned int address = 0;
@@ -228,30 +226,6 @@ void (*writemem[0x10000])(void);
 void (*writememb[0x10000])(void);
 void (*writememd[0x10000])(void);
 void (*writememh[0x10000])(void);
-
-static enum cic_type detect_cic_type(const void* ipl3)
-{
-    size_t i;
-    unsigned long long crc = 0;
-
-    for (i = 0; i < 0xfc0/4; i++)
-        crc += ((uint32_t*)ipl3)[i];
-
-    switch(crc)
-    {
-        default:
-            DebugMessage(M64MSG_WARNING, "Unknown CIC type (%08x)! using CIC 6102.", crc);
-        case 0x000000D057C85244LL: return CIC_X102;
-        case 0x000000D0027FDF31LL:
-        case 0x000000CFFB631223LL: return CIC_X101;
-        case 0x000000D6497E414BLL: return CIC_X103;
-        case 0x0000011A49F60E96LL: return CIC_X105;
-        case 0x000000D6D5BE5580LL: return CIC_X106;
-    }
-
-    /* never reached */
-    return 0;
-}
 
 typedef int (*readfn)(void*,uint32_t,uint32_t*);
 typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
@@ -659,9 +633,6 @@ int init_memory(void)
         map_region(0xb000+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init CIC type */
-    g_cic_type = detect_cic_type(g_rom + 0x40);
-
     /* map PIF RAM */
     map_region(0x9fc0, M64P_MEM_PIF, RW(pif));
     map_region(0xbfc0, M64P_MEM_PIF, RW(pif));
@@ -672,6 +643,8 @@ int init_memory(void)
     }
 
     fast_memory = 1;
+
+    init_cic_using_ipl3(&g_si.pif.cic, g_rom + 0x40);
 
     init_r4300(&g_r4300);
     init_rdp(&g_dp);

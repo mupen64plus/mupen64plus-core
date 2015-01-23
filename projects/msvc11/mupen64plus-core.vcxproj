@@ -108,6 +108,7 @@
     <ClCompile Include="..\..\src\api\callbacks.c" />
     <ClCompile Include="..\..\src\pi\cart_rom.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
+    <ClCompile Include="..\..\src\si\cic.c" />
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
     <ClCompile Include="..\..\src\r4300\cp0.c" />
@@ -191,6 +192,7 @@
     <ClInclude Include="..\..\src\api\callbacks.h" />
     <ClInclude Include="..\..\src\pi\cart_rom.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
+    <ClInclude Include="..\..\src\si\cic.h" />
     <ClInclude Include="..\..\src\api\config.h" />
     <ClInclude Include="..\..\src\r4300\cp0.h" />
     <ClInclude Include="..\..\src\r4300\cp1.h" />
