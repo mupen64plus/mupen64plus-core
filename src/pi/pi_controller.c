@@ -43,6 +43,10 @@ void connect_pi(struct pi_controller* pi,
 void init_pi(struct pi_controller* pi)
 {
     memset(pi->regs, 0, PI_REGS_COUNT*sizeof(uint32_t));
+
+    init_flashram(&pi->flashram);
+
+    pi->use_flashram = 0;
 }
 
 

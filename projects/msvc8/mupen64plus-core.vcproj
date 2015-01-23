@@ -301,7 +301,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\flashram.c"
+				RelativePath="..\..\src\pi\flashram.c"
 				>
 			</File>
 			<File
@@ -619,7 +619,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\flashram.h"
+				RelativePath="..\..\src\pi\flashram.h"
 				>
 			</File>
 			<File

@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include "cart_rom.h"
+#include "flashram.h"
 #include "sram.h"
 
 struct r4300_core;
@@ -54,7 +55,10 @@ struct pi_controller
     uint32_t regs[PI_REGS_COUNT];
 
     struct cart_rom cart_rom;
+    struct flashram flashram;
     uint8_t sram[SRAM_SIZE];
+
+    int use_flashram;
 
     struct r4300_core* r4300;
     struct ri_controller* ri;

@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - flashram.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -19,18 +20,39 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-typedef struct _flashram_info
+#ifndef M64P_PI_FLASHRAM_H
+#define M64P_PI_FLASHRAM_H
+
+#include <stdint.h>
+
+struct pi_controller;
+
+enum { FLASHRAM_SIZE = 0x20000 };
+
+enum flashram_mode
 {
-	int use_flashram;
-	int mode;
-	unsigned long long status;
-	unsigned int erase_offset, write_pointer;
-} Flashram_info;
+    FLASHRAM_MODE_NOPES = 0,
+    FLASHRAM_MODE_ERASE,
+    FLASHRAM_MODE_WRITE,
+    FLASHRAM_MODE_READ,
+    FLASHRAM_MODE_STATUS
+};
 
-extern Flashram_info flashram_info;
+struct flashram
+{
+    uint8_t mem[FLASHRAM_SIZE];
+    enum flashram_mode mode;
+    uint64_t status;
+    unsigned int erase_offset;
+    unsigned int write_pointer;
+};
 
-void init_flashram(void);
-void flashram_command(unsigned int command);
-unsigned int flashram_status(void);
-void dma_read_flashram(void);
-void dma_write_flashram(void);
+void init_flashram(struct flashram* flashram);
+
+int read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
+int write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void dma_read_flashram(struct pi_controller* pi);
+void dma_write_flashram(struct pi_controller* pi);
+
+#endif

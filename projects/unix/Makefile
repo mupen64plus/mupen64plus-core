@@ -399,11 +399,11 @@ SOURCE = \
 	$(SRCDIR)/main/sdl_key_converter.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/memory/dma.c \
-	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/n64_cic_nus_6105.c \
 	$(SRCDIR)/memory/pif.c \
 	$(SRCDIR)/pi/cart_rom.c \
+	$(SRCDIR)/pi/flashram.c \
 	$(SRCDIR)/pi/pi_controller.c \
 	$(SRCDIR)/pi/sram.c \
 	$(SRCDIR)/plugin/plugin.c \

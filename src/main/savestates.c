@@ -40,7 +40,6 @@
 
 #include "ai/ai_controller.h"
 #include "memory/memory.h"
-#include "memory/flashram.h"
 #include "plugin/plugin.h"
 #include "r4300/tlb.h"
 #include "r4300/cp0.h"
@@ -390,11 +389,11 @@ static int savestates_load_m64p(char *filepath)
     COPYARRAY(g_sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     COPYARRAY(g_pif_ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    flashram_info.use_flashram = GETDATA(curr, int);
-    flashram_info.mode = GETDATA(curr, int);
-    flashram_info.status = GETDATA(curr, unsigned long long);
-    flashram_info.erase_offset = GETDATA(curr, unsigned int);
-    flashram_info.write_pointer = GETDATA(curr, unsigned int);
+    g_pi.use_flashram = GETDATA(curr, int);
+    g_pi.flashram.mode = GETDATA(curr, int);
+    g_pi.flashram.status = GETDATA(curr, unsigned long long);
+    g_pi.flashram.erase_offset = GETDATA(curr, unsigned int);
+    g_pi.flashram.write_pointer = GETDATA(curr, unsigned int);
 
     COPYARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
     COPYARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
@@ -742,7 +741,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // g_dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; llbit = 0;
 
     // No flashram info in pj64 savestate.
-    init_flashram();
+    init_flashram(&g_pi.flashram);
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
@@ -1169,11 +1168,11 @@ static int savestates_save_m64p(char *filepath)
     PUTARRAY(g_sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     PUTARRAY(g_pif_ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    PUTDATA(curr, int, flashram_info.use_flashram);
-    PUTDATA(curr, int, flashram_info.mode);
-    PUTDATA(curr, unsigned long long, flashram_info.status);
-    PUTDATA(curr, unsigned int, flashram_info.erase_offset);
-    PUTDATA(curr, unsigned int, flashram_info.write_pointer);
+    PUTDATA(curr, int, g_pi.use_flashram);
+    PUTDATA(curr, int, g_pi.flashram.mode);
+    PUTDATA(curr, unsigned long long, g_pi.flashram.status);
+    PUTDATA(curr, unsigned int, g_pi.flashram.erase_offset);
+    PUTDATA(curr, unsigned int, g_pi.flashram.write_pointer);
 
     PUTARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
     PUTARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);

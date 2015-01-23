@@ -26,7 +26,6 @@
 #include "dma.h"
 #include "memory.h"
 #include "pif.h"
-#include "flashram.h"
 
 #include "api/m64p_types.h"
 #define M64P_CORE_PROTOTYPES 1
@@ -38,6 +37,7 @@
 #include "main/util.h"
 #include "pi/pi_controller.h"
 #include "pi/sram.h"
+#include "pi/flashram.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/cached_interp.h"
@@ -54,14 +54,14 @@ void dma_pi_read(void)
     if (g_pi.regs[PI_CART_ADDR_REG] >= 0x08000000
             && g_pi.regs[PI_CART_ADDR_REG] < 0x08010000)
     {
-        if (flashram_info.use_flashram != 1)
+        if (g_pi.use_flashram != 1)
         {
             dma_write_sram(&g_pi);
-            flashram_info.use_flashram = -1;
+            g_pi.use_flashram = -1;
         }
         else
         {
-            dma_write_flashram();
+            dma_write_flashram(&g_pi);
         }
     }
     else
@@ -84,14 +84,14 @@ void dma_pi_write(void)
         if (g_pi.regs[PI_CART_ADDR_REG] >= 0x08000000
                 && g_pi.regs[PI_CART_ADDR_REG] < 0x08010000)
         {
-            if (flashram_info.use_flashram != 1)
+            if (g_pi.use_flashram != 1)
             {
                 dma_read_sram(&g_pi);
-                flashram_info.use_flashram = -1;
+                g_pi.use_flashram = -1;
             }
             else
             {
-                dma_read_flashram();
+                dma_read_flashram(&g_pi);
             }
         }
         else if (g_pi.regs[PI_CART_ADDR_REG] >= 0x06000000

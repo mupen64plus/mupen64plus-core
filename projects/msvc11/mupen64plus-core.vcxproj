@@ -132,7 +132,7 @@
     <ClCompile Include="..\..\src\r4300\exception.c" />
     <ClCompile Include="..\..\src\rdp\fb.c" />
     <ClCompile Include="..\..\src\osal\files_win32.c" />
-    <ClCompile Include="..\..\src\memory\flashram.c" />
+    <ClCompile Include="..\..\src\pi\flashram.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
     <ClCompile Include="..\..\src\r4300\x86\gbc.c" />
     <ClCompile Include="..\..\src\r4300\x86\gcop0.c" />
@@ -212,7 +212,7 @@
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\rdp\fb.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
-    <ClInclude Include="..\..\src\memory\flashram.h" />
+    <ClInclude Include="..\..\src\pi\flashram.h" />
     <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\src\r4300\interupt.h" />

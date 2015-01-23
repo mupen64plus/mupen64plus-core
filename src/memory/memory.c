@@ -28,7 +28,6 @@
 #include "memory.h"
 #include "dma.h"
 #include "pif.h"
-#include "flashram.h"
 
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
@@ -683,9 +682,6 @@ int init_memory(void)
         map_region(0x9000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xb000+i, M64P_MEM_NOTHING, RW(nothing));
     }
-
-    flashram_info.use_flashram = 0;
-    init_flashram();
 
     fast_memory = 1;
 
@@ -1509,72 +1505,44 @@ static void write_sid(void)
     writed(write_si_regs, NULL, address, dword);
 }
 
-static int read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
-{
-    if ((flashram_info.use_flashram == -1) || ((address & 0xffff) != 0))
-    {
-        DebugMessage(M64MSG_ERROR, "unknown read in read_flashram_status()");
-        return -1;
-    }
-
-    flashram_info.use_flashram = 1;
-    *value = flashram_status();
-
-    return 0;
-}
-
-static int write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    if ((flashram_info.use_flashram == -1) || ((address & 0xffff) != 0))
-    {
-        DebugMessage(M64MSG_ERROR, "unknown write in write_flashram_command()");
-        return -1;
-    }
-
-    flashram_info.use_flashram = 1;
-    flashram_command(value & mask);
-
-    return 0;
-}
-
 static void read_pi_flashram_status(void)
 {
-    readw(read_flashram_status, NULL, address, rdword);
+    readw(read_flashram_status, &g_pi, address, rdword);
 }
 
 static void read_pi_flashram_statusb(void)
 {
-    readb(read_flashram_status, NULL, address, rdword);
+    readb(read_flashram_status, &g_pi, address, rdword);
 }
 
 static void read_pi_flashram_statush(void)
 {
-    readh(read_flashram_status, NULL, address, rdword);
+    readh(read_flashram_status, &g_pi, address, rdword);
 }
 
 static void read_pi_flashram_statusd(void)
 {
-    readd(read_flashram_status, NULL, address, rdword);
+    readd(read_flashram_status, &g_pi, address, rdword);
 }
 
 static void write_pi_flashram_command(void)
 {
-    writew(write_flashram_command, NULL, address, word);
+    writew(write_flashram_command, &g_pi, address, word);
 }
 
 static void write_pi_flashram_commandb(void)
 {
-    writeb(write_flashram_command, NULL, address, cpu_byte);
+    writeb(write_flashram_command, &g_pi, address, cpu_byte);
 }
 
 static void write_pi_flashram_commandh(void)
 {
-    writeh(write_flashram_command, NULL, address, hword);
+    writeh(write_flashram_command, &g_pi, address, hword);
 }
 
 static void write_pi_flashram_commandd(void)
 {
-    writed(write_flashram_command, NULL, address, dword);
+    writed(write_flashram_command, &g_pi, address, dword);
 }
 
 
