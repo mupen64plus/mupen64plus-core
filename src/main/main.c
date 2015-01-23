@@ -780,7 +780,7 @@ static void connect_all(
     connect_ai(ai, r4300, vi);
     connect_pi(pi, r4300, ri, rom, rom_size);
     connect_ri(ri, dram, dram_size);
-    connect_si(si, r4300);
+    connect_si(si, r4300, ri);
     connect_vi(vi, r4300);
 }
 

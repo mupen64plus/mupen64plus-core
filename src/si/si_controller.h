@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct ri_controller;
 
 enum si_registers
 {
@@ -43,6 +44,7 @@ struct si_controller
     uint32_t regs[SI_REGS_COUNT];
 
     struct r4300_core* r4300;
+    struct ri_controller* ri;
 };
 
 static inline uint32_t si_reg(uint32_t address)
@@ -52,7 +54,8 @@ static inline uint32_t si_reg(uint32_t address)
 
 
 void connect_si(struct si_controller* si,
-                struct r4300_core* r4300);
+                struct r4300_core* r4300,
+                struct ri_controller* ri);
 
 void init_si(struct si_controller* si);
 

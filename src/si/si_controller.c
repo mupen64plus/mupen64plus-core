@@ -21,18 +21,82 @@
 
 #include "si_controller.h"
 
-/* XXX: move dma_si_{read,write} here instead */
-#include "memory/dma.h"
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "main/main.h"
 #include "memory/memory.h"
+#include "memory/pif.h"
+#include "r4300/cp0.h"
 #include "r4300/interupt.h"
+#include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
+#include "ri/ri_controller.h"
 
 #include <string.h>
 
+
+static void dma_si_write(struct si_controller* si)
+{
+    int i;
+
+    if (si->regs[SI_PIF_ADDR_WR64B_REG] != 0x1FC007C0)
+    {
+        DebugMessage(M64MSG_ERROR, "dma_si_write(): unknown SI use");
+        stop=1;
+    }
+
+    for (i = 0; i < PIF_RAM_SIZE; i += 4)
+    {
+        *((uint32_t*)(&g_pif_ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
+    }
+
+    update_pif_write();
+    update_count();
+
+    if (g_delay_si) {
+        add_interupt_event(SI_INT, /*0x100*/0x900);
+    } else {
+        si->r4300->mi.regs[MI_INTR_REG] |= 0x02; // SI
+        si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
+        check_interupt();
+    }
+}
+
+static void dma_si_read(struct si_controller* si)
+{
+    int i;
+
+    if (si->regs[SI_PIF_ADDR_RD64B_REG] != 0x1FC007C0)
+    {
+        DebugMessage(M64MSG_ERROR, "dma_si_read(): unknown SI use");
+        stop=1;
+    }
+
+    update_pif_read();
+
+    for (i = 0; i < PIF_RAM_SIZE; i += 4)
+    {
+        si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&g_pif_ram[i]));
+    }
+
+    update_count();
+
+    if (g_delay_si) {
+        add_interupt_event(SI_INT, /*0x100*/0x900);
+    } else {
+        si->r4300->mi.regs[MI_INTR_REG] |= 0x02; // SI
+        si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
+        check_interupt();
+    }
+}
+
+
 void connect_si(struct si_controller* si,
-                struct r4300_core* r4300)
+                struct r4300_core* r4300,
+                struct ri_controller* ri)
 {
     si->r4300 = r4300;
+    si->ri = ri;
 }
 
 void init_si(struct si_controller* si)
@@ -64,12 +128,12 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     case SI_PIF_ADDR_RD64B_REG:
         masked_write(&si->regs[SI_PIF_ADDR_RD64B_REG], value, mask);
-        dma_si_read();
+        dma_si_read(si);
         break;
 
     case SI_PIF_ADDR_WR64B_REG:
         masked_write(&si->regs[SI_PIF_ADDR_WR64B_REG], value, mask);
-        dma_si_write();
+        dma_si_write(si);
         break;
 
     case SI_STATUS_REG:

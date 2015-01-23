@@ -398,7 +398,6 @@ SOURCE = \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
 	$(SRCDIR)/main/workqueue.c \
-	$(SRCDIR)/memory/dma.c \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/memory/n64_cic_nus_6105.c \
 	$(SRCDIR)/memory/pif.c \

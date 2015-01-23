@@ -122,7 +122,6 @@
       <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\api\debugger.c" />
-    <ClCompile Include="..\..\src\memory\dma.c" />
     <ClCompile Include="..\..\src\plugin\dummy_audio.c" />
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
@@ -203,7 +202,6 @@
     <ClInclude Include="..\..\src\debugger\dbg_types.h" />
     <ClInclude Include="..\..\src\debugger\debugger.h" />
     <ClInclude Include="..\..\src\api\debugger.h" />
-    <ClInclude Include="..\..\src\memory\dma.h" />
     <ClInclude Include="..\..\src\plugin\dummy_audio.h" />
     <ClInclude Include="..\..\src\plugin\dummy_input.h" />
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
