@@ -33,8 +33,6 @@
 #include "si/si_controller.h"
 
 
-int delay_si = 0;
-
 void dma_si_write(void)
 {
     int i;
@@ -53,7 +51,7 @@ void dma_si_write(void)
     update_pif_write();
     update_count();
 
-    if (delay_si) {
+    if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
         g_r4300.mi.regs[MI_INTR_REG] |= 0x02; // SI
@@ -81,7 +79,7 @@ void dma_si_read(void)
 
     update_count();
 
-    if (delay_si) {
+    if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
         g_r4300.mi.regs[MI_INTR_REG] |= 0x02; // SI

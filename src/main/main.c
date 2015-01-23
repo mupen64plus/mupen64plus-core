@@ -97,6 +97,8 @@ struct r4300_core g_r4300;
 struct rdp_core g_dp;
 struct rsp_core g_sp;
 
+int g_delay_si = 0;
+
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
 static int   l_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
@@ -794,7 +796,7 @@ m64p_error main_run(void)
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
-    delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+    g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
