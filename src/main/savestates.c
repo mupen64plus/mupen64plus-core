@@ -55,6 +55,7 @@
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
+#include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #ifdef LIBMINIZIP
@@ -325,10 +326,10 @@ static int savestates_load_m64p(char *filepath)
     g_sp.regs2[SP_PC_REG]    = GETDATA(curr, uint32_t);
     g_sp.regs2[SP_IBIST_REG] = GETDATA(curr, uint32_t);
 
-    g_si_regs[SI_DRAM_ADDR_REG]      = GETDATA(curr, uint32_t);
-    g_si_regs[SI_PIF_ADDR_RD64B_REG] = GETDATA(curr, uint32_t);
-    g_si_regs[SI_PIF_ADDR_WR64B_REG] = GETDATA(curr, uint32_t);
-    g_si_regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
+    g_si.regs[SI_DRAM_ADDR_REG]      = GETDATA(curr, uint32_t);
+    g_si.regs[SI_PIF_ADDR_RD64B_REG] = GETDATA(curr, uint32_t);
+    g_si.regs[SI_PIF_ADDR_WR64B_REG] = GETDATA(curr, uint32_t);
+    g_si.regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
 
     g_vi.regs[VI_STATUS_REG]  = GETDATA(curr, uint32_t);
     g_vi.regs[VI_ORIGIN_REG]  = GETDATA(curr, uint32_t);
@@ -676,10 +677,10 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_ri.regs[RI_WERROR_REG]       = GETDATA(curr, uint32_t);
 
     // si_register
-    g_si_regs[SI_DRAM_ADDR_REG]      = GETDATA(curr, uint32_t);
-    g_si_regs[SI_PIF_ADDR_RD64B_REG] = GETDATA(curr, uint32_t);
-    g_si_regs[SI_PIF_ADDR_WR64B_REG] = GETDATA(curr, uint32_t);
-    g_si_regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
+    g_si.regs[SI_DRAM_ADDR_REG]      = GETDATA(curr, uint32_t);
+    g_si.regs[SI_PIF_ADDR_RD64B_REG] = GETDATA(curr, uint32_t);
+    g_si.regs[SI_PIF_ADDR_WR64B_REG] = GETDATA(curr, uint32_t);
+    g_si.regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
 
     // tlb
     memset(tlb_LUT_r, 0, 0x400000);
@@ -1096,10 +1097,10 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_sp.regs2[SP_PC_REG]);
     PUTDATA(curr, uint32_t, g_sp.regs2[SP_IBIST_REG]);
 
-    PUTDATA(curr, uint32_t, g_si_regs[SI_DRAM_ADDR_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_RD64B_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_WR64B_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_PIF_ADDR_RD64B_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_PIF_ADDR_WR64B_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_STATUS_REG]);
 
     PUTDATA(curr, uint32_t, g_vi.regs[VI_STATUS_REG]);
     PUTDATA(curr, uint32_t, g_vi.regs[VI_ORIGIN_REG]);
@@ -1370,10 +1371,10 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, g_ri.regs[RI_ERROR_REG]);
     PUTDATA(curr, uint32_t, g_ri.regs[RI_WERROR_REG]);
 
-    PUTDATA(curr, uint32_t, g_si_regs[SI_DRAM_ADDR_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_RD64B_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_PIF_ADDR_WR64B_REG]);
-    PUTDATA(curr, uint32_t, g_si_regs[SI_STATUS_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_DRAM_ADDR_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_PIF_ADDR_RD64B_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_PIF_ADDR_WR64B_REG]);
+    PUTDATA(curr, uint32_t, g_si.regs[SI_STATUS_REG]);
 
     for (i=0; i < 32;i++)
     {

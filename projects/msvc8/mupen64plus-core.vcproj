@@ -473,6 +473,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\si_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\pi\sram.c"
 				>
 			</File>
@@ -784,6 +788,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osd\screenshot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\si_controller.h"
 				>
 			</File>
 			<File

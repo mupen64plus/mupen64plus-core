@@ -41,6 +41,7 @@
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
 #include "ri/ri_controller.h"
+#include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
@@ -346,9 +347,9 @@ uint32 read_memory_32(uint32 addr){
         return g_ri.regs[offset];
       break;
     case M64P_MEM_SI:
-      offset = (addr & 0xffff) >> 2;
+      offset = si_reg(addr);
       if (offset < SI_REGS_COUNT)
-        return g_si_regs[offset];
+        return g_si.regs[offset];
       break;
     case M64P_MEM_PIF:
       offset = ((addr & 0xffff) - 0x7c0);

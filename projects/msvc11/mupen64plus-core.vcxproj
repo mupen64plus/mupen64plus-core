@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\src\main\savestates.c" />
     <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
+    <ClCompile Include="..\..\src\si\si_controller.c" />
     <ClCompile Include="..\..\src\pi\sram.c" />
     <ClCompile Include="..\..\src\r4300\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
@@ -254,6 +255,7 @@
     <ClInclude Include="..\..\src\main\savestates.h" />
     <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
+    <ClInclude Include="..\..\src\si\si_controller.h" />
     <ClInclude Include="..\..\src\pi\sram.h" />
     <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />

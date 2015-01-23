@@ -40,6 +40,7 @@
 #include "plugin/plugin.h"
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
+#include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #include "interupt.h"
@@ -525,7 +526,7 @@ void gen_interupt(void)
             g_pif_ram[0x3f] = 0x0;
             remove_interupt_event();
             g_r4300.mi.regs[MI_INTR_REG] |= 0x02;
-            g_si_regs[SI_STATUS_REG] |= 0x1000;
+            g_si.regs[SI_STATUS_REG] |= 0x1000;
             if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else

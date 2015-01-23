@@ -34,6 +34,7 @@ struct rsp_core;
 struct ai_controller;
 struct pi_controller;
 struct ri_controller;
+struct si_controller;
 struct vi_controller;
 
 enum { RDRAM_MAX_SIZE = 0x800000 };
@@ -49,6 +50,7 @@ extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 extern struct ai_controller g_ai;
 extern struct pi_controller g_pi;
 extern struct ri_controller g_ri;
+extern struct si_controller g_si;
 extern struct vi_controller g_vi;
 
 extern struct r4300_core g_r4300;

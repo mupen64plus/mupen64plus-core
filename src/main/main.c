@@ -64,6 +64,7 @@
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
+#include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #ifdef DBG
@@ -90,6 +91,7 @@ ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 struct ai_controller g_ai;
 struct pi_controller g_pi;
 struct ri_controller g_ri;
+struct si_controller g_si;
 struct vi_controller g_vi;
 struct r4300_core g_r4300;
 struct rdp_core g_dp;
@@ -764,6 +766,7 @@ static void connect_all(
         struct ai_controller* ai,
         struct pi_controller* pi,
         struct ri_controller* ri,
+        struct si_controller* si,
         struct vi_controller* vi,
         uint32_t* dram,
         size_t dram_size,
@@ -775,6 +778,7 @@ static void connect_all(
     connect_ai(ai, r4300, vi);
     connect_pi(pi, r4300, ri, rom, rom_size);
     connect_ri(ri, dram, dram_size);
+    connect_si(si, r4300);
     connect_vi(vi, r4300);
 }
 
@@ -804,7 +808,7 @@ m64p_error main_run(void)
     }
 
     connect_all(&g_r4300, &g_dp, &g_sp,
-                &g_ai, &g_pi, &g_ri, &g_vi,
+                &g_ai, &g_pi, &g_ri, &g_si, &g_vi,
                 g_rdram, RDRAM_MAX_SIZE,
                 g_rom, g_rom_size);
 

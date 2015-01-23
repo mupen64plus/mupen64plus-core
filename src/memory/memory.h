@@ -51,20 +51,6 @@ extern void (*writememb[0x10000])(void);
 extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
-enum si_registers
-{
-    SI_DRAM_ADDR_REG,
-    SI_PIF_ADDR_RD64B_REG,
-    SI_R2_REG, /* reserved */
-    SI_R3_REG, /* reserved */
-    SI_PIF_ADDR_WR64B_REG,
-    SI_R5_REG, /* reserved */
-    SI_STATUS_REG,
-    SI_REGS_COUNT
-};
-
-extern uint32_t g_si_regs[SI_REGS_COUNT];
-
 enum cic_type
 {
     CIC_X101,

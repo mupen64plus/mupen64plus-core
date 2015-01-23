@@ -26,7 +26,6 @@
 #include "api/m64p_types.h"
 
 #include "memory.h"
-#include "dma.h"
 #include "pif.h"
 
 #include "r4300/r4300.h"
@@ -49,6 +48,7 @@
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
+#include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #ifdef DBG
@@ -199,9 +199,6 @@ static void write_dd(void);
 static void write_ddb(void);
 static void write_ddh(void);
 static void write_ddd(void);
-
-/* definitions of the rcp's structures and memory area */
-uint32_t g_si_regs[SI_REGS_COUNT];
 
 enum cic_type g_cic_type;
 
@@ -623,9 +620,6 @@ int init_memory(void)
         map_region(0xa470+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* init SI registers */
-    memset(g_si_regs, 0, SI_REGS_COUNT*sizeof(g_si_regs[0]));
-
     /* map SI registers */
     map_region(0x8480, M64P_MEM_SI, RW(si));
     map_region(0xa480, M64P_MEM_SI, RW(si));
@@ -691,6 +685,7 @@ int init_memory(void)
     init_ai(&g_ai);
     init_pi(&g_pi);
     init_ri(&g_ri);
+    init_si(&g_si);
     init_vi(&g_vi);
 
     DebugMessage(M64MSG_VERBOSE, "Memory initialized");
@@ -1421,88 +1416,44 @@ static void write_rid(void)
 }
 
 
-static inline uint32_t si_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-static int read_si_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    uint32_t reg = si_reg(address);
-
-    *value = g_si_regs[reg];
-
-    return 0;
-}
-
-static int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    uint32_t reg = si_reg(address);
-
-    switch (reg)
-    {
-    case SI_DRAM_ADDR_REG:
-        masked_write(&g_si_regs[SI_DRAM_ADDR_REG], value, mask);
-        break;
-
-    case SI_PIF_ADDR_RD64B_REG:
-        masked_write(&g_si_regs[SI_PIF_ADDR_RD64B_REG], value, mask);
-        dma_si_read();
-        break;
-
-    case SI_PIF_ADDR_WR64B_REG:
-        masked_write(&g_si_regs[SI_PIF_ADDR_WR64B_REG], value, mask);
-        dma_si_write();
-        break;
-
-    case SI_STATUS_REG:
-        g_r4300.mi.regs[MI_INTR_REG] &= ~0x2;
-        g_si_regs[SI_STATUS_REG] &= ~0x1000;
-        check_interupt();
-        break;
-    }
-
-    return 0;
-}
-
 static void read_si(void)
 {
-    readw(read_si_regs, NULL, address, rdword);
+    readw(read_si_regs, &g_si, address, rdword);
 }
 
 static void read_sib(void)
 {
-    readb(read_si_regs, NULL, address, rdword);
+    readb(read_si_regs, &g_si, address, rdword);
 }
 
 static void read_sih(void)
 {
-    readh(read_si_regs, NULL, address, rdword);
+    readh(read_si_regs, &g_si, address, rdword);
 }
 
 static void read_sid(void)
 {
-    readd(read_si_regs, NULL, address, rdword);
+    readd(read_si_regs, &g_si, address, rdword);
 }
 
 static void write_si(void)
 {
-    writew(write_si_regs, NULL, address, word);
+    writew(write_si_regs, &g_si, address, word);
 }
 
 static void write_sib(void)
 {
-    writeb(write_si_regs, NULL, address, cpu_byte);
+    writeb(write_si_regs, &g_si, address, cpu_byte);
 }
 
 static void write_sih(void)
 {
-    writeh(write_si_regs, NULL, address, hword);
+    writeh(write_si_regs, &g_si, address, hword);
 }
 
 static void write_sid(void)
 {
-    writed(write_si_regs, NULL, address, dword);
+    writed(write_si_regs, &g_si, address, dword);
 }
 
 static void read_pi_flashram_status(void)
