@@ -183,6 +183,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\src\si\af_rtc.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\ai\ai_controller.c"
 				>
 			</File>
@@ -282,6 +286,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\dynamiclib_win32.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\eeprom.c"
 				>
 			</File>
 			<File
@@ -515,6 +523,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\src\si\af_rtc.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\ai\ai_controller.h"
 				>
 			</File>
@@ -604,6 +616,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\dynamiclib.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\eeprom.h"
 				>
 			</File>
 			<File

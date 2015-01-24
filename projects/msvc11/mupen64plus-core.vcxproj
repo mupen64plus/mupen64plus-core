@@ -102,7 +102,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-      <ClCompile Include="..\..\src\ai\ai_controller.c" />
+    <ClCompile Include="..\..\src\si\af_rtc.c" />
+    <ClCompile Include="..\..\src\ai\ai_controller.c" />
     <ClCompile Include="..\..\src\r4300\x86\assemble.c" />
     <ClCompile Include="..\..\src\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
@@ -128,6 +129,7 @@
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
     <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
+    <ClCompile Include="..\..\src\si\eeprom.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
     <ClCompile Include="..\..\src\r4300\exception.c" />
     <ClCompile Include="..\..\src\rdp\fb.c" />
@@ -186,6 +188,7 @@
     <ClCompile Include="..\..\src\main\zip\zip.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\si\af_rtc.h" />
     <ClInclude Include="..\..\src\ai\ai_controller.h" />
     <ClInclude Include="..\..\src\r4300\x86\assemble.h" />
     <ClInclude Include="..\..\src\r4300\cached_interp.h" />
@@ -209,6 +212,7 @@
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
     <ClInclude Include="..\..\src\plugin\dummy_video.h" />
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
+    <ClInclude Include="..\..\src\si\eeprom.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\rdp\fb.h" />

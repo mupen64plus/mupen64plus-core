@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "pif.h"
 #include "n64_cic_nus_6105.h"
@@ -40,55 +39,7 @@
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
 
-static unsigned char eeprom[0x800];
 static unsigned char mempack[4][0x8000];
-
-static char *get_eeprom_path(void)
-{
-    return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
-}
-
-static void eeprom_format(void)
-{
-    memset(eeprom, 0xff, sizeof(eeprom));
-}
-
-static void eeprom_read_file(void)
-{
-    char *filename = get_eeprom_path();
-
-    switch (read_from_file(filename, eeprom, sizeof(eeprom)))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", filename);
-            eeprom_format();
-            break;
-        case file_read_error:
-            DebugMessage(M64MSG_WARNING, "fread() failed for 2kb eeprom file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
-
-static void eeprom_write_file(void)
-{
-    char *filename = get_eeprom_path();
-
-    switch (write_to_file(filename, eeprom, sizeof(eeprom)))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "fwrite() failed for 2kb eeprom file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
 
 static char *get_mempack_path(void)
 {
@@ -177,106 +128,6 @@ void print_pif(struct pif* pif)
                      pif->ram[i*8+4], pif->ram[i*8+5],pif->ram[i*8+6], pif->ram[i*8+7]);
 }
 #endif
-
-static unsigned char byte2bcd(int n)
-{
-    n %= 100;
-    return ((n / 10) << 4) | (n % 10);
-}
-
-static void EepromCommand(unsigned char *Command)
-{
-    time_t curtime_time;
-    struct tm *curtime;
-
-    switch (Command[2])
-    {
-    case 0: // check
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "EepromCommand() check size");
-#endif
-        if (Command[1] != 3)
-        {
-            Command[1] |= 0x40;
-            if ((Command[1] & 3) > 0)
-                Command[3] = 0;
-            if ((Command[1] & 3) > 1)
-                Command[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
-            if ((Command[1] & 3) > 2)
-                Command[5] = 0;
-        }
-        else
-        {
-            Command[3] = 0;
-            Command[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
-            Command[5] = 0;
-        }
-        break;
-    case 4: // read
-    {
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "EepromCommand() read 8-byte block %i", Command[3]);
-#endif
-        eeprom_read_file();
-        memcpy(&Command[4], eeprom + Command[3]*8, 8);
-    }
-    break;
-    case 5: // write
-    {
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "EepromCommand() write 8-byte block %i", Command[3]);
-#endif
-        eeprom_read_file();
-        memcpy(eeprom + Command[3]*8, &Command[4], 8);
-        eeprom_write_file();
-    }
-    break;
-    case 6:
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "EepromCommand() RTC status query");
-#endif
-        // RTCstatus query
-        Command[3] = 0x00;
-        Command[4] = 0x10;
-        Command[5] = 0x00;
-        break;
-    case 7:
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "EepromCommand() read RTC block %i", Command[3]);
-#endif
-        // read RTC block
-        switch (Command[3]) {	// block number
-        case 0:
-            Command[4] = 0x00;
-            Command[5] = 0x02;
-            Command[12] = 0x00;
-            break;
-        case 1:
-            DebugMessage(M64MSG_ERROR, "RTC command in EepromCommand(): read block %d", Command[2]);
-            break;
-        case 2:
-            time(&curtime_time);
-            curtime = localtime(&curtime_time);
-            Command[4] = byte2bcd(curtime->tm_sec);
-            Command[5] = byte2bcd(curtime->tm_min);
-            Command[6] = 0x80 + byte2bcd(curtime->tm_hour);
-            Command[7] = byte2bcd(curtime->tm_mday);
-            Command[8] = byte2bcd(curtime->tm_wday);
-            Command[9] = byte2bcd(curtime->tm_mon + 1);
-            Command[10] = byte2bcd(curtime->tm_year);
-            Command[11] = byte2bcd(curtime->tm_year / 100);
-            Command[12] = 0x00;	// status
-            break;
-        }
-        break;
-    case 8:
-        // write RTC block
-        DebugMessage(M64MSG_ERROR, "RTC write in EepromCommand(): %d not yet implemented", Command[2]);
-        break;
-    default:
-        DebugMessage(M64MSG_ERROR, "unknown command in EepromCommand(): %x", Command[2]);
-    }
-}
 
 static unsigned char mempack_crc(unsigned char *data)
 {
@@ -473,6 +324,21 @@ static void internal_ControllerCommand(int Control, unsigned char *Command)
     }
 }
 
+static void process_cart_command(struct pif* pif, int channel, uint8_t* cmd)
+{
+    switch (cmd[2])
+    {
+    case 0: eeprom_status_command(pif, channel, cmd); break;
+    case 4: eeprom_read_command(pif, channel, cmd); break;
+    case 5: eeprom_write_command(pif, channel, cmd); break;
+    case 6: af_rtc_status_command(pif, channel, cmd); break;
+    case 7: af_rtc_read_command(pif, channel, cmd); break;
+    case 8: af_rtc_write_command(pif, channel, cmd); break;
+    default:
+        DebugMessage(M64MSG_ERROR, "unknown PIF command: %02x", cmd[2]);
+    }
+}
+
 void init_pif(struct pif* pif)
 {
     memset(pif->ram, 0, PIF_RAM_SIZE);
@@ -592,7 +458,7 @@ void update_pif_write(struct si_controller* si)
                         internal_ControllerCommand(channel, &pif->ram[i]);
                 }
                 else if (channel == 4)
-                    EepromCommand(&pif->ram[i]);
+                    process_cart_command(pif, channel, &pif->ram[i]);
                 else
                     DebugMessage(M64MSG_ERROR, "channel >= 4 in update_pif_write");
                 i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;

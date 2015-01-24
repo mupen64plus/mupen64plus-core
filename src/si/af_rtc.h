@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - pif.h                                                   *
+ *   Mupen64plus - af_rtc.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 Hacktarux                                          *
+ *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,41 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_PIF_H
-#define M64P_SI_PIF_H
+#ifndef M64P_SI_AF_RTC_H
+#define M64P_SI_AF_RTC_H
 
 #include <stdint.h>
 
-#include "af_rtc.h"
-#include "cic.h"
-#include "eeprom.h"
+struct pif;
 
-struct si_controller;
-
-enum { PIF_RAM_SIZE = 0x40 };
-
-struct pif
-{
-    uint8_t ram[PIF_RAM_SIZE];
-
-    uint8_t eeprom[EEPROM_MAX_SIZE];
-
-    struct cic cic;
-};
-
-static inline uint32_t pif_ram_address(uint32_t address)
-{
-    return ((address & 0xfffc) - 0x7c0);
-}
-
-
-void init_pif(struct pif* pif);
-
-int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
-int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void update_pif_write(struct si_controller* si);
-void update_pif_read(struct si_controller* si);
+void af_rtc_status_command(struct pif* pif, int channel, uint8_t* cmd);
+void af_rtc_read_command(struct pif* pif, int channel, uint8_t* cmd);
+void af_rtc_write_command(struct pif* pif, int channel, uint8_t* cmd);
 
 #endif
-
