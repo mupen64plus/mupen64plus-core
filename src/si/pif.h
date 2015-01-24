@@ -33,6 +33,20 @@ struct si_controller;
 
 enum { PIF_RAM_SIZE = 0x40 };
 
+enum pif_commands
+{
+    PIF_CMD_STATUS = 0x00,
+    PIF_CMD_CONTROLLER_READ = 0x01,
+    PIF_CMD_PAK_READ = 0x02,
+    PIF_CMD_PAK_WRITE = 0x03,
+    PIF_CMD_EEPROM_READ = 0x04,
+    PIF_CMD_EEPROM_WRITE = 0x05,
+    PIF_CMD_AF_RTC_STATUS = 0x06,
+    PIF_CMD_AF_RTC_READ = 0x07,
+    PIF_CMD_AF_RTC_WRITE = 0x08,
+    PIF_CMD_RESET = 0xff,
+};
+
 struct pif
 {
     uint8_t ram[PIF_RAM_SIZE];

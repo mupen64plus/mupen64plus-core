@@ -48,12 +48,12 @@ static void process_cart_command(struct pif* pif, int channel, uint8_t* cmd)
 {
     switch (cmd[2])
     {
-    case 0: eeprom_status_command(pif, channel, cmd); break;
-    case 4: eeprom_read_command(pif, channel, cmd); break;
-    case 5: eeprom_write_command(pif, channel, cmd); break;
-    case 6: af_rtc_status_command(pif, channel, cmd); break;
-    case 7: af_rtc_read_command(pif, channel, cmd); break;
-    case 8: af_rtc_write_command(pif, channel, cmd); break;
+    case PIF_CMD_STATUS: eeprom_status_command(pif, channel, cmd); break;
+    case PIF_CMD_EEPROM_READ: eeprom_read_command(pif, channel, cmd); break;
+    case PIF_CMD_EEPROM_WRITE: eeprom_write_command(pif, channel, cmd); break;
+    case PIF_CMD_AF_RTC_STATUS: af_rtc_status_command(pif, channel, cmd); break;
+    case PIF_CMD_AF_RTC_READ: af_rtc_read_command(pif, channel, cmd); break;
+    case PIF_CMD_AF_RTC_WRITE: af_rtc_write_command(pif, channel, cmd); break;
     default:
         DebugMessage(M64MSG_ERROR, "unknown PIF command: %02x", cmd[2]);
     }

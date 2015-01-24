@@ -144,14 +144,14 @@ void process_controller_command(struct pif* pif, int channel, uint8_t* cmd)
 {
     switch (cmd[2])
     {
-    case 0x00: // status
-    case 0xFF: // reset
+    case PIF_CMD_STATUS:
+    case PIF_CMD_RESET:
         controller_status_command(pif, channel, cmd); break;
-    case 0x01: // read buttons
+    case PIF_CMD_CONTROLLER_READ:
         controller_read_buttons_command(pif, channel, cmd); break;
-    case 0x02: // read controller pak
+    case PIF_CMD_PAK_READ:
         controller_read_pak_command(pif, channel, cmd); break;
-    case 0x03: // write controller pak
+    case PIF_CMD_PAK_WRITE:
         controller_write_pak_command(pif, channel, cmd); break;
         break;
     }
@@ -161,9 +161,9 @@ void read_controller(struct pif* pif, int channel, uint8_t* cmd)
 {
     switch (cmd[2])
     {
-    case 1: read_controller_read_buttons(pif, channel, cmd); break;
-    case 2: read_controller_read_pak(pif, channel, cmd); break;
-    case 3: read_controller_write_pak(pif, channel, cmd); break;
+    case PIF_CMD_CONTROLLER_READ: read_controller_read_buttons(pif, channel, cmd); break;
+    case PIF_CMD_PAK_READ: read_controller_read_pak(pif, channel, cmd); break;
+    case PIF_CMD_PAK_WRITE: read_controller_write_pak(pif, channel, cmd); break;
     }
 }
 
