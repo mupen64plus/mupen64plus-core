@@ -136,6 +136,7 @@
     <ClCompile Include="..\..\src\osal\files_win32.c" />
     <ClCompile Include="..\..\src\pi\flashram.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
+    <ClCompile Include="..\..\src\si\game_controller.c" />
     <ClCompile Include="..\..\src\r4300\x86\gbc.c" />
     <ClCompile Include="..\..\src\r4300\x86\gcop0.c" />
     <ClCompile Include="..\..\src\r4300\x86\gcop1.c" />
@@ -154,6 +155,7 @@
     <ClCompile Include="..\..\src\main\main.c" />
     <ClCompile Include="..\..\src\main\md5.c" />
     <ClCompile Include="..\..\src\memory\memory.c" />
+    <ClCompile Include="..\..\src\si\mempak.c" />
     <ClCompile Include="..\..\src\r4300\mi_controller.c" />
     <ClCompile Include="..\..\src\si\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
@@ -218,6 +220,7 @@
     <ClInclude Include="..\..\src\rdp\fb.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
     <ClInclude Include="..\..\src\pi\flashram.h" />
+    <ClInclude Include="..\..\src\si\game_controller.h" />
     <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\src\r4300\interupt.h" />
@@ -234,6 +237,7 @@
     <ClInclude Include="..\..\src\main\main.h" />
     <ClInclude Include="..\..\src\main\md5.h" />
     <ClInclude Include="..\..\src\memory\memory.h" />
+    <ClInclude Include="..\..\src\si\mempak.h" />
     <ClInclude Include="..\..\src\r4300\mi_controller.h" />
     <ClInclude Include="..\..\src\si\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\osd\OGLFT.h" />

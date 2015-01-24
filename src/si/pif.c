@@ -19,103 +19,18 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
 #include "pif.h"
 #include "n64_cic_nus_6105.h"
 #include "si_controller.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "api/debugger.h"
-#include "main/main.h"
-#include "main/rom.h"
-#include "main/util.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/cp0.h"
-#include "r4300/r4300.h"
 #include "r4300/interupt.h"
 
-static unsigned char mempack[4][0x8000];
-
-static char *get_mempack_path(void)
-{
-    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
-}
-
-static void mempack_format(void)
-{
-    unsigned char init[] =
-    {
-        0x81,0x01,0x02,0x03, 0x04,0x05,0x06,0x07, 0x08,0x09,0x0a,0x0b, 0x0c,0x0d,0x0e,0x0f,
-        0x10,0x11,0x12,0x13, 0x14,0x15,0x16,0x17, 0x18,0x19,0x1a,0x1b, 0x1c,0x1d,0x1e,0x1f,
-        0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-        0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0x05,0x1a,0x5f,0x13, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0xff,0xff,0xff,0xff, 0xff,0xff,0xff,0xff, 0xff,0xff,0x01,0xff, 0x66,0x25,0x99,0xcd,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
-        0x00,0x71,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03
-    };
-    int i,j;
-    for (i=0; i<4; i++)
-    {
-        for (j=0; j<0x8000; j+=2)
-        {
-            mempack[i][j] = 0;
-            mempack[i][j+1] = 0x03;
-        }
-        memcpy(mempack[i], init, 272);
-    }
-}
-
-static void mempack_read_file(void)
-{
-    char *filename = get_mempack_path();
-
-    switch (read_from_file(filename, mempack, sizeof(mempack)))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_VERBOSE, "couldn't open memory pack file '%s' for reading", filename);
-            mempack_format();
-            break;
-        case file_read_error:
-            DebugMessage(M64MSG_WARNING, "fread() failed for 128kb mempack file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
-
-static void mempack_write_file(void)
-{
-    char *filename = get_mempack_path();
-
-    switch (write_to_file(filename, mempack, sizeof(mempack)))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open memory pack file '%s' for writing", filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "fwrite() failed for 128kb mempack file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
+#include <string.h>
 
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
@@ -128,201 +43,6 @@ void print_pif(struct pif* pif)
                      pif->ram[i*8+4], pif->ram[i*8+5],pif->ram[i*8+6], pif->ram[i*8+7]);
 }
 #endif
-
-static unsigned char mempack_crc(unsigned char *data)
-{
-    int i;
-    unsigned char CRC = 0;
-    for (i=0; i<=0x20; i++)
-    {
-        int mask;
-        for (mask = 0x80; mask >= 1; mask >>= 1)
-        {
-            int xor_tap = (CRC & 0x80) ? 0x85 : 0x00;
-            CRC <<= 1;
-            if (i != 0x20 && (data[i] & mask)) CRC |= 1;
-            CRC ^= xor_tap;
-        }
-    }
-    return CRC;
-}
-
-static void internal_ReadController(int Control, unsigned char *Command)
-{
-    switch (Command[2])
-    {
-    case 1:
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 1 read buttons", Control);
-#endif
-        if (Controls[Control].Present)
-        {
-            BUTTONS Keys;
-            input.getKeys(Control, &Keys);
-            *((unsigned int *)(Command + 3)) = Keys.Value;
-#ifdef COMPARE_CORE
-            CoreCompareDataSync(4, Command+3);
-#endif
-        }
-        break;
-    case 2: // read controller pack
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 2 read controller pack (in Input plugin)", Control);
-#endif
-        if (Controls[Control].Present)
-        {
-            if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (input.readController)
-                    input.readController(Control, Command);
-        }
-        break;
-    case 3: // write controller pack
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "internal_ReadController() Channel %i Command 3 write controller pack (in Input plugin)", Control);
-#endif
-        if (Controls[Control].Present)
-        {
-            if (Controls[Control].Plugin == PLUGIN_RAW)
-                if (input.readController)
-                    input.readController(Control, Command);
-        }
-        break;
-    }
-}
-
-static void internal_ControllerCommand(int Control, unsigned char *Command)
-{
-    switch (Command[2])
-    {
-    case 0x00: // read status
-    case 0xFF: // reset
-        if ((Command[1] & 0x80))
-            break;
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command %02x check pack present", Control, Command[2]);
-#endif
-        if (Controls[Control].Present)
-        {
-            Command[3] = 0x05;
-            Command[4] = 0x00;
-            switch (Controls[Control].Plugin)
-            {
-            case PLUGIN_MEMPAK:
-                Command[5] = 1;
-                break;
-            case PLUGIN_RAW:
-                Command[5] = 1;
-                break;
-            default:
-                Command[5] = 0;
-                break;
-            }
-        }
-        else
-            Command[1] |= 0x80;
-        break;
-    case 0x01:
-#ifdef DEBUG_PIF
-        DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 1 check controller present", Control);
-#endif
-        if (!Controls[Control].Present)
-            Command[1] |= 0x80;
-        break;
-    case 0x02: // read controller pack
-        if (Controls[Control].Present)
-        {
-            switch (Controls[Control].Plugin)
-            {
-            case PLUGIN_MEMPAK:
-            {
-                int address = (Command[3] << 8) | Command[4];
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 read mempack address %04x", Control, address);
-#endif
-                if (address == 0x8001)
-                {
-                    memset(&Command[5], 0, 0x20);
-                    Command[0x25] = mempack_crc(&Command[5]);
-                }
-                else
-                {
-                    address &= 0xFFE0;
-                    if (address <= 0x7FE0)
-                    {
-                        mempack_read_file();
-                        memcpy(&Command[5], &mempack[Control][address], 0x20);
-                    }
-                    else
-                    {
-                        memset(&Command[5], 0, 0x20);
-                    }
-                    Command[0x25] = mempack_crc(&Command[5]);
-                }
-            }
-            break;
-            case PLUGIN_RAW:
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 controllerCommand (in Input plugin)", Control);
-#endif
-                if (input.controllerCommand)
-                    input.controllerCommand(Control, Command);
-                break;
-            default:
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 2 (no pack plugged in)", Control);
-#endif
-                memset(&Command[5], 0, 0x20);
-                Command[0x25] = 0;
-            }
-        }
-        else
-            Command[1] |= 0x80;
-        break;
-    case 0x03: // write controller pack
-        if (Controls[Control].Present)
-        {
-            switch (Controls[Control].Plugin)
-            {
-            case PLUGIN_MEMPAK:
-            {
-                int address = (Command[3] << 8) | Command[4];
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 write mempack address %04x", Control, address);
-#endif
-                if (address == 0x8001)
-                    Command[0x25] = mempack_crc(&Command[5]);
-                else
-                {
-                    address &= 0xFFE0;
-                    if (address <= 0x7FE0)
-                    {
-                        mempack_read_file();
-                        memcpy(&mempack[Control][address], &Command[5], 0x20);
-                        mempack_write_file();
-                    }
-                    Command[0x25] = mempack_crc(&Command[5]);
-                }
-            }
-            break;
-            case PLUGIN_RAW:
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 controllerCommand (in Input plugin)", Control);
-#endif
-                if (input.controllerCommand)
-                    input.controllerCommand(Control, Command);
-                break;
-            default:
-#ifdef DEBUG_PIF
-                DebugMessage(M64MSG_INFO, "internal_ControllerCommand() Channel %i Command 3 (no pack plugged in)", Control);
-#endif
-                Command[0x25] = mempack_crc(&Command[5]);
-            }
-        }
-        else
-            Command[1] |= 0x80;
-        break;
-    }
-}
 
 static void process_cart_command(struct pif* pif, int channel, uint8_t* cmd)
 {
@@ -451,11 +171,10 @@ void update_pif_write(struct si_controller* si)
             {
                 if (channel < 4)
                 {
-                    if (Controls[channel].Present &&
-                            Controls[channel].RawData)
+                    if (Controls[channel].Present && Controls[channel].RawData)
                         input.controllerCommand(channel, &pif->ram[i]);
                     else
-                        internal_ControllerCommand(channel, &pif->ram[i]);
+                        process_controller_command(pif, channel, &pif->ram[i]);
                 }
                 else if (channel == 4)
                     process_cart_command(pif, channel, &pif->ram[i]);
@@ -469,7 +188,10 @@ void update_pif_write(struct si_controller* si)
         }
         i++;
     }
+
     //pif->ram[0x3F] = 0;
+
+    /* notify the INPUT plugin that we're at the end of PIF ram processing */
     input.controllerCommand(-1, NULL);
 }
 
@@ -500,12 +222,12 @@ void update_pif_read(struct si_controller* si)
             {
                 if (channel < 4)
                 {
-                    if (Controls[channel].Present &&
-                            Controls[channel].RawData)
+                    if (Controls[channel].Present && Controls[channel].RawData)
                         input.readController(channel, &pif->ram[i]);
                     else
-                        internal_ReadController(channel, &pif->ram[i]);
+                        read_controller(pif, channel, &pif->ram[i]);
                 }
+
                 i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;
                 channel++;
             }
@@ -514,6 +236,8 @@ void update_pif_read(struct si_controller* si)
         }
         i++;
     }
+
+    /* notify the INPUT plugin that we're at the end of PIF ram processing */
     input.readController(-1, NULL);
 }
 

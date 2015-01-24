@@ -429,6 +429,8 @@ SOURCE = \
 	$(SRCDIR)/si/af_rtc.c \
 	$(SRCDIR)/si/cic.c \
 	$(SRCDIR)/si/eeprom.c \
+	$(SRCDIR)/si/game_controller.c \
+	$(SRCDIR)/si/mempak.c \
 	$(SRCDIR)/si/n64_cic_nus_6105.c \
 	$(SRCDIR)/si/pif.c \
 	$(SRCDIR)/si/si_controller.c \

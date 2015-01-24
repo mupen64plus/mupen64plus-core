@@ -317,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\game_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\gbc.c"
 				>
 			</File>
@@ -386,6 +390,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\memory\memory.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\mempak.c"
 				>
 			</File>
 			<File
@@ -643,6 +651,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\game_controller.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\instr_counters.h"
 				>
 			</File>
@@ -704,6 +716,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\memory\memory.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\mempak.h"
 				>
 			</File>
 			<File
