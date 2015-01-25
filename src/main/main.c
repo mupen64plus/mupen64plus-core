@@ -727,7 +727,8 @@ void new_vi(void)
             DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", TimeToWait);
             SDL_Delay(TimeToWait);
             // update our time delta for this frame, taking into account the time we just waited
-            ThisFrameDelta = (SDL_GetTicks() - LastFPSTime) - AdjustedLimit;
+            CurrentFPSTime = SDL_GetTicks();
+            ThisFrameDelta = (CurrentFPSTime - LastFPSTime) - AdjustedLimit;
         }
     }
 
