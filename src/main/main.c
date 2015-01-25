@@ -683,12 +683,11 @@ void new_frame(void)
 
 void new_vi(void)
 {
-    int FrameDuration;
     unsigned int CurrentFPSTime;
     static unsigned int LastFPSTime = 0;
+    static int VITotalDelta;
     static int VIDeltas[64];
     static unsigned int VIDeltasIndex;
-    static int VITotalDelta;
 
     double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
@@ -700,20 +699,19 @@ void new_vi(void)
     if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
 #endif
 
-    // if this is the first frame, the initialize our data structures
+    // if this is the first frame, initialize our data structures
     if(LastFPSTime == 0)
     {
         LastFPSTime = SDL_GetTicks();
-        memset(VIDeltas, 0, sizeof(VIDeltas));
         VITotalDelta = 0;
+        memset(VIDeltas, 0, sizeof(VIDeltas));
         VIDeltasIndex = 0;
         return;
     }
 
     // calculate # of milliseconds that have passed since the last video interrupt
     CurrentFPSTime = SDL_GetTicks();
-    FrameDuration = CurrentFPSTime - LastFPSTime;
-    ThisFrameDelta = FrameDuration - AdjustedLimit;
+    ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
 
     // are we too fast?
     if (ThisFrameDelta < 0)
@@ -726,19 +724,19 @@ void new_vi(void)
             TimeToWait = (IntegratedDelta > ThisFrameDelta) ? -IntegratedDelta : -ThisFrameDelta;
             DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", TimeToWait);
             SDL_Delay(TimeToWait);
-            // update our time delta for this frame, taking into account the time we just waited
+            // recalculate # of milliseconds that have passed since the last video interrupt,
+            // taking into account the time we just waited
             CurrentFPSTime = SDL_GetTicks();
-            ThisFrameDelta = (CurrentFPSTime - LastFPSTime) - AdjustedLimit;
+            ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
         }
     }
 
     // update our data structures
-    VITotalDelta -= VIDeltas[VIDeltasIndex];
+    LastFPSTime = CurrentFPSTime ;
+    VITotalDelta += ThisFrameDelta - VIDeltas[VIDeltasIndex];
     VIDeltas[VIDeltasIndex] = ThisFrameDelta;
     VIDeltasIndex = (VIDeltasIndex + 1) & 63;
-    VITotalDelta += ThisFrameDelta;
 
-    LastFPSTime = CurrentFPSTime ;
     timed_section_end(TIMED_SECTION_IDLE);
 }
 
