@@ -99,7 +99,7 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     ifeq ($(NEON), 1)
         CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
     else
-      ifeq ($(VFP), 1)
+      ifeq ($(VFP_HARD), 1)
         CFLAGS += -mfpu=vfp -mfloat-abi=hard
       else
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
@@ -541,6 +541,7 @@ targets:
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    USE_GLES=1    == build against GLESv2 instead of OpenGL"
 	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
+	@echo "    VFP_HARD=1 	 == (ARM only) full hardware floating point ABI"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
 	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3 -flto)"
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
