@@ -4204,28 +4204,26 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(m2l>=0);
         signed char rh=get_reg(i_regs->regmap,HIREG|64);
         signed char rl=get_reg(i_regs->regmap,HIREG);
-        signed char temp=get_reg(i_regs->regmap,-1);
         assert(rh>=0);
         assert(rl>=0);
-        assert(temp>=0);
 
         emit_umull(m1l,m2l,rh,rl);
         emit_storereg(LOREG,rl);
         emit_mov(rh,rl);
-        emit_movimm(0, rh);
+        emit_zeroreg(rh);
         emit_smlal(m1l,m2h,rh,rl);
-        emit_mov(rh,temp);
+        emit_mov(rh,HOST_TEMPREG);
         emit_testimm(m1l,0x80000000);
-        emit_addne(temp,m2h,temp);
-        emit_movimm(0, rh);
+        emit_addne(HOST_TEMPREG,m2h,HOST_TEMPREG);
+        emit_zeroreg(rh);
         emit_smlal(m1h,m2l,rh,rl);
         emit_testimm(m2l,0x80000000);
         emit_addne(rh,m1h,rh);
         emit_storereg(LOREG|64,rl);
-        emit_sarimm(temp,31,rl);
-        emit_adds(temp,rh,temp);
+        emit_sarimm(HOST_TEMPREG,31,rl);
+        emit_adds(HOST_TEMPREG,rh,HOST_TEMPREG);
         emit_addsarimm(rl,rh,rh,31);
-        emit_mov(temp,rl);
+        emit_mov(HOST_TEMPREG,rl);
         emit_smlal(m1h,m2h,rh,rl);
       }
       if(opcode2[i]==0x1D) // DMULTU
