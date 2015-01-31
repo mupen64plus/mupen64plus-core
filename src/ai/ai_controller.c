@@ -31,6 +31,29 @@
 
 #include <string.h>
 
+
+static uint32_t get_remaining_dma_length(struct ai_controller* ai)
+{
+    unsigned int ai_event;
+    unsigned int ai_delay;
+
+    if (ai->fifo[0].delay == 0)
+        return 0;
+
+    update_count();
+    ai_event = get_event(AI_INT);
+    if (ai_event == 0)
+        return 0;
+
+    ai_delay = ai_event - g_cp0_regs[CP0_COUNT_REG];
+
+    if (ai_delay >= 0x80000000)
+        return 0;
+
+    return (uint64_t)ai_delay * ai->fifo[0].length / ai->fifo[0].delay;
+}
+
+
 void connect_ai(struct ai_controller* ai,
                 struct r4300_core* r4300,
                 struct vi_controller* vi)
@@ -53,12 +76,7 @@ int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
 
     if (reg == AI_LEN_REG)
     {
-        update_count();
-        if (ai->fifo[0].delay != 0 && get_event(AI_INT) != 0 && (get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG]) < 0x80000000)
-            *value = ((get_event(AI_INT)-g_cp0_regs[CP0_COUNT_REG])*(long long)ai->fifo[0].length)/
-                      ai->fifo[0].delay;
-        else
-            *value = 0;
+        *value = get_remaining_dma_length(ai);
     }
     else
     {
