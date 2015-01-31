@@ -144,6 +144,7 @@
     <ClCompile Include="..\..\src\r4300\x86\gcop1_l.c" />
     <ClCompile Include="..\..\src\r4300\x86\gcop1_s.c" />
     <ClCompile Include="..\..\src\r4300\x86\gcop1_w.c" />
+    <ClCompile Include="..\..\src\plugin\get_time_using_C_localtime.c" />
     <ClCompile Include="..\..\src\r4300\x86\gr4300.c" />
     <ClCompile Include="..\..\src\r4300\x86\gregimm.c" />
     <ClCompile Include="..\..\src\r4300\x86\gspecial.c" />
@@ -221,6 +222,7 @@
     <ClInclude Include="..\..\src\osal\files.h" />
     <ClInclude Include="..\..\src\pi\flashram.h" />
     <ClInclude Include="..\..\src\si\game_controller.h" />
+    <ClInclude Include="..\..\src\plugin\get_time_using_C_localtime.h" />
     <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\interpret.h" />
     <ClInclude Include="..\..\src\r4300\interupt.h" />

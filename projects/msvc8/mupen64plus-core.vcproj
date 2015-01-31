@@ -349,6 +349,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\get_time_using_C_localtime.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\gr4300.c"
 				>
 			</File>
@@ -652,6 +656,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\si\game_controller.h"
+				>
+			</File>
+			<File
+                RelativePath="..\..\src\plugin\get_time_using_C_localtime.h"
 				>
 			</File>
 			<File

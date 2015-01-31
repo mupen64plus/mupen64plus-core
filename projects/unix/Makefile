@@ -419,6 +419,7 @@ SOURCE = \
 	$(SRCDIR)/pi/flashram.c \
 	$(SRCDIR)/pi/pi_controller.c \
 	$(SRCDIR)/pi/sram.c \
+	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \

@@ -57,6 +57,7 @@
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
 #include "plugin/plugin.h"
+#include "plugin/get_time_using_C_localtime.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
@@ -843,6 +844,10 @@ m64p_error main_run(void)
 
     // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
     gfx.setRenderingCallback(video_plugin_render_callback);
+
+    /* connect external time source to AF_RTC component */
+    g_si.pif.af_rtc.user_data = NULL;
+    g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
 
 #ifdef WITH_LIRC
     lircStart();
