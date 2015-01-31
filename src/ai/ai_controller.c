@@ -53,6 +53,13 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
     return (uint64_t)ai_delay * ai->fifo[0].length / ai->fifo[0].delay;
 }
 
+static unsigned int get_dma_duration(struct ai_controller* ai)
+{
+    unsigned int samples_per_sec = ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+
+    return ((uint64_t)ai->regs[AI_LEN_REG]*ai->vi->delay*ROM_PARAMS.vilimit)
+        / (4 * samples_per_sec);
+}
 
 void connect_ai(struct ai_controller* ai,
                 struct r4300_core* r4300,
@@ -90,18 +97,15 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct ai_controller* ai = (struct ai_controller*)opaque;
     uint32_t reg = ai_reg(address);
+    unsigned int delay;
 
-    unsigned int freq,delay=0;
     switch (reg)
     {
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
         audio.aiLenChanged();
 
-        freq = ROM_PARAMS.aidacrate / (ai->regs[AI_DACRATE_REG]+1);
-        if (freq)
-            delay = (unsigned int) (((unsigned long long)ai->regs[AI_LEN_REG]*ai->vi->delay*ROM_PARAMS.vilimit)/(freq*4));
-
+        delay = get_dma_duration(ai);
         if (ai->regs[AI_STATUS_REG] & 0x40000000) // busy
         {
             ai->fifo[1].delay = delay;
