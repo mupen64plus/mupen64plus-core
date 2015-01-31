@@ -405,6 +405,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\mpk_file.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\si\n64_cic_nus_6105.c"
 				>
 			</File>
@@ -732,6 +736,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\mi_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\mpk_file.h"
 				>
 			</File>
 			<File

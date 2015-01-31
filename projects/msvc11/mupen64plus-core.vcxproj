@@ -158,6 +158,7 @@
     <ClCompile Include="..\..\src\memory\memory.c" />
     <ClCompile Include="..\..\src\si\mempak.c" />
     <ClCompile Include="..\..\src\r4300\mi_controller.c" />
+    <ClCompile Include="..\..\src\main\mpk_file.c" />
     <ClCompile Include="..\..\src\si\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="..\..\src\memory\memory.h" />
     <ClInclude Include="..\..\src\si\mempak.h" />
     <ClInclude Include="..\..\src\r4300\mi_controller.h" />
+    <ClInclude Include="..\..\src\main\mpk_file.h" />
     <ClInclude Include="..\..\src\si\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\osd\OGLFT.h" />
     <ClInclude Include="..\..\src\r4300\ops.h" />

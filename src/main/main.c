@@ -44,6 +44,7 @@
 #include "main.h"
 #include "cheat.h"
 #include "eventloop.h"
+#include "mpk_file.h"
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
@@ -131,6 +132,11 @@ static const char *get_savepathdefault(const char *configpath)
     osal_mkdirp(path, 0700);
 
     return path;
+}
+
+static char *get_mempaks_path(void)
+{
+    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 
@@ -789,6 +795,9 @@ static void connect_all(
 */
 m64p_error main_run(void)
 {
+    size_t i;
+    struct mpk_file mpk;
+
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
@@ -849,6 +858,15 @@ m64p_error main_run(void)
     g_si.pif.af_rtc.user_data = NULL;
     g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
 
+    /* open mpk file (if any) and connect it to mempaks */
+    open_mpk_file(&mpk, get_mempaks_path());
+    for(i = 0; i < MEMPAK_COUNT; ++i)
+    {
+        g_si.pif.controllers.mempaks[i].user_data = &mpk;
+        g_si.pif.controllers.mempaks[i].touch = touch_mpk_file;
+        g_si.pif.controllers.mempaks[i].data = mpk_file_ptr(&mpk, i);
+    }
+
 #ifdef WITH_LIRC
     lircStart();
 #endif // WITH_LIRC
@@ -878,6 +896,8 @@ m64p_error main_run(void)
     if (g_DebuggerActive)
         destroy_debugger();
 #endif
+
+    close_mpk_file(&mpk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {

@@ -409,6 +409,7 @@ SOURCE = \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/eventloop.c \
 	$(SRCDIR)/main/md5.c \
+	$(SRCDIR)/main/mpk_file.c \
 	$(SRCDIR)/main/profile.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \

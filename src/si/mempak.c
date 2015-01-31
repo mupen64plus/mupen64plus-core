@@ -22,24 +22,18 @@
 #include "mempak.h"
 #include "game_controller.h"
 
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-
-#include "main/main.h"
-#include "main/rom.h"
-#include "main/util.h"
-
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
-static char *get_mempaks_path(void)
+void mempak_touch(struct mempak* mpk)
 {
-    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
+    mpk->touch(mpk->user_data);
 }
 
-static void mempaks_format(uint8_t(*mempaks)[MEMPAK_SIZE])
+void format_mempak(uint8_t* mpk_data)
 {
+    size_t i;
+
     static const uint8_t init[] =
     {
         0x81,0x01,0x02,0x03, 0x04,0x05,0x06,0x07, 0x08,0x09,0x0a,0x0b, 0x0c,0x0d,0x0e,0x0f,
@@ -60,56 +54,17 @@ static void mempaks_format(uint8_t(*mempaks)[MEMPAK_SIZE])
         0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00,
         0x00,0x71,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03, 0x00,0x03,0x00,0x03
     };
-    int i,j;
-    for (i=0; i<MEMPAK_COUNT; i++)
+
+    memcpy(mpk_data, init, 272);
+
+    for(i = 272; i < MEMPAK_SIZE; i += 2)
     {
-        for (j=0; j<MEMPAK_SIZE; j+=2)
-        {
-            mempaks[i][j] = 0;
-            mempaks[i][j+1] = 0x03;
-        }
-        memcpy(mempaks[i], init, 272);
+        mpk_data[i]   = 0x00;
+        mpk_data[i+1] = 0x03;
     }
 }
 
-static void mempaks_read_file(uint8_t(*mempaks)[MEMPAK_SIZE])
-{
-    char *filename = get_mempaks_path();
-
-    switch (read_from_file(filename, mempaks, MEMPAK_COUNT*MEMPAK_SIZE))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_VERBOSE, "couldn't open memory pak file '%s' for reading", filename);
-            mempaks_format(mempaks);
-            break;
-        case file_read_error:
-            DebugMessage(M64MSG_WARNING, "fread() failed for 128kb memory pak file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
-
-static void mempaks_write_file(uint8_t(*mempaks)[MEMPAK_SIZE])
-{
-    char *filename = get_mempaks_path();
-
-    switch (write_to_file(filename, mempaks, MEMPAK_COUNT*MEMPAK_SIZE))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open memory pak file '%s' for writing", filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "fwrite() failed for 128kb memory pak file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
-
-void mempak_read_command(struct game_controllers* controllers, int channel, uint8_t* cmd)
+void mempak_read_command(struct mempak* mpk, uint8_t* cmd)
 {
     /* address is in fact an offset (11bit) | CRC (5 bits) */
     uint16_t address = (cmd[3] << 8) | cmd[4];
@@ -124,8 +79,7 @@ void mempak_read_command(struct game_controllers* controllers, int channel, uint
         address &= 0xFFE0;
         if (address <= 0x7FE0)
         {
-            mempaks_read_file(controllers->mempaks);
-            memcpy(&cmd[5], &controllers->mempaks[channel][address], 0x20);
+            memcpy(&cmd[5], &mpk->data[address], 0x20);
         }
         else
         {
@@ -135,7 +89,7 @@ void mempak_read_command(struct game_controllers* controllers, int channel, uint
     }
 }
 
-void mempak_write_command(struct game_controllers* controllers, int channel, uint8_t* cmd)
+void mempak_write_command(struct mempak* mpk, uint8_t* cmd)
 {
     /* address is in fact an offset (11bit) | CRC (5 bits) */
     uint16_t address = (cmd[3] << 8) | cmd[4];
@@ -149,10 +103,10 @@ void mempak_write_command(struct game_controllers* controllers, int channel, uin
         address &= 0xFFE0;
         if (address <= 0x7FE0)
         {
-            mempaks_read_file(controllers->mempaks);
-            memcpy(&controllers->mempaks[channel][address], &cmd[5], 0x20);
-            mempaks_write_file(controllers->mempaks);
+            memcpy(&mpk->data[address], &cmd[5], 0x20);
+            mempak_touch(mpk);
         }
         cmd[0x25] = pak_crc(&cmd[5]);
     }
 }
+

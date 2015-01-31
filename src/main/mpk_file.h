@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mempak.h                                                *
+ *   Mupen64plus - mpk_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,26 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_MEMPAK_H
-#define M64P_SI_MEMPAK_H
+#ifndef M64P_MAIN_MPK_FILE_H
+#define M64P_MAIN_MPK_FILE_H
 
+#include "si/mempak.h"
+
+#include <stddef.h>
 #include <stdint.h>
 
-struct mempak
+struct mpk_file
 {
-    /* external mpk storage */
-    void* user_data;
-    void (*touch)(void*);
-    uint8_t* data;
+    uint8_t mempaks[MEMPAK_COUNT][MEMPAK_SIZE];
+    const char* filename;
+    int touched;
 };
 
-enum { MEMPAK_COUNT = 4 };
-enum { MEMPAK_SIZE = 0x8000 };
+void open_mpk_file(struct mpk_file* mpk, const char* filename);
+void close_mpk_file(struct mpk_file* mpk);
 
-void mempak_touch(struct mempak* mpk);
+uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
 
-void format_mempak(uint8_t* mempak);
-
-void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
-void mempak_write_command(struct mempak* mpk, uint8_t* cmd);
+void touch_mpk_file(void* opaque);
 
 #endif

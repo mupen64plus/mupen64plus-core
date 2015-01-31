@@ -30,7 +30,7 @@ struct pif;
 
 struct game_controllers
 {
-    uint8_t mempaks[MEMPAK_COUNT][MEMPAK_SIZE]; 
+    struct mempak mempaks[MEMPAK_COUNT];
 };
 
 void process_controller_command(struct pif* pif, int channel, uint8_t* cmd);
