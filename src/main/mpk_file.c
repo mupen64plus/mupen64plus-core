@@ -20,11 +20,11 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "mpk_file.h"
+#include "util.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-
-#include "main/util.h"
+#include "si/pif.h"
 
 #include <stdlib.h>
 
@@ -37,12 +37,12 @@ void open_mpk_file(struct mpk_file* mpk, const char* filename)
     mpk->filename = filename;
 
     /* try to load mpk file content */
-    switch(read_from_file(mpk->filename, mpk->mempaks, MEMPAK_COUNT*MEMPAK_SIZE))
+    switch(read_from_file(mpk->filename, mpk->mempaks, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE))
     {
     case file_open_error:
         /* if no prior file exists, provide default mempaks content */
         DebugMessage(M64MSG_VERBOSE, "couldn't open mem pak file '%s' for reading", mpk->filename);
-        for(i = 0; i < MEMPAK_COUNT; ++i)
+        for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
             format_mempak(mpk->mempaks[i]);
         break;
     case file_read_error:
@@ -60,7 +60,7 @@ void close_mpk_file(struct mpk_file* mpk)
     /* write back mpk file content (if touched) */
     if (mpk->touched != 0)
     {
-        switch(write_to_file(mpk->filename, mpk->mempaks, MEMPAK_COUNT*MEMPAK_SIZE))
+        switch(write_to_file(mpk->filename, mpk->mempaks, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE))
         {
         case file_open_error:
             DebugMessage(M64MSG_WARNING, "couldn't open mem pak file '%s' for writing", mpk->filename);

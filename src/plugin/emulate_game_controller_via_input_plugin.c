@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mpk_file.h                                              *
+ *   Mupen64plus - emulate_game_controller_via_input_plugin.c              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,43 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_MPK_FILE_H
-#define M64P_MAIN_MPK_FILE_H
+#include "emulate_game_controller_via_input_plugin.h"
+#include "plugin.h"
 
-#include "si/mempak.h"
-#include "si/pif.h"
+#include "api/m64p_plugin.h"
+#include "si/game_controller.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
-struct mpk_file
+int egcvip_is_connected(void* opaque, enum pak_type* pak)
 {
-    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
-    const char* filename;
-    int touched;
-};
+    int channel = *(int*)opaque;
 
-void open_mpk_file(struct mpk_file* mpk, const char* filename);
-void close_mpk_file(struct mpk_file* mpk);
+    CONTROL* c = &Controls[channel];
 
-uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
+    switch(c->Plugin)
+    {
+    case PLUGIN_NONE: *pak = PAK_NONE; break;
+    case PLUGIN_MEMPAK: *pak = PAK_MEM; break;
+    case PLUGIN_RUMBLE_PAK: *pak = PAK_RUMBLE; break;
+    case PLUGIN_TRANSFER_PAK: *pak = PAK_TRANSFER; break;
 
-void touch_mpk_file(void* opaque);
+    case PLUGIN_RAW:
+        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
+         * so we just reproduce that behavior */
+        *pak = PAK_RUMBLE; break;
+    }
 
-#endif
+    return c->Present;
+}
+
+uint32_t egcvip_get_input(void* opaque)
+{
+    BUTTONS keys = { 0 };
+    int channel = *(int*)opaque;
+
+    if (input.getKeys)
+        input.getKeys(channel, &keys);
+
+    return keys.Value;
+
+}
+

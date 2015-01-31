@@ -58,7 +58,9 @@
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
 #include "plugin/plugin.h"
+#include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
+#include "plugin/rumble_via_input_plugin.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
@@ -409,18 +411,12 @@ void main_state_inc_slot(void)
     savestates_inc_slot();
 }
 
-static unsigned char StopRumble[64] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00, 0x00, 0x00,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0};
-
 void main_state_load(const char *filename)
 {
-    input.controllerCommand(0, StopRumble);
-    input.controllerCommand(1, StopRumble);
-    input.controllerCommand(2, StopRumble);
-    input.controllerCommand(3, StopRumble);
+    rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
 
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
@@ -858,13 +854,29 @@ m64p_error main_run(void)
     g_si.pif.af_rtc.user_data = NULL;
     g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
 
+    /* connect external game controllers */
+    static int channels[] = { 0, 1, 2, 3 };
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
+        g_si.pif.controllers[i].user_data = &channels[i];
+        g_si.pif.controllers[i].is_connected = egcvip_is_connected;
+        g_si.pif.controllers[i].get_input = egcvip_get_input;
+    }
+
+    /* connect external rumblepaks */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
+        g_si.pif.controllers[i].rumblepak.user_data = &channels[i];
+        g_si.pif.controllers[i].rumblepak.rumble = rvip_rumble;
+    }
+
     /* open mpk file (if any) and connect it to mempaks */
     open_mpk_file(&mpk, get_mempaks_path());
-    for(i = 0; i < MEMPAK_COUNT; ++i)
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
-        g_si.pif.controllers.mempaks[i].user_data = &mpk;
-        g_si.pif.controllers.mempaks[i].touch = touch_mpk_file;
-        g_si.pif.controllers.mempaks[i].data = mpk_file_ptr(&mpk, i);
+        g_si.pif.controllers[i].mempak.user_data = &mpk;
+        g_si.pif.controllers[i].mempak.touch = touch_mpk_file;
+        g_si.pif.controllers[i].mempak.data = mpk_file_ptr(&mpk, i);
     }
 
 #ifdef WITH_LIRC

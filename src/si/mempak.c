@@ -20,7 +20,6 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "mempak.h"
-#include "game_controller.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -72,7 +71,6 @@ void mempak_read_command(struct mempak* mpk, uint8_t* cmd)
     if (address == 0x8001)
     {
         memset(&cmd[5], 0, 0x20);
-        cmd[0x25] = pak_crc(&cmd[5]);
     }
     else
     {
@@ -85,7 +83,6 @@ void mempak_read_command(struct mempak* mpk, uint8_t* cmd)
         {
             memset(&cmd[5], 0, 0x20);
         }
-        cmd[0x25] = pak_crc(&cmd[5]);
     }
 }
 
@@ -96,7 +93,7 @@ void mempak_write_command(struct mempak* mpk, uint8_t* cmd)
 
     if (address == 0x8001)
     {
-        cmd[0x25] = pak_crc(&cmd[5]);
+        /* do nothing */
     }
     else
     {
@@ -106,7 +103,6 @@ void mempak_write_command(struct mempak* mpk, uint8_t* cmd)
             memcpy(&mpk->data[address], &cmd[5], 0x20);
             mempak_touch(mpk);
         }
-        cmd[0x25] = pak_crc(&cmd[5]);
     }
 }
 

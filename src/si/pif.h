@@ -29,6 +29,8 @@
 #include "eeprom.h"
 #include "game_controller.h"
 
+enum { GAME_CONTROLLERS_COUNT = 4 };
+
 struct si_controller;
 
 enum { PIF_RAM_SIZE = 0x40 };
@@ -53,7 +55,7 @@ struct pif
 
     uint8_t eeprom[EEPROM_MAX_SIZE];
 
-    struct game_controllers controllers;
+    struct game_controller controllers[GAME_CONTROLLERS_COUNT];
 
     struct af_rtc af_rtc;
 

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mpk_file.h                                              *
+ *   Mupen64plus - rumble_via_input_plugin.c                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,36 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_MPK_FILE_H
-#define M64P_MAIN_MPK_FILE_H
+#include "rumble_via_input_plugin.h"
+#include "plugin.h"
 
-#include "si/mempak.h"
-#include "si/pif.h"
+#include "si/rumblepak.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <string.h>
 
-struct mpk_file
+void rvip_rumble(void* opaque, enum rumble_action action)
 {
-    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
-    const char* filename;
-    int touched;
-};
+    int channel = *(int*)opaque;
 
-void open_mpk_file(struct mpk_file* mpk, const char* filename);
-void close_mpk_file(struct mpk_file* mpk);
+    static const uint8_t rumble_cmd_header[] =
+    {
+        0x23, 0x01, /* T=0x23, R=0x01 */
+        0x03,       /* PIF_CMD_PAK_WRITE */
+        0xc0, 0x1b, /* address=0xc000 | crc=0x1b */
+    };
 
-uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
+    uint8_t cmd[0x26];
 
-void touch_mpk_file(void* opaque);
+    uint8_t rumble_data = (action == RUMBLE_START)
+        ? 0x01
+        : 0x00;
 
-#endif
+    /* build rumble command */
+    memcpy(cmd, rumble_cmd_header, 5);
+    memset(cmd + 5, rumble_data, 0x20);
+    cmd[0x25] = 0; /* dummy data CRC */
+
+    if (input.controllerCommand)
+        input.controllerCommand(channel, cmd);
+}
+

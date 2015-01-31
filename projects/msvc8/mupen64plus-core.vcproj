@@ -293,6 +293,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\emulate_game_controller_via_input_plugin.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\eventloop.c"
 				>
 			</File>
@@ -485,6 +489,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\rumble_via_input_plugin.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\rumblepak.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\savestates.c"
 				>
 			</File>
@@ -636,6 +648,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\si\eeprom.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\emulate_game_controller_via_input_plugin.h"
 				>
 			</File>
 			<File
@@ -824,6 +840,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\rsp\rsp_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\rumble_via_input_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\rumblepak.h"
 				>
 			</File>
 			<File

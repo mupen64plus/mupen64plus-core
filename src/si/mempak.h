@@ -32,7 +32,6 @@ struct mempak
     uint8_t* data;
 };
 
-enum { MEMPAK_COUNT = 4 };
 enum { MEMPAK_SIZE = 0x8000 };
 
 void mempak_touch(struct mempak* mpk);

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mpk_file.h                                              *
+ *   Mupen64plus - rumblepak.c                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,42 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_MPK_FILE_H
-#define M64P_MAIN_MPK_FILE_H
+#include "rumblepak.h"
 
-#include "si/mempak.h"
-#include "si/pif.h"
+#include <string.h>
 
-#include <stddef.h>
-#include <stdint.h>
 
-struct mpk_file
+void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action)
 {
-    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
-    const char* filename;
-    int touched;
-};
+    rpk->rumble(rpk->user_data, action);
+}
 
-void open_mpk_file(struct mpk_file* mpk, const char* filename);
-void close_mpk_file(struct mpk_file* mpk);
+void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd)
+{
+    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
-uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
+    if ((address >= 0x8000) && (address < 0x9000))
+    {
+        memset(&cmd[5], 0x80, 0x20);
+    }
+    else
+    {
+        memset(&cmd[5], 0x00, 0x20);
+    }
+}
 
-void touch_mpk_file(void* opaque);
+void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd)
+{
+    enum rumble_action action;
+    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
-#endif
+    if (address == 0xc000)
+    {
+        action = (cmd[5] == 0)
+                ? RUMBLE_STOP
+                : RUMBLE_START;
+
+        rumblepak_rumble(rpk, action);
+    }
+}
+

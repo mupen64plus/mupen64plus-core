@@ -130,6 +130,7 @@
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
     <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
     <ClCompile Include="..\..\src\si\eeprom.c" />
+    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
     <ClCompile Include="..\..\src\r4300\exception.c" />
     <ClCompile Include="..\..\src\rdp\fb.c" />
@@ -178,6 +179,8 @@
     <ClCompile Include="..\..\src\r4300\x86\rjump.c" />
     <ClCompile Include="..\..\src\main\rom.c" />
     <ClCompile Include="..\..\src\rsp\rsp_core.c" />
+    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c" />
+    <ClCompile Include="..\..\src\si\rumblepak.c" />
     <ClCompile Include="..\..\src\main\savestates.c" />
     <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
@@ -217,6 +220,7 @@
     <ClInclude Include="..\..\src\plugin\dummy_video.h" />
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
     <ClInclude Include="..\..\src\si\eeprom.h" />
+    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\rdp\fb.h" />
@@ -264,6 +268,8 @@
     <ClInclude Include="..\..\src\ri\ri_controller.h" />
     <ClInclude Include="..\..\src\main\rom.h" />
     <ClInclude Include="..\..\src\rsp\rsp_core.h" />
+    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h" />
+    <ClInclude Include="..\..\src\si\rumblepak.h" />
     <ClInclude Include="..\..\src\main\savestates.h" />
     <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />

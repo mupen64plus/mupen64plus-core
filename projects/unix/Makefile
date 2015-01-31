@@ -420,7 +420,9 @@ SOURCE = \
 	$(SRCDIR)/pi/flashram.c \
 	$(SRCDIR)/pi/pi_controller.c \
 	$(SRCDIR)/pi/sram.c \
+	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
 	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
+	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
@@ -451,6 +453,7 @@ SOURCE = \
 	$(SRCDIR)/si/mempak.c \
 	$(SRCDIR)/si/n64_cic_nus_6105.c \
 	$(SRCDIR)/si/pif.c \
+	$(SRCDIR)/si/rumblepak.c \
 	$(SRCDIR)/si/si_controller.c \
 	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp

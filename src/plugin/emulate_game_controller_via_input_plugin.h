@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mpk_file.h                                              *
+ *   Mupen64plus - emulate_game_controller_via_input_plugin.h              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_MPK_FILE_H
-#define M64P_MAIN_MPK_FILE_H
+#ifndef M64P_PLUGIN_EMULATE_GAME_CONTROLLER_VIA_INPUT_PLUGIN_H
+#define M64P_PLUGIN_EMULATE_GAME_CONTROLLER_VIA_INPUT_PLUGIN_H
 
-#include "si/mempak.h"
-#include "si/pif.h"
-
-#include <stddef.h>
 #include <stdint.h>
 
-struct mpk_file
-{
-    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
-    const char* filename;
-    int touched;
-};
+enum pak_type;
 
-void open_mpk_file(struct mpk_file* mpk, const char* filename);
-void close_mpk_file(struct mpk_file* mpk);
+int egcvip_is_connected(void* opaque, enum pak_type* pak);
 
-uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
-
-void touch_mpk_file(void* opaque);
+uint32_t egcvip_get_input(void* opaque);
 
 #endif

@@ -174,7 +174,7 @@ void update_pif_write(struct si_controller* si)
                     if (Controls[channel].Present && Controls[channel].RawData)
                         input.controllerCommand(channel, &pif->ram[i]);
                     else
-                        process_controller_command(pif, channel, &pif->ram[i]);
+                        process_controller_command(&pif->controllers[channel], &pif->ram[i]);
                 }
                 else if (channel == 4)
                     process_cart_command(pif, channel, &pif->ram[i]);
@@ -225,7 +225,7 @@ void update_pif_read(struct si_controller* si)
                     if (Controls[channel].Present && Controls[channel].RawData)
                         input.readController(channel, &pif->ram[i]);
                     else
-                        read_controller(pif, channel, &pif->ram[i]);
+                        read_controller(&pif->controllers[channel], &pif->ram[i]);
                 }
 
                 i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mpk_file.h                                              *
+ *   Mupen64plus - rumblepak.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,27 +19,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_MPK_FILE_H
-#define M64P_MAIN_MPK_FILE_H
+#ifndef M64P_SI_RUMBLEPAK_H
+#define M64P_SI_RUMBLEPAK_H
 
-#include "si/mempak.h"
-#include "si/pif.h"
-
-#include <stddef.h>
 #include <stdint.h>
 
-struct mpk_file
+enum rumble_action
 {
-    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
-    const char* filename;
-    int touched;
+    RUMBLE_STOP,
+    RUMBLE_START
 };
 
-void open_mpk_file(struct mpk_file* mpk, const char* filename);
-void close_mpk_file(struct mpk_file* mpk);
+struct rumblepak
+{
+    /* external rumble sink */
+    void* user_data;
+    void (*rumble)(void*,enum rumble_action);
+};
 
-uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
+void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action);
 
-void touch_mpk_file(void* opaque);
+void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd);
+void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd);
 
 #endif
