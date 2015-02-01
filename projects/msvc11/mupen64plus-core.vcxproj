@@ -129,6 +129,7 @@
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
     <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
+    <ClCompile Include="..\..\src\main\eep_file.c" />
     <ClCompile Include="..\..\src\si\eeprom.c" />
     <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
@@ -219,6 +220,7 @@
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
     <ClInclude Include="..\..\src\plugin\dummy_video.h" />
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
+    <ClInclude Include="..\..\src\main\eep_file.h" />
     <ClInclude Include="..\..\src\si\eeprom.h" />
     <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />

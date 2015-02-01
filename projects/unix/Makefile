@@ -407,6 +407,7 @@ SOURCE = \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
+	$(SRCDIR)/main/eep_file.c \
 	$(SRCDIR)/main/eventloop.c \
 	$(SRCDIR)/main/md5.c \
 	$(SRCDIR)/main/mpk_file.c \

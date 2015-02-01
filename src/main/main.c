@@ -43,6 +43,7 @@
 
 #include "main.h"
 #include "cheat.h"
+#include "eep_file.h"
 #include "eventloop.h"
 #include "mpk_file.h"
 #include "profile.h"
@@ -139,6 +140,11 @@ static const char *get_savepathdefault(const char *configpath)
 static char *get_mempaks_path(void)
 {
     return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_eeprom_path(void)
+{
+    return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 
@@ -792,6 +798,7 @@ static void connect_all(
 m64p_error main_run(void)
 {
     size_t i;
+    struct eep_file eep;
     struct mpk_file mpk;
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -879,6 +886,12 @@ m64p_error main_run(void)
         g_si.pif.controllers[i].mempak.data = mpk_file_ptr(&mpk, i);
     }
 
+    /* open eep file (if any) and connect it to eeprom */
+    open_eep_file(&eep, get_eeprom_path());
+    g_si.pif.eeprom.user_data = &eep;
+    g_si.pif.eeprom.touch = touch_eep_file;
+    g_si.pif.eeprom.data = eep_file_ptr(&eep);
+
 #ifdef WITH_LIRC
     lircStart();
 #endif // WITH_LIRC
@@ -909,6 +922,7 @@ m64p_error main_run(void)
         destroy_debugger();
 #endif
 
+    close_eep_file(&eep);
     close_mpk_file(&mpk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))

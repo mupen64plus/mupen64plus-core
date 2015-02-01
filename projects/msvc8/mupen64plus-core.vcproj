@@ -289,6 +289,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\eep_file.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\si\eeprom.c"
 				>
 			</File>
@@ -644,6 +648,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\dynamiclib.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\eep_file.h"
 				>
 			</File>
 			<File

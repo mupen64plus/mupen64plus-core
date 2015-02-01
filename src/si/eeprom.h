@@ -24,12 +24,23 @@
 
 #include <stdint.h>
 
-struct pif;
-
 enum { EEPROM_MAX_SIZE = 0x800 };
 
-void eeprom_status_command(struct pif* pif, int channel, uint8_t* cmd);
-void eeprom_read_command(struct pif* pif, int channel, uint8_t* cmd);
-void eeprom_write_command(struct pif* pif, int channel, uint8_t* cmd);
+struct eeprom
+{
+    /* external eep storage */
+    void* user_data;
+    void (*touch)(void*);
+    uint8_t* data;
+};
+
+
+void eeprom_touch(struct eeprom* eeprom);
+
+void format_eeprom(uint8_t* eeprom);
+
+void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
+void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
+void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
 
 #endif
