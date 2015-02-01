@@ -905,6 +905,18 @@ m64p_error main_run(void)
     g_si.pif.eeprom.user_data = &eep;
     g_si.pif.eeprom.touch = touch_eep_file;
     g_si.pif.eeprom.data = eep_file_ptr(&eep);
+    if (ROM_SETTINGS.savetype != EEPROM_16KB)
+    {
+        /* 4kbits EEPROM */
+        g_si.pif.eeprom.size = 0x200;
+        g_si.pif.eeprom.id = 0x8000;
+    }
+    else
+    {
+        /* 16kbits EEPROM */
+        g_si.pif.eeprom.size = 0x800;
+        g_si.pif.eeprom.id = 0xc000;
+    }
 
     /* open fla file (if any) and connect it to flashram */
     open_fla_file(&fla, get_flashram_path());

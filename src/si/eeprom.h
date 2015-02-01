@@ -22,9 +22,8 @@
 #ifndef M64P_SI_EEPROM_H
 #define M64P_SI_EEPROM_H
 
+#include <stddef.h>
 #include <stdint.h>
-
-enum { EEPROM_MAX_SIZE = 0x800 };
 
 struct eeprom
 {
@@ -32,12 +31,14 @@ struct eeprom
     void* user_data;
     void (*touch)(void*);
     uint8_t* data;
+    size_t size;
+    uint16_t id;
 };
 
 
 void eeprom_touch(struct eeprom* eeprom);
 
-void format_eeprom(uint8_t* eeprom);
+void format_eeprom(uint8_t* eeprom, size_t size);
 
 void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
 void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);

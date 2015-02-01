@@ -39,7 +39,7 @@ void open_eep_file(struct eep_file* eep, const char* filename)
     case file_open_error:
         /* if no prior file exists, provide default mempaks content */
         DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", eep->filename);
-        format_eeprom(eep->eeprom);
+        format_eeprom(eep->eeprom, EEPROM_MAX_SIZE);
         break;
     case file_read_error:
         DebugMessage(M64MSG_WARNING, "failed to read eeprom file '%s'", eep->filename);

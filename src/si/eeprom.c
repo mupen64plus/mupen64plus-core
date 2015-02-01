@@ -21,7 +21,8 @@
 
 #include "eeprom.h"
 
-#include "main/rom.h"
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 
 #include <string.h>
 
@@ -31,9 +32,9 @@ void eeprom_touch(struct eeprom* eeprom)
     eeprom->touch(eeprom->user_data);
 }
 
-void format_eeprom(uint8_t* eeprom)
+void format_eeprom(uint8_t* eeprom, size_t size)
 {
-    memset(eeprom, 0xff, EEPROM_MAX_SIZE);
+    memset(eeprom, 0xff, size);
 }
 
 
@@ -44,30 +45,50 @@ void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd)
     {
         cmd[1] |= 0x40;
         if ((cmd[1] & 3) > 0)
-            cmd[3] = 0;
+            cmd[3] = (eeprom->id & 0xff);
         if ((cmd[1] & 3) > 1)
-            cmd[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
+            cmd[4] = (eeprom->id >> 8);
         if ((cmd[1] & 3) > 2)
             cmd[5] = 0;
     }
     else
     {
-        cmd[3] = 0;
-        cmd[4] = (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x80 : 0xc0;
+        cmd[3] = (eeprom->id & 0xff);
+        cmd[4] = (eeprom->id >> 8);
         cmd[5] = 0;
     }
 }
 
 void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd)
 {
+    uint16_t address = cmd[3] * 8;
+    uint8_t* data = &cmd[4];
+
     /* read 8-byte block */
-    memcpy(&cmd[4], eeprom->data + cmd[3]*8, 8);
+    if (address < eeprom->size)
+    {
+        memcpy(data, &eeprom->data[address], 8);
+    }
+    else
+    {
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
+    }
 }
 
 void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
 {
+    uint16_t address = cmd[3] * 8;
+    const uint8_t* data = &cmd[4];
+
     /* write 8-byte block */
-    memcpy(eeprom->data + cmd[3]*8, &cmd[4], 8);
-    eeprom_touch(eeprom);
+    if (address < eeprom->size)
+    {
+        memcpy(&eeprom->data[address], data, 8);
+        eeprom_touch(eeprom);
+    }
+    else
+    {
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
+    }
 }
 

@@ -24,7 +24,11 @@
 
 #include <stdint.h>
 
-#include "si/eeprom.h"
+/* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
+ * whatever the real EEPROM size is.
+ */
+
+enum { EEPROM_MAX_SIZE = 0x800 };
 
 struct eep_file
 {
