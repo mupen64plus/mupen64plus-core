@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - sram.h                                                  *
+ *   Mupen64plus - sra_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,28 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PI_SRAM_H
-#define M64P_PI_SRAM_H
+#ifndef M64P_MAIN_SRA_FILE_H
+#define M64P_MAIN_SRA_FILE_H
 
 #include <stdint.h>
 
-struct pi_controller;
+#include "pi/sram.h"
 
-enum { SRAM_SIZE = 0x8000 };
-
-struct sram
+struct sra_file
 {
-    /* external sram storage */
-    void* user_data;
-    void (*touch)(void*);
-    uint8_t* data;
+    uint8_t sram[SRAM_SIZE];
+    const char* filename;
+    int touched;
 };
 
-void sram_touch(struct sram* sram);
+void open_sra_file(struct sra_file* sra, const char* filename);
+void close_sra_file(struct sra_file* sra);
 
-void format_sram(uint8_t* sram);
+uint8_t* sra_file_ptr(struct sra_file* sra);
 
-void dma_write_sram(struct pi_controller* pi);
-void dma_read_sram(struct pi_controller* pi);
+void touch_sra_file(void* opaque);
 
 #endif

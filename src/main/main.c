@@ -49,6 +49,7 @@
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
+#include "sra_file.h"
 #include "util.h"
 
 #include "ai/ai_controller.h"
@@ -145,6 +146,11 @@ static char *get_mempaks_path(void)
 static char *get_eeprom_path(void)
 {
     return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_sram_path(void)
+{
+    return formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 
@@ -800,6 +806,7 @@ m64p_error main_run(void)
     size_t i;
     struct eep_file eep;
     struct mpk_file mpk;
+    struct sra_file sra;
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -892,6 +899,12 @@ m64p_error main_run(void)
     g_si.pif.eeprom.touch = touch_eep_file;
     g_si.pif.eeprom.data = eep_file_ptr(&eep);
 
+    /* open sra file (if any) and connect it to SRAM */
+    open_sra_file(&sra, get_sram_path());
+    g_pi.sram.user_data = &sra;
+    g_pi.sram.touch = touch_sra_file;
+    g_pi.sram.data = sra_file_ptr(&sra);
+
 #ifdef WITH_LIRC
     lircStart();
 #endif // WITH_LIRC
@@ -922,6 +935,7 @@ m64p_error main_run(void)
         destroy_debugger();
 #endif
 
+    close_sra_file(&sra);
     close_eep_file(&eep);
     close_mpk_file(&mpk);
 

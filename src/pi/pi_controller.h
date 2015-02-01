@@ -56,7 +56,7 @@ struct pi_controller
 
     struct cart_rom cart_rom;
     struct flashram flashram;
-    uint8_t sram[SRAM_SIZE];
+    struct sram sram;
 
     int use_flashram;
 

@@ -415,6 +415,7 @@ SOURCE = \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
+	$(SRCDIR)/main/sra_file.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/pi/cart_rom.c \
