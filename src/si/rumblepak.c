@@ -31,16 +31,19 @@ void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action)
 
 void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd)
 {
+    uint8_t data;
     uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
     if ((address >= 0x8000) && (address < 0x9000))
     {
-        memset(&cmd[5], 0x80, 0x20);
+        data = 0x80;
     }
     else
     {
-        memset(&cmd[5], 0x00, 0x20);
+        data = 0x00;
     }
+
+    memset(&cmd[5], data, 0x20);
 }
 
 void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd)
