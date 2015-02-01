@@ -136,6 +136,7 @@
     <ClCompile Include="..\..\src\r4300\exception.c" />
     <ClCompile Include="..\..\src\rdp\fb.c" />
     <ClCompile Include="..\..\src\osal\files_win32.c" />
+    <ClCompile Include="..\..\src\main\fla_file.c" />
     <ClCompile Include="..\..\src\pi\flashram.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
     <ClCompile Include="..\..\src\si\game_controller.c" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\rdp\fb.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
+    <ClInclude Include="..\..\src\main\fla_file.h" />
     <ClInclude Include="..\..\src\pi\flashram.h" />
     <ClInclude Include="..\..\src\si\game_controller.h" />
     <ClInclude Include="..\..\src\plugin\get_time_using_C_localtime.h" />

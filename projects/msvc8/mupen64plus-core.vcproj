@@ -317,6 +317,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\fla_file.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\pi\flashram.c"
 				>
 			</File>
@@ -680,6 +684,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\files.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\fla_file.h"
 				>
 			</File>
 			<File

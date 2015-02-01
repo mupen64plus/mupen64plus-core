@@ -45,6 +45,7 @@
 #include "cheat.h"
 #include "eep_file.h"
 #include "eventloop.h"
+#include "fla_file.h"
 #include "mpk_file.h"
 #include "profile.h"
 #include "rom.h"
@@ -151,6 +152,11 @@ static char *get_eeprom_path(void)
 static char *get_sram_path(void)
 {
     return formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_flashram_path(void)
+{
+    return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 
@@ -805,6 +811,7 @@ m64p_error main_run(void)
 {
     size_t i;
     struct eep_file eep;
+    struct fla_file fla;
     struct mpk_file mpk;
     struct sra_file sra;
 
@@ -899,6 +906,12 @@ m64p_error main_run(void)
     g_si.pif.eeprom.touch = touch_eep_file;
     g_si.pif.eeprom.data = eep_file_ptr(&eep);
 
+    /* open fla file (if any) and connect it to flashram */
+    open_fla_file(&fla, get_flashram_path());
+    g_pi.flashram.user_data = &fla;
+    g_pi.flashram.touch = touch_fla_file;
+    g_pi.flashram.data = fla_file_ptr(&fla);
+
     /* open sra file (if any) and connect it to SRAM */
     open_sra_file(&sra, get_sram_path());
     g_pi.sram.user_data = &sra;
@@ -936,6 +949,7 @@ m64p_error main_run(void)
 #endif
 
     close_sra_file(&sra);
+    close_fla_file(&fla);
     close_eep_file(&eep);
     close_mpk_file(&mpk);
 

@@ -25,64 +25,12 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/main.h"
-#include "main/rom.h"
-#include "main/util.h"
 #include "memory/memory.h"
 #include "r4300/r4300.h"
 #include "ri/ri_controller.h"
 
-#include <stdlib.h>
 #include <string.h>
 
-
-static char *get_flashram_path(void)
-{
-    return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
-}
-
-static void flashram_format(uint8_t* mem)
-{
-    memset(mem, 0xff, FLASHRAM_SIZE);
-}
-
-static void flashram_read_file(uint8_t* mem)
-{
-    char *filename = get_flashram_path();
-
-    flashram_format(mem);
-    switch (read_from_file(filename, mem, FLASHRAM_SIZE))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for reading", filename);
-            flashram_format(mem);
-            break;
-        case file_read_error:
-            DebugMessage(M64MSG_WARNING, "couldn't read 128kb flash ram file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
-
-static void flashram_write_file(uint8_t* mem)
-{
-    char *filename = get_flashram_path();
-
-    switch (write_to_file(filename, mem, FLASHRAM_SIZE))
-    {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open flash ram file '%s' for writing", filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "couldn't write 128kb flash ram file '%s'", filename);
-            break;
-        default: break;
-    }
-
-    free(filename);
-}
 
 static void flashram_command(struct pi_controller* pi, uint32_t command)
 {
@@ -114,18 +62,16 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
             break;
         case FLASHRAM_MODE_ERASE:
         {
-            flashram_read_file(flashram->mem);
             for (i=flashram->erase_offset; i<(flashram->erase_offset+128); ++i)
-                flashram->mem[i^S8] = 0xff;
-            flashram_write_file(flashram->mem);
+                flashram->data[i^S8] = 0xff;
+            flashram_touch(flashram);
         }
         break;
         case FLASHRAM_MODE_WRITE:
         {
-            flashram_read_file(flashram->mem);
             for(i = 0; i < 128; ++i)
-                flashram->mem[(flashram->erase_offset+i)^S8]= dram[(flashram->write_pointer+i)^S8];
-            flashram_write_file(flashram->mem);
+                flashram->data[(flashram->erase_offset+i)^S8]= dram[(flashram->write_pointer+i)^S8];
+            flashram_touch(flashram);
         }
         break;
         case FLASHRAM_MODE_STATUS:
@@ -160,6 +106,15 @@ void init_flashram(struct flashram* flashram)
     flashram->write_pointer = 0;
 }
 
+void flashram_touch(struct flashram* flashram)
+{
+    flashram->touch(flashram->user_data);
+}
+
+void format_flashram(uint8_t* flash)
+{
+    memset(flash, 0xff, FLASHRAM_SIZE);
+}
 
 int read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
 {
@@ -199,7 +154,7 @@ void dma_read_flashram(struct pi_controller* pi)
     unsigned int i, length;
     struct flashram* flashram = &pi->flashram;
     uint32_t* dram = pi->ri->rdram.dram;
-    uint8_t* mem = flashram->mem;
+    uint8_t* mem = flashram->data;
     unsigned int dram_addr, cart_addr;
 
     switch (flashram->mode)
@@ -213,7 +168,6 @@ void dma_read_flashram(struct pi_controller* pi)
         dram_addr = pi->regs[PI_DRAM_ADDR_REG];
         cart_addr = ((pi->regs[PI_CART_ADDR_REG]-0x08000000)&0xffff)*2;
 
-        flashram_read_file(mem);
         for(i = 0; i < length; ++i)
             ((uint8_t*)dram)[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
         break;

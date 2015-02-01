@@ -1,8 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - flashram.h                                              *
+ *   Mupen64plus - fla_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
- *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,47 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PI_FLASHRAM_H
-#define M64P_PI_FLASHRAM_H
+#ifndef M64P_MAIN_FLA_FILE_H
+#define M64P_MAIN_FLA_FILE_H
 
 #include <stdint.h>
 
-struct pi_controller;
+#include "pi/flashram.h"
 
-enum { FLASHRAM_SIZE = 0x20000 };
-
-enum flashram_mode
+struct fla_file
 {
-    FLASHRAM_MODE_NOPES = 0,
-    FLASHRAM_MODE_ERASE,
-    FLASHRAM_MODE_WRITE,
-    FLASHRAM_MODE_READ,
-    FLASHRAM_MODE_STATUS
+    uint8_t flashram[FLASHRAM_SIZE];
+    const char* filename;
+    int touched;
 };
 
-struct flashram
-{
-    /* external sram storage */
-    void* user_data;
-    void (*touch)(void*);
-    uint8_t* data;
+void open_fla_file(struct fla_file* fla, const char* filename);
+void close_fla_file(struct fla_file* fla);
 
-    enum flashram_mode mode;
-    uint64_t status;
-    unsigned int erase_offset;
-    unsigned int write_pointer;
-};
+uint8_t* fla_file_ptr(struct fla_file* fla);
 
-void init_flashram(struct flashram* flashram);
-
-void flashram_touch(struct flashram* flashram);
-
-void format_flashram(uint8_t* flash);
-
-int read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
-int write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void dma_read_flashram(struct pi_controller* pi);
-void dma_write_flashram(struct pi_controller* pi);
+void touch_fla_file(void* opaque);
 
 #endif
