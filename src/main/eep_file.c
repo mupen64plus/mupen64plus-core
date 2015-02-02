@@ -20,10 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "eep_file.h"
+#include "util.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/util.h"
 #include "si/eeprom.h"
 
 #include <stdlib.h>
@@ -37,7 +37,7 @@ void open_eep_file(struct eep_file* eep, const char* filename)
     switch(read_from_file(eep->filename, eep->eeprom, EEPROM_MAX_SIZE))
     {
     case file_open_error:
-        /* if no prior file exists, provide default mempaks content */
+        /* if no prior file exists, provide default eeprom content */
         DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", eep->filename);
         format_eeprom(eep->eeprom, EEPROM_MAX_SIZE);
         break;
@@ -47,28 +47,10 @@ void open_eep_file(struct eep_file* eep, const char* filename)
     default:
         break;
     }
-
-    eep->touched = 0;
 }
 
 void close_eep_file(struct eep_file* eep)
 {
-    /* write back eep file content (if touched) */
-    if (eep->touched != 0)
-    {
-        switch(write_to_file(eep->filename, eep->eeprom, EEPROM_MAX_SIZE))
-        {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", eep->filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "failed to write eeprom file '%s'", eep->filename);
-            break;
-        default:
-            break;
-        }
-    }
-
     free((void*)eep->filename);
 }
 
@@ -79,7 +61,19 @@ uint8_t* eep_file_ptr(struct eep_file* eep)
 
 void touch_eep_file(void* opaque)
 {
+    /* flush eeprom to disk */
     struct eep_file* eep = (struct eep_file*)opaque;
-    eep->touched = 1;
+
+    switch(write_to_file(eep->filename, eep->eeprom, EEPROM_MAX_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", eep->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write eeprom file '%s'", eep->filename);
+        break;
+    default:
+        break;
+    }
 }
 

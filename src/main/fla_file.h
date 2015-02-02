@@ -30,7 +30,6 @@ struct fla_file
 {
     uint8_t flashram[FLASHRAM_SIZE];
     const char* filename;
-    int touched;
 };
 
 void open_fla_file(struct fla_file* fla, const char* filename);

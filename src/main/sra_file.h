@@ -30,7 +30,6 @@ struct sra_file
 {
     uint8_t sram[SRAM_SIZE];
     const char* filename;
-    int touched;
 };
 
 void open_sra_file(struct sra_file* sra, const char* filename);

@@ -20,10 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "sra_file.h"
+#include "util.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/util.h"
 #include "pi/sram.h"
 
 #include <stdlib.h>
@@ -47,28 +47,10 @@ void open_sra_file(struct sra_file* sra, const char* filename)
     default:
         break;
     }
-
-    sra->touched = 0;
 }
 
 void close_sra_file(struct sra_file* sra)
 {
-    /* write back sra file content (if touched) */
-    if (sra->touched != 0)
-    {
-        switch(write_to_file(sra->filename, sra->sram, SRAM_SIZE))
-        {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for writing", sra->filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "failed to write sram file '%s'", sra->filename);
-            break;
-        default:
-            break;
-        }
-    }
-
     free((void*)sra->filename);
 }
 
@@ -79,7 +61,19 @@ uint8_t* sra_file_ptr(struct sra_file* sra)
 
 void touch_sra_file(void* opaque)
 {
+    /* flush sram to disk */
     struct sra_file* sra = (struct sra_file*)opaque;
-    sra->touched = 1;
+
+    switch(write_to_file(sra->filename, sra->sram, SRAM_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for writing", sra->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write sram file '%s'", sra->filename);
+        break;
+    default:
+        break;
+    }
 }
 

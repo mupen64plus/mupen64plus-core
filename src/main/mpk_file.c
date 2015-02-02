@@ -28,7 +28,6 @@
 
 #include <stdlib.h>
 
-
 void open_mpk_file(struct mpk_file* mpk, const char* filename)
 {
     size_t i;
@@ -51,28 +50,10 @@ void open_mpk_file(struct mpk_file* mpk, const char* filename)
     default:
         break;
     }
-
-    mpk->touched = 0;
 }
 
 void close_mpk_file(struct mpk_file* mpk)
 {
-    /* write back mpk file content (if touched) */
-    if (mpk->touched != 0)
-    {
-        switch(write_to_file(mpk->filename, mpk->mempaks, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE))
-        {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open mem pak file '%s' for writing", mpk->filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "failed to write mem pak file '%s'", mpk->filename);
-            break;
-        default:
-            break;
-        }
-    }
-
     free((void*)mpk->filename);
 }
 
@@ -83,6 +64,18 @@ uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx)
 
 void touch_mpk_file(void* opaque)
 {
+    /* flush mempak to disk */
     struct mpk_file* mpk = (struct mpk_file*)opaque;
-    mpk->touched = 1;
+
+    switch(write_to_file(mpk->filename, mpk->mempaks, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open mem pak file '%s' for writing", mpk->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write mem pak file '%s'", mpk->filename);
+        break;
+    default:
+        break;
+    }
 }

@@ -32,7 +32,6 @@ struct mpk_file
 {
     uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
     const char* filename;
-    int touched;
 };
 
 void open_mpk_file(struct mpk_file* mpk, const char* filename);

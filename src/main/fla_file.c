@@ -20,10 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fla_file.h"
+#include "util.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/util.h"
 #include "pi/flashram.h"
 
 #include <stdlib.h>
@@ -47,28 +47,10 @@ void open_fla_file(struct fla_file* fla, const char* filename)
     default:
         break;
     }
-
-    fla->touched = 0;
 }
 
 void close_fla_file(struct fla_file* fla)
 {
-    /* write back fla file content (if touched) */
-    if (fla->touched != 0)
-    {
-        switch(write_to_file(fla->filename, fla->flashram, FLASHRAM_SIZE))
-        {
-        case file_open_error:
-            DebugMessage(M64MSG_WARNING, "couldn't open flashram file '%s' for writing", fla->filename);
-            break;
-        case file_write_error:
-            DebugMessage(M64MSG_WARNING, "failed to write flashram file '%s'", fla->filename);
-            break;
-        default:
-            break;
-        }
-    }
-
     free((void*)fla->filename);
 }
 
@@ -79,7 +61,20 @@ uint8_t* fla_file_ptr(struct fla_file* fla)
 
 void touch_fla_file(void* opaque)
 {
+    /* flush flashram to disk */
     struct fla_file* fla = (struct fla_file*)opaque;
-    fla->touched = 1;
+
+    switch(write_to_file(fla->filename, fla->flashram, FLASHRAM_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open flashram file '%s' for writing", fla->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write flashram file '%s'", fla->filename);
+        break;
+    default:
+        break;
+    }
+
 }
 

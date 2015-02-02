@@ -34,7 +34,6 @@ struct eep_file
 {
     uint8_t eeprom[EEPROM_MAX_SIZE];
     const char* filename;
-    int touched;
 };
 
 void open_eep_file(struct eep_file* eep, const char* filename);
