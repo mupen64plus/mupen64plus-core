@@ -251,6 +251,13 @@ endif
 CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
 
+ifeq ($(VC), 1)
+  CFLAGS += -DUSE_GLES -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
+  GL_LDLIBS := -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
+  # OSD uses non-ES code and breaks attribs of video plugins
+  OSD=0
+endif
+
 ifeq ($(USE_GLES), 1)
   CFLAGS += -DUSE_GLES
   # OSD uses non-ES code and breaks attribs of video plugins
@@ -547,6 +554,7 @@ targets:
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    USE_GLES=1    == build against GLESv2 instead of OpenGL"
+	@echo "    VC=1 	 == build against Broadcom Videocore GLESv2"
 	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
 	@echo "    VFP_HARD=1 	 == (ARM only) full hardware floating point ABI"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
