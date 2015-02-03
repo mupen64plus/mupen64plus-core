@@ -19,9 +19,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 	.cpu arm9tdmi
 #ifndef NEON
+#ifndef VFP_HARD
 	.fpu softvfp
 #else
-    .fpu neon
+	.fpu vfp
+#endif
+#else
+    	.fpu neon
 #endif
 	.eabi_attribute 20, 1
 	.eabi_attribute 21, 1
@@ -31,6 +35,9 @@
 	.eabi_attribute 24, 1
 	.eabi_attribute 25, 1
 	.eabi_attribute 26, 2
+#ifdef VFP_HARD
+	.eabi_attribute 28, 1
+#endif
 	.eabi_attribute 30, 6
 	.eabi_attribute 18, 4
 	.file	"linkage_arm.S"
