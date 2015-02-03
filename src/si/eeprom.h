@@ -29,14 +29,14 @@ struct eeprom
 {
     /* external eep storage */
     void* user_data;
-    void (*touch)(void*);
+    void (*save)(void*);
     uint8_t* data;
     size_t size;
     uint16_t id;
 };
 
 
-void eeprom_touch(struct eeprom* eeprom);
+void eeprom_save(struct eeprom* eeprom);
 
 void format_eeprom(uint8_t* eeprom, size_t size);
 

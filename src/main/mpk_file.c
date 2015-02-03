@@ -62,7 +62,7 @@ uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx)
     return &mpk->mempaks[controller_idx][0];
 }
 
-void touch_mpk_file(void* opaque)
+void save_mpk_file(void* opaque)
 {
     /* flush mempak to disk */
     struct mpk_file* mpk = (struct mpk_file*)opaque;

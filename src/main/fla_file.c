@@ -59,7 +59,7 @@ uint8_t* fla_file_ptr(struct fla_file* fla)
     return fla->flashram;
 }
 
-void touch_fla_file(void* opaque)
+void save_fla_file(void* opaque)
 {
     /* flush flashram to disk */
     struct fla_file* fla = (struct fla_file*)opaque;

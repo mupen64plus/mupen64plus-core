@@ -27,9 +27,9 @@
 #include <string.h>
 
 
-void eeprom_touch(struct eeprom* eeprom)
+void eeprom_save(struct eeprom* eeprom)
 {
-    eeprom->touch(eeprom->user_data);
+    eeprom->save(eeprom->user_data);
 }
 
 void format_eeprom(uint8_t* eeprom, size_t size)
@@ -84,7 +84,7 @@ void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
     if (address < eeprom->size)
     {
         memcpy(&eeprom->data[address], data, 8);
-        eeprom_touch(eeprom);
+        eeprom_save(eeprom);
     }
     else
     {

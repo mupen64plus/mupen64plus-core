@@ -32,11 +32,11 @@ struct sram
 {
     /* external sram storage */
     void* user_data;
-    void (*touch)(void*);
+    void (*save)(void*);
     uint8_t* data;
 };
 
-void sram_touch(struct sram* sram);
+void sram_save(struct sram* sram);
 
 void format_sram(uint8_t* sram);
 

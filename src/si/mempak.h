@@ -28,13 +28,13 @@ struct mempak
 {
     /* external mpk storage */
     void* user_data;
-    void (*touch)(void*);
+    void (*save)(void*);
     uint8_t* data;
 };
 
 enum { MEMPAK_SIZE = 0x8000 };
 
-void mempak_touch(struct mempak* mpk);
+void mempak_save(struct mempak* mpk);
 
 void format_mempak(uint8_t* mempak);
 

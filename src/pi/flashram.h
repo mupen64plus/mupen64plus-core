@@ -42,7 +42,7 @@ struct flashram
 {
     /* external sram storage */
     void* user_data;
-    void (*touch)(void*);
+    void (*save)(void*);
     uint8_t* data;
 
     enum flashram_mode mode;
@@ -53,7 +53,7 @@ struct flashram
 
 void init_flashram(struct flashram* flashram);
 
-void flashram_touch(struct flashram* flashram);
+void flashram_save(struct flashram* flashram);
 
 void format_flashram(uint8_t* flash);
 

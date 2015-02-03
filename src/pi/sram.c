@@ -31,9 +31,9 @@
 #include <string.h>
 
 
-void sram_touch(struct sram* sram)
+void sram_save(struct sram* sram)
 {
-    sram->touch(sram->user_data);
+    sram->save(sram->user_data);
 }
 
 void format_sram(uint8_t* sram)
@@ -55,7 +55,7 @@ void dma_write_sram(struct pi_controller* pi)
     for(i = 0; i < length; ++i)
         sram[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
 
-    sram_touch(&pi->sram);
+    sram_save(&pi->sram);
 }
 
 void dma_read_sram(struct pi_controller* pi)

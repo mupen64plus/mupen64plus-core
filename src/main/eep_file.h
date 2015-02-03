@@ -41,6 +41,6 @@ void close_eep_file(struct eep_file* eep);
 
 uint8_t* eep_file_ptr(struct eep_file* eep);
 
-void touch_eep_file(void* opaque);
+void save_eep_file(void* opaque);
 
 #endif

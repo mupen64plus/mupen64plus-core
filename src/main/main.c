@@ -896,14 +896,14 @@ m64p_error main_run(void)
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
         g_si.pif.controllers[i].mempak.user_data = &mpk;
-        g_si.pif.controllers[i].mempak.touch = touch_mpk_file;
+        g_si.pif.controllers[i].mempak.save = save_mpk_file;
         g_si.pif.controllers[i].mempak.data = mpk_file_ptr(&mpk, i);
     }
 
     /* open eep file (if any) and connect it to eeprom */
     open_eep_file(&eep, get_eeprom_path());
     g_si.pif.eeprom.user_data = &eep;
-    g_si.pif.eeprom.touch = touch_eep_file;
+    g_si.pif.eeprom.save = save_eep_file;
     g_si.pif.eeprom.data = eep_file_ptr(&eep);
     if (ROM_SETTINGS.savetype != EEPROM_16KB)
     {
@@ -921,13 +921,13 @@ m64p_error main_run(void)
     /* open fla file (if any) and connect it to flashram */
     open_fla_file(&fla, get_flashram_path());
     g_pi.flashram.user_data = &fla;
-    g_pi.flashram.touch = touch_fla_file;
+    g_pi.flashram.save = save_fla_file;
     g_pi.flashram.data = fla_file_ptr(&fla);
 
     /* open sra file (if any) and connect it to SRAM */
     open_sra_file(&sra, get_sram_path());
     g_pi.sram.user_data = &sra;
-    g_pi.sram.touch = touch_sra_file;
+    g_pi.sram.save = save_sra_file;
     g_pi.sram.data = sra_file_ptr(&sra);
 
 #ifdef WITH_LIRC

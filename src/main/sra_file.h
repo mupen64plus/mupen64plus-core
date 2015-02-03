@@ -37,6 +37,6 @@ void close_sra_file(struct sra_file* sra);
 
 uint8_t* sra_file_ptr(struct sra_file* sra);
 
-void touch_sra_file(void* opaque);
+void save_sra_file(void* opaque);
 
 #endif

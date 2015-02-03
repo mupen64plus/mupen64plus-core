@@ -39,6 +39,6 @@ void close_mpk_file(struct mpk_file* mpk);
 
 uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
 
-void touch_mpk_file(void* opaque);
+void save_mpk_file(void* opaque);
 
 #endif

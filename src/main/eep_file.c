@@ -59,7 +59,7 @@ uint8_t* eep_file_ptr(struct eep_file* eep)
     return eep->eeprom;
 }
 
-void touch_eep_file(void* opaque)
+void save_eep_file(void* opaque)
 {
     /* flush eeprom to disk */
     struct eep_file* eep = (struct eep_file*)opaque;

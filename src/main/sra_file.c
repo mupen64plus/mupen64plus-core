@@ -59,7 +59,7 @@ uint8_t* sra_file_ptr(struct sra_file* sra)
     return sra->sram;
 }
 
-void touch_sra_file(void* opaque)
+void save_sra_file(void* opaque)
 {
     /* flush sram to disk */
     struct sra_file* sra = (struct sra_file*)opaque;

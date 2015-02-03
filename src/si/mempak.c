@@ -24,9 +24,9 @@
 #include <stdint.h>
 #include <string.h>
 
-void mempak_touch(struct mempak* mpk)
+void mempak_save(struct mempak* mpk)
 {
-    mpk->touch(mpk->user_data);
+    mpk->save(mpk->user_data);
 }
 
 void format_mempak(uint8_t* mpk_data)
@@ -84,7 +84,7 @@ void mempak_write_command(struct mempak* mpk, uint8_t* cmd)
     if (address < 0x8000)
     {
         memcpy(&mpk->data[address], &cmd[5], 0x20);
-        mempak_touch(mpk);
+        mempak_save(mpk);
     }
     else
     {
