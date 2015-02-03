@@ -92,9 +92,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     case MI_INIT_MODE_REG:
         if (update_mi_init_mode(&r4300->mi.regs[MI_INIT_MODE_REG], value & mask) != 0)
         {
-            /* clear DP interrupt */
-            r4300->mi.regs[MI_INTR_REG] &= ~0x20;
-            check_interupt();
+            clear_rcp_interrupt(r4300, MI_INTR_DP);
         }
         break;
     case MI_INTR_MASK_REG:
@@ -109,3 +107,14 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
+void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t intr)
+{
+    r4300->mi.regs[MI_INTR_REG] |= intr;
+    check_interupt();
+}
+
+void clear_rcp_interrupt(struct r4300_core* r4300, uint32_t intr)
+{
+    r4300->mi.regs[MI_INTR_REG] &= ~intr;
+    check_interupt();
+}

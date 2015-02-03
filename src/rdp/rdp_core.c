@@ -112,8 +112,7 @@ int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         break;
     case DPC_END_REG:
         gfx.processRDPList();
-        dp->r4300->mi.regs[MI_INTR_REG] |= 0x20;
-        check_interupt();
+        signal_rcp_interrupt(dp->r4300, MI_INTR_DP);
         break;
     }
 

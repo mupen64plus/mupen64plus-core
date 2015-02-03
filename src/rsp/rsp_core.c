@@ -97,14 +97,12 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     /* clear SP interrupt */
     if (w & 0x8)
     {
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~1;
-        check_interupt();
+        clear_rcp_interrupt(sp->r4300, MI_INTR_SP);
     }
     /* set SP interrupt */
     if (w & 0x10)
     {
-        sp->r4300->mi.regs[MI_INTR_REG] |= 1;
-        check_interupt();
+        signal_rcp_interrupt(sp->r4300, MI_INTR_SP);
     }
 
     /* clear / set single step */
@@ -288,11 +286,11 @@ void do_SP_Task(struct rsp_core* sp)
         new_frame();
 
         update_count();
-        if (sp->r4300->mi.regs[MI_INTR_REG] & 0x1)
+        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
             add_interupt_event(SP_INT, 1000);
-        if (sp->r4300->mi.regs[MI_INTR_REG] & 0x20)
+        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
             add_interupt_event(DP_INT, 1000);
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~0x21;
+        sp->r4300->mi.regs[MI_INTR_REG] &= ~(MI_INTR_SP | MI_INTR_DP);
         sp->regs[SP_STATUS_REG] &= ~0x303;
 
         protect_framebuffers(sp->dp);
@@ -307,9 +305,9 @@ void do_SP_Task(struct rsp_core* sp)
         sp->regs2[SP_PC_REG] |= save_pc;
 
         update_count();
-        if (sp->r4300->mi.regs[MI_INTR_REG] & 0x1)
+        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
             add_interupt_event(SP_INT, 4000/*500*/);
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~0x1;
+        sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
         sp->regs[SP_STATUS_REG] &= ~0x303;
         
     }
@@ -320,9 +318,9 @@ void do_SP_Task(struct rsp_core* sp)
         sp->regs2[SP_PC_REG] |= save_pc;
 
         update_count();
-        if (sp->r4300->mi.regs[MI_INTR_REG] & 0x1)
+        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
             add_interupt_event(SP_INT, 0/*100*/);
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~0x1;
+        sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
         sp->regs[SP_STATUS_REG] &= ~0x203;
     }
 }

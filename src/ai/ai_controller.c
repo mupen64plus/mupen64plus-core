@@ -101,8 +101,7 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         return 0;
 
     case AI_STATUS_REG:
-        ai->r4300->mi.regs[MI_INTR_REG] &= ~0x4;
-        check_interupt();
+        clear_rcp_interrupt(ai->r4300, MI_INTR_AI);
         return 0;
 
     case AI_DACRATE_REG:

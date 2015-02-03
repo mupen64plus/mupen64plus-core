@@ -82,8 +82,7 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         return 0;
 
     case VI_CURRENT_REG:
-        vi->r4300->mi.regs[MI_INTR_REG] &= ~0x8;
-        check_interupt();
+        clear_rcp_interrupt(vi->r4300, MI_INTR_VI);
         return 0;
     }
 

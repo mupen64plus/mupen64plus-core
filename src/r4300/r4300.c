@@ -188,7 +188,7 @@ void r4300_reset_soft(void)
     g_vi.regs[VI_CURRENT_REG] = 0;
     g_vi.regs[VI_H_START_REG] = 0;
 
-    g_r4300.mi.regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
+    g_r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
 
     memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
 

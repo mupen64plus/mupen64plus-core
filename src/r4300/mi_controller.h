@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+struct r4300_core;
+
 enum mi_registers
 {
     MI_INIT_MODE_REG,
@@ -31,6 +33,17 @@ enum mi_registers
     MI_INTR_REG,
     MI_INTR_MASK_REG,
     MI_REGS_COUNT
+};
+
+
+enum mi_intr
+{
+    MI_INTR_SP = 0x01,
+    MI_INTR_SI = 0x02,
+    MI_INTR_AI = 0x04,
+    MI_INTR_VI = 0x08,
+    MI_INTR_PI = 0x10,
+    MI_INTR_DP = 0x20
 };
 
 struct mi_controller
@@ -47,5 +60,8 @@ void init_mi(struct mi_controller* mi);
 
 int read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t intr);
+void clear_rcp_interrupt(struct r4300_core* r4300, uint32_t intr);
 
 #endif
