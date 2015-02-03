@@ -403,6 +403,23 @@ void check_interupt(void)
     }
 }
 
+static void wrapped_exception_general(void)
+{
+#ifdef NEW_DYNAREC
+    if (r4300emu == CORE_DYNAREC) {
+        g_cp0_regs[CP0_EPC_REG] = pcaddr;
+        pcaddr = 0x80000180;
+        g_cp0_regs[CP0_STATUS_REG] |= 2;
+        g_cp0_regs[CP0_CAUSE_REG] &= 0x7FFFFFFF;
+        pending_exception=1;
+    } else {
+        exception_general();
+    }
+#else
+    exception_general();
+#endif
+}
+
 void gen_interupt(void)
 {
     if (stop == 1)
@@ -448,7 +465,6 @@ void gen_interupt(void)
             if (g_cp0_regs[CP0_COUNT_REG] > 0x10000000) return;
             remove_interupt_event();
             add_interupt_event_count(SPECIAL_INT, 0);
-            return;
             break;
         case VI_INT:
             if(vi_counter < 60)
@@ -501,6 +517,7 @@ void gen_interupt(void)
                 return;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
     
         case COMPARE_INT:
@@ -512,10 +529,12 @@ void gen_interupt(void)
             g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x8000) & 0xFFFFFF83;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
     
         case CHECK_INT:
             remove_interupt_event();
+            wrapped_exception_general();
             break;
     
         case SI_INT:
@@ -533,6 +552,7 @@ void gen_interupt(void)
                 return;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
     
         case PI_INT:
@@ -545,6 +565,7 @@ void gen_interupt(void)
                 return;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
     
         case AI_INT:
@@ -579,6 +600,7 @@ void gen_interupt(void)
                 if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
                 if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
             }
+            wrapped_exception_general();
             break;
 
         case SP_INT:
@@ -594,6 +616,7 @@ void gen_interupt(void)
                 return;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
     
         case DP_INT:
@@ -607,6 +630,7 @@ void gen_interupt(void)
                 return;
             if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
             if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
+            wrapped_exception_general();
             break;
 
         case HW2_INT:
@@ -618,6 +642,7 @@ void gen_interupt(void)
             /* the exception_general() call below will jump to the interrupt vector (0x80000180) and setup the
              * interpreter or dynarec
              */
+            wrapped_exception_general();
             break;
 
         case NMI_INT:
@@ -653,27 +678,14 @@ void gen_interupt(void)
             // set next instruction address to reset vector
             last_addr = 0xa4000040;
             generic_jump_to(0xa4000040);
-            return;
+            break;
 
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", q.first->data.type);
             remove_interupt_event();
+            wrapped_exception_general();
             break;
     }
-
-#ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC) {
-        g_cp0_regs[CP0_EPC_REG] = pcaddr;
-        pcaddr = 0x80000180;
-        g_cp0_regs[CP0_STATUS_REG] |= 2;
-        g_cp0_regs[CP0_CAUSE_REG] &= 0x7FFFFFFF;
-        pending_exception=1;
-    } else {
-        exception_general();
-    }
-#else
-    exception_general();
-#endif
 
     if (!interupt_unsafe_state)
     {
