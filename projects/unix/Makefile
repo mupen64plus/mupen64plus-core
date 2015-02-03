@@ -253,13 +253,14 @@ LDLIBS += $(SDL_LDLIBS)
 
 ifeq ($(VC), 1)
   CFLAGS += -DUSE_GLES -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
-  GL_LDLIBS := -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
+  LDLIBS += -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
   # OSD uses non-ES code and breaks attribs of video plugins
   OSD=0
 endif
 
 ifeq ($(USE_GLES), 1)
   CFLAGS += -DUSE_GLES
+  LDLIBS += -lGLESv2
   # OSD uses non-ES code and breaks attribs of video plugins
   OSD=0
 endif
@@ -279,9 +280,6 @@ ifeq ($(OSD), 1)
   LDLIBS += $(FREETYPE2_LDLIBS)
 
   # search for OpenGL libraries
-  ifeq ($(USE_GLES), 1)
-    GL_LDLIBS = -lGLESv2
-  endif
   ifeq ($(OS), OSX)
     GL_LDLIBS = -framework OpenGL
     GLU_LDLIBS = -framework OpenGL
