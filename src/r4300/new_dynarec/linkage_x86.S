@@ -670,199 +670,288 @@ invalidate_block_call:
 	ret
 	.size	invalidate_block_call, .-invalidate_block_call
 
+.globl readb
+    .hidden readb
+    .type   readb, @function
+readb:
+    add     $-4, %esp
+    mov     address, %ecx
+    and     $~0x3, %ecx
+    push    %esp
+    push    %ecx
+    call    read_aligned_word
+    pop     %ecx
+    pop     %esp
+    mov     (%esp), %ebx
+    mov     address, %ecx
+    and     $3, %ecx
+    xor     $3, %ecx
+    shl     $3, %ecx
+    shr     %cl, %ebx
+    and     $0xff, %ebx
+    mov     %ebx, readmem_dword
+    add     $4, %esp
+    ret
+    .size   readb, .-readb
+
+.globl readh
+    .hidden readh
+    .type   readh, @function
+readh:
+    add     $-4, %esp
+    mov     address, %ecx
+    and     $~0x3, %ecx
+    push    %esp
+    push    %ecx
+    call    read_aligned_word
+    pop     %ecx
+    pop     %esp
+    mov     (%esp), %ebx
+    mov     address, %ecx
+    and     $2, %ecx
+    xor     $2, %ecx
+    shl     $3, %ecx
+    shr     %cl, %ebx
+    and     $0xffff, %ebx
+    mov     %ebx, readmem_dword
+    add     $4, %esp
+    ret
+    .size   readh, .-readh
+
+.globl readw
+    .hidden readw
+    .type   readw, @function
+readw:
+    add     $-4, %esp
+    mov     address, %ecx
+    and     $~0x3, %ecx
+    push    %esp
+    push    %ecx
+    call    read_aligned_word
+    pop     %ecx
+    pop     %esp
+    mov     (%esp), %ebx
+    mov     %ebx, readmem_dword
+    add     $4, %esp
+    ret
+    .size   readw, .-readw
+
+.globl readd
+    .hidden readd
+    .type   readd, @function
+readd:
+    /* high part */
+    add     $-4, %esp
+    mov     address, %ecx
+    and     $~0x7, %ecx
+    push    %esp
+    push    %ecx
+    call    read_aligned_word
+    pop     %ecx
+    pop     %esp
+    mov     (%esp), %ebx
+    mov     %ebx, readmem_dword+4
+    /* low part */
+    add     $4, %ecx
+    push    %esp
+    push    %ecx
+    call    read_aligned_word
+    pop     %ecx
+    pop     %esp
+    mov     (%esp), %ebx
+    mov     %ebx, readmem_dword
+    add     $4, %esp
+    ret
+    .size   readd, .-readd
+
+.globl writeb
+    .hidden writeb
+    .type   writeb, @function
+writeb:
+    mov     address, %edi
+    mov     cpu_byte, %ebx
+    mov     $0xff, %edx
+    mov     %edi, %ecx
+    and     $~0x3, %edi
+    and     $3, %ecx
+    xor     $3, %ecx
+    shl     $3, %ecx
+    shl     %cl, %ebx
+    shl     %cl, %edx
+    push    %edx
+    push    %ebx
+    push    %edi
+    call    write_aligned_word
+    add     $12, %esp
+    ret
+    .size   writeb, .-writeb
+
+.globl writeh
+    .hidden writeh
+    .type   writeh, @function
+writeh:
+    mov     address, %edi
+    mov     hword, %ebx
+    mov     $0xffff, %edx
+    mov     %edi, %ecx
+    and     $~0x3, %edi
+    and     $2, %ecx
+    xor     $2, %ecx
+    shl     $3, %ecx
+    shl     %cl, %ebx
+    shl     %cl, %edx
+    push    %edx
+    push    %ebx
+    push    %edi
+    call    write_aligned_word
+    add     $12, %esp
+    ret
+    .size   writeh, .-writeh
+
+.globl writew
+    .hidden writew
+    .type   writew, @function
+writew:
+    mov     address, %edi
+    mov     word, %ebx
+    and     $~0x3, %edi
+    push    $0xffffffff
+    push    %ebx
+    push    %edi
+    call    write_aligned_word
+    add     $12, %esp
+    ret
+    .size   writew, .-writew
+
+.globl writed
+    .hidden writed
+    .type   writed, @function
+writed:
+    /* high part */
+    mov     address, %edi
+    mov     dword+4, %edx
+    and     $~0x7, %edi
+    push    $0xffffffff
+    push    %edx
+    push    %edi
+    call    write_aligned_word
+    pop     %edi
+    add     $8, %esp
+    /* low part */
+    add     $4, %edi
+    mov     dword, %edx
+    push    $0xffffffff
+    push    %edx
+    push    %edi
+    call    write_aligned_word
+    add     $12, %esp
+    ret
+    .size   writed, .-writed
+
+
+.globl read_rdram_new
+	.hidden read_rdram_new
+	.type   read_rdram_new, @function
+read_rdram_new:
+    /* address: esp+4 */
+    /* *value: esp+8 */
+    mov     4(%esp), %edi
+    and     $~0x3, %edi
+    mov     g_rdram-0x80000000(%edi), %ecx
+    mov     8(%esp), %edi
+    mov     %ecx, (%edi)
+    xor     %eax, %eax
+    ret
+    .size   read_rdram_new, .-read_rdram_new
+
 .globl write_rdram_new
 	.hidden write_rdram_new
-	.type	write_rdram_new, @function
+	.type   write_rdram_new, @function
 write_rdram_new:
-	mov	address, %edi
-	mov	word, %ecx
-	mov	%ecx, g_rdram-0x80000000(%edi)
-	jmp	.E12
-	.size	write_rdram_new, .-write_rdram_new
+    /* address: esp+4 */
+    /* value: esp+8 */
+    /* mask: esp+12 */
+    mov     4(%esp), %edi
+    mov     8(%esp), %eax
+    mov     12(%esp), %ebx
+    and     $~0x3, %edi
+    mov     g_rdram-0x80000000(%edi), %ecx
+    and     %ebx, %eax
+    not     %ebx
+    and     %ebx, %ecx
+    or      %eax, %ecx
+    mov     %ecx, g_rdram-0x80000000(%edi)
+    xor     %eax, %eax
+    jmp     do_invalidate
+    .size   write_rdram_new, .-write_rdram_new
 
-.globl write_rdramb_new
-	.hidden write_rdramb_new
-	.type	write_rdramb_new, @function
-write_rdramb_new:
-	mov	address, %edi
-	xor	$3, %edi
-	movb	cpu_byte, %cl
-	movb	%cl, g_rdram-0x80000000(%edi)
-	jmp	.E12
-	.size	write_rdramb_new, .-write_rdramb_new
-
-.globl write_rdramh_new
-	.hidden write_rdramh_new
-	.type	write_rdramh_new, @function
-write_rdramh_new:
-	mov	address, %edi
-	xor	$2, %edi
-	movw	hword, %cx
-	movw	%cx, g_rdram-0x80000000(%edi)
-	jmp	.E12
-	.size	write_rdramh_new, .-write_rdramh_new
-
-.globl write_rdramd_new
-	.hidden write_rdramd_new
-	.type	write_rdramd_new, @function
-write_rdramd_new:
-	mov	address, %edi
-	mov	dword+4, %ecx
-	mov	dword, %edx
-	mov	%ecx, g_rdram-0x80000000(%edi)
-	mov	%edx, g_rdram-0x80000000+4(%edi)
-	jmp	.E12
-	.size	write_rdramd_new, .-write_rdramd_new
-
-	.type	do_invalidate, @function
+	.type   do_invalidate, @function
 do_invalidate:
-	mov	address, %edi
-	mov	%edi, %ebx /* Return ebx to caller */
-.E12:
-	shr	$12, %edi
-	cmpb	$1, invalid_code(%edi)
-	je	.E13
-	push	%edi
-	call	invalidate_block
-	pop	%edi
+    /* %edi = address */
+    shr     $12, %edi
+    cmpb    $1, invalid_code(%edi)
+    je      .E13
+    push    %edi
+    call    invalidate_block
+    pop     %edi
 .E13:
-	ret
-	.size	do_invalidate, .-do_invalidate
+    ret
+    .size   do_invalidate, .-do_invalidate
 
 .globl read_nomem_new
 	.hidden read_nomem_new
-	.type	read_nomem_new, @function
+	.type   read_nomem_new, @function
 read_nomem_new:
-	mov	address, %edi
-	mov	%edi, %ebx
-	shr	$12, %edi
-	mov	memory_map(,%edi,4),%edi
-	mov	$0x8, %eax
-	test	%edi, %edi
-	js	tlb_exception
-	mov	(%ebx,%edi,4), %ecx
-	mov	%ecx, readmem_dword
-	ret
-	.size	read_nomem_new, .-read_nomem_new
-
-.globl read_nomemb_new
-	.hidden read_nomemb_new
-	.type	read_nomemb_new, @function
-read_nomemb_new:
-	mov	address, %edi
-	mov	%edi, %ebx
-	shr	$12, %edi
-	mov	memory_map(,%edi,4),%edi
-	mov	$0x8, %eax
-	test	%edi, %edi
-	js	tlb_exception
-	xor	$3, %ebx
-	movzbl	(%ebx,%edi,4), %ecx
-	mov	%ecx, readmem_dword
-	ret
-	.size	read_nomemb_new, .-read_nomemb_new
-
-.globl read_nomemh_new
-	.hidden read_nomemh_new
-	.type	read_nomemh_new, @function
-read_nomemh_new:
-	mov	address, %edi
-	mov	%edi, %ebx
-	shr	$12, %edi
-	mov	memory_map(,%edi,4),%edi
-	mov	$0x8, %eax
-	test	%edi, %edi
-	js	tlb_exception
-	xor	$2, %ebx
-	movzwl	(%ebx,%edi,4), %ecx
-	mov	%ecx, readmem_dword
-	ret
-	.size	read_nomemh_new, .-read_nomemh_new
-
-.globl read_nomemd_new
-	.hidden read_nomemd_new
-	.type	read_nomemd_new, @function
-read_nomemd_new:
-	mov	address, %edi
-	mov	%edi, %ebx
-	shr	$12, %edi
-	mov	memory_map(,%edi,4),%edi
-	mov	$0x8, %eax
-	test	%edi, %edi
-	js	tlb_exception
-	mov	4(%ebx,%edi,4), %ecx
-	mov	(%ebx,%edi,4), %edx
-	mov	%ecx, readmem_dword
-	mov	%edx, readmem_dword+4
-	ret
-	.size	read_nomemd_new, .-read_nomemd_new
+    /* address: esp+4 */
+    /* *value: esp+8 */
+    mov     4(%esp), %edi
+    mov     %edi, %ebx
+    shr     $12, %edi
+    mov     memory_map(,%edi,4),%edi
+    mov     $0x8, %eax
+    test    %edi, %edi
+    js      tlb_exception
+    and     $~0x3, %ebx
+    mov     (%ebx,%edi,4), %ecx
+    mov     8(%esp), %edi
+    mov     %ecx, (%edi)
+    xor     %eax, %eax
+    ret
+    .size   read_nomem_new, .-read_nomem_new
 
 .globl write_nomem_new
 	.hidden write_nomem_new
-	.type	write_nomem_new, @function
+	.type   write_nomem_new, @function
 write_nomem_new:
-	call	do_invalidate
-	mov	memory_map(,%edi,4),%edi
-	mov	word, %ecx
-	mov	$0xc, %eax
-	shl	$2, %edi
-	jc	tlb_exception
-	mov	%ecx, (%ebx,%edi)
-	ret
-	.size	write_nomem_new, .-write_nomem_new
-
-.globl write_nomemb_new
-	.hidden write_nomemb_new
-	.type	write_nomemb_new, @function
-write_nomemb_new:
-	call	do_invalidate
-	mov	memory_map(,%edi,4),%edi
-	movb	cpu_byte, %cl
-	mov	$0xc, %eax
-	shl	$2, %edi
-	jc	tlb_exception
-	xor	$3, %ebx
-	movb	%cl, (%ebx,%edi)
-	ret
-	.size	write_nomemb_new, .-write_nomemb_new
-
-.globl write_nomemh_new
-	.hidden write_nomemh_new
-	.type	write_nomemh_new, @function
-write_nomemh_new:
-	call	do_invalidate
-	mov	memory_map(,%edi,4),%edi
-	movw	hword, %cx
-	mov	$0xc, %eax
-	shl	$2, %edi
-	jc	tlb_exception
-	xor	$2, %ebx
-	movw	%cx, (%ebx,%edi)
-	ret
-	.size	write_nomemh_new, .-write_nomemh_new
-
-.globl write_nomemd_new
-	.hidden write_nomemd_new
-	.type	write_nomemd_new, @function
-write_nomemd_new:
-	call	do_invalidate
-	mov	memory_map(,%edi,4),%edi
-	mov	dword+4, %edx
-	mov	dword, %ecx
-	mov	$0xc, %eax
-	shl	$2, %edi
-	jc	tlb_exception
-	mov	%edx, (%ebx,%edi)
-	mov	%ecx, 4(%ebx,%edi)
-	ret
-	.size	write_nomemd_new, .-write_nomemd_new
+    /* address: esp+4 */
+    /* value: esp+8 */
+    /* mask: esp+12 */
+    mov     4(%esp), %edi
+    call    do_invalidate
+    mov     memory_map(,%edi,4),%edi
+    mov     $0xc, %eax
+    shl     $2, %edi
+    jc      tlb_exception
+    mov     4(%esp), %ebx
+    and     $~0x3, %ebx
+    mov     8(%esp), %eax
+    mov     12(%esp), %edx
+    and     %edx, %eax
+    not     %edx
+    mov     (%ebx,%edi), %ecx
+    and     %edx, %ecx
+    or      %eax, %ecx
+    mov     %ecx, (%ebx,%edi)
+    xor     %eax, %eax
+    ret
+    .size   write_nomem_new, .-write_nomem_new
 
 	.type	tlb_exception, @function
 tlb_exception:
 	/* eax = cause */
 	/* ebx = address */
 	/* ebp = instr addr + flags */
-	mov	0x24(%esp), %ebp
+	mov	0x34(%esp), %ebp
 /* Debug: 
 	push	%ebp
 	push	%ebx
@@ -888,7 +977,7 @@ tlb_exception:
 	mov	%esi, g_cp0_regs+48 /* Status */
 	mov	%eax, g_cp0_regs+52 /* Cause */
 	mov	%edx, g_cp0_regs+56 /* EPC */
-	add	$0x24, %esp
+	add	$0x34, %esp
 	mov	$0x6000022, %edx
 	mov	%ecx, %ebp
 	movswl	%cx, %eax

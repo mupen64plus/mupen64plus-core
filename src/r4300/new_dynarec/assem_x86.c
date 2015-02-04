@@ -29,6 +29,20 @@ u_int memory_map[1048576];
 static u_int mini_ht[32][2]  __attribute__((aligned(8)));
 u_char restore_candidate[512]  __attribute__((aligned(4)));
 
+extern uint32_t address;
+extern uint8_t cpu_byte;
+extern uint16_t hword;
+extern uint32_t word;
+extern uint64_t dword;
+void readb(void);
+void readh(void);
+void readw(void);
+void readd(void);
+void writeb(void);
+void writeh(void);
+void writew(void);
+void writed(void);
+
 void do_interrupt();
 void jump_vaddr_eax();
 void jump_vaddr_ecx();
@@ -2647,18 +2661,17 @@ static void do_readstub(int n)
   if(addr<0) addr=rt;
   if(addr<0&&itype[i]!=C1LS&&itype[i]!=LOADLR) addr=get_reg(i_regmap,-1);
   assert(addr>=0);
-  int ftable=0;
+  int readfn=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    readfn=(int)readb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    readfn=(int)readh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    readfn=(int)readw;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
+    readfn=(int)readd;
   emit_writeword(rs,(int)&address);
-  emit_shrimm(rs,16,addr);
-  emit_movmem_indexedx4(ftable,addr,addr);
+  emit_movimm(readfn,addr);
   emit_pusha();
   ds=i_regs!=&regs[i];
   int real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
@@ -2731,15 +2744,15 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   int rt=get_reg(regmap,target);
   if(rs<0) rs=get_reg(regmap,-1);
   assert(rs>=0);
-  int ftable=0;
+  int readfn=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    readfn=(int)readb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    readfn=(int)readh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    readfn=(int)readw;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
+    readfn=(int)readd;
   #ifdef HOST_IMM_ADDR32
   emit_writeword_imm(addr,(int)&address);
   #else
@@ -2786,7 +2799,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     int ds=regmap!=regs[i].regmap;
     emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   }
-  emit_call(((u_int *)ftable)[addr>>16]);
+  emit_call(readfn);
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
@@ -2840,18 +2853,17 @@ static void do_writestub(int n)
   assert(rt>=0);
   if(addr<0) addr=get_reg(i_regmap,-1);
   assert(addr>=0);
-  int ftable=0;
+  int writefn=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    writefn=(int)writeb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    writefn=(int)writeh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    writefn=(int)writew;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
+    writefn=(int)writed;
   emit_writeword(rs,(int)&address);
-  emit_shrimm(rs,16,addr);
-  emit_movmem_indexedx4(ftable,addr,addr);
+  emit_movimm(writefn,addr);
   if(type==STOREB_STUB)
     emit_writebyte(rt,(int)&cpu_byte);
   if(type==STOREH_STUB)
@@ -2916,15 +2928,15 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   int rt=get_reg(regmap,target);
   assert(rs>=0);
   assert(rt>=0);
-  int ftable=0;
+  int writefn=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    writefn=(int)writeb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    writefn=(int)writeh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    writefn=(int)writew;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
+    writefn=(int)writed;
   emit_writeword(rs,(int)&address);
   if(type==STOREB_STUB)
     emit_writebyte(rt,(int)&cpu_byte);
@@ -2977,7 +2989,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     int ds=regmap!=regs[i].regmap;
     emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   }
-  emit_call(((u_int *)ftable)[addr>>16]);
+  emit_call(writefn);
   emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
   emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*(adj+1),HOST_CCREG);
