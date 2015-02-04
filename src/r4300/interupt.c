@@ -52,10 +52,6 @@
 #include "reset.h"
 #include "new_dynarec/new_dynarec.h"
 
-#ifdef WITH_LIRC
-#include "main/lirc.h"
-#endif
-
 unsigned int next_vi;
 int vi_field=0;
 static int vi_counter=0;
@@ -455,10 +451,8 @@ static void vi_int_handler(void)
         cheat_apply_cheats(ENTRY_VI);
     }
     gfx.updateScreen();
-#ifdef WITH_LIRC
-    lircCheckInput();
-#endif
-    SDL_PumpEvents();
+
+    main_check_inputs();
 
     timed_sections_refresh();
 
@@ -470,10 +464,7 @@ static void vi_int_handler(void)
         while(rompause)
         {
             SDL_Delay(10);
-            SDL_PumpEvents();
-#ifdef WITH_LIRC
-            lircCheckInput();
-#endif //WITH_LIRC
+            main_check_inputs();
         }
     }
 
@@ -508,10 +499,7 @@ static void check_int_handler(void)
 
 static void si_int_handler(void)
 {
-#ifdef WITH_LIRC
-    lircCheckInput();
-#endif //WITH_LIRC
-    SDL_PumpEvents();
+    main_check_inputs();
     g_si.pif.ram[0x3f] = 0x0;
     remove_interupt_event();
     g_si.regs[SI_STATUS_REG] |= 0x1000;
