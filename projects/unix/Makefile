@@ -100,7 +100,7 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
         CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
     else
       ifeq ($(VFP_HARD), 1)
-        CFLAGS += -mfpu=vfp -mfloat-abi=hard
+        CFLAGS += -mfpu=vfp -mfloat-abi=hard -DVFP_HARD
       else
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
       endif
@@ -251,8 +251,16 @@ endif
 CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
 
+ifeq ($(VC), 1)
+  CFLAGS += -DUSE_GLES -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
+  LDLIBS += -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
+  # OSD uses non-ES code and breaks attribs of video plugins
+  OSD=0
+endif
+
 ifeq ($(USE_GLES), 1)
   CFLAGS += -DUSE_GLES
+  LDLIBS += -lGLESv2
   # OSD uses non-ES code and breaks attribs of video plugins
   OSD=0
 endif
@@ -272,9 +280,6 @@ ifeq ($(OSD), 1)
   LDLIBS += $(FREETYPE2_LDLIBS)
 
   # search for OpenGL libraries
-  ifeq ($(USE_GLES), 1)
-    GL_LDLIBS = -lGLESv2
-  endif
   ifeq ($(OS), OSX)
     GL_LDLIBS = -framework OpenGL
     GLU_LDLIBS = -framework OpenGL
@@ -547,6 +552,7 @@ targets:
 	@echo "    LIRC=1        == enable LIRC support"
 	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
 	@echo "    USE_GLES=1    == build against GLESv2 instead of OpenGL"
+	@echo "    VC=1 	 == build against Broadcom Videocore GLESv2"
 	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
 	@echo "    VFP_HARD=1 	 == (ARM only) full hardware floating point ABI"
 	@echo "    SHAREDIR=path == extra path to search for shared data files"
