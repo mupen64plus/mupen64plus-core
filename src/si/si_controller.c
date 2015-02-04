@@ -144,3 +144,14 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
+void si_end_of_dma_event(struct si_controller* si)
+{
+    main_check_inputs();
+
+    si->pif.ram[0x3f] = 0x0;
+
+    /* trigger SI interrupt */
+    si->regs[SI_STATUS_REG] |= 0x1000;
+    raise_rcp_interrupt(si->r4300, MI_INTR_SI);
+}
+
