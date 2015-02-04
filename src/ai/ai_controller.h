@@ -67,4 +67,6 @@ void init_ai(struct ai_controller* ai);
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
+void ai_end_of_dma_event(struct ai_controller* ai, unsigned int ai_event);
+
 #endif

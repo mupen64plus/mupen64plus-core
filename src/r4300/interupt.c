@@ -512,21 +512,9 @@ static void pi_int_handler(void)
 
 static void ai_int_handler(unsigned int ai_event)
 {
-    if (g_ai.regs[AI_STATUS_REG] & 0x80000000) // full
-    {
-        remove_interupt_event();
-        g_ai.regs[AI_STATUS_REG] &= ~0x80000000;
-        g_ai.fifo[0].delay = g_ai.fifo[1].delay;
-        g_ai.fifo[0].length = g_ai.fifo[1].length;
-        add_interupt_event_count(AI_INT, ai_event+g_ai.fifo[1].delay);
-    }
-    else
-    {
-        remove_interupt_event();
-        g_ai.regs[AI_STATUS_REG] &= ~0x40000000;
-    }
+    remove_interupt_event();
 
-    raise_rcp_interrupt(&g_r4300, MI_INTR_AI);
+    ai_end_of_dma_event(&g_ai, ai_event);
 }
 
 static void sp_int_handler(void)
