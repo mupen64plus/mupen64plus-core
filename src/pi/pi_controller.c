@@ -278,3 +278,8 @@ int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
+void pi_end_of_dma_event(struct pi_controller* pi)
+{
+    pi->regs[PI_STATUS_REG] &= ~3;
+    raise_rcp_interrupt(pi->r4300, MI_INTR_PI);
+}

@@ -506,8 +506,8 @@ static void si_int_handler(void)
 static void pi_int_handler(void)
 {
     remove_interupt_event();
-    g_pi.regs[PI_STATUS_REG] &= ~3;
-    raise_rcp_interrupt(&g_r4300, MI_INTR_PI);
+
+    pi_end_of_dma_event(&g_pi);
 }
 
 static void ai_int_handler(unsigned int ai_event)
