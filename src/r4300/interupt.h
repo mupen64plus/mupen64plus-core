@@ -22,6 +22,8 @@
 #ifndef M64P_R4300_INTERUPT_H
 #define M64P_R4300_INTERUPT_H
 
+#include <stdint.h>
+
 void init_interupt(void);
 
 extern int vi_field;
@@ -30,6 +32,8 @@ extern unsigned int next_vi;
 // set to avoid savestates/reset if state may be inconsistent
 // (e.g. in the middle of an instruction)
 extern int interupt_unsafe_state;
+
+void raise_maskable_interrupt(uint32_t cause);
 
 void gen_interupt(void);
 void check_interupt(void);

@@ -420,6 +420,19 @@ static void wrapped_exception_general(void)
 #endif
 }
 
+void raise_maskable_interrupt(uint32_t cause)
+{
+    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | cause) & 0xffffff83;
+
+    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xff00))
+        return;
+
+    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1)
+        return;
+
+    wrapped_exception_general();
+}
+
 static void special_int_handler(void)
 {
     if (g_cp0_regs[CP0_COUNT_REG] > 0x10000000)
@@ -474,14 +487,7 @@ static void vi_int_handler(void)
     remove_interupt_event();
     add_interupt_event_count(VI_INT, next_vi);
 
-    g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_VI;
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-    else
-        return;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+    raise_rcp_interrupt(&g_r4300, MI_INTR_VI);
 }
 
 static void compare_int_handler(void)
@@ -491,10 +497,7 @@ static void compare_int_handler(void)
     add_interupt_event_count(COMPARE_INT, g_cp0_regs[CP0_COMPARE_REG]);
     g_cp0_regs[CP0_COUNT_REG]-=count_per_op;
 
-    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x8000) & 0xFFFFFF83;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+    raise_maskable_interrupt(0x8000);
 }
 
 static void check_int_handler(void)
@@ -511,29 +514,16 @@ static void si_int_handler(void)
     SDL_PumpEvents();
     g_si.pif.ram[0x3f] = 0x0;
     remove_interupt_event();
-    g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_SI;
     g_si.regs[SI_STATUS_REG] |= 0x1000;
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-    else
-        return;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+
+    raise_rcp_interrupt(&g_r4300, MI_INTR_SI);
 }
 
 static void pi_int_handler(void)
 {
     remove_interupt_event();
-    g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_PI;
     g_pi.regs[PI_STATUS_REG] &= ~3;
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-    else
-        return;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+    raise_rcp_interrupt(&g_r4300, MI_INTR_PI);
 }
 
 static void ai_int_handler(void)
@@ -546,30 +536,14 @@ static void ai_int_handler(void)
         g_ai.fifo[0].delay = g_ai.fifo[1].delay;
         g_ai.fifo[0].length = g_ai.fifo[1].length;
         add_interupt_event_count(AI_INT, ai_event+g_ai.fifo[1].delay);
-
-        g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_AI;
-        if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-            g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-        else
-            return;
-        if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-        if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
     }
     else
     {
         remove_interupt_event();
         g_ai.regs[AI_STATUS_REG] &= ~0x40000000;
-
-        //-------
-        g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_AI;
-        if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-            g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-        else
-            return;
-        if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-        if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
     }
-    wrapped_exception_general();
+
+    raise_rcp_interrupt(&g_r4300, MI_INTR_AI);
 }
 
 static void sp_int_handler(void)
@@ -579,14 +553,8 @@ static void sp_int_handler(void)
     // g_sp.regs[SP_STATUS_REG] |= 0x303;
 
     if (!(g_sp.regs[SP_STATUS_REG] & 0x40)) return; // !intr_on_break
-    g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_SP;
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-    else
-        return;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+
+    raise_rcp_interrupt(&g_r4300, MI_INTR_SP);
 }
 
 static void dp_int_handler(void)
@@ -594,26 +562,18 @@ static void dp_int_handler(void)
     remove_interupt_event();
     g_dp.dpc_regs[DPC_STATUS_REG] &= ~2;
     g_dp.dpc_regs[DPC_STATUS_REG] |= 0x81;
-    g_r4300.mi.regs[MI_INTR_REG] |= MI_INTR_DP;
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
-    else
-        return;
-    if ((g_cp0_regs[CP0_STATUS_REG] & 7) != 1) return;
-    if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & 0xFF00)) return;
-    wrapped_exception_general();
+
+    raise_rcp_interrupt(&g_r4300, MI_INTR_DP);
 }
 
 static void hw2_int_handler(void)
 {
     // Hardware Interrupt 2 -- remove interrupt event from queue
     remove_interupt_event();
-    // setup r4300 Status flags: reset TS, and SR, set IM2
+
     g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~0x00380000) | 0x1000;
-    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x1000) & 0xFFFFFF83;
-    /* the exception_general() call below will jump to the interrupt vector (0x80000180) and setup the
-     * interpreter or dynarec
-     */
+    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x1000) & 0xffffff83;
+
     wrapped_exception_general();
 }
 
