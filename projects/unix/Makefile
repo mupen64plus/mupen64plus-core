@@ -97,10 +97,10 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     NEW_DYNAREC := 1
     CFLAGS += -marm
     ifeq ($(NEON), 1)
-        CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
+        CFLAGS += -mfpu=neon -mfloat-abi=hard
     else
       ifeq ($(VFP_HARD), 1)
-        CFLAGS += -mfpu=vfp -mfloat-abi=hard -DVFP_HARD
+        CFLAGS += -mfpu=vfp -mfloat-abi=hard
       else
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
       endif
