@@ -39,6 +39,7 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/debugger.h"
+#include "api/m64p_vidext.h"
 #include "api/vidext.h"
 
 #include "main.h"
@@ -105,6 +106,8 @@ struct rdp_core g_dp;
 struct rsp_core g_sp;
 
 int g_delay_si = 0;
+
+int g_gs_vi_counter = 0;
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
@@ -729,7 +732,7 @@ void new_frame(void)
     }
 }
 
-void new_vi(void)
+static void apply_speed_limiter(void)
 {
     unsigned int CurrentFPSTime;
     static unsigned int LastFPSTime = 0;
@@ -770,7 +773,7 @@ void new_vi(void)
         if (IntegratedDelta < 0 && l_MainSpeedLimit)
         {
             TimeToWait = (IntegratedDelta > ThisFrameDelta) ? -IntegratedDelta : -ThisFrameDelta;
-            DebugMessage(M64MSG_VERBOSE, "    new_vi(): Waiting %ims", TimeToWait);
+            DebugMessage(M64MSG_VERBOSE, "    apply_speed_limiter(): Waiting %ims", TimeToWait);
             SDL_Delay(TimeToWait);
             // recalculate # of milliseconds that have passed since the last video interrupt,
             // taking into account the time we just waited
@@ -786,6 +789,50 @@ void new_vi(void)
     VIDeltasIndex = (VIDeltasIndex + 1) & 63;
 
     timed_section_end(TIMED_SECTION_IDLE);
+}
+
+/* TODO: make a GameShark module and move that there */
+static void gs_apply_cheats(void)
+{
+    if(g_gs_vi_counter < 60)
+    {
+        if (g_gs_vi_counter == 0)
+            cheat_apply_cheats(ENTRY_BOOT);
+        g_gs_vi_counter++;
+    }
+    else
+    {
+        cheat_apply_cheats(ENTRY_VI);
+    }
+}
+
+static void pause_loop(void)
+{
+    if(rompause)
+    {
+        osd_render();  // draw Paused message in case gfx.updateScreen didn't do it
+        VidExt_GL_SwapBuffers();
+        while(rompause)
+        {
+            SDL_Delay(10);
+            main_check_inputs();
+        }
+    }
+}
+
+/* called on vertical interrupt.
+ * Allow the core to perform various things */
+void new_vi(void)
+{
+    gs_apply_cheats();
+
+    main_check_inputs();
+
+    timed_sections_refresh();
+
+    pause_loop();
+
+    apply_speed_limiter();
 }
 
 static void connect_all(
