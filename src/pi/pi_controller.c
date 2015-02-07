@@ -24,7 +24,6 @@
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/main.h"
 #include "main/rom.h"
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
@@ -34,8 +33,8 @@
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
+#include "ri/rdram_detection_hack.h"
 #include "ri/ri_controller.h"
-#include "si/si_controller.h"
 
 #include <string.h>
 
@@ -163,26 +162,11 @@ static void dma_pi_write(struct pi_controller* pi)
         }
     }
 
-    // Set the RDRAM memory size when copying main ROM code
-    // (This is just a convenient way to run this code once at the beginning)
+    /* HACK: monitor PI DMA to trigger RDRAM size detection
+     * hack just before initial cart ROM loading. */
     if (pi->regs[PI_CART_ADDR_REG] == 0x10001000)
     {
-        switch (g_si.pif.cic.version)
-        {
-        case CIC_X101:
-        case CIC_X102:
-        case CIC_X103:
-        case CIC_X106:
-        {
-            pi->ri->rdram.dram[0x318/4] = pi->ri->rdram.dram_size;
-            break;
-        }
-        case CIC_X105:
-        {
-            pi->ri->rdram.dram[0x3f0/4] = pi->ri->rdram.dram_size;
-            break;
-        }
-        }
+        force_detected_rdram_size_hack();
     }
 
     pi->regs[PI_STATUS_REG] |= 3;

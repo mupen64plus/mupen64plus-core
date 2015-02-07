@@ -174,6 +174,7 @@
     <ClCompile Include="..\..\src\r4300\r4300_core.c" />
     <ClCompile Include="..\..\src\rdp\rdp_core.c" />
     <ClCompile Include="..\..\src\ri\rdram.c" />
+    <ClCompile Include="..\..\src\ri\rdram_detection_hack.c" />
     <ClCompile Include="..\..\src\r4300\recomp.c" />
     <ClCompile Include="..\..\src\r4300\x86\regcache.c" />
     <ClCompile Include="..\..\src\r4300\reset.c" />
@@ -266,6 +267,7 @@
     <ClInclude Include="..\..\src\r4300\r4300_core.h" />
     <ClInclude Include="..\..\src\rdp\rdp_core.h" />
     <ClInclude Include="..\..\src\ri\rdram.h" />
+    <ClInclude Include="..\..\src\ri\rdram_detection_hack.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />
     <ClInclude Include="..\..\src\r4300\x86\regcache.h" />
