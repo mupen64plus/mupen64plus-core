@@ -19,38 +19,32 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <string.h>
-
-#include <SDL.h>
-
 #define M64P_CORE_PROTOTYPES 1
+
+#include "interupt.h"
+#include "cached_interp.h"
+#include "cp0.h"
+#include "exception.h"
+#include "new_dynarec/new_dynarec.h"
+#include "r4300.h"
+#include "r4300_core.h"
+#include "reset.h"
+
 #include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "api/m64p_vidext.h"
-#include "api/vidext.h"
-#include "memory/memory.h"
-#include "main/rom.h"
 #include "main/main.h"
-#include "main/profile.h"
 #include "main/savestates.h"
-#include "main/cheat.h"
-#include "osd/osd.h"
 #include "pi/pi_controller.h"
-#include "plugin/plugin.h"
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
-#include "interupt.h"
-#include "r4300.h"
-#include "r4300_core.h"
-#include "cached_interp.h"
-#include "cp0.h"
-#include "exception.h"
-#include "reset.h"
-#include "new_dynarec/new_dynarec.h"
+
+#include <string.h>
+
+#include <SDL.h>
 
 int interupt_unsafe_state = 0;
 
@@ -432,12 +426,6 @@ static void special_int_handler(void)
     add_interupt_event_count(SPECIAL_INT, 0);
 }
 
-static void vi_int_handler(void)
-{
-    remove_interupt_event();
-    vi_vertical_interrupt_event(&g_vi);
-}
-
 static void compare_int_handler(void)
 {
     remove_interupt_event();
@@ -446,47 +434,6 @@ static void compare_int_handler(void)
     g_cp0_regs[CP0_COUNT_REG]-=count_per_op;
 
     raise_maskable_interrupt(0x8000);
-}
-
-static void check_int_handler(void)
-{
-    remove_interupt_event();
-    wrapped_exception_general();
-}
-
-static void si_int_handler(void)
-{
-    remove_interupt_event();
-
-    si_end_of_dma_event(&g_si);
-}
-
-static void pi_int_handler(void)
-{
-    remove_interupt_event();
-
-    pi_end_of_dma_event(&g_pi);
-}
-
-static void ai_int_handler(unsigned int ai_event)
-{
-    remove_interupt_event();
-
-    ai_end_of_dma_event(&g_ai, ai_event);
-}
-
-static void sp_int_handler(void)
-{
-    remove_interupt_event();
-
-    rsp_interrupt_event(&g_sp);
-}
-
-static void dp_int_handler(void)
-{
-    remove_interupt_event();
-
-    rdp_interrupt_event(&g_dp);
 }
 
 static void hw2_int_handler(void)
@@ -539,6 +486,8 @@ static void nmi_int_handler(void)
 
 void gen_interupt(void)
 {
+    unsigned int ai_event;
+
     if (stop == 1)
     {
         g_gs_vi_counter = 0; // debug
@@ -583,7 +532,8 @@ void gen_interupt(void)
             break;
 
         case VI_INT:
-            vi_int_handler();
+            remove_interupt_event();
+            vi_vertical_interrupt_event(&g_vi);
             break;
     
         case COMPARE_INT:
@@ -591,27 +541,34 @@ void gen_interupt(void)
             break;
     
         case CHECK_INT:
-            check_int_handler();
+            remove_interupt_event();
+            wrapped_exception_general();
             break;
     
         case SI_INT:
-            si_int_handler();
+            remove_interupt_event();
+            si_end_of_dma_event(&g_si);
             break;
     
         case PI_INT:
-            pi_int_handler();
+            remove_interupt_event();
+            pi_end_of_dma_event(&g_pi);
             break;
     
         case AI_INT:
-            ai_int_handler(q.first->data.count);
+            ai_event = q.first->data.count;
+            remove_interupt_event();
+            ai_end_of_dma_event(&g_ai, ai_event);
             break;
 
         case SP_INT:
-            sp_int_handler();
+            remove_interupt_event();
+            rsp_interrupt_event(&g_sp);
             break;
     
         case DP_INT:
-            dp_int_handler();
+            remove_interupt_event();
+            rdp_interrupt_event(&g_dp);
             break;
 
         case HW2_INT:
