@@ -864,6 +864,7 @@ static void connect_all(
 m64p_error main_run(void)
 {
     size_t i;
+    unsigned int disable_extra_mem;
     struct eep_file eep;
     struct fla_file fla;
     struct mpk_file mpk;
@@ -877,6 +878,7 @@ m64p_error main_run(void)
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+    disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
@@ -891,7 +893,7 @@ m64p_error main_run(void)
 
     connect_all(&g_r4300, &g_dp, &g_sp,
                 &g_ai, &g_pi, &g_ri, &g_si, &g_vi,
-                g_rdram, RDRAM_MAX_SIZE,
+                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
                 g_rom, g_rom_size);
 
     init_memory();
