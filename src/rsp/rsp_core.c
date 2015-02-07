@@ -325,3 +325,12 @@ void do_SP_Task(struct rsp_core* sp)
     }
 }
 
+void rsp_interrupt_event(struct rsp_core* sp)
+{
+    sp->regs[SP_STATUS_REG] |= 0x203;
+
+    if ((sp->regs[SP_STATUS_REG] & 0x40) != 0)
+    {
+        raise_rcp_interrupt(sp->r4300, MI_INTR_SP);
+    }
+}

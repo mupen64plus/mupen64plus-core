@@ -478,12 +478,8 @@ static void ai_int_handler(unsigned int ai_event)
 static void sp_int_handler(void)
 {
     remove_interupt_event();
-    g_sp.regs[SP_STATUS_REG] |= 0x203;
-    // g_sp.regs[SP_STATUS_REG] |= 0x303;
 
-    if (!(g_sp.regs[SP_STATUS_REG] & 0x40)) return; // !intr_on_break
-
-    raise_rcp_interrupt(&g_r4300, MI_INTR_SP);
+    rsp_interrupt_event(&g_sp);
 }
 
 static void dp_int_handler(void)
