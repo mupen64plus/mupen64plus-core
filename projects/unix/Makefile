@@ -96,11 +96,19 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     PIC ?= 1
     NEW_DYNAREC := 1
     CFLAGS += -marm
+    ifneq ("$(filter armv5%,$(HOST_CPU))","")
+    	CFLAGS += -DARMv5_ONLY
+    	$(warning Using ARMv5_ONLY)
+    endif
+    ifneq ("$(filter armv6%,$(HOST_CPU))","")
+    	CFLAGS += -DARMv5_ONLY
+    	$(warning Using ARMv5_ONLY)
+    endif
     ifeq ($(NEON), 1)
-        CFLAGS += -mfpu=neon -mfloat-abi=hard -DNEON
+        CFLAGS += -mfpu=neon -mfloat-abi=hard
     else
       ifeq ($(VFP_HARD), 1)
-        CFLAGS += -mfpu=vfp -mfloat-abi=hard -DVFP_HARD
+        CFLAGS += -mfpu=vfp -mfloat-abi=hard
       else
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
       endif
