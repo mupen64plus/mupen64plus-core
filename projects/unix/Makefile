@@ -397,6 +397,7 @@ OBJDIR = _obj$(POSTFIX)
 
 # list of required source files for compilation
 SOURCE = \
+	$(SRCDIR)/ai/ai_controller.c \
 	$(SRCDIR)/api/callbacks.c \
 	$(SRCDIR)/api/common.c \
 	$(SRCDIR)/api/config.c \
@@ -413,11 +414,11 @@ SOURCE = \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
 	$(SRCDIR)/main/workqueue.c \
-	$(SRCDIR)/memory/dma.c \
-	$(SRCDIR)/memory/flashram.c \
 	$(SRCDIR)/memory/memory.c \
-	$(SRCDIR)/memory/n64_cic_nus_6105.c \
-	$(SRCDIR)/memory/pif.c \
+	$(SRCDIR)/pi/cart_rom.c \
+	$(SRCDIR)/pi/flashram.c \
+	$(SRCDIR)/pi/pi_controller.c \
+	$(SRCDIR)/pi/sram.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
@@ -430,10 +431,26 @@ SOURCE = \
 	$(SRCDIR)/r4300/exception.c \
 	$(SRCDIR)/r4300/instr_counters.c \
 	$(SRCDIR)/r4300/interupt.c \
+	$(SRCDIR)/r4300/mi_controller.c \
 	$(SRCDIR)/r4300/pure_interp.c \
+	$(SRCDIR)/r4300/r4300_core.c \
 	$(SRCDIR)/r4300/recomp.c \
 	$(SRCDIR)/r4300/reset.c \
 	$(SRCDIR)/r4300/tlb.c \
+	$(SRCDIR)/rdp/fb.c \
+	$(SRCDIR)/rdp/rdp_core.c \
+	$(SRCDIR)/ri/rdram.c \
+	$(SRCDIR)/ri/ri_controller.c \
+	$(SRCDIR)/rsp/rsp_core.c \
+	$(SRCDIR)/si/af_rtc.c \
+	$(SRCDIR)/si/cic.c \
+	$(SRCDIR)/si/eeprom.c \
+	$(SRCDIR)/si/game_controller.c \
+	$(SRCDIR)/si/mempak.c \
+	$(SRCDIR)/si/n64_cic_nus_6105.c \
+	$(SRCDIR)/si/pif.c \
+	$(SRCDIR)/si/si_controller.c \
+	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp
 ifeq ("$(OS)","MINGW")
 SOURCE += \

@@ -22,14 +22,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
 #include "memory/memory.h"
 #include "main/main.h"
 #include "main/rom.h"
+#include "pi/pi_controller.h"
+#include "rsp/rsp_core.h"
+#include "si/si_controller.h"
+#include "vi/vi_controller.h"
 
 #include "r4300.h"
+#include "r4300_core.h"
 #include "cached_interp.h"
 #include "cp0.h"
 #include "cp1.h"
@@ -154,24 +160,6 @@ static unsigned int get_tv_type(void)
     }
 }
 
-static unsigned int get_cic_seed(void)
-{
-    switch(g_cic_type)
-    {
-        default:
-            DebugMessage(M64MSG_WARNING, "Unknown CIC (%d)! using CIC 6102.", g_cic_type);
-        case CIC_X101:
-        case CIC_X102:
-            return 0x3f;
-        case CIC_X103:
-            return 0x78;
-        case CIC_X105:
-            return 0x91;
-        case CIC_X106:
-            return 0x85;
-    }
-}
-
 /* Simulates end result of PIFBootROM execution */
 void r4300_reset_soft(void)
 {
@@ -179,47 +167,46 @@ void r4300_reset_soft(void)
     unsigned int reset_type = 0;            /* 0:ColdReset, 1:NMI */
     unsigned int s7 = 0;                    /* ??? */
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
-    unsigned int cic_seed = get_cic_seed();
-    uint32_t bsd_dom1_config = *(uint32_t*)rom;
+    uint32_t bsd_dom1_config = *(uint32_t*)g_rom;
 
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-    g_sp_regs[SP_STATUS_REG] = 1;
-    g_sp_regs2[SP_PC_REG] = 0;
+    g_sp.regs[SP_STATUS_REG] = 1;
+    g_sp.regs2[SP_PC_REG] = 0;
 
-    g_pi_regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
-    g_pi_regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
-    g_pi_regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
-    g_pi_regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
-    g_pi_regs[PI_STATUS_REG] = 0;
+    g_pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
+    g_pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
+    g_pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
+    g_pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
+    g_pi.regs[PI_STATUS_REG] = 0;
 
-    g_ai_regs[AI_DRAM_ADDR_REG] = 0;
-    g_ai_regs[AI_LEN_REG] = 0;
+    g_ai.regs[AI_DRAM_ADDR_REG] = 0;
+    g_ai.regs[AI_LEN_REG] = 0;
 
-    g_vi_regs[VI_V_INTR_REG] = 1023;
-    g_vi_regs[VI_CURRENT_REG] = 0;
-    g_vi_regs[VI_H_START_REG] = 0;
+    g_vi.regs[VI_V_INTR_REG] = 1023;
+    g_vi.regs[VI_CURRENT_REG] = 0;
+    g_vi.regs[VI_H_START_REG] = 0;
 
-    g_mi_regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
+    g_r4300.mi.regs[MI_INTR_REG] &= ~(0x10 | 0x8 | 0x4 | 0x1);
 
-    memcpy((unsigned char*)g_sp_mem+0x40, rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
     reg[21] = reset_type;   /* s5 */
-    reg[22] = cic_seed;     /* s6 */
+    reg[22] = g_si.pif.cic.seed;/* s6 */
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    g_sp_mem[0x1000/4] = 0x3c0dbfc0;
-    g_sp_mem[0x1004/4] = 0x8da807fc;
-    g_sp_mem[0x1008/4] = 0x25ad07c0;
-    g_sp_mem[0x100c/4] = 0x31080080;
-    g_sp_mem[0x1010/4] = 0x5500fffc;
-    g_sp_mem[0x1014/4] = 0x3c0dbfc0;
-    g_sp_mem[0x1018/4] = 0x8da80024;
-    g_sp_mem[0x101c/4] = 0x3c0bb000;
+    g_sp.mem[0x1000/4] = 0x3c0dbfc0;
+    g_sp.mem[0x1004/4] = 0x8da807fc;
+    g_sp.mem[0x1008/4] = 0x25ad07c0;
+    g_sp.mem[0x100c/4] = 0x31080080;
+    g_sp.mem[0x1010/4] = 0x5500fffc;
+    g_sp.mem[0x1014/4] = 0x3c0dbfc0;
+    g_sp.mem[0x1018/4] = 0x8da80024;
+    g_sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = 0xffffffffa4000040ULL; /* t3 */

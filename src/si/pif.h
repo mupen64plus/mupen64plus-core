@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - dma.h                                                   *
+ *   Mupen64plus - pif.h                                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,15 +19,58 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef DMA_H
-#define DMA_H
+#ifndef M64P_SI_PIF_H
+#define M64P_SI_PIF_H
 
-void dma_pi_write(void);
-void dma_pi_read(void);
-void dma_si_write(void);
-void dma_si_read(void);
-void dma_sp_write(void);
-void dma_sp_read(void);
+#include <stdint.h>
+
+#include "af_rtc.h"
+#include "cic.h"
+#include "eeprom.h"
+#include "game_controller.h"
+
+struct si_controller;
+
+enum { PIF_RAM_SIZE = 0x40 };
+
+enum pif_commands
+{
+    PIF_CMD_STATUS = 0x00,
+    PIF_CMD_CONTROLLER_READ = 0x01,
+    PIF_CMD_PAK_READ = 0x02,
+    PIF_CMD_PAK_WRITE = 0x03,
+    PIF_CMD_EEPROM_READ = 0x04,
+    PIF_CMD_EEPROM_WRITE = 0x05,
+    PIF_CMD_AF_RTC_STATUS = 0x06,
+    PIF_CMD_AF_RTC_READ = 0x07,
+    PIF_CMD_AF_RTC_WRITE = 0x08,
+    PIF_CMD_RESET = 0xff,
+};
+
+struct pif
+{
+    uint8_t ram[PIF_RAM_SIZE];
+
+    uint8_t eeprom[EEPROM_MAX_SIZE];
+
+    struct game_controllers controllers;
+
+    struct cic cic;
+};
+
+static inline uint32_t pif_ram_address(uint32_t address)
+{
+    return ((address & 0xfffc) - 0x7c0);
+}
+
+
+void init_pif(struct pif* pif);
+
+int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
+int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void update_pif_write(struct si_controller* si);
+void update_pif_read(struct si_controller* si);
 
 #endif
 

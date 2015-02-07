@@ -24,6 +24,7 @@
 #include <SDL.h>
 
 #define M64P_CORE_PROTOTYPES 1
+#include "ai/ai_controller.h"
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/m64p_vidext.h"
@@ -35,10 +36,16 @@
 #include "main/savestates.h"
 #include "main/cheat.h"
 #include "osd/osd.h"
+#include "pi/pi_controller.h"
 #include "plugin/plugin.h"
+#include "rdp/rdp_core.h"
+#include "rsp/rsp_core.h"
+#include "si/si_controller.h"
+#include "vi/vi_controller.h"
 
 #include "interupt.h"
 #include "r4300.h"
+#include "r4300_core.h"
 #include "cached_interp.h"
 #include "cp0.h"
 #include "exception.h"
@@ -352,7 +359,7 @@ void init_interupt(void)
 {
     SPECIAL_done = 1;
     next_vi = next_interupt = 5000;
-    g_vi_delay = next_vi;
+    g_vi.delay = next_vi;
     vi_field = 0;
 
     clear_queue();
@@ -364,7 +371,7 @@ void check_interupt(void)
 {
     struct node* event;
 
-    if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
         g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
     else
         g_cp0_regs[CP0_CAUSE_REG] &= ~0x400;
@@ -478,17 +485,17 @@ void gen_interupt(void)
             }
 
             new_vi();
-            if (g_vi_regs[VI_V_SYNC_REG] == 0) g_vi_delay = 500000;
-            else g_vi_delay = ((g_vi_regs[VI_V_SYNC_REG] + 1)*1500);
-            next_vi += g_vi_delay;
-            if (g_vi_regs[VI_STATUS_REG]&0x40) vi_field=1-vi_field;
+            if (g_vi.regs[VI_V_SYNC_REG] == 0) g_vi.delay = 500000;
+            else g_vi.delay = ((g_vi.regs[VI_V_SYNC_REG] + 1)*1500);
+            next_vi += g_vi.delay;
+            if (g_vi.regs[VI_STATUS_REG]&0x40) vi_field=1-vi_field;
             else vi_field=0;
 
             remove_interupt_event();
             add_interupt_event_count(VI_INT, next_vi);
     
-            g_mi_regs[MI_INTR_REG] |= 0x08;
-            if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+            g_r4300.mi.regs[MI_INTR_REG] |= 0x08;
+            if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
@@ -516,11 +523,11 @@ void gen_interupt(void)
             lircCheckInput();
 #endif //WITH_LIRC
             SDL_PumpEvents();
-            g_pif_ram[0x3f] = 0x0;
+            g_si.pif.ram[0x3f] = 0x0;
             remove_interupt_event();
-            g_mi_regs[MI_INTR_REG] |= 0x02;
-            g_si_regs[SI_STATUS_REG] |= 0x1000;
-            if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+            g_r4300.mi.regs[MI_INTR_REG] |= 0x02;
+            g_si.regs[SI_STATUS_REG] |= 0x1000;
+            if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
@@ -530,9 +537,9 @@ void gen_interupt(void)
     
         case PI_INT:
             remove_interupt_event();
-            g_mi_regs[MI_INTR_REG] |= 0x10;
-            g_pi_regs[PI_STATUS_REG] &= ~3;
-            if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+            g_r4300.mi.regs[MI_INTR_REG] |= 0x10;
+            g_pi.regs[PI_STATUS_REG] &= ~3;
+            if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
@@ -541,17 +548,17 @@ void gen_interupt(void)
             break;
     
         case AI_INT:
-            if (g_ai_regs[AI_STATUS_REG] & 0x80000000) // full
+            if (g_ai.regs[AI_STATUS_REG] & 0x80000000) // full
             {
                 unsigned int ai_event = get_event(AI_INT);
                 remove_interupt_event();
-                g_ai_regs[AI_STATUS_REG] &= ~0x80000000;
-                g_ai_fifo[0].delay = g_ai_fifo[1].delay;
-                g_ai_fifo[0].length = g_ai_fifo[1].length;
-                add_interupt_event_count(AI_INT, ai_event+g_ai_fifo[1].delay);
+                g_ai.regs[AI_STATUS_REG] &= ~0x80000000;
+                g_ai.fifo[0].delay = g_ai.fifo[1].delay;
+                g_ai.fifo[0].length = g_ai.fifo[1].length;
+                add_interupt_event_count(AI_INT, ai_event+g_ai.fifo[1].delay);
          
-                g_mi_regs[MI_INTR_REG] |= 0x04;
-                if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+                g_r4300.mi.regs[MI_INTR_REG] |= 0x04;
+                if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                     g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
                 else
                     return;
@@ -561,11 +568,11 @@ void gen_interupt(void)
             else
             {
                 remove_interupt_event();
-                g_ai_regs[AI_STATUS_REG] &= ~0x40000000;
+                g_ai.regs[AI_STATUS_REG] &= ~0x40000000;
 
                 //-------
-                g_mi_regs[MI_INTR_REG] |= 0x04;
-                if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+                g_r4300.mi.regs[MI_INTR_REG] |= 0x04;
+                if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                     g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
                 else
                     return;
@@ -576,12 +583,12 @@ void gen_interupt(void)
 
         case SP_INT:
             remove_interupt_event();
-            g_sp_regs[SP_STATUS_REG] |= 0x203;
-            // g_sp_regs[SP_STATUS_REG] |= 0x303;
+            g_sp.regs[SP_STATUS_REG] |= 0x203;
+            // g_sp.regs[SP_STATUS_REG] |= 0x303;
     
-            if (!(g_sp_regs[SP_STATUS_REG] & 0x40)) return; // !intr_on_break
-            g_mi_regs[MI_INTR_REG] |= 0x01;
-            if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+            if (!(g_sp.regs[SP_STATUS_REG] & 0x40)) return; // !intr_on_break
+            g_r4300.mi.regs[MI_INTR_REG] |= 0x01;
+            if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
@@ -591,10 +598,10 @@ void gen_interupt(void)
     
         case DP_INT:
             remove_interupt_event();
-            g_dpc_regs[DPC_STATUS_REG] &= ~2;
-            g_dpc_regs[DPC_STATUS_REG] |= 0x81;
-            g_mi_regs[MI_INTR_REG] |= 0x20;
-            if (g_mi_regs[MI_INTR_REG] & g_mi_regs[MI_INTR_MASK_REG])
+            g_dp.dpc_regs[DPC_STATUS_REG] &= ~2;
+            g_dp.dpc_regs[DPC_STATUS_REG] |= 0x81;
+            g_r4300.mi.regs[MI_INTR_REG] |= 0x20;
+            if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
                 g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | 0x400) & 0xFFFFFF83;
             else
                 return;
@@ -626,7 +633,7 @@ void gen_interupt(void)
             vi_counter = 0;
             init_interupt();
             // clear the audio status register so that subsequent write_ai() calls will work properly
-            g_ai_regs[AI_STATUS_REG] = 0;
+            g_ai.regs[AI_STATUS_REG] = 0;
             // set ErrorEPC with the last instruction address
             g_cp0_regs[CP0_ERROREPC_REG] = PC->addr;
             // reset the r4300 internal state

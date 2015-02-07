@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - flashram.h                                              *
+ *   Mupen64plus - cart_rom.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 Hacktarux                                          *
+ *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,18 +19,31 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-typedef struct _flashram_info
+#ifndef M64P_PI_CART_ROM_H
+#define M64P_PI_CART_ROM_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+struct cart_rom
 {
-	int use_flashram;
-	int mode;
-	unsigned long long status;
-	unsigned int erase_offset, write_pointer;
-} Flashram_info;
+    uint8_t* rom;
+    size_t rom_size;
 
-extern Flashram_info flashram_info;
+    uint32_t last_write;
+};
 
-void init_flashram(void);
-void flashram_command(unsigned int command);
-unsigned int flashram_status(void);
-void dma_read_flashram(void);
-void dma_write_flashram(void);
+static inline uint32_t rom_address(uint32_t address)
+{
+    return (address & 0x03fffffc);
+}
+
+void connect_cart_rom(struct cart_rom* cart_rom,
+                      uint8_t* rom, size_t rom_size);
+
+void init_cart_rom(struct cart_rom* cart_rom);
+
+int read_cart_rom(void* opaque, uint32_t address, uint32_t* value);
+int write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+#endif

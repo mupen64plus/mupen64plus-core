@@ -37,7 +37,10 @@
 #include "new_dynarec.h"
 
 #include "../../memory/memory.h"
+#include "../../main/main.h"
 #include "../../main/rom.h"
+
+#include "rsp/rsp_core.h"
 
 #include <sys/mman.h>
 
@@ -321,17 +324,17 @@ static void tlb_hacks()
         addr=0;
         break;
     }
-    u_int rom_addr=(u_int)rom;
+    u_int rom_addr=(u_int)g_rom;
     #ifdef ROM_COPY
     // Since memory_map is 32-bit, on 64-bit systems the rom needs to be
     // in the lower 4G of memory to use this hack.  Copy it if necessary.
-    if((void *)rom>(void *)0xffffffff) {
+    if((void *)g_rom>(void *)0xffffffff) {
       munmap(ROM_COPY, 67108864);
       if(mmap(ROM_COPY, 12582912,
               PROT_READ | PROT_WRITE,
               MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
               -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
-      memcpy(ROM_COPY,rom,12582912);
+      memcpy(ROM_COPY,g_rom,12582912);
       rom_addr=(u_int)ROM_COPY;
     }
     #endif
@@ -7675,7 +7678,7 @@ int new_recompile_block(int addr)
   start = (u_int)addr&~3;
   //assert(((u_int)addr&1)==0);
   if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
-    source = (u_int *)((u_int)g_sp_mem+start-0xa4000000);
+    source = (u_int *)((u_int)g_sp.mem+start-0xa4000000);
     pagelimit = 0xa4001000;
   }
   else if ((int)addr >= 0x80000000 && (int)addr < 0x80800000) {

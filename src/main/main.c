@@ -49,15 +49,23 @@
 #include "savestates.h"
 #include "util.h"
 
+#include "ai/ai_controller.h"
 #include "memory/memory.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
+#include "pi/pi_controller.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300.h"
+#include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
 #include "r4300/reset.h"
+#include "rdp/rdp_core.h"
+#include "ri/ri_controller.h"
+#include "rsp/rsp_core.h"
+#include "si/si_controller.h"
+#include "vi/vi_controller.h"
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
@@ -78,6 +86,18 @@ m64p_frame_callback g_FrameCallback = NULL;
 
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
+
+ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
+struct ai_controller g_ai;
+struct pi_controller g_pi;
+struct ri_controller g_ri;
+struct si_controller g_si;
+struct vi_controller g_vi;
+struct r4300_core g_r4300;
+struct rdp_core g_dp;
+struct rsp_core g_sp;
+
+int g_delay_si = 0;
 
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
@@ -740,6 +760,29 @@ void new_vi(void)
     timed_section_end(TIMED_SECTION_IDLE);
 }
 
+static void connect_all(
+        struct r4300_core* r4300,
+        struct rdp_core* dp,
+        struct rsp_core* sp,
+        struct ai_controller* ai,
+        struct pi_controller* pi,
+        struct ri_controller* ri,
+        struct si_controller* si,
+        struct vi_controller* vi,
+        uint32_t* dram,
+        size_t dram_size,
+        uint8_t* rom,
+        size_t rom_size)
+{
+    connect_rdp(dp, r4300, sp, ri);
+    connect_rsp(sp, r4300, dp, ri);
+    connect_ai(ai, r4300, vi);
+    connect_pi(pi, r4300, ri, rom, rom_size);
+    connect_ri(ri, dram, dram_size);
+    connect_si(si, r4300, ri);
+    connect_vi(vi, r4300);
+}
+
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
@@ -752,7 +795,7 @@ m64p_error main_run(void)
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
-    delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+    g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
@@ -761,9 +804,14 @@ m64p_error main_run(void)
     /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)
     {
-        swap_buffer(rom, 4, rom_size/4);
+        swap_buffer(g_rom, 4, g_rom_size/4);
         g_MemHasBeenBSwapped = 1;
     }
+
+    connect_all(&g_r4300, &g_dp, &g_sp,
+                &g_ai, &g_pi, &g_ri, &g_si, &g_vi,
+                g_rdram, RDRAM_MAX_SIZE,
+                g_rom, g_rom_size);
 
     init_memory();
 

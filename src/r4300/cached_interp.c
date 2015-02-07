@@ -24,6 +24,7 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
+#include "main/main.h"
 #include "memory/memory.h"
 
 #include "r4300.h"

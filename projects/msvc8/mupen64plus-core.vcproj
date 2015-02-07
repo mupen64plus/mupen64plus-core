@@ -183,6 +183,14 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\src\si\af_rtc.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\ai\ai_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\assemble.c"
 				>
 			</File>
@@ -195,7 +203,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pi\cart_rom.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\cheat.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\cic.c"
 				>
 			</File>
 			<File
@@ -253,10 +269,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\dma.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\plugin\dummy_audio.c"
 				>
 			</File>
@@ -277,6 +289,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\eeprom.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\eventloop.c"
 				>
 			</File>
@@ -285,15 +301,23 @@
 				>
 			</File>
 			<File
+                RelativePath="..\..\src\rdp\fb.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\osal\files_win32.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\flashram.c"
+				RelativePath="..\..\src\pi\flashram.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\api\frontend.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\game_controller.c"
 				>
 			</File>
 			<File
@@ -369,7 +393,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\n64_cic_nus_6105.c"
+				RelativePath="..\..\src\si\mempak.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\mi_controller.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\n64_cic_nus_6105.c"
 				>
 			</File>
 			<File
@@ -381,7 +413,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\pif.c"
+				RelativePath="..\..\src\pi\pi_controller.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\pif.c"
 				>
 			</File>
 			<File
@@ -401,6 +437,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\r4300_core.c"
+				>
+			</File>
+			<File
+                RelativePath="..\..\src\rdp\rdp_core.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\ri\rdram.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\recomp.c"
 				>
 			</File>
@@ -413,11 +461,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\ri\ri_controller.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\rjump.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\main\rom.c"
+				>
+            </File>
+			<File
+				RelativePath="..\..\src\rsp\rsp_core.c"
 				>
 			</File>
 			<File
@@ -433,6 +489,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\si_controller.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pi\sram.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\tlb.c"
 				>
 			</File>
@@ -442,6 +506,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\util.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vi\vi_controller.c"
 				>
 			</File>
 			<File
@@ -463,6 +531,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\src\si\af_rtc.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\ai\ai_controller.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\x86\assemble.h"
 				>
 			</File>
@@ -475,7 +551,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pi\cart_rom.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\cheat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\cic.h"
 				>
 			</File>
 			<File
@@ -523,10 +607,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\dma.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\plugin\dummy_audio.h"
 				>
 			</File>
@@ -547,6 +627,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\si\eeprom.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\eventloop.h"
 				>
 			</File>
@@ -555,11 +639,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\rdp\fb.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\osal\files.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\flashram.h"
+				RelativePath="..\..\src\pi\flashram.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\game_controller.h"
 				>
 			</File>
 			<File
@@ -627,7 +719,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\n64_cic_nus_6105.h"
+				RelativePath="..\..\src\si\mempak.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\r4300\mi_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\n64_cic_nus_6105.h"
 				>
 			</File>
 			<File
@@ -643,7 +743,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\memory\pif.h"
+				RelativePath="..\..\src\pi\pi_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\pif.h"
 				>
 			</File>
 			<File
@@ -667,6 +771,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\r4300\r4300_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\rdp\rdp_core.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\ri\rdram.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\r4300\recomp.h"
 				>
 			</File>
@@ -683,7 +799,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\ri\ri_controller.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\rom.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\rsp\rsp_core.h"
 				>
 			</File>
 			<File
@@ -696,6 +820,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osd\screenshot.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\si_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pi\sram.h"
 				>
 			</File>
 			<File
@@ -712,6 +844,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\main\version.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vi\vi_controller.h"
 				>
 			</File>
 			<File

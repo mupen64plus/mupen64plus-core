@@ -26,6 +26,7 @@
 #include "api/callbacks.h"
 #include "api/debugger.h"
 #include "memory/memory.h"
+#include "main/main.h"
 #include "main/rom.h"
 #include "osal/preproc.h"
 
