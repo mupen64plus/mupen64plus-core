@@ -140,3 +140,11 @@ int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     return 0;
 }
 
+void rdp_interrupt_event(struct rdp_core* dp)
+{
+    dp->dpc_regs[DPC_STATUS_REG] &= ~2;
+    dp->dpc_regs[DPC_STATUS_REG] |= 0x81;
+
+    raise_rcp_interrupt(dp->r4300, MI_INTR_DP);
+}
+

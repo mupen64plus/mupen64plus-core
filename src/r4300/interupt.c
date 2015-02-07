@@ -485,10 +485,8 @@ static void sp_int_handler(void)
 static void dp_int_handler(void)
 {
     remove_interupt_event();
-    g_dp.dpc_regs[DPC_STATUS_REG] &= ~2;
-    g_dp.dpc_regs[DPC_STATUS_REG] |= 0x81;
 
-    raise_rcp_interrupt(&g_r4300, MI_INTR_DP);
+    rdp_interrupt_event(&g_dp);
 }
 
 static void hw2_int_handler(void)
