@@ -25,6 +25,11 @@
 #include <stdint.h> //include for uint64_t
 #include <assert.h>
 
+#if defined(__APPLE__)
+#include <sys/types.h> // needed for u_int, u_char, etc
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 #include "../recomp.h"
 #include "../recomph.h" //include for function prototypes
 #include "../cp0.h"
