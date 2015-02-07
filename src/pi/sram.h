@@ -22,9 +22,23 @@
 #ifndef M64P_PI_SRAM_H
 #define M64P_PI_SRAM_H
 
+#include <stdint.h>
+
 struct pi_controller;
 
 enum { SRAM_SIZE = 0x8000 };
+
+struct sram
+{
+    /* external sram storage */
+    void* user_data;
+    void (*save)(void*);
+    uint8_t* data;
+};
+
+void sram_save(struct sram* sram);
+
+void format_sram(uint8_t* sram);
 
 void dma_write_sram(struct pi_controller* pi);
 void dma_read_sram(struct pi_controller* pi);

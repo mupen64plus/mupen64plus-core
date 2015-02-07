@@ -44,16 +44,16 @@ void print_pif(struct pif* pif)
 }
 #endif
 
-static void process_cart_command(struct pif* pif, int channel, uint8_t* cmd)
+static void process_cart_command(struct pif* pif, uint8_t* cmd)
 {
     switch (cmd[2])
     {
-    case PIF_CMD_STATUS: eeprom_status_command(pif, channel, cmd); break;
-    case PIF_CMD_EEPROM_READ: eeprom_read_command(pif, channel, cmd); break;
-    case PIF_CMD_EEPROM_WRITE: eeprom_write_command(pif, channel, cmd); break;
-    case PIF_CMD_AF_RTC_STATUS: af_rtc_status_command(pif, channel, cmd); break;
-    case PIF_CMD_AF_RTC_READ: af_rtc_read_command(pif, channel, cmd); break;
-    case PIF_CMD_AF_RTC_WRITE: af_rtc_write_command(pif, channel, cmd); break;
+    case PIF_CMD_STATUS: eeprom_status_command(&pif->eeprom, cmd); break;
+    case PIF_CMD_EEPROM_READ: eeprom_read_command(&pif->eeprom, cmd); break;
+    case PIF_CMD_EEPROM_WRITE: eeprom_write_command(&pif->eeprom, cmd); break;
+    case PIF_CMD_AF_RTC_STATUS: af_rtc_status_command(&pif->af_rtc, cmd); break;
+    case PIF_CMD_AF_RTC_READ: af_rtc_read_command(&pif->af_rtc, cmd); break;
+    case PIF_CMD_AF_RTC_WRITE: af_rtc_write_command(&pif->af_rtc, cmd); break;
     default:
         DebugMessage(M64MSG_ERROR, "unknown PIF command: %02x", cmd[2]);
     }
@@ -174,10 +174,10 @@ void update_pif_write(struct si_controller* si)
                     if (Controls[channel].Present && Controls[channel].RawData)
                         input.controllerCommand(channel, &pif->ram[i]);
                     else
-                        process_controller_command(pif, channel, &pif->ram[i]);
+                        process_controller_command(&pif->controllers[channel], &pif->ram[i]);
                 }
                 else if (channel == 4)
-                    process_cart_command(pif, channel, &pif->ram[i]);
+                    process_cart_command(pif, &pif->ram[i]);
                 else
                     DebugMessage(M64MSG_ERROR, "channel >= 4 in update_pif_write");
                 i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;
@@ -225,7 +225,7 @@ void update_pif_read(struct si_controller* si)
                     if (Controls[channel].Present && Controls[channel].RawData)
                         input.readController(channel, &pif->ram[i]);
                     else
-                        read_controller(pif, channel, &pif->ram[i]);
+                        read_controller(&pif->controllers[channel], &pif->ram[i]);
                 }
 
                 i += pif->ram[i] + (pif->ram[(i+1)] & 0x3F) + 1;

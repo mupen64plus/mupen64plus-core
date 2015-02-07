@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - af_rtc.c                                                *
+ *   Mupen64plus - eep_file.c                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,65 +19,61 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "af_rtc.h"
+#include "eep_file.h"
+#include "util.h"
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "si/eeprom.h"
 
-#include <time.h>
+#include <stdlib.h>
 
-static unsigned char byte2bcd(int n)
+void open_eep_file(struct eep_file* eep, const char* filename)
 {
-    n %= 100;
-    return ((n / 10) << 4) | (n % 10);
-}
+    /* ! Take ownership of filename ! */
+    eep->filename = filename;
 
-const struct tm* af_rtc_get_time(struct af_rtc* rtc)
-{
-    return rtc->get_time(rtc->user_data);
-}
-
-void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
-{
-    /* AF-RTC status query */
-    cmd[3] = 0x00;
-    cmd[4] = 0x10;
-    cmd[5] = 0x00;
-}
-
-void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
-{
-    const struct tm *rtc_time;
-
-    /* read RTC block (cmd[3]: block number) */
-    switch (cmd[3])
+    /* try to load eep file content */
+    switch(read_from_file(eep->filename, eep->eeprom, EEPROM_MAX_SIZE))
     {
-    case 0:
-        cmd[4] = 0x00;
-        cmd[5] = 0x02;
-        cmd[12] = 0x00;
+    case file_open_error:
+        /* if no prior file exists, provide default eeprom content */
+        DebugMessage(M64MSG_VERBOSE, "couldn't open eeprom file '%s' for reading", eep->filename);
+        format_eeprom(eep->eeprom, EEPROM_MAX_SIZE);
         break;
-    case 1:
-        DebugMessage(M64MSG_ERROR, "AF-RTC read command: cannot read block 1");
+    case file_read_error:
+        DebugMessage(M64MSG_WARNING, "failed to read eeprom file '%s'", eep->filename);
         break;
-    case 2:
-        rtc_time = af_rtc_get_time(rtc);
-        cmd[4] = byte2bcd(rtc_time->tm_sec);
-        cmd[5] = byte2bcd(rtc_time->tm_min);
-        cmd[6] = 0x80 + byte2bcd(rtc_time->tm_hour);
-        cmd[7] = byte2bcd(rtc_time->tm_mday);
-        cmd[8] = byte2bcd(rtc_time->tm_wday);
-        cmd[9] = byte2bcd(rtc_time->tm_mon + 1);
-        cmd[10] = byte2bcd(rtc_time->tm_year);
-        cmd[11] = byte2bcd(rtc_time->tm_year / 100);
-        cmd[12] = 0x00;	// status
+    default:
         break;
     }
 }
 
-void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd)
+void close_eep_file(struct eep_file* eep)
 {
-    /* write RTC block */
-    DebugMessage(M64MSG_ERROR, "AF-RTC write command: not yet implemented");
+    free((void*)eep->filename);
+}
+
+uint8_t* eep_file_ptr(struct eep_file* eep)
+{
+    return eep->eeprom;
+}
+
+void save_eep_file(void* opaque)
+{
+    /* flush eeprom to disk */
+    struct eep_file* eep = (struct eep_file*)opaque;
+
+    switch(write_to_file(eep->filename, eep->eeprom, EEPROM_MAX_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open eeprom file '%s' for writing", eep->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write eeprom file '%s'", eep->filename);
+        break;
+    default:
+        break;
+    }
 }
 

@@ -24,10 +24,19 @@
 
 #include <stdint.h>
 
-struct pif;
+struct tm;
 
-void af_rtc_status_command(struct pif* pif, int channel, uint8_t* cmd);
-void af_rtc_read_command(struct pif* pif, int channel, uint8_t* cmd);
-void af_rtc_write_command(struct pif* pif, int channel, uint8_t* cmd);
+struct af_rtc
+{
+    /* external time source */
+    void* user_data;
+    const struct tm* (*get_time)(void*);
+};
+
+const struct tm* af_rtc_get_time(struct af_rtc* rtc);
+
+void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd);
 
 #endif

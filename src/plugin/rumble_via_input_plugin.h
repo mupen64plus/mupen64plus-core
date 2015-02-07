@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - rumble_via_input_plugin.h                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#ifndef M64P_PLUGIN_RUMBLE_VIA_INPUT_PLUGIN_H
+#define M64P_PLUGIN_RUMBLE_VIA_INPUT_PLUGIN_H
 
-#include <stddef.h>
-#include <stdint.h>
+enum rumble_action;
 
-struct eeprom
-{
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
-};
-
-
-void eeprom_save(struct eeprom* eeprom);
-
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void rvip_rumble(void* opaque, enum rumble_action action);
 
 #endif

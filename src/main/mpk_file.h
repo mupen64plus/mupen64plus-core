@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - mpk_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,26 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#ifndef M64P_MAIN_MPK_FILE_H
+#define M64P_MAIN_MPK_FILE_H
+
+#include "si/mempak.h"
+#include "si/pif.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct eeprom
+struct mpk_file
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
+    uint8_t mempaks[GAME_CONTROLLERS_COUNT][MEMPAK_SIZE];
+    const char* filename;
 };
 
+void open_mpk_file(struct mpk_file* mpk, const char* filename);
+void close_mpk_file(struct mpk_file* mpk);
 
-void eeprom_save(struct eeprom* eeprom);
+uint8_t* mpk_file_ptr(struct mpk_file* mpk, size_t controller_idx);
 
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void save_mpk_file(void* opaque);
 
 #endif

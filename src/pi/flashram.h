@@ -40,7 +40,11 @@ enum flashram_mode
 
 struct flashram
 {
-    uint8_t mem[FLASHRAM_SIZE];
+    /* external sram storage */
+    void* user_data;
+    void (*save)(void*);
+    uint8_t* data;
+
     enum flashram_mode mode;
     uint64_t status;
     unsigned int erase_offset;
@@ -48,6 +52,10 @@ struct flashram
 };
 
 void init_flashram(struct flashram* flashram);
+
+void flashram_save(struct flashram* flashram);
+
+void format_flashram(uint8_t* flash);
 
 int read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
 int write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

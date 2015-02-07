@@ -289,7 +289,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\eep_file.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\si\eeprom.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\emulate_game_controller_via_input_plugin.c"
 				>
 			</File>
 			<File
@@ -306,6 +314,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\osal\files_win32.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\fla_file.c"
 				>
 			</File>
 			<File
@@ -346,6 +358,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\x86\gcop1_w.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\get_time_using_C_localtime.c"
 				>
 			</File>
 			<File
@@ -398,6 +414,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\mi_controller.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\mpk_file.c"
 				>
 			</File>
 			<File
@@ -477,6 +497,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\rumble_via_input_plugin.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\rumblepak.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\savestates.c"
 				>
 			</File>
@@ -490,6 +518,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\si\si_controller.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\sra_file.c"
 				>
 			</File>
 			<File
@@ -627,7 +659,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\eep_file.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\si\eeprom.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\emulate_game_controller_via_input_plugin.h"
 				>
 			</File>
 			<File
@@ -647,11 +687,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\main\fla_file.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\pi\flashram.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\si\game_controller.h"
+				>
+			</File>
+			<File
+                RelativePath="..\..\src\plugin\get_time_using_C_localtime.h"
 				>
 			</File>
 			<File
@@ -724,6 +772,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\r4300\mi_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\mpk_file.h"
 				>
 			</File>
 			<File
@@ -811,6 +863,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\rumble_via_input_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\si\rumblepak.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\savestates.h"
 				>
 			</File>
@@ -824,6 +884,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\si\si_controller.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\main\sram_file.h"
 				>
 			</File>
 			<File

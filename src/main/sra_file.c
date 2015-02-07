@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - sram.c                                                  *
+ *   Mupen64plus - sra_file.c                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,56 +19,61 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "sram.h"
-#include "pi_controller.h"
+#include "sra_file.h"
+#include "util.h"
 
-#include "memory/memory.h"
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "pi/sram.h"
 
-#include "ri/ri_controller.h"
+#include <stdlib.h>
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-
-
-void sram_save(struct sram* sram)
+void open_sra_file(struct sra_file* sra, const char* filename)
 {
-    sram->save(sram->user_data);
+    /* ! Take ownership of filename ! */
+    sra->filename = filename;
+
+    /* try to load sra file content */
+    switch(read_from_file(sra->filename, sra->sram, SRAM_SIZE))
+    {
+    case file_open_error:
+        /* if no prior file exists, provide default sram content */
+        DebugMessage(M64MSG_VERBOSE, "couldn't open sram file '%s' for reading", sra->filename);
+        format_sram(sra->sram);
+        break;
+    case file_read_error:
+        DebugMessage(M64MSG_WARNING, "failed to read sram file '%s'", sra->filename);
+        break;
+    default:
+        break;
+    }
 }
 
-void format_sram(uint8_t* sram)
+void close_sra_file(struct sra_file* sra)
 {
-    memset(sram, 0, SRAM_SIZE);
+    free((void*)sra->filename);
 }
 
-
-void dma_write_sram(struct pi_controller* pi)
+uint8_t* sra_file_ptr(struct sra_file* sra)
 {
-    size_t i;
-    size_t length = (pi->regs[PI_RD_LEN_REG] & 0xffffff) + 1;
-
-    uint8_t* sram = pi->sram.data;
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] - 0x08000000;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-
-    for(i = 0; i < length; ++i)
-        sram[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
-
-    sram_save(&pi->sram);
+    return sra->sram;
 }
 
-void dma_read_sram(struct pi_controller* pi)
+void save_sra_file(void* opaque)
 {
-    size_t i;
-    size_t length = (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1;
+    /* flush sram to disk */
+    struct sra_file* sra = (struct sra_file*)opaque;
 
-    uint8_t* sram = pi->sram.data;
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = (pi->regs[PI_CART_ADDR_REG] - 0x08000000) & 0xffff;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-
-    for(i = 0; i < length; ++i)
-        dram[(dram_addr+i)^S8] = sram[(cart_addr+i)^S8];
+    switch(write_to_file(sra->filename, sra->sram, SRAM_SIZE))
+    {
+    case file_open_error:
+        DebugMessage(M64MSG_WARNING, "couldn't open sram file '%s' for writing", sra->filename);
+        break;
+    case file_write_error:
+        DebugMessage(M64MSG_WARNING, "failed to write sram file '%s'", sra->filename);
+        break;
+    default:
+        break;
+    }
 }
 

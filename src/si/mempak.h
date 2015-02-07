@@ -24,12 +24,21 @@
 
 #include <stdint.h>
 
-struct game_controllers;
+struct mempak
+{
+    /* external mpk storage */
+    void* user_data;
+    void (*save)(void*);
+    uint8_t* data;
+};
 
-enum { MEMPAK_COUNT = 4 };
 enum { MEMPAK_SIZE = 0x8000 };
 
-void mempak_read_command(struct game_controllers* controllers, int channel, uint8_t* cmd);
-void mempak_write_command(struct game_controllers* controllers, int channel, uint8_t* cmd);
+void mempak_save(struct mempak* mpk);
+
+void format_mempak(uint8_t* mempak);
+
+void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
+void mempak_write_command(struct mempak* mpk, uint8_t* cmd);
 
 #endif

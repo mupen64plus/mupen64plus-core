@@ -43,10 +43,14 @@
 
 #include "main.h"
 #include "cheat.h"
+#include "eep_file.h"
 #include "eventloop.h"
+#include "fla_file.h"
+#include "mpk_file.h"
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
+#include "sra_file.h"
 #include "util.h"
 
 #include "ai/ai_controller.h"
@@ -57,6 +61,9 @@
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
 #include "plugin/plugin.h"
+#include "plugin/emulate_game_controller_via_input_plugin.h"
+#include "plugin/get_time_using_C_localtime.h"
+#include "plugin/rumble_via_input_plugin.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
@@ -130,6 +137,26 @@ static const char *get_savepathdefault(const char *configpath)
     osal_mkdirp(path, 0700);
 
     return path;
+}
+
+static char *get_mempaks_path(void)
+{
+    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_eeprom_path(void)
+{
+    return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_sram_path(void)
+{
+    return formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_flashram_path(void)
+{
+    return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
 
@@ -402,18 +429,12 @@ void main_state_inc_slot(void)
     savestates_inc_slot();
 }
 
-static unsigned char StopRumble[64] = {0x23, 0x01, 0x03, 0xc0, 0x1b, 0x00, 0x00, 0x00,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                       0, 0, 0, 0, 0, 0, 0, 0};
-
 void main_state_load(const char *filename)
 {
-    input.controllerCommand(0, StopRumble);
-    input.controllerCommand(1, StopRumble);
-    input.controllerCommand(2, StopRumble);
-    input.controllerCommand(3, StopRumble);
+    rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
+    rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
 
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
@@ -788,6 +809,12 @@ static void connect_all(
 */
 m64p_error main_run(void)
 {
+    size_t i;
+    struct eep_file eep;
+    struct fla_file fla;
+    struct mpk_file mpk;
+    struct sra_file sra;
+
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
@@ -844,6 +871,65 @@ m64p_error main_run(void)
     // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
     gfx.setRenderingCallback(video_plugin_render_callback);
 
+    /* connect external time source to AF_RTC component */
+    g_si.pif.af_rtc.user_data = NULL;
+    g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
+
+    /* connect external game controllers */
+    static int channels[] = { 0, 1, 2, 3 };
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
+        g_si.pif.controllers[i].user_data = &channels[i];
+        g_si.pif.controllers[i].is_connected = egcvip_is_connected;
+        g_si.pif.controllers[i].get_input = egcvip_get_input;
+    }
+
+    /* connect external rumblepaks */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
+        g_si.pif.controllers[i].rumblepak.user_data = &channels[i];
+        g_si.pif.controllers[i].rumblepak.rumble = rvip_rumble;
+    }
+
+    /* open mpk file (if any) and connect it to mempaks */
+    open_mpk_file(&mpk, get_mempaks_path());
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
+        g_si.pif.controllers[i].mempak.user_data = &mpk;
+        g_si.pif.controllers[i].mempak.save = save_mpk_file;
+        g_si.pif.controllers[i].mempak.data = mpk_file_ptr(&mpk, i);
+    }
+
+    /* open eep file (if any) and connect it to eeprom */
+    open_eep_file(&eep, get_eeprom_path());
+    g_si.pif.eeprom.user_data = &eep;
+    g_si.pif.eeprom.save = save_eep_file;
+    g_si.pif.eeprom.data = eep_file_ptr(&eep);
+    if (ROM_SETTINGS.savetype != EEPROM_16KB)
+    {
+        /* 4kbits EEPROM */
+        g_si.pif.eeprom.size = 0x200;
+        g_si.pif.eeprom.id = 0x8000;
+    }
+    else
+    {
+        /* 16kbits EEPROM */
+        g_si.pif.eeprom.size = 0x800;
+        g_si.pif.eeprom.id = 0xc000;
+    }
+
+    /* open fla file (if any) and connect it to flashram */
+    open_fla_file(&fla, get_flashram_path());
+    g_pi.flashram.user_data = &fla;
+    g_pi.flashram.save = save_fla_file;
+    g_pi.flashram.data = fla_file_ptr(&fla);
+
+    /* open sra file (if any) and connect it to SRAM */
+    open_sra_file(&sra, get_sram_path());
+    g_pi.sram.user_data = &sra;
+    g_pi.sram.save = save_sra_file;
+    g_pi.sram.data = sra_file_ptr(&sra);
+
 #ifdef WITH_LIRC
     lircStart();
 #endif // WITH_LIRC
@@ -873,6 +959,11 @@ m64p_error main_run(void)
     if (g_DebuggerActive)
         destroy_debugger();
 #endif
+
+    close_sra_file(&sra);
+    close_fla_file(&fla);
+    close_eep_file(&eep);
+    close_mpk_file(&mpk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - rumblepak.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#ifndef M64P_SI_RUMBLEPAK_H
+#define M64P_SI_RUMBLEPAK_H
 
-#include <stddef.h>
 #include <stdint.h>
 
-struct eeprom
+enum rumble_action
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
+    RUMBLE_STOP,
+    RUMBLE_START
 };
 
+struct rumblepak
+{
+    /* external rumble sink */
+    void* user_data;
+    void (*rumble)(void*,enum rumble_action);
+};
 
-void eeprom_save(struct eeprom* eeprom);
+void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action);
 
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd);
+void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd);
 
 #endif

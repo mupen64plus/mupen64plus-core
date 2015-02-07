@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - rumble_via_input_plugin.c                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,36 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#include "rumble_via_input_plugin.h"
+#include "plugin.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include "si/rumblepak.h"
 
-struct eeprom
+#include <string.h>
+
+void rvip_rumble(void* opaque, enum rumble_action action)
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
-};
+    int channel = *(int*)opaque;
 
+    static const uint8_t rumble_cmd_header[] =
+    {
+        0x23, 0x01, /* T=0x23, R=0x01 */
+        0x03,       /* PIF_CMD_PAK_WRITE */
+        0xc0, 0x1b, /* address=0xc000 | crc=0x1b */
+    };
 
-void eeprom_save(struct eeprom* eeprom);
+    uint8_t cmd[0x26];
 
-void format_eeprom(uint8_t* eeprom, size_t size);
+    uint8_t rumble_data = (action == RUMBLE_START)
+        ? 0x01
+        : 0x00;
 
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+    /* build rumble command */
+    memcpy(cmd, rumble_cmd_header, 5);
+    memset(cmd + 5, rumble_data, 0x20);
+    cmd[0x25] = 0; /* dummy data CRC */
 
-#endif
+    if (input.controllerCommand)
+        input.controllerCommand(channel, cmd);
+}
+

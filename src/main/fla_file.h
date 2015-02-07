@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - fla_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,24 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#ifndef M64P_MAIN_FLA_FILE_H
+#define M64P_MAIN_FLA_FILE_H
 
-#include <stddef.h>
 #include <stdint.h>
 
-struct eeprom
+#include "pi/flashram.h"
+
+struct fla_file
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
+    uint8_t flashram[FLASHRAM_SIZE];
+    const char* filename;
 };
 
+void open_fla_file(struct fla_file* fla, const char* filename);
+void close_fla_file(struct fla_file* fla);
 
-void eeprom_save(struct eeprom* eeprom);
+uint8_t* fla_file_ptr(struct fla_file* fla);
 
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void save_fla_file(void* opaque);
 
 #endif

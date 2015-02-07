@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - rumblepak.c                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,45 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#include "rumblepak.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include <string.h>
 
-struct eeprom
+
+void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action)
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
-};
+    rpk->rumble(rpk->user_data, action);
+}
 
+void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd)
+{
+    uint8_t data;
+    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
-void eeprom_save(struct eeprom* eeprom);
+    if ((address >= 0x8000) && (address < 0x9000))
+    {
+        data = 0x80;
+    }
+    else
+    {
+        data = 0x00;
+    }
 
-void format_eeprom(uint8_t* eeprom, size_t size);
+    memset(&cmd[5], data, 0x20);
+}
 
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd)
+{
+    enum rumble_action action;
+    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
-#endif
+    if (address == 0xc000)
+    {
+        action = (cmd[5] == 0)
+                ? RUMBLE_STOP
+                : RUMBLE_START;
+
+        rumblepak_rumble(rpk, action);
+    }
+}
+

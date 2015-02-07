@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - emulate_game_controller_via_input_plugin.c              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,43 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#include "emulate_game_controller_via_input_plugin.h"
+#include "plugin.h"
 
-#include <stddef.h>
-#include <stdint.h>
+#include "api/m64p_plugin.h"
+#include "si/game_controller.h"
 
-struct eeprom
+int egcvip_is_connected(void* opaque, enum pak_type* pak)
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
-};
+    int channel = *(int*)opaque;
 
+    CONTROL* c = &Controls[channel];
 
-void eeprom_save(struct eeprom* eeprom);
+    switch(c->Plugin)
+    {
+    case PLUGIN_NONE: *pak = PAK_NONE; break;
+    case PLUGIN_MEMPAK: *pak = PAK_MEM; break;
+    case PLUGIN_RUMBLE_PAK: *pak = PAK_RUMBLE; break;
+    case PLUGIN_TRANSFER_PAK: *pak = PAK_TRANSFER; break;
 
-void format_eeprom(uint8_t* eeprom, size_t size);
+    case PLUGIN_RAW:
+        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
+         * so we just reproduce that behavior */
+        *pak = PAK_RUMBLE; break;
+    }
 
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+    return c->Present;
+}
 
-#endif
+uint32_t egcvip_get_input(void* opaque)
+{
+    BUTTONS keys = { 0 };
+    int channel = *(int*)opaque;
+
+    if (input.getKeys)
+        input.getKeys(channel, &keys);
+
+    return keys.Value;
+
+}
+

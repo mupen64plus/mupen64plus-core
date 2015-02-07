@@ -25,17 +25,31 @@
 #include <stdint.h>
 
 #include "mempak.h"
+#include "rumblepak.h"
 
-struct pif;
-
-struct game_controllers
+enum pak_type
 {
-    uint8_t mempaks[MEMPAK_COUNT][MEMPAK_SIZE]; 
+    PAK_NONE,
+    PAK_MEM,
+    PAK_RUMBLE,
+    PAK_TRANSFER
 };
 
-void process_controller_command(struct pif* pif, int channel, uint8_t* cmd);
-void read_controller(struct pif* pif, int channel, uint8_t* cmd);
+struct game_controller
+{
+    /* external controller input */
+    void* user_data;
+    int (*is_connected)(void*,enum pak_type*);
+    uint32_t (*get_input)(void*);
 
-uint8_t pak_crc(uint8_t* data);
+    struct mempak mempak;
+    struct rumblepak rumblepak;
+};
+
+int game_controller_is_connected(struct game_controller* cont, enum pak_type* pak);
+uint32_t game_controller_get_input(struct game_controller* cont);
+
+void process_controller_command(struct game_controller* cont, uint8_t* cmd);
+void read_controller(struct game_controller* cont, uint8_t* cmd);
 
 #endif

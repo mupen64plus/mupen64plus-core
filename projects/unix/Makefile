@@ -407,18 +407,25 @@ SOURCE = \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
+	$(SRCDIR)/main/eep_file.c \
 	$(SRCDIR)/main/eventloop.c \
+	$(SRCDIR)/main/fla_file.c \
 	$(SRCDIR)/main/md5.c \
+	$(SRCDIR)/main/mpk_file.c \
 	$(SRCDIR)/main/profile.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
+	$(SRCDIR)/main/sra_file.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/pi/cart_rom.c \
 	$(SRCDIR)/pi/flashram.c \
 	$(SRCDIR)/pi/pi_controller.c \
 	$(SRCDIR)/pi/sram.c \
+	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
+	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
+	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
@@ -449,6 +456,7 @@ SOURCE = \
 	$(SRCDIR)/si/mempak.c \
 	$(SRCDIR)/si/n64_cic_nus_6105.c \
 	$(SRCDIR)/si/pif.c \
+	$(SRCDIR)/si/rumblepak.c \
 	$(SRCDIR)/si/si_controller.c \
 	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp

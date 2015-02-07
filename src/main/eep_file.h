@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - eep_file.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,29 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_EEPROM_H
-#define M64P_SI_EEPROM_H
+#ifndef M64P_MAIN_EEP_FILE_H
+#define M64P_MAIN_EEP_FILE_H
 
-#include <stddef.h>
 #include <stdint.h>
 
-struct eeprom
+/* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
+ * whatever the real EEPROM size is.
+ */
+
+enum { EEPROM_MAX_SIZE = 0x800 };
+
+struct eep_file
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
-    uint8_t* data;
-    size_t size;
-    uint16_t id;
+    uint8_t eeprom[EEPROM_MAX_SIZE];
+    const char* filename;
 };
 
+void open_eep_file(struct eep_file* eep, const char* filename);
+void close_eep_file(struct eep_file* eep);
 
-void eeprom_save(struct eeprom* eeprom);
+uint8_t* eep_file_ptr(struct eep_file* eep);
 
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void save_eep_file(void* opaque);
 
 #endif
