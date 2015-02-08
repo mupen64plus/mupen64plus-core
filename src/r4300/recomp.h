@@ -90,7 +90,6 @@ void recompile_block(int *source, precomp_block *block, unsigned int func);
 void init_block(precomp_block *block);
 void free_block(precomp_block *block);
 void recompile_opcode(void);
-void prefetch_opcode(unsigned int op, unsigned int nextop);
 void dyna_jump(void);
 void dyna_start(void *code);
 void dyna_stop(void);

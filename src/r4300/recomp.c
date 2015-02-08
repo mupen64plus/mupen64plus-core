@@ -2609,17 +2609,6 @@ void recompile_opcode(void)
 }
 
 /**********************************************************************
- ************** decode one opcode (for the interpreter) ***************
- **********************************************************************/
-void prefetch_opcode(unsigned int op, unsigned int nextop)
-{
-   dst = PC;
-   src = op;
-   check_nop = nextop == 0;
-   recomp_ops[((src >> 26) & 0x3F)]();
-}
-
-/**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/
 static void *malloc_exec(size_t size)
