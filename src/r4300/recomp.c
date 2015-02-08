@@ -548,7 +548,7 @@ static void RBLTZ(void)
          recomp_func = genbltz_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLTZ_OUT;
       recomp_func = genbltz_out;
@@ -570,7 +570,7 @@ static void RBGEZ(void)
          recomp_func = genbgez_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGEZ_OUT;
       recomp_func = genbgez_out;
@@ -592,7 +592,7 @@ static void RBLTZL(void)
          recomp_func = genbltzl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLTZL_OUT;
       recomp_func = genbltzl_out;
@@ -614,7 +614,7 @@ static void RBGEZL(void)
          recomp_func = genbgezl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGEZL_OUT;
       recomp_func = genbgezl_out;
@@ -672,7 +672,7 @@ static void RBLTZAL(void)
          recomp_func = genbltzal_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLTZAL_OUT;
       recomp_func = genbltzal_out;
@@ -694,7 +694,7 @@ static void RBGEZAL(void)
          recomp_func = genbgezal_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGEZAL_OUT;
       recomp_func = genbgezal_out;
@@ -716,7 +716,7 @@ static void RBLTZALL(void)
          recomp_func = genbltzall_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLTZALL_OUT;
       recomp_func = genbltzall_out;
@@ -738,7 +738,7 @@ static void RBGEZALL(void)
          recomp_func = genbgezall_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGEZALL_OUT;
       recomp_func = genbgezall_out;
@@ -853,7 +853,7 @@ static void RBC1F(void)
          recomp_func = genbc1f_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BC1F_OUT;
       recomp_func = genbc1f_out;
@@ -875,7 +875,7 @@ static void RBC1T(void)
          recomp_func = genbc1t_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BC1T_OUT;
       recomp_func = genbc1t_out;
@@ -897,7 +897,7 @@ static void RBC1FL(void)
          recomp_func = genbc1fl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BC1FL_OUT;
       recomp_func = genbc1fl_out;
@@ -919,7 +919,7 @@ static void RBC1TL(void)
          recomp_func = genbc1tl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BC1TL_OUT;
       recomp_func = genbc1tl_out;
@@ -1631,7 +1631,7 @@ static void RJ(void)
          recomp_func = genj_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.J_OUT;
       recomp_func = genj_out;
@@ -1653,7 +1653,7 @@ static void RJAL(void)
          recomp_func = genjal_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.JAL_OUT;
       recomp_func = genjal_out;
@@ -1675,7 +1675,7 @@ static void RBEQ(void)
          recomp_func = genbeq_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BEQ_OUT;
       recomp_func = genbeq_out;
@@ -1697,7 +1697,7 @@ static void RBNE(void)
          recomp_func = genbne_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BNE_OUT;
       recomp_func = genbne_out;
@@ -1719,7 +1719,7 @@ static void RBLEZ(void)
          recomp_func = genblez_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLEZ_OUT;
       recomp_func = genblez_out;
@@ -1741,7 +1741,7 @@ static void RBGTZ(void)
          recomp_func = genbgtz_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGTZ_OUT;
       recomp_func = genbgtz_out;
@@ -1837,7 +1837,7 @@ static void RBEQL(void)
          recomp_func = genbeql_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BEQL_OUT;
       recomp_func = genbeql_out;
@@ -1859,7 +1859,7 @@ static void RBNEL(void)
          recomp_func = genbnel_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BNEL_OUT;
       recomp_func = genbnel_out;
@@ -1881,7 +1881,7 @@ static void RBLEZL(void)
          recomp_func = genblezl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BLEZL_OUT;
       recomp_func = genblezl_out;
@@ -1903,7 +1903,7 @@ static void RBGTZL(void)
          recomp_func = genbgtzl_idle;
       }
    }
-   else if (r4300emu != CORE_PURE_INTERPRETER && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4))
    {
       dst->ops = current_instruction_table.BGTZL_OUT;
       recomp_func = genbgtzl_out;
