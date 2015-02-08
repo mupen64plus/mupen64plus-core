@@ -99,8 +99,8 @@ def main(rootdir, cfgfile, nobuild, noemail):
         break
     # Step 6: send email report and archive the results
     if not noemail:
-    	if not tester.SendReport():
-        	rval = 6
+        if not tester.SendReport():
+            rval = 6
     if not tester.ArchiveResults(archivedir):
         rval = 7
     # all done with test process
@@ -166,7 +166,7 @@ class RegTester:
         self.generalParams = { }
         self.gamesAndParams = { }
         self.modulesAndParams = { }
-        self.videoplugins = [ "mupen64plus-video-rice.so" ]
+        self.videoplugins = [ "mupen64plus-video-rice.so", "mupen64plus-video-glide64mk2.so" ]
         self.thisdate = str(date.today())
 
     def LoadConfig(self, filename):
@@ -381,7 +381,15 @@ class RegTester:
                 refimage = os.path.join(refdir, videoname, filename)
                 testimage = os.path.join(self.screenshotdir, videoname, filename)
                 diffimage = os.path.join(self.screenshotdir, videoname, os.path.splitext(filename)[0] + "_DIFF.png")
-                cmd = ("/usr/bin/compare", "-metric", "PSNR", refimage, testimage, diffimage)
+                if videoname.find("rice") != -1:
+                    # we have to escape some characters in here for the shell
+                    escrefimage = refimage.replace("'", "\\'")
+                    esctestimage = testimage.replace("'", "\\'")
+                    escdiffimage = diffimage.replace("'", "\\'")
+                    # we do a center crop to ignore the outer 1 pixel border, because it often contains garbage in rice video
+                    cmd = ("/bin/bash", "-c", "/usr/bin/compare -metric PSNR <( /usr/bin/convert " + escrefimage + " -crop 638x478+1+1 - ) <( /usr/bin/convert " + esctestimage + " -crop 638x478+1+1 - ) " + escdiffimage)
+                else:
+                    cmd = ("/usr/bin/compare", "-metric", "PSNR", refimage, testimage, diffimage)
                 pipe = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
                 similarity = pipe.read().strip()
                 pipe.close()
