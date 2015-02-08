@@ -66,8 +66,8 @@ DECLARE_INSTRUCTION(SRAV)
    ADD_TO_PC(1);
 }
 
-DECLARE_JUMP(JR,   irs32, 1, &reg[0],    0, 0)
-DECLARE_JUMP(JALR, irs32, 1, PC->f.r.rd, 0, 0)
+DECLARE_JUMP(JR,   irs32, 1, &reg[0], 0, 0)
+DECLARE_JUMP(JALR, irs32, 1, &rrd,    0, 0)
 
 DECLARE_INSTRUCTION(SYSCALL)
 {
