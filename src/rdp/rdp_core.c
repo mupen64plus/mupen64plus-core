@@ -112,8 +112,7 @@ int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         break;
     case DPC_END_REG:
         gfx.processRDPList();
-        dp->r4300->mi.regs[MI_INTR_REG] |= 0x20;
-        check_interupt();
+        signal_rcp_interrupt(dp->r4300, MI_INTR_DP);
         break;
     }
 
@@ -139,5 +138,13 @@ int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     masked_write(&dp->dps_regs[reg], value, mask);
 
     return 0;
+}
+
+void rdp_interrupt_event(struct rdp_core* dp)
+{
+    dp->dpc_regs[DPC_STATUS_REG] &= ~2;
+    dp->dpc_regs[DPC_STATUS_REG] |= 0x81;
+
+    raise_rcp_interrupt(dp->r4300, MI_INTR_DP);
 }
 

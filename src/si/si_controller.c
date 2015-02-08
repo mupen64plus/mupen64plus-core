@@ -55,9 +55,8 @@ static void dma_si_write(struct si_controller* si)
     if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        si->r4300->mi.regs[MI_INTR_REG] |= 0x02; // SI
         si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
-        check_interupt();
+        signal_rcp_interrupt(si->r4300, MI_INTR_SI);
     }
 }
 
@@ -83,9 +82,8 @@ static void dma_si_read(struct si_controller* si)
     if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        si->r4300->mi.regs[MI_INTR_REG] |= 0x02; // SI
         si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
-        check_interupt();
+        signal_rcp_interrupt(si->r4300, MI_INTR_SI);
     }
 }
 
@@ -138,12 +136,22 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         break;
 
     case SI_STATUS_REG:
-        si->r4300->mi.regs[MI_INTR_REG] &= ~0x2;
         si->regs[SI_STATUS_REG] &= ~0x1000;
-        check_interupt();
+        clear_rcp_interrupt(si->r4300, MI_INTR_SI);
         break;
     }
 
     return 0;
+}
+
+void si_end_of_dma_event(struct si_controller* si)
+{
+    main_check_inputs();
+
+    si->pif.ram[0x3f] = 0x0;
+
+    /* trigger SI interrupt */
+    si->regs[SI_STATUS_REG] |= 0x1000;
+    raise_rcp_interrupt(si->r4300, MI_INTR_SI);
 }
 

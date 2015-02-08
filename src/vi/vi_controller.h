@@ -48,7 +48,10 @@ enum vi_registers
 struct vi_controller
 {
     uint32_t regs[VI_REGS_COUNT];
+    unsigned int field;
+
     unsigned int delay;
+    unsigned int next_vi;
 
     struct r4300_core* r4300;
 };
@@ -65,5 +68,7 @@ void init_vi(struct vi_controller* vi);
 
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void vi_vertical_interrupt_event(struct vi_controller* vi);
 
 #endif
