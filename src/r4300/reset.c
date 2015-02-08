@@ -40,13 +40,6 @@ void reset_hard(void)
     init_interupt();
     if(r4300emu != CORE_PURE_INTERPRETER)
     {
-        /* TODO
-         * The following code *should* work and avoid free_blocks() and init_blocks(),
-         * but it doesn't unless the last line is added (which causes a memory leak).
-        int i;
-        for (i=0; i<0x100000; i++)
-            invalid_code[i] = 1;
-        blocks[0xa4000000>>12]->block = NULL; */
         free_blocks();
         init_blocks();
     }
