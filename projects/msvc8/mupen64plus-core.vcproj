@@ -301,6 +301,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\plugin\emulate_speaker_via_audio_plugin.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\main\eventloop.c"
 				>
 			</File>
@@ -668,6 +672,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\plugin\emulate_game_controller_via_input_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\plugin\emulate_speaker_via_audio_plugin.h"
 				>
 			</File>
 			<File

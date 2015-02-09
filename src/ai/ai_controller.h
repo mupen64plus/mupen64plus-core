@@ -22,9 +22,11 @@
 #ifndef M64P_AI_AI_CONTROLLER_H
 #define M64P_AI_AI_CONTROLLER_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct r4300_core;
+struct ri_controller;
 struct vi_controller;
 
 enum ai_registers
@@ -40,16 +42,24 @@ enum ai_registers
 
 struct ai_dma
 {
+    uint32_t address;
     uint32_t length;
-    unsigned int delay;
+    unsigned int duration;
 };
 
 struct ai_controller
 {
     uint32_t regs[AI_REGS_COUNT];
     struct ai_dma fifo[2];
+    unsigned int samples_format_changed;
+
+    /* external speaker output */
+    void* user_data;
+    void (*set_audio_format)(void*,unsigned int, unsigned int);
+    void (*push_audio_samples)(void*,const void*,size_t);
 
     struct r4300_core* r4300;
+    struct ri_controller* ri;
     struct vi_controller* vi;
 };
 
@@ -58,8 +68,12 @@ static inline uint32_t ai_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
+void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits);
+void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size);
+
 void connect_ai(struct ai_controller* ai,
                 struct r4300_core* r4300,
+                struct ri_controller* ri,
                 struct vi_controller* vi);
 
 void init_ai(struct ai_controller* ai);
@@ -67,6 +81,6 @@ void init_ai(struct ai_controller* ai);
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void ai_end_of_dma_event(struct ai_controller* ai, unsigned int ai_event);
+void ai_end_of_dma_event(struct ai_controller* ai);
 
 #endif
