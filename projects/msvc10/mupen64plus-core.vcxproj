@@ -190,33 +190,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\r4300\empty_dynarec.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\src\r4300\new_dynarec\assem_x86.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\src\r4300\new_dynarec\new_dynarec.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">CompileAsCpp</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">CompileAsCpp</CompileAs>
-    </ClCompile>
-    <ClCompile Include="..\..\src\r4300\x86\assemble.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\src\r4300\cached_interp.c" />
+    <ClCompile Include="..\..\src\ai\ai_controller.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
-    <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
-    <ClCompile Include="..\..\src\r4300\cp0.c" />
-    <ClCompile Include="..\..\src\r4300\cp1.c" />
+    <ClCompile Include="..\..\src\api\debugger.c" />
+    <ClCompile Include="..\..\src\api\frontend.c" />
+    <ClCompile Include="..\..\src\api\vidext.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -236,31 +216,92 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\src\debugger\debugger.c">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
-      <XMLDocumentationFileName Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">$(IntDir)%(Filename)1.xdc</XMLDocumentationFileName>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\api\debugger.c" />
-    <ClCompile Include="..\..\src\memory\dma.c" />
+    <ClCompile Include="..\..\src\main\cheat.c" />
+    <ClCompile Include="..\..\src\main\eep_file.c" />
+    <ClCompile Include="..\..\src\main\eventloop.c" />
+    <ClCompile Include="..\..\src\main\fla_file.c" />
+    <ClCompile Include="..\..\src\main\lirc.c" />
+    <ClCompile Include="..\..\src\main\main.c" />
+    <ClCompile Include="..\..\src\main\md5.c" />
+    <ClCompile Include="..\..\src\main\mpk_file.c" />
+    <ClCompile Include="..\..\src\main\profile.c" />
+    <ClCompile Include="..\..\src\main\rom.c" />
+    <ClCompile Include="..\..\src\main\savestates.c" />
+    <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
+    <ClCompile Include="..\..\src\main\sra_file.c" />
+    <ClCompile Include="..\..\src\main\util.c" />
+    <ClCompile Include="..\..\src\main\workqueue.c" />
+    <ClCompile Include="..\..\src\memory\memory.c" />
+    <ClCompile Include="..\..\src\osal\dynamiclib_unix.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\files_unix.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\pi\cart_rom.c" />
+    <ClCompile Include="..\..\src\pi\flashram.c" />
+    <ClCompile Include="..\..\src\pi\pi_controller.c" />
+    <ClCompile Include="..\..\src\pi\sram.c" />
     <ClCompile Include="..\..\src\plugin\dummy_audio.c" />
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
-    <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
-    <ClCompile Include="..\..\src\main\eventloop.c" />
+    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c" />
+    <ClCompile Include="..\..\src\plugin\get_time_using_C_localtime.c" />
+    <ClCompile Include="..\..\src\plugin\plugin.c" />
+    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c" />
+    <ClCompile Include="..\..\src\r4300\cached_interp.c" />
+    <ClCompile Include="..\..\src\r4300\cp0.c" />
+    <ClCompile Include="..\..\src\r4300\cp1.c" />
+    <ClCompile Include="..\..\src\r4300\empty_dynarec.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\r4300\exception.c" />
+    <ClCompile Include="..\..\src\r4300\instr_counters.c" />
+    <ClCompile Include="..\..\src\r4300\interupt.c" />
+    <ClCompile Include="..\..\src\r4300\mi_controller.c" />
+    <ClCompile Include="..\..\src\r4300\new_dynarec\assem_arm.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\r4300\new_dynarec\assem_x86.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\r4300\new_dynarec\new_dynarec.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="..\..\src\r4300\pure_interp.c" />
+    <ClCompile Include="..\..\src\r4300\r4300.c" />
+    <ClCompile Include="..\..\src\r4300\r4300_core.c" />
+    <ClCompile Include="..\..\src\r4300\recomp.c" />
+    <ClCompile Include="..\..\src\r4300\reset.c" />
+    <ClCompile Include="..\..\src\r4300\tlb.c" />
+    <ClCompile Include="..\..\src\r4300\x86\assemble.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\dynamiclib_win32.c" />
     <ClCompile Include="..\..\src\osal\files_win32.c" />
-    <ClCompile Include="..\..\src\memory\flashram.c" />
-    <ClCompile Include="..\..\src\api\frontend.c" />
     <ClCompile Include="..\..\src\r4300\x86\gbc.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
@@ -305,40 +346,19 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\r4300\instr_counters.c" />
-    <ClCompile Include="..\..\src\r4300\interupt.c" />
     <ClCompile Include="..\..\src\main\zip\ioapi.c" />
-    <ClCompile Include="..\..\src\main\lirc.c" />
-    <ClCompile Include="..\..\src\main\main.c" />
-    <ClCompile Include="..\..\src\main\md5.c" />
-    <ClCompile Include="..\..\src\memory\memory.c" />
-    <ClCompile Include="..\..\src\memory\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
-    <ClCompile Include="..\..\src\memory\pif.c" />
-    <ClCompile Include="..\..\src\plugin\plugin.c" />
-    <ClCompile Include="..\..\src\main\profile.c" />
-    <ClCompile Include="..\..\src\r4300\pure_interp.c" />
-    <ClCompile Include="..\..\src\r4300\r4300.c" />
-    <ClCompile Include="..\..\src\r4300\recomp.c" />
     <ClCompile Include="..\..\src\r4300\x86\regcache.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\r4300\reset.c" />
     <ClCompile Include="..\..\src\r4300\x86\rjump.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\rom.c" />
-    <ClCompile Include="..\..\src\main\savestates.c" />
-    <ClCompile Include="..\..\src\main\sdl_key_converter.c" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
-    <ClCompile Include="..\..\src\r4300\tlb.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
-    <ClCompile Include="..\..\src\main\util.c" />
-    <ClCompile Include="..\..\src\api\vidext.c" />
-    <ClCompile Include="..\..\src\main\workqueue.c" />
     <ClCompile Include="..\..\src\main\zip\zip.c" />
     <ClCompile Include="..\..\src\r4300\x86_64\assemble.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -424,84 +444,142 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\src\rdp\fb.c" />
+    <ClCompile Include="..\..\src\rdp\rdp_core.c" />
+    <ClCompile Include="..\..\src\ri\rdram.c" />
+    <ClCompile Include="..\..\src\ri\ri_controller.c" />
+    <ClCompile Include="..\..\src\rsp\rsp_core.c" />
+    <ClCompile Include="..\..\src\si\af_rtc.c" />
+    <ClCompile Include="..\..\src\si\cic.c" />
+    <ClCompile Include="..\..\src\si\eeprom.c" />
+    <ClCompile Include="..\..\src\si\game_controller.c" />
+    <ClCompile Include="..\..\src\si\mempak.c" />
+    <ClCompile Include="..\..\src\si\n64_cic_nus_6105.c" />
+    <ClCompile Include="..\..\src\si\pif.c" />
+    <ClCompile Include="..\..\src\si\rumblepak.c" />
+    <ClCompile Include="..\..\src\si\si_controller.c" />
+    <ClCompile Include="..\..\src\vi\vi_controller.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\ai\ai_controller.h" />
+    <ClInclude Include="..\..\src\api\callbacks.h" />
+    <ClInclude Include="..\..\src\api\config.h" />
+    <ClInclude Include="..\..\src\api\debugger.h" />
+    <ClInclude Include="..\..\src\api\m64p_common.h" />
+    <ClInclude Include="..\..\src\api\m64p_config.h" />
+    <ClInclude Include="..\..\src\api\m64p_debugger.h" />
+    <ClInclude Include="..\..\src\api\m64p_frontend.h" />
+    <ClInclude Include="..\..\src\api\m64p_plugin.h" />
+    <ClInclude Include="..\..\src\api\m64p_types.h" />
+    <ClInclude Include="..\..\src\api\m64p_vidext.h" />
+    <ClInclude Include="..\..\src\api\vidext.h" />
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h" />
-    <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h">
+    <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_decoder.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_memory.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_types.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\debugger.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\cheat.h" />
+    <ClInclude Include="..\..\src\main\eep_file.h" />
+    <ClInclude Include="..\..\src\main\eventloop.h" />
+    <ClInclude Include="..\..\src\main\fla_file.h" />
+    <ClInclude Include="..\..\src\main\lirc.h" />
     <ClInclude Include="..\..\src\main\list.h" />
+    <ClInclude Include="..\..\src\main\main.h" />
+    <ClInclude Include="..\..\src\main\md5.h" />
+    <ClInclude Include="..\..\src\main\mpk_file.h" />
+    <ClInclude Include="..\..\src\main\profile.h" />
+    <ClInclude Include="..\..\src\main\rom.h" />
+    <ClInclude Include="..\..\src\main\savestates.h" />
+    <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
+    <ClInclude Include="..\..\src\main\sra_file.h" />
+    <ClInclude Include="..\..\src\main\util.h" />
+    <ClInclude Include="..\..\src\main\version.h" />
+    <ClInclude Include="..\..\src\main\workqueue.h" />
+    <ClInclude Include="..\..\src\memory\memory.h" />
+    <ClInclude Include="..\..\src\pi\cart_rom.h" />
+    <ClInclude Include="..\..\src\pi\flashram.h" />
+    <ClInclude Include="..\..\src\pi\pi_controller.h" />
+    <ClInclude Include="..\..\src\pi\sram.h" />
+    <ClInclude Include="..\..\src\plugin\dummy_audio.h" />
+    <ClInclude Include="..\..\src\plugin\dummy_input.h" />
+    <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
+    <ClInclude Include="..\..\src\plugin\dummy_video.h" />
+    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h" />
+    <ClInclude Include="..\..\src\plugin\get_time_using_C_localtime.h" />
+    <ClInclude Include="..\..\src\plugin\plugin.h" />
+    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h" />
+    <ClInclude Include="..\..\src\r4300\cached_interp.h" />
+    <ClInclude Include="..\..\src\r4300\cp0.h" />
+    <ClInclude Include="..\..\src\r4300\cp1.h" />
+    <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\r4300\fpu.h" />
+    <ClInclude Include="..\..\src\r4300\instr_counters.h" />
+    <ClInclude Include="..\..\src\r4300\interupt.h" />
+    <ClInclude Include="..\..\src\r4300\macros.h" />
+    <ClInclude Include="..\..\src\r4300\mi_controller.h" />
+    <ClInclude Include="..\..\src\r4300\new_dynarec\assem_arm.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\src\r4300\new_dynarec\assem_x86.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\src\r4300\new_dynarec\new_dynarec.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\src\r4300\ops.h" />
+    <ClInclude Include="..\..\src\r4300\pure_interp.h" />
+    <ClInclude Include="..\..\src\r4300\r4300.h" />
+    <ClInclude Include="..\..\src\r4300\r4300_core.h" />
+    <ClInclude Include="..\..\src\r4300\recomp.h" />
+    <ClInclude Include="..\..\src\r4300\recomph.h" />
+    <ClInclude Include="..\..\src\r4300\reset.h" />
+    <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\r4300\x86\assemble.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\src\r4300\cached_interp.h" />
-    <ClInclude Include="..\..\src\api\callbacks.h" />
-    <ClInclude Include="..\..\src\main\cheat.h" />
-    <ClInclude Include="..\..\src\api\config.h" />
-    <ClInclude Include="..\..\src\r4300\cp0.h" />
-    <ClInclude Include="..\..\src\r4300\cp1.h" />
     <ClInclude Include="..\..\src\main\zip\crypt.h" />
-    <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_decoder.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_memory.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_opprintf.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_types.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\debugger\debugger.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\api\debugger.h" />
-    <ClInclude Include="..\..\src\memory\dma.h" />
-    <ClInclude Include="..\..\src\plugin\dummy_audio.h" />
-    <ClInclude Include="..\..\src\plugin\dummy_input.h" />
-    <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
-    <ClInclude Include="..\..\src\plugin\dummy_video.h" />
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
-    <ClInclude Include="..\..\src\main\eventloop.h" />
-    <ClInclude Include="..\..\src\r4300\exception.h" />
     <ClInclude Include="..\..\src\osal\files.h" />
-    <ClInclude Include="..\..\src\memory\flashram.h" />
-    <ClInclude Include="..\..\src\r4300\instr_counters.h" />
     <ClInclude Include="..\..\src\r4300\x86\assemble_struct.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
@@ -510,47 +588,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\src\r4300\interupt.h" />
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />
-    <ClInclude Include="..\..\src\main\lirc.h" />
-    <ClInclude Include="..\..\src\api\m64p_common.h" />
-    <ClInclude Include="..\..\src\api\m64p_config.h" />
-    <ClInclude Include="..\..\src\api\m64p_debugger.h" />
-    <ClInclude Include="..\..\src\api\m64p_frontend.h" />
-    <ClInclude Include="..\..\src\api\m64p_plugin.h" />
-    <ClInclude Include="..\..\src\api\m64p_types.h" />
-    <ClInclude Include="..\..\src\api\m64p_vidext.h" />
-    <ClInclude Include="..\..\src\r4300\macros.h" />
-    <ClInclude Include="..\..\src\main\main.h" />
-    <ClInclude Include="..\..\src\main\md5.h" />
-    <ClInclude Include="..\..\src\memory\memory.h" />
-    <ClInclude Include="..\..\src\memory\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\osd\OGLFT.h" />
-    <ClInclude Include="..\..\src\r4300\ops.h" />
     <ClInclude Include="..\..\src\osd\osd.h" />
-    <ClInclude Include="..\..\src\memory\pif.h" />
-    <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\osal\preproc.h" />
-    <ClInclude Include="..\..\src\main\profile.h" />
-    <ClInclude Include="..\..\src\r4300\pure_interp.h" />
-    <ClInclude Include="..\..\src\r4300\r4300.h" />
-    <ClInclude Include="..\..\src\r4300\recomp.h" />
-    <ClInclude Include="..\..\src\r4300\recomph.h" />
     <ClInclude Include="..\..\src\r4300\x86\regcache.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\src\r4300\reset.h" />
-    <ClInclude Include="..\..\src\main\rom.h" />
-    <ClInclude Include="..\..\src\main\savestates.h" />
-    <ClInclude Include="..\..\src\main\sdl_key_converter.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
-    <ClInclude Include="..\..\src\r4300\tlb.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
-    <ClInclude Include="..\..\src\main\util.h" />
-    <ClInclude Include="..\..\src\main\version.h" />
-    <ClInclude Include="..\..\src\api\vidext.h" />
-    <ClInclude Include="..\..\src\main\workqueue.h" />
     <ClInclude Include="..\..\src\main\zip\zip.h" />
     <ClInclude Include="..\..\src\r4300\x86_64\assemble.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -576,6 +623,21 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\..\src\rdp\fb.h" />
+    <ClInclude Include="..\..\src\rdp\rdp_core.h" />
+    <ClInclude Include="..\..\src\ri\rdram.h" />
+    <ClInclude Include="..\..\src\ri\ri_controller.h" />
+    <ClInclude Include="..\..\src\rsp\rsp_core.h" />
+    <ClInclude Include="..\..\src\si\af_rtc.h" />
+    <ClInclude Include="..\..\src\si\cic.h" />
+    <ClInclude Include="..\..\src\si\eeprom.h" />
+    <ClInclude Include="..\..\src\si\game_controller.h" />
+    <ClInclude Include="..\..\src\si\mempak.h" />
+    <ClInclude Include="..\..\src\si\n64_cic_nus_6105.h" />
+    <ClInclude Include="..\..\src\si\pif.h" />
+    <ClInclude Include="..\..\src\si\rumblepak.h" />
+    <ClInclude Include="..\..\src\si\si_controller.h" />
+    <ClInclude Include="..\..\src\vi\vi_controller.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\r4300\new_dynarec\linkage_x86.asm">
@@ -600,6 +662,12 @@
     <None Include="..\..\src\r4300\interpreter_regimm.def" />
     <None Include="..\..\src\r4300\interpreter_special.def" />
     <None Include="..\..\src\r4300\interpreter_tlb.def" />
+    <None Include="..\..\src\r4300\new_dynarec\linkage_arm.S">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
