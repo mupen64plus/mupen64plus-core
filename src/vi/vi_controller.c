@@ -102,8 +102,8 @@ void vi_vertical_interrupt_event(struct vi_controller* vi)
     /* allow main module to do things on VI event */
     new_vi();
 
-    /* update field (if in interlaced mode) */
-    vi->field = (vi->regs[VI_STATUS_REG] >> 6) & ~vi->field;
+    /* toggle vi field if in interlaced mode */
+    vi->field ^= (vi->regs[VI_STATUS_REG] >> 6) & 0x1;
 
     /* schedule next vertical interrupt */
     vi->delay = (vi->regs[VI_V_SYNC_REG] == 0)
