@@ -28,6 +28,7 @@ import subprocess
 import commands
 import shutil
 import stat
+import time
 import sys
 import os
 
@@ -38,7 +39,7 @@ report = "Mupen64Plus Regression Test report\n----------------------------------
 # main functions
 #
 
-def main(rootdir, cfgfile, nobuild, noemail):
+def main(rootdir, cfgfile, nogit, nobuild, nospeed, novidcheck, noemail):
     global report
     # set up child directory paths
     srcdir = os.path.join(rootdir, "source")
@@ -53,8 +54,8 @@ def main(rootdir, cfgfile, nobuild, noemail):
         if not tester.LoadConfig(cfgfile):
             rval = 1
             break
-        # Step 2: check out from Mercurial
-        if not nobuild:
+        # Step 2: check out from Git
+        if not nogit:
             if not tester.CheckoutSource(srcdir):
                 rval = 2
                 break
@@ -74,30 +75,74 @@ def main(rootdir, cfgfile, nobuild, noemail):
                 for i in range(testbuilds):
                     buildname = testlist[i]
                     buildmake = makeparams[i]
-                    BuildSource(srcdir, modfilename, modname, buildname, buildmake, module["outputfiles"], True)
-        # Step 4: build the binary for the video regression test
-        if not nobuild:
+                    BuildSource(srcdir, modfilename, modname, buildname, buildmake, module["outputfiles"], True, False)
+        # Step 4: run speed tests
+        if not nospeed:
+            SpeedTestResults = [ ]
+            # we iterate over each separate build
+            numSpeedBuilds = int(tester.generalParams["numspeedbuilds"])
+            for buildIdx in range(numSpeedBuilds):
+                buildname = "Speedtest Build #%i" % (buildIdx+1)
+                buildmake = tester.generalParams["speedbuild%iparams" % buildIdx]
+                # build all modules
+                for modname in tester.modulesAndParams:
+                    module = tester.modulesAndParams[modname]
+                    modurl = module["url"]
+                    modfilename = modurl.split('/')[-1]
+                    if not BuildSource(srcdir, modfilename, modname, buildname, buildmake, module["outputfiles"], False, False):
+                        rval = 3
+                        break
+                if rval > 0:
+                    break
+                # then we iterate over each separate test case for this build
+                numCases = int(tester.generalParams["speedbuild%itests" % buildIdx])
+                for caseIdx in range(numCases):
+                    caseName = tester.generalParams["speedbuild%itest%iname" % (buildIdx, caseIdx)]
+                    caseOptions = tester.generalParams["speedbuild%itest%ioptions" % (buildIdx, caseIdx)].split(" ")
+                    oneRunResults = tester.RunSpeedTests(caseName, caseOptions)
+                    SpeedTestResults.append((caseName, oneRunResults))
+            # now we summarize the results
+            if numSpeedBuilds > 0 and SpeedTestResults[0][1] is not None:
+                numGames = len(SpeedTestResults[0][1])
+                gameNames = [result[0] for result in SpeedTestResults[0][1]]
+                gameNameLengths = [len(name) for name in gameNames]
+                maxTestNameLength = max([len(case[0]) for case in SpeedTestResults])
+                report += "Run %i speed test cases with %i games (best of 3 trials)\n" % (len(SpeedTestResults),numGames)
+                tableHeader = (" " * (maxTestNameLength + 2)) + "  ".join(gameNames)
+                report += tableHeader + "\n" + ("=" * len(tableHeader)) + "\n"
+                for (caseName, runResults) in SpeedTestResults:
+                    report += caseName + (" " * (maxTestNameLength - len(caseName) + 2))
+                    if runResults == None:
+                        report += "Failed!\n"
+                        continue
+                    for (gameName, testTime) in runResults:
+                        strTime = "%.2f" % testTime
+                        report += strTime + (" " * (len(gameName) - len(strTime) + 2))
+                    report += "\n"
+                report += "\n"
+        # Step 5: build the binary for the video regression test
+        if not novidcheck:
             for modname in tester.modulesAndParams:
                 module = tester.modulesAndParams[modname]
                 modurl = module["url"]
                 modfilename = modurl.split('/')[-1]
-                videobuild = module["videobuild"]
-                videomake = module["videobuildparams"]
-                if not BuildSource(srcdir, modfilename, modname, videobuild, videomake, module["outputfiles"], False):
+                videobuild = self.generalParams["videobuild"]
+                videomake = self.generalParams["videobuildparams"]
+                if not BuildSource(srcdir, modfilename, modname, videobuild, videomake, module["outputfiles"], False, True):
                     rval = 3
                     break
             if rval != 0:
                 break
-        # Step 5: run the tests, check the results
-        if not tester.RunTests():
-            rval = 4
-            break
-        if not tester.CheckResults(refdir):
-            rval = 5
-            break
+            # Step 6: run the tests, check the results
+            if not tester.RunTests():
+                rval = 4
+                break
+            if not tester.CheckResults(refdir):
+                rval = 5
+                break
         # test procedure is finished
         break
-    # Step 6: send email report and archive the results
+    # Step 7: send email report and archive the results
     if not noemail:
         if not tester.SendReport():
             rval = 6
@@ -110,14 +155,16 @@ def main(rootdir, cfgfile, nobuild, noemail):
 # Checkout & build functions
 #
 
-def BuildSource(srcdir, moddir, modname, buildname, buildmake, outputfiles, istest):
+def BuildSource(srcdir, moddir, modname, buildname, buildmake, outputfiles, isbuildtest, isvideotest):
     global report
     makepath = os.path.join(srcdir, moddir,  "projects", "unix")
+    # to start, clean up
+    os.system("make -C %s clean" % makepath)
     # print build report message and clear counters
     testbuildcommand = "make -C %s %s" % (makepath, buildmake)
-    if istest:
+    if isbuildtest:
         report += "Running %s test build \"%s\"\n" % (modname, buildname)
-    else:
+    elif isvideotest:
         report += "Building %s \"%s\" for video test\n" % (modname, buildname)
     warnings = 0
     errors = 0
@@ -129,25 +176,27 @@ def BuildSource(srcdir, moddir, modname, buildname, buildmake, outputfiles, iste
         if "error:" in line:
             report += "    " + line + "\n"
             errors += 1
-        if "warning:" in line:
+        if "warning:" in line and (isbuildtest or isvideotest):
             report += "    " + line + "\n"
             warnings += 1
-    report += "%i errors. %i warnings.\n" % (errors, warnings)
-    if errors > 0 and not istest:
+    if isbuildtest or isvideotest:
+        report += "%i errors. %i warnings.\n" % (errors, warnings)
+    if errors > 0 and not isbuildtest:
         return False
     # check for output files
     for filename in outputfiles.split(','):
         if not os.path.exists(os.path.join(makepath, filename)):
             report += "Build failed: '%s' not found\n" % filename
             errors += 1
-    if errors > 0 and not istest:
+    if errors > 0 and not isbuildtest:
         return False
-    # clean up if this was a test
-    if istest:
-        os.system("make -C %s clean" % makepath)
-    # if this wasn't a test, then copy our output files and data files
-    if not istest:
+    # if this wasn't a build test, then copy our output files and data files
+    if not isbuildtest:
         for filename in outputfiles.split(','):
+            try:
+                os.unlink(os.path.join(srcdir, filename))
+            except:
+                pass
             shutil.move(os.path.join(makepath, filename), srcdir)
         datapath = os.path.join(srcdir, moddir, "data")
         if os.path.isdir(datapath):
@@ -285,7 +334,6 @@ class RegTester:
             GameParams = self.gamesAndParams[GameFilename]
             # if no screenshots parameter given for this game then skip it
             if "screenshots" not in GameParams:
-                report += "    Warning: no screenshots taken for game '%s'\n" % GameFilename
                 continue
             # make a list of screenshots and check it
             shotlist = [ str(int(framenum.strip())) for framenum in GameParams["screenshots"].split(',') ]
@@ -312,6 +360,7 @@ class RegTester:
                 exeparms += [ "--plugindir", self.bindir ]
                 exeparms += [ "--datadir", os.path.join(self.bindir, "data") ]
                 myconfig = os.path.join(self.rootdir, "config")
+                #if os.path.exists(myconfig):
                 exeparms += [ "--configdir", myconfig ]
                 exeparms += [ "--gfx", plugin ]
                 exeparms += [ "--emumode", "2" ]
@@ -324,9 +373,70 @@ class RegTester:
                     report += "    Error: Test run timed out after 60 seconds:  '%s'\n" % " ".join(exeparms)
                     os.kill(testrun.pid, 9)
                     testrun.join(10.0)
-                
         # all tests have been run
         return True                
+
+    def RunSpeedTests(self, caseName, caseOptions):
+        global report
+        rompath = self.generalParams["rompath"]
+        if not os.path.exists(rompath):
+            report += "    Error: ROM directory '%s' does not exist!\n" % rompath
+            return None
+        # Remove any current screenshot directory
+        if not deltree(self.screenshotdir):
+            return None
+        # Data initialization and start message
+        os.mkdir(self.screenshotdir)
+        # figure out which games to test
+        testGames = []
+        for GameFilename in sorted(self.gamesAndParams.iterkeys()):
+            GameParams = self.gamesAndParams[GameFilename]
+            if "speedtest" not in GameParams:
+                continue
+            numFrames = int(GameParams["speedtest"])
+            # clean up the game's name
+            GameName = GameFilename
+            for charDelimiter in [".","-","("]:
+                pivot = GameName.find(charDelimiter)
+                if pivot != -1:
+                    GameName = GameName[:pivot]
+            testGames.append((GameName, GameFilename,numFrames))
+        # run the tests
+        speedResults = [ ]
+        for (gameName, gameFilename, numFrames) in testGames:
+            # construct the command line
+            exepath = os.path.join(self.bindir, "mupen64plus")
+            exeparms = [ "--corelib", os.path.join(self.bindir, "libmupen64plus.so.2") ]
+            exeparms += [ "--testshots",  ("%i" % numFrames) ]
+            exeparms += [ "--sshotdir", self.screenshotdir ]
+            exeparms += [ "--plugindir", self.bindir ]
+            exeparms += [ "--datadir", os.path.join(self.bindir, "data") ]
+            exeparms += [ "--configdir", os.path.join(self.rootdir, "config") ]
+            exeparms += [ "--gfx", "mupen64plus-video-rice" ]
+            exeparms += [ "--nospeedlimit", "--noosd", "--nosaveoptions" ]
+            exeparms += [ "--audio", "dummy" ]
+            exeparms += caseOptions
+            exeparms += [ os.path.join(rompath, gameFilename) ]
+            # make 3 runs, take best of them
+            bestTime = None
+            for i in range(3):
+                # run it, but if it takes too long print an error and kill it
+                testrun = RegTestRunner(exepath, exeparms)
+                startTime = time.time()
+                testrun.start()
+                testrun.join(360.0)
+                if testrun.isAlive():
+                    report += "    Error: Test run timed out after 360 seconds:  '%s'\n" % " ".join(exeparms)
+                    os.kill(testrun.pid, 9)
+                    testrun.join(10.0)
+                    break
+                endTime = time.time()
+                thisTime = endTime - startTime
+                if bestTime is None or thisTime < bestTime:
+                    bestTime = thisTime
+            # save the best of 3 times
+            speedResults.append((gameName,bestTime))
+        return speedResults
 
     def CheckResults(self, refdir):
         global report
@@ -498,9 +608,13 @@ def copytree(srcpath, dstpath):
         filepath = os.path.join(srcpath, filename)
         if os.path.isdir(filepath):
             subdstpath = os.path.join(dstpath, filename)
-            os.mkdir(subdstpath)
+            if not os.path.exists(subdstpath):
+                os.mkdir(subdstpath)
             copytree(filepath, subdstpath)
         else:
+            dstfile = os.path.join(dstpath, filename)
+            if os.path.exists(dstfile):
+                os.unlink(dstfile)
             shutil.copy(filepath, dstpath)
     return True
 
@@ -511,8 +625,14 @@ def copytree(srcpath, dstpath):
 if __name__ == "__main__":
     # parse the command-line arguments
     parser = OptionParser()
-    parser.add_option("-n", "--nobuild", dest="nobuild", default=False, action="store_true",
-                      help="Assume source code is present; don't check out and build")
+    parser.add_option("-g", "--nogit", dest="nogit", default=False, action="store_true",
+                      help="Assume source code is present; don't check out latest from Git")
+    parser.add_option("-b", "--nobuild", dest="nobuild", default=False, action="store_true",
+                      help="Do not run build tests")
+    parser.add_option("-s", "--nospeed", dest="nospeed", default=False, action="store_true",
+                      help="Do not run speed regression test suite")
+    parser.add_option("-v", "--novidcheck", dest="novidcheck", default=False, action="store_true",
+                      help="Do not run video screenshot comparison tests")
     parser.add_option("-e", "--noemail", dest="noemail", default=False, action="store_true",
                       help="don't send email or archive results")
     parser.add_option("-t", "--testpath", dest="testpath",
@@ -529,7 +649,7 @@ if __name__ == "__main__":
     else:
         rootdir = opts.testpath
     # call the main function
-    rval = main(rootdir, opts.cfgfile, opts.nobuild, opts.noemail)
+    rval = main(rootdir, opts.cfgfile, opts.nogit, opts.nobuild, opts.nospeed, opts.novidcheck, opts.noemail)
     sys.exit(rval)
 
 
