@@ -23,6 +23,7 @@
 #define M64P_R4300_R4300_CORE_H
 
 #include "cp0.h"
+#include "interupt.h"
 #include "mi_controller.h"
 
 struct r4300_core

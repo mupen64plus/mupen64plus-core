@@ -25,7 +25,6 @@
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
-#include "r4300/interupt.h"
 
 #include <string.h>
 

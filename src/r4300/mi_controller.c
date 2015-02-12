@@ -22,7 +22,6 @@
 #include "mi_controller.h"
 #include "r4300.h"
 #include "r4300_core.h"
-#include "interupt.h"
 
 #include <string.h>
 

@@ -68,7 +68,6 @@
 #include "plugin/rumble_via_input_plugin.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
-#include "r4300/interupt.h"
 #include "r4300/reset.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"

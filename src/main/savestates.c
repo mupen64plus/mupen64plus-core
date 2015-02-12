@@ -46,7 +46,6 @@
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/cached_interp.h"
-#include "r4300/interupt.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "pi/pi_controller.h"
