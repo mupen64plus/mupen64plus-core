@@ -34,7 +34,7 @@
  * (at run time) the active core is not the Pure Interpreter. */
 #include "cached_interp.h"
 #include "r4300.h"
-#include "cp0.h"
+#include "cp0_private.h"
 #include "cp1.h"
 #include "exception.h"
 #include "interupt.h"

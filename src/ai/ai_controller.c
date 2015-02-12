@@ -23,7 +23,6 @@
 
 #include "main/rom.h"
 #include "memory/memory.h"
-#include "r4300/cp0.h"
 #include "r4300/r4300_core.h"
 #include "r4300/interupt.h"
 #include "ri/ri_controller.h"
@@ -42,6 +41,7 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 {
     unsigned int next_ai_event;
     unsigned int remaining_dma_duration;
+    const uint32_t* cp0_regs;
 
     if (ai->fifo[0].duration == 0)
         return 0;
@@ -51,7 +51,8 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
     if (next_ai_event == 0)
         return 0;
 
-    remaining_dma_duration = next_ai_event - g_cp0_regs[CP0_COUNT_REG];
+    cp0_regs = r4300_cp0_regs();
+    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
 
     if (remaining_dma_duration >= 0x80000000)
         return 0;

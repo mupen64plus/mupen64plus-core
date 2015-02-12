@@ -32,7 +32,7 @@
 #include "memory/memory.h"
 
 #include "r4300.h"
-#include "cp0.h"
+#include "cp0_private.h"
 #include "cp1.h"
 #include "ops.h"
 #include "exception.h"

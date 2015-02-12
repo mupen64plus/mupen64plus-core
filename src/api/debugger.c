@@ -41,7 +41,7 @@
 #include "memory/memory.h"
 #include "pi/pi_controller.h"
 #include "r4300/r4300.h"
-#include "r4300/cp0.h"
+#include "r4300/r4300_core.h"
 #include "r4300/cp1.h"
 #include "r4300/tlb.h"
 #include "ri/ri_controller.h"
@@ -336,7 +336,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_LO:
             return &lo;
         case M64P_CPU_REG_COP0:
-            return g_cp0_regs;
+            return r4300_cp0_regs();
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
             return reg_cop1_double;
         case M64P_CPU_REG_COP1_SIMPLE_PTR:

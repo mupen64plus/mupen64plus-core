@@ -25,7 +25,6 @@
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
-#include "r4300/cp0.h"
 #include "r4300/interupt.h"
 
 #include <string.h>
@@ -49,11 +48,12 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
+    const uint32_t* cp0_regs = r4300_cp0_regs();
 
     if (reg == VI_CURRENT_REG)
     {
         update_count();
-        vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - g_cp0_regs[CP0_COUNT_REG]))/1500;
+        vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG]))/1500;
         vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] & (~1)) | vi->field;
     }
 
