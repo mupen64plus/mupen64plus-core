@@ -585,3 +585,24 @@ void free_blocks(void)
     }
 }
 
+void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
+{
+    size_t i;
+    size_t begin;
+    size_t end;
+
+    if (size == 0)
+    {
+        begin = 0;
+        end = 0xfffff;
+    }
+    else
+    {
+        begin = address >> 12;
+        end = (address+size-1) >> 12;
+    }
+
+    for(i = begin; i <= end; ++i)
+        invalid_code[i] = 1;
+}
+

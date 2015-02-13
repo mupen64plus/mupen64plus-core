@@ -1252,6 +1252,27 @@ void invalidate_block(u_int block)
   #endif
 }
 
+void invalidate_cached_code_new_dynarec(uint32_t address, size_t size)
+{
+    size_t i;
+    size_t begin;
+    size_t end;
+
+    if (size == 0)
+    {
+        begin = 0;
+        end = 0xfffff;
+    }
+    else
+    {
+        begin = address >> 12;
+        end = (address+size-1) >> 12;
+    }
+
+    for(i = begin; i <= end; ++i)
+        invalidate_block(i);
+}
+
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
 static void invalidate_addr(u_int addr)
 {

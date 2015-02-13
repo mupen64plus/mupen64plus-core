@@ -26,11 +26,21 @@
 #include "interupt.h"
 #include "mi_controller.h"
 
+#include <stddef.h>
+
 struct r4300_core
 {
     struct mi_controller mi;
 };
 
 void init_r4300(struct r4300_core* r4300);
+
+/* Allow cached/dynarec r4300 implementations to invalidate
+ * their cached code at [address, address+size]
+ *
+ * If size == 0, r4300 implementation should invalidate
+ * all cached code.
+ */
+void invalidate_r4300_cached_code(uint32_t address, size_t size);
 
 #endif

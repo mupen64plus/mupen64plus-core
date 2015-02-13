@@ -21,8 +21,28 @@
 
 #include "r4300_core.h"
 
+#include "cached_interp.h"
+#include "new_dynarec/new_dynarec.h"
+#include "r4300.h"
+
 void init_r4300(struct r4300_core* r4300)
 {
     init_mi(&r4300->mi);
 }
 
+void invalidate_r4300_cached_code(uint32_t address, size_t size)
+{
+    if (r4300emu != CORE_PURE_INTERPRETER)
+    {
+#ifdef NEW_DYNAREC
+        if (r4300emu == CORE_DYNAREC)
+        {
+            invalidate_cached_code_new_dynarec(address, size);
+        }
+        else
+#endif
+        {
+            invalidate_cached_code_hacktarux(address, size);
+        }
+    }
+}

@@ -45,7 +45,6 @@
 #include "r4300/cp1.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
-#include "r4300/cached_interp.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "pi/pi_controller.h"
@@ -445,26 +444,18 @@ static int savestates_load_m64p(char *filepath)
     }
 
 #ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC) {
+    if (r4300emu == CORE_DYNAREC)
+    {
         pcaddr = GETDATA(curr, uint32_t);
         pending_exception = 1;
         invalidate_all_pages();
-    } else {
-        if(r4300emu != CORE_PURE_INTERPRETER)
-        {
-            for (i = 0; i < 0x100000; i++)
-                invalid_code[i] = 1;
-        }
-        generic_jump_to(GETDATA(curr, uint32_t)); // PC
     }
-#else
-    if(r4300emu != CORE_PURE_INTERPRETER)
-    {
-        for (i = 0; i < 0x100000; i++)
-            invalid_code[i] = 1;
-    }
-    generic_jump_to(GETDATA(curr, uint32_t)); // PC
+    else
 #endif
+    {
+        generic_jump_to(GETDATA(curr, uint32_t)); // PC
+        invalidate_r4300_cached_code(0,0);
+    }
 
     next_interupt = GETDATA(curr, unsigned int);
     g_vi.next_vi = GETDATA(curr, unsigned int);
@@ -757,22 +748,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
         pcaddr = last_addr;
         pending_exception = 1;
         invalidate_all_pages();
-    } else {
-        if(r4300emu != CORE_PURE_INTERPRETER)
-        {
-            for (i = 0; i < 0x100000; i++)
-                invalid_code[i] = 1;
-        }
+    }
+    else
+#endif
+    {
+        invalidate_r4300_cached_code(0, 0);
         generic_jump_to(last_addr);
     }
-#else
-    if(r4300emu != CORE_PURE_INTERPRETER)
-    {
-        for (i = 0; i < 0x100000; i++)
-            invalid_code[i] = 1;
-    }
-    generic_jump_to(last_addr);
-#endif
 
     // assert(savestateData+savestateSize == curr)
 

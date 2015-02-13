@@ -27,12 +27,8 @@
 #include "main/main.h"
 #include "main/rom.h"
 
-#include "r4300/r4300.h"
-#include "r4300/r4300_core.h"
-#include "r4300/cached_interp.h"
 #include "r4300/new_dynarec/new_dynarec.h"
-#include "r4300/recomph.h"
-#include "r4300/ops.h"
+#include "r4300/r4300_core.h"
 #include "r4300/tlb.h"
 
 #include "rdp/rdp_core.h"
@@ -48,12 +44,14 @@
 #include "debugger/dbg_types.h"
 #include "debugger/dbg_memory.h"
 #include "debugger/dbg_breakpoints.h"
-
+#include "r4300/r4300.h" /* for PC->addr */
 #include <string.h>
 #endif
 
 #include <stddef.h>
 #include <stdint.h>
+
+extern int fast_memory;
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
@@ -169,15 +167,6 @@ static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t v
 }
 
 
-static void invalidate_code(uint32_t address)
-{
-    if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
-        if (blocks[address>>12]->block[(address&0xFFF)/4].ops !=
-            current_instruction_table.NOTCOMPILED)
-            invalid_code[address>>12] = 1;
-}
-
-
 static void read_nothing(void)
 {
     *rdword = 0;
@@ -244,7 +233,7 @@ static void read_nomemd(void)
 
 static void write_nomem(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 4);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_word_in_memory();
@@ -252,7 +241,7 @@ static void write_nomem(void)
 
 static void write_nomemb(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 1);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_byte_in_memory();
@@ -260,7 +249,7 @@ static void write_nomemb(void)
 
 static void write_nomemh(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 2);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_hword_in_memory();
@@ -268,7 +257,7 @@ static void write_nomemh(void)
 
 static void write_nomemd(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 8);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_dword_in_memory();
