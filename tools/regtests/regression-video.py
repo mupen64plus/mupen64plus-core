@@ -122,12 +122,12 @@ def main(rootdir, cfgfile, nogit, nobuild, nospeed, novidcheck, noemail):
                 report += "\n"
         # Step 5: build the binary for the video regression test
         if not novidcheck:
+            videobuild = tester.generalParams["videobuild"]
+            videomake = tester.generalParams["videobuildparams"]
             for modname in tester.modulesAndParams:
                 module = tester.modulesAndParams[modname]
                 modurl = module["url"]
                 modfilename = modurl.split('/')[-1]
-                videobuild = self.generalParams["videobuild"]
-                videomake = self.generalParams["videobuildparams"]
                 if not BuildSource(srcdir, modfilename, modname, videobuild, videomake, module["outputfiles"], False, True):
                     rval = 3
                     break
