@@ -455,6 +455,7 @@ SOURCE = \
 	$(SRCDIR)/rdp/fb.c \
 	$(SRCDIR)/rdp/rdp_core.c \
 	$(SRCDIR)/ri/rdram.c \
+	$(SRCDIR)/ri/rdram_detection_hack.c \
 	$(SRCDIR)/ri/ri_controller.c \
 	$(SRCDIR)/rsp/rsp_core.c \
 	$(SRCDIR)/si/af_rtc.c \
