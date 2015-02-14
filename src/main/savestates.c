@@ -364,11 +364,17 @@ static int savestates_load_m64p(char *filepath)
     g_ai.regs[AI_STATUS_REG]    = GETDATA(curr, uint32_t);
     g_ai.regs[AI_DACRATE_REG]   = GETDATA(curr, uint32_t);
     g_ai.regs[AI_BITRATE_REG]   = GETDATA(curr, uint32_t);
-    g_ai.fifo[1].delay  = GETDATA(curr, unsigned int);
+    g_ai.fifo[1].duration  = GETDATA(curr, unsigned int);
     g_ai.fifo[1].length = GETDATA(curr, uint32_t);
-    g_ai.fifo[0].delay  = GETDATA(curr, unsigned int);
+    g_ai.fifo[0].duration  = GETDATA(curr, unsigned int);
     g_ai.fifo[0].length = GETDATA(curr, uint32_t);
-    audio.aiDacrateChanged(ROM_PARAMS.systemtype);
+    /* best effort initialization of fifo addresses...
+     * You might get a small sound "pop" because address might be wrong.
+     * Proper initialization requires changes to savestate format
+     */
+    g_ai.fifo[0].address = g_ai.regs[AI_DRAM_ADDR_REG];
+    g_ai.fifo[1].address = g_ai.regs[AI_DRAM_ADDR_REG];
+    g_ai.samples_format_changed = 1;
 
     g_dp.dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
     g_dp.dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
@@ -648,7 +654,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_ai.regs[AI_STATUS_REG]    = GETDATA(curr, uint32_t);
     g_ai.regs[AI_DACRATE_REG]   = GETDATA(curr, uint32_t);
     g_ai.regs[AI_BITRATE_REG]   = GETDATA(curr, uint32_t);
-    audio.aiDacrateChanged(ROM_PARAMS.systemtype);
+    g_ai.samples_format_changed = 1;
 
     // pi_register
     g_pi.regs[PI_DRAM_ADDR_REG]    = GETDATA(curr, uint32_t);
@@ -1133,9 +1139,9 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_ai.regs[AI_STATUS_REG]);
     PUTDATA(curr, uint32_t, g_ai.regs[AI_DACRATE_REG]);
     PUTDATA(curr, uint32_t, g_ai.regs[AI_BITRATE_REG]);
-    PUTDATA(curr, unsigned int, g_ai.fifo[1].delay);
+    PUTDATA(curr, unsigned int, g_ai.fifo[1].duration);
     PUTDATA(curr, uint32_t    , g_ai.fifo[1].length);
-    PUTDATA(curr, unsigned int, g_ai.fifo[0].delay);
+    PUTDATA(curr, unsigned int, g_ai.fifo[0].duration);
     PUTDATA(curr, uint32_t    , g_ai.fifo[0].length);
 
     PUTDATA(curr, uint32_t, g_dp.dpc_regs[DPC_START_REG]);

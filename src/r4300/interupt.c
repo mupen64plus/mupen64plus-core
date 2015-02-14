@@ -486,8 +486,6 @@ static void nmi_int_handler(void)
 
 void gen_interupt(void)
 {
-    unsigned int ai_event;
-
     if (stop == 1)
     {
         g_gs_vi_counter = 0; // debug
@@ -556,9 +554,8 @@ void gen_interupt(void)
             break;
     
         case AI_INT:
-            ai_event = q.first->data.count;
             remove_interupt_event();
-            ai_end_of_dma_event(&g_ai, ai_event);
+            ai_end_of_dma_event(&g_ai);
             break;
 
         case SP_INT:
