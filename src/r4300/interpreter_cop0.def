@@ -21,7 +21,7 @@
 
 DECLARE_INSTRUCTION(MFC0)
 {
-   switch(PC->f.r.nrd)
+   switch(rfs)
    {
       case CP0_RANDOM_REG:
         DebugMessage(M64MSG_ERROR, "MFC0 instruction reading un-implemented Random register");
@@ -29,7 +29,7 @@ DECLARE_INSTRUCTION(MFC0)
       case CP0_COUNT_REG:
         update_count();
       default:
-        rrt32 = g_cp0_regs[PC->f.r.nrd];
+        rrt32 = g_cp0_regs[rfs];
         sign_extended(rrt);
    }
    ADD_TO_PC(1);
@@ -37,7 +37,7 @@ DECLARE_INSTRUCTION(MFC0)
 
 DECLARE_INSTRUCTION(MTC0)
 {
-  switch(PC->f.r.nrd)
+  switch(rfs)
   {
     case CP0_INDEX_REG:
       g_cp0_regs[CP0_INDEX_REG] = (unsigned int) rrt & 0x8000003F;
@@ -130,7 +130,7 @@ DECLARE_INSTRUCTION(MTC0)
       g_cp0_regs[CP0_TAGHI_REG] =0;
       break;
     default:
-      DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", PC->f.r.nrd);
+      DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", rfs);
       stop=1;
   }
   ADD_TO_PC(1);
