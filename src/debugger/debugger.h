@@ -23,11 +23,11 @@
 #ifndef __DEBUGGER_H__
 #define __DEBUGGER_H__
 
+#include "api/m64p_types.h"
+
 extern int g_DebuggerActive;  /* True if the debugger is running */
 
-/* State of the Emulation Thread:
-   0 -> pause, 1 -> step, 2 -> run. */
-extern int run;
+extern m64p_dbg_runstate g_dbg_runstate;
 
 extern uint32 previousPC;
 
