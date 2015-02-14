@@ -29,11 +29,9 @@
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 
-// State of the Emulation Thread:
-// 0 -> pause, 2 -> run.
-
 int g_DebuggerActive = 0;    // whether the debugger is enabled or not
-int run;
+
+m64p_dbg_runstate g_dbg_runstate;
 
 // Holds the number of pending steps the debugger needs to perform.
 static SDL_sem *sem_pending_steps;
@@ -45,7 +43,7 @@ uint32 previousPC;
 void init_debugger()
 {
     g_DebuggerActive = 1;
-    run = 0;
+    g_dbg_runstate = M64P_DBG_RUNSTATE_PAUSED;
 
     DebuggerCallback(DEBUG_UI_INIT, 0); /* call front-end to initialize user interface */
 
@@ -70,20 +68,20 @@ void update_debugger(uint32 pc)
 {
     int bpt;
 
-    if(run!=0) {//check if we hit a breakpoint
+    if (g_dbg_runstate != M64P_DBG_RUNSTATE_PAUSED) {
         bpt = check_breakpoints(pc);
-        if( bpt!=-1 ) {
-            run = 0;
+        if (bpt != -1) {
+            g_dbg_runstate = M64P_DBG_RUNSTATE_PAUSED;
 
             if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
                 log_breakpoint(pc, M64P_BKP_FLAG_EXEC, 0);
         }
     }
 
-    if(run!=2) {
+    if (g_dbg_runstate != M64P_DBG_RUNSTATE_RUNNING) {
         DebuggerCallback(DEBUG_UI_UPDATE, pc);  /* call front-end to notify user interface to update */
     }
-    if(run==0) {
+    if (g_dbg_runstate == M64P_DBG_RUNSTATE_PAUSED) {
         // The emulation thread is blocked until a step call via the API.
         SDL_SemWait(sem_pending_steps);
     }

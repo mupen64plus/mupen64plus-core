@@ -58,9 +58,9 @@ EXPORT m64p_error CALL DebugSetCoreCompare(void (*)(unsigned int), void (*)(int,
  *
  * This function sets the run state of the R4300 CPU emulator.
  */
-typedef m64p_error (*ptr_DebugSetRunState)(int);
+typedef m64p_error (*ptr_DebugSetRunState)(m64p_dbg_runstate);
 #if defined(M64P_CORE_PROTOTYPES)
-EXPORT m64p_error CALL DebugSetRunState(int);
+EXPORT m64p_error CALL DebugSetRunState(m64p_dbg_runstate);
 #endif
 
 /* DebugGetState()
