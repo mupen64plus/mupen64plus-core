@@ -869,6 +869,7 @@ m64p_error main_run(void)
     struct fla_file fla;
     struct mpk_file mpk;
     struct sra_file sra;
+    static int channels[] = { 0, 1, 2, 3 };
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -932,7 +933,6 @@ m64p_error main_run(void)
     g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
 
     /* connect external game controllers */
-    static int channels[] = { 0, 1, 2, 3 };
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
         g_si.pif.controllers[i].user_data = &channels[i];

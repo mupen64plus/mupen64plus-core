@@ -14,7 +14,14 @@
 
 #define USE_MINI_HT 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 extern void *base_addr; // Code generator target address
+#ifdef __cplusplus
+}
+#endif
+
 #define TARGET_SIZE_2 25 // 2^25 = 32 megabytes
 #define JUMP_TABLE_SIZE 0 // Not needed for 32-bit x86
 

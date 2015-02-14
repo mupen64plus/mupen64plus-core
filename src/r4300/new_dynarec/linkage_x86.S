@@ -675,7 +675,7 @@ invalidate_block_call:
 	.type	write_rdram_new, @function
 write_rdram_new:
 	mov	address, %edi
-	mov	word, %ecx
+	mov	cpu_word, %ecx
 	mov	%ecx, g_rdram-0x80000000(%edi)
 	jmp	.E12
 	.size	write_rdram_new, .-write_rdram_new
@@ -697,7 +697,7 @@ write_rdramb_new:
 write_rdramh_new:
 	mov	address, %edi
 	xor	$2, %edi
-	movw	hword, %cx
+	movw	cpu_hword, %cx
 	movw	%cx, g_rdram-0x80000000(%edi)
 	jmp	.E12
 	.size	write_rdramh_new, .-write_rdramh_new
@@ -707,8 +707,8 @@ write_rdramh_new:
 	.type	write_rdramd_new, @function
 write_rdramd_new:
 	mov	address, %edi
-	mov	dword+4, %ecx
-	mov	dword, %edx
+	mov	cpu_dword+4, %ecx
+	mov	cpu_dword, %edx
 	mov	%ecx, g_rdram-0x80000000(%edi)
 	mov	%edx, g_rdram-0x80000000+4(%edi)
 	jmp	.E12
@@ -803,7 +803,7 @@ read_nomemd_new:
 write_nomem_new:
 	call	do_invalidate
 	mov	memory_map(,%edi,4),%edi
-	mov	word, %ecx
+	mov	cpu_word, %ecx
 	mov	$0xc, %eax
 	shl	$2, %edi
 	jc	tlb_exception
@@ -832,7 +832,7 @@ write_nomemb_new:
 write_nomemh_new:
 	call	do_invalidate
 	mov	memory_map(,%edi,4),%edi
-	movw	hword, %cx
+	movw	cpu_hword, %cx
 	mov	$0xc, %eax
 	shl	$2, %edi
 	jc	tlb_exception
@@ -847,8 +847,8 @@ write_nomemh_new:
 write_nomemd_new:
 	call	do_invalidate
 	mov	memory_map(,%edi,4),%edi
-	mov	dword+4, %edx
-	mov	dword, %ecx
+	mov	cpu_dword+4, %edx
+	mov	cpu_dword, %ecx
 	mov	$0xc, %eax
 	shl	$2, %edi
 	jc	tlb_exception
