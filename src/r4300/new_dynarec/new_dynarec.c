@@ -4522,8 +4522,13 @@ static void load_regs_bt(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty
         }
         else if((i_is32>>(regs[t].regmap_entry[hr]&63))&1) {
           int lr=get_reg(regs[t].regmap_entry,regs[t].regmap_entry[hr]-64);
-          assert(lr>=0);
-          emit_sarimm(lr,31,hr);
+          if(lr<0) {
+            emit_loadreg(regs[t].regmap_entry[hr],hr);
+          }
+          else
+          {
+            emit_sarimm(lr,31,hr);
+          }
         }
       }
     }
