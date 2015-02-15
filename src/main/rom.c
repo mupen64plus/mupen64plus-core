@@ -21,6 +21,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
@@ -81,42 +82,51 @@ static int is_valid_rom(const unsigned char *buffer)
         return 0;
 }
 
-/* If rom is a .v64 or .n64 image, byteswap or wordswap loadlength amount of
- * rom data to native .z64 before forwarding. Makes sure that data extraction
- * and MD5ing routines always deal with a .z64 image.
+/* Copies the source block of memory to the destination block of memory while
+ * switching the endianness of .v64 and .n64 images to the .z64 format, which
+ * is native to the Nintendo 64. The data extraction routines and MD5 hashing
+ * function may only act on the .z64 big-endian format.
+ *
+ * IN: src: The source block of memory. This must be a valid Nintendo 64 ROM
+ *          image of 'len' bytes.
+ *     len: The length of the source and destination, in bytes.
+ * OUT: dst: The destination block of memory. This must be a valid buffer for
+ *           at least 'len' bytes.
+ *      imagetype: A pointer to a byte that gets updated with the value of
+ *                 V64IMAGE, N64IMAGE or Z64IMAGE according to the format of
+ *                 the source block. The value is undefined if 'src' does not
+ *                 represent a valid Nintendo 64 ROM image.
  */
-static void swap_rom(unsigned char* localrom, unsigned char* imagetype, int loadlength)
+static void swap_copy_rom(void* dst, const void* src, size_t len, unsigned char* imagetype)
 {
-    unsigned char temp;
-    int i;
-
-    /* Btyeswap if .v64 image. */
-    if(localrom[0]==0x37)
-        {
+    if (*(const uint8_t*) src == 0x37)
+    {
         *imagetype = V64IMAGE;
-        for (i = 0; i < loadlength; i+=2)
-            {
-            temp=localrom[i];
-            localrom[i]=localrom[i+1];
-            localrom[i+1]=temp;
-            }
-        }
-    /* Wordswap if .n64 image. */
-    else if(localrom[0]==0x40)
+        /* .v64 images have byte-swapped half-words (16-bit). */
+        size_t i;
+        const uint16_t* src16 = (const uint16_t*) src;
+        uint16_t* dst16 = (uint16_t*) dst;
+        for (i = 0; i < len; i += 2)
         {
-        *imagetype = N64IMAGE;
-        for (i = 0; i < loadlength; i+=4)
-            {
-            temp=localrom[i];
-            localrom[i]=localrom[i+3];
-            localrom[i+3]=temp;
-            temp=localrom[i+1];
-            localrom[i+1]=localrom[i+2];
-            localrom[i+2]=temp;
-            }
+            *dst16++ = m64p_swap16(*src16++);
         }
-    else
+    }
+    else if (*(const uint8_t*) src == 0x40)
+    {
+        *imagetype = N64IMAGE;
+        /* .n64 images have byte-swapped words (32-bit). */
+        size_t i;
+        const uint32_t* src32 = (const uint32_t*) src;
+        uint32_t* dst32 = (uint32_t*) dst;
+        for (i = 0; i < len; i += 4)
+        {
+            *dst32++ = m64p_swap32(*src32++);
+        }
+    }
+    else {
         *imagetype = Z64IMAGE;
+        memcpy(dst, src, len);
+    }
 }
 
 m64p_error open_rom(const unsigned char* romimage, unsigned int size)
@@ -147,8 +157,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     g_rom = (unsigned char *) malloc(size);
     if (g_rom == NULL)
         return M64ERR_NO_MEMORY;
-    memcpy(g_rom, romimage, size);
-    swap_rom(g_rom, &imagetype, g_rom_size);
+    swap_copy_rom(g_rom, romimage, size, &imagetype);
 
     memcpy(&ROM_HEADER, g_rom, sizeof(m64p_rom_header));
 
