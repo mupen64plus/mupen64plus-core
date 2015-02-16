@@ -24,7 +24,6 @@
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "main/rom.h"
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
 #include "r4300/cp0.h"
