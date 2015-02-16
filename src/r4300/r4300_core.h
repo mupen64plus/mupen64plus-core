@@ -25,6 +25,7 @@
 #include "cp0.h"
 #include "interupt.h"
 #include "mi_controller.h"
+#include "tlb.h"
 
 #include <stddef.h>
 

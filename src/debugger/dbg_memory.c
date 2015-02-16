@@ -37,7 +37,6 @@
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/ops.h"
-#include "r4300/tlb.h"
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
 #include "ri/ri_controller.h"

@@ -43,7 +43,6 @@
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/cp1.h"
-#include "r4300/tlb.h"
 #include "ri/ri_controller.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"

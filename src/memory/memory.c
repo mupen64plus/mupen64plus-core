@@ -29,7 +29,6 @@
 
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "r4300/r4300_core.h"
-#include "r4300/tlb.h"
 
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
