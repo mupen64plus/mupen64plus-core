@@ -35,7 +35,7 @@
 #include "cached_interp.h"
 #include "r4300.h"
 #include "cp0_private.h"
-#include "cp1.h"
+#include "cp1_private.h"
 #include "exception.h"
 #include "interupt.h"
 #include "tlb.h"

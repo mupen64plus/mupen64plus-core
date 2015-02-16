@@ -42,7 +42,6 @@
 #include "pi/pi_controller.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
-#include "r4300/cp1.h"
 #include "ri/ri_controller.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
@@ -337,11 +336,11 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_COP0:
             return r4300_cp0_regs();
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
-            return reg_cop1_double;
+            return r4300_cp1_regs_double();
         case M64P_CPU_REG_COP1_SIMPLE_PTR:
-            return reg_cop1_simple;
+            return r4300_cp1_regs_simple();
         case M64P_CPU_REG_COP1_FGR_64:
-            return reg_cop1_fgr_64;
+            return r4300_cp1_regs();
         case M64P_CPU_TLB:
             return tlb_e;
         default:

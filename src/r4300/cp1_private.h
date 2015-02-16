@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - r4300_core.h                                            *
+ *   Mupen64plus - cp1_private.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,30 +19,19 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_R4300_CORE_H
-#define M64P_R4300_R4300_CORE_H
+#ifndef M64P_R4300_CP1_PRIVATE_H
+#define M64P_R4300_CP1_PRIVATE_H
 
-#include "cp0.h"
 #include "cp1.h"
-#include "interupt.h"
-#include "mi_controller.h"
-#include "tlb.h"
 
-#include <stddef.h>
+#include <stdint.h>
 
-struct r4300_core
-{
-    struct mi_controller mi;
-};
+extern float *reg_cop1_simple[32];
+extern double *reg_cop1_double[32];
+extern uint32_t FCR0, FCR31;
+extern int64_t reg_cop1_fgr_64[32];
+extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
 
-void init_r4300(struct r4300_core* r4300);
+#endif /* M64P_R4300_CP1_PRIVATE_H */
 
-/* Allow cached/dynarec r4300 implementations to invalidate
- * their cached code at [address, address+size]
- *
- * If size == 0, r4300 implementation should invalidate
- * all cached code.
- */
-void invalidate_r4300_cached_code(uint32_t address, size_t size);
 
-#endif

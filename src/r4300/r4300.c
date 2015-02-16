@@ -39,7 +39,7 @@
 #include "r4300_core.h"
 #include "cached_interp.h"
 #include "cp0_private.h"
-#include "cp1.h"
+#include "cp1_private.h"
 #include "ops.h"
 #include "interupt.h"
 #include "pure_interp.h"
