@@ -37,6 +37,17 @@ struct r4300_core
 
 void init_r4300(struct r4300_core* r4300);
 
+int64_t* r4300_regs(void);
+int64_t* r4300_mult_hi(void);
+int64_t* r4300_mult_lo(void);
+unsigned int* r4300_llbit(void);
+uint32_t* r4300_pc(void);
+
+uint32_t* r4300_last_addr(void);
+unsigned int* r4300_next_interrupt(void);
+
+unsigned int get_r4300_emumode(void);
+
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]
  *
@@ -44,5 +55,12 @@ void init_r4300(struct r4300_core* r4300);
  * all cached code.
  */
 void invalidate_r4300_cached_code(uint32_t address, size_t size);
+
+
+/* Jump to the given address. This works for all r4300 emulator, but is slower.
+ * Use this for common code which can be executed from any r4300 emulator. */
+void generic_jump_to(unsigned int address);
+
+void savestates_load_set_pc(uint32_t pc);
 
 #endif

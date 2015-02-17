@@ -40,7 +40,6 @@
 #include "main/main.h"
 #include "memory/memory.h"
 #include "pi/pi_controller.h"
-#include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 #include "si/si_controller.h"
@@ -132,9 +131,9 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
         case M64P_DBG_NUM_BREAKPOINTS:
             return g_NumBreakpoints;
         case M64P_DBG_CPU_DYNACORE:
-            return r4300emu;
+            return get_r4300_emumode();
         case M64P_DBG_CPU_NEXT_INTERRUPT:
-            return next_interupt;
+            return *r4300_next_interrupt();
         default:
             DebugMessage(M64MSG_WARNING, "Bug: invalid m64p_dbg_state input in DebugGetState()");
             return 0;
@@ -326,13 +325,13 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
     switch (cpu_data_type)
     {
         case M64P_CPU_PC:
-            return &PC->addr;
+            return r4300_pc();
         case M64P_CPU_REG_REG:
-            return reg;
+            return r4300_regs();
         case M64P_CPU_REG_HI:
-            return &hi;
+            return r4300_mult_hi();
         case M64P_CPU_REG_LO:
-            return &lo;
+            return r4300_mult_lo();
         case M64P_CPU_REG_COP0:
             return r4300_cp0_regs();
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
