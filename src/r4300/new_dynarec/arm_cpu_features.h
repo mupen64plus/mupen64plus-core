@@ -39,16 +39,8 @@ typedef struct
     unsigned char IDIVt;
 }arm_cpu_features_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern arm_cpu_features_t arm_cpu_features;
 void detect_arm_cpu_features(void);
 void print_arm_cpu_features(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* ARM_CPU_FEATURES_H */
