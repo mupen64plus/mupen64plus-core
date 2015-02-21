@@ -763,11 +763,11 @@ r4k_disassemble_split ( struct r4k_dis_t * state,
     dupd = strdup( buff );
     *opcode = &dupd[0];
     
-    for( i = 0; buff[i] && buff[i] != ' '; i++ );
+    for( i = 0; buff[i] && buff[i] != ' ' && buff[i] != '\t'; i++ );
     
     dupd[i] = '\0';
     
-    for( ; buff[i] && buff[i] == ' '; i++ );
+    for( ; buff[i] && (buff[i] == ' ' || buff[i] == '\t'); i++ );
     
     *operands = &dupd[i];
     
