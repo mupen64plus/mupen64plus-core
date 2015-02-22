@@ -200,13 +200,13 @@ Used by dynarec only, check should be unnecessary
 
 static void NOTCOMPILED(void)
 {
-   unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
+   uint32_t *mem = fast_mem_access(blocks[PC->addr>>12]->start);
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
    if (mem != NULL)
-      recompile_block((int *)mem, blocks[PC->addr >> 12], PC->addr);
+      recompile_block(mem, blocks[PC->addr >> 12], PC->addr);
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 

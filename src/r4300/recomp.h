@@ -87,7 +87,7 @@ typedef struct _precomp_block
    unsigned int adler32;
 } precomp_block;
 
-void recompile_block(int *source, precomp_block *block, unsigned int func);
+void recompile_block(const uint32_t *source, precomp_block *block, uint32_t func);
 void init_block(precomp_block *block);
 void free_block(precomp_block *block);
 void recompile_opcode(void);

@@ -62,6 +62,7 @@
  *
  *	from: @(#)kadb.c	8.1 (Berkeley) 6/10/93
  */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -800,7 +801,7 @@ r4k_disassemble_split_quick ( uint32_t instruction,
 
 //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[ DECODE_OP ]=-=-=-=-=-=-=-=-=-=-=-=-=-=-=[//
 
-void r4300_decode_op ( uint32 instr, char * opcode, char * arguments, int counter )
+void r4300_decode_op ( uint32_t instr, char * opcode, char * arguments, uint32_t counter )
 {
     char * _op, * _args;
     

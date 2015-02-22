@@ -1443,7 +1443,7 @@ void map_region(uint16_t region,
     map_region_w(region, write8, write16, write32, write64);
 }
 
-unsigned int *fast_mem_access(uint32_t address)
+uint32_t *fast_mem_access(uint32_t address)
 {
     /* This code is performance critical, specially on pure interpreter mode.
      * Removing error checking saves some time, but the emulator may crash. */
@@ -1454,11 +1454,11 @@ unsigned int *fast_mem_access(uint32_t address)
     address &= UINT32_C(0x1ffffffc);
 
     if (address < RDRAM_MAX_SIZE)
-        return (unsigned int*)((unsigned char*)g_rdram + address);
+        return (uint32_t*) ((uint8_t*) g_rdram + address);
     else if (address >= UINT32_C(0x10000000))
-        return (unsigned int*)((unsigned char*)g_rom + address - UINT32_C(0x10000000));
+        return (uint32_t*) ((uint8_t*) g_rom + (address - UINT32_C(0x10000000)));
     else if ((address & UINT32_C(0xffffe000)) == UINT32_C(0x04000000))
-        return (unsigned int*)((unsigned char*)g_sp.mem + (address & UINT32_C(0x1ffc)));
+        return (uint32_t*) ((uint8_t*) g_sp.mem + (address & UINT32_C(0x1ffc)));
     else
         return NULL;
 }

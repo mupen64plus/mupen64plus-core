@@ -29,7 +29,7 @@ extern int max_code_length;
 extern unsigned char **inst_pointer;
 extern precomp_block* dst_block;
 extern int fast_memory;
-extern int src;   /* opcode of r4300 instruction being recompiled */
+extern uint32_t src;   /* opcode of r4300 instruction being recompiled */
 
 #if defined(PROFILE_R4300)
   #include <stdio.h>

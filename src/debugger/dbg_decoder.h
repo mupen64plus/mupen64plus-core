@@ -54,7 +54,7 @@ struct r4k_dis_t
 }
 R4kDis;
 
-extern void r4300_decode_op ( uint32, char *, char *, int );
+extern void r4300_decode_op ( uint32_t, char *, char *, uint32_t );
 
 
 #endif /* __DECODER_H__ */

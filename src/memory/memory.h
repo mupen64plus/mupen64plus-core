@@ -111,7 +111,7 @@ void write_rdramFBd(void);
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
  * Useful for getting fast access to a zone with executable code. */
-unsigned int *fast_mem_access(uint32_t address);
+uint32_t *fast_mem_access(uint32_t address);
 
 #ifdef DBG
 void activate_memory_break_read(uint32_t address);
