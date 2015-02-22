@@ -19,7 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Before #including this file, the following macros should be defined:
+/* Before #including this file, <stdint.h> must be included, and the following
+ * macros must be defined:
  *
  * PCADDR: Program counter (memory address of the current instruction).
  *

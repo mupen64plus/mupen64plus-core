@@ -22,13 +22,15 @@
 #ifndef M64P_R4300_R4300_H
 #define M64P_R4300_R4300_H
 
+#include <stdint.h>
+
 #include "ops.h"
 #include "recomp.h"
 
 extern precomp_instr *PC;
 
 extern int stop, llbit, rompause;
-extern long long int reg[32], hi, lo;
+extern int64_t reg[32], hi, lo;
 extern long long int local_rs;
 extern unsigned int delay_slot, skip_jump, dyna_interp;
 extern unsigned int r4300emu;

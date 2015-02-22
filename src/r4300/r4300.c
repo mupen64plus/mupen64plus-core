@@ -19,6 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,7 +62,7 @@ unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
 int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
-long long int reg[32], hi, lo;
+int64_t reg[32], hi, lo;
 unsigned int next_interupt;
 precomp_instr *PC;
 #endif
@@ -209,9 +210,9 @@ void r4300_reset_soft(void)
     g_sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
-    reg[11] = 0xffffffffa4000040ULL; /* t3 */
-    reg[29] = 0xffffffffa4001ff0ULL; /* sp */
-    reg[31] = 0xffffffffa4001550ULL; /* ra */
+    reg[11] = INT64_C(0xffffffffa4000040); /* t3 */
+    reg[29] = INT64_C(0xffffffffa4001ff0); /* sp */
+    reg[31] = INT64_C(0xffffffffa4001550); /* ra */
 
     /* ready to execute IPL3 */
 }

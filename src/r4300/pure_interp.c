@@ -55,7 +55,7 @@ static void InterpretOpcode(void);
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \

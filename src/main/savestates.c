@@ -406,11 +406,11 @@ static int savestates_load_m64p(char *filepath)
     COPYARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
 
     llbit = GETDATA(curr, unsigned int);
-    COPYARRAY(reg, curr, long long int, 32);
+    COPYARRAY(reg, curr, int64_t, 32);
     COPYARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    lo = GETDATA(curr, long long int);
-    hi = GETDATA(curr, long long int);
+    lo = GETDATA(curr, int64_t);
+    hi = GETDATA(curr, int64_t);
     COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(0x04000000, 0);
@@ -550,7 +550,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     last_addr = GETDATA(curr, unsigned int);
 
     // GPR
-    COPYARRAY(reg, curr, long long int, 32);
+    COPYARRAY(reg, curr, int64_t, 32);
 
     // FPR
     COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
@@ -583,8 +583,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     FCR31 = GETDATA(curr, int);
 
     // hi / lo
-    hi = GETDATA(curr, long long int);
-    lo = GETDATA(curr, long long int);
+    hi = GETDATA(curr, int64_t);
+    lo = GETDATA(curr, int64_t);
 
     // rdram register
     g_ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
@@ -1185,10 +1185,10 @@ static int savestates_save_m64p(char *filepath)
     PUTARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
 
     PUTDATA(curr, unsigned int, llbit);
-    PUTARRAY(reg, curr, long long int, 32);
+    PUTARRAY(reg, curr, int64_t, 32);
     PUTARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
-    PUTDATA(curr, long long int, lo);
-    PUTDATA(curr, long long int, hi);
+    PUTDATA(curr, int64_t, lo);
+    PUTDATA(curr, int64_t, hi);
 
     if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
         shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
@@ -1279,7 +1279,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
 #else
     PUTDATA(curr, unsigned int, PC->addr);
 #endif
-    PUTARRAY(reg, curr, long long int, 32);
+    PUTARRAY(reg, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(0x04000000, 0);
     PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
@@ -1290,8 +1290,8 @@ static int savestates_save_pj64(char *filepath, void *handle,
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
     PUTDATA(curr, int, FCR31);
-    PUTDATA(curr, long long int, hi);
-    PUTDATA(curr, long long int, lo);
+    PUTDATA(curr, int64_t, hi);
+    PUTDATA(curr, int64_t, lo);
 
     PUTDATA(curr, uint32_t, g_ri.rdram.regs[RDRAM_CONFIG_REG]);
     PUTDATA(curr, uint32_t, g_ri.rdram.regs[RDRAM_DEVICE_ID_REG]);

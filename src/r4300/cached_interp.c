@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
+
 #include "cached_interp.h"
 
 #include "api/m64p_types.h"
@@ -66,7 +68,7 @@ unsigned int jump_to_address;
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \
@@ -98,7 +100,7 @@ unsigned int jump_to_address;
    { \
       const int take_jump = (condition); \
       const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \

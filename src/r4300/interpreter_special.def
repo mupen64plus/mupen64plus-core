@@ -26,42 +26,42 @@ DECLARE_INSTRUCTION(NOP)
 
 DECLARE_INSTRUCTION(SLL)
 {
-   rrd32 = (unsigned int)(rrt32) << rsa;
+   rrd32 = (uint32_t) rrt32 << rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRL)
 {
-   rrd32 = (unsigned int)rrt32 >> rsa;
+   rrd32 = (uint32_t) rrt32 >> rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRA)
 {
-   rrd32 = (signed int)rrt32 >> rsa;
+   rrd32 = (int32_t) rrt32 >> rsa;
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SLLV)
 {
-   rrd32 = (unsigned int)(rrt32) << (rrs32&0x1F);
+   rrd32 = (uint32_t) rrt32 << (rrs32 & 0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRLV)
 {
-   rrd32 = (unsigned int)rrt32 >> (rrs32 & 0x1F);
+   rrd32 = (uint32_t) rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRAV)
 {
-   rrd32 = (signed int)rrt32 >> (rrs32 & 0x1F);
+   rrd32 = (int32_t) rrt32 >> (rrs32 & 0x1F);
    sign_extended(rrd);
    ADD_TO_PC(1);
 }
@@ -106,25 +106,25 @@ DECLARE_INSTRUCTION(MTLO)
 
 DECLARE_INSTRUCTION(DSLLV)
 {
-   rrd = rrt << (rrs32&0x3F);
+   rrd = rrt << (rrs32 & 0x3F);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRLV)
 {
-   rrd = (unsigned long long)rrt >> (rrs32 & 0x3F);
+   rrd = (uint64_t) rrt >> (rrs32 & 0x3F);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRAV)
 {
-   rrd = (long long)rrt >> (rrs32 & 0x3F);
+   rrd = (int64_t) rrt >> (rrs32 & 0x3F);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MULT)
 {
-   long long int temp;
+   int64_t temp;
    temp = rrs * rrt;
    hi = temp >> 32;
    lo = temp;
@@ -134,9 +134,9 @@ DECLARE_INSTRUCTION(MULT)
 
 DECLARE_INSTRUCTION(MULTU)
 {
-   unsigned long long int temp;
-   temp = (unsigned int)rrs * (unsigned long long)((unsigned int)rrt);
-   hi = (long long)temp >> 32;
+   uint64_t temp;
+   temp = (uint32_t) rrs * (uint64_t) ((uint32_t) rrt);
+   hi = (int64_t) temp >> 32;
    lo = temp;
    sign_extended(lo);
    ADD_TO_PC(1);
@@ -159,8 +159,8 @@ DECLARE_INSTRUCTION(DIVU)
 {
    if (rrt32)
    {
-     lo = (unsigned int)rrs32 / (unsigned int)rrt32;
-     hi = (unsigned int)rrs32 % (unsigned int)rrt32;
+     lo = (uint32_t) rrs32 / (uint32_t) rrt32;
+     hi = (uint32_t) rrs32 % (uint32_t) rrt32;
      sign_extended(lo);
      sign_extended(hi);
    }
@@ -170,9 +170,9 @@ DECLARE_INSTRUCTION(DIVU)
 
 DECLARE_INSTRUCTION(DMULT)
 {
-   unsigned long long int op1, op2, op3, op4;
-   unsigned long long int result1, result2, result3, result4;
-   unsigned long long int temp1, temp2, temp3, temp4;
+   uint64_t op1, op2, op3, op4;
+   uint64_t result1, result2, result3, result4;
+   uint64_t temp1, temp2, temp3, temp4;
    int sign = 0;
    
    if (rrs < 0)
@@ -188,23 +188,23 @@ DECLARE_INSTRUCTION(DMULT)
      }
    else op4 = rrt;
    
-   op1 = op2 & 0xFFFFFFFF;
-   op2 = (op2 >> 32) & 0xFFFFFFFF;
-   op3 = op4 & 0xFFFFFFFF;
-   op4 = (op4 >> 32) & 0xFFFFFFFF;
+   op1 = op2 & UINT64_C(0xFFFFFFFF);
+   op2 = (op2 >> 32) & UINT64_C(0xFFFFFFFF);
+   op3 = op4 & UINT64_C(0xFFFFFFFF);
+   op4 = (op4 >> 32) & UINT64_C(0xFFFFFFFF);
    
    temp1 = op1 * op3;
    temp2 = (temp1 >> 32) + op1 * op4;
    temp3 = op2 * op3;
    temp4 = (temp3 >> 32) + op2 * op4;
    
-   result1 = temp1 & 0xFFFFFFFF;
-   result2 = temp2 + (temp3 & 0xFFFFFFFF);
+   result1 = temp1 & UINT64_C(0xFFFFFFFF);
+   result2 = temp2 + (temp3 & UINT64_C(0xFFFFFFFF));
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
    lo = result1 | (result2 << 32);
-   hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    if (sign)
      {
     hi = ~hi;
@@ -216,27 +216,27 @@ DECLARE_INSTRUCTION(DMULT)
 
 DECLARE_INSTRUCTION(DMULTU)
 {
-   unsigned long long int op1, op2, op3, op4;
-   unsigned long long int result1, result2, result3, result4;
-   unsigned long long int temp1, temp2, temp3, temp4;
+   uint64_t op1, op2, op3, op4;
+   uint64_t result1, result2, result3, result4;
+   uint64_t temp1, temp2, temp3, temp4;
    
-   op1 = rrs & 0xFFFFFFFF;
-   op2 = (rrs >> 32) & 0xFFFFFFFF;
-   op3 = rrt & 0xFFFFFFFF;
-   op4 = (rrt >> 32) & 0xFFFFFFFF;
+   op1 = rrs & UINT64_C(0xFFFFFFFF);
+   op2 = (rrs >> 32) & UINT64_C(0xFFFFFFFF);
+   op3 = rrt & UINT64_C(0xFFFFFFFF);
+   op4 = (rrt >> 32) & UINT64_C(0xFFFFFFFF);
    
    temp1 = op1 * op3;
    temp2 = (temp1 >> 32) + op1 * op4;
    temp3 = op2 * op3;
    temp4 = (temp3 >> 32) + op2 * op4;
    
-   result1 = temp1 & 0xFFFFFFFF;
-   result2 = temp2 + (temp3 & 0xFFFFFFFF);
+   result1 = temp1 & UINT64_C(0xFFFFFFFF);
+   result2 = temp2 + (temp3 & UINT64_C(0xFFFFFFFF));
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
    lo = result1 | (result2 << 32);
-   hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    
    ADD_TO_PC(1);
 }
@@ -245,8 +245,8 @@ DECLARE_INSTRUCTION(DDIV)
 {
    if (rrt)
    {
-     lo = (long long int)rrs / (long long int)rrt;
-     hi = (long long int)rrs % (long long int)rrt;
+     lo = rrs / rrt;
+     hi = rrs % rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIV: divide by 0");
    ADD_TO_PC(1);
@@ -256,8 +256,8 @@ DECLARE_INSTRUCTION(DDIVU)
 {
    if (rrt)
    {
-     lo = (unsigned long long int)rrs / (unsigned long long int)rrt;
-     hi = (unsigned long long int)rrs % (unsigned long long int)rrt;
+     lo = (uint64_t) rrs / (uint64_t) rrt;
+     hi = (uint64_t) rrs % (uint64_t) rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0");
    ADD_TO_PC(1);
@@ -324,7 +324,7 @@ DECLARE_INSTRUCTION(SLT)
 
 DECLARE_INSTRUCTION(SLTU)
 {
-   if ((unsigned long long)rrs < (unsigned long long)rrt) 
+   if ((uint64_t) rrs < (uint64_t) rrt)
      rrd = 1;
    else rrd = 0;
    ADD_TO_PC(1);
@@ -372,7 +372,7 @@ DECLARE_INSTRUCTION(DSLL)
 
 DECLARE_INSTRUCTION(DSRL)
 {
-   rrd = (unsigned long long)rrt >> rsa;
+   rrd = (uint64_t) rrt >> rsa;
    ADD_TO_PC(1);
 }
 
@@ -384,18 +384,18 @@ DECLARE_INSTRUCTION(DSRA)
 
 DECLARE_INSTRUCTION(DSLL32)
 {
-   rrd = rrt << (32+rsa);
+   rrd = rrt << (32 + rsa);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRL32)
 {
-   rrd = (unsigned long long int)rrt >> (32+rsa);
+   rrd = (uint64_t) rrt >> (32 + rsa);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRA32)
 {
-   rrd = (signed long long int)rrt >> (32+rsa);
+   rrd = (int64_t) rrt >> (32 + rsa);
    ADD_TO_PC(1);
 }

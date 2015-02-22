@@ -26,9 +26,10 @@
 #include "api/callbacks.h"
 #include "osal/preproc.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 
-extern long long int reg[32];
+extern int64_t reg[32];
 
 #define EAX 0
 #define ECX 1
