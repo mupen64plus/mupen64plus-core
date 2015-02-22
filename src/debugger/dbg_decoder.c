@@ -149,10 +149,10 @@ static const char * const r4k_str_fmt_name[16] =
 
 static const char * const r4k_str_reg_name[32] = 
 {
-	"$zero", "$at",	"v0",	"v1",	"a0",	"a1",	"a2",	"a3",
-	"t0",	"t1",	"t2",	"t3",	"t4",	"t5",	"t6",	"t7",
-	"s0",	"s1",	"s2",	"s3",	"s4",	"s5",	"s6",	"s7",
-	"t8",	"t9",	"k0",	"k1",	"$gp",	"$sp",	"s8",	"$ra"
+	"$zero", "$at",	"$v0",	"$v1",	"$a0",	"$a1",	"$a2",	"$a3",
+	"$t0",	"$t1",	"$t2",	"$t3",	"$t4",	"$t5",	"$t6",	"$t7",
+	"$s0",	"$s1",	"$s2",	"$s3",	"$s4",	"$s5",	"$s6",	"$s7",
+	"$t8",	"$t9",	"$k0",	"$k1",	"$gp",	"$sp",	"$s8",	"$ra"
 };
 
 static const char * const r4k_str_c0_opname[64] = 
@@ -361,7 +361,8 @@ db_disasm_insn ( struct r4k_dis_t * state,
             case OP_DIVU:
             case OP_DDIV:
             case OP_DDIVU:
-                    db_printf(state, "$zero,%s,%s",
+                    db_printf(state, "%s,%s,%s",
+                        r4k_str_reg_name[0],
                         r4k_str_reg_name[i.RType.rs],
                         r4k_str_reg_name[i.RType.rt]);
                     break;
@@ -762,11 +763,11 @@ r4k_disassemble_split ( struct r4k_dis_t * state,
     dupd = strdup( buff );
     *opcode = &dupd[0];
     
-    for( i = 0; buff[i] && buff[i] != ' '; i++ );
+    for( i = 0; buff[i] && buff[i] != ' ' && buff[i] != '\t'; i++ );
     
     dupd[i] = '\0';
     
-    for( ; buff[i] && buff[i] == ' '; i++ );
+    for( ; buff[i] && (buff[i] == ' ' || buff[i] == '\t'); i++ );
     
     *operands = &dupd[i];
     
