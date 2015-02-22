@@ -32,10 +32,12 @@ extern precomp_instr *PC;
 extern int stop, llbit, rompause;
 extern int64_t reg[32], hi, lo;
 extern long long int local_rs;
-extern unsigned int delay_slot, skip_jump, dyna_interp;
+extern unsigned int delay_slot;
+extern uint32_t skip_jump;
+extern unsigned int dyna_interp;
 extern unsigned int r4300emu;
 extern unsigned int next_interupt;
-extern unsigned int last_addr;
+extern uint32_t last_addr;
 #define COUNT_PER_OP_DEFAULT 2
 extern unsigned int count_per_op;
 extern cpu_instruction_table current_instruction_table;
@@ -46,7 +48,7 @@ void r4300_execute(void);
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */ 
-void generic_jump_to(unsigned int address);
+void generic_jump_to(uint32_t address);
 
 // r4300 emulators
 #define CORE_PURE_INTERPRETER 0

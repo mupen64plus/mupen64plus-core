@@ -41,7 +41,7 @@
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
-
+#include <stdint.h>
 #include <string.h>
 
 #include <SDL.h>
@@ -479,8 +479,8 @@ static void nmi_int_handler(void)
     delay_slot = 0;
     dyna_interp = 0;
     // set next instruction address to reset vector
-    last_addr = 0xa4000040;
-    generic_jump_to(0xa4000040);
+    last_addr = UINT32_C(0xa4000040);
+    generic_jump_to(UINT32_C(0xa4000040));
 }
 
 
@@ -510,7 +510,7 @@ void gen_interupt(void)
    
     if (skip_jump)
     {
-        unsigned int dest = skip_jump;
+        uint32_t dest = skip_jump;
         skip_jump = 0;
 
         next_interupt = (q.first->data.count > g_cp0_regs[CP0_COUNT_REG]

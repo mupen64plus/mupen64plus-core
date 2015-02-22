@@ -446,7 +446,7 @@ static int savestates_load_m64p(char *filepath)
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
-        pcaddr = GETDATA(curr, unsigned int);
+        pcaddr = GETDATA(curr, uint32_t);
         pending_exception = 1;
         invalidate_all_pages();
     } else {
@@ -455,7 +455,7 @@ static int savestates_load_m64p(char *filepath)
             for (i = 0; i < 0x100000; i++)
                 invalid_code[i] = 1;
         }
-        generic_jump_to(GETDATA(curr, unsigned int)); // PC
+        generic_jump_to(GETDATA(curr, uint32_t)); // PC
     }
 #else
     if(r4300emu != CORE_PURE_INTERPRETER)
@@ -463,7 +463,7 @@ static int savestates_load_m64p(char *filepath)
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
     }
-    generic_jump_to(GETDATA(curr, unsigned int)); // PC
+    generic_jump_to(GETDATA(curr, uint32_t)); // PC
 #endif
 
     next_interupt = GETDATA(curr, unsigned int);
@@ -547,7 +547,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    last_addr = GETDATA(curr, unsigned int);
+    last_addr = GETDATA(curr, uint32_t);
 
     // GPR
     COPYARRAY(reg, curr, int64_t, 32);
@@ -752,7 +752,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
-        pcaddr = GETDATA(curr, unsigned int);
+        pcaddr = last_addr;
         pending_exception = 1;
         invalidate_all_pages();
     } else {
@@ -1226,11 +1226,11 @@ static int savestates_save_m64p(char *filepath)
     }
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)
-        PUTDATA(curr, unsigned int, pcaddr);
+        PUTDATA(curr, uint32_t, pcaddr);
     else
-        PUTDATA(curr, unsigned int, PC->addr);
+        PUTDATA(curr, uint32_t, PC->addr);
 #else
-    PUTDATA(curr, unsigned int, PC->addr);
+    PUTDATA(curr, uint32_t, PC->addr);
 #endif
 
     PUTDATA(curr, unsigned int, next_interupt);
@@ -1273,11 +1273,11 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)
-        PUTDATA(curr, unsigned int, pcaddr);
+        PUTDATA(curr, uint32_t, pcaddr);
     else
-        PUTDATA(curr, unsigned int, PC->addr);
+        PUTDATA(curr, uint32_t, PC->addr);
 #else
-    PUTDATA(curr, unsigned int, PC->addr);
+    PUTDATA(curr, uint32_t, PC->addr);
 #endif
     PUTARRAY(reg, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this

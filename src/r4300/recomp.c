@@ -535,7 +535,7 @@ static void (*recomp_special[64])(void) =
 
 static void RBLTZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZ;
    recomp_func = genbltz;
    recompile_standard_i_type();
@@ -557,7 +557,7 @@ static void RBLTZ(void)
 
 static void RBGEZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZ;
    recomp_func = genbgez;
    recompile_standard_i_type();
@@ -579,7 +579,7 @@ static void RBGEZ(void)
 
 static void RBLTZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZL;
    recomp_func = genbltzl;
    recompile_standard_i_type();
@@ -601,7 +601,7 @@ static void RBLTZL(void)
 
 static void RBGEZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZL;
    recomp_func = genbgezl;
    recompile_standard_i_type();
@@ -659,7 +659,7 @@ static void RTNEI(void)
 
 static void RBLTZAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZAL;
    recomp_func = genbltzal;
    recompile_standard_i_type();
@@ -681,7 +681,7 @@ static void RBLTZAL(void)
 
 static void RBGEZAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZAL;
    recomp_func = genbgezal;
    recompile_standard_i_type();
@@ -703,7 +703,7 @@ static void RBGEZAL(void)
 
 static void RBLTZALL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZALL;
    recomp_func = genbltzall;
    recompile_standard_i_type();
@@ -725,7 +725,7 @@ static void RBLTZALL(void)
 
 static void RBGEZALL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZALL;
    recomp_func = genbgezall;
    recompile_standard_i_type();
@@ -840,7 +840,7 @@ static void (*recomp_cop0[32])(void) =
 
 static void RBC1F(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1F;
    recomp_func = genbc1f;
    recompile_standard_i_type();
@@ -862,7 +862,7 @@ static void RBC1F(void)
 
 static void RBC1T(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1T;
    recomp_func = genbc1t;
    recompile_standard_i_type();
@@ -884,7 +884,7 @@ static void RBC1T(void)
 
 static void RBC1FL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1FL;
    recomp_func = genbc1fl;
    recompile_standard_i_type();
@@ -906,7 +906,7 @@ static void RBC1FL(void)
 
 static void RBC1TL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1TL;
    recomp_func = genbc1tl;
    recompile_standard_i_type();
@@ -1618,7 +1618,7 @@ static void RREGIMM(void)
 
 static void RJ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.J;
    recomp_func = genj;
    recompile_standard_j_type();
@@ -1640,7 +1640,7 @@ static void RJ(void)
 
 static void RJAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.JAL;
    recomp_func = genjal;
    recompile_standard_j_type();
@@ -1662,7 +1662,7 @@ static void RJAL(void)
 
 static void RBEQ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BEQ;
    recomp_func = genbeq;
    recompile_standard_i_type();
@@ -1684,7 +1684,7 @@ static void RBEQ(void)
 
 static void RBNE(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BNE;
    recomp_func = genbne;
    recompile_standard_i_type();
@@ -1706,7 +1706,7 @@ static void RBNE(void)
 
 static void RBLEZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLEZ;
    recomp_func = genblez;
    recompile_standard_i_type();
@@ -1728,7 +1728,7 @@ static void RBLEZ(void)
 
 static void RBGTZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGTZ;
    recomp_func = genbgtz;
    recompile_standard_i_type();
@@ -1824,7 +1824,7 @@ static void RCOP1(void)
 
 static void RBEQL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BEQL;
    recomp_func = genbeql;
    recompile_standard_i_type();
@@ -1846,7 +1846,7 @@ static void RBEQL(void)
 
 static void RBNEL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BNEL;
    recomp_func = genbnel;
    recompile_standard_i_type();
@@ -1868,7 +1868,7 @@ static void RBNEL(void)
 
 static void RBLEZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLEZL;
    recomp_func = genblezl;
    recompile_standard_i_type();
@@ -1890,7 +1890,7 @@ static void RBLEZL(void)
 
 static void RBGTZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGTZL;
    recomp_func = genbgtzl;
    recompile_standard_i_type();

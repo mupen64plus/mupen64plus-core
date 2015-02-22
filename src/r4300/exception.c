@@ -41,7 +41,7 @@ void TLB_refill_exception(uint32_t address, int w)
    g_cp0_regs[CP0_ENTRYHI_REG] = address & 0xFFFFE000;
    if (g_cp0_regs[CP0_STATUS_REG] & 0x2) // Test de EXL
      {
-    generic_jump_to(0x80000180);
+    generic_jump_to(UINT32_C(0x80000180));
     if(delay_slot==1 || delay_slot==3) g_cp0_regs[CP0_CAUSE_REG] |= 0x80000000;
     else g_cp0_regs[CP0_CAUSE_REG] &= 0x7FFFFFFF;
      }
@@ -72,11 +72,11 @@ void TLB_refill_exception(uint32_t address, int w)
       }
     if (usual_handler)
       {
-         generic_jump_to(0x80000180);
+         generic_jump_to(UINT32_C(0x80000180));
       }
     else
       {
-         generic_jump_to(0x80000000);
+         generic_jump_to(UINT32_C(0x80000000));
       }
      }
    if(delay_slot==1 || delay_slot==3)
@@ -125,7 +125,7 @@ void exception_general(void)
      {
     g_cp0_regs[CP0_CAUSE_REG] &= 0x7FFFFFFF;
      }
-   generic_jump_to(0x80000180);
+   generic_jump_to(UINT32_C(0x80000180));
    last_addr = PC->addr;
    if (r4300emu == CORE_DYNAREC)
      {

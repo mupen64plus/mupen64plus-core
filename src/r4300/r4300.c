@@ -67,11 +67,14 @@ unsigned int next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
-unsigned int delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
+unsigned int delay_slot;
+uint32_t skip_jump = 0;
+unsigned int dyna_interp = 0;
+uint32_t last_addr;
 
 cpu_instruction_table current_instruction_table;
 
-void generic_jump_to(unsigned int address)
+void generic_jump_to(uint32_t address)
 {
    if (r4300emu == CORE_PURE_INTERPRETER)
       PC->addr = address;
@@ -222,7 +225,7 @@ static void dynarec_setup_code(void)
 {
    // The dynarec jumps here after we call dyna_start and it prepares
    // Here we need to prepare the initial code block and jump to it
-   jump_to(0xa4000040);
+   jump_to(UINT32_C(0xa4000040));
 
    // Prevent segfault on failed jump_to
    if (!actual->block || !actual->code)
@@ -297,7 +300,7 @@ void r4300_execute(void)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300emu = CORE_INTERPRETER;
         init_blocks();
-        jump_to(0xa4000040);
+        jump_to(UINT32_C(0xa4000040));
 
         /* Prevent segfault on failed jump_to */
         if (!actual->block)
