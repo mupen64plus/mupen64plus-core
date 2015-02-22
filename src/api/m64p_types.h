@@ -28,6 +28,7 @@
 /* ----------------------------------------- */
 
 /* necessary headers */
+#include <stdint.h>
 #if defined(WIN32)
   #include <windows.h>
 #endif
@@ -159,8 +160,8 @@ typedef enum {
 } m64p_command;
 
 typedef struct {
-  unsigned int address;
-  int          value;
+  uint32_t address;
+  int      value;
 } m64p_cheat_code;
 
 /* ----------------------------------------- */
@@ -310,8 +311,8 @@ typedef enum {
 #define BPT_TOGGLE_FLAG(a, b) a.flags = (a.flags ^ b);
 
 typedef struct {
-  unsigned int address;
-  unsigned int endaddr;
+  uint32_t     address;
+  uint32_t     endaddr;
   unsigned int flags;
 } m64p_breakpoint;
 

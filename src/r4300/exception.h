@@ -22,7 +22,9 @@
 #ifndef M64P_R4300_EXCEPTION_H
 #define M64P_R4300_EXCEPTION_H
 
-void TLB_refill_exception(unsigned int addresse, int w);
+#include <stdint.h>
+
+void TLB_refill_exception(uint32_t addresse, int w);
 void exception_general(void);
 
 #endif /* M64P_R4300_EXCEPTION_H */

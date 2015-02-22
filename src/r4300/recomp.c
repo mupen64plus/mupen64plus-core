@@ -2285,7 +2285,7 @@ void init_block(precomp_block *block)
    * yet as the game should have already set up the code correctly.
    */
   invalid_code[block->start>>12] = 0;
-  if (block->end < 0x80000000 || block->start >= 0xc0000000)
+  if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
   { 
     unsigned int paddr;
     
@@ -2298,8 +2298,8 @@ void init_block(precomp_block *block)
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
       blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~0xFFF;
-      blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
+      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
     init_block(blocks[paddr>>12]);
     
@@ -2312,40 +2312,40 @@ void init_block(precomp_block *block)
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
       blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~0xFFF;
-      blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
+      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
     init_block(blocks[paddr>>12]);
   }
   else
   {
-    if (block->start >= 0x80000000 && block->end < 0xa0000000 && invalid_code[(block->start+0x20000000)>>12])
+    if (block->start >= UINT32_C(0x80000000) && block->end < UINT32_C(0xa0000000) && invalid_code[(block->start+UINT32_C(0x20000000))>>12])
     {
-      if (!blocks[(block->start+0x20000000)>>12])
+      if (!blocks[(block->start+UINT32_C(0x20000000))>>12])
       {
-        blocks[(block->start+0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start+0x20000000)>>12]->code = NULL;
-        blocks[(block->start+0x20000000)>>12]->block = NULL;
-        blocks[(block->start+0x20000000)>>12]->jumps_table = NULL;
-        blocks[(block->start+0x20000000)>>12]->riprel_table = NULL;
-        blocks[(block->start+0x20000000)>>12]->start = (block->start+0x20000000) & ~0xFFF;
-        blocks[(block->start+0x20000000)>>12]->end = ((block->start+0x20000000) & ~0xFFF) + 0x1000;
+        blocks[(block->start+UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->code = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->block = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->jumps_table = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->riprel_table = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->start = (block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->end = ((block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[(block->start+0x20000000)>>12]);
+      init_block(blocks[(block->start+UINT32_C(0x20000000))>>12]);
     }
-    if (block->start >= 0xa0000000 && block->end < 0xc0000000 && invalid_code[(block->start-0x20000000)>>12])
+    if (block->start >= UINT32_C(0xa0000000) && block->end < UINT32_C(0xc0000000) && invalid_code[(block->start-UINT32_C(0x20000000))>>12])
     {
-      if (!blocks[(block->start-0x20000000)>>12])
+      if (!blocks[(block->start-UINT32_C(0x20000000))>>12])
       {
-        blocks[(block->start-0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start-0x20000000)>>12]->code = NULL;
-        blocks[(block->start-0x20000000)>>12]->block = NULL;
-        blocks[(block->start-0x20000000)>>12]->jumps_table = NULL;
-        blocks[(block->start-0x20000000)>>12]->riprel_table = NULL;
-        blocks[(block->start-0x20000000)>>12]->start = (block->start-0x20000000) & ~0xFFF;
-        blocks[(block->start-0x20000000)>>12]->end = ((block->start-0x20000000) & ~0xFFF) + 0x1000;
+        blocks[(block->start-UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->code = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->block = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->jumps_table = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->riprel_table = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->start = (block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->end = ((block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[(block->start-0x20000000)>>12]);
+      init_block(blocks[(block->start-UINT32_C(0x20000000))>>12]);
     }
   }
   timed_section_end(TIMED_SECTION_COMPILER);
@@ -2395,12 +2395,12 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
 
    for (i = (func & 0xFFF) / 4; finished != 2; i++)
      {
-    if(block->start < 0x80000000 || block->start >= 0xc0000000)
+    if(block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
       {
-          unsigned int address2 =
+          uint32_t address2 =
            virtual_to_physical_address(block->start + i*4, 0);
-         if(blocks[address2>>12]->block[(address2&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
-           blocks[address2>>12]->block[(address2&0xFFF)/4].ops = current_instruction_table.NOTCOMPILED2;
+         if(blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == current_instruction_table.NOTCOMPILED)
+           blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = current_instruction_table.NOTCOMPILED2;
       }
     
     SRC = source + i;
@@ -2437,16 +2437,16 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
       }
     
     if (i >= length-2+(length>>2)) finished = 2;
-    if (i >= (length-1) && (block->start == 0xa4000000 ||
-                block->start >= 0xc0000000 ||
-                block->end   <  0x80000000)) finished = 2;
+    if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
+                block->start >= UINT32_C(0xc0000000) ||
+                block->end   <  UINT32_C(0x80000000))) finished = 2;
     if (dst->ops == current_instruction_table.ERET || finished == 1) finished = 2;
     if (/*i >= length &&*/ 
         (dst->ops == current_instruction_table.J ||
          dst->ops == current_instruction_table.J_OUT ||
          dst->ops == current_instruction_table.JR) &&
-        !(i >= (length-1) && (block->start >= 0xc0000000 ||
-                  block->end   <  0x80000000)))
+        !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
+                  block->end   <  UINT32_C(0x80000000))))
       finished = 1;
      }
 
