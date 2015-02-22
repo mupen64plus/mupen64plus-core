@@ -2053,14 +2053,11 @@ static void emit_writebyte(int rt, int addr)
   output_w32(0xe5c00000|rd_rn_rm(rt,FP,0)|offset);
 }
 
-/*
-static void emit_mul(int rs)
+static void emit_mul(u_int rs1,u_int rs2,u_int rt)
 {
-  assem_debug("mul %%%s",regname[rs]);
-  assert(0);
+  assem_debug("mul %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe0000090|(rt<<16)|(rs2<<8)|rs1);
 }
-*/
-
 static void emit_umull(u_int rs1, u_int rs2, u_int hi, u_int lo)
 {
   assem_debug("umull %s, %s, %s, %s",regname[lo],regname[hi],regname[rs1],regname[rs2]);
@@ -2096,6 +2093,19 @@ static void emit_smlal(u_int rs1, u_int rs2, u_int hi, u_int lo)
   assert(hi<16);
   assert(lo<16);
   output_w32(0xe0e00090|(hi<<16)|(lo<<12)|(rs2<<8)|rs1);
+}
+
+static void emit_sdiv(u_int rs1,u_int rs2,u_int rt)
+{
+  assert(arm_cpu_features.IDIVa);
+  assem_debug("sdiv %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe710f010|(rt<<16)|(rs2<<8)|rs1);
+}
+static void emit_udiv(u_int rs1,u_int rs2,u_int rt)
+{
+  assert(arm_cpu_features.IDIVa);
+  assem_debug("udiv %s,%s,%s",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe730f010|(rt<<16)|(rs2<<8)|rs1);
 }
 
 static void emit_clz(int rs,int rt)
@@ -4148,32 +4158,44 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
       }
       if(opcode2[i]==0x1A) // DIV
       {
-        signed char d1=get_reg(i_regs->regmap,rs1[i]);
-        signed char d2=get_reg(i_regs->regmap,rs2[i]);
+        signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
+        signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
         assert(d1>=0);
         assert(d2>=0);
         signed char quotient=get_reg(i_regs->regmap,LOREG);
         signed char remainder=get_reg(i_regs->regmap,HIREG);
         assert(quotient>=0);
         assert(remainder>=0);
-        emit_movs(d1,remainder);
-        emit_negmi(remainder,remainder);
-        emit_movs(d2,HOST_TEMPREG);
-        emit_jeq((int)out+52); // Division by zero
-        emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
-        emit_clz(HOST_TEMPREG,quotient);
-        emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
-        emit_orimm(quotient,1<<31,quotient);
-        emit_shr(quotient,quotient,quotient);
-        emit_cmp(remainder,HOST_TEMPREG);
-        emit_subcs(remainder,HOST_TEMPREG,remainder);
-        emit_adcs(quotient,quotient,quotient);
-        emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
-        emit_jcc((int)out-16); // -4
-        emit_teq(d1,d2);
-        emit_negmi(quotient,quotient);
-        emit_test(d1,d1);
-        emit_negmi(remainder,remainder);
+
+        if(arm_cpu_features.IDIVa)
+        {
+          emit_test(d2,d2);
+          emit_jeq((int)out+16); // Division by zero
+          emit_sdiv(d1,d2,quotient);
+          emit_mul(quotient,d2,remainder);
+          emit_sub(d1,remainder,remainder);
+        }
+        else
+        {
+          emit_movs(d1,remainder);
+          emit_negmi(remainder,remainder);
+          emit_movs(d2,HOST_TEMPREG);
+          emit_jeq((int)out+52); // Division by zero
+          emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
+          emit_clz(HOST_TEMPREG,quotient);
+          emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
+          emit_orimm(quotient,1<<31,quotient);
+          emit_shr(quotient,quotient,quotient);
+          emit_cmp(remainder,HOST_TEMPREG);
+          emit_subcs(remainder,HOST_TEMPREG,remainder);
+          emit_adcs(quotient,quotient,quotient);
+          emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
+          emit_jcc((int)out-16); // -4
+          emit_teq(d1,d2);
+          emit_negmi(quotient,quotient);
+          emit_test(d1,d1);
+          emit_negmi(remainder,remainder);
+        }
       }
       if(opcode2[i]==0x1B) // DIVU
       {
@@ -4186,17 +4208,28 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(quotient>=0);
         assert(remainder>=0);
         emit_test(d2,d2);
-        emit_jeq((int)out+44); // Division by zero
-        emit_clz(d2,HOST_TEMPREG);
-        emit_movimm(1<<31,quotient);
-        emit_shl(d2,HOST_TEMPREG,d2);
-        emit_mov(d1,remainder);
-        emit_shr(quotient,HOST_TEMPREG,quotient);
-        emit_cmp(remainder,d2);
-        emit_subcs(remainder,d2,remainder);
-        emit_adcs(quotient,quotient,quotient);
-        emit_shrcc_imm(d2,1,d2);
-        emit_jcc((int)out-16); // -4
+
+        if(arm_cpu_features.IDIVa)
+        {
+          emit_jeq((int)out+16); // Division by zero
+          emit_udiv(d1,d2,quotient);
+          emit_mul(quotient,d2,remainder);
+          emit_sub(d1,remainder,remainder);
+        }
+        else
+        {
+          emit_jeq((int)out+44); // Division by zero
+          emit_clz(d2,HOST_TEMPREG);
+          emit_movimm(1<<31,quotient);
+          emit_shl(d2,HOST_TEMPREG,d2);
+          emit_mov(d1,remainder);
+          emit_shr(quotient,HOST_TEMPREG,quotient);
+          emit_cmp(remainder,d2);
+          emit_subcs(remainder,d2,remainder);
+          emit_adcs(quotient,quotient,quotient);
+          emit_shrcc_imm(d2,1,d2);
+          emit_jcc((int)out-16); // -4
+        }
       }
     }
     else // 64-bit
@@ -4531,6 +4564,10 @@ static void do_clear_cache()
 
 // CPU-architecture-specific initialization
 static void arch_init() {
+
+  detect_arm_cpu_features();
+  print_arm_cpu_features();
+
   rounding_modes[0]=0x0<<22; // round
   rounding_modes[1]=0x3<<22; // trunc
   rounding_modes[2]=0x1<<22; // ceil
