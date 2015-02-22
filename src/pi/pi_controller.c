@@ -64,8 +64,7 @@ static void dma_pi_read(struct pi_controller* pi)
 
 static void dma_pi_write(struct pi_controller* pi)
 {
-    unsigned int longueur;
-    int i;
+    unsigned int longueur, i;
 
     if (pi->regs[PI_CART_ADDR_REG] < 0x10000000)
     {
@@ -107,7 +106,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     longueur = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF)+1;
     i = (pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF;
-    longueur = (i + (int) longueur) > pi->cart_rom.rom_size ?
+    longueur = (i + longueur) > pi->cart_rom.rom_size ?
                (pi->cart_rom.rom_size - i) : longueur;
     longueur = (pi->regs[PI_DRAM_ADDR_REG] + longueur) > 0x7FFFFF ?
                (0x7FFFFF - pi->regs[PI_DRAM_ADDR_REG]) : longueur;
@@ -123,7 +122,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     if (r4300emu != CORE_PURE_INTERPRETER)
     {
-        for (i=0; i<(int)longueur; i++)
+        for (i=0; i<longueur; i++)
         {
             unsigned long rdram_address1 = pi->regs[PI_DRAM_ADDR_REG]+i+0x80000000;
             unsigned long rdram_address2 = pi->regs[PI_DRAM_ADDR_REG]+i+0xa0000000;

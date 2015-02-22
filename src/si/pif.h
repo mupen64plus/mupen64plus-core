@@ -60,7 +60,7 @@ struct pif
     struct cic cic;
 };
 
-static inline uint32_t pif_ram_address(uint32_t address)
+static uint32_t pif_ram_address(uint32_t address)
 {
     return ((address & 0xfffc) - 0x7c0);
 }

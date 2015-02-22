@@ -260,6 +260,8 @@ void init_host_disassembler(void)
 
 #endif
 
+#ifdef DBG
+
 uint64 read_memory_64(uint32 addr)
 {
     return ((uint64)read_memory_32(addr) << 32) | (uint64)read_memory_32(addr + 4);
@@ -507,3 +509,5 @@ uint32 get_memory_flags(uint32 addr)
 
   return flags;
 }
+
+#endif

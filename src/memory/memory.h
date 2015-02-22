@@ -72,7 +72,7 @@ extern void (*writememd[0x10000])(void);
 
 #endif
 
-static inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
+static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
 {
     *dst = (*dst & ~mask) | (value & mask);
 }

@@ -86,12 +86,12 @@ void (*writememh[0x10000])(void);
 typedef int (*readfn)(void*,uint32_t,uint32_t*);
 typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 
-static inline unsigned int bshift(uint32_t address)
+static unsigned int bshift(uint32_t address)
 {
     return ((address & 3) ^ 3) << 3;
 }
 
-static inline unsigned int hshift(uint32_t address)
+static unsigned int hshift(uint32_t address)
 {
     return ((address & 2) ^ 2) << 3;
 }
@@ -162,8 +162,8 @@ static int writew(writefn write_word, void* opaque, uint32_t address, uint32_t v
 static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t value)
 {
     int result =
-    write_word(opaque, address    , value >> 32, ~0U);
-    write_word(opaque, address + 4, value      , ~0U);
+    write_word(opaque, address    , (uint32_t) (value >> 32), ~0U);
+    write_word(opaque, address + 4, (uint32_t) (value      ), ~0U);
 
     return result;
 }

@@ -63,7 +63,7 @@ struct ai_controller
     struct vi_controller* vi;
 };
 
-static inline uint32_t ai_reg(uint32_t address)
+static uint32_t ai_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

@@ -31,9 +31,10 @@
 
 #include "memory/memory.h"
 
+#ifdef DBG
+
 int g_NumBreakpoints=0;
 m64p_breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
-
 
 int add_breakpoint( uint32 address )
 {
@@ -213,3 +214,4 @@ int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access)
     return 0;
 }
 
+#endif

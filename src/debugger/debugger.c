@@ -29,6 +29,8 @@
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 
+#ifdef DBG
+
 int g_DebuggerActive = 0;    // whether the debugger is enabled or not
 
 m64p_dbg_runstate g_dbg_runstate;
@@ -94,4 +96,4 @@ void debugger_step()
     SDL_SemPost(sem_pending_steps);
 }
 
-
+#endif

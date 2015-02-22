@@ -46,7 +46,7 @@ struct ri_controller
     struct rdram rdram;
 };
 
-static inline uint32_t ri_reg(uint32_t address)
+static uint32_t ri_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

@@ -33,7 +33,7 @@ struct cart_rom
     uint32_t last_write;
 };
 
-static inline uint32_t rom_address(uint32_t address)
+static uint32_t rom_address(uint32_t address)
 {
     return (address & 0x03fffffc);
 }

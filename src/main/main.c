@@ -763,7 +763,7 @@ static void apply_speed_limiter(void)
 
     // calculate # of milliseconds that have passed since the last video interrupt
     CurrentFPSTime = SDL_GetTicks();
-    ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
+    ThisFrameDelta = CurrentFPSTime - LastFPSTime - (int) AdjustedLimit;
 
     // are we too fast?
     if (ThisFrameDelta < 0)
@@ -779,7 +779,7 @@ static void apply_speed_limiter(void)
             // recalculate # of milliseconds that have passed since the last video interrupt,
             // taking into account the time we just waited
             CurrentFPSTime = SDL_GetTicks();
-            ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
+            ThisFrameDelta = CurrentFPSTime - LastFPSTime - (int) AdjustedLimit;
         }
     }
 
