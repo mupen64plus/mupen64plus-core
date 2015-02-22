@@ -63,7 +63,7 @@ int llbit, rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
 int64_t reg[32], hi, lo;
-unsigned int next_interupt;
+uint32_t next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
@@ -137,17 +137,17 @@ void r4300_reset_hard(void)
     FCR31=0;
 
     // set COP0 registers
-    g_cp0_regs[CP0_RANDOM_REG] = 31;
-    g_cp0_regs[CP0_STATUS_REG]= 0x34000000;
+    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
+    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    g_cp0_regs[CP0_CONFIG_REG]= 0x6e463;
-    g_cp0_regs[CP0_PREVID_REG] = 0xb00;
-    g_cp0_regs[CP0_COUNT_REG] = 0x5000;
-    g_cp0_regs[CP0_CAUSE_REG] = 0x5C;
-    g_cp0_regs[CP0_CONTEXT_REG] = 0x7FFFF0;
-    g_cp0_regs[CP0_EPC_REG] = 0xFFFFFFFF;
-    g_cp0_regs[CP0_BADVADDR_REG] = 0xFFFFFFFF;
-    g_cp0_regs[CP0_ERROREPC_REG] = 0xFFFFFFFF;
+    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
+    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
+    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
+    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
+    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
+    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
+    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
+    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
    
     rounding_mode = 0x33F;
 }

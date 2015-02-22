@@ -36,7 +36,7 @@ extern unsigned int delay_slot;
 extern uint32_t skip_jump;
 extern unsigned int dyna_interp;
 extern unsigned int r4300emu;
-extern unsigned int next_interupt;
+extern uint32_t next_interupt;
 extern uint32_t last_addr;
 #define COUNT_PER_OP_DEFAULT 2
 extern unsigned int count_per_op;

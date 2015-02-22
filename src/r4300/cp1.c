@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
+
 #include "new_dynarec/new_dynarec.h"
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -39,7 +41,7 @@ int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
    of MIPS R4000 Microprocessor User's Manual (Second Edition)
    by Joe Heinrich.
 */
-void shuffle_fpr_data(int oldStatus, int newStatus)
+void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
 {
 #if defined(M64P_BIG_ENDIAN)
     const int isBigEndian = 1;
@@ -47,13 +49,13 @@ void shuffle_fpr_data(int oldStatus, int newStatus)
     const int isBigEndian = 0;
 #endif
 
-    if ((newStatus & 0x04000000) != (oldStatus & 0x04000000))
+    if ((newStatus & UINT32_C(0x04000000)) != (oldStatus & UINT32_C(0x04000000)))
     {
         int i;
         int temp_fgr_32[32];
 
         // pack or unpack the FGR register data
-        if (newStatus & 0x04000000)
+        if (newStatus & UINT32_C(0x04000000))
         {   // switching into 64-bit mode
             // retrieve 32 FPR values from packed 32-bit FGR registers
             for (i = 0; i < 32; i++)
@@ -91,7 +93,7 @@ void shuffle_fpr_data(int oldStatus, int newStatus)
     }
 }
 
-void set_fpr_pointers(int newStatus)
+void set_fpr_pointers(uint32_t newStatus)
 {
     int i;
 #if defined(M64P_BIG_ENDIAN)
@@ -101,7 +103,7 @@ void set_fpr_pointers(int newStatus)
 #endif
 
     // update the FPR register pointers
-    if (newStatus & 0x04000000)
+    if (newStatus & UINT32_C(0x04000000))
     {
         for (i = 0; i < 32; i++)
         {

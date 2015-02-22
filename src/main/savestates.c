@@ -407,13 +407,13 @@ static int savestates_load_m64p(char *filepath)
 
     llbit = GETDATA(curr, unsigned int);
     COPYARRAY(reg, curr, int64_t, 32);
-    COPYARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    COPYARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
     lo = GETDATA(curr, int64_t);
     hi = GETDATA(curr, int64_t);
     COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
-        shuffle_fpr_data(0x04000000, 0);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
     FCR0 = GETDATA(curr, int);
     FCR31 = GETDATA(curr, int);
 
@@ -556,11 +556,11 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
 
     // CP0
-    COPYARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    COPYARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
 
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
 
     // Initialze the interupts
     vi_timer += g_cp0_regs[CP0_COUNT_REG];
@@ -1186,15 +1186,15 @@ static int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, unsigned int, llbit);
     PUTARRAY(reg, curr, int64_t, 32);
-    PUTARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    PUTARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     PUTDATA(curr, int64_t, lo);
     PUTDATA(curr, int64_t, hi);
 
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
+        shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
     PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0)
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
     PUTDATA(curr, int, FCR0);
     PUTDATA(curr, int, FCR31);
@@ -1270,7 +1270,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_rom, curr, unsigned int, 0x40/4);
-    PUTDATA(curr, unsigned int, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
+    PUTDATA(curr, uint32_t, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)
         PUTDATA(curr, uint32_t, pcaddr);
@@ -1280,12 +1280,12 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, PC->addr);
 #endif
     PUTARRAY(reg, curr, int64_t, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
     PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
-    PUTARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+    PUTARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     PUTDATA(curr, int, FCR0);
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented

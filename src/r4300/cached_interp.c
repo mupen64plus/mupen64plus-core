@@ -137,7 +137,7 @@ unsigned int jump_to_address;
       { \
          update_count(); \
          skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & 0xFFFFFFFC); \
+         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \
       } \
       else name(); \
