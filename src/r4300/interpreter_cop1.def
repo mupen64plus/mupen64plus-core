@@ -21,15 +21,15 @@
 
 #include "fpu.h"
 
-DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, (FCR31 & 0x800000)==0, &reg[0], 0, 1)
-DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, (FCR31 & 0x800000)!=0, &reg[0], 0, 1)
-DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, (FCR31 & 0x800000)==0, &reg[0], 1, 1)
-DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, (FCR31 & 0x800000)!=0, &reg[0], 1, 1)
+DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &reg[0], 0, 1)
+DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &reg[0], 0, 1)
+DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &reg[0], 1, 1)
+DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &reg[0], 1, 1)
 
 DECLARE_INSTRUCTION(MFC1)
 {
    if (check_cop1_unusable()) return;
-   rrt32 = *((int*)reg_cop1_simple[rfs]);
+   rrt32 = *((int32_t*) reg_cop1_simple[rfs]);
    sign_extended(rrt);
    ADD_TO_PC(1);
 }
@@ -37,7 +37,7 @@ DECLARE_INSTRUCTION(MFC1)
 DECLARE_INSTRUCTION(DMFC1)
 {
    if (check_cop1_unusable()) return;
-   rrt = *((long long*)reg_cop1_double[rfs]);
+   rrt = *((int64_t*) reg_cop1_double[rfs]);
    ADD_TO_PC(1);
 }
 
@@ -60,14 +60,14 @@ DECLARE_INSTRUCTION(CFC1)
 DECLARE_INSTRUCTION(MTC1)
 {
    if (check_cop1_unusable()) return;
-   *((int*)reg_cop1_simple[rfs]) = rrt32;
+   *((int32_t*) reg_cop1_simple[rfs]) = rrt32;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DMTC1)
 {
    if (check_cop1_unusable()) return;
-   *((long long*)reg_cop1_double[rfs]) = rrt;
+   *((int64_t*) reg_cop1_double[rfs]) = rrt;
    ADD_TO_PC(1);
 }
 
@@ -121,7 +121,7 @@ DECLARE_INSTRUCTION(MUL_D)
 DECLARE_INSTRUCTION(DIV_D)
 {
    if (check_cop1_unusable()) return;
-   if((FCR31 & 0x400) && *reg_cop1_double[cfft] == 0)
+   if((FCR31 & UINT32_C(0x400)) && *reg_cop1_double[cfft] == 0)
    {
       //FCR31 |= 0x8020;
       /*FCR31 |= 0x8000;
@@ -165,56 +165,56 @@ DECLARE_INSTRUCTION(NEG_D)
 DECLARE_INSTRUCTION(ROUND_L_D)
 {
    if (check_cop1_unusable()) return;
-   round_l_d(reg_cop1_double[cffs], (long long*)(reg_cop1_double[cffd]));
+   round_l_d(reg_cop1_double[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TRUNC_L_D)
 {
    if (check_cop1_unusable()) return;
-   trunc_l_d(reg_cop1_double[cffs], (long long*)(reg_cop1_double[cffd]));
+   trunc_l_d(reg_cop1_double[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CEIL_L_D)
 {
    if (check_cop1_unusable()) return;
-   ceil_l_d(reg_cop1_double[cffs], (long long*)(reg_cop1_double[cffd]));
+   ceil_l_d(reg_cop1_double[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(FLOOR_L_D)
 {
    if (check_cop1_unusable()) return;
-   floor_l_d(reg_cop1_double[cffs], (long long*)(reg_cop1_double[cffd]));
+   floor_l_d(reg_cop1_double[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ROUND_W_D)
 {
    if (check_cop1_unusable()) return;
-   round_w_d(reg_cop1_double[cffs], (int*)reg_cop1_simple[cffd]);
+   round_w_d(reg_cop1_double[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TRUNC_W_D)
 {
    if (check_cop1_unusable()) return;
-   trunc_w_d(reg_cop1_double[cffs], (int*)reg_cop1_simple[cffd]);
+   trunc_w_d(reg_cop1_double[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CEIL_W_D)
 {
    if (check_cop1_unusable()) return;
-   ceil_w_d(reg_cop1_double[cffs], (int*)reg_cop1_simple[cffd]);
+   ceil_w_d(reg_cop1_double[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(FLOOR_W_D)
 {
    if (check_cop1_unusable()) return;
-   floor_w_d(reg_cop1_double[cffs], (int*)reg_cop1_simple[cffd]);
+   floor_w_d(reg_cop1_double[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
@@ -228,14 +228,14 @@ DECLARE_INSTRUCTION(CVT_S_D)
 DECLARE_INSTRUCTION(CVT_W_D)
 {
    if (check_cop1_unusable()) return;
-   cvt_w_d(reg_cop1_double[cffs], (int*)reg_cop1_simple[cffd]);
+   cvt_w_d(reg_cop1_double[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CVT_L_D)
 {
    if (check_cop1_unusable()) return;
-   cvt_l_d(reg_cop1_double[cffs], (long long*)(reg_cop1_double[cffd]));
+   cvt_l_d(reg_cop1_double[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
@@ -391,14 +391,14 @@ DECLARE_INSTRUCTION(C_NGT_D)
 DECLARE_INSTRUCTION(CVT_S_L)
 {
    if (check_cop1_unusable()) return;
-   cvt_s_l((long long*)(reg_cop1_double[cffs]), reg_cop1_simple[cffd]);
+   cvt_s_l((int64_t*) reg_cop1_double[cffs], reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CVT_D_L)
 {
    if (check_cop1_unusable()) return;
-   cvt_d_l((long long*)(reg_cop1_double[cffs]), reg_cop1_double[cffd]);
+   cvt_d_l((int64_t*) reg_cop1_double[cffs], reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
@@ -427,7 +427,7 @@ DECLARE_INSTRUCTION(MUL_S)
 DECLARE_INSTRUCTION(DIV_S)
 {  
    if (check_cop1_unusable()) return;
-   if((FCR31 & 0x400) && *reg_cop1_simple[cfft] == 0)
+   if((FCR31 & UINT32_C(0x400)) && *reg_cop1_simple[cfft] == 0)
    {
      DebugMessage(M64MSG_ERROR, "DIV_S by 0");
    }
@@ -466,56 +466,56 @@ DECLARE_INSTRUCTION(NEG_S)
 DECLARE_INSTRUCTION(ROUND_L_S)
 {
    if (check_cop1_unusable()) return;
-   round_l_s(reg_cop1_simple[cffs], (long long*)(reg_cop1_double[cffd]));
+   round_l_s(reg_cop1_simple[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TRUNC_L_S)
 {
    if (check_cop1_unusable()) return;
-   trunc_l_s(reg_cop1_simple[cffs], (long long*)(reg_cop1_double[cffd]));
+   trunc_l_s(reg_cop1_simple[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CEIL_L_S)
 {
    if (check_cop1_unusable()) return;
-   ceil_l_s(reg_cop1_simple[cffs], (long long*)(reg_cop1_double[cffd]));
+   ceil_l_s(reg_cop1_simple[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(FLOOR_L_S)
 {
    if (check_cop1_unusable()) return;
-   floor_l_s(reg_cop1_simple[cffs], (long long*)(reg_cop1_double[cffd]));
+   floor_l_s(reg_cop1_simple[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ROUND_W_S)
 {
    if (check_cop1_unusable()) return;
-   round_w_s(reg_cop1_simple[cffs], (int*)reg_cop1_simple[cffd]);
+   round_w_s(reg_cop1_simple[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TRUNC_W_S)
 {
    if (check_cop1_unusable()) return;
-   trunc_w_s(reg_cop1_simple[cffs], (int*)reg_cop1_simple[cffd]);
+   trunc_w_s(reg_cop1_simple[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CEIL_W_S)
 {
    if (check_cop1_unusable()) return;
-   ceil_w_s(reg_cop1_simple[cffs], (int*)reg_cop1_simple[cffd]);
+   ceil_w_s(reg_cop1_simple[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(FLOOR_W_S)
 {
    if (check_cop1_unusable()) return;
-   floor_w_s(reg_cop1_simple[cffs], (int*)reg_cop1_simple[cffd]);
+   floor_w_s(reg_cop1_simple[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
@@ -529,14 +529,14 @@ DECLARE_INSTRUCTION(CVT_D_S)
 DECLARE_INSTRUCTION(CVT_W_S)
 {
    if (check_cop1_unusable()) return;
-   cvt_w_s(reg_cop1_simple[cffs], (int*)reg_cop1_simple[cffd]);
+   cvt_w_s(reg_cop1_simple[cffs], (int32_t*) reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CVT_L_S)
 {
    if (check_cop1_unusable()) return;
-   cvt_l_s(reg_cop1_simple[cffs], (long long*)(reg_cop1_double[cffd]));
+   cvt_l_s(reg_cop1_simple[cffs], (int64_t*) reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }
 
@@ -696,13 +696,13 @@ DECLARE_INSTRUCTION(C_NGT_S)
 DECLARE_INSTRUCTION(CVT_S_W)
 {  
    if (check_cop1_unusable()) return;
-   cvt_s_w((int*)reg_cop1_simple[cffs], reg_cop1_simple[cffd]);
+   cvt_s_w((int32_t*) reg_cop1_simple[cffs], reg_cop1_simple[cffd]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(CVT_D_W)
 {
    if (check_cop1_unusable()) return;
-   cvt_d_w((int*)reg_cop1_simple[cffs], reg_cop1_double[cffd]);
+   cvt_d_w((int32_t*) reg_cop1_simple[cffs], reg_cop1_double[cffd]);
    ADD_TO_PC(1);
 }

@@ -411,11 +411,11 @@ static int savestates_load_m64p(char *filepath)
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
     lo = GETDATA(curr, int64_t);
     hi = GETDATA(curr, int64_t);
-    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    COPYARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    FCR0 = GETDATA(curr, int);
-    FCR31 = GETDATA(curr, int);
+    FCR0 = GETDATA(curr, int32_t);
+    FCR31 = GETDATA(curr, int32_t);
 
     for (i = 0; i < 32; i++)
     {
@@ -553,7 +553,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(reg, curr, int64_t, 32);
 
     // FPR
-    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    COPYARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
 
     // CP0
     COPYARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
@@ -578,9 +578,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(buffer);
 
     // FPCR
-    FCR0 = GETDATA(curr, int);
+    FCR0 = GETDATA(curr, int32_t);
     curr += 30 * 4; // FCR1...FCR30 not supported
-    FCR31 = GETDATA(curr, int);
+    FCR31 = GETDATA(curr, int32_t);
 
     // hi / lo
     hi = GETDATA(curr, int64_t);
@@ -1192,12 +1192,12 @@ static int savestates_save_m64p(char *filepath)
 
     if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
         shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
-    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    PUTARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
         shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
-    PUTDATA(curr, int, FCR0);
-    PUTDATA(curr, int, FCR31);
+    PUTDATA(curr, int32_t, FCR0);
+    PUTDATA(curr, int32_t, FCR31);
     for (i = 0; i < 32; i++)
     {
         PUTDATA(curr, short, tlb_e[i].mask);
@@ -1282,14 +1282,14 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(reg, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    PUTARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
     if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     PUTARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    PUTDATA(curr, int, FCR0);
+    PUTDATA(curr, int32_t, FCR0);
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
-    PUTDATA(curr, int, FCR31);
+    PUTDATA(curr, int32_t, FCR31);
     PUTDATA(curr, int64_t, hi);
     PUTDATA(curr, int64_t, lo);
 

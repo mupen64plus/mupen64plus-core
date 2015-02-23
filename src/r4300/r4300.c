@@ -133,7 +133,7 @@ void r4300_reset_hard(void)
     llbit=0;
     hi=0;
     lo=0;
-    FCR0=0x511;
+    FCR0 = UINT32_C(0x511);
     FCR31=0;
 
     // set COP0 registers
