@@ -90,7 +90,7 @@ static void recompile_standard_i_type(void)
 {
    dst->f.i.rs = reg + ((src >> 21) & 0x1F);
    dst->f.i.rt = reg + ((src >> 16) & 0x1F);
-   dst->f.i.immediate = src & 0xFFFF;
+   dst->f.i.immediate = (int16_t) src;
 }
 
 static void recompile_standard_j_type(void)

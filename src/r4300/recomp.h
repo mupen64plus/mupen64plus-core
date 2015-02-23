@@ -39,7 +39,7 @@ typedef struct _precomp_instr
       {
          int64_t *rs;
          int64_t *rt;
-         short immediate;
+         int16_t immediate;
       } i;
     struct
       {

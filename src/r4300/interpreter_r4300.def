@@ -57,19 +57,19 @@ DECLARE_INSTRUCTION(SLTIU)
 
 DECLARE_INSTRUCTION(ANDI)
 {
-   irt = irs & (unsigned short)iimmediate;
+   irt = irs & (uint16_t) iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ORI)
 {
-   irt = irs | (unsigned short)iimmediate;
+   irt = irs | (uint16_t) iimmediate;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(XORI)
 {
-   irt = irs ^ (unsigned short)iimmediate;
+   irt = irs ^ (uint16_t) iimmediate;
    ADD_TO_PC(1);
 }
 
