@@ -34,6 +34,8 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <limits.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include "rom.h"
 #include "util.h"
@@ -123,7 +125,7 @@ void to_big_endian_buffer(void *buffer, size_t length, size_t count)
 /**********************
      GUI utilities
  **********************/
-void countrycodestring(unsigned short countrycode, char *string)
+void countrycodestring(uint16_t countrycode, char *string)
 {
     switch (countrycode)
     {
@@ -164,16 +166,16 @@ void countrycodestring(unsigned short countrycode, char *string)
         break;
 
     case 0x55: case 0x59:  /* Australia */
-        sprintf(string, "Australia (0x%02X)", countrycode);
+        sprintf(string, "Australia (0x%02" PRIX16 ")", countrycode);
         break;
 
     case 0x50: case 0x58: case 0x20:
     case 0x21: case 0x38: case 0x70:
-        sprintf(string, "Europe (0x%02X)", countrycode);
+        sprintf(string, "Europe (0x%02" PRIX16 ")", countrycode);
         break;
 
     default:
-        sprintf(string, "Unknown (0x%02X)", countrycode);
+        sprintf(string, "Unknown (0x%02" PRIX16 ")", countrycode);
         break;
     }
 }

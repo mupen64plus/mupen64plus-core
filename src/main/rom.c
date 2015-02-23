@@ -25,6 +25,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <stddef.h>
+#include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_types.h"
@@ -61,7 +64,7 @@ m64p_rom_header   ROM_HEADER;
 rom_params        ROM_PARAMS;
 m64p_rom_settings ROM_SETTINGS;
 
-static m64p_system_type rom_country_code_to_system_type(unsigned short country_code);
+static m64p_system_type rom_country_code_to_system_type(uint16_t country_code);
 static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type);
 static int rom_system_type_to_vi_limit(m64p_system_type system_type);
 
@@ -202,19 +205,19 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER.Name);
     imagestring(imagetype, buffer);
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
-    DebugMessage(M64MSG_INFO, "CRC: %x %x", sl(ROM_HEADER.CRC1), sl(ROM_HEADER.CRC2));
+    DebugMessage(M64MSG_INFO, "CRC: %" PRIX32 " %" PRIX32, sl(ROM_HEADER.CRC1), sl(ROM_HEADER.CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
     DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", g_rom_size, g_rom_size/1024/1024, g_rom_size/1024/1024*8);
-    DebugMessage(M64MSG_VERBOSE, "ClockRate = %x", sl(ROM_HEADER.ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %x", sl(ROM_HEADER.Release));
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %" PRIX32, sl(ROM_HEADER.ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %" PRIX32, sl(ROM_HEADER.Release));
     if(sl(ROM_HEADER.Manufacturer_ID) == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
-        DebugMessage(M64MSG_INFO, "Manufacturer: %x", sl(ROM_HEADER.Manufacturer_ID));
-    DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %x", ROM_HEADER.Cartridge_ID);
+        DebugMessage(M64MSG_INFO, "Manufacturer: %" PRIX32, sl(ROM_HEADER.Manufacturer_ID));
+    DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %" PRIX16, ROM_HEADER.Cartridge_ID);
     countrycodestring(ROM_HEADER.Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
-    DebugMessage(M64MSG_VERBOSE, "PC = %x", sl((unsigned int)ROM_HEADER.PC));
+    DebugMessage(M64MSG_VERBOSE, "PC = %" PRIX32, sl(ROM_HEADER.PC));
     DebugMessage(M64MSG_VERBOSE, "Save type: %d", ROM_SETTINGS.savetype);
 
     //Prepare Hack for GOLDENEYE
@@ -244,9 +247,9 @@ m64p_error close_rom(void)
 /* ROM utility functions */
 
 // Get the system type associated to a ROM country code.
-static m64p_system_type rom_country_code_to_system_type(unsigned short country_code)
+static m64p_system_type rom_country_code_to_system_type(uint16_t country_code)
 {
-    switch (country_code & 0xFF)
+    switch (country_code & UINT16_C(0xFF))
     {
         // PAL codes
         case 0x44:

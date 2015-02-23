@@ -469,7 +469,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
     while ((token = strtok_compat(input, ",", &saveptr))) {
         input = NULL;
 
-        ret = sscanf(token, "%08" SCNX32 " %04X", &hackbuf[num_codes].address,
+        ret = sscanf(token, "%08" SCNx32 " %04X", &hackbuf[num_codes].address,
                      &hackbuf[num_codes].value);
         if (ret == 2)
             num_codes++;

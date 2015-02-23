@@ -93,7 +93,7 @@ uint32_t virtual_to_physical_address(uint32_t addresse, int w)
          GoldenEye 007 hack allows for use of TLB.
          Recoded by okaygo to support all US, J, and E ROMS.
         **************************************************/
-        switch (ROM_HEADER.Country_code & 0xFF)
+        switch (ROM_HEADER.Country_code & UINT16_C(0xFF))
         {
         case 0x45:
             // U
