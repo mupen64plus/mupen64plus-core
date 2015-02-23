@@ -95,7 +95,7 @@ static void recompile_standard_i_type(void)
 
 static void recompile_standard_j_type(void)
 {
-   dst->f.j.inst_index = src & 0x3FFFFFF;
+   dst->f.j.inst_index = src & UINT32_C(0x3FFFFFF);
 }
 
 static void recompile_standard_r_type(void)
@@ -1622,7 +1622,7 @@ static void RJ(void)
    dst->ops = current_instruction_table.J;
    recomp_func = genj;
    recompile_standard_j_type();
-   target = (dst->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
+   target = (dst->f.j.inst_index<<2) | (dst->addr & UINT32_C(0xF0000000));
    if (target == dst->addr)
    {
       if (check_nop)
@@ -1644,7 +1644,7 @@ static void RJAL(void)
    dst->ops = current_instruction_table.JAL;
    recomp_func = genjal;
    recompile_standard_j_type();
-   target = (dst->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
+   target = (dst->f.j.inst_index<<2) | (dst->addr & UINT32_C(0xF0000000));
    if (target == dst->addr)
    {
       if (check_nop)

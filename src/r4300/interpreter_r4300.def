@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-DECLARE_JUMP(J,   (jinst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, &reg[0],  0, 0)
-DECLARE_JUMP(JAL, (jinst_index<<2) | ((PCADDR+4) & 0xF0000000), 1, &reg[31], 0, 0)
+DECLARE_JUMP(J,   (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &reg[0],  0, 0)
+DECLARE_JUMP(JAL, (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &reg[31], 0, 0)
 DECLARE_JUMP(BEQ,     PCADDR + (iimmediate+1)*4, irs == irt, &reg[0], 0, 0)
 DECLARE_JUMP(BNE,     PCADDR + (iimmediate+1)*4, irs != irt, &reg[0], 0, 0)
 DECLARE_JUMP(BLEZ,    PCADDR + (iimmediate+1)*4, irs <= 0,   &reg[0], 0, 0)
