@@ -19,8 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #if defined(__GNUC__)
 #include <unistd.h>
@@ -2166,7 +2169,7 @@ void init_block(precomp_block *block)
   static int init_length;
   timed_section_start(TIMED_SECTION_COMPILER);
 #ifdef CORE_DBG
-  DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
+  DebugMessage(M64MSG_INFO, "init block %" PRIX32 " - %" PRIX32, block->start, block->end);
 #endif
 
   length = get_block_length(block);
@@ -2496,7 +2499,7 @@ void recompile_block(const uint32_t *source, precomp_block *block, uint32_t func
     free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
      }
 #ifdef CORE_DBG
-   DebugMessage(M64MSG_INFO, "block recompiled (%x-%x)", (int)func, (int)(block->start+i*4));
+   DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
 #endif
 #if defined(PROFILE_R4300)
    fclose(pfProfile);

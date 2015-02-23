@@ -20,6 +20,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -170,8 +172,6 @@ static void InterpretOpcode(void);
 #endif
 
 #include "interpreter.def"
-#include <stdio.h>
-#include <inttypes.h>
 
 void InterpretOpcode()
 {

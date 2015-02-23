@@ -30,6 +30,8 @@
 #include "ri/ri_controller.h"
 
 #include <string.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 
 static void flashram_command(struct pi_controller* pi, uint32_t command)
@@ -92,7 +94,7 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
         flashram->status = 0x11118004f0000000LL;
         break;
     default:
-        DebugMessage(M64MSG_WARNING, "unknown flashram command: %x", command);
+        DebugMessage(M64MSG_WARNING, "unknown flashram command: %" PRIX32, command);
         break;
     }
 }

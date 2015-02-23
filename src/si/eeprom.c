@@ -25,6 +25,9 @@
 #include "api/callbacks.h"
 
 #include <string.h>
+#include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 
 void eeprom_save(struct eeprom* eeprom)
@@ -71,7 +74,7 @@ void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd)
     }
     else
     {
-        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04" PRIX16, address);
     }
 }
 
@@ -88,7 +91,7 @@ void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
     }
     else
     {
-        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04" PRIX16, address);
     }
 }
 
