@@ -25,6 +25,7 @@
  *  -String functions
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,19 +88,19 @@ void swap_buffer(void *buffer, size_t length, size_t count)
     size_t i;
     if (length == 2)
     {
-        unsigned short *pun = (unsigned short *)buffer;
+        uint16_t *pun = (uint16_t *) buffer;
         for (i = 0; i < count; i++)
             pun[i] = m64p_swap16(pun[i]);
     }
     else if (length == 4)
     {
-        unsigned int *pun = (unsigned int *)buffer;
+        uint32_t *pun = (uint32_t *) buffer;
         for (i = 0; i < count; i++)
             pun[i] = m64p_swap32(pun[i]);
     }
     else if (length == 8)
     {
-        unsigned long long *pun = (unsigned long long *)buffer;
+        uint64_t *pun = (uint64_t *) buffer;
         for (i = 0; i < count; i++)
             pun[i] = m64p_swap64(pun[i]);
     }
