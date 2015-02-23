@@ -59,8 +59,7 @@ static void InterpretOpcode(void);
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \
-          *link_register=interp_PC.addr + 8; \
-          sign_extended(*link_register); \
+          *link_register = SE32(interp_PC.addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -125,9 +124,9 @@ static void InterpretOpcode(void);
 	 && ((addr) & UINT32_C(0x0FFFFFFF)) != UINT32_C(0x0FFFFFFC) \
 	 && *fast_mem_access((addr) + 4) == 0)
 
-#define sign_extended(a) a = (int64_t) ((int32_t) (a))
-#define sign_extendedb(a) a = (int64_t) ((int8_t) (a))
-#define sign_extendedh(a) a = (int64_t) ((int16_t) (a))
+#define SE8(a) ((int64_t) ((int8_t) (a)))
+#define SE16(a) ((int64_t) ((int16_t) (a)))
+#define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
 #define rrt reg[RT_OF(op)]

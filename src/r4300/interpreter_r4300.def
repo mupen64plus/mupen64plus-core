@@ -28,15 +28,13 @@ DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    &reg[0], 0, 0)
 
 DECLARE_INSTRUCTION(ADDI)
 {
-   irt32 = irs32 + iimmediate;
-   sign_extended(irt);
+   irt = SE32(irs32 + iimmediate);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ADDIU)
 {
-   irt32 = irs32 + iimmediate;
-   sign_extended(irt);
+   irt = SE32(irs32 + iimmediate);
    ADD_TO_PC(1);
 }
 
@@ -75,8 +73,7 @@ DECLARE_INSTRUCTION(XORI)
 
 DECLARE_INSTRUCTION(LUI)
 {
-   irt32 = iimmediate << 16;
-   sign_extended(irt);
+   irt = SE32(iimmediate << 16);
    ADD_TO_PC(1);
 }
 
@@ -239,7 +236,7 @@ DECLARE_INSTRUCTION(LB)
    rdword = (uint64_t*) lsrtp;
    read_byte_in_memory();
    if (address)
-     sign_extendedb(*lsrtp);
+     *lsrtp = SE8(*lsrtp);
 }
 
 DECLARE_INSTRUCTION(LH)
@@ -251,7 +248,7 @@ DECLARE_INSTRUCTION(LH)
    rdword = (uint64_t*) lsrtp;
    read_hword_in_memory();
    if (address)
-     sign_extendedh(*lsrtp);
+     *lsrtp = SE16(*lsrtp);
 }
 
 DECLARE_INSTRUCTION(LWL)
@@ -290,7 +287,7 @@ DECLARE_INSTRUCTION(LWL)
     break;
      }
    if(address)
-     sign_extended(*lsrtp);
+     *lsrtp = SE32(*lsrtp);
 }
 
 DECLARE_INSTRUCTION(LW)
@@ -302,7 +299,7 @@ DECLARE_INSTRUCTION(LW)
    rdword = (uint64_t*) lsrtp;
    read_word_in_memory();
    if (address)
-     sign_extended(*lsrtp);
+     *lsrtp = SE32(*lsrtp);
 }
 
 DECLARE_INSTRUCTION(LBU)
@@ -359,7 +356,7 @@ DECLARE_INSTRUCTION(LWR)
     rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
     if(address)
-      sign_extended(*lsrtp);
+      *lsrtp = SE32(*lsrtp);
      }
 }
 
@@ -704,7 +701,7 @@ DECLARE_INSTRUCTION(LL)
    read_word_in_memory();
    if (address)
      {
-    sign_extended(*lsrtp);
+    *lsrtp = SE32(*lsrtp);
     llbit = 1;
      }
 }
