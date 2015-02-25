@@ -406,16 +406,16 @@ static int savestates_load_m64p(char *filepath)
     COPYARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
 
     llbit = GETDATA(curr, unsigned int);
-    COPYARRAY(reg, curr, long long int, 32);
-    COPYARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    COPYARRAY(reg, curr, int64_t, 32);
+    COPYARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    lo = GETDATA(curr, long long int);
-    hi = GETDATA(curr, long long int);
-    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
-        shuffle_fpr_data(0x04000000, 0);
-    FCR0 = GETDATA(curr, int);
-    FCR31 = GETDATA(curr, int);
+    lo = GETDATA(curr, int64_t);
+    hi = GETDATA(curr, int64_t);
+    COPYARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+    FCR0 = GETDATA(curr, int32_t);
+    FCR31 = GETDATA(curr, int32_t);
 
     for (i = 0; i < 32; i++)
     {
@@ -446,7 +446,7 @@ static int savestates_load_m64p(char *filepath)
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
-        pcaddr = GETDATA(curr, unsigned int);
+        pcaddr = GETDATA(curr, uint32_t);
         pending_exception = 1;
         invalidate_all_pages();
     } else {
@@ -455,7 +455,7 @@ static int savestates_load_m64p(char *filepath)
             for (i = 0; i < 0x100000; i++)
                 invalid_code[i] = 1;
         }
-        generic_jump_to(GETDATA(curr, unsigned int)); // PC
+        generic_jump_to(GETDATA(curr, uint32_t)); // PC
     }
 #else
     if(r4300emu != CORE_PURE_INTERPRETER)
@@ -463,7 +463,7 @@ static int savestates_load_m64p(char *filepath)
         for (i = 0; i < 0x100000; i++)
             invalid_code[i] = 1;
     }
-    generic_jump_to(GETDATA(curr, unsigned int)); // PC
+    generic_jump_to(GETDATA(curr, uint32_t)); // PC
 #endif
 
     next_interupt = GETDATA(curr, unsigned int);
@@ -547,20 +547,20 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    last_addr = GETDATA(curr, unsigned int);
+    last_addr = GETDATA(curr, uint32_t);
 
     // GPR
-    COPYARRAY(reg, curr, long long int, 32);
+    COPYARRAY(reg, curr, int64_t, 32);
 
     // FPR
-    COPYARRAY(reg_cop1_fgr_64, curr, long long int, 32);
+    COPYARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
 
     // CP0
-    COPYARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
+    COPYARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
 
     set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
 
     // Initialze the interupts
     vi_timer += g_cp0_regs[CP0_COUNT_REG];
@@ -578,13 +578,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(buffer);
 
     // FPCR
-    FCR0 = GETDATA(curr, int);
+    FCR0 = GETDATA(curr, int32_t);
     curr += 30 * 4; // FCR1...FCR30 not supported
-    FCR31 = GETDATA(curr, int);
+    FCR31 = GETDATA(curr, int32_t);
 
     // hi / lo
-    hi = GETDATA(curr, long long int);
-    lo = GETDATA(curr, long long int);
+    hi = GETDATA(curr, int64_t);
+    lo = GETDATA(curr, int64_t);
 
     // rdram register
     g_ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
@@ -752,7 +752,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC) {
-        pcaddr = GETDATA(curr, unsigned int);
+        pcaddr = last_addr;
         pending_exception = 1;
         invalidate_all_pages();
     } else {
@@ -1185,19 +1185,19 @@ static int savestates_save_m64p(char *filepath)
     PUTARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
 
     PUTDATA(curr, unsigned int, llbit);
-    PUTARRAY(reg, curr, long long int, 32);
-    PUTARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
-    PUTDATA(curr, long long int, lo);
-    PUTDATA(curr, long long int, hi);
+    PUTARRAY(reg, curr, int64_t, 32);
+    PUTARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
+    PUTDATA(curr, int64_t, lo);
+    PUTDATA(curr, int64_t, hi);
 
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
-    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0)
-        shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
+        shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
+    PUTARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
-    PUTDATA(curr, int, FCR0);
-    PUTDATA(curr, int, FCR31);
+    PUTDATA(curr, int32_t, FCR0);
+    PUTDATA(curr, int32_t, FCR31);
     for (i = 0; i < 32; i++)
     {
         PUTDATA(curr, short, tlb_e[i].mask);
@@ -1226,11 +1226,11 @@ static int savestates_save_m64p(char *filepath)
     }
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)
-        PUTDATA(curr, unsigned int, pcaddr);
+        PUTDATA(curr, uint32_t, pcaddr);
     else
-        PUTDATA(curr, unsigned int, PC->addr);
+        PUTDATA(curr, uint32_t, PC->addr);
 #else
-    PUTDATA(curr, unsigned int, PC->addr);
+    PUTDATA(curr, uint32_t, PC->addr);
 #endif
 
     PUTDATA(curr, unsigned int, next_interupt);
@@ -1270,28 +1270,28 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_rom, curr, unsigned int, 0x40/4);
-    PUTDATA(curr, unsigned int, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
+    PUTDATA(curr, uint32_t, get_event(VI_INT) - g_cp0_regs[CP0_COUNT_REG]); // vi_timer
 #ifdef NEW_DYNAREC
     if (r4300emu == CORE_DYNAREC)
-        PUTDATA(curr, unsigned int, pcaddr);
+        PUTDATA(curr, uint32_t, pcaddr);
     else
-        PUTDATA(curr, unsigned int, PC->addr);
+        PUTDATA(curr, uint32_t, PC->addr);
 #else
-    PUTDATA(curr, unsigned int, PC->addr);
+    PUTDATA(curr, uint32_t, PC->addr);
 #endif
-    PUTARRAY(reg, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
-    PUTARRAY(reg_cop1_fgr_64, curr, long long int, 32);
-    if ((g_cp0_regs[CP0_STATUS_REG] & 0x04000000) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(0x04000000, 0);
-    PUTARRAY(g_cp0_regs, curr, unsigned int, CP0_REGS_COUNT);
-    PUTDATA(curr, int, FCR0);
+    PUTARRAY(reg, curr, int64_t, 32);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+    PUTARRAY(reg_cop1_fgr_64, curr, int64_t, 32);
+    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
+        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+    PUTARRAY(g_cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
+    PUTDATA(curr, int32_t, FCR0);
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
-    PUTDATA(curr, int, FCR31);
-    PUTDATA(curr, long long int, hi);
-    PUTDATA(curr, long long int, lo);
+    PUTDATA(curr, int32_t, FCR31);
+    PUTDATA(curr, int64_t, hi);
+    PUTDATA(curr, int64_t, lo);
 
     PUTDATA(curr, uint32_t, g_ri.rdram.regs[RDRAM_CONFIG_REG]);
     PUTDATA(curr, uint32_t, g_ri.rdram.regs[RDRAM_DEVICE_ID_REG]);

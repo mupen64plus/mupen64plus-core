@@ -22,6 +22,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
+
 #include "r4300/reset.h"
 #include "r4300/r4300.h"
 #include "r4300/interupt.h"
@@ -35,7 +37,7 @@ void reset_hard(void)
     init_memory();
     r4300_reset_hard();
     r4300_reset_soft();
-    last_addr = 0xa4000040;
+    last_addr = UINT32_C(0xa4000040);
     next_interupt = 624999;
     init_interupt();
     if(r4300emu != CORE_PURE_INTERPRETER)

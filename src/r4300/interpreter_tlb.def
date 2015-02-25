@@ -24,7 +24,7 @@
 DECLARE_INSTRUCTION(TLBR)
 {
    int index;
-   index = g_cp0_regs[CP0_INDEX_REG] & 0x1F;
+   index = g_cp0_regs[CP0_INDEX_REG] & UINT32_C(0x1F);
    g_cp0_regs[CP0_PAGEMASK_REG] = tlb_e[index].mask << 13;
    g_cp0_regs[CP0_ENTRYHI_REG] = ((tlb_e[index].vpn2 << 13) | tlb_e[index].asid);
    g_cp0_regs[CP0_ENTRYLO0_REG] = (tlb_e[index].pfn_even << 6) | (tlb_e[index].c_even << 3)
@@ -108,28 +108,28 @@ static void TLBWrite(unsigned int idx)
    tlb_unmap(&tlb_e[idx]);
 
    tlb_e[idx].g = (g_cp0_regs[CP0_ENTRYLO0_REG] & g_cp0_regs[CP0_ENTRYLO1_REG] & 1);
-   tlb_e[idx].pfn_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & 0x3FFFFFC0) >> 6;
-   tlb_e[idx].pfn_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & 0x3FFFFFC0) >> 6;
-   tlb_e[idx].c_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & 0x38) >> 3;
-   tlb_e[idx].c_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & 0x38) >> 3;
-   tlb_e[idx].d_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & 0x4) >> 2;
-   tlb_e[idx].d_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & 0x4) >> 2;
-   tlb_e[idx].v_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & 0x2) >> 1;
-   tlb_e[idx].v_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & 0x2) >> 1;
-   tlb_e[idx].asid = (g_cp0_regs[CP0_ENTRYHI_REG] & 0xFF);
-   tlb_e[idx].vpn2 = (g_cp0_regs[CP0_ENTRYHI_REG] & 0xFFFFE000) >> 13;
+   tlb_e[idx].pfn_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
+   tlb_e[idx].pfn_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
+   tlb_e[idx].c_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x38)) >> 3;
+   tlb_e[idx].c_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x38)) >> 3;
+   tlb_e[idx].d_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x4)) >> 2;
+   tlb_e[idx].d_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x4)) >> 2;
+   tlb_e[idx].v_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x2)) >> 1;
+   tlb_e[idx].v_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x2)) >> 1;
+   tlb_e[idx].asid = (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF));
+   tlb_e[idx].vpn2 = (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13;
    //tlb_e[idx].r = (g_cp0_regs[CP0_ENTRYHI_REG] & 0xC000000000000000LL) >> 62;
-   tlb_e[idx].mask = (g_cp0_regs[CP0_PAGEMASK_REG] & 0x1FFE000) >> 13;
+   tlb_e[idx].mask = (g_cp0_regs[CP0_PAGEMASK_REG] & UINT32_C(0x1FFE000)) >> 13;
    
    tlb_e[idx].start_even = tlb_e[idx].vpn2 << 13;
    tlb_e[idx].end_even = tlb_e[idx].start_even+
-     (tlb_e[idx].mask << 12) + 0xFFF;
+     (tlb_e[idx].mask << 12) + UINT32_C(0xFFF);
    tlb_e[idx].phys_even = tlb_e[idx].pfn_even << 12;
    
 
    tlb_e[idx].start_odd = tlb_e[idx].end_even+1;
    tlb_e[idx].end_odd = tlb_e[idx].start_odd+
-     (tlb_e[idx].mask << 12) + 0xFFF;
+     (tlb_e[idx].mask << 12) + UINT32_C(0xFFF);
    tlb_e[idx].phys_odd = tlb_e[idx].pfn_odd << 12;
    
    tlb_map(&tlb_e[idx]);
@@ -199,7 +199,7 @@ static void TLBWrite(unsigned int idx)
 
 DECLARE_INSTRUCTION(TLBWI)
 {
-   TLBWrite(g_cp0_regs[CP0_INDEX_REG]&0x3F);
+   TLBWrite(g_cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F));
    ADD_TO_PC(1);
 }
 
@@ -215,13 +215,13 @@ DECLARE_INSTRUCTION(TLBWR)
 DECLARE_INSTRUCTION(TLBP)
 {
    int i;
-   g_cp0_regs[CP0_INDEX_REG] |= 0x80000000;
+   g_cp0_regs[CP0_INDEX_REG] |= UINT32_C(0x80000000);
    for (i=0; i<32; i++)
    {
       if (((tlb_e[i].vpn2 & (~tlb_e[i].mask)) ==
-         (((g_cp0_regs[CP0_ENTRYHI_REG] & 0xFFFFE000) >> 13) & (~tlb_e[i].mask))) &&
+         (((g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13) & (~tlb_e[i].mask))) &&
         ((tlb_e[i].g) ||
-         (tlb_e[i].asid == (g_cp0_regs[CP0_ENTRYHI_REG] & 0xFF))))
+         (tlb_e[i].asid == (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF)))))
       {
          g_cp0_regs[CP0_INDEX_REG] = i;
          break;
@@ -233,14 +233,14 @@ DECLARE_INSTRUCTION(TLBP)
 DECLARE_INSTRUCTION(ERET)
 {
    update_count();
-   if (g_cp0_regs[CP0_STATUS_REG] & 0x4)
+   if (g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x4))
    {
      DebugMessage(M64MSG_ERROR, "error in ERET");
      stop=1;
    }
    else
    {
-     g_cp0_regs[CP0_STATUS_REG] &= ~0x2;
+     g_cp0_regs[CP0_STATUS_REG] &= ~UINT32_C(0x2);
      generic_jump_to(g_cp0_regs[CP0_EPC_REG]);
    }
    llbit = 0;

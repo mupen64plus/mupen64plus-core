@@ -37,6 +37,9 @@
 #include "ri/ri_controller.h"
 
 #include <string.h>
+#include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 static void dma_pi_read(struct pi_controller* pi)
 {
@@ -85,7 +88,7 @@ static void dma_pi_write(struct pi_controller* pi)
         }
         else
         {
-            DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%x in dma_pi_write()", (int)pi->regs[PI_CART_ADDR_REG]);
+            DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%" PRIX32 " in dma_pi_write()", pi->regs[PI_CART_ADDR_REG]);
         }
 
         pi->regs[PI_STATUS_REG] |= 1;

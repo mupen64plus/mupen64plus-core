@@ -19,6 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include "cached_interp.h"
 
 #include "api/m64p_types.h"
@@ -65,13 +69,12 @@ unsigned int jump_to_address;
    static void name(void) \
    { \
       const int take_jump = (condition); \
-      const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      const uint32_t jump_target = (destination); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \
-         *link_register=PC->addr + 8; \
-         sign_extended(*link_register); \
+         *link_register = SE32(PC->addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -97,13 +100,12 @@ unsigned int jump_to_address;
    static void name##_OUT(void) \
    { \
       const int take_jump = (condition); \
-      const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      const uint32_t jump_target = (destination); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \
-         *link_register=PC->addr + 8; \
-         sign_extended(*link_register); \
+         *link_register = SE32(PC->addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -135,7 +137,7 @@ unsigned int jump_to_address;
       { \
          update_count(); \
          skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & 0xFFFFFFFC); \
+         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \
       } \
       else name(); \
@@ -198,13 +200,13 @@ Used by dynarec only, check should be unnecessary
 
 static void NOTCOMPILED(void)
 {
-   unsigned int *mem = fast_mem_access(blocks[PC->addr>>12]->start);
+   uint32_t *mem = fast_mem_access(blocks[PC->addr>>12]->start);
 #ifdef CORE_DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", PC->addr, (long) PC->ops);
 #endif
 
    if (mem != NULL)
-      recompile_block((int *)mem, blocks[PC->addr >> 12], PC->addr);
+      recompile_block(mem, blocks[PC->addr >> 12], PC->addr);
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 

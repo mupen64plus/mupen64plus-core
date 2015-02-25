@@ -19,7 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-/* Before #including this file, the following macros should be defined:
+/* Before #including this file, <stdint.h> and <inttypes.h> must be included,
+ * and the following macros must be defined:
  *
  * PCADDR: Program counter (memory address of the current instruction).
  *
@@ -47,14 +48,14 @@
 
 DECLARE_INSTRUCTION(NI)
 {
-   DebugMessage(M64MSG_ERROR, "NI() @ 0x%x", PCADDR);
-   DebugMessage(M64MSG_ERROR, "opcode not implemented: %x:%x", PCADDR, *fast_mem_access(PCADDR));
+   DebugMessage(M64MSG_ERROR, "NI() @ 0x%" PRIX32, PCADDR);
+   DebugMessage(M64MSG_ERROR, "opcode not implemented: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
    stop=1;
 }
 
 DECLARE_INSTRUCTION(RESERVED)
 {
-   DebugMessage(M64MSG_ERROR, "reserved opcode: %x:%x", PCADDR, *fast_mem_access(PCADDR));
+   DebugMessage(M64MSG_ERROR, "reserved opcode: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
    stop=1;
 }
 

@@ -22,9 +22,9 @@
 #ifndef M64P_R4300_MACROS_H
 #define M64P_R4300_MACROS_H
 
-#define sign_extended(a) a = (long long)((int)a)
-#define sign_extendedb(a) a = (long long)((signed char)a)
-#define sign_extendedh(a) a = (long long)((short)a)
+#define SE8(a) ((int64_t) ((int8_t) (a)))
+#define SE16(a) ((int64_t) ((int16_t) (a)))
+#define SE32(a) ((int64_t) ((int32_t) (a)))
 
 #define rrt *PC->f.r.rt
 #define rrd *PC->f.r.rd
@@ -46,17 +46,17 @@
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int*)PC->f.r.rt)
-#define rrd32 *((int*)PC->f.r.rd)
-#define rrs32 *((int*)PC->f.r.rs)
-#define irs32 *((int*)PC->f.i.rs)
-#define irt32 *((int*)PC->f.i.rt)
+#define rrt32 *((int32_t*) PC->f.r.rt)
+#define rrd32 *((int32_t*) PC->f.r.rd)
+#define rrs32 *((int32_t*) PC->f.r.rs)
+#define irs32 *((int32_t*) PC->f.i.rs)
+#define irt32 *((int32_t*) PC->f.i.rt)
 #else
-#define rrt32 *((int*)PC->f.r.rt+1)
-#define rrd32 *((int*)PC->f.r.rd+1)
-#define rrs32 *((int*)PC->f.r.rs+1)
-#define irs32 *((int*)PC->f.i.rs+1)
-#define irt32 *((int*)PC->f.i.rt+1)
+#define rrt32 *((int32_t*) PC->f.r.rt + 1)
+#define rrd32 *((int32_t*) PC->f.r.rd + 1)
+#define rrs32 *((int32_t*) PC->f.r.rs + 1)
+#define irs32 *((int32_t*) PC->f.i.rs + 1)
+#define irt32 *((int32_t*) PC->f.i.rt + 1)
 #endif
 
 #endif /* M64P_R4300_MACROS_H */

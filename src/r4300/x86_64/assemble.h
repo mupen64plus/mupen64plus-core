@@ -27,9 +27,10 @@
 #include "r4300/recomph.h"
 #include "api/callbacks.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 
-extern long long int reg[32];
+extern int64_t reg[32];
 
 #define RAX 0
 #define RCX 1

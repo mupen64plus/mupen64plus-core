@@ -20,6 +20,8 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
@@ -54,13 +56,12 @@ static void InterpretOpcode(void);
    static void name(uint32_t op) \
    { \
       const int take_jump = (condition); \
-      const unsigned int jump_target = (destination); \
-      long long int *link_register = (link); \
+      const uint32_t jump_target = (destination); \
+      int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &reg[0]) \
       { \
-          *link_register=interp_PC.addr + 8; \
-          sign_extended(*link_register); \
+          *link_register = SE32(interp_PC.addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -91,7 +92,7 @@ static void InterpretOpcode(void);
       { \
          update_count(); \
          skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & 0xFFFFFFFC); \
+         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
       else name(op); \
@@ -125,9 +126,9 @@ static void InterpretOpcode(void);
 	 && ((addr) & UINT32_C(0x0FFFFFFF)) != UINT32_C(0x0FFFFFFC) \
 	 && *fast_mem_access((addr) + 4) == 0)
 
-#define sign_extended(a) a = (int64_t) ((int32_t) (a))
-#define sign_extendedb(a) a = (int64_t) ((int8_t) (a))
-#define sign_extendedh(a) a = (int64_t) ((int16_t) (a))
+#define SE8(a) ((int64_t) ((int8_t) (a)))
+#define SE16(a) ((int64_t) ((int16_t) (a)))
+#define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
 #define rrt reg[RT_OF(op)]
@@ -171,8 +172,6 @@ static void InterpretOpcode(void);
 #endif
 
 #include "interpreter.def"
-#include <stdio.h>
-#include <inttypes.h>
 
 void InterpretOpcode()
 {

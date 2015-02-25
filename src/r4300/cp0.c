@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
+
 #include "r4300.h"
 #include "cp0.h"
 #include "exception.h"
@@ -36,15 +38,15 @@
 
 /* global variable */
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-unsigned int g_cp0_regs[CP0_REGS_COUNT];
+uint32_t g_cp0_regs[CP0_REGS_COUNT];
 #endif
 
 /* global functions */
 int check_cop1_unusable(void)
 {
-   if (!(g_cp0_regs[CP0_STATUS_REG] & 0x20000000))
+   if (!(g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x20000000)))
      {
-    g_cp0_regs[CP0_CAUSE_REG] = (11 << 2) | 0x10000000;
+    g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(11) << 2) | UINT32_C(0x10000000);
     exception_general();
     return 1;
      }

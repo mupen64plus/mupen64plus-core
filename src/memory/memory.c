@@ -57,19 +57,19 @@
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
-unsigned int address = 0;
+uint32_t address = 0;
 #endif
 
 // values that are being written are stored in these variables
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-unsigned int cpu_word;
-unsigned char cpu_byte;
-unsigned short cpu_hword;
-unsigned long long int cpu_dword;
+uint32_t cpu_word;
+uint8_t cpu_byte;
+uint16_t cpu_hword;
+uint64_t cpu_dword;
 #endif
 
 // addresse where the read value will be stored
-unsigned long long int* rdword;
+uint64_t* rdword;
 
 // hash tables of read functions
 void (*readmem[0x10000])(void);
@@ -96,7 +96,7 @@ static unsigned int hshift(uint32_t address)
     return ((address & 2) ^ 2) << 3;
 }
 
-static int readb(readfn read_word, void* opaque, uint32_t address, unsigned long long int* value)
+static int readb(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
     unsigned shift = bshift(address);
@@ -106,7 +106,7 @@ static int readb(readfn read_word, void* opaque, uint32_t address, unsigned long
     return result;
 }
 
-static int readh(readfn read_word, void* opaque, uint32_t address, unsigned long long int* value)
+static int readh(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
     unsigned shift = hshift(address);
@@ -116,7 +116,7 @@ static int readh(readfn read_word, void* opaque, uint32_t address, unsigned long
     return result;
 }
 
-static int readw(readfn read_word, void* opaque, uint32_t address, unsigned long long int* value)
+static int readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
     int result = read_word(opaque, address, &w);
@@ -125,7 +125,7 @@ static int readw(readfn read_word, void* opaque, uint32_t address, unsigned long
     return result;
 }
 
-static int readd(readfn read_word, void* opaque, uint32_t address, unsigned long long int* value)
+static int readd(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w[2];
     int result =
@@ -1443,22 +1443,22 @@ void map_region(uint16_t region,
     map_region_w(region, write8, write16, write32, write64);
 }
 
-unsigned int *fast_mem_access(unsigned int address)
+uint32_t *fast_mem_access(uint32_t address)
 {
     /* This code is performance critical, specially on pure interpreter mode.
      * Removing error checking saves some time, but the emulator may crash. */
 
-    if ((address & 0xc0000000) != 0x80000000)
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
         address = virtual_to_physical_address(address, 2);
 
-    address &= 0x1ffffffc;
+    address &= UINT32_C(0x1ffffffc);
 
     if (address < RDRAM_MAX_SIZE)
-        return (unsigned int*)((unsigned char*)g_rdram + address);
-    else if (address >= 0x10000000)
-        return (unsigned int*)((unsigned char*)g_rom + address - 0x10000000);
-    else if ((address & 0xffffe000) == 0x04000000)
-        return (unsigned int*)((unsigned char*)g_sp.mem + (address & 0x1ffc));
+        return (uint32_t*) ((uint8_t*) g_rdram + address);
+    else if (address >= UINT32_C(0x10000000))
+        return (uint32_t*) ((uint8_t*) g_rom + (address - UINT32_C(0x10000000)));
+    else if ((address & UINT32_C(0xffffe000)) == UINT32_C(0x04000000))
+        return (uint32_t*) ((uint8_t*) g_sp.mem + (address & UINT32_C(0x1ffc)));
     else
         return NULL;
 }

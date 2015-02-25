@@ -28,6 +28,7 @@
 /* ----------------------------------------- */
 
 /* necessary headers */
+#include <stdint.h>
 #if defined(WIN32)
   #include <windows.h>
 #endif
@@ -159,8 +160,8 @@ typedef enum {
 } m64p_command;
 
 typedef struct {
-  unsigned int address;
-  int          value;
+  uint32_t address;
+  int      value;
 } m64p_cheat_code;
 
 /* ----------------------------------------- */
@@ -176,21 +177,21 @@ typedef enum
 
 typedef struct
 {
-   unsigned char init_PI_BSB_DOM1_LAT_REG;  /* 0x00 */
-   unsigned char init_PI_BSB_DOM1_PGS_REG;  /* 0x01 */
-   unsigned char init_PI_BSB_DOM1_PWD_REG;  /* 0x02 */
-   unsigned char init_PI_BSB_DOM1_PGS_REG2; /* 0x03 */
-   unsigned int ClockRate;                  /* 0x04 */
-   unsigned int PC;                         /* 0x08 */
-   unsigned int Release;                    /* 0x0C */
-   unsigned int CRC1;                       /* 0x10 */
-   unsigned int CRC2;                       /* 0x14 */
-   unsigned int Unknown[2];                 /* 0x18 */
-   unsigned char Name[20];                  /* 0x20 */
-   unsigned int unknown;                    /* 0x34 */
-   unsigned int Manufacturer_ID;            /* 0x38 */
-   unsigned short Cartridge_ID;             /* 0x3C - Game serial number  */
-   unsigned short Country_code;             /* 0x3E */
+   uint8_t  init_PI_BSB_DOM1_LAT_REG;  /* 0x00 */
+   uint8_t  init_PI_BSB_DOM1_PGS_REG;  /* 0x01 */
+   uint8_t  init_PI_BSB_DOM1_PWD_REG;  /* 0x02 */
+   uint8_t  init_PI_BSB_DOM1_PGS_REG2; /* 0x03 */
+   uint32_t ClockRate;                 /* 0x04 */
+   uint32_t PC;                        /* 0x08 */
+   uint32_t Release;                   /* 0x0C */
+   uint32_t CRC1;                      /* 0x10 */
+   uint32_t CRC2;                      /* 0x14 */
+   uint32_t Unknown[2];                /* 0x18 */
+   uint8_t  Name[20];                  /* 0x20 */
+   uint32_t unknown;                   /* 0x34 */
+   uint32_t Manufacturer_ID;           /* 0x38 */
+   uint16_t Cartridge_ID;              /* 0x3C - Game serial number  */
+   uint16_t Country_code;              /* 0x3E */
 } m64p_rom_header;
 
 typedef struct
@@ -310,8 +311,8 @@ typedef enum {
 #define BPT_TOGGLE_FLAG(a, b) a.flags = (a.flags ^ b);
 
 typedef struct {
-  unsigned int address;
-  unsigned int endaddr;
+  uint32_t     address;
+  uint32_t     endaddr;
   unsigned int flags;
 } m64p_breakpoint;
 

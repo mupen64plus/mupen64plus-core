@@ -39,6 +39,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 // local definitions
 #define CHEAT_CODE_MAGIC_VALUE 0xDEAD0000
@@ -466,7 +469,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
     while ((token = strtok_compat(input, ",", &saveptr))) {
         input = NULL;
 
-        ret = sscanf(token, "%08X %04X", &hackbuf[num_codes].address,
+        ret = sscanf(token, "%08" SCNx32 " %04X", &hackbuf[num_codes].address,
                      &hackbuf[num_codes].value);
         if (ret == 2)
             num_codes++;

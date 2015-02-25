@@ -19,8 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #if defined(__GNUC__)
 #include <unistd.h>
@@ -51,7 +54,7 @@ int code_length; // current real recompiled code length
 int max_code_length; // current recompiled code's buffer length
 unsigned char **inst_pointer; // output buffer for recompiled code
 precomp_block *dst_block; // the current block that we are recompiling
-int src; // the current recompiled instruction
+uint32_t src; // the current recompiled instruction
 int fast_memory;
 int no_compiled_jump = 0; /* use cached interpreter instead of recompiler for jumps */
 
@@ -62,7 +65,7 @@ static void (*recomp_func)(void); // pointer to the dynarec's generator
 FILE *pfProfile;
 #endif
 
-static int *SRC; // currently recompiled instruction in the input stream
+static const uint32_t *SRC; // currently recompiled instruction in the input stream
 static int check_nop; // next instruction is nop ?
 static int delay_slot_compiled = 0;
 
@@ -90,12 +93,12 @@ static void recompile_standard_i_type(void)
 {
    dst->f.i.rs = reg + ((src >> 21) & 0x1F);
    dst->f.i.rt = reg + ((src >> 16) & 0x1F);
-   dst->f.i.immediate = src & 0xFFFF;
+   dst->f.i.immediate = (int16_t) src;
 }
 
 static void recompile_standard_j_type(void)
 {
-   dst->f.j.inst_index = src & 0x3FFFFFF;
+   dst->f.j.inst_index = src & UINT32_C(0x3FFFFFF);
 }
 
 static void recompile_standard_r_type(void)
@@ -535,7 +538,7 @@ static void (*recomp_special[64])(void) =
 
 static void RBLTZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZ;
    recomp_func = genbltz;
    recompile_standard_i_type();
@@ -557,7 +560,7 @@ static void RBLTZ(void)
 
 static void RBGEZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZ;
    recomp_func = genbgez;
    recompile_standard_i_type();
@@ -579,7 +582,7 @@ static void RBGEZ(void)
 
 static void RBLTZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZL;
    recomp_func = genbltzl;
    recompile_standard_i_type();
@@ -601,7 +604,7 @@ static void RBLTZL(void)
 
 static void RBGEZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZL;
    recomp_func = genbgezl;
    recompile_standard_i_type();
@@ -659,7 +662,7 @@ static void RTNEI(void)
 
 static void RBLTZAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZAL;
    recomp_func = genbltzal;
    recompile_standard_i_type();
@@ -681,7 +684,7 @@ static void RBLTZAL(void)
 
 static void RBGEZAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZAL;
    recomp_func = genbgezal;
    recompile_standard_i_type();
@@ -703,7 +706,7 @@ static void RBGEZAL(void)
 
 static void RBLTZALL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLTZALL;
    recomp_func = genbltzall;
    recompile_standard_i_type();
@@ -725,7 +728,7 @@ static void RBLTZALL(void)
 
 static void RBGEZALL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGEZALL;
    recomp_func = genbgezall;
    recompile_standard_i_type();
@@ -808,7 +811,7 @@ static void RMFC0(void)
    dst->ops = current_instruction_table.MFC0;
    recomp_func = genmfc0;
    recompile_standard_r_type();
-   dst->f.r.rd = (long long*)(g_cp0_regs + ((src >> 11) & 0x1F));
+   dst->f.r.rd = (int64_t*) (g_cp0_regs + ((src >> 11) & 0x1F));
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == reg) RNOP();
 }
@@ -840,7 +843,7 @@ static void (*recomp_cop0[32])(void) =
 
 static void RBC1F(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1F;
    recomp_func = genbc1f;
    recompile_standard_i_type();
@@ -862,7 +865,7 @@ static void RBC1F(void)
 
 static void RBC1T(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1T;
    recomp_func = genbc1t;
    recompile_standard_i_type();
@@ -884,7 +887,7 @@ static void RBC1T(void)
 
 static void RBC1FL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1FL;
    recomp_func = genbc1fl;
    recompile_standard_i_type();
@@ -906,7 +909,7 @@ static void RBC1FL(void)
 
 static void RBC1TL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BC1TL;
    recomp_func = genbc1tl;
    recompile_standard_i_type();
@@ -1618,11 +1621,11 @@ static void RREGIMM(void)
 
 static void RJ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.J;
    recomp_func = genj;
    recompile_standard_j_type();
-   target = (dst->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
+   target = (dst->f.j.inst_index<<2) | (dst->addr & UINT32_C(0xF0000000));
    if (target == dst->addr)
    {
       if (check_nop)
@@ -1640,11 +1643,11 @@ static void RJ(void)
 
 static void RJAL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.JAL;
    recomp_func = genjal;
    recompile_standard_j_type();
-   target = (dst->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
+   target = (dst->f.j.inst_index<<2) | (dst->addr & UINT32_C(0xF0000000));
    if (target == dst->addr)
    {
       if (check_nop)
@@ -1662,7 +1665,7 @@ static void RJAL(void)
 
 static void RBEQ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BEQ;
    recomp_func = genbeq;
    recompile_standard_i_type();
@@ -1684,7 +1687,7 @@ static void RBEQ(void)
 
 static void RBNE(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BNE;
    recomp_func = genbne;
    recompile_standard_i_type();
@@ -1706,7 +1709,7 @@ static void RBNE(void)
 
 static void RBLEZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLEZ;
    recomp_func = genblez;
    recompile_standard_i_type();
@@ -1728,7 +1731,7 @@ static void RBLEZ(void)
 
 static void RBGTZ(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGTZ;
    recomp_func = genbgtz;
    recompile_standard_i_type();
@@ -1824,7 +1827,7 @@ static void RCOP1(void)
 
 static void RBEQL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BEQL;
    recomp_func = genbeql;
    recompile_standard_i_type();
@@ -1846,7 +1849,7 @@ static void RBEQL(void)
 
 static void RBNEL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BNEL;
    recomp_func = genbnel;
    recompile_standard_i_type();
@@ -1868,7 +1871,7 @@ static void RBNEL(void)
 
 static void RBLEZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BLEZL;
    recomp_func = genblezl;
    recompile_standard_i_type();
@@ -1890,7 +1893,7 @@ static void RBLEZL(void)
 
 static void RBGTZL(void)
 {
-   unsigned int target;
+   uint32_t target;
    dst->ops = current_instruction_table.BGTZL;
    recomp_func = genbgtzl;
    recompile_standard_i_type();
@@ -2166,7 +2169,7 @@ void init_block(precomp_block *block)
   static int init_length;
   timed_section_start(TIMED_SECTION_COMPILER);
 #ifdef CORE_DBG
-  DebugMessage(M64MSG_INFO, "init block %x - %x", (int) block->start, (int) block->end);
+  DebugMessage(M64MSG_INFO, "init block %" PRIX32 " - %" PRIX32, block->start, block->end);
 #endif
 
   length = get_block_length(block);
@@ -2285,7 +2288,7 @@ void init_block(precomp_block *block)
    * yet as the game should have already set up the code correctly.
    */
   invalid_code[block->start>>12] = 0;
-  if (block->end < 0x80000000 || block->start >= 0xc0000000)
+  if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
   { 
     unsigned int paddr;
     
@@ -2298,8 +2301,8 @@ void init_block(precomp_block *block)
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
       blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~0xFFF;
-      blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
+      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
     init_block(blocks[paddr>>12]);
     
@@ -2312,40 +2315,40 @@ void init_block(precomp_block *block)
       blocks[paddr>>12]->block = NULL;
       blocks[paddr>>12]->jumps_table = NULL;
       blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~0xFFF;
-      blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
+      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
     init_block(blocks[paddr>>12]);
   }
   else
   {
-    if (block->start >= 0x80000000 && block->end < 0xa0000000 && invalid_code[(block->start+0x20000000)>>12])
+    if (block->start >= UINT32_C(0x80000000) && block->end < UINT32_C(0xa0000000) && invalid_code[(block->start+UINT32_C(0x20000000))>>12])
     {
-      if (!blocks[(block->start+0x20000000)>>12])
+      if (!blocks[(block->start+UINT32_C(0x20000000))>>12])
       {
-        blocks[(block->start+0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start+0x20000000)>>12]->code = NULL;
-        blocks[(block->start+0x20000000)>>12]->block = NULL;
-        blocks[(block->start+0x20000000)>>12]->jumps_table = NULL;
-        blocks[(block->start+0x20000000)>>12]->riprel_table = NULL;
-        blocks[(block->start+0x20000000)>>12]->start = (block->start+0x20000000) & ~0xFFF;
-        blocks[(block->start+0x20000000)>>12]->end = ((block->start+0x20000000) & ~0xFFF) + 0x1000;
+        blocks[(block->start+UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->code = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->block = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->jumps_table = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->riprel_table = NULL;
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->start = (block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
+        blocks[(block->start+UINT32_C(0x20000000))>>12]->end = ((block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[(block->start+0x20000000)>>12]);
+      init_block(blocks[(block->start+UINT32_C(0x20000000))>>12]);
     }
-    if (block->start >= 0xa0000000 && block->end < 0xc0000000 && invalid_code[(block->start-0x20000000)>>12])
+    if (block->start >= UINT32_C(0xa0000000) && block->end < UINT32_C(0xc0000000) && invalid_code[(block->start-UINT32_C(0x20000000))>>12])
     {
-      if (!blocks[(block->start-0x20000000)>>12])
+      if (!blocks[(block->start-UINT32_C(0x20000000))>>12])
       {
-        blocks[(block->start-0x20000000)>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start-0x20000000)>>12]->code = NULL;
-        blocks[(block->start-0x20000000)>>12]->block = NULL;
-        blocks[(block->start-0x20000000)>>12]->jumps_table = NULL;
-        blocks[(block->start-0x20000000)>>12]->riprel_table = NULL;
-        blocks[(block->start-0x20000000)>>12]->start = (block->start-0x20000000) & ~0xFFF;
-        blocks[(block->start-0x20000000)>>12]->end = ((block->start-0x20000000) & ~0xFFF) + 0x1000;
+        blocks[(block->start-UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->code = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->block = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->jumps_table = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->riprel_table = NULL;
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->start = (block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
+        blocks[(block->start-UINT32_C(0x20000000))>>12]->end = ((block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[(block->start-0x20000000)>>12]);
+      init_block(blocks[(block->start-UINT32_C(0x20000000))>>12]);
     }
   }
   timed_section_end(TIMED_SECTION_COMPILER);
@@ -2370,9 +2373,10 @@ void free_block(precomp_block *block)
 /**********************************************************************
  ********************* recompile a block of code **********************
  **********************************************************************/
-void recompile_block(int *source, precomp_block *block, unsigned int func)
+void recompile_block(const uint32_t *source, precomp_block *block, uint32_t func)
 {
-   int i, length, finished=0;
+   uint32_t i;
+   int length, finished=0;
    timed_section_start(TIMED_SECTION_COMPILER);
    length = (block->end-block->start)/4;
    dst_block = block;
@@ -2395,12 +2399,12 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
 
    for (i = (func & 0xFFF) / 4; finished != 2; i++)
      {
-    if(block->start < 0x80000000 || block->start >= 0xc0000000)
+    if(block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
       {
-          unsigned int address2 =
+          uint32_t address2 =
            virtual_to_physical_address(block->start + i*4, 0);
-         if(blocks[address2>>12]->block[(address2&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
-           blocks[address2>>12]->block[(address2&0xFFF)/4].ops = current_instruction_table.NOTCOMPILED2;
+         if(blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == current_instruction_table.NOTCOMPILED)
+           blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = current_instruction_table.NOTCOMPILED2;
       }
     
     SRC = source + i;
@@ -2437,16 +2441,16 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
       }
     
     if (i >= length-2+(length>>2)) finished = 2;
-    if (i >= (length-1) && (block->start == 0xa4000000 ||
-                block->start >= 0xc0000000 ||
-                block->end   <  0x80000000)) finished = 2;
+    if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
+                block->start >= UINT32_C(0xc0000000) ||
+                block->end   <  UINT32_C(0x80000000))) finished = 2;
     if (dst->ops == current_instruction_table.ERET || finished == 1) finished = 2;
     if (/*i >= length &&*/ 
         (dst->ops == current_instruction_table.J ||
          dst->ops == current_instruction_table.J_OUT ||
          dst->ops == current_instruction_table.JR) &&
-        !(i >= (length-1) && (block->start >= 0xc0000000 ||
-                  block->end   <  0x80000000)))
+        !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
+                  block->end   <  UINT32_C(0x80000000))))
       finished = 1;
      }
 
@@ -2495,7 +2499,7 @@ void recompile_block(int *source, precomp_block *block, unsigned int func)
     free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
      }
 #ifdef CORE_DBG
-   DebugMessage(M64MSG_INFO, "block recompiled (%x-%x)", (int)func, (int)(block->start+i*4));
+   DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
 #endif
 #if defined(PROFILE_R4300)
    fclose(pfProfile);

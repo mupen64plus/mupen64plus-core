@@ -22,6 +22,8 @@
 #ifndef M64P_R4300_TLB_H
 #define M64P_R4300_TLB_H
 
+#include <stdint.h>
+
 typedef struct _tlb
 {
    short mask;
@@ -48,11 +50,11 @@ typedef struct _tlb
 } tlb;
 
 extern tlb tlb_e[32];
-extern unsigned int tlb_LUT_r[0x100000];
-extern unsigned int tlb_LUT_w[0x100000];
+extern uint32_t tlb_LUT_r[0x100000];
+extern uint32_t tlb_LUT_w[0x100000];
 
 void tlb_unmap(tlb *entry);
 void tlb_map(tlb *entry);
-unsigned int virtual_to_physical_address(unsigned int addresse, int w);
+uint32_t virtual_to_physical_address(uint32_t addresse, int w);
 
 #endif /* M64P_R4300_TLB_H */

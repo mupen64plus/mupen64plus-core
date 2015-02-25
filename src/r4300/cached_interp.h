@@ -29,7 +29,7 @@
 extern char invalid_code[0x100000];
 extern precomp_block *blocks[0x100000];
 extern precomp_block *actual;
-extern unsigned int jump_to_address;
+extern uint32_t jump_to_address;
 extern const cpu_instruction_table cached_interpreter_table;
 
 void init_blocks(void);
