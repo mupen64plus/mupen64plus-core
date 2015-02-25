@@ -23,18 +23,8 @@
 
 #if (!defined(_WIN32)) && (!defined(WIN32)) && (!defined(__APPLE__))
 
-  // Linux needs this to support file operation on files larger then 4+GB
-  // But might need better if/def to select just the platforms that needs them.
+  // glibc needs this to support file operation on files larger then 4+GB
 
-        #ifndef __USE_FILE_OFFSET64
-                #define __USE_FILE_OFFSET64
-        #endif
-        #ifndef __USE_LARGEFILE64
-                #define __USE_LARGEFILE64
-        #endif
-        #ifndef _LARGEFILE64_SOURCE
-                #define _LARGEFILE64_SOURCE
-        #endif
         #ifndef _FILE_OFFSET_BIT
                 #define _FILE_OFFSET_BIT 64
         #endif
@@ -49,26 +39,14 @@
 #define OF _Z_OF
 #endif
 
-#if defined(USE_FILE32API)
-#define fopen64 fopen
-#define ftello64 ftell
-#define fseeko64 fseek
-#else
-#ifdef __FreeBSD__
-#define fopen64 fopen
-#define ftello64 ftello
-#define fseeko64 fseeko
-#endif
 #ifdef _MSC_VER
- #define fopen64 fopen
  #if (_MSC_VER >= 1400) && (!(defined(NO_MSCVER_FILE64_FUNC)))
-  #define ftello64 _ftelli64
-  #define fseeko64 _fseeki64
+  #define ftello _ftelli64
+  #define fseeko _fseeki64
  #else // old MSC
-  #define ftello64 ftell
-  #define fseeko64 fseek
+  #define ftello ftell
+  #define fseeko fseek
  #endif
-#endif
 #endif
 
 /*

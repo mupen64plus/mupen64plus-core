@@ -41,7 +41,6 @@ ifeq ("$(UNAME)","FreeBSD")
 endif
 ifeq ("$(UNAME)","OpenBSD")
   OS = FREEBSD
-  CFLAGS += -DIOAPI_NO_64
   $(warning OS type "$(UNAME)" not officially supported.')
 endif
 ifneq ("$(filter GNU/kFreeBSD kfreebsd,$(UNAME))","")
