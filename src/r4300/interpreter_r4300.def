@@ -94,8 +94,28 @@ DECLARE_INSTRUCTION(DADDIU)
    ADD_TO_PC(1);
 }
 
-// TODOXXX refactor the following functions to remove the
-// lsaddr and lsrpt locals. this may lead to a small speedup too
+/* Assists unaligned memory accessors with making masks to preserve or apply
+ * bits in registers and memory.
+ *
+ * BITS_BELOW_MASK32 and BITS_BELOW_MASK64 make masks where bits 0 to (x - 1)
+ * are set.
+ *
+ * BITS_ABOVE_MASK32 makes masks where bits x to 31 are set.
+ * BITS_ABOVE_MASK64 makes masks where bits x to 63 are set.
+ *
+ * e.g. x = 8
+ * 0000 0000 0000 0000 0000 0000 1111 1111 <- BITS_BELOW_MASK32(8)
+ * 1111 1111 1111 1111 1111 1111 0000 0000 <- BITS_ABOVE_MASK32(8)
+ *
+ * Giving a negative value or one that is >= the bit count of the mask results
+ * in undefined behavior.
+ */
+
+#define BITS_BELOW_MASK32(x) ((UINT32_C(1) << (x)) - 1)
+#define BITS_ABOVE_MASK32(x) (~((UINT32_C(1) << (x)) - 1))
+
+#define BITS_BELOW_MASK64(x) ((UINT64_C(1) << (x)) - 1)
+#define BITS_ABOVE_MASK64(x) (~((UINT64_C(1) << (x)) - 1))
 
 DECLARE_INSTRUCTION(LDL)
 {
@@ -103,63 +123,26 @@ DECLARE_INSTRUCTION(LDL)
    int64_t *lsrtp = &irt;
    uint64_t word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 7)
+   if ((lsaddr & 7) == 0)
+   {
+     address = lsaddr;
+     rdword = (uint64_t*) lsrtp;
+     read_dword_in_memory();
+   }
+   else
+   {
+     address = lsaddr & UINT32_C(0xFFFFFFF8);
+     rdword = &word;
+     read_dword_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr;
-    rdword = (uint64_t*) lsrtp;
-    read_dword_in_memory();
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFF)) | (word << 8);
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFF)) | (word << 16);
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFF)) | (word << 24);
-    break;
-      case 4:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFF)) | (word << 32);
-    break;
-      case 5:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFF)) | (word << 40);
-    break;
-      case 6:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFF)) | (word << 48);
-    break;
-      case 7:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFFFF)) | (word << 56);
-    break;
+       /* How many low bits do we want to preserve from the old value? */
+       uint64_t old_mask = BITS_BELOW_MASK64((lsaddr & 7) * 8);
+       /* How many bits up do we want to add the low bits of the new value in? */
+       int new_shift = (lsaddr & 7) * 8;
+       *lsrtp = (*lsrtp & old_mask) | (word << new_shift);
      }
+   }
 }
 
 DECLARE_INSTRUCTION(LDR)
@@ -168,63 +151,25 @@ DECLARE_INSTRUCTION(LDR)
    int64_t *lsrtp = &irt;
    uint64_t word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 7)
+   address = lsaddr & UINT32_C(0xFFFFFFF8);
+   if ((lsaddr & 7) == 7)
+   {
+     rdword = (uint64_t*) lsrtp;
+     read_dword_in_memory();
+   }
+   else
+   {
+     rdword = &word;
+     read_dword_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFFFF00)) | (word >> 56);
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFF0000)) | (word >> 48);
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFF000000)) | (word >> 40);
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFF00000000)) | (word >> 32);
-    break;
-      case 4:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFF0000000000)) | (word >> 24);
-    break;
-      case 5:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFF000000000000)) | (word >> 16);
-    break;
-      case 6:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &word;
-    read_dword_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFF00000000000000)) | (word >> 8);
-    break;
-      case 7:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = (uint64_t*) lsrtp;
-    read_dword_in_memory();
-    break;
+       /* How many high bits do we want to preserve from the old value? */
+       uint64_t old_mask = BITS_ABOVE_MASK64(((lsaddr & 7) + 1) * 8);
+       /* How many bits down do we want to add the high bits of the new value in? */
+       int new_shift = (7 - (lsaddr & 7)) * 8;
+       *lsrtp = (*lsrtp & old_mask) | (word >> new_shift);
      }
+   }
 }
 
 DECLARE_INSTRUCTION(LB)
@@ -257,37 +202,28 @@ DECLARE_INSTRUCTION(LWL)
    int64_t *lsrtp = &irt;
    uint64_t word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 3)
+   if ((lsaddr & 3) == 0)
+   {
+     address = lsaddr;
+     rdword = (uint64_t*) lsrtp;
+     read_word_in_memory();
+     if (address)
+       *lsrtp = SE32(*lsrtp);
+   }
+   else
+   {
+     address = lsaddr & UINT32_C(0xFFFFFFFC);
+     rdword = &word;
+     read_word_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr;
-    rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFF)) | (word << 8);
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFF)) | (word << 16);
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFF)) | (word << 24);
-    break;
+       /* How many low bits do we want to preserve from the old value? */
+       uint32_t old_mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
+       /* How many bits up do we want to add the low bits of the new value in? */
+       int new_shift = (lsaddr & 3) * 8;
+       *lsrtp = SE32(((uint32_t) *lsrtp & old_mask) | ((uint32_t) word << new_shift));
      }
-   if(address)
-     *lsrtp = SE32(*lsrtp);
+   }
 }
 
 DECLARE_INSTRUCTION(LW)
@@ -328,36 +264,27 @@ DECLARE_INSTRUCTION(LWR)
    int64_t *lsrtp = &irt;
    uint64_t word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 3)
+   address = lsaddr & UINT32_C(0xFFFFFFFC);
+   if ((lsaddr & 3) == 3)
+   {
+     rdword = (uint64_t*) lsrtp;
+     read_word_in_memory();
+     if (address)
+       *lsrtp = SE32(*lsrtp);
+   }
+   else
+   {
+     rdword = &word;
+     read_word_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFFFF00)) | ((word >> 24) & INT64_C(0xFF));
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFFFF0000)) | ((word >> 16) & INT64_C(0xFFFF));
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &word;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = (*lsrtp & INT64_C(0xFFFFFFFFFF000000)) | ((word >> 8) & INT64_C(0xFFFFFF));
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if(address)
-      *lsrtp = SE32(*lsrtp);
+       /* How many high bits do we want to preserve from the old value? */
+       uint32_t old_mask = BITS_ABOVE_MASK32(((lsaddr & 3) + 1) * 8);
+       /* How many bits down do we want to add the new value in? */
+       int new_shift = (3 - (lsaddr & 3)) * 8;
+       *lsrtp = SE32(((uint32_t) *lsrtp & old_mask) | ((uint32_t) word >> new_shift));
      }
+   }
 }
 
 DECLARE_INSTRUCTION(LWU)
@@ -398,43 +325,31 @@ DECLARE_INSTRUCTION(SWL)
    int64_t *lsrtp = &irt;
    uint64_t old_word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 3)
+   if ((lsaddr & 3) == 0)
+   {
+     address = lsaddr;
+     cpu_word = (uint32_t) *lsrtp;
+     write_word_in_memory();
+     CHECK_MEMORY();
+   }
+   else
+   {
+     address = lsaddr & UINT32_C(0xFFFFFFFC);
+     rdword = &old_word;
+     read_word_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr & 0xFFFFFFFC;
-    cpu_word = (uint32_t) *lsrtp;
-    write_word_in_memory();
-    CHECK_MEMORY();
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &old_word;
-    read_word_in_memory();
-    if(address)
-      {
-         cpu_word = ((uint32_t) *lsrtp >> 8) | ((uint32_t) old_word & UINT32_C(0xFF000000));
-         write_word_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &old_word;
-    read_word_in_memory();
-    if(address)
-      {
-         cpu_word = ((uint32_t) *lsrtp >> 16) | ((uint32_t) old_word & UINT32_C(0xFFFF0000));
-         write_word_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 3:
-    address = lsaddr;
-    cpu_byte = (uint8_t) (*lsrtp >> 24);
-    write_byte_in_memory();
-    CHECK_MEMORY();
-    break;
+       /* How many high bits do we want to preserve from what was in memory
+        * before? */
+       uint32_t old_mask = BITS_ABOVE_MASK32((4 - (lsaddr & 3)) * 8);
+       /* How many bits down do we need to shift the register to store some
+        * of its high bits into the low bits of the memory word? */
+       int new_shift = (lsaddr & 3) * 8;
+       cpu_word = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp >> new_shift);
+       write_word_in_memory();
+       CHECK_MEMORY();
      }
+   }
 }
 
 DECLARE_INSTRUCTION(SW)
@@ -454,92 +369,31 @@ DECLARE_INSTRUCTION(SDL)
    int64_t *lsrtp = &irt;
    uint64_t old_word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 7)
+   if ((lsaddr & 7) == 0)
+   {
+     address = lsaddr;
+     cpu_dword = *lsrtp;
+     write_dword_in_memory();
+     CHECK_MEMORY();
+   }
+   else
+   {
+     address = lsaddr & UINT32_C(0xFFFFFFF8);
+     rdword = &old_word;
+     read_dword_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr & 0xFFFFFFF8;
-    cpu_dword = *lsrtp;
-    write_dword_in_memory();
-    CHECK_MEMORY();
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 8) | (old_word & INT64_C(0xFF00000000000000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 16) | (old_word & INT64_C(0xFFFF000000000000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 24) | (old_word & INT64_C(0xFFFFFF0000000000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 4:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 32) | (old_word & INT64_C(0xFFFFFFFF00000000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 5:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 40) | (old_word & INT64_C(0xFFFFFFFFFF000000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 6:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 48) | (old_word & INT64_C(0xFFFFFFFFFFFF0000));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 7:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = ((uint64_t) *lsrtp >> 56) | (old_word & INT64_C(0xFFFFFFFFFFFFFF00));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
+       /* How many high bits do we want to preserve from what was in memory
+        * before? */
+       uint64_t old_mask = BITS_ABOVE_MASK64((8 - (lsaddr & 7)) * 8);
+       /* How many bits down do we need to shift the register to store some
+        * of its high bits into the low bits of the memory word? */
+       int new_shift = (lsaddr & 7) * 8;
+       cpu_dword = (old_word & old_mask) | ((uint64_t) *lsrtp >> new_shift);
+       write_dword_in_memory();
+       CHECK_MEMORY();
      }
+   }
 }
 
 DECLARE_INSTRUCTION(SDR)
@@ -548,92 +402,30 @@ DECLARE_INSTRUCTION(SDR)
    int64_t *lsrtp = &irt;
    uint64_t old_word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 7)
+   address = lsaddr & UINT32_C(0xFFFFFFF8);
+   if ((lsaddr & 7) == 7)
+   {
+     cpu_dword = *lsrtp;
+     write_dword_in_memory();
+     CHECK_MEMORY();
+   }
+   else
+   {
+     rdword = &old_word;
+     read_dword_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 56) | (old_word & INT64_C(0x00FFFFFFFFFFFFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 48) | (old_word & INT64_C(0x0000FFFFFFFFFFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 40) | (old_word & INT64_C(0x000000FFFFFFFFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 32) | (old_word & INT64_C(0x00000000FFFFFFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 4:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 24) | (old_word & INT64_C(0x0000000000FFFFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 5:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 16) | (old_word & INT64_C(0x000000000000FFFF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 6:
-    address = lsaddr & 0xFFFFFFF8;
-    rdword = &old_word;
-    read_dword_in_memory();
-    if(address)
-      {
-         cpu_dword = (*lsrtp << 8) | (old_word & INT64_C(0x00000000000000FF));
-         write_dword_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 7:
-    address = lsaddr & 0xFFFFFFF8;
-    cpu_dword = *lsrtp;
-    write_dword_in_memory();
-    CHECK_MEMORY();
-    break;
+       /* How many low bits do we want to preserve from what was in memory
+        * before? */
+       uint64_t old_mask = BITS_BELOW_MASK64((7 - (lsaddr & 7)) * 8);
+       /* How many bits up do we need to shift the register to store some
+        * of its low bits into the high bits of the memory word? */
+       int new_shift = (7 - (lsaddr & 7)) * 8;
+       cpu_dword = (old_word & old_mask) | (*lsrtp << new_shift);
+       write_dword_in_memory();
+       CHECK_MEMORY();
      }
+   }
 }
 
 DECLARE_INSTRUCTION(SWR)
@@ -642,48 +434,30 @@ DECLARE_INSTRUCTION(SWR)
    int64_t *lsrtp = &irt;
    uint64_t old_word = 0;
    ADD_TO_PC(1);
-   switch ((lsaddr) & 3)
+   address = lsaddr & UINT32_C(0xFFFFFFFC);
+   if ((lsaddr & 3) == 3)
+   {
+     cpu_word = (uint32_t) *lsrtp;
+     write_word_in_memory();
+     CHECK_MEMORY();
+   }
+   else
+   {
+     rdword = &old_word;
+     read_word_in_memory();
+     if (address)
      {
-      case 0:
-    address = lsaddr;
-    rdword = &old_word;
-    read_word_in_memory();
-    if(address)
-      {
-         cpu_word = ((uint32_t) *lsrtp << 24) | ((uint32_t) old_word & UINT32_C(0x00FFFFFF));
-         write_word_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 1:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &old_word;
-    read_word_in_memory();
-    if(address)
-      {
-         cpu_word = ((uint32_t) *lsrtp << 16) | ((uint32_t) old_word & UINT32_C(0x0000FFFF));
-         write_word_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 2:
-    address = lsaddr & 0xFFFFFFFC;
-    rdword = &old_word;
-    read_word_in_memory();
-    if(address)
-      {
-         cpu_word = ((uint32_t) *lsrtp << 8) | ((uint32_t) old_word & UINT32_C(0x000000FF));
-         write_word_in_memory();
-         CHECK_MEMORY();
-      }
-    break;
-      case 3:
-    address = lsaddr & 0xFFFFFFFC;
-    cpu_word = (uint32_t) *lsrtp;
-    write_word_in_memory();
-    CHECK_MEMORY();
-    break;
+       /* How many low bits do we want to preserve from what was in memory
+        * before? */
+       int32_t old_mask = BITS_BELOW_MASK32((3 - (lsaddr & 3)) * 8);
+       /* How many bits up do we need to shift the register to store some
+        * of its low bits into the high bits of the memory word? */
+       int new_shift = (3 - (lsaddr & 3)) * 8;
+       cpu_word = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
+       write_word_in_memory();
+       CHECK_MEMORY();
      }
+   }
 }
 
 DECLARE_INSTRUCTION(CACHE)
