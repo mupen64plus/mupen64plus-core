@@ -59,7 +59,8 @@ static int search_dir_file(char *destpath, const char *path, const char *filenam
 
     /* build the full filepath */
     strcpy(destpath, path);
-    if (destpath[strlen(destpath)-1] != '\\')
+    /* if the path is empty, don't add \ between it and the file name */
+    if (destpath[0] != '\0' && destpath[strlen(destpath)-1] != '\\')
         strcat(destpath, "\\");
     strcat(destpath, filename);
 
