@@ -28,7 +28,7 @@
 #include "r4300/recomph.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/cp1.h"
+#include "r4300/cp1_private.h"
 
 #if defined(COUNT_INSTR)
 #include "r4300/instr_counters.h"

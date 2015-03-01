@@ -26,6 +26,9 @@
 /* FIXME: use forward declaration for precomp_block */
 #include "recomp.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
 extern char invalid_code[0x100000];
 extern precomp_block *blocks[0x100000];
 extern precomp_block *actual;
@@ -35,6 +38,8 @@ extern const cpu_instruction_table cached_interpreter_table;
 void init_blocks(void);
 void free_blocks(void);
 void jump_to_func(void);
+
+void invalidate_cached_code_hacktarux(uint32_t address, size_t size);
 
 /* Jumps to the given address. This is for the cached interpreter / dynarec. */
 #define jump_to(a) { jump_to_address = a; jump_to_func(); }

@@ -25,7 +25,7 @@
 
 #include "exception.h"
 #include "r4300.h"
-#include "cp0.h"
+#include "cp0_private.h"
 #include "recomph.h"
 #include "tlb.h"
 

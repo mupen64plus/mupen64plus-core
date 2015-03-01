@@ -42,9 +42,9 @@
 #include "util.h"
 
 #include "memory/memory.h"
-#include "r4300/r4300.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
+#include "r4300/r4300.h"
 
 #define DEFAULT 16
 

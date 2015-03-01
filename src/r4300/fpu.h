@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "r4300.h"
+#include "cp1_private.h"
 
 #ifdef _MSC_VER
   #define M64P_FPU_INLINE static __inline

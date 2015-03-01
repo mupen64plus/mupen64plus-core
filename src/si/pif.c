@@ -27,8 +27,7 @@
 #include "api/callbacks.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
-#include "r4300/cp0.h"
-#include "r4300/interupt.h"
+#include "r4300/r4300_core.h"
 
 #include <string.h>
 #include <stdint.h>

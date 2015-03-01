@@ -30,7 +30,7 @@
 #include "r4300/recomp.h"
 #include "r4300/r4300.h"
 #include "r4300/ops.h"
-#include "r4300/cp0.h"
+#include "r4300/cp0_private.h"
 #include "r4300/exception.h"
 
 #if defined(COUNT_INSTR)

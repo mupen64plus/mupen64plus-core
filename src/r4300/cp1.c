@@ -26,16 +26,46 @@
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
-int32_t FCR0, FCR31;
+uint32_t FCR0, FCR31;
 #else
+/* ARM backend requires a different memory layout
+ * and therefore manually allocates these variables */
 extern float *reg_cop1_simple[32];
 extern double *reg_cop1_double[32];
-extern int32_t FCR0, FCR31;
+extern uint32_t FCR0, FCR31;
 #endif
 int64_t reg_cop1_fgr_64[32];
 
 int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
     ceil_mode = 0xB3F, floor_mode = 0x73F;
+
+
+int64_t* r4300_cp1_regs(void)
+{
+    return reg_cop1_fgr_64;
+}
+
+float** r4300_cp1_regs_simple(void)
+{
+    return reg_cop1_simple;
+}
+
+double** r4300_cp1_regs_double(void)
+{
+    return reg_cop1_double;
+}
+
+uint32_t* r4300_cp1_fcr0(void)
+{
+    return &FCR0;
+}
+
+uint32_t* r4300_cp1_fcr31(void)
+{
+    return &FCR31;
+}
+
+
 
 /* Refer to Figure 6-2 on page 155 and explanation on page B-11
    of MIPS R4000 Microprocessor User's Manual (Second Edition)

@@ -40,7 +40,7 @@
 #include "cached_interp.h"
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
-#include "cp0.h"
+#include "cp0_private.h"
 #include "r4300.h"
 #include "ops.h"
 #include "tlb.h"

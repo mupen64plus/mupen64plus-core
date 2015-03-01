@@ -32,8 +32,8 @@
 #include "memory/memory.h"
 
 #include "r4300.h"
-#include "cp0.h"
-#include "cp1.h"
+#include "cp0_private.h"
+#include "cp1_private.h"
 #include "ops.h"
 #include "exception.h"
 #include "interupt.h"
@@ -583,5 +583,26 @@ void free_blocks(void)
             blocks[i] = NULL;
         }
     }
+}
+
+void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
+{
+    size_t i;
+    size_t begin;
+    size_t end;
+
+    if (size == 0)
+    {
+        begin = 0;
+        end = 0xfffff;
+    }
+    else
+    {
+        begin = address >> 12;
+        end = (address+size-1) >> 12;
+    }
+
+    for(i = begin; i <= end; ++i)
+        invalid_code[i] = 1;
 }
 

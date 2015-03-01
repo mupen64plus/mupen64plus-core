@@ -66,7 +66,6 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "plugin/plugin.h"
-#include "r4300/interupt.h"
 #include "r4300/reset.h"
 
 /* version number for CoreEvents config section */

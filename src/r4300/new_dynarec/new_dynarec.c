@@ -36,7 +36,7 @@ extern "C" {
 #include "new_dynarec.h"
 #include "../recomp.h"
 #include "../recomph.h" //include for function prototypes
-#include "../cp0.h"
+#include "../cp0_private.h"
 #include "../cp1.h"
 #include "../r4300.h"
 #include "../ops.h"
@@ -1250,6 +1250,27 @@ void invalidate_block(u_int block)
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
   #endif
+}
+
+void invalidate_cached_code_new_dynarec(uint32_t address, size_t size)
+{
+    size_t i;
+    size_t begin;
+    size_t end;
+
+    if (size == 0)
+    {
+        begin = 0;
+        end = 0xfffff;
+    }
+    else
+    {
+        begin = address >> 12;
+        end = (address+size-1) >> 12;
+    }
+
+    for(i = begin; i <= end; ++i)
+        invalidate_block(i);
 }
 
 #if NEW_DYNAREC == NEW_DYNAREC_ARM

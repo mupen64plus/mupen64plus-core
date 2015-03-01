@@ -38,8 +38,8 @@
 #include "r4300.h"
 #include "r4300_core.h"
 #include "cached_interp.h"
-#include "cp0.h"
-#include "cp1.h"
+#include "cp0_private.h"
+#include "cp1_private.h"
 #include "ops.h"
 #include "interupt.h"
 #include "pure_interp.h"
@@ -59,7 +59,8 @@
 
 unsigned int r4300emu = 0;
 unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
-int llbit, rompause;
+int rompause;
+unsigned int llbit;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
 int64_t reg[32], hi, lo;

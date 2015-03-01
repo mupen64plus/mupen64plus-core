@@ -24,7 +24,7 @@
 
 #include "memory/memory.h"
 #include "plugin/plugin.h"
-#include "r4300/cached_interp.h"
+#include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 
 extern int fast_memory;
@@ -137,8 +137,7 @@ void protect_framebuffers(struct rdp_core* dp)
                 {
                     fb->once = 0;
                     fast_memory = 0;
-                    for (j=0; j<0x100000; j++)
-                        invalid_code[j] = 1;
+                    invalidate_r4300_cached_code(0, 0);
                 }
             }
         }

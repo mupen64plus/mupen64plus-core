@@ -22,8 +22,6 @@
 #include "mi_controller.h"
 #include "r4300.h"
 #include "r4300_core.h"
-#include "cp0.h"
-#include "interupt.h"
 
 #include <string.h>
 
@@ -86,6 +84,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct r4300_core* r4300 = (struct r4300_core*)opaque;
     uint32_t reg = mi_reg(address);
+    const uint32_t* cp0_regs = r4300_cp0_regs();
 
     switch(reg)
     {
@@ -100,7 +99,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
         check_interupt();
         update_count();
-        if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
+        if (next_interupt <= cp0_regs[CP0_COUNT_REG]) gen_interupt();
         break;
     }
 

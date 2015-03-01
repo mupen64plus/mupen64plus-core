@@ -27,13 +27,8 @@
 #include "main/main.h"
 #include "main/rom.h"
 
-#include "r4300/r4300.h"
-#include "r4300/r4300_core.h"
-#include "r4300/cached_interp.h"
 #include "r4300/new_dynarec/new_dynarec.h"
-#include "r4300/recomph.h"
-#include "r4300/ops.h"
-#include "r4300/tlb.h"
+#include "r4300/r4300_core.h"
 
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
@@ -48,12 +43,13 @@
 #include "debugger/dbg_types.h"
 #include "debugger/dbg_memory.h"
 #include "debugger/dbg_breakpoints.h"
-
 #include <string.h>
 #endif
 
 #include <stddef.h>
 #include <stdint.h>
+
+extern int fast_memory;
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 // address : address of the read/write operation being done
@@ -169,15 +165,6 @@ static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t v
 }
 
 
-static void invalidate_code(uint32_t address)
-{
-    if (r4300emu != CORE_PURE_INTERPRETER && !invalid_code[address>>12])
-        if (blocks[address>>12]->block[(address&0xFFF)/4].ops !=
-            current_instruction_table.NOTCOMPILED)
-            invalid_code[address>>12] = 1;
-}
-
-
 static void read_nothing(void)
 {
     *rdword = 0;
@@ -244,7 +231,7 @@ static void read_nomemd(void)
 
 static void write_nomem(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 4);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_word_in_memory();
@@ -252,7 +239,7 @@ static void write_nomem(void)
 
 static void write_nomemb(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 1);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_byte_in_memory();
@@ -260,7 +247,7 @@ static void write_nomemb(void)
 
 static void write_nomemh(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 2);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_hword_in_memory();
@@ -268,7 +255,7 @@ static void write_nomemh(void)
 
 static void write_nomemd(void)
 {
-    invalidate_code(address);
+    invalidate_r4300_cached_code(address, 8);
     address = virtual_to_physical_address(address,1);
     if (address == 0x00000000) return;
     write_dword_in_memory();
@@ -1025,7 +1012,7 @@ static void (*saved_writememd[0x10000])(void);
 
 static void readmemb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 1,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     saved_readmemb[address>>16]();
@@ -1033,7 +1020,7 @@ static void readmemb_with_bp_checks(void)
 
 static void readmemh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 2,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     saved_readmemh[address>>16]();
@@ -1041,7 +1028,7 @@ static void readmemh_with_bp_checks(void)
 
 static void readmem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 4,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     saved_readmem[address>>16]();
@@ -1049,7 +1036,7 @@ static void readmem_with_bp_checks(void)
 
 static void readmemd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 8,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     saved_readmemd[address>>16]();
@@ -1057,7 +1044,7 @@ static void readmemd_with_bp_checks(void)
 
 static void writememb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 1,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return saved_writememb[address>>16]();
@@ -1065,7 +1052,7 @@ static void writememb_with_bp_checks(void)
 
 static void writememh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 2,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return saved_writememh[address>>16]();
@@ -1073,7 +1060,7 @@ static void writememh_with_bp_checks(void)
 
 static void writemem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 4,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return saved_writemem[address>>16]();
@@ -1081,7 +1068,7 @@ static void writemem_with_bp_checks(void)
 
 static void writememd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access((PC->addr)-0x4, address, 8,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return saved_writememd[address>>16]();
