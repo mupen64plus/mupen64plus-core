@@ -103,11 +103,12 @@ static void swap_copy_rom(void* dst, const void* src, size_t len, unsigned char*
 {
     if (memcmp(src, V64_SIGNATURE, sizeof(V64_SIGNATURE)) == 0)
     {
-        *imagetype = V64IMAGE;
-        /* .v64 images have byte-swapped half-words (16-bit). */
         size_t i;
         const uint16_t* src16 = (const uint16_t*) src;
         uint16_t* dst16 = (uint16_t*) dst;
+
+        *imagetype = V64IMAGE;
+        /* .v64 images have byte-swapped half-words (16-bit). */
         for (i = 0; i < len; i += 2)
         {
             *dst16++ = m64p_swap16(*src16++);
@@ -115,11 +116,12 @@ static void swap_copy_rom(void* dst, const void* src, size_t len, unsigned char*
     }
     else if (memcmp(src, N64_SIGNATURE, sizeof(N64_SIGNATURE)) == 0)
     {
-        *imagetype = N64IMAGE;
-        /* .n64 images have byte-swapped words (32-bit). */
         size_t i;
         const uint32_t* src32 = (const uint32_t*) src;
         uint32_t* dst32 = (uint32_t*) dst;
+
+        *imagetype = N64IMAGE;
+        /* .n64 images have byte-swapped words (32-bit). */
         for (i = 0; i < len; i += 4)
         {
             *dst32++ = m64p_swap32(*src32++);
