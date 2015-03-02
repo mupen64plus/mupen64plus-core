@@ -42,7 +42,7 @@
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
-#include "debugger/debugger.h"
+#include "debugger/dbg_debugger.h"
 #endif
 
 static precomp_instr interp_PC;

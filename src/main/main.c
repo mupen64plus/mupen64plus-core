@@ -77,7 +77,7 @@
 
 #ifdef DBG
 #include "debugger/dbg_types.h"
-#include "debugger/debugger.h"
+#include "debugger/dbg_debugger.h"
 #endif
 
 #ifdef WITH_LIRC
