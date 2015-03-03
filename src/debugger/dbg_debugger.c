@@ -25,7 +25,7 @@
 #include "api/debugger.h"
 
 #include "dbg_types.h"
-#include "debugger.h"
+#include "dbg_debugger.h"
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 

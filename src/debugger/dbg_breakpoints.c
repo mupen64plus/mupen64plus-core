@@ -23,7 +23,7 @@
 #include <SDL_thread.h>
 
 #include "dbg_types.h"
-#include "debugger.h"
+#include "dbg_debugger.h"
 #include "dbg_breakpoints.h"
 
 #include "api/m64p_types.h"

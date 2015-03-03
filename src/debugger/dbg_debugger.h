@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - debugger.h                                              *
+ *   Mupen64plus - dbg_debugger.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2008 DarkJeztr                                          *
  *   Copyright (C) 2002 davFr                                              *
@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef __DEBUGGER_H__
-#define __DEBUGGER_H__
+#ifndef __DBG_DEBUGGER_H__
+#define __DBG_DEBUGGER_H__
 
 #include "api/m64p_types.h"
 
@@ -36,5 +36,5 @@ void update_debugger(uint32 pc);
 void destroy_debugger(void);
 void debugger_step(void);
 
-#endif /* __DEBUGGER_H__ */
+#endif /* __DBG_DEBUGGER_H__ */
 

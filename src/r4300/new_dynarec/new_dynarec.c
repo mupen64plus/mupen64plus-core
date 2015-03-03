@@ -38,6 +38,7 @@ extern "C" {
 #include "../recomph.h" //include for function prototypes
 #include "../cp0_private.h"
 #include "../cp1.h"
+#include "../cp1_private.h"
 #include "../r4300.h"
 #include "../ops.h"
 #include "../tlb.h"
@@ -56,10 +57,10 @@ extern "C" {
 #endif
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
-#include "assem_x86.h"
+#include "x86/assem_x86.h"
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
-#include "arm_cpu_features.h"
-#include "assem_arm.h"
+#include "arm/arm_cpu_features.h"
+#include "arm/assem_arm.h"
 #else
 #error Unsupported dynarec architecture
 #endif
@@ -1008,9 +1009,9 @@ static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
 }
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
-#include "assem_x86.c"
+#include "x86/assem_x86.c"
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
-#include "assem_arm.c"
+#include "arm/assem_arm.c"
 #else
 #error Unsupported dynarec architecture
 #endif

@@ -36,7 +36,7 @@
 #include "debugger/dbg_breakpoints.h"
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
-#include "debugger/debugger.h"
+#include "debugger/dbg_debugger.h"
 #include "main/main.h"
 #include "memory/memory.h"
 #include "pi/pi_controller.h"

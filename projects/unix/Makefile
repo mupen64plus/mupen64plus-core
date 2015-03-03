@@ -515,13 +515,13 @@ ifneq ($(DYNAREC), )
     ifeq ($(DYNAREC), x86)
       CFLAGS += -DNEW_DYNAREC=1
       SOURCE += \
-	    $(SRCDIR)/r4300/new_dynarec/linkage_x86.asm
+	    $(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm
     else
       ifeq ($(DYNAREC), arm)
         CFLAGS += -DNEW_DYNAREC=3
         SOURCE += \
-         $(SRCDIR)/r4300/new_dynarec/linkage_arm.S \
-         $(SRCDIR)/r4300/new_dynarec/arm_cpu_features.c
+         $(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.S \
+         $(SRCDIR)/r4300/new_dynarec/arm/arm_cpu_features.c
       else
         $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
       endif
@@ -571,7 +571,7 @@ endif
 
 ifeq ($(DEBUGGER), 1)
   SOURCE += \
-	$(SRCDIR)/debugger/debugger.c \
+	$(SRCDIR)/debugger/dbg_debugger.c \
 	$(SRCDIR)/debugger/dbg_decoder.c \
 	$(SRCDIR)/debugger/dbg_memory.c \
 	$(SRCDIR)/debugger/dbg_breakpoints.c
