@@ -132,9 +132,13 @@ static config_section *find_section(config_list list, const char *ParamName)
 
 static config_var *config_var_create(const char *ParamName, const char *ParamHelp)
 {
-    config_var *var = (config_var *) malloc(sizeof(config_var));
+    config_var *var;
 
-    if (var == NULL || ParamName == NULL)
+    if (ParamName == NULL)
+        return NULL;
+
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
         return NULL;
 
     memset(var, 0, sizeof(config_var));
