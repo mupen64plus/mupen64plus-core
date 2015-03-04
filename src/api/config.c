@@ -488,6 +488,10 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
         fclose(fPtr);
         return M64ERR_FILES;
     }
+    if (filelen < 0) {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
 
     configtext = (char *) malloc(filelen + 1);
     if (configtext == NULL)
