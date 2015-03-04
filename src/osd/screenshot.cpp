@@ -178,6 +178,7 @@ static char *GetNextScreenshotPath(void)
     if (CurrentShotIndex >= 1000)
     {
         DebugMessage(M64MSG_ERROR, "Can't save screenshot; folder already contains 1000 screenshots for this ROM");
+        free(ScreenshotPath);
         return NULL;
     }
     CurrentShotIndex++;
