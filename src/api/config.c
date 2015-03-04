@@ -1285,8 +1285,6 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
             DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): invalid internal parameter type for '%s'", ParamName);
             return 0;
     }
-
-    return 0;
 }
 
 EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1331,8 +1329,6 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
             DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): invalid internal parameter type for '%s'", ParamName);
             return 0.0;
     }
-
-    return 0.0;
 }
 
 EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1377,8 +1373,6 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
             DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): invalid internal parameter type for '%s'", ParamName);
             return 0;
     }
-
-    return 0;
 }
 
 EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1428,8 +1422,6 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
             DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): invalid internal parameter type for '%s'", ParamName);
             return "";
     }
-
-  return "";
 }
 
 /* ------------------------------------------------------ */
