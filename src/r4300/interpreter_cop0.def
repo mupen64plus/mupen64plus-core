@@ -29,6 +29,7 @@ DECLARE_INSTRUCTION(MFC0)
         break;
       case CP0_COUNT_REG:
         update_count();
+        /* fall through */
       default:
         rrt = SE32(g_cp0_regs[rfs]);
    }
