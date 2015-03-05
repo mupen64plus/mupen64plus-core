@@ -101,7 +101,7 @@ EXPORT const char * CALL CoreErrorMessage(m64p_error ReturnCode)
 {
     size_t i = (size_t) ReturnCode;
 
-    if (i > (sizeof(ErrorMessages) / sizeof(char *)))
+    if (i >= (sizeof(ErrorMessages) / sizeof(char *)))
         return "ERROR: Invalid m64p_error code given to CoreErrorMessage()";
 
     return ErrorMessages[i];

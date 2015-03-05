@@ -132,9 +132,13 @@ static config_section *find_section(config_list list, const char *ParamName)
 
 static config_var *config_var_create(const char *ParamName, const char *ParamHelp)
 {
-    config_var *var = (config_var *) malloc(sizeof(config_var));
+    config_var *var;
 
-    if (var == NULL || ParamName == NULL)
+    if (ParamName == NULL)
+        return NULL;
+
+    var = (config_var *) malloc(sizeof(config_var));
+    if (var == NULL)
         return NULL;
 
     memset(var, 0, sizeof(config_var));
@@ -485,6 +489,10 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     filelen = (size_t)ftell_result;
     if (fseek(fPtr, 0L, SEEK_SET) != 0)
     {
+        fclose(fPtr);
+        return M64ERR_FILES;
+    }
+    if (filelen < 0) {
         fclose(fPtr);
         return M64ERR_FILES;
     }
@@ -1285,8 +1293,6 @@ EXPORT int CALL ConfigGetParamInt(m64p_handle ConfigSectionHandle, const char *P
             DebugMessage(M64MSG_ERROR, "ConfigGetParamInt(): invalid internal parameter type for '%s'", ParamName);
             return 0;
     }
-
-    return 0;
 }
 
 EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1331,8 +1337,6 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
             DebugMessage(M64MSG_ERROR, "ConfigGetParamFloat(): invalid internal parameter type for '%s'", ParamName);
             return 0.0;
     }
-
-    return 0.0;
 }
 
 EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1377,8 +1381,6 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
             DebugMessage(M64MSG_ERROR, "ConfigGetParamBool(): invalid internal parameter type for '%s'", ParamName);
             return 0;
     }
-
-    return 0;
 }
 
 EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, const char *ParamName)
@@ -1428,8 +1430,6 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
             DebugMessage(M64MSG_ERROR, "ConfigGetParamString(): invalid internal parameter type for '%s'", ParamName);
             return "";
     }
-
-  return "";
 }
 
 /* ------------------------------------------------------ */

@@ -239,10 +239,12 @@ static int is_path_separator(char c)
 
 char* combinepath(const char* first, const char *second)
 {
-    size_t len_first = strlen(first), off_second = 0;
+    size_t len_first, off_second = 0;
 
     if (first == NULL || second == NULL)
         return NULL;
+
+    len_first = strlen(first);
 
     while (is_path_separator(first[len_first-1]))
         len_first--;
