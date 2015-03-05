@@ -52,6 +52,7 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
     {
         default:
             DebugMessage(M64MSG_WARNING, "Unknown CIC type (%016" PRIX64 ")! using CIC 6102.", crc);
+            /* fall through */
         case UINT64_C(0x000000D057C85244): i = 1; break; /* CIC_X102 */
         case UINT64_C(0x000000D0027FDF31):               /* CIC_X101 */
         case UINT64_C(0x000000CFFB631223): i = 0; break; /* CIC_X101 */
