@@ -42,7 +42,8 @@ typedef enum _file_status
     file_ok,
     file_open_error,
     file_read_error,
-    file_write_error
+    file_write_error,
+    file_size_error
 } file_status_t;
 
 /** read_from_file
@@ -53,9 +54,15 @@ file_status_t read_from_file(const char *filename, void *data, size_t size);
 
 /** write_to_file
  *    opens a file and writes the specified number of bytes.
- *    returns zero on sucess, nonzero on failure
+ *    returns zero on success, nonzero on failure
  */ 
 file_status_t write_to_file(const char *filename, const void *data, size_t size);
+
+/** load_file
+ *    load the file content into a newly allocated buffer.
+ *    returns zero on success, nonzero on failure
+ */
+file_status_t load_file(const char* filename, void** buffer, size_t* size);
 
 /**********************
    Byte swap utilities
