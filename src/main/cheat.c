@@ -460,7 +460,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
 
     /* allocate buffer */
     hackbuf = malloc(sizeof(*hackbuf) * num_codes);
-    if (!num_codes)
+    if (!hackbuf)
         return 0;
 
     /* parse cheatcodes */

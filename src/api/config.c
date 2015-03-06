@@ -315,6 +315,7 @@ static config_section * section_deepcopy(config_section *orig_section)
                     if (new_var->val.string == NULL)
                     {
                         delete_section(new_section);
+                        delete_var(new_var);
                         return NULL;
                     }
                 }
