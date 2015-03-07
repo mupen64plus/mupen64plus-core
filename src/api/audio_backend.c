@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - ai_controller.h                                         *
+ *   Mupen64plus - audio_backend.c                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2015 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,65 +19,18 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_AI_AI_CONTROLLER_H
-#define M64P_AI_AI_CONTROLLER_H
+#include "audio_backend.h"
 
 #include "api/m64p_types.h"
 
-#include <stddef.h>
-#include <stdint.h>
 
-struct r4300_core;
-struct ri_controller;
-struct vi_controller;
-
-enum ai_registers
+/* Thin wrappers to ease usage of backend callbacks - used by ai_controller.c */
+void set_audio_format(struct m64p_audio_backend* backend, unsigned int frequency, unsigned int bits)
 {
-    AI_DRAM_ADDR_REG,
-    AI_LEN_REG,
-    AI_CONTROL_REG,
-    AI_STATUS_REG,
-    AI_DACRATE_REG,
-    AI_BITRATE_REG,
-    AI_REGS_COUNT
-};
-
-struct ai_dma
-{
-    uint32_t address;
-    uint32_t length;
-    unsigned int duration;
-};
-
-struct ai_controller
-{
-    uint32_t regs[AI_REGS_COUNT];
-    struct ai_dma fifo[2];
-    unsigned int samples_format_changed;
-
-    struct m64p_audio_backend backend;
-
-    struct r4300_core* r4300;
-    struct ri_controller* ri;
-    struct vi_controller* vi;
-};
-
-static uint32_t ai_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
+    backend->set_audio_format(backend->user_data, frequency, bits);
 }
 
-
-void connect_ai(struct ai_controller* ai,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                struct vi_controller* vi);
-
-void init_ai(struct ai_controller* ai);
-
-int read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void ai_end_of_dma_event(struct ai_controller* ai);
-
-#endif
+void push_audio_samples(struct m64p_audio_backend* backend, const void* buffer, size_t size)
+{
+    backend->push_audio_samples(backend->user_data, buffer, size);
+}

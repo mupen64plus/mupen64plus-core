@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_speaker_via_audio_plugin.h                      *
+ *   Mupen64plus - audio_backend.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2015 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,12 +19,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
-#define M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
+/* This file contains the definitions for the audio backend functions which
+ * will be called from other Core modules.
+ */
+
+#if !defined(M64P_API_AUDIO_BACKEND_H)
+#define M64P_API_AUDIO_BACKEND_H
+
+#include "m64p_types.h"
 
 #include <stddef.h>
 
-void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits);
-void push_audio_samples_via_audio_plugin(void* user_data, const void* buffer, size_t size);
 
-#endif
+/* Thin wrappers to ease usage of backend callbacks - used by ai_controller.c */
+void set_audio_format(struct m64p_audio_backend* backend, unsigned int frequency, unsigned int bits);
+void push_audio_samples(struct m64p_audio_backend* backend, const void* buffer, size_t size);
+
+#endif /* M64P_API_AUDIO_BACKEND_H */

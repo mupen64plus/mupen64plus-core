@@ -413,6 +413,7 @@ OBJDIR = _obj$(POSTFIX)
 # list of required source files for compilation
 SOURCE = \
 	$(SRCDIR)/ai/ai_controller.c \
+	$(SRCDIR)/api/audio_backend.c \
 	$(SRCDIR)/api/callbacks.c \
 	$(SRCDIR)/api/common.c \
 	$(SRCDIR)/api/config.c \
@@ -439,7 +440,7 @@ SOURCE = \
 	$(SRCDIR)/pi/pi_controller.c \
 	$(SRCDIR)/pi/sram.c \
 	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
-	$(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
+	$(SRCDIR)/plugin/audio_backend_compat.c \
 	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
 	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
 	$(SRCDIR)/plugin/plugin.c \

@@ -21,6 +21,7 @@
 
 #include "ai_controller.h"
 
+#include "api/audio_backend.h"
 #include "main/rom.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
@@ -81,13 +82,13 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
             ? 16
             : 1 + ai->regs[AI_BITRATE_REG];
 
-        set_audio_format(ai, frequency, bits);
+        set_audio_format(&ai->backend, frequency, bits);
 
         ai->samples_format_changed = 0;
     }
 
-    /* push audio samples to external sink */
-    push_audio_samples(ai, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    /* push audio samples to audio backend */
+    push_audio_samples(&ai->backend, &ai->ri->rdram.dram[dma->address/4], dma->length);
 
     /* schedule end of dma event */
     update_count();
@@ -131,17 +132,6 @@ static void fifo_pop(struct ai_controller* ai)
     {
         ai->regs[AI_STATUS_REG] &= ~AI_STATUS_BUSY;
     }
-}
-
-
-void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits)
-{
-    ai->set_audio_format(ai->user_data, frequency, bits);
-}
-
-void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size)
-{
-    ai->push_audio_samples(ai->user_data, buffer, size);
 }
 
 

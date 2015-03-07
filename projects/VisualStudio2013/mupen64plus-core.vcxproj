@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\ai\ai_controller.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
+    <ClCompile Include="..\..\src\api\audio_backend.c" />
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
     <ClCompile Include="..\..\src\api\debugger.c" />
@@ -70,6 +71,7 @@
     <ClCompile Include="..\..\src\pi\flashram.c" />
     <ClCompile Include="..\..\src\pi\pi_controller.c" />
     <ClCompile Include="..\..\src\pi\sram.c" />
+    <ClCompile Include="..\..\src\plugin\audio_backend_compat.c" />
     <ClCompile Include="..\..\src\plugin\dummy_audio.c" />
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
@@ -285,6 +287,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ai\ai_controller.h" />
+    <ClInclude Include="..\..\src\api\audio_backend.h" />
     <ClInclude Include="..\..\src\api\callbacks.h" />
     <ClInclude Include="..\..\src\api\config.h" />
     <ClInclude Include="..\..\src\api\debugger.h" />
@@ -335,6 +338,7 @@
     <ClInclude Include="..\..\src\pi\flashram.h" />
     <ClInclude Include="..\..\src\pi\pi_controller.h" />
     <ClInclude Include="..\..\src\pi\sram.h" />
+    <ClInclude Include="..\..\src\plugin\audio_backend_compat.h" />
     <ClInclude Include="..\..\src\plugin\dummy_audio.h" />
     <ClInclude Include="..\..\src\plugin\dummy_input.h" />
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />

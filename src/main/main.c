@@ -62,8 +62,8 @@
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
 #include "plugin/plugin.h"
+#include "plugin/audio_backend_compat.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
-#include "plugin/emulate_speaker_via_audio_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
 #include "plugin/rumble_via_input_plugin.h"
 #include "r4300/r4300.h"
@@ -929,9 +929,7 @@ m64p_error main_run(void)
     gfx.setRenderingCallback(video_plugin_render_callback);
 
     /* connect external audio sink to AI component */
-    g_ai.user_data = &g_ai;
-    g_ai.set_audio_format = set_audio_format_via_audio_plugin;
-    g_ai.push_audio_samples = push_audio_samples_via_audio_plugin;
+    memcpy(&g_ai.backend, &AUDIO_BACKEND_COMPAT, sizeof(struct m64p_audio_backend));
 
     /* connect external time source to AF_RTC component */
     g_si.pif.af_rtc.user_data = NULL;

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - ai_controller.h                                         *
+ *   Mupen64plus - audio_backend_compat.h                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,65 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_AI_AI_CONTROLLER_H
-#define M64P_AI_AI_CONTROLLER_H
+#ifndef M64P_PLUGIN_AUDIO_BACKEND_COMPAT_H
+#define M64P_PLUGIN_AUDIO_BACKEND_COMPAT_H
 
 #include "api/m64p_types.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
-struct r4300_core;
-struct ri_controller;
-struct vi_controller;
-
-enum ai_registers
-{
-    AI_DRAM_ADDR_REG,
-    AI_LEN_REG,
-    AI_CONTROL_REG,
-    AI_STATUS_REG,
-    AI_DACRATE_REG,
-    AI_BITRATE_REG,
-    AI_REGS_COUNT
-};
-
-struct ai_dma
-{
-    uint32_t address;
-    uint32_t length;
-    unsigned int duration;
-};
-
-struct ai_controller
-{
-    uint32_t regs[AI_REGS_COUNT];
-    struct ai_dma fifo[2];
-    unsigned int samples_format_changed;
-
-    struct m64p_audio_backend backend;
-
-    struct r4300_core* r4300;
-    struct ri_controller* ri;
-    struct vi_controller* vi;
-};
-
-static uint32_t ai_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-
-void connect_ai(struct ai_controller* ai,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                struct vi_controller* vi);
-
-void init_ai(struct ai_controller* ai);
-
-int read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void ai_end_of_dma_event(struct ai_controller* ai);
+/* Audio backend compatible with m64p audio plugins */
+extern const struct m64p_audio_backend AUDIO_BACKEND_COMPAT;
 
 #endif

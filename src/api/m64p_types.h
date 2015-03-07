@@ -23,6 +23,8 @@
 #if !defined(M64P_TYPES_H)
 #define M64P_TYPES_H
 
+#include <stddef.h>
+
 /* ----------------------------------------- */
 /* Platform-specific stuff                   */
 /* ----------------------------------------- */
@@ -361,6 +363,41 @@ typedef struct {
   m64p_error (*VidExtFuncToggleFS)(void);
   m64p_error (*VidExtFuncResizeWindow)(int, int);
 } m64p_video_extension_functions;
+
+/* ------------------------------------------ */
+/* Structures and Types for Audio Backend API */
+/* ------------------------------------------ */
+
+/* Audio backend object
+ *
+ * user_data is a pointer which will be passed as the first argument of audio backend functions.
+ * Frontend writers are free to use it as they please.
+ *
+ * set_audio_format function allows the audio backend to be notified of the format of incoming samples.
+ * 2nd parameter frequency is the sample rate of incoming samples.
+ * 3rd parameter bits is the sample resolution (usually 16 bits)
+ *
+ * This function should be called by the core at least one time before any call to "push_audio_samples".
+ * Audio backends are expected to handle gracefully eventual changes of audio format
+ * even after this "initial" setup. Though in practice, very few games, if any,
+ * changes the audio format after the initial setup.
+ *
+ * push_audio_samples function notifies the audio backend of new samples ready to be played.
+ * 2nd parameter buffer is a pointer to the beginning of the incoming samples.
+ * 3rd parameter size is the size in bytes of the buffer.
+ *
+ * Samples are in stereo interleaved format (LR LR LR ...) and their resolution (bits per channel)
+ * is specified by prior calls of set_audio_format.
+ * Audio backends are expected not to block during the servicing of this function.
+ * We invite audio backends writers to buffer (and maybe resample) the incoming samples
+ * and return control to the core as soon as possible.
+ */
+struct m64p_audio_backend
+{
+  void* user_data;
+  void (*set_audio_format)(void*, unsigned int, unsigned int);
+  void (*push_audio_samples)(void*, const void*, size_t);
+};
 
 #endif /* define M64P_TYPES_H */
 
