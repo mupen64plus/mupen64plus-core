@@ -22,6 +22,53 @@
 #include "audio_backend.h"
 
 #include "api/m64p_types.h"
+#include "ai/ai_controller.h"
+
+#include <string.h>
+
+extern struct ai_controller g_ai;
+
+
+/* Dummy Audio Backend object */
+static void set_audio_format_dummy(void* user_data, unsigned int frequency, unsigned int bits)
+{
+}
+
+static void push_audio_samples_dummy(void* user_data, const void* buffer, size_t size)
+{
+}
+
+const struct m64p_audio_backend AUDIO_BACKEND_DUMMY =
+{
+    NULL,
+    set_audio_format_dummy,
+    push_audio_samples_dummy
+};
+
+
+/* Global function for use by frontend.c */
+m64p_error SetAudioInterfaceBackend(unsigned int version, const struct m64p_audio_backend* backend)
+{
+    /* check input data */
+    if (backend == NULL)
+        return M64ERR_INPUT_ASSERT;
+
+    /* check backend version */
+    if (version != M64P_AUDIO_BACKEND_VERSION)
+        return M64ERR_INCOMPATIBLE;
+
+    /* if any of the function pointers are NULL, use the dummy audio backend */
+    if (backend->set_audio_format == NULL ||
+        backend->push_audio_samples == NULL)
+    {
+        backend = &AUDIO_BACKEND_DUMMY;
+    }
+
+    /* otherwise use the user provided backend */
+    memcpy(&g_ai.backend, backend, sizeof(struct m64p_audio_backend));
+
+    return M64ERR_SUCCESS;
+}
 
 
 /* Thin wrappers to ease usage of backend callbacks - used by ai_controller.c */

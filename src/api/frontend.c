@@ -34,6 +34,7 @@
 #include "callbacks.h"
 #include "m64p_config.h"
 #include "m64p_frontend.h"
+#include "audio_backend.h"
 #include "config.h"
 #include "vidext.h"
 
@@ -47,6 +48,7 @@
 #include "main/workqueue.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
+#include "plugin/audio_backend_compat.h"
 
 /* some local state variables */
 static int l_CoreInit = 0;
@@ -77,6 +79,9 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     plugin_connect(M64PLUGIN_AUDIO, NULL);
     plugin_connect(M64PLUGIN_INPUT, NULL);
     plugin_connect(M64PLUGIN_CORE, NULL);
+
+    /* set default AI backend */
+    SetAudioInterfaceBackend(M64P_AUDIO_BACKEND_VERSION, &AUDIO_BACKEND_COMPAT);
 
     savestates_init();
 
@@ -291,6 +296,8 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             main_advance_one();
             return M64ERR_SUCCESS;
+        case M64CMD_SET_AUDIO_INTERFACE_BACKEND:
+            return SetAudioInterfaceBackend(ParamInt, ParamPtr);
         default:
             return M64ERR_INPUT_INVALID;
     }

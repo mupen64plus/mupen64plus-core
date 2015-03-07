@@ -158,7 +158,8 @@ typedef enum {
   M64CMD_CORE_STATE_SET,
   M64CMD_READ_SCREEN,
   M64CMD_RESET,
-  M64CMD_ADVANCE_FRAME
+  M64CMD_ADVANCE_FRAME,
+  M64CMD_SET_AUDIO_INTERFACE_BACKEND
 } m64p_command;
 
 typedef struct {
@@ -367,6 +368,9 @@ typedef struct {
 /* ------------------------------------------ */
 /* Structures and Types for Audio Backend API */
 /* ------------------------------------------ */
+
+/* current version of audio backend API */
+#define M64P_AUDIO_BACKEND_VERSION 1
 
 /* Audio backend object
  *

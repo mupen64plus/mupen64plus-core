@@ -62,7 +62,6 @@
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
 #include "plugin/plugin.h"
-#include "plugin/audio_backend_compat.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
 #include "plugin/rumble_via_input_plugin.h"
@@ -927,9 +926,6 @@ m64p_error main_run(void)
 
     // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
     gfx.setRenderingCallback(video_plugin_render_callback);
-
-    /* connect external audio sink to AI component */
-    memcpy(&g_ai.backend, &AUDIO_BACKEND_COMPAT, sizeof(struct m64p_audio_backend));
 
     /* connect external time source to AF_RTC component */
     g_si.pif.af_rtc.user_data = NULL;
