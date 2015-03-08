@@ -2290,9 +2290,7 @@ void init_block(precomp_block *block)
   invalid_code[block->start>>12] = 0;
   if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
   { 
-    unsigned int paddr;
-    
-    paddr = virtual_to_physical_address(block->start, 2);
+    uint32_t paddr = virtual_to_physical_address(block->start, 2);
     invalid_code[paddr>>12] = 0;
     if (!blocks[paddr>>12])
     {
@@ -2322,33 +2320,21 @@ void init_block(precomp_block *block)
   }
   else
   {
-    if (block->start >= UINT32_C(0x80000000) && block->end < UINT32_C(0xa0000000) && invalid_code[(block->start+UINT32_C(0x20000000))>>12])
+    uint32_t alt_addr = block->start ^ UINT32_C(0x20000000);
+
+    if (invalid_code[alt_addr>>12])
     {
-      if (!blocks[(block->start+UINT32_C(0x20000000))>>12])
+      if (!blocks[alt_addr>>12])
       {
-        blocks[(block->start+UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->code = NULL;
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->block = NULL;
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->jumps_table = NULL;
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->riprel_table = NULL;
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->start = (block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
-        blocks[(block->start+UINT32_C(0x20000000))>>12]->end = ((block->start+UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+        blocks[alt_addr>>12] = (precomp_block *) malloc(sizeof(precomp_block));
+        blocks[alt_addr>>12]->code = NULL;
+        blocks[alt_addr>>12]->block = NULL;
+        blocks[alt_addr>>12]->jumps_table = NULL;
+        blocks[alt_addr>>12]->riprel_table = NULL;
+        blocks[alt_addr>>12]->start = alt_addr & ~UINT32_C(0xFFF);
+        blocks[alt_addr>>12]->end = (alt_addr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[(block->start+UINT32_C(0x20000000))>>12]);
-    }
-    if (block->start >= UINT32_C(0xa0000000) && block->end < UINT32_C(0xc0000000) && invalid_code[(block->start-UINT32_C(0x20000000))>>12])
-    {
-      if (!blocks[(block->start-UINT32_C(0x20000000))>>12])
-      {
-        blocks[(block->start-UINT32_C(0x20000000))>>12] = (precomp_block *) malloc(sizeof(precomp_block));
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->code = NULL;
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->block = NULL;
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->jumps_table = NULL;
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->riprel_table = NULL;
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->start = (block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF);
-        blocks[(block->start-UINT32_C(0x20000000))>>12]->end = ((block->start-UINT32_C(0x20000000)) & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
-      }
-      init_block(blocks[(block->start-UINT32_C(0x20000000))>>12]);
+      init_block(blocks[alt_addr>>12]);
     }
   }
   timed_section_end(TIMED_SECTION_COMPILER);
