@@ -36,8 +36,7 @@ extern uint32_t FCR0, FCR31;
 #endif
 int64_t reg_cop1_fgr_64[32];
 
-int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
-    ceil_mode = 0xB3F, floor_mode = 0x73F;
+int rounding_mode = 0x33F;
 
 
 int64_t* r4300_cp1_regs(void)

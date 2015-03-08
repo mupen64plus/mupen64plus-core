@@ -70,6 +70,8 @@ extern int64_t reg[32];
 
 extern int branch_taken;
 
+extern const uint16_t trunc_mode, round_mode, ceil_mode, floor_mode;
+
 void jump_start_rel8(void);
 void jump_end_rel8(void);
 void jump_start_rel32(void);
