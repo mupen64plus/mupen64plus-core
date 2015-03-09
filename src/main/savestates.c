@@ -192,6 +192,7 @@ static int savestates_load_m64p(char *filepath)
     gzFile f;
     int version;
     int i;
+    uint32_t FCR31;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
@@ -410,7 +411,9 @@ static int savestates_load_m64p(char *filepath)
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     *r4300_cp1_fcr0()  = GETDATA(curr, uint32_t);
-    *r4300_cp1_fcr31() = GETDATA(curr, uint32_t);
+    FCR31 = GETDATA(curr, uint32_t);
+    *r4300_cp1_fcr31() = FCR31;
+    update_x86_rounding_mode(FCR31);
 
     for (i = 0; i < 32; i++)
     {
@@ -463,6 +466,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     char buffer[1024];
     unsigned int vi_timer, SaveRDRAMSize;
     int i;
+    uint32_t FCR31;
 
     unsigned char header[8];
     unsigned char RomHeader[0x40];
@@ -550,7 +554,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // FPCR
     *r4300_cp1_fcr0() = GETDATA(curr, uint32_t);
     curr += 30 * 4; // FCR1...FCR30 not supported
-    *r4300_cp1_fcr31() = GETDATA(curr, uint32_t);
+    FCR31 = GETDATA(curr, uint32_t);
+    *r4300_cp1_fcr31() = FCR31;
+    update_x86_rounding_mode(FCR31);
 
     // hi / lo
     *r4300_mult_hi() = GETDATA(curr, int64_t);
