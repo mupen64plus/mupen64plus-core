@@ -22,6 +22,7 @@
 #include <stdint.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <string.h>
 
 #include "cached_interp.h"
 
@@ -588,21 +589,39 @@ void free_blocks(void)
 void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
 {
     size_t i;
-    size_t begin;
-    size_t end;
+    uint32_t addr;
+    uint32_t addr_max;
 
     if (size == 0)
     {
-        begin = 0;
-        end = 0xfffff;
+        /* invalidate everthing */
+        memset(invalid_code, 1, 0x100000);
     }
     else
     {
-        begin = address >> 12;
-        end = (address+size-1) >> 12;
-    }
+        /* invalidate blocks (if necessary) */
+        addr_max = address+size;
 
-    for(i = begin; i <= end; ++i)
-        invalid_code[i] = 1;
+        for(addr = address; addr < addr_max; addr += 4)
+        {
+            i = (addr >> 12);
+
+            if (invalid_code[i] == 0)
+            {
+                if (blocks[i] == NULL
+                || blocks[i]->block[(addr & 0xfff) / 4].ops != current_instruction_table.NOTCOMPILED)
+                {
+                    invalid_code[i] = 1;
+                    /* go directly to next i */
+                    addr |= 0xffc;
+                }
+            }
+            else
+            {
+                /* go directly to next i */
+                addr |= 0xffc;
+            }
+        }
+    }
 }
 
