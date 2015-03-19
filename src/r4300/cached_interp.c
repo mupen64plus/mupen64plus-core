@@ -613,12 +613,14 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
                 {
                     invalid_code[i] = 1;
                     /* go directly to next i */
+                    addr &= ~0xfff;
                     addr |= 0xffc;
                 }
             }
             else
             {
                 /* go directly to next i */
+                addr &= ~0xfff;
                 addr |= 0xffc;
             }
         }
