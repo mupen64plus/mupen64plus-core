@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_speaker_via_audio_plugin.h                      *
+ *   Mupen64plus - audio_backend_compat.h                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,12 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
-#define M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
+#ifndef M64P_PLUGIN_AUDIO_BACKEND_COMPAT_H
+#define M64P_PLUGIN_AUDIO_BACKEND_COMPAT_H
 
-#include <stddef.h>
+#include "api/m64p_types.h"
 
-void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits);
-void push_audio_samples_via_audio_plugin(void* user_data, const void* buffer, size_t size);
+/* Audio backend compatible with m64p audio plugins */
+extern const struct m64p_audio_backend AUDIO_BACKEND_COMPAT;
 
 #endif

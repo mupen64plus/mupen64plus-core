@@ -185,6 +185,12 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |Advance one frame (the emulator will run until the next frame, then pause).
 |'''<tt>ParamInt</tt>''' Ignored'''<br /><tt>ParamPtr</tt>''' Ignored
 |The emulator must be currently running or paused.
+|-
+|M64CMD_SET_AUDIO_INTERFACE_BACKEND
+|This command allow the frontend to specify the audio backend to be used by the AI controller.
+|'''<tt>ParamPtr</tt>''' is a pointer to the m64p_audio_backend structure (defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]) to be used. If any of the function pointers in the structure are NULL, a dummy backend will be used (eg no sound). For now, usage of audio backends is optional and as such, a frontend is not required to use this command. In this case, the core will use the audio plugin mechanism to play sound. However, we encourage frontend writers to consider this new mechanism over audio plugins which may be deprecated in the future.
+ '''<tt>ParamInt</tt>''' is the version of the m64p_audio_backend structure. This should be M64P_AUDIO_BACKEND_VERSION
+|
 |}
 <br />
 
