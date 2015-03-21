@@ -19,11 +19,19 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <SDL.h>
 // On-screen Display
 #include <SDL_opengl.h>
 #include <SDL_thread.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "OGLFT.h"
+#include "api/m64p_types.h"
 #include "osd.h"
 
 extern "C" {

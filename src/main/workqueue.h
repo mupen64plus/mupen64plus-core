@@ -25,6 +25,8 @@
 #include "list.h"
 #include "osal/preproc.h"
 
+struct work_struct;
+
 struct work_struct *work;
 typedef void (*work_func_t)(struct work_struct *work);
 struct work_struct {

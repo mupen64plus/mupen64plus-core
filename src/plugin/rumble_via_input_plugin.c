@@ -21,6 +21,7 @@
 
 #include "rumble_via_input_plugin.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #include "plugin.h"

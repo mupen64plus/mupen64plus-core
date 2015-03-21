@@ -20,6 +20,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include "api/callbacks.h"
@@ -27,6 +28,8 @@
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
+#include "r4300/x86_64/assemble.h"
+#include "r4300/x86_64/assemble_struct.h"
 #include "regcache.h"
 
 static unsigned long long * reg_content[8];

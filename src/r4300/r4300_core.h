@@ -23,6 +23,7 @@
 #define M64P_R4300_R4300_CORE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "cp0.h"
 #include "cp1.h"

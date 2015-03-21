@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "api/m64p_frontend.h"
 #include "callbacks.h"
 #include "m64p_types.h"
 

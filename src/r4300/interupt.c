@@ -24,6 +24,7 @@
 #include "interupt.h"
 
 #include <SDL.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -31,15 +32,18 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
+#include "cp0.h"
 #include "cp0_private.h"
 #include "exception.h"
 #include "main/main.h"
 #include "main/savestates.h"
+#include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
 #include "pi/pi_controller.h"
 #include "r4300.h"
 #include "r4300_core.h"
 #include "rdp/rdp_core.h"
+#include "recomp.h"
 #include "reset.h"
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"

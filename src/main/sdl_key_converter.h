@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <SDL.h>
+#include <stdint.h>
 
 #include "osal/preproc.h"
 

@@ -25,8 +25,10 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "osal/preproc.h"
 #include "r4300/recomph.h"
 

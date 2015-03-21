@@ -38,6 +38,7 @@
 #include "main/cheat.h"
 #include "main/eventloop.h"
 #include "main/main.h"
+#include "main/md5.h"
 #include "main/rom.h"
 #include "main/savestates.h"
 #include "main/util.h"

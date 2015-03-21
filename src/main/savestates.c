@@ -22,9 +22,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <SDL.h>
 #include <SDL_thread.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <zlib.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "ai/ai_controller.h"
@@ -33,6 +39,7 @@
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
 #include "main.h"
+#include "main/list.h"
 #include "memory/memory.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"

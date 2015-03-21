@@ -22,6 +22,7 @@
 #include <SDL.h>
 #include <ctype.h>
 #include <png.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

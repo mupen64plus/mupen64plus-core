@@ -22,6 +22,7 @@
 #ifndef M64P_RI_RI_CONTROLLER_H
 #define M64P_RI_RI_CONTROLLER_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "rdram.h"

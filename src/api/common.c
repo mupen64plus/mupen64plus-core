@@ -23,6 +23,7 @@
  * outside of the core library.
  */
 
+#include <stddef.h>
 #include <stdlib.h>
 
 #define M64P_CORE_PROTOTYPES 1

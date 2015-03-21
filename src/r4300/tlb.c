@@ -21,6 +21,7 @@
 
 #include "tlb.h"
 
+#include "api/m64p_types.h"
 #include "exception.h"
 #include "main/rom.h"
 

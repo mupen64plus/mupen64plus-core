@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "api/callbacks.h"
+#include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 #include "memory/memory.h"
 #include "n64_cic_nus_6105.h"

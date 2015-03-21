@@ -22,8 +22,10 @@
 #include "r4300_core.h"
 
 #include "cached_interp.h"
+#include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
 #include "r4300.h"
+#include "recomp.h"
 
 void init_r4300(struct r4300_core* r4300)
 {

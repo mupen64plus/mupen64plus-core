@@ -21,7 +21,9 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <SDL.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #if ! SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_SCANCODE_ESCAPE SDLK_ESCAPE
@@ -61,6 +63,7 @@
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/m64p_config.h"
+#include "api/m64p_types.h"
 #include "eventloop.h"
 #include "main.h"
 #include "plugin/plugin.h"
