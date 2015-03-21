@@ -22,13 +22,12 @@
 
 #include <string.h>
 
-#include "dbg_types.h"
-#include "dbg_memory.h"
-#include "dbg_breakpoints.h"
-
 #include "ai/ai_controller.h"
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "dbg_breakpoints.h"
+#include "dbg_memory.h"
+#include "dbg_types.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "memory/memory.h"
@@ -38,8 +37,8 @@
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
-#include "rsp/rsp_core.h"
 #include "ri/ri_controller.h"
+#include "rsp/rsp_core.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 

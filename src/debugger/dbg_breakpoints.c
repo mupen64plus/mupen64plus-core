@@ -22,13 +22,11 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 
-#include "dbg_types.h"
-#include "dbg_debugger.h"
-#include "dbg_breakpoints.h"
-
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-
+#include "api/m64p_types.h"
+#include "dbg_breakpoints.h"
+#include "dbg_debugger.h"
+#include "dbg_types.h"
 #include "memory/memory.h"
 
 #ifdef DBG

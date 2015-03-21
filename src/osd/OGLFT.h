@@ -23,11 +23,11 @@
 #ifndef OGLFT_H
 #define OGLFT_H
 
-#include <cmath>
-#include <map>
-#include <list>
-#include <vector>
 #include <wchar.h>
+#include <cmath>
+#include <list>
+#include <map>
+#include <vector>
 
 #define GL_GLEXT_PROTOTYPES
 #include <SDL_opengl.h>
@@ -40,6 +40,7 @@
 #endif
 
 #include <ft2build.h>
+
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 #include FT_OUTLINE_H

@@ -21,14 +21,14 @@
 
 #include "si_controller.h"
 
-#include "api/m64p_types.h"
+#include <string.h>
+
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "main/main.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
-
-#include <string.h>
 
 
 static void dma_si_write(struct si_controller* si)

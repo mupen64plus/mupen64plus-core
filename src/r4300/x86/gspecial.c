@@ -23,14 +23,13 @@
 
 #include "assemble.h"
 #include "interpret.h"
-
 #include "r4300/cached_interp.h"
-#include "r4300/recomph.h"
-#include "r4300/recomp.h"
-#include "r4300/r4300.h"
-#include "r4300/ops.h"
 #include "r4300/cp0_private.h"
 #include "r4300/exception.h"
+#include "r4300/ops.h"
+#include "r4300/r4300.h"
+#include "r4300/recomp.h"
+#include "r4300/recomph.h"
 
 void gensll(void)
 {

@@ -19,9 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <windows.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <windows.h>
 
 #include "api/m64p_types.h"
 #include "dynamiclib.h"

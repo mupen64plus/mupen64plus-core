@@ -19,11 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
 #include <dlfcn.h>
+#include <stdlib.h>
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "dynamiclib.h"
 
 void * osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedureName)

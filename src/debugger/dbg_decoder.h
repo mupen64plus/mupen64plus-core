@@ -30,8 +30,8 @@ typedef unsigned char bool;
 #define false 0
 #define true 1
 #else
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #endif
 
 /* Disassembler lookup handler */

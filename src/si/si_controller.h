@@ -20,7 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef SI_SI_CONTROLLER_H
-#define Si_SI_CONTROLLER_H
+#define SI_SI_CONTROLLER_H
 
 #include <stdint.h>
 

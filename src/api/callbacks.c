@@ -23,12 +23,12 @@
  * front-end application
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "m64p_types.h"
 #include "callbacks.h"
+#include "m64p_types.h"
 
 /* local variables */
 static ptr_DebugCallback pDebugFunc = NULL;

@@ -19,13 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "memory/memory.h"
-
-#include "exception.h"
-#include "r4300.h"
+#include "api/m64p_types.h"
 #include "cp0_private.h"
+#include "exception.h"
+#include "memory/memory.h"
+#include "r4300.h"
 #include "recomph.h"
 #include "tlb.h"
 

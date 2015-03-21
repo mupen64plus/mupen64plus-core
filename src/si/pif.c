@@ -20,17 +20,18 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "pif.h"
-#include "n64_cic_nus_6105.h"
-#include "si_controller.h"
 
-#include "api/m64p_types.h"
+#include <stdint.h>
+#include <string.h>
+
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "memory/memory.h"
+#include "n64_cic_nus_6105.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
+#include "si_controller.h"
 
-#include <string.h>
-#include <stdint.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

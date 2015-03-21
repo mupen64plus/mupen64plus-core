@@ -26,17 +26,16 @@
 #include <stdlib.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "m64p_types.h"
-#include "m64p_debugger.h"
+#include "ai/ai_controller.h"
 #include "callbacks.h"
 #include "debugger.h"
-
-#include "ai/ai_controller.h"
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_breakpoints.h"
+#include "debugger/dbg_debugger.h"
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
-#include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
+#include "m64p_debugger.h"
+#include "m64p_types.h"
 #include "main/main.h"
 #include "memory/memory.h"
 #include "pi/pi_controller.h"

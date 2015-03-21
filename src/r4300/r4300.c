@@ -24,33 +24,32 @@
 #include <string.h>
 
 #include "ai/ai_controller.h"
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
-#include "memory/memory.h"
-#include "main/main.h"
-#include "main/rom.h"
-#include "pi/pi_controller.h"
-#include "rsp/rsp_core.h"
-#include "si/si_controller.h"
-#include "vi/vi_controller.h"
-
-#include "r4300.h"
-#include "r4300_core.h"
+#include "api/m64p_types.h"
 #include "cached_interp.h"
 #include "cp0_private.h"
 #include "cp1_private.h"
-#include "ops.h"
 #include "interupt.h"
+#include "main/main.h"
+#include "main/rom.h"
+#include "memory/memory.h"
+#include "new_dynarec/new_dynarec.h"
+#include "ops.h"
+#include "pi/pi_controller.h"
 #include "pure_interp.h"
+#include "r4300.h"
+#include "r4300_core.h"
 #include "recomp.h"
 #include "recomph.h"
+#include "rsp/rsp_core.h"
+#include "si/si_controller.h"
 #include "tlb.h"
-#include "new_dynarec/new_dynarec.h"
+#include "vi/vi_controller.h"
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
 #endif
 
 #if defined(COUNT_INSTR)

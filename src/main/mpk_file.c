@@ -20,13 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "mpk_file.h"
-#include "util.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "si/pif.h"
 
 #include <stdlib.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "si/pif.h"
+#include "util.h"
 
 void open_mpk_file(struct mpk_file* mpk, const char* filename)
 {

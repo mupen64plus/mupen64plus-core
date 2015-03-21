@@ -20,10 +20,11 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "workqueue.h"
-#include "api/callbacks.h"
 
 #include <SDL.h>
 #include <SDL_thread.h>
+
+#include "api/callbacks.h"
 
 #define WORKQUEUE_THREADS 1
 

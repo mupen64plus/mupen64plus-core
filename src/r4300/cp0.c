@@ -21,19 +21,18 @@
 
 #include <stdint.h>
 
-#include "r4300.h"
 #include "cp0_private.h"
 #include "exception.h"
-
 #include "new_dynarec/new_dynarec.h"
+#include "r4300.h"
 
 #ifdef COMPARE_CORE
 #include "api/debugger.h"
 #endif
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
 #endif
 
 /* global variable */

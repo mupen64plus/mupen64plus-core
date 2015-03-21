@@ -43,6 +43,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "zlib.h"
 
 #ifndef OF
@@ -92,6 +93,7 @@ typedef  64BIT_INT_CUSTOM_TYPE ZPOS64_T;
 #else
 #ifdef HAS_STDINT_H
 #include "stdint.h"
+
 typedef uint64_t ZPOS64_T;
 #else
 

@@ -21,10 +21,10 @@
 
 #include "af_rtc.h"
 
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-
 #include <time.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
 
 static unsigned char byte2bcd(int n)
 {

@@ -20,13 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "eep_file.h"
-#include "util.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "si/eeprom.h"
 
 #include <stdlib.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "si/eeprom.h"
+#include "util.h"
 
 void open_eep_file(struct eep_file* eep, const char* filename)
 {

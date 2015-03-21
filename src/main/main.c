@@ -28,56 +28,53 @@
  * if you want to implement an interface, you should look here
  */
 
-#include <string.h>
-#include <stdlib.h>
-
 #include <SDL.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "api/m64p_types.h"
+#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "api/config.h"
-#include "api/m64p_config.h"
 #include "api/debugger.h"
+#include "api/m64p_config.h"
+#include "api/m64p_types.h"
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
-
-#include "main.h"
 #include "cheat.h"
 #include "eep_file.h"
 #include "eventloop.h"
 #include "fla_file.h"
-#include "mpk_file.h"
-#include "profile.h"
-#include "rom.h"
-#include "savestates.h"
-#include "sra_file.h"
-#include "util.h"
-
-#include "ai/ai_controller.h"
+#include "main.h"
 #include "memory/memory.h"
+#include "mpk_file.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
 #include "pi/pi_controller.h"
-#include "plugin/plugin.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/emulate_speaker_via_audio_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
+#include "plugin/plugin.h"
 #include "plugin/rumble_via_input_plugin.h"
+#include "profile.h"
 #include "r4300/r4300.h"
 #include "r4300/r4300_core.h"
 #include "r4300/reset.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
+#include "rom.h"
 #include "rsp/rsp_core.h"
+#include "savestates.h"
 #include "si/si_controller.h"
+#include "sra_file.h"
+#include "util.h"
 #include "vi/vi_controller.h"
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
 #endif
 
 #ifdef WITH_LIRC

@@ -18,8 +18,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "main/main.h"
 #include "../../cp0_private.h"
+#include "main/main.h"
 
 extern int cycle_count;
 extern int last_count;

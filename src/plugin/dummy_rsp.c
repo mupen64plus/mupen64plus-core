@@ -22,8 +22,8 @@
 #include <stdlib.h>
 
 #include "api/m64p_types.h"
-#include "plugin.h"
 #include "dummy_rsp.h"
+#include "plugin.h"
 
 m64p_error dummyrsp_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
                                      int *APIVersion, const char **PluginNamePtr, int *Capabilities)

@@ -29,6 +29,7 @@
 
 /*	$NetBSD: db_disasm.c,v 1.21 2009/12/14 00:46:06 matt Exp $	*/
 
+#include <stdarg.h>
 /*-
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -64,9 +65,8 @@
  */
 #include <stdint.h>
 #include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #ifndef MIPS32
   #define MIPS32
 #endif

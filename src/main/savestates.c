@@ -22,23 +22,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <SDL_thread.h>
 #include <stdlib.h>
 #include <string.h>
-#include <SDL_thread.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "api/m64p_config.h"
-#include "api/config.h"
-
-#include "savestates.h"
-#include "main.h"
-#include "rom.h"
-#include "util.h"
-#include "workqueue.h"
-
 #include "ai/ai_controller.h"
+#include "api/callbacks.h"
+#include "api/config.h"
+#include "api/m64p_config.h"
+#include "api/m64p_types.h"
+#include "main.h"
 #include "memory/memory.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
@@ -47,9 +41,13 @@
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
+#include "rom.h"
 #include "rsp/rsp_core.h"
+#include "savestates.h"
 #include "si/si_controller.h"
+#include "util.h"
 #include "vi/vi_controller.h"
+#include "workqueue.h"
 
 #ifdef LIBMINIZIP
     #include <unzip.h>

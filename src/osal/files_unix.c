@@ -23,16 +23,16 @@
  * functions
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
-#include "files.h"
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "files.h"
 
 #ifdef __APPLE__
 /* OS X code for app bundle handling */

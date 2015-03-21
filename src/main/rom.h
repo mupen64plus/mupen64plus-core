@@ -23,9 +23,10 @@
 #ifndef __ROM_H__
 #define __ROM_H__
 
+#include <stdint.h>
+
 #include "api/m64p_types.h"
 #include "md5.h"
-#include <stdint.h>
 
 #define BIT(bitnr) (1ULL << (bitnr))
 #ifdef __GNUC__

@@ -22,13 +22,12 @@
 
 #include <stdio.h>
 
-#include "regcache.h"
-
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "r4300/recomp.h"
+#include "api/m64p_types.h"
 #include "r4300/r4300.h"
+#include "r4300/recomp.h"
 #include "r4300/recomph.h"
+#include "regcache.h"
 
 static unsigned long long * reg_content[8];
 static precomp_instr* last_access[8];

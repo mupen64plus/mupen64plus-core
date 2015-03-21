@@ -22,29 +22,28 @@
 #define M64P_CORE_PROTOTYPES 1
 
 #include "interupt.h"
-#include "cached_interp.h"
-#include "cp0_private.h"
-#include "exception.h"
-#include "new_dynarec/new_dynarec.h"
-#include "r4300.h"
-#include "r4300_core.h"
-#include "reset.h"
 
-#include "ai/ai_controller.h"
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "main/main.h"
-#include "main/savestates.h"
-#include "pi/pi_controller.h"
-#include "rdp/rdp_core.h"
-#include "rsp/rsp_core.h"
-#include "si/si_controller.h"
-#include "vi/vi_controller.h"
-
+#include <SDL.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <SDL.h>
+#include "ai/ai_controller.h"
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "cached_interp.h"
+#include "cp0_private.h"
+#include "exception.h"
+#include "main/main.h"
+#include "main/savestates.h"
+#include "new_dynarec/new_dynarec.h"
+#include "pi/pi_controller.h"
+#include "r4300.h"
+#include "r4300_core.h"
+#include "rdp/rdp_core.h"
+#include "reset.h"
+#include "rsp/rsp_core.h"
+#include "si/si_controller.h"
+#include "vi/vi_controller.h"
 
 int interupt_unsafe_state = 0;
 

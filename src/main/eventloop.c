@@ -20,8 +20,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
 #include <SDL.h>
+#include <stdlib.h>
 #if ! SDL_VERSION_ATLEAST(1,3,0)
 
 #define SDL_SCANCODE_ESCAPE SDLK_ESCAPE
@@ -58,15 +58,15 @@
 #endif
 
 #define M64P_CORE_PROTOTYPES 1
-#include "main.h"
-#include "eventloop.h"
-#include "sdl_key_converter.h"
-#include "util.h"
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/m64p_config.h"
+#include "eventloop.h"
+#include "main.h"
 #include "plugin/plugin.h"
 #include "r4300/reset.h"
+#include "sdl_key_converter.h"
+#include "util.h"
 
 /* version number for CoreEvents config section */
 #define CONFIG_PARAM_VERSION 1.00

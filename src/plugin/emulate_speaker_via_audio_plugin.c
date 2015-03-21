@@ -21,12 +21,12 @@
 
 #include "emulate_speaker_via_audio_plugin.h"
 
+#include <stdint.h>
+
 #include "ai/ai_controller.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
 #include "ri/ri_controller.h"
-
-#include <stdint.h>
 
 void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits)
 {

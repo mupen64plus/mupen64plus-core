@@ -22,11 +22,11 @@
 #ifndef M64P_MAIN_MPK_FILE_H
 #define M64P_MAIN_MPK_FILE_H
 
-#include "si/mempak.h"
-#include "si/pif.h"
-
 #include <stddef.h>
 #include <stdint.h>
+
+#include "si/mempak.h"
+#include "si/pif.h"
 
 struct mpk_file
 {

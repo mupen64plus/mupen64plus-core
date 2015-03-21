@@ -33,6 +33,7 @@ extern uint32_t src;   /* opcode of r4300 instruction being recompiled */
 
 #if defined(PROFILE_R4300)
   #include <stdio.h>
+
   extern FILE *pfProfile;
 #endif
 

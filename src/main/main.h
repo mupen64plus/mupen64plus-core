@@ -23,10 +23,10 @@
 #ifndef __MAIN_H__
 #define __MAIN_H__
 
+#include <stdint.h>
+
 #include "api/m64p_types.h"
 #include "osal/preproc.h"
-
-#include <stdint.h>
 
 struct r4300_core;
 struct rdp_core;

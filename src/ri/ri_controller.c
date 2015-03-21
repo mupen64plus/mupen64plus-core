@@ -21,9 +21,9 @@
 
 #include "ri_controller.h"
 
-#include "memory/memory.h"
-
 #include <string.h>
+
+#include "memory/memory.h"
 
 void connect_ri(struct ri_controller* ri,
                 uint32_t* dram,

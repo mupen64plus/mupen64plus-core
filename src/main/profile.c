@@ -24,8 +24,8 @@
 #ifdef PROFILE
 #include "profile.h"
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 
 static long long int time_in_section[NUM_TIMED_SECTIONS];
 static long long int last_start[NUM_TIMED_SECTIONS];
@@ -33,6 +33,7 @@ static long long int last_start[NUM_TIMED_SECTIONS];
 #if defined(WIN32) && !defined(__MINGW32__)
   // timing
   #include <windows.h>
+
   static long long int get_time(void)
   {
       LARGE_INTEGER counter;
@@ -50,6 +51,7 @@ static long long int last_start[NUM_TIMED_SECTIONS];
 #else  /* Not WIN32 */
   // timing
   #include <time.h>
+
   static long long int get_time(void)
   {
      struct timespec ts;

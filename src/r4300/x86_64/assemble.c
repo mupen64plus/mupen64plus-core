@@ -20,16 +20,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "assemble.h"
-
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "r4300/recomph.h"
-#include "r4300/recomp.h"
+#include "api/m64p_types.h"
+#include "assemble.h"
 #include "r4300/r4300.h"
+#include "r4300/recomp.h"
+#include "r4300/recomph.h"
 
 /* Placeholder for RIP-relative offsets is maxmimum 32-bit signed value.
  * So, if recompiled code is run without running passe2() first, it will

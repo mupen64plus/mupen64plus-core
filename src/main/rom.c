@@ -20,31 +20,29 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <ctype.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <stddef.h>
-#include <stdint.h>
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/m64p_config.h"
-
-#include "md5.h"
-#include "rom.h"
+#include "api/m64p_types.h"
 #include "main.h"
-#include "util.h"
-
+#include "md5.h"
 #include "memory/memory.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "r4300/r4300.h"
+#include "rom.h"
+#include "util.h"
 
 #define DEFAULT 16
 

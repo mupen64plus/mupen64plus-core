@@ -21,14 +21,15 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "flashram.h"
-#include "pi_controller.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "memory/memory.h"
-#include "ri/ri_controller.h"
 
 #include <string.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "memory/memory.h"
+#include "pi_controller.h"
+#include "ri/ri_controller.h"
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

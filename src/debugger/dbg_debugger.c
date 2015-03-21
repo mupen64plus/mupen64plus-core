@@ -23,11 +23,10 @@
 #include <SDL.h>
 
 #include "api/debugger.h"
-
-#include "dbg_types.h"
-#include "dbg_debugger.h"
 #include "dbg_breakpoints.h"
+#include "dbg_debugger.h"
 #include "dbg_memory.h"
+#include "dbg_types.h"
 
 #ifdef DBG
 

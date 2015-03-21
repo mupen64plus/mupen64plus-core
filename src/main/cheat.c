@@ -24,22 +24,21 @@
 
 #include <SDL.h>
 #include <SDL_thread.h>
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "api/config.h"
-
-#include "memory/memory.h"
-#include "osal/preproc.h"
-#include "cheat.h"
-#include "main.h"
-#include "rom.h"
-#include "eventloop.h"
-#include "list.h"
-
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdint.h>
+
+#include "api/callbacks.h"
+#include "api/config.h"
+#include "api/m64p_types.h"
+#include "cheat.h"
+#include "eventloop.h"
+#include "list.h"
+#include "main.h"
+#include "memory/memory.h"
+#include "osal/preproc.h"
+#include "rom.h"
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

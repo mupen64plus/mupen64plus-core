@@ -19,8 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "osal/preproc.h"
 #include <SDL.h>
+
+#include "osal/preproc.h"
 
 uint16_t sdl_keysym2scancode(uint16_t keysym);
 uint16_t sdl_scancode2keysym(uint16_t scancode);

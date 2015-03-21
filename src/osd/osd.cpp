@@ -28,13 +28,13 @@
 
 extern "C" {
     #define M64P_CORE_PROTOTYPES 1
-    #include "api/m64p_config.h"
-    #include "api/config.h"
     #include "api/callbacks.h"
+    #include "api/config.h"
+    #include "api/m64p_config.h"
     #include "api/m64p_vidext.h"
     #include "api/vidext.h"
-    #include "main/main.h"
     #include "main/list.h"
+    #include "main/main.h"
     #include "osal/files.h"
     #include "osal/preproc.h"
     #include "plugin/plugin.h"
