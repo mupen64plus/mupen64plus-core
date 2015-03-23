@@ -20,29 +20,30 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdint.h>
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
-#include "memory/memory.h"
-#include "main/main.h"
-#include "osal/preproc.h"
-
+#include "api/m64p_types.h"
 /* TLBWrite requires invalid_code and blocks from cached_interp.h, but only if
  * (at run time) the active core is not the Pure Interpreter. */
 #include "cached_interp.h"
-#include "r4300.h"
+#include "cp0.h"
 #include "cp0_private.h"
 #include "cp1_private.h"
 #include "exception.h"
 #include "interupt.h"
+#include "main/main.h"
+#include "memory/memory.h"
+#include "osal/preproc.h"
+#include "r4300.h"
 #include "tlb.h"
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
 #endif
 
 static precomp_instr interp_PC;

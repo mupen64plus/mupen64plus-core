@@ -24,8 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 
 /* various constants */
 static char instr_name[][10] =

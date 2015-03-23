@@ -21,13 +21,13 @@
 
 #include "ai_controller.h"
 
+#include <string.h>
+
 #include "main/rom.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 #include "vi/vi_controller.h"
-
-#include <string.h>
 
 enum
 {

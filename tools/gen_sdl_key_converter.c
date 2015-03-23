@@ -21,10 +21,10 @@
 
 /* gcc -E `sdl2-config --cflags --libs` `sdl-config --cflags --libs` gen_sdl_key_converter.c -o gen_sdl_key_converter */
 
-#include <stdint.h>
-#include <inttypes.h>
-#include <SDL_scancode.h>
 #include <SDL_keysym.h>
+#include <SDL_scancode.h>
+#include <inttypes.h>
+#include <stdint.h>
 
 struct keycode2scancode {
     const char *keysym_name;

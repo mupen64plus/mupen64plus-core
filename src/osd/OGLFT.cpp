@@ -19,9 +19,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <iostream>
-#include <iomanip>
+#include <GL/glu.h>
 #include <string.h>
+#include <cmath>
+#include <iomanip>
+#include <iostream>
+#include <utility>
+
 #include "OGLFT.h"
 
 int wstrlen(const wchar_t * s) 

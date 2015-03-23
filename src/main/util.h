@@ -27,7 +27,10 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
+
 #include "osal/preproc.h"
 
 /**********************

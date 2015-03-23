@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "cart_rom.h"
+
 #include "pi_controller.h"
 
 void connect_cart_rom(struct cart_rom* cart_rom,

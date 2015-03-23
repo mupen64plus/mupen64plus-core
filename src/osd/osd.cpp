@@ -19,22 +19,30 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <SDL.h>
 // On-screen Display
 #include <SDL_opengl.h>
 #include <SDL_thread.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "OGLFT.h"
+#include "api/m64p_types.h"
 #include "osd.h"
 
 extern "C" {
     #define M64P_CORE_PROTOTYPES 1
-    #include "api/m64p_config.h"
-    #include "api/config.h"
     #include "api/callbacks.h"
+    #include "api/config.h"
+    #include "api/m64p_config.h"
     #include "api/m64p_vidext.h"
     #include "api/vidext.h"
-    #include "main/main.h"
     #include "main/list.h"
+    #include "main/main.h"
     #include "osal/files.h"
     #include "osal/preproc.h"
     #include "plugin/plugin.h"

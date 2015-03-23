@@ -22,12 +22,12 @@
 #ifndef M64P_R4300_CACHED_INTERP_H
 #define M64P_R4300_CACHED_INTERP_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "ops.h"
 /* FIXME: use forward declaration for precomp_block */
 #include "recomp.h"
-
-#include <stddef.h>
-#include <stdint.h>
 
 extern char invalid_code[0x100000];
 extern precomp_block *blocks[0x100000];

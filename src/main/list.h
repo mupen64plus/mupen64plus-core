@@ -27,6 +27,7 @@ extern "C" {
 #endif
 
 #include <stddef.h>
+
 #include "osal/preproc.h"
 
 struct list_head {

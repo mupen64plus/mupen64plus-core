@@ -20,13 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fla_file.h"
-#include "util.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "pi/flashram.h"
 
 #include <stdlib.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "pi/flashram.h"
+#include "util.h"
 
 void open_fla_file(struct fla_file* fla, const char* filename)
 {

@@ -20,15 +20,14 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "sram.h"
-#include "pi_controller.h"
-
-#include "memory/memory.h"
-
-#include "ri/ri_controller.h"
 
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "memory/memory.h"
+#include "pi_controller.h"
+#include "ri/ri_controller.h"
 
 
 void sram_save(struct sram* sram)

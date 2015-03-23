@@ -20,11 +20,12 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "rumble_via_input_plugin.h"
-#include "plugin.h"
 
-#include "si/rumblepak.h"
-
+#include <stdint.h>
 #include <string.h>
+
+#include "plugin.h"
+#include "si/rumblepak.h"
 
 void rvip_rumble(void* opaque, enum rumble_action action)
 {

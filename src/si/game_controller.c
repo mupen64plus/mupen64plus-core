@@ -20,15 +20,17 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "game_controller.h"
-#include "pif.h"
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "pif.h"
+#include "si/si_controller.h"
 
 #ifdef COMPARE_CORE
 #include "api/debugger.h"
 #endif
 
+#include <stddef.h>
 #include <string.h>
 
 

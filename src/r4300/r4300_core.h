@@ -22,13 +22,14 @@
 #ifndef M64P_R4300_R4300_CORE_H
 #define M64P_R4300_R4300_CORE_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "cp0.h"
 #include "cp1.h"
 #include "interupt.h"
 #include "mi_controller.h"
 #include "tlb.h"
-
-#include <stddef.h>
 
 struct r4300_core
 {

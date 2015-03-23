@@ -20,9 +20,9 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "emulate_game_controller_via_input_plugin.h"
-#include "plugin.h"
 
 #include "api/m64p_plugin.h"
+#include "plugin.h"
 #include "si/game_controller.h"
 
 int egcvip_is_connected(void* opaque, enum pak_type* pak)

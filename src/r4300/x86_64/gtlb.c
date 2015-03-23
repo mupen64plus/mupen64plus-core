@@ -23,11 +23,10 @@
 #include <stdio.h>
 
 #include "assemble.h"
-
 #include "r4300/cached_interp.h"
-#include "r4300/recomph.h"
-#include "r4300/r4300.h"
 #include "r4300/ops.h"
+#include "r4300/r4300.h"
+#include "r4300/recomph.h"
 
 #if defined(COUNT_INSTR)
 #include "r4300/instr_counters.h"

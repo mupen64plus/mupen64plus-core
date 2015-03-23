@@ -20,31 +20,32 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdint.h>
+#include <stdlib.h>
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <string.h>
 
-#include "cached_interp.h"
-
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "api/debugger.h"
-#include "main/main.h"
-#include "memory/memory.h"
-
-#include "r4300.h"
+#include "api/m64p_types.h"
+#include "cached_interp.h"
+#include "cp0.h"
 #include "cp0_private.h"
 #include "cp1_private.h"
-#include "ops.h"
 #include "exception.h"
 #include "interupt.h"
 #include "macros.h"
+#include "main/main.h"
+#include "memory/memory.h"
+#include "ops.h"
+#include "r4300.h"
 #include "recomp.h"
 #include "tlb.h"
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
 #include "debugger/dbg_debugger.h"
+#include "debugger/dbg_types.h"
 #endif
 
 /* global variables */

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -32,17 +33,16 @@
 #endif
 #endif
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "memory/memory.h"
-#include "main/profile.h"
-
+#include "api/m64p_types.h"
 #include "cached_interp.h"
+#include "cp0_private.h"
+#include "main/profile.h"
+#include "memory/memory.h"
+#include "ops.h"
+#include "r4300.h"
 #include "recomp.h"
 #include "recomph.h" //include for function prototypes
-#include "cp0_private.h"
-#include "r4300.h"
-#include "ops.h"
 #include "tlb.h"
 
 static void *malloc_exec(size_t size);

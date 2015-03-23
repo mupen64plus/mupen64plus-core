@@ -21,12 +21,12 @@
 
 #include "vi_controller.h"
 
+#include <string.h>
+
 #include "main/main.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
-
-#include <string.h>
 
 void connect_vi(struct vi_controller* vi,
                 struct r4300_core* r4300)

@@ -27,8 +27,8 @@
 #include "fb.h"
 
 struct r4300_core;
-struct rsp_core;
 struct ri_controller;
+struct rsp_core;
 
 enum dpc_registers
 {

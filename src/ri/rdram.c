@@ -20,11 +20,11 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "rdram.h"
-#include "ri_controller.h"
-
-#include "memory/memory.h"
 
 #include <string.h>
+
+#include "memory/memory.h"
+#include "ri_controller.h"
 
 void connect_rdram(struct rdram* rdram,
                    uint32_t* dram,

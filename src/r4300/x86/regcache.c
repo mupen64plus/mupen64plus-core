@@ -21,11 +21,10 @@
 
 #include <stdio.h>
 
-#include "regcache.h"
-
-#include "r4300/recomp.h"
 #include "r4300/r4300.h"
+#include "r4300/recomp.h"
 #include "r4300/recomph.h"
+#include "regcache.h"
 
 static unsigned int* reg_content[8];
 static precomp_instr* last_access[8];

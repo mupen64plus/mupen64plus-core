@@ -20,34 +20,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdlib.h>
 
-#include "plugin.h"
-
 #include "ai/ai_controller.h"
-
 #include "api/callbacks.h"
 #include "api/m64p_common.h"
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
-
+#include "dummy_audio.h"
+#include "dummy_input.h"
+#include "dummy_rsp.h"
+#include "dummy_video.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/version.h"
 #include "memory/memory.h"
-
 #include "osal/dynamiclib.h"
-
+#include "plugin.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
-
 #include "vi/vi_controller.h"
-
-#include "dummy_audio.h"
-#include "dummy_video.h"
-#include "dummy_input.h"
-#include "dummy_rsp.h"
 
 CONTROL Controls[4];
 

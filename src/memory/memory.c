@@ -21,29 +21,26 @@
 
 #include "memory.h"
 
-#include "api/m64p_types.h"
+#include "ai/ai_controller.h"
 #include "api/callbacks.h"
-
+#include "api/m64p_types.h"
 #include "main/main.h"
 #include "main/rom.h"
-
+#include "pi/pi_controller.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "r4300/r4300_core.h"
-
 #include "rdp/rdp_core.h"
-#include "rsp/rsp_core.h"
-
-#include "ai/ai_controller.h"
-#include "pi/pi_controller.h"
 #include "ri/ri_controller.h"
+#include "rsp/rsp_core.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
 #ifdef DBG
-#include "debugger/dbg_types.h"
-#include "debugger/dbg_memory.h"
-#include "debugger/dbg_breakpoints.h"
 #include <string.h>
+
+#include "debugger/dbg_breakpoints.h"
+#include "debugger/dbg_memory.h"
+#include "debugger/dbg_types.h"
 #endif
 
 #include <stddef.h>

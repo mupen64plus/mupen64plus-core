@@ -23,16 +23,16 @@
  * outside of the core library.
  */
 
+#include <SDL.h>
 #include <stdlib.h>
 #include <string.h>
-#include <SDL.h>
 
 #define M64P_CORE_PROTOTYPES 1
+#include "../osd/osd.h"
+#include "callbacks.h"
 #include "m64p_types.h"
 #include "m64p_vidext.h"
 #include "vidext.h"
-#include "callbacks.h"
-#include "../osd/osd.h"
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 #include "vidext_sdl2_compat.h"

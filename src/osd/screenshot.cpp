@@ -19,25 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <SDL.h>
+#include <ctype.h>
+#include <png.h>
+#include <setjmp.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-
-#include <SDL.h>
-#include <png.h>
 
 #include "osd.h"
 
 extern "C" {
 #define M64P_CORE_PROTOTYPES 1
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "api/m64p_config.h"
 #include "api/config.h"
+#include "api/m64p_config.h"
+#include "api/m64p_types.h"
 #include "main/main.h"
-#include "main/util.h"
 #include "main/rom.h"
+#include "main/util.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"

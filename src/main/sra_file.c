@@ -20,13 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "sra_file.h"
-#include "util.h"
-
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-#include "pi/sram.h"
 
 #include <stdlib.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "pi/sram.h"
+#include "util.h"
 
 void open_sra_file(struct sra_file* sra, const char* filename)
 {

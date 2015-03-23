@@ -21,11 +21,12 @@
 
 #include "eeprom.h"
 
-#include "api/m64p_types.h"
-#include "api/callbacks.h"
-
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

@@ -23,18 +23,17 @@
  * outside of the core library.
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "m64p_types.h"
-#include "m64p_config.h"
-#include "config.h"
 #include "callbacks.h"
-
+#include "config.h"
+#include "m64p_config.h"
+#include "m64p_types.h"
 #include "main/util.h"
-
 #include "osal/files.h"
 #include "osal/preproc.h"
 

@@ -20,12 +20,12 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "rdram_detection_hack.h"
-#include "ri_controller.h"
-
-#include "main/main.h"
-#include "si/si_controller.h"
 
 #include <stdint.h>
+
+#include "main/main.h"
+#include "ri_controller.h"
+#include "si/si_controller.h"
 
 /* HACK: force detected RDRAM size
  * This hack is triggered just before initial ROM loading (see pi_controller.c)

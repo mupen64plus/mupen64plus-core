@@ -21,12 +21,13 @@
 
 #include "rdp_core.h"
 
+#include <string.h>
+
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
+#include "rdp/rdp_core.h"
 #include "rsp/rsp_core.h"
-
-#include <string.h>
 
 static int update_dpc_status(struct rdp_core* dp, uint32_t w)
 {

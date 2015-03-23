@@ -19,21 +19,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "api/debugger.h"
 #include "assemble.h"
 #include "interpret.h"
-#include "regcache.h"
-
-#include "api/debugger.h"
 #include "main/main.h"
 #include "memory/memory.h"
-#include "r4300/r4300.h"
 #include "r4300/cached_interp.h"
 #include "r4300/cp0_private.h"
 #include "r4300/cp1_private.h"
+#include "r4300/exception.h"
 #include "r4300/interupt.h"
 #include "r4300/ops.h"
+#include "r4300/r4300.h"
 #include "r4300/recomph.h"
-#include "r4300/exception.h"
+#include "regcache.h"
 
 static precomp_instr fake_instr;
 #ifdef COMPARE_CORE

@@ -24,29 +24,29 @@
  * outside of the core library.
  */
 
+#include <SDL.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <SDL.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "m64p_types.h"
 #include "callbacks.h"
+#include "config.h"
 #include "m64p_config.h"
 #include "m64p_frontend.h"
-#include "config.h"
-#include "vidext.h"
-
+#include "m64p_types.h"
 #include "main/cheat.h"
 #include "main/eventloop.h"
 #include "main/main.h"
+#include "main/md5.h"
 #include "main/rom.h"
 #include "main/savestates.h"
-#include "main/version.h"
 #include "main/util.h"
+#include "main/version.h"
 #include "main/workqueue.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
+#include "vidext.h"
 
 /* some local state variables */
 static int l_CoreInit = 0;

@@ -22,15 +22,16 @@
 #include "pi_controller.h"
 
 #define M64P_CORE_PROTOTYPES 1
-#include "api/m64p_types.h"
+#include <stdint.h>
+#include <string.h>
+
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
 #include "ri/rdram_detection_hack.h"
 #include "ri/ri_controller.h"
 
-#include <string.h>
-#include <stdint.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

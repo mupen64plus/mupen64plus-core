@@ -22,8 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "arm_cpu_features.h"
+
 #include "api/callbacks.h"
+#include "arm_cpu_features.h"
 
 arm_cpu_features_t arm_cpu_features;
 

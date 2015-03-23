@@ -23,12 +23,14 @@
 #ifndef M64P_R4300_ASSEMBLE_H
 #define M64P_R4300_ASSEMBLE_H
 
-#include "osal/preproc.h"
-#include "r4300/recomph.h"
-#include "api/callbacks.h"
-
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/types.h>
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "osal/preproc.h"
+#include "r4300/recomph.h"
 
 extern int64_t reg[32];
 

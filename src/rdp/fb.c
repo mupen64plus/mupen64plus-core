@@ -20,15 +20,17 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "fb.h"
-#include "rdp_core.h"
 
+#include "api/m64p_types.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
+#include "rdp_core.h"
 #include "ri/ri_controller.h"
 
 extern int fast_memory;
 
+#include <stddef.h>
 #include <string.h>
 
 void init_fb(struct fb* fb)

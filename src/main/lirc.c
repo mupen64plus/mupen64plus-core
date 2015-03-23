@@ -18,18 +18,17 @@
 
 #ifdef WITH_LIRC
 
-#include <stdlib.h>
-#include <sys/poll.h>
-#include <string.h>
 #include <ctype.h>
 #include <lirc/lirc_client.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/poll.h>
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
-#include "plugin/plugin.h"
-
+#include "api/m64p_types.h"
 #include "lirc.h"
 #include "main.h"
+#include "plugin/plugin.h"
 #include "savestates.h"
 
 static struct lirc_config *g_config;

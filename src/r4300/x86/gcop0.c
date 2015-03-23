@@ -22,12 +22,11 @@
 #include <stdio.h>
 
 #include "assemble.h"
-
 #include "r4300/cached_interp.h"
+#include "r4300/ops.h"
+#include "r4300/r4300.h"
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
-#include "r4300/r4300.h"
-#include "r4300/ops.h"
 
 //static unsigned int pMFC0 = (unsigned int)(MFC0);
 void genmfc0(void)

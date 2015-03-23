@@ -23,6 +23,7 @@
 #define DUMMY_RSP_H
 
 #include "api/m64p_plugin.h"
+#include "api/m64p_types.h"
 
 extern m64p_error dummyrsp_PluginGetVersion(m64p_plugin_type *PluginType, int *PluginVersion,
                                             int *APIVersion, const char **PluginNamePtr, int *Capabilities);

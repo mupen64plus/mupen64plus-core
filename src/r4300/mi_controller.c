@@ -20,10 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "mi_controller.h"
-#include "r4300.h"
-#include "r4300_core.h"
 
 #include <string.h>
+
+#include "cp0.h"
+#include "interupt.h"
+#include "r4300.h"
+#include "r4300_core.h"
 
 static int update_mi_init_mode(uint32_t* mi_init_mode, uint32_t w)
 {

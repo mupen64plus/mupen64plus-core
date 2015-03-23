@@ -24,11 +24,12 @@
 
 #include <stdint.h>
 
-#include "r4300/reset.h"
-#include "r4300/r4300.h"
-#include "r4300/interupt.h"
+#include "cached_interp.h"
+#include "interupt.h"
 #include "memory/memory.h"
-#include "r4300/cached_interp.h"
+#include "r4300.h"
+#include "r4300_core.h"
+#include "reset.h"
 
 int reset_hard_job = 0;
 

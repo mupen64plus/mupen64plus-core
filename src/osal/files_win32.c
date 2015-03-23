@@ -23,17 +23,17 @@
  * functions
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 #include <direct.h>
 #include <shlobj.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include "files.h"
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "files.h"
 
 /* definitions for system directories to search when looking for shared data files */
 #if defined(SHAREDIR)

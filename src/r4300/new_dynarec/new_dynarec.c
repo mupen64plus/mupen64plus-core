@@ -18,36 +18,37 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdint.h> //include for uint64_t
 #include <assert.h>
+#include <stdarg.h>
+#include <stdint.h> //include for uint64_t
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if defined(__APPLE__)
 #include <sys/types.h> // needed for u_int, u_char, etc
+
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "new_dynarec.h"
-#include "../recomp.h"
-#include "../recomph.h" //include for function prototypes
+#include "../../main/main.h"
+#include "../../main/rom.h"
+#include "../../memory/memory.h"
+#include "../../rsp/rsp_core.h"
+#include "../cached_interp.h"
 #include "../cp0_private.h"
 #include "../cp1.h"
 #include "../cp1_private.h"
-#include "../r4300.h"
-#include "../ops.h"
-#include "../tlb.h"
 #include "../interupt.h"
-#include "../cached_interp.h"
-#include "../../memory/memory.h"
-#include "../../main/main.h"
-#include "../../main/rom.h"
-#include "../../rsp/rsp_core.h"
+#include "../ops.h"
+#include "../r4300.h"
+#include "../recomp.h"
+#include "../recomph.h" //include for function prototypes
+#include "../tlb.h"
+#include "new_dynarec.h"
 #ifdef __cplusplus
 }
 #endif

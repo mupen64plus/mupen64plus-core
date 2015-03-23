@@ -21,6 +21,8 @@
 
 #include "rsp_core.h"
 
+#include <string.h>
+
 #include "main/main.h"
 #include "main/profile.h"
 #include "memory/memory.h"
@@ -28,8 +30,6 @@
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
-
-#include <string.h>
 
 static void dma_sp_write(struct rsp_core* sp)
 {

@@ -23,6 +23,7 @@
 #define __BREAKPOINTS_H__
 
 #include "../api/m64p_types.h"
+#include "dbg_types.h"
 
 extern int g_NumBreakpoints;
 extern m64p_breakpoint g_Breakpoints[];

@@ -22,14 +22,15 @@
 
 #include <stdlib.h>
 
-#include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "api/m64p_types.h"
 #include "r4300/cached_interp.h"
-#include "r4300/recomp.h"
-#include "r4300/r4300.h"
 #include "r4300/macros.h"
 #include "r4300/ops.h"
+#include "r4300/r4300.h"
+#include "r4300/recomp.h"
 #include "r4300/recomph.h"
+#include "r4300/x86_64/assemble_struct.h"
 
 // that's where the dynarec will restart when going back from a C function
 static unsigned long long *return_address;
