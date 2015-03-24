@@ -21,7 +21,6 @@
 
 #include <stdint.h>
 
-#include "cp0.h"
 #include "cp0_private.h"
 #include "exception.h"
 #include "new_dynarec/new_dynarec.h"

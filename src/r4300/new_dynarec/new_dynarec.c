@@ -40,7 +40,6 @@ extern "C" {
 #include "../../rsp/rsp_core.h"
 #include "../cached_interp.h"
 #include "../cp0_private.h"
-#include "../cp1.h"
 #include "../cp1_private.h"
 #include "../interupt.h"
 #include "../ops.h"

@@ -26,7 +26,6 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp0.h"
 #include "r4300/cp0_private.h"
 #include "r4300/exception.h"
 #include "r4300/ops.h"
