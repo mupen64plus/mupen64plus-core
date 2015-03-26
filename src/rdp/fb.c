@@ -30,7 +30,6 @@
 
 extern int fast_memory;
 
-#include <stddef.h>
 #include <string.h>
 
 void init_fb(struct fb* fb)
