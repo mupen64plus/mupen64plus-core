@@ -19,6 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include "assemble.h"
@@ -30,6 +31,13 @@
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
+
+/* These are constants with addresses so that FLDCW can read them.
+ * They are declared 'extern' so that other files can do the same. */
+const uint16_t trunc_mode = 0xF3F;
+const uint16_t round_mode = 0x33F;
+const uint16_t ceil_mode = 0xB3F;
+const uint16_t floor_mode = 0x73F;
 
 void genmfc1(void)
 {

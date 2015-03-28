@@ -72,21 +72,9 @@ DECLARE_INSTRUCTION(CTC1)
 {
    if (check_cop1_unusable()) return;
    if (rfs==31)
-      FCR31 = rrt32;
-   switch((FCR31 & 3))
    {
-   case 0:
-      rounding_mode = 0x33F; // Round to nearest, or to even if equidistant
-      break;
-    case 1:
-      rounding_mode = 0xF3F; // Truncate (toward 0)
-      break;
-    case 2:
-      rounding_mode = 0xB3F; // Round up (toward +infinity) 
-      break;
-    case 3:
-      rounding_mode = 0x73F; // Round down (toward -infinity) 
-      break;
+      FCR31 = rrt32;
+      update_x86_rounding_mode(rrt32);
    }
    //if ((FCR31 >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
    //                 (int)((FCR31 >> 7) & 0x1F));

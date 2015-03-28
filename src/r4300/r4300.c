@@ -150,7 +150,7 @@ void r4300_reset_hard(void)
     g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
     g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
    
-    rounding_mode = 0x33F;
+    update_x86_rounding_mode(FCR31);
 }
 
 

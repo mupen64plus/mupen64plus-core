@@ -36,8 +36,12 @@ extern uint32_t FCR0, FCR31;
 #endif
 int64_t reg_cop1_fgr_64[32];
 
-int rounding_mode = 0x33F, trunc_mode = 0xF3F, round_mode = 0x33F,
-    ceil_mode = 0xB3F, floor_mode = 0x73F;
+/* This is the x86 version of the rounding mode contained in FCR31.
+ * It should not really be here. Its size should also really be uint16_t,
+ * because FLDCW (Floating-point LoaD Control Word) loads 16-bit control
+ * words. However, x86/gcop1.c and x86-64/gcop1.c update this variable
+ * using 32-bit stores. */
+uint32_t rounding_mode = UINT32_C(0x33F);
 
 
 int64_t* r4300_cp1_regs(void)
@@ -148,5 +152,27 @@ void set_fpr_pointers(uint32_t newStatus)
             reg_cop1_double[i] = (double*) &reg_cop1_fgr_64[i>>1];
             reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i>>1]) + ((i & 1) ^ isBigEndian);
         }
+    }
+}
+
+/* XXX: This shouldn't really be here, but rounding_mode is used by the
+ * Hacktarux JIT and updated by CTC1 and saved states. Figure out a better
+ * place for this. */
+void update_x86_rounding_mode(uint32_t FCR31)
+{
+    switch (FCR31 & 3)
+    {
+    case 0: /* Round to nearest, or to even if equidistant */
+        rounding_mode = UINT32_C(0x33F);
+        break;
+    case 1: /* Truncate (toward 0) */
+        rounding_mode = UINT32_C(0xF3F);
+        break;
+    case 2: /* Round up (toward +Inf) */
+        rounding_mode = UINT32_C(0xB3F);
+        break;
+    case 3: /* Round down (toward -Inf) */
+        rounding_mode = UINT32_C(0x73F);
+        break;
     }
 }
