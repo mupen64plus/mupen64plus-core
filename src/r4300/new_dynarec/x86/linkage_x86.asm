@@ -453,8 +453,8 @@ cc_interrupt:
     mov     [g_cp0_regs+36],    esi    ;Count
     shr     esi,    19
     mov     DWORD [pending_exception],    0
-    and     esi,    07fh
-    cmp     DWORD [restore_candidate+esi*4],    0
+    and     esi,    01fch
+    cmp     DWORD [restore_candidate+esi],    0
     jne     _E4
 _E1:
     call    gen_interupt
@@ -488,15 +488,18 @@ _E3:
     ret                    ;exit dynarec
 _E4:
     ;Move 'dirty' blocks to the 'clean' list
-    mov     ebx,    [restore_candidate+esi*4]
-    mov     ebp,    esi
-    mov     DWORD [restore_candidate+esi*4],    0
-    shl     ebp,    5
+    mov     ebx,    DWORD [restore_candidate+esi]
+    mov     DWORD [restore_candidate+esi],    0
+    shl     esi,    3
+    mov     ebp,    0
 _E5:
     shr     ebx,    1
     jnc     _E6
-    mov     [esp],    ebp
+    mov     ecx,    esi
+    add     ecx,    ebp
+    push    ecx
     call    clean_blocks
+    pop     ecx
 _E6:
     inc     ebp
     test    ebp,    31
