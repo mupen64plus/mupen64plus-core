@@ -631,7 +631,7 @@ cc_interrupt:
 	mov	r2, #0x1fc
 	add	r10, r0, r10
 	str	r1, [fp, #pending_exception-dynarec_local]
-	and	r2, r2, r10, lsr #17
+	and	r2, r2, r10, lsr #19
 	add	r3, fp, #restore_candidate-dynarec_local
 	str	r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
 	ldr	r4, [r2, r3]
@@ -662,12 +662,13 @@ cc_interrupt:
 	/* Move 'dirty' blocks to the 'clean' list */
 	lsl	r5, r2, #3
 	str	r1, [r2, r3]
+	mov	r6,	#0
 .E5:
 	lsrs	r4, r4, #1
-	mov	r0, r5
-	add	r5, r5, #1
+	add	r0, r5, r6
 	blcs	clean_blocks
-	tst	r5, #31
+	add	r6, r6, #1
+	tst	r6, #31
 	bne	.E5
 	b	.E1
 
