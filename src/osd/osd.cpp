@@ -19,8 +19,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <SDL.h>
 // On-screen Display
 #include <SDL_opengl.h>

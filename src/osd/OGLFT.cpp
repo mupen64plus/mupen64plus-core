@@ -19,7 +19,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <GL/glu.h>
 #include <string.h>
 #include <cmath>
 #include <iomanip>
@@ -1188,7 +1187,7 @@ namespace OGLFT
         GLubyte* inverse = new GLubyte[ bitmap.rows * width ];
         GLubyte* inverse_ptr = inverse;
 
-        for(unsigned int r=0; r<bitmap.rows; r++)
+        for(int r=0; r<bitmap.rows; r++)
         {
             GLubyte* bitmap_ptr = &bitmap.buffer[bitmap.pitch * (bitmap.rows - r - 1)];
 
