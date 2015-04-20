@@ -146,8 +146,9 @@ def main(rootdir, cfgfile, nogit, nobuild, nospeed, novidcheck, noemail):
     if not noemail:
         if not tester.SendReport():
             rval = 6
-    if not tester.ArchiveResults(archivedir):
-        rval = 7
+    if not novidcheck:
+        if not tester.ArchiveResults(archivedir):
+            rval = 7
     # all done with test process
     return rval
 
