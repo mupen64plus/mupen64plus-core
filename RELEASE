@@ -1,6 +1,22 @@
 Mupen64Plus-Core Emulator Library RELEASE
 -----------------------------------------
 
+Mupen64Plus-core v2.5 - April 26, 2015
+--------------------------------------
+ - Game-specific fixes (Banjo Tooie, Zelda Ocarina of Time, DK64, Hydro Thunder, others)
+ - Game-specific override for # of clock cycles per cpu instruction
+ - Many bug fixes for SDL 2.0
+ - Various instruction-specific optimizations in new dynarec
+ - Cheat fixes for WWF No Mercy, Bomberman Hero, Super Mario 64, and Pokemon Stadium (E)
+ - Major R4300 CPU core refactoring in many subsystems to improve code organization
+ - Rewrite speed limiter code to improve performance and audio synchronization
+ - Separate the logic of the Pure Interpreter from the Cached Interpreter
+ - Regression test improvements: add speed tests, ignore border in video tests due to Rice scissor problems
+ - New Dynarec: Speed improvements, accuracy fixes, build support for MSVC
+ - Support for building against OpenGL ES
+ - Build system improvements for ARM / Raspberry Pi
+ - Video Extension: support OpenGL context version and profile selection (needed for GLideN64 under OSX)
+
 Mupen64Plus v2.0 - July 4th, 2013
 ---------------------------------
  - Fixes for various games (DK64, Zelda, Blast Corps)

@@ -22,7 +22,7 @@ README Sections
 
 *Binary Package Requirements*
 
-  - SDL 1.2
+  - SDL 1.2 or 2.0
   - libpng
   - freetype 2
   - zlib 
@@ -60,7 +60,12 @@ Type 'make' by itself to view all available build options:
      BITS=32       == build 32-bit binaries on 64-bit machine
      LIRC=1        == enable LIRC support
      NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)
+     USE_GLES=1    == build against GLESv2 instead of OpenGL
+     VC=1          == build against Broadcom Videocore GLESv2
+     NEON=1        == (ARM only) build for hard floating point environments
+     VFP_HARD=1    == (ARM only) full hardware floating point ABI
      SHAREDIR=path == extra path to search for shared data files
+     WARNFLAGS=flag == compiler warning levels (default: -Wall)
      OPTFLAGS=flag == compiler optimization (default: -O3)
      PIC=(1|0)     == Force enable/disable of position independent code
      OSD=(1|0)     == Enable/disable build of OpenGL On-screen display
