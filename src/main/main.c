@@ -114,7 +114,7 @@ static int   l_CurrentFrame = 0;         // frame counter
 static int   l_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
 static int   l_SpeedFactor = 100;        // percentage of nominal game speed at which emulator is running
 static int   l_FrameAdvance = 0;         // variable to check if we pause on next frame
-static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to keep speed at real-time
+static int   l_MainSpeedLimit = 2;       // insert delay during vi_interrupt to keep speed at real-time
 
 static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
@@ -342,9 +342,9 @@ void main_set_fastforward(int enable)
 
 }
 
-static void main_set_speedlimiter(int enable)
+static void main_set_speedlimiter(int value)
 {
-    l_MainSpeedLimit = enable ? 1 : 0;
+    l_MainSpeedLimit = value;
 }
 
 static int main_is_paused(void)
@@ -732,7 +732,52 @@ void new_frame(void)
     }
 }
 
-static void apply_speed_limiter(void)
+static void apply_old_speed_limiter(void)
+{
+    int Dif;
+    unsigned int CurrentFPSTime;
+    static unsigned int LastFPSTime = 0;
+    static unsigned int CounterTime = 0;
+    static unsigned int CalculatedTime ;
+    static int VI_Counter = 0;
+
+    double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
+    double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
+    int time;
+
+    VI_Counter++;
+
+    if(LastFPSTime == 0)
+    {
+        LastFPSTime = CounterTime = SDL_GetTicks();
+        return;
+    }
+    CurrentFPSTime = SDL_GetTicks();
+    
+    Dif = CurrentFPSTime - LastFPSTime;
+    
+    if (Dif < AdjustedLimit) 
+    {
+        CalculatedTime = (unsigned int) (CounterTime + AdjustedLimit * VI_Counter);
+        time = (int)(CalculatedTime - CurrentFPSTime);
+        if (time > 0)
+        {
+            DebugMessage(M64MSG_VERBOSE, "    apply_old_speed_limiter(): Waiting %ims", time);
+            SDL_Delay(time);
+        }
+        CurrentFPSTime = CurrentFPSTime + time;
+    }
+
+    if (CurrentFPSTime - CounterTime >= 1000.0 ) 
+    {
+        CounterTime = SDL_GetTicks();
+        VI_Counter = 0;
+    }
+    
+    LastFPSTime = CurrentFPSTime;
+}
+
+static void apply_new_speed_limiter(void)
 {
     unsigned int CurrentFPSTime;
     static unsigned int LastFPSTime = 0;
@@ -743,12 +788,6 @@ static void apply_speed_limiter(void)
     double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
     int ThisFrameDelta, IntegratedDelta, TimeToWait;
-
-    timed_section_start(TIMED_SECTION_IDLE);
-
-#ifdef DBG
-    if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
-#endif
 
     // if this is the first frame, initialize our data structures
     if(LastFPSTime == 0)
@@ -770,10 +809,10 @@ static void apply_speed_limiter(void)
         // calculate the total time error over the last 64 frames
         IntegratedDelta = VITotalDelta  + ThisFrameDelta;
         // if we are still too fast, and then speed limiter is on, then we should wait
-        if (IntegratedDelta < 0 && l_MainSpeedLimit)
+        if (IntegratedDelta < 0)
         {
             TimeToWait = (IntegratedDelta > ThisFrameDelta) ? -IntegratedDelta : -ThisFrameDelta;
-            DebugMessage(M64MSG_VERBOSE, "    apply_speed_limiter(): Waiting %ims", TimeToWait);
+            DebugMessage(M64MSG_VERBOSE, "    apply_new_speed_limiter(): Waiting %ims", TimeToWait);
             SDL_Delay(TimeToWait);
             // recalculate # of milliseconds that have passed since the last video interrupt,
             // taking into account the time we just waited
@@ -787,7 +826,28 @@ static void apply_speed_limiter(void)
     VITotalDelta += ThisFrameDelta - VIDeltas[VIDeltasIndex];
     VIDeltas[VIDeltasIndex] = ThisFrameDelta;
     VIDeltasIndex = (VIDeltasIndex + 1) & 63;
+}
 
+static void apply_speed_limiter(void)
+{
+    timed_section_start(TIMED_SECTION_IDLE);
+    
+#ifdef DBG
+    if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
+#endif
+    
+    switch (l_MainSpeedLimit)
+    {
+        case 1:
+            apply_old_speed_limiter();
+            break;
+        case 2:
+            apply_new_speed_limiter();
+            break;
+        default:
+            break;
+    }
+    
     timed_section_end(TIMED_SECTION_IDLE);
 }
 
