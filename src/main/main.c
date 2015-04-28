@@ -342,11 +342,6 @@ void main_set_fastforward(int enable)
 
 }
 
-static void main_set_speedlimiter(int value)
-{
-    l_MainSpeedLimit = value;
-}
-
 static int main_is_paused(void)
 {
     return (g_EmulatorRunning && rompause);
@@ -574,7 +569,7 @@ m64p_error main_core_state_set(m64p_core_param param, int val)
             main_speedset(val);
             return M64ERR_SUCCESS;
         case M64CORE_SPEED_LIMITER:
-            main_set_speedlimiter(val);
+            l_MainSpeedLimit = val;
             return M64ERR_SUCCESS;
         case M64CORE_VIDEO_SIZE:
         {
