@@ -48,9 +48,6 @@ extern void (*writememh[0x10000])(void);
 extern void (*writememd[0x10000])(void);
 
 #ifndef M64P_BIG_ENDIAN
-#if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
-#define sl(x) __builtin_bswap32(x)
-#else
 #define sl(mot) \
 ( \
 ((mot & 0x000000FF) << 24) | \
@@ -58,7 +55,6 @@ extern void (*writememd[0x10000])(void);
 ((mot & 0x00FF0000) >>  8) | \
 ((mot & 0xFF000000) >> 24) \
 )
-#endif
 #define S8 3
 #define S16 2
 #define Sh16 1
