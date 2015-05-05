@@ -222,8 +222,9 @@ These core parameters may be read and/or written using the M64CMD_CORE_STATE_QUE
 |M64CORE_SPEED_LIMITER
 |Yes
 |Yes
-|<tt>1</tt> to enable speed limiter, or <tt>0</tt> to disable speed limiter.
+|<tt>0</tt>=disable speed limiter, <tt>1</tt>=old speed limiter, <tt>2</tt>=new speed limiter
 |When speed limiter is disabled, emulator will run as fast as possible (useful for benchmarking).
+|New speed limiter improve performance on Raspberry Pi.
 |-
 |M64CORE_VIDEO_SIZE
 |Yes
