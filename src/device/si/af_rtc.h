@@ -43,8 +43,10 @@ void init_af_rtc(struct af_rtc* rtc,
 
 void poweron_af_rtc(struct af_rtc* rtc);
 
-void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd);
-void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd);
-void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_read_block(struct af_rtc* rtc,
+    uint8_t block, uint8_t* data, uint8_t* status);
+
+void af_rtc_write_block(struct af_rtc* rtc,
+    uint8_t block, const uint8_t* data, uint8_t* status);
 
 #endif

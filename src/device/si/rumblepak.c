@@ -47,7 +47,7 @@ void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* da
     memset(data, value, size);
 }
 
-void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size)
+void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size)
 {
     enum rumble_action action;
 

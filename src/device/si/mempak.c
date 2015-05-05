@@ -79,7 +79,7 @@ void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, si
     }
 }
 
-void mempak_write_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size)
+void mempak_write_command(struct mempak* mpk, uint16_t address, const uint8_t* data, size_t size)
 {
     if (address < 0x8000)
     {

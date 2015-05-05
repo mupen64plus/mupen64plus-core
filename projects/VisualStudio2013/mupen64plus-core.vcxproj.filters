@@ -189,16 +189,13 @@
     <ClCompile Include="..\..\src\plugin\dummy_video.c">
       <Filter>plugin</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c">
+    <ClCompile Include="..\..\src\plugin\input_plugin_compat.c">
       <Filter>plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.c">
       <Filter>plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\plugin\plugin.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c">
       <Filter>plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\rdp\fb.c">
@@ -500,16 +497,13 @@
     <ClInclude Include="..\..\src\plugin\dummy_video.h">
       <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h">
+    <ClInclude Include="..\..\src\plugin\input_plugin_compat.h">
       <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h">
       <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\plugin.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h">
       <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\rdp\fb.h">

@@ -31,6 +31,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+enum { EEPROM_BLOCK_SIZE = 8 };
 
 void format_eeprom(uint8_t* eeprom, size_t size)
 {
@@ -39,50 +40,21 @@ void format_eeprom(uint8_t* eeprom, size_t size)
 
 
 void init_eeprom(struct eeprom* eeprom,
-    uint16_t id,
+    uint16_t type,
     struct storage_backend* storage)
 {
-    eeprom->id = id;
+    eeprom->type = type;
     eeprom->storage = storage;
 }
 
-
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd)
+void eeprom_read_block(struct eeprom* eeprom,
+    uint8_t block, uint8_t* data)
 {
-    uint8_t* const type = &cmd[3];
-    uint8_t* const status = &cmd[5];
+    unsigned int address = block * EEPROM_BLOCK_SIZE;
 
-    /* check size */
-    if (cmd[1] != 3)
-    {
-        cmd[1] |= 0x40;
-        if ((cmd[1] & 3) > 0) {
-            type[0] = (uint8_t)(eeprom->id >> 0);
-        }
-        if ((cmd[1] & 3) > 1) {
-            type[1] = (uint8_t)(eeprom->id >> 8);
-        }
-        if ((cmd[1] & 3) > 2) {
-            *status = 0;
-        }
-    }
-    else
-    {
-        type[0] = (uint8_t)(eeprom->id >> 0);
-        type[1] = (uint8_t)(eeprom->id >> 8);
-        *status = 0;
-    }
-}
-
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd)
-{
-    uint16_t address = cmd[3] * 8;
-    uint8_t* data = &cmd[4];
-
-    /* read 8-byte block */
     if (address < eeprom->storage->size)
     {
-        memcpy(data, &eeprom->storage->data[address], 8);
+        memcpy(data, &eeprom->storage->data[address], EEPROM_BLOCK_SIZE);
     }
     else
     {
@@ -90,16 +62,16 @@ void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd)
     }
 }
 
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
+void eeprom_write_block(struct eeprom* eeprom,
+    uint8_t block, const uint8_t* data, uint8_t* status)
 {
-    uint16_t address = cmd[3] * 8;
-    const uint8_t* data = &cmd[4];
+    unsigned int address = block * EEPROM_BLOCK_SIZE;
 
-    /* write 8-byte block */
     if (address < eeprom->storage->size)
     {
-        memcpy(&eeprom->storage->data[address], data, 8);
+        memcpy(&eeprom->storage->data[address], data, EEPROM_BLOCK_SIZE);
         storage_save(eeprom->storage);
+        *status = 0x00;
     }
     else
     {

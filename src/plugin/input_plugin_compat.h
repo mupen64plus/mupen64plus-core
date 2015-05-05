@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rumble_via_input_plugin.c                               *
+ *   Mupen64plus - input_plugin_compat.h                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,37 +19,32 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "rumble_via_input_plugin.h"
+#ifndef M64P_PLUGIN_INPUT_PLUGIN_COMPAT_H
+#define M64P_PLUGIN_INPUT_PLUGIN_COMPAT_H
 
-#include <stdint.h>
-#include <string.h>
-
-#include "plugin.h"
+#include "backends/controller_input_backend.h"
 #include "backends/rumble_backend.h"
 
-void rvip_exec(void* opaque, enum rumble_action action)
-{
-    int channel = *(int*)opaque;
+#include <stdint.h>
 
-    static const uint8_t rumble_cmd_header[] =
-    {
-        0x23, 0x01, /* T=0x23, R=0x01 */
-        0x03,       /* PIF_CMD_PAK_WRITE */
-        0xc0, 0x1b, /* address=0xc000 | crc=0x1b */
-    };
+/* controller_input backend functions */
 
-    uint8_t cmd[0x26];
+int input_plugin_is_connected(void* opaque);
+enum pak_type input_plugin_detect_pak(void* opaque);
+uint32_t input_plugin_get_input(void* opaque);
 
-    uint8_t rumble_data = (action == RUMBLE_START)
-        ? 0x01
-        : 0x00;
+/* PIF data processing functions */
 
-    /* build rumble command */
-    memcpy(cmd, rumble_cmd_header, 5);
-    memset(cmd + 5, rumble_data, 0x20);
-    cmd[0x25] = 0; /* dummy data CRC */
+void input_plugin_read_controller(void* opaque,
+    const uint8_t* tx, const uint8_t* tx_buf,
+    uint8_t* rx, uint8_t* rx_buf);
 
-    if (input.controllerCommand)
-        input.controllerCommand(channel, cmd);
-}
+void input_plugin_controller_command(void* opaque,
+    uint8_t* tx, const uint8_t* tx_buf,
+    const uint8_t* rx, const uint8_t* rx_buf);
 
+/* Rumble backend function */
+
+void input_plugin_rumble_exec(void* opaque, enum rumble_action action);
+
+#endif

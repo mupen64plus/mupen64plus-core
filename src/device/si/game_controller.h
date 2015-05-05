@@ -56,7 +56,8 @@ void init_game_controller(struct game_controller* cont,
 
 void poweron_game_controller(struct game_controller* cont);
 
-void process_controller_command(struct game_controller* cont, uint8_t* cmd);
-void read_controller(struct game_controller* cont, uint8_t* cmd);
+void process_controller_command(void* opaque,
+    const uint8_t* tx, const uint8_t* tx_buf,
+    uint8_t* rx, uint8_t* rx_buf);
 
 #endif
