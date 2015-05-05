@@ -56,7 +56,7 @@ static unsigned char check_arm_cpu_feature(const char* feature)
 
 static unsigned char get_arm_cpu_implementer(void)
 {
-    int implementer = 0;
+    unsigned char implementer = 0;
     FILE *pFile = fopen(procfile, "r");
     
     if (pFile != NULL)
@@ -74,12 +74,12 @@ static unsigned char get_arm_cpu_implementer(void)
         }
         fclose(pFile);
     }
-    return (unsigned char)implementer;
+    return implementer;
 }
 
 static unsigned short get_arm_cpu_part(void)
 {
-    int part = 0;
+    unsigned short part = 0;
     FILE *pFile = fopen(procfile, "r");
     
     if (pFile != NULL)
@@ -97,7 +97,7 @@ static unsigned short get_arm_cpu_part(void)
         }
         fclose(pFile);
     }
-    return (unsigned short)part;
+    return part;
 }
 
 void detect_arm_cpu_features(void)
