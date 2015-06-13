@@ -210,18 +210,14 @@ memory_map = restore_candidate + 512
 dyna_linker:
 	/* r0 = virtual target address */
 	/* r1 = instruction to patch */
-	ldr	r4, .tlbptr_offset1
-.tlbptr_lpic1:
-	add	r4, pc, r4
+	ldr	r4, .tlbptr
 	lsr	r5, r0, #12
 	mov	r12, r0
 	cmp	r0, #0xC0000000
 	mov	r6, #4096
 	ldrge	r12, [r4, r5, lsl #2]
 	mov	r2, #0x80000
-	ldr	r3, .jiptr_offset1
-.jiptr_lpic1:
-	add	r3, pc, r3
+	ldr	r3, .jiptr
 	tst	r12, r12
 	sub	r6, r6, #1
 	moveq	r12, r0
@@ -261,14 +257,10 @@ dyna_linker:
 .A3:
 	/* hash_table lookup */
 	cmp	r2, #2048
-	ldr	r3, .jdptr_offset1
-.jdptr_lpic1:
-	add	r3, pc, r3
+	ldr	r3, .jdptr
 	eor	r4, r0, r0, lsl #16
 	lslcc	r2, r0, #9
-	ldr	r6, .htptr_offset1
-.htptr_lpic1:
-	add	r6, pc, r6
+	ldr	r6, .htptr
 	lsr	r4, r4, #12
 	lsrcc	r2, r2, #21
 	bic	r4, r4, #15
@@ -308,27 +300,6 @@ dyna_linker:
 	/* pagefault */
 	mov	r1, r0
 	mov	r2, #8
-
-.jiptr_align1:
-	.align	2
-.jiptr_offset1:
-	.word	jump_in-(.jiptr_lpic1+8)
-
-.jdptr_align1:
-	.align	2
-.jdptr_offset1:
-	.word	jump_dirty-(.jdptr_lpic1+8)
-
-.tlbptr_align1:
-	.align	2
-.tlbptr_offset1:
-	.word	tlb_LUT_r-(.tlbptr_lpic1+8)
-
-.htptr_align1:
-	.align	2
-.htptr_offset1:
-	.word	hash_table-(.htptr_lpic1+8)
-
 	.size	dyna_linker, .-dyna_linker
 	.type	exec_pagefault, %function
 exec_pagefault:
@@ -362,18 +333,14 @@ exec_pagefault:
 dyna_linker_ds:
 	/* r0 = virtual target address */
 	/* r1 = instruction to patch */
-	ldr	r4, .tlbptr_offset2
-.tlbptr_lpic2:
-	add	r4, pc, r4
+	ldr	r4, .tlbptr
 	lsr	r5, r0, #12
 	mov	r12, r0
 	cmp	r0, #0xC0000000
 	mov	r6, #4096
 	ldrge	r12, [r4, r5, lsl #2]
 	mov	r2, #0x80000
-	ldr	r3, .jiptr_offset2
-.jiptr_lpic2:
-	add	r3, pc, r3
+	ldr	r3, .jiptr
 	tst	r12, r12
 	sub	r6, r6, #1
 	moveq	r12, r0
@@ -413,14 +380,10 @@ dyna_linker_ds:
 .B3:
 	/* hash_table lookup */
 	cmp	r2, #2048
-	ldr	r3, .jdptr_offset2
-.jdptr_lpic2:
-	add	r3, pc, r3
+	ldr	r3, .jdptr
 	eor	r4, r0, r0, lsl #16
 	lslcc	r2, r0, #9
-	ldr	r6, .htptr_offset2
-.htptr_lpic2:
-	add	r6, pc, r6
+	ldr	r6, .htptr
 	lsr	r4, r4, #12
 	lsrcc	r2, r2, #21
 	bic	r4, r4, #15
@@ -464,29 +427,15 @@ dyna_linker_ds:
 	mov	r2, #0x80000008 /* High bit set indicates pagefault in delay slot */
 	sub	r0, r1, #4
 	b	exec_pagefault
-
-.jiptr_align2:
-	.align	2
-.jiptr_offset2:
-	.word	jump_in-(.jiptr_lpic2+8)
-
-.jdptr_align2:
-	.align	2
-.jdptr_offset2:
-	.word	jump_dirty-(.jdptr_lpic2+8)
-
-.tlbptr_align2:
-	.align	2
-.tlbptr_offset2:
-	.word	tlb_LUT_r-(.tlbptr_lpic2+8)
-
-.htptr_align2:
-	.align	2
-.htptr_offset2:
-	.word	hash_table-(.htptr_lpic2+8)
-
 	.size	dyna_linker_ds, .-dyna_linker_ds
-
+.jiptr:
+	.word	jump_in
+.jdptr:
+	.word	jump_dirty
+.tlbptr:
+	.word	tlb_LUT_r
+.htptr:
+	.word	hash_table
 	.align	2
 	.global	jump_vaddr_r0
 	.hidden jump_vaddr_r0
@@ -586,9 +535,7 @@ jump_vaddr_r7:
 	.hidden jump_vaddr
 	.type	jump_vaddr, %function
 jump_vaddr:
-	ldr	r1, .htptr_offset3
-.htptr_lpic3:
-	add	r1, pc, r1
+	ldr	r1, .htptr
 	mvn	r3, #15
 	and	r2, r3, r2, lsr #12
 	ldr	r2, [r1, r2]!
@@ -601,12 +548,6 @@ jump_vaddr:
 	bl	get_addr
 	ldr	r10, [fp, #cycle_count-dynarec_local]
 	mov	pc, r0
-
-.htptr_align3:
-	.align	2
-.htptr_offset3:
-	.word	hash_table-(.htptr_lpic3+8)
-
 	.size	jump_vaddr, .-jump_vaddr
 	.align	2
 	.global	verify_code_ds
@@ -855,12 +796,8 @@ jump_eret:
 	.hidden new_dyna_start
 	.type	new_dyna_start, %function
 new_dyna_start:
-	ldr	r12, .dlptr_offset
-.dlptr_lpic:
-	add	r12, pc, r12
-	ldr	r1, .tgtptr_offset
-.tgtptr_lpic:
-	add	r1, pc, r1
+	ldr	r12, .dlptr
+	ldr	r1, .tgtptr
 	mov	r0, #0xa4000000
 	stmia	r12, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
 	sub	fp, r12, #28
@@ -872,19 +809,11 @@ new_dyna_start:
 	str	r0, [fp, #last_count-dynarec_local]
 	sub	r10, r10, r0
 	mov	pc, r4
-
-.dlptr_align:
-	.align	2
-.dlptr_offset:
-	.word	dynarec_local+28-(.dlptr_lpic+8)
-
-.tgtptr_align:
-	.align	2
-.tgtptr_offset:
-	.word	out-(.tgtptr_lpic+8)
-
+.dlptr:
+	.word	dynarec_local+28
+.tgtptr:
+	.word	out
 	.size	new_dyna_start, .-new_dyna_start
-
 	.align	2
 	.global	invalidate_addr_r0
 	.hidden invalidate_addr_r0
