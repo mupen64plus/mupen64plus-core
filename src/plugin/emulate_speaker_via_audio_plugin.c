@@ -24,9 +24,11 @@
 #include <stdint.h>
 
 #include "ai/ai_controller.h"
+#include "main/main.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
 #include "ri/ri_controller.h"
+#include "vi/vi_controller.h"
 
 void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits)
 {
@@ -35,8 +37,8 @@ void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, 
      */
     struct ai_controller* ai = (struct ai_controller*)user_data;
     uint32_t saved_ai_dacrate = ai->regs[AI_DACRATE_REG];
-    
-    ai->regs[AI_DACRATE_REG] = ROM_PARAMS.aidacrate / frequency - 1;
+
+    ai->regs[AI_DACRATE_REG] = g_vi.clock / frequency - 1;
 
     audio.aiDacrateChanged(ROM_PARAMS.systemtype);
 

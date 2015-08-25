@@ -747,7 +747,7 @@ static void apply_speed_limiter(void)
     unsigned int CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
-    const double VILimitMilliseconds = 1000.0 / (double)ROM_PARAMS.vilimit;
+    const double VILimitMilliseconds = 1000.0 / g_vi.expected_refresh_rate;
     const double SpeedFactorMultiple = defaultSpeedFactor/l_SpeedFactor;
     const double AdjustedLimit = VILimitMilliseconds * SpeedFactorMultiple;
 
