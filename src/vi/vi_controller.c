@@ -39,11 +39,41 @@ void connect_vi(struct vi_controller* vi,
     vi->r4300 = r4300;
 }
 
-void init_vi(struct vi_controller* vi)
+unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard)
+{
+    switch(tv_standard)
+    {
+    case SYSTEM_PAL:
+        return 49656530;
+    case SYSTEM_MPAL:
+        return 48628316;
+    case SYSTEM_NTSC:
+    default:
+        return 48681812;
+    }
+}
+
+unsigned int vi_refresh_rate_from_tv_standard(m64p_system_type tv_standard)
+{
+    switch (tv_standard)
+    {
+    case SYSTEM_PAL:
+    case SYSTEM_MPAL:
+        return 50;
+
+    case SYSTEM_NTSC:
+    default:
+        return 60;
+    }
+}
+
+void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate)
 {
     memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
     vi->field = 0;
 
+    vi->clock = clock;
+    vi->expected_refresh_rate = expected_refresh_rate;
     vi->delay = vi->next_vi = 5000;
 }
 

@@ -52,8 +52,6 @@ typedef struct _rom_params
 {
    char *cheats;
    m64p_system_type systemtype;
-   int vilimit;
-   int aidacrate;
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
    unsigned char countperop;
 } rom_params;

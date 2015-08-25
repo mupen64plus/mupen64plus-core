@@ -66,8 +66,6 @@ rom_params        ROM_PARAMS;
 m64p_rom_settings ROM_SETTINGS;
 
 static m64p_system_type rom_country_code_to_system_type(uint16_t country_code);
-static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type);
-static int rom_system_type_to_vi_limit(m64p_system_type system_type);
 
 static const uint8_t Z64_SIGNATURE[4] = { 0x80, 0x37, 0x12, 0x40 };
 static const uint8_t V64_SIGNATURE[4] = { 0x37, 0x80, 0x40, 0x12 };
@@ -176,8 +174,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
-    ROM_PARAMS.vilimit = rom_system_type_to_vi_limit(ROM_PARAMS.systemtype);
-    ROM_PARAMS.aidacrate = rom_system_type_to_ai_dac_rate(ROM_PARAMS.systemtype);
     ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
     ROM_PARAMS.cheats = NULL;
 
@@ -286,35 +282,6 @@ static m64p_system_type rom_country_code_to_system_type(uint16_t country_code)
         case 0x4a:
         default: // Fallback for unknown codes
             return SYSTEM_NTSC;
-    }
-}
-
-// Get the VI (vertical interrupt) limit associated to a ROM system type.
-static int rom_system_type_to_vi_limit(m64p_system_type system_type)
-{
-    switch (system_type)
-    {
-        case SYSTEM_PAL:
-        case SYSTEM_MPAL:
-            return 50;
-
-        case SYSTEM_NTSC:
-        default:
-            return 60;
-    }
-}
-
-static int rom_system_type_to_ai_dac_rate(m64p_system_type system_type)
-{
-    switch (system_type)
-    {
-        case SYSTEM_PAL:
-            return 49656530;
-        case SYSTEM_MPAL:
-            return 48628316;
-        case SYSTEM_NTSC:
-        default:
-            return 48681812;
     }
 }
 

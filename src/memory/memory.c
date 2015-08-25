@@ -1337,7 +1337,9 @@ int init_memory(void)
     init_pi(&g_pi);
     init_ri(&g_ri);
     init_si(&g_si);
-    init_vi(&g_vi);
+    unsigned int vi_clock = vi_clock_from_tv_standard(ROM_PARAMS.systemtype);
+    unsigned int vi_expected_refresh_rate = vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype);
+    init_vi(&g_vi, vi_clock, vi_expected_refresh_rate);
 
     DebugMessage(M64MSG_VERBOSE, "Memory initialized");
     return 0;
