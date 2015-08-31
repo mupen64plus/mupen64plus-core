@@ -41,7 +41,11 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block* block);
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number);
 void free_assembler(void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number);
 
+#if defined(__x86_64__)
+void gencallinterp(unsigned long long addr, int jump);
+#else
 void gencallinterp(unsigned long addr, int jump);
+#endif
 
 void genupdate_system(int type);
 void genbnel(void);

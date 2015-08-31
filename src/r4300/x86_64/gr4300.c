@@ -313,7 +313,7 @@ void gendebug(void)
 }
 #endif
 
-void gencallinterp(unsigned long addr, int jump)
+void gencallinterp(unsigned long long addr, int jump)
 {
    free_registers_move_start();
 
