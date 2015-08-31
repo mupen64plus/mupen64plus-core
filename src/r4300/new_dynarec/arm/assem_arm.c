@@ -4783,10 +4783,10 @@ static void arch_init() {
   // Jumping thru the trampolines created above slows things down by about 1%.
   // If part of the cache is beyond the 32M limit, avoid using this area
   // initially.  It will be used later if the cache gets full.
-  if((u_int)dynamic_linker-33554432>(u_int)BASE_ADDR) {
-    if((u_int)dynamic_linker-33554432<(u_int)BASE_ADDR+(1<<(TARGET_SIZE_2-1))) {
-      out=(u_char *)(((u_int)dynamic_linker-33554432)&~4095);
+  /*if((u_int)dyna_linker-33554432>(u_int)BASE_ADDR) {
+    if((u_int)dyna_linker-33554432<(u_int)BASE_ADDR+(1<<(TARGET_SIZE_2-1))) {
+      out=(u_char *)(((u_int)dyna_linker-33554432)&~4095);
       expirep=((((int)out-BASE_ADDR)>>(TARGET_SIZE_2-16))+16384)&65535;
     }
-  }
+  }*/
 }
