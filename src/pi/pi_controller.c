@@ -55,7 +55,7 @@ static void dma_pi_read(struct pi_controller* pi)
     }
 
     pi->regs[PI_STATUS_REG] |= 1;
-    update_count();
+    cp0_update_count();
     add_interupt_event(PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/);
 }
 
@@ -90,7 +90,7 @@ static void dma_pi_write(struct pi_controller* pi)
         }
 
         pi->regs[PI_STATUS_REG] |= 1;
-        update_count();
+        cp0_update_count();
         add_interupt_event(PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000);
 
         return;
@@ -99,7 +99,7 @@ static void dma_pi_write(struct pi_controller* pi)
     if (pi->regs[PI_CART_ADDR_REG] >= 0x1fc00000) // for paper mario
     {
         pi->regs[PI_STATUS_REG] |= 1;
-        update_count();
+        cp0_update_count();
         add_interupt_event(PI_INT, 0x1000);
 
         return;
@@ -115,7 +115,7 @@ static void dma_pi_write(struct pi_controller* pi)
     if (i > pi->cart_rom.rom_size || pi->regs[PI_DRAM_ADDR_REG] > 0x7FFFFF)
     {
         pi->regs[PI_STATUS_REG] |= 3;
-        update_count();
+        cp0_update_count();
         add_interupt_event(PI_INT, longueur/8);
 
         return;
@@ -142,7 +142,7 @@ static void dma_pi_write(struct pi_controller* pi)
     }
 
     pi->regs[PI_STATUS_REG] |= 3;
-    update_count();
+    cp0_update_count();
     add_interupt_event(PI_INT, longueur/8);
 
     return;

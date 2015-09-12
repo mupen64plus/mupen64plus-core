@@ -51,7 +51,7 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 
     if (reg == VI_CURRENT_REG)
     {
-        update_count();
+        cp0_update_count();
         vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG]))/1500;
         vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] & (~1)) | vi->field;
     }

@@ -83,7 +83,7 @@ unsigned int jump_to_address;
          delay_slot=1; \
          UPDATE_DEBUGGER(); \
          PC->ops(); \
-         update_count(); \
+         cp0_update_count(); \
          delay_slot=0; \
          if (take_jump && !skip_jump) \
          { \
@@ -93,7 +93,7 @@ unsigned int jump_to_address;
       else \
       { \
          PC += 2; \
-         update_count(); \
+         cp0_update_count(); \
       } \
       last_addr = PC->addr; \
       if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
@@ -114,7 +114,7 @@ unsigned int jump_to_address;
          delay_slot=1; \
          UPDATE_DEBUGGER(); \
          PC->ops(); \
-         update_count(); \
+         cp0_update_count(); \
          delay_slot=0; \
          if (take_jump && !skip_jump) \
          { \
@@ -124,7 +124,7 @@ unsigned int jump_to_address;
       else \
       { \
          PC += 2; \
-         update_count(); \
+         cp0_update_count(); \
       } \
       last_addr = PC->addr; \
       if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
@@ -136,7 +136,7 @@ unsigned int jump_to_address;
       if (cop1 && check_cop1_unusable()) return; \
       if (take_jump) \
       { \
-         update_count(); \
+         cp0_update_count(); \
          skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \

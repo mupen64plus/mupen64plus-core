@@ -43,7 +43,7 @@ int branch_taken;
 
 /* static functions */
 
-static void genupdate_count(unsigned int addr)
+static void gencp0_update_count(unsigned int addr)
 {
 #if !defined(COMPARE_CORE) && !defined(DBG)
    mov_reg32_imm32(EAX, addr);
@@ -54,7 +54,7 @@ static void genupdate_count(unsigned int addr)
    add_m32_reg32((unsigned int*)(&g_cp0_regs[CP0_COUNT_REG]), EAX);
 #else
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)update_count);
+   mov_reg32_imm32(EAX, (unsigned int)cp0_update_count);
    call_reg32(EAX);
 #endif
 }
@@ -373,7 +373,7 @@ void gendelayslot(void)
    recompile_opcode();
    
    free_all_registers();
-   genupdate_count(dst->addr+4);
+   gencp0_update_count(dst->addr+4);
    
    mov_m32_imm32(&delay_slot, 0);
 }
@@ -985,7 +985,7 @@ void gentestl(void)
    
    jump_end_rel32();
 
-   genupdate_count(dst->addr+4);
+   gencp0_update_count(dst->addr+4);
    mov_m32_imm32(&last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
@@ -1026,7 +1026,7 @@ void gentestl_out(void)
    
    jump_end_rel32();
 
-   genupdate_count(dst->addr+4);
+   gencp0_update_count(dst->addr+4);
    mov_m32_imm32(&last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);

@@ -34,7 +34,7 @@ void TLB_refill_exception(uint32_t address, int w)
 {
    int usual_handler = 0, i;
 
-   if (r4300emu != CORE_DYNAREC && w != 2) update_count();
+   if (r4300emu != CORE_DYNAREC && w != 2) cp0_update_count();
    if (w == 1) g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(3) << 2);
    else g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(2) << 2);
    g_cp0_regs[CP0_BADVADDR_REG] = address;
@@ -112,7 +112,7 @@ void TLB_refill_exception(uint32_t address, int w)
 
 void exception_general(void)
 {
-   update_count();
+   cp0_update_count();
    g_cp0_regs[CP0_STATUS_REG] |= 2;
    
    g_cp0_regs[CP0_EPC_REG] = PC->addr;

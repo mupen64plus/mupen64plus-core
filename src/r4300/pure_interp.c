@@ -68,7 +68,7 @@ static void InterpretOpcode(void);
         interp_PC.addr += 4; \
         delay_slot=1; \
         InterpretOpcode(); \
-        update_count(); \
+        cp0_update_count(); \
         delay_slot=0; \
         if (take_jump && !skip_jump) \
         { \
@@ -78,7 +78,7 @@ static void InterpretOpcode(void);
       else \
       { \
          interp_PC.addr += 8; \
-         update_count(); \
+         cp0_update_count(); \
       } \
       last_addr = interp_PC.addr; \
       if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
@@ -90,7 +90,7 @@ static void InterpretOpcode(void);
       if (cop1 && check_cop1_unusable()) return; \
       if (take_jump) \
       { \
-         update_count(); \
+         cp0_update_count(); \
          skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \

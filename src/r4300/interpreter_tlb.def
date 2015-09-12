@@ -205,7 +205,7 @@ DECLARE_INSTRUCTION(TLBWI)
 
 DECLARE_INSTRUCTION(TLBWR)
 {
-   update_count();
+   cp0_update_count();
    g_cp0_regs[CP0_RANDOM_REG] = (g_cp0_regs[CP0_COUNT_REG]/2 % (32 - g_cp0_regs[CP0_WIRED_REG]))
                               + g_cp0_regs[CP0_WIRED_REG];
    TLBWrite(g_cp0_regs[CP0_RANDOM_REG]);
@@ -232,7 +232,7 @@ DECLARE_INSTRUCTION(TLBP)
 
 DECLARE_INSTRUCTION(ERET)
 {
-   update_count();
+   cp0_update_count();
    if (g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x4))
    {
      DebugMessage(M64MSG_ERROR, "error in ERET");

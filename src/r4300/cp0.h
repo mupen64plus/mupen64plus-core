@@ -57,7 +57,7 @@ enum r4300_cp0_registers
 
 uint32_t* r4300_cp0_regs(void);
 
-void update_count(void);
+void cp0_update_count(void);
 
 #endif /* M64P_R4300_CP0_H */
 

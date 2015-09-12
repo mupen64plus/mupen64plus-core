@@ -45,7 +45,7 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
     if (ai->fifo[0].duration == 0)
         return 0;
 
-    update_count();
+    cp0_update_count();
     next_ai_event = get_event(AI_INT);
     if (next_ai_event == 0)
         return 0;
@@ -90,7 +90,7 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     push_audio_samples(ai, &ai->ri->rdram.dram[dma->address/4], dma->length);
 
     /* schedule end of dma event */
-    update_count();
+    cp0_update_count();
     add_interupt_event(AI_INT, dma->duration);
 }
 

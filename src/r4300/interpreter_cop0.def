@@ -28,7 +28,7 @@ DECLARE_INSTRUCTION(MFC0)
         stop=1;
         break;
       case CP0_COUNT_REG:
-        update_count();
+        cp0_update_count();
         /* fall through */
       default:
         rrt = SE32(g_cp0_regs[rfs]);
@@ -70,7 +70,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_BADVADDR_REG:
       break;
     case CP0_COUNT_REG:
-      update_count();
+      cp0_update_count();
       interupt_unsafe_state = 1;
       if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
       interupt_unsafe_state = 0;
@@ -81,7 +81,7 @@ DECLARE_INSTRUCTION(MTC0)
       g_cp0_regs[CP0_ENTRYHI_REG] = rrt32 & UINT32_C(0xFFFFE0FF);
       break;
     case CP0_COMPARE_REG:
-      update_count();
+      cp0_update_count();
       remove_event(COMPARE_INT);
       add_interupt_event_count(COMPARE_INT, rrt32);
       g_cp0_regs[CP0_COMPARE_REG] = rrt32;
@@ -94,7 +94,7 @@ DECLARE_INSTRUCTION(MTC0)
           set_fpr_pointers(rrt32);
       }
       g_cp0_regs[CP0_STATUS_REG] = rrt32;
-      update_count();
+      cp0_update_count();
       ADD_TO_PC(1);
       check_interupt();
       interupt_unsafe_state = 1;
