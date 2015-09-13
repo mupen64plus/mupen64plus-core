@@ -736,13 +736,13 @@ static void apply_speed_limiter(void)
 {
     unsigned int CurrentFPSTime;
     static unsigned int LastFPSTime = 0;
-    static int VITotalDelta;
-    static int VIDeltas[64];
+    static float VITotalDelta;
+    static float VIDeltas[64];
     static unsigned int VIDeltasIndex;
 
     double VILimitMilliseconds = 1000.0 / ROM_PARAMS.vilimit;
     double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;  // adjust for selected emulator speed
-    int ThisFrameDelta, IntegratedDelta, TimeToWait;
+    float ThisFrameDelta, IntegratedDelta, TimeToWait;
 
     timed_section_start(TIMED_SECTION_IDLE);
 
@@ -762,7 +762,7 @@ static void apply_speed_limiter(void)
 
     // calculate # of milliseconds that have passed since the last video interrupt
     CurrentFPSTime = SDL_GetTicks();
-    ThisFrameDelta = CurrentFPSTime - LastFPSTime - (int) AdjustedLimit;
+    ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
 
     // are we too fast?
     if (ThisFrameDelta < 0)
@@ -773,12 +773,12 @@ static void apply_speed_limiter(void)
         if (IntegratedDelta < 0 && l_MainSpeedLimit)
         {
             TimeToWait = (IntegratedDelta > ThisFrameDelta) ? -IntegratedDelta : -ThisFrameDelta;
-            DebugMessage(M64MSG_VERBOSE, "    apply_speed_limiter(): Waiting %ims", TimeToWait);
-            SDL_Delay(TimeToWait);
+            DebugMessage(M64MSG_VERBOSE, "    apply_speed_limiter(): Waiting %ims", (int) TimeToWait);
+            SDL_Delay((int) TimeToWait);
             // recalculate # of milliseconds that have passed since the last video interrupt,
             // taking into account the time we just waited
             CurrentFPSTime = SDL_GetTicks();
-            ThisFrameDelta = CurrentFPSTime - LastFPSTime - (int) AdjustedLimit;
+            ThisFrameDelta = CurrentFPSTime - LastFPSTime - AdjustedLimit;
         }
     }
 
