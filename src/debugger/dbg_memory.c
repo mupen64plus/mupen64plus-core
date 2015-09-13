@@ -42,7 +42,7 @@
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
-#if !defined(NO_ASM) && (defined(__i386__) || defined(__x86_64__))
+#if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
 
 /* we must define PACKAGE so that bfd.h (which is included from dis-asm.h) doesn't throw an error */
 #define PACKAGE "mupen64plus-core"

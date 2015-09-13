@@ -33,7 +33,7 @@
 #include "r4300/x86_64/assemble_struct.h"
 
 // that's where the dynarec will restart when going back from a C function
-static unsigned long long *return_address;
+unsigned long long *return_address;
 
 void dyna_jump(void)
 {
@@ -49,9 +49,10 @@ void dyna_jump(void)
         *return_address = (unsigned long long) (actual->code + PC->local_addr);
 }
 
-static long long save_rsp = 0;
-static long long save_rip = 0;
+long long save_rsp = 0;
+long long save_rip = 0;
 
+#if defined(__GNUC__) && defined(__x86_64__)
 void dyna_start(void *code)
 {
   /* save the base and stack pointers */
@@ -60,7 +61,6 @@ void dyna_start(void *code)
   /* When dyna_stop() sets the *return_address to the saved RIP, the emulator thread will come back here. */
   /* It will jump to label 2, restore the base and stack pointers, and exit this function */
   DebugMessage(M64MSG_INFO, "R4300: starting 64-bit dynamic recompiler at: %p", code);
-#if defined(__GNUC__) && defined(__x86_64__)
   asm volatile
     (" push %%rbx              \n"  /* we must push an even # of registers to keep stack 16-byte aligned */
      " push %%r12              \n"
@@ -95,12 +95,12 @@ void dyna_start(void *code)
      : "b" (code), [reg]"m"(*reg)
      : "%rax", "memory"
      );
-#endif
 
     /* clear the registers so we don't return here a second time; that would be a bug */
     save_rsp=0;
     save_rip=0;
 }
+#endif
 
 void dyna_stop(void)
 {
