@@ -147,12 +147,34 @@ void *dynamic_linker(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(int)head->addr;
-      ht_bin[0]=vaddr;
-      return head->addr;
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
+      // Don't restore blocks which are about to expire from the cache
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(verify_dirty(head->addr)) {
+        //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
+        invalid_code[vaddr>>12]=0;
+        memory_map[vaddr>>12]|=0x40000000;
+        if(vpage<2048) {
+          if(tlb_LUT_r[vaddr>>12]) {
+            invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
+            memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+          }
+          restore_candidate[vpage>>3]|=1<<(vpage&7);
+        }
+        else restore_candidate[page>>3]|=1<<(page&7);
+        u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+        if(ht_bin[0]==vaddr) {
+          ht_bin[1]=(int)head->addr; // Replace existing entry
+        }
+        else
+        {
+          ht_bin[3]=ht_bin[1];
+          ht_bin[2]=ht_bin[0];
+          ht_bin[1]=(int)head->addr;
+          ht_bin[0]=vaddr;
+        }
+        return head->addr;
+      }
     }
     head=head->next;
   }
@@ -202,12 +224,34 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(int)head->addr;
-      ht_bin[0]=vaddr;
-      return head->addr;
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
+      // Don't restore blocks which are about to expire from the cache
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(verify_dirty(head->addr)) {
+        //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
+        invalid_code[vaddr>>12]=0;
+        memory_map[vaddr>>12]|=0x40000000;
+        if(vpage<2048) {
+          if(tlb_LUT_r[vaddr>>12]) {
+            invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
+            memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+          }
+          restore_candidate[vpage>>3]|=1<<(vpage&7);
+        }
+        else restore_candidate[page>>3]|=1<<(page&7);
+        u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+        if(ht_bin[0]==vaddr) {
+          ht_bin[1]=(int)head->addr; // Replace existing entry
+        }
+        else
+        {
+          ht_bin[3]=ht_bin[1];
+          ht_bin[2]=ht_bin[0];
+          ht_bin[1]=(int)head->addr;
+          ht_bin[0]=vaddr;
+        }
+        return head->addr;
+      }
     }
     head=head->next;
   }
