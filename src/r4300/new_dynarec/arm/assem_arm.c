@@ -375,6 +375,13 @@ static int verify_dirty(void *addr)
   if((*ptr&0xFF000000)!=0xeb000000) ptr++;
   assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
   u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
+
+  //Trampoline jump
+  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
+      verifier=*((u_int*)(verifier+4));
+
+  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
+
   if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
     unsigned int page=source>>12;
     unsigned int map_value=memory_map[page];
@@ -399,9 +406,14 @@ static int isclean(int addr)
   #endif
   if((*ptr&0xFF000000)!=0xeb000000) ptr++;
   if((*ptr&0xFF000000)!=0xeb000000) return 1; // bl instruction
-  if((int)ptr+((*ptr<<8)>>6)+8==(int)verify_code) return 0;
-  if((int)ptr+((*ptr<<8)>>6)+8==(int)verify_code_vm) return 0;
-  if((int)ptr+((*ptr<<8)>>6)+8==(int)verify_code_ds) return 0;
+  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
+  if(verifier==(u_int)verify_code) return 0;
+  if(verifier==(u_int)verify_code_vm) return 0;
+  if(verifier==(u_int)verify_code_ds) return 0;
+  verifier=*((u_int*)(verifier+4));
+  if(verifier==(u_int)verify_code) return 0;
+  if(verifier==(u_int)verify_code_vm) return 0;
+  if(verifier==(u_int)verify_code_ds) return 0;
   return 1;
 }
 
@@ -428,6 +440,13 @@ static void get_bounds(int addr,u_int *start,u_int *end)
   if((*ptr&0xFF000000)!=0xeb000000) ptr++;
   assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
   u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
+
+  //Trampoline jump
+  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
+      verifier=*((u_int*)(verifier+4));
+
+  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
+
   if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
     if(memory_map[source>>12]>=0x80000000) source = 0;
     else source = source+(memory_map[source>>12]<<2);
