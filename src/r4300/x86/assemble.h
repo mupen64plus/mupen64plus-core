@@ -29,8 +29,6 @@
 #include "osal/preproc.h"
 #include "r4300/recomph.h"
 
-extern int64_t reg[32];
-
 #define EAX 0
 #define ECX 1
 #define EDX 2

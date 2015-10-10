@@ -34,9 +34,9 @@ void gencvt_s_w(void)
    gencallinterp((unsigned int)cached_interpreter_table.CVT_S_W, 0);
 #else
    gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fs]));
+   mov_eax_memoffs32((unsigned int*) (&g_state.regs.cp1_s[dst->f.cf.fs]));
    fild_preg32_dword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fd]));
+   mov_eax_memoffs32((unsigned int*) (&g_state.regs.cp1_s[dst->f.cf.fd]));
    fstp_preg32_dword(EAX);
 #endif
 }
@@ -47,9 +47,9 @@ void gencvt_d_w(void)
    gencallinterp((unsigned int)cached_interpreter_table.CVT_D_W, 0);
 #else
    gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fs]));
+   mov_eax_memoffs32((unsigned int*) (&g_state.regs.cp1_s[dst->f.cf.fs]));
    fild_preg32_dword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.cf.fd]));
+   mov_eax_memoffs32((unsigned int*) (&g_state.regs.cp1_d[dst->f.cf.fd]));
    fstp_preg32_qword(EAX);
 #endif
 }

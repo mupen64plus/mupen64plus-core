@@ -41,7 +41,7 @@ void init_cache(precomp_instr* start)
     last_access[i] = NULL;
     free_since[i] = start;
      }
-     r0 = (unsigned int*)reg;
+     r0 = (unsigned int*) g_state.regs.gpr;
 }
 
 void free_all_registers(void)

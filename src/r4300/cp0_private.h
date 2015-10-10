@@ -24,8 +24,6 @@
 
 #include "cp0.h"
 
-extern unsigned int g_cp0_regs[CP0_REGS_COUNT];
-
 int check_cop1_unusable(void);
 
 #endif /* M64P_R4300_CP0_PRIVATE_H */
