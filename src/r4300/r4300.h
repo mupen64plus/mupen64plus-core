@@ -26,19 +26,58 @@
 
 #include "ops.h"
 #include "r4300_core.h"
-#include "recomp.h"
-
-extern precomp_instr *PC;
+#include "cp0.h"
 
 extern int stop, rompause;
-extern unsigned int llbit;
-extern int64_t reg[32], hi, lo;
+
+struct r4300_registers {
+    int64_t  gpr[32];      /* General-purpose registers */
+    int64_t  hi;           /* Multiplier unit high bits */
+    int64_t  lo;           /* Multiplier unit low bits */
+    uint32_t cp0[CP0_REGS_COUNT]; /* Coprocessor 0 registers */
+    float*   cp1_s[32];    /* Points into fpr_data for FPR singles */
+    double*  cp1_d[32];    /* Points into fpr_data for FPR doubles */
+    int64_t  fpr_data[32]; /* Raw data for floating-point registers */
+    uint32_t fcr_0;        /* Floating-point control register 0 */
+    uint32_t fcr_31;       /* Floating-point control register 31 */
+    uint32_t ll_bit;       /* Whether the next SC can pair with an LL */
+};
+
+struct r4300_state {
+    struct r4300_registers regs;
+    /* Set to non-zero if the currently-executing opcode is in the delay slot
+     * of a branch. Exception creation code uses this. */
+    uint32_t delay_slot;
+    /* Set to the next value of regs.cp0[CP0_COUNT_REG] that will trigger an
+     * interrupt on the CPU. */
+    uint32_t next_interrupt;
+    /* Set to the (N64) address to be read or written by a memory accessor. */
+    uint32_t access_addr;
+    /* Set to the (native) address of a 64-bit value that will receive data
+     * read by memory accessors. */
+    uint64_t* read_dest;
+    /* Set to a value to be written by a memory accessor. */
+    union {
+        uint64_t d;
+        uint32_t w;
+        uint16_t h;
+        uint8_t  b;
+    } write;
+};
+
+extern struct r4300_state g_state;
+
+/* XXX: The above types are required by [arch]/assemble.h, included by
+ * recomp.h, because they read g_state.
+ * In turn, recomp.h defines precomp_instr, which is used as PC's type below.
+ */
+#include "recomp.h"
+extern precomp_instr *PC;
+
 extern long long int local_rs;
-extern unsigned int delay_slot;
 extern uint32_t skip_jump;
 extern unsigned int dyna_interp;
 extern unsigned int r4300emu;
-extern uint32_t next_interupt;
 extern uint32_t last_addr;
 #define COUNT_PER_OP_DEFAULT 2
 extern unsigned int count_per_op;

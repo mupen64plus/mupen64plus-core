@@ -34,22 +34,22 @@ void init_r4300(struct r4300_core* r4300)
 
 int64_t* r4300_regs(void)
 {
-    return reg;
+    return g_state.regs.gpr;
 }
 
 int64_t* r4300_mult_hi(void)
 {
-    return &hi;
+    return &g_state.regs.hi;
 }
 
 int64_t* r4300_mult_lo(void)
 {
-    return &lo;
+    return &g_state.regs.lo;
 }
 
 unsigned int* r4300_llbit(void)
 {
-    return &llbit;
+    return &g_state.regs.ll_bit;
 }
 
 uint32_t* r4300_pc(void)
@@ -70,7 +70,7 @@ uint32_t* r4300_last_addr(void)
 
 unsigned int* r4300_next_interrupt(void)
 {
-    return &next_interupt;
+    return &g_state.next_interrupt;
 }
 
 unsigned int get_r4300_emumode(void)

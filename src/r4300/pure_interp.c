@@ -59,17 +59,17 @@ static void InterpretOpcode(void);
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
+      if (link_register != &g_state.regs.gpr[0]) \
       { \
           *link_register = SE32(interp_PC.addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
         interp_PC.addr += 4; \
-        delay_slot=1; \
+        g_state.delay_slot = 1; \
         InterpretOpcode(); \
         cp0_update_count(); \
-        delay_slot=0; \
+        g_state.delay_slot = 0; \
         if (take_jump && !skip_jump) \
         { \
           interp_PC.addr = jump_target; \
@@ -81,7 +81,7 @@ static void InterpretOpcode(void);
          cp0_update_count(); \
       } \
       last_addr = interp_PC.addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (g_state.next_interrupt <= g_state.regs.cp0[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
@@ -91,8 +91,8 @@ static void InterpretOpcode(void);
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+         skip = g_state.next_interrupt - g_state.regs.cp0[CP0_COUNT_REG]; \
+         if (skip > 3) g_state.regs.cp0[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
       else name(op); \
@@ -131,16 +131,16 @@ static void InterpretOpcode(void);
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
-#define rrt reg[RT_OF(op)]
-#define rrd reg[RD_OF(op)]
+#define rrt g_state.regs.gpr[RT_OF(op)]
+#define rrd g_state.regs.gpr[RD_OF(op)]
 #define rfs FS_OF(op)
-#define rrs reg[RS_OF(op)]
+#define rrs g_state.regs.gpr[RS_OF(op)]
 #define rsa SA_OF(op)
-#define irt reg[RT_OF(op)]
+#define irt g_state.regs.gpr[RT_OF(op)]
 #define ioffset IMM16S_OF(op)
 #define iimmediate IMM16S_OF(op)
-#define irs reg[RS_OF(op)]
-#define ibase reg[RS_OF(op)]
+#define irs g_state.regs.gpr[RS_OF(op)]
+#define ibase g_state.regs.gpr[RS_OF(op)]
 #define jinst_index JUMP_OF(op)
 #define lfbase RS_OF(op)
 #define lfft FT_OF(op)
@@ -151,17 +151,17 @@ static void InterpretOpcode(void);
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) &reg[RT_OF(op)])
-#define rrd32 *((int32_t*) &reg[RD_OF(op)])
-#define rrs32 *((int32_t*) &reg[RS_OF(op)])
-#define irs32 *((int32_t*) &reg[RS_OF(op)])
-#define irt32 *((int32_t*) &reg[RT_OF(op)])
+#define rrt32 *((int32_t*) &g_state.regs.gpr[RT_OF(op)])
+#define rrd32 *((int32_t*) &g_state.regs.gpr[RD_OF(op)])
+#define rrs32 *((int32_t*) &g_state.regs.gpr[RS_OF(op)])
+#define irs32 *((int32_t*) &g_state.regs.gpr[RS_OF(op)])
+#define irt32 *((int32_t*) &g_state.regs.gpr[RT_OF(op)])
 #else
-#define rrt32 *((int32_t*) &reg[RT_OF(op)] + 1)
-#define rrd32 *((int32_t*) &reg[RD_OF(op)] + 1)
-#define rrs32 *((int32_t*) &reg[RS_OF(op)] + 1)
-#define irs32 *((int32_t*) &reg[RS_OF(op)] + 1)
-#define irt32 *((int32_t*) &reg[RT_OF(op)] + 1)
+#define rrt32 *((int32_t*) &g_state.regs.gpr[RT_OF(op)] + 1)
+#define rrd32 *((int32_t*) &g_state.regs.gpr[RD_OF(op)] + 1)
+#define rrs32 *((int32_t*) &g_state.regs.gpr[RS_OF(op)] + 1)
+#define irs32 *((int32_t*) &g_state.regs.gpr[RS_OF(op)] + 1)
+#define irt32 *((int32_t*) &g_state.regs.gpr[RT_OF(op)] + 1)
 #endif
 
 // two functions are defined from the macros above but never used

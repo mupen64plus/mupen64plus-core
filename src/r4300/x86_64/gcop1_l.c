@@ -41,9 +41,9 @@ void gencvt_s_l(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long*) (&g_state.regs.cp1_d[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long*) (&g_state.regs.cp1_s[dst->f.cf.fd]));
    fstp_preg64_dword(RAX);
 #endif
 }
@@ -57,9 +57,9 @@ void gencvt_d_l(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long*) (&g_state.regs.cp1_d[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long*) (&g_state.regs.cp1_d[dst->f.cf.fd]));
    fstp_preg64_qword(RAX);
 #endif
 }
