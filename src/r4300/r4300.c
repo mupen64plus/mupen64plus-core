@@ -57,7 +57,13 @@
 #include "instr_counters.h"
 #endif
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* The New Dynarec on ARM will place this structure somewhere within its
+ * block of memory for member access via small offsets. See
+ *   new_dynarec/arm/linkage_arm.S
+ * for the definition. */
 ALIGN(4096, struct r4300_state g_state);
+#endif
 
 unsigned int r4300emu = 0;
 unsigned int count_per_op = COUNT_PER_OP_DEFAULT;

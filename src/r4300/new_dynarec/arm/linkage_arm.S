@@ -73,27 +73,28 @@ BSS_SECTION
     .align   12
     GLOBAL_VARIABLE(extra_memory, 33554432)
     GLOBAL_VARIABLE(dynarec_local, 64)
-    GLOBAL_VARIABLE(next_interupt, 4)
-    GLOBAL_VARIABLE(cycle_count, 4)
-    GLOBAL_VARIABLE(last_count, 4)
-    GLOBAL_VARIABLE(pending_exception, 4)
-    GLOBAL_VARIABLE(pcaddr, 4)
-    GLOBAL_VARIABLE(stop, 4)
-    GLOBAL_VARIABLE(invc_ptr, 4)
-    GLOBAL_VARIABLE(address, 4)
-    GLOBAL_VARIABLE(readmem_dword, 8)
-    GLOBAL_VARIABLE(cpu_dword, 8)
-    GLOBAL_VARIABLE(cpu_word, 4)
-    GLOBAL_VARIABLE(cpu_hword, 2)
-    GLOBAL_VARIABLE(cpu_byte, 1)
-    GLOBAL_VARIABLE(FCR0, 4)
-    GLOBAL_VARIABLE(FCR31, 4)
+    GLOBAL_VARIABLE(g_state, 1280)
     GLOBAL_VARIABLE(reg, 256)
     GLOBAL_VARIABLE(hi, 8)
     GLOBAL_VARIABLE(lo, 8)
     GLOBAL_VARIABLE(g_cp0_regs, 128)
     GLOBAL_VARIABLE(reg_cop1_simple, 128)
     GLOBAL_VARIABLE(reg_cop1_double, 128)
+    GLOBAL_VARIABLE(FCR0, 4)
+    GLOBAL_VARIABLE(FCR31, 4)
+    GLOBAL_VARIABLE(next_interupt, 4)
+    GLOBAL_VARIABLE(address, 4)
+    GLOBAL_VARIABLE(readmem_dword, 8)
+    GLOBAL_VARIABLE(cpu_dword, 8)
+    GLOBAL_VARIABLE(cpu_word, 4)
+    GLOBAL_VARIABLE(cpu_hword, 2)
+    GLOBAL_VARIABLE(cpu_byte, 1)
+    GLOBAL_VARIABLE(cycle_count, 4)
+    GLOBAL_VARIABLE(last_count, 4)
+    GLOBAL_VARIABLE(pending_exception, 4)
+    GLOBAL_VARIABLE(pcaddr, 4)
+    GLOBAL_VARIABLE(stop, 4)
+    GLOBAL_VARIABLE(invc_ptr, 4)
     GLOBAL_VARIABLE(rounding_modes, 16)
     GLOBAL_VARIABLE(branch_target, 4)
     GLOBAL_VARIABLE(PC, 4)
@@ -107,28 +108,33 @@ extra_memory:
     .space    33554432+64+4+4+4+4+4+4+4+4+8+8+4+2+2+4+4+256+8+8+128+128+128+16+4+4+132+4+256+512+4194304
 
     dynarec_local     = extra_memory      + 33554432
-    next_interupt     = dynarec_local     + 64
-    cycle_count       = next_interupt     + 4
+    /* This creates the g_state variable, used by the interpreters and
+     * Hacktarux JIT, right next to dynarec_local for easy offsetting.
+     * The positions of its members must match those in the declaration
+     * of the structure in r4300.h for 32-bit architectures. */
+    g_state           = dynarec_local     + 64
+    reg               = g_state           + 0    /* = regs.gpr */
+    hi                = g_state           + 256  /* = regs.hi */
+    lo                = g_state           + 264  /* = regs.lo */
+    g_cp0_regs        = g_state           + 272  /* = regs.cp0 */
+    reg_cop1_simple   = g_state           + 400  /* = regs.cp1_s */
+    reg_cop1_double   = g_state           + 528  /* = regs.cp1_d */
+    FCR0              = g_state           + 912  /* = regs.fcr_0 */
+    FCR31             = g_state           + 916  /* = regs.fcr_31 */
+    next_interupt     = g_state           + 928  /* = next_interrupt */
+    address           = g_state           + 932  /* = access_addr */
+    readmem_dword     = g_state           + 936  /* = read_dest */
+    cpu_dword         = g_state           + 940  /* = write.d */
+    cpu_word          = cpu_dword                /* = write.w */
+    cpu_hword         = cpu_dword                /* = write.h */
+    cpu_byte          = cpu_dword                /* = write.b */
+    cycle_count       = g_state           + 1280 /* allow expansion of the struct */
     last_count        = cycle_count       + 4
     pending_exception = last_count        + 4
     pcaddr            = pending_exception + 4
     stop              = pcaddr            + 4
     invc_ptr          = stop              + 4
-    address           = invc_ptr          + 4
-    readmem_dword     = address           + 4
-    cpu_dword         = readmem_dword     + 8
-    cpu_word          = cpu_dword         + 8
-    cpu_hword         = cpu_word          + 4
-    cpu_byte          = cpu_hword         + 2 /* 1 byte free */
-    FCR0              = cpu_hword         + 4
-    FCR31             = FCR0              + 4
-    reg               = FCR31             + 4
-    hi                = reg               + 256
-    lo                = hi                + 8
-    g_cp0_regs        = lo                + 8
-    reg_cop1_simple   = g_cp0_regs        + 128
-    reg_cop1_double   = reg_cop1_simple   + 128
-    rounding_modes    = reg_cop1_double   + 128
+    rounding_modes    = invc_ptr          + 4
     branch_target     = rounding_modes    + 16
     PC                = branch_target     + 4
     fake_pc           = PC                + 4
