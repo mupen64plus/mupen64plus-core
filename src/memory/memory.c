@@ -993,66 +993,66 @@ static void (*saved_writememd[0x10000])(void);
 
 static void readmemb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 1,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    saved_readmemb[address>>16]();
+    saved_readmemb[g_state.access_addr >> 16]();
 }
 
 static void readmemh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 2,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    saved_readmemh[address>>16]();
+    saved_readmemh[g_state.access_addr >> 16]();
 }
 
 static void readmem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 4,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    saved_readmem[address>>16]();
+    saved_readmem[g_state.access_addr >> 16]();
 }
 
 static void readmemd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 8,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    saved_readmemd[address>>16]();
+    saved_readmemd[g_state.access_addr >> 16]();
 }
 
 static void writememb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 1,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    return saved_writememb[address>>16]();
+    return saved_writememb[g_state.access_addr >> 16]();
 }
 
 static void writememh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 2,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    return saved_writememh[address>>16]();
+    return saved_writememh[g_state.access_addr >> 16]();
 }
 
 static void writemem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 4,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    return saved_writemem[address>>16]();
+    return saved_writemem[g_state.access_addr >> 16]();
 }
 
 static void writememd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, address, 8,
+    check_breakpoints_on_mem_access(*r4300_pc()-0x4, g_state.access_addr, 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    return saved_writememd[address>>16]();
+    return saved_writememd[g_state.access_addr >> 16]();
 }
 
 void activate_memory_break_read(uint32_t address)
