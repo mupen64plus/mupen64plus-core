@@ -4970,7 +4970,7 @@ static void do_ccstub(int n)
     if(itype[i]==RJUMP)
     {
       int r=get_reg(branch_regs[i].regmap,rs1[i]);
-      if(rs1[i]==rt1[i+1]||rs1[i]==rt2[i+1]) {
+      if((rs1[i]==rt1[i+1]||rs1[i]==rt2[i+1])&&(rs1[i]!=0)) {
         r=get_reg(branch_regs[i].regmap,RTEMP);
       }
       emit_writeword(r,(int)&pcaddr);
@@ -5136,7 +5136,7 @@ static void rjump_assemble(int i,struct regstat *i_regs)
   int rs,cc;
   rs=get_reg(branch_regs[i].regmap,rs1[i]);
   assert(rs>=0);
-  if(rs1[i]==rt1[i+1]||rs1[i]==rt2[i+1]) {
+  if((rs1[i]==rt1[i+1]||rs1[i]==rt2[i+1])&&(rs1[i]!=0)) {
     // Delay slot abuse, make a copy of the branch address register
     temp=get_reg(branch_regs[i].regmap,RTEMP);
     assert(temp>=0);
@@ -7751,7 +7751,7 @@ int new_recompile_block(int addr)
   assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
 #if defined (COUNT_NOTCOMPILEDS )
   notcompiledCount++;
-  log_message( "notcompiledCount=%i", notcompiledCount );
+  DebugMessage(M64MSG_VERBOSE, "notcompiledCount=%i", notcompiledCount );
 #endif
   //DebugMessage(M64MSG_VERBOSE, "NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
   //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,addr);
@@ -7789,7 +7789,7 @@ int new_recompile_block(int addr)
       assem_debug("mapping=%x (%x)",memory_map[start>>12],(memory_map[start>>12]<<2)+start);
     }
     else {
-      assem_debug("Compile at unmapped memory address: %x ", (int)addr);
+      DebugMessage(M64MSG_WARNING, "Compile at unmapped memory address: %x ", (int)addr);
       //assem_debug("start: %x next: %x",memory_map[start>>12],memory_map[(start+4096)>>12]);
       return 1; // Caller will invoke exception handler
     }
@@ -7797,7 +7797,7 @@ int new_recompile_block(int addr)
   }
   else {
     //DebugMessage(M64MSG_VERBOSE, "Compile at bogus memory address: %x ", (int)addr);
-    log_message("Compile at bogus memory address: %x", (int)addr);
+    DebugMessage(M64MSG_ERROR, "Compile at bogus memory address: %x", (int)addr);
     exit(1);
   }
 
@@ -8648,7 +8648,7 @@ int new_recompile_block(int addr)
           clear_const(&current,rt1[i]);
           alloc_cc(&current,i);
           dirty_reg(&current,CCREG);
-          if(rs1[i]!=rt1[i+1]&&rs1[i]!=rt2[i+1]) {
+          if((rs1[i]!=rt1[i+1]&&rs1[i]!=rt2[i+1])||(rs1[i]==0)) {
             alloc_reg(&current,i,rs1[i]);
             if (rt1[i]!=0) {
               alloc_reg(&current,i,rt1[i]);
