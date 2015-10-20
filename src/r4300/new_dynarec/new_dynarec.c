@@ -10127,6 +10127,10 @@ int new_recompile_block(int addr)
   // to use, which can avoid a load-use penalty on certain CPUs.
   for(i=0;i<slen-1;i++)
   {
+    // Avoid replacing an allocated temporary register
+    if(count_free_regs(regs[i].regmap)<=minimum_free_regs[i])
+      continue;
+
     if(!i||(itype[i-1]!=UJUMP&&itype[i-1]!=CJUMP&&itype[i-1]!=SJUMP&&itype[i-1]!=RJUMP&&itype[i-1]!=FJUMP))
     {
       if(!bt[i+1])
