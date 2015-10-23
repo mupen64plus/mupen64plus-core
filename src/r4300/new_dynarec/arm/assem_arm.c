@@ -21,6 +21,9 @@
 #include "../../cp0_private.h"
 #include "main/main.h"
 
+void *dynamic_linker(void * src, u_int vaddr);
+void *dynamic_linker_ds(void * src, u_int vaddr);
+
 extern int cycle_count;
 extern int last_count;
 extern int pcaddr;
@@ -107,8 +110,8 @@ const u_int invalidate_addr_reg[16] = {
 static u_int jump_table_symbols[] = {
   (int)invalidate_addr,
   (int)jump_vaddr,
-  (int)dyna_linker,
-  (int)dyna_linker_ds,
+  (int)dynamic_linker,
+  (int)dynamic_linker_ds,
   (int)verify_code,
   (int)verify_code_vm,
   (int)verify_code_ds,
@@ -302,6 +305,141 @@ static void set_jump_target_fillslot(int addr,u_int target,int copy)
 }
 */
 
+
+void *dynamic_linker(void * src, u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      int *ptr=(int*)src;
+      assert((*ptr&0x0f000000)==0x0a000000); //jmp
+      int offset=(int)(((u_int)*ptr+2)<<8)>>6;
+      void *ptr2=(void*)((u_int)ptr+(u_int)offset);
+#ifdef ARMv5_ONLY
+      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
+      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
+      assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
+      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
+#else
+      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
+      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
+      assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
+      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
+      assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
+      assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
+#endif
+      add_link(vaddr, ptr2);
+      *ptr=(*ptr&0xFF000000)|((((u_int)head->addr-(u_int)ptr-8)<<6)>>8);
+      __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(int)head->addr;
+      ht_bin[0]=vaddr;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  int r=new_recompile_block(vaddr);
+  if(r==0) return dynamic_linker(src, vaddr);
+  // Execute in unmapped page, generate pagefault exception
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=0x8;
+  g_cp0_regs[CP0_EPC_REG]=vaddr;
+  g_cp0_regs[CP0_BADVADDR_REG]=vaddr;
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
+  return get_addr_ht(0x80000000);
+}
+
+void *dynamic_linker_ds(void * src, u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      int *ptr=(int*)src;
+      assert((*ptr&0x0f000000)==0x0a000000); //jmp
+      int offset=(int)(((u_int)*ptr+2)<<8)>>6;
+      void *ptr2=(void*)((u_int)ptr+(u_int)offset);
+#ifdef ARMv5_ONLY
+      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
+      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
+      assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
+      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
+#else
+      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
+      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
+      assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
+      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
+      assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
+      assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
+#endif
+      add_link(vaddr, ptr2);
+      *ptr=(*ptr&0xFF000000)|((((u_int)head->addr-(u_int)ptr-8)<<6)>>8);
+      __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(int)head->addr;
+      ht_bin[0]=vaddr;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
+  if(r==0) return dynamic_linker_ds(src, vaddr);
+  // Execute in unmapped page, generate pagefault exception
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=0x80000008;
+  g_cp0_regs[CP0_EPC_REG]=(vaddr&0xFFFFFFF8)-4;
+  g_cp0_regs[CP0_BADVADDR_REG]=vaddr&0xFFFFFFF8;
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
+  return get_addr_ht(0x80000000);
+}
+
 /* Literal pool */
 static void add_literal(int addr,int val)
 {
@@ -312,24 +450,40 @@ static void add_literal(int addr,int val)
 
 static void *kill_pointer(void *stub)
 {
+#ifdef ARMv5_ONLY
   int *ptr=(int *)(stub+4);
-  assert((*ptr&0x0ff00000)==0x05900000);
+  assert((*ptr&0x0ff00000)==0x05900000); //ldr
   u_int offset=*ptr&0xfff;
   int **l_ptr=(void *)ptr+offset+8;
   int *i_ptr=*l_ptr;
+#else
+  int *ptr=(int *)(stub+8);
+  int *ptr2=(int *)(stub+12);
+  assert((*ptr&0x0ff00000)==0x03000000); //movw
+  assert((*ptr2&0x0ff00000)==0x03400000); //movt
+  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
+#endif
+  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
   set_jump_target((int)i_ptr,(int)stub);
   return i_ptr;
 }
 
 static int get_pointer(void *stub)
 {
-  //DebugMessage(M64MSG_VERBOSE, "get_pointer(%x)",(int)stub);
+#ifdef ARMv5_ONLY
   int *ptr=(int *)(stub+4);
-  assert((*ptr&0x0ff00000)==0x05900000);
+  assert((*ptr&0x0ff00000)==0x05900000); //ldr
   u_int offset=*ptr&0xfff;
   int **l_ptr=(void *)ptr+offset+8;
   int *i_ptr=*l_ptr;
-  assert((*i_ptr&0x0f000000)==0x0a000000);
+#else
+  int *ptr=(int *)(stub+8);
+  int *ptr2=(int *)(stub+12);
+  assert((*ptr&0x0ff00000)==0x03000000); //movw
+  assert((*ptr2&0x0ff00000)==0x03400000); //movt
+  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
+#endif
+  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
   return (int)i_ptr+((*i_ptr<<8)>>6)+8;
 }
 
@@ -1815,13 +1969,12 @@ static void emit_callreg(u_int r)
 {
   assem_debug("call *%%%s",regname[r]);
   assert(0);
-}
+}*/
 static void emit_jmpreg(u_int r)
 {
   assem_debug("mov pc,%s",regname[r]);
   output_w32(0xe1a00000|rd_rn_rm(15,0,r));
 }
-*/
 static void emit_readword_indexed(int offset, int rs, int rt)
 {
   assert(offset>-4096&&offset<4096);
@@ -2633,8 +2786,15 @@ static void emit_extjump2(int addr, int target, int linker)
 {
   u_char *ptr=(u_char *)addr;
   assert((ptr[3]&0x0e)==0xa);
-  emit_loadlp(target,0);
-  emit_loadlp(addr,1);
+#ifdef ARMv5_ONLY
+    emit_loadlp(target,1);
+    emit_loadlp(addr,0);
+#else
+    emit_movw(target&0x0000FFFF,1);
+    emit_movt(target&0xFFFF0000,1);
+    emit_movw(addr&0x0000FFFF,0);
+    emit_movt(addr&0xFFFF0000,0);
+#endif
   //assert(addr>=0x7000000&&addr<0x7FFFFFF);
   //assert((target>=0x80000000&&target<0x80800000)||(target>0xA4000000&&target<0xA4001000));
 //DEBUG >
@@ -2647,16 +2807,17 @@ static void emit_extjump2(int addr, int target, int linker)
   emit_writeword(ECX,(int)&last_count);
 #endif
 //DEBUG <
-  emit_jmp(linker);
+  emit_call(linker);
+  emit_jmpreg(0);
 }
 
 static void emit_extjump(int addr, int target)
 {
-  emit_extjump2(addr, target, (int)dyna_linker);
+  emit_extjump2(addr, target, (int)dynamic_linker);
 }
 static void emit_extjump_ds(int addr, int target)
 {
-  emit_extjump2(addr, target, (int)dyna_linker_ds);
+  emit_extjump2(addr, target, (int)dynamic_linker_ds);
 }
 
 static void do_readstub(int n)
@@ -4622,9 +4783,9 @@ static void arch_init() {
   // Jumping thru the trampolines created above slows things down by about 1%.
   // If part of the cache is beyond the 32M limit, avoid using this area
   // initially.  It will be used later if the cache gets full.
-  if((u_int)dyna_linker-33554432>(u_int)BASE_ADDR) {
-    if((u_int)dyna_linker-33554432<(u_int)BASE_ADDR+(1<<(TARGET_SIZE_2-1))) {
-      out=(u_char *)(((u_int)dyna_linker-33554432)&~4095);
+  if((u_int)dynamic_linker-33554432>(u_int)BASE_ADDR) {
+    if((u_int)dynamic_linker-33554432<(u_int)BASE_ADDR+(1<<(TARGET_SIZE_2-1))) {
+      out=(u_char *)(((u_int)dynamic_linker-33554432)&~4095);
       expirep=((((int)out-BASE_ADDR)>>(TARGET_SIZE_2-16))+16384)&65535;
     }
   }

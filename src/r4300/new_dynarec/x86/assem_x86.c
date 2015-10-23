@@ -114,6 +114,116 @@ static void set_jump_target(int addr,int target)
   }
 }
 
+void *dynamic_linker(void * src, u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      int *ptr=(int*)src;
+      int *ptr2=(int*)((u_int)ptr + (u_int)*ptr + 4);
+      assert((*ptr2&0xFF)==0x68);                   //push
+      assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
+      assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
+      add_link(vaddr, ptr2);
+      u_int offset=(u_int)head->addr-(u_int)ptr-4;
+      *ptr=offset;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(int)head->addr;
+      ht_bin[0]=vaddr;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  int r=new_recompile_block(vaddr);
+  if(r==0) return dynamic_linker(src, vaddr);
+  // Execute in unmapped page, generate pagefault exception
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=0x8;
+  g_cp0_regs[CP0_EPC_REG]=vaddr;
+  g_cp0_regs[CP0_BADVADDR_REG]=vaddr;
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
+  return get_addr_ht(0x80000000);
+}
+
+void *dynamic_linker_ds(void * src, u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      int *ptr=(int*)src;
+      int *ptr2=(int*)((u_int)ptr + (u_int)*ptr + 4);
+      assert((*ptr2&0xFF)==0x68);                   //push
+      assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
+      assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
+      add_link(vaddr, ptr2);
+      u_int offset=(u_int)head->addr-(u_int)ptr-4;
+      *ptr=offset;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(int)head->addr;
+      ht_bin[0]=vaddr;
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
+  if(r==0) return dynamic_linker_ds(src, vaddr);
+  // Execute in unmapped page, generate pagefault exception
+  g_cp0_regs[CP0_STATUS_REG]|=2;
+  g_cp0_regs[CP0_CAUSE_REG]=0x80000008;
+  g_cp0_regs[CP0_EPC_REG]=(vaddr&0xFFFFFFF8)-4;
+  g_cp0_regs[CP0_BADVADDR_REG]=vaddr&0xFFFFFFF8;
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
+  return get_addr_ht(0x80000000);
+}
+
 static void *kill_pointer(void *stub)
 {
   int *i_ptr=*((int **)((int)stub+6));
@@ -1791,13 +1901,13 @@ static void emit_callreg(u_int r)
   output_byte(0xFF);
   output_modrm(3,r,2);
 }
-/*static void emit_jmpreg(u_int r)
+static void emit_jmpreg(u_int r)
 {
   assem_debug("jmp *%%%s",regname[r]);
   assert(r<8);
   output_byte(0xFF);
   output_modrm(3,r,4);
-}*/
+}
 static void emit_jmpmem_indexed(u_int addr,u_int r)
 {
   assem_debug("jmp *%x(%%%s)",addr,regname[r]);
@@ -2617,8 +2727,8 @@ static void emit_extjump2(int addr, int target, int linker)
     assert(*ptr==0xe8||*ptr==0xe9);
     addr++;
   }
-  emit_movimm(target,EAX);
-  emit_movimm(addr,EBX);
+  emit_pushimm(target);
+  emit_pushimm(addr);
   //assert(addr>=0x7000000&&addr<0x7FFFFFF);
   //assert((target>=0x80000000&&target<0x80800000)||(target>0xA4000000&&target<0xA4001000));
 //DEBUG >
@@ -2631,16 +2741,18 @@ static void emit_extjump2(int addr, int target, int linker)
   emit_writeword(ECX,(int)&last_count);
 #endif
 //DEBUG <
-  emit_jmp(linker);
+  emit_call(linker);
+  emit_addimm(ESP,8,ESP);
+  emit_jmpreg(EAX);
 }
 
 static void emit_extjump(int addr, int target)
 {
-  emit_extjump2(addr, target, (int)dyna_linker);
+  emit_extjump2(addr, target, (int)dynamic_linker);
 }
 static void emit_extjump_ds(int addr, int target)
 {
-  emit_extjump2(addr, target, (int)dyna_linker_ds);
+  emit_extjump2(addr, target, (int)dynamic_linker_ds);
 }
 
 static void do_readstub(int n)
