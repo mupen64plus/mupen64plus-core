@@ -7793,7 +7793,7 @@ int new_recompile_block(int addr)
       assem_debug("mapping=%x (%x)",memory_map[start>>12],(memory_map[start>>12]<<2)+start);
     }
     else {
-      DebugMessage(M64MSG_WARNING, "Compile at unmapped memory address: %x ", (int)addr);
+      assem_debug("Compile at unmapped memory address: %x ", (int)addr);
       //assem_debug("start: %x next: %x",memory_map[start>>12],memory_map[(start+4096)>>12]);
       return 1; // Caller will invoke exception handler
     }
