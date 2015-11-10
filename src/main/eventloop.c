@@ -21,6 +21,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -339,6 +340,14 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
             break;
 #endif
 
+#ifdef WIN32
+        case SDL_SYSWMEVENT:
+            if(event->syswm.msg->msg == WM_MOVE)
+                gfx.moveScreen(0,0);
+            return 0;  // consumed the event
+            break;
+#endif
+
         // if joystick action is detected, check if it's mapped to a special function
         case SDL_JOYAXISMOTION:
         case SDL_JOYBUTTONDOWN:
@@ -468,6 +477,13 @@ void event_initialize(void)
     SDL_EnableKeyRepeat(0, 0);
 #endif
     SDL_SetEventFilter(event_sdl_filter, NULL);
+    
+#ifdef WIN32
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+
+    if (SDL_EventState(SDL_SYSWMEVENT, SDL_QUERY) != SDL_ENABLE)
+        DebugMessage(M64MSG_WARNING, "Failed to change event state: %s", SDL_GetError());
+#endif
 }
 
 int event_set_core_defaults(void)
