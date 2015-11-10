@@ -58,6 +58,7 @@
 
 M64P_FPU_INLINE void set_rounding(void)
 {
+#if 0
   switch (g_state.regs.fcr_31 & 3) {
   case 0: /* Round to nearest, or to even if equidistant */
     fesetround(FE_TONEAREST);
@@ -72,6 +73,7 @@ M64P_FPU_INLINE void set_rounding(void)
     fesetround(FE_DOWNWARD);
     break;
   }
+#endif
 }
 
 M64P_FPU_INLINE void cvt_s_w(const int32_t *source,float *dest)
