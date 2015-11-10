@@ -38,7 +38,7 @@ DECLARE_INSTRUCTION(TLBR)
 
 static void TLBWrite(unsigned int idx)
 {
-   if (r4300emu != CORE_PURE_INTERPRETER)
+   if (r4300emu != CORE_PURE_INTERPRETER && r4300emu != CORE_TRACE_JIT)
    {
       unsigned int i;
       if (tlb_e[idx].v_even)
@@ -134,7 +134,7 @@ static void TLBWrite(unsigned int idx)
    
    tlb_map(&tlb_e[idx]);
 
-   if (r4300emu != CORE_PURE_INTERPRETER)
+   if (r4300emu != CORE_PURE_INTERPRETER && r4300emu != CORE_TRACE_JIT)
    {
       unsigned int i;
       if (tlb_e[idx].v_even)

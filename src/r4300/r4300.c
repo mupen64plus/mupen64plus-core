@@ -47,6 +47,9 @@
 #include "si/si_controller.h"
 #include "tlb.h"
 #include "vi/vi_controller.h"
+#include "new_dynarec/new_dynarec.h"
+#include "trace_jit/mips-interp.h"
+#include "trace_jit/native-tracecache.h"
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
@@ -81,6 +84,7 @@ cpu_instruction_table current_instruction_table;
 
 void generic_jump_to(uint32_t address)
 {
+#if 0
    if (r4300emu == CORE_PURE_INTERPRETER)
       PC->addr = address;
    else {
@@ -93,6 +97,9 @@ void generic_jump_to(uint32_t address)
       jump_to(address);
 #endif
    }
+#else /* 1 */
+	tj_jump_to(address);
+#endif /* 0 or 1 */
 }
 
 /* this hard reset function simulates the boot-up state of the R4300 CPU */
@@ -259,6 +266,8 @@ void r4300_execute(void)
     g_state.next_interrupt = 624999;
     init_interupt();
 
+#if 0
+
     if (r4300emu == CORE_PURE_INTERPRETER)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
@@ -327,6 +336,13 @@ void r4300_execute(void)
 
         free_blocks();
     }
+
+#else /* 1 */
+	r4300emu = CORE_TRACE_JIT;
+	trace_jit_init();
+	trace_jit();
+	trace_jit_exit();
+#endif /* 0 or 1 */
 
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
 

@@ -475,7 +475,28 @@ SOURCE = \
 	$(SRCDIR)/si/rumblepak.c \
 	$(SRCDIR)/si/si_controller.c \
 	$(SRCDIR)/vi/vi_controller.c \
-	$(SRCDIR)/osd/screenshot.cpp
+	$(SRCDIR)/osd/screenshot.cpp \
+	$(SRCDIR)/r4300/trace_jit/mips-analysis.c \
+	$(SRCDIR)/r4300/trace_jit/mips-interp.c \
+	$(SRCDIR)/r4300/trace_jit/mips-jit.c \
+	$(SRCDIR)/r4300/trace_jit/mips-simplify.c \
+	$(SRCDIR)/r4300/trace_jit/mips-tracebounds.c \
+	$(SRCDIR)/r4300/trace_jit/native-tracecache.c \
+	$(SRCDIR)/r4300/trace_jit/dummy/functions.c \
+	$(SRCDIR)/r4300/trace_jit/x86-64/functions.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/functions.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-alu.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-branch.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-common.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-cp0.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-cp1.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-emit.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-except.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-mdu.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/mips-memory.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/native-ops.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/native-regcache.c \
+	$(SRCDIR)/r4300/trace_jit/mips32/native-utils.c
 ifeq ("$(OS)","MINGW")
 SOURCE += \
 	$(SRCDIR)/osal/dynamiclib_win32.c \

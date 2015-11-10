@@ -24,6 +24,7 @@
 #include "cached_interp.h"
 #include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
+#include "trace_jit/mips-interp.h"
 #include "r4300.h"
 #include "recomp.h"
 
@@ -84,6 +85,7 @@ void invalidate_r4300_cached_code(uint32_t address, size_t size)
 {
     if (r4300emu != CORE_PURE_INTERPRETER)
     {
+#if 0
 #ifdef NEW_DYNAREC
         if (r4300emu == CORE_DYNAREC)
         {
@@ -94,6 +96,9 @@ void invalidate_r4300_cached_code(uint32_t address, size_t size)
         {
             invalidate_cached_code_hacktarux(address, size);
         }
+#else
+		invalidate_cached_code_trace_jit(address, size);
+#endif
     }
 }
 
