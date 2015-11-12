@@ -782,6 +782,10 @@ static void apply_speed_limiter(void)
         }
     }
 
+    // Discard frames with excessive execution time
+    if (ThisFrameDelta > AdjustedLimit * 3)
+    	ThisFrameDelta = 0.f;
+
     // update our data structures
     LastFPSTime = CurrentFPSTime ;
     VITotalDelta += ThisFrameDelta - VIDeltas[VIDeltasIndex];
