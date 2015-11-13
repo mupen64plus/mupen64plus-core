@@ -1523,9 +1523,9 @@ void mips32_free(struct mips32_state* state, struct mips32_reg_cache* cache, uin
 			}
 			if (cache->native_hi) {
 				mips32_mfhi(state, REG_EMERGENCY);
-				mips32_sw(state, REG_EMERGENCY, STATE_OFFSET(regs.lo) + LO32_64_BYTES, REG_STATE);
+				mips32_sw(state, REG_EMERGENCY, STATE_OFFSET(regs.hi) + LO32_64_BYTES, REG_STATE);
 				mips32_sra(state, REG_EMERGENCY, REG_EMERGENCY, 31);
-				mips32_sw(state, REG_EMERGENCY, STATE_OFFSET(regs.lo) + HI32_64_BYTES, REG_STATE);
+				mips32_sw(state, REG_EMERGENCY, STATE_OFFSET(regs.hi) + HI32_64_BYTES, REG_STATE);
 			}
 		} else {
 			if (cache->native_lo) {
