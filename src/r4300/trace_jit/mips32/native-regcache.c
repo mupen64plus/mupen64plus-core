@@ -1170,7 +1170,7 @@ void mips32_save_to_stack(struct mips32_state* state, struct mips32_reg_cache* c
 {
 	int i, hi = -1, lo = -1;
 	size_t stack_offset = STACK_OFFSET_TEMP_INT;
-	uint32_t mask = cache->allocated_int & mips32_temp_int_mask;
+	uint32_t mask = cache->allocated_int & ~cache->constant_int & mips32_temp_int_mask;
 
 	for (i = FindFirstSet(mask); i >= 0; mask &= ~BIT(i), i = FindFirstSet(mask)) {
 		mips32_sw(state, i, stack_offset, REG_STACK);
@@ -1224,7 +1224,7 @@ void mips32_load_from_stack(struct mips32_state* state, struct mips32_reg_cache*
 {
 	int i, hi = -1, lo = -1;
 	size_t stack_offset = STACK_OFFSET_TEMP_INT;
-	uint32_t mask = cache->allocated_int & mips32_temp_int_mask;
+	uint32_t mask = cache->allocated_int & ~cache->constant_int & mips32_temp_int_mask;
 
 	for (i = FindFirstSet(mask); i >= 0; mask &= ~BIT(i), i = FindFirstSet(mask)) {
 		mips32_lw(state, i, stack_offset, REG_STACK);
@@ -1308,7 +1308,7 @@ void mips32_regenerate_cache(struct mips32_state* state, struct mips32_reg_cache
 	}
 
 	/* 3. Regenerate integer memory data. This may use the constants. */
-	regs = cache->allocated_int;
+	regs = cache->allocated_int & ~cache->constant_int;
 	for (i = FindFirstSet(regs); i >= 0; regs &= ~BIT(i), i = FindFirstSet(regs)) {
 		struct mips32_reg_int* entry = &cache->reg_int[i];
 		uint8_t mem_reg = 0;
