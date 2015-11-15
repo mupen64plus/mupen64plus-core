@@ -84,6 +84,10 @@ precomp_instr TJ_PC;
 			{ \
 				tj_jump_to(jump_target); \
 			} \
+			else \
+			{ \
+				tj_jump_to(TJ_PC.addr); /* revalidate code where we end up */ \
+			} \
 		} \
 		else \
 		{ \
