@@ -73,6 +73,7 @@ enum TJEmitTraceResult mips32_add_except_reloc(struct mips32_state* state)
 		new_except_relocs[state->except_reloc_count++] = (uint32_t*) state->code - 1;
 		return TJ_SUCCESS;
 	} else {
+		DebugMessage(M64MSG_ERROR, "There is insufficient memory for auxiliary data structures required to emit native code.");
 		return TJ_FAILURE;
 	}
 }
@@ -482,6 +483,7 @@ enum TJEmitTraceResult mips32_add_slow_path(struct mips32_state* state, const st
 
 		new_slow_path->cache = malloc(sizeof(struct mips32_reg_cache));
 		if (!new_slow_path->cache) {
+			DebugMessage(M64MSG_ERROR, "There is insufficient memory for auxiliary data structures required to emit native code.");
 			return TJ_FAILURE;
 		}
 		mips32_copy_reg_cache(new_slow_path->cache, cache);
@@ -497,6 +499,7 @@ enum TJEmitTraceResult mips32_add_slow_path(struct mips32_state* state, const st
 		new_slow_path->userdata = userdata;
 		return TJ_SUCCESS;
 	} else {
+		DebugMessage(M64MSG_ERROR, "There is insufficient memory for auxiliary data structures required to emit native code.");
 		return TJ_FAILURE;
 	}
 }
