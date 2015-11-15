@@ -372,7 +372,8 @@ size_t MakeTrace(uint32_t* Dest, const uint32_t* Raw, size_t Count)
 			 * delay slot. */
 			Left--;
 		}
-		op = SimplifyOpcode(*Raw++);
+		op = MandatorySimplifyOpcode(*Raw++);
+		op = SimplifyOpcode(op);
 		op = UpdateConstAnalysis(&CA, op);
 		op = UpdateWidthAnalysis(&WA, op);
 		*Dest++ = op;

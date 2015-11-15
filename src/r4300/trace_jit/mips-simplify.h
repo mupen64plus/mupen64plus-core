@@ -25,22 +25,31 @@
 #include <stdint.h>
 
 /*
+ * Simplifies a single MIPS III opcode only as required by the MIPS
+ * specification.
+ *
+ * This function transforms any opcode that would write into $0 into
+ * [SLL $0, $0, 0], the canonical form of NOP, except [JALR $0, Rs],
+ * which gets transformed into [JR Rs].
+ *
+ * This prevents all writes into register 0.
+ */
+extern uint32_t MandatorySimplifyOpcode(uint32_t op);
+
+/*
  * Simplifies a single MIPS III opcode.
  *
  * Transformations are made on the opcode to make it easier to analyse.
  * These include:
- * a) transforming any opcode that would write into $0 into [SLL $0, $0, 0],
- *    the canonical form of NOP, except [JALR $0, Rs], which gets transformed
- *    into [JR Rs];
- * b) transforming opcodes that would load a register with 0 into
+ * a) transforming opcodes that would load a register with 0 into
  *    [OR Rd, $0, $0];
- * c) transforming opcodes that would load a register with a copy of the
+ * b) transforming opcodes that would load a register with a copy of the
  *    entirety of another into [OR Rd, Rs, $0];
- * d) transforming opcodes that would load a register with a copy of the lower
+ * c) transforming opcodes that would load a register with a copy of the lower
  *    32 bits of another, sign-extended to 64 bits, into [ADDU Rd, Rs, $0];
- * e) transforming opcodes that would load a register with a low constant
+ * d) transforming opcodes that would load a register with a low constant
  *    (0x0000..0x7FFF) into [ORI Rt, $0, Imm16];
- * f) transforming jump opcodes that do not alter the control flow into
+ * e) transforming jump opcodes that do not alter the control flow into
  *    [SLL $0, $0, 0], the canonical form of NOP. These include impossible
  *    branches ([BNE $x, $x, *], [BLTZ $0, *], [BGTZ $0, *]...) and branches
  *    that execute their delay slot followed by the instruction following the
