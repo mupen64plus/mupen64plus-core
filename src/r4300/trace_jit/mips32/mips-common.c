@@ -70,36 +70,18 @@ void mips32_jump(struct mips32_state* state, uint32_t source, uint32_t target)
 	if (state->code == NULL)
 		return;
 
-	if (target == state->original_pc) {
+	if ((source & ~UINT32_C(0xFFF)) == (target & ~UINT32_C(0xFFF))) {
+		void* native_target = (target == state->original_pc)
+			? state->after_setup
+			: GetTraceAt(target);
+
 		mips32_i32(state, 8, target);
 		mips32_sw_abs(state, 8, 9, &TJ_PC.addr);
 
 		if (state->code == NULL)
 			return;
 
-		/* Try BGEZ $0. */
-		if (mips32_can_jump16(state->code, state->after_setup)) {
-			mips32_bgez(state, 0, mips32_get_jump16(state->code, state->after_setup));
-		}
-		/* Next, try J. */
-		else if (mips32_can_jump26(state->code, state->after_setup)) {
-			mips32_j(state, state->after_setup);
-		}
-		/* Finally, there's always LUI ORI JR. */
-		else {
-			mips32_i32(state, REG_EMERGENCY, (uintptr_t) state->after_setup);
-			mips32_jr(state, REG_EMERGENCY);
-		}
-		mips32_nop(state);
-	} else if ((source & ~UINT32_C(0xFFF)) == (target & ~UINT32_C(0xFFF))) {
-		void* Trace = GetTraceAt(target);
-		mips32_i32(state, 8, target);
-		mips32_sw_abs(state, 8, 9, &TJ_PC.addr);
-
-		if (state->code == NULL)
-			return;
-
-		if (Trace == NOT_CODE || Trace == FORMERLY_CODE) {
+		if (native_target == NOT_CODE || native_target == FORMERLY_CODE) {
 			/* We don't know where to go yet, and we're still emitting code.
 			 * Emit a call to the dynamic linker instead, which will sort it
 			 * out when we are no longer emitting. */
@@ -122,16 +104,16 @@ void mips32_jump(struct mips32_state* state, uint32_t source, uint32_t target)
 			}
 		} else {
 			/* Try BGEZ $0. */
-			if (mips32_can_jump16(state->code, Trace)) {
-				mips32_bgez(state, 0, mips32_get_jump16(state->code, Trace));
+			if (mips32_can_jump16(state->code, native_target)) {
+				mips32_bgez(state, 0, mips32_get_jump16(state->code, native_target));
 			}
 			/* Next, try J. */
-			else if (mips32_can_jump26(state->code, Trace)) {
-				mips32_j(state, Trace);
+			else if (mips32_can_jump26(state->code, native_target)) {
+				mips32_j(state, native_target);
 			}
 			/* Finally, there's always LUI ORI JR. */
 			else {
-				mips32_i32(state, REG_EMERGENCY, (uintptr_t) Trace);
+				mips32_i32(state, REG_EMERGENCY, (uintptr_t) native_target);
 				mips32_jr(state, REG_EMERGENCY);
 			}
 			mips32_nop(state);
