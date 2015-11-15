@@ -317,15 +317,11 @@ enum TJEmitTraceResult mips32_emit_trace(void** code_ptr, size_t avail, uint32_t
 		 * to it... */
 		mips32_add_to_count(&state, &cache);
 		mips32_free_all(&state, &cache);
-		mips32_i32(&state, 8, state.pc);
-		mips32_sw_abs(&state, 8, 9, &last_addr);
-		/* Then jump to the very next instruction to revalidate it. */
-		/* Call mips32_indirect_jump_entry. */
-		mips32_i32(&state, REG_PIC_CALL, (uintptr_t) mips32_indirect_jump_entry);
-		/* Store the PC to the first parameter register. */
 		mips32_i32(&state, REG_ARG1, state.pc);
-		mips32_jalr(&state, REG_PIC_CALL);
-		mips32_borrow_delay(&state);
+		mips32_sw_abs(&state, REG_ARG1, 9, &last_addr);
+		/* Then jump to the very next instruction to revalidate it. */
+		/* Call mips32_indirect_jump_entry using 1 argument. */
+		mips32_pic_call(&state, mips32_indirect_jump_entry);
 	} else if (!state.ending_compiled) {
 		/* If the ending jump was not compiled, it will have updated
 		 * TJ_PC.addr, checked for interrupts, etc. Just escape the JIT. */
