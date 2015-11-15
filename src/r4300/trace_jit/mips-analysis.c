@@ -1756,28 +1756,28 @@ uint32_t IntGetWrites(uint32_t op)
 		case 4: /* SPECIAL opcode 4: SLLV */
 		case 6: /* SPECIAL opcode 6: SRLV */
 		case 7: /* SPECIAL opcode 7: SRAV */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 8: /* SPECIAL opcode 8: JR */
 			return 0;
 		case 9: /* SPECIAL opcode 8: JALR */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 12: /* SPECIAL opcode 12: SYSCALL */
 		case 15: /* SPECIAL opcode 15: SYNC */
 			return 0;
 		case 16: /* SPECIAL opcode 16: MFHI */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 17: /* SPECIAL opcode 17: MTHI */
 			/* Does not write to integer registers, only to HI */
 			return 0;
 		case 18: /* SPECIAL opcode 18: MFLO */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 19: /* SPECIAL opcode 19: MTLO */
 			/* Does not write to integer registers, only to LO */
 			return 0;
 		case 20: /* SPECIAL opcode 20: DSLLV */
 		case 22: /* SPECIAL opcode 22: DSRLV */
 		case 23: /* SPECIAL opcode 23: DSRAV */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 24: /* SPECIAL opcode 24: MULT */
 		case 25: /* SPECIAL opcode 25: MULTU */
 		case 26: /* SPECIAL opcode 26: DIV */
@@ -1802,7 +1802,7 @@ uint32_t IntGetWrites(uint32_t op)
 		case 45: /* SPECIAL opcode 45: DADDU */
 		case 46: /* SPECIAL opcode 46: DSUB */
 		case 47: /* SPECIAL opcode 47: DSUBU */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		case 52: /* SPECIAL opcode 52: TEQ */
 			return 0;
 		case 56: /* SPECIAL opcode 56: DSLL */
@@ -1811,7 +1811,7 @@ uint32_t IntGetWrites(uint32_t op)
 		case 60: /* SPECIAL opcode 60: DSLL32 */
 		case 62: /* SPECIAL opcode 62: DSRL32 */
 		case 63: /* SPECIAL opcode 63: DSRA32 */
-			return BIT(RD_OF(op));
+			return BIT(RD_OF(op)) & ~BIT(0);
 		} /* switch (op & 0x3F) for the SPECIAL prefix */
 		break;
 	case 1: /* REGIMM prefix */
@@ -1845,11 +1845,11 @@ uint32_t IntGetWrites(uint32_t op)
 	case 13: /* Major opcode 13: ORI */
 	case 14: /* Major opcode 14: XORI */
 	case 15: /* Major opcode 15: LUI */
-		return BIT(RT_OF(op));
+		return BIT(RT_OF(op)) & ~BIT(0);
 	case 16: /* Coprocessor 0 prefix */
 		switch ((op >> 21) & 0x1F) {
 		case 0: /* Coprocessor 0 opcode 0: MFC0 */
-			return BIT(RT_OF(op));
+			return BIT(RT_OF(op)) & ~BIT(0);
 		case 4: /* Coprocessor 0 opcode 4: MTC0 */
 			return 0;
 		case 16: /* Coprocessor 0 opcode 16: TLB */
@@ -1869,7 +1869,7 @@ uint32_t IntGetWrites(uint32_t op)
 		case 0: /* Coprocessor 1 opcode 0: MFC1 */
 		case 1: /* Coprocessor 1 opcode 1: DMFC1 */
 		case 2: /* Coprocessor 1 opcode 2: CFC1 */
-			return BIT(RT_OF(op));
+			return BIT(RT_OF(op)) & ~BIT(0);
 		case 4: /* Coprocessor 1 opcode 4: MTC1 */
 		case 5: /* Coprocessor 1 opcode 5: DMTC1 */
 		case 6: /* Coprocessor 1 opcode 6: CTC1 */
@@ -1888,7 +1888,7 @@ uint32_t IntGetWrites(uint32_t op)
 		return 0;
 	case 24: /* Major opcode 24: DADDI */
 	case 25: /* Major opcode 25: DADDIU */
-		return BIT(RT_OF(op));
+		return BIT(RT_OF(op)) & ~BIT(0);
 	case 26: /* Major opcode 26: LDL */
 	case 27: /* Major opcode 27: LDR */
 	case 32: /* Major opcode 32: LB */
@@ -1899,7 +1899,7 @@ uint32_t IntGetWrites(uint32_t op)
 	case 37: /* Major opcode 37: LHU */
 	case 38: /* Major opcode 38: LWR */
 	case 39: /* Major opcode 39: LWU */
-		return BIT(RT_OF(op));
+		return BIT(RT_OF(op)) & ~BIT(0);
 	case 40: /* Major opcode 40: SB */
 	case 41: /* Major opcode 41: SH */
 	case 42: /* Major opcode 42: SWL */
@@ -1910,13 +1910,13 @@ uint32_t IntGetWrites(uint32_t op)
 	case 47: /* Major opcode 47: CACHE */
 		return 0;
 	case 48: /* Major opcode 48: LL */
-		return BIT(RT_OF(op));
+		return BIT(RT_OF(op)) & ~BIT(0);
 	case 49: /* Major opcode 49: LWC1 */
 	case 53: /* Major opcode 53: LDC1 */
 		return 0;
 	case 55: /* Major opcode 55: LD */
 	case 56: /* Major opcode 56: SC */
-		return BIT(RT_OF(op));
+		return BIT(RT_OF(op)) & ~BIT(0);
 	case 57: /* Major opcode 57: SWC1 */
 	case 61: /* Major opcode 61: SDC1 */
 	case 63: /* Major opcode 63: SD */
