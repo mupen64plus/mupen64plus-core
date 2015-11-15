@@ -782,6 +782,8 @@ void trace_jit_init()
 	DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Trace JIT");
 	/* SB is used to modify code by at least Donkey Kong 64. Play it safe. */
 	TraceJITSettings.SBCanModifyCode = true;
+	/* SD is used to modify code by at least Banjo-Tooie. Play it safe. */
+	TraceJITSettings.SDCanModifyCode = true;
 	ARCH_TRACE_JIT_INIT();
 
 	stop = 0;
