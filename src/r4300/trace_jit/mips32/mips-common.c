@@ -143,12 +143,10 @@ void mips32_check_interrupt_and_jump(struct mips32_state* state, struct mips32_r
 
 	/* Here, an interrupt must be taken. */
 	mips32_realize_label(state, label_interrupt);
-	mips32_i32(state, REG_PIC_CALL, (uintptr_t) &gen_interupt);
 	mips32_i32(state, 8, target);
 	mips32_sw_abs(state, 8, 9, &TJ_PC.addr);
 	mips32_sw_abs(state, 8, 9, &last_addr);
-	mips32_jalr(state, REG_PIC_CALL);
-	mips32_borrow_delay(state);
+	mips32_pic_call(state, &gen_interupt);
 
 	/* On return, we escape the JIT. */
 	mips32_jr(state, REG_ESCAPE);
@@ -191,11 +189,9 @@ void mips32_check_interrupt_and_jump_indirect(struct mips32_state* state, struct
 
 	/* Here, an interrupt must be taken. */
 	mips32_realize_label(state, label_interrupt);
-	mips32_i32(state, REG_PIC_CALL, (uintptr_t) &gen_interupt);
 	mips32_sw_abs(state, REG_ARG1, 9, &TJ_PC.addr);
 	mips32_sw_abs(state, REG_ARG1, 9, &last_addr);
-	mips32_jalr(state, REG_PIC_CALL);
-	mips32_borrow_delay(state);
+	mips32_pic_call(state, &gen_interupt);
 
 	/* On return, we escape the JIT. */
 	mips32_jr(state, REG_ESCAPE);
