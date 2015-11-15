@@ -106,15 +106,10 @@ enum TJEmitTraceResult mips32_emit_interpret(struct mips32_state* state, struct 
 
 	/* Store the op to the first parameter register. */
 	/* NOP does not really require any valid opcode. */
-	mips32_i32(state, REG_PIC_CALL, (uintptr_t) func);
-	if (func == &TJ_NOP) {
-		mips32_jalr(state, REG_PIC_CALL);
-		mips32_nop(state);
-	} else {
+	if (op != 0) {
 		mips32_i32(state, REG_ARG1, op);
-		mips32_jalr(state, REG_PIC_CALL);
-		mips32_borrow_delay(state);
 	}
+	mips32_pic_call(state, func);
 
 	state->stored_pc += N64_INSN_SIZE;
 	FAIL_AS(mips32_next_opcode(state));
@@ -124,7 +119,7 @@ enum TJEmitTraceResult mips32_emit_interpret(struct mips32_state* state, struct 
 		/* Jump to the end of the block if an exception occurred, which is
 		 * defined here as TJ_PC.addr not matching what we expect. */
 		mips32_lw_abs(state, 9, 9, &TJ_PC.addr);
-		mips32_i32(state, 8, state->stored_pc);
+		mips32_i32(state, 8, state->pc);
 		mips32_bne(state, 8, 9, +0);
 		FAIL_AS(mips32_add_except_reloc(state));
 		mips32_nop(state);
