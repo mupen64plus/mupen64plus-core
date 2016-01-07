@@ -96,7 +96,9 @@ EXPORT m64p_error CALL VidExt_Init(void)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncInit)();
 
+#if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+#endif
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) == -1)
     {
