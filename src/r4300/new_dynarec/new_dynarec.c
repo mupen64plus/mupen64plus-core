@@ -481,7 +481,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-  u_int page=(vaddr^0x80000000)>>12;
+  unsigned int page = ((vaddr^0x80000000)>>12);
   u_int vpage=page;
   if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
