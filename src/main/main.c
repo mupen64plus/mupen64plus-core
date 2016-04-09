@@ -738,11 +738,13 @@ static void apply_speed_limiter(void)
     static int resetOnce = 0;
     static int lastSpeedFactor = 100;
     static unsigned int StartFPSTime = 0;
+    static const double defaultSpeedFactor = 100.0;
     unsigned int CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
     const double VILimitMilliseconds = 1000.0 / (double)ROM_PARAMS.vilimit;
-    const double AdjustedLimit = VILimitMilliseconds * 100.0 / l_SpeedFactor;
+    const double SpeedFactorMultiple = defaultSpeedFactor/l_SpeedFactor;
+    const double AdjustedLimit = VILimitMilliseconds * SpeedFactorMultiple;
 
     //if this is the first time or we are resuming from pause
     if(StartFPSTime == 0 || !resetOnce || lastSpeedFactor != l_SpeedFactor)
@@ -771,7 +773,7 @@ static void apply_speed_limiter(void)
     //Reset if the sleep needed is an unreasonable value
     static const double minSleepNeeded = -50;
     static const double maxSleepNeeded = 50;
-    if(sleepTime < minSleepNeeded || sleepTime > maxSleepNeeded)
+    if(sleepTime < minSleepNeeded || sleepTime > (maxSleepNeeded*SpeedFactorMultiple))
     {
        resetOnce = 0;
     }
