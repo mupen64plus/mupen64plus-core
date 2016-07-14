@@ -35,6 +35,9 @@
 #include "vidext.h"
 
 #if SDL_VERSION_ATLEAST(2,0,0)
+    #ifndef USE_GLES
+    static int l_ForceCompatibilityContext = 1;
+    #endif
 #include "vidext_sdl2_compat.h"
 #endif
 
@@ -426,6 +429,9 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
         {
             case M64P_GL_CONTEXT_PROFILE_CORE:
                 Value = SDL_GL_CONTEXT_PROFILE_CORE;
+#ifndef USE_GLES
+                l_ForceCompatibilityContext = 0;
+#endif
                 break;
             case M64P_GL_CONTEXT_PROFILE_COMPATIBILITY:
                 Value = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
