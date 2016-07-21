@@ -1,10 +1,10 @@
 Mupen64Plus-Core README
 -----------------------
 
-The most current version of this README and more documentation can be found on
-the Mupen64Plus wiki:
-
-http://code.google.com/p/mupen64plus/wiki/README
+More documentation can be found on the Mupen64Plus website.
+(http://mupen64plus.org/docs/)
+You can find a more complete README file on the legacy Google Code site.
+(https://code.google.com/archive/p/mupen64plus/wikis/README.wiki).
 
 Mupen64Plus is based off of mupen64, originally created by Hacktarux. This
 package contains the only the Mupen64Plus core library.  For a fully functional
@@ -129,6 +129,43 @@ mupen64plus to /usr, do this:
  $ make PREFIX=/usr all
  $ sudo make PREFIX=/usr install
  $
+ 
+ *Custom Installation Paths*
+ 
+ You may customize the installation of the Mupen64Plus program by using the
+ options for the install.sh script:
+
+usage: install.sh [PREFIX] [SHAREDIR] [BINDIR] [LIBDIR] [MANDIR]
+
+PREFIX - installation directories prefix (default: /usr/local)
+SHAREDIR - path to Mupen64Plus shared data files (default: $PREFIX/share/mupen64plus)
+BINDIR - path to Mupen64Plus binary program files (default: $PREFIX/bin)
+LIBDIR - path to Mupen64Plus plugin files (default: $SHAREDIR/plugins)
+MANDIR - path to manual files (default: $PREFIX/man/man1)
+
+You must pass the same options to the uninstall.sh script when uninstalling
+in order to remove all of the Mupen64Plus files.
+
+You should install the Mupen64Plus plugins (libraries) in their own folder.
+If you install them in a common directory such as /usr/lib and then later
+uninstall them with "sudo uninstall.sh LIBDIR=/usr/lib", it will delete all system libraries.
+
+If you install with SHAREDIR in a place other than /usr/local/share/mupen64plus
+or /usr/share/mupen64plus, and BINDIR is not the same as SHAREDIR, then users
+will have to run Mupen64Plus with the --installdir= option, otherwise they will get an error.
+The mupen64plus executable looks in up to 5 different directories in order to find the
+Shared Data Directory. The order in which the directories are searched is:
+
+  - directory specified on command line with --installdir
+  - same directory as the mupen64plus binary
+  - /usr/local/share/mupen64plus
+  - /usr/share/mupen64plus
+  - current working directory
+
+
+If you choose to install the plugins in a non-standard location (someplace other than $SHAREDIR/plugins),
+then you must set the PluginDirectory parameter in the mupen64plus.conf config
+file to the directory path in which the plugins have been installed.
 
 4. Key Commands In Emulator
 ---------------------------
