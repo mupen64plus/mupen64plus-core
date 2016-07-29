@@ -9723,8 +9723,8 @@ int new_recompile_block(int addr)
                       k--;
                     }
                     if(i<slen-1) {
-                      if((regs[k].is32&(1LL<<f_regmap[hr]))!=
-                        (regs[i+2].was32&(1LL<<f_regmap[hr]))) {
+                      if((regs[k].is32&(1LL<<(f_regmap[hr]&63)))!=
+                        (regs[i+2].was32&(1LL<<(f_regmap[hr]&63)))) {
                         //DebugMessage(M64MSG_VERBOSE, "bad match after branch");
                         break;
                       }
@@ -9771,8 +9771,8 @@ int new_recompile_block(int addr)
                         regmap_pre[i+2][hr]=f_regmap[hr];
                         regs[i+2].wasdirty&=~(1<<hr);
                         regs[i+2].wasdirty|=(uint64_t)(1<<hr)&regs[i].dirty;
-                        assert((branch_regs[i].is32&(1LL<<f_regmap[hr]))==
-                          (regs[i+2].was32&(1LL<<f_regmap[hr])));
+                        assert((branch_regs[i].is32&(1LL<<(f_regmap[hr]&63)))==
+                          (regs[i+2].was32&(1LL<<(f_regmap[hr]&63))));
                       }
                     }
                   }
@@ -9793,8 +9793,8 @@ int new_recompile_block(int addr)
                       if(itype[k]!=RJUMP&&itype[k]!=UJUMP&&(source[k]>>16)!=0x1000) {
                         regmap_pre[k+2][hr]=f_regmap[hr];
                         regs[k+2].wasdirty&=~(1<<hr);
-                        assert((branch_regs[k].is32&(1LL<<f_regmap[hr]))==
-                          (regs[k+2].was32&(1LL<<f_regmap[hr])));
+                        assert((branch_regs[k].is32&(1LL<<(f_regmap[hr]&63)))==
+                          (regs[k+2].was32&(1LL<<(f_regmap[hr]&63))));
                       }
                     }
                     else
@@ -9814,7 +9814,7 @@ int new_recompile_block(int addr)
                   //DebugMessage(M64MSG_VERBOSE, "no-match due to different register");
                   break;
                 }
-                if((regs[j+1].is32&(1LL<<f_regmap[hr]))!=(regs[j].is32&(1LL<<f_regmap[hr]))) {
+                if((regs[j+1].is32&(1LL<<(f_regmap[hr]&63)))!=(regs[j].is32&(1LL<<(f_regmap[hr]&63)))) {
                   //DebugMessage(M64MSG_VERBOSE, "32/64 mismatch %x %d",start+j*4,hr);
                   break;
                 }
