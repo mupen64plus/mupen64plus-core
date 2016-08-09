@@ -126,10 +126,17 @@ static void dma_pi_write(struct pi_controller* pi)
     dram = (uint8_t*)pi->ri->rdram.dram;
     rom = pi->cart_rom.rom;
 
-    for(i = 0; i < longueur; ++i)
-    {
-        dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
-    }
+	if (((dram_address | rom_address | longueur) & 3) != 0)
+	{	
+    	for(i = 0; i < longueur; ++i)
+    	{
+        	dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
+    	}
+	}
+	else
+	{
+		MEMCPY4(&dram[dram_address], &rom[rom_address], longueur);
+	}
 
     invalidate_r4300_cached_code(0x80000000 + dram_address, longueur);
     invalidate_r4300_cached_code(0xa0000000 + dram_address, longueur);

@@ -47,14 +47,25 @@ static void dma_sp_write(struct rsp_core* sp)
     unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
     unsigned char *dram = (unsigned char*)sp->ri->rdram.dram;
 
-    for(j=0; j<count; j++) {
-        for(i=0; i<length; i++) {
-            spmem[memaddr^S8] = dram[dramaddr^S8];
-            memaddr++;
-            dramaddr++;
-        }
-        dramaddr+=skip;
-    }
+	if (((memaddr | dramaddr | length | skip) & 3) != 0)
+	{
+    	for(j=0; j<count; j++) {
+        	for(i=0; i<length; i++) {
+        	    spmem[memaddr^S8] = dram[dramaddr^S8];
+        	    memaddr++;
+        	    dramaddr++;
+        	}
+        	dramaddr+=skip;
+    	}
+	}
+	else
+	{
+		for(j=0; j<count; j++) {
+			MEMCPY4(&spmem[memaddr], &dram[dramaddr], length);
+			memaddr += length;
+			dramaddr += skip + length;    
+		}    
+	}
 }
 
 static void dma_sp_read(struct rsp_core* sp)
@@ -73,14 +84,25 @@ static void dma_sp_read(struct rsp_core* sp)
     unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
     unsigned char *dram = (unsigned char*)sp->ri->rdram.dram;
 
-    for(j=0; j<count; j++) {
-        for(i=0; i<length; i++) {
-            dram[dramaddr^S8] = spmem[memaddr^S8];
-            memaddr++;
-            dramaddr++;
-        }
-        dramaddr+=skip;
-    }
+	if (((dramaddr | memaddr | skip | length) & 3) != 0)
+    {
+		for(j=0; j<count; j++) {
+ 	       for(i=0; i<length; i++) {
+ 	           dram[dramaddr^S8] = spmem[memaddr^S8];
+ 	           memaddr++;
+ 	           dramaddr++;
+ 	       }
+ 	       dramaddr+=skip;
+ 		}
+	}
+	else
+	{
+		for(j=0; j<count; j++) {
+			MEMCPY4(&dram[dramaddr], &spmem[memaddr], length);
+			memaddr += length;
+			dramaddr += length + skip;
+		}	
+	}
 }
 
 static void update_sp_status(struct rsp_core* sp, uint32_t w)
