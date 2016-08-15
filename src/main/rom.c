@@ -183,9 +183,20 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.headername[20] = '\0';
     trim(ROM_PARAMS.headername); /* Remove trailing whitespace from ROM name. */
 
-    /* Look up this ROM in the .ini file and fill in goodname, etc */
-    if ((entry=ini_search_by_md5(digest)) != NULL ||
-        (entry=ini_search_by_crc(sl(ROM_HEADER.CRC1),sl(ROM_HEADER.CRC2))) != NULL)
+    /* Banjo-Tooie Fix for "No Controller" Message. */
+    if (
+      sl(ROM_HEADER.CRC1) == 0xC2E9AA9A && sl(ROM_HEADER.CRC2) == 0x475D70AA
+      || sl(ROM_HEADER.CRC1) == 0xC9176D39 && sl(ROM_HEADER.CRC2) == 0xEA4779D1
+      || sl(ROM_HEADER.CRC1) == 0x155B7CDF && sl(ROM_HEADER.CRC2) == 0xF0DA7325
+       )
+    {
+      strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
+      ROM_SETTINGS.savetype = EEPROM_16KB;
+      ROM_SETTINGS.players = 1;
+      DebugMessage(M64MSG_INFO, "Banjo-Tooie patch applied.");
+    }
+    else if ((entry=ini_search_by_md5(digest)) != NULL ||
+        (entry=ini_search_by_crc(sl(ROM_HEADER.CRC1),sl(ROM_HEADER.CRC2))) != NULL) /* Look up this ROM in the .ini file and fill in goodname, etc */
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -469,7 +480,7 @@ void romdatabase_open(void)
             search->entry.status = 0; /* Set default to 0 stars. */
             search->entry.savetype = DEFAULT;
             search->entry.players = DEFAULT;
-            search->entry.rumble = DEFAULT; 
+            search->entry.rumble = DEFAULT;
             search->entry.countperop = COUNT_PER_OP_DEFAULT;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
@@ -672,7 +683,7 @@ romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
 {
     romdatabase_search* search;
 
-    if(!g_romdatabase.have_database) 
+    if(!g_romdatabase.have_database)
         return NULL;
 
     search = g_romdatabase.crc_lists[((crc1 >> 24) & 0xff)];
@@ -680,10 +691,8 @@ romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
     while (search != NULL && search->entry.crc1 != crc1 && search->entry.crc2 != crc2)
         search = search->next_crc;
 
-    if(search == NULL) 
+    if(search == NULL)
         return NULL;
 
     return &(search->entry);
 }
-
-
