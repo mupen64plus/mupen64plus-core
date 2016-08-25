@@ -10966,11 +10966,12 @@ int new_recompile_block(int addr)
     out=(u_char *)base_addr;
   
   // Trap writes to any of the pages we compiled
-  for(i=start>>12;i<=(int)((start+slen*4)>>12);i++) {
+  for(i=start>>12;i<=(int)((start+slen*4-4)>>12);i++) {
     invalid_code[i]=0;
     memory_map[i]|=0x40000000;
     if((signed int)start>=(signed int)0xC0000000) {
       assert(using_tlb);
+      assert(memory_map[i]!=-1);
       j=(((u_int)i<<12)+(memory_map[i]<<2)-(u_int)g_rdram+(u_int)0x80000000)>>12;
       invalid_code[j]=0;
       memory_map[j]|=0x40000000;
