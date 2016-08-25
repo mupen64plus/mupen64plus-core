@@ -1213,16 +1213,10 @@ void invalidate_block(u_int block)
     if(vpage>2047||(head->vaddr>>12)==block) { // Ignore vaddr hash collision
       get_bounds((int)head->addr,&start,&end);
       //DebugMessage(M64MSG_VERBOSE, "start: %x end: %x",start,end);
-      if(page<2048&&start>=0x80000000&&end<0x80800000) {
+      if((start!=0)&&(page<2048)&&((start-(u_int)g_rdram)>=0)&&((end-(u_int)g_rdram)<0x800000)) {
         if(((start-(u_int)g_rdram)>>12)<=page&&((end-1-(u_int)g_rdram)>>12)>=page) {
           if((((start-(u_int)g_rdram)>>12)&2047)<first) first=((start-(u_int)g_rdram)>>12)&2047;
           if((((end-1-(u_int)g_rdram)>>12)&2047)>last) last=((end-1-(u_int)g_rdram)>>12)&2047;
-        }
-      }
-      if(page<2048&&(signed int)start>=(signed int)0xC0000000&&(signed int)end>=(signed int)0xC0000000) {
-        if(((start+memory_map[start>>12]-(u_int)g_rdram)>>12)<=page&&((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)>=page) {
-          if((((start+memory_map[start>>12]-(u_int)g_rdram)>>12)&2047)<first) first=((start+memory_map[start>>12]-(u_int)g_rdram)>>12)&2047;
-          if((((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)&2047)>last) last=((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)&2047;
         }
       }
     }
