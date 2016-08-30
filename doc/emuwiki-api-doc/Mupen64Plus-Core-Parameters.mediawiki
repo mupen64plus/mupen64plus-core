@@ -63,6 +63,10 @@ These are standard parameters which are used by the Mupen64Plus Core library.  T
 |M64TYPE_BOOL
 |Delay interrupt after DMA SI read/write.
 |-
+|DisableSpecRecomp
+|M64TYPE_BOOL
+|Disable speculative precompilation in new dynarec.
+|-
 |}
 
 These configuration parameters are used in the Core's event loop to detect keyboard and joystick commands.  They are stored in a configuration section called "CoreEvents" and may be altered by the front-end in order to adjust the behaviour of the emulator.  These may be adjusted at any time and the effect of the change should occur immediately.  The Keysym value stored is actually <tt>(SDLMod << 16) || SDLKey</tt>, so that keypresses with modifiers like shift, control, or alt may be used.

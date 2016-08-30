@@ -45,4 +45,6 @@ void new_dynarec_init(void);
 void new_dyna_start(void);
 void new_dynarec_cleanup(void);
 
+extern unsigned int stop_after_jal;
+
 #endif /* M64P_R4300_NEW_DYNAREC_H */

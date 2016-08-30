@@ -74,6 +74,7 @@
 #include "sra_file.h"
 #include "util.h"
 #include "vi/vi_controller.h"
+#include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
@@ -255,6 +256,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultBool(g_CoreConfig, "DelaySI", 1, "Delay interrupt after DMA SI read/write");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
+    ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
     /* handle upgrades */
     if (bUpgrade)
@@ -874,6 +876,9 @@ m64p_error main_run(void)
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
+#ifdef NEW_DYNAREC
+    stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
+#endif
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");

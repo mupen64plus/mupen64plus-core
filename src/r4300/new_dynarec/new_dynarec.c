@@ -169,7 +169,7 @@ ALIGN(16, static char shadow[2097152]);
 static char *copy;
 static int expirep;
 u_int using_tlb;
-static u_int stop_after_jal;
+unsigned int stop_after_jal;
 
   /* registers that may be allocated */
   /* 1-31 gpr */
@@ -7684,7 +7684,6 @@ void new_dynarec_init()
   // Copy this into local area so we don't have to put it in every literal pool
   invc_ptr=invalid_code;
 #endif
-  stop_after_jal=0;
   // TLB
   using_tlb=0;
   for(n=0;n<524288;n++) // 0 .. 0x7FFFFFFF
