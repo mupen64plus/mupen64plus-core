@@ -8331,7 +8331,7 @@ int new_recompile_block(int addr)
       // Don't get too close to the limit
       if(i>MAXBLOCK/2) done=1;
     }
-    if(i>0&&itype[i-1]==SYSCALL&&stop_after_jal) done=1;
+    if(i>0&&itype[i]==SYSCALL&&stop_after_jal) done=1;
     assert(i<MAXBLOCK-1);
     if(start+i*4==pagelimit-4) done=1;
     assert(start+i*4<pagelimit);
