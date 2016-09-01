@@ -19,5 +19,5 @@ env:
  - DBG_COMPARE=1
  - COUNT_INSTR=1
 script:
- - make -C projects/unix V=1 clean && CPPFLAGS="-D__extern_always_inline=inline" LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
- - make -C projects/unix V=1 clean && CPPFLAGS="-D__extern_always_inline=inline" LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl2-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
+ - make -C projects/unix V=1 clean && LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
+ - make -C projects/unix V=1 clean && LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl2-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
