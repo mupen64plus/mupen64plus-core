@@ -165,11 +165,12 @@ struct ll_entry *jump_in[4096];
 static struct ll_entry *jump_out[4096];
 struct ll_entry *jump_dirty[4096];
 ALIGN(16, u_int hash_table[65536][4]);
-ALIGN(16, static char shadow[2097152]);
 static char *copy;
 static int expirep;
 u_int using_tlb;
 unsigned int stop_after_jal;
+static u_int dirty_entry_count;
+static u_int copy_size;
 
   /* registers that may be allocated */
   /* 1-31 gpr */
@@ -1113,20 +1114,31 @@ static void remove_hash(int vaddr)
 
 static void ll_remove_matching_addrs(struct ll_entry **head,int addr,int shift)
 {
+  struct ll_entry **cur=head;
   struct ll_entry *next;
-  while(*head) {
-    if((((u_int)((*head)->addr)-(u_int)base_addr)>>shift)==((addr-(u_int)base_addr)>>shift) ||
-       (((u_int)((*head)->addr)-(u_int)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((addr-(u_int)base_addr)>>shift))
+  while(*cur) {
+    if((((u_int)((*cur)->addr)-(u_int)base_addr)>>shift)==((addr-(u_int)base_addr)>>shift) ||
+       (((u_int)((*cur)->addr)-(u_int)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((addr-(u_int)base_addr)>>shift))
     {
-      inv_debug("EXP: Remove pointer to %x (%x)\n",(int)(*head)->addr,(*head)->vaddr);
-      remove_hash((*head)->vaddr);
-      next=(*head)->next;
-      free(*head);
-      *head=next;
+      if(head>=jump_dirty&&head<(jump_dirty+4096)){
+        u_int copy,length;
+        get_copy_addr((*cur)->addr,&copy,&length);
+        u_int* ptr=(u_int*)copy;
+        ptr[length>>2]--;
+        if(ptr[length>>2]==0){
+          free(ptr);
+          copy_size-=length+4;
+        }
+      }
+      inv_debug("EXP: Remove pointer to %x (%x)\n",(int)(*cur)->addr,(*cur)->vaddr);
+      remove_hash((*cur)->vaddr);
+      next=(*cur)->next;
+      free(*cur);
+      *cur=next;
     }
     else
     {
-      head=&((*head)->next);
+      cur=&((*cur)->next);
     }
   }
 }
@@ -1139,6 +1151,16 @@ static void ll_clear(struct ll_entry **head)
   if((cur=*head)) {
     *head=0;
     while(cur) {
+      if(head>=jump_dirty&&head<(jump_dirty+4096)){
+        u_int copy,length;
+        get_copy_addr(cur->addr,&copy,&length);
+        u_int* ptr=(u_int*)copy;
+        ptr[length>>2]--;
+        if(ptr[length>>2]==0){
+          free(ptr);
+          copy_size-=length+4;
+        }
+      }
       next=cur->next;
       free(cur);
       cur=next;
@@ -6460,6 +6482,7 @@ static void pagespan_ds()
   if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   ll_add(jump_dirty+vpage,vaddr,(void *)out);
+  dirty_entry_count++;
   do_dirty_stub_ds();
   ll_add(jump_in+page,vaddr,(void *)out);
   assert(regs[0].regmap_entry[HOST_CCREG]==CCREG);
@@ -7677,7 +7700,7 @@ void new_dynarec_init()
     hash_table[n][0]=hash_table[n][2]=-1;
   memset(mini_ht,-1,sizeof(mini_ht));
   memset(restore_candidate,0,sizeof(restore_candidate));
-  copy=shadow;
+  copy_size=0;
   expirep=16384; // Expiry pointer, +2 blocks
   pending_exception=0;
   literalcount=0;
@@ -7726,14 +7749,15 @@ void new_dynarec_init()
 void new_dynarec_cleanup()
 {
   int n;
+  for(n=0;n<4096;n++) ll_clear(jump_in+n);
+  for(n=0;n<4096;n++) ll_clear(jump_out+n);
+  for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
+  assert(copy_size==0);
 #if defined(_MSC_VER)
   VirtualFree(base_addr, 0, MEM_RELEASE);
 #else
   if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
 #endif
-  for(n=0;n<4096;n++) ll_clear(jump_in+n);
-  for(n=0;n<4096;n++) ll_clear(jump_out+n);
-  for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   #ifdef ROM_COPY
   if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
   #endif
@@ -10658,6 +10682,7 @@ int new_recompile_block(int addr)
   linkcount=0;stubcount=0;
   ds=0;is_delayslot=0;
   cop1_usable=0;
+  dirty_entry_count=0;
   #ifndef DESTRUCTIVE_WRITEBACK
   uint64_t is32_pre=0;
   u_int dirty_pre=0;
@@ -10887,7 +10912,12 @@ int new_recompile_block(int addr)
     }
   }
   // External Branch Targets (jump_in)
-  if(copy+slen*4>shadow+sizeof(shadow)) copy=shadow;
+  copy=NULL;
+  copy=(char*)malloc((slen*4)+4);
+  assert(copy);
+  copy_size+=((slen*4)+4);
+  //DebugMessage(M64MSG_VERBOSE, "Currently used memory for copy: %d",copy_size);
+
   for(i=0;i<slen;i++)
   {
     if(bt[i]||i==0)
@@ -10908,6 +10938,7 @@ int new_recompile_block(int addr)
           assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
           assem_debug("jump_in: %x",start+i*4);
           ll_add(jump_dirty+vpage,vaddr,(void *)out);
+          dirty_entry_count++;
           int entry_point=do_dirty_stub(i);
           ll_add(jump_in+page,vaddr,(void *)entry_point);
           // If there was an existing entry in the hash table,
@@ -10936,6 +10967,7 @@ int new_recompile_block(int addr)
           //  emit_jmp(instr_addr[i]);
           //ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
           ll_add_32(jump_dirty+vpage,vaddr,r,(void *)out);
+          dirty_entry_count++;
           int entry_point=do_dirty_stub(i);
           ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
         }
@@ -10949,9 +10981,9 @@ int new_recompile_block(int addr)
   if(((u_int)out)&7) emit_addnop(13);
   #endif
   assert((u_int)out-beginning<MAX_OUTPUT_BLOCK_SIZE);
-  //DebugMessage(M64MSG_VERBOSE, "shadow buffer: %x-%x",(int)copy,(int)copy+slen*4);
   memcpy(copy,(char*)source,slen*4);
-  copy+=slen*4;
+  u_int *ptr=(u_int*)copy;
+  ptr[slen]=dirty_entry_count;
 
   #if NEW_DYNAREC == NEW_DYNAREC_ARM
   __clear_cache((void *)beginning,out);

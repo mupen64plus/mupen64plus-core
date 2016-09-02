@@ -315,6 +315,15 @@ static int verify_dirty(void *addr)
   return !memcmp((void *)source,(void *)copy,len);
 }
 
+static void get_copy_addr(void *addr, u_int *copy, u_int *length)
+{
+  u_char *ptr=(u_char *)addr;
+  assert(ptr[5]==0xB8);
+  *copy=*(u_int *)(ptr+11);
+  *length=*(u_int *)(ptr+16);
+  assert(ptr[20]==0xE8); // call instruction
+}
+
 // This doesn't necessarily find all clean entry points, just
 // guarantees that it's not dirty
 static int isclean(int addr)
