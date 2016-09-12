@@ -313,6 +313,7 @@ static void load_all_consts(signed char regmap[],int is32,u_int dirty,int i);
 static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e);
 static void add_to_linker(int addr,int target,int ext);
 static int verify_dirty(void *addr);
+static u_int get_clean_addr(int addr);
 
 //static int tracedebug=0;
 
@@ -447,7 +448,7 @@ void *get_addr(u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -542,7 +543,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
             //ht_bin[1]=(int)head->addr;
             //ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
