@@ -165,11 +165,12 @@ struct ll_entry *jump_in[4096];
 static struct ll_entry *jump_out[4096];
 struct ll_entry *jump_dirty[4096];
 ALIGN(16, u_int hash_table[65536][4]);
-ALIGN(16, static char shadow[2097152]);
 static char *copy;
 static int expirep;
 u_int using_tlb;
-static u_int stop_after_jal;
+unsigned int stop_after_jal;
+static u_int dirty_entry_count;
+static u_int copy_size;
 
   /* registers that may be allocated */
   /* 1-31 gpr */
@@ -313,6 +314,7 @@ static void load_all_consts(signed char regmap[],int is32,u_int dirty,int i);
 static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e);
 static void add_to_linker(int addr,int target,int ext);
 static int verify_dirty(void *addr);
+static u_int get_clean_addr(int addr);
 
 //static int tracedebug=0;
 
@@ -447,7 +449,7 @@ void *get_addr(u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -542,7 +544,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
             //ht_bin[1]=(int)head->addr;
             //ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -899,17 +901,21 @@ static void alloc_all(struct regstat *cur,int i)
 
 static void div64(int64_t dividend,int64_t divisor)
 {
-  lo=dividend/divisor;
-  hi=dividend%divisor;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
-  //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
+  if(divisor) {
+    lo=dividend/divisor;
+    hi=dividend%divisor;
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
+    //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
+  }
 }
 static void divu64(uint64_t dividend,uint64_t divisor)
 {
-  lo=dividend/divisor;
-  hi=dividend%divisor;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
-  //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
+  if(divisor) {
+    lo=dividend/divisor;
+    hi=dividend%divisor;
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
+    //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
+  }
 }
 
 static void mult64(int64_t m1,int64_t m2)
@@ -1108,20 +1114,31 @@ static void remove_hash(int vaddr)
 
 static void ll_remove_matching_addrs(struct ll_entry **head,int addr,int shift)
 {
+  struct ll_entry **cur=head;
   struct ll_entry *next;
-  while(*head) {
-    if((((u_int)((*head)->addr)-(u_int)base_addr)>>shift)==((addr-(u_int)base_addr)>>shift) ||
-       (((u_int)((*head)->addr)-(u_int)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((addr-(u_int)base_addr)>>shift))
+  while(*cur) {
+    if((((u_int)((*cur)->addr)-(u_int)base_addr)>>shift)==((addr-(u_int)base_addr)>>shift) ||
+       (((u_int)((*cur)->addr)-(u_int)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((addr-(u_int)base_addr)>>shift))
     {
-      inv_debug("EXP: Remove pointer to %x (%x)\n",(int)(*head)->addr,(*head)->vaddr);
-      remove_hash((*head)->vaddr);
-      next=(*head)->next;
-      free(*head);
-      *head=next;
+      if(head>=jump_dirty&&head<(jump_dirty+4096)){
+        u_int copy,length;
+        get_copy_addr((*cur)->addr,&copy,&length);
+        u_int* ptr=(u_int*)copy;
+        ptr[length>>2]--;
+        if(ptr[length>>2]==0){
+          free(ptr);
+          copy_size-=length+4;
+        }
+      }
+      inv_debug("EXP: Remove pointer to %x (%x)\n",(int)(*cur)->addr,(*cur)->vaddr);
+      remove_hash((*cur)->vaddr);
+      next=(*cur)->next;
+      free(*cur);
+      *cur=next;
     }
     else
     {
-      head=&((*head)->next);
+      cur=&((*cur)->next);
     }
   }
 }
@@ -1134,6 +1151,16 @@ static void ll_clear(struct ll_entry **head)
   if((cur=*head)) {
     *head=0;
     while(cur) {
+      if(head>=jump_dirty&&head<(jump_dirty+4096)){
+        u_int copy,length;
+        get_copy_addr(cur->addr,&copy,&length);
+        u_int* ptr=(u_int*)copy;
+        ptr[length>>2]--;
+        if(ptr[length>>2]==0){
+          free(ptr);
+          copy_size-=length+4;
+        }
+      }
       next=cur->next;
       free(cur);
       cur=next;
@@ -1213,16 +1240,10 @@ void invalidate_block(u_int block)
     if(vpage>2047||(head->vaddr>>12)==block) { // Ignore vaddr hash collision
       get_bounds((int)head->addr,&start,&end);
       //DebugMessage(M64MSG_VERBOSE, "start: %x end: %x",start,end);
-      if(page<2048&&start>=0x80000000&&end<0x80800000) {
+      if((start!=0)&&(page<2048)&&((start-(u_int)g_rdram)>=0)&&((end-(u_int)g_rdram)<0x800000)) {
         if(((start-(u_int)g_rdram)>>12)<=page&&((end-1-(u_int)g_rdram)>>12)>=page) {
           if((((start-(u_int)g_rdram)>>12)&2047)<first) first=((start-(u_int)g_rdram)>>12)&2047;
           if((((end-1-(u_int)g_rdram)>>12)&2047)>last) last=((end-1-(u_int)g_rdram)>>12)&2047;
-        }
-      }
-      if(page<2048&&(signed int)start>=(signed int)0xC0000000&&(signed int)end>=(signed int)0xC0000000) {
-        if(((start+memory_map[start>>12]-(u_int)g_rdram)>>12)<=page&&((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)>=page) {
-          if((((start+memory_map[start>>12]-(u_int)g_rdram)>>12)&2047)<first) first=((start+memory_map[start>>12]-(u_int)g_rdram)>>12)&2047;
-          if((((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)&2047)>last) last=((end-1+memory_map[(end-1)>>12]-(u_int)g_rdram)>>12)&2047;
         }
       }
     }
@@ -6461,6 +6482,7 @@ static void pagespan_ds()
   if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   ll_add(jump_dirty+vpage,vaddr,(void *)out);
+  dirty_entry_count++;
   do_dirty_stub_ds();
   ll_add(jump_in+page,vaddr,(void *)out);
   assert(regs[0].regmap_entry[HOST_CCREG]==CCREG);
@@ -7678,7 +7700,7 @@ void new_dynarec_init()
     hash_table[n][0]=hash_table[n][2]=-1;
   memset(mini_ht,-1,sizeof(mini_ht));
   memset(restore_candidate,0,sizeof(restore_candidate));
-  copy=shadow;
+  copy_size=0;
   expirep=16384; // Expiry pointer, +2 blocks
   pending_exception=0;
   literalcount=0;
@@ -7686,7 +7708,6 @@ void new_dynarec_init()
   // Copy this into local area so we don't have to put it in every literal pool
   invc_ptr=invalid_code;
 #endif
-  stop_after_jal=0;
   // TLB
   using_tlb=0;
   for(n=0;n<524288;n++) // 0 .. 0x7FFFFFFF
@@ -7728,14 +7749,15 @@ void new_dynarec_init()
 void new_dynarec_cleanup()
 {
   int n;
+  for(n=0;n<4096;n++) ll_clear(jump_in+n);
+  for(n=0;n<4096;n++) ll_clear(jump_out+n);
+  for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
+  assert(copy_size==0);
 #if defined(_MSC_VER)
   VirtualFree(base_addr, 0, MEM_RELEASE);
 #else
   if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
 #endif
-  for(n=0;n<4096;n++) ll_clear(jump_in+n);
-  for(n=0;n<4096;n++) ll_clear(jump_out+n);
-  for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   #ifdef ROM_COPY
   if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
   #endif
@@ -8334,7 +8356,7 @@ int new_recompile_block(int addr)
       // Don't get too close to the limit
       if(i>MAXBLOCK/2) done=1;
     }
-    if(i>0&&itype[i-1]==SYSCALL&&stop_after_jal) done=1;
+    if(i>0&&itype[i]==SYSCALL&&stop_after_jal) done=1;
     assert(i<MAXBLOCK-1);
     if(start+i*4==pagelimit-4) done=1;
     assert(start+i*4<pagelimit);
@@ -9725,8 +9747,8 @@ int new_recompile_block(int addr)
                       k--;
                     }
                     if(i<slen-1) {
-                      if((regs[k].is32&(1LL<<f_regmap[hr]))!=
-                        (regs[i+2].was32&(1LL<<f_regmap[hr]))) {
+                      if((regs[k].is32&(1LL<<(f_regmap[hr]&63)))!=
+                        (regs[i+2].was32&(1LL<<(f_regmap[hr]&63)))) {
                         //DebugMessage(M64MSG_VERBOSE, "bad match after branch");
                         break;
                       }
@@ -9773,8 +9795,8 @@ int new_recompile_block(int addr)
                         regmap_pre[i+2][hr]=f_regmap[hr];
                         regs[i+2].wasdirty&=~(1<<hr);
                         regs[i+2].wasdirty|=(uint64_t)(1<<hr)&regs[i].dirty;
-                        assert((branch_regs[i].is32&(1LL<<f_regmap[hr]))==
-                          (regs[i+2].was32&(1LL<<f_regmap[hr])));
+                        assert((branch_regs[i].is32&(1LL<<(f_regmap[hr]&63)))==
+                          (regs[i+2].was32&(1LL<<(f_regmap[hr]&63))));
                       }
                     }
                   }
@@ -9795,8 +9817,8 @@ int new_recompile_block(int addr)
                       if(itype[k]!=RJUMP&&itype[k]!=UJUMP&&(source[k]>>16)!=0x1000) {
                         regmap_pre[k+2][hr]=f_regmap[hr];
                         regs[k+2].wasdirty&=~(1<<hr);
-                        assert((branch_regs[k].is32&(1LL<<f_regmap[hr]))==
-                          (regs[k+2].was32&(1LL<<f_regmap[hr])));
+                        assert((branch_regs[k].is32&(1LL<<(f_regmap[hr]&63)))==
+                          (regs[k+2].was32&(1LL<<(f_regmap[hr]&63))));
                       }
                     }
                     else
@@ -9816,7 +9838,7 @@ int new_recompile_block(int addr)
                   //DebugMessage(M64MSG_VERBOSE, "no-match due to different register");
                   break;
                 }
-                if((regs[j+1].is32&(1LL<<f_regmap[hr]))!=(regs[j].is32&(1LL<<f_regmap[hr]))) {
+                if((regs[j+1].is32&(1LL<<(f_regmap[hr]&63)))!=(regs[j].is32&(1LL<<(f_regmap[hr]&63)))) {
                   //DebugMessage(M64MSG_VERBOSE, "32/64 mismatch %x %d",start+j*4,hr);
                   break;
                 }
@@ -10660,6 +10682,7 @@ int new_recompile_block(int addr)
   linkcount=0;stubcount=0;
   ds=0;is_delayslot=0;
   cop1_usable=0;
+  dirty_entry_count=0;
   #ifndef DESTRUCTIVE_WRITEBACK
   uint64_t is32_pre=0;
   u_int dirty_pre=0;
@@ -10889,7 +10912,12 @@ int new_recompile_block(int addr)
     }
   }
   // External Branch Targets (jump_in)
-  if(copy+slen*4>shadow+sizeof(shadow)) copy=shadow;
+  copy=NULL;
+  copy=(char*)malloc((slen*4)+4);
+  assert(copy);
+  copy_size+=((slen*4)+4);
+  //DebugMessage(M64MSG_VERBOSE, "Currently used memory for copy: %d",copy_size);
+
   for(i=0;i<slen;i++)
   {
     if(bt[i]||i==0)
@@ -10910,6 +10938,7 @@ int new_recompile_block(int addr)
           assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
           assem_debug("jump_in: %x",start+i*4);
           ll_add(jump_dirty+vpage,vaddr,(void *)out);
+          dirty_entry_count++;
           int entry_point=do_dirty_stub(i);
           ll_add(jump_in+page,vaddr,(void *)entry_point);
           // If there was an existing entry in the hash table,
@@ -10938,6 +10967,7 @@ int new_recompile_block(int addr)
           //  emit_jmp(instr_addr[i]);
           //ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
           ll_add_32(jump_dirty+vpage,vaddr,r,(void *)out);
+          dirty_entry_count++;
           int entry_point=do_dirty_stub(i);
           ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
         }
@@ -10951,9 +10981,9 @@ int new_recompile_block(int addr)
   if(((u_int)out)&7) emit_addnop(13);
   #endif
   assert((u_int)out-beginning<MAX_OUTPUT_BLOCK_SIZE);
-  //DebugMessage(M64MSG_VERBOSE, "shadow buffer: %x-%x",(int)copy,(int)copy+slen*4);
   memcpy(copy,(char*)source,slen*4);
-  copy+=slen*4;
+  u_int *ptr=(u_int*)copy;
+  ptr[slen]=dirty_entry_count;
 
   #if NEW_DYNAREC == NEW_DYNAREC_ARM
   __clear_cache((void *)beginning,out);
@@ -10966,11 +10996,12 @@ int new_recompile_block(int addr)
     out=(u_char *)base_addr;
   
   // Trap writes to any of the pages we compiled
-  for(i=start>>12;i<=(int)((start+slen*4)>>12);i++) {
+  for(i=start>>12;i<=(int)((start+slen*4-4)>>12);i++) {
     invalid_code[i]=0;
     memory_map[i]|=0x40000000;
     if((signed int)start>=(signed int)0xC0000000) {
       assert(using_tlb);
+      assert(memory_map[i]!=-1);
       j=(((u_int)i<<12)+(memory_map[i]<<2)-(u_int)g_rdram+(u_int)0x80000000)>>12;
       invalid_code[j]=0;
       memory_map[j]|=0x40000000;

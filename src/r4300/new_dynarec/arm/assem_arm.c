@@ -377,7 +377,7 @@ void *dynamic_linker(void * src, u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -467,7 +467,7 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -593,6 +593,28 @@ static int verify_dirty(void *addr)
   }
   //DebugMessage(M64MSG_VERBOSE, "verify_dirty: %x %x %x",source,copy,len);
   return !memcmp((void *)source,(void *)copy,len);
+}
+
+static void get_copy_addr(void *addr, u_int *copy, u_int *length)
+{
+  u_int *ptr=(u_int *)addr;
+  #ifdef ARMv5_ONLY
+  // get from literal pool
+  assert((*ptr&0xFFF00000)==0xe5900000);
+  u_int offset=*ptr&0xfff;
+  u_int *l_ptr=(void *)ptr+offset+8;
+  *copy=l_ptr[1];
+  *length=l_ptr[2];
+  ptr+=4;
+  #else
+  // ARMv7 movw/movt
+  assert((*ptr&0xFFF00000)==0xe3000000);
+  *copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
+  *length=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
+  ptr+=6;
+  #endif
+  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
+  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
 }
 
 // This doesn't necessarily find all clean entry points, just

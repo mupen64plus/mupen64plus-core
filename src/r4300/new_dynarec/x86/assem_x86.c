@@ -173,7 +173,7 @@ void *dynamic_linker(void * src, u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -251,7 +251,7 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
             ht_bin[1]=(int)head->addr;
             ht_bin[0]=vaddr;
           }
-          return head->addr;
+          return (void*)get_clean_addr((int)head->addr);
         }
       }
     }
@@ -313,6 +313,15 @@ static int verify_dirty(void *addr)
   }
   //DebugMessage(M64MSG_VERBOSE, "verify_dirty: %x %x %x",source,copy,len);
   return !memcmp((void *)source,(void *)copy,len);
+}
+
+static void get_copy_addr(void *addr, u_int *copy, u_int *length)
+{
+  u_char *ptr=(u_char *)addr;
+  assert(ptr[5]==0xB8);
+  *copy=*(u_int *)(ptr+11);
+  *length=*(u_int *)(ptr+16);
+  assert(ptr[20]==0xE8); // call instruction
 }
 
 // This doesn't necessarily find all clean entry points, just
