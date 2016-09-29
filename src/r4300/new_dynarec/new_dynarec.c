@@ -10687,6 +10687,13 @@ int new_recompile_block(int addr)
   uint64_t is32_pre=0;
   u_int dirty_pre=0;
   #endif
+
+  copy=NULL;
+  copy=(char*)malloc((slen*4)+4);
+  assert(copy);
+  copy_size+=((slen*4)+4);
+  //DebugMessage(M64MSG_VERBOSE, "Currently used memory for copy: %d",copy_size);
+
   u_int beginning=(u_int)out;
   if((u_int)addr&1) {
     ds=1;
@@ -10912,12 +10919,6 @@ int new_recompile_block(int addr)
     }
   }
   // External Branch Targets (jump_in)
-  copy=NULL;
-  copy=(char*)malloc((slen*4)+4);
-  assert(copy);
-  copy_size+=((slen*4)+4);
-  //DebugMessage(M64MSG_VERBOSE, "Currently used memory for copy: %d",copy_size);
-
   for(i=0;i<slen;i++)
   {
     if(bt[i]||i==0)
