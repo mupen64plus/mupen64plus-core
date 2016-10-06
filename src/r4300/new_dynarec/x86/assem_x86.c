@@ -116,6 +116,7 @@ static void set_jump_target(int addr,int target)
 
 void *dynamic_linker(void * src, u_int vaddr)
 {
+  assert((vaddr&1)==0);
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
   if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
@@ -183,13 +184,7 @@ void *dynamic_linker(void * src, u_int vaddr)
   int r=new_recompile_block(vaddr);
   if(r==0) return dynamic_linker(src, vaddr);
   // Execute in unmapped page, generate pagefault exception
-  g_cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
-  g_cp0_regs[CP0_CAUSE_REG]=CP0_CAUSE_EXCCODE_TLBL; //  0x8
-  g_cp0_regs[CP0_EPC_REG]=vaddr;
-  g_cp0_regs[CP0_BADVADDR_REG]=vaddr;
-  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
-  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
-  return get_addr_ht(0x80000000);
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
 }
 
 void *dynamic_linker_ds(void * src, u_int vaddr)
@@ -261,13 +256,7 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
   int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
   if(r==0) return dynamic_linker_ds(src, vaddr);
   // Execute in unmapped page, generate pagefault exception
-  g_cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
-  g_cp0_regs[CP0_CAUSE_REG]=CP0_CAUSE_BD | CP0_CAUSE_EXCCODE_TLBL; //  0x80000008
-  g_cp0_regs[CP0_EPC_REG]=(vaddr&0xFFFFFFF8)-4;
-  g_cp0_regs[CP0_BADVADDR_REG]=vaddr&0xFFFFFFF8;
-  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
-  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
-  return get_addr_ht(0x80000000);
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
 }
 
 static void *kill_pointer(void *stub)
@@ -3123,7 +3112,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writeword(target?rth:rt,(int)&cpu_dword+4);
   }
   emit_pusha();
-  if((signed int)addr>=(signed int)0xC0000000) {
+  if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
     // Theoretically we can have a pagefault here, if the TLB has never
     // been enabled and the address is outside the range 80000000..BFFFFFFF
     // Write out the registers so the pagefault can be handled.  This is
@@ -3158,7 +3147,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_addimm(cc,CLOCK_DIVIDER*(adj+1),cc);
   emit_add(cc,temp,cc);
   emit_writeword(cc,(int)&g_cp0_regs[CP0_COUNT_REG]);
-  if((signed int)addr>=(signed int)0xC0000000) {
+  if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
     // Pagefault address
     int ds=regmap!=regs[i].regmap;
     emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
@@ -3667,7 +3656,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     emit_writeword_imm((int)&fake_pc,(int)&PC);
     emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(fake_pc.f.r.nrd));
     if(copr==9||copr==11||copr==12) {
-      if(copr==12&&!is_delayslot) {
+      if((copr==12||copr==9)&&!is_delayslot) {
         wb_register(rs1[i],i_regs->regmap,i_regs->dirty,i_regs->is32);
       }
       emit_readword((int)&last_count,ECX);
@@ -3680,8 +3669,8 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     // so needs a special case to handle a pending interrupt.
     // The interrupt must be taken immediately, because a subsequent
     // instruction might disable interrupts again.
-    if(copr==12&&!is_delayslot) {
-      emit_writeword_imm(start+i*4+4,(int)&pcaddr);
+    if((copr==12||copr==9)&&!is_delayslot) {
+      emit_writeword_imm(start+i*4+(copr==12)*4,(int)&pcaddr);
       emit_writebyte_imm(0,(int)&pending_exception);
     }
     //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
@@ -3696,7 +3685,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_storereg(CCREG,HOST_CCREG);
     }
     emit_popa();
-    if(copr==12) {
+    if(copr==12||copr==9) {
       assert(!is_delayslot);
       //if(is_delayslot) output_byte(0xcc);
       emit_cmpmem_imm_byte((int)&pending_exception,0);
@@ -3725,6 +3714,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_call((int)cached_interpreter_table.TLBP);
     if((source[i]&0x3f)==0x18) // ERET
     {
+      assert(!is_delayslot);
       int count=ccadj[i];
       if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
       emit_addimm_and_set_flags(CLOCK_DIVIDER*count,HOST_CCREG); // TODO: Should there be an extra cycle here?

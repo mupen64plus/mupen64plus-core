@@ -73,6 +73,10 @@ cglobal write_nomem_new
 cglobal write_nomemb_new
 cglobal write_nomemh_new
 cglobal write_nomemd_new
+cglobal write_mi_new
+cglobal write_mib_new
+cglobal write_mih_new
+cglobal write_mid_new
 cglobal breakpoint
 
 cextern base_addr
@@ -110,6 +114,11 @@ cextern invalid_code
 cextern readmem_dword
 cextern check_interupt
 cextern get_addr_32
+cextern write_mi
+cextern write_mib
+cextern write_mih
+cextern write_mid
+cextern TLB_refill_exception_new
 
 section .bss
 align 4
@@ -711,14 +720,14 @@ _E12:
     call    invalidate_block
     pop     edi
 _E13:
-ret
+    ret
 
 read_nomem_new:
     mov     edi,    [address]
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
-    mov     eax,    08h
+    mov     eax,    00h
     test    edi,    edi
     js      tlb_exception
     mov     ecx,    [ebx+edi*4]
@@ -730,7 +739,7 @@ read_nomemb_new:
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
-    mov     eax,    08h
+    mov     eax,    00h
     test    edi,    edi
     js      tlb_exception
     xor     ebx,    3
@@ -743,7 +752,7 @@ read_nomemh_new:
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
-    mov     eax,    08h
+    mov     eax,    00h
     test    edi,    edi
     js      tlb_exception
     xor     ebx,    2
@@ -756,7 +765,7 @@ read_nomemd_new:
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
-    mov     eax,    08h
+    mov     eax,    00h
     test    edi,    edi
     js      tlb_exception
     mov     ecx,    [4+ebx+edi*4]
@@ -769,7 +778,7 @@ write_nomem_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
     mov     ecx,    [cpu_word]
-    mov     eax,    0ch
+    mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
     mov     [ebx+edi],    ecx
@@ -779,7 +788,7 @@ write_nomemb_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
     mov     cl,     BYTE [cpu_byte]
-    mov     eax,    0ch
+    mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
     xor     ebx,    3
@@ -790,7 +799,7 @@ write_nomemh_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
     mov     cx,     WORD [cpu_hword]
-    mov     eax,    0ch
+    mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
     xor     ebx,    2
@@ -802,70 +811,78 @@ write_nomemd_new:
     mov     edi,    [memory_map+edi*4]
     mov     edx,    [cpu_dword+4]
     mov     ecx,    [cpu_dword+0]
-    mov     eax,    0ch
+    mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
     mov     [ebx+edi],    edx
     mov     [4+ebx+edi],    ecx
     ret
 
+write_mi_new:
+    mov     ebx,    [024h+esp]
+    add     ebx,    4
+    mov     [pcaddr],    ebx
+    mov     DWORD [pending_exception],    0
+    call    write_mi
+    mov     ebx,    [pending_exception]
+    test    ebx,    ebx
+    jne     mi_exception
+    ret
 
-tlb_exception:
-    ;eax = cause
-    ;ebx = address
+write_mib_new:
+    mov     ebx,    [024h+esp]
+    add     ebx,    4
+    mov     [pcaddr],    ebx
+    mov     DWORD [pending_exception],    0
+    call    write_mib
+    mov     ebx,    [pending_exception]
+    test    ebx,    ebx
+    jne     mi_exception
+    ret
+
+write_mih_new:
+    mov     ebx,    [024h+esp]
+    add     ebx,    4
+    mov     [pcaddr],    ebx
+    mov     DWORD [pending_exception],    0
+    call    write_mih
+    mov     ebx,    [pending_exception]
+    test    ebx,    ebx
+    jne     mi_exception
+    ret
+
+write_mid_new:
+    mov     ebx,    [024h+esp]
+    add     ebx,    4
+    mov     [pcaddr],    ebx
+    mov     DWORD [pending_exception],    0
+    call    write_mid
+    mov     ebx,    [pending_exception]
+    test    ebx,    ebx
+    jne     mi_exception
+    ret
+
+mi_exception:
+    ;ebx = mem addr
     ;ebp = instr addr + flags
     mov     ebp,    [024h+esp]
-;Debug: 
-    ;push    ebp
-    ;push    ebx
-    ;push    eax
-    ;call    tlb_debug
-    ;pop     eax
-    ;pop     ebx
-    ;pop     ebp
-;end debug
-    mov     esi,    [g_cp0_regs+48]
-    mov     ecx,    ebp
-    mov     edx,    ebp
-    mov     edi,    ebp
-    shl     ebp,    31
-    shr     ecx,    12
-    or      eax,    ebp
-    sar     ebp,    29
-    and     edx,    0FFFFFFFCh
-    mov     ecx,    [memory_map+ecx*4]
-    or      esi,    2
-    mov     ecx,    [edx+ecx*4]
-    add     edx,    ebp
-    mov     [g_cp0_regs+48],    esi    ;Status
-    mov     [g_cp0_regs+52],    eax    ;Cause
-    mov     [g_cp0_regs+56],    edx    ;EPC
+    mov     ebx,    [address]
     add     esp,    024h
-    mov     edx,    06000022h
-    mov     ebp,    ecx
-    movsx   eax,    cx
-    shr     ecx,    26
-    shr     ebp,    21
-    sub     ebx,    eax
-    and     ebp,    01fh
-    ror     edx,    cl
-    mov     esi,    [g_cp0_regs+16]
-    cmovc   ebx,    [reg+ebp*8]
-    and     esi,    0FF80000Fh
-    mov     [reg+ebp*8],    ebx
-    add     eax,    ebx
-    sar     ebx,    31
-    mov     [g_cp0_regs+32],    eax    ;BadVAddr
-    shr     eax,    9
-    test    edi,    2
-    cmove   ebx,    [reg+4+ebp*8]
-    add     esp,    -12
-    and     eax,    0007FFFF0h
-    mov     [reg+4+ebp*8],    ebx
-    push    080000180h
-    or      esi,    eax
-    mov     [g_cp0_regs+16],    esi    ;Context
-    call    get_addr_ht
+    call    wb_base_reg
+    jmp     do_interrupt
+
+tlb_exception:
+    ;eax = r/w
+    ;ebx = mem addr
+    ;ebp = instr addr + flags
+    mov     ebp,    [024h+esp]
+    add     esp,    024h
+    call    wb_base_reg
+    add     esp,    -4
+    push    eax
+    push    ebx
+    push    ebp
+    call    TLB_refill_exception_new
     add     esp,    16
     mov     edi,    DWORD [next_interupt]
     mov     esi,    DWORD [g_cp0_regs+36]    ;Count
@@ -873,4 +890,33 @@ tlb_exception:
     sub     esi,    edi
     jmp     eax
 
+wb_base_reg:
+    ;ebx = address
+    ;ebp = instr addr + flags
+    mov     ecx,    ebp
+    mov     edx,    ebp
+    shr     ecx,    12
+    and     edx,    0FFFFFFFCh
+    mov     ecx,    [memory_map+ecx*4]
+    mov     ecx,    [edx+ecx*4]
+    mov     edx,    06000022h
+    mov     edi,    ecx
+    movsx   esi,    cx
+    shr     ecx,    26
+    shr     edi,    21
+    sub     ebx,    esi
+    add     esi,    ebx
+    and     edi,    01fh
+    rcr     edx,    cl
+    cmovc   ebx,    [reg+edi*8]
+    mov     [reg+edi*8],    ebx
+    sar     ebx,    31
+    test    ebp,    2
+    cmove   ebx,    [reg+4+edi*8]
+    mov     [reg+4+edi*8],    ebx
+    mov     ebx,    esi
+    ret
+
 breakpoint:
+    int    3
+    ret
