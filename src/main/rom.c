@@ -56,6 +56,7 @@ static _romdatabase g_romdatabase;
 unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
 int g_rom_size = 0;
+unsigned char alternate_vi_timing = 0;
 
 unsigned char isGoldeneyeRom = 0;
 
@@ -195,6 +196,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.cheats = entry->cheats;
+        alternate_vi_timing = entry->alternate_vi_timing;
     }
     else
     {
@@ -512,6 +514,12 @@ void romdatabase_open(void)
                 {
                     search->entry.crc1 = search->entry.crc2 = 0;
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid CRC on line %i", lineno);
+                }
+            }
+            else if(!strcmp(l.name, "ViTiming"))
+            {
+                if(!strcmp(l.value, "Alternate")) {
+                    search->entry.alternate_vi_timing = 1;
                 }
             }
             else if(!strcmp(l.name, "RefMD5"))

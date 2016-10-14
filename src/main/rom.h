@@ -124,6 +124,7 @@ typedef struct
    unsigned char savetype;
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
+   unsigned char alternate_vi_timing;
    unsigned char countperop;
    uint32_t set_flags;
 } romdatabase_entry;
