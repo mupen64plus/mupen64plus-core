@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "main/main.h"
+#include "main/rom.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
@@ -42,8 +43,6 @@ void init_vi(struct vi_controller* vi)
     vi->delay = vi->next_vi = 5000;
 }
 
-extern unsigned alternate_vi_timing;
-
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
@@ -53,7 +52,7 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
     if (reg == VI_CURRENT_REG)
     {
         cp0_update_count();
-        if (alternate_vi_timing)
+        if (g_alternate_vi_timing)
             vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) % 0x20E;
         else
             vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG]))/1500;

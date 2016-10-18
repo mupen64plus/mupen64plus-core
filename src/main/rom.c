@@ -56,7 +56,7 @@ static _romdatabase g_romdatabase;
 unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
 int g_rom_size = 0;
-unsigned char alternate_vi_timing = 0;
+unsigned char g_alternate_vi_timing = 0;
 
 unsigned char isGoldeneyeRom = 0;
 
@@ -196,7 +196,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.cheats = entry->cheats;
-        alternate_vi_timing = entry->alternate_vi_timing;
+        g_alternate_vi_timing = entry->alternate_vi_timing;
     }
     else
     {
