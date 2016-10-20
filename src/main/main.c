@@ -443,10 +443,13 @@ void main_state_inc_slot(void)
 
 void main_state_load(const char *filename)
 {
-    rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
-    rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
-    rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
-    rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
+    if (g_EmulatorRunning)
+    {
+        rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
+    }
 
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
