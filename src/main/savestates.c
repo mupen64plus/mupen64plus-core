@@ -55,6 +55,7 @@
 #include "util.h"
 #include "vi/vi_controller.h"
 #include "workqueue.h"
+#include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef LIBMINIZIP
     #include <unzip.h>
@@ -65,7 +66,7 @@
 #endif
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010000;  /* 1.0 */
+static const int savestate_latest_version = 0x00010100;  /* 1.1 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -195,13 +196,14 @@ static int savestates_load_m64p(char *filepath)
 {
     unsigned char header[44];
     gzFile f;
-    int version;
+    unsigned int version;
     int i;
     uint32_t FCR31;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
     char queue[1024];
+    unsigned char additionalData[4];
 
     uint32_t* cp0_regs = r4300_cp0_regs();
 
@@ -238,7 +240,7 @@ static int savestates_load_m64p(char *filepath)
     version = (version << 8) | *curr++;
     version = (version << 8) | *curr++;
     version = (version << 8) | *curr++;
-    if(version != 0x00010000)
+    if((version >> 16) != (savestate_latest_version >> 16))
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
         gzclose(f);
@@ -266,7 +268,8 @@ static int savestates_load_m64p(char *filepath)
         return 0;
     }
     if (gzread(f, savestateData, savestateSize) != savestateSize ||
-        (gzread(f, queue, sizeof(queue)) % 4) != 0)
+        (gzread(f, queue, sizeof(queue)) % 4) != 0 ||
+        ((version == 0x00010100) && gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData)))
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate data from %s", filepath);
         free(savestateData);
@@ -457,6 +460,14 @@ static int savestates_load_m64p(char *filepath)
 
     to_little_endian_buffer(queue, 4, 256);
     load_eventqueue_infos(queue);
+
+#ifdef NEW_DYNAREC
+    if (version == 0x00010100)
+    {
+        curr = additionalData;
+        using_tlb = GETDATA(curr, unsigned int);
+    }
+#endif
 
     *r4300_last_addr() = *r4300_pc();
 
@@ -973,7 +984,7 @@ static int savestates_save_m64p(char *filepath)
     queuelength = save_eventqueue_infos(queue);
 
     // Allocate memory for the save state data
-    save->size = 16788288 + queuelength;
+    save->size = 16788288 + sizeof(queue) + 4;
     save->data = curr = malloc(save->size);
     if (save->data == NULL)
     {
@@ -982,6 +993,8 @@ static int savestates_save_m64p(char *filepath)
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to save state.");
         return 0;
     }
+
+    memset(save->data, 0, save->size);
 
     // Write the save state data to memory
     PUTARRAY(savestate_magic, curr, unsigned char, 8);
@@ -1196,7 +1209,10 @@ static int savestates_save_m64p(char *filepath)
     to_little_endian_buffer(queue, 4, queuelength/4);
     PUTARRAY(queue, curr, char, queuelength);
 
-    // assert(curr == save->data + save->size)
+#ifdef NEW_DYNAREC
+    curr = save->data + save->size - 4;
+    PUTDATA(curr, unsigned int, using_tlb);
+#endif
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);

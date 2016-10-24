@@ -167,7 +167,7 @@ struct ll_entry *jump_dirty[4096];
 ALIGN(16, u_int hash_table[65536][4]);
 static char *copy;
 static int expirep;
-u_int using_tlb;
+unsigned int using_tlb;
 unsigned int stop_after_jal;
 static u_int dirty_entry_count;
 static u_int copy_size;
