@@ -267,17 +267,32 @@ static int savestates_load_m64p(char *filepath)
         SDL_UnlockMutex(savestates_lock);
         return 0;
     }
-    if (gzread(f, savestateData, savestateSize) != savestateSize ||
-        (gzread(f, queue, sizeof(queue)) % 4) != 0 ||
-        ((version == 0x00010100) && gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData)))
+    if (version == 0x00010000) /* original savestate version */
     {
-        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate data from %s", filepath);
-        free(savestateData);
-        gzclose(f);
-        SDL_UnlockMutex(savestates_lock);
-        return 0;
+        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+            (gzread(f, queue, sizeof(queue)) % 4) != 0)
+        {
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.0 data from %s", filepath);
+            free(savestateData);
+            gzclose(f);
+            SDL_UnlockMutex(savestates_lock);
+            return 0;
+        }
     }
-
+    else // version >= 0x00010100  saves entire eventqueue plus 4-byte using_tlb flage
+    {
+        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+            gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
+            gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData))
+        {
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.1 data from %s", filepath);
+            free(savestateData);
+            gzclose(f);
+            SDL_UnlockMutex(savestates_lock);
+            return 0;
+        }
+    }
+    
     gzclose(f);
     SDL_UnlockMutex(savestates_lock);
 
@@ -462,7 +477,7 @@ static int savestates_load_m64p(char *filepath)
     load_eventqueue_infos(queue);
 
 #ifdef NEW_DYNAREC
-    if (version == 0x00010100)
+    if (version >= 0x00010100)
     {
         curr = additionalData;
         using_tlb = GETDATA(curr, unsigned int);
@@ -963,7 +978,6 @@ static int savestates_save_m64p(char *filepath)
     int i;
 
     char queue[1024];
-    int queuelength;
 
     struct savestate_work *save;
     char *curr;
@@ -981,7 +995,7 @@ static int savestates_save_m64p(char *filepath)
     if(autoinc_save_slot)
         savestates_inc_slot();
 
-    queuelength = save_eventqueue_infos(queue);
+    save_eventqueue_infos(queue);
 
     // Allocate memory for the save state data
     save->size = 16788288 + sizeof(queue) + 4;
@@ -1206,12 +1220,13 @@ static int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, g_vi.next_vi);
     PUTDATA(curr, unsigned int, g_vi.field);
 
-    to_little_endian_buffer(queue, 4, queuelength/4);
-    PUTARRAY(queue, curr, char, queuelength);
+    to_little_endian_buffer(queue, 4, sizeof(queue)/4);
+    PUTARRAY(queue, curr, char, sizeof(queue));
 
 #ifdef NEW_DYNAREC
-    curr = save->data + save->size - 4;
     PUTDATA(curr, unsigned int, using_tlb);
+#else
+    PUTDATA(curr, unsigned int, 0);
 #endif
 
     init_work(&save->work, savestates_save_m64p_work);
