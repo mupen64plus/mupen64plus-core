@@ -257,7 +257,7 @@ ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
       $(warning Using SDL 1.2 libraries)
     endif
   endif
-  SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
+  SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags) -DUSE_SDL
   SDL_LDLIBS += $(shell $(SDL_CONFIG) --libs)
 endif
 CFLAGS += $(SDL_CFLAGS)
