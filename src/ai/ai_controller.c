@@ -51,10 +51,10 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
         return 0;
 
     cp0_regs = r4300_cp0_regs();
-    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
-
-    if (remaining_dma_duration >= 0x80000000)
+    if (next_ai_event <= cp0_regs[CP0_COUNT_REG])
         return 0;
+
+    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
 
     return (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
 }
