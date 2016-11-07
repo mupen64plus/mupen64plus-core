@@ -42,7 +42,7 @@ static int update_dpc_status(struct rdp_core* dp, uint32_t w)
     {
         dp->dpc_regs[DPC_STATUS_REG] &= ~DPC_STATUS_FREEZE;
 
-        if (!(dp->sp->regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
+        if (!(dp->sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)))
             do_sp_task_on_unfreeze = 1;
     }
     if (w & DPC_STATUS_SET_FREEZE) dp->dpc_regs[DPC_STATUS_REG] |= DPC_STATUS_FREEZE;
