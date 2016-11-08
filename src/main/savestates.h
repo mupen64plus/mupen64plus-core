@@ -48,6 +48,9 @@ void savestates_deinit(void);
 int savestates_load(void);
 int savestates_save(void);
 
+int savestates_save_m64p(char *filepath);
+int savestates_load_m64p(char *filepath);
+
 void savestates_select_slot(unsigned int s);
 unsigned int savestates_get_slot(void);
 void savestates_set_autoinc_slot(int b);
