@@ -36,24 +36,17 @@
 #include "debugger/dbg_types.h"
 #endif
 
-/* global variable */
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM backend requires a different memory layout
- * and therefore manually allocate that variable */
-uint32_t g_cp0_regs[CP0_REGS_COUNT];
-#endif
-
 /* global functions */
 uint32_t* r4300_cp0_regs(void)
 {
-    return g_cp0_regs;
+    return g_state.regs.cp0;
 }
 
 int check_cop1_unusable(void)
 {
-   if (!(g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x20000000)))
+   if (!(g_state.regs.cp0[CP0_STATUS_REG] & UINT32_C(0x20000000)))
      {
-    g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(11) << 2) | UINT32_C(0x10000000);
+    g_state.regs.cp0[CP0_CAUSE_REG] = (UINT32_C(11) << 2) | UINT32_C(0x10000000);
     exception_general();
     return 1;
      }
@@ -66,7 +59,7 @@ void cp0_update_count(void)
     if (r4300emu != CORE_DYNAREC)
     {
 #endif
-        g_cp0_regs[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
+        g_state.regs.cp0[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
         last_addr = PC->addr;
 #ifdef NEW_DYNAREC
     }

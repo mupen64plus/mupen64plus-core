@@ -334,7 +334,7 @@ void gensyscall(void)
 #else
    free_registers_move_start();
 
-   mov_m32rel_imm32(&g_cp0_regs[CP0_CAUSE_REG], 8 << 2);
+   mov_m32rel_imm32(&g_state.regs.cp0[CP0_CAUSE_REG], 8 << 2);
    gencallinterp((unsigned long long)exception_general, 0);
 #endif
 }
@@ -352,7 +352,7 @@ void genmfhi(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MFHI, 0);
 #else
    int rd = allocate_register_64_w((unsigned long long *) dst->f.r.rd);
-   int _hi = allocate_register_64((unsigned long long *) &hi);
+   int _hi = allocate_register_64((unsigned long long*) &g_state.regs.hi);
    
    mov_reg64_reg64(rd, _hi);
 #endif
@@ -366,7 +366,7 @@ void genmthi(void)
 #ifdef INTERPRET_MTHI
    gencallinterp((unsigned long long)cached_interpreter_table.MTHI, 0);
 #else
-   int _hi = allocate_register_64_w((unsigned long long *) &hi);
+   int _hi = allocate_register_64_w((unsigned long long*) &g_state.regs.hi);
    int rs = allocate_register_64((unsigned long long *) dst->f.r.rs);
 
    mov_reg64_reg64(_hi, rs);
@@ -382,7 +382,7 @@ void genmflo(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MFLO, 0);
 #else
    int rd = allocate_register_64_w((unsigned long long *) dst->f.r.rd);
-   int _lo = allocate_register_64((unsigned long long *) &lo);
+   int _lo = allocate_register_64((unsigned long long*) &g_state.regs.lo);
    
    mov_reg64_reg64(rd, _lo);
 #endif
@@ -396,7 +396,7 @@ void genmtlo(void)
 #ifdef INTERPRET_MTLO
    gencallinterp((unsigned long long)cached_interpreter_table.MTLO, 0);
 #else
-   int _lo = allocate_register_64_w((unsigned long long *)&lo);
+   int _lo = allocate_register_64_w((unsigned long long*) &g_state.regs.lo);
    int rs = allocate_register_64((unsigned long long *)dst->f.r.rs);
 
    mov_reg64_reg64(_lo, rs);
@@ -508,8 +508,8 @@ void genmult(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MULT, 0);
 #else
    int rs, rt;
-   allocate_register_32_manually_w(EAX, (unsigned int *)&lo); /* these must be done first so they are not assigned by allocate_register() */
-   allocate_register_32_manually_w(EDX, (unsigned int *)&hi);
+   allocate_register_32_manually_w(EAX, (unsigned int*) &g_state.regs.lo); /* these must be done first so they are not assigned by allocate_register() */
+   allocate_register_32_manually_w(EDX, (unsigned int*) &g_state.regs.hi);
    rs = allocate_register_32((unsigned int*)dst->f.r.rs);
    rt = allocate_register_32((unsigned int*)dst->f.r.rt);
    mov_reg32_reg32(EAX, rs);
@@ -526,8 +526,8 @@ void genmultu(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MULTU, 0);
 #else
    int rs, rt;
-   allocate_register_32_manually_w(EAX, (unsigned int *)&lo);
-   allocate_register_32_manually_w(EDX, (unsigned int *)&hi);
+   allocate_register_32_manually_w(EAX, (unsigned int*) &g_state.regs.lo);
+   allocate_register_32_manually_w(EDX, (unsigned int*) &g_state.regs.hi);
    rs = allocate_register_32((unsigned int*)dst->f.r.rs);
    rt = allocate_register_32((unsigned int*)dst->f.r.rt);
    mov_reg32_reg32(EAX, rs);
@@ -544,8 +544,8 @@ void gendiv(void)
    gencallinterp((unsigned long long)cached_interpreter_table.DIV, 0);
 #else
    int rs, rt;
-   allocate_register_32_manually_w(EAX, (unsigned int *)&lo);
-   allocate_register_32_manually_w(EDX, (unsigned int *)&hi);
+   allocate_register_32_manually_w(EAX, (unsigned int*) &g_state.regs.lo);
+   allocate_register_32_manually_w(EDX, (unsigned int*) &g_state.regs.hi);
    rs = allocate_register_32((unsigned int*)dst->f.r.rs);
    rt = allocate_register_32((unsigned int*)dst->f.r.rt);
    cmp_reg32_imm32(rt, 0);
@@ -565,8 +565,8 @@ void gendivu(void)
    gencallinterp((unsigned long long)cached_interpreter_table.DIVU, 0);
 #else
    int rs, rt;
-   allocate_register_32_manually_w(EAX, (unsigned int *)&lo);
-   allocate_register_32_manually_w(EDX, (unsigned int *)&hi);
+   allocate_register_32_manually_w(EAX, (unsigned int*) &g_state.regs.lo);
+   allocate_register_32_manually_w(EDX, (unsigned int*) &g_state.regs.hi);
    rs = allocate_register_32((unsigned int*)dst->f.r.rs);
    rt = allocate_register_32((unsigned int*)dst->f.r.rt);
    cmp_reg32_imm32(rt, 0);
@@ -598,8 +598,8 @@ void gendmultu(void)
    mov_xreg64_m64rel(RAX, (unsigned long long *) dst->f.r.rs);
    mov_xreg64_m64rel(RDX, (unsigned long long *) dst->f.r.rt);
    mul_reg64(RDX);
-   mov_m64rel_xreg64((unsigned long long *) &lo, RAX);
-   mov_m64rel_xreg64((unsigned long long *) &hi, RDX);
+   mov_m64rel_xreg64((unsigned long long*) &g_state.regs.lo, RAX);
+   mov_m64rel_xreg64((unsigned long long*) &g_state.regs.hi, RDX);
 #endif
 }
 

@@ -24,19 +24,16 @@
 
 #include <stdint.h>
 
-#define read_word_in_memory() readmem[address>>16]()
-#define read_byte_in_memory() readmemb[address>>16]()
-#define read_hword_in_memory() readmemh[address>>16]()
-#define read_dword_in_memory() readmemd[address>>16]()
-#define write_word_in_memory() writemem[address>>16]()
-#define write_byte_in_memory() writememb[address >>16]()
-#define write_hword_in_memory() writememh[address >>16]()
-#define write_dword_in_memory() writememd[address >>16]()
+#include "r4300/r4300.h"
 
-extern uint32_t address, cpu_word;
-extern uint8_t cpu_byte;
-extern uint16_t cpu_hword;
-extern uint64_t cpu_dword, *rdword;
+#define read_word_in_memory() readmem[g_state.access_addr >> 16]()
+#define read_byte_in_memory() readmemb[g_state.access_addr >> 16]()
+#define read_hword_in_memory() readmemh[g_state.access_addr >> 16]()
+#define read_dword_in_memory() readmemd[g_state.access_addr >> 16]()
+#define write_word_in_memory() writemem[g_state.access_addr >> 16]()
+#define write_byte_in_memory() writememb[g_state.access_addr >> 16]()
+#define write_hword_in_memory() writememh[g_state.access_addr >> 16]()
+#define write_dword_in_memory() writememd[g_state.access_addr >> 16]()
 
 extern void (*readmem[0x10000])(void);
 extern void (*readmemb[0x10000])(void);

@@ -92,7 +92,7 @@ void dyna_start(void *code)
      " pop  %%r12              \n"
      " pop  %%rbx              \n"
      : [save_rsp]"=m"(save_rsp), [save_rip]"=m"(save_rip), [return_address]"=m"(return_address)
-     : "b" (code), [reg]"m"(*reg)
+     : "b" (code), [reg]"m"(*g_state.regs.gpr)
      : "%rax", "memory"
      );
 

@@ -73,18 +73,18 @@ unsigned int jump_to_address;
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
+      if (link_register != &g_state.regs.gpr[0]) \
       { \
          *link_register = SE32(PC->addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
          PC++; \
-         delay_slot=1; \
+         g_state.delay_slot = 1; \
          UPDATE_DEBUGGER(); \
          PC->ops(); \
          cp0_update_count(); \
-         delay_slot=0; \
+         g_state.delay_slot = 0; \
          if (take_jump && !skip_jump) \
          { \
             PC=actual->block+((jump_target-actual->start)>>2); \
@@ -96,7 +96,7 @@ unsigned int jump_to_address;
          cp0_update_count(); \
       } \
       last_addr = PC->addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (g_state.next_interrupt <= g_state.regs.cp0[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_OUT(void) \
    { \
@@ -104,18 +104,18 @@ unsigned int jump_to_address;
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
+      if (link_register != &g_state.regs.gpr[0]) \
       { \
          *link_register = SE32(PC->addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
          PC++; \
-         delay_slot=1; \
+         g_state.delay_slot = 1; \
          UPDATE_DEBUGGER(); \
          PC->ops(); \
          cp0_update_count(); \
-         delay_slot=0; \
+         g_state.delay_slot = 0; \
          if (take_jump && !skip_jump) \
          { \
             jump_to(jump_target); \
@@ -127,7 +127,7 @@ unsigned int jump_to_address;
          cp0_update_count(); \
       } \
       last_addr = PC->addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (g_state.next_interrupt <= g_state.regs.cp0[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(void) \
    { \
@@ -137,18 +137,18 @@ unsigned int jump_to_address;
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+         skip = g_state.next_interrupt - g_state.regs.cp0[CP0_COUNT_REG]; \
+         if (skip > 3) g_state.regs.cp0[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \
       } \
       else name(); \
    }
 
 #define CHECK_MEMORY() \
-   if (!invalid_code[address>>12]) \
-      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != \
+   if (!invalid_code[g_state.access_addr >> 12]) \
+      if (blocks[g_state.access_addr >> 12]->block[(g_state.access_addr & 0xFFF) / 4].ops != \
           current_instruction_table.NOTCOMPILED) \
-         invalid_code[address>>12] = 1;
+         invalid_code[g_state.access_addr >> 12] = 1;
 
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
@@ -164,7 +164,7 @@ unsigned int jump_to_address;
 // -----------------------------------------------------------
 static void FIN_BLOCK(void)
 {
-   if (!delay_slot)
+   if (!g_state.delay_slot)
      {
     jump_to((PC-1)->addr+4);
 /*#ifdef DBG

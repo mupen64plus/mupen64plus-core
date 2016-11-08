@@ -57,18 +57,22 @@
 #include "instr_counters.h"
 #endif
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* The New Dynarec on ARM will place this structure somewhere within its
+ * block of memory for member access via small offsets. See
+ *   new_dynarec/arm/linkage_arm.S
+ * for the definition. */
+ALIGN(4096, struct r4300_state g_state);
+#endif
+
 unsigned int r4300emu = 0;
 unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
 int rompause;
-unsigned int llbit;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
-int64_t reg[32], hi, lo;
-uint32_t next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
-unsigned int delay_slot;
 uint32_t skip_jump = 0;
 unsigned int dyna_interp = 0;
 uint32_t last_addr;
@@ -99,9 +103,9 @@ void r4300_reset_hard(void)
     // clear r4300 registers and TLB entries
     for (i = 0; i < 32; i++)
     {
-        reg[i]=0;
-        g_cp0_regs[i]=0;
-        reg_cop1_fgr_64[i]=0;
+        g_state.regs.gpr[i] = 0;
+        g_state.regs.cp0[i] = 0;
+        g_state.regs.fpr_data[i] = 0;
 
         // --------------tlb------------------------
         tlb_e[i].mask=0;
@@ -131,26 +135,26 @@ void r4300_reset_hard(void)
         tlb_LUT_r[i] = 0;
         tlb_LUT_w[i] = 0;
     }
-    llbit=0;
-    hi=0;
-    lo=0;
-    FCR0 = UINT32_C(0x511);
-    FCR31=0;
+    g_state.regs.ll_bit = 0;
+    g_state.regs.hi = 0;
+    g_state.regs.lo = 0;
+    g_state.regs.fcr_0 = UINT32_C(0x511);
+    g_state.regs.fcr_31 = 0;
 
     // set COP0 registers
-    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
-    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
-    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
-    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
+    g_state.regs.cp0[CP0_RANDOM_REG] = UINT32_C(31);
+    g_state.regs.cp0[CP0_STATUS_REG]= UINT32_C(0x34000000);
+    set_fpr_pointers(g_state.regs.cp0[CP0_STATUS_REG]);
+    g_state.regs.cp0[CP0_CONFIG_REG]= UINT32_C(0x6e463);
+    g_state.regs.cp0[CP0_PREVID_REG] = UINT32_C(0xb00);
+    g_state.regs.cp0[CP0_COUNT_REG] = UINT32_C(0x5000);
+    g_state.regs.cp0[CP0_CAUSE_REG] = UINT32_C(0x5C);
+    g_state.regs.cp0[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
+    g_state.regs.cp0[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
+    g_state.regs.cp0[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
+    g_state.regs.cp0[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
    
-    update_x86_rounding_mode(FCR31);
+    update_x86_rounding_mode(g_state.regs.fcr_31);
 }
 
 
@@ -174,8 +178,8 @@ void r4300_reset_soft(void)
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     uint32_t bsd_dom1_config = *(uint32_t*)g_rom;
 
-    g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
-    g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
+    g_state.regs.cp0[CP0_STATUS_REG] = 0x34000000;
+    g_state.regs.cp0[CP0_CONFIG_REG] = 0x0006e463;
 
     g_sp.regs[SP_STATUS_REG] = 1;
     g_sp.regs2[SP_PC_REG] = 0;
@@ -197,11 +201,11 @@ void r4300_reset_soft(void)
 
     memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
 
-    reg[19] = rom_type;     /* s3 */
-    reg[20] = tv_type;      /* s4 */
-    reg[21] = reset_type;   /* s5 */
-    reg[22] = g_si.pif.cic.seed;/* s6 */
-    reg[23] = s7;           /* s7 */
+    g_state.regs.gpr[19] = rom_type;     /* s3 */
+    g_state.regs.gpr[20] = tv_type;      /* s4 */
+    g_state.regs.gpr[21] = reset_type;   /* s5 */
+    g_state.regs.gpr[22] = g_si.pif.cic.seed;/* s6 */
+    g_state.regs.gpr[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
     g_sp.mem[0x1000/4] = 0x3c0dbfc0;
@@ -214,9 +218,9 @@ void r4300_reset_soft(void)
     g_sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
-    reg[11] = INT64_C(0xffffffffa4000040); /* t3 */
-    reg[29] = INT64_C(0xffffffffa4001ff0); /* sp */
-    reg[31] = INT64_C(0xffffffffa4001550); /* ra */
+    g_state.regs.gpr[11] = INT64_C(0xffffffffa4000040); /* t3 */
+    g_state.regs.gpr[29] = INT64_C(0xffffffffa4001ff0); /* sp */
+    g_state.regs.gpr[31] = INT64_C(0xffffffffa4001550); /* ra */
 
     /* ready to execute IPL3 */
 }
@@ -242,7 +246,7 @@ void r4300_execute(void)
 
     current_instruction_table = cached_interpreter_table;
 
-    delay_slot=0;
+    g_state.delay_slot = 0;
     stop = 0;
     rompause = 0;
 
@@ -252,7 +256,7 @@ void r4300_execute(void)
 #endif
 
     last_addr = 0xa4000040;
-    next_interupt = 624999;
+    g_state.next_interrupt = 624999;
     init_interupt();
 
     if (r4300emu == CORE_PURE_INTERPRETER)

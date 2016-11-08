@@ -58,7 +58,7 @@
 
 M64P_FPU_INLINE void set_rounding(void)
 {
-  switch(FCR31 & 3) {
+  switch (g_state.regs.fcr_31 & 3) {
   case 0: /* Round to nearest, or to even if equidistant */
     fesetround(FE_TONEAREST);
     break;
@@ -171,7 +171,7 @@ M64P_FPU_INLINE void floor_w_d(const double *source,int32_t *dest)
 
 M64P_FPU_INLINE void cvt_w_s(const float *source,int32_t *dest)
 {
-  switch(FCR31&3)
+  switch (g_state.regs.fcr_31 & 3)
   {
     case 0: round_w_s(source,dest);return;
     case 1: trunc_w_s(source,dest);return;
@@ -181,7 +181,7 @@ M64P_FPU_INLINE void cvt_w_s(const float *source,int32_t *dest)
 }
 M64P_FPU_INLINE void cvt_w_d(const double *source,int32_t *dest)
 {
-  switch(FCR31&3)
+  switch (g_state.regs.fcr_31 & 3)
   {
     case 0: round_w_d(source,dest);return;
     case 1: trunc_w_d(source,dest);return;
@@ -191,7 +191,7 @@ M64P_FPU_INLINE void cvt_w_d(const double *source,int32_t *dest)
 }
 M64P_FPU_INLINE void cvt_l_s(const float *source,int64_t *dest)
 {
-  switch(FCR31&3)
+  switch (g_state.regs.fcr_31 & 3)
   {
     case 0: round_l_s(source,dest);return;
     case 1: trunc_l_s(source,dest);return;
@@ -201,7 +201,7 @@ M64P_FPU_INLINE void cvt_l_s(const float *source,int64_t *dest)
 }
 M64P_FPU_INLINE void cvt_l_d(const double *source,int64_t *dest)
 {
-  switch(FCR31&3)
+  switch (g_state.regs.fcr_31 & 3)
   {
     case 0: round_l_d(source,dest);return;
     case 1: trunc_l_d(source,dest);return;
@@ -212,174 +212,174 @@ M64P_FPU_INLINE void cvt_l_d(const double *source,int64_t *dest)
 
 M64P_FPU_INLINE void c_f_s()
 {
-  FCR31 &= ~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 &= ~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_un_s(const float *source,const float *target)
 {
-  FCR31=(isnan(*source) || isnan(*target)) ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31=(isnan(*source) || isnan(*target)) ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
                           
 M64P_FPU_INLINE void c_eq_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ueq_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_olt_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ult_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_ole_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ule_s(const float *source,const float *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_sf_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31&=~FCR31_CMP_BIT;
+  g_state.regs.fcr_31&=~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngle_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31&=~FCR31_CMP_BIT;
+  g_state.regs.fcr_31&=~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_seq_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngl_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_lt_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_nge_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_le_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngt_s(const float *source,const float *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_f_d()
 {
-  FCR31 &= ~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 &= ~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_un_d(const double *source,const double *target)
 {
-  FCR31=(isnan(*source) || isnan(*target)) ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31=(isnan(*source) || isnan(*target)) ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
                           
 M64P_FPU_INLINE void c_eq_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ueq_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_olt_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ult_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_ole_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31&=~FCR31_CMP_BIT;return;}
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31&=~FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ule_d(const double *source,const double *target)
 {
-  if (isnan(*source) || isnan(*target)) {FCR31|=FCR31_CMP_BIT;return;}
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  if (isnan(*source) || isnan(*target)) {g_state.regs.fcr_31|=FCR31_CMP_BIT;return;}
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_sf_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31&=~FCR31_CMP_BIT;
+  g_state.regs.fcr_31&=~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngle_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31&=~FCR31_CMP_BIT;
+  g_state.regs.fcr_31&=~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_seq_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngl_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source==*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source==*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_lt_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_nge_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 M64P_FPU_INLINE void c_le_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 M64P_FPU_INLINE void c_ngt_d(const double *source,const double *target)
 {
   //if (isnan(*source) || isnan(*target)) // FIXME - exception
-  FCR31 = *source<=*target ? FCR31|FCR31_CMP_BIT : FCR31&~FCR31_CMP_BIT;
+  g_state.regs.fcr_31 = *source<=*target ? g_state.regs.fcr_31|FCR31_CMP_BIT : g_state.regs.fcr_31&~FCR31_CMP_BIT;
 }
 
 

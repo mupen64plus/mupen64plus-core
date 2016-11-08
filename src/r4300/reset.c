@@ -39,7 +39,7 @@ void reset_hard(void)
     r4300_reset_hard();
     r4300_reset_soft();
     last_addr = UINT32_C(0xa4000040);
-    next_interupt = 624999;
+    g_state.next_interrupt = 624999;
     init_interupt();
     if(r4300emu != CORE_PURE_INTERPRETER)
     {

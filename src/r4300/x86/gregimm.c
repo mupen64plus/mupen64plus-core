@@ -317,26 +317,26 @@ void genbgezl_idle(void)
 
 static void genbranchlink(void)
 {
-   int r31_64bit = is64((unsigned int*)&reg[31]);
+   int r31_64bit = is64((unsigned int*) &g_state.regs.gpr[31]);
    
    if (!r31_64bit)
      {
-    int r31 = allocate_register_w((unsigned int *)&reg[31]);
+    int r31 = allocate_register_w((unsigned int*) &g_state.regs.gpr[31]);
     
     mov_reg32_imm32(r31, dst->addr+8);
      }
    else if (r31_64bit == -1)
      {
-    mov_m32_imm32((unsigned int *)&reg[31], dst->addr + 8);
+    mov_m32_imm32((unsigned int*) &g_state.regs.gpr[31], dst->addr + 8);
     if (dst->addr & 0x80000000)
-      mov_m32_imm32(((unsigned int *)&reg[31])+1, 0xFFFFFFFF);
+      mov_m32_imm32(((unsigned int*) &g_state.regs.gpr[31]) + 1, 0xFFFFFFFF);
     else
-      mov_m32_imm32(((unsigned int *)&reg[31])+1, 0);
+      mov_m32_imm32(((unsigned int*) &g_state.regs.gpr[31]) + 1, 0);
      }
    else
      {
-    int r311 = allocate_64_register1_w((unsigned int *)&reg[31]);
-    int r312 = allocate_64_register2_w((unsigned int *)&reg[31]);
+    int r311 = allocate_64_register1_w((unsigned int*) &g_state.regs.gpr[31]);
+    int r312 = allocate_64_register2_w((unsigned int*) &g_state.regs.gpr[31]);
     
     mov_reg32_imm32(r311, dst->addr+8);
     if (dst->addr & 0x80000000)
