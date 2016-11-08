@@ -55,7 +55,7 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
         if (g_alternate_vi_timing)
             vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) % 0x20E;
         else
-            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG]))/1500;
+            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG]))/g_vi_refresh_rate;
         vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] & (~1)) | vi->field;
     }
 
@@ -110,7 +110,7 @@ void vi_vertical_interrupt_event(struct vi_controller* vi)
     /* schedule next vertical interrupt */
     vi->delay = (vi->regs[VI_V_SYNC_REG] == 0)
             ? 500000
-            : (vi->regs[VI_V_SYNC_REG] + 1)*1500;
+            : (vi->regs[VI_V_SYNC_REG] + 1)*g_vi_refresh_rate;
 
     vi->next_vi += vi->delay;
 
