@@ -72,6 +72,14 @@ extern void (*writememd[0x10000])(void);
 
 #endif
 
+#ifdef __arm__
+    void __aeabi_memcpy4(void*, void*, uint32_t);		//this is present in libc6 on Raspberry PI
+    #define MEMCPY4(...) __aeabi_memcpy4(__VA_ARGS__)
+#else
+    #define MEMCPY4(...) memcpy(__VA_ARGS__)
+#endif
+
+
 static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
 {
     *dst = (*dst & ~mask) | (value & mask);
