@@ -355,10 +355,10 @@ void check_interupt(void)
     struct node* event;
 
     if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
-        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | UINT32_C(0x400)) & UINT32_C(0xFFFFFF83);
+        g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
     else
-        g_cp0_regs[CP0_CAUSE_REG] &= ~UINT32_C(0x400);
-    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(7)) != 1) return;
+        g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
+    if ((g_cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) return;
     if (g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xFF00))
     {
         event = alloc_node(&q.pool);
@@ -392,8 +392,8 @@ static void wrapped_exception_general(void)
     if (r4300emu == CORE_DYNAREC) {
         g_cp0_regs[CP0_EPC_REG] = pcaddr;
         pcaddr = 0x80000180;
-        g_cp0_regs[CP0_STATUS_REG] |= UINT32_C(2);
-        g_cp0_regs[CP0_CAUSE_REG] &= UINT32_C(0x7FFFFFFF);
+        g_cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+        g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
         pending_exception=1;
     } else {
         exception_general();
@@ -405,12 +405,12 @@ static void wrapped_exception_general(void)
 
 void raise_maskable_interrupt(uint32_t cause)
 {
-    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | cause) & UINT32_C(0xffffff83);
+    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
 
     if (!(g_cp0_regs[CP0_STATUS_REG] & g_cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00)))
         return;
 
-    if ((g_cp0_regs[CP0_STATUS_REG] & UINT32_C(7)) != UINT32_C(1))
+    if ((g_cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE)
         return;
 
     wrapped_exception_general();
@@ -434,7 +434,7 @@ static void compare_int_handler(void)
     add_interupt_event_count(COMPARE_INT, g_cp0_regs[CP0_COMPARE_REG]);
     g_cp0_regs[CP0_COUNT_REG]-=count_per_op;
 
-    raise_maskable_interrupt(UINT32_C(0x8000));
+    raise_maskable_interrupt(CP0_CAUSE_IP7);
 }
 
 static void hw2_int_handler(void)
@@ -442,8 +442,8 @@ static void hw2_int_handler(void)
     // Hardware Interrupt 2 -- remove interrupt event from queue
     remove_interupt_event();
 
-    g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~UINT32_C(0x00380000)) | UINT32_C(0x1000);
-    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | UINT32_C(0x1000)) & UINT32_C(0xffffff83);
+    g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
+    g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
 
     wrapped_exception_general();
 }
@@ -453,7 +453,7 @@ static void nmi_int_handler(void)
     // Non Maskable Interrupt -- remove interrupt event from queue
     remove_interupt_event();
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
-    g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~UINT32_C(0x00380000)) | UINT32_C(0x00500004);
+    g_cp0_regs[CP0_STATUS_REG] = (g_cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     g_cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
     // simulate the soft reset code which would run from the PIF ROM
     r4300_reset_soft();

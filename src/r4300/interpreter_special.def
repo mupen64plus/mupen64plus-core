@@ -65,7 +65,7 @@ DECLARE_JUMP(JALR, irs32, 1, &rrd,    0, 0)
 
 DECLARE_INSTRUCTION(SYSCALL)
 {
-   g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(8) << 2;
+   g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_SYS;
    exception_general();
 }
 
