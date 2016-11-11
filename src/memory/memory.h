@@ -77,7 +77,7 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-int init_memory(void);
+void poweron_memory(void);
 
 void map_region(uint16_t region,
                 int type,

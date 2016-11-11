@@ -151,17 +151,17 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
         do_SP_Task(sp);
 }
 
-void connect_rsp(struct rsp_core* sp,
-                 struct r4300_core* r4300,
-                 struct rdp_core* dp,
-                 struct ri_controller* ri)
+void init_rsp(struct rsp_core* sp,
+              struct r4300_core* r4300,
+              struct rdp_core* dp,
+              struct ri_controller* ri)
 {
     sp->r4300 = r4300;
     sp->dp = dp;
     sp->ri = ri;
 }
 
-void init_rsp(struct rsp_core* sp)
+void poweron_rsp(struct rsp_core* sp)
 {
     memset(sp->mem, 0, SP_MEM_SIZE);
     memset(sp->regs, 0, SP_REGS_COUNT*sizeof(uint32_t));

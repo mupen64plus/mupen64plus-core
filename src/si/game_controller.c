@@ -171,6 +171,25 @@ uint32_t game_controller_get_input(struct game_controller* cont)
 }
 
 
+void init_game_controller(struct game_controller* cont,
+    void* cont_user_data,
+    int (*cont_is_connected)(void*,enum pak_type*),
+    uint32_t (*cont_get_input)(void*),
+    void* mpk_user_data,
+    void (*mpk_save)(void*),
+    uint8_t* mpk_data,
+    void* rpk_user_data,
+    void (*rpk_rumble)(void*,enum rumble_action))
+{
+    cont->user_data = cont_user_data;
+    cont->is_connected = cont_is_connected;
+    cont->get_input = cont_get_input;
+
+    init_mempak(&cont->mempak, mpk_user_data, mpk_save, mpk_data);
+    init_rumblepak(&cont->rumblepak, rpk_user_data, rpk_rumble);
+}
+
+
 void process_controller_command(struct game_controller* cont, uint8_t* cmd)
 {
     switch (cmd[2])

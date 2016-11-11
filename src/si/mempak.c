@@ -63,6 +63,14 @@ void format_mempak(uint8_t* mpk_data)
     }
 }
 
+
+void init_mempak(struct mempak* mpk, void* user_data, void (*save)(void*), uint8_t* data)
+{
+    mpk->user_data = user_data;
+    mpk->save = save;
+    mpk->data = data;
+}
+
 void mempak_read_command(struct mempak* mpk, uint8_t* cmd)
 {
     uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);

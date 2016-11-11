@@ -37,6 +37,8 @@ struct rumblepak
     void (*rumble)(void*,enum rumble_action);
 };
 
+void init_rumblepak(struct rumblepak* rpk, void* user_data, void (*rumble)(void*,enum rumble_action));
+
 void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action);
 
 void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd);

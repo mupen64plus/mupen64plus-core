@@ -26,15 +26,15 @@
 #include "memory/memory.h"
 #include "ri_controller.h"
 
-void connect_rdram(struct rdram* rdram,
-                   uint32_t* dram,
-                   size_t dram_size)
+void init_rdram(struct rdram* rdram,
+                uint32_t* dram,
+                size_t dram_size)
 {
     rdram->dram = dram;
     rdram->dram_size = dram_size;
 }
 
-void init_rdram(struct rdram* rdram)
+void poweron_rdram(struct rdram* rdram)
 {
     memset(rdram->regs, 0, RDRAM_REGS_COUNT*sizeof(uint32_t));
     memset(rdram->dram, 0, rdram->dram_size);

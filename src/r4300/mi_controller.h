@@ -56,7 +56,7 @@ static uint32_t mi_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
-void init_mi(struct mi_controller* mi);
+void poweron_mi(struct mi_controller* mi);
 
 int read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

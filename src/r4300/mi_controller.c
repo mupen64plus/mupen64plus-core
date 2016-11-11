@@ -66,7 +66,7 @@ static void update_mi_intr_mask(uint32_t* mi_intr_mask, uint32_t w)
     if (w & 0x800) *mi_intr_mask |= 0x20; // set DP mask
 }
 
-void init_mi(struct mi_controller* mi)
+void poweron_mi(struct mi_controller* mi)
 {
     memset(mi->regs, 0, MI_REGS_COUNT*sizeof(uint32_t));
     mi->regs[MI_VERSION_REG] = 0x02020102;

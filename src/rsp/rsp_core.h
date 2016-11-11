@@ -100,12 +100,12 @@ static uint32_t rsp_reg2(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
-void connect_rsp(struct rsp_core* sp,
-                 struct r4300_core* r4300,
-                 struct rdp_core* dp,
-                 struct ri_controller* ri);
+void init_rsp(struct rsp_core* sp,
+              struct r4300_core* r4300,
+              struct rdp_core* dp,
+              struct ri_controller* ri);
 
-void init_rsp(struct rsp_core* sp);
+void poweron_rsp(struct rsp_core* sp);
 
 int read_rsp_mem(void* opaque, uint32_t address, uint32_t* value);
 int write_rsp_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

@@ -1149,7 +1149,7 @@ int get_memory_type(uint32_t address)
 #define W(x) write_ ## x ## b, write_ ## x ## h, write_ ## x, write_ ## x ## d
 #define RW(x) R(x), W(x)
 
-int init_memory(void)
+void poweron_memory(void)
 {
     int i;
 
@@ -1328,21 +1328,7 @@ int init_memory(void)
 
     fast_memory = 1;
 
-    init_cic_using_ipl3(&g_si.pif.cic, g_rom + 0x40);
-
-    init_r4300(&g_r4300);
-    init_rdp(&g_dp);
-    init_rsp(&g_sp);
-    init_ai(&g_ai);
-    init_pi(&g_pi);
-    init_ri(&g_ri);
-    init_si(&g_si);
-    unsigned int vi_clock = vi_clock_from_tv_standard(ROM_PARAMS.systemtype);
-    unsigned int vi_expected_refresh_rate = vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype);
-    init_vi(&g_vi, vi_clock, vi_expected_refresh_rate, g_count_per_scanline, g_alternate_vi_timing);
-
     DebugMessage(M64MSG_VERBOSE, "Memory initialized");
-    return 0;
 }
 
 static void map_region_t(uint16_t region, int type)

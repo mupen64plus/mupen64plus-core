@@ -35,6 +35,10 @@ struct af_rtc
 
 const struct tm* af_rtc_get_time(struct af_rtc* rtc);
 
+void init_af_rtc(struct af_rtc* rtc,
+                 void* user_data,
+                 const struct tm* (*get_time)(void*));
+
 void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd);
 void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd);
 void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd);

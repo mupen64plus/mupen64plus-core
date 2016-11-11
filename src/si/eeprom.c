@@ -42,6 +42,21 @@ void format_eeprom(uint8_t* eeprom, size_t size)
 }
 
 
+void init_eeprom(struct eeprom* eeprom,
+    void* user_data,
+    void (*save)(void*),
+    uint8_t* data,
+    size_t size,
+    uint16_t id)
+{
+    eeprom->user_data = user_data;
+    eeprom->save = save;
+    eeprom->data = data;
+    eeprom->size = size;
+    eeprom->id = id;
+}
+
+
 void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd)
 {
     /* check size */

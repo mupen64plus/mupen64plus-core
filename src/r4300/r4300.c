@@ -91,69 +91,6 @@ void generic_jump_to(uint32_t address)
    }
 }
 
-/* this hard reset function simulates the boot-up state of the R4300 CPU */
-void r4300_reset_hard(void)
-{
-    unsigned int i;
-
-    // clear r4300 registers and TLB entries
-    for (i = 0; i < 32; i++)
-    {
-        reg[i]=0;
-        g_cp0_regs[i]=0;
-        reg_cop1_fgr_64[i]=0;
-
-        // --------------tlb------------------------
-        tlb_e[i].mask=0;
-        tlb_e[i].vpn2=0;
-        tlb_e[i].g=0;
-        tlb_e[i].asid=0;
-        tlb_e[i].pfn_even=0;
-        tlb_e[i].c_even=0;
-        tlb_e[i].d_even=0;
-        tlb_e[i].v_even=0;
-        tlb_e[i].pfn_odd=0;
-        tlb_e[i].c_odd=0;
-        tlb_e[i].d_odd=0;
-        tlb_e[i].v_odd=0;
-        tlb_e[i].r=0;
-        //tlb_e[i].check_parity_mask=0x1000;
-
-        tlb_e[i].start_even=0;
-        tlb_e[i].end_even=0;
-        tlb_e[i].phys_even=0;
-        tlb_e[i].start_odd=0;
-        tlb_e[i].end_odd=0;
-        tlb_e[i].phys_odd=0;
-    }
-    for (i=0; i<0x100000; i++)
-    {
-        tlb_LUT_r[i] = 0;
-        tlb_LUT_w[i] = 0;
-    }
-    llbit=0;
-    hi=0;
-    lo=0;
-    FCR0 = UINT32_C(0x511);
-    FCR31=0;
-
-    // set COP0 registers
-    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
-    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
-    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
-    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
-   
-    update_x86_rounding_mode(FCR31);
-}
-
-
 static unsigned int get_tv_type(void)
 {
     switch(ROM_PARAMS.systemtype)

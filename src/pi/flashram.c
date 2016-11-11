@@ -99,7 +99,17 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
 }
 
 
-void init_flashram(struct flashram* flashram)
+void init_flashram(struct flashram* flashram,
+                   void* user_data,
+                   void (*save)(void*),
+                   uint8_t* data)
+{
+    flashram->user_data = user_data;
+    flashram->save = save;
+    flashram->data = data;
+}
+
+void poweron_flashram(struct flashram* flashram)
 {
     flashram->mode = FLASHRAM_MODE_NOPES;
     flashram->status = 0;

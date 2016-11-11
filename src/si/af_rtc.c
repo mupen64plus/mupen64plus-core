@@ -37,6 +37,15 @@ const struct tm* af_rtc_get_time(struct af_rtc* rtc)
     return rtc->get_time(rtc->user_data);
 }
 
+
+void init_af_rtc(struct af_rtc* rtc,
+                 void* user_data,
+                 const struct tm* (*get_time)(void*))
+{
+    rtc->user_data = user_data;
+    rtc->get_time = get_time;
+}
+
 void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
 {
     /* AF-RTC status query */
