@@ -86,11 +86,11 @@ static void dma_sp_read(struct rsp_core* sp)
 static void update_sp_status(struct rsp_core* sp, uint32_t w)
 {
     /* clear / set halt */
-    if (w & 0x1) sp->regs[SP_STATUS_REG] &= ~0x1;
-    if (w & 0x2) sp->regs[SP_STATUS_REG] |= 0x1;
+    if (w & 0x1) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_HALT;
+    if (w & 0x2) sp->regs[SP_STATUS_REG] |= SP_STATUS_HALT;
 
     /* clear broke */
-    if (w & 0x4) sp->regs[SP_STATUS_REG] &= ~0x2;
+    if (w & 0x4) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_BROKE;
 
     /* clear SP interrupt */
     if (w & 0x8)
@@ -104,50 +104,50 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     }
 
     /* clear / set single step */
-    if (w & 0x20) sp->regs[SP_STATUS_REG] &= ~0x20;
-    if (w & 0x40) sp->regs[SP_STATUS_REG] |= 0x20;
+    if (w & 0x20) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SSTEP;
+    if (w & 0x40) sp->regs[SP_STATUS_REG] |= SP_STATUS_SSTEP;
 
     /* clear / set interrupt on break */
-    if (w & 0x80) sp->regs[SP_STATUS_REG] &= ~0x40;
-    if (w & 0x100) sp->regs[SP_STATUS_REG] |= 0x40;
+    if (w & 0x80) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_INTR_BREAK;
+    if (w & 0x100) sp->regs[SP_STATUS_REG] |= SP_STATUS_INTR_BREAK;
 
     /* clear / set signal 0 */
-    if (w & 0x200) sp->regs[SP_STATUS_REG] &= ~0x80;
-    if (w & 0x400) sp->regs[SP_STATUS_REG] |= 0x80;
+    if (w & 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
+    if (w & 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
 
     /* clear / set signal 1 */
-    if (w & 0x800) sp->regs[SP_STATUS_REG] &= ~0x100;
-    if (w & 0x1000) sp->regs[SP_STATUS_REG] |= 0x100;
+    if (w & 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
+    if (w & 0x1000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG1;
 
     /* clear / set signal 2 */
-    if (w & 0x2000) sp->regs[SP_STATUS_REG] &= ~0x200;
-    if (w & 0x4000) sp->regs[SP_STATUS_REG] |= 0x200;
+    if (w & 0x2000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG2;
+    if (w & 0x4000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG2;
 
     /* clear / set signal 3 */
-    if (w & 0x8000) sp->regs[SP_STATUS_REG] &= ~0x400;
-    if (w & 0x10000) sp->regs[SP_STATUS_REG] |= 0x400;
+    if (w & 0x8000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG3;
+    if (w & 0x10000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG3;
 
     /* clear / set signal 4 */
-    if (w & 0x20000) sp->regs[SP_STATUS_REG] &= ~0x800;
-    if (w & 0x40000) sp->regs[SP_STATUS_REG] |= 0x800;
+    if (w & 0x20000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG4;
+    if (w & 0x40000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG4;
 
     /* clear / set signal 5 */
-    if (w & 0x80000) sp->regs[SP_STATUS_REG] &= ~0x1000;
-    if (w & 0x100000) sp->regs[SP_STATUS_REG] |= 0x1000;
+    if (w & 0x80000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG5;
+    if (w & 0x100000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG5;
 
     /* clear / set signal 6 */
-    if (w & 0x200000) sp->regs[SP_STATUS_REG] &= ~0x2000;
-    if (w & 0x400000) sp->regs[SP_STATUS_REG] |= 0x2000;
+    if (w & 0x200000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG6;
+    if (w & 0x400000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG6;
 
     /* clear / set signal 7 */
-    if (w & 0x800000) sp->regs[SP_STATUS_REG] &= ~0x4000;
-    if (w & 0x1000000) sp->regs[SP_STATUS_REG] |= 0x4000;
+    if (w & 0x800000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG7;
+    if (w & 0x1000000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG7;
 
     //if (get_event(SP_INT)) return;
     if (!(w & 0x1) && !(w & 0x4))
         return;
 
-    if (!(sp->regs[SP_STATUS_REG] & 0x3)) // !halt && !broke
+    if (!(sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)))
         do_SP_Task(sp);
 }
 
@@ -266,7 +266,7 @@ void do_SP_Task(struct rsp_core* sp)
 
     if (sp->mem[0xfc0/4] == 1)
     {
-        if (sp->dp->dpc_regs[DPC_STATUS_REG] & 0x2) // DP frozen (DK64, BC)
+        if (sp->dp->dpc_regs[DPC_STATUS_REG] & DPC_STATUS_FREEZE) // DP frozen (DK64, BC)
         {
             // don't do the task now
             // the task will be done when DP is unfreezed (see update_dpc_status)
@@ -289,7 +289,7 @@ void do_SP_Task(struct rsp_core* sp)
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
             add_interupt_event(DP_INT, 1000);
         sp->r4300->mi.regs[MI_INTR_REG] &= ~(MI_INTR_SP | MI_INTR_DP);
-        sp->regs[SP_STATUS_REG] &= ~0x200;
+        sp->regs[SP_STATUS_REG] &= ~SP_STATUS_TASKDONE;
 
         protect_framebuffers(sp->dp);
     }
@@ -306,8 +306,7 @@ void do_SP_Task(struct rsp_core* sp)
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
             add_interupt_event(SP_INT, 4000/*500*/);
         sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
-        sp->regs[SP_STATUS_REG] &= ~0x300;
-        
+        sp->regs[SP_STATUS_REG] &= ~(SP_STATUS_TASKDONE | SP_STATUS_YIELDED);
     }
     else
     {
@@ -319,15 +318,17 @@ void do_SP_Task(struct rsp_core* sp)
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
             add_interupt_event(SP_INT, 0/*100*/);
         sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
-        sp->regs[SP_STATUS_REG] &= ~0x200;
+        sp->regs[SP_STATUS_REG] &= ~SP_STATUS_TASKDONE;
     }
 }
 
 void rsp_interrupt_event(struct rsp_core* sp)
 {
-    sp->regs[SP_STATUS_REG] |= 0x203;
+    /* XXX: assume task has fully completed */
+    sp->regs[SP_STATUS_REG] |=
+        SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT;
 
-    if ((sp->regs[SP_STATUS_REG] & 0x40) != 0)
+    if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
     {
         raise_rcp_interrupt(sp->r4300, MI_INTR_SP);
     }
