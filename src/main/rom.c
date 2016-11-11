@@ -58,6 +58,7 @@ unsigned char* g_rom = NULL;
 int g_rom_size = 0;
 unsigned char g_alternate_vi_timing = 0;
 
+int g_vi_refresh_rate = 0;
 unsigned char isGoldeneyeRom = 0;
 
 m64p_rom_header   ROM_HEADER;
@@ -197,6 +198,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.cheats = entry->cheats;
         g_alternate_vi_timing = entry->alternate_vi_timing;
+        g_vi_refresh_rate = entry->vi_refresh_rate;
     }
     else
     {
@@ -521,6 +523,10 @@ void romdatabase_open(void)
                 if(!strcmp(l.value, "Alternate")) {
                     search->entry.alternate_vi_timing = 1;
                 }
+            }
+            else if(!strcmp(l.name, "ViRefresh"))
+            {
+                 search->entry.vi_refresh_rate = atoi(l.value);
             }
             else if(!strcmp(l.name, "RefMD5"))
             {
