@@ -53,6 +53,8 @@ struct vi_controller
 
     unsigned int clock;
     unsigned int expected_refresh_rate;
+    unsigned int count_per_scanline;
+    unsigned int alternate_timing;
     unsigned int delay;
     unsigned int next_vi;
 
@@ -70,7 +72,8 @@ void connect_vi(struct vi_controller* vi,
 unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
 unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
 
-void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate);
+void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
+             unsigned int count_per_scanline, unsigned int alternate_timing);
 
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
