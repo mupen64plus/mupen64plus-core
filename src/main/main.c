@@ -887,8 +887,6 @@ m64p_error main_run(void)
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
-    if (g_vi_refresh_rate == 0)
-        g_vi_refresh_rate = 1500;
     cheat_add_hacks();
 
     /* do byte-swapping if it's not been done yet */
