@@ -30,6 +30,22 @@ struct r4300_core;
 struct ri_controller;
 struct rsp_core;
 
+enum
+{
+    /* DPC status - read */
+    DPC_STATUS_XBUS_DMEM_DMA = 0x001,
+    DPC_STATUS_FREEZE        = 0x002,
+    DPC_STATUS_FLUSH         = 0x004,
+    DPC_STATUS_CBUF_READY    = 0x080,
+    /* DPC status - write */
+    DPC_STATUS_CLR_XBUS_DMEM_DMA = 0x001,
+    DPC_STATUS_SET_XBUS_DMEM_DMA = 0x002,
+    DPC_STATUS_CLR_FREEZE        = 0x004,
+    DPC_STATUS_SET_FREEZE        = 0x008,
+    DPC_STATUS_CLR_FLUSH         = 0x010,
+    DPC_STATUS_SET_FLUSH         = 0x020,
+};
+
 enum dpc_registers
 {
     DPC_START_REG,

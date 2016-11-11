@@ -30,6 +30,29 @@ struct ri_controller;
 
 enum { SP_MEM_SIZE = 0x2000 };
 
+enum
+{
+    /* SP_STATUS - read */
+    SP_STATUS_HALT       = 0x0001,
+    SP_STATUS_BROKE      = 0x0002,
+    SP_STATUS_DMA_BUSY   = 0x0004,
+    SP_STATUS_DMA_FULL   = 0x0008,
+    SP_STATUS_IO_FULL    = 0x0010,
+    SP_STATUS_SSTEP      = 0x0020,
+    SP_STATUS_INTR_BREAK = 0x0040,
+    SP_STATUS_SIG0       = 0x0080,
+    SP_STATUS_YIELD      = 0x0080,
+    SP_STATUS_SIG1       = 0x0100,
+    SP_STATUS_YIELDED    = 0x0100,
+    SP_STATUS_SIG2       = 0x0200,
+    SP_STATUS_TASKDONE   = 0x0200,
+    SP_STATUS_SIG3       = 0x0400,
+    SP_STATUS_SIG4       = 0x0800,
+    SP_STATUS_SIG5       = 0x1000,
+    SP_STATUS_SIG6       = 0x2000,
+    SP_STATUS_SIG7       = 0x4000,
+};
+
 enum sp_registers
 {
     SP_MEM_ADDR_REG,

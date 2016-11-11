@@ -35,16 +35,16 @@ void TLB_refill_exception(uint32_t address, int w)
    int usual_handler = 0, i;
 
    if (r4300emu != CORE_DYNAREC && w != 2) cp0_update_count();
-   if (w == 1) g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(3) << 2);
-   else g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(2) << 2);
+   if (w == 1) g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBS;
+   else g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBL;
    g_cp0_regs[CP0_BADVADDR_REG] = address;
    g_cp0_regs[CP0_CONTEXT_REG] = (g_cp0_regs[CP0_CONTEXT_REG] & UINT32_C(0xFF80000F)) | ((address >> 9) & UINT32_C(0x007FFFF0));
    g_cp0_regs[CP0_ENTRYHI_REG] = address & UINT32_C(0xFFFFE000);
-   if (g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x2)) // Test de EXL
+   if (g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_EXL)
      {
     generic_jump_to(UINT32_C(0x80000180));
-    if(delay_slot==1 || delay_slot==3) g_cp0_regs[CP0_CAUSE_REG] |= UINT32_C(0x80000000);
-    else g_cp0_regs[CP0_CAUSE_REG] &= UINT32_C(0x7FFFFFFF);
+    if(delay_slot==1 || delay_slot==3) g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    else g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    else
      {
@@ -57,8 +57,8 @@ void TLB_refill_exception(uint32_t address, int w)
       }
     else g_cp0_regs[CP0_EPC_REG] = PC->addr;
          
-    g_cp0_regs[CP0_CAUSE_REG] &= ~UINT32_C(0x80000000);
-    g_cp0_regs[CP0_STATUS_REG] |= UINT32_C(0x2); //EXL=1
+    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    g_cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
     
     if (address >= UINT32_C(0x80000000) && address < UINT32_C(0xc0000000))
       usual_handler = 1;
@@ -82,12 +82,12 @@ void TLB_refill_exception(uint32_t address, int w)
      }
    if(delay_slot==1 || delay_slot==3)
      {
-    g_cp0_regs[CP0_CAUSE_REG] |= UINT32_C(0x80000000);
+    g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
     g_cp0_regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_cp0_regs[CP0_CAUSE_REG] &= UINT32_C(0x7FFFFFFF);
+    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    if(w != 2) g_cp0_regs[CP0_EPC_REG]-=4;
    
@@ -113,18 +113,18 @@ void TLB_refill_exception(uint32_t address, int w)
 void exception_general(void)
 {
    cp0_update_count();
-   g_cp0_regs[CP0_STATUS_REG] |= 2;
+   g_cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
    
    g_cp0_regs[CP0_EPC_REG] = PC->addr;
    
    if(delay_slot==1 || delay_slot==3)
      {
-    g_cp0_regs[CP0_CAUSE_REG] |= UINT32_C(0x80000000);
+    g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
     g_cp0_regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_cp0_regs[CP0_CAUSE_REG] &= UINT32_C(0x7FFFFFFF);
+    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    generic_jump_to(UINT32_C(0x80000180));
    last_addr = PC->addr;

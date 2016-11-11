@@ -47,10 +47,12 @@ struct ai_dma
     unsigned int duration;
 };
 
+enum { AI_DMA_FIFO_SIZE = 2 };
+
 struct ai_controller
 {
     uint32_t regs[AI_REGS_COUNT];
-    struct ai_dma fifo[2];
+    struct ai_dma fifo[AI_DMA_FIFO_SIZE];
     unsigned int samples_format_changed;
 
     /* external speaker output */
