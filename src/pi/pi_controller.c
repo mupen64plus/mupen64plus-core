@@ -178,26 +178,31 @@ static void dma_pi_write(struct pi_controller* pi)
     add_interupt_event(PI_INT, longueur/8);
 }
 
-void connect_pi(struct pi_controller* pi,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                uint8_t* rom, size_t rom_size)
+
+void init_pi(struct pi_controller* pi,
+             uint8_t* rom, size_t rom_size,
+             void* flashram_user_data, void (*flashram_save)(void*), uint8_t* flashram_data,
+             void* sram_user_data, void (*sram_save)(void*), uint8_t* sram_data,
+             struct r4300_core* r4300,
+             struct ri_controller* ri)
 {
-    connect_cart_rom(&pi->cart_rom, rom, rom_size);
+    init_cart_rom(&pi->cart_rom, rom, rom_size);
+    init_flashram(&pi->flashram, flashram_user_data, flashram_save, flashram_data);
+    init_sram(&pi->sram, sram_user_data, sram_save, sram_data);
+
+    pi->use_flashram = 0;
 
     pi->r4300 = r4300;
     pi->ri = ri;
 }
 
-void init_pi(struct pi_controller* pi)
+void poweron_pi(struct pi_controller* pi)
 {
     memset(pi->regs, 0, PI_REGS_COUNT*sizeof(uint32_t));
 
-    init_flashram(&pi->flashram);
-
-    pi->use_flashram = 0;
+    poweron_cart_rom(&pi->cart_rom);
+    poweron_flashram(&pi->flashram);
 }
-
 
 int read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
 {

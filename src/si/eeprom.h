@@ -40,6 +40,13 @@ void eeprom_save(struct eeprom* eeprom);
 
 void format_eeprom(uint8_t* eeprom, size_t size);
 
+void init_eeprom(struct eeprom* eeprom,
+    void* user_data,
+    void (*save)(void*),
+    uint8_t* data,
+    size_t size,
+    uint16_t id);
+
 void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
 void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
 void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);

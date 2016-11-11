@@ -63,7 +63,41 @@ static void process_cart_command(struct pif* pif, uint8_t* cmd)
     }
 }
 
-void init_pif(struct pif* pif)
+
+void init_pif(struct pif* pif,
+    void* cont_user_data[],
+    int (*cont_is_connected[])(void*,enum pak_type*),
+    uint32_t (*cont_get_input[])(void*),
+    void* mpk_user_data[],
+    void (*mpk_save[])(void*),
+    uint8_t* mpk_data[],
+    void* rpk_user_data[],
+    void (*rpk_rumble[])(void*,enum rumble_action),
+    void* eeprom_user_data,
+    void (*eeprom_save)(void*),
+    uint8_t* eeprom_data,
+    size_t eeprom_size,
+    uint16_t eeprom_id,
+    void* af_rtc_user_data,
+    const struct tm* (*af_rtc_get_time)(void*),
+    const uint8_t* ipl3)
+{
+    size_t i;
+
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        init_game_controller(&pif->controllers[i],
+                cont_user_data[i], cont_is_connected[i], cont_get_input[i],
+                mpk_user_data[i], mpk_save[i], mpk_data[i],
+                rpk_user_data[i], rpk_rumble[i]);
+    }
+
+    init_eeprom(&pif->eeprom, eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeprom_id);
+    init_af_rtc(&pif->af_rtc, af_rtc_user_data, af_rtc_get_time);
+
+    init_cic_using_ipl3(&pif->cic, ipl3);
+}
+
+void poweron_pif(struct pif* pif)
 {
     memset(pif->ram, 0, PIF_RAM_SIZE);
 }

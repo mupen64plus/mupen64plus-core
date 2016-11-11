@@ -66,7 +66,25 @@ static uint32_t pif_ram_address(uint32_t address)
 }
 
 
-void init_pif(struct pif* pif);
+void init_pif(struct pif* pif,
+    void* cont_user_data[],
+    int (*cont_is_connected[])(void*,enum pak_type*),
+    uint32_t (*cont_get_input[])(void*),
+    void* mpk_user_data[],
+    void (*mpk_save[])(void*),
+    uint8_t* mpk_data[],
+    void* rpk_user_data[],
+    void (*rpk_rumble[])(void*,enum rumble_action),
+    void* eeprom_user_data,
+    void (*eeprom_save)(void*),
+    uint8_t* eeprom_data,
+    size_t eeprom_size,
+    uint16_t eeprom_id,
+    void* af_rtc_user_data,
+    const struct tm* (*af_rtc_get_time)(void*),
+    const uint8_t* ipl3);
+
+void poweron_pif(struct pif* pif);
 
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
 int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

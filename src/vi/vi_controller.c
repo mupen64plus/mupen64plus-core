@@ -32,12 +32,6 @@
 /* XXX: timing hacks */
 enum { NTSC_VERTICAL_RESOLUTION = 525 };
 
-void connect_vi(struct vi_controller* vi,
-                struct r4300_core* r4300)
-{
-    vi->r4300 = r4300;
-}
-
 unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard)
 {
     switch(tv_standard)
@@ -67,17 +61,23 @@ unsigned int vi_refresh_rate_from_tv_standard(m64p_system_type tv_standard)
 }
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
-             unsigned int count_per_scanline, unsigned int alternate_timing)
+             unsigned int count_per_scanline, unsigned int alternate_timing,
+             struct r4300_core* r4300)
 {
-    memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
-    vi->field = 0;
-
     vi->clock = clock;
     vi->expected_refresh_rate = expected_refresh_rate;
     vi->count_per_scanline = count_per_scanline;
     vi->alternate_timing = alternate_timing;
+    vi->r4300 = r4300;
+}
+
+void poweron_vi(struct vi_controller* vi)
+{
+    memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
+    vi->field = 0;
     vi->delay = vi->next_vi = 5000;
 }
+
 
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {

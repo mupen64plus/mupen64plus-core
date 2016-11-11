@@ -779,7 +779,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // g_dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit() = 0;
 
     // No flashram info in pj64 savestate.
-    init_flashram(&g_pi.flashram);
+    poweron_flashram(&g_pi.flashram);
 
     savestates_load_set_pc(*r4300_last_addr());
 

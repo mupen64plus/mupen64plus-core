@@ -74,6 +74,16 @@ void new_vi(void);
 int  main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
 
+void poweron_device(
+        struct r4300_core* r4300,
+        struct rdp_core* dp,
+        struct rsp_core* sp,
+        struct ai_controller* ai,
+        struct pi_controller* pi,
+        struct ri_controller* ri,
+        struct si_controller* si,
+        struct vi_controller* vi);
+
 m64p_error main_run(void);
 void main_stop(void);
 void main_toggle_pause(void);

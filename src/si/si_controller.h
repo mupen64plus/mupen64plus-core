@@ -57,11 +57,27 @@ static uint32_t si_reg(uint32_t address)
 }
 
 
-void connect_si(struct si_controller* si,
-                struct r4300_core* r4300,
-                struct ri_controller* ri);
+void init_si(struct si_controller* si,
+             void* cont_user_data[],
+             int (*cont_is_connected[])(void*,enum pak_type*),
+             uint32_t (*cont_get_input[])(void*),
+             void* mpk_user_data[],
+             void (*mpk_save[])(void*),
+             uint8_t* mpk_data[],
+             void* rpk_user_data[],
+             void (*rpk_rumble[])(void*,enum rumble_action),
+             void* eeprom_user_data,
+             void (*eeprom_save)(void*),
+             uint8_t* eeprom_data,
+             size_t eeprom_size,
+             uint16_t eeeprom_id,
+             void* af_rtc_user_data,
+             const struct tm* (*af_rtc_get_time)(void*),
+             const uint8_t* ipl3,
+             struct r4300_core* r4300,
+             struct ri_controller* ri);
 
-void init_si(struct si_controller* si);
+void poweron_si(struct si_controller* si);
 
 int read_si_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

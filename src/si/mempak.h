@@ -38,6 +38,8 @@ void mempak_save(struct mempak* mpk);
 
 void format_mempak(uint8_t* mempak);
 
+void init_mempak(struct mempak* mpk, void* user_data, void (*save)(void*), uint8_t* data);
+
 void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
 void mempak_write_command(struct mempak* mpk, uint8_t* cmd);
 

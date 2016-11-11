@@ -40,6 +40,8 @@ void sram_save(struct sram* sram);
 
 void format_sram(uint8_t* sram);
 
+void init_sram(struct sram* sram, void* user_data, void (*save)(void*), uint8_t* data);
+
 void dma_write_sram(struct pi_controller* pi);
 void dma_read_sram(struct pi_controller* pi);
 

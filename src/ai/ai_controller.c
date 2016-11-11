@@ -145,23 +145,29 @@ void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t siz
 }
 
 
-void connect_ai(struct ai_controller* ai,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                struct vi_controller* vi)
+void init_ai(struct ai_controller* ai,
+             void * user_data,
+             void (*set_audio_format)(void*,unsigned int, unsigned int),
+             void (*push_audio_samples)(void*,const void*,size_t),
+             struct r4300_core* r4300,
+             struct ri_controller* ri,
+             struct vi_controller* vi)
 {
+    ai->user_data = user_data;
+    ai->set_audio_format = set_audio_format;
+    ai->push_audio_samples = push_audio_samples;
+
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
 }
 
-void init_ai(struct ai_controller* ai)
+void poweron_ai(struct ai_controller* ai)
 {
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
 }
-
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
 {

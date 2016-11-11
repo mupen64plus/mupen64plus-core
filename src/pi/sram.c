@@ -40,6 +40,12 @@ void format_sram(uint8_t* sram)
     memset(sram, 0, SRAM_SIZE);
 }
 
+void init_sram(struct sram* sram, void* user_data, void (*save)(void*), uint8_t* data)
+{
+    sram->user_data = user_data;
+    sram->save = save;
+    sram->data = data;
+}
 
 void dma_write_sram(struct pi_controller* pi)
 {

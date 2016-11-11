@@ -73,12 +73,15 @@ static uint32_t ai_reg(uint32_t address)
 void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits);
 void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size);
 
-void connect_ai(struct ai_controller* ai,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                struct vi_controller* vi);
+void init_ai(struct ai_controller* ai,
+             void * user_data,
+             void (*set_audio_format)(void*,unsigned int, unsigned int),
+             void (*push_audio_samples)(void*,const void*,size_t),
+             struct r4300_core* r4300,
+             struct ri_controller* ri,
+             struct vi_controller* vi);
 
-void init_ai(struct ai_controller* ai);
+void poweron_ai(struct ai_controller* ai);
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
