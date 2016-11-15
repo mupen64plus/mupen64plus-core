@@ -44,6 +44,7 @@
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
 #include "backends/audio_out_backend.h"
+#include "backends/controller_input_backend.h"
 #include "cheat.h"
 #include "device.h"
 #include "eep_file.h"
@@ -835,13 +836,12 @@ m64p_error main_run(void)
     struct mpk_file mpk;
     struct sra_file sra;
     int channels[GAME_CONTROLLERS_COUNT];
-    int (*cont_is_connected[GAME_CONTROLLERS_COUNT])(void*,enum pak_type*);
-    uint32_t (*cont_get_input[GAME_CONTROLLERS_COUNT])(void*);
     void* mpk_user_data[GAME_CONTROLLERS_COUNT];
     void (*mpk_save[GAME_CONTROLLERS_COUNT])(void*);
     uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
     void (*rpk_rumble[GAME_CONTROLLERS_COUNT])(void*, enum rumble_action);
     struct audio_out_backend aout;
+    struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
 
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -886,8 +886,7 @@ m64p_error main_run(void)
     /* setup game controllers data */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         channels[i] = i;
-        cont_is_connected[i] = egcvip_is_connected;
-        cont_get_input[i] = egcvip_get_input;
+        cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
         mpk_user_data[i] = &mpk;
         mpk_save[i] = save_mpk_file;
         mpk_data[i] = mpk_file_ptr(&mpk, i);
@@ -900,7 +899,7 @@ m64p_error main_run(void)
                 &fla, save_fla_file, fla_file_ptr(&fla),
                 &sra, save_sra_file, sra_file_ptr(&sra),
                 g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
-                (void**)channels, cont_is_connected, cont_get_input,
+                cins,
                 mpk_user_data, mpk_save, mpk_data,
                 (void**)channels, rpk_rumble,
                 &eep, save_eep_file, eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,

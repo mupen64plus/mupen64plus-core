@@ -27,6 +27,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
+#include "backends/controller_input_backend.h"
 #include "memory/memory.h"
 #include "n64_cic_nus_6105.h"
 #include "plugin/plugin.h"
@@ -65,9 +66,7 @@ static void process_cart_command(struct pif* pif, uint8_t* cmd)
 
 
 void init_pif(struct pif* pif,
-    void* cont_user_data[],
-    int (*cont_is_connected[])(void*,enum pak_type*),
-    uint32_t (*cont_get_input[])(void*),
+    struct controller_input_backend* cins,
     void* mpk_user_data[],
     void (*mpk_save[])(void*),
     uint8_t* mpk_data[],
@@ -86,7 +85,7 @@ void init_pif(struct pif* pif,
 
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         init_game_controller(&pif->controllers[i],
-                cont_user_data[i], cont_is_connected[i], cont_get_input[i],
+                &cins[i],
                 mpk_user_data[i], mpk_save[i], mpk_data[i],
                 rpk_user_data[i], rpk_rumble[i]);
     }

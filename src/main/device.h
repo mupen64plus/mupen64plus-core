@@ -35,6 +35,7 @@
 #include "vi/vi_controller.h"
 
 struct audio_out_backend;
+struct controller_input_backend;
 
 /* Device structure is a container for the n64 submodules
  * FIXME: should also include memory submodule, but not possible atm
@@ -63,7 +64,7 @@ void init_device(struct device* dev,
     /* ri */
     uint32_t* dram, size_t dram_size,
     /* si */
-    void* cont_user_data[], int (*cont_is_connected[])(void*,enum pak_type*), uint32_t (*cont_get_input[])(void*),
+    struct controller_input_backend* cins,
     void* mpk_user_data[], void (*mpk_save[])(void*), uint8_t* mpk_data[],
     void* rpk_user_data[], void (*rpk_rumble[])(void*,enum rumble_action),
     void* eeprom_user_data, void (*eeprom_save)(void*), uint8_t* eeprom_data, size_t eeprom_size, uint16_t eeeprom_id,

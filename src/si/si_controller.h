@@ -28,6 +28,7 @@
 
 struct r4300_core;
 struct ri_controller;
+struct controller_input_backend;
 
 enum si_registers
 {
@@ -58,9 +59,7 @@ static uint32_t si_reg(uint32_t address)
 
 
 void init_si(struct si_controller* si,
-             void* cont_user_data[],
-             int (*cont_is_connected[])(void*,enum pak_type*),
-             uint32_t (*cont_get_input[])(void*),
+             struct controller_input_backend* cins,
              void* mpk_user_data[],
              void (*mpk_save[])(void*),
              uint8_t* mpk_data[],

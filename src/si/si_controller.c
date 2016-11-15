@@ -92,9 +92,7 @@ static void dma_si_read(struct si_controller* si)
 
 
 void init_si(struct si_controller* si,
-             void* cont_user_data[],
-             int (*cont_is_connected[])(void*,enum pak_type*),
-             uint32_t (*cont_get_input[])(void*),
+             struct controller_input_backend* cins,
              void* mpk_user_data[],
              void (*mpk_save[])(void*),
              uint8_t* mpk_data[],
@@ -115,7 +113,7 @@ void init_si(struct si_controller* si,
     si->ri = ri;
 
     init_pif(&si->pif,
-        cont_user_data, cont_is_connected, cont_get_input,
+        cins,
         mpk_user_data, mpk_save, mpk_data,
         rpk_user_data, rpk_rumble,
         eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeeprom_id,
