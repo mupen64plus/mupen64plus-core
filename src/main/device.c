@@ -34,7 +34,7 @@
 
 void init_device(struct device* dev,
     /* ai */
-    void * ai_user_data, void (*ai_set_audio_format)(void*,unsigned int, unsigned int), void (*ai_push_audio_samples)(void*,const void*,size_t),
+    struct audio_out_backend* aout,
     /* pi */
     uint8_t* rom, size_t rom_size,
     void* flashram_user_data, void (*flashram_save)(void*), uint8_t* flashram_data,
@@ -52,7 +52,7 @@ void init_device(struct device* dev,
 {
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri);
-    init_ai(&dev->ai, ai_user_data, ai_set_audio_format, ai_push_audio_samples, &dev->r4300, &dev->ri, &dev->vi);
+    init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);
     init_pi(&dev->pi, rom, rom_size, flashram_user_data, flashram_save, flashram_data, sram_user_data, sram_save, sram_data, &dev->r4300, &dev->ri);
     init_ri(&dev->ri, dram, dram_size);
     init_si(&dev->si,
