@@ -103,8 +103,7 @@ void init_si(struct si_controller* si,
              uint8_t* eeprom_data,
              size_t eeprom_size,
              uint16_t eeeprom_id,
-             void* af_rtc_user_data,
-             const struct tm* (*af_rtc_get_time)(void*),
+             struct clock_backend* rtc,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
              struct ri_controller* ri)
@@ -117,7 +116,7 @@ void init_si(struct si_controller* si,
         mpk_user_data, mpk_save, mpk_data,
         rpk_user_data, rpk_rumble,
         eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeeprom_id,
-        af_rtc_user_data, af_rtc_get_time,
+        rtc,
         ipl3);
 }
 

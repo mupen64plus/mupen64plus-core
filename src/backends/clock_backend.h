@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - af_rtc.h                                                *
+ *   Mupen64plus - clock_backend.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,23 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_AF_RTC_H
-#define M64P_SI_AF_RTC_H
+#ifndef M64P_BACKENDS_CLOCK_BACKEND_H
+#define M64P_BACKENDS_CLOCK_BACKEND_H
 
-#include <stdint.h>
+struct tm;
 
-struct clock_backend;
-
-struct af_rtc
+struct clock_backend
 {
-    struct clock_backend* rtc;
+    void* user_data;
+    const struct tm* (*get_time)(void*);
 };
 
-void init_af_rtc(struct af_rtc* afrtc,
-                 struct clock_backend* rtc);
-
-void af_rtc_status_command(struct af_rtc* afrtc, uint8_t* cmd);
-void af_rtc_read_command(struct af_rtc* afrtc, uint8_t* cmd);
-void af_rtc_write_command(struct af_rtc* afrtc, uint8_t* cmd);
+const struct tm* clock_get_time(struct clock_backend* clock);
 
 #endif

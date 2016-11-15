@@ -77,8 +77,7 @@ void init_pif(struct pif* pif,
     uint8_t* eeprom_data,
     size_t eeprom_size,
     uint16_t eeprom_id,
-    void* af_rtc_user_data,
-    const struct tm* (*af_rtc_get_time)(void*),
+    struct clock_backend* rtc,
     const uint8_t* ipl3)
 {
     size_t i;
@@ -91,7 +90,7 @@ void init_pif(struct pif* pif,
     }
 
     init_eeprom(&pif->eeprom, eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeprom_id);
-    init_af_rtc(&pif->af_rtc, af_rtc_user_data, af_rtc_get_time);
+    init_af_rtc(&pif->af_rtc, rtc);
 
     init_cic_using_ipl3(&pif->cic, ipl3);
 }
