@@ -34,10 +34,10 @@
  */
 void force_detected_rdram_size_hack(void)
 {
-    uint32_t address = (g_si.pif.cic.version != CIC_X105)
+    uint32_t address = (g_dev.si.pif.cic.version != CIC_X105)
         ? 0x318
         : 0x3f0;
 
-    g_ri.rdram.dram[address/4] = g_ri.rdram.dram_size;
+    g_dev.ri.rdram.dram[address/4] = g_dev.ri.rdram.dram_size;
 }
 
