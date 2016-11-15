@@ -565,7 +565,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // check ROM header
     COPYARRAY(RomHeader, curr, unsigned int, 0x40/4);
-    if(memcmp(RomHeader, g_rom, 0x40) != 0)
+    if(memcmp(RomHeader, g_dev.pi.cart_rom.rom, 0x40) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
         free(savestateData);
@@ -1286,7 +1286,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     // Write the save state data in memory
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
-    PUTARRAY(g_rom, curr, unsigned int, 0x40/4);
+    PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, uint32_t, get_event(VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc());
     PUTARRAY(r4300_regs(), curr, int64_t, 32);

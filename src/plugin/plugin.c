@@ -227,7 +227,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
-    gfx_info.HEADER = (unsigned char *) g_rom;
+    gfx_info.HEADER = (unsigned char *) g_dev.pi.cart_rom.rom;
     gfx_info.RDRAM = (unsigned char *) g_rdram;
     gfx_info.DMEM = (unsigned char *) g_dev.sp.mem;
     gfx_info.IMEM = (unsigned char *) g_dev.sp.mem + 0x1000;
