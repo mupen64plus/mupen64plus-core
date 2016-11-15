@@ -435,7 +435,7 @@ int savestates_load_m64p(char *filepath)
     g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
     g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
-    COPYARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    COPYARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -764,8 +764,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
     // RDRAM
-    memset(g_rdram, 0, RDRAM_MAX_SIZE);
-    COPYARRAY(g_rdram, curr, uint32_t, SaveRDRAMSize/4);
+    memset(g_dev.ri.rdram.dram, 0, RDRAM_MAX_SIZE);
+    COPYARRAY(g_dev.ri.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
 
     // DMEM + IMEM
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1189,7 +1189,7 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG]);
 
-    PUTARRAY(g_rdram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     PUTARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -1415,7 +1415,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
 
     PUTARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    PUTARRAY(g_rdram, curr, uint32_t, SaveRDRAMSize/4);
+    PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
 
     // Write the save state data to the output

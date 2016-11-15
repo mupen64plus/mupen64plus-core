@@ -37,8 +37,8 @@ extern m64p_handle g_CoreConfig;
 extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
 
-extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 
+extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 extern struct device g_dev;
 
 extern m64p_frame_callback g_FrameCallback;
