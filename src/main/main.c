@@ -44,6 +44,7 @@
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
 #include "backends/audio_out_backend.h"
+#include "backends/clock_backend.h"
 #include "backends/controller_input_backend.h"
 #include "cheat.h"
 #include "device.h"
@@ -841,6 +842,7 @@ m64p_error main_run(void)
     uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
     void (*rpk_rumble[GAME_CONTROLLERS_COUNT])(void*, enum rumble_action);
     struct audio_out_backend aout;
+    struct clock_backend rtc;
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
 
 
@@ -870,6 +872,7 @@ m64p_error main_run(void)
 
     /* setup backends */
     aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
+    rtc = (struct clock_backend){ NULL, get_time_using_C_localtime };
 
     /* open mpk file (if any) */
     open_mpk_file(&mpk, get_mempaks_path());
@@ -903,7 +906,7 @@ m64p_error main_run(void)
                 mpk_user_data, mpk_save, mpk_data,
                 (void**)channels, rpk_rumble,
                 &eep, save_eep_file, eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
-                NULL, get_time_using_C_localtime,
+                &rtc,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);
 
     // Attach rom to plugins
