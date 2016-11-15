@@ -52,7 +52,7 @@ void push_audio_samples_via_audio_plugin(void* user_data, const void* buffer, si
     uint32_t saved_ai_length = ai->regs[AI_LEN_REG];
     uint32_t saved_ai_dram = ai->regs[AI_DRAM_ADDR_REG];
 
-    /* exploit the fact that buffer points in g_rdram to retreive dram_addr_reg value */
+    /* exploit the fact that buffer points in g_dev.ri.rdram.dram to retreive dram_addr_reg value */
     ai->regs[AI_DRAM_ADDR_REG] = (uint8_t*)buffer - (uint8_t*)ai->ri->rdram.dram;
     ai->regs[AI_LEN_REG] = size;
 

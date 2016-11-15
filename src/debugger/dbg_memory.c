@@ -294,7 +294,7 @@ uint32 read_memory_32(uint32 addr){
         return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
-      return g_rdram[rdram_dram_address(addr)];
+      return g_dev.ri.rdram.dram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
       return g_dev.sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
@@ -377,7 +377,7 @@ void write_memory_32(uint32 addr, uint32 value){
   switch(get_memory_type(addr))
     {
     case M64P_MEM_RDRAM:
-      g_rdram[(addr & 0xffffff) >> 2] = value;
+      g_dev.ri.rdram.dram[(addr & 0xffffff) >> 2] = value;
       CHECK_MEM(addr)
       break;
     }

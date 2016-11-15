@@ -1425,7 +1425,7 @@ uint32_t *fast_mem_access(uint32_t address)
     address &= UINT32_C(0x1ffffffc);
 
     if (address < RDRAM_MAX_SIZE)
-        return (uint32_t*) ((uint8_t*) g_rdram + address);
+        return (uint32_t*) ((uint8_t*) g_dev.ri.rdram.dram + address);
     else if (address >= UINT32_C(0x10000000))
         return (uint32_t*) ((uint8_t*) g_dev.pi.cart_rom.rom + (address - UINT32_C(0x10000000)));
     else if ((address & UINT32_C(0xffffe000)) == UINT32_C(0x04000000))

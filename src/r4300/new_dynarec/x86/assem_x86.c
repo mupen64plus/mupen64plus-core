@@ -1997,7 +1997,7 @@ static void emit_readword_indexed(int addr, int rs, int rt)
 }
 static void emit_readword_tlb(int addr, int map, int rt)
 {
-  if(map<0) emit_readword(addr+(int)g_rdram-0x80000000, rt);
+  if(map<0) emit_readword(addr+(int)g_dev.ri.rdram.dram-0x80000000, rt);
   else
   {
     assem_debug("mov (%x,%%%s,4),%%%s",addr,regname[map],regname[rt]);
@@ -2009,7 +2009,7 @@ static void emit_readword_tlb(int addr, int map, int rt)
 }
 static void emit_readword_indexed_tlb(int addr, int rs, int map, int rt)
 {
-  if(map<0) emit_readword_indexed(addr+(int)g_rdram-0x80000000, rs, rt);
+  if(map<0) emit_readword_indexed(addr+(int)g_dev.ri.rdram.dram-0x80000000, rs, rt);
   else {
     assem_debug("mov %x(%%%s,%%%s,4),%%%s",addr,regname[rs],regname[map],regname[rt]);
     assert(rs!=ESP);
@@ -2042,8 +2042,8 @@ static void emit_movmem_indexedx4(int addr, int rs, int rt)
 static void emit_readdword_tlb(int addr, int map, int rh, int rl)
 {
   if(map<0) {
-    if(rh>=0) emit_readword(addr+(int)g_rdram-0x80000000, rh);
-    emit_readword(addr+(int)g_rdram-0x7FFFFFFC, rl);
+    if(rh>=0) emit_readword(addr+(int)g_dev.ri.rdram.dram-0x80000000, rh);
+    emit_readword(addr+(int)g_dev.ri.rdram.dram-0x7FFFFFFC, rl);
   }
   else {
     if(rh>=0) emit_movmem_indexedx4(addr, map, rh);
@@ -2074,7 +2074,7 @@ static void emit_movsbl_indexed(int addr, int rs, int rt)
 }
 static void emit_movsbl_tlb(int addr, int map, int rt)
 {
-  if(map<0) emit_movsbl(addr+(int)g_rdram-0x80000000, rt);
+  if(map<0) emit_movsbl(addr+(int)g_dev.ri.rdram.dram-0x80000000, rt);
   else
   {
     assem_debug("movsbl (%x,%%%s,4),%%%s",addr,regname[map],regname[rt]);
@@ -2087,7 +2087,7 @@ static void emit_movsbl_tlb(int addr, int map, int rt)
 }
 static void emit_movsbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
-  if(map<0) emit_movsbl_indexed(addr+(int)g_rdram-0x80000000, rs, rt);
+  if(map<0) emit_movsbl_indexed(addr+(int)g_dev.ri.rdram.dram-0x80000000, rs, rt);
   else {
     assem_debug("movsbl %x(%%%s,%%%s,4),%%%s",addr,regname[rs],regname[map],regname[rt]);
     assert(rs!=ESP);
@@ -2128,7 +2128,7 @@ static void emit_movswl_indexed(int addr, int rs, int rt)
 }
 static void emit_movswl_tlb(int addr, int map, int rt)
 {
-  if(map<0) emit_movswl(addr+(int)g_rdram-0x80000000, rt);
+  if(map<0) emit_movswl(addr+(int)g_dev.ri.rdram.dram-0x80000000, rt);
   else
   {
     assem_debug("movswl (%x,%%%s,4),%%%s",addr,regname[map],regname[rt]);
@@ -2157,7 +2157,7 @@ static void emit_movzbl_indexed(int addr, int rs, int rt)
 }
 static void emit_movzbl_tlb(int addr, int map, int rt)
 {
-  if(map<0) emit_movzbl(addr+(int)g_rdram-0x80000000, rt);
+  if(map<0) emit_movzbl(addr+(int)g_dev.ri.rdram.dram-0x80000000, rt);
   else
   {
     assem_debug("movzbl (%x,%%%s,4),%%%s",addr,regname[map],regname[rt]);
@@ -2170,7 +2170,7 @@ static void emit_movzbl_tlb(int addr, int map, int rt)
 }
 static void emit_movzbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
-  if(map<0) emit_movzbl_indexed(addr+(int)g_rdram-0x80000000, rs, rt);
+  if(map<0) emit_movzbl_indexed(addr+(int)g_dev.ri.rdram.dram-0x80000000, rs, rt);
   else {
     assem_debug("movzbl %x(%%%s,%%%s,4),%%%s",addr,regname[rs],regname[map],regname[rt]);
     assert(rs!=ESP);
@@ -2211,7 +2211,7 @@ static void emit_movzwl_indexed(int addr, int rs, int rt)
 }
 static void emit_movzwl_tlb(int addr, int map, int rt)
 {
-  if(map<0) emit_movzwl(addr+(int)g_rdram-0x80000000, rt);
+  if(map<0) emit_movzwl(addr+(int)g_dev.ri.rdram.dram-0x80000000, rt);
   else
   {
     assem_debug("movzwl (%x,%%%s,4),%%%s",addr,regname[map],regname[rt]);
@@ -2268,7 +2268,7 @@ static void emit_writeword_indexed(int rt, int addr, int rs)
 }
 static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
 {
-  if(map<0) emit_writeword_indexed(rt, addr+(int)g_rdram-0x80000000, rs);
+  if(map<0) emit_writeword_indexed(rt, addr+(int)g_dev.ri.rdram.dram-0x80000000, rs);
   else {
     assem_debug("mov %%%s,%x(%%%s,%%%s,1)",regname[rt],addr,regname[rs],regname[map]);
     assert(rs!=ESP);
@@ -2358,7 +2358,7 @@ static void emit_writebyte_indexed(int rt, int addr, int rs)
 }
 static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
 {
-  if(map<0) emit_writebyte_indexed(rt, addr+(int)g_rdram-0x80000000, rs);
+  if(map<0) emit_writebyte_indexed(rt, addr+(int)g_dev.ri.rdram.dram-0x80000000, rs);
   else
   if(rt<4) {
     assem_debug("movb %%%cl,%x(%%%s,%%%s,1)",regname[rt][1],addr,regname[rs],regname[map]);
@@ -3525,7 +3525,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
   }
   if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
     if(!c||memtarget) {
-      //emit_readword_indexed((int)g_rdram-0x80000000,temp2,temp2);
+      //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,temp2,temp2);
       emit_readword_indexed_tlb(0,temp2,map,temp2);
       if(jaddr) add_stub(LOADW_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
@@ -3598,8 +3598,8 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
         emit_storereg(rs1[i]|64,get_reg(i_regs->regmap,rs1[i]|64));
     int temp2h=get_reg(i_regs->regmap,FTEMP|64);
     if(!c||memtarget) {
-      //if(th>=0) emit_readword_indexed((int)g_rdram-0x80000000,temp2,temp2h);
-      //emit_readword_indexed((int)g_rdram-0x7FFFFFFC,temp2,temp2);
+      //if(th>=0) emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,temp2,temp2h);
+      //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x7FFFFFFC,temp2,temp2);
       emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
       if(jaddr) add_stub(LOADD_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
