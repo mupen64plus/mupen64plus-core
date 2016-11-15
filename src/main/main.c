@@ -36,7 +36,6 @@
 #include <string.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/debugger.h"
@@ -45,17 +44,16 @@
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
 #include "cheat.h"
+#include "device.h"
 #include "eep_file.h"
 #include "eventloop.h"
 #include "fla_file.h"
 #include "main.h"
-#include "memory/memory.h"
 #include "mpk_file.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
-#include "pi/pi_controller.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/emulate_speaker_via_audio_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
@@ -63,17 +61,11 @@
 #include "plugin/rumble_via_input_plugin.h"
 #include "profile.h"
 #include "r4300/r4300.h"
-#include "r4300/r4300_core.h"
 #include "r4300/reset.h"
-#include "rdp/rdp_core.h"
-#include "ri/ri_controller.h"
 #include "rom.h"
-#include "rsp/rsp_core.h"
 #include "savestates.h"
-#include "si/si_controller.h"
 #include "sra_file.h"
 #include "util.h"
-#include "vi/vi_controller.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef DBG
@@ -97,14 +89,7 @@ int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't s
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
 ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
-struct ai_controller g_ai;
-struct pi_controller g_pi;
-struct ri_controller g_ri;
-struct si_controller g_si;
-struct vi_controller g_vi;
-struct r4300_core g_r4300;
-struct rdp_core g_dp;
-struct rsp_core g_sp;
+struct device g_dev;
 
 int g_delay_si = 0;
 
@@ -445,10 +430,10 @@ void main_state_load(const char *filename)
 {
     if (g_EmulatorRunning)
     {
-        rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_dev.si.pif.controllers[0].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_dev.si.pif.controllers[1].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_dev.si.pif.controllers[2].rumblepak, RUMBLE_STOP);
+        rumblepak_rumble(&g_dev.si.pif.controllers[3].rumblepak, RUMBLE_STOP);
     }
 
     if (filename == NULL) // Save to slot
@@ -747,7 +732,7 @@ static void apply_speed_limiter(void)
     unsigned int CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
-    const double VILimitMilliseconds = 1000.0 / g_vi.expected_refresh_rate;
+    const double VILimitMilliseconds = 1000.0 / g_dev.vi.expected_refresh_rate;
     const double SpeedFactorMultiple = defaultSpeedFactor/l_SpeedFactor;
     const double AdjustedLimit = VILimitMilliseconds * SpeedFactorMultiple;
 
@@ -836,64 +821,6 @@ void new_vi(void)
     apply_speed_limiter();
 }
 
-static void init_device(
-        struct r4300_core* r4300,
-        struct rdp_core* dp,
-        struct rsp_core* sp,
-        struct ai_controller* ai,
-            void * ai_user_data, void (*ai_set_audio_format)(void*,unsigned int, unsigned int), void (*ai_push_audio_samples)(void*,const void*,size_t),
-        struct pi_controller* pi,
-            uint8_t* rom, size_t rom_size,
-            void* flashram_user_data, void (*flashram_save)(void*), uint8_t* flashram_data,
-            void* sram_user_data, void (*sram_save)(void*), uint8_t* sram_data,
-        struct ri_controller* ri,
-            uint32_t* dram, size_t dram_size,
-        struct si_controller* si,
-            void* cont_user_data[], int (*cont_is_connected[])(void*,enum pak_type*), uint32_t (*cont_get_input[])(void*),
-            void* mpk_user_data[], void (*mpk_save[])(void*), uint8_t* mpk_data[],
-            void* rpk_user_data[], void (*rpk_rumble[])(void*,enum rumble_action),
-            void* eeprom_user_data, void (*eeprom_save)(void*), uint8_t* eeprom_data, size_t eeprom_size, uint16_t eeeprom_id,
-            void* af_rtc_user_data, const struct tm* (*af_rtc_get_time)(void*),
-        struct vi_controller* vi,
-            unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing)
-{
-    init_rdp(dp, r4300, sp, ri);
-    init_rsp(sp, r4300, dp, ri);
-    init_ai(ai, ai_user_data, ai_set_audio_format, ai_push_audio_samples, r4300, ri, vi);
-    init_pi(pi, rom, rom_size, flashram_user_data, flashram_save, flashram_data, sram_user_data, sram_save, sram_data, r4300, ri);
-    init_ri(ri, dram, dram_size);
-    init_si(si,
-        cont_user_data, cont_is_connected, cont_get_input,
-        mpk_user_data, mpk_save, mpk_data,
-        rpk_user_data, rpk_rumble,
-        eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeeprom_id,
-        af_rtc_user_data, af_rtc_get_time,
-        rom + 0x40,
-        r4300, ri);
-    init_vi(vi, vi_clock, expected_refresh_rate, count_per_scanline, alternate_timing, r4300);
-}
-
-void poweron_device(
-        struct r4300_core* r4300,
-        struct rdp_core* dp,
-        struct rsp_core* sp,
-        struct ai_controller* ai,
-        struct pi_controller* pi,
-        struct ri_controller* ri,
-        struct si_controller* si,
-        struct vi_controller* vi)
-{
-    poweron_r4300(r4300);
-    poweron_rdp(dp);
-    poweron_rsp(sp);
-    poweron_ai(ai);
-    poweron_pi(pi);
-    poweron_ri(ri);
-    poweron_si(si);
-    poweron_vi(vi);
-    poweron_memory();
-}
-
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
@@ -960,22 +887,17 @@ m64p_error main_run(void)
         rpk_rumble[i] = rvip_rumble;
     }
 
-    init_device(&g_r4300, &g_dp, &g_sp,
-             &g_ai,
-                &g_ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin,
-             &g_pi,
-                 g_rom, g_rom_size,
-                 &fla, save_fla_file, fla_file_ptr(&fla),
-                 &sra, save_sra_file, sra_file_ptr(&sra),
-             &g_ri,
-                 g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
-             &g_si,
+    init_device(&g_dev,
+                &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin,
+                g_rom, g_rom_size,
+                &fla, save_fla_file, fla_file_ptr(&fla),
+                &sra, save_sra_file, sra_file_ptr(&sra),
+                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
                 (void**)channels, cont_is_connected, cont_get_input,
                 mpk_user_data, mpk_save, mpk_data,
                 (void**)channels, rpk_rumble,
                 &eep, save_eep_file, eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
                 NULL, get_time_using_C_localtime,
-             &g_vi,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);
 
     // Attach rom to plugins
@@ -1023,14 +945,7 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     /* call r4300 CPU core and run the game */
-    poweron_device(&g_r4300,
-            &g_dp,
-            &g_sp,
-            &g_ai,
-            &g_pi,
-            &g_ri,
-            &g_si,
-            &g_vi);
+    poweron_device(&g_dev);
 
     r4300_reset_soft();
     r4300_execute();

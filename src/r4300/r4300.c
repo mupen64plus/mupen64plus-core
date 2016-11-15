@@ -114,41 +114,41 @@ void r4300_reset_soft(void)
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-    g_sp.regs[SP_STATUS_REG] = 1;
-    g_sp.regs2[SP_PC_REG] = 0;
+    g_dev.sp.regs[SP_STATUS_REG] = 1;
+    g_dev.sp.regs2[SP_PC_REG] = 0;
 
-    g_pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
-    g_pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
-    g_pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
-    g_pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
-    g_pi.regs[PI_STATUS_REG] = 0;
+    g_dev.pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
+    g_dev.pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
+    g_dev.pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
+    g_dev.pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
+    g_dev.pi.regs[PI_STATUS_REG] = 0;
 
-    g_ai.regs[AI_DRAM_ADDR_REG] = 0;
-    g_ai.regs[AI_LEN_REG] = 0;
+    g_dev.ai.regs[AI_DRAM_ADDR_REG] = 0;
+    g_dev.ai.regs[AI_LEN_REG] = 0;
 
-    g_vi.regs[VI_V_INTR_REG] = 1023;
-    g_vi.regs[VI_CURRENT_REG] = 0;
-    g_vi.regs[VI_H_START_REG] = 0;
+    g_dev.vi.regs[VI_V_INTR_REG] = 1023;
+    g_dev.vi.regs[VI_CURRENT_REG] = 0;
+    g_dev.vi.regs[VI_H_START_REG] = 0;
 
-    g_r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
+    g_dev.r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
 
-    memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_dev.sp.mem+0x40, g_rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
     reg[21] = reset_type;   /* s5 */
-    reg[22] = g_si.pif.cic.seed;/* s6 */
+    reg[22] = g_dev.si.pif.cic.seed;/* s6 */
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    g_sp.mem[0x1000/4] = 0x3c0dbfc0;
-    g_sp.mem[0x1004/4] = 0x8da807fc;
-    g_sp.mem[0x1008/4] = 0x25ad07c0;
-    g_sp.mem[0x100c/4] = 0x31080080;
-    g_sp.mem[0x1010/4] = 0x5500fffc;
-    g_sp.mem[0x1014/4] = 0x3c0dbfc0;
-    g_sp.mem[0x1018/4] = 0x8da80024;
-    g_sp.mem[0x101c/4] = 0x3c0bb000;
+    g_dev.sp.mem[0x1000/4] = 0x3c0dbfc0;
+    g_dev.sp.mem[0x1004/4] = 0x8da807fc;
+    g_dev.sp.mem[0x1008/4] = 0x25ad07c0;
+    g_dev.sp.mem[0x100c/4] = 0x31080080;
+    g_dev.sp.mem[0x1010/4] = 0x5500fffc;
+    g_dev.sp.mem[0x1014/4] = 0x3c0dbfc0;
+    g_dev.sp.mem[0x1018/4] = 0x8da80024;
+    g_dev.sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = INT64_C(0xffffffffa4000040); /* t3 */

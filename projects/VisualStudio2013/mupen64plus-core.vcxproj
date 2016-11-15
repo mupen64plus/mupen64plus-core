@@ -47,6 +47,7 @@
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
     <ClCompile Include="..\..\src\debugger\dbg_memory.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
+    <ClCompile Include="..\..\src\main\device.c" />
     <ClCompile Include="..\..\src\main\eep_file.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
     <ClCompile Include="..\..\src\main\fla_file.c" />
@@ -460,6 +461,7 @@
     <ClInclude Include="..\..\src\debugger\dbg_memory.h" />
     <ClInclude Include="..\..\src\debugger\dbg_types.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
+    <ClInclude Include="..\..\src\main\device.h" />
     <ClInclude Include="..\..\src\main\eep_file.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
     <ClInclude Include="..\..\src\main\fla_file.h" />
