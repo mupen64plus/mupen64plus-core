@@ -25,7 +25,6 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "main/main.h"
-#include "main/rom.h"
 #include "pi/pi_controller.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 #include "r4300/r4300_core.h"
@@ -1305,13 +1304,13 @@ void poweron_memory(void)
     }
 
     /* map cart ROM */
-    for(i = 0; i < (g_rom_size >> 16); ++i)
+    for(i = 0; i < (g_dev.pi.cart_rom.rom_size >> 16); ++i)
     {
         map_region(0x9000+i, M64P_MEM_ROM, R(rom), W(nothing));
         map_region(0xb000+i, M64P_MEM_ROM, R(rom),
                    write_nothingb, write_nothingh, write_rom, write_nothingd);
     }
-    for(i = (g_rom_size >> 16); i < 0xfc0; ++i)
+    for(i = (g_dev.pi.cart_rom.rom_size >> 16); i < 0xfc0; ++i)
     {
         map_region(0x9000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(0xb000+i, M64P_MEM_NOTHING, RW(nothing));
@@ -1428,7 +1427,7 @@ uint32_t *fast_mem_access(uint32_t address)
     if (address < RDRAM_MAX_SIZE)
         return (uint32_t*) ((uint8_t*) g_rdram + address);
     else if (address >= UINT32_C(0x10000000))
-        return (uint32_t*) ((uint8_t*) g_rom + (address - UINT32_C(0x10000000)));
+        return (uint32_t*) ((uint8_t*) g_dev.pi.cart_rom.rom + (address - UINT32_C(0x10000000)));
     else if ((address & UINT32_C(0xffffe000)) == UINT32_C(0x04000000))
         return (uint32_t*) ((uint8_t*) g_dev.sp.mem + (address & UINT32_C(0x1ffc)));
     else
