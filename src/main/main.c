@@ -43,6 +43,7 @@
 #include "api/m64p_types.h"
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
+#include "backends/audio_out_backend.h"
 #include "cheat.h"
 #include "device.h"
 #include "eep_file.h"
@@ -840,6 +841,8 @@ m64p_error main_run(void)
     void (*mpk_save[GAME_CONTROLLERS_COUNT])(void*);
     uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
     void (*rpk_rumble[GAME_CONTROLLERS_COUNT])(void*, enum rumble_action);
+    struct audio_out_backend aout;
+
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -865,6 +868,9 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
+    /* setup backends */
+    aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
+
     /* open mpk file (if any) */
     open_mpk_file(&mpk, get_mempaks_path());
 
@@ -889,7 +895,7 @@ m64p_error main_run(void)
     }
 
     init_device(&g_dev,
-                &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin,
+                &aout,
                 g_rom, g_rom_size,
                 &fla, save_fla_file, fla_file_ptr(&fla),
                 &sra, save_sra_file, sra_file_ptr(&sra),

@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+#include "backends/audio_out_backend.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
@@ -81,13 +82,13 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
             ? 16 /* default bit rate */
             : 1 + ai->regs[AI_BITRATE_REG];
 
-        set_audio_format(ai, frequency, bits);
+        audio_out_set_format(ai->aout, frequency, bits);
 
         ai->samples_format_changed = 0;
     }
 
     /* push audio samples to external sink */
-    push_audio_samples(ai, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    audio_out_push_samples(ai->aout, &ai->ri->rdram.dram[dma->address/4], dma->length);
 
     /* schedule end of dma event */
     cp0_update_count();
@@ -134,32 +135,16 @@ static void fifo_pop(struct ai_controller* ai)
 }
 
 
-void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits)
-{
-    ai->set_audio_format(ai->user_data, frequency, bits);
-}
-
-void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size)
-{
-    ai->push_audio_samples(ai->user_data, buffer, size);
-}
-
-
 void init_ai(struct ai_controller* ai,
-             void * user_data,
-             void (*set_audio_format)(void*,unsigned int, unsigned int),
-             void (*push_audio_samples)(void*,const void*,size_t),
              struct r4300_core* r4300,
              struct ri_controller* ri,
-             struct vi_controller* vi)
+             struct vi_controller* vi,
+             struct audio_out_backend* aout)
 {
-    ai->user_data = user_data;
-    ai->set_audio_format = set_audio_format;
-    ai->push_audio_samples = push_audio_samples;
-
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
+    ai->aout = aout;
 }
 
 void poweron_ai(struct ai_controller* ai)

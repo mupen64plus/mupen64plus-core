@@ -34,6 +34,8 @@
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
+struct audio_out_backend;
+
 /* Device structure is a container for the n64 submodules
  * FIXME: should also include memory submodule, but not possible atm
  * because of new_dynarec.
@@ -53,7 +55,7 @@ struct device
 /* Setup device "static" properties.  */
 void init_device(struct device* dev,
     /* ai */
-    void * ai_user_data, void (*ai_set_audio_format)(void*,unsigned int, unsigned int), void (*ai_push_audio_samples)(void*,const void*,size_t),
+    struct audio_out_backend* aout,
     /* pi */
     uint8_t* rom, size_t rom_size,
     void* flashram_user_data, void (*flashram_save)(void*), uint8_t* flashram_data,
