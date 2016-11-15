@@ -42,7 +42,7 @@ void init_device(struct device* dev,
     /* ri */
     uint32_t* dram, size_t dram_size,
     /* si */
-    void* cont_user_data[], int (*cont_is_connected[])(void*,enum pak_type*), uint32_t (*cont_get_input[])(void*),
+    struct controller_input_backend* cins,
     void* mpk_user_data[], void (*mpk_save[])(void*), uint8_t* mpk_data[],
     void* rpk_user_data[], void (*rpk_rumble[])(void*,enum rumble_action),
     void* eeprom_user_data, void (*eeprom_save)(void*), uint8_t* eeprom_data, size_t eeprom_size, uint16_t eeeprom_id,
@@ -56,7 +56,7 @@ void init_device(struct device* dev,
     init_pi(&dev->pi, rom, rom_size, flashram_user_data, flashram_save, flashram_data, sram_user_data, sram_save, sram_data, &dev->r4300, &dev->ri);
     init_ri(&dev->ri, dram, dram_size);
     init_si(&dev->si,
-        cont_user_data, cont_is_connected, cont_get_input,
+        cins,
         mpk_user_data, mpk_save, mpk_data,
         rpk_user_data, rpk_rumble,
         eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeeprom_id,

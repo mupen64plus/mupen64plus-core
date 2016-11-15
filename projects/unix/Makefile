@@ -419,6 +419,7 @@ SOURCE = \
 	$(SRCDIR)/api/frontend.c \
 	$(SRCDIR)/api/vidext.c \
 	$(SRCDIR)/backends/audio_out_backend.c \
+	$(SRCDIR)/backends/controller_input_backend.c \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
