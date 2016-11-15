@@ -28,6 +28,7 @@
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
 #include "backends/controller_input_backend.h"
+#include "backends/rumble_backend.h"
 #include "memory/memory.h"
 #include "n64_cic_nus_6105.h"
 #include "plugin/plugin.h"
@@ -70,8 +71,7 @@ void init_pif(struct pif* pif,
     void* mpk_user_data[],
     void (*mpk_save[])(void*),
     uint8_t* mpk_data[],
-    void* rpk_user_data[],
-    void (*rpk_rumble[])(void*,enum rumble_action),
+    struct rumble_backend* rumbles,
     void* eeprom_user_data,
     void (*eeprom_save)(void*),
     uint8_t* eeprom_data,
@@ -86,7 +86,7 @@ void init_pif(struct pif* pif,
         init_game_controller(&pif->controllers[i],
                 &cins[i],
                 mpk_user_data[i], mpk_save[i], mpk_data[i],
-                rpk_user_data[i], rpk_rumble[i]);
+                &rumbles[i]);
     }
 
     init_eeprom(&pif->eeprom, eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeprom_id);

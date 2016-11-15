@@ -166,13 +166,12 @@ void init_game_controller(struct game_controller* cont,
     void* mpk_user_data,
     void (*mpk_save)(void*),
     uint8_t* mpk_data,
-    void* rpk_user_data,
-    void (*rpk_rumble)(void*,enum rumble_action))
+    struct rumble_backend* rumble)
 {
     cont->cin = cin;;
 
     init_mempak(&cont->mempak, mpk_user_data, mpk_save, mpk_data);
-    init_rumblepak(&cont->rumblepak, rpk_user_data, rpk_rumble);
+    init_rumblepak(&cont->rumblepak, rumble);
 }
 
 

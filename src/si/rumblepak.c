@@ -21,18 +21,13 @@
 
 #include "rumblepak.h"
 
+#include "backends/rumble_backend.h"
+
 #include <string.h>
 
 
-void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action)
+void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble)
 {
-    rpk->rumble(rpk->user_data, action);
-}
-
-
-void init_rumblepak(struct rumblepak* rpk, void* user_data, void (*rumble)(void*,enum rumble_action))
-{
-    rpk->user_data = user_data;
     rpk->rumble = rumble;
 }
 
@@ -64,7 +59,7 @@ void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd)
                 ? RUMBLE_STOP
                 : RUMBLE_START;
 
-        rumblepak_rumble(rpk, action);
+        rumble_exec(rpk->rumble, action);
     }
 }
 
