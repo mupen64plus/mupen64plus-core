@@ -46,6 +46,7 @@
 #include "backends/audio_out_backend.h"
 #include "backends/clock_backend.h"
 #include "backends/controller_input_backend.h"
+#include "backends/rumble_backend.h"
 #include "cheat.h"
 #include "device.h"
 #include "eep_file.h"
@@ -434,10 +435,10 @@ void main_state_load(const char *filename)
 {
     if (g_EmulatorRunning)
     {
-        rumblepak_rumble(&g_dev.si.pif.controllers[0].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_dev.si.pif.controllers[1].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_dev.si.pif.controllers[2].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_dev.si.pif.controllers[3].rumblepak, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[0].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[1].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[2].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[3].rumblepak.rumble, RUMBLE_STOP);
     }
 
     if (filename == NULL) // Save to slot
@@ -840,10 +841,10 @@ m64p_error main_run(void)
     void* mpk_user_data[GAME_CONTROLLERS_COUNT];
     void (*mpk_save[GAME_CONTROLLERS_COUNT])(void*);
     uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
-    void (*rpk_rumble[GAME_CONTROLLERS_COUNT])(void*, enum rumble_action);
     struct audio_out_backend aout;
     struct clock_backend rtc;
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
+    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
 
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -893,7 +894,7 @@ m64p_error main_run(void)
         mpk_user_data[i] = &mpk;
         mpk_save[i] = save_mpk_file;
         mpk_data[i] = mpk_file_ptr(&mpk, i);
-        rpk_rumble[i] = rvip_rumble;
+        rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
     }
 
     init_device(&g_dev,
@@ -904,7 +905,7 @@ m64p_error main_run(void)
                 g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
                 cins,
                 mpk_user_data, mpk_save, mpk_data,
-                (void**)channels, rpk_rumble,
+                rumbles,
                 &eep, save_eep_file, eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
                 &rtc,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);

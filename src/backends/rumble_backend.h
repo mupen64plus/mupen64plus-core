@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - game_controller.h                                       *
+ *   Mupen64plus - rumble_backend.h                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,40 +19,23 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_GAME_CONTROLLER_H
-#define M64P_SI_GAME_CONTROLLER_H
+#ifndef M64P_BACKENDS_RUMBLE_BACKEND_H
+#define M64P_BACKENDS_RUMBLE_BACKEND_H
 
 #include <stdint.h>
 
-#include "mempak.h"
-#include "rumblepak.h"
-
-enum pak_type
+enum rumble_action
 {
-    PAK_NONE,
-    PAK_MEM,
-    PAK_RUMBLE,
-    PAK_TRANSFER
+    RUMBLE_STOP,
+    RUMBLE_START
 };
 
-struct controller_input_backend;
-
-struct game_controller
+struct rumble_backend
 {
-    struct controller_input_backend* cin;
-    struct mempak mempak;
-    struct rumblepak rumblepak;
+    void* user_data;
+    void (*rumble)(void*, enum rumble_action);
 };
 
-
-void init_game_controller(struct game_controller* cont,
-    struct controller_input_backend* cin,
-    void* mpk_user_data,
-    void (*mpk_save)(void*),
-    uint8_t* mpk_data,
-    struct rumble_backend* rumble);
-
-void process_controller_command(struct game_controller* cont, uint8_t* cmd);
-void read_controller(struct game_controller* cont, uint8_t* cmd);
+void rumble_exec(struct rumble_backend* rumble, enum rumble_action action);
 
 #endif

@@ -29,6 +29,7 @@
 struct r4300_core;
 struct ri_controller;
 struct controller_input_backend;
+struct rumble_backend;
 
 enum si_registers
 {
@@ -63,8 +64,7 @@ void init_si(struct si_controller* si,
              void* mpk_user_data[],
              void (*mpk_save[])(void*),
              uint8_t* mpk_data[],
-             void* rpk_user_data[],
-             void (*rpk_rumble[])(void*,enum rumble_action),
+             struct rumble_backend* rumbles,
              void* eeprom_user_data,
              void (*eeprom_save)(void*),
              uint8_t* eeprom_data,

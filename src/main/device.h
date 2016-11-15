@@ -37,6 +37,7 @@
 struct audio_out_backend;
 struct controller_input_backend;
 struct clock_backend;
+struct rumble_backend;
 
 /* Device structure is a container for the n64 submodules
  * FIXME: should also include memory submodule, but not possible atm
@@ -67,7 +68,7 @@ void init_device(struct device* dev,
     /* si */
     struct controller_input_backend* cins,
     void* mpk_user_data[], void (*mpk_save[])(void*), uint8_t* mpk_data[],
-    void* rpk_user_data[], void (*rpk_rumble[])(void*,enum rumble_action),
+    struct rumble_backend* rumbles,
     void* eeprom_user_data, void (*eeprom_save)(void*), uint8_t* eeprom_data, size_t eeprom_size, uint16_t eeeprom_id,
     struct clock_backend* rtc,
     /* vi */
