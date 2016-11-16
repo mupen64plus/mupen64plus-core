@@ -427,16 +427,13 @@ SOURCE = \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
 	$(SRCDIR)/main/device.c \
-	$(SRCDIR)/main/eep_file.c \
 	$(SRCDIR)/main/eventloop.c \
-	$(SRCDIR)/main/fla_file.c \
 	$(SRCDIR)/main/md5.c \
-	$(SRCDIR)/main/mpk_file.c \
 	$(SRCDIR)/main/profile.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
-	$(SRCDIR)/main/sra_file.c \
+	$(SRCDIR)/main/storage_file.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/memory/memory.c \
 	$(SRCDIR)/pi/cart_rom.c \

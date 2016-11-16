@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - fla_file.c                                              *
+ *   Mupen64plus - storage_file.c                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,62 +19,56 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "fla_file.h"
+#include "storage_file.h"
 
 #include <stdlib.h>
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "pi/flashram.h"
 #include "util.h"
 
-void open_fla_file(struct fla_file* fla, const char* filename)
+
+int open_storage_file(struct storage_file* storage, size_t size, const char* filename)
 {
     /* ! Take ownership of filename ! */
-    fla->filename = filename;
+    storage->filename = filename;
+    storage->size = size;
 
-    /* try to load fla file content */
-    switch(read_from_file(fla->filename, fla->flashram, FLASHRAM_SIZE))
-    {
-    case file_open_error:
-        /* if no prior file exists, provide default flashram content */
-        DebugMessage(M64MSG_VERBOSE, "couldn't open sram file '%s' for reading", fla->filename);
-        format_flashram(fla->flashram);
-        break;
-    case file_read_error:
-        DebugMessage(M64MSG_WARNING, "failed to read flashram file '%s'", fla->filename);
-        break;
-    default:
-        break;
+    /* allocate memory for holding data */
+    storage->data = malloc(storage->size);
+    if (storage->data == NULL) {
+        return -1;
     }
+
+    /* try to load storage file content */
+    return read_from_file(storage->filename, storage->data, storage->size);
 }
 
-void close_fla_file(struct fla_file* fla)
+void close_storage_file(struct storage_file* storage)
 {
-    free((void*)fla->filename);
+    free((void*)storage->data);
+    free((void*)storage->filename);
 }
 
-uint8_t* fla_file_ptr(struct fla_file* fla)
+uint8_t* storage_file_ptr(struct storage_file* storage, size_t offset)
 {
-    return fla->flashram;
+    return storage->data + offset;
 }
 
-void save_fla_file(void* opaque)
-{
-    /* flush flashram to disk */
-    struct fla_file* fla = (struct fla_file*)opaque;
 
-    switch(write_to_file(fla->filename, fla->flashram, FLASHRAM_SIZE))
+void save_storage_file(void* opaque)
+{
+    struct storage_file* storage = (struct storage_file*)opaque;
+
+    switch(write_to_file(storage->filename, storage->data, storage->size))
     {
     case file_open_error:
-        DebugMessage(M64MSG_WARNING, "couldn't open flashram file '%s' for writing", fla->filename);
+        DebugMessage(M64MSG_WARNING, "couldn't open storage file '%s' for writing", storage->filename);
         break;
     case file_write_error:
-        DebugMessage(M64MSG_WARNING, "failed to write flashram file '%s'", fla->filename);
+        DebugMessage(M64MSG_WARNING, "failed to write storage file '%s'", storage->filename);
         break;
     default:
         break;
     }
-
 }
-
