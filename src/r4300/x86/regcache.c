@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 
+#include "main/main.h"
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
@@ -41,7 +42,7 @@ void init_cache(precomp_instr* start)
     last_access[i] = NULL;
     free_since[i] = start;
      }
-     r0 = (unsigned int*)reg;
+     r0 = (unsigned int*)g_dev.r4300.regs;
 }
 
 void free_all_registers(void)

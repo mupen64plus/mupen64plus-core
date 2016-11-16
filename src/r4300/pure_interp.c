@@ -59,7 +59,7 @@ static void InterpretOpcode(void);
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &reg[0]) \
+      if (link_register != &g_dev.r4300.regs[0]) \
       { \
           *link_register = SE32(interp_PC.addr + 8); \
       } \
@@ -131,16 +131,16 @@ static void InterpretOpcode(void);
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
-#define rrt reg[RT_OF(op)]
-#define rrd reg[RD_OF(op)]
+#define rrt g_dev.r4300.regs[RT_OF(op)]
+#define rrd g_dev.r4300.regs[RD_OF(op)]
 #define rfs FS_OF(op)
-#define rrs reg[RS_OF(op)]
+#define rrs g_dev.r4300.regs[RS_OF(op)]
 #define rsa SA_OF(op)
-#define irt reg[RT_OF(op)]
+#define irt g_dev.r4300.regs[RT_OF(op)]
 #define ioffset IMM16S_OF(op)
 #define iimmediate IMM16S_OF(op)
-#define irs reg[RS_OF(op)]
-#define ibase reg[RS_OF(op)]
+#define irs g_dev.r4300.regs[RS_OF(op)]
+#define ibase g_dev.r4300.regs[RS_OF(op)]
 #define jinst_index JUMP_OF(op)
 #define lfbase RS_OF(op)
 #define lfft FT_OF(op)
@@ -151,17 +151,17 @@ static void InterpretOpcode(void);
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) &reg[RT_OF(op)])
-#define rrd32 *((int32_t*) &reg[RD_OF(op)])
-#define rrs32 *((int32_t*) &reg[RS_OF(op)])
-#define irs32 *((int32_t*) &reg[RS_OF(op)])
-#define irt32 *((int32_t*) &reg[RT_OF(op)])
+#define rrt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)])
+#define rrd32 *((int32_t*) &g_dev.r4300.regs[RD_OF(op)])
+#define rrs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)])
+#define irs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)])
+#define irt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)])
 #else
-#define rrt32 *((int32_t*) &reg[RT_OF(op)] + 1)
-#define rrd32 *((int32_t*) &reg[RD_OF(op)] + 1)
-#define rrs32 *((int32_t*) &reg[RS_OF(op)] + 1)
-#define irs32 *((int32_t*) &reg[RS_OF(op)] + 1)
-#define irt32 *((int32_t*) &reg[RT_OF(op)] + 1)
+#define rrt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)] + 1)
+#define rrd32 *((int32_t*) &g_dev.r4300.regs[RD_OF(op)] + 1)
+#define rrs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)] + 1)
+#define irs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)] + 1)
+#define irt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)] + 1)
 #endif
 
 // two functions are defined from the macros above but never used
@@ -206,7 +206,7 @@ void InterpretOpcode()
 		case 8: JR(op); break;
 		case 9: /* SPECIAL opcode 9: JALR */
 			/* Note: This can omit the check for Rd == 0 because the JALR
-			 * function checks for link_register != &reg[0]. If you're
+			 * function checks for link_register != &g_dev.r4300.regs[0]. If you're
 			 * using this as a reference for a JIT, do check Rd == 0 in it. */
 			JALR(op);
 			break;

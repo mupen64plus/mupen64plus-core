@@ -899,8 +899,8 @@ static void alloc_all(struct regstat *cur,int i)
 static void div64(int64_t dividend,int64_t divisor)
 {
   if(divisor) {
-    lo=dividend/divisor;
-    hi=dividend%divisor;
+    g_dev.r4300.lo=dividend/divisor;
+    g_dev.r4300.hi=dividend%divisor;
     //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
     //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
   }
@@ -908,8 +908,8 @@ static void div64(int64_t dividend,int64_t divisor)
 static void divu64(uint64_t dividend,uint64_t divisor)
 {
   if(divisor) {
-    lo=dividend/divisor;
-    hi=dividend%divisor;
+    g_dev.r4300.lo=dividend/divisor;
+    g_dev.r4300.hi=dividend%divisor;
     //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
     //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
   }
@@ -950,13 +950,13 @@ static void mult64(int64_t m1,int64_t m2)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   lo = result1 | (result2 << 32);
-   hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   g_dev.r4300.lo = result1 | (result2 << 32);
+   g_dev.r4300.hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
    if (sign)
      {
-    hi = ~hi;
-    if (!lo) hi++;
-    else lo = ~lo + 1;
+    g_dev.r4300.hi = ~g_dev.r4300.hi;
+    if (!g_dev.r4300.lo) g_dev.r4300.hi++;
+    else g_dev.r4300.lo = ~g_dev.r4300.lo + 1;
      }
 }
 
@@ -982,8 +982,8 @@ static void multu64(uint64_t m1,uint64_t m2)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   lo = result1 | (result2 << 32);
-   hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   g_dev.r4300.lo = result1 | (result2 << 32);
+   g_dev.r4300.hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
    
   //DebugMessage(M64MSG_VERBOSE, "TRACE: dmultu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                      ,(int)reg[LOREG],(int)(reg[LOREG]>>32));

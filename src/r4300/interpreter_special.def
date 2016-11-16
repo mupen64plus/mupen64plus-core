@@ -60,7 +60,7 @@ DECLARE_INSTRUCTION(SRAV)
    ADD_TO_PC(1);
 }
 
-DECLARE_JUMP(JR,   irs32, 1, &reg[0], 0, 0)
+DECLARE_JUMP(JR,   irs32, 1, &g_dev.r4300.regs[0], 0, 0)
 DECLARE_JUMP(JALR, irs32, 1, &rrd,    0, 0)
 
 DECLARE_INSTRUCTION(SYSCALL)
@@ -76,25 +76,25 @@ DECLARE_INSTRUCTION(SYNC)
 
 DECLARE_INSTRUCTION(MFHI)
 {
-   rrd = hi;
+   rrd = g_dev.r4300.hi;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTHI)
 {
-   hi = rrs;
+   g_dev.r4300.hi = rrs;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MFLO)
 {
-   rrd = lo;
+   rrd = g_dev.r4300.lo;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTLO)
 {
-   lo = rrs;
+   g_dev.r4300.lo = rrs;
    ADD_TO_PC(1);
 }
 
@@ -120,8 +120,8 @@ DECLARE_INSTRUCTION(MULT)
 {
    int64_t temp;
    temp = rrs * rrt;
-   hi = temp >> 32;
-   lo = SE32(temp);
+   g_dev.r4300.hi = temp >> 32;
+   g_dev.r4300.lo = SE32(temp);
    ADD_TO_PC(1);
 }
 
@@ -129,8 +129,8 @@ DECLARE_INSTRUCTION(MULTU)
 {
    uint64_t temp;
    temp = (uint32_t) rrs * (uint64_t) ((uint32_t) rrt);
-   hi = (int64_t) temp >> 32;
-   lo = SE32(temp);
+   g_dev.r4300.hi = (int64_t) temp >> 32;
+   g_dev.r4300.lo = SE32(temp);
    ADD_TO_PC(1);
 }
 
@@ -138,8 +138,8 @@ DECLARE_INSTRUCTION(DIV)
 {
    if (rrt32)
    {
-     lo = SE32(rrs32 / rrt32);
-     hi = SE32(rrs32 % rrt32);
+     g_dev.r4300.lo = SE32(rrs32 / rrt32);
+     g_dev.r4300.hi = SE32(rrs32 % rrt32);
    }
    else DebugMessage(M64MSG_ERROR, "DIV: divide by 0");
    ADD_TO_PC(1);
@@ -149,8 +149,8 @@ DECLARE_INSTRUCTION(DIVU)
 {
    if (rrt32)
    {
-     lo = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
-     hi = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
+     g_dev.r4300.lo = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
+     g_dev.r4300.hi = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
    }
    else DebugMessage(M64MSG_ERROR, "DIVU: divide by 0");
    ADD_TO_PC(1);
@@ -191,13 +191,13 @@ DECLARE_INSTRUCTION(DMULT)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   lo = result1 | (result2 << 32);
-   hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+   g_dev.r4300.lo = result1 | (result2 << 32);
+   g_dev.r4300.hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    if (sign)
      {
-    hi = ~hi;
-    if (!lo) hi++;
-    else lo = ~lo + 1;
+    g_dev.r4300.hi = ~g_dev.r4300.hi;
+    if (!g_dev.r4300.lo) g_dev.r4300.hi++;
+    else g_dev.r4300.lo = ~g_dev.r4300.lo + 1;
      }
    ADD_TO_PC(1);
 }
@@ -223,8 +223,8 @@ DECLARE_INSTRUCTION(DMULTU)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   lo = result1 | (result2 << 32);
-   hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+   g_dev.r4300.lo = result1 | (result2 << 32);
+   g_dev.r4300.hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    
    ADD_TO_PC(1);
 }
@@ -233,8 +233,8 @@ DECLARE_INSTRUCTION(DDIV)
 {
    if (rrt)
    {
-     lo = rrs / rrt;
-     hi = rrs % rrt;
+     g_dev.r4300.lo = rrs / rrt;
+     g_dev.r4300.hi = rrs % rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIV: divide by 0");
    ADD_TO_PC(1);
@@ -244,8 +244,8 @@ DECLARE_INSTRUCTION(DDIVU)
 {
    if (rrt)
    {
-     lo = (uint64_t) rrs / (uint64_t) rrt;
-     hi = (uint64_t) rrs % (uint64_t) rrt;
+     g_dev.r4300.lo = (uint64_t) rrs / (uint64_t) rrt;
+     g_dev.r4300.hi = (uint64_t) rrs % (uint64_t) rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0");
    ADD_TO_PC(1);

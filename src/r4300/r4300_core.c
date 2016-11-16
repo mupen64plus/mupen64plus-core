@@ -28,16 +28,17 @@
 #include "new_dynarec/new_dynarec.h"
 #include "r4300.h"
 #include "recomp.h"
+#include "main/main.h"
 
 #include <string.h>
 
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
-    memset(reg, 0, 32*sizeof(reg[0]));
-    llbit = 0;
-    hi = 0;
-    lo = 0;
+    memset(r4300->regs, 0, 32*sizeof(r4300->regs[0]));
+    r4300->hi = 0;
+    r4300->lo = 0;
+    r4300->llbit = 0;
 
     /* setup CP0 registers */
     memset(g_cp0_regs, 0, CP0_REGS_COUNT * sizeof(g_cp0_regs[0]));
@@ -70,22 +71,22 @@ void poweron_r4300(struct r4300_core* r4300)
 
 int64_t* r4300_regs(void)
 {
-    return reg;
+    return g_dev.r4300.regs;
 }
 
 int64_t* r4300_mult_hi(void)
 {
-    return &hi;
+    return &g_dev.r4300.hi;
 }
 
 int64_t* r4300_mult_lo(void)
 {
-    return &lo;
+    return &g_dev.r4300.lo;
 }
 
 unsigned int* r4300_llbit(void)
 {
-    return &llbit;
+    return &g_dev.r4300.llbit;
 }
 
 uint32_t* r4300_pc(void)

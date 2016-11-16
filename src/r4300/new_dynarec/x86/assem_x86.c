@@ -1080,9 +1080,9 @@ static void emit_loadreg(int r, int hr)
   if((r&63)==0)
     emit_zeroreg(hr);
   else {
-    int addr=((int)reg)+((r&63)<<3)+((r&64)>>4);
-    if((r&63)==HIREG) addr=(int)&hi+((r&64)>>4);
-    if((r&63)==LOREG) addr=(int)&lo+((r&64)>>4);
+    int addr=((int)g_dev.r4300.regs)+((r&63)<<3)+((r&64)>>4);
+    if((r&63)==HIREG) addr=(int)&g_dev.r4300.hi+((r&64)>>4);
+    if((r&63)==LOREG) addr=(int)&g_dev.r4300.lo+((r&64)>>4);
     if(r==CCREG) addr=(int)&cycle_count;
     if(r==CSREG) addr=(int)&g_cp0_regs[CP0_STATUS_REG];
     if(r==FSREG) addr=(int)&FCR31;
@@ -1094,9 +1094,9 @@ static void emit_loadreg(int r, int hr)
 }
 static void emit_storereg(int r, int hr)
 {
-  int addr=((int)reg)+((r&63)<<3)+((r&64)>>4);
-  if((r&63)==HIREG) addr=(int)&hi+((r&64)>>4);
-  if((r&63)==LOREG) addr=(int)&lo+((r&64)>>4);
+  int addr=((int)g_dev.r4300.regs)+((r&63)<<3)+((r&64)>>4);
+  if((r&63)==HIREG) addr=(int)&g_dev.r4300.hi+((r&64)>>4);
+  if((r&63)==LOREG) addr=(int)&g_dev.r4300.lo+((r&64)>>4);
   if(r==CCREG) addr=(int)&cycle_count;
   if(r==FSREG) addr=(int)&FCR31;
   assem_debug("mov %%%s,%x+%d",regname[hr],addr,r);

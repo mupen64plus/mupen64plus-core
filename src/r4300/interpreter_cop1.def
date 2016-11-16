@@ -21,10 +21,10 @@
 
 #include "fpu.h"
 
-DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &reg[0], 0, 1)
-DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &reg[0], 0, 1)
-DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &reg[0], 1, 1)
-DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &reg[0], 1, 1)
+DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &g_dev.r4300.regs[0], 0, 1)
+DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &g_dev.r4300.regs[0], 0, 1)
+DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)==0, &g_dev.r4300.regs[0], 1, 1)
+DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, (FCR31 & FCR31_CMP_BIT)!=0, &g_dev.r4300.regs[0], 1, 1)
 
 DECLARE_INSTRUCTION(MFC1)
 {

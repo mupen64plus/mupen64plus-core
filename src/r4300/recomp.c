@@ -37,6 +37,7 @@
 #include "api/m64p_types.h"
 #include "cached_interp.h"
 #include "cp0_private.h"
+#include "main/main.h"
 #include "main/profile.h"
 #include "memory/memory.h"
 #include "ops.h"
@@ -91,8 +92,8 @@ static void RNOTCOMPILED(void)
 
 static void recompile_standard_i_type(void)
 {
-   dst->f.i.rs = reg + ((src >> 21) & 0x1F);
-   dst->f.i.rt = reg + ((src >> 16) & 0x1F);
+   dst->f.i.rs = g_dev.r4300.regs + ((src >> 21) & 0x1F);
+   dst->f.i.rt = g_dev.r4300.regs + ((src >> 16) & 0x1F);
    dst->f.i.immediate = (int16_t) src;
 }
 
@@ -103,9 +104,9 @@ static void recompile_standard_j_type(void)
 
 static void recompile_standard_r_type(void)
 {
-   dst->f.r.rs = reg + ((src >> 21) & 0x1F);
-   dst->f.r.rt = reg + ((src >> 16) & 0x1F);
-   dst->f.r.rd = reg + ((src >> 11) & 0x1F);
+   dst->f.r.rs = g_dev.r4300.regs + ((src >> 21) & 0x1F);
+   dst->f.r.rt = g_dev.r4300.regs + ((src >> 16) & 0x1F);
+   dst->f.r.rd = g_dev.r4300.regs + ((src >> 11) & 0x1F);
    dst->f.r.sa = (src >>  6) & 0x1F;
 }
 
@@ -138,7 +139,7 @@ static void RSLL(void)
    dst->ops = current_instruction_table.SLL;
    recomp_func = gensll;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSRL(void)
@@ -146,7 +147,7 @@ static void RSRL(void)
    dst->ops = current_instruction_table.SRL;
    recomp_func = gensrl;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSRA(void)
@@ -154,7 +155,7 @@ static void RSRA(void)
    dst->ops = current_instruction_table.SRA;
    recomp_func = gensra;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSLLV(void)
@@ -162,7 +163,7 @@ static void RSLLV(void)
    dst->ops = current_instruction_table.SLLV;
    recomp_func = gensllv;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSRLV(void)
@@ -170,7 +171,7 @@ static void RSRLV(void)
    dst->ops = current_instruction_table.SRLV;
    recomp_func = gensrlv;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSRAV(void)
@@ -178,7 +179,7 @@ static void RSRAV(void)
    dst->ops = current_instruction_table.SRAV;
    recomp_func = gensrav;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RJR(void)
@@ -218,7 +219,7 @@ static void RMFHI(void)
    dst->ops = current_instruction_table.MFHI;
    recomp_func = genmfhi;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RMTHI(void)
@@ -233,7 +234,7 @@ static void RMFLO(void)
    dst->ops = current_instruction_table.MFLO;
    recomp_func = genmflo;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RMTLO(void)
@@ -248,7 +249,7 @@ static void RDSLLV(void)
    dst->ops = current_instruction_table.DSLLV;
    recomp_func = gendsllv;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRLV(void)
@@ -256,7 +257,7 @@ static void RDSRLV(void)
    dst->ops = current_instruction_table.DSRLV;
    recomp_func = gendsrlv;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRAV(void)
@@ -264,7 +265,7 @@ static void RDSRAV(void)
    dst->ops = current_instruction_table.DSRAV;
    recomp_func = gendsrav;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RMULT(void)
@@ -328,7 +329,7 @@ static void RADD(void)
    dst->ops = current_instruction_table.ADD;
    recomp_func = genadd;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RADDU(void)
@@ -336,7 +337,7 @@ static void RADDU(void)
    dst->ops = current_instruction_table.ADDU;
    recomp_func = genaddu;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSUB(void)
@@ -344,7 +345,7 @@ static void RSUB(void)
    dst->ops = current_instruction_table.SUB;
    recomp_func = gensub;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSUBU(void)
@@ -352,7 +353,7 @@ static void RSUBU(void)
    dst->ops = current_instruction_table.SUBU;
    recomp_func = gensubu;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RAND(void)
@@ -360,7 +361,7 @@ static void RAND(void)
    dst->ops = current_instruction_table.AND;
    recomp_func = genand;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void ROR(void)
@@ -368,7 +369,7 @@ static void ROR(void)
    dst->ops = current_instruction_table.OR;
    recomp_func = genor;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RXOR(void)
@@ -376,7 +377,7 @@ static void RXOR(void)
    dst->ops = current_instruction_table.XOR;
    recomp_func = genxor;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RNOR(void)
@@ -384,7 +385,7 @@ static void RNOR(void)
    dst->ops = current_instruction_table.NOR;
    recomp_func = gennor;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSLT(void)
@@ -392,7 +393,7 @@ static void RSLT(void)
    dst->ops = current_instruction_table.SLT;
    recomp_func = genslt;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RSLTU(void)
@@ -400,7 +401,7 @@ static void RSLTU(void)
    dst->ops = current_instruction_table.SLTU;
    recomp_func = gensltu;
    recompile_standard_r_type();
-   if(dst->f.r.rd == reg) RNOP();
+   if(dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDADD(void)
@@ -408,7 +409,7 @@ static void RDADD(void)
    dst->ops = current_instruction_table.DADD;
    recomp_func = gendadd;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDADDU(void)
@@ -416,7 +417,7 @@ static void RDADDU(void)
    dst->ops = current_instruction_table.DADDU;
    recomp_func = gendaddu;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSUB(void)
@@ -424,7 +425,7 @@ static void RDSUB(void)
    dst->ops = current_instruction_table.DSUB;
    recomp_func = gendsub;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSUBU(void)
@@ -432,7 +433,7 @@ static void RDSUBU(void)
    dst->ops = current_instruction_table.DSUBU;
    recomp_func = gendsubu;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RTGE(void)
@@ -477,7 +478,7 @@ static void RDSLL(void)
    dst->ops = current_instruction_table.DSLL;
    recomp_func = gendsll;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRL(void)
@@ -485,7 +486,7 @@ static void RDSRL(void)
    dst->ops = current_instruction_table.DSRL;
    recomp_func = gendsrl;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRA(void)
@@ -493,7 +494,7 @@ static void RDSRA(void)
    dst->ops = current_instruction_table.DSRA;
    recomp_func = gendsra;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSLL32(void)
@@ -501,7 +502,7 @@ static void RDSLL32(void)
    dst->ops = current_instruction_table.DSLL32;
    recomp_func = gendsll32;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRL32(void)
@@ -509,7 +510,7 @@ static void RDSRL32(void)
    dst->ops = current_instruction_table.DSRL32;
    recomp_func = gendsrl32;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void RDSRA32(void)
@@ -517,7 +518,7 @@ static void RDSRA32(void)
    dst->ops = current_instruction_table.DSRA32;
    recomp_func = gendsra32;
    recompile_standard_r_type();
-   if (dst->f.r.rd == reg) RNOP();
+   if (dst->f.r.rd == g_dev.r4300.regs) RNOP();
 }
 
 static void (*recomp_special[64])(void) =
@@ -813,7 +814,7 @@ static void RMFC0(void)
    recompile_standard_r_type();
    dst->f.r.rd = (int64_t*) (g_cp0_regs + ((src >> 11) & 0x1F));
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dst->f.r.rt == reg) RNOP();
+   if (dst->f.r.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RMTC0(void)
@@ -1527,7 +1528,7 @@ static void RMFC1(void)
    recomp_func = genmfc1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dst->f.r.rt == reg) RNOP();
+   if (dst->f.r.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RDMFC1(void)
@@ -1536,7 +1537,7 @@ static void RDMFC1(void)
    recomp_func = gendmfc1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dst->f.r.rt == reg) RNOP();
+   if (dst->f.r.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RCFC1(void)
@@ -1545,7 +1546,7 @@ static void RCFC1(void)
    recomp_func = gencfc1;
    recompile_standard_r_type();
    dst->f.r.nrd = (src >> 11) & 0x1F;
-   if (dst->f.r.rt == reg) RNOP();
+   if (dst->f.r.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RMTC1(void)
@@ -1756,7 +1757,7 @@ static void RADDI(void)
    dst->ops = current_instruction_table.ADDI;
    recomp_func = genaddi;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RADDIU(void)
@@ -1764,7 +1765,7 @@ static void RADDIU(void)
    dst->ops = current_instruction_table.ADDIU;
    recomp_func = genaddiu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RSLTI(void)
@@ -1772,7 +1773,7 @@ static void RSLTI(void)
    dst->ops = current_instruction_table.SLTI;
    recomp_func = genslti;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RSLTIU(void)
@@ -1780,7 +1781,7 @@ static void RSLTIU(void)
    dst->ops = current_instruction_table.SLTIU;
    recomp_func = gensltiu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RANDI(void)
@@ -1788,7 +1789,7 @@ static void RANDI(void)
    dst->ops = current_instruction_table.ANDI;
    recomp_func = genandi;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RORI(void)
@@ -1796,7 +1797,7 @@ static void RORI(void)
    dst->ops = current_instruction_table.ORI;
    recomp_func = genori;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RXORI(void)
@@ -1804,7 +1805,7 @@ static void RXORI(void)
    dst->ops = current_instruction_table.XORI;
    recomp_func = genxori;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLUI(void)
@@ -1812,7 +1813,7 @@ static void RLUI(void)
    dst->ops = current_instruction_table.LUI;
    recomp_func = genlui;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RCOP0(void)
@@ -1918,7 +1919,7 @@ static void RDADDI(void)
    dst->ops = current_instruction_table.DADDI;
    recomp_func = gendaddi;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RDADDIU(void)
@@ -1926,7 +1927,7 @@ static void RDADDIU(void)
    dst->ops = current_instruction_table.DADDIU;
    recomp_func = gendaddiu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLDL(void)
@@ -1934,7 +1935,7 @@ static void RLDL(void)
    dst->ops = current_instruction_table.LDL;
    recomp_func = genldl;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLDR(void)
@@ -1942,7 +1943,7 @@ static void RLDR(void)
    dst->ops = current_instruction_table.LDR;
    recomp_func = genldr;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLB(void)
@@ -1950,7 +1951,7 @@ static void RLB(void)
    dst->ops = current_instruction_table.LB;
    recomp_func = genlb;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLH(void)
@@ -1958,7 +1959,7 @@ static void RLH(void)
    dst->ops = current_instruction_table.LH;
    recomp_func = genlh;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLWL(void)
@@ -1966,7 +1967,7 @@ static void RLWL(void)
    dst->ops = current_instruction_table.LWL;
    recomp_func = genlwl;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLW(void)
@@ -1974,7 +1975,7 @@ static void RLW(void)
    dst->ops = current_instruction_table.LW;
    recomp_func = genlw;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLBU(void)
@@ -1982,7 +1983,7 @@ static void RLBU(void)
    dst->ops = current_instruction_table.LBU;
    recomp_func = genlbu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLHU(void)
@@ -1990,7 +1991,7 @@ static void RLHU(void)
    dst->ops = current_instruction_table.LHU;
    recomp_func = genlhu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLWR(void)
@@ -1998,7 +1999,7 @@ static void RLWR(void)
    dst->ops = current_instruction_table.LWR;
    recomp_func = genlwr;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLWU(void)
@@ -2006,7 +2007,7 @@ static void RLWU(void)
    dst->ops = current_instruction_table.LWU;
    recomp_func = genlwu;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RSB(void)
@@ -2069,7 +2070,7 @@ static void RLL(void)
    recomp_func = genll;
    dst->ops = current_instruction_table.LL;
    recompile_standard_i_type();
-   if(dst->f.i.rt == reg) RNOP();
+   if(dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RLWC1(void)
@@ -2098,7 +2099,7 @@ static void RLD(void)
    dst->ops = current_instruction_table.LD;
    recomp_func = genld;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RSC(void)
@@ -2106,7 +2107,7 @@ static void RSC(void)
    dst->ops = current_instruction_table.SC;
    recomp_func = gensc;
    recompile_standard_i_type();
-   if (dst->f.i.rt == reg) RNOP();
+   if (dst->f.i.rt == g_dev.r4300.regs) RNOP();
 }
 
 static void RSWC1(void)

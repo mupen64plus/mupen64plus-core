@@ -33,6 +33,11 @@
 
 struct r4300_core
 {
+    int64_t regs[32];
+    int64_t hi;
+    int64_t lo;
+    unsigned int llbit;
+
     struct mi_controller mi;
 };
 

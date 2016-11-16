@@ -18,12 +18,14 @@
 ;Free Software Foundation, Inc.,
 ;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+%include "../../src/main/asm_defines.h"
+
 global dyna_start
 
 extern save_rsp
 extern save_rip
-extern reg
 extern return_address
+extern g_dev
 
 section .bss
 align 4
@@ -39,7 +41,7 @@ dyna_start:
     push r15
     push rbp
     mov [rel save_rsp], rsp
-    lea r15, [rel reg]        ;store the base location of the r4300 registers in r15 for addressing
+    lea r15, [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs]        ;store the base location of the r4300 registers in r15 for addressing
     call _A1
     jmp _A2
 _A1:

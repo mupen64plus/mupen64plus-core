@@ -200,6 +200,9 @@ ifeq ($(OS), MINGW)
   ASFLAGS = -f win32
 endif
 
+# assembler also needs base include directory
+ASFLAGS += -I../../src
+
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
 endif
@@ -329,6 +332,7 @@ AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
 MKDIR ?= mkdir -p
+GENS.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -S
 COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
@@ -649,7 +653,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR)
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/main/asm_defines.h
 
 # build dependency files
 CFLAGS += -MD -MP
@@ -657,10 +661,20 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
+
+# Manual dep specification
+$(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines.h
+
+# Generate defines for nasm
+$(SRCDIR)/main/asm_defines.h: $(SRCDIR)/main/asm_defines.c
+	$(GENS.c) -fno-lto $< -o - | awk '($$1 == "->") { print "%define " $$2 "_" $$3 " " substr($$4,2) }' > $@
+
+# XXX: do the same for ARM assembler ?
+
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	$(COMPILE.as) -o $@ $<
-	
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.S
 	$(COMPILE.c) -o $@ $<
 

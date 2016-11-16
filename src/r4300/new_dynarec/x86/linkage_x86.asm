@@ -16,6 +16,8 @@
 ;Free Software Foundation, Inc.,                                       
 ;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          
 
+%include "../../src/main/asm_defines.h"
+
 %ifdef ELF_TYPE
     %macro  cglobal 1
       global  %1
@@ -100,9 +102,6 @@ cextern stop
 cextern last_count
 cextern pcaddr
 cextern clean_blocks
-cextern reg
-cextern hi
-cextern lo
 cextern invalidate_block
 cextern address
 cextern g_rdram
@@ -119,6 +118,7 @@ cextern write_mib
 cextern write_mih
 cextern write_mid
 cextern TLB_refill_exception_new
+cextern g_dev
 
 section .bss
 align 4
@@ -576,21 +576,21 @@ _E8:
     mov     ebx,    248
     xor     edi,    edi
 _E9:
-    mov     ecx,    [reg+ebx]
-    mov     edx,    [reg+4+ebx]
+    mov     ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs + ebx]
+    mov     edx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs + ebx + 4]
     sar     ecx,    31
     xor     edx,    ecx
     neg     edx
     adc     edi,    edi
     sub     ebx,    8
     jne     _E9
-    mov     ecx,    [hi+ebx]
-    mov     edx,    [hi+4+ebx]
+    mov     ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_hi + ebx]
+    mov     edx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_hi + ebx + 4]
     sar     ecx,    31
     xor     edx,    ecx
     jne     _E10
-    mov     ecx,    [lo+ebx]
-    mov     edx,    [lo+4+ebx]
+    mov     ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_lo + ebx]
+    mov     edx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_lo + ebx + 4]
     sar     ecx,    31
     xor     edx,    ecx
 _E10:
@@ -908,12 +908,12 @@ wb_base_reg:
     add     esi,    ebx
     and     edi,    01fh
     rcr     edx,    cl
-    cmovc   ebx,    [reg+edi*8]
-    mov     [reg+edi*8],    ebx
+    cmovc   ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs+edi*8]
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs+edi*8],    ebx
     sar     ebx,    31
     test    ebp,    2
-    cmove   ebx,    [reg+4+edi*8]
-    mov     [reg+4+edi*8],    ebx
+    cmove   ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs+4+edi*8]
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs+4+edi*8],    ebx
     mov     ebx,    esi
     ret
 
