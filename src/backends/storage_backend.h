@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mempak.h                                                *
+ *   Mupen64plus - storage_backend.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,26 +19,15 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_SI_MEMPAK_H
-#define M64P_SI_MEMPAK_H
+#ifndef M64P_BACKENDS_STORAGE_BACKEND_H
+#define M64P_BACKENDS_STORAGE BACKEND_H
 
-#include <stdint.h>
-
-struct storage_backend;
-
-struct mempak
+struct storage_backend
 {
-    uint8_t* data;
-    struct storage_backend* storage;
+    void* user_data;
+    void (*save)(void*);
 };
 
-enum { MEMPAK_SIZE = 0x8000 };
-
-void format_mempak(uint8_t* mempak);
-
-void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage);
-
-void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
-void mempak_write_command(struct mempak* mpk, uint8_t* cmd);
+void storage_save(struct storage_backend* storage);
 
 #endif

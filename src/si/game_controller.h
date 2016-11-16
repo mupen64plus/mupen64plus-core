@@ -36,6 +36,7 @@ enum pak_type
 };
 
 struct controller_input_backend;
+struct storage_backend;
 
 struct game_controller
 {
@@ -47,9 +48,8 @@ struct game_controller
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
-    void* mpk_user_data,
-    void (*mpk_save)(void*),
     uint8_t* mpk_data,
+    struct storage_backend* mpk_storage,
     struct rumble_backend* rumble);
 
 void process_controller_command(struct game_controller* cont, uint8_t* cmd);

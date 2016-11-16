@@ -25,26 +25,21 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "backends/storage_backend.h"
 #include "memory/memory.h"
 #include "pi_controller.h"
 #include "ri/ri_controller.h"
 
-
-void sram_save(struct sram* sram)
-{
-    sram->save(sram->user_data);
-}
 
 void format_sram(uint8_t* sram)
 {
     memset(sram, 0, SRAM_SIZE);
 }
 
-void init_sram(struct sram* sram, void* user_data, void (*save)(void*), uint8_t* data)
+void init_sram(struct sram* sram, uint8_t* data, struct storage_backend* storage)
 {
-    sram->user_data = user_data;
-    sram->save = save;
     sram->data = data;
+    sram->storage = storage;
 }
 
 void dma_write_sram(struct pi_controller* pi)
@@ -60,7 +55,7 @@ void dma_write_sram(struct pi_controller* pi)
     for(i = 0; i < length; ++i)
         sram[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
 
-    sram_save(&pi->sram);
+    storage_save(pi->sram.storage);
 }
 
 void dma_read_sram(struct pi_controller* pi)
