@@ -422,6 +422,7 @@ SOURCE = \
 	$(SRCDIR)/backends/clock_backend.c \
 	$(SRCDIR)/backends/controller_input_backend.c \
 	$(SRCDIR)/backends/rumble_backend.c \
+	$(SRCDIR)/backends/storage_backend.c \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \

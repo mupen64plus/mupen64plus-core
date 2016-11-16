@@ -26,15 +26,11 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "backends/storage_backend.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-
-void eeprom_save(struct eeprom* eeprom)
-{
-    eeprom->save(eeprom->user_data);
-}
 
 void format_eeprom(uint8_t* eeprom, size_t size)
 {
@@ -43,17 +39,15 @@ void format_eeprom(uint8_t* eeprom, size_t size)
 
 
 void init_eeprom(struct eeprom* eeprom,
-    void* user_data,
-    void (*save)(void*),
     uint8_t* data,
     size_t size,
-    uint16_t id)
+    uint16_t id,
+    struct storage_backend* storage)
 {
-    eeprom->user_data = user_data;
-    eeprom->save = save;
     eeprom->data = data;
     eeprom->size = size;
     eeprom->id = id;
+    eeprom->storage = storage;
 }
 
 
@@ -103,7 +97,7 @@ void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
     if (address < eeprom->size)
     {
         memcpy(&eeprom->data[address], data, 8);
-        eeprom_save(eeprom);
+        storage_save(eeprom->storage);
     }
     else
     {

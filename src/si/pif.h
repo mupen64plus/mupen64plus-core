@@ -68,15 +68,13 @@ static uint32_t pif_ram_address(uint32_t address)
 
 void init_pif(struct pif* pif,
     struct controller_input_backend* cins,
-    void* mpk_user_data[],
-    void (*mpk_save[])(void*),
     uint8_t* mpk_data[],
+    struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
-    void* eeprom_user_data,
-    void (*eeprom_save)(void*),
     uint8_t* eeprom_data,
     size_t eeprom_size,
     uint16_t eeprom_id,
+    struct storage_backend* eeprom_storage,
     struct clock_backend* rtc,
     const uint8_t* ipl3);
 

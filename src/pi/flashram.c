@@ -26,6 +26,7 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "backends/storage_backend.h"
 #include "memory/memory.h"
 #include "pi_controller.h"
 #include "ri/ri_controller.h"
@@ -66,14 +67,14 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
         {
             for (i=flashram->erase_offset; i<(flashram->erase_offset+128); ++i)
                 flashram->data[i^S8] = 0xff;
-            flashram_save(flashram);
+            storage_save(flashram->storage);
         }
         break;
         case FLASHRAM_MODE_WRITE:
         {
             for(i = 0; i < 128; ++i)
                 flashram->data[(flashram->erase_offset+i)^S8]= dram[(flashram->write_pointer+i)^S8];
-            flashram_save(flashram);
+            storage_save(flashram->storage);
         }
         break;
         case FLASHRAM_MODE_STATUS:
@@ -100,13 +101,11 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
 
 
 void init_flashram(struct flashram* flashram,
-                   void* user_data,
-                   void (*save)(void*),
-                   uint8_t* data)
+                   uint8_t* data,
+                   struct storage_backend* storage)
 {
-    flashram->user_data = user_data;
-    flashram->save = save;
     flashram->data = data;
+    flashram->storage = storage;
 }
 
 void poweron_flashram(struct flashram* flashram)
@@ -115,11 +114,6 @@ void poweron_flashram(struct flashram* flashram)
     flashram->status = 0;
     flashram->erase_offset = 0;
     flashram->write_pointer = 0;
-}
-
-void flashram_save(struct flashram* flashram)
-{
-    flashram->save(flashram->user_data);
 }
 
 void format_flashram(uint8_t* flash)

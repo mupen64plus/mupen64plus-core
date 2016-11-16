@@ -30,6 +30,7 @@ struct r4300_core;
 struct ri_controller;
 struct controller_input_backend;
 struct rumble_backend;
+struct storage_backend;
 
 enum si_registers
 {
@@ -61,15 +62,13 @@ static uint32_t si_reg(uint32_t address)
 
 void init_si(struct si_controller* si,
              struct controller_input_backend* cins,
-             void* mpk_user_data[],
-             void (*mpk_save[])(void*),
              uint8_t* mpk_data[],
+             struct storage_backend* mpk_storages,
              struct rumble_backend* rumbles,
-             void* eeprom_user_data,
-             void (*eeprom_save)(void*),
              uint8_t* eeprom_data,
              size_t eeprom_size,
-             uint16_t eeeprom_id,
+             uint16_t eeprom_id,
+             struct storage_backend* eeprom_storage,
              struct clock_backend* rtc,
              const uint8_t* ipl3,
              struct r4300_core* r4300,

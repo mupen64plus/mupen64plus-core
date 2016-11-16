@@ -47,6 +47,7 @@
 #include "backends/clock_backend.h"
 #include "backends/controller_input_backend.h"
 #include "backends/rumble_backend.h"
+#include "backends/storage_backend.h"
 #include "cheat.h"
 #include "device.h"
 #include "eep_file.h"
@@ -838,13 +839,15 @@ m64p_error main_run(void)
     struct mpk_file mpk;
     struct sra_file sra;
     int channels[GAME_CONTROLLERS_COUNT];
-    void* mpk_user_data[GAME_CONTROLLERS_COUNT];
-    void (*mpk_save[GAME_CONTROLLERS_COUNT])(void*);
-    uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
     struct audio_out_backend aout;
     struct clock_backend rtc;
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
     struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
+    struct storage_backend fla_storage;
+    struct storage_backend sra_storage;
+    struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
+    uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
+    struct storage_backend eep_storage;
 
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
@@ -874,6 +877,9 @@ m64p_error main_run(void)
     /* setup backends */
     aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
     rtc = (struct clock_backend){ NULL, get_time_using_C_localtime };
+    fla_storage = (struct storage_backend){ &fla, save_fla_file };
+    sra_storage = (struct storage_backend){ &sra, save_sra_file };
+    eep_storage = (struct storage_backend){ &eep, save_eep_file };
 
     /* open mpk file (if any) */
     open_mpk_file(&mpk, get_mempaks_path());
@@ -891,8 +897,7 @@ m64p_error main_run(void)
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         channels[i] = i;
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
-        mpk_user_data[i] = &mpk;
-        mpk_save[i] = save_mpk_file;
+        mpk_storages[i] = (struct storage_backend){ &mpk, save_mpk_file };
         mpk_data[i] = mpk_file_ptr(&mpk, i);
         rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
     }
@@ -900,13 +905,13 @@ m64p_error main_run(void)
     init_device(&g_dev,
                 &aout,
                 g_rom, g_rom_size,
-                &fla, save_fla_file, fla_file_ptr(&fla),
-                &sra, save_sra_file, sra_file_ptr(&sra),
+                fla_file_ptr(&fla), &fla_storage,
+                sra_file_ptr(&sra), &sra_storage,
                 g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
                 cins,
-                mpk_user_data, mpk_save, mpk_data,
+                mpk_data, mpk_storages,
                 rumbles,
-                &eep, save_eep_file, eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
+                eep_file_ptr(&eep), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &rtc,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);
 

@@ -29,6 +29,7 @@
 #include "api/m64p_types.h"
 #include "backends/controller_input_backend.h"
 #include "backends/rumble_backend.h"
+#include "backends/storage_backend.h"
 #include "memory/memory.h"
 #include "n64_cic_nus_6105.h"
 #include "plugin/plugin.h"
@@ -68,15 +69,13 @@ static void process_cart_command(struct pif* pif, uint8_t* cmd)
 
 void init_pif(struct pif* pif,
     struct controller_input_backend* cins,
-    void* mpk_user_data[],
-    void (*mpk_save[])(void*),
     uint8_t* mpk_data[],
+    struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
-    void* eeprom_user_data,
-    void (*eeprom_save)(void*),
     uint8_t* eeprom_data,
     size_t eeprom_size,
     uint16_t eeprom_id,
+    struct storage_backend* eeprom_storage,
     struct clock_backend* rtc,
     const uint8_t* ipl3)
 {
@@ -85,11 +84,11 @@ void init_pif(struct pif* pif,
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         init_game_controller(&pif->controllers[i],
                 &cins[i],
-                mpk_user_data[i], mpk_save[i], mpk_data[i],
+                mpk_data[i], &mpk_storages[i],
                 &rumbles[i]);
     }
 
-    init_eeprom(&pif->eeprom, eeprom_user_data, eeprom_save, eeprom_data, eeprom_size, eeprom_id);
+    init_eeprom(&pif->eeprom, eeprom_data, eeprom_size, eeprom_id, eeprom_storage);
     init_af_rtc(&pif->af_rtc, rtc);
 
     init_cic_using_ipl3(&pif->cic, ipl3);

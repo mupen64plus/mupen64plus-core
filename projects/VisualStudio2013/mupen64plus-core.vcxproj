@@ -46,6 +46,7 @@
     <ClCompile Include="..\..\src\backends\clock_backend.c" />
     <ClCompile Include="..\..\src\backends\controller_input_backend.c" />
     <ClCompile Include="..\..\src\backends\rumble_backend.c" />
+    <ClCompile Include="..\..\src\backends\storage_backend.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_debugger.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
@@ -461,6 +462,7 @@
     <ClInclude Include="..\..\src\backends\clock_backend.h" />
     <ClInclude Include="..\..\src\backends\controller_input_backend.h" />
     <ClInclude Include="..\..\src\backends\rumble_backend.h" />
+    <ClInclude Include="..\..\src\backends\storage_backend.h" />
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />
     <ClInclude Include="..\..\src\debugger\dbg_debugger.h" />
