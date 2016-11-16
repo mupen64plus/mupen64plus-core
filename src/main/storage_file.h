@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eep_file.h                                              *
+ *   Mupen64plus - storage_file.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,28 +19,24 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_EEP_FILE_H
-#define M64P_MAIN_EEP_FILE_H
+#ifndef M64P_MAIN_STORAGE_FILE_H
+#define M64P_MAIN_STORAGE_FILE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-/* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
- * whatever the real EEPROM size is.
- */
-
-enum { EEPROM_MAX_SIZE = 0x800 };
-
-struct eep_file
+struct storage_file
 {
-    uint8_t eeprom[EEPROM_MAX_SIZE];
+    uint8_t* data;
+    size_t size;
     const char* filename;
 };
 
-void open_eep_file(struct eep_file* eep, const char* filename);
-void close_eep_file(struct eep_file* eep);
+int open_storage_file(struct storage_file* storage, size_t size, const char* filename);
+void close_storage_file(struct storage_file* storage);
 
-uint8_t* eep_file_ptr(struct eep_file* eep);
+uint8_t* storage_file_ptr(struct storage_file* storage, size_t offset);
 
-void save_eep_file(void* opaque);
+void save_storage_file(void* opaque);
 
 #endif
