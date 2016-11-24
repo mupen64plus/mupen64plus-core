@@ -22,6 +22,7 @@
 #ifndef M64P_SI_MEMPAK_H
 #define M64P_SI_MEMPAK_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct storage_backend;
@@ -38,7 +39,7 @@ void format_mempak(uint8_t* mempak);
 
 void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage);
 
-void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
-void mempak_write_command(struct mempak* mpk, uint8_t* cmd);
+void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size);
+void mempak_write_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size);
 
 #endif

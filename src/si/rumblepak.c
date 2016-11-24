@@ -31,31 +31,29 @@ void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble)
     rpk->rumble = rumble;
 }
 
-void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd)
+void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size)
 {
-    uint8_t data;
-    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
+    uint8_t value;
 
     if ((address >= 0x8000) && (address < 0x9000))
     {
-        data = 0x80;
+        value = 0x80;
     }
     else
     {
-        data = 0x00;
+        value = 0x00;
     }
 
-    memset(&cmd[5], data, 0x20);
+    memset(data, value, size);
 }
 
-void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd)
+void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size)
 {
     enum rumble_action action;
-    uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
 
     if (address == 0xc000)
     {
-        action = (cmd[5] == 0)
+        action = (*data == 0)
                 ? RUMBLE_STOP
                 : RUMBLE_START;
 
