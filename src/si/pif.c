@@ -123,6 +123,8 @@ void update_pif_write(struct si_controller* si)
 
     char challenge[30], response[30];
     int i=0, channel=0;
+
+    pif->cic_challenge = 0;
     if (pif->ram[0x3F] > 1)
     {
         switch (pif->ram[0x3F])
@@ -148,6 +150,7 @@ void update_pif_write(struct si_controller* si)
             }
             // the last byte (2 nibbles) is always 0
             pif->ram[63] = 0;
+            pif->cic_challenge = 1;
             break;
         case 0x08:
 #ifdef DEBUG_PIF
@@ -160,6 +163,7 @@ void update_pif_write(struct si_controller* si)
         }
         return;
     }
+
     while (i<0x40)
     {
         switch (pif->ram[i])
@@ -204,6 +208,12 @@ void update_pif_read(struct si_controller* si)
     struct pif* pif = &si->pif;
 
     int i=0, channel=0;
+
+    /* When PIF ram contains a CIC challenge result, do not
+     * process the memory as if it were normal commands. */
+    if (pif->cic_challenge)
+        return;
+
     while (i<0x40)
     {
         switch (pif->ram[i])
