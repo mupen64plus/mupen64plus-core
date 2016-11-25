@@ -30,6 +30,12 @@
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 
+enum
+{
+    /* SI_STATUS - read */
+    SI_STATUS_INTERRUPT = 0x1000,
+
+};
 
 static void dma_si_write(struct si_controller* si)
 {
@@ -52,7 +58,7 @@ static void dma_si_write(struct si_controller* si)
     if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
+        si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
         signal_rcp_interrupt(si->r4300, MI_INTR_SI);
     }
 }
@@ -79,7 +85,7 @@ static void dma_si_read(struct si_controller* si)
     if (g_delay_si) {
         add_interupt_event(SI_INT, /*0x100*/0x900);
     } else {
-        si->regs[SI_STATUS_REG] |= 0x1000; // INTERRUPT
+        si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
         signal_rcp_interrupt(si->r4300, MI_INTR_SI);
     }
 }
@@ -133,7 +139,7 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         break;
 
     case SI_STATUS_REG:
-        si->regs[SI_STATUS_REG] &= ~0x1000;
+        si->regs[SI_STATUS_REG] &= ~SI_STATUS_INTERRUPT;
         clear_rcp_interrupt(si->r4300, MI_INTR_SI);
         break;
     }
@@ -148,7 +154,7 @@ void si_end_of_dma_event(struct si_controller* si)
     si->pif.ram[0x3f] = 0x0;
 
     /* trigger SI interrupt */
-    si->regs[SI_STATUS_REG] |= 0x1000;
+    si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
     raise_rcp_interrupt(si->r4300, MI_INTR_SI);
 }
 

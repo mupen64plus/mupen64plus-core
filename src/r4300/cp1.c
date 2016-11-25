@@ -21,6 +21,8 @@
 
 #include <stdint.h>
 
+#include "cp0.h"
+
 #include "new_dynarec/new_dynarec.h"
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -83,13 +85,13 @@ void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
     const int isBigEndian = 0;
 #endif
 
-    if ((newStatus & UINT32_C(0x04000000)) != (oldStatus & UINT32_C(0x04000000)))
+    if ((newStatus & CP0_STATUS_FR) != (oldStatus & CP0_STATUS_FR))
     {
         int i;
         int32_t temp_fgr_32[32];
 
         // pack or unpack the FGR register data
-        if (newStatus & UINT32_C(0x04000000))
+        if (newStatus & CP0_STATUS_FR)
         {   // switching into 64-bit mode
             // retrieve 32 FPR values from packed 32-bit FGR registers
             for (i = 0; i < 32; i++)
@@ -137,7 +139,7 @@ void set_fpr_pointers(uint32_t newStatus)
 #endif
 
     // update the FPR register pointers
-    if (newStatus & UINT32_C(0x04000000))
+    if (newStatus & CP0_STATUS_FR)
     {
         for (i = 0; i < 32; i++)
         {

@@ -35,8 +35,21 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+enum
+{
+    /* PI_STATUS - read */
+    PI_STATUS_DMA_BUSY  = 0x01,
+    PI_STATUS_IO_BUSY   = 0x02,
+    PI_STATUS_ERROR     = 0x04,
+
+    /* PI_STATUS - write */
+    PI_STATUS_RESET     = 0x01,
+    PI_STATUS_CLR_INTR  = 0x02
+};
+
 static void dma_pi_read(struct pi_controller* pi)
 {
+    /* XXX: end of domain is wrong ? */
     if (pi->regs[PI_CART_ADDR_REG] >= 0x08000000 && pi->regs[PI_CART_ADDR_REG] < 0x08010000)
     {
         if (pi->use_flashram != 1)
@@ -54,9 +67,12 @@ static void dma_pi_read(struct pi_controller* pi)
         DebugMessage(M64MSG_WARNING, "Unknown dma read in dma_pi_read()");
     }
 
-    pi->regs[PI_STATUS_REG] |= 1;
+    /* Mark DMA as busy */
+    pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+
+    /* schedule end of dma interrupt event */
     cp0_update_count();
-    add_interupt_event(PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/);
+    add_interupt_event(PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
 }
 
 static void dma_pi_write(struct pi_controller* pi)
@@ -69,6 +85,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     if (pi->regs[PI_CART_ADDR_REG] < 0x10000000)
     {
+        /* XXX: end of domain is wrong ? */
         if (pi->regs[PI_CART_ADDR_REG] >= 0x08000000 && pi->regs[PI_CART_ADDR_REG] < 0x08010000)
         {
             if (pi->use_flashram != 1)
@@ -89,18 +106,25 @@ static void dma_pi_write(struct pi_controller* pi)
             DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%" PRIX32 " in dma_pi_write()", pi->regs[PI_CART_ADDR_REG]);
         }
 
-        pi->regs[PI_STATUS_REG] |= 1;
+        /* mark DMA as busy */
+        pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+
+        /* schedule end of dma interrupt event */
         cp0_update_count();
-        add_interupt_event(PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000);
+        add_interupt_event(PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000); /* XXX: 0x1000 ??? */
 
         return;
     }
 
+    /* XXX: why need special treatment ? */
     if (pi->regs[PI_CART_ADDR_REG] >= 0x1fc00000) // for paper mario
     {
-        pi->regs[PI_STATUS_REG] |= 1;
+        /* mark DMA as busy */
+        pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+
+        /* schedule end of dma interrupt event */
         cp0_update_count();
-        add_interupt_event(PI_INT, 0x1000);
+        add_interupt_event(PI_INT, 0x1000); /* XXX: 0x1000 ??? */
 
         return;
     }
@@ -114,7 +138,11 @@ static void dma_pi_write(struct pi_controller* pi)
 
     if (i > pi->cart_rom.rom_size || pi->regs[PI_DRAM_ADDR_REG] > 0x7FFFFF)
     {
-        pi->regs[PI_STATUS_REG] |= 3;
+        /* mark both DMA and IO as busy */
+        pi->regs[PI_STATUS_REG] |=
+            PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY;
+
+        /* schedule end of dma interrupt event */
         cp0_update_count();
         add_interupt_event(PI_INT, longueur/8);
 
@@ -141,11 +169,13 @@ static void dma_pi_write(struct pi_controller* pi)
         force_detected_rdram_size_hack();
     }
 
-    pi->regs[PI_STATUS_REG] |= 3;
+    /* mark both DMA and IO as busy */
+    pi->regs[PI_STATUS_REG] |=
+        PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY;
+
+    /* schedule end of dma interrupt event */
     cp0_update_count();
     add_interupt_event(PI_INT, longueur/8);
-
-    return;
 }
 
 void connect_pi(struct pi_controller* pi,
@@ -220,6 +250,6 @@ int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
 void pi_end_of_dma_event(struct pi_controller* pi)
 {
-    pi->regs[PI_STATUS_REG] &= ~3;
+    pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
     raise_rcp_interrupt(pi->r4300, MI_INTR_PI);
 }

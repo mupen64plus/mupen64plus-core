@@ -51,10 +51,10 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
         return 0;
 
     cp0_regs = r4300_cp0_regs();
-    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
-
-    if (remaining_dma_duration >= 0x80000000)
+    if (next_ai_event <= cp0_regs[CP0_COUNT_REG])
         return 0;
+
+    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
 
     return (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
 }
@@ -62,9 +62,10 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 static unsigned int get_dma_duration(struct ai_controller* ai)
 {
     unsigned int samples_per_sec = ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+    unsigned int bytes_per_sample = 4; /* XXX: assume 16bit stereo - should depends on bitrate instead */
+    unsigned int cpu_counts_per_sec = ai->vi->delay * ROM_PARAMS.vilimit; /* estimate cpu counts/sec using VI */
 
-    return ((uint64_t)ai->regs[AI_LEN_REG]*ai->vi->delay*ROM_PARAMS.vilimit)
-        / (4 * samples_per_sec);
+    return ((uint64_t)ai->regs[AI_LEN_REG] * cpu_counts_per_sec) / (bytes_per_sample * samples_per_sec);
 }
 
 
@@ -74,11 +75,11 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     if (ai->samples_format_changed)
     {
         unsigned int frequency = (ai->regs[AI_DACRATE_REG] == 0)
-            ? 44100
+            ? 44100 /* default sample rate */
             : ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
 
         unsigned int bits = (ai->regs[AI_BITRATE_REG] == 0)
-            ? 16
+            ? 16 /* default bit rate */
             : 1 + ai->regs[AI_BITRATE_REG];
 
         set_audio_format(ai, frequency, bits);
@@ -158,7 +159,7 @@ void connect_ai(struct ai_controller* ai,
 void init_ai(struct ai_controller* ai)
 {
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
-    memset(ai->fifo, 0, 2*sizeof(struct ai_dma));
+    memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
 }
 

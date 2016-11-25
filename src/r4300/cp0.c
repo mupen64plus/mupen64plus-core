@@ -51,13 +51,13 @@ uint32_t* r4300_cp0_regs(void)
 
 int check_cop1_unusable(void)
 {
-   if (!(g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x20000000)))
-     {
-    g_cp0_regs[CP0_CAUSE_REG] = (UINT32_C(11) << 2) | UINT32_C(0x10000000);
-    exception_general();
-    return 1;
-     }
-   return 0;
+    if (!(g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
+    {
+        g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        exception_general();
+        return 1;
+    }
+    return 0;
 }
 
 void cp0_update_count(void)

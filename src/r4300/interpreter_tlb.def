@@ -233,14 +233,14 @@ DECLARE_INSTRUCTION(TLBP)
 DECLARE_INSTRUCTION(ERET)
 {
    cp0_update_count();
-   if (g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x4))
+   if (g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_ERL)
    {
      DebugMessage(M64MSG_ERROR, "error in ERET");
      stop=1;
    }
    else
    {
-     g_cp0_regs[CP0_STATUS_REG] &= ~UINT32_C(0x2);
+     g_cp0_regs[CP0_STATUS_REG] &= ~CP0_STATUS_EXL;
      generic_jump_to(g_cp0_regs[CP0_EPC_REG]);
    }
    llbit = 0;

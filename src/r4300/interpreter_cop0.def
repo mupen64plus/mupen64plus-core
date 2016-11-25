@@ -85,10 +85,10 @@ DECLARE_INSTRUCTION(MTC0)
       remove_event(COMPARE_INT);
       add_interupt_event_count(COMPARE_INT, rrt32);
       g_cp0_regs[CP0_COMPARE_REG] = rrt32;
-      g_cp0_regs[CP0_CAUSE_REG] &= UINT32_C(0xFFFF7FFF); //Timer interupt is clear
+      g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
       break;
     case CP0_STATUS_REG:
-      if((rrt32 & UINT32_C(0x04000000)) != (g_cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)))
+      if((rrt32 & CP0_STATUS_FR) != (g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_FR))
       {
           shuffle_fpr_data(g_cp0_regs[CP0_STATUS_REG], rrt32);
           set_fpr_pointers(rrt32);

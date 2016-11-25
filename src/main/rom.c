@@ -56,8 +56,9 @@ static _romdatabase g_romdatabase;
 unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
 int g_rom_size = 0;
+/* Global hacks */
 unsigned char g_alternate_vi_timing = 0;
-
+int           g_vi_refresh_rate = 1500;
 unsigned char isGoldeneyeRom = 0;
 
 m64p_rom_header   ROM_HEADER;
@@ -184,6 +185,10 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.headername[20] = '\0';
     trim(ROM_PARAMS.headername); /* Remove trailing whitespace from ROM name. */
 
+    /* set default values for global variables which can be set by the ROM ini */
+    g_alternate_vi_timing = 0;
+    g_vi_refresh_rate = 1500;
+    
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
         (entry=ini_search_by_crc(sl(ROM_HEADER.CRC1),sl(ROM_HEADER.CRC2))) != NULL)
@@ -197,6 +202,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.cheats = entry->cheats;
         g_alternate_vi_timing = entry->alternate_vi_timing;
+        if (entry->vi_refresh_rate > 0)
+            g_vi_refresh_rate = entry->vi_refresh_rate;
     }
     else
     {
@@ -459,9 +466,11 @@ void romdatabase_open(void)
                 continue;
             }
 
-            *next_search = (romdatabase_search*)malloc(sizeof(romdatabase_search));
+            *next_search = (romdatabase_search*) malloc(sizeof(romdatabase_search));
             search = *next_search;
             next_search = &search->next_entry;
+            
+            memset(search, 0, sizeof(romdatabase_search));
 
             search->entry.goodname = NULL;
             memcpy(search->entry.md5, md5, 16);
@@ -521,6 +530,10 @@ void romdatabase_open(void)
                 if(!strcmp(l.value, "Alternate")) {
                     search->entry.alternate_vi_timing = 1;
                 }
+            }
+            else if(!strcmp(l.name, "ViRefresh"))
+            {
+                 search->entry.vi_refresh_rate = atoi(l.value);
             }
             else if(!strcmp(l.name, "RefMD5"))
             {
