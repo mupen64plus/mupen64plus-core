@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-typedef struct _tlb
+struct tlb_entry
 {
    short mask;
    int vpn2;
@@ -40,21 +40,27 @@ typedef struct _tlb
    char v_odd;
    char r;
    //int check_parity_mask;
-   
+
    unsigned int start_even;
    unsigned int end_even;
    unsigned int phys_even;
    unsigned int start_odd;
    unsigned int end_odd;
    unsigned int phys_odd;
-} tlb;
+};
 
-extern tlb tlb_e[32];
-extern uint32_t tlb_LUT_r[0x100000];
-extern uint32_t tlb_LUT_w[0x100000];
+struct tlb
+{
+    struct tlb_entry entries[32];
+    uint32_t LUT_r[0x100000];
+    uint32_t LUT_w[0x100000];
+};
 
-void tlb_unmap(tlb *entry);
-void tlb_map(tlb *entry);
+void poweron_tlb(struct tlb* tlb);
+
+void tlb_unmap(struct tlb_entry* entry);
+void tlb_map(struct tlb_entry* entry);
+
 uint32_t virtual_to_physical_address(uint32_t addresse, int w);
 
 #endif /* M64P_R4300_TLB_H */

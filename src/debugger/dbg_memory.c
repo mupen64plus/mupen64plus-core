@@ -290,8 +290,8 @@ uint32 read_memory_32(uint32 addr){
   switch(get_memory_type(addr))
     {
     case M64P_MEM_NOMEM:
-      if(tlb_LUT_r[addr>>12])
-        return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
+      if(g_dev.r4300.cp0.tlb.LUT_r[addr>>12])
+        return read_memory_32((g_dev.r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
       return g_dev.ri.rdram.dram[rdram_dram_address(addr)];
@@ -431,7 +431,7 @@ uint32 get_memory_flags(uint32 addr)
   switch(type)
   {
     case M64P_MEM_NOMEM:
-      if(tlb_LUT_r[addr>>12])
+      if(g_dev.r4300.cp0.tlb.LUT_r[addr>>12])
         flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
       break;
     case M64P_MEM_NOTHING:

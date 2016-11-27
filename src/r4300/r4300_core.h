@@ -29,7 +29,6 @@
 #include "cp1.h"
 #include "interupt.h"
 #include "mi_controller.h"
-#include "tlb.h"
 
 struct r4300_core
 {
@@ -37,6 +36,8 @@ struct r4300_core
     int64_t hi;
     int64_t lo;
     unsigned int llbit;
+
+    struct cp0 cp0;
 
     struct mi_controller mi;
 };

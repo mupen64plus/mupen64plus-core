@@ -119,9 +119,9 @@ void *dynamic_linker(void * src, u_int vaddr)
   assert((vaddr&1)==0);
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
-  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
   head=jump_in[page];
@@ -148,7 +148,7 @@ void *dynamic_linker(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -156,9 +156,9 @@ void *dynamic_linker(void * src, u_int vaddr)
           invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
-            if(tlb_LUT_r[vaddr>>12]) {
-              invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
-              memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);
           }
@@ -191,9 +191,9 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
 {
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
-  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
   head=jump_in[page];
@@ -220,7 +220,7 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_cp0_regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],next_interupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -228,9 +228,9 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
           invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
-            if(tlb_LUT_r[vaddr>>12]) {
-              invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
-              memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);
           }
@@ -1084,7 +1084,7 @@ static void emit_loadreg(int r, int hr)
     if((r&63)==HIREG) addr=(int)&g_dev.r4300.hi+((r&64)>>4);
     if((r&63)==LOREG) addr=(int)&g_dev.r4300.lo+((r&64)>>4);
     if(r==CCREG) addr=(int)&cycle_count;
-    if(r==CSREG) addr=(int)&g_cp0_regs[CP0_STATUS_REG];
+    if(r==CSREG) addr=(int)&g_dev.r4300.cp0.regs[CP0_STATUS_REG];
     if(r==FSREG) addr=(int)&FCR31;
     assem_debug("mov %x+%d,%%%s",addr,r,regname[hr]);
     output_byte(0x8B);
@@ -2780,7 +2780,7 @@ static void emit_extjump2(int addr, int target, int linker)
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
-  emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
+  emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
 #endif
@@ -2865,11 +2865,11 @@ static void do_readstub(int n)
   emit_addimm(cc,CLOCK_DIVIDER*(stubs[n][6]+1),cc);
   emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_cp0_regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
   emit_callreg(addr);
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
-  emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
@@ -2955,7 +2955,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   emit_readword((int)&last_count,temp);
   emit_addimm(cc,CLOCK_DIVIDER*(adj+1),cc);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_cp0_regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
   if((signed int)addr>=(signed int)0xC0000000) {
     // Pagefault address
     int ds=regmap!=regs[i].regmap;
@@ -2964,7 +2964,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   emit_call(((u_int *)ftable)[addr>>16]);
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
-  emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
@@ -3068,9 +3068,9 @@ static void do_writestub(int n)
   emit_addimm(cc,CLOCK_DIVIDER*(stubs[n][6]+1),cc);
   emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_cp0_regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
   emit_callreg(addr);
-  emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
@@ -3146,14 +3146,14 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_readword((int)&last_count,temp);
   emit_addimm(cc,CLOCK_DIVIDER*(adj+1),cc);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_cp0_regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
   if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
     // Pagefault address
     int ds=regmap!=regs[i].regmap;
     emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   }
   emit_call(((u_int *)ftable)[addr>>16]);
-  emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&next_interupt,ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
@@ -3572,7 +3572,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
     //restore_regs(0x100f);*/
@@ -3639,7 +3639,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
           emit_add(HOST_CCREG,ECX,HOST_CCREG);
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-          emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
+          emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
         }
         emit_call((int)cached_interpreter_table.MFC0);
         emit_readword((int)&readmem_dword,t);
@@ -3663,7 +3663,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
       emit_add(HOST_CCREG,ECX,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
+      emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
     }
     // What a mess.  The status register (12) can enable interrupts,
     // so needs a special case to handle a pending interrupt.
@@ -3677,7 +3677,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     //else
     emit_call((int)cached_interpreter_table.MTC0);
     if(copr==9||copr==11||copr==12) {
-      emit_readword((int)&g_cp0_regs[CP0_COUNT_REG],HOST_CCREG);
+      emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((int)&next_interupt,ECX);
       emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_sub(HOST_CCREG,ECX,HOST_CCREG);
@@ -3707,7 +3707,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
       emit_add(HOST_CCREG,ECX,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&g_cp0_regs[CP0_COUNT_REG]);
+      emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
       emit_call((int)TLBWR_new);
     }
     if((source[i]&0x3f)==0x08) // TLBP

@@ -28,7 +28,6 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp0_private.h"
 #include "cp1_private.h"
 #include "interupt.h"
 #include "main/main.h"
@@ -109,8 +108,8 @@ void r4300_reset_soft(void)
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     uint32_t bsd_dom1_config = *(uint32_t*)g_dev.pi.cart_rom.rom;
 
-    g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
-    g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
+    g_dev.r4300.cp0.regs[CP0_STATUS_REG] = 0x34000000;
+    g_dev.r4300.cp0.regs[CP0_CONFIG_REG] = 0x0006e463;
 
     g_dev.sp.regs[SP_STATUS_REG] = 1;
     g_dev.sp.regs2[SP_PC_REG] = 0;

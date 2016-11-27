@@ -335,7 +335,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_COP1_FGR_64:
             return r4300_cp1_regs();
         case M64P_CPU_TLB:
-            return tlb_e;
+            return g_dev.r4300.cp0.tlb.entries;
         default:
             DebugMessage(M64MSG_ERROR, "Bug: DebugGetCPUDataPtr() called with invalid input m64p_dbg_cpu_data");
             return NULL;

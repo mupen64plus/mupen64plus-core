@@ -30,7 +30,6 @@
 /* TLBWrite requires invalid_code and blocks from cached_interp.h, but only if
  * (at run time) the active core is not the Pure Interpreter. */
 #include "cached_interp.h"
-#include "cp0_private.h"
 #include "cp1_private.h"
 #include "exception.h"
 #include "interupt.h"
@@ -81,7 +80,7 @@ static void InterpretOpcode(void);
          cp0_update_count(); \
       } \
       last_addr = interp_PC.addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
@@ -91,8 +90,8 @@ static void InterpretOpcode(void);
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+         skip = next_interupt - g_dev.r4300.cp0.regs[CP0_COUNT_REG]; \
+         if (skip > 3) g_dev.r4300.cp0.regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
       else name(op); \

@@ -20,9 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include <stdint.h>
+#include <string.h>
 
-#include "cp0_private.h"
 #include "exception.h"
+#include "main/main.h"
 #include "new_dynarec/new_dynarec.h"
 #include "r4300.h"
 #include "recomp.h"
@@ -36,24 +37,35 @@
 #include "debugger/dbg_types.h"
 #endif
 
-/* global variable */
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM backend requires a different memory layout
- * and therefore manually allocate that variable */
-uint32_t g_cp0_regs[CP0_REGS_COUNT];
-#endif
-
 /* global functions */
+void poweron_cp0(struct cp0* cp0)
+{
+    memset(cp0->regs, 0, CP0_REGS_COUNT * sizeof(cp0->regs[0]));
+    cp0->regs[CP0_RANDOM_REG] = UINT32_C(31);
+    cp0->regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
+    cp0->regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
+    cp0->regs[CP0_PREVID_REG] = UINT32_C(0xb00);
+    cp0->regs[CP0_COUNT_REG] = UINT32_C(0x5000);
+    cp0->regs[CP0_CAUSE_REG] = UINT32_C(0x5c);
+    cp0->regs[CP0_CONTEXT_REG] = UINT32_C(0x7ffff0);
+    cp0->regs[CP0_EPC_REG] = UINT32_C(0xffffffff);
+    cp0->regs[CP0_BADVADDR_REG] = UINT32_C(0xffffffff);
+    cp0->regs[CP0_ERROREPC_REG] = UINT32_C(0xffffffff);
+
+    poweron_tlb(&cp0->tlb);
+}
+
+
 uint32_t* r4300_cp0_regs(void)
 {
-    return g_cp0_regs;
+    return g_dev.r4300.cp0.regs;
 }
 
 int check_cop1_unusable(void)
 {
-    if (!(g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
+    if (!(g_dev.r4300.cp0.regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
-        g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
         exception_general();
         return 1;
     }
@@ -66,7 +78,7 @@ void cp0_update_count(void)
     if (r4300emu != CORE_DYNAREC)
     {
 #endif
-        g_cp0_regs[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
+        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
         last_addr = PC->addr;
 #ifdef NEW_DYNAREC
     }

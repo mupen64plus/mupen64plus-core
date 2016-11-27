@@ -25,7 +25,6 @@
 #include "main/main.h"
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp0_private.h"
 #include "r4300/cp1_private.h"
 #include "r4300/exception.h"
 #include "r4300/interupt.h"
@@ -51,7 +50,7 @@ static void gencp0_update_count(unsigned int addr)
    shr_reg32_imm8(EAX, 2);
    mov_reg32_m32(EDX, &count_per_op);
    mul_reg32(EDX);
-   add_m32_reg32((unsigned int*)(&g_cp0_regs[CP0_COUNT_REG]), EAX);
+   add_m32_reg32((unsigned int*)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]), EAX);
 #else
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
    mov_reg32_imm32(EAX, (unsigned int)cp0_update_count);
@@ -62,7 +61,7 @@ static void gencp0_update_count(unsigned int addr)
 static void gencheck_interupt(unsigned int instr_structure)
 {
    mov_eax_memoffs32(&next_interupt);
-   cmp_reg32_m32(EAX, &g_cp0_regs[CP0_COUNT_REG]);
+   cmp_reg32_m32(EAX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(17);
    mov_m32_imm32((unsigned int*)(&PC), instr_structure); // 10
    mov_reg32_imm32(EAX, (unsigned int)gen_interupt); // 5
@@ -72,7 +71,7 @@ static void gencheck_interupt(unsigned int instr_structure)
 static void gencheck_interupt_out(unsigned int addr)
 {
    mov_eax_memoffs32(&next_interupt);
-   cmp_reg32_m32(EAX, &g_cp0_regs[CP0_COUNT_REG]);
+   cmp_reg32_m32(EAX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(27);
    mov_m32_imm32((unsigned int*)(&fake_instr.addr), addr);
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(&fake_instr));
@@ -396,7 +395,7 @@ void genfin_block(void)
 void gencheck_interupt_reg(void) // addr is in EAX
 {
    mov_reg32_m32(EBX, &next_interupt);
-   cmp_reg32_m32(EBX, &g_cp0_regs[CP0_COUNT_REG]);
+   cmp_reg32_m32(EBX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(22);
    mov_memoffs32_eax((unsigned int*)(&fake_instr.addr)); // 5
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(&fake_instr)); // 10
@@ -470,12 +469,12 @@ void genj_idle(void)
      }
    
    mov_eax_memoffs32((unsigned int *)(&next_interupt));
-   sub_reg32_m32(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
+   sub_reg32_m32(EAX, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(11);
    
    and_eax_imm32(0xFFFFFFFC);  // 5
-   add_m32_reg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX); // 6
+   add_m32_reg32((unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]), EAX); // 6
   
    genj();
 #endif
@@ -557,12 +556,12 @@ void genjal_idle(void)
      }
    
    mov_eax_memoffs32((unsigned int *)(&next_interupt));
-   sub_reg32_m32(EAX, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
+   sub_reg32_m32(EAX, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(11);
    
    and_eax_imm32(0xFFFFFFFC);
-   add_m32_reg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), EAX);
+   add_m32_reg32((unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]), EAX);
   
    genjal();
 #endif
@@ -656,13 +655,13 @@ void gentest_idle(void)
    jump_start_rel32();
    
    mov_reg32_m32(reg, (unsigned int *)(&next_interupt));
-   sub_reg32_m32(reg, (unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]));
+   sub_reg32_m32(reg, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(reg, 5);
    jbe_rj(18);
    
    sub_reg32_imm32(reg, 2); // 6
    and_reg32_imm32(reg, 0xFFFFFFFC); // 6
-   add_m32_reg32((unsigned int *)(&g_cp0_regs[CP0_COUNT_REG]), reg); // 6
+   add_m32_reg32((unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]), reg); // 6
    
    jump_end_rel32();
 }
@@ -1722,7 +1721,7 @@ void gencheck_cop1_unusable(void)
 {
    free_all_registers();
    simplify_access();
-   test_m32_imm32((unsigned int*)&g_cp0_regs[CP0_STATUS_REG], CP0_STATUS_CU1);
+   test_m32_imm32((unsigned int*)&g_dev.r4300.cp0.regs[CP0_STATUS_REG], CP0_STATUS_CU1);
    jne_rj(0);
 
    jump_start_rel8();

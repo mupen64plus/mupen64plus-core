@@ -82,13 +82,11 @@ cglobal write_mid_new
 cglobal breakpoint
 
 cextern base_addr
-cextern tlb_LUT_r
 cextern jump_in
 cextern add_link
 cextern hash_table
 cextern jump_dirty
 cextern new_recompile_block
-cextern g_cp0_regs
 cextern get_addr_ht
 cextern cycle_count
 cextern get_addr
@@ -133,7 +131,7 @@ dyna_linker:
     mov     ecx,    eax
     shr     edi,    12
     cmp     eax,    0C0000000h
-    cmovge  ecx,    [tlb_LUT_r+edi*4]
+    cmovge  ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_tlb + offsetof_struct_tlb_LUT_r+edi*4]
     test    ecx,    ecx
     cmovz   ecx,    eax
     xor     ecx,    080000000h
@@ -225,22 +223,22 @@ exec_pagefault:
     ;eax = instruction pointer
     ;ebx = fault address
     ;ecx = cause
-    mov     edx,    [g_cp0_regs+48]
+    mov     edx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48]
     add     esp,    -12
-    mov     edi,    [g_cp0_regs+16]
+    mov     edi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+16]
     or      edx,    2
-    mov     [g_cp0_regs+32],    ebx        ;BadVAddr
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+32],    ebx        ;BadVAddr
     and     edi,    0FF80000Fh
-    mov     [g_cp0_regs+48],    edx        ;Status
-    mov     [g_cp0_regs+52],    ecx        ;Cause
-    mov     [g_cp0_regs+56],    eax        ;EPC
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48],    edx        ;Status
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+52],    ecx        ;Cause
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+56],    eax        ;EPC
     mov     ecx,    ebx
     shr     ebx,    9
     and     ecx,    0FFFFE000h
     and     ebx,    0007FFFF0h
-    mov     [g_cp0_regs+40],    ecx        ;EntryHI
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+40],    ecx        ;EntryHI
     or      edi,    ebx
-    mov     [g_cp0_regs+16],    edi        ;Context
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+16],    edi        ;Context
     push     080000000h
     call    get_addr_ht
     add     esp,    16
@@ -253,7 +251,7 @@ dyna_linker_ds:
     mov     ecx,    eax
     shr     edi,    12
     cmp     eax,    0C0000000h
-    cmovge  ecx,    [tlb_LUT_r+edi*4]
+    cmovge  ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_tlb + offsetof_struct_tlb_LUT_r+edi*4]
     test    ecx,    ecx
     cmovz   ecx,    eax
     xor     ecx,    080000000h
@@ -459,7 +457,7 @@ _D5:
 cc_interrupt:
     add     esi,    [last_count]
     add     esp,    -28                 ;Align stack
-    mov     [g_cp0_regs+36],    esi    ;Count
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36],    esi    ;Count
     shr     esi,    19
     mov     DWORD [pending_exception],    0
     and     esi,    01fch
@@ -467,7 +465,7 @@ cc_interrupt:
     jne     _E4
 _E1:
     call    gen_interupt
-    mov     esi,    [g_cp0_regs+36]
+    mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     eax,    [next_interupt]
     mov     ebx,    [pending_exception]
     mov     ecx,    [stop]
@@ -521,7 +519,7 @@ do_interrupt:
     push    edi
     call    get_addr_ht
     add     esp,    16
-    mov     esi,    [g_cp0_regs+36]
+    mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     ebx,    [next_interupt]
     mov     [last_count],    ebx
     sub     esi,    ebx
@@ -531,12 +529,12 @@ do_interrupt:
 fp_exception:
     mov     edx,    01000002ch
 _E7:
-    mov     ebx,    [g_cp0_regs+48]
+    mov     ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48]
     add     esp,    -12
     or      ebx,    2
-    mov     [g_cp0_regs+48],    ebx     ;Status
-    mov     [g_cp0_regs+52],    edx     ;Cause
-    mov     [g_cp0_regs+56],    eax     ;EPC
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48],    ebx     ;Status
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+52],    edx     ;Cause
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+56],    eax     ;EPC
     push    080000180h
     call    get_addr_ht
     add     esp,    16
@@ -548,29 +546,29 @@ fp_exception_ds:
 
 jump_syscall:
     mov     edx,    020h
-    mov     ebx,    [g_cp0_regs+48]
+    mov     ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48]
     add     esp,    -12
     or      ebx,    2
-    mov     [g_cp0_regs+48],    ebx     ;Status
-    mov     [g_cp0_regs+52],    edx     ;Cause
-    mov     [g_cp0_regs+56],    eax     ;EPC
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48],    ebx     ;Status
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+52],    edx     ;Cause
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+56],    eax     ;EPC
     push    080000180h
     call    get_addr_ht
     add     esp,    16
     jmp     eax
 
 jump_eret:
-    mov     ebx,    [g_cp0_regs+48]        ;Status
+    mov     ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48]        ;Status
     add     esi,    [last_count]
     and     ebx,    0FFFFFFFDh
-    mov     [g_cp0_regs+36],    esi        ;Count
-    mov     [g_cp0_regs+48],    ebx        ;Status
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36],    esi        ;Count
+    mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48],    ebx        ;Status
     call    check_interupt
     mov     eax,    [next_interupt]
-    mov     esi,    [g_cp0_regs+36]
+    mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     [last_count],    eax
     sub     esi,    eax
-    mov     eax,    [g_cp0_regs+56]        ;EPC
+    mov     eax,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+56]        ;EPC
     jns     _E11
 _E8:
     mov     ebx,    248
@@ -619,7 +617,7 @@ new_dyna_start:
     push    0a4000040h
     call    new_recompile_block
     mov     edi,    DWORD [next_interupt]
-    mov     esi,    DWORD [g_cp0_regs+36]
+    mov     esi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     DWORD [last_count],    edi
     sub     esi,    edi
     jmp     DWORD [base_addr]
@@ -885,7 +883,7 @@ tlb_exception:
     call    TLB_refill_exception_new
     add     esp,    16
     mov     edi,    DWORD [next_interupt]
-    mov     esi,    DWORD [g_cp0_regs+36]    ;Count
+    mov     esi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]    ;Count
     mov     DWORD [last_count],    edi
     sub     esi,    edi
     jmp     eax

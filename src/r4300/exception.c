@@ -21,8 +21,8 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "cp0_private.h"
 #include "exception.h"
+#include "main/main.h"
 #include "memory/memory.h"
 #include "r4300.h"
 #include "r4300_core.h"
@@ -35,40 +35,40 @@ void TLB_refill_exception(uint32_t address, int w)
    int usual_handler = 0, i;
 
    if (r4300emu != CORE_DYNAREC && w != 2) cp0_update_count();
-   if (w == 1) g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBS;
-   else g_cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBL;
-   g_cp0_regs[CP0_BADVADDR_REG] = address;
-   g_cp0_regs[CP0_CONTEXT_REG] = (g_cp0_regs[CP0_CONTEXT_REG] & UINT32_C(0xFF80000F)) | ((address >> 9) & UINT32_C(0x007FFFF0));
-   g_cp0_regs[CP0_ENTRYHI_REG] = address & UINT32_C(0xFFFFE000);
-   if (g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_EXL)
+   if (w == 1) g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBS;
+   else g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBL;
+   g_dev.r4300.cp0.regs[CP0_BADVADDR_REG] = address;
+   g_dev.r4300.cp0.regs[CP0_CONTEXT_REG] = (g_dev.r4300.cp0.regs[CP0_CONTEXT_REG] & UINT32_C(0xFF80000F)) | ((address >> 9) & UINT32_C(0x007FFFF0));
+   g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] = address & UINT32_C(0xFFFFE000);
+   if (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & CP0_STATUS_EXL)
      {
     generic_jump_to(UINT32_C(0x80000180));
-    if(delay_slot==1 || delay_slot==3) g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    else g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    if(delay_slot==1 || delay_slot==3) g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    else g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    else
      {
     if (r4300emu != CORE_PURE_INTERPRETER) 
       {
          if (w!=2)
-           g_cp0_regs[CP0_EPC_REG] = PC->addr;
+           g_dev.r4300.cp0.regs[CP0_EPC_REG] = PC->addr;
          else
-           g_cp0_regs[CP0_EPC_REG] = address;
+           g_dev.r4300.cp0.regs[CP0_EPC_REG] = address;
       }
-    else g_cp0_regs[CP0_EPC_REG] = PC->addr;
+    else g_dev.r4300.cp0.regs[CP0_EPC_REG] = PC->addr;
          
-    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
-    g_cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
     
     if (address >= UINT32_C(0x80000000) && address < UINT32_C(0xc0000000))
       usual_handler = 1;
     for (i=0; i<32; i++)
       {
-         if (/*tlb_e[i].v_even &&*/ address >= tlb_e[i].start_even &&
-         address <= tlb_e[i].end_even)
+         if (/*g_dev.r4300.cp0.tlb.entries[i].v_even &&*/ address >= g_dev.r4300.cp0.tlb.entries[i].start_even &&
+         address <= g_dev.r4300.cp0.tlb.entries[i].end_even)
            usual_handler = 1;
-         if (/*tlb_e[i].v_odd &&*/ address >= tlb_e[i].start_odd &&
-         address <= tlb_e[i].end_odd)
+         if (/*g_dev.r4300.cp0.tlb.entries[i].v_odd &&*/ address >= g_dev.r4300.cp0.tlb.entries[i].start_odd &&
+         address <= g_dev.r4300.cp0.tlb.entries[i].end_odd)
            usual_handler = 1;
       }
     if (usual_handler)
@@ -82,14 +82,14 @@ void TLB_refill_exception(uint32_t address, int w)
      }
    if(delay_slot==1 || delay_slot==3)
      {
-    g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    g_cp0_regs[CP0_EPC_REG]-=4;
+    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
-   if(w != 2) g_cp0_regs[CP0_EPC_REG]-=4;
+   if(w != 2) g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
    
    last_addr = PC->addr;
    
@@ -113,18 +113,18 @@ void TLB_refill_exception(uint32_t address, int w)
 void exception_general(void)
 {
    cp0_update_count();
-   g_cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+   g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
    
-   g_cp0_regs[CP0_EPC_REG] = PC->addr;
+   g_dev.r4300.cp0.regs[CP0_EPC_REG] = PC->addr;
    
    if(delay_slot==1 || delay_slot==3)
      {
-    g_cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    g_cp0_regs[CP0_EPC_REG]-=4;
+    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    generic_jump_to(UINT32_C(0x80000180));
    last_addr = PC->addr;

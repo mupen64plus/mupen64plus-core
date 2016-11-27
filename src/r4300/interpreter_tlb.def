@@ -24,15 +24,15 @@
 DECLARE_INSTRUCTION(TLBR)
 {
    int index;
-   index = g_cp0_regs[CP0_INDEX_REG] & UINT32_C(0x1F);
-   g_cp0_regs[CP0_PAGEMASK_REG] = tlb_e[index].mask << 13;
-   g_cp0_regs[CP0_ENTRYHI_REG] = ((tlb_e[index].vpn2 << 13) | tlb_e[index].asid);
-   g_cp0_regs[CP0_ENTRYLO0_REG] = (tlb_e[index].pfn_even << 6) | (tlb_e[index].c_even << 3)
-     | (tlb_e[index].d_even << 2) | (tlb_e[index].v_even << 1)
-       | tlb_e[index].g;
-   g_cp0_regs[CP0_ENTRYLO1_REG] = (tlb_e[index].pfn_odd << 6) | (tlb_e[index].c_odd << 3)
-     | (tlb_e[index].d_odd << 2) | (tlb_e[index].v_odd << 1)
-       | tlb_e[index].g;
+   index = g_dev.r4300.cp0.regs[CP0_INDEX_REG] & UINT32_C(0x1F);
+   g_dev.r4300.cp0.regs[CP0_PAGEMASK_REG] = g_dev.r4300.cp0.tlb.entries[index].mask << 13;
+   g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] = ((g_dev.r4300.cp0.tlb.entries[index].vpn2 << 13) | g_dev.r4300.cp0.tlb.entries[index].asid);
+   g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] = (g_dev.r4300.cp0.tlb.entries[index].pfn_even << 6) | (g_dev.r4300.cp0.tlb.entries[index].c_even << 3)
+     | (g_dev.r4300.cp0.tlb.entries[index].d_even << 2) | (g_dev.r4300.cp0.tlb.entries[index].v_even << 1)
+       | g_dev.r4300.cp0.tlb.entries[index].g;
+   g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] = (g_dev.r4300.cp0.tlb.entries[index].pfn_odd << 6) | (g_dev.r4300.cp0.tlb.entries[index].c_odd << 3)
+     | (g_dev.r4300.cp0.tlb.entries[index].d_odd << 2) | (g_dev.r4300.cp0.tlb.entries[index].v_odd << 1)
+       | g_dev.r4300.cp0.tlb.entries[index].g;
    ADD_TO_PC(1);
 }
 
@@ -41,12 +41,12 @@ static void TLBWrite(unsigned int idx)
    if (r4300emu != CORE_PURE_INTERPRETER)
    {
       unsigned int i;
-      if (tlb_e[idx].v_even)
+      if (g_dev.r4300.cp0.tlb.entries[idx].v_even)
       {
-         for (i=tlb_e[idx].start_even>>12; i<=tlb_e[idx].end_even>>12; i++)
+         for (i=g_dev.r4300.cp0.tlb.entries[idx].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[idx].end_even>>12; i++)
          {
-            if(!invalid_code[i] &&(invalid_code[tlb_LUT_r[i]>>12] ||
-               invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+            if(!invalid_code[i] &&(invalid_code[g_dev.r4300.cp0.tlb.LUT_r[i]>>12] ||
+               invalid_code[(g_dev.r4300.cp0.tlb.LUT_r[i]>>12)+0x20000]))
                invalid_code[i] = 1;
             if (!invalid_code[i])
             {
@@ -55,12 +55,12 @@ static void TLBWrite(unsigned int idx)
                 md5_byte_t digest[16];
                 md5_init(&state);
                 md5_append(&state, 
-                       (const md5_byte_t*)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],
+                       (const md5_byte_t*)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],
                        0x1000);
                 md5_finish(&state, digest);
                 for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
                 
-                blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+                blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
                 
                 invalid_code[i] = 1;
             }
@@ -72,12 +72,12 @@ static void TLBWrite(unsigned int idx)
             }
          }
       }
-      if (tlb_e[idx].v_odd)
+      if (g_dev.r4300.cp0.tlb.entries[idx].v_odd)
       {
-         for (i=tlb_e[idx].start_odd>>12; i<=tlb_e[idx].end_odd>>12; i++)
+         for (i=g_dev.r4300.cp0.tlb.entries[idx].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[idx].end_odd>>12; i++)
          {
-            if(!invalid_code[i] &&(invalid_code[tlb_LUT_r[i]>>12] ||
-               invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+            if(!invalid_code[i] &&(invalid_code[g_dev.r4300.cp0.tlb.LUT_r[i]>>12] ||
+               invalid_code[(g_dev.r4300.cp0.tlb.LUT_r[i]>>12)+0x20000]))
                invalid_code[i] = 1;
             if (!invalid_code[i])
             {
@@ -86,12 +86,12 @@ static void TLBWrite(unsigned int idx)
                md5_byte_t digest[16];
                md5_init(&state);
                md5_append(&state, 
-                      (const md5_byte_t*)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],
+                      (const md5_byte_t*)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],
                       0x1000);
                md5_finish(&state, digest);
                for (j=0; j<16; j++) blocks[i]->md5[j] = digest[j];*/
                 
-               blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4], 0x1000);
+               blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
                 
                invalid_code[i] = 1;
             }
@@ -105,41 +105,41 @@ static void TLBWrite(unsigned int idx)
       }
    }
 
-   tlb_unmap(&tlb_e[idx]);
+   tlb_unmap(&g_dev.r4300.cp0.tlb.entries[idx]);
 
-   tlb_e[idx].g = (g_cp0_regs[CP0_ENTRYLO0_REG] & g_cp0_regs[CP0_ENTRYLO1_REG] & 1);
-   tlb_e[idx].pfn_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
-   tlb_e[idx].pfn_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
-   tlb_e[idx].c_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x38)) >> 3;
-   tlb_e[idx].c_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x38)) >> 3;
-   tlb_e[idx].d_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x4)) >> 2;
-   tlb_e[idx].d_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x4)) >> 2;
-   tlb_e[idx].v_even = (g_cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x2)) >> 1;
-   tlb_e[idx].v_odd = (g_cp0_regs[CP0_ENTRYLO1_REG] & UINT32_C(0x2)) >> 1;
-   tlb_e[idx].asid = (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF));
-   tlb_e[idx].vpn2 = (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13;
-   //tlb_e[idx].r = (g_cp0_regs[CP0_ENTRYHI_REG] & 0xC000000000000000LL) >> 62;
-   tlb_e[idx].mask = (g_cp0_regs[CP0_PAGEMASK_REG] & UINT32_C(0x1FFE000)) >> 13;
+   g_dev.r4300.cp0.tlb.entries[idx].g = (g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] & g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] & 1);
+   g_dev.r4300.cp0.tlb.entries[idx].pfn_even = (g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
+   g_dev.r4300.cp0.tlb.entries[idx].pfn_odd = (g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
+   g_dev.r4300.cp0.tlb.entries[idx].c_even = (g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] & UINT32_C(0x38)) >> 3;
+   g_dev.r4300.cp0.tlb.entries[idx].c_odd = (g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] & UINT32_C(0x38)) >> 3;
+   g_dev.r4300.cp0.tlb.entries[idx].d_even = (g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] & UINT32_C(0x4)) >> 2;
+   g_dev.r4300.cp0.tlb.entries[idx].d_odd = (g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] & UINT32_C(0x4)) >> 2;
+   g_dev.r4300.cp0.tlb.entries[idx].v_even = (g_dev.r4300.cp0.regs[CP0_ENTRYLO0_REG] & UINT32_C(0x2)) >> 1;
+   g_dev.r4300.cp0.tlb.entries[idx].v_odd = (g_dev.r4300.cp0.regs[CP0_ENTRYLO1_REG] & UINT32_C(0x2)) >> 1;
+   g_dev.r4300.cp0.tlb.entries[idx].asid = (g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF));
+   g_dev.r4300.cp0.tlb.entries[idx].vpn2 = (g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13;
+   //g_dev.r4300.cp0.tlb.entries[idx].r = (g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] & 0xC000000000000000LL) >> 62;
+   g_dev.r4300.cp0.tlb.entries[idx].mask = (g_dev.r4300.cp0.regs[CP0_PAGEMASK_REG] & UINT32_C(0x1FFE000)) >> 13;
    
-   tlb_e[idx].start_even = tlb_e[idx].vpn2 << 13;
-   tlb_e[idx].end_even = tlb_e[idx].start_even+
-     (tlb_e[idx].mask << 12) + UINT32_C(0xFFF);
-   tlb_e[idx].phys_even = tlb_e[idx].pfn_even << 12;
+   g_dev.r4300.cp0.tlb.entries[idx].start_even = g_dev.r4300.cp0.tlb.entries[idx].vpn2 << 13;
+   g_dev.r4300.cp0.tlb.entries[idx].end_even = g_dev.r4300.cp0.tlb.entries[idx].start_even+
+     (g_dev.r4300.cp0.tlb.entries[idx].mask << 12) + UINT32_C(0xFFF);
+   g_dev.r4300.cp0.tlb.entries[idx].phys_even = g_dev.r4300.cp0.tlb.entries[idx].pfn_even << 12;
    
 
-   tlb_e[idx].start_odd = tlb_e[idx].end_even+1;
-   tlb_e[idx].end_odd = tlb_e[idx].start_odd+
-     (tlb_e[idx].mask << 12) + UINT32_C(0xFFF);
-   tlb_e[idx].phys_odd = tlb_e[idx].pfn_odd << 12;
+   g_dev.r4300.cp0.tlb.entries[idx].start_odd = g_dev.r4300.cp0.tlb.entries[idx].end_even+1;
+   g_dev.r4300.cp0.tlb.entries[idx].end_odd = g_dev.r4300.cp0.tlb.entries[idx].start_odd+
+     (g_dev.r4300.cp0.tlb.entries[idx].mask << 12) + UINT32_C(0xFFF);
+   g_dev.r4300.cp0.tlb.entries[idx].phys_odd = g_dev.r4300.cp0.tlb.entries[idx].pfn_odd << 12;
    
-   tlb_map(&tlb_e[idx]);
+   tlb_map(&g_dev.r4300.cp0.tlb.entries[idx]);
 
    if (r4300emu != CORE_PURE_INTERPRETER)
    {
       unsigned int i;
-      if (tlb_e[idx].v_even)
+      if (g_dev.r4300.cp0.tlb.entries[idx].v_even)
       {    
-         for (i=tlb_e[idx].start_even>>12; i<=tlb_e[idx].end_even>>12; i++)
+         for (i=g_dev.r4300.cp0.tlb.entries[idx].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[idx].end_even>>12; i++)
          {
             /*if (blocks[i] && (blocks[i]->md5[0] || blocks[i]->md5[1] ||
                   blocks[i]->md5[2] || blocks[i]->md5[3]))
@@ -150,7 +150,7 @@ static void TLBWrite(unsigned int idx)
                md5_byte_t digest[16];
                md5_init(&state);
                md5_append(&state, 
-                  (const md5_byte_t*)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],
+                  (const md5_byte_t*)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],
                   0x1000);
                md5_finish(&state, digest);
                for (j=0; j<16; j++)
@@ -160,15 +160,15 @@ static void TLBWrite(unsigned int idx)
                }*/
                if(blocks[i] && blocks[i]->adler32)
                {
-                  if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+                  if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000))
                      invalid_code[i] = 0;
                }
          }
       }
 
-      if (tlb_e[idx].v_odd)
+      if (g_dev.r4300.cp0.tlb.entries[idx].v_odd)
       {    
-         for (i=tlb_e[idx].start_odd>>12; i<=tlb_e[idx].end_odd>>12; i++)
+         for (i=g_dev.r4300.cp0.tlb.entries[idx].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[idx].end_odd>>12; i++)
          {
             /*if (blocks[i] && (blocks[i]->md5[0] || blocks[i]->md5[1] ||
                   blocks[i]->md5[2] || blocks[i]->md5[3]))
@@ -179,7 +179,7 @@ static void TLBWrite(unsigned int idx)
             md5_byte_t digest[16];
             md5_init(&state);
             md5_append(&state, 
-                   (const md5_byte_t*)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],
+                   (const md5_byte_t*)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],
                    0x1000);
             md5_finish(&state, digest);
             for (j=0; j<16; j++)
@@ -189,7 +189,7 @@ static void TLBWrite(unsigned int idx)
             }*/
             if(blocks[i] && blocks[i]->adler32)
             {
-               if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(tlb_LUT_r[i]&0x7FF000)/4],0x1000))
+               if(blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(g_dev.r4300.cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000))
                   invalid_code[i] = 0;
             }
          }
@@ -199,31 +199,31 @@ static void TLBWrite(unsigned int idx)
 
 DECLARE_INSTRUCTION(TLBWI)
 {
-   TLBWrite(g_cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F));
+   TLBWrite(g_dev.r4300.cp0.regs[CP0_INDEX_REG] & UINT32_C(0x3F));
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TLBWR)
 {
    cp0_update_count();
-   g_cp0_regs[CP0_RANDOM_REG] = (g_cp0_regs[CP0_COUNT_REG]/2 % (32 - g_cp0_regs[CP0_WIRED_REG]))
-                              + g_cp0_regs[CP0_WIRED_REG];
-   TLBWrite(g_cp0_regs[CP0_RANDOM_REG]);
+   g_dev.r4300.cp0.regs[CP0_RANDOM_REG] = (g_dev.r4300.cp0.regs[CP0_COUNT_REG]/2 % (32 - g_dev.r4300.cp0.regs[CP0_WIRED_REG]))
+                              + g_dev.r4300.cp0.regs[CP0_WIRED_REG];
+   TLBWrite(g_dev.r4300.cp0.regs[CP0_RANDOM_REG]);
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(TLBP)
 {
    int i;
-   g_cp0_regs[CP0_INDEX_REG] |= UINT32_C(0x80000000);
+   g_dev.r4300.cp0.regs[CP0_INDEX_REG] |= UINT32_C(0x80000000);
    for (i=0; i<32; i++)
    {
-      if (((tlb_e[i].vpn2 & (~tlb_e[i].mask)) ==
-         (((g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13) & (~tlb_e[i].mask))) &&
-        ((tlb_e[i].g) ||
-         (tlb_e[i].asid == (g_cp0_regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF)))))
+      if (((g_dev.r4300.cp0.tlb.entries[i].vpn2 & (~g_dev.r4300.cp0.tlb.entries[i].mask)) ==
+         (((g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] & UINT32_C(0xFFFFE000)) >> 13) & (~g_dev.r4300.cp0.tlb.entries[i].mask))) &&
+        ((g_dev.r4300.cp0.tlb.entries[i].g) ||
+         (g_dev.r4300.cp0.tlb.entries[i].asid == (g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] & UINT32_C(0xFF)))))
       {
-         g_cp0_regs[CP0_INDEX_REG] = i;
+         g_dev.r4300.cp0.regs[CP0_INDEX_REG] = i;
          break;
       }
    }
@@ -233,18 +233,18 @@ DECLARE_INSTRUCTION(TLBP)
 DECLARE_INSTRUCTION(ERET)
 {
    cp0_update_count();
-   if (g_cp0_regs[CP0_STATUS_REG] & CP0_STATUS_ERL)
+   if (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & CP0_STATUS_ERL)
    {
      DebugMessage(M64MSG_ERROR, "error in ERET");
      stop=1;
    }
    else
    {
-     g_cp0_regs[CP0_STATUS_REG] &= ~CP0_STATUS_EXL;
-     generic_jump_to(g_cp0_regs[CP0_EPC_REG]);
+     g_dev.r4300.cp0.regs[CP0_STATUS_REG] &= ~CP0_STATUS_EXL;
+     generic_jump_to(g_dev.r4300.cp0.regs[CP0_EPC_REG]);
    }
    g_dev.r4300.llbit = 0;
    check_interupt();
    last_addr = PCADDR;
-   if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt();
+   if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt();
 }

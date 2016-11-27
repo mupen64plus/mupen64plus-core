@@ -30,7 +30,6 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp0_private.h"
 #include "cp1_private.h"
 #include "exception.h"
 #include "interupt.h"
@@ -96,7 +95,7 @@ unsigned int jump_to_address;
          cp0_update_count(); \
       } \
       last_addr = PC->addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_OUT(void) \
    { \
@@ -127,7 +126,7 @@ unsigned int jump_to_address;
          cp0_update_count(); \
       } \
       last_addr = PC->addr; \
-      if (next_interupt <= g_cp0_regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(void) \
    { \
@@ -137,8 +136,8 @@ unsigned int jump_to_address;
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = next_interupt - g_cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+         skip = next_interupt - g_dev.r4300.cp0.regs[CP0_COUNT_REG]; \
+         if (skip > 3) g_dev.r4300.cp0.regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \
       } \
       else name(); \

@@ -22,7 +22,6 @@
 #include "r4300_core.h"
 
 #include "cached_interp.h"
-#include "cp0_private.h"
 #include "cp1_private.h"
 #include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
@@ -41,28 +40,13 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->llbit = 0;
 
     /* setup CP0 registers */
-    memset(g_cp0_regs, 0, CP0_REGS_COUNT * sizeof(g_cp0_regs[0]));
-    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
-    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
-    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
-    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
-
-    /* clear TLB entries */
-    memset(tlb_e, 0, 32 * sizeof(tlb_e[0]));
-    memset(tlb_LUT_r, 0, 0x100000 * sizeof(tlb_LUT_r[0]));
-    memset(tlb_LUT_w, 0, 0x100000 * sizeof(tlb_LUT_w[0]));
+    poweron_cp0(&r4300->cp0);
 
     /* setup CP1 registers */
     memset(reg_cop1_fgr_64, 0, 32 * sizeof(reg_cop1_fgr_64[0]));
     FCR0 = UINT32_C(0x511);
     FCR31 = 0;
-    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
+    set_fpr_pointers(r4300->cp0.regs[CP0_STATUS_REG]);
     update_x86_rounding_mode(FCR31);
 
     /* setup mi */

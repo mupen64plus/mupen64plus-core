@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "tlb.h"
+
 enum
 {
     CP0_STATUS_IE   = 0x00000001,
@@ -132,7 +134,19 @@ enum r4300_cp0_registers
     CP0_REGS_COUNT = 32
 };
 
+struct cp0
+{
+    uint32_t regs[CP0_REGS_COUNT];
+
+    struct tlb tlb;
+};
+
+
+void poweron_cp0(struct cp0* cp0);
+
 uint32_t* r4300_cp0_regs(void);
+
+int check_cop1_unusable(void);
 
 void cp0_update_count(void);
 

@@ -36,7 +36,6 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp0_private.h"
 #include "main/main.h"
 #include "main/profile.h"
 #include "memory/memory.h"
@@ -812,7 +811,7 @@ static void RMFC0(void)
    dst->ops = current_instruction_table.MFC0;
    recomp_func = genmfc0;
    recompile_standard_r_type();
-   dst->f.r.rd = (int64_t*) (g_cp0_regs + ((src >> 11) & 0x1F));
+   dst->f.r.rd = (int64_t*) (g_dev.r4300.cp0.regs + ((src >> 11) & 0x1F));
    dst->f.r.nrd = (src >> 11) & 0x1F;
    if (dst->f.r.rt == g_dev.r4300.regs) RNOP();
 }
