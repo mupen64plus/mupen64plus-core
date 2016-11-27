@@ -883,6 +883,7 @@ m64p_error main_run(void)
 {
     size_t i;
     unsigned int disable_extra_mem;
+    unsigned int emumode;
     struct storage_file eep;
     struct storage_file fla;
     struct storage_file mpk;
@@ -900,7 +901,7 @@ m64p_error main_run(void)
 
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
-    r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
+    emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
     /* set some other core parameters based on the config file values */
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
@@ -946,6 +947,7 @@ m64p_error main_run(void)
     }
 
     init_device(&g_dev,
+                emumode,
                 count_per_op,
                 &aout,
                 g_rom, g_rom_size,
@@ -1069,7 +1071,7 @@ void main_stop(void)
         g_rom_pause = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
-    stop = 1;
+    g_dev.r4300.stop = 1;
 #ifdef DBG
     if(g_DebuggerActive)
     {

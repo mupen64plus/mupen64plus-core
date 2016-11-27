@@ -28,22 +28,8 @@
 #include "r4300_core.h"
 #include "recomp.h"
 
-extern precomp_instr *PC;
-
-extern int stop;
-extern long long int local_rs;
-extern uint32_t skip_jump;
-extern unsigned int dyna_interp;
-extern unsigned int r4300emu;
-extern cpu_instruction_table current_instruction_table;
-
 void r4300_reset_soft(void);
 void r4300_execute(void);
-
-// r4300 emulators
-#define CORE_PURE_INTERPRETER 0
-#define CORE_INTERPRETER      1
-#define CORE_DYNAREC          2
 
 #endif /* M64P_R4300_R4300_H */
 

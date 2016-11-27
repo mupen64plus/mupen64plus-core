@@ -95,7 +95,6 @@ cextern memory_map
 cextern pending_exception
 cextern restore_candidate
 cextern gen_interupt
-cextern stop
 cextern last_count
 cextern pcaddr
 cextern clean_blocks
@@ -467,7 +466,7 @@ _E1:
     mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     eax,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     ebx,    [pending_exception]
-    mov     ecx,    [stop]
+    mov     ecx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_stop]
     add     esp,    28
     mov     [last_count],    eax
     sub     esi,    eax

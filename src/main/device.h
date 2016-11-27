@@ -59,6 +59,7 @@ struct device
 /* Setup device "static" properties.  */
 void init_device(struct device* dev,
     /* r4300 */
+    unsigned int emumode,
     unsigned int count_per_op,
     /* ai */
     struct audio_out_backend* aout,

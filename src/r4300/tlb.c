@@ -139,7 +139,7 @@ uint32_t virtual_to_physical_address(uint32_t addresse, int w)
         if (tlb->LUT_r[addresse>>12])
             return (tlb->LUT_r[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, PC->addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, g_dev.r4300.pc->addr);
     //getchar();
     TLB_refill_exception(addresse,w);
     //return 0x80000000;

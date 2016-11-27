@@ -156,7 +156,7 @@ void genjr(void)
 #ifdef INTERPRET_JR
    gencallinterp((unsigned int)cached_interpreter_table.JR, 1);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
+   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff =
      (unsigned int)(&dst->local_addr) - (unsigned int)(dst);
    unsigned int diff_need =
@@ -174,16 +174,16 @@ void genjr(void)
    free_all_registers();
    simplify_access();
    mov_eax_memoffs32((unsigned int *)dst->f.i.rs);
-   mov_memoffs32_eax((unsigned int *)&local_rs);
+   mov_memoffs32_eax((unsigned int *)&g_dev.r4300.local_rs);
    
    gendelayslot();
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
+   mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
    gencheck_interupt_reg();
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
+   mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
    and_eax_imm32(0xFFFFF000);
    cmp_eax_imm32(dst_block->start & 0xFFFFF000);
@@ -192,7 +192,7 @@ void genjr(void)
    jump_start_rel32();
    
    mov_m32_reg32(&jump_to_address, EBX);
-   mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
+   mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
    
@@ -222,7 +222,7 @@ void genjalr(void)
 #ifdef INTERPRET_JALR
    gencallinterp((unsigned int)cached_interpreter_table.JALR, 0);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
+   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff =
      (unsigned int)(&dst->local_addr) - (unsigned int)(dst);
    unsigned int diff_need =
@@ -240,7 +240,7 @@ void genjalr(void)
    free_all_registers();
    simplify_access();
    mov_eax_memoffs32((unsigned int *)dst->f.r.rs);
-   mov_memoffs32_eax((unsigned int *)&local_rs);
+   mov_memoffs32_eax((unsigned int *)&g_dev.r4300.local_rs);
    
    gendelayslot();
    
@@ -250,12 +250,12 @@ void genjalr(void)
    else
      mov_m32_imm32(((unsigned int *)(dst-1)->f.r.rd)+1, 0);
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
+   mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
    gencheck_interupt_reg();
    
-   mov_eax_memoffs32((unsigned int *)&local_rs);
+   mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
    and_eax_imm32(0xFFFFF000);
    cmp_eax_imm32(dst_block->start & 0xFFFFF000);
@@ -264,7 +264,7 @@ void genjalr(void)
    jump_start_rel32();
    
    mov_m32_reg32(&jump_to_address, EBX);
-   mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
+   mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
    

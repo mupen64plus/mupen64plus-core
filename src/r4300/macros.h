@@ -26,37 +26,37 @@
 #define SE16(a) ((int64_t) ((int16_t) (a)))
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
-#define rrt *PC->f.r.rt
-#define rrd *PC->f.r.rd
-#define rfs PC->f.r.nrd
-#define rrs *PC->f.r.rs
-#define rsa PC->f.r.sa
-#define irt *PC->f.i.rt
-#define ioffset PC->f.i.immediate
-#define iimmediate PC->f.i.immediate
-#define irs *PC->f.i.rs
-#define ibase *PC->f.i.rs
-#define jinst_index PC->f.j.inst_index
-#define lfbase PC->f.lf.base
-#define lfft PC->f.lf.ft
-#define lfoffset PC->f.lf.offset
-#define cfft PC->f.cf.ft
-#define cffs PC->f.cf.fs
-#define cffd PC->f.cf.fd
+#define rrt *g_dev.r4300.pc->f.r.rt
+#define rrd *g_dev.r4300.pc->f.r.rd
+#define rfs g_dev.r4300.pc->f.r.nrd
+#define rrs *g_dev.r4300.pc->f.r.rs
+#define rsa g_dev.r4300.pc->f.r.sa
+#define irt *g_dev.r4300.pc->f.i.rt
+#define ioffset g_dev.r4300.pc->f.i.immediate
+#define iimmediate g_dev.r4300.pc->f.i.immediate
+#define irs *g_dev.r4300.pc->f.i.rs
+#define ibase *g_dev.r4300.pc->f.i.rs
+#define jinst_index g_dev.r4300.pc->f.j.inst_index
+#define lfbase g_dev.r4300.pc->f.lf.base
+#define lfft g_dev.r4300.pc->f.lf.ft
+#define lfoffset g_dev.r4300.pc->f.lf.offset
+#define cfft g_dev.r4300.pc->f.cf.ft
+#define cffs g_dev.r4300.pc->f.cf.fs
+#define cffd g_dev.r4300.pc->f.cf.fd
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) PC->f.r.rt)
-#define rrd32 *((int32_t*) PC->f.r.rd)
-#define rrs32 *((int32_t*) PC->f.r.rs)
-#define irs32 *((int32_t*) PC->f.i.rs)
-#define irt32 *((int32_t*) PC->f.i.rt)
+#define rrt32 *((int32_t*) g_dev.r4300.pc->f.r.rt)
+#define rrd32 *((int32_t*) g_dev.r4300.pc->f.r.rd)
+#define rrs32 *((int32_t*) g_dev.r4300.pc->f.r.rs)
+#define irs32 *((int32_t*) g_dev.r4300.pc->f.i.rs)
+#define irt32 *((int32_t*) g_dev.r4300.pc->f.i.rt)
 #else
-#define rrt32 *((int32_t*) PC->f.r.rt + 1)
-#define rrd32 *((int32_t*) PC->f.r.rd + 1)
-#define rrs32 *((int32_t*) PC->f.r.rs + 1)
-#define irs32 *((int32_t*) PC->f.i.rs + 1)
-#define irt32 *((int32_t*) PC->f.i.rt + 1)
+#define rrt32 *((int32_t*) g_dev.r4300.pc->f.r.rt + 1)
+#define rrd32 *((int32_t*) g_dev.r4300.pc->f.r.rd + 1)
+#define rrs32 *((int32_t*) g_dev.r4300.pc->f.r.rs + 1)
+#define irs32 *((int32_t*) g_dev.r4300.pc->f.i.rs + 1)
+#define irt32 *((int32_t*) g_dev.r4300.pc->f.i.rt + 1)
 #endif
 
 #endif /* M64P_R4300_MACROS_H */

@@ -75,7 +75,7 @@ void add_jump(unsigned int pc_addr, unsigned int mi_addr)
    jumps_number++;
 }
 
-void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
+void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block *block)
 {
    unsigned int real_code_length, addr_dest;
    int i;

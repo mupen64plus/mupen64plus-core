@@ -123,7 +123,7 @@ static void decode_recompiled(uint32 addr)
     if(blocks[addr>>12] == NULL)
         return;
 
-    if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
+    if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
     //      recompile_block((int *) g_dev.sp_mem, blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");
@@ -202,7 +202,7 @@ int get_has_recompiled(uint32 addr)
 {
     unsigned char *assemb, *end_addr;
 
-    if(r4300emu != CORE_DYNAREC || blocks[addr>>12] == NULL)
+    if(g_dev.r4300.emumode != EMUMODE_DYNAREC || blocks[addr>>12] == NULL)
         return FALSE;
 
     assemb = (blocks[addr>>12]->code) + 

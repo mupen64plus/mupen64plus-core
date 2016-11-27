@@ -24,14 +24,14 @@
 
 #include "r4300/recomp.h"
 
-void init_cache(precomp_instr* start);
+void init_cache(struct precomp_instr* start);
 void free_all_registers(void);
 void free_register(int reg);
 int allocate_register(unsigned int *addr);
 int allocate_64_register1(unsigned int *addr);
 int allocate_64_register2(unsigned int *addr);
 int is64(unsigned int *addr);
-void build_wrappers(precomp_instr*, int, int, precomp_block*);
+void build_wrappers(struct precomp_instr*, int, int, struct precomp_block*);
 int lru_register(void);
 int allocate_register_w(unsigned int *addr);
 int allocate_64_register1_w(unsigned int *addr);

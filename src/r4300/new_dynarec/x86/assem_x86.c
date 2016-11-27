@@ -3632,7 +3632,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_writeword_imm((int)&fake_pc,(int)&PC);
+        emit_writeword_imm((int)&fake_pc,(int)&g_dev.r4300.pc);
         emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(fake_pc.f.r.nrd));
         if(copr==9) {
           emit_readword((int)&last_count,ECX);
@@ -3653,7 +3653,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     assert(s>=0);
     emit_writeword(s,(int)&readmem_dword);
     emit_pusha();
-    emit_writeword_imm((int)&fake_pc,(int)&PC);
+    emit_writeword_imm((int)&fake_pc,(int)&g_dev.r4300.pc);
     emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(fake_pc.f.r.nrd));
     if(copr==9||copr==11||copr==12) {
       if((copr==12||copr==9)&&!is_delayslot) {

@@ -20,6 +20,8 @@ void foo(void)
     DEFINE(struct r4300_core, hi);
     DEFINE(struct r4300_core, lo);
 
+    DEFINE(struct r4300_core, stop);
+
     DEFINE(struct r4300_core, cp0);
     DEFINE(struct cp0, regs);
     DEFINE(struct cp0, next_interrupt);

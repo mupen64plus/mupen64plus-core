@@ -388,7 +388,7 @@ void check_interupt(void)
 static void wrapped_exception_general(void)
 {
 #ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC) {
+    if (g_dev.r4300.emumode == CORE_DYNAREC) {
         g_dev.r4300.cp0.regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0x80000180;
         g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
@@ -466,27 +466,27 @@ static void nmi_int_handler(void)
     // clear the audio status register so that subsequent write_ai() calls will work properly
     g_dev.ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
-    g_dev.r4300.cp0.regs[CP0_ERROREPC_REG] = PC->addr;
+    g_dev.r4300.cp0.regs[CP0_ERROREPC_REG] = g_dev.r4300.pc->addr;
     // reset the r4300 internal state
-    if (r4300emu != CORE_PURE_INTERPRETER)
+    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
         // clear all the compiled instruction blocks and re-initialize
         free_blocks();
         init_blocks();
     }
-    // adjust ErrorEPC if we were in a delay slot, and clear the g_dev.r4300.delay_slot and dyna_interp flags
+    // adjust ErrorEPC if we were in a delay slot, and clear the g_dev.r4300.delay_slot and g_dev.r4300.dyna_interp flags
     if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
     {
         g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]-=4;
     }
     g_dev.r4300.delay_slot = 0;
-    dyna_interp = 0;
+    g_dev.r4300.dyna_interp = 0;
     // set next instruction address to reset vector
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
     generic_jump_to(UINT32_C(0xa4000040));
 
 #ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC)
+    if (g_dev.r4300.emumode == CORE_DYNAREC)
     {
         g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0xa4000040;
@@ -499,7 +499,7 @@ static void nmi_int_handler(void)
 
 void gen_interupt(void)
 {
-    if (stop == 1)
+    if (g_dev.r4300.stop == 1)
     {
         g_gs_vi_counter = 0; // debug
         dyna_stop();
@@ -521,10 +521,10 @@ void gen_interupt(void)
         }
     }
    
-    if (skip_jump)
+    if (g_dev.r4300.skip_jump)
     {
-        uint32_t dest = skip_jump;
-        skip_jump = 0;
+        uint32_t dest = g_dev.r4300.skip_jump;
+        g_dev.r4300.skip_jump = 0;
 
         g_dev.r4300.cp0.next_interrupt = (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
                 || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - q.first->data.count) < UINT32_C(0x80000000))

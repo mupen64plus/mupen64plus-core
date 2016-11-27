@@ -31,8 +31,9 @@
 
 #include <string.h>
 
-void init_r4300(struct r4300_core* r4300, unsigned int count_per_op)
+void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op)
 {
+    r4300->emumode = emumode;
     init_cp0(&r4300->cp0, count_per_op);
 }
 
@@ -44,7 +45,12 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->lo = 0;
     r4300->llbit = 0;
 
+    r4300->pc = NULL;
     r4300->delay_slot = 0;
+    r4300->local_rs = 0;
+    r4300->skip_jump = 0;
+    r4300->dyna_interp = 0;
+    //r4300->current_instruction_table;
 
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);
@@ -83,27 +89,27 @@ unsigned int* r4300_llbit(void)
 uint32_t* r4300_pc(void)
 {
 #ifdef NEW_DYNAREC
-    return (r4300emu == CORE_DYNAREC)
+    return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         ? (uint32_t*)&pcaddr
-        : &PC->addr;
+        : &g_dev.r4300.pc->addr;
 #else
-    return &PC->addr;
+    return &g_dev.r4300.pc->addr;
 #endif
 }
 
 unsigned int get_r4300_emumode(void)
 {
-    return r4300emu;
+    return g_dev.r4300.emumode;
 }
 
 
 
 void invalidate_r4300_cached_code(uint32_t address, size_t size)
 {
-    if (r4300emu != CORE_PURE_INTERPRETER)
+    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
 #ifdef NEW_DYNAREC
-        if (r4300emu == CORE_DYNAREC)
+        if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         {
             invalidate_cached_code_new_dynarec(address, size);
         }
@@ -119,7 +125,7 @@ void invalidate_r4300_cached_code(uint32_t address, size_t size)
 void savestates_load_set_pc(uint32_t pc)
 {
 #ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC)
+    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
     {
         pcaddr = pc;
         pending_exception = 1;

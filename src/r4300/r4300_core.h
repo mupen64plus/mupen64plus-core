@@ -29,6 +29,17 @@
 #include "cp1.h"
 #include "mi_controller.h"
 
+#include "ops.h" /* for cpu_instruction_table */
+
+struct precomp_instr;
+
+enum {
+    EMUMODE_PURE_INTERPRETER = 0,
+    EMUMODE_INTERPRETER      = 1,
+    EMUMODE_DYNAREC          = 2,
+};
+
+
 struct r4300_core
 {
     int64_t regs[32];
@@ -36,14 +47,22 @@ struct r4300_core
     int64_t lo;
     unsigned int llbit;
 
+    struct precomp_instr* pc;
     unsigned int delay_slot;
+    long long int local_rs;
+    uint32_t skip_jump;
+    int stop;
+    unsigned int dyna_interp;
+    struct cpu_instruction_table current_instruction_table;
+
+    unsigned int emumode;
 
     struct cp0 cp0;
 
     struct mi_controller mi;
 };
 
-void init_r4300(struct r4300_core* r4300, unsigned int count_per_op);
+void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op);
 void poweron_r4300(struct r4300_core* r4300);
 
 int64_t* r4300_regs(void);

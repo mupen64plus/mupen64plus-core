@@ -118,7 +118,7 @@ void free_assembler(void **block_jumps_table, int *block_jumps_number, void **bl
   *block_riprel_number = riprel_number;
 }
 
-void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
+void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block *block)
 {
   unsigned int i;
 
@@ -131,7 +131,7 @@ void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
    */
   for (i = 0; i < jumps_number; i++)
   {
-    precomp_instr *jump_instr = dest + ((jumps_table[i].mi_addr - dest[0].addr) / 4);
+    struct precomp_instr *jump_instr = dest + ((jumps_table[i].mi_addr - dest[0].addr) / 4);
     unsigned int   jmp_offset_loc = jumps_table[i].pc_addr;
     unsigned char *addr_dest = NULL;
     /* calculate the destination address to jump to */

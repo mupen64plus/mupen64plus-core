@@ -188,10 +188,10 @@ void genjr(void)
 #ifdef INTERPRET_JR
    gencallinterp((unsigned long long)cached_interpreter_table.JR, 1);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
-   unsigned int diff = (unsigned int) offsetof(precomp_instr, local_addr);
-   unsigned int diff_need = (unsigned int) offsetof(precomp_instr, reg_cache_infos.need_map);
-   unsigned int diff_wrap = (unsigned int) offsetof(precomp_instr, reg_cache_infos.jump_wrapper);
+   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
+   unsigned int diff = (unsigned int) offsetof(struct precomp_instr, local_addr);
+   unsigned int diff_need = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.need_map);
+   unsigned int diff_wrap = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.jump_wrapper);
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
@@ -203,16 +203,16 @@ void genjr(void)
    free_registers_move_start();
 
    mov_xreg32_m32rel(EAX, (unsigned int *)dst->f.i.rs);
-   mov_m32rel_xreg32((unsigned int *)&local_rs, EAX);
+   mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.local_rs, EAX);
    
    gendelayslot();
    
-   mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
+   mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
    gencheck_interupt_reg();
    
-   mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
+   mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
    and_eax_imm32(0xFFFFF000);
    cmp_eax_imm32(dst_block->start & 0xFFFFF000);
@@ -222,7 +222,7 @@ void genjr(void)
    
    mov_m32rel_xreg32(&jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (dst+1));
-   mov_m64rel_xreg64((unsigned long long *)(&PC), RAX);
+   mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.pc), RAX);
    mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
    call_reg64(RAX);  /* will never return from call */
 
@@ -257,10 +257,10 @@ void genjalr(void)
 #ifdef INTERPRET_JALR
    gencallinterp((unsigned long long)cached_interpreter_table.JALR, 0);
 #else
-   static unsigned int precomp_instr_size = sizeof(precomp_instr);
-   unsigned int diff = (unsigned int) offsetof(precomp_instr, local_addr);
-   unsigned int diff_need = (unsigned int) offsetof(precomp_instr, reg_cache_infos.need_map);
-   unsigned int diff_wrap = (unsigned int) offsetof(precomp_instr, reg_cache_infos.jump_wrapper);
+   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
+   unsigned int diff = (unsigned int) offsetof(struct precomp_instr, local_addr);
+   unsigned int diff_need = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.need_map);
+   unsigned int diff_wrap = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.jump_wrapper);
    
    if (((dst->addr & 0xFFF) == 0xFFC && 
        (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
@@ -272,7 +272,7 @@ void genjalr(void)
    free_registers_move_start();
 
    mov_xreg32_m32rel(EAX, (unsigned int *)dst->f.r.rs);
-   mov_m32rel_xreg32((unsigned int *)&local_rs, EAX);
+   mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.local_rs, EAX);
    
    gendelayslot();
    
@@ -282,12 +282,12 @@ void genjalr(void)
    else
      mov_m32rel_imm32(((unsigned int *)(dst-1)->f.r.rd)+1, 0);
    
-   mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
+   mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
    gencheck_interupt_reg();
    
-   mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
+   mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
    and_eax_imm32(0xFFFFF000);
    cmp_eax_imm32(dst_block->start & 0xFFFFF000);
@@ -297,7 +297,7 @@ void genjalr(void)
    
    mov_m32rel_xreg32(&jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (dst+1));
-   mov_m64rel_xreg64((unsigned long long *)(&PC), RAX);
+   mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.pc), RAX);
    mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
    call_reg64(RAX);  /* will never return from call */
 

@@ -37,16 +37,16 @@ unsigned long long *return_address;
 
 void dyna_jump(void)
 {
-    if (stop == 1)
+    if (g_dev.r4300.stop == 1)
     {
         dyna_stop();
         return;
     }
 
-    if (PC->reg_cache_infos.need_map)
-        *return_address = (unsigned long long) (PC->reg_cache_infos.jump_wrapper);
+    if (g_dev.r4300.pc->reg_cache_infos.need_map)
+        *return_address = (unsigned long long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
     else
-        *return_address = (unsigned long long) (actual->code + PC->local_addr);
+        *return_address = (unsigned long long) (actual->code + g_dev.r4300.pc->local_addr);
 }
 
 long long save_rsp = 0;

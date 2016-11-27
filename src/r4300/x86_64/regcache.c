@@ -33,13 +33,13 @@
 #include "regcache.h"
 
 static unsigned long long * reg_content[8];
-static precomp_instr* last_access[8];
-static precomp_instr* free_since[8];
+static struct precomp_instr* last_access[8];
+static struct precomp_instr* free_since[8];
 static int dirty[8];
 static int is64bits[8];
 static unsigned long long *r0;
 
-void init_cache(precomp_instr* start)
+void init_cache(struct precomp_instr* start)
 {
   int i;
   for (i=0; i<8; i++)
@@ -116,7 +116,7 @@ void free_registers_move_start(void)
 // this function frees a specific X86 GPR
 void free_register(int reg)
 {
-  precomp_instr *last;
+  struct precomp_instr *last;
    
   if (last_access[reg] != NULL)
     last = last_access[reg]+1;
@@ -198,7 +198,7 @@ void set_register_state(int reg, unsigned int *addr, int _dirty, int _is64bits)
 int lock_register(int reg)
 {
    free_register(reg);
-   last_access[reg] = (precomp_instr *) 0xFFFFFFFFFFFFFFFFULL;
+   last_access[reg] = (struct precomp_instr *) 0xFFFFFFFFFFFFFFFFULL;
    reg_content[reg] = NULL;
    return reg;
 }
@@ -223,7 +223,7 @@ int allocate_register_32(unsigned int *addr)
     {
       if (last_access[i] != NULL && (unsigned int *) reg_content[i] == addr)
       {
-        precomp_instr *last = last_access[i]+1;
+        struct precomp_instr *last = last_access[i]+1;
 
         while (last <= dst)
         {
@@ -280,7 +280,7 @@ int allocate_register_64(unsigned long long *addr)
     {
       if (last_access[i] != NULL && reg_content[i] == addr)
       {
-        precomp_instr *last = last_access[i]+1;
+        struct precomp_instr *last = last_access[i]+1;
 
         while (last <= dst)
         {
@@ -354,7 +354,7 @@ int allocate_register_32_w(unsigned int *addr)
   {
     if (last_access[i] != NULL && reg_content[i] == (unsigned long long *) addr)
     {
-      precomp_instr *last = last_access[i] + 1;
+      struct precomp_instr *last = last_access[i] + 1;
          
       while (last <= dst)
       {
@@ -399,7 +399,7 @@ int allocate_register_64_w(unsigned long long *addr)
   {
     if (last_access[i] != NULL && reg_content[i] == addr)
     {
-      precomp_instr *last = last_access[i] + 1;
+      struct precomp_instr *last = last_access[i] + 1;
 
       while (last <= dst)
       {
@@ -442,7 +442,7 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
   /* check if we just happen to already have this r4300 reg cached in the requested x86 reg */
   if (last_access[reg] != NULL && reg_content[reg] == (unsigned long long *) addr)
   {
-    precomp_instr *last = last_access[reg] + 1;
+    struct precomp_instr *last = last_access[reg] + 1;
     while (last <= dst)
     {
       last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
@@ -470,7 +470,7 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
   {
     if (last_access[i] != NULL && reg_content[i] == (unsigned long long *) addr)
     {
-      precomp_instr *last = last_access[i]+1;
+      struct precomp_instr *last = last_access[i]+1;
       while (last <= dst)
       {
         last->reg_cache_infos.needed_registers[i] = reg_content[i];
@@ -511,7 +511,7 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
   /* check if we just happen to already have this r4300 reg cached in the requested x86 reg */
   if (last_access[reg] != NULL && reg_content[reg] == (unsigned long long *) addr)
   {
-    precomp_instr *last = last_access[reg]+1;
+    struct precomp_instr *last = last_access[reg]+1;
     while (last <= dst)
     {
       last->reg_cache_infos.needed_registers[reg] = NULL;
@@ -540,7 +540,7 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
   {
     if (last_access[i] != NULL && reg_content[i] == (unsigned long long *) addr)
     {
-      precomp_instr *last = last_access[i] + 1;
+      struct precomp_instr *last = last_access[i] + 1;
       while (last <= dst)
       {
         last->reg_cache_infos.needed_registers[i] = NULL;
@@ -580,7 +580,7 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
 // 0xC3 ret
 // total : 84 bytes
 
-static void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_block* block)
+static void build_wrapper(struct precomp_instr *instr, unsigned char* pCode, struct precomp_block* block)
 {
    int i;
 
@@ -639,7 +639,7 @@ static void build_wrapper(precomp_instr *instr, unsigned char* pCode, precomp_bl
    *pCode++ = 0xC3;
 }
 
-void build_wrappers(precomp_instr *instr, int start, int end, precomp_block* block)
+void build_wrappers(struct precomp_instr *instr, int start, int end, struct precomp_block* block)
 {
    int i, reg;
    for (i=start; i<end; i++)

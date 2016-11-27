@@ -95,11 +95,11 @@ int check_cop1_unusable(void)
 void cp0_update_count(void)
 {
 #ifdef NEW_DYNAREC
-    if (r4300emu != CORE_DYNAREC)
+    if (g_dev.r4300.emumode != EMUMODE_DYNAREC)
     {
 #endif
-        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((PC->addr - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
-        g_dev.r4300.cp0.last_addr = PC->addr;
+        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((g_dev.r4300.pc->addr - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
+        g_dev.r4300.cp0.last_addr = g_dev.r4300.pc->addr;
 #ifdef NEW_DYNAREC
     }
 #endif
@@ -109,7 +109,7 @@ void cp0_update_count(void)
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(PC->addr);
+   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(g_dev.r4300.pc->addr);
 #endif
 */
 }
