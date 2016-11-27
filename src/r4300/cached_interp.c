@@ -143,10 +143,10 @@ unsigned int jump_to_address;
    }
 
 #define CHECK_MEMORY() \
-   if (!invalid_code[address>>12]) \
-      if (blocks[address>>12]->block[(address&0xFFF)/4].ops != \
+   if (!invalid_code[g_dev.mem.address>>12]) \
+      if (blocks[g_dev.mem.address>>12]->block[(g_dev.mem.address&0xFFF)/4].ops != \
           g_dev.r4300.current_instruction_table.NOTCOMPILED) \
-         invalid_code[address>>12] = 1;
+         invalid_code[g_dev.mem.address>>12] = 1;
 
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning

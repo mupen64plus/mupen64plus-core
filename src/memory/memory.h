@@ -24,28 +24,52 @@
 
 #include <stdint.h>
 
-#define read_word_in_memory() readmem[address>>16]()
-#define read_byte_in_memory() readmemb[address>>16]()
-#define read_hword_in_memory() readmemh[address>>16]()
-#define read_dword_in_memory() readmemd[address>>16]()
-#define write_word_in_memory() writemem[address>>16]()
-#define write_byte_in_memory() writememb[address >>16]()
-#define write_hword_in_memory() writememh[address >>16]()
-#define write_dword_in_memory() writememd[address >>16]()
+struct memory
+{
+    uint64_t* rdword;
 
-extern uint32_t address, cpu_word;
-extern uint8_t cpu_byte;
-extern uint16_t cpu_hword;
-extern uint64_t cpu_dword, *rdword;
+    union {
+        uint8_t  wbyte;
+        uint16_t whword;
+        uint32_t wword;
+        uint64_t wdword;
+    };
 
-extern void (*readmem[0x10000])(void);
-extern void (*readmemb[0x10000])(void);
-extern void (*readmemh[0x10000])(void);
-extern void (*readmemd[0x10000])(void);
-extern void (*writemem[0x10000])(void);
-extern void (*writememb[0x10000])(void);
-extern void (*writememh[0x10000])(void);
-extern void (*writememd[0x10000])(void);
+    uint32_t address;
+
+    void (*readmem[0x10000])(void);
+    void (*readmemb[0x10000])(void);
+    void (*readmemh[0x10000])(void);
+    void (*readmemd[0x10000])(void);
+    void (*writemem[0x10000])(void);
+    void (*writememb[0x10000])(void);
+    void (*writememh[0x10000])(void);
+    void (*writememd[0x10000])(void);
+
+#ifdef DBG
+    int memtype[0x10000];
+    void (*saved_readmemb[0x10000])(void);
+    void (*saved_readmemh[0x10000])(void);
+    void (*saved_readmem [0x10000])(void);
+    void (*saved_readmemd[0x10000])(void);
+    void (*saved_writememb[0x10000])(void);
+    void (*saved_writememh[0x10000])(void);
+    void (*saved_writemem [0x10000])(void);
+    void (*saved_writememd[0x10000])(void);
+#endif
+};
+
+/* struct memory definition is required prior including this */
+#include "main/main.h"
+
+#define read_word_in_memory() g_dev.mem.readmem[g_dev.mem.address>>16]()
+#define read_byte_in_memory() g_dev.mem.readmemb[g_dev.mem.address>>16]()
+#define read_hword_in_memory() g_dev.mem.readmemh[g_dev.mem.address>>16]()
+#define read_dword_in_memory() g_dev.mem.readmemd[g_dev.mem.address>>16]()
+#define write_word_in_memory() g_dev.mem.writemem[g_dev.mem.address>>16]()
+#define write_byte_in_memory() g_dev.mem.writememb[g_dev.mem.address >>16]()
+#define write_hword_in_memory() g_dev.mem.writememh[g_dev.mem.address >>16]()
+#define write_dword_in_memory() g_dev.mem.writememd[g_dev.mem.address >>16]()
 
 #ifndef M64P_BIG_ENDIAN
 #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
@@ -77,9 +101,10 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-void poweron_memory(void);
+void poweron_memory(struct memory* mem);
 
-void map_region(uint16_t region,
+void map_region(struct memory* mem,
+                uint16_t region,
                 int type,
                 void (*read8)(void),
                 void (*read16)(void),
@@ -114,11 +139,11 @@ void write_rdramFBd(void);
 uint32_t *fast_mem_access(uint32_t address);
 
 #ifdef DBG
-void activate_memory_break_read(uint32_t address);
-void deactivate_memory_break_read(uint32_t address);
-void activate_memory_break_write(uint32_t address);
-void deactivate_memory_break_write(uint32_t address);
-int get_memory_type(uint32_t address);
+void activate_memory_break_read(struct memory* mem, uint32_t address);
+void deactivate_memory_break_read(struct memory* mem, uint32_t address);
+void activate_memory_break_write(struct memory* mem, uint32_t address);
+void deactivate_memory_break_write(struct memory* mem, uint32_t address);
+int get_memory_type(struct memory* mem, uint32_t address);
 #endif
 
 #endif

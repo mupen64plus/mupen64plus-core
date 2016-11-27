@@ -1,6 +1,7 @@
 #include <stddef.h>
 
 #include "main/device.h"
+#include "memory/memory.h"
 #include "r4300/r4300_core.h"
 
 /* magic macros -- don't change these */
@@ -32,4 +33,12 @@ void foo(void)
     DEFINE(struct tlb, entries);
     DEFINE(struct tlb, LUT_r);
     DEFINE(struct tlb, LUT_w);
+
+    DEFINE(struct device, mem);
+
+    DEFINE(struct memory, wbyte);
+    DEFINE(struct memory, whword);
+    DEFINE(struct memory, wword);
+    DEFINE(struct memory, wdword);
+    DEFINE(struct memory, address);
 }

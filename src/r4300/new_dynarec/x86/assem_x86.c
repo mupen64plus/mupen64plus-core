@@ -2824,14 +2824,14 @@ static void do_readstub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    ftable=(int)g_dev.mem.readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    ftable=(int)g_dev.mem.readmemh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
-  emit_writeword(rs,(int)&address);
+    ftable=(int)g_dev.mem.readmemd;
+  emit_writeword(rs,(int)&g_dev.mem.address);
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   emit_pusha();
@@ -2908,17 +2908,17 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   assert(rs>=0);
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    ftable=(int)g_dev.mem.readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    ftable=(int)g_dev.mem.readmemh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
+    ftable=(int)g_dev.mem.readmemd;
   #ifdef HOST_IMM_ADDR32
-  emit_writeword_imm(addr,(int)&address);
+  emit_writeword_imm(addr,(int)&g_dev.mem.address);
   #else
-  emit_writeword(rs,(int)&address);
+  emit_writeword(rs,(int)&g_dev.mem.address);
   #endif
   emit_pusha();
   if((signed int)addr>=(signed int)0xC0000000) {
@@ -3017,25 +3017,25 @@ static void do_writestub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    ftable=(int)g_dev.mem.writememb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
-  emit_writeword(rs,(int)&address);
+    ftable=(int)g_dev.mem.writememd;
+  emit_writeword(rs,(int)&g_dev.mem.address);
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)&cpu_byte);
+    emit_writebyte(rt,(int)&g_dev.mem.wbyte);
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&cpu_hword);
+    emit_writehword(rt,(int)&g_dev.mem.whword);
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&cpu_word);
+    emit_writeword(rt,(int)&g_dev.mem.wword);
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&cpu_dword);
-    emit_writeword(r?rth:rt,(int)&cpu_dword+4);
+    emit_writeword(rt,(int)&g_dev.mem.wdword);
+    emit_writeword(r?rth:rt,(int)&g_dev.mem.wdword+4);
   }
   emit_pusha();
   ds=i_regs!=&regs[i];
@@ -3093,23 +3093,23 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   assert(rt>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    ftable=(int)g_dev.mem.writememb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
-  emit_writeword(rs,(int)&address);
+    ftable=(int)g_dev.mem.writememd;
+  emit_writeword(rs,(int)&g_dev.mem.address);
   if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)&cpu_byte);
+    emit_writebyte(rt,(int)&g_dev.mem.wbyte);
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&cpu_hword);
+    emit_writehword(rt,(int)&g_dev.mem.whword);
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&cpu_word);
+    emit_writeword(rt,(int)&g_dev.mem.wword);
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&cpu_dword);
-    emit_writeword(target?rth:rt,(int)&cpu_dword+4);
+    emit_writeword(rt,(int)&g_dev.mem.wdword);
+    emit_writeword(target?rth:rt,(int)&g_dev.mem.wdword+4);
   }
   emit_pusha();
   if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {

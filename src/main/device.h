@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include "ai/ai_controller.h"
+#include "memory/memory.h"
 #include "pi/pi_controller.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
@@ -41,9 +42,7 @@ struct rumble_backend;
 struct storage_backend;
 
 /* Device structure is a container for the n64 submodules
- * FIXME: should also include memory submodule, but not possible atm
- * because of new_dynarec.
- */
+ * It contains all state related to the emulated system. */
 struct device
 {
     struct r4300_core r4300;
@@ -54,6 +53,7 @@ struct device
     struct ri_controller ri;
     struct si_controller si;
     struct vi_controller vi;
+    struct memory mem;
 };
 
 /* Setup device "static" properties.  */

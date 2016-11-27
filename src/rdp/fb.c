@@ -123,8 +123,8 @@ void protect_framebuffers(struct rdp_core* dp)
                 end >>= 16;
                 for (j=start; j<=end; j++)
                 {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
+                    map_region(&g_dev.mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
+                    map_region(&g_dev.mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
                 }
                 start <<= 4;
                 end <<= 4;
@@ -167,8 +167,8 @@ void unprotect_framebuffers(struct rdp_core* dp)
 
                 for (j=start; j<=end; j++)
                 {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdram));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdram));
+                    map_region(&g_dev.mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdram));
+                    map_region(&g_dev.mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdram));
                 }
             }
         }

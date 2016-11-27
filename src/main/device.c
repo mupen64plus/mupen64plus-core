@@ -80,5 +80,5 @@ void poweron_device(struct device* dev)
     poweron_ri(&dev->ri);
     poweron_si(&dev->si);
     poweron_vi(&dev->vi);
-    poweron_memory();
+    poweron_memory(&dev->mem);
 }

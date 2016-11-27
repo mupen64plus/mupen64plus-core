@@ -99,12 +99,7 @@ cextern last_count
 cextern pcaddr
 cextern clean_blocks
 cextern invalidate_block
-cextern address
 cextern g_rdram
-cextern cpu_byte
-cextern cpu_hword
-cextern cpu_word
-cextern cpu_dword
 cextern invalid_code
 cextern readmem_dword
 cextern check_interupt
@@ -677,36 +672,36 @@ invalidate_block_call:
     ret
 
 write_rdram_new:
-    mov     edi,    [address]
-    mov     ecx,    [cpu_word]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
+    mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wword]
     mov     [g_rdram-0x80000000+edi],    ecx
     jmp     _E12
 
 write_rdramb_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     xor     edi,    3
-    mov     cl,     BYTE [cpu_byte]
+    mov     cl,     BYTE [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wbyte]
     mov     BYTE [g_rdram-0x80000000+edi],    cl
     jmp     _E12
 
 write_rdramh_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     xor     edi,    2
-    mov     cx,     WORD [cpu_hword]
+    mov     cx,     WORD [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_whword]
     mov     WORD [g_rdram-0x80000000+edi],    cx
     jmp     _E12
 
 write_rdramd_new:
-    mov     edi,    [address]
-    mov     ecx,    [cpu_dword+4]
-    mov     edx,    [cpu_dword+0]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
+    mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+4]
+    mov     edx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+0]
     mov     [g_rdram-0x80000000+edi],      ecx
     mov     [g_rdram-0x80000000+4+edi],    edx
     jmp     _E12
 
 
 do_invalidate:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     mov     ebx,    edi    ;Return ebx to caller
 _E12:
     shr     edi,    12
@@ -719,7 +714,7 @@ _E13:
     ret
 
 read_nomem_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
@@ -731,7 +726,7 @@ read_nomem_new:
     ret
 
 read_nomemb_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
@@ -744,7 +739,7 @@ read_nomemb_new:
     ret
 
 read_nomemh_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
@@ -757,7 +752,7 @@ read_nomemh_new:
     ret
 
 read_nomemd_new:
-    mov     edi,    [address]
+    mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     mov     ebx,    edi
     shr     edi,    12
     mov     edi,    [memory_map+edi*4]
@@ -773,7 +768,7 @@ read_nomemd_new:
 write_nomem_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
-    mov     ecx,    [cpu_word]
+    mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wword]
     mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
@@ -783,7 +778,7 @@ write_nomem_new:
 write_nomemb_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
-    mov     cl,     BYTE [cpu_byte]
+    mov     cl,     BYTE [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wbyte]
     mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
@@ -794,7 +789,7 @@ write_nomemb_new:
 write_nomemh_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
-    mov     cx,     WORD [cpu_hword]
+    mov     cx,     WORD [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_whword]
     mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception
@@ -805,8 +800,8 @@ write_nomemh_new:
 write_nomemd_new:
     call    do_invalidate
     mov     edi,    [memory_map+edi*4]
-    mov     edx,    [cpu_dword+4]
-    mov     ecx,    [cpu_dword+0]
+    mov     edx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+4]
+    mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+0]
     mov     eax,    01h
     shl     edi,    2
     jc      tlb_exception

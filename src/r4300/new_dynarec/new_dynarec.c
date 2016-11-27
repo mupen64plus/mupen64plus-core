@@ -7685,7 +7685,7 @@ void new_dynarec_init()
 #endif
   out=(u_char *)base_addr;
 
-  rdword=&readmem_dword;
+  g_dev.mem.rdword=&readmem_dword;
   fake_pc.f.r.rs=(long long int *)&readmem_dword;
   fake_pc.f.r.rt=(long long int *)&readmem_dword;
   fake_pc.f.r.rd=(long long int *)&readmem_dword;
@@ -7713,30 +7713,30 @@ void new_dynarec_init()
   for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
     memory_map[n]=-1;
   for(n=0;n<0x8000;n++) { // 0 .. 0x7FFFFFFF
-    writemem[n] = write_nomem_new;
-    writememb[n] = write_nomemb_new;
-    writememh[n] = write_nomemh_new;
-    writememd[n] = write_nomemd_new;
-    readmem[n] = read_nomem_new;
-    readmemb[n] = read_nomemb_new;
-    readmemh[n] = read_nomemh_new;
-    readmemd[n] = read_nomemd_new;
+    g_dev.mem.writemem[n] = write_nomem_new;
+    g_dev.mem.writememb[n] = write_nomemb_new;
+    g_dev.mem.writememh[n] = write_nomemh_new;
+    g_dev.mem.writememd[n] = write_nomemd_new;
+    g_dev.mem.readmem[n] = read_nomem_new;
+    g_dev.mem.readmemb[n] = read_nomemb_new;
+    g_dev.mem.readmemh[n] = read_nomemh_new;
+    g_dev.mem.readmemd[n] = read_nomemd_new;
   }
   for(n=0x8000;n<0x8080;n++) { // 0x80000000 .. 0x807FFFFF
-    writemem[n] = write_rdram_new;
-    writememb[n] = write_rdramb_new;
-    writememh[n] = write_rdramh_new;
-    writememd[n] = write_rdramd_new;
+    g_dev.mem.writemem[n] = write_rdram_new;
+    g_dev.mem.writememb[n] = write_rdramb_new;
+    g_dev.mem.writememh[n] = write_rdramh_new;
+    g_dev.mem.writememd[n] = write_rdramd_new;
   }
   for(n=0xC000;n<0x10000;n++) { // 0xC0000000 .. 0xFFFFFFFF
-    writemem[n] = write_nomem_new;
-    writememb[n] = write_nomemb_new;
-    writememh[n] = write_nomemh_new;
-    writememd[n] = write_nomemd_new;
-    readmem[n] = read_nomem_new;
-    readmemb[n] = read_nomemb_new;
-    readmemh[n] = read_nomemh_new;
-    readmemd[n] = read_nomemd_new;
+    g_dev.mem.writemem[n] = write_nomem_new;
+    g_dev.mem.writememb[n] = write_nomemb_new;
+    g_dev.mem.writememh[n] = write_nomemh_new;
+    g_dev.mem.writememd[n] = write_nomemd_new;
+    g_dev.mem.readmem[n] = read_nomem_new;
+    g_dev.mem.readmemb[n] = read_nomemb_new;
+    g_dev.mem.readmemh[n] = read_nomemh_new;
+    g_dev.mem.readmemd[n] = read_nomemd_new;
   }
 
   writemem[0x8430] = write_mi_new;
