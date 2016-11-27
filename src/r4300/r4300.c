@@ -57,7 +57,6 @@
 #endif
 
 unsigned int r4300emu = 0;
-int rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
 precomp_instr *PC;
@@ -173,7 +172,7 @@ void r4300_execute(void)
     current_instruction_table = cached_interpreter_table;
 
     stop = 0;
-    rompause = 0;
+    g_rom_pause = 0;
 
     /* clear instruction counters */
 #if defined(COUNT_INSTR)

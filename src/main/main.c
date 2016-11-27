@@ -90,6 +90,9 @@ m64p_frame_callback g_FrameCallback = NULL;
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
+
+int g_rom_pause;
+
 /* XXX: only global because of new dynarec linkage_x86.asm and plugin.c */
 ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
 struct device g_dev;
@@ -339,7 +342,7 @@ static void main_set_speedlimiter(int enable)
 
 static int main_is_paused(void)
 {
-    return (g_EmulatorRunning && rompause);
+    return (g_EmulatorRunning && g_rom_pause);
 }
 
 void main_toggle_pause(void)
@@ -347,7 +350,7 @@ void main_toggle_pause(void)
     if (!g_EmulatorRunning)
         return;
 
-    if (rompause)
+    if (g_rom_pause)
     {
         DebugMessage(M64MSG_STATUS, "Emulation continued.");
         if(l_msgPause)
@@ -369,14 +372,14 @@ void main_toggle_pause(void)
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 
-    rompause = !rompause;
+    g_rom_pause = !g_rom_pause;
     l_FrameAdvance = 0;
 }
 
 void main_advance_one(void)
 {
     l_FrameAdvance = 1;
-    rompause = 0;
+    g_rom_pause = 0;
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 }
 
@@ -460,7 +463,7 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
         case M64CORE_EMU_STATE:
             if (!g_EmulatorRunning)
                 *rval = M64EMU_STOPPED;
-            else if (rompause)
+            else if (g_rom_pause)
                 *rval = M64EMU_PAUSED;
             else
                 *rval = M64EMU_RUNNING;
@@ -719,7 +722,7 @@ void new_frame(void)
     l_CurrentFrame++;
 
     if (l_FrameAdvance) {
-        rompause = 1;
+        g_rom_pause = 1;
         l_FrameAdvance = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
@@ -797,11 +800,11 @@ static void gs_apply_cheats(void)
 
 static void pause_loop(void)
 {
-    if(rompause)
+    if(g_rom_pause)
     {
         osd_render();  // draw Paused message in case gfx.updateScreen didn't do it
         VidExt_GL_SwapBuffers();
-        while(rompause)
+        while(g_rom_pause)
         {
             SDL_Delay(10);
             main_check_inputs();
@@ -1061,9 +1064,9 @@ void main_stop(void)
         osd_delete_message(l_msgVol);
         l_msgVol = NULL;
     }
-    if (rompause)
+    if (g_rom_pause)
     {
-        rompause = 0;
+        g_rom_pause = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
     stop = 1;

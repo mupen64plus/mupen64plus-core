@@ -30,7 +30,7 @@
 
 extern precomp_instr *PC;
 
-extern int stop, rompause;
+extern int stop;
 extern long long int local_rs;
 extern uint32_t skip_jump;
 extern unsigned int dyna_interp;
