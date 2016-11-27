@@ -31,6 +31,11 @@
 
 #include <string.h>
 
+void init_r4300(struct r4300_core* r4300, unsigned int count_per_op)
+{
+    init_cp0(&r4300->cp0, count_per_op);
+}
+
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
@@ -82,16 +87,6 @@ uint32_t* r4300_pc(void)
 #else
     return &PC->addr;
 #endif
-}
-
-uint32_t* r4300_last_addr(void)
-{
-    return &last_addr;
-}
-
-unsigned int* r4300_next_interrupt(void)
-{
-    return &next_interupt;
 }
 
 unsigned int get_r4300_emumode(void)

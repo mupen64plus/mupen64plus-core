@@ -196,13 +196,13 @@ void add_interupt_event_count(int type, unsigned int count)
     {
         q.first = event;
         event->next = NULL;
-        next_interupt = q.first->data.count;
+        g_dev.r4300.cp0.next_interrupt = q.first->data.count;
     }
     else if (before_event(count, q.first->data.count, q.first->data.type) && !special)
     {
         event->next = q.first;
         q.first = event;
-        next_interupt = q.first->data.count;
+        g_dev.r4300.cp0.next_interrupt = q.first->data.count;
     }
     else
     {
@@ -235,7 +235,7 @@ static void remove_interupt_event(void)
     q.first = e->next;
     free_node(&q.pool, e);
 
-    next_interupt = (q.first != NULL
+    g_dev.r4300.cp0.next_interrupt = (q.first != NULL
          && (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
          || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - q.first->data.count) < UINT32_C(0x80000000)))
         ? q.first->data.count
@@ -368,7 +368,7 @@ void check_interupt(void)
             return;
         }
 
-        event->data.count = next_interupt = g_dev.r4300.cp0.regs[CP0_COUNT_REG];
+        event->data.count = g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.regs[CP0_COUNT_REG];
         event->data.type = CHECK_INT;
 
         if (q.first == NULL)
@@ -432,9 +432,9 @@ static void special_int_handler(void)
 static void compare_int_handler(void)
 {
     remove_interupt_event();
-    g_dev.r4300.cp0.regs[CP0_COUNT_REG]+=count_per_op;
+    g_dev.r4300.cp0.regs[CP0_COUNT_REG]+=g_dev.r4300.cp0.count_per_op;
     add_interupt_event_count(COMPARE_INT, g_dev.r4300.cp0.regs[CP0_COMPARE_REG]);
-    g_dev.r4300.cp0.regs[CP0_COUNT_REG]-=count_per_op;
+    g_dev.r4300.cp0.regs[CP0_COUNT_REG]-=g_dev.r4300.cp0.count_per_op;
 
     raise_maskable_interrupt(CP0_CAUSE_IP7);
 }
@@ -482,7 +482,7 @@ static void nmi_int_handler(void)
     delay_slot = 0;
     dyna_interp = 0;
     // set next instruction address to reset vector
-    last_addr = UINT32_C(0xa4000040);
+    g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
     generic_jump_to(UINT32_C(0xa4000040));
 
 #ifdef NEW_DYNAREC
@@ -526,12 +526,12 @@ void gen_interupt(void)
         uint32_t dest = skip_jump;
         skip_jump = 0;
 
-        next_interupt = (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
+        g_dev.r4300.cp0.next_interrupt = (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
                 || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - q.first->data.count) < UINT32_C(0x80000000))
             ? q.first->data.count
             : 0;
 
-        last_addr = dest;
+        g_dev.r4300.cp0.last_addr = dest;
         generic_jump_to(dest);
         return;
     } 

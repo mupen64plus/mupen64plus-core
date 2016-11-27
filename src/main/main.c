@@ -908,7 +908,7 @@ m64p_error main_run(void)
 #endif
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
-    count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
+    unsigned int count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
     cheat_add_hacks();
@@ -943,6 +943,7 @@ m64p_error main_run(void)
     }
 
     init_device(&g_dev,
+                count_per_op,
                 &aout,
                 g_rom, g_rom_size,
                 storage_file_ptr(&fla, 0), &fla_storage,

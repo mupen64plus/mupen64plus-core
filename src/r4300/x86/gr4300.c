@@ -46,9 +46,9 @@ static void gencp0_update_count(unsigned int addr)
 {
 #if !defined(COMPARE_CORE) && !defined(DBG)
    mov_reg32_imm32(EAX, addr);
-   sub_reg32_m32(EAX, (unsigned int*)(&last_addr));
+   sub_reg32_m32(EAX, (unsigned int*)(&g_dev.r4300.cp0.last_addr));
    shr_reg32_imm8(EAX, 2);
-   mov_reg32_m32(EDX, &count_per_op);
+   mov_reg32_m32(EDX, &g_dev.r4300.cp0.count_per_op);
    mul_reg32(EDX);
    add_m32_reg32((unsigned int*)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]), EAX);
 #else
@@ -60,7 +60,7 @@ static void gencp0_update_count(unsigned int addr)
 
 static void gencheck_interupt(unsigned int instr_structure)
 {
-   mov_eax_memoffs32(&next_interupt);
+   mov_eax_memoffs32(&g_dev.r4300.cp0.next_interrupt);
    cmp_reg32_m32(EAX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(17);
    mov_m32_imm32((unsigned int*)(&PC), instr_structure); // 10
@@ -70,7 +70,7 @@ static void gencheck_interupt(unsigned int instr_structure)
 
 static void gencheck_interupt_out(unsigned int addr)
 {
-   mov_eax_memoffs32(&next_interupt);
+   mov_eax_memoffs32(&g_dev.r4300.cp0.next_interrupt);
    cmp_reg32_m32(EAX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(27);
    mov_m32_imm32((unsigned int*)(&fake_instr.addr), addr);
@@ -394,7 +394,7 @@ void genfin_block(void)
 
 void gencheck_interupt_reg(void) // addr is in EAX
 {
-   mov_reg32_m32(EBX, &next_interupt);
+   mov_reg32_m32(EBX, &g_dev.r4300.cp0.next_interrupt);
    cmp_reg32_m32(EBX, &g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
    ja_rj(22);
    mov_memoffs32_eax((unsigned int*)(&fake_instr.addr)); // 5
@@ -424,7 +424,7 @@ void genj(void)
    gendelayslot();
    naddr = ((dst-1)->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
    
-   mov_m32_imm32(&last_addr, naddr);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt((unsigned int)&actual->block[(naddr-actual->start)/4]);
    jmp(naddr);
 #endif
@@ -447,7 +447,7 @@ void genj_out(void)
    gendelayslot();
    naddr = ((dst-1)->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
    
-   mov_m32_imm32(&last_addr, naddr);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
    mov_m32_imm32(&jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
@@ -468,7 +468,7 @@ void genj_idle(void)
     return;
      }
    
-   mov_eax_memoffs32((unsigned int *)(&next_interupt));
+   mov_eax_memoffs32((unsigned int *)(&g_dev.r4300.cp0.next_interrupt));
    sub_reg32_m32(EAX, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(11);
@@ -504,7 +504,7 @@ void genjal(void)
    
    naddr = ((dst-1)->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
    
-   mov_m32_imm32(&last_addr, naddr);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt((unsigned int)&actual->block[(naddr-actual->start)/4]);
    jmp(naddr);
 #endif
@@ -534,7 +534,7 @@ void genjal_out(void)
    
    naddr = ((dst-1)->f.j.inst_index<<2) | (dst->addr & 0xF0000000);
    
-   mov_m32_imm32(&last_addr, naddr);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
    mov_m32_imm32(&jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
@@ -555,7 +555,7 @@ void genjal_idle(void)
     return;
      }
    
-   mov_eax_memoffs32((unsigned int *)(&next_interupt));
+   mov_eax_memoffs32((unsigned int *)(&g_dev.r4300.cp0.next_interrupt));
    sub_reg32_m32(EAX, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(EAX, 3);
    jbe_rj(11);
@@ -574,13 +574,13 @@ void gentest(void)
 
    jump_start_rel32();
 
-   mov_m32_imm32(&last_addr, dst->addr + (dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + (dst-1)->f.i.immediate*4);
    gencheck_interupt((unsigned int)(dst + (dst-1)->f.i.immediate));
    jmp(dst->addr + (dst-1)->f.i.immediate*4);
 
    jump_end_rel32();
 
-   mov_m32_imm32(&last_addr, dst->addr + 4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
 }
@@ -610,7 +610,7 @@ void gentest_out(void)
 
    jump_start_rel32();
 
-   mov_m32_imm32(&last_addr, dst->addr + (dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + (dst-1)->f.i.immediate*4);
    gencheck_interupt_out(dst->addr + (dst-1)->f.i.immediate*4);
    mov_m32_imm32(&jump_to_address, dst->addr + (dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
@@ -619,7 +619,7 @@ void gentest_out(void)
    
    jump_end_rel32();
 
-   mov_m32_imm32(&last_addr, dst->addr + 4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
 }
@@ -654,7 +654,7 @@ void gentest_idle(void)
 
    jump_start_rel32();
    
-   mov_reg32_m32(reg, (unsigned int *)(&next_interupt));
+   mov_reg32_m32(reg, (unsigned int *)(&g_dev.r4300.cp0.next_interrupt));
    sub_reg32_m32(reg, (unsigned int *)(&g_dev.r4300.cp0.regs[CP0_COUNT_REG]));
    cmp_reg32_imm8(reg, 5);
    jbe_rj(18);
@@ -978,14 +978,14 @@ void gentestl(void)
    jump_start_rel32();
 
    gendelayslot();
-   mov_m32_imm32(&last_addr, dst->addr + (dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + (dst-1)->f.i.immediate*4);
    gencheck_interupt((unsigned int)(dst + (dst-1)->f.i.immediate));
    jmp(dst->addr + (dst-1)->f.i.immediate*4);
    
    jump_end_rel32();
 
    gencp0_update_count(dst->addr+4);
-   mov_m32_imm32(&last_addr, dst->addr + 4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
 }
@@ -1016,7 +1016,7 @@ void gentestl_out(void)
    jump_start_rel32();
 
    gendelayslot();
-   mov_m32_imm32(&last_addr, dst->addr + (dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + (dst-1)->f.i.immediate*4);
    gencheck_interupt_out(dst->addr + (dst-1)->f.i.immediate*4);
    mov_m32_imm32(&jump_to_address, dst->addr + (dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&PC), (unsigned int)(dst+1));
@@ -1026,7 +1026,7 @@ void gentestl_out(void)
    jump_end_rel32();
 
    gencp0_update_count(dst->addr+4);
-   mov_m32_imm32(&last_addr, dst->addr + 4);
+   mov_m32_imm32(&g_dev.r4300.cp0.last_addr, dst->addr + 4);
    gencheck_interupt((unsigned int)(dst + 1));
    jmp(dst->addr + 4);
 }

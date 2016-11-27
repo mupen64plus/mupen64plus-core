@@ -245,6 +245,6 @@ DECLARE_INSTRUCTION(ERET)
    }
    g_dev.r4300.llbit = 0;
    check_interupt();
-   last_addr = PCADDR;
-   if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt();
+   g_dev.r4300.cp0.last_addr = PCADDR;
+   if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt();
 }

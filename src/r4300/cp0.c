@@ -38,6 +38,11 @@
 #endif
 
 /* global functions */
+void init_cp0(struct cp0* cp0, unsigned int count_per_op)
+{
+    cp0->count_per_op = count_per_op;
+}
+
 void poweron_cp0(struct cp0* cp0)
 {
     memset(cp0->regs, 0, CP0_REGS_COUNT * sizeof(cp0->regs[0]));
@@ -52,6 +57,10 @@ void poweron_cp0(struct cp0* cp0)
     cp0->regs[CP0_BADVADDR_REG] = UINT32_C(0xffffffff);
     cp0->regs[CP0_ERROREPC_REG] = UINT32_C(0xffffffff);
 
+    /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
+    cp0->next_interrupt = 0;
+    cp0->last_addr = UINT32_C(0xbfc00000);
+
     poweron_tlb(&cp0->tlb);
 }
 
@@ -60,6 +69,17 @@ uint32_t* r4300_cp0_regs(void)
 {
     return g_dev.r4300.cp0.regs;
 }
+
+uint32_t* r4300_cp0_last_addr(void)
+{
+    return &g_dev.r4300.cp0.last_addr;
+}
+
+unsigned int* r4300_cp0_next_interrupt(void)
+{
+    return &g_dev.r4300.cp0.next_interrupt;
+}
+
 
 int check_cop1_unusable(void)
 {
@@ -78,8 +98,8 @@ void cp0_update_count(void)
     if (r4300emu != CORE_DYNAREC)
     {
 #endif
-        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((PC->addr - last_addr) >> 2) * count_per_op;
-        last_addr = PC->addr;
+        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((PC->addr - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
+        g_dev.r4300.cp0.last_addr = PC->addr;
 #ifdef NEW_DYNAREC
     }
 #endif

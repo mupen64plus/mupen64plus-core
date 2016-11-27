@@ -50,6 +50,8 @@
 
 /* Amount of cpu cycles per vi scanline - empirically determined */
 enum { DEFAULT_COUNT_PER_SCANLINE = 1500 };
+/* Number of cpu cycles per instruction */
+enum { DEFAULT_COUNT_PER_OP = 2 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -177,7 +179,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
-    ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+    ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
@@ -212,7 +214,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
-        ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
+        ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -451,7 +453,7 @@ void romdatabase_open(void)
             search->entry.savetype = DEFAULT;
             search->entry.players = DEFAULT;
             search->entry.rumble = DEFAULT; 
-            search->entry.countperop = COUNT_PER_OP_DEFAULT;
+            search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 

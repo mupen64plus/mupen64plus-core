@@ -33,6 +33,8 @@
 
 
 void init_device(struct device* dev,
+    /* r4300 */
+    unsigned int count_per_op,
     /* ai */
     struct audio_out_backend* aout,
     /* pi */
@@ -50,6 +52,7 @@ void init_device(struct device* dev,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing)
 {
+    init_r4300(&dev->r4300, count_per_op);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);

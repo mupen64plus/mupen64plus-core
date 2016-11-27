@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 
+#include "interupt.h"
 #include "tlb.h"
 
 enum
@@ -138,13 +139,20 @@ struct cp0
 {
     uint32_t regs[CP0_REGS_COUNT];
 
+    uint32_t next_interrupt;
+    uint32_t last_addr;
+    unsigned int count_per_op;
+
     struct tlb tlb;
 };
 
 
+void init_cp0(struct cp0* cp0, unsigned int count_per_op);
 void poweron_cp0(struct cp0* cp0);
 
 uint32_t* r4300_cp0_regs(void);
+uint32_t* r4300_cp0_last_addr(void);
+unsigned int* r4300_cp0_next_interrupt(void);
 
 int check_cop1_unusable(void);
 

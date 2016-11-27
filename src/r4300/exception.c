@@ -91,7 +91,7 @@ void TLB_refill_exception(uint32_t address, int w)
      }
    if(w != 2) g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
    
-   last_addr = PC->addr;
+   g_dev.r4300.cp0.last_addr = PC->addr;
    
    if (r4300emu == CORE_DYNAREC) 
      {
@@ -105,7 +105,7 @@ void TLB_refill_exception(uint32_t address, int w)
     if (delay_slot)
       {
          skip_jump = PC->addr;
-         next_interupt = 0;
+         g_dev.r4300.cp0.next_interrupt = 0;
       }
      }
 }
@@ -127,7 +127,7 @@ void exception_general(void)
     g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    generic_jump_to(UINT32_C(0x80000180));
-   last_addr = PC->addr;
+   g_dev.r4300.cp0.last_addr = PC->addr;
    if (r4300emu == CORE_DYNAREC)
      {
     dyna_jump();
@@ -139,7 +139,7 @@ void exception_general(void)
     if (delay_slot)
       {
          skip_jump = PC->addr;
-         next_interupt = 0;
+         g_dev.r4300.cp0.next_interrupt = 0;
       }
      }
 }

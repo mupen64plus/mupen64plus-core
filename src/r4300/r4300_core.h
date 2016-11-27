@@ -27,7 +27,6 @@
 
 #include "cp0.h"
 #include "cp1.h"
-#include "interupt.h"
 #include "mi_controller.h"
 
 struct r4300_core
@@ -42,6 +41,7 @@ struct r4300_core
     struct mi_controller mi;
 };
 
+void init_r4300(struct r4300_core* r4300, unsigned int count_per_op);
 void poweron_r4300(struct r4300_core* r4300);
 
 int64_t* r4300_regs(void);
@@ -49,9 +49,6 @@ int64_t* r4300_mult_hi(void);
 int64_t* r4300_mult_lo(void);
 unsigned int* r4300_llbit(void);
 uint32_t* r4300_pc(void);
-
-uint32_t* r4300_last_addr(void);
-unsigned int* r4300_next_interrupt(void);
 
 unsigned int get_r4300_emumode(void);
 

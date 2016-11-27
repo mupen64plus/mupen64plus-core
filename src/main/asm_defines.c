@@ -22,6 +22,9 @@ void foo(void)
 
     DEFINE(struct r4300_core, cp0);
     DEFINE(struct cp0, regs);
+    DEFINE(struct cp0, next_interrupt);
+    DEFINE(struct cp0, last_addr);
+    DEFINE(struct cp0, count_per_op);
     DEFINE(struct cp0, tlb);
 
     DEFINE(struct tlb, entries);

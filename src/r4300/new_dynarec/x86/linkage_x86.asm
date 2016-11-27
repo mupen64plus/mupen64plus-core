@@ -95,7 +95,6 @@ cextern memory_map
 cextern pending_exception
 cextern restore_candidate
 cextern gen_interupt
-cextern next_interupt
 cextern stop
 cextern last_count
 cextern pcaddr
@@ -466,7 +465,7 @@ cc_interrupt:
 _E1:
     call    gen_interupt
     mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
-    mov     eax,    [next_interupt]
+    mov     eax,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     ebx,    [pending_exception]
     mov     ecx,    [stop]
     add     esp,    28
@@ -520,7 +519,7 @@ do_interrupt:
     call    get_addr_ht
     add     esp,    16
     mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
-    mov     ebx,    [next_interupt]
+    mov     ebx,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     [last_count],    ebx
     sub     esi,    ebx
     add     esi,    2
@@ -564,7 +563,7 @@ jump_eret:
     mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36],    esi        ;Count
     mov     [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+48],    ebx        ;Status
     call    check_interupt
-    mov     eax,    [next_interupt]
+    mov     eax,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     esi,    [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     [last_count],    eax
     sub     esi,    eax
@@ -616,7 +615,7 @@ new_dyna_start:
     add     esp,    -8    ;align stack
     push    0a4000040h
     call    new_recompile_block
-    mov     edi,    DWORD [next_interupt]
+    mov     edi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     esi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]
     mov     DWORD [last_count],    edi
     sub     esi,    edi

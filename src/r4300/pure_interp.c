@@ -79,8 +79,8 @@ static void InterpretOpcode(void);
          interp_PC.addr += 8; \
          cp0_update_count(); \
       } \
-      last_addr = interp_PC.addr; \
-      if (next_interupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
+      g_dev.r4300.cp0.last_addr = interp_PC.addr; \
+      if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
@@ -90,7 +90,7 @@ static void InterpretOpcode(void);
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = next_interupt - g_dev.r4300.cp0.regs[CP0_COUNT_REG]; \
+         skip = g_dev.r4300.cp0.next_interrupt - g_dev.r4300.cp0.regs[CP0_COUNT_REG]; \
          if (skip > 3) g_dev.r4300.cp0.regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
@@ -725,7 +725,7 @@ void pure_interpreter(void)
 {
    stop = 0;
    PC = &interp_PC;
-   PC->addr = last_addr = 0xa4000040;
+   PC->addr = g_dev.r4300.cp0.last_addr = 0xa4000040;
 
    while (!stop)
    {

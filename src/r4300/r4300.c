@@ -57,18 +57,15 @@
 #endif
 
 unsigned int r4300emu = 0;
-unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
 int rompause;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 int stop;
-uint32_t next_interupt;
 precomp_instr *PC;
 #endif
 long long int local_rs;
 unsigned int delay_slot;
 uint32_t skip_jump = 0;
 unsigned int dyna_interp = 0;
-uint32_t last_addr;
 
 cpu_instruction_table current_instruction_table;
 
@@ -79,7 +76,7 @@ void generic_jump_to(uint32_t address)
    else {
 #ifdef NEW_DYNAREC
       if (r4300emu == CORE_DYNAREC)
-         last_addr = pcaddr;
+         g_dev.r4300.cp0.last_addr = pcaddr;
       else
          jump_to(address);
 #else
@@ -185,8 +182,9 @@ void r4300_execute(void)
     memset(instr_count, 0, 131*sizeof(instr_count[0]));
 #endif
 
-    last_addr = 0xa4000040;
-    next_interupt = 624999;
+    /* XXX: might go to r4300_poweron / soft_reset ? */
+    g_dev.r4300.cp0.last_addr = 0xa4000040;
+    g_dev.r4300.cp0.next_interrupt = 624999;
     init_interupt();
 
     if (r4300emu == CORE_PURE_INTERPRETER)
@@ -241,7 +239,7 @@ void r4300_execute(void)
         if (!actual->block)
             return;
 
-        last_addr = PC->addr;
+        g_dev.r4300.cp0.last_addr = PC->addr;
         while (!stop)
         {
 #ifdef COMPARE_CORE

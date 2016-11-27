@@ -208,7 +208,7 @@ void genjr(void)
    gendelayslot();
    
    mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
-   mov_m32rel_xreg32((unsigned int *)&last_addr, EAX);
+   mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
    gencheck_interupt_reg();
    
@@ -283,7 +283,7 @@ void genjalr(void)
      mov_m32rel_imm32(((unsigned int *)(dst-1)->f.r.rd)+1, 0);
    
    mov_xreg32_m32rel(EAX, (unsigned int *)&local_rs);
-   mov_m32rel_xreg32((unsigned int *)&last_addr, EAX);
+   mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
    gencheck_interupt_reg();
    

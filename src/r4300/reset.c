@@ -38,15 +38,15 @@ void reset_hard(void)
     poweron_device(&g_dev);
 
     r4300_reset_soft();
-    last_addr = UINT32_C(0xa4000040);
-    next_interupt = 624999;
+    g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
+    g_dev.r4300.cp0.next_interrupt = 624999;
     init_interupt();
     if(r4300emu != CORE_PURE_INTERPRETER)
     {
         free_blocks();
         init_blocks();
     }
-    generic_jump_to(last_addr);
+    generic_jump_to(g_dev.r4300.cp0.last_addr);
 }
 
 void reset_soft(void)

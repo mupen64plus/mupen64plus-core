@@ -491,7 +491,7 @@ int savestates_load_m64p(char *filepath)
 
     savestates_load_set_pc(GETDATA(curr, uint32_t));
 
-    *r4300_next_interrupt() = GETDATA(curr, unsigned int);
+    *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
     g_dev.vi.field = GETDATA(curr, unsigned int);
 
@@ -508,7 +508,7 @@ int savestates_load_m64p(char *filepath)
     }
 #endif
 
-    *r4300_last_addr() = *r4300_pc();
+    *r4300_cp0_last_addr() = *r4300_pc();
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -576,7 +576,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    *r4300_last_addr() = GETDATA(curr, uint32_t);
+    *r4300_cp0_last_addr() = GETDATA(curr, uint32_t);
 
     // GPR
     COPYARRAY(r4300_regs(), curr, int64_t, 32);
@@ -593,7 +593,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // Initialze the interupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
-    *r4300_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
+    *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
                   : vi_timer;
     g_dev.vi.next_vi = vi_timer;
@@ -781,7 +781,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(*r4300_last_addr());
+    savestates_load_set_pc(*r4300_cp0_last_addr());
 
     // assert(savestateData+savestateSize == curr)
 
@@ -1244,7 +1244,7 @@ int savestates_save_m64p(char *filepath)
     }
     PUTDATA(curr, uint32_t, *r4300_pc());
 
-    PUTDATA(curr, unsigned int, *r4300_next_interrupt());
+    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt());
     PUTDATA(curr, unsigned int, g_dev.vi.next_vi);
     PUTDATA(curr, unsigned int, g_dev.vi.field);
 
