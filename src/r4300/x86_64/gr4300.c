@@ -334,13 +334,13 @@ void gencallinterp(uintptr_t addr, int jump)
 
 void gendelayslot(void)
 {
-   mov_m32rel_imm32((void*)(&delay_slot), 1);
+   mov_m32rel_imm32((void*)(&g_dev.r4300.delay_slot), 1);
    recompile_opcode();
    
    free_all_registers();
    gencp0_update_count(dst->addr+4);
    
-   mov_m32rel_imm32((void*)(&delay_slot), 0);
+   mov_m32rel_imm32((void*)(&g_dev.r4300.delay_slot), 0);
 }
 
 void genni(void)

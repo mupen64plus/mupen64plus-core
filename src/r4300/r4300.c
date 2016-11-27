@@ -63,7 +63,6 @@ int stop;
 precomp_instr *PC;
 #endif
 long long int local_rs;
-unsigned int delay_slot;
 uint32_t skip_jump = 0;
 unsigned int dyna_interp = 0;
 
@@ -173,7 +172,6 @@ void r4300_execute(void)
 
     current_instruction_table = cached_interpreter_table;
 
-    delay_slot=0;
     stop = 0;
     rompause = 0;
 

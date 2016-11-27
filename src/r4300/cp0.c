@@ -105,11 +105,11 @@ void cp0_update_count(void)
 #endif
 
 #ifdef COMPARE_CORE
-   if (delay_slot)
+   if (g_dev.r4300.delay_slot)
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !delay_slot) update_debugger(PC->addr);
+   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(PC->addr);
 #endif
 */
 }

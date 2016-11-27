@@ -474,12 +474,12 @@ static void nmi_int_handler(void)
         free_blocks();
         init_blocks();
     }
-    // adjust ErrorEPC if we were in a delay slot, and clear the delay_slot and dyna_interp flags
-    if(delay_slot==1 || delay_slot==3)
+    // adjust ErrorEPC if we were in a delay slot, and clear the g_dev.r4300.delay_slot and dyna_interp flags
+    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
     {
         g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]-=4;
     }
-    delay_slot = 0;
+    g_dev.r4300.delay_slot = 0;
     dyna_interp = 0;
     // set next instruction address to reset vector
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);

@@ -65,10 +65,10 @@ static void InterpretOpcode(void);
       if (!likely || take_jump) \
       { \
         interp_PC.addr += 4; \
-        delay_slot=1; \
+        g_dev.r4300.delay_slot=1; \
         InterpretOpcode(); \
         cp0_update_count(); \
-        delay_slot=0; \
+        g_dev.r4300.delay_slot=0; \
         if (take_jump && !skip_jump) \
         { \
           interp_PC.addr = jump_target; \

@@ -36,6 +36,8 @@ struct r4300_core
     int64_t lo;
     unsigned int llbit;
 
+    unsigned int delay_slot;
+
     struct cp0 cp0;
 
     struct mi_controller mi;

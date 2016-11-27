@@ -44,6 +44,8 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->lo = 0;
     r4300->llbit = 0;
 
+    r4300->delay_slot = 0;
+
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);
 
