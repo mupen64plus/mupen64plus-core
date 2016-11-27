@@ -28,7 +28,6 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp1_private.h"
 #include "interupt.h"
 #include "main/main.h"
 #include "main/rom.h"

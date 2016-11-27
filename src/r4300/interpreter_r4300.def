@@ -491,7 +491,7 @@ DECLARE_INSTRUCTION(LWC1)
    rdword = &temp;
    read_word_in_memory();
    if (address)
-     *((uint32_t*) reg_cop1_simple[lslfft]) = (uint32_t) *rdword;
+     *((uint32_t*) g_dev.r4300.cp1.regs_simple[lslfft]) = (uint32_t) *rdword;
 }
 
 DECLARE_INSTRUCTION(LDC1)
@@ -501,7 +501,7 @@ DECLARE_INSTRUCTION(LDC1)
    if (check_cop1_unusable()) return;
    ADD_TO_PC(1);
    address = lslfaddr;
-   rdword = (uint64_t*) reg_cop1_double[lslfft];
+   rdword = (uint64_t*) g_dev.r4300.cp1.regs_double[lslfft];
    read_dword_in_memory();
 }
 
@@ -542,7 +542,7 @@ DECLARE_INSTRUCTION(SWC1)
    if (check_cop1_unusable()) return;
    ADD_TO_PC(1);
    address = lslfaddr;
-   cpu_word = *((uint32_t*) reg_cop1_simple[lslfft]);
+   cpu_word = *((uint32_t*) g_dev.r4300.cp1.regs_simple[lslfft]);
    write_word_in_memory();
    CHECK_MEMORY();
 }
@@ -554,7 +554,7 @@ DECLARE_INSTRUCTION(SDC1)
    if (check_cop1_unusable()) return;
    ADD_TO_PC(1);
    address = lslfaddr;
-   cpu_dword = *((uint64_t*) reg_cop1_double[lslfft]);
+   cpu_dword = *((uint64_t*) g_dev.r4300.cp1.regs_double[lslfft]);
    write_dword_in_memory();
    CHECK_MEMORY();
 }

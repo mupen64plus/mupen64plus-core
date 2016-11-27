@@ -59,6 +59,8 @@ struct r4300_core
 
     struct cp0 cp0;
 
+    struct cp1 cp1;
+
     struct mi_controller mi;
 };
 

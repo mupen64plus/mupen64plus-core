@@ -22,7 +22,7 @@
 
 #include "assemble.h"
 #include "interpret.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
@@ -41,9 +41,9 @@ void gencvt_s_l(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&g_dev.r4300.cp1.regs_double[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&g_dev.r4300.cp1.regs_simple[dst->f.cf.fd]));
    fstp_preg64_dword(RAX);
 #endif
 }
@@ -57,9 +57,9 @@ void gencvt_d_l(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_L, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fs]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&g_dev.r4300.cp1.regs_double[dst->f.cf.fs]));
    fild_preg64_qword(RAX);
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_double[dst->f.cf.fd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&g_dev.r4300.cp1.regs_double[dst->f.cf.fd]));
    fstp_preg64_qword(RAX);
 #endif
 }

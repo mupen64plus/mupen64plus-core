@@ -30,7 +30,7 @@
 /* TLBWrite requires invalid_code and blocks from cached_interp.h, but only if
  * (at run time) the active core is not the Pure Interpreter. */
 #include "cached_interp.h"
-#include "cp1_private.h"
+#include "cp1.h"
 #include "exception.h"
 #include "interupt.h"
 #include "main/main.h"

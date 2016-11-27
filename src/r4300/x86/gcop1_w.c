@@ -23,7 +23,8 @@
 
 #include "assemble.h"
 #include "interpret.h"
-#include "r4300/cp1_private.h"
+#include "main/main.h"
+#include "r4300/cp1.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/recomph.h"
@@ -34,9 +35,9 @@ void gencvt_s_w(void)
    gencallinterp((unsigned int)cached_interpreter_table.CVT_S_W, 0);
 #else
    gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fs]));
+   mov_eax_memoffs32((unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.cf.fs]));
    fild_preg32_dword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fd]));
+   mov_eax_memoffs32((unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.cf.fd]));
    fstp_preg32_dword(EAX);
 #endif
 }
@@ -47,9 +48,9 @@ void gencvt_d_w(void)
    gencallinterp((unsigned int)cached_interpreter_table.CVT_D_W, 0);
 #else
    gencheck_cop1_unusable();
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_simple[dst->f.cf.fs]));
+   mov_eax_memoffs32((unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.cf.fs]));
    fild_preg32_dword(EAX);
-   mov_eax_memoffs32((unsigned int*)(&reg_cop1_double[dst->f.cf.fd]));
+   mov_eax_memoffs32((unsigned int*)(&g_dev.r4300.cp1.regs_double[dst->f.cf.fd]));
    fstp_preg32_qword(EAX);
 #endif
 }

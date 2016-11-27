@@ -39,7 +39,7 @@ extern "C" {
 #include "../../memory/memory.h"
 #include "../../rsp/rsp_core.h"
 #include "../cached_interp.h"
-#include "../cp1_private.h"
+#include "../cp1.h"
 #include "../interupt.h"
 #include "../ops.h"
 #include "../r4300.h"
@@ -2132,7 +2132,7 @@ static void rlist()
     DebugMessage(M64MSG_VERBOSE, "r%d:%8x%8x ",i,((int *)(reg+i))[1],((int *)(reg+i))[0]);
   DebugMessage(M64MSG_VERBOSE, "TRACE: ");
   for(i=0;i<32;i++)
-    DebugMessage(M64MSG_VERBOSE, "f%d:%8x%8x ",i,((int*)reg_cop1_simple[i])[1],*((int*)reg_cop1_simple[i]));
+    DebugMessage(M64MSG_VERBOSE, "f%d:%8x%8x ",i,((int*)g_dev.r4300.cp1.regs_simple[i])[1],*((int*)g_dev.r4300.cp1.regs_simple[i]));
 }
 
 static void enabletrace()
@@ -3594,10 +3594,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   if (opcode[i]==0x39) { // SWC1 (get float address)
-    emit_readword((int)&reg_cop1_simple[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)&g_dev.r4300.cp1.regs_simple[(source[i]>>16)&0x1f],tl);
   }
   if (opcode[i]==0x3D) { // SDC1 (get double address)
-    emit_readword((int)&reg_cop1_double[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)&g_dev.r4300.cp1.regs_double[(source[i]>>16)&0x1f],tl);
   }
   // Generate address + offset
   if(!using_tlb) {
@@ -3632,10 +3632,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     emit_readword_indexed(0,tl,tl);
   }
   if (opcode[i]==0x31) { // LWC1 (get target address)
-    emit_readword((int)&reg_cop1_simple[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)&g_dev.r4300.cp1.regs_simple[(source[i]>>16)&0x1f],temp);
   }
   if (opcode[i]==0x35) { // LDC1 (get target address)
-    emit_readword((int)&reg_cop1_double[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)&g_dev.r4300.cp1.regs_double[(source[i]>>16)&0x1f],temp);
   }
   if(!using_tlb) {
     if(!c) {

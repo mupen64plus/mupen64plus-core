@@ -22,7 +22,6 @@
 #include "r4300_core.h"
 
 #include "cached_interp.h"
-#include "cp1_private.h"
 #include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
 #include "r4300.h"
@@ -56,11 +55,7 @@ void poweron_r4300(struct r4300_core* r4300)
     poweron_cp0(&r4300->cp0);
 
     /* setup CP1 registers */
-    memset(reg_cop1_fgr_64, 0, 32 * sizeof(reg_cop1_fgr_64[0]));
-    FCR0 = UINT32_C(0x511);
-    FCR31 = 0;
-    set_fpr_pointers(r4300->cp0.regs[CP0_STATUS_REG]);
-    update_x86_rounding_mode(FCR31);
+    poweron_cp1(&r4300->cp1);
 
     /* setup mi */
     poweron_mi(&r4300->mi);

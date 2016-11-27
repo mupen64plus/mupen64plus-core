@@ -1,0 +1,13 @@
+%define offsetof_struct_device_r4300 0
+%define offsetof_struct_r4300_core_regs 0
+%define offsetof_struct_r4300_core_hi 256
+%define offsetof_struct_r4300_core_lo 264
+%define offsetof_struct_r4300_core_cp0 1272
+%define offsetof_struct_cp0_regs 0
+%define offsetof_struct_cp0_next_interrupt 128
+%define offsetof_struct_cp0_last_addr 132
+%define offsetof_struct_cp0_count_per_op 136
+%define offsetof_struct_cp0_tlb 140
+%define offsetof_struct_tlb_entries 0
+%define offsetof_struct_tlb_LUT_r 1664
+%define offsetof_struct_tlb_LUT_w 4195968

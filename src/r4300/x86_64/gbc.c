@@ -25,7 +25,7 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
@@ -38,7 +38,7 @@
 
 static void genbc1f_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
+   test_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
    sete_m8rel((unsigned char *) &branch_taken);
 }
 
@@ -107,7 +107,7 @@ void genbc1f_idle(void)
 
 static void genbc1t_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
+   test_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
    setne_m8rel((unsigned char *) &branch_taken);
 }
 

@@ -23,15 +23,16 @@
 
 #include "assemble.h"
 #include "interpret.h"
+#include "main/main.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/recomph.h"
 
 static void genbc1f_test(void)
 {
-   test_m32_imm32((unsigned int*)&FCR31, 0x800000);
+   test_m32_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
    jne_rj(12);
    mov_m32_imm32((unsigned int*)(&branch_taken), 1); // 10
    jmp_imm_short(10); // 2
@@ -97,7 +98,7 @@ void genbc1f_idle(void)
 
 static void genbc1t_test(void)
 {
-   test_m32_imm32((unsigned int*)&FCR31, 0x800000);
+   test_m32_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
    je_rj(12);
    mov_m32_imm32((unsigned int*)(&branch_taken), 1); // 10
    jmp_imm_short(10); // 2

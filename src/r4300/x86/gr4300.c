@@ -25,7 +25,7 @@
 #include "main/main.h"
 #include "memory/memory.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/exception.h"
 #include "r4300/interupt.h"
 #include "r4300/ops.h"
@@ -1756,7 +1756,7 @@ void genlwc1(void)
    
    mov_m32_imm32((unsigned int *)(&g_dev.r4300.pc), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_reg32_m32(EDX, (unsigned int*)(&reg_cop1_simple[dst->f.lf.ft])); // 6
+   mov_reg32_m32(EDX, (unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.lf.ft])); // 6
    mov_m32_reg32((unsigned int *)(&rdword), EDX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)readmem); // 7
@@ -1765,7 +1765,7 @@ void genlwc1(void)
    
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)g_dev.ri.rdram.dram); // 6
-   mov_reg32_m32(EBX, (unsigned int*)(&reg_cop1_simple[dst->f.lf.ft])); // 6
+   mov_reg32_m32(EBX, (unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.lf.ft])); // 6
    mov_preg32_reg32(EBX, EAX); // 2
 #endif
 }
@@ -1795,7 +1795,7 @@ void genldc1(void)
    
    mov_m32_imm32((unsigned int *)(&g_dev.r4300.pc), (unsigned int)(dst+1)); // 10
    mov_m32_reg32((unsigned int *)(&address), EBX); // 6
-   mov_reg32_m32(EDX, (unsigned int*)(&reg_cop1_double[dst->f.lf.ft])); // 6
+   mov_reg32_m32(EDX, (unsigned int*)(&g_dev.r4300.cp1.regs_double[dst->f.lf.ft])); // 6
    mov_m32_reg32((unsigned int *)(&rdword), EDX); // 6
    shr_reg32_imm8(EBX, 16); // 3
    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)readmemd); // 7
@@ -1805,7 +1805,7 @@ void genldc1(void)
    and_reg32_imm32(EBX, 0x7FFFFF); // 6
    mov_reg32_preg32pimm32(EAX, EBX, ((unsigned int)g_dev.ri.rdram.dram)+4); // 6
    mov_reg32_preg32pimm32(ECX, EBX, ((unsigned int)g_dev.ri.rdram.dram)); // 6
-   mov_reg32_m32(EBX, (unsigned int*)(&reg_cop1_double[dst->f.lf.ft])); // 6
+   mov_reg32_m32(EBX, (unsigned int*)(&g_dev.r4300.cp1.regs_double[dst->f.lf.ft])); // 6
    mov_preg32_reg32(EBX, EAX); // 2
    mov_preg32pimm32_reg32(EBX, 4, ECX); // 6
 #endif
@@ -1863,7 +1863,7 @@ void genswc1(void)
 #else
    gencheck_cop1_unusable();
    
-   mov_reg32_m32(EDX, (unsigned int*)(&reg_cop1_simple[dst->f.lf.ft]));
+   mov_reg32_m32(EDX, (unsigned int*)(&g_dev.r4300.cp1.regs_simple[dst->f.lf.ft]));
    mov_reg32_preg32(ECX, EDX);
    mov_eax_memoffs32((unsigned int *)(&g_dev.r4300.regs[dst->f.lf.base]));
    add_eax_imm32((int)dst->f.lf.offset);
@@ -1920,7 +1920,7 @@ void gensdc1(void)
 #else
    gencheck_cop1_unusable();
    
-   mov_reg32_m32(ESI, (unsigned int*)(&reg_cop1_double[dst->f.lf.ft]));
+   mov_reg32_m32(ESI, (unsigned int*)(&g_dev.r4300.cp1.regs_double[dst->f.lf.ft]));
    mov_reg32_preg32(ECX, ESI);
    mov_reg32_preg32pimm32(EDX, ESI, 4);
    mov_eax_memoffs32((unsigned int *)(&g_dev.r4300.regs[dst->f.lf.base]));

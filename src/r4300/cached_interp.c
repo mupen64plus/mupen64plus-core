@@ -30,7 +30,6 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp1_private.h"
 #include "exception.h"
 #include "interupt.h"
 #include "macros.h"
