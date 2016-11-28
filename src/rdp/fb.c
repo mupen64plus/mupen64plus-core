@@ -32,7 +32,7 @@ extern int fast_memory;
 
 #include <string.h>
 
-void init_fb(struct fb* fb)
+void poweron_fb(struct fb* fb)
 {
     memset(fb, 0, sizeof(*fb));
     fb->once = 1;

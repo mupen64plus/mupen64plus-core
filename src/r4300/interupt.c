@@ -343,10 +343,10 @@ void init_interupt(void)
 {
     SPECIAL_done = 1;
 
-    g_vi.delay = g_vi.next_vi = 5000;
+    g_dev.vi.delay = g_dev.vi.next_vi = 5000;
 
     clear_queue();
-    add_interupt_event_count(VI_INT, g_vi.next_vi);
+    add_interupt_event_count(VI_INT, g_dev.vi.next_vi);
     add_interupt_event_count(SPECIAL_INT, 0);
 }
 
@@ -354,7 +354,7 @@ void check_interupt(void)
 {
     struct node* event;
 
-    if (g_r4300.mi.regs[MI_INTR_REG] & g_r4300.mi.regs[MI_INTR_MASK_REG])
+    if (g_dev.r4300.mi.regs[MI_INTR_REG] & g_dev.r4300.mi.regs[MI_INTR_MASK_REG])
         g_cp0_regs[CP0_CAUSE_REG] = (g_cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
     else
         g_cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
@@ -462,7 +462,7 @@ static void nmi_int_handler(void)
     g_gs_vi_counter = 0;
     init_interupt();
     // clear the audio status register so that subsequent write_ai() calls will work properly
-    g_ai.regs[AI_STATUS_REG] = 0;
+    g_dev.ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
     g_cp0_regs[CP0_ERROREPC_REG] = PC->addr;
     // reset the r4300 internal state
@@ -532,7 +532,7 @@ void gen_interupt(void)
 
         case VI_INT:
             remove_interupt_event();
-            vi_vertical_interrupt_event(&g_vi);
+            vi_vertical_interrupt_event(&g_dev.vi);
             break;
     
         case COMPARE_INT:
@@ -546,27 +546,27 @@ void gen_interupt(void)
     
         case SI_INT:
             remove_interupt_event();
-            si_end_of_dma_event(&g_si);
+            si_end_of_dma_event(&g_dev.si);
             break;
     
         case PI_INT:
             remove_interupt_event();
-            pi_end_of_dma_event(&g_pi);
+            pi_end_of_dma_event(&g_dev.pi);
             break;
     
         case AI_INT:
             remove_interupt_event();
-            ai_end_of_dma_event(&g_ai);
+            ai_end_of_dma_event(&g_dev.ai);
             break;
 
         case SP_INT:
             remove_interupt_event();
-            rsp_interrupt_event(&g_sp);
+            rsp_interrupt_event(&g_dev.sp);
             break;
     
         case DP_INT:
             remove_interupt_event();
-            rdp_interrupt_event(&g_dp);
+            rdp_interrupt_event(&g_dev.dp);
             break;
 
         case HW2_INT:

@@ -373,17 +373,17 @@ static void tlb_hacks()
         addr=0;
         break;
     }
-    u_int rom_addr=(u_int)g_rom;
+    u_int rom_addr=(u_int)g_dev.pi.cart_rom.rom;
     #ifdef ROM_COPY
     // Since memory_map is 32-bit, on 64-bit systems the rom needs to be
     // in the lower 4G of memory to use this hack.  Copy it if necessary.
-    if((void *)g_rom>(void *)0xffffffff) {
+    if((void *)g_dev.pi.cart_rom.rom>(void *)0xffffffff) {
       munmap(ROM_COPY, 67108864);
       if(mmap(ROM_COPY, 12582912,
               PROT_READ | PROT_WRITE,
               MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
               -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
-      memcpy(ROM_COPY,g_rom,12582912);
+      memcpy(ROM_COPY,g_dev.pi.cart_rom.rom,12582912);
       rom_addr=(u_int)ROM_COPY;
     }
     #endif
@@ -1240,10 +1240,10 @@ void invalidate_block(u_int block)
     if(vpage>2047||(head->vaddr>>12)==block) { // Ignore vaddr hash collision
       get_bounds((int)head->addr,&start,&end);
       //DebugMessage(M64MSG_VERBOSE, "start: %x end: %x",start,end);
-      if((start!=0)&&(page<2048)&&((start-(u_int)g_rdram)>=0)&&((end-(u_int)g_rdram)<0x800000)) {
-        if(((start-(u_int)g_rdram)>>12)<=page&&((end-1-(u_int)g_rdram)>>12)>=page) {
-          if((((start-(u_int)g_rdram)>>12)&2047)<first) first=((start-(u_int)g_rdram)>>12)&2047;
-          if((((end-1-(u_int)g_rdram)>>12)&2047)>last) last=((end-1-(u_int)g_rdram)>>12)&2047;
+      if((start!=0)&&(page<2048)&&((start-(u_int)g_dev.ri.rdram.dram)>=0)&&((end-(u_int)g_dev.ri.rdram.dram)<0x800000)) {
+        if(((start-(u_int)g_dev.ri.rdram.dram)>>12)<=page&&((end-1-(u_int)g_dev.ri.rdram.dram)>>12)>=page) {
+          if((((start-(u_int)g_dev.ri.rdram.dram)>>12)&2047)<first) first=((start-(u_int)g_dev.ri.rdram.dram)>>12)&2047;
+          if((((end-1-(u_int)g_dev.ri.rdram.dram)>>12)&2047)>last) last=((end-1-(u_int)g_dev.ri.rdram.dram)>>12)&2047;
         }
       }
     }
@@ -1271,12 +1271,12 @@ void invalidate_block(u_int block)
   if(tlb_LUT_w[block]) {
     assert(tlb_LUT_r[block]==tlb_LUT_w[block]);
     // CHECK: Is this right?
-    memory_map[block]=((tlb_LUT_w[block]&0xFFFFF000)-(block<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+    memory_map[block]=((tlb_LUT_w[block]&0xFFFFF000)-(block<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
     u_int real_block=tlb_LUT_w[block]>>12;
     invalid_code[real_block]=1;
-    if(real_block>=0x80000&&real_block<0x80800) memory_map[real_block]=((u_int)g_rdram-0x80000000)>>2;
+    if(real_block>=0x80000&&real_block<0x80800) memory_map[real_block]=((u_int)g_dev.ri.rdram.dram-0x80000000)>>2;
   }
-  else if(block>=0x80000&&block<0x80800) memory_map[block]=((u_int)g_rdram-0x80000000)>>2;
+  else if(block>=0x80000&&block<0x80800) memory_map[block]=((u_int)g_dev.ri.rdram.dram-0x80000000)>>2;
   #ifdef USE_MINI_HT
   memset(mini_ht,-1,sizeof(mini_ht));
   #endif
@@ -1334,7 +1334,7 @@ void invalidate_all_pages()
   // TLB
   for(page=0;page<0x100000;page++) {
     if(tlb_LUT_r[page]) {
-      memory_map[page]=((tlb_LUT_r[page]&0xFFFFF000)-(page<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+      memory_map[page]=((tlb_LUT_r[page]&0xFFFFF000)-(page<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
       if(!tlb_LUT_w[page]||!invalid_code[page])
         memory_map[page]|=0x40000000; // Write protect
     }
@@ -1375,8 +1375,8 @@ void clean_blocks(u_int page)
           u_int i;
           u_int inv=0;
           get_bounds((int)head->addr,&start,&end);
-          if(start-(u_int)g_rdram<0x800000) {
-            for(i=(start-(u_int)g_rdram+0x80000000)>>12;i<=(end-1-(u_int)g_rdram+0x80000000)>>12;i++) {
+          if(start-(u_int)g_dev.ri.rdram.dram<0x800000) {
+            for(i=(start-(u_int)g_dev.ri.rdram.dram+0x80000000)>>12;i<=(end-1-(u_int)g_dev.ri.rdram.dram+0x80000000)>>12;i++) {
               inv|=invalid_code[i];
             }
           }
@@ -2114,7 +2114,7 @@ static int mchecksum()
     unsigned int temp=sum;
     sum<<=1;
     sum|=(~temp)>>31;
-    sum^=((u_int *)g_rdram)[i];
+    sum^=((u_int *)g_dev.ri.rdram.dram)[i];
   }
   return sum;
 }
@@ -2924,7 +2924,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         {
           //emit_xorimm(addr,3,tl);
           //gen_tlb_addr_r(tl,map);
-          //emit_movsbl_indexed((int)g_rdram-0x80000000,tl,tl);
+          //emit_movsbl_indexed((int)g_dev.ri.rdram.dram-0x80000000,tl,tl);
           int x=0;
           if(!c) emit_xorimm(addr,3,tl);
           else x=((constmap[i][s]+offset)^3)-(constmap[i][s]+offset);
@@ -2959,7 +2959,7 @@ static void load_assemble(int i,struct regstat *i_regs)
             #ifdef RAM_OFFSET
             emit_movswl_indexed(x,tl,tl);
             #else
-            emit_movswl_indexed((int)g_rdram-0x80000000+x,tl,tl);
+            emit_movswl_indexed((int)g_dev.ri.rdram.dram-0x80000000+x,tl,tl);
             #endif
           }
         }
@@ -2973,7 +2973,7 @@ static void load_assemble(int i,struct regstat *i_regs)
   if (opcode[i]==0x23) { // LW
     if(!c||memtarget) {
       if(!dummy) {
-        //emit_readword_indexed((int)g_rdram-0x80000000,addr,tl);
+        //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,addr,tl);
         #ifdef HOST_IMM_ADDR32
         if(c)
           emit_readword_tlb(constmap[i][s]+offset,map,tl);
@@ -2998,7 +2998,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         {
           //emit_xorimm(addr,3,tl);
           //gen_tlb_addr_r(tl,map);
-          //emit_movzbl_indexed((int)g_rdram-0x80000000,tl,tl);
+          //emit_movzbl_indexed((int)g_dev.ri.rdram.dram-0x80000000,tl,tl);
           int x=0;
           if(!c) emit_xorimm(addr,3,tl);
           else x=((constmap[i][s]+offset)^3)-(constmap[i][s]+offset);
@@ -3033,7 +3033,7 @@ static void load_assemble(int i,struct regstat *i_regs)
             #ifdef RAM_OFFSET
             emit_movzwl_indexed(x,tl,tl);
             #else
-            emit_movzwl_indexed((int)g_rdram-0x80000000+x,tl,tl);
+            emit_movzwl_indexed((int)g_dev.ri.rdram.dram-0x80000000+x,tl,tl);
             #endif
           }
         }
@@ -3048,7 +3048,7 @@ static void load_assemble(int i,struct regstat *i_regs)
     assert(th>=0);
     if(!c||memtarget) {
       if(!dummy) {
-        //emit_readword_indexed((int)g_rdram-0x80000000,addr,tl);
+        //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,addr,tl);
         #ifdef HOST_IMM_ADDR32
         if(c)
           emit_readword_tlb(constmap[i][s]+offset,map,tl);
@@ -3068,8 +3068,8 @@ static void load_assemble(int i,struct regstat *i_regs)
     if(!c||memtarget) {
       if(!dummy) {
         //gen_tlb_addr_r(tl,map);
-        //if(th>=0) emit_readword_indexed((int)g_rdram-0x80000000,addr,th);
-        //emit_readword_indexed((int)g_rdram-0x7FFFFFFC,addr,tl);
+        //if(th>=0) emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,addr,th);
+        //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x7FFFFFFC,addr,tl);
         #ifdef HOST_IMM_ADDR32
         if(c)
           emit_readdword_tlb(constmap[i][s]+offset,map,th,tl);
@@ -3197,7 +3197,7 @@ static void store_assemble(int i,struct regstat *i_regs)
       if(!c) emit_xorimm(addr,3,temp);
       else x=((constmap[i][s]+offset)^3)-(constmap[i][s]+offset);
       //gen_tlb_addr_w(temp,map);
-      //emit_writebyte_indexed(tl,(int)g_rdram-0x80000000,temp);
+      //emit_writebyte_indexed(tl,(int)g_dev.ri.rdram.dram-0x80000000,temp);
       emit_writebyte_indexed_tlb(tl,x,temp,map,temp);
     }
     type=STOREB_STUB;
@@ -3214,13 +3214,13 @@ static void store_assemble(int i,struct regstat *i_regs)
         gen_tlb_addr_w(temp,map);
         emit_writehword_indexed(tl,x,temp);
       }else
-        emit_writehword_indexed(tl,(int)g_rdram-0x80000000+x,temp);
+        emit_writehword_indexed(tl,(int)g_dev.ri.rdram.dram-0x80000000+x,temp);
     }
     type=STOREH_STUB;
   }
   if (opcode[i]==0x2B) { // SW
     if(!c||memtarget)
-      //emit_writeword_indexed(tl,(int)g_rdram-0x80000000,addr);
+      //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x80000000,addr);
       emit_writeword_indexed_tlb(tl,0,addr,map,temp);
     type=STOREW_STUB;
   }
@@ -3228,13 +3228,13 @@ static void store_assemble(int i,struct regstat *i_regs)
     if(!c||memtarget) {
       if(rs2[i]) {
         assert(th>=0);
-        //emit_writeword_indexed(th,(int)g_rdram-0x80000000,addr);
-        //emit_writeword_indexed(tl,(int)g_rdram-0x7FFFFFFC,addr);
+        //emit_writeword_indexed(th,(int)g_dev.ri.rdram.dram-0x80000000,addr);
+        //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x7FFFFFFC,addr);
         emit_writedword_indexed_tlb(th,tl,0,addr,map,temp);
       }else{
         // Store zero
-        //emit_writeword_indexed(tl,(int)g_rdram-0x80000000,temp);
-        //emit_writeword_indexed(tl,(int)g_rdram-0x7FFFFFFC,temp);
+        //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x80000000,temp);
+        //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x7FFFFFFC,temp);
         emit_writedword_indexed_tlb(tl,tl,0,addr,map,temp);
       }
     }
@@ -3358,8 +3358,8 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
     gen_tlb_addr_w(temp,map);
     #else
-    if((u_int)g_rdram!=0x80000000) 
-      emit_addimm_no_flags((u_int)g_rdram-(u_int)0x80000000,temp);
+    if((u_int)g_dev.ri.rdram.dram!=0x80000000) 
+      emit_addimm_no_flags((u_int)g_dev.ri.rdram.dram-(u_int)0x80000000,temp);
     #endif
   }else{ // using tlb
     int map=get_reg(i_regs->regmap,TLREG);
@@ -3520,7 +3520,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     if(map<0) map=HOST_TEMPREG;
     gen_orig_addr_w(temp,map);
     #else
-    emit_addimm_no_flags((u_int)0x80000000-(u_int)g_rdram,temp);
+    emit_addimm_no_flags((u_int)0x80000000-(u_int)g_dev.ri.rdram.dram,temp);
     #endif
     #if defined(HOST_IMM8)
     int ir=get_reg(i_regs->regmap,INVCP);
@@ -3666,7 +3666,7 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
   if (opcode[i]==0x31) { // LWC1
     //if(s>=0&&!c&&!offset) emit_mov(s,tl);
     //gen_tlb_addr_r(ar,map);
-    //emit_readword_indexed((int)g_rdram-0x80000000,tl,tl);
+    //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,tl,tl);
     #ifdef HOST_IMM_ADDR32
     if(c) emit_readword_tlb(constmap[i][s]+offset,map,tl);
     else
@@ -3678,8 +3678,8 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     assert(th>=0);
     //if(s>=0&&!c&&!offset) emit_mov(s,tl);
     //gen_tlb_addr_r(ar,map);
-    //emit_readword_indexed((int)g_rdram-0x80000000,tl,th);
-    //emit_readword_indexed((int)g_rdram-0x7FFFFFFC,tl,tl);
+    //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,tl,th);
+    //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x7FFFFFFC,tl,tl);
     #ifdef HOST_IMM_ADDR32
     if(c) emit_readdword_tlb(constmap[i][s]+offset,map,th,tl);
     else
@@ -3688,14 +3688,14 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     type=LOADD_STUB;
   }
   if (opcode[i]==0x39) { // SWC1
-    //emit_writeword_indexed(tl,(int)g_rdram-0x80000000,temp);
+    //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x80000000,temp);
     emit_writeword_indexed_tlb(tl,0,offset||c||s<0?temp:s,map,temp);
     type=STOREW_STUB;
   }
   if (opcode[i]==0x3D) { // SDC1
     assert(th>=0);
-    //emit_writeword_indexed(th,(int)g_rdram-0x80000000,temp);
-    //emit_writeword_indexed(tl,(int)g_rdram-0x7FFFFFFC,temp);
+    //emit_writeword_indexed(th,(int)g_dev.ri.rdram.dram-0x80000000,temp);
+    //emit_writeword_indexed(tl,(int)g_dev.ri.rdram.dram-0x7FFFFFFC,temp);
     emit_writedword_indexed_tlb(th,tl,0,offset||c||s<0?temp:s,map,temp);
     type=STORED_STUB;
   }
@@ -4067,14 +4067,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
             if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
               #ifdef RAM_OFFSET
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(int)g_rdram-0x80000000,ra);
+                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(int)g_dev.ri.rdram.dram-0x80000000,ra);
               else
               #endif
               emit_movimm((constmap[i][rs]+offset)&0xFFFFFFFC,ra);
             }else if (opcode[i]==0x1a||opcode[i]==0x1b) { // LDL/LDR
               #ifdef RAM_OFFSET
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(int)g_rdram-0x80000000,ra);
+                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(int)g_dev.ri.rdram.dram-0x80000000,ra);
               else
               #endif
               emit_movimm((constmap[i][rs]+offset)&0xFFFFFFF8,ra);
@@ -4085,7 +4085,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
               #endif
               #ifdef RAM_OFFSET
               if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(constmap[i][rs]+offset+(int)g_rdram-0x80000000,ra);
+                emit_movimm(constmap[i][rs]+offset+(int)g_dev.ri.rdram.dram-0x80000000,ra);
               else
               #endif
               emit_movimm(constmap[i][rs]+offset,ra);
@@ -4141,14 +4141,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
         if (opcode[i+1]==0x22||opcode[i+1]==0x26) { // LWL/LWR
           #ifdef RAM_OFFSET
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFFC)+(int)g_rdram-0x80000000,ra);
+            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFFC)+(int)g_dev.ri.rdram.dram-0x80000000,ra);
           else
           #endif
           emit_movimm((constmap[i+1][rs]+offset)&0xFFFFFFFC,ra);
         }else if (opcode[i+1]==0x1a||opcode[i+1]==0x1b) { // LDL/LDR
           #ifdef RAM_OFFSET
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFF8)+(int)g_rdram-0x80000000,ra);
+            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFF8)+(int)g_dev.ri.rdram.dram-0x80000000,ra);
           else
           #endif
           emit_movimm((constmap[i+1][rs]+offset)&0xFFFFFFF8,ra);
@@ -4159,7 +4159,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
           #endif
           #ifdef RAM_OFFSET
           if((itype[i+1]==LOAD||opcode[i+1]==0x31||opcode[i+1]==0x35)&&(signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(constmap[i+1][rs]+offset+(int)g_rdram-0x80000000,ra);
+            emit_movimm(constmap[i+1][rs]+offset+(int)g_dev.ri.rdram.dram-0x80000000,ra);
           else
           #endif
           emit_movimm(constmap[i+1][rs]+offset,ra);
@@ -4203,7 +4203,7 @@ static int get_final_value(int hr, int i, int *value)
           #endif
           #ifdef RAM_OFFSET
           if((signed int)constmap[i][hr]+imm[i+2]<(signed int)0x80800000)
-            *value=constmap[i][hr]+imm[i+2]+(int)g_rdram-0x80000000;
+            *value=constmap[i][hr]+imm[i+2]+(int)g_dev.ri.rdram.dram-0x80000000;
           else
           #endif
           // Precompute load address
@@ -4218,7 +4218,7 @@ static int get_final_value(int hr, int i, int *value)
         #endif
         #ifdef RAM_OFFSET
         if((signed int)constmap[i][hr]+imm[i+1]<(signed int)0x80800000)
-          *value=constmap[i][hr]+imm[i+1]+(int)g_rdram-0x80000000;
+          *value=constmap[i][hr]+imm[i+1]+(int)g_dev.ri.rdram.dram-0x80000000;
         else
         #endif
         // Precompute load address
@@ -7713,7 +7713,7 @@ void new_dynarec_init()
   for(n=0;n<524288;n++) // 0 .. 0x7FFFFFFF
     memory_map[n]=-1;
   for(n=524288;n<526336;n++) // 0x80000000 .. 0x807FFFFF
-    memory_map[n]=((u_int)g_rdram-0x80000000)>>2;
+    memory_map[n]=((u_int)g_dev.ri.rdram.dram-0x80000000)>>2;
   for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
     memory_map[n]=-1;
   for(n=0;n<0x8000;n++) { // 0 .. 0x7FFFFFFF
@@ -7791,17 +7791,17 @@ int new_recompile_block(int addr)
   start = (u_int)addr&~3;
   //assert(((u_int)addr&1)==0);
   if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
-    source = (u_int *)((u_int)g_sp.mem+start-0xa4000000);
+    source = (u_int *)((u_int)g_dev.sp.mem+start-0xa4000000);
     pagelimit = 0xa4001000;
   }
   else if ((int)addr >= 0x80000000 && (int)addr < 0x80800000) {
-    source = (u_int *)((u_int)g_rdram+start-0x80000000);
+    source = (u_int *)((u_int)g_dev.ri.rdram.dram+start-0x80000000);
     pagelimit = 0x80800000;
   }
   else if ((signed int)addr >= (signed int)0xC0000000) {
     //DebugMessage(M64MSG_VERBOSE, "addr=%x mm=%x",(u_int)addr,(memory_map[start>>12]<<2));
     //if(tlb_LUT_r[start>>12])
-      //source = (u_int *)(((int)g_rdram)+(tlb_LUT_r[start>>12]&0xFFFFF000)+(((int)addr)&0xFFF)-0x80000000);
+      //source = (u_int *)(((int)g_dev.ri.rdram.dram)+(tlb_LUT_r[start>>12]&0xFFFFF000)+(((int)addr)&0xFFF)-0x80000000);
     if((signed int)memory_map[start>>12]>=0) {
       source = (u_int *)((u_int)(start+(memory_map[start>>12]<<2)));
       pagelimit=(start+4096)&0xFFFFF000;
@@ -11003,7 +11003,7 @@ int new_recompile_block(int addr)
     if((signed int)start>=(signed int)0xC0000000) {
       assert(using_tlb);
       assert(memory_map[i]!=-1);
-      j=(((u_int)i<<12)+(memory_map[i]<<2)-(u_int)g_rdram+(u_int)0x80000000)>>12;
+      j=(((u_int)i<<12)+(memory_map[i]<<2)-(u_int)g_dev.ri.rdram.dram+(u_int)0x80000000)>>12;
       invalid_code[j]=0;
       memory_map[j]|=0x40000000;
       //DebugMessage(M64MSG_VERBOSE, "write protect physical page: %x (virtual %x)",j<<12,start);
@@ -11101,7 +11101,7 @@ void TLBWI_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
-        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!tlb_LUT_w[i]||!invalid_code[i]) {
           memory_map[i]|=0x40000000; // Write protect
@@ -11122,7 +11122,7 @@ void TLBWI_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
-        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!tlb_LUT_w[i]||!invalid_code[i]) {
           memory_map[i]|=0x40000000; // Write protect
@@ -11173,7 +11173,7 @@ void TLBWR_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
-        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!tlb_LUT_w[i]||!invalid_code[i]) {
           memory_map[i]|=0x40000000; // Write protect
@@ -11194,7 +11194,7 @@ void TLBWR_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       if(tlb_LUT_r[i]) {
-        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_rdram-0x80000000)>>2;
+        memory_map[i]=((tlb_LUT_r[i]&0xFFFFF000)-(i<<12)+(unsigned int)g_dev.ri.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!tlb_LUT_w[i]||!invalid_code[i]) {
           memory_map[i]|=0x40000000; // Write protect

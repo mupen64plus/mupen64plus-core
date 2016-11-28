@@ -23,6 +23,7 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "backends/controller_input_backend.h"
 #include "pif.h"
 
 #ifdef COMPARE_CORE
@@ -56,12 +57,12 @@ static uint8_t pak_data_crc(const uint8_t* data)
 static void read_controller_read_buttons(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
-    int connected = game_controller_is_connected(cont, &pak);
+    int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
         return;
 
-    *((uint32_t*)(cmd + 3)) = game_controller_get_input(cont);
+    *((uint32_t*)(cmd + 3)) = controller_input_get_input(cont->cin);
 
 #ifdef COMPARE_CORE
     CoreCompareDataSync(4, cmd + 3);
@@ -72,7 +73,7 @@ static void read_controller_read_buttons(struct game_controller* cont, uint8_t* 
 static void controller_status_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
-    int connected = game_controller_is_connected(cont, &pak);
+    int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (cmd[1] & 0x80)
         return;
@@ -103,7 +104,7 @@ static void controller_status_command(struct game_controller* cont, uint8_t* cmd
 static void controller_read_buttons_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
-    int connected = game_controller_is_connected(cont, &pak);
+    int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
         cmd[1] |= 0x80;
@@ -114,7 +115,7 @@ static void controller_read_buttons_command(struct game_controller* cont, uint8_
 static void controller_read_pak_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
-    int connected = game_controller_is_connected(cont, &pak);
+    int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
     {
@@ -138,7 +139,7 @@ static void controller_read_pak_command(struct game_controller* cont, uint8_t* c
 static void controller_write_pak_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
-    int connected = game_controller_is_connected(cont, &pak);
+    int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
     {
@@ -160,14 +161,16 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
 }
 
 
-int game_controller_is_connected(struct game_controller* cont, enum pak_type* pak)
+void init_game_controller(struct game_controller* cont,
+    struct controller_input_backend* cin,
+    uint8_t* mpk_data,
+    struct storage_backend* mpk_storage,
+    struct rumble_backend* rumble)
 {
-    return cont->is_connected(cont->user_data, pak);
-}
+    cont->cin = cin;;
 
-uint32_t game_controller_get_input(struct game_controller* cont)
-{
-    return cont->get_input(cont->user_data);
+    init_mempak(&cont->mempak, mpk_data, mpk_storage);
+    init_rumblepak(&cont->rumblepak, rumble);
 }
 
 

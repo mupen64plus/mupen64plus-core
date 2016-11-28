@@ -26,7 +26,7 @@
 
 #include "cached_interp.h"
 #include "interupt.h"
-#include "memory/memory.h"
+#include "main/main.h"
 #include "r4300.h"
 #include "r4300_core.h"
 #include "reset.h"
@@ -35,8 +35,8 @@ int reset_hard_job = 0;
 
 void reset_hard(void)
 {
-    init_memory();
-    r4300_reset_hard();
+    poweron_device(&g_dev);
+
     r4300_reset_soft();
     last_addr = UINT32_C(0xa4000040);
     next_interupt = 624999;

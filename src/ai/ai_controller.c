@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "main/rom.h"
+#include "backends/audio_out_backend.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
@@ -61,9 +61,9 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 
 static unsigned int get_dma_duration(struct ai_controller* ai)
 {
-    unsigned int samples_per_sec = ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+    unsigned int samples_per_sec = ai->vi->clock / (1 + ai->regs[AI_DACRATE_REG]);
     unsigned int bytes_per_sample = 4; /* XXX: assume 16bit stereo - should depends on bitrate instead */
-    unsigned int cpu_counts_per_sec = ai->vi->delay * ROM_PARAMS.vilimit; /* estimate cpu counts/sec using VI */
+    unsigned int cpu_counts_per_sec = ai->vi->delay * ai->vi->expected_refresh_rate; /* estimate cpu counts/sec using VI */
 
     return ((uint64_t)ai->regs[AI_LEN_REG] * cpu_counts_per_sec) / (bytes_per_sample * samples_per_sec);
 }
@@ -76,19 +76,19 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     {
         unsigned int frequency = (ai->regs[AI_DACRATE_REG] == 0)
             ? 44100 /* default sample rate */
-            : ROM_PARAMS.aidacrate / (1 + ai->regs[AI_DACRATE_REG]);
+            : ai->vi->clock / (1 + ai->regs[AI_DACRATE_REG]);
 
         unsigned int bits = (ai->regs[AI_BITRATE_REG] == 0)
             ? 16 /* default bit rate */
             : 1 + ai->regs[AI_BITRATE_REG];
 
-        set_audio_format(ai, frequency, bits);
+        audio_out_set_format(ai->aout, frequency, bits);
 
         ai->samples_format_changed = 0;
     }
 
     /* push audio samples to external sink */
-    push_audio_samples(ai, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    audio_out_push_samples(ai->aout, &ai->ri->rdram.dram[dma->address/4], dma->length);
 
     /* schedule end of dma event */
     cp0_update_count();
@@ -135,34 +135,24 @@ static void fifo_pop(struct ai_controller* ai)
 }
 
 
-void set_audio_format(struct ai_controller* ai, unsigned int frequency, unsigned int bits)
-{
-    ai->set_audio_format(ai->user_data, frequency, bits);
-}
-
-void push_audio_samples(struct ai_controller* ai, const void* buffer, size_t size)
-{
-    ai->push_audio_samples(ai->user_data, buffer, size);
-}
-
-
-void connect_ai(struct ai_controller* ai,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                struct vi_controller* vi)
+void init_ai(struct ai_controller* ai,
+             struct r4300_core* r4300,
+             struct ri_controller* ri,
+             struct vi_controller* vi,
+             struct audio_out_backend* aout)
 {
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
+    ai->aout = aout;
 }
 
-void init_ai(struct ai_controller* ai)
+void poweron_ai(struct ai_controller* ai)
 {
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
 }
-
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
 {

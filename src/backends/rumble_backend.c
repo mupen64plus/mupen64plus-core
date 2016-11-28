@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - sra_file.h                                              *
+ *   Mupen64plus - rumble_backend.c                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,24 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_SRA_FILE_H
-#define M64P_MAIN_SRA_FILE_H
+#include "rumble_backend.h"
 
-#include <stdint.h>
 
-#include "pi/sram.h"
-
-struct sra_file
+void rumble_exec(struct rumble_backend* rumble, enum rumble_action action)
 {
-    uint8_t sram[SRAM_SIZE];
-    const char* filename;
-};
-
-void open_sra_file(struct sra_file* sra, const char* filename);
-void close_sra_file(struct sra_file* sra);
-
-uint8_t* sra_file_ptr(struct sra_file* sra);
-
-void save_sra_file(void* opaque);
-
-#endif
+    rumble->rumble(rumble->user_data, action);
+}

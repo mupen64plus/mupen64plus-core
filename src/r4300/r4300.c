@@ -91,69 +91,6 @@ void generic_jump_to(uint32_t address)
    }
 }
 
-/* this hard reset function simulates the boot-up state of the R4300 CPU */
-void r4300_reset_hard(void)
-{
-    unsigned int i;
-
-    // clear r4300 registers and TLB entries
-    for (i = 0; i < 32; i++)
-    {
-        reg[i]=0;
-        g_cp0_regs[i]=0;
-        reg_cop1_fgr_64[i]=0;
-
-        // --------------tlb------------------------
-        tlb_e[i].mask=0;
-        tlb_e[i].vpn2=0;
-        tlb_e[i].g=0;
-        tlb_e[i].asid=0;
-        tlb_e[i].pfn_even=0;
-        tlb_e[i].c_even=0;
-        tlb_e[i].d_even=0;
-        tlb_e[i].v_even=0;
-        tlb_e[i].pfn_odd=0;
-        tlb_e[i].c_odd=0;
-        tlb_e[i].d_odd=0;
-        tlb_e[i].v_odd=0;
-        tlb_e[i].r=0;
-        //tlb_e[i].check_parity_mask=0x1000;
-
-        tlb_e[i].start_even=0;
-        tlb_e[i].end_even=0;
-        tlb_e[i].phys_even=0;
-        tlb_e[i].start_odd=0;
-        tlb_e[i].end_odd=0;
-        tlb_e[i].phys_odd=0;
-    }
-    for (i=0; i<0x100000; i++)
-    {
-        tlb_LUT_r[i] = 0;
-        tlb_LUT_w[i] = 0;
-    }
-    llbit=0;
-    hi=0;
-    lo=0;
-    FCR0 = UINT32_C(0x511);
-    FCR31=0;
-
-    // set COP0 registers
-    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
-    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
-    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
-    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
-   
-    update_x86_rounding_mode(FCR31);
-}
-
-
 static unsigned int get_tv_type(void)
 {
     switch(ROM_PARAMS.systemtype)
@@ -172,46 +109,46 @@ void r4300_reset_soft(void)
     unsigned int reset_type = 0;            /* 0:ColdReset, 1:NMI */
     unsigned int s7 = 0;                    /* ??? */
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
-    uint32_t bsd_dom1_config = *(uint32_t*)g_rom;
+    uint32_t bsd_dom1_config = *(uint32_t*)g_dev.pi.cart_rom.rom;
 
     g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
     g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
-    g_sp.regs[SP_STATUS_REG] = 1;
-    g_sp.regs2[SP_PC_REG] = 0;
+    g_dev.sp.regs[SP_STATUS_REG] = 1;
+    g_dev.sp.regs2[SP_PC_REG] = 0;
 
-    g_pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
-    g_pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
-    g_pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
-    g_pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
-    g_pi.regs[PI_STATUS_REG] = 0;
+    g_dev.pi.regs[PI_BSD_DOM1_LAT_REG] = (bsd_dom1_config      ) & 0xff;
+    g_dev.pi.regs[PI_BSD_DOM1_PWD_REG] = (bsd_dom1_config >>  8) & 0xff;
+    g_dev.pi.regs[PI_BSD_DOM1_PGS_REG] = (bsd_dom1_config >> 16) & 0x0f;
+    g_dev.pi.regs[PI_BSD_DOM1_RLS_REG] = (bsd_dom1_config >> 20) & 0x03;
+    g_dev.pi.regs[PI_STATUS_REG] = 0;
 
-    g_ai.regs[AI_DRAM_ADDR_REG] = 0;
-    g_ai.regs[AI_LEN_REG] = 0;
+    g_dev.ai.regs[AI_DRAM_ADDR_REG] = 0;
+    g_dev.ai.regs[AI_LEN_REG] = 0;
 
-    g_vi.regs[VI_V_INTR_REG] = 1023;
-    g_vi.regs[VI_CURRENT_REG] = 0;
-    g_vi.regs[VI_H_START_REG] = 0;
+    g_dev.vi.regs[VI_V_INTR_REG] = 1023;
+    g_dev.vi.regs[VI_CURRENT_REG] = 0;
+    g_dev.vi.regs[VI_H_START_REG] = 0;
 
-    g_r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
+    g_dev.r4300.mi.regs[MI_INTR_REG] &= ~(MI_INTR_PI | MI_INTR_VI | MI_INTR_AI | MI_INTR_SP);
 
-    memcpy((unsigned char*)g_sp.mem+0x40, g_rom+0x40, 0xfc0);
+    memcpy((unsigned char*)g_dev.sp.mem+0x40, g_dev.pi.cart_rom.rom+0x40, 0xfc0);
 
     reg[19] = rom_type;     /* s3 */
     reg[20] = tv_type;      /* s4 */
     reg[21] = reset_type;   /* s5 */
-    reg[22] = g_si.pif.cic.seed;/* s6 */
+    reg[22] = g_dev.si.pif.cic.seed;/* s6 */
     reg[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
-    g_sp.mem[0x1000/4] = 0x3c0dbfc0;
-    g_sp.mem[0x1004/4] = 0x8da807fc;
-    g_sp.mem[0x1008/4] = 0x25ad07c0;
-    g_sp.mem[0x100c/4] = 0x31080080;
-    g_sp.mem[0x1010/4] = 0x5500fffc;
-    g_sp.mem[0x1014/4] = 0x3c0dbfc0;
-    g_sp.mem[0x1018/4] = 0x8da80024;
-    g_sp.mem[0x101c/4] = 0x3c0bb000;
+    g_dev.sp.mem[0x1000/4] = 0x3c0dbfc0;
+    g_dev.sp.mem[0x1004/4] = 0x8da807fc;
+    g_dev.sp.mem[0x1008/4] = 0x25ad07c0;
+    g_dev.sp.mem[0x100c/4] = 0x31080080;
+    g_dev.sp.mem[0x1010/4] = 0x5500fffc;
+    g_dev.sp.mem[0x1014/4] = 0x3c0dbfc0;
+    g_dev.sp.mem[0x1018/4] = 0x8da80024;
+    g_dev.sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
     reg[11] = INT64_C(0xffffffffa4000040); /* t3 */

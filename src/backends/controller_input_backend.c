@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rdram_detection_hack.c                                  *
+ *   Mupen64plus - controller_input_backend.c                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,25 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "rdram_detection_hack.h"
+#include "controller_input_backend.h"
 
-#include <stdint.h>
 
-#include "main/main.h"
-#include "ri_controller.h"
-#include "si/si_controller.h"
-
-/* HACK: force detected RDRAM size
- * This hack is triggered just before initial ROM loading (see pi_controller.c)
- *
- * Proper emulation of RI/RDRAM subsystem is required to avoid this hack.
- */
-void force_detected_rdram_size_hack(void)
+int controller_input_is_connected(struct controller_input_backend* cin, enum pak_type* pak)
 {
-    uint32_t address = (g_dev.si.pif.cic.version != CIC_X105)
-        ? 0x318
-        : 0x3f0;
-
-    g_dev.ri.rdram.dram[address/4] = g_dev.ri.rdram.dram_size;
+    return cin->is_connected(cin->user_data, pak);
 }
+
+uint32_t controller_input_get_input(struct controller_input_backend* cin)
+{
+    return cin->get_input(cin->user_data);
+}
+
 

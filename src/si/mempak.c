@@ -21,13 +21,11 @@
 
 #include "mempak.h"
 
+#include "backends/storage_backend.h"
+
 #include <stdint.h>
 #include <string.h>
 
-void mempak_save(struct mempak* mpk)
-{
-    mpk->save(mpk->user_data);
-}
 
 void format_mempak(uint8_t* mpk_data)
 {
@@ -63,6 +61,13 @@ void format_mempak(uint8_t* mpk_data)
     }
 }
 
+
+void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage)
+{
+    mpk->data = data;
+    mpk->storage = storage;
+}
+
 void mempak_read_command(struct mempak* mpk, uint8_t* cmd)
 {
     uint16_t address = (cmd[3] << 8) | (cmd[4] & 0xe0);
@@ -84,7 +89,7 @@ void mempak_write_command(struct mempak* mpk, uint8_t* cmd)
     if (address < 0x8000)
     {
         memcpy(&mpk->data[address], &cmd[5], 0x20);
-        mempak_save(mpk);
+        storage_save(mpk->storage);
     }
     else
     {

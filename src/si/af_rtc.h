@@ -24,19 +24,18 @@
 
 #include <stdint.h>
 
-struct tm;
+struct clock_backend;
 
 struct af_rtc
 {
-    /* external time source */
-    void* user_data;
-    const struct tm* (*get_time)(void*);
+    struct clock_backend* rtc;
 };
 
-const struct tm* af_rtc_get_time(struct af_rtc* rtc);
+void init_af_rtc(struct af_rtc* afrtc,
+                 struct clock_backend* rtc);
 
-void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd);
-void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd);
-void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_status_command(struct af_rtc* afrtc, uint8_t* cmd);
+void af_rtc_read_command(struct af_rtc* afrtc, uint8_t* cmd);
+void af_rtc_write_command(struct af_rtc* afrtc, uint8_t* cmd);
 
 #endif

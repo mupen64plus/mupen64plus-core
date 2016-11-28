@@ -29,7 +29,6 @@
 #include "dbg_memory.h"
 #include "dbg_types.h"
 #include "main/main.h"
-#include "main/rom.h"
 #include "memory/memory.h"
 #include "pi/pi_controller.h"
 #include "r4300/cached_interp.h"
@@ -125,7 +124,7 @@ static void decode_recompiled(uint32 addr)
         return;
 
     if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == current_instruction_table.NOTCOMPILED)
-    //      recompile_block((int *) g_sp_mem, blocks[addr>>12], addr);
+    //      recompile_block((int *) g_dev.sp_mem, blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");
     strcpy(args_recompiled[0],"NOTCOMPILED");
@@ -295,70 +294,70 @@ uint32 read_memory_32(uint32 addr){
         return read_memory_32((tlb_LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
-      return g_rdram[rdram_dram_address(addr)];
+      return g_dev.ri.rdram.dram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
-      return g_sp.mem[rsp_mem_address(addr)];
+      return g_dev.sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
-      return *((uint32 *)(g_rom + rom_address(addr)));
+      return *((uint32 *)(g_dev.pi.cart_rom.rom + rom_address(addr)));
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
-          return g_ri.rdram.regs[offset];
+          return g_dev.ri.rdram.regs[offset];
       break;
     case M64P_MEM_RSPREG:
       offset = rsp_reg(addr);
       if (offset < SP_REGS_COUNT)
-        return g_sp.regs[offset];
+        return g_dev.sp.regs[offset];
       break;
     case M64P_MEM_RSP:
       offset = rsp_reg2(addr);
       if (offset < SP_REGS2_COUNT)
-        return g_sp.regs2[offset];
+        return g_dev.sp.regs2[offset];
       break;
     case M64P_MEM_DP:
       offset = dpc_reg(addr);
       if (offset < DPC_REGS_COUNT)
-        return g_dp.dpc_regs[offset];
+        return g_dev.dp.dpc_regs[offset];
       break;
     case M64P_MEM_DPS:
       offset = dps_reg(addr);
       if (offset < DPS_REGS_COUNT)
-        return g_dp.dps_regs[offset];
+        return g_dev.dp.dps_regs[offset];
       break;
     case M64P_MEM_VI:
       offset = vi_reg(addr);
       if (offset < VI_REGS_COUNT)
-        return g_vi.regs[offset];
+        return g_dev.vi.regs[offset];
       break;
     case M64P_MEM_AI:
       offset = ai_reg(addr);
       if (offset < AI_REGS_COUNT)
-        return g_ai.regs[offset];
+        return g_dev.ai.regs[offset];
       break;
     case M64P_MEM_PI:
       offset = pi_reg(addr);
       if (offset < PI_REGS_COUNT)
-        return g_pi.regs[offset];
+        return g_dev.pi.regs[offset];
       break;
     case M64P_MEM_RI:
       offset = ri_reg(addr);
       if (offset < RI_REGS_COUNT)
-        return g_ri.regs[offset];
+        return g_dev.ri.regs[offset];
       break;
     case M64P_MEM_SI:
       offset = si_reg(addr);
       if (offset < SI_REGS_COUNT)
-        return g_si.regs[offset];
+        return g_dev.si.regs[offset];
       break;
     case M64P_MEM_PIF:
       offset = pif_ram_address(addr);
       if (offset < PIF_RAM_SIZE)
-        return sl((*((uint32_t*)&g_si.pif.ram[offset])));
+        return sl((*((uint32_t*)&g_dev.si.pif.ram[offset])));
       break;
     case M64P_MEM_MI:
       offset = mi_reg(addr);
       if (offset < MI_REGS_COUNT)
-        return g_r4300.mi.regs[offset];
+        return g_dev.r4300.mi.regs[offset];
       break;
     default:
       break;
@@ -378,7 +377,7 @@ void write_memory_32(uint32 addr, uint32 value){
   switch(get_memory_type(addr))
     {
     case M64P_MEM_RDRAM:
-      g_rdram[(addr & 0xffffff) >> 2] = value;
+      g_dev.ri.rdram.dram[(addr & 0xffffff) >> 2] = value;
       CHECK_MEM(addr)
       break;
     }

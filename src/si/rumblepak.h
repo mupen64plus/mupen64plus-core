@@ -24,20 +24,14 @@
 
 #include <stdint.h>
 
-enum rumble_action
-{
-    RUMBLE_STOP,
-    RUMBLE_START
-};
+struct rumble_backend;
 
 struct rumblepak
 {
-    /* external rumble sink */
-    void* user_data;
-    void (*rumble)(void*,enum rumble_action);
+    struct rumble_backend* rumble;
 };
 
-void rumblepak_rumble(struct rumblepak* rpk, enum rumble_action action);
+void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
 
 void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd);
 void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd);

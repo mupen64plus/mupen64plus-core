@@ -44,7 +44,6 @@ extern uint32_t last_addr;
 extern unsigned int count_per_op;
 extern cpu_instruction_table current_instruction_table;
 
-void r4300_reset_hard(void);
 void r4300_reset_soft(void);
 void r4300_execute(void);
 

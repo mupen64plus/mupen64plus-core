@@ -67,7 +67,19 @@ static uint32_t pif_ram_address(uint32_t address)
 }
 
 
-void init_pif(struct pif* pif);
+void init_pif(struct pif* pif,
+    struct controller_input_backend* cins,
+    uint8_t* mpk_data[],
+    struct storage_backend* mpk_storages,
+    struct rumble_backend* rumbles,
+    uint8_t* eeprom_data,
+    size_t eeprom_size,
+    uint16_t eeprom_id,
+    struct storage_backend* eeprom_storage,
+    struct clock_backend* rtc,
+    const uint8_t* ipl3);
+
+void poweron_pif(struct pif* pif);
 
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
 int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
