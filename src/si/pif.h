@@ -52,6 +52,7 @@ enum pif_commands
 struct pif
 {
     uint8_t ram[PIF_RAM_SIZE];
+    uint8_t cic_challenge;
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
     struct eeprom eeprom;
