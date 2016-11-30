@@ -888,6 +888,7 @@ m64p_error main_run(void)
 {
     size_t i;
     unsigned int emumode;
+    int no_compiled_jump;
     struct storage_file eep;
     struct storage_file fla;
     struct storage_file mpk;
@@ -952,6 +953,7 @@ m64p_error main_run(void)
     init_device(&g_dev,
                 emumode,
                 count_per_op,
+                no_compiled_jump,
                 &aout,
                 g_rom, g_rom_size,
                 storage_file_ptr(&fla, 0), &fla_storage,

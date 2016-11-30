@@ -25,6 +25,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(PROFILE_R4300)
+#include <stdio.h>
+#endif
+
 #include "cp0.h"
 #include "cp1.h"
 #include "mi_controller.h"
@@ -55,6 +59,29 @@ struct r4300_core
     unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
 
+    /* from recomp.c.
+     * XXX: more work is needed to correctly encapsulate these */
+    struct {
+        int init_length;
+        struct precomp_instr* dst;          /* destination structure for the recompiled instruction */
+        int code_length;                    /* current real recompiled code length */
+        int max_code_length;                /* current recompiled code's buffer length */
+        unsigned char **inst_pointer;       /* output buffer for recompiled code */
+        struct precomp_block *dst_block;    /* the current block that we are recompiling */
+        uint32_t src;                       /* the current recompiled instruction */
+        int fast_memory;
+        int no_compiled_jump;               /* use cached interpreter instead of recompiler for jumps */
+        void (*recomp_func)(void);          /* pointer to the dynarec's generator
+                                               function for the latest decoded opcode */
+        const uint32_t *SRC;                /* currently recompiled instruction in the input stream */
+        int check_nop;                      /* next instruction is nop ? */
+        int delay_slot_compiled;
+
+#if defined(PROFILE_R4300)
+        FILE* pfProfile;
+#endif
+    } recomp;
+
     unsigned int emumode;
 
     struct cp0 cp0;
@@ -64,7 +91,7 @@ struct r4300_core
     struct mi_controller mi;
 };
 
-void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op);
+void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
 void poweron_r4300(struct r4300_core* r4300);
 
 int64_t* r4300_regs(void);

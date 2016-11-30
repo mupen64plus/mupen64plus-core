@@ -194,7 +194,7 @@ void r4300_execute(void)
         g_dev.r4300.pc++;
 #endif
 #if defined(PROFILE_R4300)
-        pfProfile = fopen("instructionaddrs.dat", "ab");
+        g_dev.r4300.recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
         for (i=0; i<0x100000; i++)
             if (invalid_code[i] == 0 && blocks[i] != NULL && blocks[i]->code != NULL && blocks[i]->block != NULL)
             {
@@ -203,12 +203,12 @@ void r4300_execute(void)
                 // store final code length for this block
                 mipsop = -1; /* -1 == end of x86 code block */
                 x86addr = blocks[i]->code + blocks[i]->code_length;
-                if (fwrite(&mipsop, 1, 4, pfProfile) != 4 ||
-                    fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *))
+                if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 ||
+                    fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *))
                     DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
             }
-        fclose(pfProfile);
-        pfProfile = NULL;
+        fclose(g_dev.r4300.recomp.pfProfile);
+        g_dev.r4300.recomp.pfProfile = NULL;
 #endif
         free_blocks();
     }

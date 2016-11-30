@@ -56,7 +56,7 @@ void init_cache(struct precomp_instr* start)
 void free_all_registers(void)
 {
 #if defined(PROFILE_R4300)
-  int freestart = code_length;
+  int freestart = g_dev.r4300.recomp.code_length;
   int flushed = 0;
 #endif
 
@@ -72,7 +72,7 @@ void free_all_registers(void)
     }
     else
     {
-      while (free_since[i] <= dst)
+      while (free_since[i] <= g_dev.r4300.recomp.dst)
       {
         free_since[i]->reg_cache_infos.needed_registers[i] = NULL;
         free_since[i]++;
@@ -88,7 +88,7 @@ void free_all_registers(void)
     if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || /* -5 = regcache flushing */
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
-    x86addr = (long long) ((*inst_pointer) + code_length);
+    x86addr = (long long) ((*inst_pointer) + g_dev.r4300.recomp.code_length);
     if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
         fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
@@ -99,8 +99,8 @@ void free_all_registers(void)
 static void simplify_access(void)
 {
    int i;
-   dst->local_addr = code_length;
-   for(i=0; i<8; i++) dst->reg_cache_infos.needed_registers[i] = NULL;
+   g_dev.r4300.recomp.dst->local_addr = g_dev.r4300.recomp.code_length;
+   for(i=0; i<8; i++) g_dev.r4300.recomp.dst->reg_cache_infos.needed_registers[i] = NULL;
 }
 
 void free_registers_move_start(void)
@@ -123,7 +123,7 @@ void free_register(int reg)
   else
     last = free_since[reg];
    
-  while (last <= dst)
+  while (last <= g_dev.r4300.recomp.dst)
   {
     if (last_access[reg] != NULL && dirty[reg])
       last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
@@ -133,7 +133,7 @@ void free_register(int reg)
   }
   if (last_access[reg] == NULL) 
   {
-    free_since[reg] = dst+1;
+    free_since[reg] = g_dev.r4300.recomp.dst+1;
     return;
   }
 
@@ -151,7 +151,7 @@ void free_register(int reg)
   }
 
   last_access[reg] = NULL;
-  free_since[reg] = dst+1;
+  free_since[reg] = g_dev.r4300.recomp.dst+1;
 }
 
 int lru_register(void)
@@ -189,7 +189,7 @@ void set_register_state(int reg, unsigned int *addr, int _dirty, int _is64bits)
   if (addr == NULL)
     last_access[reg] = NULL;
   else
-    last_access[reg] = dst;
+    last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = (unsigned long long *) addr;
   is64bits[reg] = _is64bits;
   dirty[reg] = _dirty;
@@ -225,12 +225,12 @@ int allocate_register_32(unsigned int *addr)
       {
         struct precomp_instr *last = last_access[i]+1;
 
-        while (last <= dst)
+        while (last <= g_dev.r4300.recomp.dst)
         {
           last->reg_cache_infos.needed_registers[i] = reg_content[i];
           last++;
         }
-        last_access[i] = dst;
+        last_access[i] = g_dev.r4300.recomp.dst;
         is64bits[i] = 0;
         return i;
       }
@@ -244,14 +244,14 @@ int allocate_register_32(unsigned int *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
     }
   }
    
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = (unsigned long long *) addr;
   dirty[reg] = 0;
   is64bits[reg] = 0;
@@ -282,12 +282,12 @@ int allocate_register_64(unsigned long long *addr)
       {
         struct precomp_instr *last = last_access[i]+1;
 
-        while (last <= dst)
+        while (last <= g_dev.r4300.recomp.dst)
         {
           last->reg_cache_infos.needed_registers[i] = reg_content[i];
           last++;
         }
-        last_access[i] = dst;
+        last_access[i] = g_dev.r4300.recomp.dst;
         if (is64bits[i] == 0)
         {
           movsxd_reg64_reg32(i, i);
@@ -305,14 +305,14 @@ int allocate_register_64(unsigned long long *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
     }
   }
    
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = addr;
   dirty[reg] = 0;
   is64bits[reg] = 1;
@@ -356,12 +356,12 @@ int allocate_register_32_w(unsigned int *addr)
     {
       struct precomp_instr *last = last_access[i] + 1;
          
-      while (last <= dst)
+      while (last <= g_dev.r4300.recomp.dst)
       {
         last->reg_cache_infos.needed_registers[i] = NULL;
         last++;
       }
-      last_access[i] = dst;
+      last_access[i] = g_dev.r4300.recomp.dst;
       dirty[i] = 1;
       is64bits[i] = 0;
       return i;
@@ -375,14 +375,14 @@ int allocate_register_32_w(unsigned int *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
     }
   }
    
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = (unsigned long long *) addr;
   dirty[reg] = 1;
   is64bits[reg] = 0;
@@ -401,12 +401,12 @@ int allocate_register_64_w(unsigned long long *addr)
     {
       struct precomp_instr *last = last_access[i] + 1;
 
-      while (last <= dst)
+      while (last <= g_dev.r4300.recomp.dst)
       {
         last->reg_cache_infos.needed_registers[i] = NULL;
         last++;
       }
-      last_access[i] = dst;
+      last_access[i] = g_dev.r4300.recomp.dst;
       is64bits[i] = 1;
       dirty[i] = 1;
       return i;
@@ -420,14 +420,14 @@ int allocate_register_64_w(unsigned long long *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
     }
   }
    
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = addr;
   dirty[reg] = 1;
   is64bits[reg] = 1;
@@ -443,12 +443,12 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
   if (last_access[reg] != NULL && reg_content[reg] == (unsigned long long *) addr)
   {
     struct precomp_instr *last = last_access[reg] + 1;
-    while (last <= dst)
+    while (last <= g_dev.r4300.recomp.dst)
     {
       last->reg_cache_infos.needed_registers[reg] = reg_content[reg];
       last++;
     }
-    last_access[reg] = dst;
+    last_access[reg] = g_dev.r4300.recomp.dst;
     /* we won't touch is64bits or dirty; the register returned is "read-only" */
     return;
   }
@@ -458,7 +458,7 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
@@ -471,29 +471,29 @@ void allocate_register_32_manually(int reg, unsigned int *addr)
     if (last_access[i] != NULL && reg_content[i] == (unsigned long long *) addr)
     {
       struct precomp_instr *last = last_access[i]+1;
-      while (last <= dst)
+      while (last <= g_dev.r4300.recomp.dst)
       {
         last->reg_cache_infos.needed_registers[i] = reg_content[i];
         last++;
       }
-      last_access[i] = dst;
+      last_access[i] = g_dev.r4300.recomp.dst;
       if (is64bits[i])
         mov_reg64_reg64(reg, i);
       else
         mov_reg32_reg32(reg, i);
-      last_access[reg] = dst;
+      last_access[reg] = g_dev.r4300.recomp.dst;
       is64bits[reg] = is64bits[i];
       dirty[reg] = dirty[i];
       reg_content[reg] = reg_content[i];
       /* free the previous x86 register used to cache this r4300 register */
-      free_since[i] = dst + 1;
+      free_since[i] = g_dev.r4300.recomp.dst + 1;
       last_access[i] = NULL;
       return;
     }
   }
 
   /* otherwise just load the 32-bit value into the requested register */
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = (unsigned long long *) addr;
   dirty[reg] = 0;
   is64bits[reg] = 0;
@@ -512,12 +512,12 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
   if (last_access[reg] != NULL && reg_content[reg] == (unsigned long long *) addr)
   {
     struct precomp_instr *last = last_access[reg]+1;
-    while (last <= dst)
+    while (last <= g_dev.r4300.recomp.dst)
     {
       last->reg_cache_infos.needed_registers[reg] = NULL;
       last++;
     }
-    last_access[reg] = dst;
+    last_access[reg] = g_dev.r4300.recomp.dst;
     is64bits[reg] = 0;
     dirty[reg] = 1;
     return;
@@ -528,7 +528,7 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
     free_register(reg);
   else
   {
-    while (free_since[reg] <= dst)
+    while (free_since[reg] <= g_dev.r4300.recomp.dst)
     {
       free_since[reg]->reg_cache_infos.needed_registers[reg] = NULL;
       free_since[reg]++;
@@ -541,24 +541,24 @@ void allocate_register_32_manually_w(int reg, unsigned int *addr)
     if (last_access[i] != NULL && reg_content[i] == (unsigned long long *) addr)
     {
       struct precomp_instr *last = last_access[i] + 1;
-      while (last <= dst)
+      while (last <= g_dev.r4300.recomp.dst)
       {
         last->reg_cache_infos.needed_registers[i] = NULL;
         last++;
       }
-      last_access[reg] = dst;
+      last_access[reg] = g_dev.r4300.recomp.dst;
       reg_content[reg] = reg_content[i];
       dirty[reg] = 1;
       is64bits[reg] = 0;
       /* free the previous x86 register used to cache this r4300 register */
-      free_since[i] = dst+1;
+      free_since[i] = g_dev.r4300.recomp.dst+1;
       last_access[i] = NULL;
       return;
     }
   }
    
   /* otherwise just set up the requested register as 32-bit */
-  last_access[reg] = dst;
+  last_access[reg] = g_dev.r4300.recomp.dst;
   reg_content[reg] = (unsigned long long *) addr;
   dirty[reg] = 1;
   is64bits[reg] = 0;

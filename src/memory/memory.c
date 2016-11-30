@@ -45,8 +45,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern int fast_memory;
-
 typedef int (*readfn)(void*,uint32_t,uint32_t*);
 typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 
@@ -1286,10 +1284,6 @@ void poweron_memory(struct memory* mem)
         map_region(mem, 0x9000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(mem, 0xb000+i, M64P_MEM_NOTHING, RW(nothing));
     }
-
-    fast_memory = 1;
-
-    DebugMessage(M64MSG_VERBOSE, "Memory initialized");
 }
 
 static void map_region_t(struct memory* mem, uint16_t region, int type)

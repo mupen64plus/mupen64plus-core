@@ -185,17 +185,17 @@ static unsigned int g_jump_start32 = 0;
 
 void jump_start_rel8(void)
 {
-  g_jump_start8 = code_length;
+  g_jump_start8 = g_dev.r4300.recomp.code_length;
 }
 
 void jump_start_rel32(void)
 {
-  g_jump_start32 = code_length;
+  g_jump_start32 = g_dev.r4300.recomp.code_length;
 }
 
 void jump_end_rel8(void)
 {
-  unsigned int jump_end = code_length;
+  unsigned int jump_end = g_dev.r4300.recomp.code_length;
   int jump_vec = jump_end - g_jump_start8;
 
   if (jump_vec > 127 || jump_vec < -128)
@@ -204,17 +204,17 @@ void jump_end_rel8(void)
     OSAL_BREAKPOINT_INTERRUPT;
   }
 
-  code_length = g_jump_start8 - 1;
+  g_dev.r4300.recomp.code_length = g_jump_start8 - 1;
   put8(jump_vec);
-  code_length = jump_end;
+  g_dev.r4300.recomp.code_length = jump_end;
 }
 
 void jump_end_rel32(void)
 {
-  unsigned int jump_end = code_length;
+  unsigned int jump_end = g_dev.r4300.recomp.code_length;
   int jump_vec = jump_end - g_jump_start32;
 
-  code_length = g_jump_start32 - 4;
+  g_dev.r4300.recomp.code_length = g_jump_start32 - 4;
   put32(jump_vec);
-  code_length = jump_end;
+  g_dev.r4300.recomp.code_length = jump_end;
 }

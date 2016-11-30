@@ -30,10 +30,12 @@
 
 #include <string.h>
 
-void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op)
+void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
 {
     r4300->emumode = emumode;
     init_cp0(&r4300->cp0, count_per_op);
+
+    r4300->recomp.no_compiled_jump = no_compiled_jump;
 }
 
 void poweron_r4300(struct r4300_core* r4300)
@@ -50,6 +52,10 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->skip_jump = 0;
     r4300->dyna_interp = 0;
     //r4300->current_instruction_table;
+
+    /* recomp init */
+    r4300->recomp.fast_memory = 1;
+    r4300->recomp.delay_slot_compiled = 0;
 
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);
