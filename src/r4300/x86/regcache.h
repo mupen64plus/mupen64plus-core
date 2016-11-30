@@ -22,7 +22,8 @@
 #ifndef M64P_R4300_REGCACHE_H
 #define M64P_R4300_REGCACHE_H
 
-#include "r4300/recomp.h"
+struct precomp_instr;
+struct precomp_block;
 
 void init_cache(struct precomp_instr* start);
 void free_all_registers(void);

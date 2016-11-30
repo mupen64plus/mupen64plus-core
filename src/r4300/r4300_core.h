@@ -34,8 +34,7 @@
 #include "mi_controller.h"
 
 #include "ops.h" /* for cpu_instruction_table */
-
-struct precomp_instr;
+#include "recomp_types.h" /* for precomp_instr */
 
 struct cached_interp
 {
@@ -66,6 +65,9 @@ struct r4300_core
     int stop;
     unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
+
+    /* from pure_interp.c */
+    struct precomp_instr interp_PC;
 
     /* from cached_interp.c.
      * XXX: more work is needed to correctly encapsulate these */

@@ -25,10 +25,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "main/main.h"
 #include "osal/preproc.h"
-#include "r4300/recomph.h"
+#include "r4300/recomp.h"
 
 #define EAX 0
 #define ECX 1

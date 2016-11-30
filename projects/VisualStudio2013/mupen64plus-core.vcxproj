@@ -562,6 +562,7 @@
     <ClInclude Include="..\..\src\r4300\r4300.h" />
     <ClInclude Include="..\..\src\r4300\r4300_core.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
+    <ClInclude Include="..\..\src\r4300\recomp_types.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />
     <ClInclude Include="..\..\src\r4300\reset.h" />
     <ClInclude Include="..\..\src\r4300\tlb.h" />

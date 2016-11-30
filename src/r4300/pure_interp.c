@@ -44,12 +44,11 @@
 #include "debugger/dbg_types.h"
 #endif
 
-static struct precomp_instr interp_PC;
 
 static void InterpretOpcode(void);
 
-#define PCADDR interp_PC.addr
-#define ADD_TO_PC(x) interp_PC.addr += x*4;
+#define PCADDR g_dev.r4300.interp_PC.addr
+#define ADD_TO_PC(x) g_dev.r4300.interp_PC.addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(uint32_t op)
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(uint32_t op) \
@@ -60,26 +59,26 @@ static void InterpretOpcode(void);
       if (cop1 && check_cop1_unusable()) return; \
       if (link_register != &g_dev.r4300.regs[0]) \
       { \
-          *link_register = SE32(interp_PC.addr + 8); \
+          *link_register = SE32(g_dev.r4300.interp_PC.addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
-        interp_PC.addr += 4; \
+        g_dev.r4300.interp_PC.addr += 4; \
         g_dev.r4300.delay_slot=1; \
         InterpretOpcode(); \
         cp0_update_count(); \
         g_dev.r4300.delay_slot=0; \
         if (take_jump && !g_dev.r4300.skip_jump) \
         { \
-          interp_PC.addr = jump_target; \
+          g_dev.r4300.interp_PC.addr = jump_target; \
         } \
       } \
       else \
       { \
-         interp_PC.addr += 8; \
+         g_dev.r4300.interp_PC.addr += 8; \
          cp0_update_count(); \
       } \
-      g_dev.r4300.cp0.last_addr = interp_PC.addr; \
+      g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
       if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
@@ -724,7 +723,7 @@ void InterpretOpcode()
 void pure_interpreter(void)
 {
    g_dev.r4300.stop = 0;
-   g_dev.r4300.pc = &interp_PC;
+   g_dev.r4300.pc = &g_dev.r4300.interp_PC;
    g_dev.r4300.pc->addr = g_dev.r4300.cp0.last_addr = 0xa4000040;
 
    while (!g_dev.r4300.stop)

@@ -27,11 +27,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "osal/preproc.h"
+#include "api/callbacks.h"
 #include "main/main.h"
-#include "r4300/recomph.h"
+#include "osal/preproc.h"
+#include "r4300/recomp.h"
 
 #define RAX 0
 #define RCX 1
