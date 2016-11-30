@@ -3,6 +3,7 @@
 #include "main/device.h"
 #include "memory/memory.h"
 #include "r4300/r4300_core.h"
+#include "ri/ri_controller.h"
 
 /* magic macros -- don't change these */
 #undef offsetof
@@ -41,4 +42,8 @@ void foo(void)
     DEFINE(struct memory, wword);
     DEFINE(struct memory, wdword);
     DEFINE(struct memory, address);
+
+    DEFINE(struct device, ri);
+    DEFINE(struct ri_controller, rdram);
+    DEFINE(struct rdram, dram);
 }

@@ -228,7 +228,7 @@ static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
     gfx_info.HEADER = (unsigned char *) g_rom;
-    gfx_info.RDRAM = (unsigned char *) g_rdram;
+    gfx_info.RDRAM = (unsigned char *) g_rdram; /* can't use g_dev.ri.rdram.dram because device not initialized yet */
     gfx_info.DMEM = (unsigned char *) g_dev.sp.mem;
     gfx_info.IMEM = (unsigned char *) g_dev.sp.mem + 0x1000;
     gfx_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
@@ -320,7 +320,7 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.RDRAM = (unsigned char *) g_rdram;
+    audio_info.RDRAM = (unsigned char *) g_rdram; /* can't use g_dev.ri.rdram.dram because device not initialized yet */
     audio_info.DMEM = (unsigned char *) g_dev.sp.mem;
     audio_info.IMEM = (unsigned char *) g_dev.sp.mem + 0x1000;
     audio_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
@@ -466,7 +466,7 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_rsp(void)
 {
     /* fill in the RSP_INFO data structure */
-    rsp_info.RDRAM = (unsigned char *) g_rdram;
+    rsp_info.RDRAM = (unsigned char *) g_rdram; /* can't use g_dev.ri.rdram.dram because device not initialized yet */
     rsp_info.DMEM = (unsigned char *) g_dev.sp.mem;
     rsp_info.IMEM = (unsigned char *) g_dev.sp.mem + 0x1000;
     rsp_info.MI_INTR_REG = &g_dev.r4300.mi.regs[MI_INTR_REG];

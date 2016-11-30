@@ -93,8 +93,13 @@ int         g_EmulatorRunning = 0;      // need separate boolean to tell if emul
 
 int g_rom_pause;
 
-/* XXX: only global because of new dynarec linkage_x86.asm and plugin.c */
-ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
+/* g_rdram{,_size} are globals to allow plugins early access (before device is initialized).
+ * Please use g_dev.ri.rdram.dram{,_size} instead, after device initialization.
+ * Initialization and DeInitialization of these variables is done at CoreStartup and CoreShutdown.
+ */
+void* g_rdram = NULL;
+size_t g_rdram_size = 0;
+
 struct device g_dev;
 
 int g_delay_si = 0;
@@ -882,7 +887,6 @@ static void open_eep_file(struct storage_file* storage)
 m64p_error main_run(void)
 {
     size_t i;
-    unsigned int disable_extra_mem;
     unsigned int emumode;
     struct storage_file eep;
     struct storage_file fla;
@@ -911,7 +915,6 @@ m64p_error main_run(void)
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
-    disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     unsigned int count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
@@ -953,7 +956,7 @@ m64p_error main_run(void)
                 g_rom, g_rom_size,
                 storage_file_ptr(&fla, 0), &fla_storage,
                 storage_file_ptr(&sra, 0), &sra_storage,
-                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
+                g_rdram, g_rdram_size,
                 cins,
                 mpk_data, mpk_storages,
                 rumbles,

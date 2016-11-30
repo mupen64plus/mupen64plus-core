@@ -99,7 +99,6 @@ cextern last_count
 cextern pcaddr
 cextern clean_blocks
 cextern invalidate_block
-cextern g_rdram
 cextern invalid_code
 cextern readmem_dword
 cextern check_interupt
@@ -673,30 +672,34 @@ invalidate_block_call:
 
 write_rdram_new:
     mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
+    add     edi,    [g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram]
     mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wword]
-    mov     [g_rdram-0x80000000+edi],    ecx
+    mov     [edi - 0x80000000],    ecx
     jmp     _E12
 
 write_rdramb_new:
     mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     xor     edi,    3
+    add     edi,    [g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram]
     mov     cl,     BYTE [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wbyte]
-    mov     BYTE [g_rdram-0x80000000+edi],    cl
+    mov     BYTE [edi - 0x80000000],    cl
     jmp     _E12
 
 write_rdramh_new:
     mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     xor     edi,    2
+    add     edi,    [g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram]
     mov     cx,     WORD [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_whword]
-    mov     WORD [g_rdram-0x80000000+edi],    cx
+    mov     WORD [edi - 0x80000000],    cx
     jmp     _E12
 
 write_rdramd_new:
     mov     edi,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
+    add     edi,    [g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram]
     mov     ecx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+4]
     mov     edx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword+0]
-    mov     [g_rdram-0x80000000+edi],      ecx
-    mov     [g_rdram-0x80000000+4+edi],    edx
+    mov     [edi - 0x80000000],         ecx
+    mov     [edi - 0x80000000 + 4],     edx
     jmp     _E12
 
 
