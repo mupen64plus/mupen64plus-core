@@ -152,12 +152,12 @@ void *dynamic_linker(void * src, u_int vaddr)
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          invalid_code[vaddr>>12]=0;
+          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
             if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
               memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);
@@ -224,12 +224,12 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          invalid_code[vaddr>>12]=0;
+          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
             if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
               memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);

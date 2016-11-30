@@ -191,7 +191,7 @@ void genjr(void)
 
    jump_start_rel32();
    
-   mov_m32_reg32(&jump_to_address, EBX);
+   mov_m32_reg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
@@ -263,7 +263,7 @@ void genjalr(void)
 
    jump_start_rel32();
    
-   mov_m32_reg32(&jump_to_address, EBX);
+   mov_m32_reg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);

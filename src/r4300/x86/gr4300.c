@@ -425,7 +425,7 @@ void genj(void)
    naddr = ((g_dev.r4300.recomp.dst-1)->f.j.inst_index<<2) | (g_dev.r4300.recomp.dst->addr & 0xF0000000);
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
-   gencheck_interupt((unsigned int)&actual->block[(naddr-actual->start)/4]);
+   gencheck_interupt((unsigned int)&g_dev.r4300.cached_interp.actual->block[(naddr-g_dev.r4300.cached_interp.actual->start)/4]);
    jmp(naddr);
 #endif
 }
@@ -449,7 +449,7 @@ void genj_out(void)
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
-   mov_m32_imm32(&jump_to_address, naddr);
+   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
@@ -505,7 +505,7 @@ void genjal(void)
    naddr = ((g_dev.r4300.recomp.dst-1)->f.j.inst_index<<2) | (g_dev.r4300.recomp.dst->addr & 0xF0000000);
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
-   gencheck_interupt((unsigned int)&actual->block[(naddr-actual->start)/4]);
+   gencheck_interupt((unsigned int)&g_dev.r4300.cached_interp.actual->block[(naddr-g_dev.r4300.cached_interp.actual->start)/4]);
    jmp(naddr);
 #endif
 }
@@ -536,7 +536,7 @@ void genjal_out(void)
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
-   mov_m32_imm32(&jump_to_address, naddr);
+   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
@@ -612,7 +612,7 @@ void gentest_out(void)
 
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32_imm32(&jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
@@ -1018,7 +1018,7 @@ void gentestl_out(void)
    gendelayslot();
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32_imm32(&jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst+1));
    mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
    call_reg32(EAX);
@@ -1567,12 +1567,12 @@ void gensb(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1580,7 +1580,7 @@ void gensb(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 
@@ -1624,12 +1624,12 @@ void gensh(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1637,7 +1637,7 @@ void gensh(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 
@@ -1685,12 +1685,12 @@ void gensw(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1698,7 +1698,7 @@ void gensw(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 
@@ -1896,12 +1896,12 @@ void genswc1(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1909,7 +1909,7 @@ void genswc1(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 
@@ -1956,12 +1956,12 @@ void gensdc1(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1969,7 +1969,7 @@ void gensdc1(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 
@@ -2016,12 +2016,12 @@ void gensd(void)
    
    mov_reg32_reg32(EBX, EAX);
    shr_reg32_imm8(EBX, 12);
-   cmp_preg32pimm32_imm8(EBX, (unsigned int)invalid_code, 0);
+   cmp_preg32pimm32_imm8(EBX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 0);
    jne_rj(54);
    mov_reg32_reg32(ECX, EBX); // 2
    shl_reg32_imm8(EBX, 2); // 3
-   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)blocks); // 6
-   mov_reg32_preg32pimm32(EBX, EBX, (int)&actual->block - (int)actual); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)g_dev.r4300.cached_interp.blocks); // 6
+   mov_reg32_preg32pimm32(EBX, EBX, (int)&g_dev.r4300.cached_interp.actual->block - (int)g_dev.r4300.cached_interp.actual); // 6
    and_eax_imm32(0xFFF); // 5
    shr_reg32_imm8(EAX, 2); // 3
    mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -2029,7 +2029,7 @@ void gensd(void)
    mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&g_dev.r4300.recomp.dst->ops - (int)g_dev.r4300.recomp.dst); // 7
    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
    je_rj(7); // 2
-   mov_preg32pimm32_imm8(ECX, (unsigned int)invalid_code, 1); // 7
+   mov_preg32pimm32_imm8(ECX, (unsigned int)g_dev.r4300.cached_interp.invalid_code, 1); // 7
 #endif
 }
 

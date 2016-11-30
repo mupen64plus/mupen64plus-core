@@ -2263,54 +2263,54 @@ void init_block(struct precomp_block *block)
   /* here we're marking the block as a valid code even if it's not compiled
    * yet as the game should have already set up the code correctly.
    */
-  invalid_code[block->start>>12] = 0;
+  g_dev.r4300.cached_interp.invalid_code[block->start>>12] = 0;
   if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
   { 
     uint32_t paddr = virtual_to_physical_address(block->start, 2);
-    invalid_code[paddr>>12] = 0;
-    if (!blocks[paddr>>12])
+    g_dev.r4300.cached_interp.invalid_code[paddr>>12] = 0;
+    if (!g_dev.r4300.cached_interp.blocks[paddr>>12])
     {
-      blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-      blocks[paddr>>12]->code = NULL;
-      blocks[paddr>>12]->block = NULL;
-      blocks[paddr>>12]->jumps_table = NULL;
-      blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
-      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+      g_dev.r4300.cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->code = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->block = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->jumps_table = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->riprel_table = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
-    init_block(blocks[paddr>>12]);
+    init_block(g_dev.r4300.cached_interp.blocks[paddr>>12]);
     
     paddr += block->end - block->start - 4;
-    invalid_code[paddr>>12] = 0;
-    if (!blocks[paddr>>12])
+    g_dev.r4300.cached_interp.invalid_code[paddr>>12] = 0;
+    if (!g_dev.r4300.cached_interp.blocks[paddr>>12])
     {
-      blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-      blocks[paddr>>12]->code = NULL;
-      blocks[paddr>>12]->block = NULL;
-      blocks[paddr>>12]->jumps_table = NULL;
-      blocks[paddr>>12]->riprel_table = NULL;
-      blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
-      blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+      g_dev.r4300.cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->code = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->block = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->jumps_table = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->riprel_table = NULL;
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+      g_dev.r4300.cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
     }
-    init_block(blocks[paddr>>12]);
+    init_block(g_dev.r4300.cached_interp.blocks[paddr>>12]);
   }
   else
   {
     uint32_t alt_addr = block->start ^ UINT32_C(0x20000000);
 
-    if (invalid_code[alt_addr>>12])
+    if (g_dev.r4300.cached_interp.invalid_code[alt_addr>>12])
     {
-      if (!blocks[alt_addr>>12])
+      if (!g_dev.r4300.cached_interp.blocks[alt_addr>>12])
       {
-        blocks[alt_addr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-        blocks[alt_addr>>12]->code = NULL;
-        blocks[alt_addr>>12]->block = NULL;
-        blocks[alt_addr>>12]->jumps_table = NULL;
-        blocks[alt_addr>>12]->riprel_table = NULL;
-        blocks[alt_addr>>12]->start = alt_addr & ~UINT32_C(0xFFF);
-        blocks[alt_addr>>12]->end = (alt_addr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->code = NULL;
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->block = NULL;
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->jumps_table = NULL;
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->riprel_table = NULL;
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->start = alt_addr & ~UINT32_C(0xFFF);
+        g_dev.r4300.cached_interp.blocks[alt_addr>>12]->end = (alt_addr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
       }
-      init_block(blocks[alt_addr>>12]);
+      init_block(g_dev.r4300.cached_interp.blocks[alt_addr>>12]);
     }
   }
   timed_section_end(TIMED_SECTION_COMPILER);
@@ -2365,8 +2365,8 @@ void recompile_block(const uint32_t *source, struct precomp_block *block, uint32
       {
           uint32_t address2 =
            virtual_to_physical_address(block->start + i*4, 0);
-         if(blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
-           blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = g_dev.r4300.current_instruction_table.NOTCOMPILED2;
+         if(g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
+           g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = g_dev.r4300.current_instruction_table.NOTCOMPILED2;
       }
     
     g_dev.r4300.recomp.SRC = source + i;

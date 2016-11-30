@@ -146,7 +146,7 @@ static void dynarec_setup_code(void)
    jump_to(UINT32_C(0xa4000040));
 
    // Prevent segfault on failed jump_to
-   if (!actual->block || !actual->code)
+   if (!g_dev.r4300.cached_interp.actual->block || !g_dev.r4300.cached_interp.actual->code)
       dyna_stop();
 }
 #endif
@@ -221,7 +221,7 @@ void r4300_execute(void)
         jump_to(UINT32_C(0xa4000040));
 
         /* Prevent segfault on failed jump_to */
-        if (!actual->block)
+        if (!g_dev.r4300.cached_interp.actual->block)
             return;
 
         g_dev.r4300.cp0.last_addr = g_dev.r4300.pc->addr;

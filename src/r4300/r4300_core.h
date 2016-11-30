@@ -37,6 +37,14 @@
 
 struct precomp_instr;
 
+struct cached_interp
+{
+    char invalid_code[0x100000];
+    struct precomp_block* blocks[0x100000];
+    struct precomp_block* actual;
+    unsigned int jump_to_address;
+};
+
 enum {
     EMUMODE_PURE_INTERPRETER = 0,
     EMUMODE_INTERPRETER      = 1,
@@ -58,6 +66,10 @@ struct r4300_core
     int stop;
     unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
+
+    /* from cached_interp.c.
+     * XXX: more work is needed to correctly encapsulate these */
+    struct cached_interp cached_interp;
 
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */

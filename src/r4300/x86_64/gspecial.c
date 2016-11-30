@@ -220,7 +220,7 @@ void genjr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.pc), RAX);
    mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
@@ -295,7 +295,7 @@ void genjalr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.pc), RAX);
    mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);

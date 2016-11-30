@@ -35,6 +35,9 @@ void foo(void)
     DEFINE(struct tlb, LUT_r);
     DEFINE(struct tlb, LUT_w);
 
+    DEFINE(struct r4300_core, cached_interp);
+    DEFINE(struct cached_interp, invalid_code);
+
     DEFINE(struct device, mem);
 
     DEFINE(struct memory, wbyte);

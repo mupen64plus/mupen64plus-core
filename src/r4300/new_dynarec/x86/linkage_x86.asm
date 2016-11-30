@@ -99,7 +99,6 @@ cextern last_count
 cextern pcaddr
 cextern clean_blocks
 cextern invalidate_block
-cextern invalid_code
 cextern readmem_dword
 cextern check_interupt
 cextern get_addr_32
@@ -708,7 +707,7 @@ do_invalidate:
     mov     ebx,    edi    ;Return ebx to caller
 _E12:
     shr     edi,    12
-    cmp     BYTE [invalid_code+edi],    1
+    cmp     BYTE [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cached_interp + offsetof_struct_cached_interp_invalid_code + edi],    1
     je      _E13
     push    edi
     call    invalidate_block

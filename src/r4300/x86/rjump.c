@@ -58,7 +58,7 @@ void dyna_jump()
     if (g_dev.r4300.pc->reg_cache_infos.need_map)
         *return_address = (unsigned long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
     else
-        *return_address = (unsigned long) (actual->code + g_dev.r4300.pc->local_addr);
+        *return_address = (unsigned long) (g_dev.r4300.cached_interp.actual->code + g_dev.r4300.pc->local_addr);
 }
 
 #if defined(WIN32) && !defined(__GNUC__) /* this warning disable only works if placed outside of the scope of a function */
