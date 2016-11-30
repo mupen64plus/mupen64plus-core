@@ -58,6 +58,7 @@ void poweron_cp0(struct cp0* cp0)
     cp0->regs[CP0_ERROREPC_REG] = UINT32_C(0xffffffff);
 
     /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
+    cp0->interrupt_unsafe_state = 0;
     cp0->next_interrupt = 0;
     cp0->last_addr = UINT32_C(0xbfc00000);
 

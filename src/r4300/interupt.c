@@ -46,32 +46,10 @@
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
 
-int interupt_unsafe_state = 0;
-
-struct interrupt_event
-{
-    int type;
-    unsigned int count;
-};
-
 
 /***************************************************************************
  * Pool of Single Linked List Nodes
  **************************************************************************/
-#define POOL_CAPACITY 16
-
-struct node
-{
-    struct interrupt_event data;
-    struct node *next;
-};
-
-struct pool
-{
-    struct node nodes[POOL_CAPACITY];
-    struct node* stack[POOL_CAPACITY];
-    size_t index;
-};
 
 static struct node* alloc_node(struct pool* p);
 static void free_node(struct pool* p, struct node* node);
@@ -82,7 +60,7 @@ static void clear_pool(struct pool* p);
 static struct node* alloc_node(struct pool* p)
 {
     /* return NULL if pool is too small */
-    if (p->index >= POOL_CAPACITY)
+    if (p->index >= INTERRUPT_NODES_POOL_CAPACITY)
         return NULL;
 
     return p->stack[p->index++];
@@ -101,7 +79,7 @@ static void clear_pool(struct pool* p)
 {
     size_t i;
 
-    for(i = 0; i < POOL_CAPACITY; ++i)
+    for(i = 0; i < INTERRUPT_NODES_POOL_CAPACITY; ++i)
         p->stack[i] = &p->nodes[i];
 
     p->index = 0;
@@ -111,19 +89,10 @@ static void clear_pool(struct pool* p)
  * Interrupt Queue
  **************************************************************************/
 
-struct interrupt_queue
-{
-    struct pool pool;
-    struct node* first;
-};
-
-static struct interrupt_queue q;
-
-
 static void clear_queue(void)
 {
-    q.first = NULL;
-    clear_pool(&q.pool);
+    g_dev.r4300.cp0.q.first = NULL;
+    clear_pool(&g_dev.r4300.cp0.q.pool);
 }
 
 
@@ -182,7 +151,7 @@ void add_interupt_event_count(int type, unsigned int count)
         return;
     }
 
-    event = alloc_node(&q.pool);
+    event = alloc_node(&g_dev.r4300.cp0.q.pool);
     if (event == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Failed to allocate node for new interrupt event");
@@ -192,21 +161,21 @@ void add_interupt_event_count(int type, unsigned int count)
     event->data.count = count;
     event->data.type = type;
 
-    if (q.first == NULL)
+    if (g_dev.r4300.cp0.q.first == NULL)
     {
-        q.first = event;
+        g_dev.r4300.cp0.q.first = event;
         event->next = NULL;
-        g_dev.r4300.cp0.next_interrupt = q.first->data.count;
+        g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.q.first->data.count;
     }
-    else if (before_event(count, q.first->data.count, q.first->data.type) && !special)
+    else if (before_event(count, g_dev.r4300.cp0.q.first->data.count, g_dev.r4300.cp0.q.first->data.type) && !special)
     {
-        event->next = q.first;
-        q.first = event;
-        g_dev.r4300.cp0.next_interrupt = q.first->data.count;
+        event->next = g_dev.r4300.cp0.q.first;
+        g_dev.r4300.cp0.q.first = event;
+        g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.q.first->data.count;
     }
     else
     {
-        for(e = q.first;
+        for(e = g_dev.r4300.cp0.q.first;
             e->next != NULL &&
             (!before_event(count, e->next->data.count, e->next->data.type) || special);
             e = e->next);
@@ -231,20 +200,20 @@ static void remove_interupt_event(void)
 {
     struct node* e;
 
-    e = q.first;
-    q.first = e->next;
-    free_node(&q.pool, e);
+    e = g_dev.r4300.cp0.q.first;
+    g_dev.r4300.cp0.q.first = e->next;
+    free_node(&g_dev.r4300.cp0.q.pool, e);
 
-    g_dev.r4300.cp0.next_interrupt = (q.first != NULL
-         && (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
-         || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - q.first->data.count) < UINT32_C(0x80000000)))
-        ? q.first->data.count
+    g_dev.r4300.cp0.next_interrupt = (g_dev.r4300.cp0.q.first != NULL
+         && (g_dev.r4300.cp0.q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
+         || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000)))
+        ? g_dev.r4300.cp0.q.first->data.count
         : 0;
 }
 
 unsigned int get_event(int type)
 {
-    struct node* e = q.first;
+    struct node* e = g_dev.r4300.cp0.q.first;
 
     if (e == NULL)
         return 0;
@@ -261,23 +230,23 @@ unsigned int get_event(int type)
 
 int get_next_event_type(void)
 {
-    return (q.first == NULL)
+    return (g_dev.r4300.cp0.q.first == NULL)
         ? 0
-        : q.first->data.type;
+        : g_dev.r4300.cp0.q.first->data.type;
 }
 
 void remove_event(int type)
 {
     struct node* to_del;
-    struct node* e = q.first;
+    struct node* e = g_dev.r4300.cp0.q.first;
 
     if (e == NULL)
         return;
 
     if (e->data.type == type)
     {
-        q.first = e->next;
-        free_node(&q.pool, e);
+        g_dev.r4300.cp0.q.first = e->next;
+        free_node(&g_dev.r4300.cp0.q.pool, e);
     }
     else
     {
@@ -287,7 +256,7 @@ void remove_event(int type)
         {
             to_del = e->next;
             e->next = to_del->next;
-            free_node(&q.pool, to_del);
+            free_node(&g_dev.r4300.cp0.q.pool, to_del);
         }
     }
 }
@@ -299,7 +268,7 @@ void translate_event_queue(unsigned int base)
     remove_event(COMPARE_INT);
     remove_event(SPECIAL_INT);
 
-    for(e = q.first; e != NULL; e = e->next)
+    for(e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
     {
         e->data.count = (e->data.count - g_dev.r4300.cp0.regs[CP0_COUNT_REG]) + base;
     }
@@ -314,7 +283,7 @@ int save_eventqueue_infos(char *buf)
 
     len = 0;
 
-    for(e = q.first; e != NULL; e = e->next)
+    for(e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
     {
         memcpy(buf + len    , &e->data.type , 4);
         memcpy(buf + len + 4, &e->data.count, 4);
@@ -360,7 +329,7 @@ void check_interupt(void)
     if ((g_dev.r4300.cp0.regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) return;
     if (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & g_dev.r4300.cp0.regs[CP0_CAUSE_REG] & UINT32_C(0xFF00))
     {
-        event = alloc_node(&q.pool);
+        event = alloc_node(&g_dev.r4300.cp0.q.pool);
 
         if (event == NULL)
         {
@@ -371,15 +340,15 @@ void check_interupt(void)
         event->data.count = g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.regs[CP0_COUNT_REG];
         event->data.type = CHECK_INT;
 
-        if (q.first == NULL)
+        if (g_dev.r4300.cp0.q.first == NULL)
         {
-            q.first = event;
+            g_dev.r4300.cp0.q.first = event;
             event->next = NULL;
         }
         else
         {
-            event->next = q.first;
-            q.first = event;
+            event->next = g_dev.r4300.cp0.q.first;
+            g_dev.r4300.cp0.q.first = event;
 
         }
     }
@@ -505,7 +474,7 @@ void gen_interupt(void)
         dyna_stop();
     }
 
-    if (!interupt_unsafe_state)
+    if (!g_dev.r4300.cp0.interrupt_unsafe_state)
     {
         if (savestates_get_job() == savestates_job_load)
         {
@@ -526,9 +495,9 @@ void gen_interupt(void)
         uint32_t dest = g_dev.r4300.skip_jump;
         g_dev.r4300.skip_jump = 0;
 
-        g_dev.r4300.cp0.next_interrupt = (q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
-                || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - q.first->data.count) < UINT32_C(0x80000000))
-            ? q.first->data.count
+        g_dev.r4300.cp0.next_interrupt = (g_dev.r4300.cp0.q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
+                || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000))
+            ? g_dev.r4300.cp0.q.first->data.count
             : 0;
 
         g_dev.r4300.cp0.last_addr = dest;
@@ -536,7 +505,7 @@ void gen_interupt(void)
         return;
     } 
 
-    switch(q.first->data.type)
+    switch(g_dev.r4300.cp0.q.first->data.type)
     {
         case SPECIAL_INT:
             special_int_handler();
@@ -590,13 +559,13 @@ void gen_interupt(void)
             break;
 
         default:
-            DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", q.first->data.type);
+            DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", g_dev.r4300.cp0.q.first->data.type);
             remove_interupt_event();
             wrapped_exception_general();
             break;
     }
 
-    if (!interupt_unsafe_state)
+    if (!g_dev.r4300.cp0.interrupt_unsafe_state)
     {
         if (savestates_get_job() == savestates_job_save)
         {

@@ -26,10 +26,6 @@
 
 void init_interupt(void);
 
-// set to avoid savestates/reset if state may be inconsistent
-// (e.g. in the middle of an instruction)
-extern int interupt_unsafe_state;
-
 void raise_maskable_interrupt(uint32_t cause);
 
 void gen_interupt(void);

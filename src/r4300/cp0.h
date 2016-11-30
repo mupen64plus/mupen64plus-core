@@ -135,11 +135,47 @@ enum r4300_cp0_registers
     CP0_REGS_COUNT = 32
 };
 
+
+
+enum { INTERRUPT_NODES_POOL_CAPACITY = 16 };
+
+struct interrupt_event
+{
+    int type;
+    unsigned int count;
+};
+
+struct node
+{
+    struct interrupt_event data;
+    struct node *next;
+};
+
+struct pool
+{
+    struct node nodes [INTERRUPT_NODES_POOL_CAPACITY];
+    struct node* stack[INTERRUPT_NODES_POOL_CAPACITY];
+    size_t index;
+};
+
+struct interrupt_queue
+{
+    struct pool pool;
+    struct node* first;
+};
+
+
 struct cp0
 {
     uint32_t regs[CP0_REGS_COUNT];
 
+    /* set to avoid savestates/reset if state may be inconsistent
+     * (e.g. in the middle of an instruction) */
+    int interrupt_unsafe_state;
+
+    struct interrupt_queue q;
     uint32_t next_interrupt;
+
     uint32_t last_addr;
     unsigned int count_per_op;
 

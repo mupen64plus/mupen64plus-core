@@ -71,9 +71,9 @@ DECLARE_INSTRUCTION(MTC0)
       break;
     case CP0_COUNT_REG:
       cp0_update_count();
-      interupt_unsafe_state = 1;
+      g_dev.r4300.cp0.interrupt_unsafe_state = 1;
       if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt();
-      interupt_unsafe_state = 0;
+      g_dev.r4300.cp0.interrupt_unsafe_state = 0;
       translate_event_queue(rrt32);
       g_dev.r4300.cp0.regs[CP0_COUNT_REG] = rrt32;
       break;
@@ -97,9 +97,9 @@ DECLARE_INSTRUCTION(MTC0)
       cp0_update_count();
       ADD_TO_PC(1);
       check_interupt();
-      interupt_unsafe_state = 1;
+      g_dev.r4300.cp0.interrupt_unsafe_state = 1;
       if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt();
-      interupt_unsafe_state = 0;
+      g_dev.r4300.cp0.interrupt_unsafe_state = 0;
       ADD_TO_PC(-1);
       break;
     case CP0_CAUSE_REG:
