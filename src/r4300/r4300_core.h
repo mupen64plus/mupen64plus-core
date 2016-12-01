@@ -34,7 +34,7 @@
 #include "mi_controller.h"
 
 #include "ops.h" /* for cpu_instruction_table */
-#include "recomp_types.h" /* for precomp_instr */
+#include "recomp_types.h" /* for precomp_instr, regcache_state */
 
 struct cached_interp
 {
@@ -68,6 +68,9 @@ struct r4300_core
 
     /* When reset_hard_job is set, next interrupt will cause hard reset */
     int reset_hard_job;
+
+    /* from regcache.c */
+    struct regcache_state regcache_state;
 
     /* from pure_interp.c */
     struct precomp_instr interp_PC;
