@@ -22,9 +22,6 @@
 
 global dyna_start
 
-extern save_rsp
-extern save_rip
-extern return_address
 extern g_dev
 
 section .bss
@@ -40,21 +37,21 @@ dyna_start:
     push r14
     push r15
     push rbp
-    mov [rel save_rsp], rsp
+    mov [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp], rsp
     lea r15, [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs]        ;store the base location of the r4300 registers in r15 for addressing
     call _A1
     jmp _A2
 _A1:
     pop  rax
-    mov  [rel save_rip], rax
+    mov  [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rip], rax
     sub rsp, 0x20
     and rsp, 0xFFFFFFFFFFFFFFF0          ;ensure that stack is 16-byte aligned
     mov rax, rsp
     sub rax, 8
-    mov [rel return_address], rax
+    mov [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address], rax
     call rcx
 _A2:
-    mov  rsp, [rel save_rsp]
+    mov  rsp, [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp]
     pop  rbp
     pop  r15
     pop  r14

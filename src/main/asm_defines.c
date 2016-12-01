@@ -24,6 +24,12 @@ void foo(void)
 
     DEFINE(struct r4300_core, stop);
 
+#if defined(__x86_64__)
+    DEFINE(struct r4300_core, save_rsp);
+    DEFINE(struct r4300_core, save_rip);
+#endif
+    DEFINE(struct r4300_core, return_address);
+
     DEFINE(struct r4300_core, cp0);
     DEFINE(struct cp0, regs);
     DEFINE(struct cp0, next_interrupt);

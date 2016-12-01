@@ -65,6 +65,18 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->max_riprel_number = 0;
 #endif
 
+#if defined(__x86_64__)
+    r4300->save_rsp = 0;
+    r4300->save_rip = 0;
+#else
+    r4300->save_ebp = 0;
+    r4300->save_ebx = 0;
+    r4300->save_esi = 0;
+    r4300->save_edi = 0;
+    r4300->save_esp = 0;
+    r4300->save_eip = 0;
+#endif
+
     /* recomp init */
     r4300->recomp.fast_memory = 1;
     r4300->recomp.delay_slot_compiled = 0;

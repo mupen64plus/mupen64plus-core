@@ -32,9 +32,6 @@
 #include "r4300/recomph.h"
 #include "r4300/x86_64/assemble_struct.h"
 
-// that's where the dynarec will restart when going back from a C function
-unsigned long long *return_address;
-
 void dyna_jump(void)
 {
     if (g_dev.r4300.stop == 1)
@@ -44,13 +41,10 @@ void dyna_jump(void)
     }
 
     if (g_dev.r4300.pc->reg_cache_infos.need_map)
-        *return_address = (unsigned long long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
+        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
     else
-        *return_address = (unsigned long long) (g_dev.r4300.cached_interp.actual->code + g_dev.r4300.pc->local_addr);
+        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.cached_interp.actual->code + g_dev.r4300.pc->local_addr);
 }
-
-long long save_rsp = 0;
-long long save_rip = 0;
 
 #if defined(__GNUC__) && defined(__x86_64__)
 void dyna_start(void *code)
@@ -91,24 +85,24 @@ void dyna_start(void *code)
      " pop  %%r13              \n"
      " pop  %%r12              \n"
      " pop  %%rbx              \n"
-     : [save_rsp]"=m"(save_rsp), [save_rip]"=m"(save_rip), [return_address]"=m"(return_address)
+     : [save_rsp]"=m"(g_dev.r4300.save_rsp), [save_rip]"=m"(g_dev.r4300.save_rip), [return_address]"=m"(g_dev.r4300.return_address)
      : "b" (code), [r4300_regs]"m"(*g_dev.r4300.regs)
      : "%rax", "memory"
      );
 
     /* clear the registers so we don't return here a second time; that would be a bug */
-    save_rsp=0;
-    save_rip=0;
+    g_dev.r4300.save_rsp=0;
+    g_dev.r4300.save_rip=0;
 }
 #endif
 
 void dyna_stop(void)
 {
-  if (save_rip == 0)
+  if (g_dev.r4300.save_rip == 0)
     DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");
   else
   {
-    *return_address = (unsigned long long) save_rip;
+    *g_dev.r4300.return_address = (unsigned long long) g_dev.r4300.save_rip;
   }
 }
 
