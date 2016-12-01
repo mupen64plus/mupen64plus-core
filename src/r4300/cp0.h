@@ -176,6 +176,8 @@ struct cp0
     struct interrupt_queue q;
     uint32_t next_interrupt;
 
+    int special_done;
+
     uint32_t last_addr;
     unsigned int count_per_op;
 

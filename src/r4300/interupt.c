@@ -95,9 +95,6 @@ static void clear_queue(void)
     clear_pool(&g_dev.r4300.cp0.q.pool);
 }
 
-
-static int SPECIAL_done = 0;
-
 static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 {
     if(evt1 - g_dev.r4300.cp0.regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
@@ -114,7 +111,7 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
                 switch(type2)
                 {
                     case SPECIAL_INT:
-                        if(SPECIAL_done) return 1;
+                        if(g_dev.r4300.cp0.special_done) return 1;
                         else return 0;
                         break;
                     default:
@@ -140,7 +137,7 @@ void add_interupt_event_count(int type, unsigned int count)
 
     special = (type == SPECIAL_INT);
    
-    if(g_dev.r4300.cp0.regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) SPECIAL_done = 0;
+    if(g_dev.r4300.cp0.regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) g_dev.r4300.cp0.special_done = 0;
    
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
@@ -309,7 +306,7 @@ void load_eventqueue_infos(char *buf)
 
 void init_interupt(void)
 {
-    SPECIAL_done = 1;
+    g_dev.r4300.cp0.special_done = 1;
 
     g_dev.vi.delay = g_dev.vi.next_vi = 5000;
 
@@ -393,7 +390,7 @@ static void special_int_handler(void)
         return;
 
 
-    SPECIAL_done = 1;
+    g_dev.r4300.cp0.special_done = 1;
     remove_interupt_event();
     add_interupt_event_count(SPECIAL_INT, 0);
 }

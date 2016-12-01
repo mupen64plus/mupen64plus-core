@@ -60,6 +60,7 @@ void poweron_cp0(struct cp0* cp0)
     /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
     cp0->interrupt_unsafe_state = 0;
     cp0->next_interrupt = 0;
+    cp0->special_done = 0;
     cp0->last_addr = UINT32_C(0xbfc00000);
 
     poweron_tlb(&cp0->tlb);
