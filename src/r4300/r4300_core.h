@@ -102,6 +102,18 @@ struct r4300_core
 #endif
     } recomp;
 
+    /* from gr4300.c */
+    int branch_taken;
+    struct precomp_instr fake_instr;
+#ifdef COMPARE_CORE
+#if defined(__x86_64__)
+    long long debug_reg_storage[8];
+#else
+    int eax, ebx, ecx, edx, esp, ebp, esi, edi;
+#endif
+#endif
+
+
     unsigned int emumode;
 
     struct cp0 cp0;

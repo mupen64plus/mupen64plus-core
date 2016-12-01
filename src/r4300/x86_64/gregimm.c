@@ -47,19 +47,19 @@ static void genbltz_test(void)
     int rs = allocate_register_32((unsigned int *)g_dev.r4300.recomp.dst->f.i.rs);
     
     cmp_reg32_imm32(rs, 0);
-    setl_m8rel((unsigned char *) &branch_taken);
+    setl_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
   else if (rs_64bit == -1)
   {
     cmp_m32rel_imm32(((unsigned int *)g_dev.r4300.recomp.dst->f.i.rs)+1, 0);
-    setl_m8rel((unsigned char *) &branch_taken);
+    setl_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
   else
   {
     int rs = allocate_register_64((unsigned long long *)g_dev.r4300.recomp.dst->f.i.rs);
 
     cmp_reg64_imm8(rs, 0);
-    setl_m8rel((unsigned char *) &branch_taken);
+    setl_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
 }
 
@@ -131,18 +131,18 @@ static void genbgez_test(void)
   {
     int rs = allocate_register_32((unsigned int *)g_dev.r4300.recomp.dst->f.i.rs);
     cmp_reg32_imm32(rs, 0);
-    setge_m8rel((unsigned char *) &branch_taken);
+    setge_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
   else if (rs_64bit == -1)
   {
     cmp_m32rel_imm32(((unsigned int *)g_dev.r4300.recomp.dst->f.i.rs)+1, 0);
-    setge_m8rel((unsigned char *) &branch_taken);
+    setge_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
   else
   {
     int rs = allocate_register_64((unsigned long long *)g_dev.r4300.recomp.dst->f.i.rs);
     cmp_reg64_imm8(rs, 0);
-    setge_m8rel((unsigned char *) &branch_taken);
+    setge_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
   }
 }
 

@@ -58,6 +58,8 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->recomp.fast_memory = 1;
     r4300->recomp.delay_slot_compiled = 0;
 
+    r4300->branch_taken = 0;
+
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);
 

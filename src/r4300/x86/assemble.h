@@ -58,8 +58,6 @@
 #define DH 6
 #define BH 7
 
-extern int branch_taken;
-
 extern const uint16_t trunc_mode, round_mode, ceil_mode, floor_mode;
 
 void jump_start_rel8(void);
