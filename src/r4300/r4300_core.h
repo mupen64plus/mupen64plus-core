@@ -36,6 +36,7 @@
 #include "ops.h" /* for cpu_instruction_table */
 #include "recomp_types.h" /* for precomp_instr, regcache_state */
 
+struct jump_table;
 struct cached_interp
 {
     char invalid_code[0x100000];
@@ -71,6 +72,21 @@ struct r4300_core
 
     /* from regcache.c */
     struct regcache_state regcache_state;
+
+    /* from assemble.c */
+    struct jump_table* jumps_table;
+    int jumps_number;
+    int max_jumps_number;
+
+    unsigned int jump_start8;
+    unsigned int jump_start32;
+
+#if defined(__x86_64__)
+    struct riprelative_table* riprel_table;
+    int riprel_number;
+    int max_riprel_number;
+#endif
+
 
     /* from pure_interp.c */
     struct precomp_instr interp_PC;

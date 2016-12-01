@@ -41,4 +41,10 @@ struct reg_cache
    int need_cop1_check;
 };
 
+struct jump_table
+{
+   unsigned int mi_addr;
+   unsigned int pc_addr;
+};
+
 #endif /* M64P_R4300_ASSEMBLE_STRUCT_H */

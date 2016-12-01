@@ -54,6 +54,17 @@ void poweron_r4300(struct r4300_core* r4300)
     //r4300->current_instruction_table;
     r4300->reset_hard_job = 0;
 
+    r4300->jumps_table = NULL;
+    r4300->jumps_number = 0;
+    r4300->max_jumps_number = 0;
+    r4300->jump_start8 = 0;
+    r4300->jump_start32 = 0;
+#if defined(__x86_64__)
+    r4300->riprel_table = NULL;
+    r4300->riprel_number = 0;
+    r4300->max_riprel_number = 0;
+#endif
+
     /* recomp init */
     r4300->recomp.fast_memory = 1;
     r4300->recomp.delay_slot_compiled = 0;
