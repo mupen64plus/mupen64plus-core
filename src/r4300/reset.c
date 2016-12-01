@@ -31,8 +31,6 @@
 #include "r4300_core.h"
 #include "reset.h"
 
-int reset_hard_job = 0;
-
 void reset_hard(void)
 {
     poweron_device(&g_dev);

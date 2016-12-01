@@ -482,10 +482,9 @@ void gen_interupt(void)
             return;
         }
 
-        if (reset_hard_job)
+        if (g_dev.r4300.reset_hard_job)
         {
             reset_hard();
-            reset_hard_job = 0;
             return;
         }
     }

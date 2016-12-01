@@ -22,9 +22,8 @@
 #ifndef M64P_R4300_RESET_H
 #define M64P_R4300_RESET_H
 
-/* For hard reset, set reset_hard_job and next interrupt will cause hard reset.
+/* For hard reset, set r4300_core->reset_hard_job and next interrupt will cause hard reset.
  * For soft reset, call reset_soft() at any time. */
-extern int reset_hard_job;
 void reset_hard();
 void reset_soft();
 

@@ -52,6 +52,7 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->skip_jump = 0;
     r4300->dyna_interp = 0;
     //r4300->current_instruction_table;
+    r4300->reset_hard_job = 0;
 
     /* recomp init */
     r4300->recomp.fast_memory = 1;

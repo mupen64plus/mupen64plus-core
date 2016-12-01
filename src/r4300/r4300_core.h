@@ -66,6 +66,9 @@ struct r4300_core
     unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
 
+    /* When reset_hard_job is set, next interrupt will cause hard reset */
+    int reset_hard_job;
+
     /* from pure_interp.c */
     struct precomp_instr interp_PC;
 
