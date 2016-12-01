@@ -42,6 +42,8 @@
 #   define offsetof(TYPE,MEMBER) ((unsigned int) &((TYPE*)0)->MEMBER)
 #endif
 
+static const unsigned int precomp_instr_size = sizeof(struct precomp_instr);
+
 void gensll(void)
 {
 #if defined(COUNT_INSTR)
@@ -188,7 +190,6 @@ void genjr(void)
 #ifdef INTERPRET_JR
    gencallinterp((unsigned long long)cached_interpreter_table.JR, 1);
 #else
-   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff = (unsigned int) offsetof(struct precomp_instr, local_addr);
    unsigned int diff_need = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.need_map);
    unsigned int diff_wrap = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.jump_wrapper);
@@ -257,7 +258,6 @@ void genjalr(void)
 #ifdef INTERPRET_JALR
    gencallinterp((unsigned long long)cached_interpreter_table.JALR, 0);
 #else
-   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff = (unsigned int) offsetof(struct precomp_instr, local_addr);
    unsigned int diff_need = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.need_map);
    unsigned int diff_wrap = (unsigned int) offsetof(struct precomp_instr, reg_cache_infos.jump_wrapper);

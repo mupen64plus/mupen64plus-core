@@ -31,6 +31,8 @@
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
 
+static const unsigned int precomp_instr_size = sizeof(struct precomp_instr);
+
 void gensll(void)
 {
 #ifdef INTERPRET_SLL
@@ -156,7 +158,6 @@ void genjr(void)
 #ifdef INTERPRET_JR
    gencallinterp((unsigned int)cached_interpreter_table.JR, 1);
 #else
-   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff =
      (unsigned int)(&g_dev.r4300.recomp.dst->local_addr) - (unsigned int)(g_dev.r4300.recomp.dst);
    unsigned int diff_need =
@@ -222,7 +223,6 @@ void genjalr(void)
 #ifdef INTERPRET_JALR
    gencallinterp((unsigned int)cached_interpreter_table.JALR, 0);
 #else
-   static unsigned int precomp_instr_size = sizeof(struct precomp_instr);
    unsigned int diff =
      (unsigned int)(&g_dev.r4300.recomp.dst->local_addr) - (unsigned int)(g_dev.r4300.recomp.dst);
    unsigned int diff_need =
