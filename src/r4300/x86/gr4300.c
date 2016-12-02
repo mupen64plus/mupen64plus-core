@@ -317,17 +317,17 @@ extern unsigned int op; /* api/debugger.c */
 void gendebug(void)
 {
    free_all_registers();
-   mov_m32_reg32((unsigned int*)&eax, EAX);
-   mov_m32_reg32((unsigned int*)&ebx, EBX);
-   mov_m32_reg32((unsigned int*)&ecx, ECX);
-   mov_m32_reg32((unsigned int*)&edx, EDX);
-   mov_m32_reg32((unsigned int*)&esp, ESP);
-   mov_m32_reg32((unsigned int*)&ebp, EBP);
-   mov_m32_reg32((unsigned int*)&esi, ESI);
-   mov_m32_reg32((unsigned int*)&edi, EDI);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.eax, EAX);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.ebx, EBX);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.ecx, ECX);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.edx, EDX);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.esp, ESP);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.ebp, EBP);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.esi, ESI);
+   mov_m32_reg32((unsigned int*)&g_dev.r4300.edi, EDI);
    
    mov_m32_imm32((unsigned int*)(&g_dev.r4300.pc), (unsigned int)(g_dev.r4300.recomp.dst));
-   mov_m32_imm32((unsigned int*)(&op), (unsigned int)(src));
+   mov_m32_imm32((unsigned int*)(&op), (unsigned int)(g_dev.r4300.recomp.src));
    mov_reg32_imm32(EAX, (unsigned int) CoreCompareCallback);
    call_reg32(EAX);
    

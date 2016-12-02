@@ -38,6 +38,7 @@
 #include "main/device.h"
 #include "main/main.h"
 #include "memory/memory.h"
+#include "r4300/r4300_core.h"
 
 unsigned int op;
 
@@ -127,7 +128,7 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
         case M64P_DBG_CPU_DYNACORE:
             return get_r4300_emumode();
         case M64P_DBG_CPU_NEXT_INTERRUPT:
-            return *r4300_next_interrupt();
+            return *r4300_cp0_next_interrupt();
         default:
             DebugMessage(M64MSG_WARNING, "Bug: invalid m64p_dbg_state input in DebugGetState()");
             return 0;
@@ -187,7 +188,7 @@ EXPORT int CALL DebugMemGetMemInfo(m64p_dbg_mem_info mem_info_type, unsigned int
     switch (mem_info_type)
     {
         case M64P_DBG_MEM_TYPE:
-            return get_memory_type(address);
+            return get_memory_type(&g_dev.mem, address);
         case M64P_DBG_MEM_FLAGS:
             return get_memory_flags(address);
         case M64P_DBG_MEM_HAS_RECOMPILED:

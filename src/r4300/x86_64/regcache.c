@@ -76,14 +76,14 @@ void free_all_registers(void)
 #if defined(PROFILE_R4300)
   if (flushed == 1)
   {
-    long long x86addr = (long long) ((*inst_pointer) + freestart);
+    long long x86addr = (long long) ((*g_dev.r4300.recomp.inst_pointer) + freestart);
     int mipsop = -5;
-    if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || /* -5 = regcache flushing */
-        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
+    if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || /* -5 = regcache flushing */
+        fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
-    x86addr = (long long) ((*inst_pointer) + g_dev.r4300.recomp.code_length);
-    if (fwrite(&src, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
-        fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+    x86addr = (long long) ((*g_dev.r4300.recomp.inst_pointer) + g_dev.r4300.recomp.code_length);
+    if (fwrite(&g_dev.r4300.recomp.src, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
+        fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
   }
 #endif
@@ -580,8 +580,8 @@ static void build_wrapper(struct precomp_instr *instr, unsigned char* pCode, str
 #if defined(PROFILE_R4300)
    long long x86addr = (long long) pCode;
    int mipsop = -4;
-   if (fwrite(&mipsop, 1, 4, pfProfile) != 4 || // write 4-byte MIPS opcode
-       fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+   if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
+       fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
        DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
 

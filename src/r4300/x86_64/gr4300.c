@@ -288,7 +288,7 @@ void gendebug(void)
    
    mov_reg64_imm64(RAX, (unsigned long long) g_dev.r4300.recomp.dst);
    mov_memoffs64_rax((unsigned long long *) &g_dev.r4300.pc);
-   mov_reg32_imm32(EAX, (unsigned int) src);
+   mov_reg32_imm32(EAX, (unsigned int) g_dev.r4300.recomp.src);
    mov_memoffs32_eax((unsigned int *) &op);
    mov_reg64_imm64(RAX, (unsigned long long) CoreCompareCallback);
    call_reg64(RAX);

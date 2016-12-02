@@ -120,11 +120,11 @@ static void decode_recompiled(uint32 addr)
 
     lines_recompiled=0;
 
-    if(blocks[addr>>12] == NULL)
+    if(g_dev.r4300.cached_interp.blocks[addr>>12] == NULL)
         return;
 
-    if(blocks[addr>>12]->block[(addr&0xFFF)/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
-    //      recompile_block((int *) g_dev.sp_mem, blocks[addr>>12], addr);
+    if(g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
+    //      recompile_block((int *) g_dev.sp_mem, g_dev.r4300.cached_interp.blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");
     strcpy(args_recompiled[0],"NOTCOMPILED");
@@ -134,15 +134,15 @@ static void decode_recompiled(uint32 addr)
     return;
       }
 
-    assemb = (blocks[addr>>12]->code) + 
-      (blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
+    assemb = (g_dev.r4300.cached_interp.blocks[addr>>12]->code) + 
+      (g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
 
-    end_addr = blocks[addr>>12]->code;
+    end_addr = g_dev.r4300.cached_interp.blocks[addr>>12]->code;
 
     if( (addr & 0xFFF) >= 0xFFC)
-        end_addr += blocks[addr>>12]->code_length;
+        end_addr += g_dev.r4300.cached_interp.blocks[addr>>12]->code_length;
     else
-        end_addr += blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
+        end_addr += g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
 
     while(assemb < end_addr)
       {
@@ -202,18 +202,18 @@ int get_has_recompiled(uint32 addr)
 {
     unsigned char *assemb, *end_addr;
 
-    if(g_dev.r4300.emumode != EMUMODE_DYNAREC || blocks[addr>>12] == NULL)
+    if(g_dev.r4300.emumode != EMUMODE_DYNAREC || g_dev.r4300.cached_interp.blocks[addr>>12] == NULL)
         return FALSE;
 
-    assemb = (blocks[addr>>12]->code) + 
-      (blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
+    assemb = (g_dev.r4300.cached_interp.blocks[addr>>12]->code) + 
+      (g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
 
-    end_addr = blocks[addr>>12]->code;
+    end_addr = g_dev.r4300.cached_interp.blocks[addr>>12]->code;
 
     if( (addr & 0xFFF) >= 0xFFC)
-        end_addr += blocks[addr>>12]->code_length;
+        end_addr += g_dev.r4300.cached_interp.blocks[addr>>12]->code_length;
     else
-        end_addr += blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
+        end_addr += g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
     if(assemb==end_addr)
       return FALSE;
 
@@ -287,7 +287,7 @@ void write_memory_64_unaligned(uint32 addr, uint64 value)
 uint32 read_memory_32(uint32 addr){
   uint32_t offset;
 
-  switch(get_memory_type(addr))
+  switch(get_memory_type(&g_dev.mem, addr))
     {
     case M64P_MEM_NOMEM:
       if(g_dev.r4300.cp0.tlb.LUT_r[addr>>12])
@@ -374,7 +374,7 @@ uint32 read_memory_32_unaligned(uint32 addr)
 }
 
 void write_memory_32(uint32 addr, uint32 value){
-  switch(get_memory_type(addr))
+  switch(get_memory_type(&g_dev.mem, addr))
     {
     case M64P_MEM_RDRAM:
       g_dev.ri.rdram.dram[(addr & 0xffffff) >> 2] = value;
@@ -424,7 +424,7 @@ void write_memory_8(uint32 addr, uint8 value)
 
 uint32 get_memory_flags(uint32 addr)
 {
-  int type=get_memory_type(addr);
+  int type=get_memory_type(&g_dev.mem, addr);
   const uint32 addrlow = (addr & 0xFFFF);
   uint32 flags = 0;
 

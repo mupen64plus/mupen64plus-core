@@ -65,13 +65,13 @@ void free_all_registers(void)
 #if defined(PROFILE_R4300)
   if (flushed == 1)
   {
-    long x86addr = (long) ((*inst_pointer) + freestart);
+    long x86addr = (long) ((*g_dev.r4300.recomp.inst_pointer) + freestart);
     int mipsop = -5;
-    fwrite(&mipsop, 1, 4, pfProfile); /* -5 = regcache flushing */
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to start of register cache flushing instructions
-    x86addr = (long) ((*inst_pointer) + g_dev.r4300.recomp.code_length);
-    fwrite(&src, 1, 4, pfProfile); // write 4-byte MIPS opcode for current instruction
-    fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+    fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile); /* -5 = regcache flushing */
+    fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile); // write pointer to start of register cache flushing instructions
+    x86addr = (long) ((*g_dev.r4300.recomp.inst_pointer) + g_dev.r4300.recomp.code_length);
+    fwrite(&g_dev.r4300.recomp.src, 1, 4, g_dev.r4300.recomp.pfProfile); // write 4-byte MIPS opcode for current instruction
+    fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
   }
 #endif
 }
@@ -785,8 +785,8 @@ static void build_wrapper(struct precomp_instr *instr, unsigned char* code, stru
 #if defined(PROFILE_R4300)
    long x86addr = (long) code;
    int mipsop = -4;
-   fwrite(&mipsop, 1, 4, pfProfile); // write 4-byte MIPS opcode
-   fwrite(&x86addr, 1, sizeof(char *), pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
+   fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile); // write 4-byte MIPS opcode
+   fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
 #endif
    
    code[j++] = 0x81;
