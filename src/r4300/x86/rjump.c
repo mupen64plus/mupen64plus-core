@@ -33,16 +33,16 @@
 
 void dyna_jump()
 {
-    if (g_dev.r4300.stop == 1)
+    if (*r4300_stop() == 1)
     {
         dyna_stop();
         return;
     }
 
-    if (g_dev.r4300.pc->reg_cache_infos.need_map)
-        *g_dev.r4300.return_address = (unsigned long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
+    if ((*r4300_pc_struct())->reg_cache_infos.need_map)
+        *g_dev.r4300.return_address = (unsigned long) ((*r4300_pc_struct())->reg_cache_infos.jump_wrapper);
     else
-        *g_dev.r4300.return_address = (unsigned long) (g_dev.r4300.cached_interp.actual->code + g_dev.r4300.pc->local_addr);
+        *g_dev.r4300.return_address = (unsigned long) (g_dev.r4300.cached_interp.actual->code + (*r4300_pc_struct())->local_addr);
 }
 
 #if defined(WIN32) && !defined(__GNUC__) /* this warning disable only works if placed outside of the scope of a function */

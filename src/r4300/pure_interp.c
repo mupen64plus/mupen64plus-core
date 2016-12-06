@@ -57,7 +57,7 @@ static void InterpretOpcode(void);
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable()) return; \
-      if (link_register != &g_dev.r4300.regs[0]) \
+      if (link_register != &r4300_regs()[0]) \
       { \
           *link_register = SE32(g_dev.r4300.interp_PC.addr + 8); \
       } \
@@ -79,18 +79,19 @@ static void InterpretOpcode(void);
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
-      if (g_dev.r4300.cp0.next_interrupt <= g_dev.r4300.cp0.regs[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
+      uint32_t* cp0_regs = r4300_cp0_regs(); \
       const int take_jump = (condition); \
       int skip; \
       if (cop1 && check_cop1_unusable()) return; \
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = g_dev.r4300.cp0.next_interrupt - g_dev.r4300.cp0.regs[CP0_COUNT_REG]; \
-         if (skip > 3) g_dev.r4300.cp0.regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+         skip = *r4300_cp0_next_interrupt() - cp0_regs[CP0_COUNT_REG]; \
+         if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
       else name(op); \
@@ -129,16 +130,16 @@ static void InterpretOpcode(void);
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
-#define rrt g_dev.r4300.regs[RT_OF(op)]
-#define rrd g_dev.r4300.regs[RD_OF(op)]
+#define rrt r4300_regs()[RT_OF(op)]
+#define rrd r4300_regs()[RD_OF(op)]
 #define rfs FS_OF(op)
-#define rrs g_dev.r4300.regs[RS_OF(op)]
+#define rrs r4300_regs()[RS_OF(op)]
 #define rsa SA_OF(op)
-#define irt g_dev.r4300.regs[RT_OF(op)]
+#define irt r4300_regs()[RT_OF(op)]
 #define ioffset IMM16S_OF(op)
 #define iimmediate IMM16S_OF(op)
-#define irs g_dev.r4300.regs[RS_OF(op)]
-#define ibase g_dev.r4300.regs[RS_OF(op)]
+#define irs r4300_regs()[RS_OF(op)]
+#define ibase r4300_regs()[RS_OF(op)]
 #define jinst_index JUMP_OF(op)
 #define lfbase RS_OF(op)
 #define lfft FT_OF(op)
@@ -149,17 +150,17 @@ static void InterpretOpcode(void);
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)])
-#define rrd32 *((int32_t*) &g_dev.r4300.regs[RD_OF(op)])
-#define rrs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)])
-#define irs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)])
-#define irt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)])
+#define rrt32 *((int32_t*) &r4300_regs()[RT_OF(op)])
+#define rrd32 *((int32_t*) &r4300_regs()[RD_OF(op)])
+#define rrs32 *((int32_t*) &r4300_regs()[RS_OF(op)])
+#define irs32 *((int32_t*) &r4300_regs()[RS_OF(op)])
+#define irt32 *((int32_t*) &r4300_regs()[RT_OF(op)])
 #else
-#define rrt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)] + 1)
-#define rrd32 *((int32_t*) &g_dev.r4300.regs[RD_OF(op)] + 1)
-#define rrs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)] + 1)
-#define irs32 *((int32_t*) &g_dev.r4300.regs[RS_OF(op)] + 1)
-#define irt32 *((int32_t*) &g_dev.r4300.regs[RT_OF(op)] + 1)
+#define rrt32 *((int32_t*) &r4300_regs()[RT_OF(op)] + 1)
+#define rrd32 *((int32_t*) &r4300_regs()[RD_OF(op)] + 1)
+#define rrs32 *((int32_t*) &r4300_regs()[RS_OF(op)] + 1)
+#define irs32 *((int32_t*) &r4300_regs()[RS_OF(op)] + 1)
+#define irt32 *((int32_t*) &r4300_regs()[RT_OF(op)] + 1)
 #endif
 
 // two functions are defined from the macros above but never used
@@ -173,7 +174,7 @@ static void InterpretOpcode(void);
 
 void InterpretOpcode()
 {
-	uint32_t op = *fast_mem_access(g_dev.r4300.pc->addr);
+	uint32_t op = *fast_mem_access(*r4300_pc());
 	switch ((op >> 26) & 0x3F) {
 	case 0: /* SPECIAL prefix */
 		switch (op & 0x3F) {
@@ -204,7 +205,7 @@ void InterpretOpcode()
 		case 8: JR(op); break;
 		case 9: /* SPECIAL opcode 9: JALR */
 			/* Note: This can omit the check for Rd == 0 because the JALR
-			 * function checks for link_register != &g_dev.r4300.regs[0]. If you're
+			 * function checks for link_register != &r4300_regs()[0]. If you're
 			 * using this as a reference for a JIT, do check Rd == 0 in it. */
 			JALR(op);
 			break;
@@ -342,19 +343,19 @@ void InterpretOpcode()
 	case 1: /* REGIMM prefix */
 		switch ((op >> 16) & 0x1F) {
 		case 0: /* REGIMM opcode 0: BLTZ */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLTZ_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLTZ_IDLE(op);
 			else                                     BLTZ(op);
 			break;
 		case 1: /* REGIMM opcode 1: BGEZ */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGEZ_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGEZ_IDLE(op);
 			else                                     BGEZ(op);
 			break;
 		case 2: /* REGIMM opcode 2: BLTZL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLTZL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLTZL_IDLE(op);
 			else                                     BLTZL(op);
 			break;
 		case 3: /* REGIMM opcode 3: BGEZL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGEZL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGEZL_IDLE(op);
 			else                                     BGEZL(op);
 			break;
 		case 8: /* REGIMM opcode 8: TGEI (Not implemented) */
@@ -366,19 +367,19 @@ void InterpretOpcode()
 			NI(op);
 			break;
 		case 16: /* REGIMM opcode 16: BLTZAL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLTZAL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLTZAL_IDLE(op);
 			else                                     BLTZAL(op);
 			break;
 		case 17: /* REGIMM opcode 17: BGEZAL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGEZAL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGEZAL_IDLE(op);
 			else                                     BGEZAL(op);
 			break;
 		case 18: /* REGIMM opcode 18: BLTZALL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLTZALL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLTZALL_IDLE(op);
 			else                                     BLTZALL(op);
 			break;
 		case 19: /* REGIMM opcode 19: BGEZALL */
-			if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGEZALL_IDLE(op);
+			if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGEZALL_IDLE(op);
 			else                                     BGEZALL(op);
 			break;
 		default: /* REGIMM opcodes 4..7, 13, 15, 20..31:
@@ -388,27 +389,27 @@ void InterpretOpcode()
 		} /* switch ((op >> 16) & 0x1F) for the REGIMM prefix */
 		break;
 	case 2: /* Major opcode 2: J */
-		if (IS_ABSOLUTE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) J_IDLE(op);
+		if (IS_ABSOLUTE_IDLE_LOOP(op, *r4300_pc())) J_IDLE(op);
 		else                                     J(op);
 		break;
 	case 3: /* Major opcode 3: JAL */
-		if (IS_ABSOLUTE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) JAL_IDLE(op);
+		if (IS_ABSOLUTE_IDLE_LOOP(op, *r4300_pc())) JAL_IDLE(op);
 		else                                     JAL(op);
 		break;
 	case 4: /* Major opcode 4: BEQ */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BEQ_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BEQ_IDLE(op);
 		else                                     BEQ(op);
 		break;
 	case 5: /* Major opcode 5: BNE */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BNE_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BNE_IDLE(op);
 		else                                     BNE(op);
 		break;
 	case 6: /* Major opcode 6: BLEZ */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLEZ_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLEZ_IDLE(op);
 		else                                     BLEZ(op);
 		break;
 	case 7: /* Major opcode 7: BGTZ */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGTZ_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGTZ_IDLE(op);
 		else                                     BGTZ(op);
 		break;
 	case 8: /* Major opcode 8: ADDI */
@@ -489,19 +490,19 @@ void InterpretOpcode()
 		case 8: /* Coprocessor 1 opcode 8: Branch on C1 condition... */
 			switch ((op >> 16) & 0x3) {
 			case 0: /* opcode 0: BC1F */
-				if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BC1F_IDLE(op);
+				if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BC1F_IDLE(op);
 				else                                     BC1F(op);
 				break;
 			case 1: /* opcode 1: BC1T */
-				if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BC1T_IDLE(op);
+				if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BC1T_IDLE(op);
 				else                                     BC1T(op);
 				break;
 			case 2: /* opcode 2: BC1FL */
-				if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BC1FL_IDLE(op);
+				if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BC1FL_IDLE(op);
 				else                                     BC1FL(op);
 				break;
 			case 3: /* opcode 3: BC1TL */
-				if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BC1TL_IDLE(op);
+				if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BC1TL_IDLE(op);
 				else                                     BC1TL(op);
 				break;
 			} /* switch ((op >> 16) & 0x3) for branches on C1 condition */
@@ -619,19 +620,19 @@ void InterpretOpcode()
 		} /* switch ((op >> 21) & 0x1F) for the Coprocessor 1 prefix */
 		break;
 	case 20: /* Major opcode 20: BEQL */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BEQL_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BEQL_IDLE(op);
 		else                                     BEQL(op);
 		break;
 	case 21: /* Major opcode 21: BNEL */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BNEL_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BNEL_IDLE(op);
 		else                                     BNEL(op);
 		break;
 	case 22: /* Major opcode 22: BLEZL */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BLEZL_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BLEZL_IDLE(op);
 		else                                     BLEZL(op);
 		break;
 	case 23: /* Major opcode 23: BGTZL */
-		if (IS_RELATIVE_IDLE_LOOP(op, g_dev.r4300.pc->addr)) BGTZL_IDLE(op);
+		if (IS_RELATIVE_IDLE_LOOP(op, *r4300_pc())) BGTZL_IDLE(op);
 		else                                     BGTZL(op);
 		break;
 	case 24: /* Major opcode 24: DADDI */
@@ -722,17 +723,17 @@ void InterpretOpcode()
 
 void pure_interpreter(void)
 {
-   g_dev.r4300.stop = 0;
-   g_dev.r4300.pc = &g_dev.r4300.interp_PC;
-   g_dev.r4300.pc->addr = g_dev.r4300.cp0.last_addr = 0xa4000040;
+   *r4300_stop() = 0;
+   *r4300_pc_struct() = &g_dev.r4300.interp_PC;
+   *r4300_pc() = g_dev.r4300.cp0.last_addr = 0xa4000040;
 
-   while (!g_dev.r4300.stop)
+   while (!*r4300_stop())
    {
 #ifdef COMPARE_CORE
      CoreCompareCallback();
 #endif
 #ifdef DBG
-     if (g_DebuggerActive) update_debugger(g_dev.r4300.pc->addr);
+     if (g_DebuggerActive) update_debugger(*r4300_pc());
 #endif
      InterpretOpcode();
    }

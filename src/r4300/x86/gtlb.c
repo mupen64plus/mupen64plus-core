@@ -31,7 +31,7 @@ void gentlbwi(void)
 {
    gencallinterp((unsigned int)cached_interpreter_table.TLBWI, 0);
    /*dst->local_addr = code_length;
-   mov_m32_imm32((void *)(&g_dev.r4300.pc), (unsigned int)(dst));
+   mov_m32_imm32((void *)(&(*r4300_pc_struct())), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBWI));
    call_reg32(EAX);
    genupdate_system(0);*/
@@ -41,7 +41,7 @@ void gentlbp(void)
 {
    gencallinterp((unsigned int)cached_interpreter_table.TLBP, 0);
    /*dst->local_addr = code_length;
-   mov_m32_imm32((void *)(&g_dev.r4300.pc), (unsigned int)(dst));
+   mov_m32_imm32((void *)(&(*r4300_pc_struct())), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBP));
    call_reg32(EAX);
    genupdate_system(0);*/
@@ -51,7 +51,7 @@ void gentlbr(void)
 {
    gencallinterp((unsigned int)cached_interpreter_table.TLBR, 0);
    /*dst->local_addr = code_length;
-   mov_m32_imm32((void *)(&g_dev.r4300.pc), (unsigned int)(dst));
+   mov_m32_imm32((void *)(&(*r4300_pc_struct())), (unsigned int)(dst));
    mov_reg32_imm32(EAX, (unsigned int)(TLBR));
    call_reg32(EAX);
    genupdate_system(0);*/
@@ -61,7 +61,7 @@ void generet(void)
 {
    gencallinterp((unsigned int)cached_interpreter_table.ERET, 1);
    /*dst->local_addr = code_length;
-   mov_m32_imm32((void *)(&g_dev.r4300.pc), (unsigned int)(dst));
+   mov_m32_imm32((void *)(&(*r4300_pc_struct())), (unsigned int)(dst));
    genupdate_system(0);
    mov_reg32_imm32(EAX, (unsigned int)(ERET));
    call_reg32(EAX);

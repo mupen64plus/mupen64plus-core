@@ -38,7 +38,7 @@
 
 static void genbc1f_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
+   test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
    sete_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
 }
 
@@ -107,7 +107,7 @@ void genbc1f_idle(void)
 
 static void genbc1t_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.fcr31, 0x800000);
+   test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
    setne_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
 }
 

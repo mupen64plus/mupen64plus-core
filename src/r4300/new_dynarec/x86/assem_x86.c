@@ -148,7 +148,7 @@ void *dynamic_linker(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],*r4300_cp0_next_interrupt(),vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -220,7 +220,7 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],*r4300_cp0_next_interrupt(),vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -1080,11 +1080,11 @@ static void emit_loadreg(int r, int hr)
   if((r&63)==0)
     emit_zeroreg(hr);
   else {
-    int addr=((int)g_dev.r4300.regs)+((r&63)<<3)+((r&64)>>4);
-    if((r&63)==HIREG) addr=(int)&g_dev.r4300.hi+((r&64)>>4);
-    if((r&63)==LOREG) addr=(int)&g_dev.r4300.lo+((r&64)>>4);
+    int addr=((int)r4300_regs())+((r&63)<<3)+((r&64)>>4);
+    if((r&63)==HIREG) addr=(int)r4300_mult_hi()+((r&64)>>4);
+    if((r&63)==LOREG) addr=(int)r4300_mult_lo()+((r&64)>>4);
     if(r==CCREG) addr=(int)&cycle_count;
-    if(r==CSREG) addr=(int)&g_dev.r4300.cp0.regs[CP0_STATUS_REG];
+    if(r==CSREG) addr=(int)&r4300_cp0_regs()[CP0_STATUS_REG];
     if(r==FSREG) addr=(int)&g_dev.r4300.cp1.fcr31;
     assem_debug("mov %x+%d,%%%s",addr,r,regname[hr]);
     output_byte(0x8B);
@@ -1094,9 +1094,9 @@ static void emit_loadreg(int r, int hr)
 }
 static void emit_storereg(int r, int hr)
 {
-  int addr=((int)g_dev.r4300.regs)+((r&63)<<3)+((r&64)>>4);
-  if((r&63)==HIREG) addr=(int)&g_dev.r4300.hi+((r&64)>>4);
-  if((r&63)==LOREG) addr=(int)&g_dev.r4300.lo+((r&64)>>4);
+  int addr=((int)r4300_regs())+((r&63)<<3)+((r&64)>>4);
+  if((r&63)==HIREG) addr=(int)r4300_mult_hi()+((r&64)>>4);
+  if((r&63)==LOREG) addr=(int)r4300_mult_lo()+((r&64)>>4);
   if(r==CCREG) addr=(int)&cycle_count;
   if(r==FSREG) addr=(int)&g_dev.r4300.cp1.fcr31;
   assem_debug("mov %%%s,%x+%d",regname[hr],addr,r);
@@ -2779,8 +2779,8 @@ static void emit_extjump2(int addr, int target, int linker)
 #ifdef DEBUG_CYCLE_COUNT
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,HOST_CCREG);
-  emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
-  emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
 #endif
@@ -2831,7 +2831,7 @@ static void do_readstub(int n)
     ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
     ftable=(int)g_dev.mem.readmemd;
-  emit_writeword(rs,(int)&g_dev.mem.address);
+  emit_writeword(rs,(int)memory_address());
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   emit_pusha();
@@ -2865,12 +2865,12 @@ static void do_readstub(int n)
   emit_addimm(cc,CLOCK_DIVIDER*(stubs[n][6]+1),cc);
   emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   emit_callreg(addr);
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
-  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
+  emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
@@ -2916,9 +2916,9 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)g_dev.mem.readmemd;
   #ifdef HOST_IMM_ADDR32
-  emit_writeword_imm(addr,(int)&g_dev.mem.address);
+  emit_writeword_imm(addr,(int)memory_address());
   #else
-  emit_writeword(rs,(int)&g_dev.mem.address);
+  emit_writeword(rs,(int)memory_address());
   #endif
   emit_pusha();
   if((signed int)addr>=(signed int)0xC0000000) {
@@ -2955,7 +2955,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   emit_readword((int)&last_count,temp);
   emit_addimm(cc,CLOCK_DIVIDER*(adj+1),cc);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   if((signed int)addr>=(signed int)0xC0000000) {
     // Pagefault address
     int ds=regmap!=regs[i].regmap;
@@ -2964,8 +2964,8 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   emit_call(((u_int *)ftable)[addr>>16]);
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
-  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
+  emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
@@ -3024,18 +3024,18 @@ static void do_writestub(int n)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)&g_dev.mem.address);
+  emit_writeword(rs,(int)memory_address());
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)&g_dev.mem.wbyte);
+    emit_writebyte(rt,(int)memory_wbyte());
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&g_dev.mem.whword);
+    emit_writehword(rt,(int)memory_whword());
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&g_dev.mem.wword);
+    emit_writeword(rt,(int)memory_wword());
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&g_dev.mem.wdword);
-    emit_writeword(r?rth:rt,(int)&g_dev.mem.wdword+4);
+    emit_writeword(rt,(int)memory_wdword());
+    emit_writeword(r?rth:rt,(int)memory_wdword()+4);
   }
   emit_pusha();
   ds=i_regs!=&regs[i];
@@ -3068,10 +3068,10 @@ static void do_writestub(int n)
   emit_addimm(cc,CLOCK_DIVIDER*(stubs[n][6]+1),cc);
   emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   emit_callreg(addr);
-  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
+  emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
@@ -3100,16 +3100,16 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)&g_dev.mem.address);
+  emit_writeword(rs,(int)memory_address());
   if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)&g_dev.mem.wbyte);
+    emit_writebyte(rt,(int)memory_wbyte());
   if(type==STOREH_STUB)
-    emit_writehword(rt,(int)&g_dev.mem.whword);
+    emit_writehword(rt,(int)memory_whword());
   if(type==STOREW_STUB)
-    emit_writeword(rt,(int)&g_dev.mem.wword);
+    emit_writeword(rt,(int)memory_wword());
   if(type==STORED_STUB) {
-    emit_writeword(rt,(int)&g_dev.mem.wdword);
-    emit_writeword(target?rth:rt,(int)&g_dev.mem.wdword+4);
+    emit_writeword(rt,(int)memory_wdword());
+    emit_writeword(target?rth:rt,(int)memory_wdword()+4);
   }
   emit_pusha();
   if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
@@ -3146,15 +3146,15 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_readword((int)&last_count,temp);
   emit_addimm(cc,CLOCK_DIVIDER*(adj+1),cc);
   emit_add(cc,temp,cc);
-  emit_writeword(cc,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(cc,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
     // Pagefault address
     int ds=regmap!=regs[i].regmap;
     emit_writeword_imm_esp(start+i*4+(((regs[i].was32>>rs1[i])&1)<<1)+ds,32);
   }
   emit_call(((u_int *)ftable)[addr>>16]);
-  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
+  emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
@@ -3572,7 +3572,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
     //restore_regs(0x100f);*/
@@ -3632,14 +3632,14 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_writeword_imm((int)&fake_pc,(int)&g_dev.r4300.pc);
+        emit_writeword_imm((int)&fake_pc,(int)&(*r4300_pc_struct()));
         emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(fake_pc.f.r.nrd));
         if(copr==9) {
           emit_readword((int)&last_count,ECX);
           emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
           emit_add(HOST_CCREG,ECX,HOST_CCREG);
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-          emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+          emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
         }
         emit_call((int)cached_interpreter_table.MFC0);
         emit_readword((int)&readmem_dword,t);
@@ -3653,7 +3653,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     assert(s>=0);
     emit_writeword(s,(int)&readmem_dword);
     emit_pusha();
-    emit_writeword_imm((int)&fake_pc,(int)&g_dev.r4300.pc);
+    emit_writeword_imm((int)&fake_pc,(int)&(*r4300_pc_struct()));
     emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(fake_pc.f.r.nrd));
     if(copr==9||copr==11||copr==12) {
       if((copr==12||copr==9)&&!is_delayslot) {
@@ -3663,7 +3663,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
       emit_add(HOST_CCREG,ECX,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+      emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
     }
     // What a mess.  The status register (12) can enable interrupts,
     // so needs a special case to handle a pending interrupt.
@@ -3677,8 +3677,8 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     //else
     emit_call((int)cached_interpreter_table.MTC0);
     if(copr==9||copr==11||copr==12) {
-      emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
+      emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
+      emit_readword((int)r4300_cp0_next_interrupt(),ECX);
       emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_sub(HOST_CCREG,ECX,HOST_CCREG);
       emit_writeword(ECX,(int)&last_count);
@@ -3707,7 +3707,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
       emit_add(HOST_CCREG,ECX,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+      emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
       emit_call((int)TLBWR_new);
     }
     if((source[i]&0x3f)==0x08) // TLBP

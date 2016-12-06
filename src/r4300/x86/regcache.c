@@ -35,7 +35,7 @@ void init_cache(struct precomp_instr* start)
     g_dev.r4300.regcache_state.last_access[i] = NULL;
     g_dev.r4300.regcache_state.free_since[i] = start;
      }
-     g_dev.r4300.regcache_state.r0 = (unsigned int*)g_dev.r4300.regs;
+     g_dev.r4300.regcache_state.r0 = (unsigned int*)r4300_regs();
 }
 
 void free_all_registers(void)

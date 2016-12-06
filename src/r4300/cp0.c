@@ -45,21 +45,27 @@ void init_cp0(struct cp0* cp0, unsigned int count_per_op)
 
 void poweron_cp0(struct cp0* cp0)
 {
-    memset(cp0->regs, 0, CP0_REGS_COUNT * sizeof(cp0->regs[0]));
-    cp0->regs[CP0_RANDOM_REG] = UINT32_C(31);
-    cp0->regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    cp0->regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    cp0->regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    cp0->regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    cp0->regs[CP0_CAUSE_REG] = UINT32_C(0x5c);
-    cp0->regs[CP0_CONTEXT_REG] = UINT32_C(0x7ffff0);
-    cp0->regs[CP0_EPC_REG] = UINT32_C(0xffffffff);
-    cp0->regs[CP0_BADVADDR_REG] = UINT32_C(0xffffffff);
-    cp0->regs[CP0_ERROREPC_REG] = UINT32_C(0xffffffff);
+    uint32_t* cp0_regs;
+    unsigned int* cp0_next_interrupt;
+
+    cp0_regs = r4300_cp0_regs();
+    cp0_next_interrupt = r4300_cp0_next_interrupt();
+
+    memset(cp0_regs, 0, CP0_REGS_COUNT * sizeof(cp0_regs[0]));
+    cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
+    cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
+    cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
+    cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
+    cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
+    cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5c);
+    cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7ffff0);
+    cp0_regs[CP0_EPC_REG] = UINT32_C(0xffffffff);
+    cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xffffffff);
+    cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xffffffff);
 
     /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
     cp0->interrupt_unsafe_state = 0;
-    cp0->next_interrupt = 0;
+    *cp0_next_interrupt = 0;
     cp0->special_done = 0;
     cp0->last_addr = UINT32_C(0xbfc00000);
 
@@ -69,7 +75,12 @@ void poweron_cp0(struct cp0* cp0)
 
 uint32_t* r4300_cp0_regs(void)
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
     return g_dev.r4300.cp0.regs;
+#else
+/* ARM dynarec uses a different memory layout */
+    return g_dev_r4300_cp0_regs;
+#endif
 }
 
 uint32_t* r4300_cp0_last_addr(void)
@@ -79,15 +90,22 @@ uint32_t* r4300_cp0_last_addr(void)
 
 unsigned int* r4300_cp0_next_interrupt(void)
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
     return &g_dev.r4300.cp0.next_interrupt;
+#else
+/* ARM dynarec uses a different memory layout */
+    return g_dev_r4300_cp0_next_interrupt;
+#endif
 }
 
 
 int check_cop1_unusable(void)
 {
-    if (!(g_dev.r4300.cp0.regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
+    uint32_t* cp0_regs = r4300_cp0_regs();
+
+    if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
-        g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
         exception_general();
         return 1;
     }
@@ -96,12 +114,14 @@ int check_cop1_unusable(void)
 
 void cp0_update_count(void)
 {
+    uint32_t* cp0_regs = r4300_cp0_regs();
+
 #ifdef NEW_DYNAREC
     if (g_dev.r4300.emumode != EMUMODE_DYNAREC)
     {
 #endif
-        g_dev.r4300.cp0.regs[CP0_COUNT_REG] += ((g_dev.r4300.pc->addr - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
-        g_dev.r4300.cp0.last_addr = g_dev.r4300.pc->addr;
+        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc() - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
+        g_dev.r4300.cp0.last_addr = *r4300_pc();
 #ifdef NEW_DYNAREC
     }
 #endif
@@ -111,7 +131,7 @@ void cp0_update_count(void)
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(g_dev.r4300.pc->addr);
+   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(*r4300_pc());
 #endif
 */
 }

@@ -414,11 +414,11 @@ void *get_addr(u_int vaddr)
   if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,page);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,page);
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
       u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
       ht_bin[3]=ht_bin[1];
       ht_bin[2]=ht_bin[0];
@@ -431,7 +431,7 @@ void *get_addr(u_int vaddr)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -463,7 +463,7 @@ void *get_addr(u_int vaddr)
     }
     head=head->next;
   }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -472,7 +472,7 @@ void *get_addr(u_int vaddr)
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -481,7 +481,7 @@ void *get_addr_ht(u_int vaddr)
 
 void *get_addr_32(u_int vaddr,u_int flags)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
   u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
   if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
@@ -495,7 +495,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_in[page];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
       if(head->reg32==0) {
         u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
         if(ht_bin[0]==-1) {
@@ -517,7 +517,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=jump_dirty[vpage];
   while(head!=NULL) {
     if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
       // Don't restore blocks which are about to expire from the cache
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
@@ -552,7 +552,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
     }
     head=head->next;
   }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -898,8 +898,8 @@ static void alloc_all(struct regstat *cur,int i)
 static void div64(int64_t dividend,int64_t divisor)
 {
   if(divisor) {
-    g_dev.r4300.lo=dividend/divisor;
-    g_dev.r4300.hi=dividend%divisor;
+    *r4300_mult_lo()=dividend/divisor;
+    *r4300_mult_hi()=dividend%divisor;
     //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
     //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
   }
@@ -907,8 +907,8 @@ static void div64(int64_t dividend,int64_t divisor)
 static void divu64(uint64_t dividend,uint64_t divisor)
 {
   if(divisor) {
-    g_dev.r4300.lo=dividend/divisor;
-    g_dev.r4300.hi=dividend%divisor;
+    *r4300_mult_lo()=dividend/divisor;
+    *r4300_mult_hi()=dividend%divisor;
     //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
     //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
   }
@@ -949,13 +949,13 @@ static void mult64(int64_t m1,int64_t m2)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   g_dev.r4300.lo = result1 | (result2 << 32);
-   g_dev.r4300.hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   *r4300_mult_lo() = result1 | (result2 << 32);
+   *r4300_mult_hi() = (result3 & 0xFFFFFFFF) | (result4 << 32);
    if (sign)
      {
-    g_dev.r4300.hi = ~g_dev.r4300.hi;
-    if (!g_dev.r4300.lo) g_dev.r4300.hi++;
-    else g_dev.r4300.lo = ~g_dev.r4300.lo + 1;
+    *r4300_mult_hi() = ~*r4300_mult_hi();
+    if (!*r4300_mult_lo()) (*r4300_mult_hi())++;
+    else *r4300_mult_lo() = ~*r4300_mult_lo() + 1;
      }
 }
 
@@ -981,8 +981,8 @@ static void multu64(uint64_t m1,uint64_t m2)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   g_dev.r4300.lo = result1 | (result2 << 32);
-   g_dev.r4300.hi = (result3 & 0xFFFFFFFF) | (result4 << 32);
+   *r4300_mult_lo() = result1 | (result2 << 32);
+   *r4300_mult_hi() = (result3 & 0xFFFFFFFF) | (result4 << 32);
    
   //DebugMessage(M64MSG_VERBOSE, "TRACE: dmultu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
   //                                      ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
@@ -2143,16 +2143,16 @@ static void enabletrace()
 
 static void memdebug(int i)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,rchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,rchecksum());
   //rlist();
   //if(tracedebug) {
-  //if(g_dev.r4300.cp0.regs[CP0_COUNT_REG]>=-2084597794) {
-  if((signed int)g_dev.r4300.cp0.regs[CP0_COUNT_REG]>=-2084597794&&(signed int)g_dev.r4300.cp0.regs[CP0_COUNT_REG]<0) {
+  //if(r4300_cp0_regs()[CP0_COUNT_REG]>=-2084597794) {
+  if((signed int)r4300_cp0_regs()[CP0_COUNT_REG]>=-2084597794&&(signed int)r4300_cp0_regs()[CP0_COUNT_REG]<0) {
   //if(0) {
-    DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),g_dev.r4300.cp0.regs[CP0_STATUS_REG]);
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
+    DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),r4300_cp0_regs()[CP0_STATUS_REG]);
+    //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
     rlist();
     #if NEW_DYNAREC == NEW_DYNAREC_X86
     DebugMessage(M64MSG_VERBOSE, "TRACE: %x",(&i)[-1]);
@@ -3093,7 +3093,7 @@ static void load_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
         #endif
         #if NEW_DYNAREC == NEW_DYNAREC_ARM
         if(get_reg(i_regs->regmap,CCREG)<0)
@@ -3102,7 +3102,7 @@ static void load_assemble(int i,struct regstat *i_regs)
           emit_mov(HOST_CCREG,0);
         emit_add(0,ECX,0);
         emit_addimm(0,2*ccadj[i],0);
-        emit_writeword(0,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(0,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
         #endif
     emit_call((int)memdebug);
     //emit_popa();
@@ -3285,7 +3285,7 @@ static void store_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
         #endif
         #if NEW_DYNAREC == NEW_DYNAREC_ARM
         if(get_reg(i_regs->regmap,CCREG)<0)
@@ -3294,7 +3294,7 @@ static void store_assemble(int i,struct regstat *i_regs)
           emit_mov(HOST_CCREG,0);
         emit_add(0,ECX,0);
         emit_addimm(0,2*ccadj[i],0);
-        emit_writeword(0,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(0,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
         #endif
     emit_call((int)memdebug);
     #if NEW_DYNAREC == NEW_DYNAREC_X86
@@ -3541,7 +3541,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
     //restore_regs(0x100f);
@@ -3733,7 +3733,7 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
           emit_loadreg(CCREG,HOST_CCREG);
         emit_add(HOST_CCREG,ECX,HOST_CCREG);
         emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
     emit_call((int)memdebug);
     emit_popa();
   }*/
@@ -5027,9 +5027,9 @@ static void do_ccstub(int n)
   /* This works but uses a lot of memory...
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
-  emit_writeword(EAX,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(EAX,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   emit_call((int)gen_interupt);
-  emit_readword((int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG],HOST_CCREG);
+  emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&g_dev.r4300.cp0.next_interrupt,EAX);
   emit_readword((int)&pending_exception,EBX);
   emit_writeword(EAX,(int)&last_count);
@@ -5275,7 +5275,7 @@ static void rjump_assemble(int i,struct regstat *i_regs)
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,HOST_CCREG);
   emit_readword((int)&g_dev.r4300.cp0.next_interrupt,ECX);
-  emit_writeword(HOST_CCREG,(int)&g_dev.r4300.cp0.regs[CP0_COUNT_REG]);
+  emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&last_count);
 #endif
@@ -7780,18 +7780,18 @@ int new_recompile_block(int addr)
     for(n=0;n<=2048;n++) ll_clear(jump_dirty+n);
   }
 */
-  //if(g_dev.r4300.cp0.regs[CP0_COUNT_REG]==365117028) tracedebug=1;
+  //if(r4300_cp0_regs()[CP0_COUNT_REG]==365117028) tracedebug=1;
   assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
 #if defined (COUNT_NOTCOMPILEDS )
   notcompiledCount++;
   DebugMessage(M64MSG_VERBOSE, "notcompiledCount=%i", notcompiledCount );
 #endif
   //DebugMessage(M64MSG_VERBOSE, "NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,addr);
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,addr);
   //if(debug) 
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",g_dev.r4300.cp0.regs[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
-  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(g_dev.r4300.cp0.regs[CP0_STATUS_REG] & 0x04000000)>>26,(g_dev.r4300.cp0.regs[CP0_STATUS_REG] & 0x20000000)>>29);
-  /*if(g_dev.r4300.cp0.regs[CP0_COUNT_REG]>=312978186) {
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
+  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(r4300_cp0_regs()[CP0_STATUS_REG] & 0x04000000)>>26,(r4300_cp0_regs()[CP0_STATUS_REG] & 0x20000000)>>29);
+  /*if(r4300_cp0_regs()[CP0_COUNT_REG]>=312978186) {
     rlist();
   }*/
   //rlist();
@@ -11076,10 +11076,10 @@ void TLBWI_new(void)
 {
   unsigned int i;
   /* Remove old entries */
-  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_even;
-  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_even;
-  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_odd;
+  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_even;
+  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_even;
+  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -11097,12 +11097,12 @@ void TLBWI_new(void)
     }
   }
   cached_interpreter_table.TLBWI();
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",g_dev.r4300.cp0.regs[CP0_INDEX_REG]);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_even,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_even,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].phys_even,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].v_even,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].d_even);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_odd,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_odd,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].phys_odd,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].v_odd,g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].d_odd);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",r4300_cp0_regs()[CP0_INDEX_REG]);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].phys_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].v_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].d_even);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].phys_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].v_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].d_odd);
   /* Combine g_dev.r4300.cp0.tlb.LUT_r, g_dev.r4300.cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
+  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11123,7 +11123,7 @@ void TLBWI_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
-  for (i=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
+  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11149,12 +11149,12 @@ void TLBWI_new(void)
 void TLBWR_new(void)
 {
   unsigned int i;
-  g_dev.r4300.cp0.regs[CP0_RANDOM_REG] = (g_dev.r4300.cp0.regs[CP0_COUNT_REG]/2 % (32 - g_dev.r4300.cp0.regs[CP0_WIRED_REG])) + g_dev.r4300.cp0.regs[CP0_WIRED_REG];
+  r4300_cp0_regs()[CP0_RANDOM_REG] = (r4300_cp0_regs()[CP0_COUNT_REG]/2 % (32 - r4300_cp0_regs()[CP0_WIRED_REG])) + r4300_cp0_regs()[CP0_WIRED_REG];
   /* Remove old entries */
-  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].start_even;
-  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].end_even;
-  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].end_odd;
+  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].start_even;
+  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].end_even;
+  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -11174,7 +11174,7 @@ void TLBWR_new(void)
   cached_interpreter_table.TLBWR();
   /* Combine g_dev.r4300.cp0.tlb.LUT_r, g_dev.r4300.cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
+  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11195,7 +11195,7 @@ void TLBWR_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
-  for (i=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[g_dev.r4300.cp0.regs[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
+  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs()[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)

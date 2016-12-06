@@ -30,11 +30,11 @@
 void poweron_cp1(struct cp1* cp1)
 {
     memset(cp1->regs, 0, 32 * sizeof(cp1->regs[0]));
-    cp1->fcr0 = UINT32_C(0x511);
-    cp1->fcr31 = 0;
+    *r4300_cp1_fcr0() = UINT32_C(0x511);
+    *r4300_cp1_fcr31() = 0;
 
     set_fpr_pointers(UINT32_C(0x34000000)); /* c0_status value at poweron */
-    update_x86_rounding_mode(cp1->fcr31);
+    update_x86_rounding_mode(*r4300_cp1_fcr31());
 }
 
 
@@ -45,22 +45,42 @@ int64_t* r4300_cp1_regs(void)
 
 float** r4300_cp1_regs_simple(void)
 {
-    return g_dev.r4300.cp1.regs_simple;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return g_dev.r4300.cp1.regs_simple_;
+#else
+    return &g_dev_r4300_cp1_regs_simple;
+#endif
 }
 
 double** r4300_cp1_regs_double(void)
 {
-    return g_dev.r4300.cp1.regs_double;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return g_dev.r4300.cp1.regs_double_;
+#else
+    return g_dev_r4300_cp1_regs_double;
+#endif
 }
 
 uint32_t* r4300_cp1_fcr0(void)
 {
-    return &g_dev.r4300.cp1.fcr0;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.cp1.fcr0_;
+#else
+    return &g_dev_r4300_cp1_fcr0;
+#endif
 }
 
 uint32_t* r4300_cp1_fcr31(void)
 {
-    return &g_dev.r4300.cp1.fcr31;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.cp1.fcr31_;
+#else
+    return &g_dev_r4300_cp1_fcr31;
+#endif
 }
 
 
@@ -135,16 +155,16 @@ void set_fpr_pointers(uint32_t newStatus)
     {
         for (i = 0; i < 32; i++)
         {
-            g_dev.r4300.cp1.regs_double[i] = (double*) &g_dev.r4300.cp1.regs[i];
-            g_dev.r4300.cp1.regs_simple[i] = ((float*) &g_dev.r4300.cp1.regs[i]) + isBigEndian;
+            (r4300_cp1_regs_double())[i] = (double*) &g_dev.r4300.cp1.regs[i];
+            (r4300_cp1_regs_simple())[i] = ((float*) &g_dev.r4300.cp1.regs[i]) + isBigEndian;
         }
     }
     else
     {
         for (i = 0; i < 32; i++)
         {
-            g_dev.r4300.cp1.regs_double[i] = (double*) &g_dev.r4300.cp1.regs[i>>1];
-            g_dev.r4300.cp1.regs_simple[i] = ((float*) &g_dev.r4300.cp1.regs[i>>1]) + ((i & 1) ^ isBigEndian);
+            (r4300_cp1_regs_double())[i] = (double*) &g_dev.r4300.cp1.regs[i>>1];
+            (r4300_cp1_regs_simple())[i] = ((float*) &g_dev.r4300.cp1.regs[i>>1]) + ((i & 1) ^ isBigEndian);
         }
     }
 }

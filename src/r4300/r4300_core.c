@@ -41,12 +41,12 @@ void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int cou
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
-    memset(r4300->regs, 0, 32*sizeof(r4300->regs[0]));
-    r4300->hi = 0;
-    r4300->lo = 0;
+    memset(r4300_regs(), 0, 32*sizeof(int64_t));
+    *r4300_mult_hi() = 0;
+    *r4300_mult_lo() = 0;
     r4300->llbit = 0;
 
-    r4300->pc = NULL;
+    *r4300_pc_struct() = NULL;
     r4300->delay_slot = 0;
     r4300->local_rs = 0;
     r4300->skip_jump = 0;
@@ -95,17 +95,32 @@ void poweron_r4300(struct r4300_core* r4300)
 
 int64_t* r4300_regs(void)
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     return g_dev.r4300.regs;
+#else
+    return g_dev_r4300_regs;
+#endif
 }
 
 int64_t* r4300_mult_hi(void)
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.hi;
+#else
+    return &g_dev_r4300_hi;
+#endif
 }
 
 int64_t* r4300_mult_lo(void)
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.lo;
+#else
+    return &g_dev_r4300_lo;
+#endif
 }
 
 unsigned int* r4300_llbit(void)
@@ -118,9 +133,29 @@ uint32_t* r4300_pc(void)
 #ifdef NEW_DYNAREC
     return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         ? (uint32_t*)&pcaddr
-        : &g_dev.r4300.pc->addr;
+        : &(*r4300_pc_struct())->addr;
 #else
-    return &g_dev.r4300.pc->addr;
+    return &(*r4300_pc_struct())->addr;
+#endif
+}
+
+struct precomp_instr** r4300_pc_struct(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.pc;
+#else
+    return &g_dev_r4300_pc;
+#endif
+}
+
+int* r4300_stop(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.stop;
+#else
+    return &g_dev_r4300_stop;
 #endif
 }
 

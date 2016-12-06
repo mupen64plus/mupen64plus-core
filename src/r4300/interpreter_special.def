@@ -60,12 +60,14 @@ DECLARE_INSTRUCTION(SRAV)
    ADD_TO_PC(1);
 }
 
-DECLARE_JUMP(JR,   irs32, 1, &g_dev.r4300.regs[0], 0, 0)
+DECLARE_JUMP(JR,   irs32, 1, &r4300_regs()[0], 0, 0)
 DECLARE_JUMP(JALR, irs32, 1, &rrd,    0, 0)
 
 DECLARE_INSTRUCTION(SYSCALL)
 {
-   g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_SYS;
+   uint32_t* cp0_regs = r4300_cp0_regs();
+
+   cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_SYS;
    exception_general();
 }
 
@@ -76,25 +78,25 @@ DECLARE_INSTRUCTION(SYNC)
 
 DECLARE_INSTRUCTION(MFHI)
 {
-   rrd = g_dev.r4300.hi;
+   rrd = *r4300_mult_hi();
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTHI)
 {
-   g_dev.r4300.hi = rrs;
+   *r4300_mult_hi() = rrs;
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MFLO)
 {
-   rrd = g_dev.r4300.lo;
+   rrd = *r4300_mult_lo();
    ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTLO)
 {
-   g_dev.r4300.lo = rrs;
+   *r4300_mult_lo() = rrs;
    ADD_TO_PC(1);
 }
 
@@ -120,8 +122,8 @@ DECLARE_INSTRUCTION(MULT)
 {
    int64_t temp;
    temp = rrs * rrt;
-   g_dev.r4300.hi = temp >> 32;
-   g_dev.r4300.lo = SE32(temp);
+   *r4300_mult_hi() = temp >> 32;
+   *r4300_mult_lo() = SE32(temp);
    ADD_TO_PC(1);
 }
 
@@ -129,8 +131,8 @@ DECLARE_INSTRUCTION(MULTU)
 {
    uint64_t temp;
    temp = (uint32_t) rrs * (uint64_t) ((uint32_t) rrt);
-   g_dev.r4300.hi = (int64_t) temp >> 32;
-   g_dev.r4300.lo = SE32(temp);
+   *r4300_mult_hi() = (int64_t) temp >> 32;
+   *r4300_mult_lo() = SE32(temp);
    ADD_TO_PC(1);
 }
 
@@ -138,8 +140,8 @@ DECLARE_INSTRUCTION(DIV)
 {
    if (rrt32)
    {
-     g_dev.r4300.lo = SE32(rrs32 / rrt32);
-     g_dev.r4300.hi = SE32(rrs32 % rrt32);
+     *r4300_mult_lo() = SE32(rrs32 / rrt32);
+     *r4300_mult_hi() = SE32(rrs32 % rrt32);
    }
    else DebugMessage(M64MSG_ERROR, "DIV: divide by 0");
    ADD_TO_PC(1);
@@ -149,8 +151,8 @@ DECLARE_INSTRUCTION(DIVU)
 {
    if (rrt32)
    {
-     g_dev.r4300.lo = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
-     g_dev.r4300.hi = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
+     *r4300_mult_lo() = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
+     *r4300_mult_hi() = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
    }
    else DebugMessage(M64MSG_ERROR, "DIVU: divide by 0");
    ADD_TO_PC(1);
@@ -191,13 +193,13 @@ DECLARE_INSTRUCTION(DMULT)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   g_dev.r4300.lo = result1 | (result2 << 32);
-   g_dev.r4300.hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+   *r4300_mult_lo() = result1 | (result2 << 32);
+   *r4300_mult_hi() = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    if (sign)
      {
-    g_dev.r4300.hi = ~g_dev.r4300.hi;
-    if (!g_dev.r4300.lo) g_dev.r4300.hi++;
-    else g_dev.r4300.lo = ~g_dev.r4300.lo + 1;
+    *r4300_mult_hi() = ~*r4300_mult_hi();
+    if (!*r4300_mult_lo()) (*r4300_mult_hi())++;
+    else *r4300_mult_lo() = ~*r4300_mult_lo() + 1;
      }
    ADD_TO_PC(1);
 }
@@ -223,8 +225,8 @@ DECLARE_INSTRUCTION(DMULTU)
    result3 = (result2 >> 32) + temp4;
    result4 = (result3 >> 32);
    
-   g_dev.r4300.lo = result1 | (result2 << 32);
-   g_dev.r4300.hi = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+   *r4300_mult_lo() = result1 | (result2 << 32);
+   *r4300_mult_hi() = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
    
    ADD_TO_PC(1);
 }
@@ -233,8 +235,8 @@ DECLARE_INSTRUCTION(DDIV)
 {
    if (rrt)
    {
-     g_dev.r4300.lo = rrs / rrt;
-     g_dev.r4300.hi = rrs % rrt;
+     *r4300_mult_lo() = rrs / rrt;
+     *r4300_mult_hi() = rrs % rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIV: divide by 0");
    ADD_TO_PC(1);
@@ -244,8 +246,8 @@ DECLARE_INSTRUCTION(DDIVU)
 {
    if (rrt)
    {
-     g_dev.r4300.lo = (uint64_t) rrs / (uint64_t) rrt;
-     g_dev.r4300.hi = (uint64_t) rrs % (uint64_t) rrt;
+     *r4300_mult_lo() = (uint64_t) rrs / (uint64_t) rrt;
+     *r4300_mult_hi() = (uint64_t) rrs % (uint64_t) rrt;
    }
    else DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0");
    ADD_TO_PC(1);
@@ -343,7 +345,7 @@ DECLARE_INSTRUCTION(TEQ)
    if (rrs == rrt)
    {
      DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
-     g_dev.r4300.stop=1;
+     *r4300_stop()=1;
    }
    ADD_TO_PC(1);
 }

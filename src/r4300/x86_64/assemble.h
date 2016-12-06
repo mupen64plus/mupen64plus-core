@@ -113,11 +113,11 @@ static osal_inline void put64(unsigned long long qword)
 static osal_inline int rel_r15_offset(void *dest, const char *op_name)
 {
     /* calculate the destination pointer's offset from the base of the r4300 registers */
-    long long rel_offset = (long long) ((unsigned char *) dest - (unsigned char *) g_dev.r4300.regs);
+    long long rel_offset = (long long) ((unsigned char *) dest - (unsigned char *) r4300_regs());
 
     if (llabs(rel_offset) > 0x7fffffff)
     {
-        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, g_dev.r4300.regs, op_name);
+        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, r4300_regs(), op_name);
         OSAL_BREAKPOINT_INTERRUPT;
     }
 

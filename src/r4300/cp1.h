@@ -27,12 +27,15 @@
 struct cp1
 {
     int64_t regs[32];
-    uint32_t fcr0;
-    uint32_t fcr31;
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    uint32_t fcr0_;
+    uint32_t fcr31_;
 
-    float *regs_simple[32];
-    double *regs_double[32];
+    float* regs_simple_[32];
+    double* regs_double_[32];
+#endif
 
     /* This is the x86 version of the rounding mode contained in FCR31.
      * It should not really be here. Its size should also really be uint16_t,

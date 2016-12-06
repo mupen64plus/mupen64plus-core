@@ -32,33 +32,34 @@
 
 void TLB_refill_exception(uint32_t address, int w)
 {
+   uint32_t* cp0_regs = r4300_cp0_regs();
    int usual_handler = 0, i;
 
    if (g_dev.r4300.emumode != EMUMODE_DYNAREC && w != 2) cp0_update_count();
-   if (w == 1) g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBS;
-   else g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBL;
-   g_dev.r4300.cp0.regs[CP0_BADVADDR_REG] = address;
-   g_dev.r4300.cp0.regs[CP0_CONTEXT_REG] = (g_dev.r4300.cp0.regs[CP0_CONTEXT_REG] & UINT32_C(0xFF80000F)) | ((address >> 9) & UINT32_C(0x007FFFF0));
-   g_dev.r4300.cp0.regs[CP0_ENTRYHI_REG] = address & UINT32_C(0xFFFFE000);
-   if (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & CP0_STATUS_EXL)
+   if (w == 1) cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBS;
+   else cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TLBL;
+   cp0_regs[CP0_BADVADDR_REG] = address;
+   cp0_regs[CP0_CONTEXT_REG] = (cp0_regs[CP0_CONTEXT_REG] & UINT32_C(0xFF80000F)) | ((address >> 9) & UINT32_C(0x007FFFF0));
+   cp0_regs[CP0_ENTRYHI_REG] = address & UINT32_C(0xFFFFE000);
+   if (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_EXL)
      {
     generic_jump_to(UINT32_C(0x80000180));
-    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3) g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    else g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3) cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    else cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    else
      {
     if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER) 
       {
          if (w!=2)
-           g_dev.r4300.cp0.regs[CP0_EPC_REG] = g_dev.r4300.pc->addr;
+           cp0_regs[CP0_EPC_REG] = *r4300_pc();
          else
-           g_dev.r4300.cp0.regs[CP0_EPC_REG] = address;
+           cp0_regs[CP0_EPC_REG] = address;
       }
-    else g_dev.r4300.cp0.regs[CP0_EPC_REG] = g_dev.r4300.pc->addr;
+    else cp0_regs[CP0_EPC_REG] = *r4300_pc();
          
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
-    g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+    cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
     
     if (address >= UINT32_C(0x80000000) && address < UINT32_C(0xc0000000))
       usual_handler = 1;
@@ -82,16 +83,16 @@ void TLB_refill_exception(uint32_t address, int w)
      }
    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
      {
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
+    cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    cp0_regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
-   if(w != 2) g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
+   if(w != 2) cp0_regs[CP0_EPC_REG]-=4;
    
-   g_dev.r4300.cp0.last_addr = g_dev.r4300.pc->addr;
+   g_dev.r4300.cp0.last_addr = *r4300_pc();
    
    if (g_dev.r4300.emumode == EMUMODE_DYNAREC) 
      {
@@ -104,30 +105,32 @@ void TLB_refill_exception(uint32_t address, int w)
     g_dev.r4300.dyna_interp = 0;
     if (g_dev.r4300.delay_slot)
       {
-         g_dev.r4300.skip_jump = g_dev.r4300.pc->addr;
-         g_dev.r4300.cp0.next_interrupt = 0;
+         g_dev.r4300.skip_jump = *r4300_pc();
+         *r4300_cp0_next_interrupt() = 0;
       }
      }
 }
 
 void exception_general(void)
 {
+   uint32_t* cp0_regs = r4300_cp0_regs();
+
    cp0_update_count();
-   g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+   cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
    
-   g_dev.r4300.cp0.regs[CP0_EPC_REG] = g_dev.r4300.pc->addr;
+   cp0_regs[CP0_EPC_REG] = *r4300_pc();
    
    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
      {
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-    g_dev.r4300.cp0.regs[CP0_EPC_REG]-=4;
+    cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+    cp0_regs[CP0_EPC_REG]-=4;
      }
    else
      {
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+    cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
      }
    generic_jump_to(UINT32_C(0x80000180));
-   g_dev.r4300.cp0.last_addr = g_dev.r4300.pc->addr;
+   g_dev.r4300.cp0.last_addr = *r4300_pc();
    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
      {
     dyna_jump();
@@ -138,8 +141,8 @@ void exception_general(void)
     g_dev.r4300.dyna_interp = 0;
     if (g_dev.r4300.delay_slot)
       {
-         g_dev.r4300.skip_jump = g_dev.r4300.pc->addr;
-         g_dev.r4300.cp0.next_interrupt = 0;
+         g_dev.r4300.skip_jump = *r4300_pc();
+         *r4300_cp0_next_interrupt() = 0;
       }
      }
 }

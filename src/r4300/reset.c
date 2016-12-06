@@ -37,7 +37,7 @@ void reset_hard(void)
 
     r4300_reset_soft();
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
-    g_dev.r4300.cp0.next_interrupt = 624999;
+    *r4300_cp0_next_interrupt() = 624999;
     init_interupt();
     if(g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {

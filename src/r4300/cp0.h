@@ -27,6 +27,8 @@
 #include "interupt.h"
 #include "tlb.h"
 
+#include "new_dynarec/new_dynarec.h"
+
 enum
 {
     CP0_STATUS_IE   = 0x00000001,
@@ -167,14 +169,20 @@ struct interrupt_queue
 
 struct cp0
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     uint32_t regs[CP0_REGS_COUNT];
+#endif
 
     /* set to avoid savestates/reset if state may be inconsistent
      * (e.g. in the middle of an instruction) */
     int interrupt_unsafe_state;
 
     struct interrupt_queue q;
-    uint32_t next_interrupt;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    unsigned int next_interrupt;
+#endif
 
     int special_done;
 

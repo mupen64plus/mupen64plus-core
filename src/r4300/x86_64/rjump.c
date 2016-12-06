@@ -34,16 +34,16 @@
 
 void dyna_jump(void)
 {
-    if (g_dev.r4300.stop == 1)
+    if (*r4300_stop() == 1)
     {
         dyna_stop();
         return;
     }
 
-    if (g_dev.r4300.pc->reg_cache_infos.need_map)
-        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.pc->reg_cache_infos.jump_wrapper);
+    if ((*r4300_pc_struct())->reg_cache_infos.need_map)
+        *g_dev.r4300.return_address = (unsigned long long) ((*r4300_pc_struct())->reg_cache_infos.jump_wrapper);
     else
-        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.cached_interp.actual->code + g_dev.r4300.pc->local_addr);
+        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.cached_interp.actual->code + (*r4300_pc_struct())->local_addr);
 }
 
 #if defined(__GNUC__) && defined(__x86_64__)
@@ -86,7 +86,7 @@ void dyna_start(void *code)
      " pop  %%r12              \n"
      " pop  %%rbx              \n"
      : [save_rsp]"=m"(g_dev.r4300.save_rsp), [save_rip]"=m"(g_dev.r4300.save_rip), [return_address]"=m"(g_dev.r4300.return_address)
-     : "b" (code), [r4300_regs]"m"(*g_dev.r4300.regs)
+     : "b" (code), [r4300_regs]"m"(*r4300_regs())
      : "%rax", "memory"
      );
 

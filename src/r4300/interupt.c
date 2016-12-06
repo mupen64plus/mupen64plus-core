@@ -97,16 +97,17 @@ static void clear_queue(void)
 
 static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 {
-    if(evt1 - g_dev.r4300.cp0.regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    if(evt1 - cp0_regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
     {
-        if(evt2 - g_dev.r4300.cp0.regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
+        if(evt2 - cp0_regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
         {
-            if((evt1 - g_dev.r4300.cp0.regs[CP0_COUNT_REG]) < (evt2 - g_dev.r4300.cp0.regs[CP0_COUNT_REG])) return 1;
+            if((evt1 - cp0_regs[CP0_COUNT_REG]) < (evt2 - cp0_regs[CP0_COUNT_REG])) return 1;
             else return 0;
         }
         else
         {
-            if((g_dev.r4300.cp0.regs[CP0_COUNT_REG] - evt2) < UINT32_C(0x10000000))
+            if((cp0_regs[CP0_COUNT_REG] - evt2) < UINT32_C(0x10000000))
             {
                 switch(type2)
                 {
@@ -126,7 +127,8 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
 
 void add_interupt_event(int type, unsigned int delay)
 {
-    add_interupt_event_count(type, g_dev.r4300.cp0.regs[CP0_COUNT_REG] + delay);
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    add_interupt_event_count(type, cp0_regs[CP0_COUNT_REG] + delay);
 }
 
 void add_interupt_event_count(int type, unsigned int count)
@@ -134,10 +136,12 @@ void add_interupt_event_count(int type, unsigned int count)
     struct node* event;
     struct node* e;
     int special;
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     special = (type == SPECIAL_INT);
    
-    if(g_dev.r4300.cp0.regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) g_dev.r4300.cp0.special_done = 0;
+    if(cp0_regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) g_dev.r4300.cp0.special_done = 0;
    
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
@@ -162,13 +166,13 @@ void add_interupt_event_count(int type, unsigned int count)
     {
         g_dev.r4300.cp0.q.first = event;
         event->next = NULL;
-        g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.q.first->data.count;
+        *cp0_next_interrupt = g_dev.r4300.cp0.q.first->data.count;
     }
     else if (before_event(count, g_dev.r4300.cp0.q.first->data.count, g_dev.r4300.cp0.q.first->data.type) && !special)
     {
         event->next = g_dev.r4300.cp0.q.first;
         g_dev.r4300.cp0.q.first = event;
-        g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.q.first->data.count;
+        *cp0_next_interrupt = g_dev.r4300.cp0.q.first->data.count;
     }
     else
     {
@@ -196,14 +200,16 @@ void add_interupt_event_count(int type, unsigned int count)
 static void remove_interupt_event(void)
 {
     struct node* e;
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     e = g_dev.r4300.cp0.q.first;
     g_dev.r4300.cp0.q.first = e->next;
     free_node(&g_dev.r4300.cp0.q.pool, e);
 
-    g_dev.r4300.cp0.next_interrupt = (g_dev.r4300.cp0.q.first != NULL
-         && (g_dev.r4300.cp0.q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
-         || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000)))
+    *cp0_next_interrupt = (g_dev.r4300.cp0.q.first != NULL
+         && (g_dev.r4300.cp0.q.first->data.count > cp0_regs[CP0_COUNT_REG]
+         || (cp0_regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000)))
         ? g_dev.r4300.cp0.q.first->data.count
         : 0;
 }
@@ -261,15 +267,16 @@ void remove_event(int type)
 void translate_event_queue(unsigned int base)
 {
     struct node* e;
+    uint32_t* cp0_regs = r4300_cp0_regs();
 
     remove_event(COMPARE_INT);
     remove_event(SPECIAL_INT);
 
     for(e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
     {
-        e->data.count = (e->data.count - g_dev.r4300.cp0.regs[CP0_COUNT_REG]) + base;
+        e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
-    add_interupt_event_count(COMPARE_INT, g_dev.r4300.cp0.regs[CP0_COMPARE_REG]);
+    add_interupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
     add_interupt_event_count(SPECIAL_INT, 0);
 }
 
@@ -318,13 +325,15 @@ void init_interupt(void)
 void check_interupt(void)
 {
     struct node* event;
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     if (g_dev.r4300.mi.regs[MI_INTR_REG] & g_dev.r4300.mi.regs[MI_INTR_MASK_REG])
-        g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = (g_dev.r4300.cp0.regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
+        cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
     else
-        g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
-    if ((g_dev.r4300.cp0.regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) return;
-    if (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & g_dev.r4300.cp0.regs[CP0_CAUSE_REG] & UINT32_C(0xFF00))
+        cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
+    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) return;
+    if (cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xFF00))
     {
         event = alloc_node(&g_dev.r4300.cp0.q.pool);
 
@@ -334,7 +343,7 @@ void check_interupt(void)
             return;
         }
 
-        event->data.count = g_dev.r4300.cp0.next_interrupt = g_dev.r4300.cp0.regs[CP0_COUNT_REG];
+        event->data.count = *cp0_next_interrupt = cp0_regs[CP0_COUNT_REG];
         event->data.type = CHECK_INT;
 
         if (g_dev.r4300.cp0.q.first == NULL)
@@ -354,14 +363,15 @@ void check_interupt(void)
 static void wrapped_exception_general(void)
 {
 #ifdef NEW_DYNAREC
+    uint32_t* cp0_regs = r4300_cp0_regs();
     if (g_dev.r4300.emumode == CORE_DYNAREC) {
-        g_dev.r4300.cp0.regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
+        cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0x80000180;
-        g_dev.r4300.cp0.regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
+        cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
         if(pcaddr&1)
-          g_dev.r4300.cp0.regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
+          cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         else
-          g_dev.r4300.cp0.regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+          cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
         pending_exception=1;
     } else {
         exception_general();
@@ -373,12 +383,13 @@ static void wrapped_exception_general(void)
 
 void raise_maskable_interrupt(uint32_t cause)
 {
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = (g_dev.r4300.cp0.regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
 
-    if (!(g_dev.r4300.cp0.regs[CP0_STATUS_REG] & g_dev.r4300.cp0.regs[CP0_CAUSE_REG] & UINT32_C(0xff00)))
+    if (!(cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00)))
         return;
 
-    if ((g_dev.r4300.cp0.regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE)
+    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE)
         return;
 
     wrapped_exception_general();
@@ -386,7 +397,8 @@ void raise_maskable_interrupt(uint32_t cause)
 
 static void special_int_handler(void)
 {
-    if (g_dev.r4300.cp0.regs[CP0_COUNT_REG] > UINT32_C(0x10000000))
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000))
         return;
 
 
@@ -397,42 +409,45 @@ static void special_int_handler(void)
 
 static void compare_int_handler(void)
 {
+    uint32_t* cp0_regs = r4300_cp0_regs();
     remove_interupt_event();
-    g_dev.r4300.cp0.regs[CP0_COUNT_REG]+=g_dev.r4300.cp0.count_per_op;
-    add_interupt_event_count(COMPARE_INT, g_dev.r4300.cp0.regs[CP0_COMPARE_REG]);
-    g_dev.r4300.cp0.regs[CP0_COUNT_REG]-=g_dev.r4300.cp0.count_per_op;
+    cp0_regs[CP0_COUNT_REG]+=g_dev.r4300.cp0.count_per_op;
+    add_interupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    cp0_regs[CP0_COUNT_REG]-=g_dev.r4300.cp0.count_per_op;
 
     raise_maskable_interrupt(CP0_CAUSE_IP7);
 }
 
 static void hw2_int_handler(void)
 {
+    uint32_t* cp0_regs = r4300_cp0_regs();
     // Hardware Interrupt 2 -- remove interrupt event from queue
     remove_interupt_event();
 
-    g_dev.r4300.cp0.regs[CP0_STATUS_REG] = (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG] = (g_dev.r4300.cp0.regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
+    cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
+    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
 
     wrapped_exception_general();
 }
 
 static void nmi_int_handler(void)
 {
+    uint32_t* cp0_regs = r4300_cp0_regs();
     // Non Maskable Interrupt -- remove interrupt event from queue
     remove_interupt_event();
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
-    g_dev.r4300.cp0.regs[CP0_STATUS_REG] = (g_dev.r4300.cp0.regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
-    g_dev.r4300.cp0.regs[CP0_CAUSE_REG]  = 0x00000000;
+    cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
+    cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
     // simulate the soft reset code which would run from the PIF ROM
     r4300_reset_soft();
     // clear all interrupts, reset interrupt counters back to 0
-    g_dev.r4300.cp0.regs[CP0_COUNT_REG] = 0;
+    cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
     init_interupt();
     // clear the audio status register so that subsequent write_ai() calls will work properly
     g_dev.ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
-    g_dev.r4300.cp0.regs[CP0_ERROREPC_REG] = g_dev.r4300.pc->addr;
+    cp0_regs[CP0_ERROREPC_REG] = *r4300_pc();
     // reset the r4300 internal state
     if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
@@ -443,7 +458,7 @@ static void nmi_int_handler(void)
     // adjust ErrorEPC if we were in a delay slot, and clear the g_dev.r4300.delay_slot and g_dev.r4300.dyna_interp flags
     if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
     {
-        g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]-=4;
+        cp0_regs[CP0_ERROREPC_REG]-=4;
     }
     g_dev.r4300.delay_slot = 0;
     g_dev.r4300.dyna_interp = 0;
@@ -465,7 +480,10 @@ static void nmi_int_handler(void)
 
 void gen_interupt(void)
 {
-    if (g_dev.r4300.stop == 1)
+    uint32_t* cp0_regs = r4300_cp0_regs();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+
+    if (*r4300_stop() == 1)
     {
         g_gs_vi_counter = 0; // debug
         dyna_stop();
@@ -491,8 +509,8 @@ void gen_interupt(void)
         uint32_t dest = g_dev.r4300.skip_jump;
         g_dev.r4300.skip_jump = 0;
 
-        g_dev.r4300.cp0.next_interrupt = (g_dev.r4300.cp0.q.first->data.count > g_dev.r4300.cp0.regs[CP0_COUNT_REG]
-                || (g_dev.r4300.cp0.regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000))
+        *cp0_next_interrupt = (g_dev.r4300.cp0.q.first->data.count > cp0_regs[CP0_COUNT_REG]
+                || (cp0_regs[CP0_COUNT_REG] - g_dev.r4300.cp0.q.first->data.count) < UINT32_C(0x80000000))
             ? g_dev.r4300.cp0.q.first->data.count
             : 0;
 

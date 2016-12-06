@@ -36,6 +36,8 @@
 #include "ops.h" /* for cpu_instruction_table */
 #include "recomp_types.h" /* for precomp_instr, regcache_state */
 
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+
 struct jump_table;
 struct cached_interp
 {
@@ -54,16 +56,24 @@ enum {
 
 struct r4300_core
 {
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     int64_t regs[32];
     int64_t hi;
     int64_t lo;
+#endif
     unsigned int llbit;
 
     struct precomp_instr* pc;
+
     unsigned int delay_slot;
     long long int local_rs;
     uint32_t skip_jump;
+
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
     int stop;
+#endif
     unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
 
@@ -165,6 +175,8 @@ int64_t* r4300_mult_hi(void);
 int64_t* r4300_mult_lo(void);
 unsigned int* r4300_llbit(void);
 uint32_t* r4300_pc(void);
+struct precomp_instr** r4300_pc_struct(void);
+int* r4300_stop(void);
 
 unsigned int get_r4300_emumode(void);
 
