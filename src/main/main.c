@@ -36,7 +36,6 @@
 #include <string.h>
 
 #define M64P_CORE_PROTOTYPES 1
-#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/debugger.h"
@@ -44,18 +43,19 @@
 #include "api/m64p_types.h"
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
+#include "backends/audio_out_backend.h"
+#include "backends/clock_backend.h"
+#include "backends/controller_input_backend.h"
+#include "backends/rumble_backend.h"
+#include "backends/storage_backend.h"
 #include "cheat.h"
-#include "eep_file.h"
+#include "device.h"
 #include "eventloop.h"
-#include "fla_file.h"
 #include "main.h"
-#include "memory/memory.h"
-#include "mpk_file.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
-#include "pi/pi_controller.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/emulate_speaker_via_audio_plugin.h"
 #include "plugin/get_time_using_C_localtime.h"
@@ -63,17 +63,11 @@
 #include "plugin/rumble_via_input_plugin.h"
 #include "profile.h"
 #include "r4300/r4300.h"
-#include "r4300/r4300_core.h"
 #include "r4300/reset.h"
-#include "rdp/rdp_core.h"
-#include "ri/ri_controller.h"
 #include "rom.h"
-#include "rsp/rsp_core.h"
 #include "savestates.h"
-#include "si/si_controller.h"
-#include "sra_file.h"
+#include "storage_file.h"
 #include "util.h"
-#include "vi/vi_controller.h"
 #include "r4300/new_dynarec/new_dynarec.h"
 
 #ifdef DBG
@@ -96,15 +90,9 @@ m64p_frame_callback g_FrameCallback = NULL;
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
+/* XXX: only global because of new dynarec linkage_x86.asm and plugin.c */
 ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
-struct ai_controller g_ai;
-struct pi_controller g_pi;
-struct ri_controller g_ri;
-struct si_controller g_si;
-struct vi_controller g_vi;
-struct r4300_core g_r4300;
-struct rdp_core g_dp;
-struct rsp_core g_sp;
+struct device g_dev;
 
 int g_delay_si = 0;
 
@@ -445,10 +433,10 @@ void main_state_load(const char *filename)
 {
     if (g_EmulatorRunning)
     {
-        rumblepak_rumble(&g_si.pif.controllers[0].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[1].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[2].rumblepak, RUMBLE_STOP);
-        rumblepak_rumble(&g_si.pif.controllers[3].rumblepak, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[0].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[1].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[2].rumblepak.rumble, RUMBLE_STOP);
+        rumble_exec(g_dev.si.pif.controllers[3].rumblepak.rumble, RUMBLE_STOP);
     }
 
     if (filename == NULL) // Save to slot
@@ -747,7 +735,7 @@ static void apply_speed_limiter(void)
     unsigned int CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
-    const double VILimitMilliseconds = 1000.0 / (double)ROM_PARAMS.vilimit;
+    const double VILimitMilliseconds = 1000.0 / g_dev.vi.expected_refresh_rate;
     const double SpeedFactorMultiple = defaultSpeedFactor/l_SpeedFactor;
     const double AdjustedLimit = VILimitMilliseconds * SpeedFactorMultiple;
 
@@ -836,28 +824,54 @@ void new_vi(void)
     apply_speed_limiter();
 }
 
-static void connect_all(
-        struct r4300_core* r4300,
-        struct rdp_core* dp,
-        struct rsp_core* sp,
-        struct ai_controller* ai,
-        struct pi_controller* pi,
-        struct ri_controller* ri,
-        struct si_controller* si,
-        struct vi_controller* vi,
-        uint32_t* dram,
-        size_t dram_size,
-        uint8_t* rom,
-        size_t rom_size)
+static void open_mpk_file(struct storage_file* storage)
 {
-    connect_rdp(dp, r4300, sp, ri);
-    connect_rsp(sp, r4300, dp, ri);
-    connect_ai(ai, r4300, ri, vi);
-    connect_pi(pi, r4300, ri, rom, rom_size);
-    connect_ri(ri, dram, dram_size);
-    connect_si(si, r4300, ri);
-    connect_vi(vi, r4300);
+    unsigned int i;
+    int ret = open_storage_file(storage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
+
+    if (ret == (int)file_open_error) {
+        /* if file doesn't exists provide default content */
+        for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            format_mempak(storage->data + i * MEMPAK_SIZE);
+        }
+    }
 }
+
+static void open_fla_file(struct storage_file* storage)
+{
+    int ret = open_storage_file(storage, FLASHRAM_SIZE, get_flashram_path());
+
+    if (ret == (int)file_open_error) {
+        /* if file doesn't exists provide default content */
+        format_flashram(storage->data);
+    }
+}
+
+static void open_sra_file(struct storage_file* storage)
+{
+    int ret = open_storage_file(storage, SRAM_SIZE, get_sram_path());
+
+    if (ret == (int)file_open_error) {
+        /* if file doesn't exists provide default content */
+        format_sram(storage->data);
+    }
+}
+
+static void open_eep_file(struct storage_file* storage)
+{
+    /* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
+     * whatever the real EEPROM size is.
+     */
+    enum { EEPROM_MAX_SIZE = 0x800 };
+
+    int ret = open_storage_file(storage, EEPROM_MAX_SIZE, get_eeprom_path());
+
+    if (ret == (int)file_open_error) {
+        /* if file doesn't exists provide default content */
+        format_eeprom(storage->data, EEPROM_MAX_SIZE);
+    }
+}
+
 
 /*********************************************************************************************************
 * emulation thread - runs the core
@@ -866,11 +880,21 @@ m64p_error main_run(void)
 {
     size_t i;
     unsigned int disable_extra_mem;
-    struct eep_file eep;
-    struct fla_file fla;
-    struct mpk_file mpk;
-    struct sra_file sra;
-    static int channels[] = { 0, 1, 2, 3 };
+    struct storage_file eep;
+    struct storage_file fla;
+    struct storage_file mpk;
+    struct storage_file sra;
+    int channels[GAME_CONTROLLERS_COUNT];
+    struct audio_out_backend aout;
+    struct clock_backend rtc;
+    struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
+    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
+    struct storage_backend fla_storage;
+    struct storage_backend sra_storage;
+    struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
+    uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
+    struct storage_backend eep_storage;
+
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -896,12 +920,40 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
-    connect_all(&g_r4300, &g_dp, &g_sp,
-                &g_ai, &g_pi, &g_ri, &g_si, &g_vi,
-                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
-                g_rom, g_rom_size);
+    /* open storage files, provide default content if not present */
+    open_mpk_file(&mpk);
+    open_eep_file(&eep);
+    open_fla_file(&fla);
+    open_sra_file(&sra);
 
-    init_memory();
+    /* setup backends */
+    aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
+    rtc = (struct clock_backend){ NULL, get_time_using_C_localtime };
+    fla_storage = (struct storage_backend){ &fla, save_storage_file };
+    sra_storage = (struct storage_backend){ &sra, save_storage_file };
+    eep_storage = (struct storage_backend){ &eep, save_storage_file };
+
+    /* setup game controllers data */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        channels[i] = i;
+        cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
+        mpk_storages[i] = (struct storage_backend){ &mpk, save_storage_file };
+        mpk_data[i] = storage_file_ptr(&mpk, i * MEMPAK_SIZE);
+        rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
+    }
+
+    init_device(&g_dev,
+                &aout,
+                g_rom, g_rom_size,
+                storage_file_ptr(&fla, 0), &fla_storage,
+                storage_file_ptr(&sra, 0), &sra_storage,
+                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
+                cins,
+                mpk_data, mpk_storages,
+                rumbles,
+                storage_file_ptr(&eep, 0), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
+                &rtc,
+                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);
 
     // Attach rom to plugins
     if (!gfx.romOpen())
@@ -932,69 +984,6 @@ m64p_error main_run(void)
     // setup rendering callback from video plugin to the core, for screenshots and On-Screen-Display
     gfx.setRenderingCallback(video_plugin_render_callback);
 
-    /* connect external audio sink to AI component */
-    g_ai.user_data = &g_ai;
-    g_ai.set_audio_format = set_audio_format_via_audio_plugin;
-    g_ai.push_audio_samples = push_audio_samples_via_audio_plugin;
-
-    /* connect external time source to AF_RTC component */
-    g_si.pif.af_rtc.user_data = NULL;
-    g_si.pif.af_rtc.get_time = get_time_using_C_localtime;
-
-    /* connect external game controllers */
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
-    {
-        g_si.pif.controllers[i].user_data = &channels[i];
-        g_si.pif.controllers[i].is_connected = egcvip_is_connected;
-        g_si.pif.controllers[i].get_input = egcvip_get_input;
-    }
-
-    /* connect external rumblepaks */
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
-    {
-        g_si.pif.controllers[i].rumblepak.user_data = &channels[i];
-        g_si.pif.controllers[i].rumblepak.rumble = rvip_rumble;
-    }
-
-    /* open mpk file (if any) and connect it to mempaks */
-    open_mpk_file(&mpk, get_mempaks_path());
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
-    {
-        g_si.pif.controllers[i].mempak.user_data = &mpk;
-        g_si.pif.controllers[i].mempak.save = save_mpk_file;
-        g_si.pif.controllers[i].mempak.data = mpk_file_ptr(&mpk, i);
-    }
-
-    /* open eep file (if any) and connect it to eeprom */
-    open_eep_file(&eep, get_eeprom_path());
-    g_si.pif.eeprom.user_data = &eep;
-    g_si.pif.eeprom.save = save_eep_file;
-    g_si.pif.eeprom.data = eep_file_ptr(&eep);
-    if (ROM_SETTINGS.savetype != EEPROM_16KB)
-    {
-        /* 4kbits EEPROM */
-        g_si.pif.eeprom.size = 0x200;
-        g_si.pif.eeprom.id = 0x8000;
-    }
-    else
-    {
-        /* 16kbits EEPROM */
-        g_si.pif.eeprom.size = 0x800;
-        g_si.pif.eeprom.id = 0xc000;
-    }
-
-    /* open fla file (if any) and connect it to flashram */
-    open_fla_file(&fla, get_flashram_path());
-    g_pi.flashram.user_data = &fla;
-    g_pi.flashram.save = save_fla_file;
-    g_pi.flashram.data = fla_file_ptr(&fla);
-
-    /* open sra file (if any) and connect it to SRAM */
-    open_sra_file(&sra, get_sram_path());
-    g_pi.sram.user_data = &sra;
-    g_pi.sram.save = save_sra_file;
-    g_pi.sram.data = sra_file_ptr(&sra);
-
 #ifdef WITH_LIRC
     lircStart();
 #endif // WITH_LIRC
@@ -1011,7 +1000,8 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     /* call r4300 CPU core and run the game */
-    r4300_reset_hard();
+    poweron_device(&g_dev);
+
     r4300_reset_soft();
     r4300_execute();
 
@@ -1025,10 +1015,10 @@ m64p_error main_run(void)
         destroy_debugger();
 #endif
 
-    close_sra_file(&sra);
-    close_fla_file(&fla);
-    close_eep_file(&eep);
-    close_mpk_file(&mpk);
+    close_storage_file(&sra);
+    close_storage_file(&fla);
+    close_storage_file(&eep);
+    close_storage_file(&mpk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {

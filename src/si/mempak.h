@@ -24,19 +24,19 @@
 
 #include <stdint.h>
 
+struct storage_backend;
+
 struct mempak
 {
-    /* external mpk storage */
-    void* user_data;
-    void (*save)(void*);
     uint8_t* data;
+    struct storage_backend* storage;
 };
 
 enum { MEMPAK_SIZE = 0x8000 };
 
-void mempak_save(struct mempak* mpk);
-
 void format_mempak(uint8_t* mempak);
+
+void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage);
 
 void mempak_read_command(struct mempak* mpk, uint8_t* cmd);
 void mempak_write_command(struct mempak* mpk, uint8_t* cmd);

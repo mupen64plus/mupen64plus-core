@@ -25,6 +25,7 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "backends/clock_backend.h"
 
 static unsigned char byte2bcd(int n)
 {
@@ -32,12 +33,14 @@ static unsigned char byte2bcd(int n)
     return ((n / 10) << 4) | (n % 10);
 }
 
-const struct tm* af_rtc_get_time(struct af_rtc* rtc)
+
+void init_af_rtc(struct af_rtc* afrtc,
+                 struct clock_backend* rtc)
 {
-    return rtc->get_time(rtc->user_data);
+    afrtc->rtc = rtc;
 }
 
-void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
+void af_rtc_status_command(struct af_rtc* afrtc, uint8_t* cmd)
 {
     /* AF-RTC status query */
     cmd[3] = 0x00;
@@ -45,7 +48,7 @@ void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
     cmd[5] = 0x00;
 }
 
-void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
+void af_rtc_read_command(struct af_rtc* afrtc, uint8_t* cmd)
 {
     const struct tm *rtc_time;
 
@@ -61,7 +64,7 @@ void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
         DebugMessage(M64MSG_ERROR, "AF-RTC read command: cannot read block 1");
         break;
     case 2:
-        rtc_time = af_rtc_get_time(rtc);
+        rtc_time = clock_get_time(afrtc->rtc);
         cmd[4] = byte2bcd(rtc_time->tm_sec);
         cmd[5] = byte2bcd(rtc_time->tm_min);
         cmd[6] = 0x80 + byte2bcd(rtc_time->tm_hour);
@@ -75,7 +78,7 @@ void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
     }
 }
 
-void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd)
+void af_rtc_write_command(struct af_rtc* afrtc, uint8_t* cmd)
 {
     /* write RTC block */
     DebugMessage(M64MSG_ERROR, "AF-RTC write command: not yet implemented");

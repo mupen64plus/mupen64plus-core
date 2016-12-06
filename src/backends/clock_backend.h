@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eep_file.h                                              *
+ *   Mupen64plus - clock_backend.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,28 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_EEP_FILE_H
-#define M64P_MAIN_EEP_FILE_H
+#ifndef M64P_BACKENDS_CLOCK_BACKEND_H
+#define M64P_BACKENDS_CLOCK_BACKEND_H
 
-#include <stdint.h>
+struct tm;
 
-/* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
- * whatever the real EEPROM size is.
- */
-
-enum { EEPROM_MAX_SIZE = 0x800 };
-
-struct eep_file
+struct clock_backend
 {
-    uint8_t eeprom[EEPROM_MAX_SIZE];
-    const char* filename;
+    void* user_data;
+    const struct tm* (*get_time)(void*);
 };
 
-void open_eep_file(struct eep_file* eep, const char* filename);
-void close_eep_file(struct eep_file* eep);
-
-uint8_t* eep_file_ptr(struct eep_file* eep);
-
-void save_eep_file(void* opaque);
+const struct tm* clock_get_time(struct clock_backend* clock);
 
 #endif

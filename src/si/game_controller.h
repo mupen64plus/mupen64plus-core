@@ -35,19 +35,22 @@ enum pak_type
     PAK_TRANSFER
 };
 
+struct controller_input_backend;
+struct storage_backend;
+
 struct game_controller
 {
-    /* external controller input */
-    void* user_data;
-    int (*is_connected)(void*,enum pak_type*);
-    uint32_t (*get_input)(void*);
-
+    struct controller_input_backend* cin;
     struct mempak mempak;
     struct rumblepak rumblepak;
 };
 
-int game_controller_is_connected(struct game_controller* cont, enum pak_type* pak);
-uint32_t game_controller_get_input(struct game_controller* cont);
+
+void init_game_controller(struct game_controller* cont,
+    struct controller_input_backend* cin,
+    uint8_t* mpk_data,
+    struct storage_backend* mpk_storage,
+    struct rumble_backend* rumble);
 
 void process_controller_command(struct game_controller* cont, uint8_t* cmd);
 void read_controller(struct game_controller* cont, uint8_t* cmd);

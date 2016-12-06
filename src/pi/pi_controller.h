@@ -31,6 +31,7 @@
 
 struct r4300_core;
 struct ri_controller;
+struct storage_backend;
 
 enum pi_registers
 {
@@ -70,12 +71,15 @@ static uint32_t pi_reg(uint32_t address)
 }
 
 
-void connect_pi(struct pi_controller* pi,
-                struct r4300_core* r4300,
-                struct ri_controller* ri,
-                uint8_t* rom, size_t rom_size);
 
-void init_pi(struct pi_controller* pi);
+void init_pi(struct pi_controller* pi,
+             uint8_t* rom, size_t rom_size,
+             uint8_t* flashram_data, struct storage_backend* flashram_storage,
+             uint8_t* sram_data, struct storage_backend* sram_storage,
+             struct r4300_core* r4300,
+             struct ri_controller* ri);
+
+void poweron_pi(struct pi_controller* pi);
 
 int read_pi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

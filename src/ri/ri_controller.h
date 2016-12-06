@@ -52,11 +52,11 @@ static uint32_t ri_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
-void connect_ri(struct ri_controller* ri,
-                uint32_t* dram,
-                size_t dram_size);
+void init_ri(struct ri_controller* ri,
+             uint32_t* dram,
+             size_t dram_size);
 
-void init_ri(struct ri_controller* ri);
+void poweron_ri(struct ri_controller* ri);
 
 int read_ri_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

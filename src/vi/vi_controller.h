@@ -23,6 +23,7 @@
 #define M64P_VI_VI_CONTROLLER_H
 
 #include <stdint.h>
+#include "api/m64p_types.h"
 
 struct r4300_core;
 
@@ -49,9 +50,13 @@ struct vi_controller
 {
     uint32_t regs[VI_REGS_COUNT];
     unsigned int field;
-
     unsigned int delay;
     unsigned int next_vi;
+
+    unsigned int clock;
+    unsigned int expected_refresh_rate;
+    unsigned int count_per_scanline;
+    unsigned int alternate_timing;
 
     struct r4300_core* r4300;
 };
@@ -61,10 +66,15 @@ static uint32_t vi_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
-void connect_vi(struct vi_controller* vi,
-                struct r4300_core* r4300);
 
-void init_vi(struct vi_controller* vi);
+unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
+unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
+
+void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
+             unsigned int count_per_scanline, unsigned int alternate_timing,
+             struct r4300_core* r4300);
+
+void poweron_vi(struct vi_controller* vi);
 
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

@@ -25,20 +25,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct storage_backend;
+
 struct eeprom
 {
-    /* external eep storage */
-    void* user_data;
-    void (*save)(void*);
     uint8_t* data;
     size_t size;
     uint16_t id;
+    struct storage_backend* storage;
 };
 
 
-void eeprom_save(struct eeprom* eeprom);
-
 void format_eeprom(uint8_t* eeprom, size_t size);
+
+void init_eeprom(struct eeprom* eeprom,
+    uint8_t* data,
+    size_t size,
+    uint16_t id,
+    struct storage_backend* storage);
 
 void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
 void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);

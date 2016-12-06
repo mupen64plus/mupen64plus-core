@@ -91,12 +91,12 @@ static uint32_t dps_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
-void connect_rdp(struct rdp_core* dp,
-                 struct r4300_core* r4300,
-                 struct rsp_core* sp,
-                 struct ri_controller* ri);
+void init_rdp(struct rdp_core* dp,
+              struct r4300_core* r4300,
+              struct rsp_core* sp,
+              struct ri_controller* ri);
 
-void init_rdp(struct rdp_core* dp);
+void poweron_rdp(struct rdp_core* dp);
 
 int read_dpc_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);

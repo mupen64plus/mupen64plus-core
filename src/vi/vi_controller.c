@@ -23,29 +23,61 @@
 
 #include <string.h>
 
+#include "api/m64p_types.h"
 #include "main/main.h"
-#include "main/rom.h"
 #include "memory/memory.h"
 #include "plugin/plugin.h"
 #include "r4300/r4300_core.h"
 
 /* XXX: timing hacks */
-enum { DEFAULT_CPU_COUNT_PER_SCANLINE = 1500 };
 enum { NTSC_VERTICAL_RESOLUTION = 525 };
 
-void connect_vi(struct vi_controller* vi,
-                struct r4300_core* r4300)
+unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard)
 {
+    switch(tv_standard)
+    {
+    case SYSTEM_PAL:
+        return 49656530;
+    case SYSTEM_MPAL:
+        return 48628316;
+    case SYSTEM_NTSC:
+    default:
+        return 48681812;
+    }
+}
+
+unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard)
+{
+    switch (tv_standard)
+    {
+    case SYSTEM_PAL:
+    case SYSTEM_MPAL:
+        return 50;
+
+    case SYSTEM_NTSC:
+    default:
+        return 60;
+    }
+}
+
+void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
+             unsigned int count_per_scanline, unsigned int alternate_timing,
+             struct r4300_core* r4300)
+{
+    vi->clock = clock;
+    vi->expected_refresh_rate = expected_refresh_rate;
+    vi->count_per_scanline = count_per_scanline;
+    vi->alternate_timing = alternate_timing;
     vi->r4300 = r4300;
 }
 
-void init_vi(struct vi_controller* vi)
+void poweron_vi(struct vi_controller* vi)
 {
     memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
     vi->field = 0;
-
     vi->delay = vi->next_vi = 5000;
 }
+
 
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
@@ -57,10 +89,10 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
     {
         /* XXX: update current line number */
         cp0_update_count();
-        if (g_alternate_vi_timing)
+        if (vi->alternate_timing)
             vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) % (NTSC_VERTICAL_RESOLUTION + 1);
         else
-            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / g_vi_refresh_rate;
+            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
 
         /* update current field */
         vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] & (~1)) | vi->field;
@@ -117,7 +149,7 @@ void vi_vertical_interrupt_event(struct vi_controller* vi)
     /* schedule next vertical interrupt */
     vi->delay = (vi->regs[VI_V_SYNC_REG] == 0)
             ? 500000
-            : (vi->regs[VI_V_SYNC_REG] + 1) * g_vi_refresh_rate;
+            : (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
 
     vi->next_vi += vi->delay;
 

@@ -26,16 +26,8 @@
 #include <stdint.h>
 
 #include "api/m64p_types.h"
+#include "main/device.h"
 #include "osal/preproc.h"
-
-struct ai_controller;
-struct pi_controller;
-struct r4300_core;
-struct rdp_core;
-struct ri_controller;
-struct rsp_core;
-struct si_controller;
-struct vi_controller;
 
 enum { RDRAM_MAX_SIZE = 0x800000 };
 
@@ -45,17 +37,9 @@ extern m64p_handle g_CoreConfig;
 extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
 
+
 extern ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
-
-extern struct ai_controller g_ai;
-extern struct pi_controller g_pi;
-extern struct ri_controller g_ri;
-extern struct si_controller g_si;
-extern struct vi_controller g_vi;
-
-extern struct r4300_core g_r4300;
-extern struct rdp_core g_dp;
-extern struct rsp_core g_sp;
+extern struct device g_dev;
 
 extern m64p_frame_callback g_FrameCallback;
 
