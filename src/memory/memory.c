@@ -606,22 +606,22 @@ static void read_mid(void)
     readd(read_mi_regs, &g_dev.r4300, address, rdword);
 }
 
-static void write_mi(void)
+void write_mi(void)
 {
     writew(write_mi_regs, &g_dev.r4300, address, cpu_word);
 }
 
-static void write_mib(void)
+void write_mib(void)
 {
     writeb(write_mi_regs, &g_dev.r4300, address, cpu_byte);
 }
 
-static void write_mih(void)
+void write_mih(void)
 {
     writeh(write_mi_regs, &g_dev.r4300, address, cpu_hword);
 }
 
-static void write_mid(void)
+void write_mid(void)
 {
     writed(write_mi_regs, &g_dev.r4300, address, cpu_dword);
 }

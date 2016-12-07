@@ -271,6 +271,10 @@ void fp_exception();
 void fp_exception_ds();
 void jump_syscall();
 void jump_eret();
+void write_mi(void);
+void write_mib(void);
+void write_mih(void);
+void write_mid(void);
 #ifdef __cplusplus
 }
 #endif
@@ -297,6 +301,10 @@ void write_rdram_new(void);
 void write_rdramb_new(void);
 void write_rdramh_new(void);
 void write_rdramd_new(void);
+void write_mi_new(void);
+void write_mib_new(void);
+void write_mih_new(void);
+void write_mid_new(void);
 extern u_int memory_map[1048576];
 #ifdef __cplusplus
 }
@@ -315,6 +323,7 @@ static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e
 static void add_to_linker(int addr,int target,int ext);
 static int verify_dirty(void *addr);
 static u_int get_clean_addr(int addr);
+void *TLB_refill_exception_new(u_int inst_addr, u_int mem_addr, int w);
 
 //static int tracedebug=0;
 
@@ -459,13 +468,7 @@ void *get_addr(u_int vaddr)
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
-  g_cp0_regs[CP0_STATUS_REG]|=2;
-  g_cp0_regs[CP0_CAUSE_REG]=(vaddr<<31)|0x8;
-  g_cp0_regs[CP0_EPC_REG]=(vaddr&1)?vaddr-5:vaddr;
-  g_cp0_regs[CP0_BADVADDR_REG]=(vaddr&~1);
-  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
-  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
-  return get_addr_ht(0x80000000);
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
 }
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
@@ -554,13 +557,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
-  g_cp0_regs[CP0_STATUS_REG]|=2;
-  g_cp0_regs[CP0_CAUSE_REG]=(vaddr<<31)|0x8;
-  g_cp0_regs[CP0_EPC_REG]=(vaddr&1)?vaddr-5:vaddr;
-  g_cp0_regs[CP0_BADVADDR_REG]=(vaddr&~1);
-  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((g_cp0_regs[CP0_BADVADDR_REG]>>9)&0x007FFFF0);
-  g_cp0_regs[CP0_ENTRYHI_REG]=g_cp0_regs[CP0_BADVADDR_REG]&0xFFFFE000;
-  return get_addr_ht(0x80000000);
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
 }
 
 static void clear_all_regs(signed char regmap[])
@@ -7742,6 +7739,17 @@ void new_dynarec_init()
     readmemh[n] = read_nomemh_new;
     readmemd[n] = read_nomemd_new;
   }
+
+  writemem[0x8430] = write_mi_new;
+  writememb[0x8430] = write_mib_new;
+  writememh[0x8430] = write_mih_new;
+  writememd[0x8430] = write_mid_new;
+
+  writemem[0xa430] = write_mi_new;
+  writememb[0xa430] = write_mib_new;
+  writememh[0xa430] = write_mih_new;
+  writememd[0xa430] = write_mid_new;
+
   tlb_hacks();
   arch_init();
 }
@@ -11209,4 +11217,36 @@ void TLBWR_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
+}
+
+void *TLB_refill_exception_new(u_int inst_addr,u_int mem_addr,int w)
+{
+  int i;
+
+  if(w==1)
+    g_cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBS;
+  else
+    g_cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBL;
+
+  g_cp0_regs[CP0_BADVADDR_REG]=mem_addr;
+  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((mem_addr>>9)&0x007FFFF0);
+  g_cp0_regs[CP0_ENTRYHI_REG]=mem_addr&0xFFFFE000;
+
+  assert((g_cp0_regs[CP0_STATUS_REG]&CP0_STATUS_EXL)==0);
+
+  g_cp0_regs[CP0_EPC_REG]=(inst_addr&~3)-(inst_addr&1)*4;
+  g_cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
+  
+  if((mem_addr>=0x80000000)&&(mem_addr<0xc0000000))
+    return get_addr_ht(0x80000180);
+
+  for(i=0;i<32;i++)
+  {
+    if((mem_addr>=tlb_e[i].start_even)&&(mem_addr<=tlb_e[i].end_even))
+      return get_addr_ht(0x80000180);
+    if((mem_addr>=tlb_e[i].start_odd)&&(mem_addr<=tlb_e[i].end_odd))
+      return get_addr_ht(0x80000180);
+  }
+
+  return get_addr_ht(0x80000000);
 }
