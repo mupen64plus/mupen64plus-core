@@ -43,8 +43,6 @@ m64p_error close_rom(void);
 
 extern unsigned char* g_rom;
 extern int g_rom_size;
-extern int g_count_per_scanline;
-extern unsigned char g_alternate_vi_timing;
 
 extern unsigned char isGoldeneyeRom;
 
@@ -54,6 +52,8 @@ typedef struct _rom_params
    m64p_system_type systemtype;
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
    unsigned char countperop;
+   int vitiming;
+   int countperscanline;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
