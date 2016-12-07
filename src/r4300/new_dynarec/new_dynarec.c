@@ -3594,10 +3594,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   if (opcode[i]==0x39) { // SWC1 (get float address)
-    emit_readword((int)&g_dev.r4300.cp1.regs_simple[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)r4300_cp1_regs_simple()[(source[i]>>16)&0x1f],tl);
   }
   if (opcode[i]==0x3D) { // SDC1 (get double address)
-    emit_readword((int)&g_dev.r4300.cp1.regs_double[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)r4300_cp1_regs_double()[(source[i]>>16)&0x1f],tl);
   }
   // Generate address + offset
   if(!using_tlb) {
@@ -3632,10 +3632,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     emit_readword_indexed(0,tl,tl);
   }
   if (opcode[i]==0x31) { // LWC1 (get target address)
-    emit_readword((int)&g_dev.r4300.cp1.regs_simple[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)r4300_cp1_regs_simple()[(source[i]>>16)&0x1f],temp);
   }
   if (opcode[i]==0x35) { // LDC1 (get target address)
-    emit_readword((int)&g_dev.r4300.cp1.regs_double[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)r4300_cp1_regs_double()[(source[i]>>16)&0x1f],temp);
   }
   if(!using_tlb) {
     if(!c) {
@@ -7739,15 +7739,15 @@ void new_dynarec_init()
     g_dev.mem.readmemd[n] = read_nomemd_new;
   }
 
-  writemem[0x8430] = write_mi_new;
-  writememb[0x8430] = write_mib_new;
-  writememh[0x8430] = write_mih_new;
-  writememd[0x8430] = write_mid_new;
+  g_dev.mem.writemem[0x8430] = write_mi_new;
+  g_dev.mem.writememb[0x8430] = write_mib_new;
+  g_dev.mem.writememh[0x8430] = write_mih_new;
+  g_dev.mem.writememd[0x8430] = write_mid_new;
 
-  writemem[0xa430] = write_mi_new;
-  writememb[0xa430] = write_mib_new;
-  writememh[0xa430] = write_mih_new;
-  writememd[0xa430] = write_mid_new;
+  g_dev.mem.writemem[0xa430] = write_mi_new;
+  g_dev.mem.writememb[0xa430] = write_mib_new;
+  g_dev.mem.writememh[0xa430] = write_mih_new;
+  g_dev.mem.writememd[0xa430] = write_mid_new;
 
   tlb_hacks();
   arch_init();
@@ -11221,29 +11221,30 @@ void TLBWR_new(void)
 void *TLB_refill_exception_new(u_int inst_addr,u_int mem_addr,int w)
 {
   int i;
+  uint32_t* cp0_regs = r4300_cp0_regs();
 
   if(w==1)
-    g_cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBS;
+    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBS;
   else
-    g_cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBL;
+    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBL;
 
-  g_cp0_regs[CP0_BADVADDR_REG]=mem_addr;
-  g_cp0_regs[CP0_CONTEXT_REG]=(g_cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((mem_addr>>9)&0x007FFFF0);
-  g_cp0_regs[CP0_ENTRYHI_REG]=mem_addr&0xFFFFE000;
+  cp0_regs[CP0_BADVADDR_REG]=mem_addr;
+  cp0_regs[CP0_CONTEXT_REG]=(cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((mem_addr>>9)&0x007FFFF0);
+  cp0_regs[CP0_ENTRYHI_REG]=mem_addr&0xFFFFE000;
 
-  assert((g_cp0_regs[CP0_STATUS_REG]&CP0_STATUS_EXL)==0);
+  assert((cp0_regs[CP0_STATUS_REG]&CP0_STATUS_EXL)==0);
 
-  g_cp0_regs[CP0_EPC_REG]=(inst_addr&~3)-(inst_addr&1)*4;
-  g_cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
+  cp0_regs[CP0_EPC_REG]=(inst_addr&~3)-(inst_addr&1)*4;
+  cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
   
   if((mem_addr>=0x80000000)&&(mem_addr<0xc0000000))
     return get_addr_ht(0x80000180);
 
   for(i=0;i<32;i++)
   {
-    if((mem_addr>=tlb_e[i].start_even)&&(mem_addr<=tlb_e[i].end_even))
+    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_even)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_even))
       return get_addr_ht(0x80000180);
-    if((mem_addr>=tlb_e[i].start_odd)&&(mem_addr<=tlb_e[i].end_odd))
+    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_odd)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_odd))
       return get_addr_ht(0x80000180);
   }
 

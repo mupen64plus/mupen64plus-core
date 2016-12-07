@@ -859,7 +859,7 @@ mi_exception:
     ;ebx = mem addr
     ;ebp = instr addr + flags
     mov     ebp,    [024h+esp]
-    mov     ebx,    [address]
+    mov     ebx,    [g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address]
     add     esp,    024h
     call    wb_base_reg
     jmp     do_interrupt
@@ -877,7 +877,7 @@ tlb_exception:
     push    ebp
     call    TLB_refill_exception_new
     add     esp,    16
-    mov     edi,    DWORD [next_interupt]
+    mov     edi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_next_interrupt]
     mov     esi,    DWORD [g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_regs+36]    ;Count
     mov     DWORD [last_count],    edi
     sub     esi,    edi

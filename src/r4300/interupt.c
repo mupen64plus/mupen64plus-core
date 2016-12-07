@@ -364,7 +364,7 @@ static void wrapped_exception_general(void)
 {
 #ifdef NEW_DYNAREC
     uint32_t* cp0_regs = r4300_cp0_regs();
-    if (g_dev.r4300.emumode == CORE_DYNAREC) {
+    if (g_dev.r4300.emumode == EMUMODE_DYNAREC) {
         cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0x80000180;
         cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
@@ -467,7 +467,7 @@ static void nmi_int_handler(void)
     generic_jump_to(UINT32_C(0xa4000040));
 
 #ifdef NEW_DYNAREC
-    if (g_dev.r4300.emumode == CORE_DYNAREC)
+    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
     {
         g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0xa4000040;
