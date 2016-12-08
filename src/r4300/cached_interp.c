@@ -195,7 +195,7 @@ Used by dynarec only, check should be unnecessary
 static void NOTCOMPILED(void)
 {
    uint32_t *mem = fast_mem_access(g_dev.r4300.cached_interp.blocks[*r4300_pc()>>12]->start);
-#ifdef EMUMODE_DBG
+#ifdef DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(), (long) (*r4300_pc_struct())->ops);
 #endif
 

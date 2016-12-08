@@ -2144,7 +2144,7 @@ void init_block(struct precomp_block *block)
 {
   int i, length, already_exist = 1;
   timed_section_start(TIMED_SECTION_COMPILER);
-#ifdef CORE_DBG
+#ifdef DBG
   DebugMessage(M64MSG_INFO, "init block %" PRIX32 " - %" PRIX32, block->start, block->end);
 #endif
 
@@ -2460,7 +2460,7 @@ void recompile_block(const uint32_t *source, struct precomp_block *block, uint32
     block->max_code_length = g_dev.r4300.recomp.max_code_length;
     free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
      }
-#ifdef CORE_DBG
+#ifdef DBG
    DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
 #endif
 #if defined(PROFILE_R4300)
