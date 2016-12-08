@@ -981,7 +981,7 @@ GLOBAL_FUNCTION(write_mid_new):
 LOCAL_FUNCTION(mi_exception):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
-    ldr    r1, [fp, #address-dynarec_local]
+    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
     bl     wb_base_reg
     b      do_interrupt
 
@@ -992,8 +992,8 @@ LOCAL_FUNCTION(tlb_exception):
     bl     wb_base_reg
     mov    r0, r3
     bl     TLB_refill_exception_new
-    ldr    r1, [fp, #next_interupt-dynarec_local]
-    ldr    r10, [fp, #g_cp0_regs+36-dynarec_local] /* Count */
+    ldr    r1, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
+    ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
     str    r1, [fp, #last_count-dynarec_local]
     sub    r10, r10, r1
     mov    pc, r0
@@ -1008,7 +1008,7 @@ LOCAL_FUNCTION(wb_base_reg):
     mov    r6, #0x6000000
     orr    r6, r6, #0x22
     ldr    r0, [r8, r7, lsl #2]
-    add    r5, fp, #g_dev_r400_regs-dynarec_local
+    add    r5, fp, #g_dev_r4300_regs-dynarec_local
     mov    r7, #0xf8
     lsl    r8, r0, #16
     lsr    r4, r0, #26
