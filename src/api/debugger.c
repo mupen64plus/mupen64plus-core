@@ -33,12 +33,12 @@
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
 #include "debugger/dbg_types.h"
+#include "device/device.h"
+#include "device/memory/memory.h"
+#include "device/r4300/r4300_core.h"
 #include "m64p_debugger.h"
 #include "m64p_types.h"
-#include "main/device.h"
 #include "main/main.h"
-#include "memory/memory.h"
-#include "r4300/r4300_core.h"
 
 unsigned int op;
 

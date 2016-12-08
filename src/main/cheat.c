@@ -34,13 +34,13 @@
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/m64p_types.h"
+#include "device/memory/memory.h"
+#include "device/r4300/r4300_core.h"
 #include "cheat.h"
 #include "eventloop.h"
 #include "list.h"
 #include "main.h"
-#include "memory/memory.h"
 #include "osal/preproc.h"
-#include "r4300/r4300_core.h"
 #include "rom.h"
 
 #define __STDC_FORMAT_MACROS

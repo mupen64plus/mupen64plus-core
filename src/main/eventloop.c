@@ -67,10 +67,10 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
+#include "device/r4300/reset.h"
 #include "eventloop.h"
 #include "main.h"
 #include "plugin/plugin.h"
-#include "r4300/reset.h"
 #include "sdl_key_converter.h"
 #include "util.h"
 
