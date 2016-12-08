@@ -47,7 +47,7 @@ float** r4300_cp1_regs_simple(void)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.cp1.regs_simple_;
+    return g_dev.r4300.cp1.regs_simple;
 #else
     return &g_dev_r4300_cp1_regs_simple;
 #endif
@@ -57,7 +57,7 @@ double** r4300_cp1_regs_double(void)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.cp1.regs_double_;
+    return g_dev.r4300.cp1.regs_double;
 #else
     return g_dev_r4300_cp1_regs_double;
 #endif
@@ -67,7 +67,7 @@ uint32_t* r4300_cp1_fcr0(void)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr0_;
+    return &g_dev.r4300.cp1.fcr0;
 #else
     return &g_dev_r4300_cp1_fcr0;
 #endif
@@ -77,7 +77,7 @@ uint32_t* r4300_cp1_fcr31(void)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr31_;
+    return &g_dev.r4300.cp1.fcr31;
 #else
     return &g_dev_r4300_cp1_fcr31;
 #endif
