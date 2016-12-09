@@ -68,6 +68,8 @@
     .eabi_attribute 18, 4
     .file    "linkage_arm.S"
 
+#include "main/asm_defines_gas.h"
+
 BSS_SECTION
 
     .align   12
@@ -146,8 +148,8 @@ TEXT_SECTION
     .jiptr_offset2  : .word jump_in-(.jiptr_pic2+8)
     .jdptr_offset1  : .word jump_dirty-(.jdptr_pic1+8)
     .jdptr_offset2  : .word jump_dirty-(.jdptr_pic2+8)
-    .tlbptr_offset1 : .word tlb_LUT_r-(.tlbptr_pic1+8)
-    .tlbptr_offset2 : .word tlb_LUT_r-(.tlbptr_pic2+8)
+    .tlbptr_offset1 : .word g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_tlb + offsetof_struct_tlb_LUT_r - (.tlbptr_pic1+8)
+    .tlbptr_offset2 : .word g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cp0 + offsetof_struct_cp0_tlb + offsetof_struct_tlb_LUT_r - (.tlbptr_pic2+8)
     .htptr_offset1  : .word hash_table-(.htptr_pic1+8)
     .htptr_offset2  : .word hash_table-(.htptr_pic2+8)
     .htptr_offset3  : .word hash_table-(.htptr_pic3+8)
