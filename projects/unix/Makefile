@@ -664,7 +664,7 @@ CXXFLAGS += $(CFLAGS)
 
 # Manual dep specification
 $(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
-$(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.asm: $(SRCDIR)/main/asm_defines_gas.h
+$(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
 
 # Generate defines for nasm
 $(SRCDIR)/main/asm_defines_nasm.h: $(SRCDIR)/main/asm_defines.c
