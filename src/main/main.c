@@ -50,6 +50,7 @@
 #include "backends/storage_backend.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/pifbootrom/pifbootrom.h"
 #include "device/r4300/new_dynarec/new_dynarec.h"
 #include "device/r4300/r4300.h"
 #include "device/r4300/reset.h"
@@ -1027,7 +1028,7 @@ m64p_error main_run(void)
     /* call r4300 CPU core and run the game */
     poweron_device(&g_dev);
 
-    r4300_reset_soft();
+    pifbootrom_hle_execute(&g_dev);
     r4300_execute();
 
     /* now begin to shut down */

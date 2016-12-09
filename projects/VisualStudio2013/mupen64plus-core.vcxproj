@@ -57,6 +57,7 @@
     <ClCompile Include="..\..\src\device\pi\flashram.c" />
     <ClCompile Include="..\..\src\device\pi\pi_controller.c" />
     <ClCompile Include="..\..\src\device\pi\sram.c" />
+    <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c" />
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\cp0.c" />
     <ClCompile Include="..\..\src\device\r4300\cp1.c" />
@@ -473,6 +474,7 @@
     <ClInclude Include="..\..\src\device\pi\flashram.h" />
     <ClInclude Include="..\..\src\device\pi\pi_controller.h" />
     <ClInclude Include="..\..\src\device\pi\sram.h" />
+    <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h" />
     <ClInclude Include="..\..\src\device\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0_private.h" />

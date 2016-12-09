@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - r4300.h                                                 *
+ *   Mupen64plus - pifbootrom.h                                            *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2002 Hacktarux                                          *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,10 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_R4300_R4300_H
-#define M64P_DEVICE_R4300_R4300_H
+#ifndef M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
+#define M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
 
-void r4300_execute(void);
+struct device;
 
-#endif /* M64P_DEVICE_R4300_R4300_H */
+/* Simulates end result of PIFBootROM execution.
+ * This bypasses entirely the execution of real PIFBootROM */
+void pifbootrom_hle_execute(struct device* dev);
 
+#endif

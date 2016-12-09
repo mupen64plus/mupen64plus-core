@@ -26,6 +26,7 @@
 
 #include "cached_interp.h"
 #include "interupt.h"
+#include "device/pifbootrom/pifbootrom.h"
 #include "main/main.h"
 #include "r4300.h"
 #include "r4300_core.h"
@@ -35,7 +36,7 @@ void reset_hard(void)
 {
     poweron_device(&g_dev);
 
-    r4300_reset_soft();
+    pifbootrom_hle_execute(&g_dev);
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt() = 624999;
     init_interupt();

@@ -31,6 +31,7 @@
 #include "api/m64p_types.h"
 #include "device/ai/ai_controller.h"
 #include "device/pi/pi_controller.h"
+#include "device/pifbootrom/pifbootrom.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
 #include "device/r4300/mi_controller.h"
@@ -439,7 +440,7 @@ static void nmi_int_handler(void)
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
     // simulate the soft reset code which would run from the PIF ROM
-    r4300_reset_soft();
+    pifbootrom_hle_execute(&g_dev);
     // clear all interrupts, reset interrupt counters back to 0
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
