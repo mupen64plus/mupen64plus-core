@@ -19,6 +19,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "main/main.h"
+#include "r4300/tlb.h"
 
 void *dynamic_linker(void * src, u_int vaddr);
 void *dynamic_linker_ds(void * src, u_int vaddr);
@@ -30,11 +31,25 @@ extern int pending_exception;
 extern int branch_target;
 extern int ram_offset;
 extern uint64_t readmem_dword;
-extern precomp_instr fake_pc;
+extern struct precomp_instr fake_pc;
 extern void *dynarec_local;
 extern u_int memory_map[1048576];
 extern u_int mini_ht[32][2];
 extern u_int rounding_modes[4];
+extern double** g_dev_r4300_cp1_regs_double;
+extern float* g_dev_r4300_cp1_regs_simple;
+extern uint32_t g_dev_r4300_cp1_fcr31;
+extern uint32_t g_dev_r4300_cp1_fcr0;
+extern unsigned int* g_dev_r4300_cp0_next_interrupt;
+extern uint32_t* g_dev_r4300_cp0_regs;
+extern uint64_t g_dev_mem_wdword;
+extern uint32_t g_dev_mem_wword;
+extern uint16_t g_dev_mem_whword;
+extern uint8_t g_dev_mem_wbyte;
+extern uint32_t g_dev_mem_address;
+extern int64_t g_dev_r4300_lo;
+extern int64_t g_dev_r4300_hi;
+extern int64_t* g_dev_r4300_regs;
 
 static u_int literals[1024][2];
 
@@ -105,6 +120,9 @@ const u_int invalidate_addr_reg[16] = {
   0};
 
 #include "../../fpu.h"
+#include "../../../main/device.h"
+#include "../../../memory/memory.h"
+#include "../../../main/main.h"
 
 static u_int jump_table_symbols[] = {
   (int)invalidate_addr,
@@ -310,9 +328,10 @@ void *dynamic_linker(void * src, u_int vaddr)
   assert((vaddr&1)==0);
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
-  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
   head=jump_in[page];
@@ -356,12 +375,12 @@ void *dynamic_linker(void * src, u_int vaddr)
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
           //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          invalid_code[vaddr>>12]=0;
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
-            if(tlb_LUT_r[vaddr>>12]) {
-              invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
-              memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);
           }
@@ -394,9 +413,9 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
 {
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
-  if(page>262143&&tlb_LUT_r[vaddr>>12]) page=(tlb_LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&tlb_LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
   head=jump_in[page];
@@ -440,12 +459,12 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
       if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
           //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          invalid_code[vaddr>>12]=0;
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
           memory_map[vaddr>>12]|=0x40000000;
           if(vpage<2048) {
-            if(tlb_LUT_r[vaddr>>12]) {
-              invalid_code[tlb_LUT_r[vaddr>>12]>>12]=0;
-              memory_map[tlb_LUT_r[vaddr>>12]>>12]|=0x40000000;
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
             }
             restore_candidate[vpage>>3]|=1<<(vpage&7);
           }
@@ -2903,13 +2922,13 @@ static void do_readstub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    ftable=(int)g_dev.mem.readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    ftable=(int)g_dev.mem.readmemh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
+    ftable=(int)g_dev.mem.readmemd;
   emit_writeword(rs,(int)&g_dev_mem_address);
   //emit_pusha();
   save_regs(reglist);
@@ -2977,13 +2996,13 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   assert(rs>=0);
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)readmemb;
+    ftable=(int)g_dev.mem.readmemb;
   if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)readmemh;
+    ftable=(int)g_dev.mem.readmemh;
   if(type==LOADW_STUB)
-    ftable=(int)readmem;
+    ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
-    ftable=(int)readmemd;
+    ftable=(int)g_dev.mem.readmemd;
   emit_writeword(rs,(int)&g_dev_mem_address);
   //emit_pusha();
   save_regs(reglist);
@@ -3072,13 +3091,13 @@ static void do_writestub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    ftable=(int)g_dev.mem.writememb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
+    ftable=(int)g_dev.mem.writememd;
   emit_writeword(rs,(int)&g_dev_mem_address);
   //emit_shrimm(rs,16,rs);
   //emit_movmem_indexedx4(ftable,rs,rs);
@@ -3139,13 +3158,13 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   assert(rt>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)writememb;
+    ftable=(int)g_dev.mem.writememb;
   if(type==STOREH_STUB)
-    ftable=(int)writememh;
+    ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
-    ftable=(int)writemem;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
-    ftable=(int)writememd;
+    ftable=(int)g_dev.mem.writememd;
   emit_writeword(rs,(int)&g_dev_mem_address);
   //emit_shrimm(rs,16,rs);
   //emit_movmem_indexedx4(ftable,rs,rs);

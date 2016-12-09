@@ -30,6 +30,12 @@
 
 #include <string.h>
 
+extern int64_t* g_dev_r4300_regs;
+extern int64_t g_dev_r4300_hi;
+extern int64_t g_dev_r4300_lo;
+extern struct precomp_instr* g_dev_r4300_pc;
+extern int g_dev_r4300_stop;
+
 void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
 {
     r4300->emumode = emumode;

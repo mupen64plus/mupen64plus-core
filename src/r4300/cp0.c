@@ -37,6 +37,9 @@
 #include "debugger/dbg_types.h"
 #endif
 
+extern uint32_t* g_dev_r4300_cp0_regs;
+extern unsigned int* g_dev_r4300_cp0_next_interrupt;
+
 /* global functions */
 void init_cp0(struct cp0* cp0, unsigned int count_per_op)
 {

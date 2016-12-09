@@ -45,6 +45,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+extern uint32_t g_dev_mem_address;
+extern uint8_t g_dev_mem_wbyte;
+extern uint16_t g_dev_mem_whword;
+extern uint32_t g_dev_mem_wword;
+extern uint64_t g_dev_mem_wdword;
+
 typedef int (*readfn)(void*,uint32_t,uint32_t*);
 typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 

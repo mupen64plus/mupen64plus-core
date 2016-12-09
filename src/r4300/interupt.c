@@ -469,7 +469,8 @@ static void nmi_int_handler(void)
 #ifdef NEW_DYNAREC
     if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
     {
-        g_dev.r4300.cp0.regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
+        uint32_t* cp0_next_regs = r4300_cp0_regs();
+        cp0_next_regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0xa4000040;
         pending_exception = 1;
         invalidate_all_pages();
