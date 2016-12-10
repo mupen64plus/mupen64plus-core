@@ -23,6 +23,7 @@
 #define M64P_R4300_CP1_H
 
 #include <stdint.h>
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
 struct cp1
 {

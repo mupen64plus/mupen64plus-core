@@ -27,7 +27,7 @@
 #include "interupt.h"
 #include "tlb.h"
 
-#include "new_dynarec/new_dynarec.h"
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
 enum
 {

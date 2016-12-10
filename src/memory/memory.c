@@ -26,7 +26,7 @@
 #include "api/m64p_types.h"
 #include "main/main.h"
 #include "pi/pi_controller.h"
-#include "r4300/new_dynarec/new_dynarec.h"
+#include "r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"

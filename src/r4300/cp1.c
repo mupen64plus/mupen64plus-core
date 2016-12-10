@@ -25,6 +25,8 @@
 #include "cp0.h"
 #include "cp1.h"
 
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+
 #include "main/main.h"
 
 extern float** g_dev_r4300_cp1_regs_simple;

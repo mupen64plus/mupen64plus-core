@@ -23,7 +23,7 @@
 
 #include "cached_interp.h"
 #include "mi_controller.h"
-#include "new_dynarec/new_dynarec.h"
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "r4300.h"
 #include "recomp.h"
 #include "main/main.h"
