@@ -27,7 +27,7 @@
 
 #include "main/main.h"
 
-extern float* g_dev_r4300_cp1_regs_simple;
+extern float** g_dev_r4300_cp1_regs_simple;
 extern double** g_dev_r4300_cp1_regs_double;
 extern uint32_t g_dev_r4300_cp1_fcr0;
 extern uint32_t g_dev_r4300_cp1_fcr31;
@@ -54,7 +54,7 @@ float** r4300_cp1_regs_simple(void)
 /* ARM dynarec uses a different memory layout */
     return g_dev.r4300.cp1.regs_simple;
 #else
-    return &g_dev_r4300_cp1_regs_simple;
+    return g_dev_r4300_cp1_regs_simple;
 #endif
 }
 

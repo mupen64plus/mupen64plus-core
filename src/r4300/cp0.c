@@ -38,7 +38,7 @@
 #endif
 
 extern uint32_t* g_dev_r4300_cp0_regs;
-extern unsigned int* g_dev_r4300_cp0_next_interrupt;
+extern unsigned int g_dev_r4300_cp0_next_interrupt;
 
 /* global functions */
 void init_cp0(struct cp0* cp0, unsigned int count_per_op)
@@ -97,7 +97,7 @@ unsigned int* r4300_cp0_next_interrupt(void)
     return &g_dev.r4300.cp0.next_interrupt;
 #else
 /* ARM dynarec uses a different memory layout */
-    return g_dev_r4300_cp0_next_interrupt;
+    return &g_dev_r4300_cp0_next_interrupt;
 #endif
 }
 
