@@ -905,7 +905,6 @@ m64p_error main_run(void)
     struct storage_backend fla_storage;
     struct storage_backend sra_storage;
     struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
-    uint8_t* mpk_data[GAME_CONTROLLERS_COUNT];
     struct storage_backend eep_storage;
 
 
@@ -951,16 +950,15 @@ m64p_error main_run(void)
     /* setup backends */
     aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
     clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
-    fla_storage = (struct storage_backend){ &fla, save_storage_file };
-    sra_storage = (struct storage_backend){ &sra, save_storage_file };
-    eep_storage = (struct storage_backend){ &eep, save_storage_file };
+    fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_storage_file };
+    sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_storage_file };
+    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, &eep, save_storage_file };
 
     /* setup game controllers data */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         channels[i] = i;
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
-        mpk_storages[i] = (struct storage_backend){ &mpk, save_storage_file };
-        mpk_data[i] = storage_file_ptr(&mpk, i * MEMPAK_SIZE);
+        mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_storage_file };
         rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
     }
 
@@ -970,13 +968,13 @@ m64p_error main_run(void)
                 no_compiled_jump,
                 &aout,
                 g_rom, g_rom_size,
-                storage_file_ptr(&fla, 0), &fla_storage,
-                storage_file_ptr(&sra, 0), &sra_storage,
+                &fla_storage,
+                &sra_storage,
                 g_rdram, g_rdram_size,
                 cins,
-                mpk_data, mpk_storages,
+                mpk_storages,
                 rumbles,
-                storage_file_ptr(&eep, 0), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
+                (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
 

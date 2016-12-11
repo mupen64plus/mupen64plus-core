@@ -48,7 +48,6 @@ struct game_controller
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
-    uint8_t* mpk_data,
     struct storage_backend* mpk_storage,
     struct rumble_backend* rumble);
 

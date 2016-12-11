@@ -93,11 +93,8 @@ static void dma_si_read(struct si_controller* si)
 
 void init_si(struct si_controller* si,
              struct controller_input_backend* cins,
-             uint8_t* mpk_data[],
              struct storage_backend* mpk_storages,
              struct rumble_backend* rumbles,
-             uint8_t* eeprom_data,
-             size_t eeprom_size,
              uint16_t eeprom_id,
              struct storage_backend* eeprom_storage,
              struct clock_backend* clock,
@@ -110,9 +107,9 @@ void init_si(struct si_controller* si,
 
     init_pif(&si->pif,
         cins,
-        mpk_data, mpk_storages,
+        mpk_storages,
         rumbles,
-        eeprom_data, eeprom_size, eeprom_id, eeprom_storage,
+        eeprom_id, eeprom_storage,
         clock,
         ipl3);
 }

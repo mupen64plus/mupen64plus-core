@@ -62,9 +62,8 @@ void format_mempak(uint8_t* mpk_data)
 }
 
 
-void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage)
+void init_mempak(struct mempak* mpk, struct storage_backend* storage)
 {
-    mpk->data = data;
     mpk->storage = storage;
 }
 
@@ -72,7 +71,7 @@ void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, si
 {
     if (address < 0x8000)
     {
-        memcpy(data, &mpk->data[address], size);
+        memcpy(data, &mpk->storage->data[address], size);
     }
     else
     {
@@ -84,7 +83,7 @@ void mempak_write_command(struct mempak* mpk, uint16_t address, uint8_t* data, s
 {
     if (address < 0x8000)
     {
-        memcpy(&mpk->data[address], data, size);
+        memcpy(&mpk->storage->data[address], data, size);
         storage_save(mpk->storage);
     }
     else

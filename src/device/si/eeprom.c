@@ -39,13 +39,9 @@ void format_eeprom(uint8_t* eeprom, size_t size)
 
 
 void init_eeprom(struct eeprom* eeprom,
-    uint8_t* data,
-    size_t size,
     uint16_t id,
     struct storage_backend* storage)
 {
-    eeprom->data = data;
-    eeprom->size = size;
     eeprom->id = id;
     eeprom->storage = storage;
 }
@@ -78,9 +74,9 @@ void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd)
     uint8_t* data = &cmd[4];
 
     /* read 8-byte block */
-    if (address < eeprom->size)
+    if (address < eeprom->storage->size)
     {
-        memcpy(data, &eeprom->data[address], 8);
+        memcpy(data, &eeprom->storage->data[address], 8);
     }
     else
     {
@@ -94,9 +90,9 @@ void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd)
     const uint8_t* data = &cmd[4];
 
     /* write 8-byte block */
-    if (address < eeprom->size)
+    if (address < eeprom->storage->size)
     {
-        memcpy(&eeprom->data[address], data, 8);
+        memcpy(&eeprom->storage->data[address], data, 8);
         storage_save(eeprom->storage);
     }
     else

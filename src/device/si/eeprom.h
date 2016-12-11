@@ -29,8 +29,6 @@ struct storage_backend;
 
 struct eeprom
 {
-    uint8_t* data;
-    size_t size;
     uint16_t id;
     struct storage_backend* storage;
 };
@@ -39,8 +37,6 @@ struct eeprom
 void format_eeprom(uint8_t* eeprom, size_t size);
 
 void init_eeprom(struct eeprom* eeprom,
-    uint8_t* data,
-    size_t size,
     uint16_t id,
     struct storage_backend* storage);
 

@@ -35,8 +35,6 @@ struct storage_file
 int open_storage_file(struct storage_file* storage, size_t size, const char* filename);
 void close_storage_file(struct storage_file* storage);
 
-uint8_t* storage_file_ptr(struct storage_file* storage, size_t offset);
-
 void save_storage_file(void* opaque);
 
 #endif

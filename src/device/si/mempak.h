@@ -29,7 +29,6 @@ struct storage_backend;
 
 struct mempak
 {
-    uint8_t* data;
     struct storage_backend* storage;
 };
 
@@ -37,7 +36,7 @@ enum { MEMPAK_SIZE = 0x8000 };
 
 void format_mempak(uint8_t* mempak);
 
-void init_mempak(struct mempak* mpk, uint8_t* data, struct storage_backend* storage);
+void init_mempak(struct mempak* mpk, struct storage_backend* storage);
 
 void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size);
 void mempak_write_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size);

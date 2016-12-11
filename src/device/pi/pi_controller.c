@@ -181,14 +181,14 @@ static void dma_pi_write(struct pi_controller* pi)
 
 void init_pi(struct pi_controller* pi,
              uint8_t* rom, size_t rom_size,
-             uint8_t* flashram_data, struct storage_backend* flashram_storage,
-             uint8_t* sram_data, struct storage_backend* sram_storage,
+             struct storage_backend* flashram_storage,
+             struct storage_backend* sram_storage,
              struct r4300_core* r4300,
              struct ri_controller* ri)
 {
     init_cart_rom(&pi->cart_rom, rom, rom_size);
-    init_flashram(&pi->flashram, flashram_data, flashram_storage);
-    init_sram(&pi->sram, sram_data, sram_storage);
+    init_flashram(&pi->flashram, flashram_storage);
+    init_sram(&pi->sram, sram_storage);
 
     pi->use_flashram = 0;
 

@@ -31,13 +31,12 @@ enum { SRAM_SIZE = 0x8000 };
 
 struct sram
 {
-    uint8_t* data;
     struct storage_backend* storage;
 };
 
 void format_sram(uint8_t* sram);
 
-void init_sram(struct sram* sram, uint8_t* data, struct storage_backend* storage);
+void init_sram(struct sram* sram, struct storage_backend* storage);
 
 void dma_write_sram(struct pi_controller* pi);
 void dma_read_sram(struct pi_controller* pi);

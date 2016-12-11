@@ -178,13 +178,12 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
-    uint8_t* mpk_data,
     struct storage_backend* mpk_storage,
     struct rumble_backend* rumble)
 {
     cont->cin = cin;;
 
-    init_mempak(&cont->mempak, mpk_data, mpk_storage);
+    init_mempak(&cont->mempak, mpk_storage);
     init_rumblepak(&cont->rumblepak, rumble);
 }
 

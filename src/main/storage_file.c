@@ -50,12 +50,6 @@ void close_storage_file(struct storage_file* storage)
     free((void*)storage->filename);
 }
 
-uint8_t* storage_file_ptr(struct storage_file* storage, size_t offset)
-{
-    return storage->data + offset;
-}
-
-
 void save_storage_file(void* opaque)
 {
     struct storage_file* storage = (struct storage_file*)opaque;

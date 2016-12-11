@@ -46,12 +46,10 @@ struct flashram
     unsigned int erase_offset;
     unsigned int write_pointer;
 
-    uint8_t* data;
     struct storage_backend* storage;
 };
 
 void init_flashram(struct flashram* flashram,
-                   uint8_t* data,
                    struct storage_backend* storage);
 
 void poweron_flashram(struct flashram* flashram);
