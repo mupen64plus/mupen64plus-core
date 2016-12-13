@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - get_time_using_C_localtime.h                            *
+ *   Mupen64plus - get_time_using_time_plus_delta.c                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,11 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PLUGIN_GET_TIME_USING_C_LOCALTIME_H
-#define M64P_PLUGIN_GET_TIME_USING_C_LOCALTIME_H
+#include "get_time_using_time_plus_delta.h"
 
-struct tm;
+#include <time.h>
 
-const struct tm* get_time_using_C_localtime(void* user_data);
 
-#endif
+time_t get_time_using_time_plus_delta(void* user_data)
+{
+    time_t user_delta = (user_data == NULL)
+        ? 0
+        : *(time_t*)user_data;
+
+    return user_delta + time(NULL);
+}
+

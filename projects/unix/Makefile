@@ -477,7 +477,7 @@ SOURCE = \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
 	$(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
-	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
+	$(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
 	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \

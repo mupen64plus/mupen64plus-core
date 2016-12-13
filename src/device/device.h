@@ -75,7 +75,7 @@ void init_device(struct device* dev,
     uint8_t* mpk_data[], struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
     uint8_t* eeprom_data, size_t eeprom_size, uint16_t eeprom_id, struct storage_backend* eeprom_storage,
-    struct clock_backend* rtc,
+    struct clock_backend* clock,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing);
 

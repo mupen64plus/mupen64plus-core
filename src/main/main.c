@@ -62,7 +62,7 @@
 #include "osd/screenshot.h"
 #include "plugin/emulate_game_controller_via_input_plugin.h"
 #include "plugin/emulate_speaker_via_audio_plugin.h"
-#include "plugin/get_time_using_C_localtime.h"
+#include "plugin/get_time_using_time_plus_delta.h"
 #include "plugin/plugin.h"
 #include "plugin/rumble_via_input_plugin.h"
 #include "profile.h"
@@ -890,7 +890,7 @@ static void open_eep_file(struct storage_file* storage)
 m64p_error main_run(void)
 {
     size_t i;
-    unsigned int disable_extra_mem, count_per_op;
+    unsigned int count_per_op;
     unsigned int emumode;
     int no_compiled_jump, alternate_vi_timing, count_per_scanline;
     struct storage_file eep;
@@ -899,7 +899,7 @@ m64p_error main_run(void)
     struct storage_file sra;
     int channels[GAME_CONTROLLERS_COUNT];
     struct audio_out_backend aout;
-    struct clock_backend rtc;
+    struct clock_backend clock;
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
     struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
     struct storage_backend fla_storage;
@@ -920,7 +920,6 @@ m64p_error main_run(void)
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
-    disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
     count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
@@ -951,7 +950,7 @@ m64p_error main_run(void)
 
     /* setup backends */
     aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
-    rtc = (struct clock_backend){ NULL, get_time_using_C_localtime };
+    clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
     fla_storage = (struct storage_backend){ &fla, save_storage_file };
     sra_storage = (struct storage_backend){ &sra, save_storage_file };
     eep_storage = (struct storage_backend){ &eep, save_storage_file };
@@ -978,7 +977,7 @@ m64p_error main_run(void)
                 mpk_data, mpk_storages,
                 rumbles,
                 storage_file_ptr(&eep, 0), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
-                &rtc,
+                &clock,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
 
     // Attach rom to plugins

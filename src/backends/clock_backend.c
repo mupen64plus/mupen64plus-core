@@ -22,7 +22,7 @@
 #include "clock_backend.h"
 
 
-const struct tm* clock_get_time(struct clock_backend* clock)
+time_t clock_get_time(struct clock_backend* clock)
 {
     return clock->get_time(clock->user_data);
 }

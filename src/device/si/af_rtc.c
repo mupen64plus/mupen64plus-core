@@ -21,11 +21,11 @@
 
 #include "af_rtc.h"
 
-#include <time.h>
-
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "backends/clock_backend.h"
+
+#include <time.h>
 
 enum { AF_RTC_DEVICE_TYPE = 0x1000 };
 
@@ -53,7 +53,7 @@ static void time2data(uint8_t* data, time_t now)
 static void update_rtc(struct af_rtc* rtc)
 {
     /* update rtc->now */
-    time_t now = time(NULL);
+    time_t now = clock_get_time(rtc->clock);
     rtc->now += now - rtc->last_update_rtc;
     rtc->last_update_rtc = now;
 }

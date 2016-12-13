@@ -34,9 +34,8 @@ struct af_rtc
     /* block 2 */
     time_t now;
 
-    struct clock_backend* clock;
-
     time_t last_update_rtc;
+    struct clock_backend* clock;
 };
 
 void init_af_rtc(struct af_rtc* rtc,

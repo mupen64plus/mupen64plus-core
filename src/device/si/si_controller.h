@@ -69,7 +69,7 @@ void init_si(struct si_controller* si,
              size_t eeprom_size,
              uint16_t eeprom_id,
              struct storage_backend* eeprom_storage,
-             struct clock_backend* rtc,
+             struct clock_backend* clock,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
              struct ri_controller* ri);

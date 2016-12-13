@@ -76,7 +76,7 @@ void init_pif(struct pif* pif,
     size_t eeprom_size,
     uint16_t eeprom_id,
     struct storage_backend* eeprom_storage,
-    struct clock_backend* rtc,
+    struct clock_backend* clock,
     const uint8_t* ipl3)
 {
     size_t i;
@@ -89,7 +89,7 @@ void init_pif(struct pif* pif,
     }
 
     init_eeprom(&pif->eeprom, eeprom_data, eeprom_size, eeprom_id, eeprom_storage);
-    init_af_rtc(&pif->af_rtc, rtc);
+    init_af_rtc(&pif->af_rtc, clock);
 
     init_cic_using_ipl3(&pif->cic, ipl3);
 }
