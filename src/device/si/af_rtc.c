@@ -27,60 +27,125 @@
 #include "api/m64p_types.h"
 #include "backends/clock_backend.h"
 
+enum { AF_RTC_DEVICE_TYPE = 0x1000 };
+
+
 static unsigned char byte2bcd(int n)
 {
     n %= 100;
     return ((n / 10) << 4) | (n % 10);
 }
 
-
-void init_af_rtc(struct af_rtc* afrtc,
-                 struct clock_backend* rtc)
+static void time2data(uint8_t* data, time_t now)
 {
-    afrtc->rtc = rtc;
+    const struct tm* tm = localtime(&now);
+
+    data[0] = byte2bcd(tm->tm_sec);
+    data[1] = byte2bcd(tm->tm_min);
+    data[2] = 0x80 + byte2bcd(tm->tm_hour);
+    data[3] = byte2bcd(tm->tm_mday);
+    data[4] = byte2bcd(tm->tm_wday);
+    data[5] = byte2bcd(tm->tm_mon + 1);
+    data[6] = byte2bcd(tm->tm_year);
+    data[7] = byte2bcd(tm->tm_year / 100);
 }
 
-void af_rtc_status_command(struct af_rtc* afrtc, uint8_t* cmd)
+static void update_rtc(struct af_rtc* rtc)
+{
+    /* update rtc->now */
+    time_t now = time(NULL);
+    rtc->now += now - rtc->last_update_rtc;
+    rtc->last_update_rtc = now;
+}
+
+
+
+void init_af_rtc(struct af_rtc* rtc,
+                 struct clock_backend* clock)
+{
+    rtc->clock = clock;
+}
+
+void poweron_af_rtc(struct af_rtc* rtc)
+{
+    /* blocks 1&2 are read/write, timer is activated */
+    rtc->control = 0x0200;
+
+    rtc->now = 0;
+    rtc->last_update_rtc = 0;
+}
+
+void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
 {
     /* AF-RTC status query */
-    cmd[3] = 0x00;
-    cmd[4] = 0x10;
-    cmd[5] = 0x00;
+    uint8_t* type = &cmd[3];
+    uint8_t* status = &cmd[5];
+
+    type[0] = (uint8_t)(AF_RTC_DEVICE_TYPE >> 0);
+    type[1] = (uint8_t)(AF_RTC_DEVICE_TYPE >> 8);
+    *status =  0x00;
 }
 
-void af_rtc_read_command(struct af_rtc* afrtc, uint8_t* cmd)
+void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
 {
-    const struct tm *rtc_time;
+    /* read RTC block */
+    uint8_t block = cmd[3];
+    uint8_t* data = &cmd[4];
+    uint8_t* status = &cmd[12];
 
-    /* read RTC block (cmd[3]: block number) */
-    switch (cmd[3])
+    switch (block)
     {
     case 0:
-        cmd[4] = 0x00;
-        cmd[5] = 0x02;
-        cmd[12] = 0x00;
+        data[0] = (uint8_t)(rtc->control >> 0);
+        data[1] = (uint8_t)(rtc->control >> 8);
+        *status = 0x00;
         break;
     case 1:
-        DebugMessage(M64MSG_ERROR, "AF-RTC read command: cannot read block 1");
+        DebugMessage(M64MSG_ERROR, "AF-RTC reading block 1 is not implemented !");
         break;
     case 2:
-        rtc_time = clock_get_time(afrtc->rtc);
-        cmd[4] = byte2bcd(rtc_time->tm_sec);
-        cmd[5] = byte2bcd(rtc_time->tm_min);
-        cmd[6] = 0x80 + byte2bcd(rtc_time->tm_hour);
-        cmd[7] = byte2bcd(rtc_time->tm_mday);
-        cmd[8] = byte2bcd(rtc_time->tm_wday);
-        cmd[9] = byte2bcd(rtc_time->tm_mon + 1);
-        cmd[10] = byte2bcd(rtc_time->tm_year);
-        cmd[11] = byte2bcd(rtc_time->tm_year / 100);
-        cmd[12] = 0x00;	// status
+        update_rtc(rtc);
+        time2data(data, rtc->now);
+        *status = 0x00;
         break;
+
+    default:
+        DebugMessage(M64MSG_ERROR, "AF-RTC read invalid block: %u", block);
     }
 }
 
-void af_rtc_write_command(struct af_rtc* afrtc, uint8_t* cmd)
+void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd)
 {
     /* write RTC block */
-    DebugMessage(M64MSG_ERROR, "AF-RTC write command: not yet implemented");
+    uint8_t block = cmd[3];
+    const uint8_t* data = &cmd[4];
+    uint8_t* status = &cmd[12];
+
+    switch (block)
+    {
+    case 0:
+        rtc->control = (data[1] << 8) | data[0];
+        *status = 0x00;
+        break;
+    case 1:
+        /* block 1 read-only when control[0] is set */
+        if (rtc->control & 0x01) {
+            break;
+        }
+        DebugMessage(M64MSG_ERROR, "AF-RTC writing block 1 is not implemented !");
+        break;
+    case 2:
+        /* block 2 read-only when control[1] is set */
+        if (rtc->control & 0x02) {
+            break;
+        }
+
+        /* TODO: implement block 2 writes */
+        DebugMessage(M64MSG_ERROR, "AF-RTC writing block 2 is not implemented !");
+        break;
+
+    default:
+        DebugMessage(M64MSG_ERROR, "AF-RTC write invalid block: %u", block);
+    }
 }
 

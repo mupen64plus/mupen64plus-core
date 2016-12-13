@@ -23,19 +23,29 @@
 #define M64P_DEVICE_SI_AF_RTC_H
 
 #include <stdint.h>
+#include <time.h>
 
 struct clock_backend;
 
 struct af_rtc
 {
-    struct clock_backend* rtc;
+    /* block 0 */
+    uint16_t control;
+    /* block 2 */
+    time_t now;
+
+    struct clock_backend* clock;
+
+    time_t last_update_rtc;
 };
 
-void init_af_rtc(struct af_rtc* afrtc,
-                 struct clock_backend* rtc);
+void init_af_rtc(struct af_rtc* rtc,
+                 struct clock_backend* clock);
 
-void af_rtc_status_command(struct af_rtc* afrtc, uint8_t* cmd);
-void af_rtc_read_command(struct af_rtc* afrtc, uint8_t* cmd);
-void af_rtc_write_command(struct af_rtc* afrtc, uint8_t* cmd);
+void poweron_af_rtc(struct af_rtc* rtc);
+
+void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd);
+void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd);
 
 #endif

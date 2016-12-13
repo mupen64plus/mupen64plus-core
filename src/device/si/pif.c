@@ -97,6 +97,8 @@ void init_pif(struct pif* pif,
 void poweron_pif(struct pif* pif)
 {
     memset(pif->ram, 0, PIF_RAM_SIZE);
+
+    poweron_af_rtc(&pif->af_rtc);
 }
 
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
