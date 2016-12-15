@@ -34,7 +34,6 @@
 #include "device/r4300/cp1.h"
 #include "device/r4300/exception.h"
 #include "device/r4300/interupt.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/tlb.h"
 #include "main/main.h"
 #include "osal/preproc.h"

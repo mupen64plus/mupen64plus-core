@@ -36,7 +36,6 @@
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
-#include "device/r4300/r4300.h"
 #include "main.h"
 #include "md5.h"
 #include "osal/preproc.h"

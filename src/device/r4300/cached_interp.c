@@ -35,7 +35,6 @@
 #include "device/r4300/interupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/tlb.h"
 #include "main/main.h"

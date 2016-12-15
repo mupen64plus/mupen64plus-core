@@ -435,7 +435,6 @@ SOURCE = \
 	$(SRCDIR)/device/pi/pi_controller.c \
 	$(SRCDIR)/device/pi/sram.c \
 	$(SRCDIR)/device/pifbootrom/pifbootrom.c \
-	$(SRCDIR)/device/r4300/r4300.c \
 	$(SRCDIR)/device/r4300/cached_interp.c \
 	$(SRCDIR)/device/r4300/cp0.c \
 	$(SRCDIR)/device/r4300/cp1.c \

@@ -26,7 +26,6 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "assemble.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
 #include "device/r4300/x86_64/assemble_struct.h"

@@ -23,7 +23,6 @@
 #include "api/m64p_types.h"
 #include "device/r4300/exception.h"
 #include "device/memory/memory.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"

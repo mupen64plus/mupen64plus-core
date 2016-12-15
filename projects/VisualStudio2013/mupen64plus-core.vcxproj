@@ -120,7 +120,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\pure_interp.c" />
-    <ClCompile Include="..\..\src\device\r4300\r4300.c" />
     <ClCompile Include="..\..\src\device\r4300\r4300_core.c" />
     <ClCompile Include="..\..\src\device\r4300\recomp.c" />
     <ClCompile Include="..\..\src\device\r4300\tlb.c" />
@@ -527,7 +526,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\ops.h" />
     <ClInclude Include="..\..\src\device\r4300\pure_interp.h" />
-    <ClInclude Include="..\..\src\device\r4300\device\r4300.h" />
     <ClInclude Include="..\..\src\device\r4300\device\r4300_core.h" />
     <ClInclude Include="..\..\src\device\r4300\recomp.h" />
     <ClInclude Include="..\..\src\device\r4300\recomp_types.h" />

@@ -28,7 +28,6 @@
 #include "device/r4300/cp1.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
 #include "main/main.h"

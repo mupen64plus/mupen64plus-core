@@ -42,7 +42,6 @@ extern "C" {
 #include "device/r4300/cp1.h"
 #include "device/r4300/interupt.h"
 #include "device/r4300/ops.h"
-#include "device/r4300/r4300.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
