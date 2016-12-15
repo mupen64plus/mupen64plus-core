@@ -51,9 +51,6 @@
 #include "cheat.h"
 #include "device/device.h"
 #include "device/pifbootrom/pifbootrom.h"
-#include "device/r4300/new_dynarec/new_dynarec.h"
-#include "device/r4300/r4300.h"
-#include "device/r4300/reset.h"
 #include "eventloop.h"
 #include "main.h"
 #include "osal/files.h"
@@ -681,10 +678,13 @@ int main_volume_get_muted(void)
 
 m64p_error main_reset(int do_hard_reset)
 {
-    if (do_hard_reset)
-        g_dev.r4300.reset_hard_job = 1;
-    else
-        reset_soft();
+    if (do_hard_reset) {
+        hard_reset_device(&g_dev);
+    }
+    else {
+        soft_reset_device(&g_dev);
+    }
+
     return M64ERR_SUCCESS;
 }
 
@@ -1021,11 +1021,9 @@ m64p_error main_run(void)
     g_EmulatorRunning = 1;
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
-    /* call r4300 CPU core and run the game */
     poweron_device(&g_dev);
-
     pifbootrom_hle_execute(&g_dev);
-    r4300_execute();
+    run_device(&g_dev);
 
     /* now begin to shut down */
 #ifdef WITH_LIRC
@@ -1101,7 +1099,7 @@ void main_stop(void)
         StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
 
-    *r4300_stop() = 1;
+    stop_device(&g_dev);
 
 #ifdef DBG
     if(g_DebuggerActive)

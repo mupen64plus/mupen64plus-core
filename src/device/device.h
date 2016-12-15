@@ -84,4 +84,23 @@ void init_device(struct device* dev,
  */
 void poweron_device(struct device* dev);
 
+/* Let device run.
+ * To return from this function, a call to stop_device has to be made.
+ */
+void run_device(struct device* dev);
+
+/* Terminate execution of running device.
+ */
+void stop_device(struct device* dev);
+
+/* Schedule a hard reset on running device.
+ * This is what model a poweroff/poweron action on the device.
+ */
+void hard_reset_device(struct device* dev);
+
+/* Schedule a soft reset on runnning device.
+ * This is what model a press on the device reset button.
+ */
+void soft_reset_device(struct device* dev);
+
 #endif

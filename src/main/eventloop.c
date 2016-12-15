@@ -67,7 +67,6 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
-#include "device/r4300/reset.h"
 #include "eventloop.h"
 #include "main.h"
 #include "plugin/plugin.h"
@@ -616,7 +615,7 @@ void event_sdl_keydown(int keysym, int keymod)
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdIncrement)))
         main_state_inc_slot();
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdReset)))
-        reset_soft();
+        main_reset(0);
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdSpeeddown)))
         main_speeddown(5);
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdSpeedup)))

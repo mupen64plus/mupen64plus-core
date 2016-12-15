@@ -83,3 +83,27 @@ void poweron_device(struct device* dev)
     poweron_vi(&dev->vi);
     poweron_memory(&dev->mem);
 }
+
+void run_device(struct device* dev)
+{
+    /* device execution is driven by the r4300 */
+    r4300_execute();
+}
+
+void stop_device(struct device* dev)
+{
+    /* set stop flag so that r4300 execution will be stopped at next interrupt */
+    *r4300_stop() = 1;
+}
+
+void hard_reset_device(struct device* dev)
+{
+    /* set reset hard flag so reset_hard will be called at next interrupt */
+    dev->r4300.reset_hard_job = 1;
+}
+
+void soft_reset_device(struct device* dev)
+{
+    /* schedule HW2 and NMI interrupts to trigger a soft reset */
+    reset_soft();
+}
