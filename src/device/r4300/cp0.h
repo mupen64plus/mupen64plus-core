@@ -93,14 +93,14 @@ enum
     CP0_CAUSE_EXCCODE_MASK  = 0x1f << 2,
 
     /* Interrupt Pending */
-    CP0_CAUSE_IP0  = 0x00000100,
-    CP0_CAUSE_IP1  = 0x00000200,
-    CP0_CAUSE_IP2  = 0x00000400,
-    CP0_CAUSE_IP3  = 0x00000800,
-    CP0_CAUSE_IP4  = 0x00001000,
+    CP0_CAUSE_IP0  = 0x00000100,    /* sw0 */
+    CP0_CAUSE_IP1  = 0x00000200,    /* sw1 */
+    CP0_CAUSE_IP2  = 0x00000400,    /* rcp */
+    CP0_CAUSE_IP3  = 0x00000800,    /* cart */
+    CP0_CAUSE_IP4  = 0x00001000,    /* pif */
     CP0_CAUSE_IP5  = 0x00002000,
     CP0_CAUSE_IP6  = 0x00004000,
-    CP0_CAUSE_IP7  = 0x00008000,
+    CP0_CAUSE_IP7  = 0x00008000,    /* timer */
 
     CP0_CAUSE_CE1 = 0x10000000,
     CP0_CAUSE_BD  = 0x80000000,
