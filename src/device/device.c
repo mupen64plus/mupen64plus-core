@@ -104,6 +104,7 @@ void hard_reset_device(struct device* dev)
 
 void soft_reset_device(struct device* dev)
 {
-    /* schedule HW2 and NMI interrupts to trigger a soft reset */
-    reset_soft();
+    /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
+    add_interupt_event(HW2_INT, 0);
+    add_interupt_event(NMI_INT, 50000000);
 }

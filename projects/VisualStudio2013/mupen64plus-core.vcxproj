@@ -123,7 +123,6 @@
     <ClCompile Include="..\..\src\device\r4300\r4300.c" />
     <ClCompile Include="..\..\src\device\r4300\r4300_core.c" />
     <ClCompile Include="..\..\src\device\r4300\recomp.c" />
-    <ClCompile Include="..\..\src\device\r4300\reset.c" />
     <ClCompile Include="..\..\src\device\r4300\tlb.c" />
     <ClCompile Include="..\..\src\device\r4300\x86\assemble.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
@@ -533,7 +532,6 @@
     <ClInclude Include="..\..\src\device\r4300\recomp.h" />
     <ClInclude Include="..\..\src\device\r4300\recomp_types.h" />
     <ClInclude Include="..\..\src\device\r4300\recomph.h" />
-    <ClInclude Include="..\..\src\device\r4300\reset.h" />
     <ClInclude Include="..\..\src\device\r4300\tlb.h" />
     <ClInclude Include="..\..\src\device\r4300\x86\assemble.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>

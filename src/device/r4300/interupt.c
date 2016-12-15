@@ -39,7 +39,6 @@
 #include "device/r4300/r4300.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/reset.h"
 #include "device/rdp/rdp_core.h"
 #include "device/rsp/rsp_core.h"
 #include "device/si/si_controller.h"
@@ -477,6 +476,23 @@ static void nmi_int_handler(void)
         invalidate_all_pages();
     }
 #endif
+}
+
+
+static void reset_hard(void)
+{
+    poweron_device(&g_dev);
+
+    pifbootrom_hle_execute(&g_dev);
+    g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
+    *r4300_cp0_next_interrupt() = 624999;
+    init_interupt();
+    if(g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
+    {
+        free_blocks();
+        init_blocks();
+    }
+    generic_jump_to(g_dev.r4300.cp0.last_addr);
 }
 
 

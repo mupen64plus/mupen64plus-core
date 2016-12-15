@@ -446,7 +446,6 @@ SOURCE = \
 	$(SRCDIR)/device/r4300/pure_interp.c \
 	$(SRCDIR)/device/r4300/r4300_core.c \
 	$(SRCDIR)/device/r4300/recomp.c \
-	$(SRCDIR)/device/r4300/reset.c \
 	$(SRCDIR)/device/r4300/tlb.c \
 	$(SRCDIR)/device/rdp/fb.c \
 	$(SRCDIR)/device/rdp/rdp_core.c \
