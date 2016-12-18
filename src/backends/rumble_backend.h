@@ -33,7 +33,7 @@ enum rumble_action
 struct rumble_backend
 {
     void* user_data;
-    void (*rumble)(void*, enum rumble_action);
+    void (*exec)(void*, enum rumble_action);
 };
 
 void rumble_exec(struct rumble_backend* rumble, enum rumble_action action);

@@ -958,7 +958,7 @@ m64p_error main_run(void)
         channels[i] = i;
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
-        rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
+        rumbles[i] = (struct rumble_backend){ &channels[i], rvip_exec };
     }
 
     init_device(&g_dev,

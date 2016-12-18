@@ -27,7 +27,7 @@
 #include "plugin.h"
 #include "backends/rumble_backend.h"
 
-void rvip_rumble(void* opaque, enum rumble_action action)
+void rvip_exec(void* opaque, enum rumble_action action)
 {
     int channel = *(int*)opaque;
 
