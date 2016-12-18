@@ -68,7 +68,7 @@
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
-#include "storage_file.h"
+#include "file_storage.h"
 #include "util.h"
 
 #ifdef DBG
@@ -835,10 +835,10 @@ void new_vi(void)
     apply_speed_limiter();
 }
 
-static void open_mpk_file(struct storage_file* storage)
+static void open_mpk_file(struct file_storage* storage)
 {
     unsigned int i;
-    int ret = open_storage_file(storage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
+    int ret = open_file_storage(storage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
@@ -848,9 +848,9 @@ static void open_mpk_file(struct storage_file* storage)
     }
 }
 
-static void open_fla_file(struct storage_file* storage)
+static void open_fla_file(struct file_storage* storage)
 {
-    int ret = open_storage_file(storage, FLASHRAM_SIZE, get_flashram_path());
+    int ret = open_file_storage(storage, FLASHRAM_SIZE, get_flashram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
@@ -858,9 +858,9 @@ static void open_fla_file(struct storage_file* storage)
     }
 }
 
-static void open_sra_file(struct storage_file* storage)
+static void open_sra_file(struct file_storage* storage)
 {
-    int ret = open_storage_file(storage, SRAM_SIZE, get_sram_path());
+    int ret = open_file_storage(storage, SRAM_SIZE, get_sram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
@@ -868,21 +868,20 @@ static void open_sra_file(struct storage_file* storage)
     }
 }
 
-static void open_eep_file(struct storage_file* storage)
+static void open_eep_file(struct file_storage* storage)
 {
     /* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
      * whatever the real EEPROM size is.
      */
     enum { EEPROM_MAX_SIZE = 0x800 };
 
-    int ret = open_storage_file(storage, EEPROM_MAX_SIZE, get_eeprom_path());
+    int ret = open_file_storage(storage, EEPROM_MAX_SIZE, get_eeprom_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
         format_eeprom(storage->data, EEPROM_MAX_SIZE);
     }
 }
-
 
 /*********************************************************************************************************
 * emulation thread - runs the core
@@ -892,11 +891,12 @@ m64p_error main_run(void)
     size_t i;
     unsigned int count_per_op;
     unsigned int emumode;
-    int no_compiled_jump, alternate_vi_timing, count_per_scanline;
-    struct storage_file eep;
-    struct storage_file fla;
-    struct storage_file mpk;
-    struct storage_file sra;
+    int alternate_vi_timing, count_per_scanline;
+    int no_compiled_jump;
+    struct file_storage eep;
+    struct file_storage fla;
+    struct file_storage mpk;
+    struct file_storage sra;
     int channels[GAME_CONTROLLERS_COUNT];
     struct audio_out_backend aout;
     struct clock_backend clock;
@@ -906,7 +906,6 @@ m64p_error main_run(void)
     struct storage_backend sra_storage;
     struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
     struct storage_backend eep_storage;
-
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -950,15 +949,15 @@ m64p_error main_run(void)
     /* setup backends */
     aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
     clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
-    fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_storage_file };
-    sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_storage_file };
-    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, &eep, save_storage_file };
+    fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_file_storage };
+    sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_file_storage };
+    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, &eep, save_file_storage };
 
     /* setup game controllers data */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         channels[i] = i;
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
-        mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_storage_file };
+        mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
         rumbles[i] = (struct rumble_backend){ &channels[i], rvip_rumble };
     }
 
@@ -1038,10 +1037,10 @@ m64p_error main_run(void)
         destroy_debugger();
 #endif
 
-    close_storage_file(&sra);
-    close_storage_file(&fla);
-    close_storage_file(&eep);
-    close_storage_file(&mpk);
+    close_file_storage(&sra);
+    close_file_storage(&fla);
+    close_file_storage(&eep);
+    close_file_storage(&mpk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1064,11 +1063,11 @@ on_input_open_failure:
 on_audio_open_failure:
     gfx.romClosed();
 on_gfx_open_failure:
-    /* release storage files */
-    close_storage_file(&sra);
-    close_storage_file(&fla);
-    close_storage_file(&eep);
-    close_storage_file(&mpk);
+    /* release file storages */
+    close_file_storage(&sra);
+    close_file_storage(&fla);
+    close_file_storage(&eep);
+    close_file_storage(&mpk);
 
     return M64ERR_PLUGIN_FAIL;
 }

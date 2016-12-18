@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - storage_file.h                                          *
+ *   Mupen64plus - file_storage.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,22 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_MAIN_STORAGE_FILE_H
-#define M64P_MAIN_STORAGE_FILE_H
+#ifndef M64P_MAIN_FILE_STORAGE_H
+#define M64P_MAIN_FILE_STORAGE_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct storage_file
+struct file_storage
 {
     uint8_t* data;
     size_t size;
     const char* filename;
 };
 
-int open_storage_file(struct storage_file* storage, size_t size, const char* filename);
-void close_storage_file(struct storage_file* storage);
+int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
+void close_file_storage(struct file_storage* storage);
 
-void save_storage_file(void* opaque);
+void save_file_storage(void* opaque);
 
 #endif

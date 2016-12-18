@@ -473,7 +473,7 @@ SOURCE = \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
-	$(SRCDIR)/main/storage_file.c \
+	$(SRCDIR)/main/file_storage.c \
 	$(SRCDIR)/main/workqueue.c \
 	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
 	$(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - storage_file.c                                          *
+ *   Mupen64plus - file_storage.c                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,7 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "storage_file.h"
+#include "file_storage.h"
 
 #include <stdlib.h>
 
@@ -28,7 +28,7 @@
 #include "util.h"
 
 
-int open_storage_file(struct storage_file* storage, size_t size, const char* filename)
+int open_file_storage(struct file_storage* storage, size_t size, const char* filename)
 {
     /* ! Take ownership of filename ! */
     storage->filename = filename;
@@ -44,15 +44,15 @@ int open_storage_file(struct storage_file* storage, size_t size, const char* fil
     return read_from_file(storage->filename, storage->data, storage->size);
 }
 
-void close_storage_file(struct storage_file* storage)
+void close_file_storage(struct file_storage* storage)
 {
     free((void*)storage->data);
     free((void*)storage->filename);
 }
 
-void save_storage_file(void* opaque)
+void save_file_storage(void* opaque)
 {
-    struct storage_file* storage = (struct storage_file*)opaque;
+    struct file_storage* storage = (struct file_storage*)opaque;
 
     switch(write_to_file(storage->filename, storage->data, storage->size))
     {
