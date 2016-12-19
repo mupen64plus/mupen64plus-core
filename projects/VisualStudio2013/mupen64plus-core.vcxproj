@@ -717,17 +717,17 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\main\asm_defines_nasm.h</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">..\..\src\main\asm_defines_nasm.h</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">..\..\src\main\asm_defines_nasm.h</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\main\asm_defines_nasm.h</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">..\..\src\main\asm_defines_nasm.h</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">cl /FA /FaCON %(FullPath) | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '($$1 == "->") { print %define " $$2 "_" $$3 " " substr($$4,2) }' > ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">cl /c /FoCON %(FullPath) | dumpbin.exe /SYMBOLS | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" '(index($$6, "offsetof_struct") == 1) { print %define " $$6 " 0x"$$2 }' > ..\..\src\main\asm_defines_nasm.h</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">..\..\src\main\asm_defines_nasm.h</Outputs>
     </CustomBuild>
   </ItemGroup>
