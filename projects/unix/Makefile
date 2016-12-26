@@ -332,7 +332,6 @@ AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
 MKDIR ?= mkdir -p
-COMPILEANDLINK.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH)
 COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
