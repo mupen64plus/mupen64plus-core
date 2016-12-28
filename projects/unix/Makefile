@@ -328,10 +328,12 @@ endif
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
+OBJDUMP   = $(CROSS_COMPILE)objdump
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
-MKDIR ?= mkdir -p
+MKDIR    ?= mkdir -p
+AWK      ?= awk
 COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
@@ -675,11 +677,11 @@ $(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
 
 # Generate defines for nasm by parsing global symbols
 $(SRCDIR)/main/asm_defines_nasm.h: $(ASM_DEFINES)
-	objdump -t $< | awk '(index($$6, "offsetof_struct") == 1) { print "%define " $$6 " 0x"$$1 }' > $@
+	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "%define " $$6 " 0x"$$1 }' > $@
 
 # Generate defines for gas by parsing global symbols
 $(SRCDIR)/main/asm_defines_gas.h: $(ASM_DEFINES)
-	objdump -t $< | awk '(index($$6, "offsetof_struct") == 1) { print "#define " $$6 " 0x"$$1 }' > $@
+	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "#define " $$6 " 0x"$$1 }' > $@
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
