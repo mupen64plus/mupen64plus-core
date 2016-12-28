@@ -39,10 +39,12 @@
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t)&((TYPE*)0)->MEMBER)
 
-/* Internally used to define a dummy array named "sym" and whose size is "val" bytes.
+/* Internally used to define a dummy array named "sym" and whose size is "val + 1" bytes.
  * This eases extraction of such information using objdump/dumpbin/nm tools.
+ * The plus one in size is to avoid the creation of zero sized array (which are illegal in C).
+ * We need to subtract one in objects symbols sizes to get the correct value.
  */
-#define _DEFINE(sym, val) const char sym[val];
+#define _DEFINE(sym, val) const char sym[1+val];
 
 /* Export member m of structure s.
  * Suitable parsing of corresponding object file (objdump/dumpbin/awk)

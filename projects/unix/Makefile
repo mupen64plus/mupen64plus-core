@@ -677,11 +677,11 @@ $(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
 
 # Generate defines for nasm by parsing global symbols
 $(SRCDIR)/main/asm_defines_nasm.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "%define " $$6 " 0x"$$1 }' > $@
+	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "%define " $$6 " (0x"$$1"-1)" }' > $@
 
 # Generate defines for gas by parsing global symbols
 $(SRCDIR)/main/asm_defines_gas.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "#define " $$6 " 0x"$$1 }' > $@
+	$(OBJDUMP) -t $< | $(AWK) '(index($$6, "offsetof_struct") == 1) { print "#define " $$6 " (0x"$$1"-1)" }' > $@
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
