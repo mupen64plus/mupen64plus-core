@@ -34,10 +34,7 @@
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 
-
-
-#undef offsetof
-#define offsetof(TYPE, MEMBER) ((size_t)&((TYPE*)0)->MEMBER)
+#include <stddef.h>
 
 /* Internally used to define a dummy array named "sym" and whose size is "val + 1" bytes.
  * This eases extraction of such information using objdump/dumpbin/nm tools.
