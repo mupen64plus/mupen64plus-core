@@ -31,6 +31,7 @@
 
 #include "main/device.h"
 #include "memory/memory.h"
+#include "r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "r4300/r4300_core.h"
 #include "ri/ri_controller.h"
 
@@ -54,11 +55,14 @@
 /* Structure members definitions */
 DEFINE(device, r4300);
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
 DEFINE(r4300_core, regs);
 DEFINE(r4300_core, hi);
 DEFINE(r4300_core, lo);
 
 DEFINE(r4300_core, stop);
+#endif
 
 #if defined(__x86_64__)
 DEFINE(r4300_core, save_rsp);
@@ -67,8 +71,11 @@ DEFINE(r4300_core, save_rip);
 DEFINE(r4300_core, return_address);
 
 DEFINE(r4300_core, cp0);
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
 DEFINE(cp0, regs);
 DEFINE(cp0, next_interrupt);
+#endif
 DEFINE(cp0, last_addr);
 DEFINE(cp0, count_per_op);
 DEFINE(cp0, tlb);
@@ -82,11 +89,14 @@ DEFINE(cached_interp, invalid_code);
 
 DEFINE(device, mem);
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
 DEFINE(memory, wbyte);
 DEFINE(memory, whword);
 DEFINE(memory, wword);
 DEFINE(memory, wdword);
 DEFINE(memory, address);
+#endif
 
 DEFINE(device, ri);
 DEFINE(ri_controller, rdram);
