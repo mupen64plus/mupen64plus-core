@@ -37,7 +37,7 @@ extern u_int memory_map[1048576];
 extern u_int mini_ht[32][2];
 extern u_int rounding_modes[4];
 extern double** g_dev_r4300_cp1_regs_double;
-extern float* g_dev_r4300_cp1_regs_simple;
+extern float** g_dev_r4300_cp1_regs_simple;
 extern uint32_t g_dev_r4300_cp1_fcr31;
 extern uint32_t g_dev_r4300_cp1_fcr0;
 extern unsigned int* g_dev_r4300_cp0_next_interrupt;
