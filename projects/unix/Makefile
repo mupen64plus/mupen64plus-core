@@ -201,7 +201,7 @@ ifeq ($(OS), MINGW)
 endif
 
 # assembler also needs base include directory
-ASFLAGS += -I../../src
+ASFLAGS += -I../../src/
 
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
