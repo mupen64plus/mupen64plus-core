@@ -36,12 +36,12 @@ extern void *dynarec_local;
 extern u_int memory_map[1048576];
 extern u_int mini_ht[32][2];
 extern u_int rounding_modes[4];
-extern double** g_dev_r4300_cp1_regs_double;
-extern float** g_dev_r4300_cp1_regs_simple;
+extern float* g_dev_r4300_cp1_regs_simple[32];
+extern double* g_dev_r4300_cp1_regs_double[32];
 extern uint32_t g_dev_r4300_cp1_fcr31;
 extern uint32_t g_dev_r4300_cp1_fcr0;
-extern unsigned int* g_dev_r4300_cp0_next_interrupt;
-extern uint32_t* g_dev_r4300_cp0_regs;
+extern unsigned int g_dev_r4300_cp0_next_interrupt;
+extern uint32_t g_dev_r4300_cp0_regs[32];
 extern uint64_t g_dev_mem_wdword;
 extern uint32_t g_dev_mem_wword;
 extern uint16_t g_dev_mem_whword;
@@ -49,7 +49,7 @@ extern uint8_t g_dev_mem_wbyte;
 extern uint32_t g_dev_mem_address;
 extern int64_t g_dev_r4300_lo;
 extern int64_t g_dev_r4300_hi;
-extern int64_t* g_dev_r4300_regs;
+extern int64_t g_dev_r4300_regs[32];
 
 static u_int literals[1024][2];
 

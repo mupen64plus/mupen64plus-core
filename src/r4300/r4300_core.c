@@ -30,7 +30,7 @@
 
 #include <string.h>
 
-extern int64_t* g_dev_r4300_regs;
+extern int64_t g_dev_r4300_regs[32];
 extern int64_t g_dev_r4300_hi;
 extern int64_t g_dev_r4300_lo;
 extern struct precomp_instr* g_dev_r4300_pc;

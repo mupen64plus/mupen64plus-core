@@ -29,8 +29,8 @@
 
 #include "main/main.h"
 
-extern float** g_dev_r4300_cp1_regs_simple;
-extern double** g_dev_r4300_cp1_regs_double;
+extern float* g_dev_r4300_cp1_regs_simple[32];
+extern double* g_dev_r4300_cp1_regs_double[32];
 extern uint32_t g_dev_r4300_cp1_fcr0;
 extern uint32_t g_dev_r4300_cp1_fcr31;
 
