@@ -981,15 +981,15 @@ m64p_error main_run(void)
     // Attach rom to plugins
     if (!gfx.romOpen())
     {
-        return M64ERR_PLUGIN_FAIL;
+        goto on_gfx_open_failure;
     }
     if (!audio.romOpen())
     {
-        gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
+        goto on_audio_open_failure;
     }
     if (!input.romOpen())
     {
-        audio.romClosed(); gfx.romClosed(); return M64ERR_PLUGIN_FAIL;
+        goto on_input_open_failure;
     }
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
@@ -1058,6 +1058,19 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_STOPPED);
 
     return M64ERR_SUCCESS;
+
+on_input_open_failure:
+    audio.romClosed();
+on_audio_open_failure:
+    gfx.romClosed();
+on_gfx_open_failure:
+    /* release storage files */
+    close_storage_file(&sra);
+    close_storage_file(&fla);
+    close_storage_file(&eep);
+    close_storage_file(&mpk);
+
+    return M64ERR_PLUGIN_FAIL;
 }
 
 void main_stop(void)
