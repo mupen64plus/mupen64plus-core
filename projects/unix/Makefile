@@ -429,6 +429,8 @@ SOURCE = \
 	$(SRCDIR)/backends/storage_backend.c \
 	$(SRCDIR)/device/ai/ai_controller.c \
 	$(SRCDIR)/device/device.c \
+	$(SRCDIR)/device/gb/gb_cart.c \
+	$(SRCDIR)/device/gb/mbc3_rtc.c \
 	$(SRCDIR)/device/memory/memory.c \
 	$(SRCDIR)/device/pi/cart_rom.c \
 	$(SRCDIR)/device/pi/flashram.c \
@@ -460,6 +462,7 @@ SOURCE = \
 	$(SRCDIR)/device/si/n64_cic_nus_6105.c \
 	$(SRCDIR)/device/si/pif.c \
 	$(SRCDIR)/device/si/rumblepak.c \
+	$(SRCDIR)/device/si/transferpak.c \
 	$(SRCDIR)/device/si/si_controller.c \
 	$(SRCDIR)/device/vi/vi_controller.c \
 	$(SRCDIR)/main/main.c \

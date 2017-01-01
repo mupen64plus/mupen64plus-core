@@ -33,6 +33,7 @@ struct file_storage
 };
 
 int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
+int open_rom_file_storage(struct file_storage* storage, const char* filename);
 void close_file_storage(struct file_storage* storage);
 
 void save_file_storage(void* opaque);

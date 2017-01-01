@@ -136,7 +136,7 @@ static void controller_read_pak_command(struct game_controller* cont, uint8_t* c
     case PAK_NONE: memset(data, 0, PAK_CHUNK_SIZE); break;
     case PAK_MEM: mempak_read_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
     case PAK_RUMBLE: rumblepak_read_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: /* TODO */ break;
+    case PAK_TRANSFER: transferpak_read_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
     default:
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
@@ -167,7 +167,7 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
     case PAK_NONE: /* do nothing */ break;
     case PAK_MEM: mempak_write_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
     case PAK_RUMBLE: rumblepak_write_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: /* TODO */ break;
+    case PAK_TRANSFER: transferpak_write_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
     default:
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
@@ -175,16 +175,22 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
     *crc = pak_data_crc(data);
 }
 
-
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
     struct storage_backend* mpk_storage,
-    struct rumble_backend* rumble)
+    struct rumble_backend* rumble,
+    struct gb_cart* gb_cart)
 {
     cont->cin = cin;;
 
     init_mempak(&cont->mempak, mpk_storage);
     init_rumblepak(&cont->rumblepak, rumble);
+    init_transferpak(&cont->transferpak, gb_cart);
+}
+
+void poweron_game_controller(struct game_controller* cont)
+{
+    poweron_transferpak(&cont->transferpak);
 }
 
 

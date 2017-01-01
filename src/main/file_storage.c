@@ -44,6 +44,22 @@ int open_file_storage(struct file_storage* storage, size_t size, const char* fil
     return read_from_file(storage->filename, storage->data, storage->size);
 }
 
+int open_rom_file_storage(struct file_storage* storage, const char* filename)
+{
+    storage->data = NULL;
+    storage->size = 0;
+    storage->filename = NULL;
+
+    file_status_t err = load_file(filename, (void**)&storage->data, &storage->size);
+
+    if (err == file_ok) {
+        /* ! take ownsership of filename ! */
+        storage->filename = filename;
+    }
+
+    return err;
+}
+
 void close_file_storage(struct file_storage* storage)
 {
     free((void*)storage->data);

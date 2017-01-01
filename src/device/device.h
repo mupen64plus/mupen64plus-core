@@ -74,6 +74,7 @@ void init_device(struct device* dev,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
+    struct gb_cart* gb_carts,
     uint16_t eeprom_id, struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
     /* vi */
