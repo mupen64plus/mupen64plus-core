@@ -20,7 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef M64P_BACKENDS_STORAGE_BACKEND_H
-#define M64P_BACKENDS_STORAGE BACKEND_H
+#define M64P_BACKENDS_STORAGE_BACKEND_H
 
 #include <stddef.h>
 #include <stdint.h>
