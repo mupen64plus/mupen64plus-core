@@ -87,6 +87,9 @@ struct savestate_work {
     char *data;
     size_t size;
     struct work_struct work;
+#ifdef __LIBRETRO__
+    void *mempointer;
+#endif
 };
 
 /* Returns the malloc'd full path of the currently selected savestate. */
@@ -196,10 +199,13 @@ static void savestates_clear_job(void)
 #define PUTDATA(buff, type, value) \
     do { type x = value; PUTARRAY(&x, buff, type, 1); } while(0)
 
+#ifndef __LIBRETRO__
 int savestates_load_m64p(char *filepath)
+#else
+int savestates_load_m64p(const void *data)
+#endif
 {
     unsigned char header[44];
-    gzFile f;
     unsigned int version;
     int i;
     uint32_t FCR31;
@@ -215,6 +221,8 @@ int savestates_load_m64p(char *filepath)
     SDL_LockMutex(savestates_lock);
 #endif
 
+#ifndef __LIBRETRO__
+    gzFile f;
     f = gzopen(filepath, "rb");
     if(f==NULL)
     {
@@ -246,6 +254,16 @@ int savestates_load_m64p(char *filepath)
 #endif
         return 0;
     }
+#else
+    memcpy(header, data, 44);
+    curr = header;
+    if(strncmp((char *)curr, savestate_magic, 8)!=0)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Savestate is not a valid Mupen64plus savestate.");
+        return 0;
+    }
+#endif
+
     curr += 8;
 
     version = *curr++;
@@ -255,7 +273,9 @@ int savestates_load_m64p(char *filepath)
     if((version >> 16) != (savestate_latest_version >> 16))
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State version (%08x) isn't compatible. Please update Mupen64Plus.", version);
+#ifndef __LIBRETRO__
         gzclose(f);
+#endif
 #ifdef USE_SDL
         SDL_UnlockMutex(savestates_lock);
 #endif
@@ -265,7 +285,9 @@ int savestates_load_m64p(char *filepath)
     if(memcmp((char *)curr, ROM_SETTINGS.MD5, 32))
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM MD5 does not match current ROM.");
+#ifndef __LIBRETRO__
         gzclose(f);
+#endif
 #ifdef USE_SDL
         SDL_UnlockMutex(savestates_lock);
 #endif
@@ -279,7 +301,9 @@ int savestates_load_m64p(char *filepath)
     if (savestateData == NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Insufficient memory to load state.");
+#ifndef __LIBRETRO__
         gzclose(f);
+#endif
 #ifdef USE_SDL
         SDL_UnlockMutex(savestates_lock);
 #endif
@@ -287,6 +311,7 @@ int savestates_load_m64p(char *filepath)
     }
     if (version == 0x00010000) /* original savestate version */
     {
+#ifndef __LIBRETRO__
         if (gzread(f, savestateData, savestateSize) != savestateSize ||
             (gzread(f, queue, sizeof(queue)) % 4) != 0)
         {
@@ -298,9 +323,14 @@ int savestates_load_m64p(char *filepath)
 #endif
             return 0;
         }
+#else
+        memcpy(savestateData, data + 44, savestateSize);
+        memcpy(queue, data + 44 + savestateSize, sizeof(queue));
+#endif
     }
     else // version >= 0x00010100  saves entire eventqueue plus 4-byte using_tlb flage
     {
+#ifndef __LIBRETRO__
         if (gzread(f, savestateData, savestateSize) != savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
             gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData))
@@ -313,9 +343,16 @@ int savestates_load_m64p(char *filepath)
 #endif
             return 0;
         }
+#else
+        memcpy(savestateData, data + 44, savestateSize);
+        memcpy(queue, data + 44 + savestateSize, sizeof(queue));
+        memcpy(additionalData, data + 44 + savestateSize + sizeof(queue), sizeof(additionalData));
+#endif
     }
-    
+
+#ifndef __LIBRETRO__
     gzclose(f);
+#endif
 #ifdef USE_SDL
     SDL_UnlockMutex(savestates_lock);
 #endif
@@ -511,7 +548,9 @@ int savestates_load_m64p(char *filepath)
     *r4300_last_addr() = *r4300_pc();
 
     free(savestateData);
+#ifndef __LIBRETRO__
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
+#endif
     return 1;
 }
 
@@ -964,14 +1003,15 @@ int savestates_load(void)
 
 static void savestates_save_m64p_work(struct work_struct *work)
 {
-    gzFile f;
     struct savestate_work *save = container_of(work, struct savestate_work, work);
 
 #ifdef USE_SDL
     SDL_LockMutex(savestates_lock);
 #endif
 
+#ifndef __LIBRETRO__
     // Write the state to a GZIP file
+    gzFile f;
     f = gzopen(save->filepath, "wb");
 
     if (f==NULL)
@@ -990,9 +1030,14 @@ static void savestates_save_m64p_work(struct work_struct *work)
     }
 
     gzclose(f);
+#else
+    memcpy(save->mempointer, save->data, save->size);
+#endif
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Saved state to: %s", namefrompath(save->filepath));
     free(save->data);
+#ifndef __LIBRETRO__
     free(save->filepath);
+#endif
     free(save);
 
 #ifdef USE_SDL
@@ -1000,7 +1045,11 @@ static void savestates_save_m64p_work(struct work_struct *work)
 #endif
 }
 
+#ifndef __LIBRETRO__
 int savestates_save_m64p(char *filepath)
+#else
+int savestates_save_m64p(void *data)
+#endif
 {
     unsigned char outbuf[4];
     int i;
@@ -1018,7 +1067,11 @@ int savestates_save_m64p(char *filepath)
         return 0;
     }
 
+#ifndef __LIBRETRO__
     save->filepath = strdup(filepath);
+#else
+    save->mempointer = data;
+#endif
 
     if(autoinc_save_slot)
         savestates_inc_slot();
