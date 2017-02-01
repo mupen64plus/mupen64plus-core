@@ -262,10 +262,10 @@ char *trim(char *str)
 {
     char *start = str, *end = str + strlen(str);
 
-    while (start < end && isspace(*start))
+    while (start < end && isspace((unsigned char)(*start)))
         start++;
 
-    while (end > start && isspace(*(end-1)))
+    while (end > start && isspace((unsigned char)(*(end-1))))
         end--;
 
     memmove(str, start, end - start);
@@ -278,7 +278,7 @@ int string_to_int(const char *str, int *result)
 {
     char *endptr;
     long int n;
-    if (*str == '\0' || isspace(*str))
+    if (*str == '\0' || isspace((unsigned char)(*str)))
         return 0;
     errno = 0;
     n = strtol(str, &endptr, 10);
