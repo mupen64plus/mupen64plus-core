@@ -252,6 +252,8 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultBool(g_CoreConfig, "DelaySI", 1, "Delay interrupt after DMA SI read/write");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
+    ConfigSetDefaultInt(g_CoreConfig, "ViTiming", -1, "Use alternate VI timing (-1=Game default, 0=Don't use alternate timing, 1=Use alternate timing)");
+    ConfigSetDefaultInt(g_CoreConfig, "CountPerScanline", -1, "Modify the default count per scanline(-1 or 0=Game default)");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
     /* handle upgrades */
@@ -887,8 +889,9 @@ static void open_eep_file(struct storage_file* storage)
 m64p_error main_run(void)
 {
     size_t i;
+    unsigned int disable_extra_mem, count_per_op;
     unsigned int emumode;
-    int no_compiled_jump;
+    int no_compiled_jump, alternate_vi_timing, count_per_scanline;
     struct storage_file eep;
     struct storage_file fla;
     struct storage_file mpk;
@@ -916,9 +919,20 @@ m64p_error main_run(void)
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
-    unsigned int count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
+    disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
+    count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
+    alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
+    count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
+
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
+
+    if (alternate_vi_timing < 0)
+        alternate_vi_timing = ROM_PARAMS.vitiming;
+
+    if (count_per_scanline  <= 0)
+        count_per_scanline = ROM_PARAMS.countperscanline;
+
     cheat_add_hacks();
 
     /* do byte-swapping if it's not been done yet */
@@ -964,7 +978,7 @@ m64p_error main_run(void)
                 rumbles,
                 storage_file_ptr(&eep, 0), (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &rtc,
-                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), g_count_per_scanline, g_alternate_vi_timing);
+                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
 
     // Attach rom to plugins
     if (!gfx.romOpen())
