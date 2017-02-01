@@ -44,11 +44,14 @@
 #include "rom.h"
 #include "util.h"
 
-#define DEFAULT 16
-#define ALTERNATE_VI_TIMING_DEFAULT 0
-#define DEFAULT_COUNT_PER_SCANLINE 1500
-
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
+
+/* Amount of cpu cycles per vi scanline - empirically determined */
+enum { DEFAULT_COUNT_PER_SCANLINE = 1500 };
+/* Number of cpu cycles per instruction */
+enum { DEFAULT_COUNT_PER_OP = 2 };
+/* by default, alternate VI timing is disabled */
+enum { DEFAULT_ALTERNATE_VI_TIMING = 0 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -173,8 +176,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
-    ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
-    ROM_PARAMS.vitiming = ALTERNATE_VI_TIMING_DEFAULT;
+    ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
+    ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
     ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
     ROM_PARAMS.cheats = NULL;
 
@@ -205,8 +208,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
-        ROM_PARAMS.countperop = COUNT_PER_OP_DEFAULT;
-        ROM_PARAMS.vitiming = ALTERNATE_VI_TIMING_DEFAULT;
+        ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
+        ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
         ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
         ROM_PARAMS.cheats = NULL;
     }
@@ -446,8 +449,8 @@ void romdatabase_open(void)
             search->entry.savetype = DEFAULT;
             search->entry.players = DEFAULT;
             search->entry.rumble = DEFAULT; 
-            search->entry.countperop = COUNT_PER_OP_DEFAULT;
-            search->entry.alternate_vi_timing = ALTERNATE_VI_TIMING_DEFAULT;
+            search->entry.countperop = DEFAULT_COUNT_PER_OP;
+            search->entry.alternate_vi_timing = DEFAULT_ALTERNATE_VI_TIMING;
             search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;

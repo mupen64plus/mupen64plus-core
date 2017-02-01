@@ -33,20 +33,21 @@
 #include <stdint.h>
 #include <string.h>
 
+enum { PAK_CHUNK_SIZE = 0x20 };
 
 static uint8_t pak_data_crc(const uint8_t* data)
 {
     size_t i;
     uint8_t crc = 0;
 
-    for(i = 0; i <= 0x20; ++i)
+    for(i = 0; i <= PAK_CHUNK_SIZE; ++i)
     {
         int mask;
         for (mask = 0x80; mask >= 1; mask >>= 1)
         {
             uint8_t xor_tap = (crc & 0x80) ? 0x85 : 0x00;
             crc <<= 1;
-            if (i != 0x20 && (data[i] & mask)) crc |= 1;
+            if (i != PAK_CHUNK_SIZE && (data[i] & mask)) crc |= 1;
             crc ^= xor_tap;
         }
     }
@@ -115,6 +116,9 @@ static void controller_read_buttons_command(struct game_controller* cont, uint8_
 static void controller_read_pak_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
+    uint16_t address;
+    uint8_t* data;
+    uint8_t* crc;
     int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
@@ -123,22 +127,29 @@ static void controller_read_pak_command(struct game_controller* cont, uint8_t* c
         return;
     }
 
+    address = (cmd[3] << 8) | (cmd[4] & 0xe0);
+    data = &cmd[5];
+    crc = &cmd[5 + PAK_CHUNK_SIZE];
+
     switch (pak)
     {
-    case PAK_NONE: memset(&cmd[5], 0, 0x20); break;
-    case PAK_MEM: mempak_read_command(&cont->mempak, cmd); break;
-    case PAK_RUMBLE: rumblepak_read_command(&cont->rumblepak, cmd); break;
+    case PAK_NONE: memset(data, 0, PAK_CHUNK_SIZE); break;
+    case PAK_MEM: mempak_read_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
+    case PAK_RUMBLE: rumblepak_read_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
     case PAK_TRANSFER: /* TODO */ break;
     default:
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    cmd[0x25] = pak_data_crc(&cmd[5]);
+    *crc = pak_data_crc(data);
 }
 
 static void controller_write_pak_command(struct game_controller* cont, uint8_t* cmd)
 {
     enum pak_type pak;
+    uint16_t address;
+    uint8_t* data;
+    uint8_t* crc;
     int connected = controller_input_is_connected(cont->cin, &pak);
 
     if (!connected)
@@ -147,17 +158,21 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
         return;
     }
 
+    address = (cmd[3] << 8) | (cmd[4] & 0xe0);
+    data = &cmd[5];
+    crc = &cmd[5 + PAK_CHUNK_SIZE];
+
     switch (pak)
     {
     case PAK_NONE: /* do nothing */ break;
-    case PAK_MEM: mempak_write_command(&cont->mempak, cmd); break;
-    case PAK_RUMBLE: rumblepak_write_command(&cont->rumblepak, cmd); break;
+    case PAK_MEM: mempak_write_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
+    case PAK_RUMBLE: rumblepak_write_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
     case PAK_TRANSFER: /* TODO */ break;
     default:
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    cmd[0x25] = pak_data_crc(&cmd[5]);
+    *crc = pak_data_crc(data);
 }
 
 

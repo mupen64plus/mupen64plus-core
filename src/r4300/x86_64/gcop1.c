@@ -26,7 +26,7 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "memory/memory.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/macros.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
@@ -53,11 +53,11 @@ void genmfc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MFC1, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *)(&reg_cop1_simple[dst->f.r.nrd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.r.nrd]));
    mov_reg32_preg64(EBX, RAX);
-   mov_m32rel_xreg32((unsigned int*)dst->f.r.rt, EBX);
+   mov_m32rel_xreg32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt, EBX);
    sar_reg32_imm8(EBX, 31);
-   mov_m32rel_xreg32(((unsigned int*)dst->f.r.rt)+1, EBX);
+   mov_m32rel_xreg32(((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt)+1, EBX);
 #endif
 }
 
@@ -70,11 +70,11 @@ void gendmfc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.DMFC1, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg64_m64rel(RAX, (unsigned long long *) (&reg_cop1_double[dst->f.r.nrd]));
+   mov_xreg64_m64rel(RAX, (unsigned long long *) (&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.r.nrd]));
    mov_reg32_preg64(EBX, RAX);
    mov_reg32_preg64pimm32(ECX, RAX, 4);
-   mov_m32rel_xreg32((unsigned int*)dst->f.r.rt, EBX);
-   mov_m32rel_xreg32(((unsigned int*)dst->f.r.rt)+1, ECX);
+   mov_m32rel_xreg32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt, EBX);
+   mov_m32rel_xreg32(((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt)+1, ECX);
 #endif
 }
 
@@ -87,11 +87,11 @@ void gencfc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CFC1, 0);
 #else
    gencheck_cop1_unusable();
-   if(dst->f.r.nrd == 31) mov_xreg32_m32rel(EAX, (unsigned int*)&FCR31);
-   else mov_xreg32_m32rel(EAX, (unsigned int*)&FCR0);
-   mov_m32rel_xreg32((unsigned int*)dst->f.r.rt, EAX);
+   if(g_dev.r4300.recomp.dst->f.r.nrd == 31) mov_xreg32_m32rel(EAX, (unsigned int*)&(*r4300_cp1_fcr31()));
+   else mov_xreg32_m32rel(EAX, (unsigned int*)&(*r4300_cp1_fcr0()));
+   mov_m32rel_xreg32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt, EAX);
    sar_reg32_imm8(EAX, 31);
-   mov_m32rel_xreg32(((unsigned int*)dst->f.r.rt)+1, EAX);
+   mov_m32rel_xreg32(((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt)+1, EAX);
 #endif
 }
 
@@ -104,8 +104,8 @@ void genmtc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.MTC1, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg32_m32rel(EAX, (unsigned int*)dst->f.r.rt);
-   mov_xreg64_m64rel(RBX, (unsigned long long *)(&reg_cop1_simple[dst->f.r.nrd]));
+   mov_xreg32_m32rel(EAX, (unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
+   mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.r.nrd]));
    mov_preg64_reg32(RBX, EAX);
 #endif
 }
@@ -119,9 +119,9 @@ void gendmtc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.DMTC1, 0);
 #else
    gencheck_cop1_unusable();
-   mov_xreg32_m32rel(EAX, (unsigned int*)dst->f.r.rt);
-   mov_xreg32_m32rel(EBX, ((unsigned int*)dst->f.r.rt)+1);
-   mov_xreg64_m64rel(RDX, (unsigned long long *)(&reg_cop1_double[dst->f.r.nrd]));
+   mov_xreg32_m32rel(EAX, (unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
+   mov_xreg32_m32rel(EBX, ((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt)+1);
+   mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.r.nrd]));
    mov_preg64_reg32(RDX, EAX);
    mov_preg64pimm32_reg32(RDX, 4, EBX);
 #endif
@@ -136,30 +136,30 @@ void genctc1(void)
    gencallinterp((unsigned long long)cached_interpreter_table.CTC1, 0);
 #else
    gencheck_cop1_unusable();
-   
-   if (dst->f.r.nrd != 31) return;
-   mov_xreg32_m32rel(EAX, (unsigned int*)dst->f.r.rt);
-   mov_m32rel_xreg32((unsigned int*)&FCR31, EAX);
+
+   if (g_dev.r4300.recomp.dst->f.r.nrd != 31) return;
+   mov_xreg32_m32rel(EAX, (unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
+   mov_m32rel_xreg32((unsigned int*)&(*r4300_cp1_fcr31()), EAX);
    and_eax_imm32(3);
    
    cmp_eax_imm32(0);
    jne_rj(13);
-   mov_m32rel_imm32((unsigned int*)&rounding_mode, 0x33F); // 11
+   mov_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.rounding_mode, 0x33F); // 11
    jmp_imm_short(51); // 2
    
    cmp_eax_imm32(1); // 5
    jne_rj(13); // 2
-   mov_m32rel_imm32((unsigned int*)&rounding_mode, 0xF3F); // 11
+   mov_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.rounding_mode, 0xF3F); // 11
    jmp_imm_short(31); // 2
    
    cmp_eax_imm32(2); // 5
    jne_rj(13); // 2
-   mov_m32rel_imm32((unsigned int*)&rounding_mode, 0xB3F); // 11
+   mov_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.rounding_mode, 0xB3F); // 11
    jmp_imm_short(11); // 2
    
-   mov_m32rel_imm32((unsigned int*)&rounding_mode, 0x73F); // 11
+   mov_m32rel_imm32((unsigned int*)&g_dev.r4300.cp1.rounding_mode, 0x73F); // 11
    
-   fldcw_m16rel((unsigned short*)&rounding_mode);
+   fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
 }
 

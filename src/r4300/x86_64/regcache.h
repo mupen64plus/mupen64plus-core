@@ -23,9 +23,10 @@
 #ifndef M64P_R4300_REGCACHE_H
 #define M64P_R4300_REGCACHE_H
 
-#include "r4300/recomp.h"
+struct precomp_instr;
+struct precomp_block;
 
-void init_cache(precomp_instr* start);
+void init_cache(struct precomp_instr* start);
 void free_registers_move_start(void);
 void free_all_registers(void);
 void free_register(int reg);
@@ -41,7 +42,7 @@ int allocate_register_32_w(unsigned int *addr);
 int allocate_register_64_w(unsigned long long *addr);
 void allocate_register_32_manually(int reg, unsigned int *addr);
 void allocate_register_32_manually_w(int reg, unsigned int *addr);
-void build_wrappers(precomp_instr*, int, int, precomp_block*);
+void build_wrappers(struct precomp_instr*, int, int, struct precomp_block*);
 
 #endif /* M64P_R4300_REGCACHE_H */
 

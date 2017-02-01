@@ -26,37 +26,37 @@
 #define SE16(a) ((int64_t) ((int16_t) (a)))
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
-#define rrt *PC->f.r.rt
-#define rrd *PC->f.r.rd
-#define rfs PC->f.r.nrd
-#define rrs *PC->f.r.rs
-#define rsa PC->f.r.sa
-#define irt *PC->f.i.rt
-#define ioffset PC->f.i.immediate
-#define iimmediate PC->f.i.immediate
-#define irs *PC->f.i.rs
-#define ibase *PC->f.i.rs
-#define jinst_index PC->f.j.inst_index
-#define lfbase PC->f.lf.base
-#define lfft PC->f.lf.ft
-#define lfoffset PC->f.lf.offset
-#define cfft PC->f.cf.ft
-#define cffs PC->f.cf.fs
-#define cffd PC->f.cf.fd
+#define rrt *(*r4300_pc_struct())->f.r.rt
+#define rrd *(*r4300_pc_struct())->f.r.rd
+#define rfs (*r4300_pc_struct())->f.r.nrd
+#define rrs *(*r4300_pc_struct())->f.r.rs
+#define rsa (*r4300_pc_struct())->f.r.sa
+#define irt *(*r4300_pc_struct())->f.i.rt
+#define ioffset (*r4300_pc_struct())->f.i.immediate
+#define iimmediate (*r4300_pc_struct())->f.i.immediate
+#define irs *(*r4300_pc_struct())->f.i.rs
+#define ibase *(*r4300_pc_struct())->f.i.rs
+#define jinst_index (*r4300_pc_struct())->f.j.inst_index
+#define lfbase (*r4300_pc_struct())->f.lf.base
+#define lfft (*r4300_pc_struct())->f.lf.ft
+#define lfoffset (*r4300_pc_struct())->f.lf.offset
+#define cfft (*r4300_pc_struct())->f.cf.ft
+#define cffs (*r4300_pc_struct())->f.cf.fs
+#define cffd (*r4300_pc_struct())->f.cf.fd
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) PC->f.r.rt)
-#define rrd32 *((int32_t*) PC->f.r.rd)
-#define rrs32 *((int32_t*) PC->f.r.rs)
-#define irs32 *((int32_t*) PC->f.i.rs)
-#define irt32 *((int32_t*) PC->f.i.rt)
+#define rrt32 *((int32_t*) (*r4300_pc_struct())->f.r.rt)
+#define rrd32 *((int32_t*) (*r4300_pc_struct())->f.r.rd)
+#define rrs32 *((int32_t*) (*r4300_pc_struct())->f.r.rs)
+#define irs32 *((int32_t*) (*r4300_pc_struct())->f.i.rs)
+#define irt32 *((int32_t*) (*r4300_pc_struct())->f.i.rt)
 #else
-#define rrt32 *((int32_t*) PC->f.r.rt + 1)
-#define rrd32 *((int32_t*) PC->f.r.rd + 1)
-#define rrs32 *((int32_t*) PC->f.r.rs + 1)
-#define irs32 *((int32_t*) PC->f.i.rs + 1)
-#define irt32 *((int32_t*) PC->f.i.rt + 1)
+#define rrt32 *((int32_t*) (*r4300_pc_struct())->f.r.rt + 1)
+#define rrd32 *((int32_t*) (*r4300_pc_struct())->f.r.rd + 1)
+#define rrs32 *((int32_t*) (*r4300_pc_struct())->f.r.rs + 1)
+#define irs32 *((int32_t*) (*r4300_pc_struct())->f.i.rs + 1)
+#define irt32 *((int32_t*) (*r4300_pc_struct())->f.i.rt + 1)
 #endif
 
 #endif /* M64P_R4300_MACROS_H */

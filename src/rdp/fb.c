@@ -28,8 +28,6 @@
 #include "rdp_core.h"
 #include "ri/ri_controller.h"
 
-extern int fast_memory;
-
 #include <string.h>
 
 void poweron_fb(struct fb* fb)
@@ -123,8 +121,8 @@ void protect_framebuffers(struct rdp_core* dp)
                 end >>= 16;
                 for (j=start; j<=end; j++)
                 {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
+                    map_region(&g_dev.mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
+                    map_region(&g_dev.mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
                 }
                 start <<= 4;
                 end <<= 4;
@@ -134,10 +132,11 @@ void protect_framebuffers(struct rdp_core* dp)
                     else fb->dirty_page[j] = 0;
                 }
 
+                /* disable "fast memory" if framebuffer handlers are used */
                 if (fb->once != 0)
                 {
                     fb->once = 0;
-                    fast_memory = 0;
+                    dp->r4300->recomp.fast_memory = 0;
                     invalidate_r4300_cached_code(0, 0);
                 }
             }
@@ -167,8 +166,8 @@ void unprotect_framebuffers(struct rdp_core* dp)
 
                 for (j=start; j<=end; j++)
                 {
-                    map_region(0x8000+j, M64P_MEM_RDRAM, RW(rdram));
-                    map_region(0xa000+j, M64P_MEM_RDRAM, RW(rdram));
+                    map_region(&g_dev.mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdram));
+                    map_region(&g_dev.mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdram));
                 }
             }
         }

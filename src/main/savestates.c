@@ -445,8 +445,8 @@ int savestates_load_m64p(char *filepath)
     g_dev.pi.flashram.erase_offset = GETDATA(curr, unsigned int);
     g_dev.pi.flashram.write_pointer = GETDATA(curr, unsigned int);
 
-    COPYARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
-    COPYARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
+    COPYARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, uint32_t, 0x100000);
+    COPYARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, uint32_t, 0x100000);
 
     *r4300_llbit() = GETDATA(curr, unsigned int);
     COPYARRAY(r4300_regs(), curr, int64_t, 32);
@@ -464,34 +464,34 @@ int savestates_load_m64p(char *filepath)
 
     for (i = 0; i < 32; i++)
     {
-        tlb_e[i].mask = GETDATA(curr, short);
+        g_dev.r4300.cp0.tlb.entries[i].mask = GETDATA(curr, short);
         curr += 2;
-        tlb_e[i].vpn2 = GETDATA(curr, int);
-        tlb_e[i].g = GETDATA(curr, char);
-        tlb_e[i].asid = GETDATA(curr, unsigned char);
+        g_dev.r4300.cp0.tlb.entries[i].vpn2 = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].g = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].asid = GETDATA(curr, unsigned char);
         curr += 2;
-        tlb_e[i].pfn_even = GETDATA(curr, int);
-        tlb_e[i].c_even = GETDATA(curr, char);
-        tlb_e[i].d_even = GETDATA(curr, char);
-        tlb_e[i].v_even = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].pfn_even = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].c_even = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].d_even = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].v_even = GETDATA(curr, char);
         curr++;
-        tlb_e[i].pfn_odd = GETDATA(curr, int);
-        tlb_e[i].c_odd = GETDATA(curr, char);
-        tlb_e[i].d_odd = GETDATA(curr, char);
-        tlb_e[i].v_odd = GETDATA(curr, char);
-        tlb_e[i].r = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].pfn_odd = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].c_odd = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].d_odd = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].v_odd = GETDATA(curr, char);
+        g_dev.r4300.cp0.tlb.entries[i].r = GETDATA(curr, char);
    
-        tlb_e[i].start_even = GETDATA(curr, unsigned int);
-        tlb_e[i].end_even = GETDATA(curr, unsigned int);
-        tlb_e[i].phys_even = GETDATA(curr, unsigned int);
-        tlb_e[i].start_odd = GETDATA(curr, unsigned int);
-        tlb_e[i].end_odd = GETDATA(curr, unsigned int);
-        tlb_e[i].phys_odd = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].start_even = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].end_even = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].phys_even = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].start_odd = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].end_odd = GETDATA(curr, unsigned int);
+        g_dev.r4300.cp0.tlb.entries[i].phys_odd = GETDATA(curr, unsigned int);
     }
 
     savestates_load_set_pc(GETDATA(curr, uint32_t));
 
-    *r4300_next_interrupt() = GETDATA(curr, unsigned int);
+    *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
     g_dev.vi.field = GETDATA(curr, unsigned int);
 
@@ -508,7 +508,7 @@ int savestates_load_m64p(char *filepath)
     }
 #endif
 
-    *r4300_last_addr() = *r4300_pc();
+    *r4300_cp0_last_addr() = *r4300_pc();
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -576,7 +576,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    *r4300_last_addr() = GETDATA(curr, uint32_t);
+    *r4300_cp0_last_addr() = GETDATA(curr, uint32_t);
 
     // GPR
     COPYARRAY(r4300_regs(), curr, int64_t, 32);
@@ -593,7 +593,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // Initialze the interupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
-    *r4300_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
+    *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
                   : vi_timer;
     g_dev.vi.next_vi = vi_timer;
@@ -720,8 +720,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.si.regs[SI_STATUS_REG]         = GETDATA(curr, uint32_t);
 
     // tlb
-    memset(tlb_LUT_r, 0, 0x400000);
-    memset(tlb_LUT_w, 0, 0x400000);
+    memset(g_dev.r4300.cp0.tlb.LUT_r, 0, 0x400000);
+    memset(g_dev.r4300.cp0.tlb.LUT_w, 0, 0x400000);
     for (i=0; i < 32; i++)
     {
         unsigned int MyPageMask, MyEntryHi, MyEntryLo0, MyEntryLo1;
@@ -733,31 +733,31 @@ static int savestates_load_pj64(char *filepath, void *handle,
         MyEntryLo1 = GETDATA(curr, unsigned int);
 
         // This is copied from TLBWI instruction
-        tlb_e[i].g = (MyEntryLo0 & MyEntryLo1 & 1);
-        tlb_e[i].pfn_even = (MyEntryLo0 & 0x3FFFFFC0) >> 6;
-        tlb_e[i].pfn_odd = (MyEntryLo1 & 0x3FFFFFC0) >> 6;
-        tlb_e[i].c_even = (MyEntryLo0 & 0x38) >> 3;
-        tlb_e[i].c_odd = (MyEntryLo1 & 0x38) >> 3;
-        tlb_e[i].d_even = (MyEntryLo0 & 0x4) >> 2;
-        tlb_e[i].d_odd = (MyEntryLo1 & 0x4) >> 2;
-        tlb_e[i].v_even = (MyEntryLo0 & 0x2) >> 1;
-        tlb_e[i].v_odd = (MyEntryLo1 & 0x2) >> 1;
-        tlb_e[i].asid = (MyEntryHi & 0xFF);
-        tlb_e[i].vpn2 = (MyEntryHi & 0xFFFFE000) >> 13;
-        //tlb_e[i].r = (MyEntryHi & 0xC000000000000000LL) >> 62;
-        tlb_e[i].mask = (MyPageMask & 0x1FFE000) >> 13;
+        g_dev.r4300.cp0.tlb.entries[i].g = (MyEntryLo0 & MyEntryLo1 & 1);
+        g_dev.r4300.cp0.tlb.entries[i].pfn_even = (MyEntryLo0 & 0x3FFFFFC0) >> 6;
+        g_dev.r4300.cp0.tlb.entries[i].pfn_odd = (MyEntryLo1 & 0x3FFFFFC0) >> 6;
+        g_dev.r4300.cp0.tlb.entries[i].c_even = (MyEntryLo0 & 0x38) >> 3;
+        g_dev.r4300.cp0.tlb.entries[i].c_odd = (MyEntryLo1 & 0x38) >> 3;
+        g_dev.r4300.cp0.tlb.entries[i].d_even = (MyEntryLo0 & 0x4) >> 2;
+        g_dev.r4300.cp0.tlb.entries[i].d_odd = (MyEntryLo1 & 0x4) >> 2;
+        g_dev.r4300.cp0.tlb.entries[i].v_even = (MyEntryLo0 & 0x2) >> 1;
+        g_dev.r4300.cp0.tlb.entries[i].v_odd = (MyEntryLo1 & 0x2) >> 1;
+        g_dev.r4300.cp0.tlb.entries[i].asid = (MyEntryHi & 0xFF);
+        g_dev.r4300.cp0.tlb.entries[i].vpn2 = (MyEntryHi & 0xFFFFE000) >> 13;
+        //g_dev.r4300.cp0.tlb.entries[i].r = (MyEntryHi & 0xC000000000000000LL) >> 62;
+        g_dev.r4300.cp0.tlb.entries[i].mask = (MyPageMask & 0x1FFE000) >> 13;
            
-        tlb_e[i].start_even = tlb_e[i].vpn2 << 13;
-        tlb_e[i].end_even = tlb_e[i].start_even+
-          (tlb_e[i].mask << 12) + 0xFFF;
-        tlb_e[i].phys_even = tlb_e[i].pfn_even << 12;
+        g_dev.r4300.cp0.tlb.entries[i].start_even = g_dev.r4300.cp0.tlb.entries[i].vpn2 << 13;
+        g_dev.r4300.cp0.tlb.entries[i].end_even = g_dev.r4300.cp0.tlb.entries[i].start_even+
+          (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
+        g_dev.r4300.cp0.tlb.entries[i].phys_even = g_dev.r4300.cp0.tlb.entries[i].pfn_even << 12;
            
-        tlb_e[i].start_odd = tlb_e[i].end_even+1;
-        tlb_e[i].end_odd = tlb_e[i].start_odd+
-          (tlb_e[i].mask << 12) + 0xFFF;
-        tlb_e[i].phys_odd = tlb_e[i].pfn_odd << 12;
+        g_dev.r4300.cp0.tlb.entries[i].start_odd = g_dev.r4300.cp0.tlb.entries[i].end_even+1;
+        g_dev.r4300.cp0.tlb.entries[i].end_odd = g_dev.r4300.cp0.tlb.entries[i].start_odd+
+          (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
+        g_dev.r4300.cp0.tlb.entries[i].phys_odd = g_dev.r4300.cp0.tlb.entries[i].pfn_odd << 12;
 
-        tlb_map(&tlb_e[i]);
+        tlb_map(&g_dev.r4300.cp0.tlb.entries[i]);
     }
 
     // pif ram
@@ -781,7 +781,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(*r4300_last_addr());
+    savestates_load_set_pc(*r4300_cp0_last_addr());
 
     // assert(savestateData+savestateSize == curr)
 
@@ -1199,8 +1199,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, g_dev.pi.flashram.erase_offset);
     PUTDATA(curr, unsigned int, g_dev.pi.flashram.write_pointer);
 
-    PUTARRAY(tlb_LUT_r, curr, unsigned int, 0x100000);
-    PUTARRAY(tlb_LUT_w, curr, unsigned int, 0x100000);
+    PUTARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, unsigned int, 0x100000);
+    PUTARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, unsigned int, 0x100000);
 
     PUTDATA(curr, unsigned int, *r4300_llbit());
     PUTARRAY(r4300_regs(), curr, int64_t, 32);
@@ -1218,33 +1218,33 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
     for (i = 0; i < 32; i++)
     {
-        PUTDATA(curr, short, tlb_e[i].mask);
+        PUTDATA(curr, short, g_dev.r4300.cp0.tlb.entries[i].mask);
         PUTDATA(curr, short, 0);
-        PUTDATA(curr, int, tlb_e[i].vpn2);
-        PUTDATA(curr, char, tlb_e[i].g);
-        PUTDATA(curr, unsigned char, tlb_e[i].asid);
+        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].vpn2);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].g);
+        PUTDATA(curr, unsigned char, g_dev.r4300.cp0.tlb.entries[i].asid);
         PUTDATA(curr, short, 0);
-        PUTDATA(curr, int, tlb_e[i].pfn_even);
-        PUTDATA(curr, char, tlb_e[i].c_even);
-        PUTDATA(curr, char, tlb_e[i].d_even);
-        PUTDATA(curr, char, tlb_e[i].v_even);
+        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].pfn_even);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].c_even);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].d_even);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].v_even);
         PUTDATA(curr, char, 0);
-        PUTDATA(curr, int, tlb_e[i].pfn_odd);
-        PUTDATA(curr, char, tlb_e[i].c_odd);
-        PUTDATA(curr, char, tlb_e[i].d_odd);
-        PUTDATA(curr, char, tlb_e[i].v_odd);
-        PUTDATA(curr, char, tlb_e[i].r);
+        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].pfn_odd);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].c_odd);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].d_odd);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].v_odd);
+        PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].r);
    
-        PUTDATA(curr, unsigned int, tlb_e[i].start_even);
-        PUTDATA(curr, unsigned int, tlb_e[i].end_even);
-        PUTDATA(curr, unsigned int, tlb_e[i].phys_even);
-        PUTDATA(curr, unsigned int, tlb_e[i].start_odd);
-        PUTDATA(curr, unsigned int, tlb_e[i].end_odd);
-        PUTDATA(curr, unsigned int, tlb_e[i].phys_odd);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].start_even);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].end_even);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].phys_even);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].start_odd);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].end_odd);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].phys_odd);
     }
     PUTDATA(curr, uint32_t, *r4300_pc());
 
-    PUTDATA(curr, unsigned int, *r4300_next_interrupt());
+    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt());
     PUTDATA(curr, unsigned int, g_dev.vi.next_vi);
     PUTDATA(curr, unsigned int, g_dev.vi.field);
 
@@ -1396,15 +1396,15 @@ static int savestates_save_pj64(char *filepath, void *handle,
     {
         // From TLBR
         unsigned int EntryDefined, MyPageMask, MyEntryHi, MyEntryLo0, MyEntryLo1;
-        EntryDefined = tlb_e[i].v_even || tlb_e[i].v_odd;
-        MyPageMask = tlb_e[i].mask << 13;
-        MyEntryHi = ((tlb_e[i].vpn2 << 13) | tlb_e[i].asid);
-        MyEntryLo0 = (tlb_e[i].pfn_even << 6) | (tlb_e[i].c_even << 3)
-         | (tlb_e[i].d_even << 2) | (tlb_e[i].v_even << 1)
-           | tlb_e[i].g;
-        MyEntryLo1 = (tlb_e[i].pfn_odd << 6) | (tlb_e[i].c_odd << 3)
-         | (tlb_e[i].d_odd << 2) | (tlb_e[i].v_odd << 1)
-           | tlb_e[i].g;
+        EntryDefined = g_dev.r4300.cp0.tlb.entries[i].v_even || g_dev.r4300.cp0.tlb.entries[i].v_odd;
+        MyPageMask = g_dev.r4300.cp0.tlb.entries[i].mask << 13;
+        MyEntryHi = ((g_dev.r4300.cp0.tlb.entries[i].vpn2 << 13) | g_dev.r4300.cp0.tlb.entries[i].asid);
+        MyEntryLo0 = (g_dev.r4300.cp0.tlb.entries[i].pfn_even << 6) | (g_dev.r4300.cp0.tlb.entries[i].c_even << 3)
+         | (g_dev.r4300.cp0.tlb.entries[i].d_even << 2) | (g_dev.r4300.cp0.tlb.entries[i].v_even << 1)
+           | g_dev.r4300.cp0.tlb.entries[i].g;
+        MyEntryLo1 = (g_dev.r4300.cp0.tlb.entries[i].pfn_odd << 6) | (g_dev.r4300.cp0.tlb.entries[i].c_odd << 3)
+         | (g_dev.r4300.cp0.tlb.entries[i].d_odd << 2) | (g_dev.r4300.cp0.tlb.entries[i].v_odd << 1)
+           | g_dev.r4300.cp0.tlb.entries[i].g;
 
         PUTDATA(curr, unsigned int, EntryDefined);
         PUTDATA(curr, unsigned int, MyPageMask);

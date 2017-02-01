@@ -22,47 +22,78 @@
 #include "r4300_core.h"
 
 #include "cached_interp.h"
-#include "cp0_private.h"
-#include "cp1_private.h"
 #include "mi_controller.h"
-#include "new_dynarec/new_dynarec.h"
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "r4300.h"
 #include "recomp.h"
+#include "main/main.h"
 
 #include <string.h>
+
+extern int64_t g_dev_r4300_regs[32];
+extern int64_t g_dev_r4300_hi;
+extern int64_t g_dev_r4300_lo;
+extern struct precomp_instr* g_dev_r4300_pc;
+extern int g_dev_r4300_stop;
+
+void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
+{
+    r4300->emumode = emumode;
+    init_cp0(&r4300->cp0, count_per_op);
+
+    r4300->recomp.no_compiled_jump = no_compiled_jump;
+}
 
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
-    memset(reg, 0, 32*sizeof(reg[0]));
-    llbit = 0;
-    hi = 0;
-    lo = 0;
+    memset(r4300_regs(), 0, 32*sizeof(int64_t));
+    *r4300_mult_hi() = 0;
+    *r4300_mult_lo() = 0;
+    r4300->llbit = 0;
+
+    *r4300_pc_struct() = NULL;
+    r4300->delay_slot = 0;
+    r4300->local_rs = 0;
+    r4300->skip_jump = 0;
+    r4300->dyna_interp = 0;
+    //r4300->current_instruction_table;
+    r4300->reset_hard_job = 0;
+
+    r4300->jumps_table = NULL;
+    r4300->jumps_number = 0;
+    r4300->max_jumps_number = 0;
+    r4300->jump_start8 = 0;
+    r4300->jump_start32 = 0;
+#if defined(__x86_64__)
+    r4300->riprel_table = NULL;
+    r4300->riprel_number = 0;
+    r4300->max_riprel_number = 0;
+#endif
+
+#if defined(__x86_64__)
+    r4300->save_rsp = 0;
+    r4300->save_rip = 0;
+#else
+    r4300->save_ebp = 0;
+    r4300->save_ebx = 0;
+    r4300->save_esi = 0;
+    r4300->save_edi = 0;
+    r4300->save_esp = 0;
+    r4300->save_eip = 0;
+#endif
+
+    /* recomp init */
+    r4300->recomp.fast_memory = 1;
+    r4300->recomp.delay_slot_compiled = 0;
+
+    r4300->branch_taken = 0;
 
     /* setup CP0 registers */
-    memset(g_cp0_regs, 0, CP0_REGS_COUNT * sizeof(g_cp0_regs[0]));
-    g_cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
-    g_cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
-    g_cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    g_cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
-    g_cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
-    g_cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5C);
-    g_cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7FFFF0);
-    g_cp0_regs[CP0_EPC_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_BADVADDR_REG] = UINT32_C(0xFFFFFFFF);
-    g_cp0_regs[CP0_ERROREPC_REG] = UINT32_C(0xFFFFFFFF);
-
-    /* clear TLB entries */
-    memset(tlb_e, 0, 32 * sizeof(tlb_e[0]));
-    memset(tlb_LUT_r, 0, 0x100000 * sizeof(tlb_LUT_r[0]));
-    memset(tlb_LUT_w, 0, 0x100000 * sizeof(tlb_LUT_w[0]));
+    poweron_cp0(&r4300->cp0);
 
     /* setup CP1 registers */
-    memset(reg_cop1_fgr_64, 0, 32 * sizeof(reg_cop1_fgr_64[0]));
-    FCR0 = UINT32_C(0x511);
-    FCR31 = 0;
-    set_fpr_pointers(g_cp0_regs[CP0_STATUS_REG]);
-    update_x86_rounding_mode(FCR31);
+    poweron_cp1(&r4300->cp1);
 
     /* setup mi */
     poweron_mi(&r4300->mi);
@@ -70,58 +101,83 @@ void poweron_r4300(struct r4300_core* r4300)
 
 int64_t* r4300_regs(void)
 {
-    return reg;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return g_dev.r4300.regs;
+#else
+    return g_dev_r4300_regs;
+#endif
 }
 
 int64_t* r4300_mult_hi(void)
 {
-    return &hi;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.hi;
+#else
+    return &g_dev_r4300_hi;
+#endif
 }
 
 int64_t* r4300_mult_lo(void)
 {
-    return &lo;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.lo;
+#else
+    return &g_dev_r4300_lo;
+#endif
 }
 
 unsigned int* r4300_llbit(void)
 {
-    return &llbit;
+    return &g_dev.r4300.llbit;
 }
 
 uint32_t* r4300_pc(void)
 {
 #ifdef NEW_DYNAREC
-    return (r4300emu == CORE_DYNAREC)
+    return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         ? (uint32_t*)&pcaddr
-        : &PC->addr;
+        : &(*r4300_pc_struct())->addr;
 #else
-    return &PC->addr;
+    return &(*r4300_pc_struct())->addr;
 #endif
 }
 
-uint32_t* r4300_last_addr(void)
+struct precomp_instr** r4300_pc_struct(void)
 {
-    return &last_addr;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.pc;
+#else
+    return &g_dev_r4300_pc;
+#endif
 }
 
-unsigned int* r4300_next_interrupt(void)
+int* r4300_stop(void)
 {
-    return &next_interupt;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.stop;
+#else
+    return &g_dev_r4300_stop;
+#endif
 }
 
 unsigned int get_r4300_emumode(void)
 {
-    return r4300emu;
+    return g_dev.r4300.emumode;
 }
 
 
 
 void invalidate_r4300_cached_code(uint32_t address, size_t size)
 {
-    if (r4300emu != CORE_PURE_INTERPRETER)
+    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
 #ifdef NEW_DYNAREC
-        if (r4300emu == CORE_DYNAREC)
+        if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         {
             invalidate_cached_code_new_dynarec(address, size);
         }
@@ -137,7 +193,7 @@ void invalidate_r4300_cached_code(uint32_t address, size_t size)
 void savestates_load_set_pc(uint32_t pc)
 {
 #ifdef NEW_DYNAREC
-    if (r4300emu == CORE_DYNAREC)
+    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
     {
         pcaddr = pc;
         pending_exception = 1;

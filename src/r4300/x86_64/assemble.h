@@ -27,12 +27,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "api/callbacks.h"
+#include "main/main.h"
 #include "osal/preproc.h"
-#include "r4300/recomph.h"
-
-extern int64_t reg[32];
+#include "r4300/recomp.h"
 
 #define RAX 0
 #define RCX 1
@@ -70,8 +69,6 @@ extern int64_t reg[32];
 #define DH 6
 #define BH 7
 
-extern int branch_taken;
-
 extern const uint16_t trunc_mode, round_mode, ceil_mode, floor_mode;
 
 void jump_start_rel8(void);
@@ -82,45 +79,45 @@ void add_jump(unsigned int pc_addr, unsigned int mi_addr, unsigned int absolute6
 
 static osal_inline void put8(unsigned char octet)
 {
-  (*inst_pointer)[code_length] = octet;
-  code_length++;
-  if (code_length == max_code_length)
+  (*g_dev.r4300.recomp.inst_pointer)[g_dev.r4300.recomp.code_length] = octet;
+  g_dev.r4300.recomp.code_length++;
+  if (g_dev.r4300.recomp.code_length == g_dev.r4300.recomp.max_code_length)
   {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
+    *g_dev.r4300.recomp.inst_pointer = realloc_exec(*g_dev.r4300.recomp.inst_pointer, g_dev.r4300.recomp.max_code_length, g_dev.r4300.recomp.max_code_length+8192);
+    g_dev.r4300.recomp.max_code_length += 8192;
   }
 }
 
 static osal_inline void put32(unsigned int dword)
 {
-  if ((code_length + 4) >= max_code_length)
+  if ((g_dev.r4300.recomp.code_length + 4) >= g_dev.r4300.recomp.max_code_length)
   {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
+    *g_dev.r4300.recomp.inst_pointer = realloc_exec(*g_dev.r4300.recomp.inst_pointer, g_dev.r4300.recomp.max_code_length, g_dev.r4300.recomp.max_code_length+8192);
+    g_dev.r4300.recomp.max_code_length += 8192;
   }
-  *((unsigned int *) (*inst_pointer + code_length)) = dword;
-  code_length += 4;
+  *((unsigned int *) (*g_dev.r4300.recomp.inst_pointer + g_dev.r4300.recomp.code_length)) = dword;
+  g_dev.r4300.recomp.code_length += 4;
 }
 
 static osal_inline void put64(unsigned long long qword)
 {
-  if ((code_length + 8) >= max_code_length)
+  if ((g_dev.r4300.recomp.code_length + 8) >= g_dev.r4300.recomp.max_code_length)
   {
-    *inst_pointer = realloc_exec(*inst_pointer, max_code_length, max_code_length+8192);
-    max_code_length += 8192;
+    *g_dev.r4300.recomp.inst_pointer = realloc_exec(*g_dev.r4300.recomp.inst_pointer, g_dev.r4300.recomp.max_code_length, g_dev.r4300.recomp.max_code_length+8192);
+    g_dev.r4300.recomp.max_code_length += 8192;
   }
-  *((unsigned long long *) (*inst_pointer + code_length)) = qword;
-  code_length += 8;
+  *((unsigned long long *) (*g_dev.r4300.recomp.inst_pointer + g_dev.r4300.recomp.code_length)) = qword;
+  g_dev.r4300.recomp.code_length += 8;
 }
 
 static osal_inline int rel_r15_offset(void *dest, const char *op_name)
 {
     /* calculate the destination pointer's offset from the base of the r4300 registers */
-    long long rel_offset = (long long) ((unsigned char *) dest - (unsigned char *) reg);
+    long long rel_offset = (long long) ((unsigned char *) dest - (unsigned char *) r4300_regs());
 
     if (llabs(rel_offset) > 0x7fffffff)
     {
-        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, reg, op_name);
+        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, r4300_regs(), op_name);
         OSAL_BREAKPOINT_INTERRUPT;
     }
 
@@ -560,7 +557,7 @@ static osal_inline void jmp(unsigned int mi_addr)
    put8(0x25);
    put32(0);
    put64(0);
-   add_jump(code_length-8, mi_addr, 1);
+   add_jump(g_dev.r4300.recomp.code_length-8, mi_addr, 1);
 }
 
 static osal_inline void cdq(void)

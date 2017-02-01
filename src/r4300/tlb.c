@@ -23,39 +23,51 @@
 
 #include "api/m64p_types.h"
 #include "exception.h"
+#include "main/main.h"
 #include "main/rom.h"
 
-tlb tlb_e[32];
+#include <string.h>
 
-unsigned int tlb_LUT_r[0x100000];
-unsigned int tlb_LUT_w[0x100000];
+void poweron_tlb(struct tlb* tlb)
+{
+    /* clear TLB entries */
+    memset(tlb->entries, 0, 32 * sizeof(tlb->entries[0]));
+    memset(tlb->LUT_r, 0, 0x100000 * sizeof(tlb->LUT_r[0]));
+    memset(tlb->LUT_w, 0, 0x100000 * sizeof(tlb->LUT_w[0]));
+}
 
-void tlb_unmap(tlb *entry)
+void tlb_unmap(struct tlb_entry* entry)
 {
     unsigned int i;
+
+    /* FIXME! avoid g_dev usage */
+    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
 
     if (entry->v_even)
     {
         for (i=entry->start_even; i<entry->end_even; i += 0x1000)
-            tlb_LUT_r[i>>12] = 0;
+            tlb->LUT_r[i>>12] = 0;
         if (entry->d_even)
             for (i=entry->start_even; i<entry->end_even; i += 0x1000)
-                tlb_LUT_w[i>>12] = 0;
+                tlb->LUT_w[i>>12] = 0;
     }
 
     if (entry->v_odd)
     {
         for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
-            tlb_LUT_r[i>>12] = 0;
+            tlb->LUT_r[i>>12] = 0;
         if (entry->d_odd)
             for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
-                tlb_LUT_w[i>>12] = 0;
+                tlb->LUT_w[i>>12] = 0;
     }
 }
 
-void tlb_map(tlb *entry)
+void tlb_map(struct tlb_entry* entry)
 {
     unsigned int i;
+
+    /* FIXME! avoid g_dev usage */
+    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
 
     if (entry->v_even)
     {
@@ -64,10 +76,10 @@ void tlb_map(tlb *entry)
             entry->phys_even < 0x20000000)
         {
             for (i=entry->start_even;i<entry->end_even;i+=0x1000)
-                tlb_LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
             if (entry->d_even)
                 for (i=entry->start_even;i<entry->end_even;i+=0x1000)
-                    tlb_LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
         }
     }
 
@@ -78,16 +90,19 @@ void tlb_map(tlb *entry)
             entry->phys_odd < 0x20000000)
         {
             for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
-                tlb_LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
             if (entry->d_odd)
                 for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
-                    tlb_LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
         }
     }
 }
 
 uint32_t virtual_to_physical_address(uint32_t addresse, int w)
 {
+    /* FIXME! avoid g_dev usage */
+    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
+
     if (addresse >= UINT32_C(0x7f000000) && addresse < UINT32_C(0x80000000) && isGoldeneyeRom)
     {
         /**************************************************
@@ -116,15 +131,15 @@ uint32_t virtual_to_physical_address(uint32_t addresse, int w)
     }
     if (w == 1)
     {
-        if (tlb_LUT_w[addresse>>12])
-            return (tlb_LUT_w[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (tlb->LUT_w[addresse>>12])
+            return (tlb->LUT_w[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
     }
     else
     {
-        if (tlb_LUT_r[addresse>>12])
-            return (tlb_LUT_r[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (tlb->LUT_r[addresse>>12])
+            return (tlb->LUT_r[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, PC->addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, g_dev.r4300.pc->addr);
     //getchar();
     TLB_refill_exception(addresse,w);
     //return 0x80000000;

@@ -74,13 +74,13 @@ void enable_breakpoint( int bpt)
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_READ)) {
         for (bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
             if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
-                activate_memory_break_read((uint32) bptAddr);
+                activate_memory_break_read(&g_dev.mem, (uint32) bptAddr);
     }
 
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_WRITE)) {
         for (bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
             if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
-                activate_memory_break_write((uint32) bptAddr);
+                activate_memory_break_write(&g_dev.mem, (uint32) bptAddr);
     }
     
     BPT_SET_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);
@@ -96,13 +96,13 @@ void disable_breakpoint( int bpt )
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_READ)) {
         for (bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
             if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
-                deactivate_memory_break_read((uint32) bptAddr);
+                deactivate_memory_break_read(&g_dev.mem, (uint32) bptAddr);
     }
 
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_WRITE)) {
         for (bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
             if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
-                deactivate_memory_break_write((uint32) bptAddr);
+                deactivate_memory_break_write(&g_dev.mem, (uint32) bptAddr);
     }
 
     BPT_CLEAR_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);

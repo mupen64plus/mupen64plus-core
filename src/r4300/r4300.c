@@ -28,8 +28,6 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "cached_interp.h"
-#include "cp0_private.h"
-#include "cp1_private.h"
 #include "interupt.h"
 #include "main/main.h"
 #include "main/rom.h"
@@ -57,32 +55,14 @@
 #include "instr_counters.h"
 #endif
 
-unsigned int r4300emu = 0;
-unsigned int count_per_op = COUNT_PER_OP_DEFAULT;
-int rompause;
-unsigned int llbit;
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-int stop;
-int64_t reg[32], hi, lo;
-uint32_t next_interupt;
-precomp_instr *PC;
-#endif
-long long int local_rs;
-unsigned int delay_slot;
-uint32_t skip_jump = 0;
-unsigned int dyna_interp = 0;
-uint32_t last_addr;
-
-cpu_instruction_table current_instruction_table;
-
 void generic_jump_to(uint32_t address)
 {
-   if (r4300emu == CORE_PURE_INTERPRETER)
-      PC->addr = address;
+   if (g_dev.r4300.emumode == EMUMODE_PURE_INTERPRETER)
+      *r4300_pc() = address;
    else {
 #ifdef NEW_DYNAREC
-      if (r4300emu == CORE_DYNAREC)
-         last_addr = pcaddr;
+      if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+         g_dev.r4300.cp0.last_addr = pcaddr;
       else
          jump_to(address);
 #else
@@ -111,8 +91,11 @@ void r4300_reset_soft(void)
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     uint32_t bsd_dom1_config = *(uint32_t*)g_dev.pi.cart_rom.rom;
 
-    g_cp0_regs[CP0_STATUS_REG] = 0x34000000;
-    g_cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
+    int64_t* r4300_gpregs = r4300_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs();
+
+    cp0_regs[CP0_STATUS_REG] = 0x34000000;
+    cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
 
     g_dev.sp.regs[SP_STATUS_REG] = 1;
     g_dev.sp.regs2[SP_PC_REG] = 0;
@@ -134,11 +117,11 @@ void r4300_reset_soft(void)
 
     memcpy((unsigned char*)g_dev.sp.mem+0x40, g_dev.pi.cart_rom.rom+0x40, 0xfc0);
 
-    reg[19] = rom_type;     /* s3 */
-    reg[20] = tv_type;      /* s4 */
-    reg[21] = reset_type;   /* s5 */
-    reg[22] = g_dev.si.pif.cic.seed;/* s6 */
-    reg[23] = s7;           /* s7 */
+    r4300_gpregs[19] = rom_type;     /* s3 */
+    r4300_gpregs[20] = tv_type;      /* s4 */
+    r4300_gpregs[21] = reset_type;   /* s5 */
+    r4300_gpregs[22] = g_dev.si.pif.cic.seed;/* s6 */
+    r4300_gpregs[23] = s7;           /* s7 */
 
     /* required by CIC x105 */
     g_dev.sp.mem[0x1000/4] = 0x3c0dbfc0;
@@ -151,9 +134,9 @@ void r4300_reset_soft(void)
     g_dev.sp.mem[0x101c/4] = 0x3c0bb000;
 
     /* required by CIC x105 */
-    reg[11] = INT64_C(0xffffffffa4000040); /* t3 */
-    reg[29] = INT64_C(0xffffffffa4001ff0); /* sp */
-    reg[31] = INT64_C(0xffffffffa4001550); /* ra */
+    r4300_gpregs[11] = INT64_C(0xffffffffa4000040); /* t3 */
+    r4300_gpregs[29] = INT64_C(0xffffffffa4001ff0); /* sp */
+    r4300_gpregs[31] = INT64_C(0xffffffffa4001550); /* ra */
 
     /* ready to execute IPL3 */
 }
@@ -166,7 +149,7 @@ static void dynarec_setup_code(void)
    jump_to(UINT32_C(0xa4000040));
 
    // Prevent segfault on failed jump_to
-   if (!actual->block || !actual->code)
+   if (!g_dev.r4300.cached_interp.actual->block || !g_dev.r4300.cached_interp.actual->code)
       dyna_stop();
 }
 #endif
@@ -177,32 +160,32 @@ void r4300_execute(void)
     unsigned int i;
 #endif
 
-    current_instruction_table = cached_interpreter_table;
+    g_dev.r4300.current_instruction_table = cached_interpreter_table;
 
-    delay_slot=0;
-    stop = 0;
-    rompause = 0;
+    *r4300_stop() = 0;
+    g_rom_pause = 0;
 
     /* clear instruction counters */
 #if defined(COUNT_INSTR)
     memset(instr_count, 0, 131*sizeof(instr_count[0]));
 #endif
 
-    last_addr = 0xa4000040;
-    next_interupt = 624999;
+    /* XXX: might go to r4300_poweron / soft_reset ? */
+    g_dev.r4300.cp0.last_addr = 0xa4000040;
+    *r4300_cp0_next_interrupt() = 624999;
     init_interupt();
 
-    if (r4300emu == CORE_PURE_INTERPRETER)
+    if (g_dev.r4300.emumode == EMUMODE_PURE_INTERPRETER)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
-        r4300emu = CORE_PURE_INTERPRETER;
+        g_dev.r4300.emumode = EMUMODE_PURE_INTERPRETER;
         pure_interpreter();
     }
 #if defined(DYNAREC)
-    else if (r4300emu >= 2)
+    else if (g_dev.r4300.emumode >= 2)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
-        r4300emu = CORE_DYNAREC;
+        g_dev.r4300.emumode = EMUMODE_DYNAREC;
         init_blocks();
 
 #ifdef NEW_DYNAREC
@@ -211,51 +194,51 @@ void r4300_execute(void)
         new_dynarec_cleanup();
 #else
         dyna_start(dynarec_setup_code);
-        PC++;
+        (*r4300_pc_struct())++;
 #endif
 #if defined(PROFILE_R4300)
-        pfProfile = fopen("instructionaddrs.dat", "ab");
+        g_dev.r4300.recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
         for (i=0; i<0x100000; i++)
-            if (invalid_code[i] == 0 && blocks[i] != NULL && blocks[i]->code != NULL && blocks[i]->block != NULL)
+            if (g_dev.r4300.cached_interp.invalid_code[i] == 0 && g_dev.r4300.cached_interp.blocks[i] != NULL && g_dev.r4300.cached_interp.blocks[i]->code != NULL && g_dev.r4300.cached_interp.blocks[i]->block != NULL)
             {
                 unsigned char *x86addr;
                 int mipsop;
                 // store final code length for this block
                 mipsop = -1; /* -1 == end of x86 code block */
-                x86addr = blocks[i]->code + blocks[i]->code_length;
-                if (fwrite(&mipsop, 1, 4, pfProfile) != 4 ||
-                    fwrite(&x86addr, 1, sizeof(char *), pfProfile) != sizeof(char *))
+                x86addr = g_dev.r4300.cached_interp.blocks[i]->code + g_dev.r4300.cached_interp.blocks[i]->code_length;
+                if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 ||
+                    fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *))
                     DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
             }
-        fclose(pfProfile);
-        pfProfile = NULL;
+        fclose(g_dev.r4300.recomp.pfProfile);
+        g_dev.r4300.recomp.pfProfile = NULL;
 #endif
         free_blocks();
     }
 #endif
-    else /* if (r4300emu == CORE_INTERPRETER) */
+    else /* if (g_dev.r4300.emumode == EMUMODE_INTERPRETER) */
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
-        r4300emu = CORE_INTERPRETER;
+        g_dev.r4300.emumode = EMUMODE_INTERPRETER;
         init_blocks();
         jump_to(UINT32_C(0xa4000040));
 
         /* Prevent segfault on failed jump_to */
-        if (!actual->block)
+        if (!g_dev.r4300.cached_interp.actual->block)
             return;
 
-        last_addr = PC->addr;
-        while (!stop)
+        g_dev.r4300.cp0.last_addr = *r4300_pc();
+        while (!*r4300_stop())
         {
 #ifdef COMPARE_CORE
-            if (PC->ops == cached_interpreter_table.FIN_BLOCK && (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
-                virtual_to_physical_address(PC->addr, 2);
+            if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
+                virtual_to_physical_address((*r4300_pc_struct())->addr, 2);
             CoreCompareCallback();
 #endif
 #ifdef DBG
-            if (g_DebuggerActive) update_debugger(PC->addr);
+            if (g_DebuggerActive) update_debugger((*r4300_pc_struct())->addr);
 #endif
-            PC->ops();
+            (*r4300_pc_struct())->ops();
         }
 
         free_blocks();
@@ -265,7 +248,7 @@ void r4300_execute(void)
 
     /* print instruction counts */
 #if defined(COUNT_INSTR)
-    if (r4300emu == CORE_DYNAREC)
+    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
         instr_counters_print();
 #endif
 }

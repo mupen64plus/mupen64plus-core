@@ -22,12 +22,29 @@
 #ifndef M64P_R4300_ASSEMBLE_STRUCT_H
 #define M64P_R4300_ASSEMBLE_STRUCT_H
 
-typedef struct _reg_cache_struct
+struct precomp_instr;
+
+struct regcache_state {
+    unsigned int* reg_content[8];
+    struct precomp_instr* last_access[8];
+    struct precomp_instr* free_since[8];
+    int dirty[8];
+    int r64[8];
+    unsigned int* r0;
+};
+
+struct reg_cache
 {
    int need_map;
    void *needed_registers[8];
    unsigned char jump_wrapper[62];
    int need_cop1_check;
-} reg_cache_struct;
+};
+
+struct jump_table
+{
+   unsigned int mi_addr;
+   unsigned int pc_addr;
+};
 
 #endif /* M64P_R4300_ASSEMBLE_STRUCT_H */

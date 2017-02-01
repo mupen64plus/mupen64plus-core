@@ -562,6 +562,7 @@
     <ClInclude Include="..\..\src\r4300\r4300.h" />
     <ClInclude Include="..\..\src\r4300\r4300_core.h" />
     <ClInclude Include="..\..\src\r4300\recomp.h" />
+    <ClInclude Include="..\..\src\r4300\recomp_types.h" />
     <ClInclude Include="..\..\src\r4300\recomph.h" />
     <ClInclude Include="..\..\src\r4300\reset.h" />
     <ClInclude Include="..\..\src\r4300\tlb.h" />
@@ -682,12 +683,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">false</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">$(IntDir)linkage_x86.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">$(IntDir)linkage_x86.obj</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)linkage_x86.obj -f  win32 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">$(IntDir)linkage_x86.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">$(IntDir)linkage_x86.obj</Outputs>
     </CustomBuild>
@@ -701,9 +702,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)dyna_start.obj -f  win64 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)dyna_start.obj -f  win64 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)dyna_start.obj</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -o $(IntDir)dyna_start.obj -f  win64 %(FullPath)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)dyna_start.obj -f  win64 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)dyna_start.obj</Outputs>
     </CustomBuild>
   </ItemGroup>
@@ -874,6 +875,9 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers />
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -896,6 +900,9 @@
       <ImageHasSafeExceptionHandlers>
       </ImageHasSafeExceptionHandlers>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">
     <ClCompile>
@@ -922,6 +929,11 @@
       <ImageHasSafeExceptionHandlers>
       </ImageHasSafeExceptionHandlers>
     </Link>
+    <PreBuildEvent>
+      <Message>
+      </Message>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">
     <ClCompile>
@@ -946,6 +958,9 @@
       <ImageHasSafeExceptionHandlers>
       </ImageHasSafeExceptionHandlers>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -967,6 +982,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -987,6 +1005,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">
     <ClCompile>
@@ -1008,6 +1029,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">
     <ClCompile>
@@ -1028,6 +1052,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
+    <PreBuildEvent>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

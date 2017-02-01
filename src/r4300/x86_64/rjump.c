@@ -32,25 +32,19 @@
 #include "r4300/recomph.h"
 #include "r4300/x86_64/assemble_struct.h"
 
-// that's where the dynarec will restart when going back from a C function
-unsigned long long *return_address;
-
 void dyna_jump(void)
 {
-    if (stop == 1)
+    if (*r4300_stop() == 1)
     {
         dyna_stop();
         return;
     }
 
-    if (PC->reg_cache_infos.need_map)
-        *return_address = (unsigned long long) (PC->reg_cache_infos.jump_wrapper);
+    if ((*r4300_pc_struct())->reg_cache_infos.need_map)
+        *g_dev.r4300.return_address = (unsigned long long) ((*r4300_pc_struct())->reg_cache_infos.jump_wrapper);
     else
-        *return_address = (unsigned long long) (actual->code + PC->local_addr);
+        *g_dev.r4300.return_address = (unsigned long long) (g_dev.r4300.cached_interp.actual->code + (*r4300_pc_struct())->local_addr);
 }
-
-long long save_rsp = 0;
-long long save_rip = 0;
 
 #if defined(__GNUC__) && defined(__x86_64__)
 void dyna_start(void *code)
@@ -69,7 +63,7 @@ void dyna_start(void *code)
      " push %%r15              \n"
      " push %%rbp              \n"
      " mov  %%rsp, %[save_rsp] \n"
-     " lea  %[reg], %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
+     " lea  %[r4300_regs], %%r15      \n" /* store the base location of the r4300 registers in r15 for addressing */
      " call 1f                 \n"
      " jmp 2f                  \n"
      "1:                       \n"
@@ -91,24 +85,24 @@ void dyna_start(void *code)
      " pop  %%r13              \n"
      " pop  %%r12              \n"
      " pop  %%rbx              \n"
-     : [save_rsp]"=m"(save_rsp), [save_rip]"=m"(save_rip), [return_address]"=m"(return_address)
-     : "b" (code), [reg]"m"(*reg)
+     : [save_rsp]"=m"(g_dev.r4300.save_rsp), [save_rip]"=m"(g_dev.r4300.save_rip), [return_address]"=m"(g_dev.r4300.return_address)
+     : "b" (code), [r4300_regs]"m"(*r4300_regs())
      : "%rax", "memory"
      );
 
     /* clear the registers so we don't return here a second time; that would be a bug */
-    save_rsp=0;
-    save_rip=0;
+    g_dev.r4300.save_rsp=0;
+    g_dev.r4300.save_rip=0;
 }
 #endif
 
 void dyna_stop(void)
 {
-  if (save_rip == 0)
+  if (g_dev.r4300.save_rip == 0)
     DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");
   else
   {
-    *return_address = (unsigned long long) save_rip;
+    *g_dev.r4300.return_address = (unsigned long long) g_dev.r4300.save_rip;
   }
 }
 

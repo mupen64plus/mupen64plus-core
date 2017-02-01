@@ -25,7 +25,7 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "r4300/cached_interp.h"
-#include "r4300/cp1_private.h"
+#include "r4300/cp1.h"
 #include "r4300/ops.h"
 #include "r4300/r4300.h"
 #include "r4300/recomp.h"
@@ -38,8 +38,8 @@
 
 static void genbc1f_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
-   sete_m8rel((unsigned char *) &branch_taken);
+   test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
+   sete_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
 }
 
 void genbc1f(void)
@@ -50,8 +50,8 @@ void genbc1f(void)
 #ifdef INTERPRET_BC1F
    gencallinterp((unsigned long long)cached_interpreter_table.BC1F, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1F, 1);
     return;
@@ -72,8 +72,8 @@ void genbc1f_out(void)
 #ifdef INTERPRET_BC1F_OUT
    gencallinterp((unsigned long long)cached_interpreter_table.BC1F_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1F_OUT, 1);
     return;
@@ -91,8 +91,8 @@ void genbc1f_idle(void)
 #ifdef INTERPRET_BC1F_IDLE
    gencallinterp((unsigned long long)cached_interpreter_table.BC1F_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1F_IDLE, 1);
     return;
@@ -107,8 +107,8 @@ void genbc1f_idle(void)
 
 static void genbc1t_test(void)
 {
-   test_m32rel_imm32((unsigned int*)&FCR31, 0x800000);
-   setne_m8rel((unsigned char *) &branch_taken);
+   test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
+   setne_m8rel((unsigned char *) &g_dev.r4300.branch_taken);
 }
 
 void genbc1t(void)
@@ -119,8 +119,8 @@ void genbc1t(void)
 #ifdef INTERPRET_BC1T
    gencallinterp((unsigned long long)cached_interpreter_table.BC1T, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1T, 1);
     return;
@@ -141,8 +141,8 @@ void genbc1t_out(void)
 #ifdef INTERPRET_BC1T_OUT
    gencallinterp((unsigned long long)cached_interpreter_table.BC1T_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1T_OUT, 1);
     return;
@@ -160,8 +160,8 @@ void genbc1t_idle(void)
 #ifdef INTERPRET_BC1T_IDLE
    gencallinterp((unsigned long long)cached_interpreter_table.BC1T_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1T_IDLE, 1);
     return;
@@ -182,8 +182,8 @@ void genbc1fl(void)
 #ifdef INTERPRET_BC1FL
    gencallinterp((unsigned long long)cached_interpreter_table.BC1FL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1FL, 1);
     return;
@@ -204,8 +204,8 @@ void genbc1fl_out(void)
 #ifdef INTERPRET_BC1FL_OUT
    gencallinterp((unsigned long long)cached_interpreter_table.BC1FL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1FL_OUT, 1);
     return;
@@ -223,8 +223,8 @@ void genbc1fl_idle(void)
 #ifdef INTERPRET_BC1FL_IDLE
    gencallinterp((unsigned long long)cached_interpreter_table.BC1FL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1FL_IDLE, 1);
     return;
@@ -245,8 +245,8 @@ void genbc1tl(void)
 #ifdef INTERPRET_BC1TL
    gencallinterp((unsigned long long)cached_interpreter_table.BC1TL, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1TL, 1);
     return;
@@ -267,8 +267,8 @@ void genbc1tl_out(void)
 #ifdef INTERPRET_BC1TL_OUT
    gencallinterp((unsigned long long)cached_interpreter_table.BC1TL_OUT, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1TL_OUT, 1);
     return;
@@ -286,8 +286,8 @@ void genbc1tl_idle(void)
 #ifdef INTERPRET_BC1TL_IDLE
    gencallinterp((unsigned long long)cached_interpreter_table.BC1TL_IDLE, 1);
 #else
-   if (((dst->addr & 0xFFF) == 0xFFC &&
-       (dst->addr < 0x80000000 || dst->addr >= 0xC0000000))||no_compiled_jump)
+   if (((g_dev.r4300.recomp.dst->addr & 0xFFF) == 0xFFC &&
+       (g_dev.r4300.recomp.dst->addr < 0x80000000 || g_dev.r4300.recomp.dst->addr >= 0xC0000000))||g_dev.r4300.recomp.no_compiled_jump)
      {
     gencallinterp((unsigned long long)cached_interpreter_table.BC1TL_IDLE, 1);
     return;

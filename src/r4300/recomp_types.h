@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - cp1_private.h                                           *
+ *   Mupen64plus - recomp_types.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,19 +19,74 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_R4300_CP1_PRIVATE_H
-#define M64P_R4300_CP1_PRIVATE_H
+#ifndef M64P_R4300_RECOMP_TYPES_H
+#define M64P_R4300_RECOMP_TYPES_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include "cp1.h"
+#if defined(__x86_64__)
+  #include "x86_64/assemble_struct.h"
+#else
+  #include "x86/assemble_struct.h"
+#endif
 
-extern float *reg_cop1_simple[32];
-extern double *reg_cop1_double[32];
-extern uint32_t FCR0, FCR31;
-extern int64_t reg_cop1_fgr_64[32];
-extern uint32_t rounding_mode;
+struct precomp_instr
+{
+   void (*ops)(void);
+   union
+     {
+    struct
+      {
+         int64_t *rs;
+         int64_t *rt;
+         int16_t immediate;
+      } i;
+    struct
+      {
+         uint32_t inst_index;
+      } j;
+    struct
+      {
+         int64_t *rs;
+         int64_t *rt;
+         int64_t *rd;
+         unsigned char sa;
+         unsigned char nrd;
+      } r;
+    struct
+      {
+         unsigned char base;
+         unsigned char ft;
+         short offset;
+      } lf;
+    struct
+      {
+         unsigned char ft;
+         unsigned char fs;
+         unsigned char fd;
+      } cf;
+     } f;
+   uint32_t addr; /* word-aligned instruction address in r4300 address space */
+   unsigned int local_addr; /* byte offset to start of corresponding x86_64 instructions, from start of code block */
+   struct reg_cache reg_cache_infos;
+};
 
-#endif /* M64P_R4300_CP1_PRIVATE_H */
+struct precomp_block
+{
+   struct precomp_instr* block;
+   uint32_t start;
+   uint32_t end;
+   unsigned char *code;
+   unsigned int code_length;
+   unsigned int max_code_length;
+   void *jumps_table;
+   int jumps_number;
+   void *riprel_table;
+   int riprel_number;
+   //unsigned char md5[16];
+   unsigned int adler32;
+};
 
+#endif /* M64P_R4300_RECOMP_TYPES_H */
 

@@ -90,8 +90,16 @@ m64p_frame_callback g_FrameCallback = NULL;
 int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
-/* XXX: only global because of new dynarec linkage_x86.asm and plugin.c */
-ALIGN(16, uint32_t g_rdram[RDRAM_MAX_SIZE/4]);
+
+int g_rom_pause;
+
+/* g_rdram{,_size} are globals to allow plugins early access (before device is initialized).
+ * Please use g_dev.ri.rdram.dram{,_size} instead, after device initialization.
+ * Initialization and DeInitialization of these variables is done at CoreStartup and CoreShutdown.
+ */
+void* g_rdram = NULL;
+size_t g_rdram_size = 0;
+
 struct device g_dev;
 
 int g_delay_si = 0;
@@ -341,7 +349,7 @@ static void main_set_speedlimiter(int enable)
 
 static int main_is_paused(void)
 {
-    return (g_EmulatorRunning && rompause);
+    return (g_EmulatorRunning && g_rom_pause);
 }
 
 void main_toggle_pause(void)
@@ -349,7 +357,7 @@ void main_toggle_pause(void)
     if (!g_EmulatorRunning)
         return;
 
-    if (rompause)
+    if (g_rom_pause)
     {
         DebugMessage(M64MSG_STATUS, "Emulation continued.");
         if(l_msgPause)
@@ -371,14 +379,14 @@ void main_toggle_pause(void)
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
 
-    rompause = !rompause;
+    g_rom_pause = !g_rom_pause;
     l_FrameAdvance = 0;
 }
 
 void main_advance_one(void)
 {
     l_FrameAdvance = 1;
-    rompause = 0;
+    g_rom_pause = 0;
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 }
 
@@ -462,7 +470,7 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
         case M64CORE_EMU_STATE:
             if (!g_EmulatorRunning)
                 *rval = M64EMU_STOPPED;
-            else if (rompause)
+            else if (g_rom_pause)
                 *rval = M64EMU_PAUSED;
             else
                 *rval = M64EMU_RUNNING;
@@ -673,7 +681,7 @@ int main_volume_get_muted(void)
 m64p_error main_reset(int do_hard_reset)
 {
     if (do_hard_reset)
-        reset_hard_job |= 1;
+        g_dev.r4300.reset_hard_job = 1;
     else
         reset_soft();
     return M64ERR_SUCCESS;
@@ -721,7 +729,7 @@ void new_frame(void)
     l_CurrentFrame++;
 
     if (l_FrameAdvance) {
-        rompause = 1;
+        g_rom_pause = 1;
         l_FrameAdvance = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_PAUSED);
     }
@@ -799,11 +807,11 @@ static void gs_apply_cheats(void)
 
 static void pause_loop(void)
 {
-    if(rompause)
+    if(g_rom_pause)
     {
         osd_render();  // draw Paused message in case gfx.updateScreen didn't do it
         VidExt_GL_SwapBuffers();
-        while(rompause)
+        while(g_rom_pause)
         {
             SDL_Delay(10);
             main_check_inputs();
@@ -881,7 +889,9 @@ static void open_eep_file(struct storage_file* storage)
 m64p_error main_run(void)
 {
     size_t i;
-    unsigned int disable_extra_mem;
+    unsigned int disable_extra_mem, count_per_op;
+    unsigned int emumode;
+    int no_compiled_jump, alternate_vi_timing, count_per_scanline;
     struct storage_file eep;
     struct storage_file fla;
     struct storage_file mpk;
@@ -899,7 +909,7 @@ m64p_error main_run(void)
 
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
-    r4300emu = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
+    emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
     /* set some other core parameters based on the config file values */
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
@@ -911,8 +921,9 @@ m64p_error main_run(void)
     g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
-    int alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
-    int count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
+    alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
+    count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
+
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
 
@@ -954,11 +965,14 @@ m64p_error main_run(void)
     }
 
     init_device(&g_dev,
+                emumode,
+                count_per_op,
+                no_compiled_jump,
                 &aout,
                 g_rom, g_rom_size,
                 storage_file_ptr(&fla, 0), &fla_storage,
                 storage_file_ptr(&sra, 0), &sra_storage,
-                g_rdram, (disable_extra_mem == 0) ? 0x800000 : 0x400000,
+                g_rdram, g_rdram_size,
                 cins,
                 mpk_data, mpk_storages,
                 rumbles,
@@ -1071,16 +1085,18 @@ void main_stop(void)
         osd_delete_message(l_msgVol);
         l_msgVol = NULL;
     }
-    if (rompause)
+    if (g_rom_pause)
     {
-        rompause = 0;
+        g_rom_pause = 0;
         StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
     }
-    stop = 1;
+
+    *r4300_stop() = 1;
+
 #ifdef DBG
     if(g_DebuggerActive)
     {
         debugger_step();
     }
-#endif        
+#endif
 }

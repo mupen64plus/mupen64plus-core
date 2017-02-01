@@ -24,6 +24,11 @@
 
 #include <stdint.h>
 
+#include "interupt.h"
+#include "tlb.h"
+
+#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+
 enum
 {
     CP0_STATUS_IE   = 0x00000001,
@@ -132,7 +137,70 @@ enum r4300_cp0_registers
     CP0_REGS_COUNT = 32
 };
 
+
+
+enum { INTERRUPT_NODES_POOL_CAPACITY = 16 };
+
+struct interrupt_event
+{
+    int type;
+    unsigned int count;
+};
+
+struct node
+{
+    struct interrupt_event data;
+    struct node *next;
+};
+
+struct pool
+{
+    struct node nodes [INTERRUPT_NODES_POOL_CAPACITY];
+    struct node* stack[INTERRUPT_NODES_POOL_CAPACITY];
+    size_t index;
+};
+
+struct interrupt_queue
+{
+    struct pool pool;
+    struct node* first;
+};
+
+
+struct cp0
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    uint32_t regs[CP0_REGS_COUNT];
+#endif
+
+    /* set to avoid savestates/reset if state may be inconsistent
+     * (e.g. in the middle of an instruction) */
+    int interrupt_unsafe_state;
+
+    struct interrupt_queue q;
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    unsigned int next_interrupt;
+#endif
+
+    int special_done;
+
+    uint32_t last_addr;
+    unsigned int count_per_op;
+
+    struct tlb tlb;
+};
+
+
+void init_cp0(struct cp0* cp0, unsigned int count_per_op);
+void poweron_cp0(struct cp0* cp0);
+
 uint32_t* r4300_cp0_regs(void);
+uint32_t* r4300_cp0_last_addr(void);
+unsigned int* r4300_cp0_next_interrupt(void);
+
+int check_cop1_unusable(void);
 
 void cp0_update_count(void);
 

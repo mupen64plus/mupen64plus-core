@@ -200,6 +200,9 @@ ifeq ($(OS), MINGW)
   ASFLAGS = -f win32
 endif
 
+# assembler also needs base include directory
+ASFLAGS += -I../../src/
+
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
 endif
@@ -325,10 +328,12 @@ endif
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
+OBJDUMP   = $(CROSS_COMPILE)objdump
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
-MKDIR ?= mkdir -p
+MKDIR    ?= mkdir -p
+AWK      ?= awk
 COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
@@ -649,7 +654,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR)
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/main/asm_defines_nasm.h $(SRCDIR)/main/asm_defines_gas.h
 
 # build dependency files
 CFLAGS += -MD -MP
@@ -657,10 +662,31 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
+
+# Manual dep specification
+$(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
+$(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
+
+
+ASM_DEFINES = $(OBJDIR)/main/asm_defines.o
+
+# It is important to disable LTO for this object file
+# otherwise we can't extract usefull information from it.
+$(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
+	$(COMPILE.c) -fno-lto -o $@ $<
+
+# Generate defines for nasm by parsing global symbols
+$(SRCDIR)/main/asm_defines_nasm.h: $(ASM_DEFINES)
+	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "%define " $$6 " (0x"$$1"-1)" }' > $@
+
+# Generate defines for gas by parsing global symbols
+$(SRCDIR)/main/asm_defines_gas.h: $(ASM_DEFINES)
+	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "#define " $$6 " (0x"$$1"-1)" }' > $@
+
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
 	$(COMPILE.as) -o $@ $<
-	
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.S
 	$(COMPILE.c) -o $@ $<
 

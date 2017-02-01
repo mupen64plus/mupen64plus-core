@@ -30,110 +30,98 @@
 #include "r4300/recomp.h"
 #include "r4300/recomph.h"
 
-typedef struct _jump_table
-{
-   unsigned int mi_addr;
-   unsigned int pc_addr;
-} jump_table;
-
-static jump_table *jumps_table = NULL;
-static int jumps_number, max_jumps_number;
-
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)
 {
    if (block_jumps_table)
    {
-     jumps_table = (jump_table *) block_jumps_table;
-     jumps_number = block_jumps_number;
-     max_jumps_number = jumps_number;
+     g_dev.r4300.jumps_table = (struct jump_table *) block_jumps_table;
+     g_dev.r4300.jumps_number = block_jumps_number;
+     g_dev.r4300.max_jumps_number = g_dev.r4300.jumps_number;
    }
    else
    {
-     jumps_table = (jump_table *) malloc(1000*sizeof(jump_table));
-     jumps_number = 0;
-     max_jumps_number = 1000;
+     g_dev.r4300.jumps_table = (struct jump_table *) malloc(1000*sizeof(struct jump_table));
+     g_dev.r4300.jumps_number = 0;
+     g_dev.r4300.max_jumps_number = 1000;
    }
 }
 
 void free_assembler(void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number)
 {
-   *block_jumps_table = jumps_table;
-   *block_jumps_number = jumps_number;
+   *block_jumps_table = g_dev.r4300.jumps_table;
+   *block_jumps_number = g_dev.r4300.jumps_number;
    *block_riprel_table = NULL;  /* RIP-relative addressing is only for x86-64 */
    *block_riprel_number = 0;
 }
 
 void add_jump(unsigned int pc_addr, unsigned int mi_addr)
 {
-   if (jumps_number == max_jumps_number)
+   if (g_dev.r4300.jumps_number == g_dev.r4300.max_jumps_number)
    {
-     max_jumps_number += 1000;
-     jumps_table = (jump_table *) realloc(jumps_table, max_jumps_number*sizeof(jump_table));
+     g_dev.r4300.max_jumps_number += 1000;
+     g_dev.r4300.jumps_table = (struct jump_table *) realloc(g_dev.r4300.jumps_table, g_dev.r4300.max_jumps_number*sizeof(struct jump_table));
    }
-   jumps_table[jumps_number].pc_addr = pc_addr;
-   jumps_table[jumps_number].mi_addr = mi_addr;
-   jumps_number++;
+   g_dev.r4300.jumps_table[g_dev.r4300.jumps_number].pc_addr = pc_addr;
+   g_dev.r4300.jumps_table[g_dev.r4300.jumps_number].mi_addr = mi_addr;
+   g_dev.r4300.jumps_number++;
 }
 
-void passe2(precomp_instr *dest, int start, int end, precomp_block *block)
+void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block *block)
 {
    unsigned int real_code_length, addr_dest;
    int i;
    build_wrappers(dest, start, end, block);
-   real_code_length = code_length;
+   real_code_length = g_dev.r4300.recomp.code_length;
    
-   for (i=0; i < jumps_number; i++)
+   for (i=0; i < g_dev.r4300.jumps_number; i++)
    {
-     code_length = jumps_table[i].pc_addr;
-     if (dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.need_map)
+     g_dev.r4300.recomp.code_length = g_dev.r4300.jumps_table[i].pc_addr;
+     if (dest[(g_dev.r4300.jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.need_map)
      {
-       addr_dest = (unsigned int)dest[(jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.jump_wrapper;
-       put32(addr_dest-((unsigned int)block->code+code_length)-4);
+       addr_dest = (unsigned int)dest[(g_dev.r4300.jumps_table[i].mi_addr - dest[0].addr)/4].reg_cache_infos.jump_wrapper;
+       put32(addr_dest-((unsigned int)block->code+g_dev.r4300.recomp.code_length)-4);
      }
      else
      {
-       addr_dest = dest[(jumps_table[i].mi_addr - dest[0].addr)/4].local_addr;
-       put32(addr_dest-code_length-4);
+       addr_dest = dest[(g_dev.r4300.jumps_table[i].mi_addr - dest[0].addr)/4].local_addr;
+       put32(addr_dest-g_dev.r4300.recomp.code_length-4);
      }
    }
-   code_length = real_code_length;
+   g_dev.r4300.recomp.code_length = real_code_length;
 }
-
-static unsigned int g_jump_start8 = 0;
-static unsigned int g_jump_start32 = 0;
 
 void jump_start_rel8(void)
 {
-  g_jump_start8 = code_length;
+  g_dev.r4300.jump_start8 = g_dev.r4300.recomp.code_length;
 }
 
 void jump_start_rel32(void)
 {
-  g_jump_start32 = code_length;
+  g_dev.r4300.jump_start32 = g_dev.r4300.recomp.code_length;
 }
 
 void jump_end_rel8(void)
 {
-  unsigned int jump_end = code_length;
-  int jump_vec = jump_end - g_jump_start8;
+  unsigned int jump_end = g_dev.r4300.recomp.code_length;
+  int jump_vec = jump_end - g_dev.r4300.jump_start8;
 
   if (jump_vec > 127 || jump_vec < -128)
   {
-    DebugMessage(M64MSG_ERROR, "8-bit relative jump too long! From %x to %x", g_jump_start8, jump_end);
+    DebugMessage(M64MSG_ERROR, "8-bit relative jump too long! From %x to %x", g_dev.r4300.jump_start8, jump_end);
     OSAL_BREAKPOINT_INTERRUPT;
   }
 
-  code_length = g_jump_start8 - 1;
+  g_dev.r4300.recomp.code_length = g_dev.r4300.jump_start8 - 1;
   put8(jump_vec);
-  code_length = jump_end;
+  g_dev.r4300.recomp.code_length = jump_end;
 }
 
 void jump_end_rel32(void)
 {
-  unsigned int jump_end = code_length;
-  int jump_vec = jump_end - g_jump_start32;
+  unsigned int jump_end = g_dev.r4300.recomp.code_length;
+  int jump_vec = jump_end - g_dev.r4300.jump_start32;
 
-  code_length = g_jump_start32 - 4;
+  g_dev.r4300.recomp.code_length = g_dev.r4300.jump_start32 - 4;
   put32(jump_vec);
-  code_length = jump_end;
+  g_dev.r4300.recomp.code_length = jump_end;
 }

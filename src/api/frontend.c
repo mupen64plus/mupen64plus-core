@@ -19,7 +19,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the Core front-end functions which will be exported
  * outside of the core library.
  */
@@ -52,11 +52,14 @@
 static int l_CoreInit = 0;
 static int l_ROMOpen = 0;
 
+
 /* functions exported outside of libmupen64plus to front-end application */
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
                                    void (*StateCallback)(void *, m64p_core_param, int))
 {
+    unsigned int disable_extra_mem;
+
     if (l_CoreInit)
         return M64ERR_ALREADY_INIT;
 
@@ -91,6 +94,15 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     if (!main_set_core_defaults())
         return M64ERR_INTERNAL;
 
+    /* allocate memory for rdram */
+    disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
+    g_rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
+    g_rdram = malloc(g_rdram_size);
+    if (g_rdram == NULL) {
+        g_rdram_size = 0;
+        return M64ERR_NO_MEMORY;
+    }
+
     /* The ROM database contains MD5 hashes, goodnames, and some game-specific parameters */
     romdatabase_open();
 
@@ -113,6 +125,11 @@ EXPORT m64p_error CALL CoreShutdown(void)
 
     /* tell SDL to shut down */
     SDL_Quit();
+
+    /* deallocate RDRAM */
+    free(g_rdram);
+    g_rdram = NULL;
+    g_rdram_size = 0;
 
     l_CoreInit = 0;
     return M64ERR_SUCCESS;

@@ -64,6 +64,9 @@
     <Filter Include="r4300\new_dynarec\arm">
       <UniqueIdentifier>{873c3262-2472-407c-8451-67cbb5f78bae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="backends">
+      <UniqueIdentifier>{4e08d3a7-cb15-4bc5-8d8a-04fea5461fb1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ai\ai_controller.c">
@@ -99,13 +102,7 @@
     <ClCompile Include="..\..\src\main\cheat.c">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\eep_file.c">
-      <Filter>main</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\eventloop.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\fla_file.c">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\lirc.c">
@@ -115,9 +112,6 @@
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\md5.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\mpk_file.c">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\profile.c">
@@ -130,9 +124,6 @@
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\sdl_key_converter.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\sra_file.c">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\util.c">
@@ -402,6 +393,27 @@
     <ClCompile Include="..\..\src\debugger\dbg_memory.c">
       <Filter>debugger</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\main\device.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\storage_file.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\audio_out_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\clock_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\controller_input_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\rumble_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\storage_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ai\ai_controller.h">
@@ -458,13 +470,7 @@
     <ClInclude Include="..\..\src\main\cheat.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\eep_file.h">
-      <Filter>main</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\eventloop.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\fla_file.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\lirc.h">
@@ -479,9 +485,6 @@
     <ClInclude Include="..\..\src\main\md5.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\mpk_file.h">
-      <Filter>main</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\profile.h">
       <Filter>main</Filter>
     </ClInclude>
@@ -492,9 +495,6 @@
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\sdl_key_converter.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\sra_file.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\util.h">
@@ -724,6 +724,30 @@
     </ClInclude>
     <ClInclude Include="..\..\src\debugger\dbg_types.h">
       <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\device.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\storage_file.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\audio_out_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\clock_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\controller_input_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\rumble_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\storage_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\r4300\recomp_types.h">
+      <Filter>r4300</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

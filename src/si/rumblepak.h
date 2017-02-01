@@ -22,6 +22,7 @@
 #ifndef M64P_SI_RUMBLEPAK_H
 #define M64P_SI_RUMBLEPAK_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct rumble_backend;
@@ -33,7 +34,7 @@ struct rumblepak
 
 void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
 
-void rumblepak_read_command(struct rumblepak* rpk, uint8_t* cmd);
-void rumblepak_write_command(struct rumblepak* rpk, uint8_t* cmd);
+void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
+void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
 
 #endif
