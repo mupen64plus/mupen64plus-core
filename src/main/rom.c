@@ -446,9 +446,9 @@ void romdatabase_open(void)
             search->entry.crc1 = 0;
             search->entry.crc2 = 0;
             search->entry.status = 0; /* Set default to 0 stars. */
-            search->entry.savetype = DEFAULT;
-            search->entry.players = DEFAULT;
-            search->entry.rumble = DEFAULT; 
+            search->entry.savetype = 0;
+            search->entry.players = 0;
+            search->entry.rumble = 0;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.alternate_vi_timing = DEFAULT_ALTERNATE_VI_TIMING;
             search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
