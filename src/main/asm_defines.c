@@ -29,11 +29,11 @@
  * files.
  */
 
-#include "main/device.h"
-#include "memory/memory.h"
-#include "r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
-#include "r4300/r4300_core.h"
-#include "ri/ri_controller.h"
+#include "device/device.h"
+#include "device/memory/memory.h"
+#include "device/r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "device/r4300/r4300_core.h"
+#include "device/ri/ri_controller.h"
 
 #include <stddef.h>
 

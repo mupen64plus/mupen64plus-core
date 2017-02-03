@@ -22,24 +22,21 @@
 
 #include <string.h>
 
-#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 #include "dbg_types.h"
+#include "device/ai/ai_controller.h"
+#include "device/memory/memory.h"
+#include "device/pi/pi_controller.h"
+#include "device/r4300/r4300_core.h"
+#include "device/rdp/rdp_core.h"
+#include "device/ri/ri_controller.h"
+#include "device/rsp/rsp_core.h"
+#include "device/si/si_controller.h"
+#include "device/vi/vi_controller.h"
 #include "main/main.h"
-#include "memory/memory.h"
-#include "pi/pi_controller.h"
-#include "r4300/cached_interp.h"
-#include "r4300/ops.h"
-#include "r4300/r4300.h"
-#include "r4300/r4300_core.h"
-#include "rdp/rdp_core.h"
-#include "ri/ri_controller.h"
-#include "rsp/rsp_core.h"
-#include "si/si_controller.h"
-#include "vi/vi_controller.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
 

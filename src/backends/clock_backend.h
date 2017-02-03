@@ -22,14 +22,14 @@
 #ifndef M64P_BACKENDS_CLOCK_BACKEND_H
 #define M64P_BACKENDS_CLOCK_BACKEND_H
 
-struct tm;
+#include <time.h>
 
 struct clock_backend
 {
     void* user_data;
-    const struct tm* (*get_time)(void*);
+    time_t (*get_time)(void*);
 };
 
-const struct tm* clock_get_time(struct clock_backend* clock);
+time_t clock_get_time(struct clock_backend* clock);
 
 #endif

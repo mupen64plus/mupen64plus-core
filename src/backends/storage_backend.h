@@ -20,14 +20,22 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #ifndef M64P_BACKENDS_STORAGE_BACKEND_H
-#define M64P_BACKENDS_STORAGE BACKEND_H
+#define M64P_BACKENDS_STORAGE_BACKEND_H
+
+#include <stddef.h>
+#include <stdint.h>
 
 struct storage_backend
 {
+    uint8_t* data;
+    size_t size;
+
     void* user_data;
     void (*save)(void*);
 };
 
+uint8_t* storage_data(struct storage_backend* storage);
+size_t storage_size(struct storage_backend* storage);
 void storage_save(struct storage_backend* storage);
 
 #endif

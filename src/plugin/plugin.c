@@ -23,11 +23,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "ai/ai_controller.h"
 #include "api/callbacks.h"
 #include "api/m64p_common.h"
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
+#include "device/ai/ai_controller.h"
+#include "device/memory/memory.h"
+#include "device/r4300/r4300_core.h"
+#include "device/rdp/rdp_core.h"
+#include "device/rsp/rsp_core.h"
+#include "device/vi/vi_controller.h"
 #include "dummy_audio.h"
 #include "dummy_input.h"
 #include "dummy_rsp.h"
@@ -35,13 +40,8 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "main/version.h"
-#include "memory/memory.h"
 #include "osal/dynamiclib.h"
 #include "plugin.h"
-#include "r4300/r4300_core.h"
-#include "rdp/rdp_core.h"
-#include "rsp/rsp_core.h"
-#include "vi/vi_controller.h"
 
 CONTROL Controls[4];
 

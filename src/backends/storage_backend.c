@@ -21,6 +21,15 @@
 
 #include "storage_backend.h"
 
+uint8_t* storage_data(struct storage_backend* storage)
+{
+    return storage->data;;
+}
+
+size_t storage_size(struct storage_backend* storage)
+{
+    return storage->size;
+}
 
 void storage_save(struct storage_backend* storage)
 {

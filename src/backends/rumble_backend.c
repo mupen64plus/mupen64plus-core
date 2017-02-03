@@ -24,5 +24,5 @@
 
 void rumble_exec(struct rumble_backend* rumble, enum rumble_action action)
 {
-    rumble->rumble(rumble->user_data, action);
+    rumble->exec(rumble->user_data, action);
 }

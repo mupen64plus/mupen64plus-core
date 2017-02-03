@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 #include "api/m64p_types.h"
-#include "main/device.h"
+#include "device/device.h"
 #include "osal/preproc.h"
 
 enum { RDRAM_MAX_SIZE = 0x800000 };

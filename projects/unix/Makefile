@@ -416,7 +416,6 @@ OBJDIR = _obj$(POSTFIX)
 
 # list of required source files for compilation
 SOURCE = \
-	$(SRCDIR)/ai/ai_controller.c \
 	$(SRCDIR)/api/callbacks.c \
 	$(SRCDIR)/api/common.c \
 	$(SRCDIR)/api/config.c \
@@ -428,61 +427,61 @@ SOURCE = \
 	$(SRCDIR)/backends/controller_input_backend.c \
 	$(SRCDIR)/backends/rumble_backend.c \
 	$(SRCDIR)/backends/storage_backend.c \
+	$(SRCDIR)/device/ai/ai_controller.c \
+	$(SRCDIR)/device/device.c \
+	$(SRCDIR)/device/memory/memory.c \
+	$(SRCDIR)/device/pi/cart_rom.c \
+	$(SRCDIR)/device/pi/flashram.c \
+	$(SRCDIR)/device/pi/pi_controller.c \
+	$(SRCDIR)/device/pi/sram.c \
+	$(SRCDIR)/device/pifbootrom/pifbootrom.c \
+	$(SRCDIR)/device/r4300/cached_interp.c \
+	$(SRCDIR)/device/r4300/cp0.c \
+	$(SRCDIR)/device/r4300/cp1.c \
+	$(SRCDIR)/device/r4300/exception.c \
+	$(SRCDIR)/device/r4300/instr_counters.c \
+	$(SRCDIR)/device/r4300/interupt.c \
+	$(SRCDIR)/device/r4300/mi_controller.c \
+	$(SRCDIR)/device/r4300/pure_interp.c \
+	$(SRCDIR)/device/r4300/r4300_core.c \
+	$(SRCDIR)/device/r4300/recomp.c \
+	$(SRCDIR)/device/r4300/tlb.c \
+	$(SRCDIR)/device/rdp/fb.c \
+	$(SRCDIR)/device/rdp/rdp_core.c \
+	$(SRCDIR)/device/ri/rdram.c \
+	$(SRCDIR)/device/ri/rdram_detection_hack.c \
+	$(SRCDIR)/device/ri/ri_controller.c \
+	$(SRCDIR)/device/rsp/rsp_core.c \
+	$(SRCDIR)/device/si/af_rtc.c \
+	$(SRCDIR)/device/si/cic.c \
+	$(SRCDIR)/device/si/eeprom.c \
+	$(SRCDIR)/device/si/game_controller.c \
+	$(SRCDIR)/device/si/mempak.c \
+	$(SRCDIR)/device/si/n64_cic_nus_6105.c \
+	$(SRCDIR)/device/si/pif.c \
+	$(SRCDIR)/device/si/rumblepak.c \
+	$(SRCDIR)/device/si/si_controller.c \
+	$(SRCDIR)/device/vi/vi_controller.c \
 	$(SRCDIR)/main/main.c \
 	$(SRCDIR)/main/util.c \
 	$(SRCDIR)/main/cheat.c \
-	$(SRCDIR)/main/device.c \
 	$(SRCDIR)/main/eventloop.c \
 	$(SRCDIR)/main/md5.c \
 	$(SRCDIR)/main/profile.c \
 	$(SRCDIR)/main/rom.c \
 	$(SRCDIR)/main/savestates.c \
 	$(SRCDIR)/main/sdl_key_converter.c \
-	$(SRCDIR)/main/storage_file.c \
+	$(SRCDIR)/main/file_storage.c \
 	$(SRCDIR)/main/workqueue.c \
-	$(SRCDIR)/memory/memory.c \
-	$(SRCDIR)/pi/cart_rom.c \
-	$(SRCDIR)/pi/flashram.c \
-	$(SRCDIR)/pi/pi_controller.c \
-	$(SRCDIR)/pi/sram.c \
 	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
 	$(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
-	$(SRCDIR)/plugin/get_time_using_C_localtime.c \
+	$(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
 	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
 	$(SRCDIR)/plugin/plugin.c \
 	$(SRCDIR)/plugin/dummy_video.c \
 	$(SRCDIR)/plugin/dummy_audio.c \
 	$(SRCDIR)/plugin/dummy_input.c \
 	$(SRCDIR)/plugin/dummy_rsp.c \
-	$(SRCDIR)/r4300/r4300.c \
-	$(SRCDIR)/r4300/cached_interp.c \
-	$(SRCDIR)/r4300/cp0.c \
-	$(SRCDIR)/r4300/cp1.c \
-	$(SRCDIR)/r4300/exception.c \
-	$(SRCDIR)/r4300/instr_counters.c \
-	$(SRCDIR)/r4300/interupt.c \
-	$(SRCDIR)/r4300/mi_controller.c \
-	$(SRCDIR)/r4300/pure_interp.c \
-	$(SRCDIR)/r4300/r4300_core.c \
-	$(SRCDIR)/r4300/recomp.c \
-	$(SRCDIR)/r4300/reset.c \
-	$(SRCDIR)/r4300/tlb.c \
-	$(SRCDIR)/rdp/fb.c \
-	$(SRCDIR)/rdp/rdp_core.c \
-	$(SRCDIR)/ri/rdram.c \
-	$(SRCDIR)/ri/rdram_detection_hack.c \
-	$(SRCDIR)/ri/ri_controller.c \
-	$(SRCDIR)/rsp/rsp_core.c \
-	$(SRCDIR)/si/af_rtc.c \
-	$(SRCDIR)/si/cic.c \
-	$(SRCDIR)/si/eeprom.c \
-	$(SRCDIR)/si/game_controller.c \
-	$(SRCDIR)/si/mempak.c \
-	$(SRCDIR)/si/n64_cic_nus_6105.c \
-	$(SRCDIR)/si/pif.c \
-	$(SRCDIR)/si/rumblepak.c \
-	$(SRCDIR)/si/si_controller.c \
-	$(SRCDIR)/vi/vi_controller.c \
 	$(SRCDIR)/osd/screenshot.cpp
 ifeq ("$(OS)","MINGW")
 SOURCE += \
@@ -522,40 +521,40 @@ ifneq ($(DYNAREC), )
     ifeq ($(DYNAREC), x86)
       CFLAGS += -DNEW_DYNAREC=1
       SOURCE += \
-	    $(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm
+	    $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm
     else
       ifeq ($(DYNAREC), arm)
         CFLAGS += -DNEW_DYNAREC=3
         SOURCE += \
-         $(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.S \
-         $(SRCDIR)/r4300/new_dynarec/arm/arm_cpu_features.c
+         $(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S \
+         $(SRCDIR)/device/r4300/new_dynarec/arm/arm_cpu_features.c
       else
         $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
       endif
     endif
 
     SOURCE += \
-      $(SRCDIR)/r4300/empty_dynarec.c \
-      $(SRCDIR)/r4300/new_dynarec/new_dynarec.c
+      $(SRCDIR)/device/r4300/empty_dynarec.c \
+      $(SRCDIR)/device/r4300/new_dynarec/new_dynarec.c
   else
     SOURCE += \
-      $(SRCDIR)/r4300/$(DYNAREC)/assemble.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gbc.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop0.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop1.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_d.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_l.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_s.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gcop1_w.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gr4300.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gregimm.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gspecial.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/gtlb.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/regcache.c \
-      $(SRCDIR)/r4300/$(DYNAREC)/rjump.c
+      $(SRCDIR)/device/r4300/$(DYNAREC)/assemble.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gbc.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop0.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_d.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_l.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_s.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_w.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gr4300.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gregimm.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gspecial.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/gtlb.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/regcache.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c
   endif
 else
-  SOURCE += $(SRCDIR)/r4300/empty_dynarec.c
+  SOURCE += $(SRCDIR)/device/r4300/empty_dynarec.c
 endif
 
 ifeq ($(LIRC), 1)
@@ -664,8 +663,8 @@ CXXFLAGS += $(CFLAGS)
 
 
 # Manual dep specification
-$(SRCDIR)/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
-$(SRCDIR)/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
+$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
+$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
 
 
 ASM_DEFINES = $(OBJDIR)/main/asm_defines.o

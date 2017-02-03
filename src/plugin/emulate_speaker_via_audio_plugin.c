@@ -23,11 +23,11 @@
 
 #include <stdint.h>
 
-#include "ai/ai_controller.h"
+#include "device/ai/ai_controller.h"
+#include "device/ri/ri_controller.h"
+#include "device/vi/vi_controller.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
-#include "ri/ri_controller.h"
-#include "vi/vi_controller.h"
 
 void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits)
 {

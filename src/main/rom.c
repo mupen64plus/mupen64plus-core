@@ -35,12 +35,11 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
+#include "device/memory/memory.h"
 #include "main.h"
 #include "md5.h"
-#include "memory/memory.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
-#include "r4300/r4300.h"
 #include "rom.h"
 #include "util.h"
 
