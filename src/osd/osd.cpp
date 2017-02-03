@@ -241,11 +241,21 @@ void osd_init(int width, int height)
 
     l_font = new OGLFT::Monochrome(fontpath, (float) height / 35.0f);  // make font size proportional to screen height
 
-    if(!l_font || !l_font->isValid())
+    if (!l_font || !l_font->isValid())
     {
         DebugMessage(M64MSG_ERROR, "Could not construct face from %s", fontpath);
         return;
     }
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+    int gl_context;
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &gl_context);
+    if (gl_context == SDL_GL_CONTEXT_PROFILE_CORE)
+    {
+        DebugMessage(M64MSG_WARNING, "OSD not compatible with OpenGL core context. OSD deactivated.");
+        return;
+    }
+#endif
 
     // clear statics
     for (int i = 0; i < OSD_NUM_CORNERS; i++)
