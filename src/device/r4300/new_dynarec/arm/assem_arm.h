@@ -38,11 +38,14 @@
 // Note: FP is set to &dynarec_local when executing generated code.
 // Thus the local variables are actually global and not on the stack.
 
-extern char *invc_ptr;
-extern char extra_memory[33554432];
-
 #define BASE_ADDR ((int)(&extra_memory))
-//#define TARGET_SIZE_2 24 // 2^24 = 16 megabytes
 #define TARGET_SIZE_2 25 // 2^25 = 32 megabytes
+#define JUMP_TABLE_SIZE (sizeof(jump_table_symbols)*2)
+
+/* bug-fix to implement __clear_cache (missing in Android; http://code.google.com/p/android/issues/detail?id=1803) */
+void __clear_cache_bugfix(char* begin, char *end);
+#ifdef ANDROID
+  #define __clear_cache __clear_cache_bugfix
+#endif
 
 #endif /* M64P_DEVICE_R4300_NEW_DYNAREC_ARM_ASSEM_ARM_H */

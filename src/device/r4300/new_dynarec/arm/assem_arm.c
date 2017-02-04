@@ -18,16 +18,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "main/main.h"
-#include "device/r4300/tlb.h"
-
-void *dynamic_linker(void * src, u_int vaddr);
-void *dynamic_linker_ds(void * src, u_int vaddr);
-
+extern char *invc_ptr;
+extern char extra_memory[33554432];
 extern int cycle_count;
 extern int last_count;
-extern int pcaddr;
-extern int pending_exception;
 extern int branch_target;
 extern int ram_offset;
 extern uint64_t readmem_dword;
@@ -36,41 +30,43 @@ extern void *dynarec_local;
 extern u_int memory_map[1048576];
 extern u_int mini_ht[32][2];
 extern u_int rounding_modes[4];
-extern float* g_dev_r4300_cp1_regs_simple[32];
-extern double* g_dev_r4300_cp1_regs_double[32];
-extern uint32_t g_dev_r4300_cp1_fcr31;
-extern uint32_t g_dev_r4300_cp1_fcr0;
-extern unsigned int g_dev_r4300_cp0_next_interrupt;
-extern uint32_t g_dev_r4300_cp0_regs[32];
-extern uint64_t g_dev_mem_wdword;
-extern uint32_t g_dev_mem_wword;
-extern uint16_t g_dev_mem_whword;
-extern uint8_t g_dev_mem_wbyte;
-extern uint32_t g_dev_mem_address;
-extern int64_t g_dev_r4300_lo;
-extern int64_t g_dev_r4300_hi;
-extern int64_t g_dev_r4300_regs[32];
+extern u_char restore_candidate[512];
+
+void jump_vaddr_r0(void);
+void jump_vaddr_r1(void);
+void jump_vaddr_r2(void);
+void jump_vaddr_r3(void);
+void jump_vaddr_r4(void);
+void jump_vaddr_r5(void);
+void jump_vaddr_r6(void);
+void jump_vaddr_r7(void);
+void jump_vaddr_r8(void);
+void jump_vaddr_r9(void);
+void jump_vaddr_r10(void);
+void jump_vaddr_r12(void);
+void invalidate_addr_r0(void);
+void invalidate_addr_r1(void);
+void invalidate_addr_r2(void);
+void invalidate_addr_r3(void);
+void invalidate_addr_r4(void);
+void invalidate_addr_r5(void);
+void invalidate_addr_r6(void);
+void invalidate_addr_r7(void);
+void invalidate_addr_r8(void);
+void invalidate_addr_r9(void);
+void invalidate_addr_r10(void);
+void invalidate_addr_r12(void);
+void indirect_jump_indexed(void);
+void indirect_jump(void);
+
+static void *dyna_linker(void * src, u_int vaddr);
+static void *dyna_linker_ds(void * src, u_int vaddr);
+static void invalidate_addr(u_int addr);
 
 static u_int literals[1024][2];
+static unsigned int needs_clear_cache[1<<(TARGET_SIZE_2-17)];
 
-void indirect_jump_indexed();
-void indirect_jump();
-void do_interrupt();
-void jump_vaddr();
-void jump_vaddr_r0();
-void jump_vaddr_r1();
-void jump_vaddr_r2();
-void jump_vaddr_r3();
-void jump_vaddr_r4();
-void jump_vaddr_r5();
-void jump_vaddr_r6();
-void jump_vaddr_r7();
-void jump_vaddr_r8();
-void jump_vaddr_r9();
-void jump_vaddr_r10();
-void jump_vaddr_r12();
-
-const u_int jump_vaddr_reg[16] = {
+static const u_int jump_vaddr_reg[16] = {
   (int)jump_vaddr_r0,
   (int)jump_vaddr_r1,
   (int)jump_vaddr_r2,
@@ -88,20 +84,7 @@ const u_int jump_vaddr_reg[16] = {
   0,
   0};
 
-void invalidate_addr_r0();
-void invalidate_addr_r1();
-void invalidate_addr_r2();
-void invalidate_addr_r3();
-void invalidate_addr_r4();
-void invalidate_addr_r5();
-void invalidate_addr_r6();
-void invalidate_addr_r7();
-void invalidate_addr_r8();
-void invalidate_addr_r9();
-void invalidate_addr_r10();
-void invalidate_addr_r12();
-
-const u_int invalidate_addr_reg[16] = {
+static const u_int invalidate_addr_reg[16] = {
   (int)invalidate_addr_r0,
   (int)invalidate_addr_r1,
   (int)invalidate_addr_r2,
@@ -119,16 +102,10 @@ const u_int invalidate_addr_reg[16] = {
   0,
   0};
 
-#include "device/r4300/fpu.h"
-#include "device/device.h"
-#include "device/memory/memory.h"
-#include "main/main.h"
-
 static u_int jump_table_symbols[] = {
   (int)invalidate_addr,
-  (int)jump_vaddr,
-  (int)dynamic_linker,
-  (int)dynamic_linker_ds,
+  (int)dyna_linker,
+  (int)dyna_linker_ds,
   (int)verify_code,
   (int)verify_code_vm,
   (int)verify_code_ds,
@@ -170,8 +147,6 @@ static u_int jump_table_symbols[] = {
   (int)invalidate_addr_r9,
   (int)invalidate_addr_r10,
   (int)invalidate_addr_r12,
-  (int)mult64,
-  (int)multu64,
   (int)div64,
   (int)divu64,
   (int)cvt_s_w,
@@ -250,12 +225,7 @@ static u_int jump_table_symbols[] = {
   (int)neg_d
 };
 
-static unsigned int needs_clear_cache[1<<(TARGET_SIZE_2-17)];
-
-#define JUMP_TABLE_SIZE (sizeof(jump_table_symbols)*2)
-
 /* Linker */
-
 static void set_jump_target(int addr,u_int target)
 {
   u_char *ptr=(u_char *)addr;
@@ -321,177 +291,6 @@ static void set_jump_target_fillslot(int addr,u_int target,int copy)
   }
 }
 */
-
-
-void *dynamic_linker(void * src, u_int vaddr)
-{
-  assert((vaddr&1)==0);
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      int *ptr=(int*)src;
-      assert((*ptr&0x0f000000)==0x0a000000); //jmp
-      int offset=(int)(((u_int)*ptr+2)<<8)>>6;
-      void *ptr2=(void*)((u_int)ptr+(u_int)offset);
-#ifdef ARMv5_ONLY
-      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
-      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
-      assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
-      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
-#else
-      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
-      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
-      assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
-      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
-      assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
-      assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
-#endif
-      add_link(vaddr, ptr2);
-      *ptr=(*ptr&0xFF000000)|((((u_int)head->addr-(u_int)ptr-8)<<6)>>8);
-      __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
-      return head->addr;
-    }
-    head=head->next;
-  }
-
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev_r4300_cp0_regs[CP0_COUNT_REG],g_dev_r4300_cp0_next_interrupt,vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(int)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(int)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-
-  int r=new_recompile_block(vaddr);
-  if(r==0) return dynamic_linker(src, vaddr);
-  // Execute in unmapped page, generate pagefault exception
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
-}
-
-void *dynamic_linker_ds(void * src, u_int vaddr)
-{
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      int *ptr=(int*)src;
-      assert((*ptr&0x0f000000)==0x0a000000); //jmp
-      int offset=(int)(((u_int)*ptr+2)<<8)>>6;
-      void *ptr2=(void*)((u_int)ptr+(u_int)offset);
-#ifdef ARMv5_ONLY
-      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
-      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
-      assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
-      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
-#else
-      assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
-      assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
-      assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
-      assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
-      assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
-      assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
-#endif
-      add_link(vaddr, ptr2);
-      *ptr=(*ptr&0xFF000000)|((((u_int)head->addr-(u_int)ptr-8)<<6)>>8);
-      __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
-      return head->addr;
-    }
-    head=head->next;
-  }
-
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",g_dev_r4300_cp0_regs[CP0_COUNT_REG],g_dev_r4300_cp0_next_interrupt,vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(int)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(int)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-
-  int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
-  if(r==0) return dynamic_linker_ds(src, vaddr);
-  // Execute in unmapped page, generate pagefault exception
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
-}
 
 /* Literal pool */
 static void add_literal(int addr,int val)
@@ -682,6 +481,30 @@ static void get_bounds(int addr,u_int *start,u_int *end)
   }
   *start=source;
   *end=source+len;
+}
+
+static void *add_pointer(void *src, void* addr)
+{
+  int *ptr=(int*)src;
+  assert((*ptr&0x0f000000)==0x0a000000); //jmp
+  int offset=(int)(((u_int)*ptr+2)<<8)>>6;
+  void *ptr2=(void*)((u_int)ptr+(u_int)offset);
+#ifdef ARMv5_ONLY
+  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
+  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
+  //assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
+  //assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
+#else
+  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
+  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
+  assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
+  assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
+  //assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
+  //assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
+#endif
+  *ptr=(*ptr&0xFF000000)|((((u_int)addr-(u_int)ptr-8)<<6)>>8);
+  __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
+  return ptr2;
 }
 
 /* Register allocation */
@@ -2710,7 +2533,7 @@ static void emit_fcmpd(int x,int y)
   output_w32(0xeeb46b47);
 } 
 
-static void emit_fmstat()
+static void emit_fmstat(void)
 {
   assem_debug("fmstat");
   output_w32(0xeef1fa10);
@@ -2884,15 +2707,6 @@ static void emit_extjump2(int addr, int target, int linker)
 //DEBUG <
   emit_call(linker);
   emit_jmpreg(0);
-}
-
-static void emit_extjump(int addr, int target)
-{
-  emit_extjump2(addr, target, (int)dynamic_linker);
-}
-static void emit_extjump_ds(int addr, int target)
-{
-  emit_extjump2(addr, target, (int)dynamic_linker_ds);
 }
 
 static void do_readstub(int n)
@@ -3227,11 +3041,6 @@ static void do_unalignedwritestub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-void printregs(int edi,int esi,int ebp,int esp,int b,int d,int c,int a)
-{
-  DebugMessage(M64MSG_VERBOSE, "regs: %x %x %x %x %x %x %x (%x)",a,b,c,d,ebp,esi,edi,(&edi)[-1]);
-}
-
 static void do_invstub(int n)
 {
   literal_pool(20);
@@ -3268,7 +3077,7 @@ static int do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds()
+static void do_dirty_stub_ds(void)
 {
   // Careful about the code output here, verify_dirty needs to parse it.
   #ifdef ARMv5_ONLY
@@ -4787,7 +4596,7 @@ static void wb_invalidate_arm(signed char pre[],signed char entry[],uint64_t dir
 
 // Clearing the cache is rather slow on ARM Linux, so mark the areas
 // that need to be cleared, and then only clear these areas once.
-static void do_clear_cache()
+static void do_clear_cache(void)
 {
   int i,j;
   for (i=0;i<(1<<(TARGET_SIZE_2-17));i++)
@@ -4818,8 +4627,13 @@ static void do_clear_cache()
   }
 }
 
+static void invalidate_addr(u_int addr)
+{
+  invalidate_block(addr>>12);
+}
+
 // CPU-architecture-specific initialization
-static void arch_init() {
+static void arch_init(void) {
 
   detect_arm_cpu_features();
   print_arm_cpu_features();
