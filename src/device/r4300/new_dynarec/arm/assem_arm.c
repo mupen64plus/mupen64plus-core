@@ -19,7 +19,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "main/main.h"
-#include "r4300/tlb.h"
+#include "device/r4300/tlb.h"
 
 void *dynamic_linker(void * src, u_int vaddr);
 void *dynamic_linker_ds(void * src, u_int vaddr);
@@ -119,10 +119,10 @@ const u_int invalidate_addr_reg[16] = {
   0,
   0};
 
-#include "../../fpu.h"
-#include "../../../main/device.h"
-#include "../../../memory/memory.h"
-#include "../../../main/main.h"
+#include "device/r4300/fpu.h"
+#include "device/device.h"
+#include "device/memory/memory.h"
+#include "main/main.h"
 
 static u_int jump_table_symbols[] = {
   (int)invalidate_addr,
