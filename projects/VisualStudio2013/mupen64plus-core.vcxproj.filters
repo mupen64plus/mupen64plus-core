@@ -7,48 +7,6 @@
     <Filter Include="debugger">
       <UniqueIdentifier>{7f51f5eb-d111-4ea0-8e53-16af048aa72c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="device\ai">
-      <UniqueIdentifier>{2dbce10a-02a0-4348-8b30-3a9d8b7186cf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\memory">
-      <UniqueIdentifier>{34995a42-e31b-454b-b4c8-968095acfbc1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\pi">
-      <UniqueIdentifier>{3043b677-3c06-467d-b176-ef96cdf9bea4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300">
-      <UniqueIdentifier>{9529393c-1033-4db2-9847-d99d0f2a3efc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300\new_dynarec">
-      <UniqueIdentifier>{0a3e6535-058f-4cf8-94a1-cf33e0668572}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300\x86">
-      <UniqueIdentifier>{11f2d5a7-413e-462b-a57b-693174db54b3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300\x86_64">
-      <UniqueIdentifier>{87776cb1-be61-4bae-b41a-b58247a4d566}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300\new_dynarec\x86">
-      <UniqueIdentifier>{2ce19bee-47cf-4152-bddf-d2587d4ad1c1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\r4300\new_dynarec\arm">
-      <UniqueIdentifier>{873c3262-2472-407c-8451-67cbb5f78bae}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\rdp">
-      <UniqueIdentifier>{a84c1e57-9545-43d0-98c4-891f2a74f328}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\ri">
-      <UniqueIdentifier>{ae9c3462-6c64-4e37-af7f-ae332906f7ee}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\rsp">
-      <UniqueIdentifier>{b6da3844-0918-46e3-b8d6-82420c5904bd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\si">
-      <UniqueIdentifier>{e8322b9e-b3e5-475a-8446-47b2ad0c3c73}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="device\vi">
-      <UniqueIdentifier>{c07bc3cc-5ebb-4a54-9487-ce74c52ee078}</UniqueIdentifier>
-    </Filter>
     <Filter Include="main">
       <UniqueIdentifier>{ff56da04-0803-4045-b46c-e3dc66c192a6}</UniqueIdentifier>
     </Filter>
@@ -67,8 +25,59 @@
     <Filter Include="backends">
       <UniqueIdentifier>{4e08d3a7-cb15-4bc5-8d8a-04fea5461fb1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="device">
+      <UniqueIdentifier>{e879612e-16c4-48d4-bc9c-bbdadf92295b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\ai">
+      <UniqueIdentifier>{2dbce10a-02a0-4348-8b30-3a9d8b7186cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\memory">
+      <UniqueIdentifier>{34995a42-e31b-454b-b4c8-968095acfbc1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\pi">
+      <UniqueIdentifier>{3043b677-3c06-467d-b176-ef96cdf9bea4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300">
+      <UniqueIdentifier>{9529393c-1033-4db2-9847-d99d0f2a3efc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec">
+      <UniqueIdentifier>{0a3e6535-058f-4cf8-94a1-cf33e0668572}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec\x86">
+      <UniqueIdentifier>{2ce19bee-47cf-4152-bddf-d2587d4ad1c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec\arm">
+      <UniqueIdentifier>{873c3262-2472-407c-8451-67cbb5f78bae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\x86">
+      <UniqueIdentifier>{11f2d5a7-413e-462b-a57b-693174db54b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\x86_64">
+      <UniqueIdentifier>{87776cb1-be61-4bae-b41a-b58247a4d566}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\rdp">
+      <UniqueIdentifier>{a84c1e57-9545-43d0-98c4-891f2a74f328}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\ri">
+      <UniqueIdentifier>{ae9c3462-6c64-4e37-af7f-ae332906f7ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\rsp">
+      <UniqueIdentifier>{b6da3844-0918-46e3-b8d6-82420c5904bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\si">
+      <UniqueIdentifier>{e8322b9e-b3e5-475a-8446-47b2ad0c3c73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\vi">
+      <UniqueIdentifier>{c07bc3cc-5ebb-4a54-9487-ce74c52ee078}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\pifbootrom">
+      <UniqueIdentifier>{0628d2cb-f4d7-4b1e-ad47-00501bd18048}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\device\ai\ai_controller.c">
+      <Filter>device\ai</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\api\callbacks.c">
       <Filter>api</Filter>
     </ClCompile>
@@ -87,26 +96,71 @@
     <ClCompile Include="..\..\src\api\vidext.c">
       <Filter>api</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c">
-      <Filter>debugger</Filter>
+    <ClCompile Include="..\..\src\main\zip\ioapi.c">
+      <Filter>main\zip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\debugger\dbg_debugger.c">
-      <Filter>debugger</Filter>
+    <ClCompile Include="..\..\src\main\zip\unzip.c">
+      <Filter>main\zip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\debugger\dbg_decoder.c">
-      <Filter>debugger</Filter>
+    <ClCompile Include="..\..\src\main\zip\zip.c">
+      <Filter>main\zip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\debugger\dbg_memory.c">
-      <Filter>debugger</Filter>
+    <ClCompile Include="..\..\src\main\cheat.c">
+      <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\ai\ai_controller.c">
-      <Filter>device\ai</Filter>
+    <ClCompile Include="..\..\src\main\eventloop.c">
+      <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\device.c">
-      <Filter>device</Filter>
+    <ClCompile Include="..\..\src\main\lirc.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\main.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\md5.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\profile.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\rom.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\savestates.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\sdl_key_converter.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\util.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\workqueue.c">
+      <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\memory\memory.c">
       <Filter>device\memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\dynamiclib_unix.c">
+      <Filter>osal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\dynamiclib_win32.c">
+      <Filter>osal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\files_unix.c">
+      <Filter>osal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osal\files_win32.c">
+      <Filter>osal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osd\OGLFT.cpp">
+      <Filter>osd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osd\osd.cpp">
+      <Filter>osd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osd\screenshot.cpp">
+      <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\pi\cart_rom.c">
       <Filter>device\pi</Filter>
@@ -119,6 +173,78 @@
     </ClCompile>
     <ClCompile Include="..\..\src\device\pi\sram.c">
       <Filter>device\pi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\dummy_audio.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\dummy_input.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\dummy_rsp.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\dummy_video.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\plugin.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\rdp\fb.c">
+      <Filter>device\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\rdp\rdp_core.c">
+      <Filter>device\rdp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\ri\rdram.c">
+      <Filter>device\ri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\ri\rdram_detection_hack.c">
+      <Filter>device\ri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\ri\ri_controller.c">
+      <Filter>device\ri</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\rsp\rsp_core.c">
+      <Filter>device\rsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\af_rtc.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\cic.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\eeprom.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\game_controller.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\mempak.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\n64_cic_nus_6105.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\pif.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\rumblepak.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\si_controller.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\vi\vi_controller.c">
+      <Filter>device\vi</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c">
       <Filter>device\r4300</Filter>
@@ -147,16 +273,10 @@
     <ClCompile Include="..\..\src\device\r4300\pure_interp.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\r4300.c">
-      <Filter>device\r4300</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\r4300_core.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\recomp.c">
-      <Filter>device\r4300</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\reset.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\tlb.c">
@@ -258,146 +378,17 @@
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\x86\assem_x86.c">
       <Filter>device\r4300\new_dynarec\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\rdp\fb.c">
-      <Filter>device\rdp</Filter>
+    <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c">
+      <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\rdp\rdp_core.c">
-      <Filter>device\rdp</Filter>
+    <ClCompile Include="..\..\src\debugger\dbg_debugger.c">
+      <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\ri\rdram.c">
-      <Filter>device\ri</Filter>
+    <ClCompile Include="..\..\src\debugger\dbg_decoder.c">
+      <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\ri\rdram_detection_hack.c">
-      <Filter>device\ri</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\ri\ri_controller.c">
-      <Filter>device\ri</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\rsp\rsp_core.c">
-      <Filter>device\rsp</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\af_rtc.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\cic.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\eeprom.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\game_controller.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\mempak.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\n64_cic_nus_6105.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\pif.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\rumblepak.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\si_controller.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\vi\vi_controller.c">
-      <Filter>device\vi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\ioapi.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\unzip.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\zip.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\cheat.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\eventloop.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\lirc.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\main.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\md5.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\profile.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\rom.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\savestates.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\sdl_key_converter.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\util.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\workqueue.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osal\dynamiclib_unix.c">
-      <Filter>osal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osal\dynamiclib_win32.c">
-      <Filter>osal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osal\files_unix.c">
-      <Filter>osal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osal\files_win32.c">
-      <Filter>osal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osd\OGLFT.cpp">
-      <Filter>osd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osd\osd.cpp">
-      <Filter>osd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osd\screenshot.cpp">
-      <Filter>osd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\dummy_audio.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\dummy_input.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\dummy_rsp.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\dummy_video.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\get_time_using_C_localtime.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\plugin.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c">
-      <Filter>plugin</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\storage_file.c">
-      <Filter>main</Filter>
+    <ClCompile Include="..\..\src\debugger\dbg_memory.c">
+      <Filter>debugger</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\audio_out_backend.c">
       <Filter>backends</Filter>
@@ -414,8 +405,23 @@
     <ClCompile Include="..\..\src\backends\storage_backend.c">
       <Filter>backends</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\device.c">
+      <Filter>device</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main\file_storage.c">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c">
+      <Filter>device\pifbootrom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\plugin\get_time_using_time_plus_delta.c">
+      <Filter>plugin</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\device\ai\ai_controller.h">
+      <Filter>device\ai</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\api\callbacks.h">
       <Filter>api</Filter>
     </ClInclude>
@@ -452,47 +458,77 @@
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h">
       <Filter>api</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\audio_out_backend.h">
-      <Filter>backends</Filter>
+    <ClInclude Include="..\..\src\main\zip\crypt.h">
+      <Filter>main\zip</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\clock_backend.h">
-      <Filter>backends</Filter>
+    <ClInclude Include="..\..\src\main\zip\ioapi.h">
+      <Filter>main\zip</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\controller_input_backend.h">
-      <Filter>backends</Filter>
+    <ClInclude Include="..\..\src\main\zip\unzip.h">
+      <Filter>main\zip</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\rumble_backend.h">
-      <Filter>backends</Filter>
+    <ClInclude Include="..\..\src\main\zip\zip.h">
+      <Filter>main\zip</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\storage_backend.h">
-      <Filter>backends</Filter>
+    <ClInclude Include="..\..\src\main\cheat.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\eventloop.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_debugger.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\lirc.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_decoder.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\list.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\main.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_memory.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\md5.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_types.h">
-      <Filter>debugger</Filter>
+    <ClInclude Include="..\..\src\main\profile.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\ai\ai_controller.h">
-      <Filter>device\ai</Filter>
+    <ClInclude Include="..\..\src\main\rom.h">
+      <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\device.h">
-      <Filter>device</Filter>
+    <ClInclude Include="..\..\src\main\savestates.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\sdl_key_converter.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\util.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\version.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\workqueue.h">
+      <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\memory\memory.h">
       <Filter>device\memory</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osal\dynamiclib.h">
+      <Filter>osal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osal\files.h">
+      <Filter>osal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osal\preproc.h">
+      <Filter>osal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osd\OGLFT.h">
+      <Filter>osd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osd\osd.h">
+      <Filter>osd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osd\screenshot.h">
+      <Filter>osd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\pi\cart_rom.h">
       <Filter>device\pi</Filter>
@@ -506,101 +542,29 @@
     <ClInclude Include="..\..\src\device\pi\sram.h">
       <Filter>device\pi</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\cached_interp.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\dummy_audio.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\cp0.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\dummy_input.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\cp0_private.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\dummy_rsp.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\cp1.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\dummy_video.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\cp1_private.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\exception.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\fpu.h">
-      <Filter>device\r4300</Filter>
+    <ClInclude Include="..\..\src\plugin\plugin.h">
+      <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\instr_counters.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\interupt.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\macros.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\mi_controller.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\ops.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\pure_interp.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\r4300.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\r4300_core.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\recomp.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\recomp_types.h">
-      <Filter>r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\recomph.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\reset.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\tlb.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86\assemble.h">
-      <Filter>device\r4300\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86\assemble_struct.h">
-      <Filter>device\r4300\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86\interpret.h">
-      <Filter>device\r4300\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86\regcache.h">
-      <Filter>device\r4300\x86</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86_64\assemble.h">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86_64\assemble_struct.h">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86_64\interpret.h">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\x86_64\regcache.h">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\new_dynarec\new_dynarec.h">
-      <Filter>device\r4300\new_dynarec</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.h">
-      <Filter>device\r4300\new_dynarec\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\assem_arm.h">
-      <Filter>device\r4300\new_dynarec\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\new_dynarec\x86\assem_x86.h">
-      <Filter>device\r4300\new_dynarec\x86</Filter>
+    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h">
+      <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\rdp\fb.h">
       <Filter>device\rdp</Filter>
@@ -650,103 +614,133 @@
     <ClInclude Include="..\..\src\device\vi\vi_controller.h">
       <Filter>device\vi</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\crypt.h">
-      <Filter>main\zip</Filter>
+    <ClInclude Include="..\..\src\device\r4300\cached_interp.h">
+      <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\ioapi.h">
-      <Filter>main\zip</Filter>
+    <ClInclude Include="..\..\src\device\r4300\cp0.h">
+      <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\unzip.h">
-      <Filter>main\zip</Filter>
+    <ClInclude Include="..\..\src\device\r4300\cp1.h">
+      <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\zip.h">
-      <Filter>main\zip</Filter>
+    <ClInclude Include="..\..\src\device\r4300\exception.h">
+      <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\cheat.h">
+    <ClInclude Include="..\..\src\device\r4300\fpu.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\instr_counters.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\interupt.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\macros.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\mi_controller.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\ops.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\pure_interp.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\r4300_core.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\recomp.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\recomph.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\tlb.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86\assemble.h">
+      <Filter>device\r4300\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86\assemble_struct.h">
+      <Filter>device\r4300\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86\interpret.h">
+      <Filter>device\r4300\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86\regcache.h">
+      <Filter>device\r4300\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86_64\assemble.h">
+      <Filter>device\r4300\x86_64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86_64\assemble_struct.h">
+      <Filter>device\r4300\x86_64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86_64\interpret.h">
+      <Filter>device\r4300\x86_64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\x86_64\regcache.h">
+      <Filter>device\r4300\x86_64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\new_dynarec.h">
+      <Filter>device\r4300\new_dynarec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.h">
+      <Filter>device\r4300\new_dynarec\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\assem_arm.h">
+      <Filter>device\r4300\new_dynarec\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\x86\assem_x86.h">
+      <Filter>device\r4300\new_dynarec\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_debugger.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_decoder.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_memory.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\debugger\dbg_types.h">
+      <Filter>debugger</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\audio_out_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\clock_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\controller_input_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\rumble_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\storage_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\recomp_types.h">
+      <Filter>device\r4300</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\device.h">
+      <Filter>device</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\file_storage.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\eventloop.h">
-      <Filter>main</Filter>
+    <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h">
+      <Filter>device\pifbootrom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\lirc.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\list.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\main.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\md5.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\profile.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\rom.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\savestates.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\sdl_key_converter.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\storage_file.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\util.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\version.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\workqueue.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osal\dynamiclib.h">
-      <Filter>osal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osal\files.h">
-      <Filter>osal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osal\preproc.h">
-      <Filter>osal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osd\OGLFT.h">
-      <Filter>osd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osd\osd.h">
-      <Filter>osd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osd\screenshot.h">
-      <Filter>osd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\dummy_audio.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\dummy_input.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\dummy_rsp.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\dummy_video.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\get_time_using_C_localtime.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\plugin.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h">
+    <ClInclude Include="..\..\src\plugin\get_time_using_time_plus_delta.h">
       <Filter>plugin</Filter>
     </ClInclude>
   </ItemGroup>
