@@ -18,7 +18,19 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "main/main.h"
+void jump_vaddr_eax(void);
+void jump_vaddr_ecx(void);
+void jump_vaddr_edx(void);
+void jump_vaddr_ebx(void);
+void jump_vaddr_ebp(void);
+void jump_vaddr_edi(void);
+void invalidate_block_eax(void);
+void invalidate_block_ecx(void);
+void invalidate_block_edx(void);
+void invalidate_block_ebx(void);
+void invalidate_block_ebp(void);
+void invalidate_block_esi(void);
+void invalidate_block_edi(void);
 
 int cycle_count;
 int last_count;
@@ -26,24 +38,14 @@ int pcaddr;
 int pending_exception;
 int branch_target;
 uint64_t readmem_dword;
-static struct precomp_instr fake_pc;
 u_int memory_map[1048576];
-ALIGN(8, static u_int mini_ht[32][2]);
 ALIGN(4, u_char restore_candidate[512]);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-void do_interrupt();
-void jump_vaddr_eax();
-void jump_vaddr_ecx();
-void jump_vaddr_edx();
-void jump_vaddr_ebx();
-void jump_vaddr_ebp();
-void jump_vaddr_edi();
-#ifdef __cplusplus
-}
-#endif
+ALIGN(8, static u_int mini_ht[32][2]);
+static struct precomp_instr fake_pc;
+// We need these for cmovcc instructions on x86
+static const u_int const_zero=0;
+static const u_int const_one=1;
 
 static const u_int jump_vaddr_reg[8] = {
   (int)jump_vaddr_eax,
@@ -54,20 +56,6 @@ static const u_int jump_vaddr_reg[8] = {
   (int)jump_vaddr_ebp,
   0,
   (int)jump_vaddr_edi };
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-void invalidate_block_eax();
-void invalidate_block_ecx();
-void invalidate_block_edx();
-void invalidate_block_ebx();
-void invalidate_block_ebp();
-void invalidate_block_esi();
-void invalidate_block_edi();
-#ifdef __cplusplus
-}
-#endif
 
 static const u_int invalidate_block_reg[8] = {
   (int)invalidate_block_eax,
@@ -85,14 +73,7 @@ static const u_short rounding_modes[4] = {
   0xB3F, // ceil
   0x73F};// floor
 
-#include "../../fpu.h"
-
-// We need these for cmovcc instructions on x86
-static const u_int const_zero=0;
-static const u_int const_one=1;
-
 /* Linker */
-
 static void set_jump_target(int addr,int target)
 {
   u_char *ptr=(u_char *)addr;
@@ -112,151 +93,6 @@ static void set_jump_target(int addr,int target)
     u_int *ptr2=(u_int *)(ptr+6);
     *ptr2=target;
   }
-}
-
-void *dynamic_linker(void * src, u_int vaddr)
-{
-  assert((vaddr&1)==0);
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      int *ptr=(int*)src;
-      int *ptr2=(int*)((u_int)ptr + (u_int)*ptr + 4);
-      assert((*ptr2&0xFF)==0x68);                   //push
-      assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
-      assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
-      add_link(vaddr, ptr2);
-      u_int offset=(u_int)head->addr-(u_int)ptr-4;
-      *ptr=offset;
-      return head->addr;
-    }
-    head=head->next;
-  }
-
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],*r4300_cp0_next_interrupt(),vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(int)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(int)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-
-  int r=new_recompile_block(vaddr);
-  if(r==0) return dynamic_linker(src, vaddr);
-  // Execute in unmapped page, generate pagefault exception
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
-}
-
-void *dynamic_linker_ds(void * src, u_int vaddr)
-{
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      int *ptr=(int*)src;
-      int *ptr2=(int*)((u_int)ptr + (u_int)*ptr + 4);
-      assert((*ptr2&0xFF)==0x68);                   //push
-      assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
-      assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
-      add_link(vaddr, ptr2);
-      u_int offset=(u_int)head->addr-(u_int)ptr-4;
-      *ptr=offset;
-      return head->addr;
-    }
-    head=head->next;
-  }
-
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],*r4300_cp0_next_interrupt(),vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(int)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(int)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-
-  int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
-  if(r==0) return dynamic_linker_ds(src, vaddr);
-  // Execute in unmapped page, generate pagefault exception
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
 }
 
 static void *kill_pointer(void *stub)
@@ -341,6 +177,18 @@ static void get_bounds(int addr,u_int *start,u_int *end)
   }
   if(start) *start=source;
   if(end) *end=source+len;
+}
+
+static void *add_pointer(void *src, void* addr)
+{
+  int *ptr=(int*)src;
+  int *ptr2=(int*)((u_int)ptr+(u_int)*ptr+4);
+  assert((*ptr2&0xFF)==0x68);                   //push
+  assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
+  //assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
+  u_int offset=(u_int)addr-(u_int)ptr-4;
+  *ptr=offset;
+  return (void*)ptr2;
 }
 
 /* Register allocation */
@@ -1916,12 +1764,12 @@ static void emit_pushmem(int addr)
   output_modrm(0,5,6);
   output_w32(addr);
 }
-static void emit_pusha()
+static void emit_pusha(void)
 {
   assem_debug("pusha");
   output_byte(0x60);
 }
-static void emit_popa()
+static void emit_popa(void)
 {
   assem_debug("popa");
   output_byte(0x61);
@@ -2428,7 +2276,7 @@ static void emit_idiv(int rs)
   output_byte(0xF7);
   output_modrm(3,rs,7);
 }
-static void emit_cdq()
+static void emit_cdq(void)
 {
   assem_debug("cdq");
   output_byte(0x99);
@@ -2527,19 +2375,19 @@ static void emit_fucomip(u_int r)
   output_byte(0xdf);
   output_byte(0xe8+r);
 }
-static void emit_fchs()
+static void emit_fchs(void)
 {
   assem_debug("fchs");
   output_byte(0xd9);
   output_byte(0xe0);
 }
-static void emit_fabs()
+static void emit_fabs(void)
 {
   assem_debug("fabs");
   output_byte(0xd9);
   output_byte(0xe1);
 }
-static void emit_fsqrt()
+static void emit_fsqrt(void)
 {
   assem_debug("fsqrt");
   output_byte(0xd9);
@@ -2625,7 +2473,7 @@ static void emit_fdiv(int r)
   output_byte(0xd8);
   output_byte(0xf0+r);
 }
-static void emit_fpop()
+static void emit_fpop(void)
 {
   // fstp st(0)
   assem_debug("fpop");
@@ -2674,14 +2522,14 @@ static void emit_fstpl(int r)
   if(r!=EBP) output_modrm(0,r,3);
   else {output_modrm(1,EBP,3);output_byte(0);}
 }
-static void emit_fnstcw_stack()
+static void emit_fnstcw_stack(void)
 {
   assem_debug("fnstcw (%%esp)");
   output_byte(0xd9);
   output_modrm(0,4,7);
   output_sib(0,4,4);
 }
-static void emit_fldcw_stack()
+static void emit_fldcw_stack(void)
 {
   assem_debug("fldcw (%%esp)");
   output_byte(0xd9);
@@ -2788,15 +2636,6 @@ static void emit_extjump2(int addr, int target, int linker)
   emit_call(linker);
   emit_addimm(ESP,8,ESP);
   emit_jmpreg(EAX);
-}
-
-static void emit_extjump(int addr, int target)
-{
-  emit_extjump2(addr, target, (int)dynamic_linker);
-}
-static void emit_extjump_ds(int addr, int target)
-{
-  emit_extjump2(addr, target, (int)dynamic_linker_ds);
 }
 
 static void do_readstub(int n)
@@ -3195,7 +3034,7 @@ static int do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds()
+static void do_dirty_stub_ds(void)
 {
   emit_pushimm(start+1);
   emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
@@ -4611,4 +4450,4 @@ static void literal_pool(int n) {}
 static void literal_pool_jumpover(int n) {}
 
 // CPU-architecture-specific initialization, not needed for x86
-static void arch_init() {}
+static void arch_init(void) {}

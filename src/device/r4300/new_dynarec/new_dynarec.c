@@ -18,39 +18,31 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdint.h> //include for uint64_t
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #if defined(__APPLE__)
 #include <sys/types.h> // needed for u_int, u_char, etc
-
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "new_dynarec.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "device/memory/memory.h"
+#include "device/rsp/rsp_core.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
 #include "device/r4300/interupt.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
-#include "device/rsp/rsp_core.h"
-#ifdef __cplusplus
-}
-#endif
+#include "device/r4300/fpu.h"
 
-#if !defined(_MSC_VER)
+#if !defined(WIN32)
 #include <sys/mman.h>
 #endif
 
@@ -63,11 +55,99 @@ extern "C" {
 #error Unsupported dynarec architecture
 #endif
 
+/* debug */
+#define ASSEM_DEBUG 0
+#define INV_DEBUG 0
+#define COUNT_NOTCOMPILEDS 0
+
+static void nullf() {}
+#if ASSEM_DEBUG
+    #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
+#else
+    #define assem_debug nullf
+#endif
+#if INV_DEBUG
+    #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
+#else
+    #define inv_debug nullf
+#endif
+
+/* registers that may be allocated */
+/* 1-31 gpr */
+#define HIREG 32 // hi
+#define LOREG 33 // lo
+#define FSREG 34 // FPU status (FCSR)
+#define CSREG 35 // Coprocessor status
+#define CCREG 36 // Cycle count
+#define INVCP 37 // Pointer to invalid_code
+#define MMREG 38 // Pointer to memory_map
+#define ROREG 39 // ram offset (if rdram!=0x80000000)
+#define TEMPREG 40
+#define FTEMP 40 // FPU temporary register
+#define PTEMP 41 // Prefetch temporary register
+#define TLREG 42 // TLB mapping offset
+#define RHASH 43 // Return address hash
+#define RHTBL 44 // Return address hash table address
+#define RTEMP 45 // JR/JALR address register
+#define MAXREG 45
+#define AGEN1 46 // Address generation temporary register
+#define AGEN2 47 // Address generation temporary register
+#define MGEN1 48 // Maptable address generation temporary register
+#define MGEN2 49 // Maptable address generation temporary register
+#define BTREG 50 // Branch target temporary register
+
+/* instruction types */
+#define NOP 0     // No operation
+#define LOAD 1    // Load
+#define STORE 2   // Store
+#define LOADLR 3  // Unaligned load
+#define STORELR 4 // Unaligned store
+#define MOV 5     // Move 
+#define ALU 6     // Arithmetic/logic
+#define MULTDIV 7 // Multiply/divide
+#define SHIFT 8   // Shift by register
+#define SHIFTIMM 9// Shift by immediate
+#define IMM16 10  // 16-bit immediate
+#define RJUMP 11  // Unconditional jump to register
+#define UJUMP 12  // Unconditional jump
+#define CJUMP 13  // Conditional branch (BEQ/BNE/BGTZ/BLEZ)
+#define SJUMP 14  // Conditional branch (regimm format)
+#define COP0 15   // Coprocessor 0
+#define COP1 16   // Coprocessor 1
+#define C1LS 17   // Coprocessor 1 load/store
+#define FJUMP 18  // Conditional branch (floating point)
+#define FLOAT 19  // Floating point unit
+#define FCONV 20  // Convert integer to float
+#define FCOMP 21  // Floating point compare (sets FSREG)
+#define SYSCALL 22// SYSCALL
+#define OTHER 23  // Other
+#define SPAN 24   // Branch/delay slot spans 2 pages
+#define NI 25     // Not implemented
+
+/* stubs */
+#define CC_STUB 1
+#define FP_STUB 2
+#define LOADB_STUB 3
+#define LOADH_STUB 4
+#define LOADW_STUB 5
+#define LOADD_STUB 6
+#define LOADBU_STUB 7
+#define LOADHU_STUB 8
+#define STOREB_STUB 9
+#define STOREH_STUB 10
+#define STOREW_STUB 11
+#define STORED_STUB 12
+#define STORELR_STUB 13
+#define INVCODE_STUB 14
+
+/* branch codes */
+#define TAKEN 1
+#define NOTTAKEN 2
+#define NULLDS 3
+
 #define MAXBLOCK 4096
 #define MAX_OUTPUT_BLOCK_SIZE 262144
 #define CLOCK_DIVIDER g_dev.r4300.cp0.count_per_op
-
-void *base_addr;
 
 struct regstat
 {
@@ -92,20 +172,53 @@ struct ll_entry
   struct ll_entry *next;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern u_char restore_candidate[512];
-extern int cycle_count;
-extern int last_count;
-extern int branch_target;
-extern uint64_t readmem_dword;
-extern struct ll_entry *jump_in[4096];
-extern struct ll_entry *jump_dirty[4096];
-extern ALIGN(16, u_int hash_table[65536][4]);
-#ifdef __cplusplus
-}
-#endif
+/* linkage */
+void verify_code(void);
+void verify_code_vm(void);
+void verify_code_ds(void);
+void cc_interrupt(void);
+void do_interrupt(void);
+void fp_exception(void);
+void fp_exception_ds(void);
+void jump_syscall(void);
+void jump_eret(void);
+void read_nomem_new(void);
+void read_nomemb_new(void);
+void read_nomemh_new(void);
+void read_nomemd_new(void);
+void write_nomem_new(void);
+void write_nomemb_new(void);
+void write_nomemh_new(void);
+void write_nomemd_new(void);
+void write_rdram_new(void);
+void write_rdramb_new(void);
+void write_rdramh_new(void);
+void write_rdramd_new(void);
+void write_mi_new(void);
+void write_mib_new(void);
+void write_mih_new(void);
+void write_mid_new(void);
+
+/* interpreted opcode */
+static void div64(int64_t dividend,int64_t divisor);
+static void divu64(uint64_t dividend,uint64_t divisor);
+static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits);
+static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits);
+static void TLBWI_new(void);
+static void TLBWR_new(void);
+
+int new_recompile_block(int addr);
+void invalidate_block(u_int block);
+void *TLB_refill_exception_new(u_int inst_addr, u_int mem_addr, int w);
+
+static void wb_register(signed char r,signed char regmap[],uint64_t dirty,uint64_t is32);
+static void wb_dirtys(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty);
+static void load_regs_entry(int t);
+static void load_all_consts(signed char regmap[],int is32,u_int dirty,int i);
+
+void *base_addr;
+u_char *out;
+unsigned int stop_after_jal;
 
 static u_int start;
 static u_int *source;
@@ -136,10 +249,6 @@ static uint64_t branch_unneeded_reg_upper[MAXBLOCK];
 static uint64_t p32[MAXBLOCK];
 static uint64_t pr32[MAXBLOCK];
 static signed char regmap_pre[MAXBLOCK][HOST_REGS];
-#ifdef ASSEM_DEBUG
-static signed char regmap[MAXBLOCK][HOST_REGS];
-static signed char regmap_entry[MAXBLOCK][HOST_REGS];
-#endif
 static uint64_t constmap[MAXBLOCK][HOST_REGS];
 static struct regstat regs[MAXBLOCK];
 static struct regstat branch_regs[MAXBLOCK];
@@ -158,405 +267,25 @@ static int stubcount;
 static int literalcount;
 static int is_delayslot;
 static int cop1_usable;
-u_char *out;
-struct ll_entry *jump_in[4096];
-static struct ll_entry *jump_out[4096];
-struct ll_entry *jump_dirty[4096];
-ALIGN(16, u_int hash_table[65536][4]);
 static char *copy;
 static int expirep;
 unsigned int using_tlb;
 unsigned int stop_after_jal;
 static u_int dirty_entry_count;
 static u_int copy_size;
+static u_int hash_table[65536][4];
+static struct ll_entry *jump_in[4096];
+static struct ll_entry *jump_dirty[4096];
+static struct ll_entry *jump_out[4096];
 
-  /* registers that may be allocated */
-  /* 1-31 gpr */
-#define HIREG 32 // hi
-#define LOREG 33 // lo
-#define FSREG 34 // FPU status (FCSR)
-#define CSREG 35 // Coprocessor status
-#define CCREG 36 // Cycle count
-#define INVCP 37 // Pointer to invalid_code
-#define MMREG 38 // Pointer to memory_map
-#define ROREG 39 // ram offset (if rdram!=0x80000000)
-#define TEMPREG 40
-#define FTEMP 40 // FPU temporary register
-#define PTEMP 41 // Prefetch temporary register
-#define TLREG 42 // TLB mapping offset
-#define RHASH 43 // Return address hash
-#define RHTBL 44 // Return address hash table address
-#define RTEMP 45 // JR/JALR address register
-#define MAXREG 45
-#define AGEN1 46 // Address generation temporary register
-#define AGEN2 47 // Address generation temporary register
-#define MGEN1 48 // Maptable address generation temporary register
-#define MGEN2 49 // Maptable address generation temporary register
-#define BTREG 50 // Branch target temporary register
-
-  /* instruction types */
-#define NOP 0     // No operation
-#define LOAD 1    // Load
-#define STORE 2   // Store
-#define LOADLR 3  // Unaligned load
-#define STORELR 4 // Unaligned store
-#define MOV 5     // Move 
-#define ALU 6     // Arithmetic/logic
-#define MULTDIV 7 // Multiply/divide
-#define SHIFT 8   // Shift by register
-#define SHIFTIMM 9// Shift by immediate
-#define IMM16 10  // 16-bit immediate
-#define RJUMP 11  // Unconditional jump to register
-#define UJUMP 12  // Unconditional jump
-#define CJUMP 13  // Conditional branch (BEQ/BNE/BGTZ/BLEZ)
-#define SJUMP 14  // Conditional branch (regimm format)
-#define COP0 15   // Coprocessor 0
-#define COP1 16   // Coprocessor 1
-#define C1LS 17   // Coprocessor 1 load/store
-#define FJUMP 18  // Conditional branch (floating point)
-#define FLOAT 19  // Floating point unit
-#define FCONV 20  // Convert integer to float
-#define FCOMP 21  // Floating point compare (sets FSREG)
-#define SYSCALL 22// SYSCALL
-#define OTHER 23  // Other
-#define SPAN 24   // Branch/delay slot spans 2 pages
-#define NI 25     // Not implemented
-
-  /* stubs */
-#define CC_STUB 1
-#define FP_STUB 2
-#define LOADB_STUB 3
-#define LOADH_STUB 4
-#define LOADW_STUB 5
-#define LOADD_STUB 6
-#define LOADBU_STUB 7
-#define LOADHU_STUB 8
-#define STOREB_STUB 9
-#define STOREH_STUB 10
-#define STOREW_STUB 11
-#define STORED_STUB 12
-#define STORELR_STUB 13
-#define INVCODE_STUB 14
-
-  /* branch codes */
-#define TAKEN 1
-#define NOTTAKEN 2
-#define NULLDS 3
-
-/* bug-fix to implement __clear_cache (missing in Android; http://code.google.com/p/android/issues/detail?id=1803) */
-void __clear_cache_bugfix(char* begin, char *end);
-#ifdef ANDROID
-	#define __clear_cache __clear_cache_bugfix
+#if COUNT_NOTCOMPILEDS
+static int notcompiledCount = 0;
 #endif
 
-// asm linkage
-#ifdef __cplusplus
-extern "C" {
+#if ASSEM_DEBUG
+static signed char regmap[MAXBLOCK][HOST_REGS];
+static signed char regmap_entry[MAXBLOCK][HOST_REGS];
 #endif
-int new_recompile_block(int addr);
-void *get_addr_ht(u_int vaddr);
-void *get_addr(u_int vaddr);
-void *get_addr_32(u_int vaddr,u_int flags);
-void add_link(u_int vaddr,void *src);
-void clean_blocks(u_int page);
-void dyna_linker();
-void dyna_linker_ds();
-void verify_code();
-void verify_code_vm();
-void verify_code_ds();
-void cc_interrupt();
-void fp_exception();
-void fp_exception_ds();
-void jump_syscall();
-void jump_eret();
-void write_mi(void);
-void write_mib(void);
-void write_mih(void);
-void write_mid(void);
-#ifdef __cplusplus
-}
-#endif
-static void remove_hash(int vaddr);
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
-static void invalidate_addr(u_int addr);
-#endif
-
-// TLB
-void TLBWI_new();
-void TLBWR_new();
-#ifdef __cplusplus
-extern "C" {
-#endif
-void read_nomem_new(void);
-void read_nomemb_new(void);
-void read_nomemh_new(void);
-void read_nomemd_new(void);
-void write_nomem_new(void);
-void write_nomemb_new(void);
-void write_nomemh_new(void);
-void write_nomemd_new(void);
-void write_rdram_new(void);
-void write_rdramb_new(void);
-void write_rdramh_new(void);
-void write_rdramd_new(void);
-void write_mi_new(void);
-void write_mib_new(void);
-void write_mih_new(void);
-void write_mid_new(void);
-extern u_int memory_map[1048576];
-#ifdef __cplusplus
-}
-#endif
-
-// Needed by assembler
-static void wb_register(signed char r,signed char regmap[],uint64_t dirty,uint64_t is32);
-static void wb_dirtys(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty);
-static void wb_needed_dirtys(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty,int addr);
-static void load_all_regs(signed char i_regmap[]);
-static void load_needed_regs(signed char i_regmap[],signed char next_regmap[]);
-static void load_regs_entry(int t);
-static void load_all_consts(signed char regmap[],int is32,u_int dirty,int i);
-
-static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e);
-static void add_to_linker(int addr,int target,int ext);
-static int verify_dirty(void *addr);
-static u_int get_clean_addr(int addr);
-void *TLB_refill_exception_new(u_int inst_addr, u_int mem_addr, int w);
-
-//static int tracedebug=0;
-
-//#define DEBUG_CYCLE_COUNT 1
-
-// Uncomment these two lines to generate debug output:
-//#define ASSEM_DEBUG 1
-//#define INV_DEBUG 1
-
-// Uncomment this line to output the number of NOTCOMPILED blocks as they occur:
-//#define COUNT_NOTCOMPILEDS 1
-
-#if defined (COUNT_NOTCOMPILEDS )
-	int notcompiledCount = 0;
-#endif
-
-#ifdef __cplusplus
-static void nullf(...) {}
-#else
-static void nullf() {}
-#endif
-
-#if defined( ASSEM_DEBUG )
-    #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
-#else
-    #define assem_debug nullf
-#endif
-#if defined( INV_DEBUG )
-    #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
-#else
-    #define inv_debug nullf
-#endif
-
-#define log_message(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
-
-static void tlb_hacks()
-{
-  // Goldeneye hack
-  if (strncmp((char *) ROM_HEADER.Name, "GOLDENEYE",9) == 0)
-  {
-    u_int addr;
-    int n;
-    switch (ROM_HEADER.Country_code&0xFF) 
-    {
-      case 0x45: // U
-        addr=0x34b30;
-        break;                   
-      case 0x4A: // J 
-        addr=0x34b70;    
-        break;    
-      case 0x50: // E 
-        addr=0x329f0;
-        break;                        
-      default: 
-        // Unknown country code
-        addr=0;
-        break;
-    }
-    u_int rom_addr=(u_int)g_dev.pi.cart_rom.rom;
-    #ifdef ROM_COPY
-    // Since memory_map is 32-bit, on 64-bit systems the rom needs to be
-    // in the lower 4G of memory to use this hack.  Copy it if necessary.
-    if((void *)g_dev.pi.cart_rom.rom>(void *)0xffffffff) {
-      munmap(ROM_COPY, 67108864);
-      if(mmap(ROM_COPY, 12582912,
-              PROT_READ | PROT_WRITE,
-              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-              -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
-      memcpy(ROM_COPY,g_dev.pi.cart_rom.rom,12582912);
-      rom_addr=(u_int)ROM_COPY;
-    }
-    #endif
-    if(addr) {
-      for(n=0x7F000;n<0x80000;n++) {
-        memory_map[n]=(((u_int)(rom_addr+addr-0x7F000000))>>2)|0x40000000;
-      }
-    }
-  }
-}
-
-// Get address from virtual address
-// This is called from the recompiled JR/JALR instructions
-void *get_addr(u_int vaddr)
-{
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,page);
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(int)head->addr;
-      ht_bin[0]=vaddr;
-      return head->addr;
-    }
-    head=head->next;
-  }
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(int)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(int)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
-  int r=new_recompile_block(vaddr);
-  if(r==0) return get_addr(vaddr);
-  // Execute in unmapped page, generate pagefault execption
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
-}
-// Look up address in hash table first
-void *get_addr_ht(u_int vaddr)
-{
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-  return get_addr(vaddr);
-}
-
-void *get_addr_32(u_int vaddr,u_int flags)
-{
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      if(head->reg32==0) {
-        u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-        if(ht_bin[0]==-1) {
-          ht_bin[1]=(int)head->addr;
-          ht_bin[0]=vaddr;
-        }else if(ht_bin[2]==-1) {
-          ht_bin[3]=(int)head->addr;
-          ht_bin[2]=vaddr;
-        }
-        //ht_bin[3]=ht_bin[1];
-        //ht_bin[2]=ht_bin[0];
-        //ht_bin[1]=(int)head->addr;
-        //ht_bin[0]=vaddr;
-      }
-      return head->addr;
-    }
-    head=head->next;
-  }
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          memory_map[vaddr>>12]|=0x40000000;
-          if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
-            }
-            restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else restore_candidate[page>>3]|=1<<(page&7);
-          if(head->reg32==0) {
-            u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-            if(ht_bin[0]==-1) {
-              ht_bin[1]=(int)head->addr;
-              ht_bin[0]=vaddr;
-            }else if(ht_bin[2]==-1) {
-              ht_bin[3]=(int)head->addr;
-              ht_bin[2]=vaddr;
-            }
-            //ht_bin[3]=ht_bin[1];
-            //ht_bin[2]=ht_bin[0];
-            //ht_bin[1]=(int)head->addr;
-            //ht_bin[0]=vaddr;
-          }
-          return (void*)get_clean_addr((int)head->addr);
-        }
-      }
-    }
-    head=head->next;
-  }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
-  int r=new_recompile_block(vaddr);
-  if(r==0) return get_addr(vaddr);
-  // Execute in unmapped page, generate pagefault execption
-  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
-}
 
 static void clear_all_regs(signed char regmap[])
 {
@@ -869,6 +598,1033 @@ static int loop_reg(int i, int r, int hr)
   return hr;
 }
 
+// Basic liveness analysis for MIPS registers
+static void unneeded_registers(int istart,int iend,int r)
+{
+  int i;
+  uint64_t u,uu,b,bu;
+  uint64_t temp_u,temp_uu;
+  uint64_t tdep;
+  if(iend==slen-1) {
+    u=1;uu=1;
+  }else{
+    u=unneeded_reg[iend+1];
+    uu=unneeded_reg_upper[iend+1];
+    u=1;uu=1;
+  }
+  for (i=iend;i>=istart;i--)
+  {
+    //DebugMessage(M64MSG_VERBOSE, "unneeded registers i=%d (%d,%d) r=%d",i,istart,iend,r);
+    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
+    {
+      // If subroutine call, flag return address as a possible branch target
+      if(rt1[i]==31 && i<slen-2) bt[i+2]=1;
+      
+      if(ba[i]<start || ba[i]>=(start+slen*4))
+      {
+        // Branch out of this block, flush all regs
+        u=1;
+        uu=1;
+        /* Hexagon hack 
+        if(itype[i]==UJUMP&&rt1[i]==31)
+        {
+          uu=u=0x300C00F; // Discard at, v0-v1, t6-t9
+        }
+        if(itype[i]==RJUMP&&rs1[i]==31)
+        {
+          uu=u=0x300C0F3; // Discard at, a0-a3, t6-t9
+        }
+        if(start>0x80000400&&start<0x80800000) {
+          if(itype[i]==UJUMP&&rt1[i]==31)
+          {
+            //uu=u=0x30300FF0FLL; // Discard at, v0-v1, t0-t9, lo, hi
+            uu=u=0x300FF0F; // Discard at, v0-v1, t0-t9
+          }
+          if(itype[i]==RJUMP&&rs1[i]==31)
+          {
+            //uu=u=0x30300FFF3LL; // Discard at, a0-a3, t0-t9, lo, hi
+            uu=u=0x300FFF3; // Discard at, a0-a3, t0-t9
+          }
+        }*/
+        branch_unneeded_reg[i]=u;
+        branch_unneeded_reg_upper[i]=uu;
+        // Merge in delay slot
+        tdep=(~uu>>rt1[i+1])&1;
+        u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+        uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+        u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
+        uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
+        uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
+        u|=1;uu|=1;
+        // If branch is "likely" (and conditional)
+        // then we skip the delay slot on the fall-thru path
+        if(likely[i]) {
+          if(i<slen-1) {
+            u&=unneeded_reg[i+2];
+            uu&=unneeded_reg_upper[i+2];
+          }
+          else
+          {
+            u=1;
+            uu=1;
+          }
+        }
+      }
+      else
+      {
+        // Internal branch, flag target
+        bt[(ba[i]-start)>>2]=1;
+        if(ba[i]<=start+i*4) {
+          // Backward branch
+          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
+          {
+            // Unconditional branch
+            temp_u=1;temp_uu=1;
+          } else {
+            // Conditional branch (not taken case)
+            temp_u=unneeded_reg[i+2];
+            temp_uu=unneeded_reg_upper[i+2];
+          }
+          // Merge in delay slot
+          tdep=(~temp_uu>>rt1[i+1])&1;
+          temp_u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+          temp_uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+          temp_u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
+          temp_uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
+          temp_uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
+          temp_u|=1;temp_uu|=1;
+          // If branch is "likely" (and conditional)
+          // then we skip the delay slot on the fall-thru path
+          if(likely[i]) {
+            if(i<slen-1) {
+              temp_u&=unneeded_reg[i+2];
+              temp_uu&=unneeded_reg_upper[i+2];
+            }
+            else
+            {
+              temp_u=1;
+              temp_uu=1;
+            }
+          }
+          tdep=(~temp_uu>>rt1[i])&1;
+          temp_u|=(1LL<<rt1[i])|(1LL<<rt2[i]);
+          temp_uu|=(1LL<<rt1[i])|(1LL<<rt2[i]);
+          temp_u&=~((1LL<<rs1[i])|(1LL<<rs2[i]));
+          temp_uu&=~((1LL<<us1[i])|(1LL<<us2[i]));
+          temp_uu&=~((tdep<<dep1[i])|(tdep<<dep2[i]));
+          temp_u|=1;temp_uu|=1;
+          unneeded_reg[i]=temp_u;
+          unneeded_reg_upper[i]=temp_uu;
+          // Only go three levels deep.  This recursion can take an
+          // excessive amount of time if there are a lot of nested loops.
+          if(r<2) {
+            unneeded_registers((ba[i]-start)>>2,i-1,r+1);
+          }else{
+            unneeded_reg[(ba[i]-start)>>2]=1;
+            unneeded_reg_upper[(ba[i]-start)>>2]=1;
+          }
+        } /*else*/ if(1) {
+          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
+          {
+            // Unconditional branch
+            u=unneeded_reg[(ba[i]-start)>>2];
+            uu=unneeded_reg_upper[(ba[i]-start)>>2];
+            branch_unneeded_reg[i]=u;
+            branch_unneeded_reg_upper[i]=uu;
+        //u=1;
+        //uu=1;
+        //branch_unneeded_reg[i]=u;
+        //branch_unneeded_reg_upper[i]=uu;
+            // Merge in delay slot
+            tdep=(~uu>>rt1[i+1])&1;
+            u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+            uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+            u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
+            uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
+            uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
+            u|=1;uu|=1;
+          } else {
+            // Conditional branch
+            b=unneeded_reg[(ba[i]-start)>>2];
+            bu=unneeded_reg_upper[(ba[i]-start)>>2];
+            branch_unneeded_reg[i]=b;
+            branch_unneeded_reg_upper[i]=bu;
+        //b=1;
+        //bu=1;
+        //branch_unneeded_reg[i]=b;
+        //branch_unneeded_reg_upper[i]=bu;
+            // Branch delay slot
+            tdep=(~uu>>rt1[i+1])&1;
+            b|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+            bu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
+            b&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
+            bu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
+            bu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
+            b|=1;bu|=1;
+            // If branch is "likely" then we skip the
+            // delay slot on the fall-thru path
+            if(likely[i]) {
+              u=b;
+              uu=bu;
+              if(i<slen-1) {
+                u&=unneeded_reg[i+2];
+                uu&=unneeded_reg_upper[i+2];
+        //u=1;
+        //uu=1;
+              }
+            } else {
+              u&=b;
+              uu&=bu;
+        //u=1;
+        //uu=1;
+            }
+            if(i<slen-1) {
+              branch_unneeded_reg[i]&=unneeded_reg[i+2];
+              branch_unneeded_reg_upper[i]&=unneeded_reg_upper[i+2];
+        //branch_unneeded_reg[i]=1;
+        //branch_unneeded_reg_upper[i]=1;
+            } else {
+              branch_unneeded_reg[i]=1;
+              branch_unneeded_reg_upper[i]=1;
+            }
+          }
+        }
+      }
+    }
+    else if(itype[i]==SYSCALL)
+    {
+      // SYSCALL instruction (software interrupt)
+      u=1;
+      uu=1;
+    }
+    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
+    {
+      // ERET instruction (return from interrupt)
+      u=1;
+      uu=1;
+    }
+    //u=uu=1; // DEBUG
+    tdep=(~uu>>rt1[i])&1;
+    // Written registers are unneeded
+    u|=1LL<<rt1[i];
+    u|=1LL<<rt2[i];
+    uu|=1LL<<rt1[i];
+    uu|=1LL<<rt2[i];
+    // Accessed registers are needed
+    u&=~(1LL<<rs1[i]);
+    u&=~(1LL<<rs2[i]);
+    uu&=~(1LL<<us1[i]);
+    uu&=~(1LL<<us2[i]);
+    // Source-target dependencies
+    uu&=~(tdep<<dep1[i]);
+    uu&=~(tdep<<dep2[i]);
+    // R0 is always unneeded
+    u|=1;uu|=1;
+    // Save it
+    unneeded_reg[i]=u;
+    unneeded_reg_upper[i]=uu;
+    /*
+    DebugMessage(M64MSG_VERBOSE, "ur (%d,%d) %x: ",istart,iend,start+i*4);
+    DebugMessage(M64MSG_VERBOSE, "U:");
+    int r;
+    for(r=1;r<=CCREG;r++) {
+      if((unneeded_reg[i]>>r)&1) {
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
+      }
+    }
+    DebugMessage(M64MSG_VERBOSE, " UU:");
+    for(r=1;r<=CCREG;r++) {
+      if(((unneeded_reg_upper[i]&~unneeded_reg[i])>>r)&1) {
+        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
+        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
+        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
+      }
+    }*/
+  }
+}
+
+// Identify registers which are likely to contain 32-bit values
+// This is used to predict whether any branches will jump to a
+// location with 64-bit values in registers.
+static void provisional_32bit(void)
+{
+  int i,j;
+  uint64_t is32=1;
+  uint64_t lastbranch=1;
+  
+  for(i=0;i<slen;i++)
+  {
+    if(i>0) {
+      if(itype[i-1]==CJUMP||itype[i-1]==SJUMP||itype[i-1]==FJUMP) {
+        if(i>1) is32=lastbranch;
+        else is32=1;
+      }
+    }
+    if(i>1)
+    {
+      if(itype[i-2]==CJUMP||itype[i-2]==SJUMP||itype[i-2]==FJUMP) {
+        if(likely[i-2]) {
+          if(i>2) is32=lastbranch;
+          else is32=1;
+        }
+      }
+      if((opcode[i-2]&0x2f)==0x05) // BNE/BNEL
+      {
+        if(rs1[i-2]==0||rs2[i-2]==0)
+        {
+          if(rs1[i-2]) {
+            is32|=1LL<<rs1[i-2];
+          }
+          if(rs2[i-2]) {
+            is32|=1LL<<rs2[i-2];
+          }
+        }
+      }
+    }
+    // If something jumps here with 64-bit values
+    // then promote those registers to 64 bits
+    if(bt[i])
+    {
+      uint64_t temp_is32=is32;
+      for(j=i-1;j>=0;j--)
+      {
+        if(ba[j]==start+i*4) 
+          //temp_is32&=branch_regs[j].is32;
+          temp_is32&=p32[j];
+      }
+      for(j=i;j<slen;j++)
+      {
+        if(ba[j]==start+i*4) 
+          temp_is32=1;
+      }
+      is32=temp_is32;
+    }
+    int type=itype[i];
+    int op=opcode[i];
+    int op2=opcode2[i];
+    int rt=rt1[i];
+    int s1=rs1[i];
+    int s2=rs2[i];
+    if(type==UJUMP||type==RJUMP||type==CJUMP||type==SJUMP||type==FJUMP) {
+      // Branches don't write registers, consider the delay slot instead.
+      type=itype[i+1];
+      op=opcode[i+1];
+      op2=opcode2[i+1];
+      rt=rt1[i+1];
+      s1=rs1[i+1];
+      s2=rs2[i+1];
+      lastbranch=is32;
+    }
+    switch(type) {
+      case LOAD:
+        if(opcode[i]==0x27||opcode[i]==0x37|| // LWU/LD
+           opcode[i]==0x1A||opcode[i]==0x1B) // LDL/LDR
+          is32&=~(1LL<<rt);
+        else
+          is32|=1LL<<rt;
+        break;
+      case STORE:
+      case STORELR:
+        break;
+      case LOADLR:
+        if(op==0x1a||op==0x1b) is32&=~(1LL<<rt); // LDR/LDL
+        if(op==0x22) is32|=1LL<<rt; // LWL
+        break;
+      case IMM16:
+        if (op==0x08||op==0x09|| // ADDI/ADDIU
+            op==0x0a||op==0x0b|| // SLTI/SLTIU
+            op==0x0c|| // ANDI
+            op==0x0f)  // LUI
+        {
+          is32|=1LL<<rt;
+        }
+        if(op==0x18||op==0x19) { // DADDI/DADDIU
+          is32&=~(1LL<<rt);
+          //if(imm[i]==0)
+          //  is32|=((is32>>s1)&1LL)<<rt;
+        }
+        if(op==0x0d||op==0x0e) { // ORI/XORI
+          uint64_t sr=((is32>>s1)&1LL);
+          is32&=~(1LL<<rt);
+          is32|=sr<<rt;
+        }
+        break;
+      case UJUMP:
+        break;
+      case RJUMP:
+        break;
+      case CJUMP:
+        break;
+      case SJUMP:
+        break;
+      case FJUMP:
+        break;
+      case ALU:
+        if(op2>=0x20&&op2<=0x23) { // ADD/ADDU/SUB/SUBU
+          is32|=1LL<<rt;
+        }
+        if(op2==0x2a||op2==0x2b) { // SLT/SLTU
+          is32|=1LL<<rt;
+        }
+        else if(op2>=0x24&&op2<=0x27) { // AND/OR/XOR/NOR
+          uint64_t sr=((is32>>s1)&(is32>>s2)&1LL);
+          is32&=~(1LL<<rt);
+          is32|=sr<<rt;
+        }
+        else if(op2>=0x2c&&op2<=0x2d) { // DADD/DADDU
+          if(s1==0&&s2==0) {
+            is32|=1LL<<rt;
+          }
+          else if(s2==0) {
+            uint64_t sr=((is32>>s1)&1LL);
+            is32&=~(1LL<<rt);
+            is32|=sr<<rt;
+          }
+          else if(s1==0) {
+            uint64_t sr=((is32>>s2)&1LL);
+            is32&=~(1LL<<rt);
+            is32|=sr<<rt;
+          }
+          else {
+            is32&=~(1LL<<rt);
+          }
+        }
+        else if(op2>=0x2e&&op2<=0x2f) { // DSUB/DSUBU
+          if(s1==0&&s2==0) {
+            is32|=1LL<<rt;
+          }
+          else if(s2==0) {
+            uint64_t sr=((is32>>s1)&1LL);
+            is32&=~(1LL<<rt);
+            is32|=sr<<rt;
+          }
+          else {
+            is32&=~(1LL<<rt);
+          }
+        }
+        break;
+      case MULTDIV:
+        if (op2>=0x1c&&op2<=0x1f) { // DMULT/DMULTU/DDIV/DDIVU
+          is32&=~((1LL<<HIREG)|(1LL<<LOREG));
+        }
+        else {
+          is32|=(1LL<<HIREG)|(1LL<<LOREG);
+        }
+        break;
+      case MOV:
+        {
+          uint64_t sr=((is32>>s1)&1LL);
+          is32&=~(1LL<<rt);
+          is32|=sr<<rt;
+        }
+        break;
+      case SHIFT:
+        if(op2>=0x14&&op2<=0x17) is32&=~(1LL<<rt); // DSLLV/DSRLV/DSRAV
+        else is32|=1LL<<rt; // SLLV/SRLV/SRAV
+        break;
+      case SHIFTIMM:
+        is32|=1LL<<rt;
+        // DSLL/DSRL/DSRA/DSLL32/DSRL32 but not DSRA32 have 64-bit result
+        if(op2>=0x38&&op2<0x3f) is32&=~(1LL<<rt);
+        break;
+      case COP0:
+        if(op2==0) is32|=1LL<<rt; // MFC0
+        break;
+      case COP1:
+        if(op2==0) is32|=1LL<<rt; // MFC1
+        if(op2==1) is32&=~(1LL<<rt); // DMFC1
+        if(op2==2) is32|=1LL<<rt; // CFC1
+        break;
+      case C1LS:
+        break;
+      case FLOAT:
+      case FCONV:
+        break;
+      case FCOMP:
+        break;
+      case SYSCALL:
+        break;
+      default:
+        break;
+    }
+    is32|=1;
+    p32[i]=is32;
+
+    if(i>0)
+    {
+      if(itype[i-1]==UJUMP||itype[i-1]==RJUMP||(source[i-1]>>16)==0x1000)
+      {
+        if(rt1[i-1]==31) // JAL/JALR
+        {
+          // Subroutine call will return here, don't alloc any registers
+          is32=1;
+        }
+        else if(i+1<slen)
+        {
+          // Internal branch will jump here, match registers to caller
+          is32=0x3FFFFFFFFLL;
+        }
+      }
+    }
+  }
+}
+
+// Identify registers which may be assumed to contain 32-bit values
+// and where optimizations will rely on this.
+// This is used to determine whether backward branches can safely
+// jump to a location with 64-bit values in registers.
+static void provisional_r32(void)
+{
+  u_int r32=0;
+  int i;
+  
+  for (i=slen-1;i>=0;i--)
+  {
+    int hr;
+    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
+    {
+      if(ba[i]<start || ba[i]>=(start+slen*4))
+      {
+        // Branch out of this block, don't need anything
+        r32=0;
+      }
+      else
+      {
+        // Internal branch
+        // Need whatever matches the target
+        // (and doesn't get overwritten by the delay slot instruction)
+        r32=0;
+        int t=(ba[i]-start)>>2;
+        if(ba[i]>start+i*4) {
+          // Forward branch
+          //if(!(requires_32bit[t]&~regs[i].was32))
+          //  r32|=requires_32bit[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
+          if(!(pr32[t]&~regs[i].was32))
+            r32|=pr32[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
+        }else{
+          // Backward branch
+          if(!(regs[t].was32&~unneeded_reg_upper[t]&~regs[i].was32))
+            r32|=regs[t].was32&~unneeded_reg_upper[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
+        }
+      }
+      // Conditional branch may need registers for following instructions
+      if(itype[i]!=RJUMP&&itype[i]!=UJUMP&&(source[i]>>16)!=0x1000)
+      {
+        if(i<slen-2) {
+          //r32|=requires_32bit[i+2];
+          r32|=pr32[i+2];
+          r32&=regs[i].was32;
+          // Mark this address as a branch target since it may be called
+          // upon return from interrupt
+          //bt[i+2]=1;
+        }
+      }
+      // Merge in delay slot
+      if(!likely[i]) {
+        // These are overwritten unless the branch is "likely"
+        // and the delay slot is nullified if not taken
+        r32&=~(1LL<<rt1[i+1]);
+        r32&=~(1LL<<rt2[i+1]);
+      }
+      // Assume these are needed (delay slot)
+      if(us1[i+1]>0)
+      {
+        if((regs[i].was32>>us1[i+1])&1) r32|=1LL<<us1[i+1];
+      }
+      if(us2[i+1]>0)
+      {
+        if((regs[i].was32>>us2[i+1])&1) r32|=1LL<<us2[i+1];
+      }
+      if(dep1[i+1]&&!((unneeded_reg_upper[i]>>dep1[i+1])&1))
+      {
+        if((regs[i].was32>>dep1[i+1])&1) r32|=1LL<<dep1[i+1];
+      }
+      if(dep2[i+1]&&!((unneeded_reg_upper[i]>>dep2[i+1])&1))
+      {
+        if((regs[i].was32>>dep2[i+1])&1) r32|=1LL<<dep2[i+1];
+      }
+    }
+    else if(itype[i]==SYSCALL)
+    {
+      // SYSCALL instruction (software interrupt)
+      r32=0;
+    }
+    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
+    {
+      // ERET instruction (return from interrupt)
+      r32=0;
+    }
+    // Check 32 bits
+    r32&=~(1LL<<rt1[i]);
+    r32&=~(1LL<<rt2[i]);
+    if(us1[i]>0)
+    {
+      if((regs[i].was32>>us1[i])&1) r32|=1LL<<us1[i];
+    }
+    if(us2[i]>0)
+    {
+      if((regs[i].was32>>us2[i])&1) r32|=1LL<<us2[i];
+    }
+    if(dep1[i]&&!((unneeded_reg_upper[i]>>dep1[i])&1))
+    {
+      if((regs[i].was32>>dep1[i])&1) r32|=1LL<<dep1[i];
+    }
+    if(dep2[i]&&!((unneeded_reg_upper[i]>>dep2[i])&1))
+    {
+      if((regs[i].was32>>dep2[i])&1) r32|=1LL<<dep2[i];
+    }
+    //requires_32bit[i]=r32;
+    pr32[i]=r32;
+    
+    // Dirty registers which are 32-bit, require 32-bit input
+    // as they will be written as 32-bit values
+    for(hr=0;hr<HOST_REGS;hr++)
+    {
+      if(regs[i].regmap_entry[hr]>0&&regs[i].regmap_entry[hr]<64) {
+        if((regs[i].was32>>regs[i].regmap_entry[hr])&(regs[i].wasdirty>>hr)&1) {
+          if(!((unneeded_reg_upper[i]>>regs[i].regmap_entry[hr])&1))
+          pr32[i]|=1LL<<regs[i].regmap_entry[hr];
+          //requires_32bit[i]|=1LL<<regs[i].regmap_entry[hr];
+        }
+      }
+    }
+  }
+}
+
+// Write back dirty registers as soon as we will no longer modify them,
+// so that we don't end up with lots of writes at the branches.
+static void clean_registers(int istart,int iend,int wr)
+{
+  int i;
+  int r;
+  u_int will_dirty_i,will_dirty_next,temp_will_dirty;
+  u_int wont_dirty_i,wont_dirty_next,temp_wont_dirty;
+  if(iend==slen-1) {
+    will_dirty_i=will_dirty_next=0;
+    wont_dirty_i=wont_dirty_next=0;
+  }else{
+    will_dirty_i=will_dirty_next=will_dirty[iend+1];
+    wont_dirty_i=wont_dirty_next=wont_dirty[iend+1];
+  }
+  for (i=iend;i>=istart;i--)
+  {
+    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
+    {
+      if(ba[i]<start || ba[i]>=(start+slen*4))
+      {
+        // Branch out of this block, flush all regs
+        if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
+        {
+          // Unconditional branch
+          will_dirty_i=0;
+          wont_dirty_i=0;
+          // Merge in delay slot (will dirty)
+          for(r=0;r<HOST_REGS;r++) {
+            if(r!=EXCLUDE_REG) {
+              if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+              if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+              if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+              if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+              if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+            }
+          }
+        }
+        else
+        {
+          // Conditional branch
+          will_dirty_i=0;
+          wont_dirty_i=wont_dirty_next;
+          // Merge in delay slot (will dirty)
+          for(r=0;r<HOST_REGS;r++) {
+            if(r!=EXCLUDE_REG) {
+              if(!likely[i]) {
+                // Might not dirty if likely branch is not taken
+                if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                if(branch_regs[i].regmap[r]==0) will_dirty_i&=~(1<<r);
+                if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+                //if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                //if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+                if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+              }
+            }
+          }
+        }
+        // Merge in delay slot (wont dirty)
+        for(r=0;r<HOST_REGS;r++) {
+          if(r!=EXCLUDE_REG) {
+            if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
+            if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
+            if((regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
+            if((regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
+            if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
+            if((branch_regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
+            if((branch_regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
+            if((branch_regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
+            if((branch_regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
+            if(branch_regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
+          }
+        }
+        if(wr) {
+          #ifndef DESTRUCTIVE_WRITEBACK
+          branch_regs[i].dirty&=wont_dirty_i;
+          #endif
+          branch_regs[i].dirty|=will_dirty_i;
+        }
+      }
+      else
+      {
+        // Internal branch
+        if(ba[i]<=start+i*4) {
+          // Backward branch
+          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
+          {
+            // Unconditional branch
+            temp_will_dirty=0;
+            temp_wont_dirty=0;
+            // Merge in delay slot (will dirty)
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
+                if((branch_regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
+                if(branch_regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
+                if(branch_regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
+                if((regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
+                if((regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
+                if((regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
+                if((regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
+                if((regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
+                if(regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
+                if(regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
+              }
+            }
+          } else {
+            // Conditional branch (not taken case)
+            temp_will_dirty=will_dirty_next;
+            temp_wont_dirty=wont_dirty_next;
+            // Merge in delay slot (will dirty)
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(!likely[i]) {
+                  // Will not dirty if likely branch is not taken
+                  if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
+                  if(branch_regs[i].regmap[r]==0) temp_will_dirty&=~(1<<r);
+                  if(branch_regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
+                  //if((regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
+                  //if((regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
+                  if((regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
+                  if((regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
+                  if((regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
+                  if(regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
+                  if(regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
+                }
+              }
+            }
+          }
+          // Merge in delay slot (wont dirty)
+          for(r=0;r<HOST_REGS;r++) {
+            if(r!=EXCLUDE_REG) {
+              if((regs[i].regmap[r]&63)==rt1[i]) temp_wont_dirty|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i]) temp_wont_dirty|=1<<r;
+              if((regs[i].regmap[r]&63)==rt1[i+1]) temp_wont_dirty|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i+1]) temp_wont_dirty|=1<<r;
+              if(regs[i].regmap[r]==CCREG) temp_wont_dirty|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_wont_dirty|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_wont_dirty|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_wont_dirty|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_wont_dirty|=1<<r;
+              if(branch_regs[i].regmap[r]==CCREG) temp_wont_dirty|=1<<r;
+            }
+          }
+          // Deal with changed mappings
+          if(i<iend) {
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(regs[i].regmap[r]!=regmap_pre[i][r]) {
+                  temp_will_dirty&=~(1<<r);
+                  temp_wont_dirty&=~(1<<r);
+                  if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
+                    temp_will_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
+                    temp_wont_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
+                  } else {
+                    temp_will_dirty|=1<<r;
+                    temp_wont_dirty|=1<<r;
+                  }
+                }
+              }
+            }
+          }
+          if(wr) {
+            will_dirty[i]=temp_will_dirty;
+            wont_dirty[i]=temp_wont_dirty;
+            clean_registers((ba[i]-start)>>2,i-1,0);
+          }else{
+            // Limit recursion.  It can take an excessive amount
+            // of time if there are a lot of nested loops.
+            will_dirty[(ba[i]-start)>>2]=0;
+            wont_dirty[(ba[i]-start)>>2]=-1;
+          }
+        }
+        /*else*/ if(1)
+        {
+          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
+          {
+            // Unconditional branch
+            will_dirty_i=0;
+            wont_dirty_i=0;
+          //if(ba[i]>start+i*4) { // Disable recursion (for debugging)
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(branch_regs[i].regmap[r]==regs[(ba[i]-start)>>2].regmap_entry[r]) {
+                  will_dirty_i|=will_dirty[(ba[i]-start)>>2]&(1<<r);
+                  wont_dirty_i|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
+                }
+                if(branch_regs[i].regmap[r]>=0) {
+                  will_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(branch_regs[i].regmap[r]&63))&1)<<r;
+                  wont_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(branch_regs[i].regmap[r]&63))&1)<<r;
+                }
+              }
+            }
+          //}
+            // Merge in delay slot
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+                if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+                if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+              }
+            }
+          } else {
+            // Conditional branch
+            will_dirty_i=will_dirty_next;
+            wont_dirty_i=wont_dirty_next;
+          //if(ba[i]>start+i*4) { // Disable recursion (for debugging)
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                signed char target_reg=branch_regs[i].regmap[r];
+                if(target_reg==regs[(ba[i]-start)>>2].regmap_entry[r]) {
+                  will_dirty_i&=will_dirty[(ba[i]-start)>>2]&(1<<r);
+                  wont_dirty_i|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
+                }
+                else if(target_reg>=0) {
+                  will_dirty_i&=((unneeded_reg[(ba[i]-start)>>2]>>(target_reg&63))&1)<<r;
+                  wont_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(target_reg&63))&1)<<r;
+                }
+                // Treat delay slot as part of branch too
+                /*if(regs[i+1].regmap[r]==regs[(ba[i]-start)>>2].regmap_entry[r]) {
+                  will_dirty[i+1]&=will_dirty[(ba[i]-start)>>2]&(1<<r);
+                  wont_dirty[i+1]|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
+                }
+                else
+                {
+                  will_dirty[i+1]&=~(1<<r);
+                }*/
+              }
+            }
+          //}
+            // Merge in delay slot
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(!likely[i]) {
+                  // Might not dirty if likely branch is not taken
+                  if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                  if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                  if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+                  if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+                  //if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+                  //if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+                  if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
+                  if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
+                  if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+                  if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+                  if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+                }
+              }
+            }
+          }
+          // Merge in delay slot (won't dirty)
+          for(r=0;r<HOST_REGS;r++) {
+            if(r!=EXCLUDE_REG) {
+              if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
+              if((regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
+              if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
+              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
+              if(branch_regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
+            }
+          }
+          if(wr) {
+            #ifndef DESTRUCTIVE_WRITEBACK
+            branch_regs[i].dirty&=wont_dirty_i;
+            #endif
+            branch_regs[i].dirty|=will_dirty_i;
+          }
+        }
+      }
+    }
+    else if(itype[i]==SYSCALL)
+    {
+      // SYSCALL instruction (software interrupt)
+      will_dirty_i=0;
+      wont_dirty_i=0;
+    }
+    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
+    {
+      // ERET instruction (return from interrupt)
+      will_dirty_i=0;
+      wont_dirty_i=0;
+    }
+    will_dirty_next=will_dirty_i;
+    wont_dirty_next=wont_dirty_i;
+    for(r=0;r<HOST_REGS;r++) {
+      if(r!=EXCLUDE_REG) {
+        if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
+        if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
+        if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
+        if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
+        if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
+        if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
+        if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
+        if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
+        if(i>istart) {
+          if(itype[i]!=RJUMP&&itype[i]!=UJUMP&&itype[i]!=CJUMP&&itype[i]!=SJUMP&&itype[i]!=FJUMP) 
+          {
+            // Don't store a register immediately after writing it,
+            // may prevent dual-issue.
+            if((regs[i].regmap[r]&63)==rt1[i-1]) wont_dirty_i|=1<<r;
+            if((regs[i].regmap[r]&63)==rt2[i-1]) wont_dirty_i|=1<<r;
+          }
+        }
+      }
+    }
+    // Save it
+    will_dirty[i]=will_dirty_i;
+    wont_dirty[i]=wont_dirty_i;
+    // Mark registers that won't be dirtied as not dirty
+    if(wr) {
+      /*DebugMessage(M64MSG_VERBOSE, "wr (%d,%d) %x will:",istart,iend,start+i*4);
+      for(r=0;r<HOST_REGS;r++) {
+        if((will_dirty_i>>r)&1) {
+          DebugMessage(M64MSG_VERBOSE, " r%d",r);
+        }
+      }*/
+
+      //if(i==istart||(itype[i-1]!=RJUMP&&itype[i-1]!=UJUMP&&itype[i-1]!=CJUMP&&itype[i-1]!=SJUMP&&itype[i-1]!=FJUMP)) {
+        regs[i].dirty|=will_dirty_i;
+        #ifndef DESTRUCTIVE_WRITEBACK
+        regs[i].dirty&=wont_dirty_i;
+        if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
+        {
+          if(i<iend-1&&itype[i]!=RJUMP&&itype[i]!=UJUMP&&(source[i]>>16)!=0x1000) {
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(regs[i].regmap[r]==regmap_pre[i+2][r]) {
+                  regs[i+2].wasdirty&=wont_dirty_i|~(1<<r);
+                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+2): %d",start+i*4,i,r); / *assert(!((wont_dirty_i>>r)&1));*/}
+              }
+            }
+          }
+        }
+        else
+        {
+          if(i<iend) {
+            for(r=0;r<HOST_REGS;r++) {
+              if(r!=EXCLUDE_REG) {
+                if(regs[i].regmap[r]==regmap_pre[i+1][r]) {
+                  regs[i+1].wasdirty&=wont_dirty_i|~(1<<r);
+                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+1): %d",start+i*4,i,r);/ *assert(!((wont_dirty_i>>r)&1));*/}
+              }
+            }
+          }
+        }
+        #endif
+      //}
+    }
+    // Deal with changed mappings
+    temp_will_dirty=will_dirty_i;
+    temp_wont_dirty=wont_dirty_i;
+    for(r=0;r<HOST_REGS;r++) {
+      if(r!=EXCLUDE_REG) {
+        int nr;
+        if(regs[i].regmap[r]==regmap_pre[i][r]) {
+          if(wr) {
+            #ifndef DESTRUCTIVE_WRITEBACK
+            regs[i].wasdirty&=wont_dirty_i|~(1<<r);
+            #endif
+            regs[i].wasdirty|=will_dirty_i&(1<<r);
+          }
+        }
+        else if((nr=get_reg(regs[i].regmap,regmap_pre[i][r]))>=0) {
+          // Register moved to a different register
+          will_dirty_i&=~(1<<r);
+          wont_dirty_i&=~(1<<r);
+          will_dirty_i|=((temp_will_dirty>>nr)&1)<<r;
+          wont_dirty_i|=((temp_wont_dirty>>nr)&1)<<r;
+          if(wr) {
+            #ifndef DESTRUCTIVE_WRITEBACK
+            regs[i].wasdirty&=wont_dirty_i|~(1<<r);
+            #endif
+            regs[i].wasdirty|=will_dirty_i&(1<<r);
+          }
+        }
+        else {
+          will_dirty_i&=~(1<<r);
+          wont_dirty_i&=~(1<<r);
+          if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
+            will_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
+            wont_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
+          } else {
+            wont_dirty_i|=1<<r;
+            /*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch: %d",start+i*4,i,r);/ *assert(!((will_dirty>>r)&1));*/
+          }
+        }
+      }
+    }
+  }
+}
 
 // Allocate every register, preserving source/target regs
 static void alloc_all(struct regstat *cur,int i)
@@ -893,122 +1649,39 @@ static void alloc_all(struct regstat *cur,int i)
   }
 }
 
-
-static void div64(int64_t dividend,int64_t divisor)
+static void add_to_linker(int addr,int target,int ext)
 {
-  if(divisor) {
-    *r4300_mult_lo()=dividend/divisor;
-    *r4300_mult_hi()=dividend%divisor;
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: ddiv %8x%8x %8x%8x" ,(int)reg[HIREG],(int)(reg[HIREG]>>32)
-    //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
-  }
-}
-static void divu64(uint64_t dividend,uint64_t divisor)
-{
-  if(divisor) {
-    *r4300_mult_lo()=dividend/divisor;
-    *r4300_mult_hi()=dividend%divisor;
-    //DebugMessage(M64MSG_VERBOSE, "TRACE: ddivu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
-    //                                     ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
-  }
+  link_addr[linkcount][0]=addr;
+  link_addr[linkcount][1]=target;
+  link_addr[linkcount][2]=ext;  
+  linkcount++;
 }
 
-static void mult64(int64_t m1,int64_t m2)
+static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e)
 {
-   unsigned long long int op1, op2, op3, op4;
-   unsigned long long int result1, result2, result3, result4;
-   unsigned long long int temp1, temp2, temp3, temp4;
-   int sign = 0;
-   
-   if (m1 < 0)
-     {
-    op2 = -m1;
-    sign = 1 - sign;
-     }
-   else op2 = m1;
-   if (m2 < 0)
-     {
-    op4 = -m2;
-    sign = 1 - sign;
-     }
-   else op4 = m2;
-   
-   op1 = op2 & 0xFFFFFFFF;
-   op2 = (op2 >> 32) & 0xFFFFFFFF;
-   op3 = op4 & 0xFFFFFFFF;
-   op4 = (op4 >> 32) & 0xFFFFFFFF;
-   
-   temp1 = op1 * op3;
-   temp2 = (temp1 >> 32) + op1 * op4;
-   temp3 = op2 * op3;
-   temp4 = (temp3 >> 32) + op2 * op4;
-   
-   result1 = temp1 & 0xFFFFFFFF;
-   result2 = temp2 + (temp3 & 0xFFFFFFFF);
-   result3 = (result2 >> 32) + temp4;
-   result4 = (result3 >> 32);
-   
-   *r4300_mult_lo() = result1 | (result2 << 32);
-   *r4300_mult_hi() = (result3 & 0xFFFFFFFF) | (result4 << 32);
-   if (sign)
-     {
-    *r4300_mult_hi() = ~*r4300_mult_hi();
-    if (!*r4300_mult_lo()) (*r4300_mult_hi())++;
-    else *r4300_mult_lo() = ~*r4300_mult_lo() + 1;
-     }
+  stubs[stubcount][0]=type;
+  stubs[stubcount][1]=addr;
+  stubs[stubcount][2]=retaddr;
+  stubs[stubcount][3]=a;
+  stubs[stubcount][4]=b;
+  stubs[stubcount][5]=c;
+  stubs[stubcount][6]=d;
+  stubs[stubcount][7]=e;
+  stubcount++;
 }
 
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
-static void multu64(uint64_t m1,uint64_t m2)
+static void remove_hash(int vaddr)
 {
-   unsigned long long int op1, op2, op3, op4;
-   unsigned long long int result1, result2, result3, result4;
-   unsigned long long int temp1, temp2, temp3, temp4;
-   
-   op1 = m1 & 0xFFFFFFFF;
-   op2 = (m1 >> 32) & 0xFFFFFFFF;
-   op3 = m2 & 0xFFFFFFFF;
-   op4 = (m2 >> 32) & 0xFFFFFFFF;
-   
-   temp1 = op1 * op3;
-   temp2 = (temp1 >> 32) + op1 * op4;
-   temp3 = op2 * op3;
-   temp4 = (temp3 >> 32) + op2 * op4;
-   
-   result1 = temp1 & 0xFFFFFFFF;
-   result2 = temp2 + (temp3 & 0xFFFFFFFF);
-   result3 = (result2 >> 32) + temp4;
-   result4 = (result3 >> 32);
-   
-   *r4300_mult_lo() = result1 | (result2 << 32);
-   *r4300_mult_hi() = (result3 & 0xFFFFFFFF) | (result4 << 32);
-   
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: dmultu %8x%8x %8x%8x",(int)reg[HIREG],(int)(reg[HIREG]>>32)
-  //                                      ,(int)reg[LOREG],(int)(reg[LOREG]>>32));
-}
-#endif
-
-static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
-{
-  if(bits) {
-    original<<=64-bits;
-    original>>=64-bits;
-    loaded<<=bits;
-    original|=loaded;
+  //DebugMessage(M64MSG_VERBOSE, "remove hash: %x",vaddr);
+  u_int *ht_bin=hash_table[(((vaddr)>>16)^vaddr)&0xFFFF];
+  if(ht_bin[2]==vaddr) {
+    ht_bin[2]=ht_bin[3]=-1;
   }
-  else original=loaded;
-  return original;
-}
-static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
-{
-  if(bits^56) {
-    original>>=64-(bits^56);
-    original<<=64-(bits^56);
-    loaded>>=bits^56;
-    original|=loaded;
+  if(ht_bin[0]==vaddr) {
+    ht_bin[0]=ht_bin[2];
+    ht_bin[1]=ht_bin[3];
+    ht_bin[2]=ht_bin[3]=-1;
   }
-  else original=loaded;
-  return original;
 }
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
@@ -1018,6 +1691,51 @@ static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
 #else
 #error Unsupported dynarec architecture
 #endif
+
+static void tlb_hacks()
+{
+  // Goldeneye hack
+  if (strncmp((char *) ROM_HEADER.Name, "GOLDENEYE",9) == 0)
+  {
+    u_int addr;
+    int n;
+    switch (ROM_HEADER.Country_code&0xFF) 
+    {
+      case 0x45: // U
+        addr=0x34b30;
+        break;                   
+      case 0x4A: // J 
+        addr=0x34b70;    
+        break;    
+      case 0x50: // E 
+        addr=0x329f0;
+        break;                        
+      default: 
+        // Unknown country code
+        addr=0;
+        break;
+    }
+    u_int rom_addr=(u_int)g_dev.pi.cart_rom.rom;
+    #ifdef ROM_COPY
+    // Since memory_map is 32-bit, on 64-bit systems the rom needs to be
+    // in the lower 4G of memory to use this hack.  Copy it if necessary.
+    if((void *)g_dev.pi.cart_rom.rom>(void *)0xffffffff) {
+      munmap(ROM_COPY, 67108864);
+      if(mmap(ROM_COPY, 12582912,
+              PROT_READ | PROT_WRITE,
+              MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+              -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
+      memcpy(ROM_COPY,g_dev.pi.cart_rom.rom,12582912);
+      rom_addr=(u_int)ROM_COPY;
+    }
+    #endif
+    if(addr) {
+      for(n=0x7F000;n<0x80000;n++) {
+        memory_map[n]=(((u_int)(rom_addr+addr-0x7F000000))>>2)|0x40000000;
+      }
+    }
+  }
+}
 
 // Add virtual address mapping to linked list
 static void ll_add(struct ll_entry **head,int vaddr,void *addr)
@@ -1043,68 +1761,6 @@ static void ll_add_32(struct ll_entry **head,int vaddr,u_int reg32,void *addr)
   new_entry->addr=addr;
   new_entry->next=*head;
   *head=new_entry;
-}
-
-// Check if an address is already compiled
-// but don't return addresses which are about to expire from the cache
-static void *check_addr(u_int vaddr)
-{
-  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) {
-    if(((ht_bin[1]-MAX_OUTPUT_BLOCK_SIZE-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
-      if(isclean(ht_bin[1])) return (void *)ht_bin[1];
-  }
-  if(ht_bin[2]==vaddr) {
-    if(((ht_bin[3]-MAX_OUTPUT_BLOCK_SIZE-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
-      if(isclean(ht_bin[3])) return (void *)ht_bin[3];
-  }
-  u_int page=(vaddr^0x80000000)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  struct ll_entry *head;
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        // Update existing entry with current address
-        if(ht_bin[0]==vaddr) {
-          ht_bin[1]=(int)head->addr;
-          return head->addr;
-        }
-        if(ht_bin[2]==vaddr) {
-          ht_bin[3]=(int)head->addr;
-          return head->addr;
-        }
-        // Insert into hash table with low priority.
-        // Don't evict existing entries, as they are probably
-        // addresses that are being accessed frequently.
-        if(ht_bin[0]==-1) {
-          ht_bin[1]=(int)head->addr;
-          ht_bin[0]=vaddr;
-        }else if(ht_bin[2]==-1) {
-          ht_bin[3]=(int)head->addr;
-          ht_bin[2]=vaddr;
-        }
-        return head->addr;
-      }
-    }
-    head=head->next;
-  }
-  return 0;
-}
-
-static void remove_hash(int vaddr)
-{
-  //DebugMessage(M64MSG_VERBOSE, "remove hash: %x",vaddr);
-  u_int *ht_bin=hash_table[(((vaddr)>>16)^vaddr)&0xFFFF];
-  if(ht_bin[2]==vaddr) {
-    ht_bin[2]=ht_bin[3]=-1;
-  }
-  if(ht_bin[0]==vaddr) {
-    ht_bin[0]=ht_bin[2];
-    ht_bin[1]=ht_bin[3];
-    ht_bin[2]=ht_bin[3]=-1;
-  }
 }
 
 static void ll_remove_matching_addrs(struct ll_entry **head,int addr,int shift)
@@ -1183,6 +1839,346 @@ static void ll_kill_pointers(struct ll_entry *head,int addr,int shift)
     }
     head=head->next;
   }
+}
+
+// Add an entry to jump_out after making a link
+static void add_link(u_int vaddr,void *src)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>4095) page=2048+(page&2047);
+  inv_debug("add_link: %x -> %x (%d)\n",(int)src,vaddr,page);
+  ll_add(jump_out+page,vaddr,src);
+  //int ptr=get_pointer(src);
+  //inv_debug("add_link: Pointer is to %x\n",(int)ptr);
+}
+
+static void *dynamic_linker(void * src, u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      add_link(vaddr, add_pointer(src,head->addr));
+      return head->addr;
+    }
+    head=head->next;
+  }
+
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],*r4300_cp0_next_interrupt(),vaddr,(int)head->addr);
+      // Don't restore blocks which are about to expire from the cache
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
+        if(verify_dirty(head->addr)) {
+          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
+          memory_map[vaddr>>12]|=0x40000000;
+          if(vpage<2048) {
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
+            }
+            restore_candidate[vpage>>3]|=1<<(vpage&7);
+          }
+          else restore_candidate[page>>3]|=1<<(page&7);
+          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+          if(ht_bin[0]==vaddr) {
+            ht_bin[1]=(int)head->addr; // Replace existing entry
+          }
+          else
+          {
+            ht_bin[3]=ht_bin[1];
+            ht_bin[2]=ht_bin[0];
+            ht_bin[1]=(int)head->addr;
+            ht_bin[0]=vaddr;
+          }
+          return (void*)get_clean_addr((int)head->addr);
+        }
+      }
+    }
+    head=head->next;
+  }
+  return NULL;
+}
+
+static void *dyna_linker(void * src, u_int vaddr)
+{
+  assert((vaddr&1)==0);
+  void *addr=dynamic_linker(src,vaddr);
+  if(addr==NULL)
+  {
+    if(new_recompile_block(vaddr)==0)
+    {
+      addr=dynamic_linker(src,vaddr);
+      assert(addr!=NULL);
+    }
+    else
+      addr=TLB_refill_exception_new(vaddr,vaddr&~1,0);
+  }
+  return addr;
+}
+
+static void *dyna_linker_ds(void * src, u_int vaddr)
+{
+  void *addr=dynamic_linker(src,vaddr);
+  if(addr==NULL)
+  {
+    if(new_recompile_block((vaddr&0xFFFFFFF8)+1)==0)
+    {
+      addr=dynamic_linker(src,vaddr);
+      assert(addr!=NULL);
+    }
+    else
+      addr=TLB_refill_exception_new(vaddr,vaddr&~1,0);
+  }
+  return addr;
+}
+
+// Get address from virtual address
+// This is called from the recompiled JR/JALR instructions
+void *get_addr(u_int vaddr)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,page);
+  head=jump_in[page];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(int)head->addr;
+      ht_bin[0]=vaddr;
+      return head->addr;
+    }
+    head=head->next;
+  }
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      // Don't restore blocks which are about to expire from the cache
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
+        if(verify_dirty(head->addr)) {
+          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
+          memory_map[vaddr>>12]|=0x40000000;
+          if(vpage<2048) {
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
+            }
+            restore_candidate[vpage>>3]|=1<<(vpage&7);
+          }
+          else restore_candidate[page>>3]|=1<<(page&7);
+          u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+          if(ht_bin[0]==vaddr) {
+            ht_bin[1]=(int)head->addr; // Replace existing entry
+          }
+          else
+          {
+            ht_bin[3]=ht_bin[1];
+            ht_bin[2]=ht_bin[0];
+            ht_bin[1]=(int)head->addr;
+            ht_bin[0]=vaddr;
+          }
+          return (void*)get_clean_addr((int)head->addr);
+        }
+      }
+    }
+    head=head->next;
+  }
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
+  int r=new_recompile_block(vaddr);
+  if(r==0) return get_addr(vaddr);
+  // Execute in unmapped page, generate pagefault execption
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
+}
+// Look up address in hash table first
+void *get_addr_ht(u_int vaddr)
+{
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+  return get_addr(vaddr);
+}
+
+void *get_addr_32(u_int vaddr,u_int flags)
+{
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
+  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      if(head->reg32==0) {
+        u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+        if(ht_bin[0]==-1) {
+          ht_bin[1]=(int)head->addr;
+          ht_bin[0]=vaddr;
+        }else if(ht_bin[2]==-1) {
+          ht_bin[3]=(int)head->addr;
+          ht_bin[2]=vaddr;
+        }
+        //ht_bin[3]=ht_bin[1];
+        //ht_bin[2]=ht_bin[0];
+        //ht_bin[1]=(int)head->addr;
+        //ht_bin[0]=vaddr;
+      }
+      return head->addr;
+    }
+    head=head->next;
+  }
+  head=jump_dirty[vpage];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
+      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
+      // Don't restore blocks which are about to expire from the cache
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
+        if(verify_dirty(head->addr)) {
+          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
+          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
+          memory_map[vaddr>>12]|=0x40000000;
+          if(vpage<2048) {
+            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
+              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=0x40000000;
+            }
+            restore_candidate[vpage>>3]|=1<<(vpage&7);
+          }
+          else restore_candidate[page>>3]|=1<<(page&7);
+          if(head->reg32==0) {
+            u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+            if(ht_bin[0]==-1) {
+              ht_bin[1]=(int)head->addr;
+              ht_bin[0]=vaddr;
+            }else if(ht_bin[2]==-1) {
+              ht_bin[3]=(int)head->addr;
+              ht_bin[2]=vaddr;
+            }
+            //ht_bin[3]=ht_bin[1];
+            //ht_bin[2]=ht_bin[0];
+            //ht_bin[1]=(int)head->addr;
+            //ht_bin[0]=vaddr;
+          }
+          return (void*)get_clean_addr((int)head->addr);
+        }
+      }
+    }
+    head=head->next;
+  }
+  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
+  int r=new_recompile_block(vaddr);
+  if(r==0) return get_addr(vaddr);
+  // Execute in unmapped page, generate pagefault execption
+  return TLB_refill_exception_new(vaddr,vaddr&~1,0);
+}
+
+void *TLB_refill_exception_new(u_int inst_addr,u_int mem_addr,int w)
+{
+  int i;
+  uint32_t* cp0_regs = r4300_cp0_regs();
+
+  if(w==1)
+    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBS;
+  else
+    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBL;
+
+  cp0_regs[CP0_BADVADDR_REG]=mem_addr;
+  cp0_regs[CP0_CONTEXT_REG]=(cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((mem_addr>>9)&0x007FFFF0);
+  cp0_regs[CP0_ENTRYHI_REG]=mem_addr&0xFFFFE000;
+  assert((cp0_regs[CP0_STATUS_REG]&CP0_STATUS_EXL)==0);
+  cp0_regs[CP0_EPC_REG]=(inst_addr&~3)-(inst_addr&1)*4;
+  cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
+  
+  if((mem_addr>=0x80000000)&&(mem_addr<0xc0000000))
+    return get_addr_ht(0x80000180);
+
+  for(i=0;i<32;i++)
+  {
+    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_even)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_even))
+      return get_addr_ht(0x80000180);
+    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_odd)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_odd))
+      return get_addr_ht(0x80000180);
+  }
+  return get_addr_ht(0x80000000);
+}
+
+// Check if an address is already compiled
+// but don't return addresses which are about to expire from the cache
+static void *check_addr(u_int vaddr)
+{
+  u_int *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) {
+    if(((ht_bin[1]-MAX_OUTPUT_BLOCK_SIZE-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(isclean(ht_bin[1])) return (void *)ht_bin[1];
+  }
+  if(ht_bin[2]==vaddr) {
+    if(((ht_bin[3]-MAX_OUTPUT_BLOCK_SIZE-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(isclean(ht_bin[3])) return (void *)ht_bin[3];
+  }
+  u_int page=(vaddr^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  struct ll_entry *head;
+  head=jump_in[page];
+  while(head!=NULL) {
+    if(head->vaddr==vaddr&&head->reg32==0) {
+      if((((u_int)head->addr-(u_int)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
+        // Update existing entry with current address
+        if(ht_bin[0]==vaddr) {
+          ht_bin[1]=(int)head->addr;
+          return head->addr;
+        }
+        if(ht_bin[2]==vaddr) {
+          ht_bin[3]=(int)head->addr;
+          return head->addr;
+        }
+        // Insert into hash table with low priority.
+        // Don't evict existing entries, as they are probably
+        // addresses that are being accessed frequently.
+        if(ht_bin[0]==-1) {
+          ht_bin[1]=(int)head->addr;
+          ht_bin[0]=vaddr;
+        }else if(ht_bin[2]==-1) {
+          ht_bin[3]=(int)head->addr;
+          ht_bin[2]=vaddr;
+        }
+        return head->addr;
+      }
+    }
+    head=head->next;
+  }
+  return 0;
 }
 
 // This is called when we write to a compiled block (see do_invstub)
@@ -1298,16 +2294,9 @@ void invalidate_cached_code_new_dynarec(uint32_t address, size_t size)
         invalidate_block(i);
 }
 
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
-static void invalidate_addr(u_int addr)
-{
-  invalidate_block(addr>>12);
-}
-#endif
-
 // This is called when loading a save state.
 // Anything could have changed, so invalidate everything.
-void invalidate_all_pages()
+void invalidate_all_pages(void)
 {
   u_int page;
   for(page=0;page<4096;page++)
@@ -1337,18 +2326,6 @@ void invalidate_all_pages()
     if(page==0x80000) page=0xC0000;
   }
   tlb_hacks();
-}
-
-// Add an entry to jump_out after making a link
-void add_link(u_int vaddr,void *src)
-{
-  u_int page=(vaddr^0x80000000)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>4095) page=2048+(page&2047);
-  inv_debug("add_link: %x -> %x (%d)\n",(int)src,vaddr,page);
-  ll_add(jump_out+page,vaddr,src);
-  //int ptr=get_pointer(src);
-  //inv_debug("add_link: Pointer is to %x\n",(int)ptr);
 }
 
 // If a code block was found to be unmodified (bit was set in
@@ -1410,6 +2387,14 @@ void clean_blocks(u_int page)
   }
 }
 
+static void emit_extjump(int addr, int target)
+{
+  emit_extjump2(addr, target, (int)dyna_linker);
+}
+static void emit_extjump_ds(int addr, int target)
+{
+  emit_extjump2(addr, target, (int)dyna_linker_ds);
+}
 
 static void mov_alloc(struct regstat *current,int i)
 {
@@ -2064,19 +3049,6 @@ static void pagespan_alloc(struct regstat *current,int i)
   //else ...
 }
 
-static void add_stub(int type,int addr,int retaddr,int a,int b,int c,int d,int e)
-{
-  stubs[stubcount][0]=type;
-  stubs[stubcount][1]=addr;
-  stubs[stubcount][2]=retaddr;
-  stubs[stubcount][3]=a;
-  stubs[stubcount][4]=b;
-  stubs[stubcount][5]=c;
-  stubs[stubcount][6]=d;
-  stubs[stubcount][7]=e;
-  stubcount++;
-}
-
 // Write out a single register
 static void wb_register(signed char r,signed char regmap[],uint64_t dirty,uint64_t is32)
 {
@@ -2100,9 +3072,8 @@ static void wb_register(signed char r,signed char regmap[],uint64_t dirty,uint64
   }
 }
 #if 0
-static int mchecksum()
+static int mchecksum(void)
 {
-  //if(!tracedebug) return 0;
   int i;
   int sum=0;
   for(i=0;i<2097152;i++) {
@@ -2114,7 +3085,7 @@ static int mchecksum()
   return sum;
 }
 
-static int rchecksum()
+static int rchecksum(void)
 {
   int i;
   int sum=0;
@@ -2123,7 +3094,7 @@ static int rchecksum()
   return sum;
 }
 
-static void rlist()
+static void rlist(void)
 {
   int i;
   DebugMessage(M64MSG_VERBOSE, "TRACE: ");
@@ -2134,21 +3105,12 @@ static void rlist()
     DebugMessage(M64MSG_VERBOSE, "f%d:%8x%8x ",i,((int*)g_dev.r4300.cp1.regs_simple[i])[1],*((int*)g_dev.r4300.cp1.regs_simple[i]));
 }
 
-static void enabletrace()
-{
-  tracedebug=1;
-}
-
-
 static void memdebug(int i)
 {
   //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) lo=%8x%8x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[LOREG]>>32),(int)reg[LOREG]);
   //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (rchecksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,rchecksum());
   //rlist();
-  //if(tracedebug) {
-  //if(r4300_cp0_regs()[CP0_COUNT_REG]>=-2084597794) {
   if((signed int)r4300_cp0_regs()[CP0_COUNT_REG]>=-2084597794&&(signed int)r4300_cp0_regs()[CP0_COUNT_REG]<0) {
-  //if(0) {
     DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
     //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) Status=%x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),r4300_cp0_regs()[CP0_STATUS_REG]);
     //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x) hi=%8x%8x",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum(),(int)(reg[HIREG]>>32),(int)reg[HIREG]);
@@ -2669,25 +3631,25 @@ static void imm16_assemble(int i,struct regstat *i_regs)
               }
             }
             if(opcode[i]==0x0d) { //ORI
-            if(sl<0) {
-              emit_orimm(tl,imm[i],tl);
-            }else{
-              if(!((i_regs->wasconst>>sl)&1))
-                emit_orimm(sl,imm[i],tl);
-              else
-                emit_movimm(constmap[i][sl]|imm[i],tl);
+              if(sl<0) {
+                emit_orimm(tl,imm[i],tl);
+              }else{
+                if(!((i_regs->wasconst>>sl)&1))
+                  emit_orimm(sl,imm[i],tl);
+                else
+                  emit_movimm((int)(constmap[i][sl]|imm[i]),tl);
+              }
             }
-	    }
             if(opcode[i]==0x0e) { //XORI
-            if(sl<0) {
-              emit_xorimm(tl,imm[i],tl);
-            }else{
-              if(!((i_regs->wasconst>>sl)&1))
-                emit_xorimm(sl,imm[i],tl);
-              else
-                emit_movimm(constmap[i][sl]^imm[i],tl);
+              if(sl<0) {
+                emit_xorimm(tl,imm[i],tl);
+              }else{
+                if(!((i_regs->wasconst>>sl)&1))
+                  emit_xorimm(sl,imm[i],tl);
+                else
+                  emit_movimm((int)(constmap[i][sl]^imm[i]),tl);
+              }
             }
-	    }
           }
           else {
             emit_movimm(imm[i],tl);
@@ -5052,14 +6014,6 @@ static void do_ccstub(int n)
   emit_jmpreg(EAX);*/
 }
 
-static void add_to_linker(int addr,int target,int ext)
-{
-  link_addr[linkcount][0]=addr;
-  link_addr[linkcount][1]=target;
-  link_addr[linkcount][2]=ext;  
-  linkcount++;
-}
-
 static void ujump_assemble(int i,struct regstat *i_regs)
 {
   #ifdef REG_PREFETCH
@@ -6466,7 +7420,7 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
 }
 
 // Assemble the delay slot for the above
-static void pagespan_ds()
+static void pagespan_ds(void)
 {
   assem_debug("initial delay slot:");
   u_int vaddr=start+1;
@@ -6557,1036 +7511,7 @@ static void pagespan_ds()
   load_regs_bt(regs[0].regmap,regs[0].is32,regs[0].dirty,start+4);
 }
 
-// Basic liveness analysis for MIPS registers
-static void unneeded_registers(int istart,int iend,int r)
-{
-  int i;
-  uint64_t u,uu,b,bu;
-  uint64_t temp_u,temp_uu;
-  uint64_t tdep;
-  if(iend==slen-1) {
-    u=1;uu=1;
-  }else{
-    u=unneeded_reg[iend+1];
-    uu=unneeded_reg_upper[iend+1];
-    u=1;uu=1;
-  }
-  for (i=iend;i>=istart;i--)
-  {
-    //DebugMessage(M64MSG_VERBOSE, "unneeded registers i=%d (%d,%d) r=%d",i,istart,iend,r);
-    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
-    {
-      // If subroutine call, flag return address as a possible branch target
-      if(rt1[i]==31 && i<slen-2) bt[i+2]=1;
-      
-      if(ba[i]<start || ba[i]>=(start+slen*4))
-      {
-        // Branch out of this block, flush all regs
-        u=1;
-        uu=1;
-        /* Hexagon hack 
-        if(itype[i]==UJUMP&&rt1[i]==31)
-        {
-          uu=u=0x300C00F; // Discard at, v0-v1, t6-t9
-        }
-        if(itype[i]==RJUMP&&rs1[i]==31)
-        {
-          uu=u=0x300C0F3; // Discard at, a0-a3, t6-t9
-        }
-        if(start>0x80000400&&start<0x80800000) {
-          if(itype[i]==UJUMP&&rt1[i]==31)
-          {
-            //uu=u=0x30300FF0FLL; // Discard at, v0-v1, t0-t9, lo, hi
-            uu=u=0x300FF0F; // Discard at, v0-v1, t0-t9
-          }
-          if(itype[i]==RJUMP&&rs1[i]==31)
-          {
-            //uu=u=0x30300FFF3LL; // Discard at, a0-a3, t0-t9, lo, hi
-            uu=u=0x300FFF3; // Discard at, a0-a3, t0-t9
-          }
-        }*/
-        branch_unneeded_reg[i]=u;
-        branch_unneeded_reg_upper[i]=uu;
-        // Merge in delay slot
-        tdep=(~uu>>rt1[i+1])&1;
-        u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-        uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-        u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
-        uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
-        uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
-        u|=1;uu|=1;
-        // If branch is "likely" (and conditional)
-        // then we skip the delay slot on the fall-thru path
-        if(likely[i]) {
-          if(i<slen-1) {
-            u&=unneeded_reg[i+2];
-            uu&=unneeded_reg_upper[i+2];
-          }
-          else
-          {
-            u=1;
-            uu=1;
-          }
-        }
-      }
-      else
-      {
-        // Internal branch, flag target
-        bt[(ba[i]-start)>>2]=1;
-        if(ba[i]<=start+i*4) {
-          // Backward branch
-          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
-          {
-            // Unconditional branch
-            temp_u=1;temp_uu=1;
-          } else {
-            // Conditional branch (not taken case)
-            temp_u=unneeded_reg[i+2];
-            temp_uu=unneeded_reg_upper[i+2];
-          }
-          // Merge in delay slot
-          tdep=(~temp_uu>>rt1[i+1])&1;
-          temp_u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-          temp_uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-          temp_u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
-          temp_uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
-          temp_uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
-          temp_u|=1;temp_uu|=1;
-          // If branch is "likely" (and conditional)
-          // then we skip the delay slot on the fall-thru path
-          if(likely[i]) {
-            if(i<slen-1) {
-              temp_u&=unneeded_reg[i+2];
-              temp_uu&=unneeded_reg_upper[i+2];
-            }
-            else
-            {
-              temp_u=1;
-              temp_uu=1;
-            }
-          }
-          tdep=(~temp_uu>>rt1[i])&1;
-          temp_u|=(1LL<<rt1[i])|(1LL<<rt2[i]);
-          temp_uu|=(1LL<<rt1[i])|(1LL<<rt2[i]);
-          temp_u&=~((1LL<<rs1[i])|(1LL<<rs2[i]));
-          temp_uu&=~((1LL<<us1[i])|(1LL<<us2[i]));
-          temp_uu&=~((tdep<<dep1[i])|(tdep<<dep2[i]));
-          temp_u|=1;temp_uu|=1;
-          unneeded_reg[i]=temp_u;
-          unneeded_reg_upper[i]=temp_uu;
-          // Only go three levels deep.  This recursion can take an
-          // excessive amount of time if there are a lot of nested loops.
-          if(r<2) {
-            unneeded_registers((ba[i]-start)>>2,i-1,r+1);
-          }else{
-            unneeded_reg[(ba[i]-start)>>2]=1;
-            unneeded_reg_upper[(ba[i]-start)>>2]=1;
-          }
-        } /*else*/ if(1) {
-          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
-          {
-            // Unconditional branch
-            u=unneeded_reg[(ba[i]-start)>>2];
-            uu=unneeded_reg_upper[(ba[i]-start)>>2];
-            branch_unneeded_reg[i]=u;
-            branch_unneeded_reg_upper[i]=uu;
-        //u=1;
-        //uu=1;
-        //branch_unneeded_reg[i]=u;
-        //branch_unneeded_reg_upper[i]=uu;
-            // Merge in delay slot
-            tdep=(~uu>>rt1[i+1])&1;
-            u|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-            uu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-            u&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
-            uu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
-            uu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
-            u|=1;uu|=1;
-          } else {
-            // Conditional branch
-            b=unneeded_reg[(ba[i]-start)>>2];
-            bu=unneeded_reg_upper[(ba[i]-start)>>2];
-            branch_unneeded_reg[i]=b;
-            branch_unneeded_reg_upper[i]=bu;
-        //b=1;
-        //bu=1;
-        //branch_unneeded_reg[i]=b;
-        //branch_unneeded_reg_upper[i]=bu;
-            // Branch delay slot
-            tdep=(~uu>>rt1[i+1])&1;
-            b|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-            bu|=(1LL<<rt1[i+1])|(1LL<<rt2[i+1]);
-            b&=~((1LL<<rs1[i+1])|(1LL<<rs2[i+1]));
-            bu&=~((1LL<<us1[i+1])|(1LL<<us2[i+1]));
-            bu&=~((tdep<<dep1[i+1])|(tdep<<dep2[i+1]));
-            b|=1;bu|=1;
-            // If branch is "likely" then we skip the
-            // delay slot on the fall-thru path
-            if(likely[i]) {
-              u=b;
-              uu=bu;
-              if(i<slen-1) {
-                u&=unneeded_reg[i+2];
-                uu&=unneeded_reg_upper[i+2];
-        //u=1;
-        //uu=1;
-              }
-            } else {
-              u&=b;
-              uu&=bu;
-        //u=1;
-        //uu=1;
-            }
-            if(i<slen-1) {
-              branch_unneeded_reg[i]&=unneeded_reg[i+2];
-              branch_unneeded_reg_upper[i]&=unneeded_reg_upper[i+2];
-        //branch_unneeded_reg[i]=1;
-        //branch_unneeded_reg_upper[i]=1;
-            } else {
-              branch_unneeded_reg[i]=1;
-              branch_unneeded_reg_upper[i]=1;
-            }
-          }
-        }
-      }
-    }
-    else if(itype[i]==SYSCALL)
-    {
-      // SYSCALL instruction (software interrupt)
-      u=1;
-      uu=1;
-    }
-    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
-    {
-      // ERET instruction (return from interrupt)
-      u=1;
-      uu=1;
-    }
-    //u=uu=1; // DEBUG
-    tdep=(~uu>>rt1[i])&1;
-    // Written registers are unneeded
-    u|=1LL<<rt1[i];
-    u|=1LL<<rt2[i];
-    uu|=1LL<<rt1[i];
-    uu|=1LL<<rt2[i];
-    // Accessed registers are needed
-    u&=~(1LL<<rs1[i]);
-    u&=~(1LL<<rs2[i]);
-    uu&=~(1LL<<us1[i]);
-    uu&=~(1LL<<us2[i]);
-    // Source-target dependencies
-    uu&=~(tdep<<dep1[i]);
-    uu&=~(tdep<<dep2[i]);
-    // R0 is always unneeded
-    u|=1;uu|=1;
-    // Save it
-    unneeded_reg[i]=u;
-    unneeded_reg_upper[i]=uu;
-    /*
-    DebugMessage(M64MSG_VERBOSE, "ur (%d,%d) %x: ",istart,iend,start+i*4);
-    DebugMessage(M64MSG_VERBOSE, "U:");
-    int r;
-    for(r=1;r<=CCREG;r++) {
-      if((unneeded_reg[i]>>r)&1) {
-        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
-        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
-        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
-      }
-    }
-    DebugMessage(M64MSG_VERBOSE, " UU:");
-    for(r=1;r<=CCREG;r++) {
-      if(((unneeded_reg_upper[i]&~unneeded_reg[i])>>r)&1) {
-        if(r==HIREG) DebugMessage(M64MSG_VERBOSE, " HI");
-        else if(r==LOREG) DebugMessage(M64MSG_VERBOSE, " LO");
-        else DebugMessage(M64MSG_VERBOSE, " r%d",r);
-      }
-    }*/
-  }
-}
-
-// Identify registers which are likely to contain 32-bit values
-// This is used to predict whether any branches will jump to a
-// location with 64-bit values in registers.
-static void provisional_32bit()
-{
-  int i,j;
-  uint64_t is32=1;
-  uint64_t lastbranch=1;
-  
-  for(i=0;i<slen;i++)
-  {
-    if(i>0) {
-      if(itype[i-1]==CJUMP||itype[i-1]==SJUMP||itype[i-1]==FJUMP) {
-        if(i>1) is32=lastbranch;
-        else is32=1;
-      }
-    }
-    if(i>1)
-    {
-      if(itype[i-2]==CJUMP||itype[i-2]==SJUMP||itype[i-2]==FJUMP) {
-        if(likely[i-2]) {
-          if(i>2) is32=lastbranch;
-          else is32=1;
-        }
-      }
-      if((opcode[i-2]&0x2f)==0x05) // BNE/BNEL
-      {
-        if(rs1[i-2]==0||rs2[i-2]==0)
-        {
-          if(rs1[i-2]) {
-            is32|=1LL<<rs1[i-2];
-          }
-          if(rs2[i-2]) {
-            is32|=1LL<<rs2[i-2];
-          }
-        }
-      }
-    }
-    // If something jumps here with 64-bit values
-    // then promote those registers to 64 bits
-    if(bt[i])
-    {
-      uint64_t temp_is32=is32;
-      for(j=i-1;j>=0;j--)
-      {
-        if(ba[j]==start+i*4) 
-          //temp_is32&=branch_regs[j].is32;
-          temp_is32&=p32[j];
-      }
-      for(j=i;j<slen;j++)
-      {
-        if(ba[j]==start+i*4) 
-          temp_is32=1;
-      }
-      is32=temp_is32;
-    }
-    int type=itype[i];
-    int op=opcode[i];
-    int op2=opcode2[i];
-    int rt=rt1[i];
-    int s1=rs1[i];
-    int s2=rs2[i];
-    if(type==UJUMP||type==RJUMP||type==CJUMP||type==SJUMP||type==FJUMP) {
-      // Branches don't write registers, consider the delay slot instead.
-      type=itype[i+1];
-      op=opcode[i+1];
-      op2=opcode2[i+1];
-      rt=rt1[i+1];
-      s1=rs1[i+1];
-      s2=rs2[i+1];
-      lastbranch=is32;
-    }
-    switch(type) {
-      case LOAD:
-        if(opcode[i]==0x27||opcode[i]==0x37|| // LWU/LD
-           opcode[i]==0x1A||opcode[i]==0x1B) // LDL/LDR
-          is32&=~(1LL<<rt);
-        else
-          is32|=1LL<<rt;
-        break;
-      case STORE:
-      case STORELR:
-        break;
-      case LOADLR:
-        if(op==0x1a||op==0x1b) is32&=~(1LL<<rt); // LDR/LDL
-        if(op==0x22) is32|=1LL<<rt; // LWL
-        break;
-      case IMM16:
-        if (op==0x08||op==0x09|| // ADDI/ADDIU
-            op==0x0a||op==0x0b|| // SLTI/SLTIU
-            op==0x0c|| // ANDI
-            op==0x0f)  // LUI
-        {
-          is32|=1LL<<rt;
-        }
-        if(op==0x18||op==0x19) { // DADDI/DADDIU
-          is32&=~(1LL<<rt);
-          //if(imm[i]==0)
-          //  is32|=((is32>>s1)&1LL)<<rt;
-        }
-        if(op==0x0d||op==0x0e) { // ORI/XORI
-          uint64_t sr=((is32>>s1)&1LL);
-          is32&=~(1LL<<rt);
-          is32|=sr<<rt;
-        }
-        break;
-      case UJUMP:
-        break;
-      case RJUMP:
-        break;
-      case CJUMP:
-        break;
-      case SJUMP:
-        break;
-      case FJUMP:
-        break;
-      case ALU:
-        if(op2>=0x20&&op2<=0x23) { // ADD/ADDU/SUB/SUBU
-          is32|=1LL<<rt;
-        }
-        if(op2==0x2a||op2==0x2b) { // SLT/SLTU
-          is32|=1LL<<rt;
-        }
-        else if(op2>=0x24&&op2<=0x27) { // AND/OR/XOR/NOR
-          uint64_t sr=((is32>>s1)&(is32>>s2)&1LL);
-          is32&=~(1LL<<rt);
-          is32|=sr<<rt;
-        }
-        else if(op2>=0x2c&&op2<=0x2d) { // DADD/DADDU
-          if(s1==0&&s2==0) {
-            is32|=1LL<<rt;
-          }
-          else if(s2==0) {
-            uint64_t sr=((is32>>s1)&1LL);
-            is32&=~(1LL<<rt);
-            is32|=sr<<rt;
-          }
-          else if(s1==0) {
-            uint64_t sr=((is32>>s2)&1LL);
-            is32&=~(1LL<<rt);
-            is32|=sr<<rt;
-          }
-          else {
-            is32&=~(1LL<<rt);
-          }
-        }
-        else if(op2>=0x2e&&op2<=0x2f) { // DSUB/DSUBU
-          if(s1==0&&s2==0) {
-            is32|=1LL<<rt;
-          }
-          else if(s2==0) {
-            uint64_t sr=((is32>>s1)&1LL);
-            is32&=~(1LL<<rt);
-            is32|=sr<<rt;
-          }
-          else {
-            is32&=~(1LL<<rt);
-          }
-        }
-        break;
-      case MULTDIV:
-        if (op2>=0x1c&&op2<=0x1f) { // DMULT/DMULTU/DDIV/DDIVU
-          is32&=~((1LL<<HIREG)|(1LL<<LOREG));
-        }
-        else {
-          is32|=(1LL<<HIREG)|(1LL<<LOREG);
-        }
-        break;
-      case MOV:
-        {
-          uint64_t sr=((is32>>s1)&1LL);
-          is32&=~(1LL<<rt);
-          is32|=sr<<rt;
-        }
-        break;
-      case SHIFT:
-        if(op2>=0x14&&op2<=0x17) is32&=~(1LL<<rt); // DSLLV/DSRLV/DSRAV
-        else is32|=1LL<<rt; // SLLV/SRLV/SRAV
-        break;
-      case SHIFTIMM:
-        is32|=1LL<<rt;
-        // DSLL/DSRL/DSRA/DSLL32/DSRL32 but not DSRA32 have 64-bit result
-        if(op2>=0x38&&op2<0x3f) is32&=~(1LL<<rt);
-        break;
-      case COP0:
-        if(op2==0) is32|=1LL<<rt; // MFC0
-        break;
-      case COP1:
-        if(op2==0) is32|=1LL<<rt; // MFC1
-        if(op2==1) is32&=~(1LL<<rt); // DMFC1
-        if(op2==2) is32|=1LL<<rt; // CFC1
-        break;
-      case C1LS:
-        break;
-      case FLOAT:
-      case FCONV:
-        break;
-      case FCOMP:
-        break;
-      case SYSCALL:
-        break;
-      default:
-        break;
-    }
-    is32|=1;
-    p32[i]=is32;
-
-    if(i>0)
-    {
-      if(itype[i-1]==UJUMP||itype[i-1]==RJUMP||(source[i-1]>>16)==0x1000)
-      {
-        if(rt1[i-1]==31) // JAL/JALR
-        {
-          // Subroutine call will return here, don't alloc any registers
-          is32=1;
-        }
-        else if(i+1<slen)
-        {
-          // Internal branch will jump here, match registers to caller
-          is32=0x3FFFFFFFFLL;
-        }
-      }
-    }
-  }
-}
-
-// Identify registers which may be assumed to contain 32-bit values
-// and where optimizations will rely on this.
-// This is used to determine whether backward branches can safely
-// jump to a location with 64-bit values in registers.
-static void provisional_r32()
-{
-  u_int r32=0;
-  int i;
-  
-  for (i=slen-1;i>=0;i--)
-  {
-    int hr;
-    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
-    {
-      if(ba[i]<start || ba[i]>=(start+slen*4))
-      {
-        // Branch out of this block, don't need anything
-        r32=0;
-      }
-      else
-      {
-        // Internal branch
-        // Need whatever matches the target
-        // (and doesn't get overwritten by the delay slot instruction)
-        r32=0;
-        int t=(ba[i]-start)>>2;
-        if(ba[i]>start+i*4) {
-          // Forward branch
-          //if(!(requires_32bit[t]&~regs[i].was32))
-          //  r32|=requires_32bit[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
-          if(!(pr32[t]&~regs[i].was32))
-            r32|=pr32[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
-        }else{
-          // Backward branch
-          if(!(regs[t].was32&~unneeded_reg_upper[t]&~regs[i].was32))
-            r32|=regs[t].was32&~unneeded_reg_upper[t]&(~(1LL<<rt1[i+1]))&(~(1LL<<rt2[i+1]));
-        }
-      }
-      // Conditional branch may need registers for following instructions
-      if(itype[i]!=RJUMP&&itype[i]!=UJUMP&&(source[i]>>16)!=0x1000)
-      {
-        if(i<slen-2) {
-          //r32|=requires_32bit[i+2];
-          r32|=pr32[i+2];
-          r32&=regs[i].was32;
-          // Mark this address as a branch target since it may be called
-          // upon return from interrupt
-          //bt[i+2]=1;
-        }
-      }
-      // Merge in delay slot
-      if(!likely[i]) {
-        // These are overwritten unless the branch is "likely"
-        // and the delay slot is nullified if not taken
-        r32&=~(1LL<<rt1[i+1]);
-        r32&=~(1LL<<rt2[i+1]);
-      }
-      // Assume these are needed (delay slot)
-      if(us1[i+1]>0)
-      {
-        if((regs[i].was32>>us1[i+1])&1) r32|=1LL<<us1[i+1];
-      }
-      if(us2[i+1]>0)
-      {
-        if((regs[i].was32>>us2[i+1])&1) r32|=1LL<<us2[i+1];
-      }
-      if(dep1[i+1]&&!((unneeded_reg_upper[i]>>dep1[i+1])&1))
-      {
-        if((regs[i].was32>>dep1[i+1])&1) r32|=1LL<<dep1[i+1];
-      }
-      if(dep2[i+1]&&!((unneeded_reg_upper[i]>>dep2[i+1])&1))
-      {
-        if((regs[i].was32>>dep2[i+1])&1) r32|=1LL<<dep2[i+1];
-      }
-    }
-    else if(itype[i]==SYSCALL)
-    {
-      // SYSCALL instruction (software interrupt)
-      r32=0;
-    }
-    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
-    {
-      // ERET instruction (return from interrupt)
-      r32=0;
-    }
-    // Check 32 bits
-    r32&=~(1LL<<rt1[i]);
-    r32&=~(1LL<<rt2[i]);
-    if(us1[i]>0)
-    {
-      if((regs[i].was32>>us1[i])&1) r32|=1LL<<us1[i];
-    }
-    if(us2[i]>0)
-    {
-      if((regs[i].was32>>us2[i])&1) r32|=1LL<<us2[i];
-    }
-    if(dep1[i]&&!((unneeded_reg_upper[i]>>dep1[i])&1))
-    {
-      if((regs[i].was32>>dep1[i])&1) r32|=1LL<<dep1[i];
-    }
-    if(dep2[i]&&!((unneeded_reg_upper[i]>>dep2[i])&1))
-    {
-      if((regs[i].was32>>dep2[i])&1) r32|=1LL<<dep2[i];
-    }
-    //requires_32bit[i]=r32;
-    pr32[i]=r32;
-    
-    // Dirty registers which are 32-bit, require 32-bit input
-    // as they will be written as 32-bit values
-    for(hr=0;hr<HOST_REGS;hr++)
-    {
-      if(regs[i].regmap_entry[hr]>0&&regs[i].regmap_entry[hr]<64) {
-        if((regs[i].was32>>regs[i].regmap_entry[hr])&(regs[i].wasdirty>>hr)&1) {
-          if(!((unneeded_reg_upper[i]>>regs[i].regmap_entry[hr])&1))
-          pr32[i]|=1LL<<regs[i].regmap_entry[hr];
-          //requires_32bit[i]|=1LL<<regs[i].regmap_entry[hr];
-        }
-      }
-    }
-  }
-}
-
-// Write back dirty registers as soon as we will no longer modify them,
-// so that we don't end up with lots of writes at the branches.
-static void clean_registers(int istart,int iend,int wr)
-{
-  int i;
-  int r;
-  u_int will_dirty_i,will_dirty_next,temp_will_dirty;
-  u_int wont_dirty_i,wont_dirty_next,temp_wont_dirty;
-  if(iend==slen-1) {
-    will_dirty_i=will_dirty_next=0;
-    wont_dirty_i=wont_dirty_next=0;
-  }else{
-    will_dirty_i=will_dirty_next=will_dirty[iend+1];
-    wont_dirty_i=wont_dirty_next=wont_dirty[iend+1];
-  }
-  for (i=iend;i>=istart;i--)
-  {
-    if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
-    {
-      if(ba[i]<start || ba[i]>=(start+slen*4))
-      {
-        // Branch out of this block, flush all regs
-        if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
-        {
-          // Unconditional branch
-          will_dirty_i=0;
-          wont_dirty_i=0;
-          // Merge in delay slot (will dirty)
-          for(r=0;r<HOST_REGS;r++) {
-            if(r!=EXCLUDE_REG) {
-              if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-              if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-              if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-              if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-              if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-            }
-          }
-        }
-        else
-        {
-          // Conditional branch
-          will_dirty_i=0;
-          wont_dirty_i=wont_dirty_next;
-          // Merge in delay slot (will dirty)
-          for(r=0;r<HOST_REGS;r++) {
-            if(r!=EXCLUDE_REG) {
-              if(!likely[i]) {
-                // Might not dirty if likely branch is not taken
-                if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                if(branch_regs[i].regmap[r]==0) will_dirty_i&=~(1<<r);
-                if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-                //if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                //if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-                if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-              }
-            }
-          }
-        }
-        // Merge in delay slot (wont dirty)
-        for(r=0;r<HOST_REGS;r++) {
-          if(r!=EXCLUDE_REG) {
-            if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
-            if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
-            if((regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
-            if((regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
-            if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
-            if((branch_regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
-            if((branch_regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
-            if((branch_regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
-            if((branch_regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
-            if(branch_regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
-          }
-        }
-        if(wr) {
-          #ifndef DESTRUCTIVE_WRITEBACK
-          branch_regs[i].dirty&=wont_dirty_i;
-          #endif
-          branch_regs[i].dirty|=will_dirty_i;
-        }
-      }
-      else
-      {
-        // Internal branch
-        if(ba[i]<=start+i*4) {
-          // Backward branch
-          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
-          {
-            // Unconditional branch
-            temp_will_dirty=0;
-            temp_wont_dirty=0;
-            // Merge in delay slot (will dirty)
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
-                if((branch_regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
-                if(branch_regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
-                if(branch_regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
-                if((regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
-                if((regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
-                if((regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
-                if((regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
-                if((regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
-                if(regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
-                if(regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
-              }
-            }
-          } else {
-            // Conditional branch (not taken case)
-            temp_will_dirty=will_dirty_next;
-            temp_wont_dirty=wont_dirty_next;
-            // Merge in delay slot (will dirty)
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(!likely[i]) {
-                  // Will not dirty if likely branch is not taken
-                  if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
-                  if(branch_regs[i].regmap[r]==0) temp_will_dirty&=~(1<<r);
-                  if(branch_regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
-                  //if((regs[i].regmap[r]&63)==rt1[i]) temp_will_dirty|=1<<r;
-                  //if((regs[i].regmap[r]&63)==rt2[i]) temp_will_dirty|=1<<r;
-                  if((regs[i].regmap[r]&63)==rt1[i+1]) temp_will_dirty|=1<<r;
-                  if((regs[i].regmap[r]&63)==rt2[i+1]) temp_will_dirty|=1<<r;
-                  if((regs[i].regmap[r]&63)>33) temp_will_dirty&=~(1<<r);
-                  if(regs[i].regmap[r]<=0) temp_will_dirty&=~(1<<r);
-                  if(regs[i].regmap[r]==CCREG) temp_will_dirty|=1<<r;
-                }
-              }
-            }
-          }
-          // Merge in delay slot (wont dirty)
-          for(r=0;r<HOST_REGS;r++) {
-            if(r!=EXCLUDE_REG) {
-              if((regs[i].regmap[r]&63)==rt1[i]) temp_wont_dirty|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i]) temp_wont_dirty|=1<<r;
-              if((regs[i].regmap[r]&63)==rt1[i+1]) temp_wont_dirty|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i+1]) temp_wont_dirty|=1<<r;
-              if(regs[i].regmap[r]==CCREG) temp_wont_dirty|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt1[i]) temp_wont_dirty|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i]) temp_wont_dirty|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) temp_wont_dirty|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) temp_wont_dirty|=1<<r;
-              if(branch_regs[i].regmap[r]==CCREG) temp_wont_dirty|=1<<r;
-            }
-          }
-          // Deal with changed mappings
-          if(i<iend) {
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(regs[i].regmap[r]!=regmap_pre[i][r]) {
-                  temp_will_dirty&=~(1<<r);
-                  temp_wont_dirty&=~(1<<r);
-                  if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
-                    temp_will_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
-                    temp_wont_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
-                  } else {
-                    temp_will_dirty|=1<<r;
-                    temp_wont_dirty|=1<<r;
-                  }
-                }
-              }
-            }
-          }
-          if(wr) {
-            will_dirty[i]=temp_will_dirty;
-            wont_dirty[i]=temp_wont_dirty;
-            clean_registers((ba[i]-start)>>2,i-1,0);
-          }else{
-            // Limit recursion.  It can take an excessive amount
-            // of time if there are a lot of nested loops.
-            will_dirty[(ba[i]-start)>>2]=0;
-            wont_dirty[(ba[i]-start)>>2]=-1;
-          }
-        }
-        /*else*/ if(1)
-        {
-          if(itype[i]==RJUMP||itype[i]==UJUMP||(source[i]>>16)==0x1000)
-          {
-            // Unconditional branch
-            will_dirty_i=0;
-            wont_dirty_i=0;
-          //if(ba[i]>start+i*4) { // Disable recursion (for debugging)
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(branch_regs[i].regmap[r]==regs[(ba[i]-start)>>2].regmap_entry[r]) {
-                  will_dirty_i|=will_dirty[(ba[i]-start)>>2]&(1<<r);
-                  wont_dirty_i|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
-                }
-                if(branch_regs[i].regmap[r]>=0) {
-                  will_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(branch_regs[i].regmap[r]&63))&1)<<r;
-                  wont_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(branch_regs[i].regmap[r]&63))&1)<<r;
-                }
-              }
-            }
-          //}
-            // Merge in delay slot
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-                if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-                if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-              }
-            }
-          } else {
-            // Conditional branch
-            will_dirty_i=will_dirty_next;
-            wont_dirty_i=wont_dirty_next;
-          //if(ba[i]>start+i*4) { // Disable recursion (for debugging)
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                signed char target_reg=branch_regs[i].regmap[r];
-                if(target_reg==regs[(ba[i]-start)>>2].regmap_entry[r]) {
-                  will_dirty_i&=will_dirty[(ba[i]-start)>>2]&(1<<r);
-                  wont_dirty_i|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
-                }
-                else if(target_reg>=0) {
-                  will_dirty_i&=((unneeded_reg[(ba[i]-start)>>2]>>(target_reg&63))&1)<<r;
-                  wont_dirty_i|=((unneeded_reg[(ba[i]-start)>>2]>>(target_reg&63))&1)<<r;
-                }
-                // Treat delay slot as part of branch too
-                /*if(regs[i+1].regmap[r]==regs[(ba[i]-start)>>2].regmap_entry[r]) {
-                  will_dirty[i+1]&=will_dirty[(ba[i]-start)>>2]&(1<<r);
-                  wont_dirty[i+1]|=wont_dirty[(ba[i]-start)>>2]&(1<<r);
-                }
-                else
-                {
-                  will_dirty[i+1]&=~(1<<r);
-                }*/
-              }
-            }
-          //}
-            // Merge in delay slot
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(!likely[i]) {
-                  // Might not dirty if likely branch is not taken
-                  if((branch_regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                  if((branch_regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                  if(branch_regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-                  if(branch_regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-                  //if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-                  //if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-                  if((regs[i].regmap[r]&63)==rt1[i+1]) will_dirty_i|=1<<r;
-                  if((regs[i].regmap[r]&63)==rt2[i+1]) will_dirty_i|=1<<r;
-                  if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-                  if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-                  if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-                }
-              }
-            }
-          }
-          // Merge in delay slot (won't dirty)
-          for(r=0;r<HOST_REGS;r++) {
-            if(r!=EXCLUDE_REG) {
-              if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
-              if((regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
-              if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt1[i+1]) wont_dirty_i|=1<<r;
-              if((branch_regs[i].regmap[r]&63)==rt2[i+1]) wont_dirty_i|=1<<r;
-              if(branch_regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
-            }
-          }
-          if(wr) {
-            #ifndef DESTRUCTIVE_WRITEBACK
-            branch_regs[i].dirty&=wont_dirty_i;
-            #endif
-            branch_regs[i].dirty|=will_dirty_i;
-          }
-        }
-      }
-    }
-    else if(itype[i]==SYSCALL)
-    {
-      // SYSCALL instruction (software interrupt)
-      will_dirty_i=0;
-      wont_dirty_i=0;
-    }
-    else if(itype[i]==COP0 && (source[i]&0x3f)==0x18)
-    {
-      // ERET instruction (return from interrupt)
-      will_dirty_i=0;
-      wont_dirty_i=0;
-    }
-    will_dirty_next=will_dirty_i;
-    wont_dirty_next=wont_dirty_i;
-    for(r=0;r<HOST_REGS;r++) {
-      if(r!=EXCLUDE_REG) {
-        if((regs[i].regmap[r]&63)==rt1[i]) will_dirty_i|=1<<r;
-        if((regs[i].regmap[r]&63)==rt2[i]) will_dirty_i|=1<<r;
-        if((regs[i].regmap[r]&63)>33) will_dirty_i&=~(1<<r);
-        if(regs[i].regmap[r]<=0) will_dirty_i&=~(1<<r);
-        if(regs[i].regmap[r]==CCREG) will_dirty_i|=1<<r;
-        if((regs[i].regmap[r]&63)==rt1[i]) wont_dirty_i|=1<<r;
-        if((regs[i].regmap[r]&63)==rt2[i]) wont_dirty_i|=1<<r;
-        if(regs[i].regmap[r]==CCREG) wont_dirty_i|=1<<r;
-        if(i>istart) {
-          if(itype[i]!=RJUMP&&itype[i]!=UJUMP&&itype[i]!=CJUMP&&itype[i]!=SJUMP&&itype[i]!=FJUMP) 
-          {
-            // Don't store a register immediately after writing it,
-            // may prevent dual-issue.
-            if((regs[i].regmap[r]&63)==rt1[i-1]) wont_dirty_i|=1<<r;
-            if((regs[i].regmap[r]&63)==rt2[i-1]) wont_dirty_i|=1<<r;
-          }
-        }
-      }
-    }
-    // Save it
-    will_dirty[i]=will_dirty_i;
-    wont_dirty[i]=wont_dirty_i;
-    // Mark registers that won't be dirtied as not dirty
-    if(wr) {
-      /*DebugMessage(M64MSG_VERBOSE, "wr (%d,%d) %x will:",istart,iend,start+i*4);
-      for(r=0;r<HOST_REGS;r++) {
-        if((will_dirty_i>>r)&1) {
-          DebugMessage(M64MSG_VERBOSE, " r%d",r);
-        }
-      }*/
-
-      //if(i==istart||(itype[i-1]!=RJUMP&&itype[i-1]!=UJUMP&&itype[i-1]!=CJUMP&&itype[i-1]!=SJUMP&&itype[i-1]!=FJUMP)) {
-        regs[i].dirty|=will_dirty_i;
-        #ifndef DESTRUCTIVE_WRITEBACK
-        regs[i].dirty&=wont_dirty_i;
-        if(itype[i]==RJUMP||itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
-        {
-          if(i<iend-1&&itype[i]!=RJUMP&&itype[i]!=UJUMP&&(source[i]>>16)!=0x1000) {
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(regs[i].regmap[r]==regmap_pre[i+2][r]) {
-                  regs[i+2].wasdirty&=wont_dirty_i|~(1<<r);
-                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+2): %d",start+i*4,i,r); / *assert(!((wont_dirty_i>>r)&1));*/}
-              }
-            }
-          }
-        }
-        else
-        {
-          if(i<iend) {
-            for(r=0;r<HOST_REGS;r++) {
-              if(r!=EXCLUDE_REG) {
-                if(regs[i].regmap[r]==regmap_pre[i+1][r]) {
-                  regs[i+1].wasdirty&=wont_dirty_i|~(1<<r);
-                }else {/*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch(+1): %d",start+i*4,i,r);/ *assert(!((wont_dirty_i>>r)&1));*/}
-              }
-            }
-          }
-        }
-        #endif
-      //}
-    }
-    // Deal with changed mappings
-    temp_will_dirty=will_dirty_i;
-    temp_wont_dirty=wont_dirty_i;
-    for(r=0;r<HOST_REGS;r++) {
-      if(r!=EXCLUDE_REG) {
-        int nr;
-        if(regs[i].regmap[r]==regmap_pre[i][r]) {
-          if(wr) {
-            #ifndef DESTRUCTIVE_WRITEBACK
-            regs[i].wasdirty&=wont_dirty_i|~(1<<r);
-            #endif
-            regs[i].wasdirty|=will_dirty_i&(1<<r);
-          }
-        }
-        else if((nr=get_reg(regs[i].regmap,regmap_pre[i][r]))>=0) {
-          // Register moved to a different register
-          will_dirty_i&=~(1<<r);
-          wont_dirty_i&=~(1<<r);
-          will_dirty_i|=((temp_will_dirty>>nr)&1)<<r;
-          wont_dirty_i|=((temp_wont_dirty>>nr)&1)<<r;
-          if(wr) {
-            #ifndef DESTRUCTIVE_WRITEBACK
-            regs[i].wasdirty&=wont_dirty_i|~(1<<r);
-            #endif
-            regs[i].wasdirty|=will_dirty_i&(1<<r);
-          }
-        }
-        else {
-          will_dirty_i&=~(1<<r);
-          wont_dirty_i&=~(1<<r);
-          if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
-            will_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
-            wont_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
-          } else {
-            wont_dirty_i|=1<<r;
-            /*DebugMessage(M64MSG_VERBOSE, "i: %x (%d) mismatch: %d",start+i*4,i,r);/ *assert(!((will_dirty>>r)&1));*/
-          }
-        }
-      }
-    }
-  }
-}
-
-#ifdef ASSEM_DEBUG
-  /* disassembly */
+/* disassembly */
 static void disassemble_inst(int i)
 {
     if (bt[i]) DebugMessage(M64MSG_VERBOSE, "*"); else DebugMessage(M64MSG_VERBOSE, " ");
@@ -7661,9 +7586,8 @@ static void disassemble_inst(int i)
         printf (" %x: %s",start+i*4,insn[i]);
     }
 }
-#endif
 
-void new_dynarec_init()
+void new_dynarec_init(void)
 {
   DebugMessage(M64MSG_INFO, "Init new dynarec");
 
@@ -7673,7 +7597,7 @@ void new_dynarec_init()
             MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
             -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
 #else
-#if defined(_MSC_VER)
+#if defined(WIN32)
   base_addr = VirtualAlloc(NULL, 1<<TARGET_SIZE_2, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 #else
   if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
@@ -7752,14 +7676,14 @@ void new_dynarec_init()
   arch_init();
 }
 
-void new_dynarec_cleanup()
+void new_dynarec_cleanup(void)
 {
   int n;
   for(n=0;n<4096;n++) ll_clear(jump_in+n);
   for(n=0;n<4096;n++) ll_clear(jump_out+n);
   for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   assert(copy_size==0);
-#if defined(_MSC_VER)
+#if defined(WIN32)
   VirtualFree(base_addr, 0, MEM_RELEASE);
 #else
   if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
@@ -7771,29 +7695,11 @@ void new_dynarec_cleanup()
 
 int new_recompile_block(int addr)
 {
-/*
-  if(addr==0x800cd050) {
-    int block;
-    for(block=0x80000;block<0x80800;block++) invalidate_block(block);
-    int n;
-    for(n=0;n<=2048;n++) ll_clear(jump_dirty+n);
-  }
-*/
-  //if(r4300_cp0_regs()[CP0_COUNT_REG]==365117028) tracedebug=1;
   assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
-#if defined (COUNT_NOTCOMPILEDS )
+#if COUNT_NOTCOMPILEDS
   notcompiledCount++;
   DebugMessage(M64MSG_VERBOSE, "notcompiledCount=%i", notcompiledCount );
 #endif
-  //DebugMessage(M64MSG_VERBOSE, "NOTCOMPILED: addr = %x -> %x", (int)addr, (int)out);
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (compile %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,addr);
-  //if(debug) 
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (checksum %x)",r4300_cp0_regs()[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,mchecksum());
-  //DebugMessage(M64MSG_VERBOSE, "fpu mapping=%x enabled=%x",(r4300_cp0_regs()[CP0_STATUS_REG] & 0x04000000)>>26,(r4300_cp0_regs()[CP0_STATUS_REG] & 0x20000000)>>29);
-  /*if(r4300_cp0_regs()[CP0_COUNT_REG]>=312978186) {
-    rlist();
-  }*/
-  //rlist();
   start = (u_int)addr&~3;
   //assert(((u_int)addr&1)==0);
   if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
@@ -10479,9 +10385,8 @@ int new_recompile_block(int addr)
     bt[slen-1]=1; // Mark as a branch target so instruction can restart after exception
   }
   
-  /* Debug/disassembly */
-//  if((void*)assem_debug==(void*)printf)
-#if defined( ASSEM_DEBUG )
+/* Debug/disassembly */
+#if ASSEM_DEBUG
   for(i=0;i<slen;i++)
   {
     DebugMessage(M64MSG_VERBOSE, "U:");
@@ -10707,10 +10612,8 @@ int new_recompile_block(int addr)
   }
   for(i=0;i<slen;i++)
   {
-    //if(ds) DebugMessage(M64MSG_VERBOSE, "ds: ");
-//    if((void*)assem_debug==(void*)printf) disassemble_inst(i);
-#if defined( ASSEM_DEBUG )
-	  disassemble_inst(i);
+#if ASSEM_DEBUG
+    disassemble_inst(i);
 #endif
     if(ds) {
       ds=0; // Skip delay slot
@@ -11071,7 +10974,46 @@ int new_recompile_block(int addr)
   return 0;
 }
 
-void TLBWI_new(void)
+/* interpreted opcode */
+static void div64(int64_t dividend,int64_t divisor)
+{
+  if(divisor) {
+    *r4300_mult_lo()=dividend/divisor;
+    *r4300_mult_hi()=dividend%divisor;
+  }
+}
+static void divu64(uint64_t dividend,uint64_t divisor)
+{
+  if(divisor) {
+    *r4300_mult_lo()=dividend/divisor;
+    *r4300_mult_hi()=dividend%divisor;
+  }
+}
+
+static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
+{
+  if(bits) {
+    original<<=64-bits;
+    original>>=64-bits;
+    loaded<<=bits;
+    original|=loaded;
+  }
+  else original=loaded;
+  return original;
+}
+static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
+{
+  if(bits^56) {
+    original>>=64-(bits^56);
+    original<<=64-(bits^56);
+    loaded>>=bits^56;
+    original|=loaded;
+  }
+  else original=loaded;
+  return original;
+}
+
+static void TLBWI_new(void)
 {
   unsigned int i;
   /* Remove old entries */
@@ -11145,7 +11087,7 @@ void TLBWI_new(void)
   }
 }
 
-void TLBWR_new(void)
+static void TLBWR_new(void)
 {
   unsigned int i;
   r4300_cp0_regs()[CP0_RANDOM_REG] = (r4300_cp0_regs()[CP0_COUNT_REG]/2 % (32 - r4300_cp0_regs()[CP0_WIRED_REG])) + r4300_cp0_regs()[CP0_WIRED_REG];
@@ -11217,35 +11159,3 @@ void TLBWR_new(void)
   }
 }
 
-void *TLB_refill_exception_new(u_int inst_addr,u_int mem_addr,int w)
-{
-  int i;
-  uint32_t* cp0_regs = r4300_cp0_regs();
-
-  if(w==1)
-    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBS;
-  else
-    cp0_regs[CP0_CAUSE_REG]=(inst_addr<<31)|CP0_CAUSE_EXCCODE_TLBL;
-
-  cp0_regs[CP0_BADVADDR_REG]=mem_addr;
-  cp0_regs[CP0_CONTEXT_REG]=(cp0_regs[CP0_CONTEXT_REG]&0xFF80000F)|((mem_addr>>9)&0x007FFFF0);
-  cp0_regs[CP0_ENTRYHI_REG]=mem_addr&0xFFFFE000;
-
-  assert((cp0_regs[CP0_STATUS_REG]&CP0_STATUS_EXL)==0);
-
-  cp0_regs[CP0_EPC_REG]=(inst_addr&~3)-(inst_addr&1)*4;
-  cp0_regs[CP0_STATUS_REG]|=CP0_STATUS_EXL;
-  
-  if((mem_addr>=0x80000000)&&(mem_addr<0xc0000000))
-    return get_addr_ht(0x80000180);
-
-  for(i=0;i<32;i++)
-  {
-    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_even)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_even))
-      return get_addr_ht(0x80000180);
-    if((mem_addr>=g_dev.r4300.cp0.tlb.entries[i].start_odd)&&(mem_addr<=g_dev.r4300.cp0.tlb.entries[i].end_odd))
-      return get_addr_ht(0x80000180);
-  }
-
-  return get_addr_ht(0x80000000);
-}
