@@ -1,4 +1,7 @@
 { global:
+ConfigExternalGetParameter;
+ConfigExternalOpen;
+ConfigExternalClose;
 ConfigDeleteSection;
 ConfigGetParamBool;
 ConfigGetParameter;

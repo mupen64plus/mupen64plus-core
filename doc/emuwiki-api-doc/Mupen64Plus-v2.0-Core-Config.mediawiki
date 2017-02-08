@@ -149,6 +149,7 @@ These functions should be used for reading or writing configuration values in mo
 |This function sets the value of one of the emulator's configuration parameters in the section which is represented by '''<tt>ConfigSectionHandle</tt>'''.
 |}
 <br />
+{| border="1"
 |Prototype
 |'''<tt>m64p_error ConfigSetParameterHelp(m64p_handle ConfigSectionHandle, const char *ParamName, const char *ParamHelp)</tt>'''
 |-
@@ -180,6 +181,62 @@ These functions should be used for reading or writing configuration values in mo
 |-
 |Usage
 |This function retrieves the value of one of the emulator's parameters in the section which is represented by '''<tt>ConfigSectionHandle</tt>'''.
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error ConfigExternalOpen(const char *FileName, m64p_handle *Handle)</tt>'''
+|-
+|Return Value
+|M64ERR_SUCCESS if the config file was successfully opened.
+|-
+|Input Parameters
+|'''<tt>FileName</tt>''' The path to the config file.<br />
+'''<tt>Handle</tt>''' A pointer to a <tt>m64p_handle</tt>.
+|-
+|Requirements
+|The Mupen64Plus library must already be initialized before calling this function. '''<tt>FileName</tt>''' cannot be NULL.
+|-
+|Usage
+|This function opens an external config file and reads the contents into memory.
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error ConfigExternalClose(m64p_handle Handle)</tt>'''
+|-
+|Return Value
+|M64ERR_SUCCESS if the config file was successfully closed.
+|-
+|Input Parameters
+|'''<tt>Handle</tt>''' A <tt>m64p_handle</tt> that was previously passed to ConfigExternalOpen().
+|-
+|Requirements
+|The Mupen64Plus library must already be initialized before calling this function. '''<tt>Handle</tt>''' should have already been passed to ConfigExternalOpen().
+|-
+|Usage
+|This function opens an external config file and reads the contents into memory.
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error ConfigExternalGetParameter(m64p_handle Handle, const char *SectionName, const char *ParamName, char* ParamPtr, int ParamMaxLength)</tt>'''
+|-
+|Return Value
+|M64ERR_SUCCESS if ParamName was found and ParamPtr is populated with the result.
+|-
+|Input Parameters
+|'''<tt>Handle</tt>''' A <tt>m64p_handle</tt> that was previously passed to ConfigExternalOpen().<br />
+'''<tt>SectionName</tt>''' NULL-terminated string containing the name of the section to retrieve the parameter from.<br />
+'''<tt>ParamName</tt>''' NULL-terminated string containing the name of the parameter whose value is being retrieved.<br />
+'''<tt>ParamPtr</tt>''' An allocated char array that is at least as large as ParamMaxLength. The result, if found will be copied into this array.<br />
+'''<tt>ParamMaxLength</tt>''' The maximum number of bytes to be copied into ParamPtr.
+|-
+|Requirements
+|The Mupen64Plus library must already be initialized before calling this function. '''<tt>Handle</tt>''' should have already been passed to ConfigExternalOpen. The '''<tt>SectionName</tt>''' and '''<tt>ParamName</tt>''' pointers cannot be NULL. ParamPtr must be a pre-allocated char array that is at least as large as ParamMaxLength.
+|-
+|Usage
+|This functions allows a plugin to leverage the built-in ini parser to read any cfg/ini file.
 |}
 <br />
 {| border="1"
