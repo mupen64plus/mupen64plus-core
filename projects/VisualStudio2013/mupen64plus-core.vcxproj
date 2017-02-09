@@ -703,6 +703,21 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)dyna_start.obj -f win64 -d WIN64 %(FullPath)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)dyna_start.obj</Outputs>
     </CustomBuild>
+    <CustomBuild Include="..\..\src\device\r4300\x86\dyna_start.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)dyna_start.obj -f win32 -d LEADING_UNDERSCORE %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)dyna_start.obj</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"..\..\..\mupen64plus-win32-deps\nasm-2.11.06\nasm.exe" -i ..\..\src\ -o $(IntDir)dyna_start.obj -f win32 -d LEADING_UNDERSCORE %(FullPath)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)dyna_start.obj</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{92D3FEB9-2129-41C5-8577-BCD7D961EF41}</ProjectGuid>

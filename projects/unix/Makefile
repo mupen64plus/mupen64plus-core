@@ -568,11 +568,8 @@ ifneq ($(DYNAREC), )
       $(SRCDIR)/device/r4300/$(DYNAREC)/gspecial.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/gtlb.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/regcache.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c
-      ifeq ($(DYNAREC), x86_64)
-        SOURCE += \
-          $(SRCDIR)/device/r4300/x86_64/dyna_start.asm
-      endif
+      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/dyna_start.asm
   endif
 else
   SOURCE += $(SRCDIR)/device/r4300/empty_dynarec.c
@@ -686,6 +683,7 @@ CXXFLAGS += $(CFLAGS)
 # Manual dep specification
 $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
 $(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
+$(SRCDIR)/device/r4300/x86/dyna_start.asm: $(SRCDIR)/main/asm_defines_nasm.h
 $(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(SRCDIR)/main/asm_defines_nasm.h
 
 

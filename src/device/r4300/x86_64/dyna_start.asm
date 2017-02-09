@@ -96,4 +96,7 @@ _A2:
     pop rsi
     pop rdi
 %endif
+
+    mov  QWORD [rel g_dev_r4300_save_rsp], 0
+    mov  QWORD [rel g_dev_r4300_save_rip], 0
     ret
