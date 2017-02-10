@@ -887,7 +887,7 @@
       <ImageHasSafeExceptionHandlers />
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -912,7 +912,7 @@
       </ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" $7 \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">
@@ -943,7 +943,7 @@
     <PreBuildEvent>
       <Message>
       </Message>
-      <Command>cl /c /Fo$(IntDir) /D "NEW_DYNAREC=1" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "NEW_DYNAREC=1" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">
@@ -970,7 +970,7 @@
       </ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" $7 \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -994,7 +994,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -1017,7 +1017,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" $7 \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">
@@ -1041,7 +1041,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /D "NEW_DYNAREC=1" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" substr($7,2) \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "NEW_DYNAREC=1" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">
@@ -1064,7 +1064,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" "/offsetof_struct/ { print \"%%\"\"define\t\" $7 \"\t(0x\"$2\"-1)\" }" &gt; ..\..\src\main\asm_defines_nasm.h</Command>
+      <Command>cl /c /Fo$(IntDir) /D "__x86_64__" /I ..\..\src ..\..\src\main\asm_defines.c &amp; dumpbin.exe /SYMBOLS $(IntDir)asm_defines.obj | "..\..\..\mupen64plus-win32-deps\gawk-3.1.6-1\bin\gawk.exe" -f ..\..\tools\gen_asm_defines.awk</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

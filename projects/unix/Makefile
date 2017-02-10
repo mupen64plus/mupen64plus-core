@@ -345,7 +345,7 @@ endif
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
-OBJDUMP   = $(CROSS_COMPILE)objdump
+NM        = $(CROSS_COMPILE)nm
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
@@ -679,14 +679,6 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
-
-# Manual dep specification
-$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
-$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
-$(SRCDIR)/device/r4300/x86/dyna_start.asm: $(SRCDIR)/main/asm_defines_nasm.h
-$(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(SRCDIR)/main/asm_defines_nasm.h
-
-
 ASM_DEFINES = $(OBJDIR)/main/asm_defines.o
 
 # It is important to disable LTO for this object file
@@ -694,13 +686,15 @@ ASM_DEFINES = $(OBJDIR)/main/asm_defines.o
 $(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
 	$(COMPILE.c) -fno-lto -o $@ $<
 
-# Generate defines for nasm by parsing global symbols
-$(SRCDIR)/main/asm_defines_nasm.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "%define " $$6 " (0x"$$1"-1)" }' > $@
-
-# Generate defines for gas by parsing global symbols
-$(SRCDIR)/main/asm_defines_gas.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "#define " $$6 " (0x"$$1"-1)" }' > $@
+# Manual dep specification
+$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/x86/dyna_start.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
