@@ -68,7 +68,7 @@
     .eabi_attribute 18, 4
     .file    "linkage_arm.S"
 
-#include "main/asm_defines_gas.h"
+#include "asm_defines_gas.h"
 
 BSS_SECTION
 

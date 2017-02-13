@@ -1,6 +1,6 @@
 BEGIN {
-  nasm_file = "../../src/main/asm_defines_nasm.h";
-  gas_file = "../../src/main/asm_defines_gas.h";
+  nasm_file = dest_dir"/asm_defines_nasm.h";
+  gas_file =  dest_dir"/asm_defines_gas.h";
 }
 
 NR==1 {

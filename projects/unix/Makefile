@@ -129,7 +129,7 @@ endif
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall -Wno-unused-function
-CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -DM64P_PARALLEL
+CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
@@ -172,7 +172,7 @@ ifeq ($(OS), LINUX)
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -ldl
   # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  LDFLAGS += -Wl,-version-script,../../src/api/api_export.ver
   ifeq ($(ARCH_DETECTED), 64BITS)
     ASFLAGS = -f elf64
   else
@@ -208,7 +208,7 @@ ifeq ($(OS), MINGW)
   TARGET = mupen64plus$(POSTFIX).dll
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
   # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  LDFLAGS += -Wl,-version-script,../../src/api/api_export.ver
   LDLIBS += -lpthread
   ifeq ($(ARCH_DETECTED), 64BITS)
     ASFLAGS = -f win64 -d WIN64
@@ -217,8 +217,8 @@ ifeq ($(OS), MINGW)
   endif
 endif
 
-# assembler also needs base include directory
-ASFLAGS += -I../../src/
+# assembler also needs base include directories
+ASFLAGS += -I../../src/ -I../../src/asm_defines/
 
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
@@ -604,6 +604,7 @@ endif
 
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
+OBJECTS += $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(SRCDIR)/asm_defines/asm_defines.c)
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.S, $(OBJDIR)/%.o, $(filter %.S, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%.o, $(filter %.asm, $(SOURCE)))
@@ -671,7 +672,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/main/asm_defines_nasm.h $(SRCDIR)/main/asm_defines_gas.h
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_nasm.h $(SRCDIR)/asm_defines/asm_defines_gas.h
 
 # build dependency files
 CFLAGS += -MD -MP
@@ -679,22 +680,22 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
-ASM_DEFINES = $(OBJDIR)/main/asm_defines.o
+ASM_DEFINES = $(OBJDIR)/asm_defines/asm_defines.o
 
 # It is important to disable LTO for this object file
 # otherwise we can't extract usefull information from it.
-$(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
+$(ASM_DEFINES): $(SRCDIR)/asm_defines/asm_defines.c
 	$(COMPILE.c) -fno-lto -o $@ $<
 
 # Manual dep specification
 $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 $(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 $(SRCDIR)/device/r4300/x86/dyna_start.asm: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 $(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -f ../../tools/gen_asm_defines.awk
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm
