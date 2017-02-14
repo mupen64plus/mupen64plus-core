@@ -21,36 +21,61 @@
 %include "asm_defines_nasm.h"
 
 %ifdef LEADING_UNDERSCORE
-    %macro  cglobal 1
+    %macro cglobal 1
       global  _%1
       %define %1 _%1
     %endmacro
 
-    %macro  cextern 1
+    %macro cextern 1
       extern  _%1
       %define %1 _%1
     %endmacro
 %else
-    %macro  cglobal 1
+    %macro cglobal 1
       global  %1
     %endmacro
     
-    %macro  cextern 1
+    %macro cextern 1
       extern  %1
     %endmacro
 %endif
 
-%define g_dev_r4300_save_ebp       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_ebp)
-%define g_dev_r4300_save_esp       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_esp)
-%define g_dev_r4300_save_ebx       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_ebx)
-%define g_dev_r4300_save_esi       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_esi)
-%define g_dev_r4300_save_edi       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_edi)
-%define g_dev_r4300_save_eip       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_eip)
-%define g_dev_r4300_return_address (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address)
+%macro get_GOT 0
+      call  %%getgot
+  %%getgot:
+      pop  ebx
+      add  ebx,_GLOBAL_OFFSET_TABLE_+$$-%%getgot wrt ..gotpc
+%endmacro
+
+%ifdef PIC
+    %define get_got_address get_GOT
+    %define store_ebx
+    %define load_ebx
+    %define find_local_data(a) ebx + a wrt ..gotoff
+    %define find_external_data(a) ebx + a wrt ..got
+%else
+    %define get_got_address
+    %define store_ebx mov  [g_dev_r4300_save_ebx], ebx
+    %define load_ebx  mov  ebx, [g_dev_r4300_save_ebx]
+    %define find_local_data(a) a
+    %define find_extern_data(a) a
+%endif
+
+%define g_dev_r4300_save_ebp        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_ebp)
+%define g_dev_r4300_save_esp        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_esp)
+%define g_dev_r4300_save_ebx        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_ebx)
+%define g_dev_r4300_save_esi        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_esi)
+%define g_dev_r4300_save_edi        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_edi)
+%define g_dev_r4300_save_eip        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_eip)
+%define g_dev_r4300_return_address  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address)
 
 cglobal dyna_start
 
 cextern g_dev
+
+%ifdef PIC
+cextern _GLOBAL_OFFSET_TABLE_
+%endif
 
 section .bss
 align 4
@@ -59,33 +84,35 @@ section .rodata
 section .text
 
 dyna_start:
-    mov  [g_dev_r4300_save_ebp], ebp
-    mov  [g_dev_r4300_save_esp], esp
-    mov  [g_dev_r4300_save_ebx], ebx
-    mov  [g_dev_r4300_save_esi], esi
-    mov  [g_dev_r4300_save_edi], edi
+    get_got_address
+    store_ebx
+    mov  [find_local_data(g_dev_r4300_save_ebp)], ebp
+    mov  [find_local_data(g_dev_r4300_save_esp)], esp
+    mov  [find_local_data(g_dev_r4300_save_esi)], esi
+    mov  [find_local_data(g_dev_r4300_save_edi)], edi
     call point1
     jmp  point2
 point1:
     pop  eax
-    mov  [g_dev_r4300_save_eip], eax
+    mov  [find_local_data(g_dev_r4300_save_eip)], eax
     mov  eax, [esp+4]
     sub  esp, 0x10
     and  esp, 0xfffffff0
-    mov  [g_dev_r4300_return_address], esp
-    sub  DWORD [g_dev_r4300_return_address], 4
+    mov  [find_local_data(g_dev_r4300_return_address)], esp
+    sub  DWORD [find_local_data(g_dev_r4300_return_address)], 4
     call eax
 point2:
-    mov  ebp, [g_dev_r4300_save_ebp]
-    mov  esp, [g_dev_r4300_save_esp]
-    mov  ebx, [g_dev_r4300_save_ebx]
-    mov  esi, [g_dev_r4300_save_esi]
-    mov  edi, [g_dev_r4300_save_edi]
-    
-    mov  DWORD [g_dev_r4300_save_ebp], 0
-    mov  DWORD [g_dev_r4300_save_esp], 0
-    mov  DWORD [g_dev_r4300_save_ebx], 0
-    mov  DWORD [g_dev_r4300_save_esi], 0
-    mov  DWORD [g_dev_r4300_save_edi], 0
-    mov  DWORD [g_dev_r4300_save_eip], 0
+    get_got_address
+    load_ebx
+    mov  ebp, [find_local_data(g_dev_r4300_save_ebp)]
+    mov  esp, [find_local_data(g_dev_r4300_save_esp)]
+    mov  esi, [find_local_data(g_dev_r4300_save_esi)]
+    mov  edi, [find_local_data(g_dev_r4300_save_edi)]
+
+    mov  DWORD [find_local_data(g_dev_r4300_save_ebx)], 0
+    mov  DWORD [find_local_data(g_dev_r4300_save_ebp)], 0
+    mov  DWORD [find_local_data(g_dev_r4300_save_esp)], 0
+    mov  DWORD [find_local_data(g_dev_r4300_save_esi)], 0
+    mov  DWORD [find_local_data(g_dev_r4300_save_edi)], 0
+    mov  DWORD [find_local_data(g_dev_r4300_save_eip)], 0
     ret

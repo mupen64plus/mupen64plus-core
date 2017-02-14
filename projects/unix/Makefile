@@ -217,6 +217,10 @@ ifeq ($(OS), MINGW)
   endif
 endif
 
+ifeq ($(PIC), 1)
+  ASFLAGS += -d PIC
+endif
+
 # assembler also needs base include directories
 ASFLAGS += -I../../src/ -I../../src/asm_defines/
 
