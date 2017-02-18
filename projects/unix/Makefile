@@ -484,6 +484,7 @@ SOURCE = \
     $(SRCDIR)/device/si/pif.c \
     $(SRCDIR)/device/si/rumblepak.c \
     $(SRCDIR)/device/si/si_controller.c \
+    $(SRCDIR)/device/si/transferpak.c \
     $(SRCDIR)/device/vi/vi_controller.c \
     $(SRCDIR)/main/main.c \
     $(SRCDIR)/main/util.c \
