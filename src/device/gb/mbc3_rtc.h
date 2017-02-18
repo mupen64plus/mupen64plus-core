@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_game_controller_via_input_plugin.c              *
+ *   Mupen64plus - mbc3_rtc.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,49 +19,44 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "emulate_game_controller_via_input_plugin.h"
+#ifndef M64P_DEVICE_GB_MBC3_RTC_H
+#define M64P_DEVICE_GB_MBC3_RTC_H
 
-#include "api/m64p_plugin.h"
-#include "main/main.h"
-#include "plugin.h"
-#include "device/si/game_controller.h"
+#include <stdint.h>
+#include <time.h>
 
-int egcvip_is_connected(void* opaque, enum pak_type* pak)
+struct clock_backend;
+
+enum mbc3_rtc_registers
 {
-    int channel = *(int*)opaque;
+    MBC3_RTC_SECONDS,   /* 0-59 */
+    MBC3_RTC_MINUTES,   /* 0-59 */
+    MBC3_RTC_HOURS,     /* 0-23 */
+    MBC3_RTC_DAYS_L,    /* Days Counter is 16 bit wide */
+    MBC3_RTC_DAYS_H,    /* bits 0-8: days counter (0-511) */
+                        /* bits 9-13: zeros ? */
+                        /* bits 14: halt (0: stop timer, 1: active timer) */
+                        /* bits 15: carry (0: no overflow, 1: couter overflowed) */
+    MBC3_RTC_REGS_COUNT
+};
 
-    CONTROL* c = &Controls[channel];
-
-    switch(c->Plugin)
-    {
-    case PLUGIN_NONE: *pak = PAK_NONE; break;
-    case PLUGIN_MEMPAK: *pak = PAK_MEM; break;
-    case PLUGIN_RUMBLE_PAK: *pak = PAK_RUMBLE; break;
-    case PLUGIN_TRANSFER_PAK: *pak = PAK_TRANSFER; break;
-
-    case PLUGIN_RAW:
-        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-         * so we just reproduce that behavior */
-        *pak = PAK_RUMBLE; break;
-    }
-
-    /* Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[channel].transferpak.gb_cart != NULL) {
-        *pak = PAK_TRANSFER;
-    }
-
-    return c->Present;
-}
-
-uint32_t egcvip_get_input(void* opaque)
+struct mbc3_rtc
 {
-    BUTTONS keys = { 0 };
-    int channel = *(int*)opaque;
+    uint8_t regs[MBC3_RTC_REGS_COUNT];
 
-    if (input.getKeys)
-        input.getKeys(channel, &keys);
+    unsigned int latch;
+    uint8_t latched_regs[MBC3_RTC_REGS_COUNT];
 
-    return keys.Value;
+    time_t last_time;
 
-}
+    struct clock_backend* clock;
+};
 
+void init_mbc3_rtc(struct mbc3_rtc* rtc, struct clock_backend* clock);
+void poweron_mbc3_rtc(struct mbc3_rtc* rtc);
+
+uint8_t read_mbc3_rtc_regs(struct mbc3_rtc* rtc, unsigned int reg);
+void write_mbc3_rtc_regs(struct mbc3_rtc* rtc, unsigned int reg, uint8_t value);
+void latch_mbc3_rtc_regs(struct mbc3_rtc* rtc, uint8_t data);
+
+#endif

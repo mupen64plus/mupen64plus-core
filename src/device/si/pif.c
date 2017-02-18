@@ -30,6 +30,7 @@
 #include "backends/controller_input_backend.h"
 #include "backends/rumble_backend.h"
 #include "backends/storage_backend.h"
+#include "device/gb/gb_cart.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/si/n64_cic_nus_6105.h"
@@ -71,6 +72,7 @@ void init_pif(struct pif* pif,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
+    struct gb_cart* gb_carts,
     uint16_t eeprom_id,
     struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
@@ -82,7 +84,8 @@ void init_pif(struct pif* pif,
         init_game_controller(&pif->controllers[i],
                 &cins[i],
                 &mpk_storages[i],
-                &rumbles[i]);
+                &rumbles[i],
+                (gb_carts[i].rom.data != NULL) ? &gb_carts[i] : NULL);
     }
 
     init_eeprom(&pif->eeprom, eeprom_id, eeprom_storage);
@@ -93,9 +96,14 @@ void init_pif(struct pif* pif,
 
 void poweron_pif(struct pif* pif)
 {
+    size_t i;
+
     memset(pif->ram, 0, PIF_RAM_SIZE);
 
     poweron_af_rtc(&pif->af_rtc);
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        poweron_game_controller(&pif->controllers[i]);
+    }
 }
 
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
