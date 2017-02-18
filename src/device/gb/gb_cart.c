@@ -661,9 +661,13 @@ int init_gb_cart(struct gb_cart* gb_cart,
         struct clock_backend* clock)
 {
     const struct parsed_cart_type* type;
-    struct storage_backend rom = { 0 };
-    struct storage_backend ram = { 0 };
-    struct mbc3_rtc rtc = { 0 };
+    struct storage_backend rom;
+    struct storage_backend ram;
+    struct mbc3_rtc rtc;
+    
+    memset(&rom, 0, sizeof(rom));
+    memset(&ram, 0, sizeof(ram));
+    memset(&rtc, 0, sizeof(rtc));
 
     /* ask to load rom and initialize rom storage backend */
     init_rom(rom_opaque, &rom);

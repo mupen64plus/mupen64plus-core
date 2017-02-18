@@ -960,7 +960,7 @@ m64p_error main_run(void)
     struct storage_backend sra_storage;
     struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
     struct storage_backend eep_storage;
-    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT] = { 0 };
+    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
     struct file_storage gb_carts_rom[GAME_CONTROLLERS_COUNT];
     struct file_storage gb_carts_ram[GAME_CONTROLLERS_COUNT];
 
@@ -1011,14 +1011,15 @@ m64p_error main_run(void)
     eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, &eep, save_file_storage };
 
     /* setup game controllers data */
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
+    {
         channels[i] = i;
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
         rumbles[i] = (struct rumble_backend){ &channels[i], rvip_exec };
 
-        if (g_gb_rom_files[i] != NULL) {
-
+        if (g_gb_rom_files[i] != NULL)
+        {
             char* gbsav_path = get_gbsav_path(i);
             char* gbrom_path = strdup(g_gb_rom_files[i]);
 
@@ -1033,12 +1034,17 @@ m64p_error main_run(void)
             if (init_gb_cart(&gb_carts[i],
                              &gb_carts_rom[i], init_gb_rom,
                              &gb_carts_ram[i], init_gb_ram,
-                             &clock) != 0) {
+                             &clock) != 0)
+            {
                 /* could not load gb rom file so invalidate it and release other resources */
                 close_file_storage(&gb_carts_rom[i]);
                 close_file_storage(&gb_carts_ram[i]);
                 g_gb_rom_files[i] = NULL;
             }
+        }
+        else
+        {
+            memset(&gb_carts[i], 0, sizeof(struct gb_cart));
         }
     }
 
