@@ -619,6 +619,9 @@ OBJECTS += $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%.o, $(filter %.asm, $(SOURCE))
 OBJDIRS = $(dir $(OBJECTS))
 $(shell $(MKDIR) $(OBJDIRS))
 
+# we have a special object file for the new dynarec
+ASM_DEFINES_OBJ = $(OBJDIR)/asm_defines/asm_defines.o
+
 # build targets
 targets:
 	@echo "Mupen64Plus-core makefile. "
@@ -688,28 +691,20 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
-ASM_DEFINES = $(OBJDIR)/asm_defines/asm_defines.o
-
 # It is important to disable LTO for this object file
 # otherwise we can't extract usefull information from it.
-$(ASM_DEFINES): $(SRCDIR)/asm_defines/asm_defines.c
+$(ASM_DEFINES_OBJ): $(SRCDIR)/asm_defines/asm_defines.c
 	$(COMPILE.c) -fno-lto -o $@ $<
 
-# Manual dep specification
-$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
-$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
-$(SRCDIR)/device/r4300/x86/dyna_start.asm: $(ASM_DEFINES)
-	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
-$(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(ASM_DEFINES)
+# Script hackery for generating ASM include files for the new dynarec assembly code
+$(SRCDIR)/asm_defines/%.h: $(ASM_DEFINES_OBJ)
 	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 
 # standard build rules
-$(OBJDIR)/%.o: $(SRCDIR)/%.asm
+$(OBJDIR)/%.o: $(SRCDIR)/%.asm $(SRCDIR)/asm_defines/asm_defines_nasm.h
 	$(COMPILE.as) -o $@ $<
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.S
+$(OBJDIR)/%.o: $(SRCDIR)/%.S $(SRCDIR)/asm_defines/asm_defines_gas.h
 	$(COMPILE.c) -o $@ $<
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
