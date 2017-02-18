@@ -50,6 +50,7 @@
 #include "backends/storage_backend.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/gb/gb_cart.h"
 #include "device/pifbootrom/pifbootrom.h"
 #include "eventloop.h"
 #include "main.h"
@@ -99,6 +100,22 @@ void* g_rdram = NULL;
 size_t g_rdram_size = 0;
 
 struct device g_dev;
+
+/* Gameboy roms to load in transfer pak */
+/* TODO: allow ui to pass the gb rom file to the core */
+char* g_gb_rom_files[GAME_CONTROLLERS_COUNT] = {
+#if 0
+    "./pkmb.gb",
+    "./mtennis.gbc",
+    "./pd.gbc",
+    "./pkmc.gbc",
+#else
+    NULL,
+    NULL,
+    NULL,
+    NULL
+#endif
+};
 
 int g_delay_si = 0;
 
@@ -155,6 +172,15 @@ static char *get_sram_path(void)
 static char *get_flashram_path(void)
 {
     return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
+}
+
+static char *get_gbsav_path(unsigned int controller)
+{
+    /* gb save files names are suffixed with the controller number
+     * to avoid multiple controllers to write to the same save file.
+     */
+    const char* name = namefrompath(g_gb_rom_files[controller]);
+    return formatstr("%s%s.%u.sav", get_savesrampath(), name, controller);
 }
 
 
@@ -883,6 +909,34 @@ static void open_eep_file(struct file_storage* storage)
     }
 }
 
+static void init_gb_rom(void* opaque, struct storage_backend* storage)
+{
+    struct file_storage* fstorage = (struct file_storage*)opaque;
+
+    open_rom_file_storage(fstorage, fstorage->filename);
+
+    storage->data = fstorage->data;
+    storage->size = fstorage->size;
+    storage->user_data = fstorage;
+    storage->save = NULL;
+}
+
+static void init_gb_ram(void* opaque, struct storage_backend* storage)
+{
+    struct file_storage* fstorage = (struct file_storage*)opaque;
+
+    int ret = open_file_storage(fstorage, storage->size, fstorage->filename);
+
+    storage->data = fstorage->data;
+    storage->user_data = fstorage;
+    storage->save = save_file_storage;
+
+    if (ret == (int)file_open_error) {
+        /* if file doesn't exists provide default content */
+        memset(storage->data, 0, storage->size);
+    }
+}
+
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
@@ -906,6 +960,9 @@ m64p_error main_run(void)
     struct storage_backend sra_storage;
     struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
     struct storage_backend eep_storage;
+    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT] = { 0 };
+    struct file_storage gb_carts_rom[GAME_CONTROLLERS_COUNT];
+    struct file_storage gb_carts_ram[GAME_CONTROLLERS_COUNT];
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -959,6 +1016,30 @@ m64p_error main_run(void)
         cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
         rumbles[i] = (struct rumble_backend){ &channels[i], rvip_exec };
+
+        if (g_gb_rom_files[i] != NULL) {
+
+            char* gbsav_path = get_gbsav_path(i);
+            char* gbrom_path = strdup(g_gb_rom_files[i]);
+
+            gb_carts_rom[i].data = NULL;
+            gb_carts_rom[i].size = 0;
+            gb_carts_rom[i].filename = gbrom_path;
+
+            gb_carts_ram[i].data = NULL;
+            gb_carts_ram[i].size = 0;
+            gb_carts_ram[i].filename = gbsav_path;
+
+            if (init_gb_cart(&gb_carts[i],
+                             &gb_carts_rom[i], init_gb_rom,
+                             &gb_carts_ram[i], init_gb_ram,
+                             &clock) != 0) {
+                /* could not load gb rom file so invalidate it and release other resources */
+                close_file_storage(&gb_carts_rom[i]);
+                close_file_storage(&gb_carts_ram[i]);
+                g_gb_rom_files[i] = NULL;
+            }
+        }
     }
 
     init_device(&g_dev,
@@ -973,6 +1054,7 @@ m64p_error main_run(void)
                 cins,
                 mpk_storages,
                 rumbles,
+                gb_carts,
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
@@ -1034,6 +1116,13 @@ m64p_error main_run(void)
     if (g_DebuggerActive)
         destroy_debugger();
 #endif
+    /* release gb_carts */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        if (g_gb_rom_files[i] != NULL) {
+            close_file_storage(&gb_carts_rom[i]);
+            close_file_storage(&gb_carts_ram[i]);
+        }
+    }
 
     close_file_storage(&sra);
     close_file_storage(&fla);
@@ -1061,7 +1150,15 @@ on_input_open_failure:
 on_audio_open_failure:
     gfx.romClosed();
 on_gfx_open_failure:
-    /* release file storages */
+    /* release gb_carts */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        if (g_gb_rom_files[i] != NULL) {
+            close_file_storage(&gb_carts_rom[i]);
+            close_file_storage(&gb_carts_ram[i]);
+        }
+    }
+
+    /* release storage files */
     close_file_storage(&sra);
     close_file_storage(&fla);
     close_file_storage(&eep);

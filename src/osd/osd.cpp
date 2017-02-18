@@ -249,8 +249,8 @@ void osd_init(int width, int height)
 
 #if SDL_VERSION_ATLEAST(2,0,0)
     int gl_context;
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &gl_context);
-    if (gl_context == SDL_GL_CONTEXT_PROFILE_CORE)
+    VidExt_GL_GetAttribute(M64P_GL_CONTEXT_PROFILE_MASK, &gl_context);
+    if (gl_context == M64P_GL_CONTEXT_PROFILE_CORE)
     {
         DebugMessage(M64MSG_WARNING, "OSD not compatible with OpenGL core context. OSD deactivated.");
         return;

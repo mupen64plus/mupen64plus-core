@@ -450,6 +450,8 @@ SOURCE = \
     $(SRCDIR)/backends/storage_backend.c \
     $(SRCDIR)/device/ai/ai_controller.c \
     $(SRCDIR)/device/device.c \
+    $(SRCDIR)/device/gb/gb_cart.c \
+    $(SRCDIR)/device/gb/mbc3_rtc.c \
     $(SRCDIR)/device/memory/memory.c \
     $(SRCDIR)/device/pi/cart_rom.c \
     $(SRCDIR)/device/pi/flashram.c \
@@ -504,6 +506,7 @@ SOURCE = \
     $(SRCDIR)/plugin/dummy_input.c \
     $(SRCDIR)/plugin/dummy_rsp.c \
     $(SRCDIR)/osd/screenshot.cpp
+
 ifeq ("$(OS)","MINGW")
 SOURCE += \
     $(SRCDIR)/osal/dynamiclib_win32.c \

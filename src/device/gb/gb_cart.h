@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_game_controller_via_input_plugin.c              *
+ *   Mupen64plus - gb_cart.h                                               *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2015 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,49 +19,43 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "emulate_game_controller_via_input_plugin.h"
+#ifndef M64P_DEVICE_GB_GB_CART_H
+#define M64P_DEVICE_GB_GB_CART_H
 
-#include "api/m64p_plugin.h"
-#include "main/main.h"
-#include "plugin.h"
-#include "device/si/game_controller.h"
+#include <stddef.h>
+#include <stdint.h>
 
-int egcvip_is_connected(void* opaque, enum pak_type* pak)
+#include "mbc3_rtc.h"
+#include "backends/storage_backend.h"
+
+struct clock_backend;
+
+struct gb_cart
 {
-    int channel = *(int*)opaque;
+    struct storage_backend rom;
+    struct storage_backend ram;
 
-    CONTROL* c = &Controls[channel];
+    unsigned int rom_bank;
+    unsigned int ram_bank;
 
-    switch(c->Plugin)
-    {
-    case PLUGIN_NONE: *pak = PAK_NONE; break;
-    case PLUGIN_MEMPAK: *pak = PAK_MEM; break;
-    case PLUGIN_RUMBLE_PAK: *pak = PAK_RUMBLE; break;
-    case PLUGIN_TRANSFER_PAK: *pak = PAK_TRANSFER; break;
+    unsigned int ram_enable;
+    unsigned int mbc1_mode;
 
-    case PLUGIN_RAW:
-        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-         * so we just reproduce that behavior */
-        *pak = PAK_RUMBLE; break;
-    }
+    unsigned int has_rtc;
+    struct mbc3_rtc rtc;
 
-    /* Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[channel].transferpak.gb_cart != NULL) {
-        *pak = PAK_TRANSFER;
-    }
+    int (*read_gb_cart)(struct gb_cart* gb_cart, uint16_t address, uint8_t* data, size_t size);
+    int (*write_gb_cart)(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
+};
 
-    return c->Present;
-}
+int init_gb_cart(struct gb_cart* gb_cart,
+        void* rom_opaque, void (*init_rom)(void* user_data, struct storage_backend* rom),
+        void* ram_opaque, void (*init_ram)(void* user_data, struct storage_backend* ram),
+        struct clock_backend* clock);
 
-uint32_t egcvip_get_input(void* opaque)
-{
-    BUTTONS keys = { 0 };
-    int channel = *(int*)opaque;
+void poweron_gb_cart(struct gb_cart* gb_cart);
 
-    if (input.getKeys)
-        input.getKeys(channel, &keys);
+int read_gb_cart(struct gb_cart* gb_cart, uint16_t address, uint8_t* data, size_t size);
+int write_gb_cart(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
 
-    return keys.Value;
-
-}
-
+#endif

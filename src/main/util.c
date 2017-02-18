@@ -82,6 +82,71 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
     return file_ok;
 }
 
+file_status_t load_file(const char* filename, void** buffer, size_t* size)
+{
+    FILE* fd;
+    size_t l_size;
+    void* l_buffer;
+    int err;
+    file_status_t ret;
+
+    /* open file */
+    ret = file_open_error;
+    fd = fopen(filename, "rb");
+    if (fd == NULL)
+    {
+        return file_open_error;
+    }
+
+    /* obtain file size */
+    ret = file_size_error;
+    err = fseek(fd, 0, SEEK_END);
+    if (err != 0)
+    {
+        goto close_file;
+    }
+
+    err = ftell(fd);
+    if (err == -1)
+    {
+        goto close_file;
+    }
+    l_size = (size_t)err;
+
+    err = fseek(fd, 0, SEEK_SET);
+    if (err != 0)
+    {
+        goto close_file;
+    }
+
+    /* allocate buffer */
+    l_buffer = malloc(l_size);
+    if (l_buffer == NULL)
+    {
+        goto close_file;
+    }
+
+    /* copy file content to buffer */
+    ret = file_read_error;
+    err = fread(l_buffer, 1, l_size, fd);
+    if (err != l_size)
+    {
+        free(l_buffer);
+        goto close_file;
+    }
+
+    /* commit buffer,size */
+    ret = file_ok;
+    *buffer = l_buffer;
+    *size = l_size;
+
+    /* close file */
+close_file:
+    fclose(fd);
+    return ret;
+}
+
+
 /**********************
    Byte swap utilities
  **********************/

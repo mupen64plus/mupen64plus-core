@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_game_controller_via_input_plugin.c              *
+ *   Mupen64plus - transferpak.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,49 +19,36 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "emulate_game_controller_via_input_plugin.h"
+#ifndef M64P_DEVICE_SI_TRANSFERPAK_H
+#define M64P_DEVICE_SI_TRANSFERPAK_H
 
-#include "api/m64p_plugin.h"
-#include "main/main.h"
-#include "plugin.h"
-#include "device/si/game_controller.h"
+#include <stddef.h>
+#include <stdint.h>
 
-int egcvip_is_connected(void* opaque, enum pak_type* pak)
+struct gb_cart;
+
+enum cart_access_mode
 {
-    int channel = *(int*)opaque;
+    CART_NOT_INSERTED = 0x40,
+    CART_ACCESS_MODE_0 = 0x80,
+    CART_ACCESS_MODE_1 = 0x89
+};
 
-    CONTROL* c = &Controls[channel];
-
-    switch(c->Plugin)
-    {
-    case PLUGIN_NONE: *pak = PAK_NONE; break;
-    case PLUGIN_MEMPAK: *pak = PAK_MEM; break;
-    case PLUGIN_RUMBLE_PAK: *pak = PAK_RUMBLE; break;
-    case PLUGIN_TRANSFER_PAK: *pak = PAK_TRANSFER; break;
-
-    case PLUGIN_RAW:
-        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-         * so we just reproduce that behavior */
-        *pak = PAK_RUMBLE; break;
-    }
-
-    /* Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[channel].transferpak.gb_cart != NULL) {
-        *pak = PAK_TRANSFER;
-    }
-
-    return c->Present;
-}
-
-uint32_t egcvip_get_input(void* opaque)
+struct transferpak
 {
-    BUTTONS keys = { 0 };
-    int channel = *(int*)opaque;
+    unsigned int enabled;
+    unsigned int bank;
+    unsigned int access_mode;
+    unsigned int access_mode_changed;
 
-    if (input.getKeys)
-        input.getKeys(channel, &keys);
+    struct gb_cart* gb_cart;
+};
 
-    return keys.Value;
+void init_transferpak(struct transferpak* tpk, struct gb_cart* gb_cart);
+void poweron_transferpak(struct transferpak* tpk);
 
-}
 
+void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t* data, size_t size);
+void transferpak_write_command(struct transferpak* tpk, uint16_t address, const uint8_t* data, size_t size);
+
+#endif

@@ -26,6 +26,7 @@
 
 #include "mempak.h"
 #include "rumblepak.h"
+#include "transferpak.h"
 
 enum pak_type
 {
@@ -43,13 +44,17 @@ struct game_controller
     struct controller_input_backend* cin;
     struct mempak mempak;
     struct rumblepak rumblepak;
+    struct transferpak transferpak;
 };
 
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
     struct storage_backend* mpk_storage,
-    struct rumble_backend* rumble);
+    struct rumble_backend* rumble,
+    struct gb_cart* gb_cart);
+
+void poweron_game_controller(struct game_controller* cont);
 
 void process_controller_command(struct game_controller* cont, uint8_t* cmd);
 void read_controller(struct game_controller* cont, uint8_t* cmd);
