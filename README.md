@@ -35,6 +35,7 @@ build Mupen64Plus from source:
 
   - GNU C and C++ compiler, libraries, and headers
   - GNU make
+  - Nasm
   - Development packages for all the libraries above
 
 ## 2. Building From Source

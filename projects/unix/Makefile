@@ -96,12 +96,12 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
     NEW_DYNAREC := 1
     CFLAGS += -marm
     ifneq ("$(filter armv5%,$(HOST_CPU))","")
-    	CFLAGS += -DARMv5_ONLY
-    	$(warning Using ARMv5_ONLY)
+        CFLAGS += -DARMv5_ONLY
+        $(warning Using ARMv5_ONLY)
     endif
     ifneq ("$(filter armv6%,$(HOST_CPU))","")
-    	CFLAGS += -DARMv5_ONLY
-    	$(warning Using ARMv5_ONLY)
+        CFLAGS += -DARMv5_ONLY
+        $(warning Using ARMv5_ONLY)
     endif
     ifeq ($(NEON), 1)
         CFLAGS += -mfpu=neon -mfloat-abi=hard
@@ -129,7 +129,7 @@ endif
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall -Wno-unused-function
-CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -DM64P_PARALLEL
+CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
@@ -160,7 +160,11 @@ ifeq ($(OS), FREEBSD)
   SONAME = libmupen64plus$(POSTFIX).so.2
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -L${LOCALBASE}/lib -lc
-  ASFLAGS = -f elf -d ELF_TYPE
+  ifeq ($(ARCH_DETECTED), 64BITS)
+    ASFLAGS = -f elf64
+  else
+    ASFLAGS = -f elf
+  endif
 endif
 ifeq ($(OS), LINUX)
   TARGET = libmupen64plus$(POSTFIX).so.2.0.0
@@ -168,8 +172,12 @@ ifeq ($(OS), LINUX)
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-dynamic -Wl,-soname,$(SONAME)
   LDLIBS += -ldl
   # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
-  ASFLAGS = -f elf -d ELF_TYPE
+  LDFLAGS += -Wl,-version-script,../../src/api/api_export.ver
+  ifeq ($(ARCH_DETECTED), 64BITS)
+    ASFLAGS = -f elf64
+  else
+    ASFLAGS = -f elf
+  endif
 endif
 ifeq ($(OS), OSX)
   #xcode-select has been around since XCode 3.0, i.e. OS X 10.5
@@ -179,12 +187,17 @@ ifeq ($(OS), OSX)
   TARGET = libmupen64plus$(POSTFIX).dylib
   LDFLAGS += -framework CoreFoundation -bundle -read_only_relocs suppress
   LDLIBS += -ldl
-  ASFLAGS = -f macho
+  ifeq ($(ARCH_DETECTED), 64BITS)
+    ASFLAGS = -f macho64 -d LEADING_UNDERSCORE
+  else
+    ASFLAGS = -f macho -d LEADING_UNDERSCORE
+  endif
+
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.5 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.6 -isysroot $(OSX_SDK_PATH)
     else
-      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.5 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.6 -isysroot $(OSX_SDK_PATH)
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
       endif
@@ -195,13 +208,21 @@ ifeq ($(OS), MINGW)
   TARGET = mupen64plus$(POSTFIX).dll
   LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
   # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  LDFLAGS += -Wl,-version-script,../../src/api/api_export.ver
   LDLIBS += -lpthread
-  ASFLAGS = -f win32
+  ifeq ($(ARCH_DETECTED), 64BITS)
+    ASFLAGS = -f win64 -d WIN64
+  else
+    ASFLAGS = -f win32 -d LEADING_UNDERSCORE
+  endif
 endif
 
-# assembler also needs base include directory
-ASFLAGS += -I../../src/
+ifeq ($(PIC), 1)
+  ASFLAGS += -d PIC
+endif
+
+# assembler also needs base include directories
+ASFLAGS += -I../../src/ -I../../src/asm_defines/
 
 ifeq ($(CPU_ENDIANNESS), BIG)
   CFLAGS += -DM64P_BIG_ENDIAN
@@ -210,10 +231,10 @@ endif
 # disable verbose output
 ifneq ($(findstring $(MAKEFLAGS),s),s)
 ifndef V
-	Q_CC  = @echo '    CC  '$@;
-	Q_CXX = @echo '    CXX '$@;
-	Q_AS  = @echo '    AS  '$@;
-	Q_LD  = @echo '    LD  '$@;
+    Q_CC  = @echo '    CC  '$@;
+    Q_CXX = @echo '    CXX '$@;
+    Q_AS  = @echo '    AS  '$@;
+    Q_LD  = @echo '    LD  '$@;
 endif
 endif
 
@@ -328,7 +349,7 @@ endif
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
-OBJDUMP   = $(CROSS_COMPILE)objdump
+NM        = $(CROSS_COMPILE)nm
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
@@ -366,7 +387,7 @@ else
   else
     ifneq ($(OS),OSX)
       INSTALL_STRIP_FLAG ?= -s
-	endif
+    endif
   endif
 endif
 # 3. other options given to the makefile on the command line
@@ -416,90 +437,90 @@ OBJDIR = _obj$(POSTFIX)
 
 # list of required source files for compilation
 SOURCE = \
-	$(SRCDIR)/api/callbacks.c \
-	$(SRCDIR)/api/common.c \
-	$(SRCDIR)/api/config.c \
-	$(SRCDIR)/api/debugger.c \
-	$(SRCDIR)/api/frontend.c \
-	$(SRCDIR)/api/vidext.c \
-	$(SRCDIR)/backends/audio_out_backend.c \
-	$(SRCDIR)/backends/clock_backend.c \
-	$(SRCDIR)/backends/controller_input_backend.c \
-	$(SRCDIR)/backends/rumble_backend.c \
-	$(SRCDIR)/backends/storage_backend.c \
-	$(SRCDIR)/device/ai/ai_controller.c \
-	$(SRCDIR)/device/device.c \
-	$(SRCDIR)/device/gb/gb_cart.c \
-	$(SRCDIR)/device/gb/mbc3_rtc.c \
-	$(SRCDIR)/device/memory/memory.c \
-	$(SRCDIR)/device/pi/cart_rom.c \
-	$(SRCDIR)/device/pi/flashram.c \
-	$(SRCDIR)/device/pi/pi_controller.c \
-	$(SRCDIR)/device/pi/sram.c \
-	$(SRCDIR)/device/pifbootrom/pifbootrom.c \
-	$(SRCDIR)/device/r4300/cached_interp.c \
-	$(SRCDIR)/device/r4300/cp0.c \
-	$(SRCDIR)/device/r4300/cp1.c \
-	$(SRCDIR)/device/r4300/exception.c \
-	$(SRCDIR)/device/r4300/instr_counters.c \
-	$(SRCDIR)/device/r4300/interupt.c \
-	$(SRCDIR)/device/r4300/mi_controller.c \
-	$(SRCDIR)/device/r4300/pure_interp.c \
-	$(SRCDIR)/device/r4300/r4300_core.c \
-	$(SRCDIR)/device/r4300/recomp.c \
-	$(SRCDIR)/device/r4300/tlb.c \
-	$(SRCDIR)/device/rdp/fb.c \
-	$(SRCDIR)/device/rdp/rdp_core.c \
-	$(SRCDIR)/device/ri/rdram.c \
-	$(SRCDIR)/device/ri/rdram_detection_hack.c \
-	$(SRCDIR)/device/ri/ri_controller.c \
-	$(SRCDIR)/device/rsp/rsp_core.c \
-	$(SRCDIR)/device/si/af_rtc.c \
-	$(SRCDIR)/device/si/cic.c \
-	$(SRCDIR)/device/si/eeprom.c \
-	$(SRCDIR)/device/si/game_controller.c \
-	$(SRCDIR)/device/si/mempak.c \
-	$(SRCDIR)/device/si/n64_cic_nus_6105.c \
-	$(SRCDIR)/device/si/pif.c \
-	$(SRCDIR)/device/si/rumblepak.c \
-	$(SRCDIR)/device/si/transferpak.c \
-	$(SRCDIR)/device/si/si_controller.c \
-	$(SRCDIR)/device/vi/vi_controller.c \
-	$(SRCDIR)/main/main.c \
-	$(SRCDIR)/main/util.c \
-	$(SRCDIR)/main/cheat.c \
-	$(SRCDIR)/main/eventloop.c \
-	$(SRCDIR)/main/md5.c \
-	$(SRCDIR)/main/profile.c \
-	$(SRCDIR)/main/rom.c \
-	$(SRCDIR)/main/savestates.c \
-	$(SRCDIR)/main/sdl_key_converter.c \
-	$(SRCDIR)/main/file_storage.c \
-	$(SRCDIR)/main/workqueue.c \
-	$(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
-	$(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
-	$(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
-	$(SRCDIR)/plugin/rumble_via_input_plugin.c \
-	$(SRCDIR)/plugin/plugin.c \
-	$(SRCDIR)/plugin/dummy_video.c \
-	$(SRCDIR)/plugin/dummy_audio.c \
-	$(SRCDIR)/plugin/dummy_input.c \
-	$(SRCDIR)/plugin/dummy_rsp.c \
-	$(SRCDIR)/osd/screenshot.cpp
+    $(SRCDIR)/api/callbacks.c \
+    $(SRCDIR)/api/common.c \
+    $(SRCDIR)/api/config.c \
+    $(SRCDIR)/api/debugger.c \
+    $(SRCDIR)/api/frontend.c \
+    $(SRCDIR)/api/vidext.c \
+    $(SRCDIR)/backends/audio_out_backend.c \
+    $(SRCDIR)/backends/clock_backend.c \
+    $(SRCDIR)/backends/controller_input_backend.c \
+    $(SRCDIR)/backends/rumble_backend.c \
+    $(SRCDIR)/backends/storage_backend.c \
+    $(SRCDIR)/device/ai/ai_controller.c \
+    $(SRCDIR)/device/device.c \
+    $(SRCDIR)/device/gb/gb_cart.c \
+    $(SRCDIR)/device/gb/mbc3_rtc.c \
+    $(SRCDIR)/device/memory/memory.c \
+    $(SRCDIR)/device/pi/cart_rom.c \
+    $(SRCDIR)/device/pi/flashram.c \
+    $(SRCDIR)/device/pi/pi_controller.c \
+    $(SRCDIR)/device/pi/sram.c \
+    $(SRCDIR)/device/pifbootrom/pifbootrom.c \
+    $(SRCDIR)/device/r4300/cached_interp.c \
+    $(SRCDIR)/device/r4300/cp0.c \
+    $(SRCDIR)/device/r4300/cp1.c \
+    $(SRCDIR)/device/r4300/exception.c \
+    $(SRCDIR)/device/r4300/instr_counters.c \
+    $(SRCDIR)/device/r4300/interupt.c \
+    $(SRCDIR)/device/r4300/mi_controller.c \
+    $(SRCDIR)/device/r4300/pure_interp.c \
+    $(SRCDIR)/device/r4300/r4300_core.c \
+    $(SRCDIR)/device/r4300/recomp.c \
+    $(SRCDIR)/device/r4300/tlb.c \
+    $(SRCDIR)/device/rdp/fb.c \
+    $(SRCDIR)/device/rdp/rdp_core.c \
+    $(SRCDIR)/device/ri/rdram.c \
+    $(SRCDIR)/device/ri/rdram_detection_hack.c \
+    $(SRCDIR)/device/ri/ri_controller.c \
+    $(SRCDIR)/device/rsp/rsp_core.c \
+    $(SRCDIR)/device/si/af_rtc.c \
+    $(SRCDIR)/device/si/cic.c \
+    $(SRCDIR)/device/si/eeprom.c \
+    $(SRCDIR)/device/si/game_controller.c \
+    $(SRCDIR)/device/si/mempak.c \
+    $(SRCDIR)/device/si/n64_cic_nus_6105.c \
+    $(SRCDIR)/device/si/pif.c \
+    $(SRCDIR)/device/si/rumblepak.c \
+    $(SRCDIR)/device/si/si_controller.c \
+    $(SRCDIR)/device/vi/vi_controller.c \
+    $(SRCDIR)/main/main.c \
+    $(SRCDIR)/main/util.c \
+    $(SRCDIR)/main/cheat.c \
+    $(SRCDIR)/main/eventloop.c \
+    $(SRCDIR)/main/md5.c \
+    $(SRCDIR)/main/profile.c \
+    $(SRCDIR)/main/rom.c \
+    $(SRCDIR)/main/savestates.c \
+    $(SRCDIR)/main/sdl_key_converter.c \
+    $(SRCDIR)/main/file_storage.c \
+    $(SRCDIR)/main/workqueue.c \
+    $(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
+    $(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
+    $(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
+    $(SRCDIR)/plugin/rumble_via_input_plugin.c \
+    $(SRCDIR)/plugin/plugin.c \
+    $(SRCDIR)/plugin/dummy_video.c \
+    $(SRCDIR)/plugin/dummy_audio.c \
+    $(SRCDIR)/plugin/dummy_input.c \
+    $(SRCDIR)/plugin/dummy_rsp.c \
+    $(SRCDIR)/osd/screenshot.cpp
+
 ifeq ("$(OS)","MINGW")
 SOURCE += \
-	$(SRCDIR)/osal/dynamiclib_win32.c \
-	$(SRCDIR)/osal/files_win32.c
+    $(SRCDIR)/osal/dynamiclib_win32.c \
+    $(SRCDIR)/osal/files_win32.c
 else
 SOURCE += \
-	$(SRCDIR)/osal/dynamiclib_unix.c \
-	$(SRCDIR)/osal/files_unix.c
+    $(SRCDIR)/osal/dynamiclib_unix.c \
+    $(SRCDIR)/osal/files_unix.c
 endif
 
 ifeq ($(OSD), 1)
 SOURCE += \
-	$(SRCDIR)/osd/OGLFT.cpp \
-	$(SRCDIR)/osd/osd.cpp
+    $(SRCDIR)/osd/OGLFT.cpp \
+    $(SRCDIR)/osd/osd.cpp
 endif
 
 # source files for optional features
@@ -524,7 +545,7 @@ ifneq ($(DYNAREC), )
     ifeq ($(DYNAREC), x86)
       CFLAGS += -DNEW_DYNAREC=1
       SOURCE += \
-	    $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm
+        $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm
     else
       ifeq ($(DYNAREC), arm)
         CFLAGS += -DNEW_DYNAREC=3
@@ -554,7 +575,8 @@ ifneq ($(DYNAREC), )
       $(SRCDIR)/device/r4300/$(DYNAREC)/gspecial.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/gtlb.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/regcache.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c
+      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/dyna_start.asm
   endif
 else
   SOURCE += $(SRCDIR)/device/r4300/empty_dynarec.c
@@ -567,9 +589,9 @@ endif
 
 ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
   SOURCE += \
-	$(SRCDIR)/main/zip/ioapi.c \
-	$(SRCDIR)/main/zip/zip.c \
-	$(SRCDIR)/main/zip/unzip.c
+    $(SRCDIR)/main/zip/ioapi.c \
+    $(SRCDIR)/main/zip/zip.c \
+    $(SRCDIR)/main/zip/unzip.c
 
   CFLAGS += -DNOCRYPT -DNOUNCRYPT
 else
@@ -580,15 +602,16 @@ endif
 
 ifeq ($(DEBUGGER), 1)
   SOURCE += \
-	$(SRCDIR)/debugger/dbg_debugger.c \
-	$(SRCDIR)/debugger/dbg_decoder.c \
-	$(SRCDIR)/debugger/dbg_memory.c \
-	$(SRCDIR)/debugger/dbg_breakpoints.c
+    $(SRCDIR)/debugger/dbg_debugger.c \
+    $(SRCDIR)/debugger/dbg_decoder.c \
+    $(SRCDIR)/debugger/dbg_memory.c \
+    $(SRCDIR)/debugger/dbg_breakpoints.c
   LDLIBS += -lopcodes -lbfd
 endif
 
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
+OBJECTS += $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(SRCDIR)/asm_defines/asm_defines.c)
 OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.S, $(OBJDIR)/%.o, $(filter %.S, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%.o, $(filter %.asm, $(SOURCE)))
@@ -599,41 +622,41 @@ $(shell $(MKDIR) $(OBJDIRS))
 targets:
 	@echo "Mupen64Plus-core makefile. "
 	@echo "  Targets:"
-	@echo "    all           == Build Mupen64Plus core library"
-	@echo "    clean         == remove object files"
-	@echo "    install       == Install Mupen64Plus core library"
-	@echo "    uninstall     == Uninstall Mupen64Plus core library"
+	@echo "    all            == Build Mupen64Plus core library"
+	@echo "    clean          == remove object files"
+	@echo "    install        == Install Mupen64Plus core library"
+	@echo "    uninstall      == Uninstall Mupen64Plus core library"
 	@echo "  Build Options:"
-	@echo "    BITS=32       == build 32-bit binaries on 64-bit machine"
-	@echo "    LIRC=1        == enable LIRC support"
-	@echo "    NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)"
-	@echo "    USE_GLES=1    == build against GLESv2 instead of OpenGL"
-	@echo "    VC=1 	 == build against Broadcom Videocore GLESv2"
-	@echo "    NEON=1        == (ARM only) build for hard floating point environments"
-	@echo "    VFP_HARD=1 	 == (ARM only) full hardware floating point ABI"
-	@echo "    SHAREDIR=path == extra path to search for shared data files"
-	@echo "    OPTFLAGS=flag == compiler optimization (default: -O3 -flto)"
+	@echo "    BITS=32        == build 32-bit binaries on 64-bit machine"
+	@echo "    LIRC=1         == enable LIRC support"
+	@echo "    NO_ASM=1       == build without assembly (no dynamic recompiler or MMX/SSE code)"
+	@echo "    USE_GLES=1     == build against GLESv2 instead of OpenGL"
+	@echo "    VC=1           == build against Broadcom Videocore GLESv2"
+	@echo "    NEON=1         == (ARM only) build for hard floating point environments"
+	@echo "    VFP_HARD=1     == (ARM only) full hardware floating point ABI"
+	@echo "    SHAREDIR=path  == extra path to search for shared data files"
+	@echo "    OPTFLAGS=flag  == compiler optimization (default: -O3 -flto)"
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
-	@echo "    PIC=(1|0)     == Force enable/disable of position independent code"
-	@echo "    OSD=(1|0)     == Enable/disable build of OpenGL On-screen display"
-	@echo "    NEW_DYNAREC=1 == Replace dynamic recompiler with Ari64's experimental dynarec"
-	@echo "    POSTFIX=name  == String added to the name of the the build (default: '')"
+	@echo "    PIC=(1|0)      == Force enable/disable of position independent code"
+	@echo "    OSD=(1|0)      == Enable/disable build of OpenGL On-screen display"
+	@echo "    NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec"
+	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
-	@echo "    PREFIX=path   == install/uninstall prefix (default: /usr/local/)"
-	@echo "    SHAREDIR=path == path to install shared data files (default: PREFIX/share/mupen64plus)"
-	@echo "    LIBDIR=path   == path to install core library (default: PREFIX/lib)"
-	@echo "    INCDIR=path   == path to install core header files (default: PREFIX/include/mupen64plus)"
-	@echo "    DESTDIR=path  == path to prepend to all installation paths (only for packagers)"
+	@echo "    PREFIX=path    == install/uninstall prefix (default: /usr/local/)"
+	@echo "    SHAREDIR=path  == path to install shared data files (default: PREFIX/share/mupen64plus)"
+	@echo "    LIBDIR=path    == path to install core library (default: PREFIX/lib)"
+	@echo "    INCDIR=path    == path to install core header files (default: PREFIX/include/mupen64plus)"
+	@echo "    DESTDIR=path   == path to prepend to all installation paths (only for packagers)"
 	@echo "  Debugging Options:"
-	@echo "    PROFILE=1     == build gprof instrumentation into binaries for profiling"
-	@echo "    DEBUG=1       == add debugging symbols to binaries"
-	@echo "    DEBUGGER=1    == build debugger API into core for front-ends.  runs slower."
-	@echo "    DBG_CORE=1    == print debugging info in r4300 core"
-	@echo "    DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)"
-	@echo "    DBG_COMPARE=1 == enable core-synchronized r4300 debugging"
-	@echo "    DBG_TIMING=1  == print timing data"
-	@echo "    DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file"
-	@echo "    V=1           == show verbose compiler output"
+	@echo "    PROFILE=1      == build gprof instrumentation into binaries for profiling"
+	@echo "    DEBUG=1        == add debugging symbols to binaries"
+	@echo "    DEBUGGER=1     == build debugger API into core for front-ends.  runs slower."
+	@echo "    DBG_CORE=1     == print debugging info in r4300 core"
+	@echo "    DBG_COUNT=1    == print R4300 instruction count totals (64-bit dynarec only)"
+	@echo "    DBG_COMPARE=1  == enable core-synchronized r4300 debugging"
+	@echo "    DBG_TIMING=1   == print timing data"
+	@echo "    DBG_PROFILE=1  == dump profiling data for r4300 dynarec to data file"
+	@echo "    V=1            == show verbose compiler output"
 
 all: $(TARGET)
 
@@ -656,7 +679,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/main/asm_defines_nasm.h $(SRCDIR)/main/asm_defines_gas.h
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_nasm.h $(SRCDIR)/asm_defines/asm_defines_gas.h
 
 # build dependency files
 CFLAGS += -MD -MP
@@ -664,26 +687,22 @@ CFLAGS += -MD -MP
 
 CXXFLAGS += $(CFLAGS)
 
-
-# Manual dep specification
-$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(SRCDIR)/main/asm_defines_nasm.h
-$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(SRCDIR)/main/asm_defines_gas.h
-
-
-ASM_DEFINES = $(OBJDIR)/main/asm_defines.o
+ASM_DEFINES = $(OBJDIR)/asm_defines/asm_defines.o
 
 # It is important to disable LTO for this object file
 # otherwise we can't extract usefull information from it.
-$(ASM_DEFINES): $(SRCDIR)/main/asm_defines.c
+$(ASM_DEFINES): $(SRCDIR)/asm_defines/asm_defines.c
 	$(COMPILE.c) -fno-lto -o $@ $<
 
-# Generate defines for nasm by parsing global symbols
-$(SRCDIR)/main/asm_defines_nasm.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "%define " $$6 " (0x"$$1"-1)" }' > $@
-
-# Generate defines for gas by parsing global symbols
-$(SRCDIR)/main/asm_defines_gas.h: $(ASM_DEFINES)
-	$(OBJDUMP) -t $< | $(AWK) '/offsetof_struct/ { print "#define " $$6 " (0x"$$1"-1)" }' > $@
+# Manual dep specification
+$(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/x86/dyna_start.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/device/r4300/x86_64/dyna_start.asm: $(ASM_DEFINES)
+	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm

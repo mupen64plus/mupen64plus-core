@@ -67,6 +67,13 @@ DEFINE(r4300_core, stop);
 #if defined(__x86_64__)
 DEFINE(r4300_core, save_rsp);
 DEFINE(r4300_core, save_rip);
+#else
+DEFINE(r4300_core, save_ebp);
+DEFINE(r4300_core, save_esp);
+DEFINE(r4300_core, save_ebx);
+DEFINE(r4300_core, save_esi);
+DEFINE(r4300_core, save_edi);
+DEFINE(r4300_core, save_eip);
 #endif
 DEFINE(r4300_core, return_address);
 

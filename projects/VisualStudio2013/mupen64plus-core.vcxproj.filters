@@ -777,5 +777,8 @@
     <CustomBuild Include="..\..\src\device\r4300\x86_64\dyna_start.asm">
       <Filter>device\r4300\x86_64</Filter>
     </CustomBuild>
+    <CustomBuild Include="..\..\src\device\r4300\x86\dyna_start.asm">
+      <Filter>device\r4300\x86</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

@@ -3023,7 +3023,7 @@ static int do_dirty_stub(int i)
   assem_debug("do_dirty_stub %x",start+i*4);
   emit_pushimm(start+i*4);
   emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
-  emit_movimm((int)copy,EBX);
+  emit_movimm((int)copy,EDX);
   emit_movimm(slen*4,ECX);
   emit_call((int)start<(int)0xC0000000?(int)&verify_code:(int)&verify_code_vm);
   emit_addimm(ESP,4,ESP);
@@ -3038,7 +3038,7 @@ static void do_dirty_stub_ds(void)
 {
   emit_pushimm(start+1);
   emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
-  emit_movimm((int)copy,EBX);
+  emit_movimm((int)copy,EDX);
   emit_movimm(slen*4,ECX);
   emit_call((int)&verify_code_ds);
   emit_addimm(ESP,4,ESP);

@@ -18,11 +18,36 @@
 ;Free Software Foundation, Inc.,
 ;51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-%include "main/asm_defines_nasm.h"
+%include "asm_defines_nasm.h"
 
-global dyna_start
+%ifdef LEADING_UNDERSCORE
+    %macro  cglobal 1
+      global  _%1
+      %define %1 _%1
+    %endmacro
 
-extern g_dev
+    %macro  cextern 1
+      extern  _%1
+      %define %1 _%1
+    %endmacro
+%else
+    %macro  cglobal 1
+      global  %1
+    %endmacro
+    
+    %macro  cextern 1
+      extern  %1
+    %endmacro
+%endif
+
+%define g_dev_r4300_save_rsp       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp)
+%define g_dev_r4300_save_rip       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rip)
+%define g_dev_r4300_return_address (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address)
+%define g_dev_r4300_regs           (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs)
+
+cglobal dyna_start
+
+cextern g_dev
 
 section .bss
 align 4
@@ -31,31 +56,47 @@ section .rodata
 section .text
 
 dyna_start:
-    push rbx                 ;we must push an even # of registers to keep stack 16-byte aligned
+    ;we must push an even # of registers to keep stack 16-byte aligned
+%ifdef WIN64
+    push rdi
+    push rsi
+%endif
+    push rbx
     push r12
     push r13
     push r14
     push r15
     push rbp
-    mov [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp], rsp
-    lea r15, [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs]        ;store the base location of the r4300 registers in r15 for addressing
+    mov  [rel g_dev_r4300_save_rsp], rsp
+    lea  r15, [rel g_dev_r4300_regs] ;store the base location of the r4300 registers in r15 for addressing
     call _A1
-    jmp _A2
+    jmp  _A2
 _A1:
     pop  rax
-    mov  [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rip], rax
-    sub rsp, 0x20
-    and rsp, 0xFFFFFFFFFFFFFFF0          ;ensure that stack is 16-byte aligned
-    mov rax, rsp
-    sub rax, 8
-    mov [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address], rax
+    mov  [rel g_dev_r4300_save_rip], rax
+    sub  rsp, 0x20
+    and  rsp, 0xFFFFFFFFFFFFFFF0 ;ensure that stack is 16-byte aligned
+    mov  rax, rsp
+    sub  rax, 8
+    mov  [rel g_dev_r4300_return_address], rax
+%ifdef WIN64
     call rcx
+%else
+    call rdi
+%endif
 _A2:
-    mov  rsp, [rel g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp]
+    mov  rsp, [rel g_dev_r4300_save_rsp]
     pop  rbp
     pop  r15
     pop  r14
     pop  r13
     pop  r12
     pop  rbx
+%ifdef WIN64
+    pop rsi
+    pop rdi
+%endif
+
+    mov  QWORD [rel g_dev_r4300_save_rsp], 0
+    mov  QWORD [rel g_dev_r4300_save_rip], 0
     ret
