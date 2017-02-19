@@ -511,7 +511,7 @@ static unsigned int update_invalid_addr(unsigned int addr)
      }
    else
      {
-    unsigned int paddr = virtual_to_physical_address(addr, 2);
+    unsigned int paddr = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, addr, 2);
     if (paddr)
       {
          unsigned int beg_paddr = paddr - (addr - (addr&~0xFFF));

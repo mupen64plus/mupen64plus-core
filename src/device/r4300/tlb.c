@@ -101,11 +101,8 @@ void tlb_map(struct tlb* tlb, size_t entry)
     }
 }
 
-uint32_t virtual_to_physical_address(uint32_t addresse, int w)
+uint32_t virtual_to_physical_address(struct tlb* tlb, uint32_t addresse, int w)
 {
-    /* FIXME! avoid g_dev usage */
-    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
-
     if (addresse >= UINT32_C(0x7f000000) && addresse < UINT32_C(0x80000000) && isGoldeneyeRom)
     {
         /**************************************************
