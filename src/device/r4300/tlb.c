@@ -23,7 +23,6 @@
 
 #include "api/m64p_types.h"
 #include "exception.h"
-#include "main/main.h"
 #include "main/rom.h"
 
 #include <assert.h>
