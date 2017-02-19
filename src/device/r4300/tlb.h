@@ -22,6 +22,7 @@
 #ifndef M64P_DEVICE_R4300_TLB_H
 #define M64P_DEVICE_R4300_TLB_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct tlb_entry
@@ -58,8 +59,8 @@ struct tlb
 
 void poweron_tlb(struct tlb* tlb);
 
-void tlb_unmap(struct tlb_entry* entry);
-void tlb_map(struct tlb_entry* entry);
+void tlb_unmap(struct tlb* tlb, size_t entry);
+void tlb_map(struct tlb* tlb, size_t entry);
 
 uint32_t virtual_to_physical_address(uint32_t addresse, int w);
 

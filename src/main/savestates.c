@@ -757,7 +757,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
           (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
         g_dev.r4300.cp0.tlb.entries[i].phys_odd = g_dev.r4300.cp0.tlb.entries[i].pfn_odd << 12;
 
-        tlb_map(&g_dev.r4300.cp0.tlb.entries[i]);
+        tlb_map(&g_dev.r4300.cp0.tlb, i);
     }
 
     // pif ram
