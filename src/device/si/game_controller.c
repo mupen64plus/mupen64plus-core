@@ -35,19 +35,19 @@
 
 enum { PAK_CHUNK_SIZE = 0x20 };
 
-static uint8_t pak_data_crc(const uint8_t* data)
+static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 {
     size_t i;
     uint8_t crc = 0;
 
-    for(i = 0; i <= PAK_CHUNK_SIZE; ++i)
+    for(i = 0; i <= size; ++i)
     {
         int mask;
         for (mask = 0x80; mask >= 1; mask >>= 1)
         {
             uint8_t xor_tap = (crc & 0x80) ? 0x85 : 0x00;
             crc <<= 1;
-            if (i != PAK_CHUNK_SIZE && (data[i] & mask)) crc |= 1;
+            if (i != size && (data[i] & mask)) crc |= 1;
             crc ^= xor_tap;
         }
     }
@@ -141,7 +141,7 @@ static void controller_read_pak_command(struct game_controller* cont, uint8_t* c
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    *crc = pak_data_crc(data);
+    *crc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
 static void controller_write_pak_command(struct game_controller* cont, uint8_t* cmd)
@@ -172,7 +172,7 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    *crc = pak_data_crc(data);
+    *crc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
 void init_game_controller(struct game_controller* cont,
