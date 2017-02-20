@@ -49,6 +49,17 @@ enum pif_commands
     PIF_CMD_RESET = 0xff,
 };
 
+enum pif_peripheral_device_types
+{
+    PIF_PDT_JOY_ABS_COUNTERS = 0x1,     /* joystick with absolute coordinates */
+    PIF_PDT_JOY_REL_COUNTERS = 0x2,     /* joystick with relative coordinates (= mouse) */
+    PIF_PDT_JOY_PORT         = 0x4,     /* has port for external paks */
+    PIF_PDT_EEPROM_4K        = 0x200,   /* 4k EEPROM */
+    PIF_PDT_EEPROM_16K       = 0x800,   /* 16k EEPROM */
+    PIF_PDT_AF_RTC           = 0x1000,  /* RTC */
+};
+
+
 struct pif
 {
     uint8_t ram[PIF_RAM_SIZE];

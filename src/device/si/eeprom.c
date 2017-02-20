@@ -49,22 +49,28 @@ void init_eeprom(struct eeprom* eeprom,
 
 void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd)
 {
+    uint8_t* const type = &cmd[3];
+    uint8_t* const status = &cmd[5];
+
     /* check size */
     if (cmd[1] != 3)
     {
         cmd[1] |= 0x40;
-        if ((cmd[1] & 3) > 0)
-            cmd[3] = (eeprom->id & 0xff);
-        if ((cmd[1] & 3) > 1)
-            cmd[4] = (eeprom->id >> 8);
-        if ((cmd[1] & 3) > 2)
-            cmd[5] = 0;
+        if ((cmd[1] & 3) > 0) {
+            type[0] = (uint8_t)(eeprom->id >> 0);
+        }
+        if ((cmd[1] & 3) > 1) {
+            type[1] = (uint8_t)(eeprom->id >> 8);
+        }
+        if ((cmd[1] & 3) > 2) {
+            *status = 0;
+        }
     }
     else
     {
-        cmd[3] = (eeprom->id & 0xff);
-        cmd[4] = (eeprom->id >> 8);
-        cmd[5] = 0;
+        type[0] = (uint8_t)(eeprom->id >> 0);
+        type[1] = (uint8_t)(eeprom->id >> 8);
+        *status = 0;
     }
 }
 

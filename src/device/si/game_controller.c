@@ -76,6 +76,11 @@ static void controller_status_command(struct game_controller* cont, uint8_t* cmd
     enum pak_type pak;
     int connected = controller_input_is_connected(cont->cin, &pak);
 
+    uint8_t* const type = &cmd[3];
+    uint8_t* const status = &cmd[5];
+
+    const uint16_t game_controller_type = PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT;
+
     if (cmd[1] & 0x80)
         return;
 
@@ -85,20 +90,20 @@ static void controller_status_command(struct game_controller* cont, uint8_t* cmd
         return;
     }
 
-    cmd[3] = 0x05;
-    cmd[4] = 0x00;
+    type[0] = (uint8_t)(game_controller_type >> 0);
+    type[1] = (uint8_t)(game_controller_type >> 8);
 
     switch(pak)
     {
     case PAK_MEM:
     case PAK_RUMBLE:
     case PAK_TRANSFER:
-        cmd[5] = 1;
+        *status = 1;
         break;
 
     case PAK_NONE:
     default:
-        cmd[5] = 0;
+        *status = 0;
     }
 }
 

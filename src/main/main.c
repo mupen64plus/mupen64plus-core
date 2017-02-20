@@ -1008,7 +1008,7 @@ m64p_error main_run(void)
     clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
     fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_file_storage };
     sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_file_storage };
-    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x200 : 0x800, &eep, save_file_storage };
+    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? PIF_PDT_EEPROM_4K : PIF_PDT_EEPROM_16K, &eep, save_file_storage };
 
     /* setup game controllers data */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
