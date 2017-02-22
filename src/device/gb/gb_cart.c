@@ -571,45 +571,45 @@ struct parsed_cart_type
 static const struct parsed_cart_type* parse_cart_type(uint8_t cart_type)
 {
 #define MBC(x) #x, read_gb_cart_ ## x, write_gb_cart_ ## x
-    static const struct parsed_cart_type nombc_none           = (struct parsed_cart_type){ MBC(nombc),        GED_NONE };
-    static const struct parsed_cart_type nombc_ram            = (struct parsed_cart_type){ MBC(nombc),        GED_RAM };
-    static const struct parsed_cart_type nombc_ram_batt       = (struct parsed_cart_type){ MBC(nombc),        GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type nombc_none           = { MBC(nombc),        GED_NONE };
+    static const struct parsed_cart_type nombc_ram            = { MBC(nombc),        GED_RAM };
+    static const struct parsed_cart_type nombc_ram_batt       = { MBC(nombc),        GED_RAM | GED_BATTERY };
 
-    static const struct parsed_cart_type mbc1_none            = (struct parsed_cart_type){ MBC(mbc1),         GED_NONE };
-    static const struct parsed_cart_type mbc1_ram             = (struct parsed_cart_type){ MBC(mbc1),         GED_RAM  };
-    static const struct parsed_cart_type mbc1_ram_batt        = (struct parsed_cart_type){ MBC(mbc1),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mbc1_none            = { MBC(mbc1),         GED_NONE };
+    static const struct parsed_cart_type mbc1_ram             = { MBC(mbc1),         GED_RAM  };
+    static const struct parsed_cart_type mbc1_ram_batt        = { MBC(mbc1),         GED_RAM | GED_BATTERY };
 
-    static const struct parsed_cart_type mbc2_none            = (struct parsed_cart_type){ MBC(mbc2),         GED_NONE };
-    static const struct parsed_cart_type mbc2_ram_batt        = (struct parsed_cart_type){ MBC(mbc2),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mbc2_none            = { MBC(mbc2),         GED_NONE };
+    static const struct parsed_cart_type mbc2_ram_batt        = { MBC(mbc2),         GED_RAM | GED_BATTERY };
 
-    static const struct parsed_cart_type mmm01_none           = (struct parsed_cart_type){ MBC(mmm01),        GED_NONE };
-    static const struct parsed_cart_type mmm01_ram            = (struct parsed_cart_type){ MBC(mmm01),        GED_RAM  };
-    static const struct parsed_cart_type mmm01_ram_batt       = (struct parsed_cart_type){ MBC(mmm01),        GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mmm01_none           = { MBC(mmm01),        GED_NONE };
+    static const struct parsed_cart_type mmm01_ram            = { MBC(mmm01),        GED_RAM  };
+    static const struct parsed_cart_type mmm01_ram_batt       = { MBC(mmm01),        GED_RAM | GED_BATTERY };
 
-    static const struct parsed_cart_type mbc3_none            = (struct parsed_cart_type){ MBC(mbc3),         GED_NONE };
-    static const struct parsed_cart_type mbc3_ram             = (struct parsed_cart_type){ MBC(mbc3),         GED_RAM  };
-    static const struct parsed_cart_type mbc3_ram_batt        = (struct parsed_cart_type){ MBC(mbc3),         GED_RAM | GED_BATTERY };
-    static const struct parsed_cart_type mbc3_batt_rtc        = (struct parsed_cart_type){ MBC(mbc3),         GED_BATTERY | GED_RTC };
-    static const struct parsed_cart_type mbc3_ram_batt_rtc    = (struct parsed_cart_type){ MBC(mbc3),         GED_RAM | GED_BATTERY | GED_RTC };
+    static const struct parsed_cart_type mbc3_none            = { MBC(mbc3),         GED_NONE };
+    static const struct parsed_cart_type mbc3_ram             = { MBC(mbc3),         GED_RAM  };
+    static const struct parsed_cart_type mbc3_ram_batt        = { MBC(mbc3),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mbc3_batt_rtc        = { MBC(mbc3),         GED_BATTERY | GED_RTC };
+    static const struct parsed_cart_type mbc3_ram_batt_rtc    = { MBC(mbc3),         GED_RAM | GED_BATTERY | GED_RTC };
 
-    static const struct parsed_cart_type mbc5_none            = (struct parsed_cart_type){ MBC(mbc5),         GED_NONE };
-    static const struct parsed_cart_type mbc5_ram             = (struct parsed_cart_type){ MBC(mbc5),         GED_RAM  };
-    static const struct parsed_cart_type mbc5_ram_batt        = (struct parsed_cart_type){ MBC(mbc5),         GED_RAM | GED_BATTERY };
-    static const struct parsed_cart_type mbc5_rumble          = (struct parsed_cart_type){ MBC(mbc5),         GED_RUMBLE };
-    static const struct parsed_cart_type mbc5_ram_rumble      = (struct parsed_cart_type){ MBC(mbc5),         GED_RAM | GED_RUMBLE };
-    static const struct parsed_cart_type mbc5_ram_batt_rumble = (struct parsed_cart_type){ MBC(mbc5),         GED_RAM | GED_BATTERY | GED_RUMBLE };
+    static const struct parsed_cart_type mbc5_none            = { MBC(mbc5),         GED_NONE };
+    static const struct parsed_cart_type mbc5_ram             = { MBC(mbc5),         GED_RAM  };
+    static const struct parsed_cart_type mbc5_ram_batt        = { MBC(mbc5),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mbc5_rumble          = { MBC(mbc5),         GED_RUMBLE };
+    static const struct parsed_cart_type mbc5_ram_rumble      = { MBC(mbc5),         GED_RAM | GED_RUMBLE };
+    static const struct parsed_cart_type mbc5_ram_batt_rumble = { MBC(mbc5),         GED_RAM | GED_BATTERY | GED_RUMBLE };
 
-    static const struct parsed_cart_type mbc6                 = (struct parsed_cart_type){ MBC(mbc6),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type mbc6                 = { MBC(mbc6),         GED_RAM | GED_BATTERY };
 
-    static const struct parsed_cart_type mbc7                 = (struct parsed_cart_type){ MBC(mbc7),         GED_RAM | GED_BATTERY | GED_ACCELEROMETER };
+    static const struct parsed_cart_type mbc7                 = { MBC(mbc7),         GED_RAM | GED_BATTERY | GED_ACCELEROMETER };
 
-    static const struct parsed_cart_type pocket_cam           = (struct parsed_cart_type){ MBC(pocket_cam),   GED_NONE };
+    static const struct parsed_cart_type pocket_cam           = { MBC(pocket_cam),   GED_NONE };
 
-    static const struct parsed_cart_type bandai_tama5         = (struct parsed_cart_type){ MBC(bandai_tama5), GED_NONE };
+    static const struct parsed_cart_type bandai_tama5         = { MBC(bandai_tama5), GED_NONE };
 
-    static const struct parsed_cart_type huc3                 = (struct parsed_cart_type){ MBC(huc3),         GED_NONE };
+    static const struct parsed_cart_type huc3                 = { MBC(huc3),         GED_NONE };
 
-    static const struct parsed_cart_type huc1                 = (struct parsed_cart_type){ MBC(huc1),         GED_RAM | GED_BATTERY };
+    static const struct parsed_cart_type huc1                 = { MBC(huc1),         GED_RAM | GED_BATTERY };
 #undef MBC
 
     switch(cart_type)
@@ -664,7 +664,7 @@ int init_gb_cart(struct gb_cart* gb_cart,
     struct storage_backend rom;
     struct storage_backend ram;
     struct mbc3_rtc rtc;
-    
+
     memset(&rom, 0, sizeof(rom));
     memset(&ram, 0, sizeof(ram));
     memset(&rtc, 0, sizeof(rtc));
