@@ -617,3 +617,18 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
     }
 }
 
+void run_cached_interpreter(struct r4300_core* r4300)
+{
+    while (!*r4300_stop())
+    {
+#ifdef COMPARE_CORE
+        if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
+            virtual_to_physical_address(&r4300->cp0.tlb, (*r4300_pc_struct())->addr, 2);
+        CoreCompareCallback();
+#endif
+#ifdef DBG
+        if (g_DebuggerActive) update_debugger((*r4300_pc_struct())->addr);
+#endif
+        (*r4300_pc_struct())->ops();
+    }
+}

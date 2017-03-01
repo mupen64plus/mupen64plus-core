@@ -36,6 +36,8 @@ void jump_to_func(void);
 
 void invalidate_cached_code_hacktarux(uint32_t address, size_t size);
 
+void run_cached_interpreter(struct r4300_core* r4300);
+
 /* Jumps to the given address. This is for the cached interpreter / dynarec. */
 #define jump_to(a) { g_dev.r4300.cached_interp.jump_to_address = a; jump_to_func(); }
 

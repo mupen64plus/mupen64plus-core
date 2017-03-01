@@ -198,18 +198,8 @@ void run_r4300(void)
             return;
 
         g_dev.r4300.cp0.last_addr = *r4300_pc();
-        while (!*r4300_stop())
-        {
-#ifdef COMPARE_CORE
-            if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
-                virtual_to_physical_address(&g_dev.r4300.cp0.tlb, (*r4300_pc_struct())->addr, 2);
-            CoreCompareCallback();
-#endif
-#ifdef DBG
-            if (g_DebuggerActive) update_debugger((*r4300_pc_struct())->addr);
-#endif
-            (*r4300_pc_struct())->ops();
-        }
+
+        run_cached_interpreter(&g_dev.r4300);
 
         free_blocks();
     }
