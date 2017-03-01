@@ -126,7 +126,7 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
         case M64P_DBG_NUM_BREAKPOINTS:
             return g_NumBreakpoints;
         case M64P_DBG_CPU_DYNACORE:
-            return get_r4300_emumode();
+            return get_r4300_emumode(&g_dev.r4300);
         case M64P_DBG_CPU_NEXT_INTERRUPT:
             return *r4300_cp0_next_interrupt();
         default:

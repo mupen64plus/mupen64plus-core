@@ -261,9 +261,9 @@ int* r4300_stop(void)
 #endif
 }
 
-unsigned int get_r4300_emumode(void)
+unsigned int get_r4300_emumode(struct r4300_core* r4300)
 {
-    return g_dev.r4300.emumode;
+    return r4300->emumode;
 }
 
 

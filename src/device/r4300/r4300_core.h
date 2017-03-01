@@ -180,7 +180,7 @@ uint32_t* r4300_pc(void);
 struct precomp_instr** r4300_pc_struct(void);
 int* r4300_stop(void);
 
-unsigned int get_r4300_emumode(void);
+unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]
