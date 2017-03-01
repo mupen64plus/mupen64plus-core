@@ -149,7 +149,7 @@ void run_r4300(void)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
         g_dev.r4300.emumode = EMUMODE_PURE_INTERPRETER;
-        pure_interpreter();
+        run_pure_interpreter(&g_dev.r4300);
     }
 #if defined(DYNAREC)
     else if (g_dev.r4300.emumode >= 2)

@@ -720,11 +720,11 @@ void InterpretOpcode()
 	} /* switch ((op >> 26) & 0x3F) */
 }
 
-void pure_interpreter(void)
+void run_pure_interpreter(struct r4300_core* r4300)
 {
    *r4300_stop() = 0;
-   *r4300_pc_struct() = &g_dev.r4300.interp_PC;
-   *r4300_pc() = g_dev.r4300.cp0.last_addr = 0xa4000040;
+   *r4300_pc_struct() = &r4300->interp_PC;
+   *r4300_pc() = r4300->cp0.last_addr = 0xa4000040;
 
    while (!*r4300_stop())
    {
