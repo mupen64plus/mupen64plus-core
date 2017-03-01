@@ -124,9 +124,9 @@ static void dynarec_setup_code(void)
 }
 #endif
 
-void run_r4300(void)
+void run_r4300(struct r4300_core* r4300)
 {
-    g_dev.r4300.current_instruction_table = cached_interpreter_table;
+    r4300->current_instruction_table = cached_interpreter_table;
 
     *r4300_stop() = 0;
     g_rom_pause = 0;
@@ -137,21 +137,21 @@ void run_r4300(void)
 #endif
 
     /* XXX: might go to r4300_poweron / soft_reset ? */
-    g_dev.r4300.cp0.last_addr = 0xa4000040;
+    r4300->cp0.last_addr = 0xa4000040;
     *r4300_cp0_next_interrupt() = 624999;
     init_interupt();
 
-    if (g_dev.r4300.emumode == EMUMODE_PURE_INTERPRETER)
+    if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Pure Interpreter");
-        g_dev.r4300.emumode = EMUMODE_PURE_INTERPRETER;
-        run_pure_interpreter(&g_dev.r4300);
+        r4300->emumode = EMUMODE_PURE_INTERPRETER;
+        run_pure_interpreter(r4300);
     }
 #if defined(DYNAREC)
-    else if (g_dev.r4300.emumode >= 2)
+    else if (r4300->emumode >= 2)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
-        g_dev.r4300.emumode = EMUMODE_DYNAREC;
+        r4300->emumode = EMUMODE_DYNAREC;
         init_blocks();
 
 #ifdef NEW_DYNAREC
@@ -163,25 +163,25 @@ void run_r4300(void)
         (*r4300_pc_struct())++;
 #endif
 #if defined(PROFILE_R4300)
-        profile_write_end_of_code_blocks(&g_dev.r4300);
+        profile_write_end_of_code_blocks(r4300);
 #endif
         free_blocks();
     }
 #endif
-    else /* if (g_dev.r4300.emumode == EMUMODE_INTERPRETER) */
+    else /* if (r4300->emumode == EMUMODE_INTERPRETER) */
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
-        g_dev.r4300.emumode = EMUMODE_INTERPRETER;
+        r4300->emumode = EMUMODE_INTERPRETER;
         init_blocks();
         jump_to(UINT32_C(0xa4000040));
 
         /* Prevent segfault on failed jump_to */
-        if (!g_dev.r4300.cached_interp.actual->block)
+        if (!r4300->cached_interp.actual->block)
             return;
 
-        g_dev.r4300.cp0.last_addr = *r4300_pc();
+        r4300->cp0.last_addr = *r4300_pc();
 
-        run_cached_interpreter(&g_dev.r4300);
+        run_cached_interpreter(r4300);
 
         free_blocks();
     }
@@ -190,7 +190,7 @@ void run_r4300(void)
 
     /* print instruction counts */
 #if defined(COUNT_INSTR)
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
         instr_counters_print();
 #endif
 }
