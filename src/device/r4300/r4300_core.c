@@ -126,10 +126,6 @@ static void dynarec_setup_code(void)
 
 void run_r4300(void)
 {
-#if (defined(DYNAREC) && defined(PROFILE_R4300))
-    unsigned int i;
-#endif
-
     g_dev.r4300.current_instruction_table = cached_interpreter_table;
 
     *r4300_stop() = 0;
@@ -167,21 +163,7 @@ void run_r4300(void)
         (*r4300_pc_struct())++;
 #endif
 #if defined(PROFILE_R4300)
-        g_dev.r4300.recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
-        for (i=0; i<0x100000; i++)
-            if (g_dev.r4300.cached_interp.invalid_code[i] == 0 && g_dev.r4300.cached_interp.blocks[i] != NULL && g_dev.r4300.cached_interp.blocks[i]->code != NULL && g_dev.r4300.cached_interp.blocks[i]->block != NULL)
-            {
-                unsigned char *x86addr;
-                int mipsop;
-                // store final code length for this block
-                mipsop = -1; /* -1 == end of x86 code block */
-                x86addr = g_dev.r4300.cached_interp.blocks[i]->code + g_dev.r4300.cached_interp.blocks[i]->code_length;
-                if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 ||
-                    fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *))
-                    DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
-            }
-        fclose(g_dev.r4300.recomp.pfProfile);
-        g_dev.r4300.recomp.pfProfile = NULL;
+        profile_write_end_of_code_blocks(&g_dev.r4300);
 #endif
         free_blocks();
     }

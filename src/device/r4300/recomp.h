@@ -27,6 +27,8 @@
 
 #include "recomp_types.h"
 
+struct r4300_core;
+
 void recompile_block(const uint32_t *source, struct precomp_block* block, uint32_t func);
 void init_block(struct precomp_block* block);
 void free_block(struct precomp_block* block);
@@ -35,6 +37,10 @@ void dyna_jump(void);
 void dyna_start(void *code);
 void dyna_stop(void);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
+
+#if defined(PROFILE_R4300)
+void profile_write_end_of_code_blocks(struct r4300_core* r4300);
+#endif
 
 #if defined(__x86_64__)
   #include "x86_64/assemble.h"

@@ -2573,6 +2573,32 @@ void recompile_opcode(void)
    g_dev.r4300.recomp.delay_slot_compiled = 2;
 }
 
+#if defined(PROFILE_R4300)
+void profile_write_end_of_code_blocks(struct r4300_core* r4300)
+{
+    size_t i;
+
+    r4300->recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
+
+    for (i = 0; i < 0x100000; ++i) {
+        if (r4300->cached_interp.invalid_code[i] == 0 && r4300->cached_interp.blocks[i] != NULL && r4300->cached_interp.blocks[i]->code != NULL && r4300->cached_interp.blocks[i]->block != NULL)
+        {
+            unsigned char *x86addr;
+            int mipsop;
+            // store final code length for this block
+            mipsop = -1; /* -1 == end of x86 code block */
+            x86addr = r4300->cached_interp.blocks[i]->code + r4300->cached_interp.blocks[i]->code_length;
+            if (fwrite(&mipsop, 1, 4, r4300->recomp.pfProfile) != 4 ||
+                fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *))
+                DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
+        }
+    }
+
+    fclose(r4300->recomp.pfProfile);
+    r4300->recomp.pfProfile = NULL;
+}
+#endif
+
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/
