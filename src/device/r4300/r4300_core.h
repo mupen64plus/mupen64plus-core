@@ -193,7 +193,7 @@ void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, si
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */
-void generic_jump_to(unsigned int address);
+void generic_jump_to(struct r4300_core* r4300, unsigned int address);
 
 void savestates_load_set_pc(uint32_t pc);
 

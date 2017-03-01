@@ -463,7 +463,7 @@ static void nmi_int_handler(void)
     g_dev.r4300.dyna_interp = 0;
     // set next instruction address to reset vector
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
-    generic_jump_to(UINT32_C(0xa4000040));
+    generic_jump_to(&g_dev.r4300, UINT32_C(0xa4000040));
 
 #ifdef NEW_DYNAREC
     if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
@@ -491,7 +491,7 @@ static void reset_hard(void)
         free_blocks();
         init_blocks();
     }
-    generic_jump_to(g_dev.r4300.cp0.last_addr);
+    generic_jump_to(&g_dev.r4300, g_dev.r4300.cp0.last_addr);
 }
 
 
@@ -532,7 +532,7 @@ void gen_interupt(void)
             : 0;
 
         g_dev.r4300.cp0.last_addr = dest;
-        generic_jump_to(dest);
+        generic_jump_to(&g_dev.r4300, dest);
         return;
     } 
 

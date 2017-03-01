@@ -286,20 +286,23 @@ void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, si
 }
 
 
-void generic_jump_to(uint32_t address)
+void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 {
-   if (g_dev.r4300.emumode == EMUMODE_PURE_INTERPRETER)
-      *r4300_pc() = address;
-   else {
+    if (r4300->emumode == EMUMODE_PURE_INTERPRETER) {
+        *r4300_pc() = address;
+    }
+    else {
 #ifdef NEW_DYNAREC
-      if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
-         g_dev.r4300.cp0.last_addr = pcaddr;
-      else
-         jump_to(address);
+        if (r4300->emumode == EMUMODE_DYNAREC) {
+            r4300->cp0.last_addr = pcaddr;
+        }
+        else {
+            jump_to(address);
+        }
 #else
-      jump_to(address);
+        jump_to(address);
 #endif
-   }
+    }
 }
 
 
@@ -316,7 +319,7 @@ void savestates_load_set_pc(uint32_t pc)
     else
 #endif
     {
-        generic_jump_to(pc);
+        generic_jump_to(&g_dev.r4300, pc);
         invalidate_r4300_cached_code(&g_dev.r4300, 0, 0);
     }
 }
