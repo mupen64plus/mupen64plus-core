@@ -159,8 +159,8 @@ static void dma_pi_write(struct pi_controller* pi)
         dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
     }
 
-    invalidate_r4300_cached_code(0x80000000 + dram_address, longueur);
-    invalidate_r4300_cached_code(0xa0000000 + dram_address, longueur);
+    invalidate_r4300_cached_code(pi->r4300, 0x80000000 + dram_address, longueur);
+    invalidate_r4300_cached_code(pi->r4300, 0xa0000000 + dram_address, longueur);
 
     /* HACK: monitor PI DMA to trigger RDRAM size detection
      * hack just before initial cart ROM loading. */

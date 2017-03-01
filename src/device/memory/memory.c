@@ -254,7 +254,7 @@ static void read_nomemd(void)
 
 static void write_nomem(void)
 {
-    invalidate_r4300_cached_code(*memory_address(), 4);
+    invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 4);
     *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_word_in_memory();
@@ -262,7 +262,7 @@ static void write_nomem(void)
 
 static void write_nomemb(void)
 {
-    invalidate_r4300_cached_code(*memory_address(), 1);
+    invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 1);
     *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_byte_in_memory();
@@ -270,7 +270,7 @@ static void write_nomemb(void)
 
 static void write_nomemh(void)
 {
-    invalidate_r4300_cached_code(*memory_address(), 2);
+    invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 2);
     *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_hword_in_memory();
@@ -278,7 +278,7 @@ static void write_nomemh(void)
 
 static void write_nomemd(void)
 {
-    invalidate_r4300_cached_code(*memory_address(), 8);
+    invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 8);
     *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_dword_in_memory();

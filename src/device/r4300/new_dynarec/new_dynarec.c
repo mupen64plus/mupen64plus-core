@@ -2273,7 +2273,7 @@ void invalidate_block(u_int block)
   #endif
 }
 
-void invalidate_cached_code_new_dynarec(uint32_t address, size_t size)
+void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size)
 {
     size_t i;
     size_t begin;

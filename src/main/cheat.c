@@ -86,13 +86,13 @@ static void update_address_16bit(unsigned int address, unsigned short new_value)
 {
     *(unsigned short *)(((unsigned char*)g_dev.ri.rdram.dram + ((address & 0xFFFFFF)^S16))) = new_value;
     address &= 0xfeffffff;  // mask out bit 24 which is used by GS codes to specify 8/16 bits
-    invalidate_r4300_cached_code(address, 2);
+    invalidate_r4300_cached_code(&g_dev.r4300, address, 2);
 }
 
 static void update_address_8bit(unsigned int address, unsigned char new_value)
 {
     *(unsigned char *)(((unsigned char*)g_dev.ri.rdram.dram + ((address & 0xFFFFFF)^S8))) = new_value;
-    invalidate_r4300_cached_code(address, 1);
+    invalidate_r4300_cached_code(&g_dev.r4300, address, 1);
 }
 
 static int address_equal_to_8bit(unsigned int address, unsigned char value)

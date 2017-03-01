@@ -34,7 +34,7 @@ void init_blocks(void);
 void free_blocks(void);
 void jump_to_func(void);
 
-void invalidate_cached_code_hacktarux(uint32_t address, size_t size);
+void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size);
 
 void run_cached_interpreter(struct r4300_core* r4300);
 

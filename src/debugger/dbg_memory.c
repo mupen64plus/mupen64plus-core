@@ -56,7 +56,7 @@ static void *opaddr_recompiled[564];
 static disassemble_info dis_info;
 
 #define CHECK_MEM(address) \
-   invalidate_r4300_cached_code(address, 4);
+   invalidate_r4300_cached_code(&g_dev.r4300, address, 4);
 
 static void process_opcode_out(void *strm, const char *fmt, ...){
   va_list ap;

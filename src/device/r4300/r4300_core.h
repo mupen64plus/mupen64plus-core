@@ -188,7 +188,7 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300);
  * If size == 0, r4300 implementation should invalidate
  * all cached code.
  */
-void invalidate_r4300_cached_code(uint32_t address, size_t size);
+void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size);
 
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.

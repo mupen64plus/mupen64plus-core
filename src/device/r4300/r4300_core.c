@@ -268,19 +268,19 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300)
 
 
 
-void invalidate_r4300_cached_code(uint32_t address, size_t size)
+void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)
 {
-    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
+    if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
 #ifdef NEW_DYNAREC
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+        if (r4300->emumode == EMUMODE_DYNAREC)
         {
-            invalidate_cached_code_new_dynarec(address, size);
+            invalidate_cached_code_new_dynarec(r4300, address, size);
         }
         else
 #endif
         {
-            invalidate_cached_code_hacktarux(address, size);
+            invalidate_cached_code_hacktarux(r4300, address, size);
         }
     }
 }
@@ -317,6 +317,6 @@ void savestates_load_set_pc(uint32_t pc)
 #endif
     {
         generic_jump_to(pc);
-        invalidate_r4300_cached_code(0,0);
+        invalidate_r4300_cached_code(&g_dev.r4300, 0, 0);
     }
 }

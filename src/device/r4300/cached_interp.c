@@ -576,7 +576,7 @@ void free_blocks(void)
     }
 }
 
-void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
+void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size)
 {
     size_t i;
     uint32_t addr;
@@ -585,7 +585,7 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
     if (size == 0)
     {
         /* invalidate everthing */
-        memset(g_dev.r4300.cached_interp.invalid_code, 1, 0x100000);
+        memset(r4300->cached_interp.invalid_code, 1, 0x100000);
     }
     else
     {
@@ -596,12 +596,12 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
         {
             i = (addr >> 12);
 
-            if (g_dev.r4300.cached_interp.invalid_code[i] == 0)
+            if (r4300->cached_interp.invalid_code[i] == 0)
             {
-                if (g_dev.r4300.cached_interp.blocks[i] == NULL
-                || g_dev.r4300.cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != g_dev.r4300.current_instruction_table.NOTCOMPILED)
+                if (r4300->cached_interp.blocks[i] == NULL
+                || r4300->cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != r4300->current_instruction_table.NOTCOMPILED)
                 {
-                    g_dev.r4300.cached_interp.invalid_code[i] = 1;
+                    r4300->cached_interp.invalid_code[i] = 1;
                     /* go directly to next i */
                     addr &= ~0xfff;
                     addr |= 0xffc;
