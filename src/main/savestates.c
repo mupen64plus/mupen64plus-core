@@ -489,7 +489,7 @@ int savestates_load_m64p(char *filepath)
         g_dev.r4300.cp0.tlb.entries[i].phys_odd = GETDATA(curr, unsigned int);
     }
 
-    savestates_load_set_pc(GETDATA(curr, uint32_t));
+    savestates_load_set_pc(&g_dev.r4300, GETDATA(curr, uint32_t));
 
     *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
@@ -781,7 +781,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(*r4300_cp0_last_addr());
+    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr());
 
     // assert(savestateData+savestateSize == curr)
 
