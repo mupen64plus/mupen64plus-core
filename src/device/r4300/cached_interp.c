@@ -109,7 +109,7 @@
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
          { \
-            jump_to(jump_target); \
+            cached_interpreter_dynarec_jump_to(&g_dev.r4300, jump_target); \
          } \
       } \
       else \
@@ -158,7 +158,7 @@ static void FIN_BLOCK(void)
 {
    if (!g_dev.r4300.delay_slot)
      {
-    jump_to(((*r4300_pc_struct())-1)->addr+4);
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc());
 #endif
@@ -171,7 +171,7 @@ Used by dynarec only, check should be unnecessary
      {
     struct precomp_block *blk = g_dev.r4300.cached_interp.actual;
     struct precomp_instr *inst = (*r4300_pc_struct());
-    jump_to(((*r4300_pc_struct())-1)->addr+4);
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc());
@@ -525,32 +525,57 @@ static unsigned int update_invalid_addr(unsigned int addr)
      }
 }
 
+
 void jump_to_func(void)
 {
-   unsigned int paddr;
-   if (g_dev.r4300.skip_jump) return;
-   paddr = update_invalid_addr(g_dev.r4300.cached_interp.jump_to_address);
-   if (!paddr) return;
-   g_dev.r4300.cached_interp.actual = g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12];
-   if (g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cached_interp.jump_to_address>>12])
-     {
-    if (!g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12])
-      {
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-         g_dev.r4300.cached_interp.actual = g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12];
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->code = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->block = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->jumps_table = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->riprel_table = NULL;
-      }
-    g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->start = g_dev.r4300.cached_interp.jump_to_address & ~0xFFF;
-    g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->end = (g_dev.r4300.cached_interp.jump_to_address & ~0xFFF) + 0x1000;
-    init_block(g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]);
-     }
-   (*r4300_pc_struct())=g_dev.r4300.cached_interp.actual->block+((g_dev.r4300.cached_interp.jump_to_address-g_dev.r4300.cached_interp.actual->start)>>2);
-
-   if (g_dev.r4300.emumode == EMUMODE_DYNAREC) dyna_jump();
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, g_dev.r4300.cached_interp.jump_to_address);
 }
+
+void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
+{
+    struct cached_interp* const cinterp = &r4300->cached_interp;
+    struct precomp_block** b;
+
+    if (r4300->skip_jump) {
+        return;
+    }
+
+    if (!update_invalid_addr(address)) {
+        return;
+    }
+
+    b = &cinterp->blocks[address >> 12];
+
+    cinterp->actual = *b;
+
+    /* setup new block if invalid */
+    if (cinterp->invalid_code[address >> 12])
+    {
+        if (!*b)
+        {
+            *b = (struct precomp_block*)malloc(sizeof(struct precomp_block));
+            cinterp->actual = *b;
+            (*b)->code = NULL;
+            (*b)->block = NULL;
+            (*b)->jumps_table = NULL;
+            (*b)->riprel_table = NULL;
+        }
+
+        (*b)->start = (address & ~0xfff);
+        (*b)->end = (address & ~0xfff) + 0x1000;
+
+        init_block(*b);
+    }
+
+    /* set new PC */
+    (*r4300_pc_struct()) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
+
+    /* set new PC for dynarec (eg set "return_address")*/
+    if (r4300->emumode == EMUMODE_DYNAREC) {
+        dyna_jump();
+    }
+}
+
 
 void init_blocks(struct cached_interp* cinterp)
 {

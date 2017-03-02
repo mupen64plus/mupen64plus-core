@@ -114,13 +114,15 @@ void poweron_r4300(struct r4300_core* r4300)
 #if !defined(NO_ASM)
 static void dynarec_setup_code(void)
 {
-   // The dynarec jumps here after we call dyna_start and it prepares
-   // Here we need to prepare the initial code block and jump to it
-   jump_to(UINT32_C(0xa4000040));
+    /* The dynarec jumps here after we call dyna_start and it prepares
+     * Here we need to prepare the initial code block and jump to it
+     */
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, UINT32_C(0xa4000040));
 
-   // Prevent segfault on failed jump_to
-   if (!g_dev.r4300.cached_interp.actual->block || !g_dev.r4300.cached_interp.actual->code)
-      dyna_stop();
+    /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
+    if (!g_dev.r4300.cached_interp.actual->block || !g_dev.r4300.cached_interp.actual->code) {
+        dyna_stop();
+    }
 }
 #endif
 
@@ -173,11 +175,12 @@ void run_r4300(struct r4300_core* r4300)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300->emumode = EMUMODE_INTERPRETER;
         init_blocks(&r4300->cached_interp);
-        jump_to(UINT32_C(0xa4000040));
+        cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
 
-        /* Prevent segfault on failed jump_to */
-        if (!r4300->cached_interp.actual->block)
+        /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
+        if (!r4300->cached_interp.actual->block) {
             return;
+        }
 
         r4300->cp0.last_addr = *r4300_pc();
 
@@ -288,20 +291,22 @@ void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, si
 
 void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 {
-    if (r4300->emumode == EMUMODE_PURE_INTERPRETER) {
+    if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
+    {
         *r4300_pc() = address;
     }
-    else {
+    else
+    {
 #ifdef NEW_DYNAREC
-        if (r4300->emumode == EMUMODE_DYNAREC) {
+        if (r4300->emumode == EMUMODE_DYNAREC)
+        {
             r4300->cp0.last_addr = pcaddr;
         }
-        else {
-            jump_to(address);
-        }
-#else
-        jump_to(address);
+        else
 #endif
+        {
+            cached_interpreter_dynarec_jump_to(r4300, address);
+        }
     }
 }
 

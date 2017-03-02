@@ -35,13 +35,17 @@ extern const struct cpu_instruction_table cached_interpreter_table;
 
 void init_blocks(struct cached_interp* cinterp);
 void free_blocks(struct cached_interp* cinterp);
-void jump_to_func(void);
 
 void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size);
 
 void run_cached_interpreter(struct r4300_core* r4300);
 
 /* Jumps to the given address. This is for the cached interpreter / dynarec. */
-#define jump_to(a) { g_dev.r4300.cached_interp.jump_to_address = a; jump_to_func(); }
+void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address);
+
+/* Jumps to jump_to_address.
+ * Parameterless version of cached_interpreter_dynarec_jump_to to ease usage in dynarec.
+ */
+void jump_to_func(void);
 
 #endif /* M64P_DEVICE_R4300_CACHED_INTERP_H */
