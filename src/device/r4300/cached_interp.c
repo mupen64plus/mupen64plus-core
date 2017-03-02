@@ -552,26 +552,28 @@ void jump_to_func(void)
    if (g_dev.r4300.emumode == EMUMODE_DYNAREC) dyna_jump();
 }
 
-void init_blocks(void)
+void init_blocks(struct cached_interp* cinterp)
 {
-   int i;
-   for (i=0; i<0x100000; i++)
+   size_t i;
+
+   for (i = 0; i < 0x100000; ++i)
    {
-      g_dev.r4300.cached_interp.invalid_code[i] = 1;
-      g_dev.r4300.cached_interp.blocks[i] = NULL;
+      cinterp->invalid_code[i] = 1;
+      cinterp->blocks[i] = NULL;
    }
 }
 
-void free_blocks(void)
+void free_blocks(struct cached_interp* cinterp)
 {
-   int i;
-   for (i=0; i<0x100000; i++)
+   size_t i;
+
+   for (i = 0; i < 0x100000; ++i)
    {
-        if (g_dev.r4300.cached_interp.blocks[i])
+        if (cinterp->blocks[i])
         {
-            free_block(g_dev.r4300.cached_interp.blocks[i]);
-            free(g_dev.r4300.cached_interp.blocks[i]);
-            g_dev.r4300.cached_interp.blocks[i] = NULL;
+            free_block(cinterp->blocks[i]);
+            free(cinterp->blocks[i]);
+            cinterp->blocks[i] = NULL;
         }
     }
 }

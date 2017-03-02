@@ -28,10 +28,13 @@
 #include "ops.h"
 #include "main/main.h"
 
+struct r4300_core;
+struct cached_interp;
+
 extern const struct cpu_instruction_table cached_interpreter_table;
 
-void init_blocks(void);
-void free_blocks(void);
+void init_blocks(struct cached_interp* cinterp);
+void free_blocks(struct cached_interp* cinterp);
 void jump_to_func(void);
 
 void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size);
