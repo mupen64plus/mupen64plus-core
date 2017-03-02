@@ -2265,7 +2265,7 @@ void init_block(struct precomp_block *block)
   g_dev.r4300.cached_interp.invalid_code[block->start>>12] = 0;
   if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
   { 
-    uint32_t paddr = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, block->start, 2);
+    uint32_t paddr = virtual_to_physical_address(&g_dev.r4300, block->start, 2);
     g_dev.r4300.cached_interp.invalid_code[paddr>>12] = 0;
     if (!g_dev.r4300.cached_interp.blocks[paddr>>12])
     {
@@ -2363,7 +2363,7 @@ void recompile_block(const uint32_t *source, struct precomp_block *block, uint32
     if(block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
       {
           uint32_t address2 =
-           virtual_to_physical_address(&g_dev.r4300.cp0.tlb, block->start + i*4, 0);
+           virtual_to_physical_address(&g_dev.r4300, block->start + i*4, 0);
          if(g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
            g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = g_dev.r4300.current_instruction_table.NOTCOMPILED2;
       }

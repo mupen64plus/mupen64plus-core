@@ -515,7 +515,7 @@ static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
     }
     else
     {
-        uint32_t paddr = virtual_to_physical_address(&r4300->cp0.tlb, addr, 2);
+        uint32_t paddr = virtual_to_physical_address(r4300, addr, 2);
         if (paddr)
         {
             uint32_t beg_paddr = paddr - (addr - (addr & ~0xfff));
@@ -664,7 +664,7 @@ void run_cached_interpreter(struct r4300_core* r4300)
     {
 #ifdef COMPARE_CORE
         if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
-            virtual_to_physical_address(&r4300->cp0.tlb, (*r4300_pc_struct())->addr, 2);
+            virtual_to_physical_address(r4300, (*r4300_pc_struct())->addr, 2);
         CoreCompareCallback();
 #endif
 #ifdef DBG

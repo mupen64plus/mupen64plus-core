@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct r4300_core;
+
 struct tlb_entry
 {
    short mask;
@@ -62,6 +64,6 @@ void poweron_tlb(struct tlb* tlb);
 void tlb_unmap(struct tlb* tlb, size_t entry);
 void tlb_map(struct tlb* tlb, size_t entry);
 
-uint32_t virtual_to_physical_address(struct tlb* tlb, uint32_t addresse, int w);
+uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w);
 
 #endif /* M64P_DEVICE_R4300_TLB_H */

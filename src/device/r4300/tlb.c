@@ -22,7 +22,8 @@
 #include "tlb.h"
 
 #include "api/m64p_types.h"
-#include "exception.h"
+#include "device/r4300/exception.h"
+#include "device/r4300/r4300_core.h"
 #include "main/rom.h"
 
 #include <assert.h>
@@ -100,9 +101,9 @@ void tlb_map(struct tlb* tlb, size_t entry)
     }
 }
 
-uint32_t virtual_to_physical_address(struct tlb* tlb, uint32_t addresse, int w)
+uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
 {
-    if (addresse >= UINT32_C(0x7f000000) && addresse < UINT32_C(0x80000000) && isGoldeneyeRom)
+    if (address >= UINT32_C(0x7f000000) && address < UINT32_C(0x80000000) && isGoldeneyeRom)
     {
         /**************************************************
          GoldenEye 007 hack allows for use of TLB.
@@ -112,35 +113,35 @@ uint32_t virtual_to_physical_address(struct tlb* tlb, uint32_t addresse, int w)
         {
         case 0x45:
             // U
-            return UINT32_C(0xb0034b30) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b30) + (address & UINT32_C(0xFFFFFF));
             break;
         case 0x4A:
             // J
-            return UINT32_C(0xb0034b70) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b70) + (address & UINT32_C(0xFFFFFF));
             break;
         case 0x50:
             // E
-            return UINT32_C(0xb00329f0) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb00329f0) + (address & UINT32_C(0xFFFFFF));
             break;
         default:
             // UNKNOWN COUNTRY CODE FOR GOLDENEYE USING AMERICAN VERSION HACK
-            return UINT32_C(0xb0034b30) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b30) + (address & UINT32_C(0xFFFFFF));
             break;
         }
     }
     if (w == 1)
     {
-        if (tlb->LUT_w[addresse>>12])
-            return (tlb->LUT_w[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (r4300->cp0.tlb.LUT_w[address>>12])
+            return (r4300->cp0.tlb.LUT_w[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
     else
     {
-        if (tlb->LUT_r[addresse>>12])
-            return (tlb->LUT_r[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (r4300->cp0.tlb.LUT_r[address>>12])
+            return (r4300->cp0.tlb.LUT_r[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, g_dev.r4300.pc->addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, g_dev.r4300.pc->addr);
     //getchar();
-    TLB_refill_exception(addresse,w);
+    TLB_refill_exception(r4300, address, w);
     //return 0x80000000;
     return 0x00000000;
 }

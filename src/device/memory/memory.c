@@ -226,28 +226,28 @@ static void write_nothingd(void)
 
 static void read_nomem(void)
 {
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),0);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),0);
     if (*memory_address() == 0x00000000) return;
     read_word_in_memory();
 }
 
 static void read_nomemb(void)
 {
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),0);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),0);
     if (*memory_address() == 0x00000000) return;
     read_byte_in_memory();
 }
 
 static void read_nomemh(void)
 {
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),0);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),0);
     if (*memory_address() == 0x00000000) return;
     read_hword_in_memory();
 }
 
 static void read_nomemd(void)
 {
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),0);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),0);
     if (*memory_address() == 0x00000000) return;
     read_dword_in_memory();
 }
@@ -255,7 +255,7 @@ static void read_nomemd(void)
 static void write_nomem(void)
 {
     invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 4);
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_word_in_memory();
 }
@@ -263,7 +263,7 @@ static void write_nomem(void)
 static void write_nomemb(void)
 {
     invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 1);
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_byte_in_memory();
 }
@@ -271,7 +271,7 @@ static void write_nomemb(void)
 static void write_nomemh(void)
 {
     invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 2);
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_hword_in_memory();
 }
@@ -279,7 +279,7 @@ static void write_nomemh(void)
 static void write_nomemd(void)
 {
     invalidate_r4300_cached_code(&g_dev.r4300, *memory_address(), 8);
-    *memory_address() = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, *memory_address(),1);
+    *memory_address() = virtual_to_physical_address(&g_dev.r4300, *memory_address(),1);
     if (*memory_address() == 0x00000000) return;
     write_dword_in_memory();
 }
@@ -1436,7 +1436,7 @@ uint32_t *fast_mem_access(uint32_t address)
      * Removing error checking saves some time, but the emulator may crash. */
 
     if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
-        address = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, address, 2);
+        address = virtual_to_physical_address(&g_dev.r4300, address, 2);
 
     address &= UINT32_C(0x1ffffffc);
 
