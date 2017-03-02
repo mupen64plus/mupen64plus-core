@@ -501,28 +501,42 @@ const struct cpu_instruction_table cached_interpreter_table = {
    NOTCOMPILED2
 };
 
-static unsigned int update_invalid_addr(unsigned int addr)
+static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
-   if (addr >= 0x80000000 && addr < 0xc0000000)
-     {
-    if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
-    if (g_dev.r4300.cached_interp.invalid_code[(addr^0x20000000)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-    return addr;
-     }
-   else
-     {
-    unsigned int paddr = virtual_to_physical_address(&g_dev.r4300.cp0.tlb, addr, 2);
-    if (paddr)
-      {
-         unsigned int beg_paddr = paddr - (addr - (addr&~0xFFF));
-         update_invalid_addr(paddr);
-         if (g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0x000)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0xFFC)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0x000)>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0xFFC)>>12] = 1;
-      }
-    return paddr;
-     }
+    if (addr >= 0x80000000 && addr < 0xc0000000)
+    {
+        if (r4300->cached_interp.invalid_code[addr>>12]) {
+            r4300->cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
+        }
+        if (r4300->cached_interp.invalid_code[(addr^0x20000000)>>12]) {
+            r4300->cached_interp.invalid_code[addr>>12] = 1;
+        }
+        return addr;
+    }
+    else
+    {
+        uint32_t paddr = virtual_to_physical_address(&r4300->cp0.tlb, addr, 2);
+        if (paddr)
+        {
+            uint32_t beg_paddr = paddr - (addr - (addr & ~0xfff));
+
+            update_invalid_addr(r4300, paddr);
+
+            if (r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12]) {
+                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12]) {
+                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[addr>>12]) {
+                r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[addr>>12]) {
+                r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12] = 1;
+            }
+        }
+        return paddr;
+    }
 }
 
 
@@ -540,7 +554,7 @@ void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t addre
         return;
     }
 
-    if (!update_invalid_addr(address)) {
+    if (!update_invalid_addr(r4300, address)) {
         return;
     }
 
