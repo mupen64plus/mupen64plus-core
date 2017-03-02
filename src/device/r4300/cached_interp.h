@@ -26,7 +26,6 @@
 #include <stdint.h>
 
 #include "ops.h"
-#include "main/main.h"
 
 struct r4300_core;
 struct cached_interp;
