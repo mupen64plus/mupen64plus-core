@@ -38,6 +38,10 @@ void dyna_start(void *code);
 void dyna_stop(void);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
+
+void dynarec_jump_to_address(void);
+
+
 #if defined(PROFILE_R4300)
 void profile_write_end_of_code_blocks(struct r4300_core* r4300);
 #endif

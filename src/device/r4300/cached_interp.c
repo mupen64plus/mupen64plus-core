@@ -539,12 +539,6 @@ static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
     }
 }
 
-
-void jump_to_func(void)
-{
-    cached_interpreter_dynarec_jump_to(&g_dev.r4300, g_dev.r4300.cached_interp.jump_to_address);
-}
-
 void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     struct cached_interp* const cinterp = &r4300->cached_interp;

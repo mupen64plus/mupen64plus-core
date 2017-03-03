@@ -424,10 +424,10 @@ void genj_out(void)
    
    mov_m32rel_imm32((void*)(&g_dev.r4300.cp0.last_addr), naddr);
    gencheck_interupt_out(naddr);
-   mov_m32rel_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
+   mov_m32rel_imm32(&g_dev.r4300.recomp.jump_to_address, naddr);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long)jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long)dynarec_jump_to_address);
    call_reg64(RAX);
 #endif
 }
@@ -521,10 +521,10 @@ void genjal_out(void)
 
    mov_m32rel_imm32((void*)(&g_dev.r4300.cp0.last_addr), naddr);
    gencheck_interupt_out(naddr);
-   mov_m32rel_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
+   mov_m32rel_imm32(&g_dev.r4300.recomp.jump_to_address, naddr);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);
 #endif
 }
@@ -602,10 +602,10 @@ void gentest_out(void)
 
    mov_m32rel_imm32((void*)(&g_dev.r4300.cp0.last_addr), g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32rel_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32rel_imm32(&g_dev.r4300.recomp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);
    jump_end_rel32();
 
@@ -1036,11 +1036,11 @@ void gentestl_out(void)
    gendelayslot();
    mov_m32rel_imm32((void*)(&g_dev.r4300.cp0.last_addr), g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32rel_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32rel_imm32(&g_dev.r4300.recomp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
 
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);
    
    jump_end_rel32();

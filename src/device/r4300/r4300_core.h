@@ -44,7 +44,6 @@ struct cached_interp
     char invalid_code[0x100000];
     struct precomp_block* blocks[0x100000];
     struct precomp_block* actual;
-    unsigned int jump_to_address;
 };
 
 enum {
@@ -140,6 +139,8 @@ struct r4300_core
         const uint32_t *SRC;                /* currently recompiled instruction in the input stream */
         int check_nop;                      /* next instruction is nop ? */
         int delay_slot_compiled;
+
+        uint32_t jump_to_address;
 
 #if defined(PROFILE_R4300)
         FILE* pfProfile;

@@ -220,10 +220,10 @@ void genjr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);  /* will never return from call */
 
    jump_end_rel32();
@@ -294,10 +294,10 @@ void genjalr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);  /* will never return from call */
 
    jump_end_rel32();

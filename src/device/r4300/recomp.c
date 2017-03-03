@@ -2599,6 +2599,14 @@ void profile_write_end_of_code_blocks(struct r4300_core* r4300)
 }
 #endif
 
+
+/* Parameterless version of cached_interpreter_dynarec_jump_to to ease usage in dynarec. */
+void dynarec_jump_to_address(void)
+{
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, g_dev.r4300.recomp.jump_to_address);
+}
+
+
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/

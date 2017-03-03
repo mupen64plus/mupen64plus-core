@@ -441,9 +441,9 @@ void genj_out(void)
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
-   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
+   mov_m32_imm32(&g_dev.r4300.recomp.jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
 #endif
 }
@@ -528,9 +528,9 @@ void genjal_out(void)
    
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, naddr);
    gencheck_interupt_out(naddr);
-   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, naddr);
+   mov_m32_imm32(&g_dev.r4300.recomp.jump_to_address, naddr);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
 #endif
 }
@@ -604,9 +604,9 @@ void gentest_out(void)
 
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.recomp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
    
    jump_end_rel32();
@@ -1010,9 +1010,9 @@ void gentestl_out(void)
    gendelayslot();
    mov_m32_imm32(&g_dev.r4300.cp0.last_addr, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    gencheck_interupt_out(g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
-   mov_m32_imm32(&g_dev.r4300.cached_interp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
+   mov_m32_imm32(&g_dev.r4300.recomp.jump_to_address, g_dev.r4300.recomp.dst->addr + (g_dev.r4300.recomp.dst-1)->f.i.immediate*4);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
    
    jump_end_rel32();
