@@ -59,16 +59,18 @@ static void clear_pool(struct pool* p);
 static struct node* alloc_node(struct pool* p)
 {
     /* return NULL if pool is too small */
-    if (p->index >= INTERRUPT_NODES_POOL_CAPACITY)
+    if (p->index >= INTERRUPT_NODES_POOL_CAPACITY) {
         return NULL;
+    }
 
     return p->stack[p->index++];
 }
 
 static void free_node(struct pool* p, struct node* node)
 {
-    if (p->index == 0 || node == NULL)
+    if (p->index == 0 || node == NULL) {
         return;
+    }
 
     p->stack[--p->index] = node;
 }
@@ -78,8 +80,9 @@ static void clear_pool(struct pool* p)
 {
     size_t i;
 
-    for(i = 0; i < INTERRUPT_NODES_POOL_CAPACITY; ++i)
+    for (i = 0; i < INTERRUPT_NODES_POOL_CAPACITY; ++i) {
         p->stack[i] = &p->nodes[i];
+    }
 
     p->index = 0;
 }
@@ -139,9 +142,11 @@ void add_interrupt_event_count(int type, unsigned int count)
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     special = (type == SPECIAL_INT);
-   
-    if(cp0_regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) g_dev.r4300.cp0.special_done = 0;
-   
+
+    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) {
+        g_dev.r4300.cp0.special_done = 0;
+    }
+
     if (get_event(type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
         /* FIXME: hack-fix for freezing in Perfect Dark
@@ -175,7 +180,7 @@ void add_interrupt_event_count(int type, unsigned int count)
     }
     else
     {
-        for(e = g_dev.r4300.cp0.q.first;
+        for (e = g_dev.r4300.cp0.q.first;
             e->next != NULL &&
             (!before_event(count, e->next->data.count, e->next->data.type) || special);
             e = e->next);
@@ -217,13 +222,15 @@ unsigned int get_event(int type)
 {
     struct node* e = g_dev.r4300.cp0.q.first;
 
-    if (e == NULL)
+    if (e == NULL) {
         return 0;
+    }
 
-    if (e->data.type == type)
+    if (e->data.type == type) {
         return e->data.count;
+    }
 
-    for(; e->next != NULL && e->next->data.type != type; e = e->next);
+    for (; e->next != NULL && e->next->data.type != type; e = e->next);
 
     return (e->next != NULL)
         ? e->next->data.count
@@ -242,8 +249,9 @@ void remove_event(int type)
     struct node* to_del;
     struct node* e = g_dev.r4300.cp0.q.first;
 
-    if (e == NULL)
+    if (e == NULL) {
         return;
+    }
 
     if (e->data.type == type)
     {
@@ -252,7 +260,7 @@ void remove_event(int type)
     }
     else
     {
-        for(; e->next != NULL && e->next->data.type != type; e = e->next);
+        for (; e->next != NULL && e->next->data.type != type; e = e->next);
 
         if (e->next != NULL)
         {
@@ -271,7 +279,7 @@ void translate_event_queue(unsigned int base)
     remove_event(COMPARE_INT);
     remove_event(SPECIAL_INT);
 
-    for(e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
+    for (e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
     {
         e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
@@ -286,7 +294,7 @@ int save_eventqueue_infos(char *buf)
 
     len = 0;
 
-    for(e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
+    for (e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
     {
         memcpy(buf + len    , &e->data.type , 4);
         memcpy(buf + len + 4, &e->data.count, 4);
@@ -327,11 +335,15 @@ void check_interrupt(void)
     uint32_t* cp0_regs = r4300_cp0_regs();
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
-    if (g_dev.r4300.mi.regs[MI_INTR_REG] & g_dev.r4300.mi.regs[MI_INTR_MASK_REG])
+    if (g_dev.r4300.mi.regs[MI_INTR_REG] & g_dev.r4300.mi.regs[MI_INTR_MASK_REG]) {
         cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
-    else
+    }
+    else {
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
-    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) return;
+    }
+    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) {
+        return;
+    }
     if (cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xFF00))
     {
         event = alloc_node(&g_dev.r4300.cp0.q.pool);
@@ -367,10 +379,12 @@ static void wrapped_exception_general(void)
         cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0x80000180;
         cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
-        if(pcaddr&1)
+        if (pcaddr & 1) {
           cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-        else
+        }
+        else {
           cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
+        }
         pending_exception=1;
     } else {
         exception_general();
@@ -385,11 +399,13 @@ void raise_maskable_interrupt(uint32_t cause)
     uint32_t* cp0_regs = r4300_cp0_regs();
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
 
-    if (!(cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00)))
+    if (!(cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00))) {
         return;
+    }
 
-    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE)
+    if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) {
         return;
+    }
 
     wrapped_exception_general();
 }
@@ -397,8 +413,9 @@ void raise_maskable_interrupt(uint32_t cause)
 static void special_int_handler(void)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
-    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000))
+    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000)) {
         return;
+    }
 
 
     g_dev.r4300.cp0.special_done = 1;
@@ -520,7 +537,7 @@ void gen_interrupt(void)
             return;
         }
     }
-   
+
     if (g_dev.r4300.skip_jump)
     {
         uint32_t dest = g_dev.r4300.skip_jump;
@@ -534,7 +551,7 @@ void gen_interrupt(void)
         g_dev.r4300.cp0.last_addr = dest;
         generic_jump_to(&g_dev.r4300, dest);
         return;
-    } 
+    }
 
     switch(g_dev.r4300.cp0.q.first->data.type)
     {
@@ -546,26 +563,26 @@ void gen_interrupt(void)
             remove_interrupt_event();
             vi_vertical_interrupt_event(&g_dev.vi);
             break;
-    
+
         case COMPARE_INT:
             compare_int_handler();
             break;
-    
+
         case CHECK_INT:
             remove_interrupt_event();
             wrapped_exception_general();
             break;
-    
+
         case SI_INT:
             remove_interrupt_event();
             si_end_of_dma_event(&g_dev.si);
             break;
-    
+
         case PI_INT:
             remove_interrupt_event();
             pi_end_of_dma_event(&g_dev.pi);
             break;
-    
+
         case AI_INT:
             remove_interrupt_event();
             ai_end_of_dma_event(&g_dev.ai);
@@ -575,7 +592,7 @@ void gen_interrupt(void)
             remove_interrupt_event();
             rsp_interrupt_event(&g_dev.sp);
             break;
-    
+
         case DP_INT:
             remove_interrupt_event();
             rdp_interrupt_event(&g_dev.dp);
