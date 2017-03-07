@@ -129,24 +129,24 @@ static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int e
     else return 0;
 }
 
-void add_interrupt_event(int type, unsigned int delay)
+void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
-    add_interrupt_event_count(type, cp0_regs[CP0_COUNT_REG] + delay);
+    const uint32_t* cp0_regs = r4300_cp0_regs();
+    add_interrupt_event_count(cp0, type, cp0_regs[CP0_COUNT_REG] + delay);
 }
 
-void add_interrupt_event_count(int type, unsigned int count)
+void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
 {
     struct node* event;
     struct node* e;
     int special;
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs();
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     special = (type == SPECIAL_INT);
 
     if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) {
-        g_dev.r4300.cp0.special_done = 0;
+        cp0->special_done = 0;
     }
 
     if (get_event(type)) {
@@ -158,7 +158,7 @@ void add_interrupt_event_count(int type, unsigned int count)
         return;
     }
 
-    event = alloc_node(&g_dev.r4300.cp0.q.pool);
+    event = alloc_node(&cp0->q.pool);
     if (event == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Failed to allocate node for new interrupt event");
@@ -168,23 +168,23 @@ void add_interrupt_event_count(int type, unsigned int count)
     event->data.count = count;
     event->data.type = type;
 
-    if (g_dev.r4300.cp0.q.first == NULL)
+    if (cp0->q.first == NULL)
     {
-        g_dev.r4300.cp0.q.first = event;
+        cp0->q.first = event;
         event->next = NULL;
-        *cp0_next_interrupt = g_dev.r4300.cp0.q.first->data.count;
+        *cp0_next_interrupt = cp0->q.first->data.count;
     }
-    else if (before_event(&g_dev.r4300.cp0, count, g_dev.r4300.cp0.q.first->data.count, g_dev.r4300.cp0.q.first->data.type) && !special)
+    else if (before_event(cp0, count, cp0->q.first->data.count, cp0->q.first->data.type) && !special)
     {
-        event->next = g_dev.r4300.cp0.q.first;
-        g_dev.r4300.cp0.q.first = event;
-        *cp0_next_interrupt = g_dev.r4300.cp0.q.first->data.count;
+        event->next = cp0->q.first;
+        cp0->q.first = event;
+        *cp0_next_interrupt = cp0->q.first->data.count;
     }
     else
     {
-        for (e = g_dev.r4300.cp0.q.first;
+        for (e = cp0->q.first;
             e->next != NULL &&
-            (!before_event(&g_dev.r4300.cp0, count, e->next->data.count, e->next->data.type) || special);
+            (!before_event(cp0, count, e->next->data.count, e->next->data.type) || special);
             e = e->next);
 
         if (e->next == NULL)
@@ -276,17 +276,18 @@ void remove_event(int type)
 void translate_event_queue(unsigned int base)
 {
     struct node* e;
+    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
 
     remove_event(COMPARE_INT);
     remove_event(SPECIAL_INT);
 
-    for (e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
+    for (e = r4300->cp0.q.first; e != NULL; e = e->next)
     {
         e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
-    add_interrupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
-    add_interrupt_event_count(SPECIAL_INT, 0);
+    add_interrupt_event_count(&r4300->cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
 }
 
 int save_eventqueue_infos(char *buf)
@@ -317,7 +318,7 @@ void load_eventqueue_infos(char *buf)
     {
         int type = *((unsigned int*)&buf[len]);
         unsigned int count = *((unsigned int*)&buf[len+4]);
-        add_interrupt_event_count(type, count);
+        add_interrupt_event_count(&r4300->cp0, type, count);
         len += 8;
     }
 }
@@ -331,8 +332,8 @@ void init_interrupt(void)
     g_dev.vi.delay = g_dev.vi.next_vi = 5000;
 
     clear_queue(&r4300->cp0.q);
-    add_interrupt_event_count(VI_INT, g_dev.vi.next_vi);
-    add_interrupt_event_count(SPECIAL_INT, 0);
+    add_interrupt_event_count(&r4300->cp0, VI_INT, g_dev.vi.next_vi);
+    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
 }
 
 void check_interrupt(void)
@@ -418,24 +419,29 @@ void raise_maskable_interrupt(uint32_t cause)
 
 static void special_int_handler(void)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    struct r4300_core* r4300 = &g_dev.r4300;
+    const uint32_t* cp0_regs = r4300_cp0_regs();
+
     if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000)) {
         return;
     }
 
 
-    g_dev.r4300.cp0.special_done = 1;
+    r4300->cp0.special_done = 1;
     remove_interrupt_event();
-    add_interrupt_event_count(SPECIAL_INT, 0);
+    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
 }
 
 static void compare_int_handler(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
+
     remove_interrupt_event();
-    cp0_regs[CP0_COUNT_REG]+=g_dev.r4300.cp0.count_per_op;
-    add_interrupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
-    cp0_regs[CP0_COUNT_REG]-=g_dev.r4300.cp0.count_per_op;
+
+    cp0_regs[CP0_COUNT_REG] += r4300->cp0.count_per_op;
+    add_interrupt_event_count(&r4300->cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    cp0_regs[CP0_COUNT_REG] -= r4300->cp0.count_per_op;
 
     raise_maskable_interrupt(CP0_CAUSE_IP7);
 }
