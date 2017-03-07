@@ -91,10 +91,10 @@ static void clear_pool(struct pool* p)
  * Interrupt Queue
  **************************************************************************/
 
-static void clear_queue(void)
+static void clear_queue(struct interrupt_queue* q)
 {
-    g_dev.r4300.cp0.q.first = NULL;
-    clear_pool(&g_dev.r4300.cp0.q.pool);
+    q->first = NULL;
+    clear_pool(&q->pool);
 }
 
 static int before_event(unsigned int evt1, unsigned int evt2, int type2)
@@ -307,8 +307,10 @@ int save_eventqueue_infos(char *buf)
 
 void load_eventqueue_infos(char *buf)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     int len = 0;
-    clear_queue();
+    clear_queue(&r4300->cp0.q);
     while (*((unsigned int*)&buf[len]) != 0xFFFFFFFF)
     {
         int type = *((unsigned int*)&buf[len]);
@@ -320,11 +322,13 @@ void load_eventqueue_infos(char *buf)
 
 void init_interrupt(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     g_dev.r4300.cp0.special_done = 1;
 
     g_dev.vi.delay = g_dev.vi.next_vi = 5000;
 
-    clear_queue();
+    clear_queue(&r4300->cp0.q);
     add_interrupt_event_count(VI_INT, g_dev.vi.next_vi);
     add_interrupt_event_count(SPECIAL_INT, 0);
 }
