@@ -97,24 +97,26 @@ static void clear_queue(struct interrupt_queue* q)
     clear_pool(&q->pool);
 }
 
-static int before_event(unsigned int evt1, unsigned int evt2, int type2)
+static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int evt2, int type2)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
-    if(evt1 - cp0_regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
+    const uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t count = cp0_regs[CP0_COUNT_REG];
+
+    if (evt1 - count < UINT32_C(0x80000000))
     {
-        if(evt2 - cp0_regs[CP0_COUNT_REG] < UINT32_C(0x80000000))
+        if (evt2 - count < UINT32_C(0x80000000))
         {
-            if((evt1 - cp0_regs[CP0_COUNT_REG]) < (evt2 - cp0_regs[CP0_COUNT_REG])) return 1;
+            if ((evt1 - count) < (evt2 - count)) return 1;
             else return 0;
         }
         else
         {
-            if((cp0_regs[CP0_COUNT_REG] - evt2) < UINT32_C(0x10000000))
+            if ((count - evt2) < UINT32_C(0x10000000))
             {
                 switch(type2)
                 {
                     case SPECIAL_INT:
-                        if(g_dev.r4300.cp0.special_done) return 1;
+                        if (cp0->special_done) return 1;
                         else return 0;
                         break;
                     default:
@@ -172,7 +174,7 @@ void add_interrupt_event_count(int type, unsigned int count)
         event->next = NULL;
         *cp0_next_interrupt = g_dev.r4300.cp0.q.first->data.count;
     }
-    else if (before_event(count, g_dev.r4300.cp0.q.first->data.count, g_dev.r4300.cp0.q.first->data.type) && !special)
+    else if (before_event(&g_dev.r4300.cp0, count, g_dev.r4300.cp0.q.first->data.count, g_dev.r4300.cp0.q.first->data.type) && !special)
     {
         event->next = g_dev.r4300.cp0.q.first;
         g_dev.r4300.cp0.q.first = event;
@@ -182,7 +184,7 @@ void add_interrupt_event_count(int type, unsigned int count)
     {
         for (e = g_dev.r4300.cp0.q.first;
             e->next != NULL &&
-            (!before_event(count, e->next->data.count, e->next->data.type) || special);
+            (!before_event(&g_dev.r4300.cp0, count, e->next->data.count, e->next->data.type) || special);
             e = e->next);
 
         if (e->next == NULL)
