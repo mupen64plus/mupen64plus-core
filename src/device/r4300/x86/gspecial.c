@@ -181,7 +181,7 @@ void genjr(void)
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
@@ -252,7 +252,7 @@ void genjalr(void)
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);

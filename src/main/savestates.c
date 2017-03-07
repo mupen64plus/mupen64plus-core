@@ -591,7 +591,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
 
-    // Initialze the interupts
+    // Initialze the interrupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
     *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]

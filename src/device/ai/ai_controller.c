@@ -92,7 +92,7 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
 
     /* schedule end of dma event */
     cp0_update_count();
-    add_interupt_event(AI_INT, dma->duration);
+    add_interrupt_event(AI_INT, dma->duration);
 }
 
 static void fifo_push(struct ai_controller* ai)

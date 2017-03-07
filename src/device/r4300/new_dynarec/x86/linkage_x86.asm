@@ -119,13 +119,13 @@ cextern branch_target
 cextern memory_map
 cextern pending_exception
 cextern restore_candidate
-cextern gen_interupt
+cextern gen_interrupt
 cextern last_count
 cextern pcaddr
 cextern clean_blocks
 cextern invalidate_block
 cextern readmem_dword
-cextern check_interupt
+cextern check_interrupt
 cextern get_addr_32
 cextern write_mi
 cextern write_mib
@@ -257,7 +257,7 @@ cc_interrupt:
     cmp     DWORD [find_local_data(restore_candidate+esi)],    0
     jne     _E4
 _E1:
-    call    gen_interupt
+    call    gen_interrupt
     mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
     mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
     mov     edx,    [find_local_data(pending_exception)]
@@ -360,7 +360,7 @@ jump_eret:
     and     ecx,    0FFFFFFFDh
     mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi        ;Count
     mov     [find_local_data(g_dev_r4300_cp0_regs+48)],    ecx        ;Status
-    call    check_interupt
+    call    check_interrupt
     mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
     mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
     mov     [find_local_data(last_count)],    eax

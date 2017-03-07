@@ -32,7 +32,7 @@
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
-#include "device/r4300/interupt.h"
+#include "device/r4300/interrupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
@@ -87,7 +87,7 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_OUT(void) \
    { \
@@ -118,7 +118,7 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(void) \
    { \

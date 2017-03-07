@@ -290,7 +290,7 @@ GLOBAL_FUNCTION(cc_interrupt):
     tst    r4, r4
     bne    .E4
 .E1:
-    bl     gen_interupt
+    bl     gen_interrupt
     mov    lr, r10
     ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
     ldr    r0, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
@@ -379,7 +379,7 @@ GLOBAL_FUNCTION(jump_eret):
     add    r10, r0, r10
     str    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
     str    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
-    bl     check_interupt
+    bl     check_interrupt
     ldr    r1, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
     ldr    r0, [fp, #g_dev_r4300_cp0_regs+56-dynarec_local] /* EPC */
     str    r1, [fp, #last_count-dynarec_local]

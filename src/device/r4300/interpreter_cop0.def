@@ -77,7 +77,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COUNT_REG:
       cp0_update_count();
       g_dev.r4300.cp0.interrupt_unsafe_state = 1;
-      if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interupt();
+      if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
       g_dev.r4300.cp0.interrupt_unsafe_state = 0;
       translate_event_queue(rrt32);
       cp0_regs[CP0_COUNT_REG] = rrt32;
@@ -88,7 +88,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COMPARE_REG:
       cp0_update_count();
       remove_event(COMPARE_INT);
-      add_interupt_event_count(COMPARE_INT, rrt32);
+      add_interrupt_event_count(COMPARE_INT, rrt32);
       cp0_regs[CP0_COMPARE_REG] = rrt32;
       cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
       break;
@@ -101,9 +101,9 @@ DECLARE_INSTRUCTION(MTC0)
       cp0_regs[CP0_STATUS_REG] = rrt32;
       cp0_update_count();
       ADD_TO_PC(1);
-      check_interupt();
+      check_interrupt();
       g_dev.r4300.cp0.interrupt_unsafe_state = 1;
-      if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interupt();
+      if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
       g_dev.r4300.cp0.interrupt_unsafe_state = 0;
       ADD_TO_PC(-1);
       break;

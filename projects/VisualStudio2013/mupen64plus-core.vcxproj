@@ -124,7 +124,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\exception.c" />
     <ClCompile Include="..\..\src\device\r4300\instr_counters.c" />
-    <ClCompile Include="..\..\src\device\r4300\interupt.c" />
+    <ClCompile Include="..\..\src\device\r4300\interrupt.c" />
     <ClCompile Include="..\..\src\device\r4300\mi_controller.c" />
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -517,7 +517,7 @@
     <ClInclude Include="..\..\src\device\r4300\exception.h" />
     <ClInclude Include="..\..\src\device\r4300\fpu.h" />
     <ClInclude Include="..\..\src\device\r4300\instr_counters.h" />
-    <ClInclude Include="..\..\src\device\r4300\interupt.h" />
+    <ClInclude Include="..\..\src\device\r4300\interrupt.h" />
     <ClInclude Include="..\..\src\device\r4300\macros.h" />
     <ClInclude Include="..\..\src\device\r4300\mi_controller.h" />
     <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.h">

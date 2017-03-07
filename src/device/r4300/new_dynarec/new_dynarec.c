@@ -36,7 +36,7 @@
 #include "device/rsp/rsp_core.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
-#include "device/r4300/interupt.h"
+#include "device/r4300/interrupt.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/tlb.h"
@@ -5989,7 +5989,7 @@ static void do_ccstub(int n)
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
   emit_writeword(EAX,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
-  emit_call((int)gen_interupt);
+  emit_call((int)gen_interrupt);
   emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&g_dev.r4300.cp0.next_interrupt,EAX);
   emit_readword((int)&pending_exception,EBX);

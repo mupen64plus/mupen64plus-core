@@ -363,7 +363,7 @@ what's new in 0.5:
       feature. Mariokart's monitor in first race running fullspeed and
       puzzle effect in banjo's intro are two examples that i can think
       about but there are many more.
-    + detection of VI interupt rate works on weird country codes
+    + detection of VI interrupt rate works on weird country codes
     + better detection of self modifying code in dma
     + warnings fixed on new gcc versions
     + rsp's dmem and imem are now contiguous in PC's memory (some windows
@@ -510,7 +510,7 @@ what's new in 0.1:
   - Core
     + sram bug zelda oot fixed
     + flashram is working
-    + a new interupt system that'll enabled
+    + a new interrupt system that'll enabled
       more accurate timing in the future but can cause
       some compatibility issues right now
     + bug in DMULT/DMULTU opcode fixed

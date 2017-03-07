@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - interupt.h                                              *
+ *   Mupen64plus - interrupt.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,22 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_R4300_INTERUPT_H
-#define M64P_DEVICE_R4300_INTERUPT_H
+#ifndef M64P_DEVICE_R4300_INTERRUPT_H
+#define M64P_DEVICE_R4300_INTERRUPT_H
 
 #include <stdint.h>
 
-void init_interupt(void);
+void init_interrupt(void);
 
 void raise_maskable_interrupt(uint32_t cause);
 
-void gen_interupt(void);
-void check_interupt(void);
+void gen_interrupt(void);
+void check_interrupt(void);
 
 void translate_event_queue(unsigned int base);
 void remove_event(int type);
-void add_interupt_event_count(int type, unsigned int count);
-void add_interupt_event(int type, unsigned int delay);
+void add_interrupt_event_count(int type, unsigned int count);
+void add_interrupt_event(int type, unsigned int delay);
 unsigned int get_event(int type);
 int get_next_event_type(void);
 
@@ -53,4 +53,4 @@ void load_eventqueue_infos(char *buf);
 #define HW2_INT     0x200
 #define NMI_INT     0x400
 
-#endif /* M64P_DEVICE_R4300_INTERUPT_H */
+#endif /* M64P_DEVICE_R4300_INTERRUPT_H */

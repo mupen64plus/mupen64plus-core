@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - interupt.c                                              *
+ *   Mupen64plus - interrupt.c                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -21,7 +21,7 @@
 
 #define M64P_CORE_PROTOTYPES 1
 
-#include "interupt.h"
+#include "interrupt.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -124,13 +124,13 @@ static int before_event(unsigned int evt1, unsigned int evt2, int type2)
     else return 0;
 }
 
-void add_interupt_event(int type, unsigned int delay)
+void add_interrupt_event(int type, unsigned int delay)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
-    add_interupt_event_count(type, cp0_regs[CP0_COUNT_REG] + delay);
+    add_interrupt_event_count(type, cp0_regs[CP0_COUNT_REG] + delay);
 }
 
-void add_interupt_event_count(int type, unsigned int count)
+void add_interrupt_event_count(int type, unsigned int count)
 {
     struct node* event;
     struct node* e;
@@ -196,7 +196,7 @@ void add_interupt_event_count(int type, unsigned int count)
     }
 }
 
-static void remove_interupt_event(void)
+static void remove_interrupt_event(void)
 {
     struct node* e;
     uint32_t* cp0_regs = r4300_cp0_regs();
@@ -275,8 +275,8 @@ void translate_event_queue(unsigned int base)
     {
         e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
-    add_interupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
-    add_interupt_event_count(SPECIAL_INT, 0);
+    add_interrupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    add_interrupt_event_count(SPECIAL_INT, 0);
 }
 
 int save_eventqueue_infos(char *buf)
@@ -305,23 +305,23 @@ void load_eventqueue_infos(char *buf)
     {
         int type = *((unsigned int*)&buf[len]);
         unsigned int count = *((unsigned int*)&buf[len+4]);
-        add_interupt_event_count(type, count);
+        add_interrupt_event_count(type, count);
         len += 8;
     }
 }
 
-void init_interupt(void)
+void init_interrupt(void)
 {
     g_dev.r4300.cp0.special_done = 1;
 
     g_dev.vi.delay = g_dev.vi.next_vi = 5000;
 
     clear_queue();
-    add_interupt_event_count(VI_INT, g_dev.vi.next_vi);
-    add_interupt_event_count(SPECIAL_INT, 0);
+    add_interrupt_event_count(VI_INT, g_dev.vi.next_vi);
+    add_interrupt_event_count(SPECIAL_INT, 0);
 }
 
-void check_interupt(void)
+void check_interrupt(void)
 {
     struct node* event;
     uint32_t* cp0_regs = r4300_cp0_regs();
@@ -402,16 +402,16 @@ static void special_int_handler(void)
 
 
     g_dev.r4300.cp0.special_done = 1;
-    remove_interupt_event();
-    add_interupt_event_count(SPECIAL_INT, 0);
+    remove_interrupt_event();
+    add_interrupt_event_count(SPECIAL_INT, 0);
 }
 
 static void compare_int_handler(void)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
-    remove_interupt_event();
+    remove_interrupt_event();
     cp0_regs[CP0_COUNT_REG]+=g_dev.r4300.cp0.count_per_op;
-    add_interupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    add_interrupt_event_count(COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
     cp0_regs[CP0_COUNT_REG]-=g_dev.r4300.cp0.count_per_op;
 
     raise_maskable_interrupt(CP0_CAUSE_IP7);
@@ -421,7 +421,7 @@ static void hw2_int_handler(void)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
     // Hardware Interrupt 2 -- remove interrupt event from queue
-    remove_interupt_event();
+    remove_interrupt_event();
 
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
@@ -433,7 +433,7 @@ static void nmi_int_handler(void)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
     // Non Maskable Interrupt -- remove interrupt event from queue
-    remove_interupt_event();
+    remove_interrupt_event();
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
@@ -442,7 +442,7 @@ static void nmi_int_handler(void)
     // clear all interrupts, reset interrupt counters back to 0
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
-    init_interupt();
+    init_interrupt();
     // clear the audio status register so that subsequent write_ai() calls will work properly
     g_dev.ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
@@ -485,7 +485,7 @@ static void reset_hard(void)
     pifbootrom_hle_execute(&g_dev);
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt() = 624999;
-    init_interupt();
+    init_interrupt();
     if(g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
         free_blocks(&g_dev.r4300.cached_interp);
@@ -495,7 +495,7 @@ static void reset_hard(void)
 }
 
 
-void gen_interupt(void)
+void gen_interrupt(void)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
@@ -543,7 +543,7 @@ void gen_interupt(void)
             break;
 
         case VI_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             vi_vertical_interrupt_event(&g_dev.vi);
             break;
     
@@ -552,32 +552,32 @@ void gen_interupt(void)
             break;
     
         case CHECK_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             wrapped_exception_general();
             break;
     
         case SI_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             si_end_of_dma_event(&g_dev.si);
             break;
     
         case PI_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             pi_end_of_dma_event(&g_dev.pi);
             break;
     
         case AI_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             ai_end_of_dma_event(&g_dev.ai);
             break;
 
         case SP_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             rsp_interrupt_event(&g_dev.sp);
             break;
     
         case DP_INT:
-            remove_interupt_event();
+            remove_interrupt_event();
             rdp_interrupt_event(&g_dev.dp);
             break;
 
@@ -591,7 +591,7 @@ void gen_interupt(void)
 
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", g_dev.r4300.cp0.q.first->data.type);
-            remove_interupt_event();
+            remove_interrupt_event();
             wrapped_exception_general();
             break;
     }

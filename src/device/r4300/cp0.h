@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-#include "interupt.h"
+#include "interrupt.h"
 #include "tlb.h"
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
