@@ -46,7 +46,7 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
         return 0;
 
     cp0_update_count();
-    next_ai_event = get_event(AI_INT);
+    next_ai_event = get_event(&ai->r4300->cp0.q, AI_INT);
     if (next_ai_event == 0)
         return 0;
 

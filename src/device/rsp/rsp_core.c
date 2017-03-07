@@ -143,7 +143,7 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     if (w & 0x800000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG7;
     if (w & 0x1000000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG7;
 
-    //if (get_event(SP_INT)) return;
+    //if (get_event(&sp->r4300->cp0.q, SP_INT)) return;
     if (!(w & 0x1) && !(w & 0x4))
         return;
 

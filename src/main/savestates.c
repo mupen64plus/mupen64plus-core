@@ -1287,7 +1287,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
-    PUTDATA(curr, uint32_t, get_event(VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
+    PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc());
     PUTARRAY(r4300_regs(), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this

@@ -149,7 +149,7 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
         cp0->special_done = 0;
     }
 
-    if (get_event(type)) {
+    if (get_event(&cp0->q, type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
         /* FIXME: hack-fix for freezing in Perfect Dark
          * http://code.google.com/p/mupen64plus/issues/detail?id=553
@@ -220,9 +220,9 @@ static void remove_interrupt_event(void)
         : 0;
 }
 
-unsigned int get_event(int type)
+unsigned int get_event(const struct interrupt_queue* q, int type)
 {
-    struct node* e = g_dev.r4300.cp0.q.first;
+    const struct node* e = q->first;
 
     if (e == NULL) {
         return 0;
