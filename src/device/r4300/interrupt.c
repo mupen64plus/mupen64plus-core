@@ -337,10 +337,9 @@ void init_interrupt(struct cp0* cp0)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-void check_interrupt(void)
+void check_interrupt(struct r4300_core* r4300)
 {
     struct node* event;
-    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 

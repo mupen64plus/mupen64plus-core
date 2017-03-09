@@ -101,7 +101,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     case MI_INTR_MASK_REG:
         update_mi_intr_mask(&r4300->mi.regs[MI_INTR_MASK_REG], value & mask);
 
-        check_interrupt();
+        check_interrupt(r4300);
         cp0_update_count();
         if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
         break;
@@ -123,12 +123,12 @@ void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 {
     r4300->mi.regs[MI_INTR_REG] |= mi_intr;
-    check_interrupt();
+    check_interrupt(r4300);
 }
 
 void clear_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 {
     r4300->mi.regs[MI_INTR_REG] &= ~mi_intr;
-    check_interrupt();
+    check_interrupt(r4300);
 }
 

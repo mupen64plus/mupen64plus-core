@@ -101,7 +101,7 @@ DECLARE_INSTRUCTION(MTC0)
       cp0_regs[CP0_STATUS_REG] = rrt32;
       cp0_update_count();
       ADD_TO_PC(1);
-      check_interrupt();
+      check_interrupt(&g_dev.r4300);
       g_dev.r4300.cp0.interrupt_unsafe_state = 1;
       if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
       g_dev.r4300.cp0.interrupt_unsafe_state = 0;

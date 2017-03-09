@@ -125,7 +125,7 @@ cextern pcaddr
 cextern clean_blocks
 cextern invalidate_block
 cextern readmem_dword
-cextern check_interrupt
+cextern new_dynarec_check_interrupt
 cextern get_addr_32
 cextern write_mi
 cextern write_mib
@@ -360,7 +360,7 @@ jump_eret:
     and     ecx,    0FFFFFFFDh
     mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi        ;Count
     mov     [find_local_data(g_dev_r4300_cp0_regs+48)],    ecx        ;Status
-    call    check_interrupt
+    call    new_dynarec_check_interrupt
     mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
     mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
     mov     [find_local_data(last_count)],    eax

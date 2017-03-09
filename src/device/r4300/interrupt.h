@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 
+struct r4300_core;
 struct cp0;
 struct interrupt_queue;
 
@@ -32,7 +33,7 @@ void init_interrupt(struct cp0* cp0);
 void raise_maskable_interrupt(uint32_t cause);
 
 void gen_interrupt(void);
-void check_interrupt(void);
+void check_interrupt(struct r4300_core* r4300);
 
 void translate_event_queue(struct cp0* cp0, unsigned int base);
 void remove_event(struct interrupt_queue* q, int type);
