@@ -39,7 +39,7 @@ void remove_event(int type);
 void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count);
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay);
 unsigned int get_event(const struct interrupt_queue* q, int type);
-int get_next_event_type(void);
+int get_next_event_type(const struct interrupt_queue* q);
 
 int save_eventqueue_infos(char *buf);
 void load_eventqueue_infos(char *buf);

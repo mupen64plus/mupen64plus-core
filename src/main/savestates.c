@@ -1505,7 +1505,7 @@ int savestates_save(void)
        Otherwise try again in a little while. */
     if ((type == savestates_type_pj64_zip ||
          type == savestates_type_pj64_unc) &&
-        get_next_event_type() > COMPARE_INT)
+        get_next_event_type(&g_dev.r4300.cp0.q) > COMPARE_INT)
         return 0;
 
     if (fname != NULL && type == savestates_type_unknown)

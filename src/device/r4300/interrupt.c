@@ -239,11 +239,11 @@ unsigned int get_event(const struct interrupt_queue* q, int type)
         : 0;
 }
 
-int get_next_event_type(void)
+int get_next_event_type(const struct interrupt_queue* q)
 {
-    return (g_dev.r4300.cp0.q.first == NULL)
+    return (q->first == NULL)
         ? 0
-        : g_dev.r4300.cp0.q.first->data.type;
+        : q->first->data.type;
 }
 
 void remove_event(int type)
