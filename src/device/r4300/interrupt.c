@@ -323,17 +323,18 @@ void load_eventqueue_infos(struct cp0* cp0, const char *buf)
     }
 }
 
-void init_interrupt(void)
+void init_interrupt(struct cp0* cp0)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    /* XXX: VI doesn't really belongs here */
+    struct vi_controller* vi = &g_dev.vi;
 
-    g_dev.r4300.cp0.special_done = 1;
+    cp0->special_done = 1;
 
-    g_dev.vi.delay = g_dev.vi.next_vi = 5000;
+    vi->delay = vi->next_vi = 5000;
 
-    clear_queue(&r4300->cp0.q);
-    add_interrupt_event_count(&r4300->cp0, VI_INT, g_dev.vi.next_vi);
-    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
+    clear_queue(&cp0->q);
+    add_interrupt_event_count(cp0, VI_INT, vi->next_vi);
+    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
 void check_interrupt(void)
@@ -473,7 +474,7 @@ static void nmi_int_handler(void)
     // clear all interrupts, reset interrupt counters back to 0
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
-    init_interrupt();
+    init_interrupt(&r4300->cp0);
     // clear the audio status register so that subsequent write_ai() calls will work properly
     g_dev.ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
@@ -516,7 +517,7 @@ static void reset_hard(void)
     pifbootrom_hle_execute(&g_dev);
     g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt() = 624999;
-    init_interrupt();
+    init_interrupt(&g_dev.r4300.cp0);
     if(g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
     {
         free_blocks(&g_dev.r4300.cached_interp);

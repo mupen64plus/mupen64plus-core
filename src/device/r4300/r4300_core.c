@@ -141,7 +141,7 @@ void run_r4300(struct r4300_core* r4300)
     /* XXX: might go to r4300_poweron / soft_reset ? */
     r4300->cp0.last_addr = 0xa4000040;
     *r4300_cp0_next_interrupt() = 624999;
-    init_interrupt();
+    init_interrupt(&r4300->cp0);
 
     if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
     {

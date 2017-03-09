@@ -27,7 +27,7 @@
 struct cp0;
 struct interrupt_queue;
 
-void init_interrupt(void);
+void init_interrupt(struct cp0* cp0);
 
 void raise_maskable_interrupt(uint32_t cause);
 
