@@ -459,9 +459,10 @@ static void hw2_int_handler(void)
     wrapped_exception_general();
 }
 
-static void nmi_int_handler(void)
+/* XXX: this should only require r4300 struct not device ? */
+static void nmi_int_handler(struct device* dev)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    struct r4300_core* r4300 = &dev->r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
     // Non Maskable Interrupt -- remove interrupt event from queue
     remove_interrupt_event(&r4300->cp0);
@@ -469,35 +470,35 @@ static void nmi_int_handler(void)
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
     // simulate the soft reset code which would run from the PIF ROM
-    pifbootrom_hle_execute(&g_dev);
+    pifbootrom_hle_execute(dev);
     // clear all interrupts, reset interrupt counters back to 0
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
     // clear the audio status register so that subsequent write_ai() calls will work properly
-    g_dev.ai.regs[AI_STATUS_REG] = 0;
+    dev->ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
     cp0_regs[CP0_ERROREPC_REG] = *r4300_pc();
     // reset the r4300 internal state
-    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
+    if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
         // clear all the compiled instruction blocks and re-initialize
-        free_blocks(&g_dev.r4300.cached_interp);
-        init_blocks(&g_dev.r4300.cached_interp);
+        free_blocks(&r4300->cached_interp);
+        init_blocks(&r4300->cached_interp);
     }
-    // adjust ErrorEPC if we were in a delay slot, and clear the g_dev.r4300.delay_slot and g_dev.r4300.dyna_interp flags
-    if(g_dev.r4300.delay_slot==1 || g_dev.r4300.delay_slot==3)
+    // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
+    if(r4300->delay_slot==1 || r4300->delay_slot==3)
     {
         cp0_regs[CP0_ERROREPC_REG]-=4;
     }
-    g_dev.r4300.delay_slot = 0;
-    g_dev.r4300.dyna_interp = 0;
+    r4300->delay_slot = 0;
+    r4300->dyna_interp = 0;
     // set next instruction address to reset vector
-    g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
-    generic_jump_to(&g_dev.r4300, UINT32_C(0xa4000040));
+    r4300->cp0.last_addr = UINT32_C(0xa4000040);
+    generic_jump_to(r4300, UINT32_C(0xa4000040));
 
 #ifdef NEW_DYNAREC
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
         uint32_t* cp0_next_regs = r4300_cp0_regs();
         cp0_next_regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
@@ -617,7 +618,7 @@ void gen_interrupt(void)
             break;
 
         case NMI_INT:
-            nmi_int_handler();
+            nmi_int_handler(&g_dev);
             break;
 
         default:
