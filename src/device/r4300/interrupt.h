@@ -35,7 +35,7 @@ void gen_interrupt(void);
 void check_interrupt(void);
 
 void translate_event_queue(unsigned int base);
-void remove_event(int type);
+void remove_event(struct interrupt_queue* q, int type);
 void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count);
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay);
 unsigned int get_event(const struct interrupt_queue* q, int type);

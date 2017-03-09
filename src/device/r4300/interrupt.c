@@ -247,10 +247,10 @@ int get_next_event_type(const struct interrupt_queue* q)
         : q->first->data.type;
 }
 
-void remove_event(int type)
+void remove_event(struct interrupt_queue* q, int type)
 {
     struct node* to_del;
-    struct node* e = g_dev.r4300.cp0.q.first;
+    struct node* e = q->first;
 
     if (e == NULL) {
         return;
@@ -258,8 +258,8 @@ void remove_event(int type)
 
     if (e->data.type == type)
     {
-        g_dev.r4300.cp0.q.first = e->next;
-        free_node(&g_dev.r4300.cp0.q.pool, e);
+        q->first = e->next;
+        free_node(&q->pool, e);
     }
     else
     {
@@ -269,7 +269,7 @@ void remove_event(int type)
         {
             to_del = e->next;
             e->next = to_del->next;
-            free_node(&g_dev.r4300.cp0.q.pool, to_del);
+            free_node(&q->pool, to_del);
         }
     }
 }
@@ -280,8 +280,8 @@ void translate_event_queue(unsigned int base)
     struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
 
-    remove_event(COMPARE_INT);
-    remove_event(SPECIAL_INT);
+    remove_event(&r4300->cp0.q, COMPARE_INT);
+    remove_event(&r4300->cp0.q, SPECIAL_INT);
 
     for (e = r4300->cp0.q.first; e != NULL; e = e->next)
     {

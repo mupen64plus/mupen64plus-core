@@ -87,7 +87,7 @@ DECLARE_INSTRUCTION(MTC0)
       break;
     case CP0_COMPARE_REG:
       cp0_update_count();
-      remove_event(COMPARE_INT);
+      remove_event(&g_dev.r4300.cp0.q, COMPARE_INT);
       add_interrupt_event_count(&g_dev.r4300.cp0, COMPARE_INT, rrt32);
       cp0_regs[CP0_COMPARE_REG] = rrt32;
       cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
