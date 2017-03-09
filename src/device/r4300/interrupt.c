@@ -418,9 +418,8 @@ void raise_maskable_interrupt(uint32_t cause)
     wrapped_exception_general();
 }
 
-static void special_int_handler(void)
+static void special_int_handler(struct cp0* cp0)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     const uint32_t* cp0_regs = r4300_cp0_regs();
 
     if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000)) {
@@ -428,9 +427,9 @@ static void special_int_handler(void)
     }
 
 
-    r4300->cp0.special_done = 1;
-    remove_interrupt_event(&r4300->cp0);
-    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
+    cp0->special_done = 1;
+    remove_interrupt_event(cp0);
+    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
 static void compare_int_handler(void)
@@ -571,7 +570,7 @@ void gen_interrupt(void)
     switch(g_dev.r4300.cp0.q.first->data.type)
     {
         case SPECIAL_INT:
-            special_int_handler();
+            special_int_handler(&g_dev.r4300.cp0);
             break;
 
         case VI_INT:
