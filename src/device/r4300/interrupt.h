@@ -34,7 +34,7 @@ void raise_maskable_interrupt(uint32_t cause);
 void gen_interrupt(void);
 void check_interrupt(void);
 
-void translate_event_queue(unsigned int base);
+void translate_event_queue(struct cp0* cp0, unsigned int base);
 void remove_event(struct interrupt_queue* q, int type);
 void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count);
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay);

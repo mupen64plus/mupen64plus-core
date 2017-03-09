@@ -274,21 +274,20 @@ void remove_event(struct interrupt_queue* q, int type)
     }
 }
 
-void translate_event_queue(unsigned int base)
+void translate_event_queue(struct cp0* cp0, unsigned int base)
 {
     struct node* e;
-    struct r4300_core* r4300 = &g_dev.r4300;
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs();
 
-    remove_event(&r4300->cp0.q, COMPARE_INT);
-    remove_event(&r4300->cp0.q, SPECIAL_INT);
+    remove_event(&cp0->q, COMPARE_INT);
+    remove_event(&cp0->q, SPECIAL_INT);
 
-    for (e = r4300->cp0.q.first; e != NULL; e = e->next)
+    for (e = cp0->q.first; e != NULL; e = e->next)
     {
         e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
-    add_interrupt_event_count(&r4300->cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
-    add_interrupt_event_count(&r4300->cp0, SPECIAL_INT, 0);
+    add_interrupt_event_count(cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
+    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
 int save_eventqueue_infos(char *buf)
