@@ -510,20 +510,22 @@ static void nmi_int_handler(struct device* dev)
 }
 
 
-static void reset_hard(void)
+static void reset_hard(struct device* dev)
 {
-    poweron_device(&g_dev);
+    struct r4300_core* r4300 = &dev->r4300;
 
-    pifbootrom_hle_execute(&g_dev);
-    g_dev.r4300.cp0.last_addr = UINT32_C(0xa4000040);
+    poweron_device(dev);
+
+    pifbootrom_hle_execute(dev);
+    r4300->cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt() = 624999;
-    init_interrupt(&g_dev.r4300.cp0);
-    if(g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
+    init_interrupt(&r4300->cp0);
+    if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
-        free_blocks(&g_dev.r4300.cached_interp);
-        init_blocks(&g_dev.r4300.cached_interp);
+        free_blocks(&r4300->cached_interp);
+        init_blocks(&r4300->cached_interp);
     }
-    generic_jump_to(&g_dev.r4300, g_dev.r4300.cp0.last_addr);
+    generic_jump_to(r4300, r4300->cp0.last_addr);
 }
 
 
@@ -548,7 +550,7 @@ void gen_interrupt(void)
 
         if (g_dev.r4300.reset_hard_job)
         {
-            reset_hard();
+            reset_hard(&g_dev);
             return;
         }
     }
