@@ -41,8 +41,8 @@ void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay);
 unsigned int get_event(const struct interrupt_queue* q, int type);
 int get_next_event_type(const struct interrupt_queue* q);
 
-int save_eventqueue_infos(char *buf);
-void load_eventqueue_infos(char *buf);
+int save_eventqueue_infos(struct cp0* cp0, char *buf);
+void load_eventqueue_infos(struct cp0* cp0, const char *buf);
 
 #define VI_INT      0x001
 #define COMPARE_INT 0x002

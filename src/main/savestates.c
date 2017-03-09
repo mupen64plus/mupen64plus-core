@@ -498,7 +498,7 @@ int savestates_load_m64p(char *filepath)
     // assert(savestateData+savestateSize == curr)
 
     to_little_endian_buffer(queue, 4, 256);
-    load_eventqueue_infos(queue);
+    load_eventqueue_infos(&g_dev.r4300.cp0, queue);
 
 #ifdef NEW_DYNAREC
     if (version >= 0x00010100)
@@ -604,7 +604,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     *((unsigned int*)&buffer[12]) = cp0_regs[CP0_COMPARE_REG];
     *((unsigned int*)&buffer[16]) = 0xFFFFFFFF;
 
-    load_eventqueue_infos(buffer);
+    load_eventqueue_infos(&g_dev.r4300.cp0, buffer);
 
     // FPCR
     *r4300_cp1_fcr0() = GETDATA(curr, uint32_t);
@@ -1023,7 +1023,7 @@ int savestates_save_m64p(char *filepath)
     if(autoinc_save_slot)
         savestates_inc_slot();
 
-    save_eventqueue_infos(queue);
+    save_eventqueue_infos(&g_dev.r4300.cp0, queue);
 
     // Allocate memory for the save state data
     save->size = 16788288 + sizeof(queue) + 4;

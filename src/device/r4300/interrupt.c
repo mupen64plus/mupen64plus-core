@@ -290,14 +290,14 @@ void translate_event_queue(struct cp0* cp0, unsigned int base)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-int save_eventqueue_infos(char *buf)
+int save_eventqueue_infos(struct cp0* cp0, char *buf)
 {
     int len;
     struct node* e;
 
     len = 0;
 
-    for (e = g_dev.r4300.cp0.q.first; e != NULL; e = e->next)
+    for (e = cp0->q.first; e != NULL; e = e->next)
     {
         memcpy(buf + len    , &e->data.type , 4);
         memcpy(buf + len + 4, &e->data.count, 4);
@@ -308,17 +308,17 @@ int save_eventqueue_infos(char *buf)
     return len+4;
 }
 
-void load_eventqueue_infos(char *buf)
+void load_eventqueue_infos(struct cp0* cp0, const char *buf)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
-
     int len = 0;
-    clear_queue(&r4300->cp0.q);
-    while (*((unsigned int*)&buf[len]) != 0xFFFFFFFF)
+
+    clear_queue(&cp0->q);
+
+    while (*((const unsigned int*)&buf[len]) != 0xFFFFFFFF)
     {
-        int type = *((unsigned int*)&buf[len]);
-        unsigned int count = *((unsigned int*)&buf[len+4]);
-        add_interrupt_event_count(&r4300->cp0, type, count);
+        int type = *((const unsigned int*)&buf[len]);
+        unsigned int count = *((const unsigned int*)&buf[len+4]);
+        add_interrupt_event_count(cp0, type, count);
         len += 8;
     }
 }
