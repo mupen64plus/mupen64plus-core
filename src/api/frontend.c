@@ -97,7 +97,7 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     /* allocate memory for rdram */
     disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
     g_rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
-    g_rdram = malloc(g_rdram_size);
+    g_rdram = malloc(RDRAM_MAX_SIZE);
     if (g_rdram == NULL) {
         g_rdram_size = 0;
         return M64ERR_NO_MEMORY;
