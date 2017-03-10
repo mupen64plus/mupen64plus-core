@@ -154,7 +154,7 @@ void run_r4300(struct r4300_core* r4300)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300->emumode = EMUMODE_DYNAREC;
-        init_blocks(&r4300->cached_interp);
+        init_blocks(r4300);
 
 #ifdef NEW_DYNAREC
         new_dynarec_init();
@@ -167,14 +167,14 @@ void run_r4300(struct r4300_core* r4300)
 #if defined(PROFILE_R4300)
         profile_write_end_of_code_blocks(r4300);
 #endif
-        free_blocks(&r4300->cached_interp);
+        free_blocks(r4300);
     }
 #endif
     else /* if (r4300->emumode == EMUMODE_INTERPRETER) */
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300->emumode = EMUMODE_INTERPRETER;
-        init_blocks(&r4300->cached_interp);
+        init_blocks(r4300);
         cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
 
         /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
@@ -186,7 +186,7 @@ void run_r4300(struct r4300_core* r4300)
 
         run_cached_interpreter(r4300);
 
-        free_blocks(&r4300->cached_interp);
+        free_blocks(r4300);
     }
 
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");

@@ -483,8 +483,8 @@ static void nmi_int_handler(struct device* dev)
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
         // clear all the compiled instruction blocks and re-initialize
-        free_blocks(&r4300->cached_interp);
-        init_blocks(&r4300->cached_interp);
+        free_blocks(r4300);
+        init_blocks(r4300);
     }
     // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
     if(r4300->delay_slot==1 || r4300->delay_slot==3)
@@ -522,8 +522,8 @@ static void reset_hard(struct device* dev)
     init_interrupt(&r4300->cp0);
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
-        free_blocks(&r4300->cached_interp);
-        init_blocks(&r4300->cached_interp);
+        free_blocks(r4300);
+        init_blocks(r4300);
     }
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }

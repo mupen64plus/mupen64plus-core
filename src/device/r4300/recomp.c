@@ -2315,15 +2315,17 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
     timed_section_end(TIMED_SECTION_COMPILER);
 }
 
-void free_block(struct precomp_block *block)
+void free_block(struct r4300_core* r4300, struct precomp_block* block)
 {
     size_t memsize = get_block_memsize(block);
 
     if (block->block) {
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+        if (r4300->emumode == EMUMODE_DYNAREC) {
             free_exec(block->block, memsize);
-        else
+        }
+        else {
             free(block->block);
+        }
         block->block = NULL;
     }
     if (block->code) { free_exec(block->code, block->max_code_length); block->code = NULL; }

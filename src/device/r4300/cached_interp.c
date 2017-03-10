@@ -585,26 +585,28 @@ void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t addre
 }
 
 
-void init_blocks(struct cached_interp* cinterp)
+void init_blocks(struct r4300_core* r4300)
 {
-   size_t i;
+    size_t i;
+    struct cached_interp* cinterp = &r4300->cached_interp;
 
-   for (i = 0; i < 0x100000; ++i)
-   {
-      cinterp->invalid_code[i] = 1;
-      cinterp->blocks[i] = NULL;
-   }
+    for (i = 0; i < 0x100000; ++i)
+    {
+        cinterp->invalid_code[i] = 1;
+        cinterp->blocks[i] = NULL;
+    }
 }
 
-void free_blocks(struct cached_interp* cinterp)
+void free_blocks(struct r4300_core* r4300)
 {
-   size_t i;
+    size_t i;
+    struct cached_interp* cinterp = &r4300->cached_interp;
 
-   for (i = 0; i < 0x100000; ++i)
-   {
+    for (i = 0; i < 0x100000; ++i)
+    {
         if (cinterp->blocks[i])
         {
-            free_block(cinterp->blocks[i]);
+            free_block(r4300, cinterp->blocks[i]);
             free(cinterp->blocks[i]);
             cinterp->blocks[i] = NULL;
         }
