@@ -485,7 +485,7 @@ DECLARE_INSTRUCTION(LWC1)
    const unsigned char lslfft = lfft;
    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
    uint64_t temp;
-   if (check_cop1_unusable()) return;
+   if (check_cop1_unusable(&g_dev.r4300)) return;
    ADD_TO_PC(1);
    *memory_address() = lslfaddr;
    g_dev.mem.rdword = &temp;
@@ -498,7 +498,7 @@ DECLARE_INSTRUCTION(LDC1)
 {
    const unsigned char lslfft = lfft;
    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
-   if (check_cop1_unusable()) return;
+   if (check_cop1_unusable(&g_dev.r4300)) return;
    ADD_TO_PC(1);
    *memory_address() = lslfaddr;
    g_dev.mem.rdword = (uint64_t*) (r4300_cp1_regs_double())[lslfft];
@@ -539,7 +539,7 @@ DECLARE_INSTRUCTION(SWC1)
 {
    const unsigned char lslfft = lfft;
    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
-   if (check_cop1_unusable()) return;
+   if (check_cop1_unusable(&g_dev.r4300)) return;
    ADD_TO_PC(1);
    *memory_address() = lslfaddr;
    *memory_wword() = *((uint32_t*)(r4300_cp1_regs_simple())[lslfft]);
@@ -551,7 +551,7 @@ DECLARE_INSTRUCTION(SDC1)
 {
    const unsigned char lslfft = lfft;
    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
-   if (check_cop1_unusable()) return;
+   if (check_cop1_unusable(&g_dev.r4300)) return;
    ADD_TO_PC(1);
    *memory_address() = lslfaddr;
    *memory_wdword() = *((uint64_t*) (r4300_cp1_regs_double())[lslfft]);

@@ -2628,6 +2628,11 @@ void dynarec_exception_general(void)
     exception_general(&g_dev.r4300);
 }
 
+/* Parameterless version of check_cop1_unusable to ease usage in dynarec. */
+int dynarec_check_cop1_unusable(void)
+{
+    return check_cop1_unusable(&g_dev.r4300);
+}
 
 /**********************************************************************
  ************** allocate memory with executable bit set ***************

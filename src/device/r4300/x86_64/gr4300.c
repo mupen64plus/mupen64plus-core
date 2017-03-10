@@ -1872,7 +1872,7 @@ void gencheck_cop1_unusable(void)
    jne_rj(0);
    jump_start_rel8();
 
-   gencallinterp((unsigned long long)check_cop1_unusable, 0);
+   gencallinterp((unsigned long long)dynarec_check_cop1_unusable, 0);
 
    jump_end_rel8();
 }

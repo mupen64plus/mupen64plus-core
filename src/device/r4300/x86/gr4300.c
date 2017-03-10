@@ -1718,7 +1718,7 @@ void gencheck_cop1_unusable(void)
 
    jump_start_rel8();
    
-   gencallinterp((unsigned int)check_cop1_unusable, 0);
+   gencallinterp((unsigned int)dynarec_check_cop1_unusable, 0);
    
    jump_end_rel8();
 }

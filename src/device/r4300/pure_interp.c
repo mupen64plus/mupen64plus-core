@@ -55,7 +55,7 @@ static void InterpretOpcode(void);
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs()[0]) \
       { \
           *link_register = SE32(g_dev.r4300.interp_PC.addr + 8); \
@@ -85,7 +85,7 @@ static void InterpretOpcode(void);
       uint32_t* cp0_regs = r4300_cp0_regs(); \
       const int take_jump = (condition); \
       int skip; \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (take_jump) \
       { \
          cp0_update_count(); \

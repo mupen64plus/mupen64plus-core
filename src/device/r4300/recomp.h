@@ -41,6 +41,7 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
 void dynarec_jump_to_address(void);
 void dynarec_exception_general(void);
+int dynarec_check_cop1_unusable(void);
 
 
 #if defined(PROFILE_R4300)
