@@ -199,7 +199,7 @@ static void NOTCOMPILED(void)
 #endif
 
    if (mem != NULL)
-      recompile_block(mem, g_dev.r4300.cached_interp.blocks[*r4300_pc() >> 12], *r4300_pc());
+      recompile_block(&g_dev.r4300, mem, g_dev.r4300.cached_interp.blocks[*r4300_pc() >> 12], *r4300_pc());
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 

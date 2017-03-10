@@ -2336,137 +2336,145 @@ void free_block(struct r4300_core* r4300, struct precomp_block* block)
 /**********************************************************************
  ********************* recompile a block of code **********************
  **********************************************************************/
-void recompile_block(const uint32_t *source, struct precomp_block *block, uint32_t func)
+void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
 {
     uint32_t i;
-    int length, finished=0;
+    int length, finished = 0;
     timed_section_start(TIMED_SECTION_COMPILER);
     length = (block->end-block->start)/4;
-    g_dev.r4300.recomp.dst_block = block;
+    r4300->recomp.dst_block = block;
 
     //for (i=0; i<16; i++) block->md5[i] = 0;
     block->adler32 = 0;
 
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        g_dev.r4300.recomp.code_length = block->code_length;
-        g_dev.r4300.recomp.max_code_length = block->max_code_length;
-        g_dev.r4300.recomp.inst_pointer = &block->code;
+        r4300->recomp.code_length = block->code_length;
+        r4300->recomp.max_code_length = block->max_code_length;
+        r4300->recomp.inst_pointer = &block->code;
         init_assembler(block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
         init_cache(block->block + (func & 0xFFF) / 4);
     }
 
 #if defined(PROFILE_R4300)
-    g_dev.r4300.recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
+    r4300->recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
 #endif
 
     for (i = (func & 0xFFF) / 4; finished != 2; i++)
     {
-        if(block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
+        if (block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
         {
-            uint32_t address2 =
-                virtual_to_physical_address(&g_dev.r4300, block->start + i*4, 0);
-            if(g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
-                g_dev.r4300.cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = g_dev.r4300.current_instruction_table.NOTCOMPILED2;
+            uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
+            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->current_instruction_table.NOTCOMPILED) {
+                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = r4300->current_instruction_table.NOTCOMPILED2;
+            }
         }
 
-        g_dev.r4300.recomp.SRC = source + i;
-        g_dev.r4300.recomp.src = source[i];
-        g_dev.r4300.recomp.check_nop = source[i+1] == 0;
-        g_dev.r4300.recomp.dst = block->block + i;
-        g_dev.r4300.recomp.dst->addr = block->start + i*4;
-        g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-        g_dev.r4300.recomp.dst->local_addr = g_dev.r4300.recomp.code_length;
+        r4300->recomp.SRC = source + i;
+        r4300->recomp.src = source[i];
+        r4300->recomp.check_nop = source[i+1] == 0;
+        r4300->recomp.dst = block->block + i;
+        r4300->recomp.dst->addr = block->start + i*4;
+        r4300->recomp.dst->reg_cache_infos.need_map = 0;
+        r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) gendebug();
+        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
 #endif
 #if defined(PROFILE_R4300)
         long x86addr = (long) (block->code + block->block[i].local_addr);
-        if (fwrite(source + i, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
-                fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
-            DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
-#endif
-        g_dev.r4300.recomp.recomp_func = NULL;
-        recomp_ops[((g_dev.r4300.recomp.src >> 26) & 0x3F)]();
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
-        g_dev.r4300.recomp.dst = block->block + i;
 
-        /*if ((g_dev.r4300.recomp.dst+1)->ops != NOTCOMPILED && !g_dev.r4300.recomp.delay_slot_compiled &&
+        /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
+         * this MIPS instruction. */
+        if (fwrite(source + i, 1, 4, r4300->recomp.pfProfile) != 4
+        || fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) {
+            DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
+        }
+#endif
+        r4300->recomp.recomp_func = NULL;
+        recomp_ops[((r4300->recomp.src >> 26) & 0x3F)]();
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+        r4300->recomp.dst = block->block + i;
+
+        /*if ((r4300->recomp.dst+1)->ops != NOTCOMPILED && !r4300->recomp.delay_slot_compiled &&
           i < length)
           {
-          if (g_dev.r4300.emumode == EMUMODE_DYNAREC) genlink_subblock();
+          if (r4300->emumode == EMUMODE_DYNAREC) genlink_subblock();
           finished = 2;
           }*/
-        if (g_dev.r4300.recomp.delay_slot_compiled) 
+        if (r4300->recomp.delay_slot_compiled)
         {
-            g_dev.r4300.recomp.delay_slot_compiled--;
+            r4300->recomp.delay_slot_compiled--;
             free_all_registers();
         }
 
-        if (i >= length-2+(length>>2)) finished = 2;
+        if (i >= length-2+(length>>2)) { finished = 2; }
         if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
                     block->start >= UINT32_C(0xc0000000) ||
-                    block->end   <  UINT32_C(0x80000000))) finished = 2;
-        if (g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.ERET || finished == 1) finished = 2;
-        if (/*i >= length &&*/ 
-                (g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.J ||
-                 g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.J_OUT ||
-                 g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JR) &&
+                    block->end   <  UINT32_C(0x80000000))) { finished = 2; }
+        if (r4300->recomp.dst->ops == r4300->current_instruction_table.ERET || finished == 1) { finished = 2; }
+        if (/*i >= length && */
+                (r4300->recomp.dst->ops == r4300->current_instruction_table.J ||
+                 r4300->recomp.dst->ops == r4300->current_instruction_table.J_OUT ||
+                 r4300->recomp.dst->ops == r4300->current_instruction_table.JR) &&
                 !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
-                        block->end   <  UINT32_C(0x80000000))))
+                        block->end   <  UINT32_C(0x80000000)))) {
             finished = 1;
+        }
     }
 
 #if defined(PROFILE_R4300)
-    long x86addr = (long) (block->code + g_dev.r4300.recomp.code_length);
+    long x86addr = (long) (block->code + r4300->recomp.code_length);
     int mipsop = -3; /* -3 == block-postfix */
-    if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
-            fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+    /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
+     * this MIPS instruction. */
+    if (fwrite(&mipsop, 1, 4, r4300->recomp.pfProfile) != 4
+    || fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) {
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
+    }
 #endif
 
     if (i >= length)
     {
-        g_dev.r4300.recomp.dst = block->block + i;
-        g_dev.r4300.recomp.dst->addr = block->start + i*4;
-        g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-        g_dev.r4300.recomp.dst->local_addr = g_dev.r4300.recomp.code_length;
+        r4300->recomp.dst = block->block + i;
+        r4300->recomp.dst->addr = block->start + i*4;
+        r4300->recomp.dst->reg_cache_infos.need_map = 0;
+        r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) gendebug();
+        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
 #endif
         RFIN_BLOCK();
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
         {
-            g_dev.r4300.recomp.dst = block->block + i;
-            g_dev.r4300.recomp.dst->addr = block->start + i*4;
-            g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-            g_dev.r4300.recomp.dst->local_addr = g_dev.r4300.recomp.code_length;
+            r4300->recomp.dst = block->block + i;
+            r4300->recomp.dst->addr = block->start + i*4;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-            if (g_dev.r4300.emumode == EMUMODE_DYNAREC) gendebug();
+            if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
 #endif
             RFIN_BLOCK();
-            if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
+            if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
             i++;
         }
     }
-    else if (g_dev.r4300.emumode == EMUMODE_DYNAREC) genlink_subblock();
+    else if (r4300->emumode == EMUMODE_DYNAREC) { genlink_subblock(); }
 
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
         free_all_registers();
         passe2(block->block, (func&0xFFF)/4, i, block);
-        block->code_length = g_dev.r4300.recomp.code_length;
-        block->max_code_length = g_dev.r4300.recomp.max_code_length;
+        block->code_length = r4300->recomp.code_length;
+        block->max_code_length = r4300->recomp.max_code_length;
         free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
     }
 #ifdef DBG
     DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
 #endif
 #if defined(PROFILE_R4300)
-    fclose(g_dev.r4300.recomp.pfProfile);
-    g_dev.r4300.recomp.pfProfile = NULL;
+    fclose(r4300->recomp.pfProfile);
+    r4300->recomp.pfProfile = NULL;
 #endif
     timed_section_end(TIMED_SECTION_COMPILER);
 }

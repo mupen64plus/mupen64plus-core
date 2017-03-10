@@ -121,7 +121,7 @@ static void decode_recompiled(uint32 addr)
         return;
 
     if(g_dev.r4300.cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == g_dev.r4300.current_instruction_table.NOTCOMPILED)
-    //      recompile_block((int *) g_dev.sp_mem, g_dev.r4300.cached_interp.blocks[addr>>12], addr);
+    //      recompile_block(&g_dev.r4300, (int *) g_dev.sp_mem, g_dev.r4300.cached_interp.blocks[addr>>12], addr);
       {
     strcpy(opcode_recompiled[0],"INVLD");
     strcpy(args_recompiled[0],"NOTCOMPILED");
