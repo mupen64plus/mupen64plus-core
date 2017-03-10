@@ -2469,78 +2469,77 @@ void recompile_block(const uint32_t *source, struct precomp_block *block, uint32
     timed_section_end(TIMED_SECTION_COMPILER);
 }
 
-static int is_jump(void)
+static int is_jump(const struct r4300_core* r4300)
 {
-    recomp_ops[((g_dev.r4300.recomp.src >> 26) & 0x3F)]();
     return
-        (g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.J ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.J_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.J_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JAL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JAL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JAL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQ ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQ_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQ_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNE_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNE_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZ ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZ_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZ_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZ ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZ_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZ_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BEQL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNEL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNEL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BNEL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLEZL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGTZL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JR ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.JALR ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZ ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZ_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZ_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZ ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZ_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZ_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZAL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZAL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZAL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZAL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZAL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZAL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZALL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZALL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BLTZALL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZALL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZALL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BGEZALL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1F ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1F_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1F_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1T ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1T_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1T_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1FL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1FL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1FL_IDLE ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1TL ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1TL_OUT ||
-         g_dev.r4300.recomp.dst->ops == g_dev.r4300.current_instruction_table.BC1TL_IDLE);
+        (r4300->recomp.dst->ops == r4300->current_instruction_table.J ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.J_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.J_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.JAL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.JAL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.JAL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQ ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQ_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQ_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNE_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNE_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZ ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZ_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZ_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZ ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZ_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZ_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BEQL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNEL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNEL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BNEL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLEZL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGTZL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.JR ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.JALR ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZ ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZ_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZ_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZ ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZ_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZ_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZAL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZAL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZAL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZAL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZAL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZAL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZALL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZALL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BLTZALL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZALL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZALL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BGEZALL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1F ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1F_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1F_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1T ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1T_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1T_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1FL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1FL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1FL_IDLE ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1TL ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1TL_OUT ||
+         r4300->recomp.dst->ops == r4300->current_instruction_table.BC1TL_IDLE);
 }
 
 /**********************************************************************
@@ -2554,7 +2553,8 @@ void recompile_opcode(struct r4300_core* r4300)
     r4300->recomp.dst->addr = (r4300->recomp.dst-1)->addr + 4;
     r4300->recomp.dst->reg_cache_infos.need_map = 0;
 
-    if (!is_jump())
+    recomp_ops[((r4300->recomp.src >> 26) & 0x3F)]();
+    if (!is_jump(r4300))
     {
 #if defined(PROFILE_R4300)
         long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
