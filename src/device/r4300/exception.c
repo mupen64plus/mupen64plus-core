@@ -127,10 +127,8 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
     }
 }
 
-/* XXX: parameterless to ease usage in dynarec */
-void exception_general(void)
+void exception_general(struct r4300_core* r4300)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
 
     cp0_update_count();

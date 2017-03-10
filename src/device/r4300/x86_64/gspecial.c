@@ -26,7 +26,6 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
@@ -334,7 +333,7 @@ void gensyscall(void)
    free_registers_move_start();
 
    mov_m32rel_imm32(&r4300_cp0_regs()[CP0_CAUSE_REG], 8 << 2);
-   gencallinterp((unsigned long long)exception_general, 0);
+   gencallinterp((unsigned long long)dynarec_exception_general, 0);
 #endif
 }
 

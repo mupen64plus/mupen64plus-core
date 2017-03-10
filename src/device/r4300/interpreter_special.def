@@ -68,7 +68,7 @@ DECLARE_INSTRUCTION(SYSCALL)
    uint32_t* cp0_regs = r4300_cp0_regs();
 
    cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_SYS;
-   exception_general();
+   exception_general(&g_dev.r4300);
 }
 
 DECLARE_INSTRUCTION(SYNC)

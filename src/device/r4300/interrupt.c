@@ -395,10 +395,10 @@ static void wrapped_exception_general(struct r4300_core* r4300)
         }
         pending_exception=1;
     } else {
-        exception_general();
+        exception_general(r4300);
     }
 #else
-    exception_general();
+    exception_general(r4300);
 #endif
 }
 

@@ -111,7 +111,7 @@ DECLARE_INSTRUCTION(DIV_D)
       //(*r4300_cp1_fcr31()) |= 0x8020;
       /*(*r4300_cp1_fcr31()) |= 0x8000;
       Cause = 15 << 2;
-      exception_general();*/
+      exception_general(&g_dev.r4300);*/
       DebugMessage(M64MSG_ERROR, "DIV_D by 0");
       //return;
    }

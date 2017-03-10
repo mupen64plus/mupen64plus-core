@@ -37,6 +37,7 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
+#include "device/r4300/exception.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h" //include for function prototypes
@@ -2619,6 +2620,12 @@ void profile_write_end_of_code_blocks(struct r4300_core* r4300)
 void dynarec_jump_to_address(void)
 {
     cached_interpreter_dynarec_jump_to(&g_dev.r4300, g_dev.r4300.recomp.jump_to_address);
+}
+
+/* Parameterless version of exception_general to ease usage in dynarec. */
+void dynarec_exception_general(void)
+{
+    exception_general(&g_dev.r4300);
 }
 
 
