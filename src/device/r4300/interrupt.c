@@ -379,11 +379,11 @@ void check_interrupt(struct r4300_core* r4300)
     }
 }
 
-static void wrapped_exception_general(void)
+static void wrapped_exception_general(struct r4300_core* r4300)
 {
 #ifdef NEW_DYNAREC
     uint32_t* cp0_regs = r4300_cp0_regs();
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC) {
+    if (r4300->emumode == EMUMODE_DYNAREC) {
         cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
         pcaddr = 0x80000180;
         cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
@@ -415,7 +415,7 @@ void raise_maskable_interrupt(uint32_t cause)
         return;
     }
 
-    wrapped_exception_general();
+    wrapped_exception_general(&g_dev.r4300);
 }
 
 static void special_int_handler(struct cp0* cp0)
@@ -456,7 +456,7 @@ static void hw2_int_handler(void)
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
 
-    wrapped_exception_general();
+    wrapped_exception_general(r4300);
 }
 
 /* XXX: this should only require r4300 struct not device ? */
@@ -588,7 +588,7 @@ void gen_interrupt(void)
 
         case CHECK_INT:
             remove_interrupt_event(&r4300->cp0);
-            wrapped_exception_general();
+            wrapped_exception_general(r4300);
             break;
 
         case SI_INT:
@@ -627,7 +627,7 @@ void gen_interrupt(void)
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", r4300->cp0.q.first->data.type);
             remove_interrupt_event(&r4300->cp0);
-            wrapped_exception_general();
+            wrapped_exception_general(r4300);
             break;
     }
 
