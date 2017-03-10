@@ -572,7 +572,7 @@ void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t addre
         (*b)->start = (address & ~0xfff);
         (*b)->end = (address & ~0xfff) + 0x1000;
 
-        init_block(*b);
+        init_block(r4300, *b);
     }
 
     /* set new PC */

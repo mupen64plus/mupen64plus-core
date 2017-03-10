@@ -2139,7 +2139,7 @@ static size_t get_block_memsize(const struct precomp_block *block)
 /**********************************************************************
  ******************** initialize an empty block ***********************
  **********************************************************************/
-void init_block(struct precomp_block *block)
+void init_block(struct r4300_core* r4300, struct precomp_block* block)
 {
     int i, length, already_exist = 1;
     timed_section_start(TIMED_SECTION_COMPILER);
@@ -2152,7 +2152,7 @@ void init_block(struct precomp_block *block)
     if (!block->block)
     {
         size_t memsize = get_block_memsize(block);
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) {
+        if (r4300->emumode == EMUMODE_DYNAREC) {
             block->block = (struct precomp_instr *) malloc_exec(memsize);
             if (!block->block) {
                 DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate executable memory for dynamic recompiler. Try to use an interpreter mode.");
@@ -2171,24 +2171,24 @@ void init_block(struct precomp_block *block)
         already_exist = 0;
     }
 
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
         if (!block->code)
         {
 #if defined(PROFILE_R4300)
-            g_dev.r4300.recomp.max_code_length = 524288; /* allocate so much code space that we'll never have to realloc(), because this may */
+            r4300->recomp.max_code_length = 524288; /* allocate so much code space that we'll never have to realloc(), because this may */
             /* cause instruction locations to move, and break our profiling data                */
 #else
-            g_dev.r4300.recomp.max_code_length = 32768;
+            r4300->recomp.max_code_length = 32768;
 #endif
-            block->code = (unsigned char *) malloc_exec(g_dev.r4300.recomp.max_code_length);
+            block->code = (unsigned char *) malloc_exec(r4300->recomp.max_code_length);
         }
         else
         {
-            g_dev.r4300.recomp.max_code_length = block->max_code_length;
+            r4300->recomp.max_code_length = block->max_code_length;
         }
-        g_dev.r4300.recomp.code_length = 0;
-        g_dev.r4300.recomp.inst_pointer = &block->code;
+        r4300->recomp.code_length = 0;
+        r4300->recomp.inst_pointer = &block->code;
 
         if (block->jumps_table)
         {
@@ -2207,109 +2207,109 @@ void init_block(struct precomp_block *block)
     if (!already_exist)
     {
 #if defined(PROFILE_R4300)
-        g_dev.r4300.recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
+        r4300->recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
         long x86addr = (long) block->code;
         int mipsop = -2; /* -2 == NOTCOMPILED block at beginning of x86 code */
-        if (fwrite(&mipsop, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
-                fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        if (fwrite(&mipsop, 1, 4, r4300->recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
+                fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
 #endif
 
         for (i=0; i<length; i++)
         {
-            g_dev.r4300.recomp.dst = block->block + i;
-            g_dev.r4300.recomp.dst->addr = block->start + i*4;
-            g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-            g_dev.r4300.recomp.dst->local_addr = g_dev.r4300.recomp.code_length;
+            r4300->recomp.dst = block->block + i;
+            r4300->recomp.dst->addr = block->start + i*4;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-            if (g_dev.r4300.emumode == EMUMODE_DYNAREC) gendebug();
+            if (r4300->emumode == EMUMODE_DYNAREC) gendebug();
 #endif
             RNOTCOMPILED();
-            if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
+            if (r4300->emumode == EMUMODE_DYNAREC) r4300->recomp.recomp_func();
         }
 #if defined(PROFILE_R4300)
-        fclose(g_dev.r4300.recomp.pfProfile);
-        g_dev.r4300.recomp.pfProfile = NULL;
+        fclose(r4300->recomp.pfProfile);
+        r4300->recomp.pfProfile = NULL;
 #endif
-        g_dev.r4300.recomp.init_length = g_dev.r4300.recomp.code_length;
+        r4300->recomp.init_length = r4300->recomp.code_length;
     }
     else
     {
 #if defined(PROFILE_R4300)
-        g_dev.r4300.recomp.code_length = block->code_length; /* leave old instructions in their place */
+        r4300->recomp.code_length = block->code_length; /* leave old instructions in their place */
 #else
-        g_dev.r4300.recomp.code_length = g_dev.r4300.recomp.init_length; /* recompile everything, overwrite old recompiled instructions */
+        r4300->recomp.code_length = r4300->recomp.init_length; /* recompile everything, overwrite old recompiled instructions */
 #endif
         for (i=0; i<length; i++)
         {
-            g_dev.r4300.recomp.dst = block->block + i;
-            g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-            g_dev.r4300.recomp.dst->local_addr = i * (g_dev.r4300.recomp.init_length / length);
-            g_dev.r4300.recomp.dst->ops = g_dev.r4300.current_instruction_table.NOTCOMPILED;
+            r4300->recomp.dst = block->block + i;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = i * (r4300->recomp.init_length / length);
+            r4300->recomp.dst->ops = r4300->current_instruction_table.NOTCOMPILED;
         }
     }
 
-    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
         free_all_registers();
         /* calling pass2 of the assembler is not necessary here because all of the code emitted by
            gennotcompiled() and gendebug() is position-independent and contains no jumps . */
-        block->code_length = g_dev.r4300.recomp.code_length;
-        block->max_code_length = g_dev.r4300.recomp.max_code_length;
+        block->code_length = r4300->recomp.code_length;
+        block->max_code_length = r4300->recomp.max_code_length;
         free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
     }
 
     /* here we're marking the block as a valid code even if it's not compiled
      * yet as the game should have already set up the code correctly.
      */
-    g_dev.r4300.cached_interp.invalid_code[block->start>>12] = 0;
+    r4300->cached_interp.invalid_code[block->start>>12] = 0;
     if (block->end < UINT32_C(0x80000000) || block->start >= UINT32_C(0xc0000000))
     {
-        uint32_t paddr = virtual_to_physical_address(&g_dev.r4300, block->start, 2);
-        g_dev.r4300.cached_interp.invalid_code[paddr>>12] = 0;
-        if (!g_dev.r4300.cached_interp.blocks[paddr>>12])
+        uint32_t paddr = virtual_to_physical_address(r4300, block->start, 2);
+        r4300->cached_interp.invalid_code[paddr>>12] = 0;
+        if (!r4300->cached_interp.blocks[paddr>>12])
         {
-            g_dev.r4300.cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->code = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->block = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->jumps_table = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->riprel_table = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+            r4300->cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+            r4300->cached_interp.blocks[paddr>>12]->code = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->block = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->jumps_table = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->riprel_table = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+            r4300->cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
         }
-        init_block(g_dev.r4300.cached_interp.blocks[paddr>>12]);
+        init_block(r4300, r4300->cached_interp.blocks[paddr>>12]);
 
         paddr += block->end - block->start - 4;
-        g_dev.r4300.cached_interp.invalid_code[paddr>>12] = 0;
-        if (!g_dev.r4300.cached_interp.blocks[paddr>>12])
+        r4300->cached_interp.invalid_code[paddr>>12] = 0;
+        if (!r4300->cached_interp.blocks[paddr>>12])
         {
-            g_dev.r4300.cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->code = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->block = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->jumps_table = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->riprel_table = NULL;
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
-            g_dev.r4300.cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+            r4300->cached_interp.blocks[paddr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+            r4300->cached_interp.blocks[paddr>>12]->code = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->block = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->jumps_table = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->riprel_table = NULL;
+            r4300->cached_interp.blocks[paddr>>12]->start = paddr & ~UINT32_C(0xFFF);
+            r4300->cached_interp.blocks[paddr>>12]->end = (paddr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
         }
-        init_block(g_dev.r4300.cached_interp.blocks[paddr>>12]);
+        init_block(r4300, r4300->cached_interp.blocks[paddr>>12]);
     }
     else
     {
         uint32_t alt_addr = block->start ^ UINT32_C(0x20000000);
 
-        if (g_dev.r4300.cached_interp.invalid_code[alt_addr>>12])
+        if (r4300->cached_interp.invalid_code[alt_addr>>12])
         {
-            if (!g_dev.r4300.cached_interp.blocks[alt_addr>>12])
+            if (!r4300->cached_interp.blocks[alt_addr>>12])
             {
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->code = NULL;
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->block = NULL;
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->jumps_table = NULL;
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->riprel_table = NULL;
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->start = alt_addr & ~UINT32_C(0xFFF);
-                g_dev.r4300.cached_interp.blocks[alt_addr>>12]->end = (alt_addr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
+                r4300->cached_interp.blocks[alt_addr>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
+                r4300->cached_interp.blocks[alt_addr>>12]->code = NULL;
+                r4300->cached_interp.blocks[alt_addr>>12]->block = NULL;
+                r4300->cached_interp.blocks[alt_addr>>12]->jumps_table = NULL;
+                r4300->cached_interp.blocks[alt_addr>>12]->riprel_table = NULL;
+                r4300->cached_interp.blocks[alt_addr>>12]->start = alt_addr & ~UINT32_C(0xFFF);
+                r4300->cached_interp.blocks[alt_addr>>12]->end = (alt_addr & ~UINT32_C(0xFFF)) + UINT32_C(0x1000);
             }
-            init_block(g_dev.r4300.cached_interp.blocks[alt_addr>>12]);
+            init_block(r4300, r4300->cached_interp.blocks[alt_addr>>12]);
         }
     }
     timed_section_end(TIMED_SECTION_COMPILER);
