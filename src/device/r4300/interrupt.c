@@ -432,9 +432,8 @@ static void special_int_handler(struct cp0* cp0)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-static void compare_int_handler(void)
+static void compare_int_handler(struct r4300_core* r4300)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
 
     remove_interrupt_event(&r4300->cp0);
@@ -446,9 +445,8 @@ static void compare_int_handler(void)
     raise_maskable_interrupt(r4300, CP0_CAUSE_IP7);
 }
 
-static void hw2_int_handler(void)
+static void hw2_int_handler(struct r4300_core* r4300)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs();
     // Hardware Interrupt 2 -- remove interrupt event from queue
     remove_interrupt_event(&r4300->cp0);
@@ -583,7 +581,7 @@ void gen_interrupt(void)
             break;
 
         case COMPARE_INT:
-            compare_int_handler();
+            compare_int_handler(r4300);
             break;
 
         case CHECK_INT:
@@ -617,7 +615,7 @@ void gen_interrupt(void)
             break;
 
         case HW2_INT:
-            hw2_int_handler();
+            hw2_int_handler(r4300);
             break;
 
         case NMI_INT:
