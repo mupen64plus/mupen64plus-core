@@ -32,7 +32,7 @@ struct r4300_core;
 void recompile_block(const uint32_t *source, struct precomp_block* block, uint32_t func);
 void init_block(struct precomp_block* block);
 void free_block(struct precomp_block* block);
-void recompile_opcode(void);
+void recompile_opcode(struct r4300_core* r4300);
 void dyna_jump(void);
 void dyna_start(void *code);
 void dyna_stop(void);

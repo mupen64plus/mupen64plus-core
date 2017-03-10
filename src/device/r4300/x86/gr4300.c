@@ -361,7 +361,7 @@ void gencallinterp(uintptr_t addr, int jump)
 void gendelayslot(void)
 {
    mov_m32_imm32(&g_dev.r4300.delay_slot, 1);
-   recompile_opcode();
+   recompile_opcode(&g_dev.r4300);
    
    free_all_registers();
    gencp0_update_count(g_dev.r4300.recomp.dst->addr+4);

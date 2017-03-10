@@ -2546,31 +2546,36 @@ static int is_jump(void)
 /**********************************************************************
  ************ recompile only one opcode (use for delay slot) **********
  **********************************************************************/
-void recompile_opcode(void)
+void recompile_opcode(struct r4300_core* r4300)
 {
-    g_dev.r4300.recomp.SRC++;
-    g_dev.r4300.recomp.src = *g_dev.r4300.recomp.SRC;
-    g_dev.r4300.recomp.dst++;
-    g_dev.r4300.recomp.dst->addr = (g_dev.r4300.recomp.dst-1)->addr + 4;
-    g_dev.r4300.recomp.dst->reg_cache_infos.need_map = 0;
-    if(!is_jump())
+    r4300->recomp.SRC++;
+    r4300->recomp.src = *r4300->recomp.SRC;
+    r4300->recomp.dst++;
+    r4300->recomp.dst->addr = (r4300->recomp.dst-1)->addr + 4;
+    r4300->recomp.dst->reg_cache_infos.need_map = 0;
+
+    if (!is_jump())
     {
 #if defined(PROFILE_R4300)
-        long x86addr = (long) ((*g_dev.r4300.recomp.inst_pointer) + g_dev.r4300.recomp.code_length);
-        if (fwrite(&g_dev.r4300.recomp.src, 1, 4, g_dev.r4300.recomp.pfProfile) != 4 || // write 4-byte MIPS opcode
-                fwrite(&x86addr, 1, sizeof(char *), g_dev.r4300.recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
+        long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
+
+        /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
+         * this MIPS instruction. */
+        if (fwrite(&r4300->recomp.src, 1, 4, r4300->recomp.pfProfile) != 4
+        || fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) {
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
+        }
 #endif
-        g_dev.r4300.recomp.recomp_func = NULL;
-        recomp_ops[((g_dev.r4300.recomp.src >> 26) & 0x3F)]();
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
+        r4300->recomp.recomp_func = NULL;
+        recomp_ops[((r4300->recomp.src >> 26) & 0x3F)]();
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
     }
     else
     {
         RNOP();
-        if (g_dev.r4300.emumode == EMUMODE_DYNAREC) g_dev.r4300.recomp.recomp_func();
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
     }
-    g_dev.r4300.recomp.delay_slot_compiled = 2;
+    r4300->recomp.delay_slot_compiled = 2;
 }
 
 #if defined(PROFILE_R4300)
