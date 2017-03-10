@@ -139,7 +139,7 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
         if (r4300->cp0.tlb.LUT_r[address>>12])
             return (r4300->cp0.tlb.LUT_r[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, g_dev.r4300.pc->addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, r4300->pc->addr);
     //getchar();
     TLB_refill_exception(r4300, address, w);
     //return 0x80000000;
