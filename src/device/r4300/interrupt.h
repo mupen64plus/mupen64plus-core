@@ -30,7 +30,7 @@ struct interrupt_queue;
 
 void init_interrupt(struct cp0* cp0);
 
-void raise_maskable_interrupt(uint32_t cause);
+void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause);
 
 void gen_interrupt(void);
 void check_interrupt(struct r4300_core* r4300);

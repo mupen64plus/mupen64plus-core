@@ -402,7 +402,7 @@ static void wrapped_exception_general(struct r4300_core* r4300)
 #endif
 }
 
-void raise_maskable_interrupt(uint32_t cause)
+void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
@@ -415,7 +415,7 @@ void raise_maskable_interrupt(uint32_t cause)
         return;
     }
 
-    wrapped_exception_general(&g_dev.r4300);
+    wrapped_exception_general(r4300);
 }
 
 static void special_int_handler(struct cp0* cp0)
@@ -443,7 +443,7 @@ static void compare_int_handler(void)
     add_interrupt_event_count(&r4300->cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
     cp0_regs[CP0_COUNT_REG] -= r4300->cp0.count_per_op;
 
-    raise_maskable_interrupt(CP0_CAUSE_IP7);
+    raise_maskable_interrupt(r4300, CP0_CAUSE_IP7);
 }
 
 static void hw2_int_handler(void)

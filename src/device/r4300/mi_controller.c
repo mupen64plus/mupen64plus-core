@@ -116,7 +116,7 @@ void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
     r4300->mi.regs[MI_INTR_REG] |= mi_intr;
 
     if (r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG])
-        raise_maskable_interrupt(CP0_CAUSE_IP2);
+        raise_maskable_interrupt(r4300, CP0_CAUSE_IP2);
 }
 
 /* interrupt execution is scheduled (if not masked) */
