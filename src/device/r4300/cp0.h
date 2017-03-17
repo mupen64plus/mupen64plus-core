@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 
-#include "interupt.h"
+#include "interrupt.h"
 #include "tlb.h"
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
@@ -200,7 +200,7 @@ uint32_t* r4300_cp0_regs(void);
 uint32_t* r4300_cp0_last_addr(void);
 unsigned int* r4300_cp0_next_interrupt(void);
 
-int check_cop1_unusable(void);
+int check_cop1_unusable(struct r4300_core* r4300);
 
 void cp0_update_count(void);
 

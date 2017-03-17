@@ -22,10 +22,11 @@
 #include "tlb.h"
 
 #include "api/m64p_types.h"
-#include "exception.h"
-#include "main/main.h"
+#include "device/r4300/exception.h"
+#include "device/r4300/r4300_core.h"
 #include "main/rom.h"
 
+#include <assert.h>
 #include <string.h>
 
 void poweron_tlb(struct tlb* tlb)
@@ -36,74 +37,73 @@ void poweron_tlb(struct tlb* tlb)
     memset(tlb->LUT_w, 0, 0x100000 * sizeof(tlb->LUT_w[0]));
 }
 
-void tlb_unmap(struct tlb_entry* entry)
+void tlb_unmap(struct tlb* tlb, size_t entry)
 {
     unsigned int i;
+    const struct tlb_entry* e;
 
-    /* FIXME! avoid g_dev usage */
-    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
+    assert(entry < 32);
+    e = &tlb->entries[entry];
 
-    if (entry->v_even)
+    if (e->v_even)
     {
-        for (i=entry->start_even; i<entry->end_even; i += 0x1000)
+        for (i=e->start_even; i<e->end_even; i += 0x1000)
             tlb->LUT_r[i>>12] = 0;
-        if (entry->d_even)
-            for (i=entry->start_even; i<entry->end_even; i += 0x1000)
+        if (e->d_even)
+            for (i=e->start_even; i<e->end_even; i += 0x1000)
                 tlb->LUT_w[i>>12] = 0;
     }
 
-    if (entry->v_odd)
+    if (e->v_odd)
     {
-        for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
+        for (i=e->start_odd; i<e->end_odd; i += 0x1000)
             tlb->LUT_r[i>>12] = 0;
-        if (entry->d_odd)
-            for (i=entry->start_odd; i<entry->end_odd; i += 0x1000)
+        if (e->d_odd)
+            for (i=e->start_odd; i<e->end_odd; i += 0x1000)
                 tlb->LUT_w[i>>12] = 0;
     }
 }
 
-void tlb_map(struct tlb_entry* entry)
+void tlb_map(struct tlb* tlb, size_t entry)
 {
     unsigned int i;
+    const struct tlb_entry* e;
 
-    /* FIXME! avoid g_dev usage */
-    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
+    assert(entry < 32);
+    e = &tlb->entries[entry];
 
-    if (entry->v_even)
+    if (e->v_even)
     {
-        if (entry->start_even < entry->end_even &&
-            !(entry->start_even >= 0x80000000 && entry->end_even < 0xC0000000) &&
-            entry->phys_even < 0x20000000)
+        if (e->start_even < e->end_even &&
+            !(e->start_even >= 0x80000000 && e->end_even < 0xC0000000) &&
+            e->phys_even < 0x20000000)
         {
-            for (i=entry->start_even;i<entry->end_even;i+=0x1000)
-                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
-            if (entry->d_even)
-                for (i=entry->start_even;i<entry->end_even;i+=0x1000)
-                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_even + (i - entry->start_even) + 0xFFF);
+            for (i=e->start_even;i<e->end_even;i+=0x1000)
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (e->phys_even + (i - e->start_even) + 0xFFF);
+            if (e->d_even)
+                for (i=e->start_even;i<e->end_even;i+=0x1000)
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (e->phys_even + (i - e->start_even) + 0xFFF);
         }
     }
 
-    if (entry->v_odd)
+    if (e->v_odd)
     {
-        if (entry->start_odd < entry->end_odd &&
-            !(entry->start_odd >= 0x80000000 && entry->end_odd < 0xC0000000) &&
-            entry->phys_odd < 0x20000000)
+        if (e->start_odd < e->end_odd &&
+            !(e->start_odd >= 0x80000000 && e->end_odd < 0xC0000000) &&
+            e->phys_odd < 0x20000000)
         {
-            for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
-                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
-            if (entry->d_odd)
-                for (i=entry->start_odd;i<entry->end_odd;i+=0x1000)
-                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (entry->phys_odd + (i - entry->start_odd) + 0xFFF);
+            for (i=e->start_odd;i<e->end_odd;i+=0x1000)
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (e->phys_odd + (i - e->start_odd) + 0xFFF);
+            if (e->d_odd)
+                for (i=e->start_odd;i<e->end_odd;i+=0x1000)
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (e->phys_odd + (i - e->start_odd) + 0xFFF);
         }
     }
 }
 
-uint32_t virtual_to_physical_address(uint32_t addresse, int w)
+uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
 {
-    /* FIXME! avoid g_dev usage */
-    struct tlb* tlb = &g_dev.r4300.cp0.tlb;
-
-    if (addresse >= UINT32_C(0x7f000000) && addresse < UINT32_C(0x80000000) && isGoldeneyeRom)
+    if (address >= UINT32_C(0x7f000000) && address < UINT32_C(0x80000000) && isGoldeneyeRom)
     {
         /**************************************************
          GoldenEye 007 hack allows for use of TLB.
@@ -113,35 +113,35 @@ uint32_t virtual_to_physical_address(uint32_t addresse, int w)
         {
         case 0x45:
             // U
-            return UINT32_C(0xb0034b30) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b30) + (address & UINT32_C(0xFFFFFF));
             break;
         case 0x4A:
             // J
-            return UINT32_C(0xb0034b70) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b70) + (address & UINT32_C(0xFFFFFF));
             break;
         case 0x50:
             // E
-            return UINT32_C(0xb00329f0) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb00329f0) + (address & UINT32_C(0xFFFFFF));
             break;
         default:
             // UNKNOWN COUNTRY CODE FOR GOLDENEYE USING AMERICAN VERSION HACK
-            return UINT32_C(0xb0034b30) + (addresse & UINT32_C(0xFFFFFF));
+            return UINT32_C(0xb0034b30) + (address & UINT32_C(0xFFFFFF));
             break;
         }
     }
     if (w == 1)
     {
-        if (tlb->LUT_w[addresse>>12])
-            return (tlb->LUT_w[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (r4300->cp0.tlb.LUT_w[address>>12])
+            return (r4300->cp0.tlb.LUT_w[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
     else
     {
-        if (tlb->LUT_r[addresse>>12])
-            return (tlb->LUT_r[addresse>>12] & UINT32_C(0xFFFFF000)) | (addresse & UINT32_C(0xFFF));
+        if (r4300->cp0.tlb.LUT_r[address>>12])
+            return (r4300->cp0.tlb.LUT_r[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
-    //printf("tlb exception !!! @ %x, %x, add:%x\n", addresse, w, g_dev.r4300.pc->addr);
+    //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, r4300->pc->addr);
     //getchar();
-    TLB_refill_exception(addresse,w);
+    TLB_refill_exception(r4300, address, w);
     //return 0x80000000;
     return 0x00000000;
 }

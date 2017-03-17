@@ -273,7 +273,7 @@ void gensdl(void);
 void gensdr(void);
 void genlink_subblock(void);
 void gendelayslot(void);
-void gencheck_interupt_reg(void);
+void gencheck_interrupt_reg(void);
 void gentest(void);
 void gentest_out(void);
 void gentest_idle(void);

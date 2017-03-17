@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - interupt.h                                              *
+ *   Mupen64plus - interrupt.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,27 +19,31 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_R4300_INTERUPT_H
-#define M64P_DEVICE_R4300_INTERUPT_H
+#ifndef M64P_DEVICE_R4300_INTERRUPT_H
+#define M64P_DEVICE_R4300_INTERRUPT_H
 
 #include <stdint.h>
 
-void init_interupt(void);
+struct r4300_core;
+struct cp0;
+struct interrupt_queue;
 
-void raise_maskable_interrupt(uint32_t cause);
+void init_interrupt(struct cp0* cp0);
 
-void gen_interupt(void);
-void check_interupt(void);
+void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause);
 
-void translate_event_queue(unsigned int base);
-void remove_event(int type);
-void add_interupt_event_count(int type, unsigned int count);
-void add_interupt_event(int type, unsigned int delay);
-unsigned int get_event(int type);
-int get_next_event_type(void);
+void gen_interrupt(void);
+void check_interrupt(struct r4300_core* r4300);
 
-int save_eventqueue_infos(char *buf);
-void load_eventqueue_infos(char *buf);
+void translate_event_queue(struct cp0* cp0, unsigned int base);
+void remove_event(struct interrupt_queue* q, int type);
+void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count);
+void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay);
+unsigned int get_event(const struct interrupt_queue* q, int type);
+int get_next_event_type(const struct interrupt_queue* q);
+
+int save_eventqueue_infos(struct cp0* cp0, char *buf);
+void load_eventqueue_infos(struct cp0* cp0, const char *buf);
 
 #define VI_INT      0x001
 #define COMPARE_INT 0x002
@@ -53,4 +57,4 @@ void load_eventqueue_infos(char *buf);
 #define HW2_INT     0x200
 #define NMI_INT     0x400
 
-#endif /* M64P_DEVICE_R4300_INTERUPT_H */
+#endif /* M64P_DEVICE_R4300_INTERRUPT_H */

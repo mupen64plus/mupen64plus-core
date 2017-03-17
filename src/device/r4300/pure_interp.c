@@ -33,7 +33,7 @@
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
 #include "device/r4300/exception.h"
-#include "device/r4300/interupt.h"
+#include "device/r4300/interrupt.h"
 #include "device/r4300/tlb.h"
 #include "main/main.h"
 #include "osal/preproc.h"
@@ -55,7 +55,7 @@ static void InterpretOpcode(void);
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs()[0]) \
       { \
           *link_register = SE32(g_dev.r4300.interp_PC.addr + 8); \
@@ -78,14 +78,14 @@ static void InterpretOpcode(void);
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
       uint32_t* cp0_regs = r4300_cp0_regs(); \
       const int take_jump = (condition); \
       int skip; \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (take_jump) \
       { \
          cp0_update_count(); \
@@ -720,11 +720,11 @@ void InterpretOpcode()
 	} /* switch ((op >> 26) & 0x3F) */
 }
 
-void pure_interpreter(void)
+void run_pure_interpreter(struct r4300_core* r4300)
 {
    *r4300_stop() = 0;
-   *r4300_pc_struct() = &g_dev.r4300.interp_PC;
-   *r4300_pc() = g_dev.r4300.cp0.last_addr = 0xa4000040;
+   *r4300_pc_struct() = &r4300->interp_PC;
+   *r4300_pc() = r4300->cp0.last_addr = 0xa4000040;
 
    while (!*r4300_stop())
    {

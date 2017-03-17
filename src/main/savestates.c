@@ -489,7 +489,7 @@ int savestates_load_m64p(char *filepath)
         g_dev.r4300.cp0.tlb.entries[i].phys_odd = GETDATA(curr, unsigned int);
     }
 
-    savestates_load_set_pc(GETDATA(curr, uint32_t));
+    savestates_load_set_pc(&g_dev.r4300, GETDATA(curr, uint32_t));
 
     *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
@@ -498,7 +498,7 @@ int savestates_load_m64p(char *filepath)
     // assert(savestateData+savestateSize == curr)
 
     to_little_endian_buffer(queue, 4, 256);
-    load_eventqueue_infos(queue);
+    load_eventqueue_infos(&g_dev.r4300.cp0, queue);
 
 #ifdef NEW_DYNAREC
     if (version >= 0x00010100)
@@ -591,7 +591,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
 
-    // Initialze the interupts
+    // Initialze the interrupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
     *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
@@ -604,7 +604,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     *((unsigned int*)&buffer[12]) = cp0_regs[CP0_COMPARE_REG];
     *((unsigned int*)&buffer[16]) = 0xFFFFFFFF;
 
-    load_eventqueue_infos(buffer);
+    load_eventqueue_infos(&g_dev.r4300.cp0, buffer);
 
     // FPCR
     *r4300_cp1_fcr0() = GETDATA(curr, uint32_t);
@@ -757,7 +757,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
           (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
         g_dev.r4300.cp0.tlb.entries[i].phys_odd = g_dev.r4300.cp0.tlb.entries[i].pfn_odd << 12;
 
-        tlb_map(&g_dev.r4300.cp0.tlb.entries[i]);
+        tlb_map(&g_dev.r4300.cp0.tlb, i);
     }
 
     // pif ram
@@ -781,7 +781,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(*r4300_cp0_last_addr());
+    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr());
 
     // assert(savestateData+savestateSize == curr)
 
@@ -1023,7 +1023,7 @@ int savestates_save_m64p(char *filepath)
     if(autoinc_save_slot)
         savestates_inc_slot();
 
-    save_eventqueue_infos(queue);
+    save_eventqueue_infos(&g_dev.r4300.cp0, queue);
 
     // Allocate memory for the save state data
     save->size = 16788288 + sizeof(queue) + 4;
@@ -1287,7 +1287,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
-    PUTDATA(curr, uint32_t, get_event(VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
+    PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc());
     PUTARRAY(r4300_regs(), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
@@ -1505,7 +1505,7 @@ int savestates_save(void)
        Otherwise try again in a little while. */
     if ((type == savestates_type_pj64_zip ||
          type == savestates_type_pj64_unc) &&
-        get_next_event_type() > COMPARE_INT)
+        get_next_event_type(&g_dev.r4300.cp0.q) > COMPARE_INT)
         return 0;
 
     if (fname != NULL && type == savestates_type_unknown)

@@ -186,7 +186,7 @@ As in the original mupen64plus, the emulated clock runs at 37.5 MHz, and each in
 
 ==Interrupt handler==
 
-When the cycle count register reaches its limit, cc_interrupt is called, which in turn calls gen_interupt [sic].  If interrupts are not enabled, cc_interrupt returns.  If interrupts are enabled, and an interrupt is to be taken, the pending_exception flag will be set.  In this case, cc_interrupt does not return, and instead pops the stack and causes an unconditional jump to the address in pcaddr (usually 0x80000180).
+When the cycle count register reaches its limit, cc_interrupt is called, which in turn calls gen_interrupt.  If interrupts are not enabled, cc_interrupt returns.  If interrupts are enabled, and an interrupt is to be taken, the pending_exception flag will be set.  In this case, cc_interrupt does not return, and instead pops the stack and causes an unconditional jump to the address in pcaddr (usually 0x80000180).
 
 There is one additional case where the interrupt handler may be called.  If interrupts were disabled, and are enabled by writing to coprocessor 0 register 12, any pending interrupts are handled immediately.
 

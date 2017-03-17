@@ -109,7 +109,7 @@ static void TLBWrite(unsigned int idx)
       }
    }
 
-   tlb_unmap(&g_dev.r4300.cp0.tlb.entries[idx]);
+   tlb_unmap(&g_dev.r4300.cp0.tlb, idx);
 
    g_dev.r4300.cp0.tlb.entries[idx].g = (cp0_regs[CP0_ENTRYLO0_REG] & cp0_regs[CP0_ENTRYLO1_REG] & 1);
    g_dev.r4300.cp0.tlb.entries[idx].pfn_even = (cp0_regs[CP0_ENTRYLO0_REG] & UINT32_C(0x3FFFFFC0)) >> 6;
@@ -136,7 +136,7 @@ static void TLBWrite(unsigned int idx)
      (g_dev.r4300.cp0.tlb.entries[idx].mask << 12) + UINT32_C(0xFFF);
    g_dev.r4300.cp0.tlb.entries[idx].phys_odd = g_dev.r4300.cp0.tlb.entries[idx].pfn_odd << 12;
    
-   tlb_map(&g_dev.r4300.cp0.tlb.entries[idx]);
+   tlb_map(&g_dev.r4300.cp0.tlb, idx);
 
    if (g_dev.r4300.emumode != EMUMODE_PURE_INTERPRETER)
    {
@@ -253,10 +253,10 @@ DECLARE_INSTRUCTION(ERET)
    else
    {
      cp0_regs[CP0_STATUS_REG] &= ~CP0_STATUS_EXL;
-     generic_jump_to(cp0_regs[CP0_EPC_REG]);
+     generic_jump_to(&g_dev.r4300, cp0_regs[CP0_EPC_REG]);
    }
    g_dev.r4300.llbit = 0;
-   check_interupt();
+   check_interrupt(&g_dev.r4300);
    g_dev.r4300.cp0.last_addr = PCADDR;
-   if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interupt();
+   if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
 }

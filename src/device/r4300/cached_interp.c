@@ -32,7 +32,7 @@
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
-#include "device/r4300/interupt.h"
+#include "device/r4300/interrupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
@@ -63,7 +63,7 @@
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs()[0]) \
       { \
          *link_register = SE32(*r4300_pc() + 8); \
@@ -87,14 +87,14 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_OUT(void) \
    { \
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs()[0]) \
       { \
          *link_register = SE32(*r4300_pc() + 8); \
@@ -109,7 +109,7 @@
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
          { \
-            jump_to(jump_target); \
+            cached_interpreter_dynarec_jump_to(&g_dev.r4300, jump_target); \
          } \
       } \
       else \
@@ -118,14 +118,14 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(void) \
    { \
       uint32_t* cp0_regs = r4300_cp0_regs(); \
       const int take_jump = (condition); \
       int skip; \
-      if (cop1 && check_cop1_unusable()) return; \
+      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (take_jump) \
       { \
          cp0_update_count(); \
@@ -158,7 +158,7 @@ static void FIN_BLOCK(void)
 {
    if (!g_dev.r4300.delay_slot)
      {
-    jump_to(((*r4300_pc_struct())-1)->addr+4);
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc());
 #endif
@@ -171,7 +171,7 @@ Used by dynarec only, check should be unnecessary
      {
     struct precomp_block *blk = g_dev.r4300.cached_interp.actual;
     struct precomp_instr *inst = (*r4300_pc_struct());
-    jump_to(((*r4300_pc_struct())-1)->addr+4);
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc());
@@ -199,7 +199,7 @@ static void NOTCOMPILED(void)
 #endif
 
    if (mem != NULL)
-      recompile_block(mem, g_dev.r4300.cached_interp.blocks[*r4300_pc() >> 12], *r4300_pc());
+      recompile_block(&g_dev.r4300, mem, g_dev.r4300.cached_interp.blocks[*r4300_pc() >> 12], *r4300_pc());
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 
@@ -501,82 +501,119 @@ const struct cpu_instruction_table cached_interpreter_table = {
    NOTCOMPILED2
 };
 
-static unsigned int update_invalid_addr(unsigned int addr)
+static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
-   if (addr >= 0x80000000 && addr < 0xc0000000)
-     {
-    if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
-    if (g_dev.r4300.cached_interp.invalid_code[(addr^0x20000000)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-    return addr;
-     }
-   else
-     {
-    unsigned int paddr = virtual_to_physical_address(addr, 2);
-    if (paddr)
-      {
-         unsigned int beg_paddr = paddr - (addr - (addr&~0xFFF));
-         update_invalid_addr(paddr);
-         if (g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0x000)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0xFFC)>>12]) g_dev.r4300.cached_interp.invalid_code[addr>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0x000)>>12] = 1;
-         if (g_dev.r4300.cached_interp.invalid_code[addr>>12]) g_dev.r4300.cached_interp.invalid_code[(beg_paddr+0xFFC)>>12] = 1;
-      }
-    return paddr;
-     }
-}
-
-void jump_to_func(void)
-{
-   unsigned int paddr;
-   if (g_dev.r4300.skip_jump) return;
-   paddr = update_invalid_addr(g_dev.r4300.cached_interp.jump_to_address);
-   if (!paddr) return;
-   g_dev.r4300.cached_interp.actual = g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12];
-   if (g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cached_interp.jump_to_address>>12])
-     {
-    if (!g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12])
-      {
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12] = (struct precomp_block *) malloc(sizeof(struct precomp_block));
-         g_dev.r4300.cached_interp.actual = g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12];
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->code = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->block = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->jumps_table = NULL;
-         g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->riprel_table = NULL;
-      }
-    g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->start = g_dev.r4300.cached_interp.jump_to_address & ~0xFFF;
-    g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]->end = (g_dev.r4300.cached_interp.jump_to_address & ~0xFFF) + 0x1000;
-    init_block(g_dev.r4300.cached_interp.blocks[g_dev.r4300.cached_interp.jump_to_address>>12]);
-     }
-   (*r4300_pc_struct())=g_dev.r4300.cached_interp.actual->block+((g_dev.r4300.cached_interp.jump_to_address-g_dev.r4300.cached_interp.actual->start)>>2);
-
-   if (g_dev.r4300.emumode == EMUMODE_DYNAREC) dyna_jump();
-}
-
-void init_blocks(void)
-{
-   int i;
-   for (i=0; i<0x100000; i++)
-   {
-      g_dev.r4300.cached_interp.invalid_code[i] = 1;
-      g_dev.r4300.cached_interp.blocks[i] = NULL;
-   }
-}
-
-void free_blocks(void)
-{
-   int i;
-   for (i=0; i<0x100000; i++)
-   {
-        if (g_dev.r4300.cached_interp.blocks[i])
+    if (addr >= 0x80000000 && addr < 0xc0000000)
+    {
+        if (r4300->cached_interp.invalid_code[addr>>12]) {
+            r4300->cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
+        }
+        if (r4300->cached_interp.invalid_code[(addr^0x20000000)>>12]) {
+            r4300->cached_interp.invalid_code[addr>>12] = 1;
+        }
+        return addr;
+    }
+    else
+    {
+        uint32_t paddr = virtual_to_physical_address(r4300, addr, 2);
+        if (paddr)
         {
-            free_block(g_dev.r4300.cached_interp.blocks[i]);
-            free(g_dev.r4300.cached_interp.blocks[i]);
-            g_dev.r4300.cached_interp.blocks[i] = NULL;
+            uint32_t beg_paddr = paddr - (addr - (addr & ~0xfff));
+
+            update_invalid_addr(r4300, paddr);
+
+            if (r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12]) {
+                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12]) {
+                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[addr>>12]) {
+                r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12] = 1;
+            }
+            if (r4300->cached_interp.invalid_code[addr>>12]) {
+                r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12] = 1;
+            }
+        }
+        return paddr;
+    }
+}
+
+void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
+{
+    struct cached_interp* const cinterp = &r4300->cached_interp;
+    struct precomp_block** b;
+
+    if (r4300->skip_jump) {
+        return;
+    }
+
+    if (!update_invalid_addr(r4300, address)) {
+        return;
+    }
+
+    b = &cinterp->blocks[address >> 12];
+
+    cinterp->actual = *b;
+
+    /* setup new block if invalid */
+    if (cinterp->invalid_code[address >> 12])
+    {
+        if (!*b)
+        {
+            *b = (struct precomp_block*)malloc(sizeof(struct precomp_block));
+            cinterp->actual = *b;
+            (*b)->code = NULL;
+            (*b)->block = NULL;
+            (*b)->jumps_table = NULL;
+            (*b)->riprel_table = NULL;
+        }
+
+        (*b)->start = (address & ~0xfff);
+        (*b)->end = (address & ~0xfff) + 0x1000;
+
+        init_block(r4300, *b);
+    }
+
+    /* set new PC */
+    (*r4300_pc_struct()) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
+
+    /* set new PC for dynarec (eg set "return_address")*/
+    if (r4300->emumode == EMUMODE_DYNAREC) {
+        dyna_jump();
+    }
+}
+
+
+void init_blocks(struct r4300_core* r4300)
+{
+    size_t i;
+    struct cached_interp* cinterp = &r4300->cached_interp;
+
+    for (i = 0; i < 0x100000; ++i)
+    {
+        cinterp->invalid_code[i] = 1;
+        cinterp->blocks[i] = NULL;
+    }
+}
+
+void free_blocks(struct r4300_core* r4300)
+{
+    size_t i;
+    struct cached_interp* cinterp = &r4300->cached_interp;
+
+    for (i = 0; i < 0x100000; ++i)
+    {
+        if (cinterp->blocks[i])
+        {
+            free_block(r4300, cinterp->blocks[i]);
+            free(cinterp->blocks[i]);
+            cinterp->blocks[i] = NULL;
         }
     }
 }
 
-void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
+void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size)
 {
     size_t i;
     uint32_t addr;
@@ -585,7 +622,7 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
     if (size == 0)
     {
         /* invalidate everthing */
-        memset(g_dev.r4300.cached_interp.invalid_code, 1, 0x100000);
+        memset(r4300->cached_interp.invalid_code, 1, 0x100000);
     }
     else
     {
@@ -596,12 +633,12 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
         {
             i = (addr >> 12);
 
-            if (g_dev.r4300.cached_interp.invalid_code[i] == 0)
+            if (r4300->cached_interp.invalid_code[i] == 0)
             {
-                if (g_dev.r4300.cached_interp.blocks[i] == NULL
-                || g_dev.r4300.cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != g_dev.r4300.current_instruction_table.NOTCOMPILED)
+                if (r4300->cached_interp.blocks[i] == NULL
+                || r4300->cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != r4300->current_instruction_table.NOTCOMPILED)
                 {
-                    g_dev.r4300.cached_interp.invalid_code[i] = 1;
+                    r4300->cached_interp.invalid_code[i] = 1;
                     /* go directly to next i */
                     addr &= ~0xfff;
                     addr |= 0xffc;
@@ -617,3 +654,18 @@ void invalidate_cached_code_hacktarux(uint32_t address, size_t size)
     }
 }
 
+void run_cached_interpreter(struct r4300_core* r4300)
+{
+    while (!*r4300_stop())
+    {
+#ifdef COMPARE_CORE
+        if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
+            virtual_to_physical_address(r4300, (*r4300_pc_struct())->addr, 2);
+        CoreCompareCallback();
+#endif
+#ifdef DBG
+        if (g_DebuggerActive) update_debugger((*r4300_pc_struct())->addr);
+#endif
+        (*r4300_pc_struct())->ops();
+    }
+}

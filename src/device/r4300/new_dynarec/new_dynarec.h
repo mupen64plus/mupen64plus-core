@@ -29,6 +29,8 @@
 #define NEW_DYNAREC_AMD64 2
 #define NEW_DYNAREC_ARM 3
 
+struct r4300_core;
+
 extern int pcaddr;
 extern int pending_exception;
 extern unsigned int stop_after_jal;
@@ -58,7 +60,7 @@ extern uint32_t g_dev_r4300_cp1_fcr31;
 #endif
 
 void invalidate_all_pages(void);
-void invalidate_cached_code_new_dynarec(uint32_t address, size_t size);
+void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size);
 void new_dynarec_init(void);
 void new_dyna_start(void);
 void new_dynarec_cleanup(void);

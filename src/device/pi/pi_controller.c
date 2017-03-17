@@ -72,7 +72,7 @@ static void dma_pi_read(struct pi_controller* pi)
 
     /* schedule end of dma interrupt event */
     cp0_update_count();
-    add_interupt_event(PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
 }
 
 static void dma_pi_write(struct pi_controller* pi)
@@ -111,7 +111,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count();
-        add_interupt_event(PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000); /* XXX: 0x1000 ??? */
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000); /* XXX: 0x1000 ??? */
 
         return;
     }
@@ -124,7 +124,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count();
-        add_interupt_event(PI_INT, 0x1000); /* XXX: 0x1000 ??? */
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000); /* XXX: 0x1000 ??? */
 
         return;
     }
@@ -144,7 +144,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count();
-        add_interupt_event(PI_INT, longueur/8);
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
 
         return;
     }
@@ -159,8 +159,8 @@ static void dma_pi_write(struct pi_controller* pi)
         dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
     }
 
-    invalidate_r4300_cached_code(0x80000000 + dram_address, longueur);
-    invalidate_r4300_cached_code(0xa0000000 + dram_address, longueur);
+    invalidate_r4300_cached_code(pi->r4300, 0x80000000 + dram_address, longueur);
+    invalidate_r4300_cached_code(pi->r4300, 0xa0000000 + dram_address, longueur);
 
     /* HACK: monitor PI DMA to trigger RDRAM size detection
      * hack just before initial cart ROM loading. */
@@ -175,7 +175,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     /* schedule end of dma interrupt event */
     cp0_update_count();
-    add_interupt_event(PI_INT, longueur/8);
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
 }
 
 

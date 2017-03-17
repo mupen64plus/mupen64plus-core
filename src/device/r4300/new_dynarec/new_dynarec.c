@@ -36,7 +36,7 @@
 #include "device/rsp/rsp_core.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
-#include "device/r4300/interupt.h"
+#include "device/r4300/interrupt.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/tlb.h"
@@ -2273,7 +2273,7 @@ void invalidate_block(u_int block)
   #endif
 }
 
-void invalidate_cached_code_new_dynarec(uint32_t address, size_t size)
+void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size)
 {
     size_t i;
     size_t begin;
@@ -5989,7 +5989,7 @@ static void do_ccstub(int n)
   emit_readword((int)&last_count,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
   emit_writeword(EAX,(int)&r4300_cp0_regs()[CP0_COUNT_REG]);
-  emit_call((int)gen_interupt);
+  emit_call((int)gen_interrupt);
   emit_readword((int)&r4300_cp0_regs()[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&g_dev.r4300.cp0.next_interrupt,EAX);
   emit_readword((int)&pending_exception,EBX);
@@ -11157,5 +11157,11 @@ static void TLBWR_new(void)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,memory_map[i],memory_map[i]<<2);
   }
+}
+
+/* used in assembler files */
+void new_dynarec_check_interrupt(void)
+{
+    check_interrupt(&g_dev.r4300);
 }
 

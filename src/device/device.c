@@ -89,7 +89,7 @@ void poweron_device(struct device* dev)
 void run_device(struct device* dev)
 {
     /* device execution is driven by the r4300 */
-    run_r4300();
+    run_r4300(&dev->r4300);
 }
 
 void stop_device(struct device* dev)
@@ -107,6 +107,6 @@ void hard_reset_device(struct device* dev)
 void soft_reset_device(struct device* dev)
 {
     /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
-    add_interupt_event(HW2_INT, 0);
-    add_interupt_event(NMI_INT, 50000000);
+    add_interrupt_event(&dev->r4300.cp0, HW2_INT, 0);
+    add_interrupt_event(&dev->r4300.cp0, NMI_INT, 50000000);
 }

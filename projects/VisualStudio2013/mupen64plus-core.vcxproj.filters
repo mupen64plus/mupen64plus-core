@@ -264,7 +264,7 @@
     <ClCompile Include="..\..\src\device\r4300\instr_counters.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\interupt.c">
+    <ClCompile Include="..\..\src\device\r4300\interrupt.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\mi_controller.c">
@@ -632,7 +632,7 @@
     <ClInclude Include="..\..\src\device\r4300\instr_counters.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\interupt.h">
+    <ClInclude Include="..\..\src\device\r4300\interrupt.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\macros.h">

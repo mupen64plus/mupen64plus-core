@@ -84,7 +84,7 @@ char FCR31[4];
 char tlb_e[32][SIZE_TLB_ENTRY];
 char PCaddr[4];
 
-char next_interupt[4];
+char next_interrupt[4];
 char next_vi[4];
 char vi_field[4];
 
@@ -299,7 +299,7 @@ int load_original_mupen64(const char *filename)
     gzread(f, tlb_e[0], 32 * SIZE_TLB_ENTRY);
     gzread(f, PCaddr, 4);
 
-    gzread(f, next_interupt, 4);
+    gzread(f, next_interrupt, 4);
     gzread(f, next_vi, 4);
     gzread(f, vi_field, 4);
 
@@ -384,7 +384,7 @@ int save_newest(const char *filename)
     gzwrite(f, tlb_e[0], 32 * SIZE_TLB_ENTRY);
     gzwrite(f, PCaddr, 4);
 
-    gzwrite(f, next_interupt, 4);
+    gzwrite(f, next_interrupt, 4);
     gzwrite(f, next_vi, 4);
     gzwrite(f, vi_field, 4);
 

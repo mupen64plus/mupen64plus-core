@@ -102,14 +102,14 @@ unsigned int* r4300_cp0_next_interrupt(void)
 }
 
 
-int check_cop1_unusable(void)
+int check_cop1_unusable(struct r4300_core* r4300)
 {
     uint32_t* cp0_regs = r4300_cp0_regs();
 
     if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
         cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
-        exception_general();
+        exception_general(r4300);
         return 1;
     }
     return 0;

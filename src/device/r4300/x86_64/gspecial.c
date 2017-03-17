@@ -26,7 +26,6 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
@@ -210,7 +209,7 @@ void genjr(void)
    mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
@@ -220,10 +219,10 @@ void genjr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);  /* will never return from call */
 
    jump_end_rel32();
@@ -284,7 +283,7 @@ void genjalr(void)
    mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_m32rel_xreg32((unsigned int *)&g_dev.r4300.cp0.last_addr, EAX);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_xreg32_m32rel(EAX, (unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
@@ -294,10 +293,10 @@ void genjalr(void)
 
    jump_start_rel32();
    
-   mov_m32rel_xreg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32rel_xreg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct())), RAX);
-   mov_reg64_imm64(RAX, (unsigned long long) jump_to_func);
+   mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
    call_reg64(RAX);  /* will never return from call */
 
    jump_end_rel32();
@@ -334,7 +333,7 @@ void gensyscall(void)
    free_registers_move_start();
 
    mov_m32rel_imm32(&r4300_cp0_regs()[CP0_CAUSE_REG], 8 << 2);
-   gencallinterp((unsigned long long)exception_general, 0);
+   gencallinterp((unsigned long long)dynarec_exception_general, 0);
 #endif
 }
 

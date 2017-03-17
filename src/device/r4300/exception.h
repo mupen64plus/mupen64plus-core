@@ -24,8 +24,10 @@
 
 #include <stdint.h>
 
-void TLB_refill_exception(uint32_t addresse, int w);
-void exception_general(void);
+struct r4300_core;
+
+void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w);
+void exception_general(struct r4300_core* r4300);
 
 #endif /* M64P_DEVICE_R4300_EXCEPTION_H */
 

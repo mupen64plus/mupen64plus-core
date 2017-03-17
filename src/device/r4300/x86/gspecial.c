@@ -24,7 +24,6 @@
 #include "assemble.h"
 #include "interpret.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
@@ -181,7 +180,7 @@ void genjr(void)
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
@@ -191,9 +190,9 @@ void genjr(void)
 
    jump_start_rel32();
    
-   mov_m32_reg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32_reg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
    
    jump_end_rel32();
@@ -252,7 +251,7 @@ void genjalr(void)
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_memoffs32_eax((unsigned int *)&g_dev.r4300.cp0.last_addr);
    
-   gencheck_interupt_reg();
+   gencheck_interrupt_reg();
    
    mov_eax_memoffs32((unsigned int *)&g_dev.r4300.local_rs);
    mov_reg32_reg32(EBX, EAX);
@@ -262,9 +261,9 @@ void genjalr(void)
 
    jump_start_rel32();
    
-   mov_m32_reg32(&g_dev.r4300.cached_interp.jump_to_address, EBX);
+   mov_m32_reg32(&g_dev.r4300.recomp.jump_to_address, EBX);
    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct())), (unsigned int)(g_dev.r4300.recomp.dst+1));
-   mov_reg32_imm32(EAX, (unsigned int)jump_to_func);
+   mov_reg32_imm32(EAX, (unsigned int)dynarec_jump_to_address);
    call_reg32(EAX);
    
    jump_end_rel32();
@@ -296,7 +295,7 @@ void gensyscall(void)
    free_all_registers();
    simplify_access();
    mov_m32_imm32(&r4300_cp0_regs()[CP0_CAUSE_REG], 8 << 2);
-   gencallinterp((unsigned int)exception_general, 0);
+   gencallinterp((unsigned int)dynarec_exception_general, 0);
 #endif
 }
 

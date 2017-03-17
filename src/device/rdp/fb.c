@@ -137,7 +137,7 @@ void protect_framebuffers(struct rdp_core* dp)
                 {
                     fb->once = 0;
                     dp->r4300->recomp.fast_memory = 0;
-                    invalidate_r4300_cached_code(0, 0);
+                    invalidate_r4300_cached_code(dp->r4300, 0, 0);
                 }
             }
         }

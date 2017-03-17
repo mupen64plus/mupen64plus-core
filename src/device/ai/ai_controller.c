@@ -46,7 +46,7 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
         return 0;
 
     cp0_update_count();
-    next_ai_event = get_event(AI_INT);
+    next_ai_event = get_event(&ai->r4300->cp0.q, AI_INT);
     if (next_ai_event == 0)
         return 0;
 
@@ -92,7 +92,7 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
 
     /* schedule end of dma event */
     cp0_update_count();
-    add_interupt_event(AI_INT, dma->duration);
+    add_interrupt_event(&ai->r4300->cp0, AI_INT, dma->duration);
 }
 
 static void fifo_push(struct ai_controller* ai)

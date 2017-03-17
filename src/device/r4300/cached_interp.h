@@ -26,17 +26,19 @@
 #include <stdint.h>
 
 #include "ops.h"
-#include "main/main.h"
+
+struct r4300_core;
 
 extern const struct cpu_instruction_table cached_interpreter_table;
 
-void init_blocks(void);
-void free_blocks(void);
-void jump_to_func(void);
+void init_blocks(struct r4300_core* r4300);
+void free_blocks(struct r4300_core* r4300);
 
-void invalidate_cached_code_hacktarux(uint32_t address, size_t size);
+void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size);
+
+void run_cached_interpreter(struct r4300_core* r4300);
 
 /* Jumps to the given address. This is for the cached interpreter / dynarec. */
-#define jump_to(a) { g_dev.r4300.cached_interp.jump_to_address = a; jump_to_func(); }
+void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address);
 
 #endif /* M64P_DEVICE_R4300_CACHED_INTERP_H */

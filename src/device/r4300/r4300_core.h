@@ -44,7 +44,6 @@ struct cached_interp
     char invalid_code[0x100000];
     struct precomp_block* blocks[0x100000];
     struct precomp_block* actual;
-    unsigned int jump_to_address;
 };
 
 enum {
@@ -141,6 +140,8 @@ struct r4300_core
         int check_nop;                      /* next instruction is nop ? */
         int delay_slot_compiled;
 
+        uint32_t jump_to_address;
+
 #if defined(PROFILE_R4300)
         FILE* pfProfile;
 #endif
@@ -170,7 +171,7 @@ struct r4300_core
 void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
 void poweron_r4300(struct r4300_core* r4300);
 
-void run_r4300(void);
+void run_r4300(struct r4300_core* r4300);
 
 int64_t* r4300_regs(void);
 int64_t* r4300_mult_hi(void);
@@ -180,7 +181,7 @@ uint32_t* r4300_pc(void);
 struct precomp_instr** r4300_pc_struct(void);
 int* r4300_stop(void);
 
-unsigned int get_r4300_emumode(void);
+unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]
@@ -188,13 +189,13 @@ unsigned int get_r4300_emumode(void);
  * If size == 0, r4300 implementation should invalidate
  * all cached code.
  */
-void invalidate_r4300_cached_code(uint32_t address, size_t size);
+void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size);
 
 
 /* Jump to the given address. This works for all r4300 emulator, but is slower.
  * Use this for common code which can be executed from any r4300 emulator. */
-void generic_jump_to(unsigned int address);
+void generic_jump_to(struct r4300_core* r4300, unsigned int address);
 
-void savestates_load_set_pc(uint32_t pc);
+void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc);
 
 #endif
