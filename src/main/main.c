@@ -1045,6 +1045,8 @@ m64p_error main_run(void)
         else
         {
             memset(&gb_carts[i], 0, sizeof(struct gb_cart));
+            memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
+            memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
         }
     }
 
