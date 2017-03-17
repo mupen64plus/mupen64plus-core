@@ -35,19 +35,19 @@
 
 enum { PAK_CHUNK_SIZE = 0x20 };
 
-static uint8_t pak_data_crc(const uint8_t* data)
+static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 {
     size_t i;
     uint8_t crc = 0;
 
-    for(i = 0; i <= PAK_CHUNK_SIZE; ++i)
+    for(i = 0; i <= size; ++i)
     {
         int mask;
         for (mask = 0x80; mask >= 1; mask >>= 1)
         {
             uint8_t xor_tap = (crc & 0x80) ? 0x85 : 0x00;
             crc <<= 1;
-            if (i != PAK_CHUNK_SIZE && (data[i] & mask)) crc |= 1;
+            if (i != size && (data[i] & mask)) crc |= 1;
             crc ^= xor_tap;
         }
     }
@@ -76,6 +76,11 @@ static void controller_status_command(struct game_controller* cont, uint8_t* cmd
     enum pak_type pak;
     int connected = controller_input_is_connected(cont->cin, &pak);
 
+    uint8_t* const type = &cmd[3];
+    uint8_t* const status = &cmd[5];
+
+    const uint16_t game_controller_type = PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT;
+
     if (cmd[1] & 0x80)
         return;
 
@@ -85,20 +90,20 @@ static void controller_status_command(struct game_controller* cont, uint8_t* cmd
         return;
     }
 
-    cmd[3] = 0x05;
-    cmd[4] = 0x00;
+    type[0] = (uint8_t)(game_controller_type >> 0);
+    type[1] = (uint8_t)(game_controller_type >> 8);
 
     switch(pak)
     {
     case PAK_MEM:
     case PAK_RUMBLE:
     case PAK_TRANSFER:
-        cmd[5] = 1;
+        *status = 1;
         break;
 
     case PAK_NONE:
     default:
-        cmd[5] = 0;
+        *status = 0;
     }
 }
 
@@ -141,7 +146,7 @@ static void controller_read_pak_command(struct game_controller* cont, uint8_t* c
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    *crc = pak_data_crc(data);
+    *crc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
 static void controller_write_pak_command(struct game_controller* cont, uint8_t* cmd)
@@ -172,7 +177,7 @@ static void controller_write_pak_command(struct game_controller* cont, uint8_t* 
         DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
     }
 
-    *crc = pak_data_crc(data);
+    *crc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
 void init_game_controller(struct game_controller* cont,

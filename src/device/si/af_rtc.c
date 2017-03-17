@@ -20,15 +20,13 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "af_rtc.h"
+#include "pif.h"
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "backends/clock_backend.h"
 
 #include <time.h>
-
-enum { AF_RTC_DEVICE_TYPE = 0x1000 };
-
 
 static unsigned char byte2bcd(int n)
 {
@@ -78,11 +76,11 @@ void poweron_af_rtc(struct af_rtc* rtc)
 void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
 {
     /* AF-RTC status query */
-    uint8_t* type = &cmd[3];
-    uint8_t* status = &cmd[5];
+    uint8_t* const type = &cmd[3];
+    uint8_t* const status = &cmd[5];
 
-    type[0] = (uint8_t)(AF_RTC_DEVICE_TYPE >> 0);
-    type[1] = (uint8_t)(AF_RTC_DEVICE_TYPE >> 8);
+    type[0] = (uint8_t)(PIF_PDT_AF_RTC >> 0);
+    type[1] = (uint8_t)(PIF_PDT_AF_RTC >> 8);
     *status =  0x00;
 }
 

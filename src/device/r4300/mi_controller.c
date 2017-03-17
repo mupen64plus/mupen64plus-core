@@ -51,18 +51,18 @@ static int update_mi_init_mode(uint32_t* mi_init_mode, uint32_t w)
 
 static void update_mi_intr_mask(uint32_t* mi_intr_mask, uint32_t w)
 {
-    if (w & 0x1)   *mi_intr_mask &= ~0x1; // clear SP mask
-    if (w & 0x2)   *mi_intr_mask |= 0x1; // set SP mask
-    if (w & 0x4)   *mi_intr_mask &= ~0x2; // clear SI mask
-    if (w & 0x8)   *mi_intr_mask |= 0x2; // set SI mask
-    if (w & 0x10)  *mi_intr_mask &= ~0x4; // clear AI mask
-    if (w & 0x20)  *mi_intr_mask |= 0x4; // set AI mask
-    if (w & 0x40)  *mi_intr_mask &= ~0x8; // clear VI mask
-    if (w & 0x80)  *mi_intr_mask |= 0x8; // set VI mask
-    if (w & 0x100) *mi_intr_mask &= ~0x10; // clear PI mask
-    if (w & 0x200) *mi_intr_mask |= 0x10; // set PI mask
-    if (w & 0x400) *mi_intr_mask &= ~0x20; // clear DP mask
-    if (w & 0x800) *mi_intr_mask |= 0x20; // set DP mask
+    if (w & 0x1)   *mi_intr_mask &= ~MI_INTR_SP;
+    if (w & 0x2)   *mi_intr_mask |= MI_INTR_SP;
+    if (w & 0x4)   *mi_intr_mask &= ~MI_INTR_SI;
+    if (w & 0x8)   *mi_intr_mask |= MI_INTR_SI;
+    if (w & 0x10)  *mi_intr_mask &= ~MI_INTR_AI;
+    if (w & 0x20)  *mi_intr_mask |= MI_INTR_AI;
+    if (w & 0x40)  *mi_intr_mask &= ~MI_INTR_VI;
+    if (w & 0x80)  *mi_intr_mask |= MI_INTR_VI;
+    if (w & 0x100) *mi_intr_mask &= ~MI_INTR_PI;
+    if (w & 0x200) *mi_intr_mask |= MI_INTR_PI;
+    if (w & 0x400) *mi_intr_mask &= ~MI_INTR_DP;
+    if (w & 0x800) *mi_intr_mask |= MI_INTR_DP;
 }
 
 void poweron_mi(struct mi_controller* mi)
