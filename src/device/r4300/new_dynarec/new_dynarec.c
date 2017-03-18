@@ -64,20 +64,12 @@ static void nullf() {}
 #if ASSEM_DEBUG
     #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
-#ifdef __clang__
     #define assem_debug(...)
-#else
-    #define assem_debug nullf
-#endif
 #endif
 #if INV_DEBUG
     #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
-#ifdef __clang__
     #define inv_debug(...)
-#else
-    #define inv_debug nullf
-#endif
 #endif
 
 /* registers that may be allocated */
