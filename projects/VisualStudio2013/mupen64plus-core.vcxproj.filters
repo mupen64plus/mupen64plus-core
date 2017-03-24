@@ -73,6 +73,9 @@
     <Filter Include="device\pifbootrom">
       <UniqueIdentifier>{0628d2cb-f4d7-4b1e-ad47-00501bd18048}</UniqueIdentifier>
     </Filter>
+    <Filter Include="device\gb">
+      <UniqueIdentifier>{8f670ceb-ce46-4a21-a0bf-8540bcae178c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\device\ai\ai_controller.c">
@@ -217,9 +220,6 @@
       <Filter>device\rsp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\si\af_rtc.c">
-      <Filter>device\si</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\si\cic.c">
       <Filter>device\si</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\si\eeprom.c">
@@ -416,6 +416,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\plugin\get_time_using_time_plus_delta.c">
       <Filter>plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\gb\gb_cart.c">
+      <Filter>device\gb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c">
+      <Filter>device\gb</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\cic.c">
+      <Filter>device\si</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\si\transferpak.c">
+      <Filter>device\si</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -742,6 +754,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\get_time_using_time_plus_delta.h">
       <Filter>plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\gb\gb_cart.h">
+      <Filter>device\gb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h">
+      <Filter>device\gb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\si\transferpak.h">
+      <Filter>device\si</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

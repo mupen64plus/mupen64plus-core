@@ -109,6 +109,9 @@ extra_memory:
     .space    33554432+64+4+4+4+4+4+4+4+4+8+8+4+2+2+4+4+256+8+8+128+128+128+16+4+4+132+4+256+512+4194304
 
     dynarec_local                   = extra_memory                      + 33554432
+    stack_space                     = dynarec_local                     + 0  /* Stack space used by dynarec to push/pop caller-saved register (r0-r3, r12) */
+    free_space                      = dynarec_local                     + 20 /* Free space (8 bytes) */
+    saved_context                   = dynarec_local                     + 28
     g_dev_r4300_cp0_next_interrupt  = dynarec_local                     + 64
     cycle_count                     = g_dev_r4300_cp0_next_interrupt    + 4
     last_count                      = cycle_count                       + 4
@@ -144,7 +147,7 @@ END_SECTION
 TEXT_SECTION
 
     .align   2
-    .dlptr_offset   : .word dynarec_local+28-(.dlptr_pic+8)
+    .dlptr_offset   : .word saved_context-(.dlptr_pic+8)
     .outptr_offset  : .word out-(.outptr_pic+8)
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
@@ -307,7 +310,7 @@ GLOBAL_FUNCTION(cc_interrupt):
     bl     get_addr_ht
     mov    pc, r0
 .E3:
-    add    r12, fp, #28
+    add    r12, fp, #saved_context-dynarec_local
     ldmia  r12, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
 .E4:
     /* Move 'dirty' blocks to the 'clean' list */
@@ -422,7 +425,7 @@ GLOBAL_FUNCTION(new_dyna_start):
     add    r1, pc, r1
     mov    r0, #0xa4000000
     stmia  r12, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    sub    fp, r12, #28
+    sub    fp, r12, #saved_context-dynarec_local
     ldr    r4, [r1]
     add    r0, r0, #0x40
     bl     new_recompile_block
@@ -597,14 +600,14 @@ GLOBAL_FUNCTION(read_nomemd_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomem_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
     ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #28]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #24]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     tst    r12, #0x40000000
@@ -614,14 +617,14 @@ GLOBAL_FUNCTION(write_nomem_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemb_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
     ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #28]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #24]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     tst    r12, #0x40000000
@@ -632,14 +635,14 @@ GLOBAL_FUNCTION(write_nomemb_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemh_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
     ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #28]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #24]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     lsls   r12, #2
@@ -650,14 +653,14 @@ GLOBAL_FUNCTION(write_nomemh_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemd_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
     ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #28]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #24]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     lsls   r12, #2
@@ -671,60 +674,60 @@ GLOBAL_FUNCTION(write_nomemd_new):
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mi_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     add    r3, #4
     str    r3, [fp, #pcaddr-dynarec_local]
     mov    r1, #0
     str    r1, [fp, #pending_exception-dynarec_local]
     bl     write_mi
-    ldr    lr, [fp, #28]
-    ldr    r3, [fp, #24]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r1, [fp, #pending_exception-dynarec_local]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mib_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     add    r3, #4
     str    r3, [fp, #pcaddr-dynarec_local]
     mov    r1, #0
     str    r1, [fp, #pending_exception-dynarec_local]
     bl     write_mib
-    ldr    lr, [fp, #28]
-    ldr    r3, [fp, #24]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r1, [fp, #pending_exception-dynarec_local]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mih_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     add    r3, #4
     str    r3, [fp, #pcaddr-dynarec_local]
     mov    r1, #0
     str    r1, [fp, #pending_exception-dynarec_local]
     bl     write_mih
-    ldr    lr, [fp, #28]
-    ldr    r3, [fp, #24]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r1, [fp, #pending_exception-dynarec_local]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mid_new):
-    str    r3, [fp, #24]
-    str    lr, [fp, #28]
+    str    r3, [fp, #free_space-dynarec_local]
+    str    lr, [fp, #free_space+4-dynarec_local]
     add    r3, #4
     str    r3, [fp, #pcaddr-dynarec_local]
     mov    r1, #0
     str    r1, [fp, #pending_exception-dynarec_local]
     bl     write_mid
-    ldr    lr, [fp, #28]
-    ldr    r3, [fp, #24]
+    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r3, [fp, #free_space-dynarec_local]
     ldr    r1, [fp, #pending_exception-dynarec_local]
     tst    r1, r1
     bne    mi_exception
