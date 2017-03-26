@@ -658,13 +658,7 @@
     <ClInclude Include="..\..\src\device\vi\vi_controller.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\device\r4300\interpreter.def" />
-    <None Include="..\..\src\device\r4300\interpreter_cop0.def" />
-    <None Include="..\..\src\device\r4300\interpreter_cop1.def" />
-    <None Include="..\..\src\device\r4300\interpreter_r4300.def" />
-    <None Include="..\..\src\device\r4300\interpreter_regimm.def" />
-    <None Include="..\..\src\device\r4300\interpreter_special.def" />
-    <None Include="..\..\src\device\r4300\interpreter_tlb.def" />
+    <None Include="..\..\src\device\r4300\mips_instructions.def" />
     <None Include="..\..\src\device\r4300\new_dynarec\arm\linkage_arm.S">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

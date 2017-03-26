@@ -766,25 +766,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\device\r4300\interpreter.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_cop0.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_cop1.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_r4300.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_regimm.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_special.def">
-      <Filter>device\r4300</Filter>
-    </None>
-    <None Include="..\..\src\device\r4300\interpreter_tlb.def">
+    <None Include="..\..\src\device\r4300\mips_instructions.def">
       <Filter>device\r4300</Filter>
     </None>
     <None Include="..\..\src\device\r4300\new_dynarec\arm\linkage_arm.S">

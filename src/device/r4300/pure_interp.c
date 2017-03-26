@@ -169,7 +169,7 @@ static void InterpretOpcode(void);
   static void JALR_IDLE(uint32_t) __attribute__((used));
 #endif
 
-#include "interpreter.def"
+#include "mips_instructions.def"
 
 void InterpretOpcode()
 {
