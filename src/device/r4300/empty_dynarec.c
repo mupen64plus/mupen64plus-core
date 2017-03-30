@@ -46,7 +46,7 @@ void free_all_registers()
 {
 }
 
-/* From rjump.c */
+/* Dynarec control functions */
 
 void dyna_jump()
 {

@@ -285,85 +285,16 @@
     <ClCompile Include="..\..\src\device\r4300\x86\assemble.c">
       <Filter>device\r4300\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gbc.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop0.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop1.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop1_d.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop1_l.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop1_s.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gcop1_w.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gr4300.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gregimm.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gspecial.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\gtlb.c">
+    <ClCompile Include="..\..\src\device\r4300\x86\dynarec.c">
       <Filter>device\r4300\x86</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\x86\regcache.c">
       <Filter>device\r4300\x86</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86\rjump.c">
-      <Filter>device\r4300\x86</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\x86_64\assemble.c">
       <Filter>device\r4300\x86_64</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gbc.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop0.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop1.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop1_d.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop1_l.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop1_s.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gcop1_w.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gr4300.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gregimm.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gspecial.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\gtlb.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\x86_64\regcache.c">
-      <Filter>device\r4300\x86_64</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\x86_64\rjump.c">
       <Filter>device\r4300\x86_64</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\new_dynarec.c">
