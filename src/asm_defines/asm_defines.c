@@ -77,6 +77,15 @@ DEFINE(r4300_core, save_eip);
 #endif
 DEFINE(r4300_core, return_address);
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+DEFINE(r4300_core, wbyte);
+DEFINE(r4300_core, whword);
+DEFINE(r4300_core, wword);
+DEFINE(r4300_core, wdword);
+DEFINE(r4300_core, address);
+#endif
+
 DEFINE(r4300_core, cp0);
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
@@ -93,17 +102,6 @@ DEFINE(tlb, LUT_w);
 
 DEFINE(r4300_core, cached_interp);
 DEFINE(cached_interp, invalid_code);
-
-DEFINE(device, mem);
-
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-DEFINE(memory, wbyte);
-DEFINE(memory, whword);
-DEFINE(memory, wword);
-DEFINE(memory, wdword);
-DEFINE(memory, address);
-#endif
 
 DEFINE(device, ri);
 DEFINE(ri_controller, rdram);

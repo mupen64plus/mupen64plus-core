@@ -46,6 +46,8 @@
  */
 
 #include "fpu.h"
+#include "r4300_core.h"
+#include "device/memory/memory.h"
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -98,10 +100,10 @@ DECLARE_INSTRUCTION(LB)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_byte_in_memory();
-    if (*memory_address()) {
+    if (*r4300_address()) {
         *lsrtp = SE8(*lsrtp);
     }
 }
@@ -111,8 +113,8 @@ DECLARE_INSTRUCTION(LBU)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_byte_in_memory();
 }
 
@@ -121,10 +123,10 @@ DECLARE_INSTRUCTION(LH)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_hword_in_memory();
-    if (*memory_address()) {
+    if (*r4300_address()) {
         *lsrtp = SE16(*lsrtp);
     }
 }
@@ -134,8 +136,8 @@ DECLARE_INSTRUCTION(LHU)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_hword_in_memory();
 }
 
@@ -144,10 +146,10 @@ DECLARE_INSTRUCTION(LL)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
-    if (*memory_address()) {
+    if (*r4300_address()) {
         *lsrtp = SE32(*lsrtp);
         g_dev.r4300.llbit = 1;
     }
@@ -158,10 +160,10 @@ DECLARE_INSTRUCTION(LW)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
-    if (*memory_address()) {
+    if (*r4300_address()) {
         *lsrtp = SE32(*lsrtp);
     }
 }
@@ -171,8 +173,8 @@ DECLARE_INSTRUCTION(LWU)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
 }
 
@@ -184,18 +186,18 @@ DECLARE_INSTRUCTION(LWL)
     ADD_TO_PC(1);
     if ((lsaddr & 3) == 0)
     {
-        *memory_address() = lsaddr;
-        g_dev.mem.rdword = (uint64_t*) lsrtp;
+        *r4300_address() = lsaddr;
+        g_dev.r4300.rdword = (uint64_t*) lsrtp;
         read_word_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
             *lsrtp = SE32(*lsrtp);
     }
     else
     {
-        *memory_address() = lsaddr & UINT32_C(0xFFFFFFFC);
-        g_dev.mem.rdword = &word;
+        *r4300_address() = lsaddr & UINT32_C(0xFFFFFFFC);
+        g_dev.r4300.rdword = &word;
         read_word_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many low bits do we want to preserve from the old value? */
             uint32_t old_mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
@@ -212,20 +214,20 @@ DECLARE_INSTRUCTION(LWR)
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr & UINT32_C(0xFFFFFFFC);
+    *r4300_address() = lsaddr & UINT32_C(0xFFFFFFFC);
     if ((lsaddr & 3) == 3)
     {
-        g_dev.mem.rdword = (uint64_t*) lsrtp;
+        g_dev.r4300.rdword = (uint64_t*) lsrtp;
         read_word_in_memory();
-        if (*memory_address()) {
+        if (*r4300_address()) {
             *lsrtp = SE32(*lsrtp);
         }
     }
     else
     {
-        g_dev.mem.rdword = &word;
+        g_dev.r4300.rdword = &word;
         read_word_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many high bits do we want to preserve from the old value? */
             uint32_t old_mask = BITS_ABOVE_MASK32(((lsaddr & 3) + 1) * 8);
@@ -241,8 +243,8 @@ DECLARE_INSTRUCTION(LD)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    g_dev.mem.rdword = (uint64_t*) lsrtp;
+    *r4300_address() = lsaddr;
+    g_dev.r4300.rdword = (uint64_t*) lsrtp;
     read_dword_in_memory();
 }
 
@@ -254,16 +256,16 @@ DECLARE_INSTRUCTION(LDL)
     ADD_TO_PC(1);
     if ((lsaddr & 7) == 0)
     {
-        *memory_address() = lsaddr;
-        g_dev.mem.rdword = (uint64_t*) lsrtp;
+        *r4300_address() = lsaddr;
+        g_dev.r4300.rdword = (uint64_t*) lsrtp;
         read_dword_in_memory();
     }
     else
     {
-        *memory_address() = lsaddr & UINT32_C(0xFFFFFFF8);
-        g_dev.mem.rdword = &word;
+        *r4300_address() = lsaddr & UINT32_C(0xFFFFFFF8);
+        g_dev.r4300.rdword = &word;
         read_dword_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many low bits do we want to preserve from the old value? */
             uint64_t old_mask = BITS_BELOW_MASK64((lsaddr & 7) * 8);
@@ -280,17 +282,17 @@ DECLARE_INSTRUCTION(LDR)
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr & UINT32_C(0xFFFFFFF8);
+    *r4300_address() = lsaddr & UINT32_C(0xFFFFFFF8);
     if ((lsaddr & 7) == 7)
     {
-        g_dev.mem.rdword = (uint64_t*) lsrtp;
+        g_dev.r4300.rdword = (uint64_t*) lsrtp;
         read_dword_in_memory();
     }
     else
     {
-        g_dev.mem.rdword = &word;
+        g_dev.r4300.rdword = &word;
         read_dword_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many high bits do we want to preserve from the old value? */
             uint64_t old_mask = BITS_ABOVE_MASK64(((lsaddr & 7) + 1) * 8);
@@ -308,8 +310,8 @@ DECLARE_INSTRUCTION(SB)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    *memory_wbyte() = (uint8_t) *lsrtp;
+    *r4300_address() = lsaddr;
+    *r4300_wbyte() = (uint8_t) *lsrtp;
     write_byte_in_memory();
     CHECK_MEMORY();
 }
@@ -319,8 +321,8 @@ DECLARE_INSTRUCTION(SH)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    *memory_whword() = (uint16_t) *lsrtp;
+    *r4300_address() = lsaddr;
+    *r4300_whword() = (uint16_t) *lsrtp;
     write_hword_in_memory();
     CHECK_MEMORY();
 }
@@ -332,8 +334,8 @@ DECLARE_INSTRUCTION(SC)
     ADD_TO_PC(1);
     if(g_dev.r4300.llbit)
     {
-        *memory_address() = lsaddr;
-        *memory_wword() = (uint32_t) *lsrtp;
+        *r4300_address() = lsaddr;
+        *r4300_wword() = (uint32_t) *lsrtp;
         write_word_in_memory();
         CHECK_MEMORY();
         g_dev.r4300.llbit = 0;
@@ -350,8 +352,8 @@ DECLARE_INSTRUCTION(SW)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    *memory_wword() = (uint32_t) *lsrtp;
+    *r4300_address() = lsaddr;
+    *r4300_wword() = (uint32_t) *lsrtp;
     write_word_in_memory();
     CHECK_MEMORY();
 }
@@ -364,17 +366,17 @@ DECLARE_INSTRUCTION(SWL)
     ADD_TO_PC(1);
     if ((lsaddr & 3) == 0)
     {
-        *memory_address() = lsaddr;
-        *memory_wword() = (uint32_t) *lsrtp;
+        *r4300_address() = lsaddr;
+        *r4300_wword() = (uint32_t) *lsrtp;
         write_word_in_memory();
         CHECK_MEMORY();
     }
     else
     {
-        *memory_address() = lsaddr & UINT32_C(0xFFFFFFFC);
-        g_dev.mem.rdword = &old_word;
+        *r4300_address() = lsaddr & UINT32_C(0xFFFFFFFC);
+        g_dev.r4300.rdword = &old_word;
         read_word_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many high bits do we want to preserve from what was in memory
              * before? */
@@ -382,7 +384,7 @@ DECLARE_INSTRUCTION(SWL)
             /* How many bits down do we need to shift the register to store some
              * of its high bits into the low bits of the memory word? */
             int new_shift = (lsaddr & 3) * 8;
-            *memory_wword() = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp >> new_shift);
+            *r4300_wword() = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp >> new_shift);
             write_word_in_memory();
             CHECK_MEMORY();
         }
@@ -395,18 +397,18 @@ DECLARE_INSTRUCTION(SWR)
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr & UINT32_C(0xFFFFFFFC);
+    *r4300_address() = lsaddr & UINT32_C(0xFFFFFFFC);
     if ((lsaddr & 3) == 3)
     {
-        *memory_wword() = (uint32_t) *lsrtp;
+        *r4300_wword() = (uint32_t) *lsrtp;
         write_word_in_memory();
         CHECK_MEMORY();
     }
     else
     {
-        g_dev.mem.rdword = &old_word;
+        g_dev.r4300.rdword = &old_word;
         read_word_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many low bits do we want to preserve from what was in memory
              * before? */
@@ -414,7 +416,7 @@ DECLARE_INSTRUCTION(SWR)
             /* How many bits up do we need to shift the register to store some
              * of its low bits into the high bits of the memory word? */
             int new_shift = (3 - (lsaddr & 3)) * 8;
-            *memory_wword() = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
+            *r4300_wword() = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
             write_word_in_memory();
             CHECK_MEMORY();
         }
@@ -426,8 +428,8 @@ DECLARE_INSTRUCTION(SD)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr;
-    *memory_wdword() = *lsrtp;
+    *r4300_address() = lsaddr;
+    *r4300_wdword() = *lsrtp;
     write_dword_in_memory();
     CHECK_MEMORY();
 }
@@ -440,17 +442,17 @@ DECLARE_INSTRUCTION(SDL)
     ADD_TO_PC(1);
     if ((lsaddr & 7) == 0)
     {
-        *memory_address() = lsaddr;
-        *memory_wdword() = *lsrtp;
+        *r4300_address() = lsaddr;
+        *r4300_wdword() = *lsrtp;
         write_dword_in_memory();
         CHECK_MEMORY();
     }
     else
     {
-        *memory_address() = lsaddr & UINT32_C(0xFFFFFFF8);
-        g_dev.mem.rdword = &old_word;
+        *r4300_address() = lsaddr & UINT32_C(0xFFFFFFF8);
+        g_dev.r4300.rdword = &old_word;
         read_dword_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many high bits do we want to preserve from what was in memory
              * before? */
@@ -458,7 +460,7 @@ DECLARE_INSTRUCTION(SDL)
             /* How many bits down do we need to shift the register to store some
              * of its high bits into the low bits of the memory word? */
             int new_shift = (lsaddr & 7) * 8;
-            *memory_wdword() = (old_word & old_mask) | ((uint64_t) *lsrtp >> new_shift);
+            *r4300_wdword() = (old_word & old_mask) | ((uint64_t) *lsrtp >> new_shift);
             write_dword_in_memory();
             CHECK_MEMORY();
         }
@@ -471,18 +473,18 @@ DECLARE_INSTRUCTION(SDR)
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *memory_address() = lsaddr & UINT32_C(0xFFFFFFF8);
+    *r4300_address() = lsaddr & UINT32_C(0xFFFFFFF8);
     if ((lsaddr & 7) == 7)
     {
-        *memory_wdword() = *lsrtp;
+        *r4300_wdword() = *lsrtp;
         write_dword_in_memory();
         CHECK_MEMORY();
     }
     else
     {
-        g_dev.mem.rdword = &old_word;
+        g_dev.r4300.rdword = &old_word;
         read_dword_in_memory();
-        if (*memory_address())
+        if (*r4300_address())
         {
             /* How many low bits do we want to preserve from what was in memory
              * before? */
@@ -490,7 +492,7 @@ DECLARE_INSTRUCTION(SDR)
             /* How many bits up do we need to shift the register to store some
              * of its low bits into the high bits of the memory word? */
             int new_shift = (7 - (lsaddr & 7)) * 8;
-            *memory_wdword() = (old_word & old_mask) | (*lsrtp << new_shift);
+            *r4300_wdword() = (old_word & old_mask) | (*lsrtp << new_shift);
             write_dword_in_memory();
             CHECK_MEMORY();
         }
@@ -1352,11 +1354,11 @@ DECLARE_INSTRUCTION(LWC1)
     uint64_t temp;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
-    *memory_address() = lslfaddr;
-    g_dev.mem.rdword = &temp;
+    *r4300_address() = lslfaddr;
+    g_dev.r4300.rdword = &temp;
     read_word_in_memory();
-    if (*memory_address()) {
-        *((uint32_t*)(r4300_cp1_regs_simple())[lslfft]) = (uint32_t) *g_dev.mem.rdword;
+    if (*r4300_address()) {
+        *((uint32_t*)(r4300_cp1_regs_simple())[lslfft]) = (uint32_t) *g_dev.r4300.rdword;
     }
 }
 
@@ -1366,8 +1368,8 @@ DECLARE_INSTRUCTION(LDC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
-    *memory_address() = lslfaddr;
-    g_dev.mem.rdword = (uint64_t*) (r4300_cp1_regs_double())[lslfft];
+    *r4300_address() = lslfaddr;
+    g_dev.r4300.rdword = (uint64_t*) (r4300_cp1_regs_double())[lslfft];
     read_dword_in_memory();
 }
 
@@ -1377,8 +1379,8 @@ DECLARE_INSTRUCTION(SWC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
-    *memory_address() = lslfaddr;
-    *memory_wword() = *((uint32_t*)(r4300_cp1_regs_simple())[lslfft]);
+    *r4300_address() = lslfaddr;
+    *r4300_wword() = *((uint32_t*)(r4300_cp1_regs_simple())[lslfft]);
     write_word_in_memory();
     CHECK_MEMORY();
 }
@@ -1389,8 +1391,8 @@ DECLARE_INSTRUCTION(SDC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
-    *memory_address() = lslfaddr;
-    *memory_wdword() = *((uint64_t*) (r4300_cp1_regs_double())[lslfft]);
+    *r4300_address() = lslfaddr;
+    *r4300_wdword() = *((uint64_t*) (r4300_cp1_regs_double())[lslfft]);
     write_dword_in_memory();
     CHECK_MEMORY();
 }

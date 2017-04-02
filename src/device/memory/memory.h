@@ -24,24 +24,8 @@
 
 #include <stdint.h>
 
-#include "device/r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
-
 struct memory
 {
-    uint64_t* rdword;
-
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    union {
-        uint8_t  wbyte;
-        uint16_t whword;
-        uint32_t wword;
-        uint64_t wdword;
-    };
-
-    uint32_t address;
-#endif
-
     void (*readmem[0x10000])(void);
     void (*readmemb[0x10000])(void);
     void (*readmemh[0x10000])(void);
@@ -64,23 +48,17 @@ struct memory
 #endif
 };
 
-uint32_t* memory_address();
-uint8_t*  memory_wbyte();
-uint16_t* memory_whword();
-uint32_t* memory_wword();
-uint64_t* memory_wdword();
-
 /* struct memory definition is required prior including this */
 #include "main/main.h"
 
-#define read_word_in_memory() g_dev.mem.readmem[*memory_address()>>16]()
-#define read_byte_in_memory() g_dev.mem.readmemb[*memory_address()>>16]()
-#define read_hword_in_memory() g_dev.mem.readmemh[*memory_address()>>16]()
-#define read_dword_in_memory() g_dev.mem.readmemd[*memory_address()>>16]()
-#define write_word_in_memory() g_dev.mem.writemem[*memory_address()>>16]()
-#define write_byte_in_memory() g_dev.mem.writememb[*memory_address() >>16]()
-#define write_hword_in_memory() g_dev.mem.writememh[*memory_address() >>16]()
-#define write_dword_in_memory() g_dev.mem.writememd[*memory_address() >>16]()
+#define read_word_in_memory() g_dev.mem.readmem[*r4300_address()>>16]()
+#define read_byte_in_memory() g_dev.mem.readmemb[*r4300_address()>>16]()
+#define read_hword_in_memory() g_dev.mem.readmemh[*r4300_address()>>16]()
+#define read_dword_in_memory() g_dev.mem.readmemd[*r4300_address()>>16]()
+#define write_word_in_memory() g_dev.mem.writemem[*r4300_address()>>16]()
+#define write_byte_in_memory() g_dev.mem.writememb[*r4300_address() >>16]()
+#define write_hword_in_memory() g_dev.mem.writememh[*r4300_address() >>16]()
+#define write_dword_in_memory() g_dev.mem.writememd[*r4300_address() >>16]()
 
 #ifndef M64P_BIG_ENDIAN
 #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))

@@ -158,6 +158,20 @@ struct r4300_core
 #endif
 #endif
 
+    /* Memory accesses variables */
+    uint64_t* rdword;
+
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    union {
+        uint8_t  wbyte;
+        uint16_t whword;
+        uint32_t wword;
+        uint64_t wdword;
+    };
+
+    uint32_t address;
+#endif
 
     unsigned int emumode;
 
@@ -182,6 +196,12 @@ struct precomp_instr** r4300_pc_struct(void);
 int* r4300_stop(void);
 
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
+
+uint32_t* r4300_address(void);
+uint8_t*  r4300_wbyte(void);
+uint16_t* r4300_whword(void);
+uint32_t* r4300_wword(void);
+uint64_t* r4300_wdword(void);
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]

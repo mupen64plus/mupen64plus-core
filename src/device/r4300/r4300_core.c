@@ -46,6 +46,12 @@ extern int64_t g_dev_r4300_hi;
 extern int64_t g_dev_r4300_lo;
 extern struct precomp_instr* g_dev_r4300_pc;
 extern int g_dev_r4300_stop;
+extern uint32_t g_dev_r4300_address;
+extern uint8_t g_dev_r4300_wbyte;
+extern uint16_t g_dev_r4300_whword;
+extern uint32_t g_dev_r4300_wword;
+extern uint64_t g_dev_r4300_wdword;
+
 
 void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
 {
@@ -269,6 +275,55 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300)
     return r4300->emumode;
 }
 
+uint32_t* r4300_address(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.address;
+#else
+    return &g_dev_r4300_address;
+#endif
+}
+
+uint8_t*  r4300_wbyte(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.wbyte;
+#else
+    return &g_dev_r4300_wbyte;
+#endif
+}
+
+uint16_t* r4300_whword(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.whword;
+#else
+    return &g_dev_r4300_whword;
+#endif
+}
+
+uint32_t* r4300_wword(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.wword;
+#else
+    return &g_dev_r4300_wword;
+#endif
+}
+
+uint64_t* r4300_wdword(void)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &g_dev.r4300.wdword;
+#else
+    return &g_dev_r4300_wdword;
+#endif
+}
 
 
 void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)

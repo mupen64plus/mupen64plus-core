@@ -82,12 +82,12 @@ BSS_SECTION
     GLOBAL_VARIABLE(pcaddr, 4)
     GLOBAL_VARIABLE(g_dev_r4300_stop, 4)
     GLOBAL_VARIABLE(invc_ptr, 4)
-    GLOBAL_VARIABLE(g_dev_mem_address, 4)
+    GLOBAL_VARIABLE(g_dev_r4300_address, 4)
     GLOBAL_VARIABLE(readmem_dword, 8)
-    GLOBAL_VARIABLE(g_dev_mem_wdword, 8)
-    GLOBAL_VARIABLE(g_dev_mem_wword, 4)
-    GLOBAL_VARIABLE(g_dev_mem_whword, 2)
-    GLOBAL_VARIABLE(g_dev_mem_wbyte, 1)
+    GLOBAL_VARIABLE(g_dev_r4300_wdword, 8)
+    GLOBAL_VARIABLE(g_dev_r4300_wword, 4)
+    GLOBAL_VARIABLE(g_dev_r4300_whword, 2)
+    GLOBAL_VARIABLE(g_dev_r4300_wbyte, 1)
     GLOBAL_VARIABLE(g_dev_r4300_cp1_fcr0, 4)
     GLOBAL_VARIABLE(g_dev_r4300_cp1_fcr31, 4)
     GLOBAL_VARIABLE(g_dev_r4300_regs, 256)
@@ -119,13 +119,13 @@ extra_memory:
     pcaddr                          = pending_exception                 + 4
     g_dev_r4300_stop                = pcaddr                            + 4
     invc_ptr                        = g_dev_r4300_stop                  + 4
-    g_dev_mem_address               = invc_ptr                          + 4
-    readmem_dword                   = g_dev_mem_address                 + 4
-    g_dev_mem_wdword                = readmem_dword                     + 8
-    g_dev_mem_wword                 = g_dev_mem_wdword                  + 8
-    g_dev_mem_whword                = g_dev_mem_wword                   + 4
-    g_dev_mem_wbyte                 = g_dev_mem_whword                  + 2 /* 1 byte free */
-    g_dev_r4300_cp1_fcr0            = g_dev_mem_whword                  + 4
+    g_dev_r4300_address             = invc_ptr                          + 4
+    readmem_dword                   = g_dev_r4300_address               + 4
+    g_dev_r4300_wdword              = readmem_dword                     + 8
+    g_dev_r4300_wword               = g_dev_r4300_wdword                + 8
+    g_dev_r4300_whword              = g_dev_r4300_wword                 + 4
+    g_dev_r4300_wbyte               = g_dev_r4300_whword                + 2 /* 1 byte free */
+    g_dev_r4300_cp1_fcr0            = g_dev_r4300_whword                + 4
     g_dev_r4300_cp1_fcr31           = g_dev_r4300_cp1_fcr0              + 4
     g_dev_r4300_regs                = g_dev_r4300_cp1_fcr31             + 4
     g_dev_r4300_hi                  = g_dev_r4300_regs                  + 256
@@ -500,23 +500,23 @@ LOCAL_FUNCTION(invalidate_addr_call):
 
 GLOBAL_FUNCTION(write_rdram_new):
     ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldr    r0, [fp, #g_dev_mem_wword-dynarec_local]
+    ldr    r2, [fp, #g_dev_r4300_address-dynarec_local]
+    ldr    r0, [fp, #g_dev_r4300_wword-dynarec_local]
     str    r0, [r2, r3, lsl #2]
     b      .E12
 
 GLOBAL_FUNCTION(write_rdramb_new):
     ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldrb   r0, [fp, #g_dev_mem_wbyte-dynarec_local]
+    ldr    r2, [fp, #g_dev_r4300_address-dynarec_local]
+    ldrb   r0, [fp, #g_dev_r4300_wbyte-dynarec_local]
     eor    r2, r2, #3
     strb   r0, [r2, r3, lsl #2]
     b      .E12
 
 GLOBAL_FUNCTION(write_rdramh_new):
     ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldrh   r0, [fp, #g_dev_mem_whword-dynarec_local]
+    ldr    r2, [fp, #g_dev_r4300_address-dynarec_local]
+    ldrh   r0, [fp, #g_dev_r4300_whword-dynarec_local]
     eor    r2, r2, #2
     lsl    r3, r3, #2
     strh   r0, [r2, r3]
@@ -524,17 +524,17 @@ GLOBAL_FUNCTION(write_rdramh_new):
 
 GLOBAL_FUNCTION(write_rdramd_new):
     ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-/*    ldrd    r0, [fp, #g_dev_mem_wdword-dynarec_local]*/
-    ldr    r0, [fp, #g_dev_mem_wdword-dynarec_local]
-    ldr    r1, [fp, #g_dev_mem_wdword+4-dynarec_local]
+    ldr    r2, [fp, #g_dev_r4300_address-dynarec_local]
+/*    ldrd    r0, [fp, #g_dev_r4300_wdword-dynarec_local]*/
+    ldr    r0, [fp, #g_dev_r4300_wdword-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_wdword+4-dynarec_local]
     add    r3, r2, r3, lsl #2
     str    r0, [r3, #4]
     str    r1, [r3]
     b      .E12
 
 LOCAL_FUNCTION(do_invalidate):
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r2, [fp, #g_dev_r4300_address-dynarec_local]
 .E12:
     ldr    r1, [fp, #invc_ptr-dynarec_local]
     lsr    r0, r2, #12
@@ -544,7 +544,7 @@ LOCAL_FUNCTION(do_invalidate):
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomem_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -556,7 +556,7 @@ GLOBAL_FUNCTION(read_nomem_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemb_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -569,7 +569,7 @@ GLOBAL_FUNCTION(read_nomemb_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemh_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -583,7 +583,7 @@ GLOBAL_FUNCTION(read_nomemh_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemd_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -603,7 +603,7 @@ GLOBAL_FUNCTION(write_nomem_new):
     str    r3, [fp, #free_space-dynarec_local]
     str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
@@ -612,7 +612,7 @@ GLOBAL_FUNCTION(write_nomem_new):
     mov    r2, #1
     tst    r12, #0x40000000
     bne    tlb_exception
-    ldr    r0, [fp, #g_dev_mem_wword-dynarec_local]
+    ldr    r0, [fp, #g_dev_r4300_wword-dynarec_local]
     str    r0, [r1, r12, lsl #2]
     mov    pc, lr
 
@@ -620,7 +620,7 @@ GLOBAL_FUNCTION(write_nomemb_new):
     str    r3, [fp, #free_space-dynarec_local]
     str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
@@ -630,7 +630,7 @@ GLOBAL_FUNCTION(write_nomemb_new):
     tst    r12, #0x40000000
     bne    tlb_exception
     eor    r1, r1, #3
-    ldrb   r0, [fp, #g_dev_mem_wbyte-dynarec_local]
+    ldrb   r0, [fp, #g_dev_r4300_wbyte-dynarec_local]
     strb   r0, [r1, r12, lsl #2]
     mov    pc, lr
 
@@ -638,7 +638,7 @@ GLOBAL_FUNCTION(write_nomemh_new):
     str    r3, [fp, #free_space-dynarec_local]
     str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
@@ -648,7 +648,7 @@ GLOBAL_FUNCTION(write_nomemh_new):
     lsls   r12, #2
     bcs    tlb_exception
     eor    r1, r1, #2
-    ldrh   r0, [fp, #g_dev_mem_whword-dynarec_local]
+    ldrh   r0, [fp, #g_dev_r4300_whword-dynarec_local]
     strh   r0, [r1, r12]
     mov    pc, lr
 
@@ -656,7 +656,7 @@ GLOBAL_FUNCTION(write_nomemd_new):
     str    r3, [fp, #free_space-dynarec_local]
     str    lr, [fp, #free_space+4-dynarec_local]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     add    r12, fp, #memory_map-dynarec_local
     ldr    lr, [fp, #free_space+4-dynarec_local]
     lsr    r0, r1, #12
@@ -666,8 +666,8 @@ GLOBAL_FUNCTION(write_nomemd_new):
     lsls   r12, #2
     bcs    tlb_exception
     add    r3, r1, #4
-    ldr    r0, [fp, #g_dev_mem_wdword+4-dynarec_local]
-    ldr    r1, [fp, #g_dev_mem_wdword-dynarec_local]
+    ldr    r0, [fp, #g_dev_r4300_wdword+4-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_wdword-dynarec_local]
 /*    strd    r0, [r1, r12]*/
     str    r0, [r1, r12]
     str    r1, [r3, r12]
@@ -736,7 +736,7 @@ GLOBAL_FUNCTION(write_mid_new):
 LOCAL_FUNCTION(mi_exception):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #g_dev_r4300_address-dynarec_local]
     bl     wb_base_reg
     b      do_interrupt
 

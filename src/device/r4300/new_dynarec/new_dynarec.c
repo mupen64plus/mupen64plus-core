@@ -7608,7 +7608,7 @@ void new_dynarec_init(void)
 #endif
   out=(u_char *)base_addr;
 
-  g_dev.mem.rdword=&readmem_dword;
+  g_dev.r4300.rdword=&readmem_dword;
   fake_pc.f.r.rs=(long long int *)&readmem_dword;
   fake_pc.f.r.rt=(long long int *)&readmem_dword;
   fake_pc.f.r.rd=(long long int *)&readmem_dword;

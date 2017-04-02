@@ -56,11 +56,11 @@
 %endif
 
 %define g_dev_ri_rdram_dram                    (g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram)
-%define g_dev_mem_address                      (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_address)
-%define g_dev_mem_wword                        (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wword)
-%define g_dev_mem_wbyte                        (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wbyte)
-%define g_dev_mem_whword                       (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_whword)
-%define g_dev_mem_wdword                       (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_wdword)
+%define g_dev_r4300_address                    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_address)
+%define g_dev_r4300_wword                      (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wword)
+%define g_dev_r4300_wbyte                      (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wbyte)
+%define g_dev_r4300_whword                     (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_whword)
+%define g_dev_r4300_wdword                     (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wdword)
 %define g_dev_r4300_stop                       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_stop)
 %define g_dev_r4300_regs                       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs)
 %define g_dev_r4300_hi                         (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_hi)
@@ -478,43 +478,43 @@ invalidate_block_call:
 
 write_rdram_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     ecx,    [find_local_data(g_dev_mem_wword)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wword)]
     mov     [edx - 0x80000000],    ecx
     jmp     _E12
 
 write_rdramb_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     xor     edx,    3
     add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     cl,     BYTE [find_local_data(g_dev_mem_wbyte)]
+    mov     cl,     BYTE [find_local_data(g_dev_r4300_wbyte)]
     mov     BYTE [edx - 0x80000000],    cl
     jmp     _E12
 
 write_rdramh_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     xor     edx,    2
     add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     cx,     WORD [find_local_data(g_dev_mem_whword)]
+    mov     cx,     WORD [find_local_data(g_dev_r4300_whword)]
     mov     WORD [edx - 0x80000000],    cx
     jmp     _E12
 
 write_rdramd_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     ecx,    [find_local_data(g_dev_mem_wdword+4)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wdword+4)]
     mov     [edx - 0x80000000],         ecx
-    mov     ecx,    [find_local_data(g_dev_mem_wdword+0)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wdword+0)]
     mov     [edx - 0x80000000 + 4],     ecx
     jmp     _E12
 
 do_invalidate:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     mov     edi,    edx    ;Return edi to caller
 _E12:
     shr     edx,    12
@@ -528,7 +528,7 @@ _E13:
 
 read_nomem_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     mov     edi,    edx
     shr     edx,    12
     mov     edx,    [find_local_data(memory_map+edx*4)]
@@ -541,7 +541,7 @@ read_nomem_new:
 
 read_nomemb_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     mov     edi,    edx
     shr     edx,    12
     mov     edx,    [find_local_data(memory_map+edx*4)]
@@ -555,7 +555,7 @@ read_nomemb_new:
 
 read_nomemh_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     mov     edi,    edx
     shr     edx,    12
     mov     edx,    [find_local_data(memory_map+edx*4)]
@@ -569,7 +569,7 @@ read_nomemh_new:
 
 read_nomemd_new:
     get_got_address
-    mov     edx,    [find_local_data(g_dev_mem_address)]
+    mov     edx,    [find_local_data(g_dev_r4300_address)]
     mov     edi,    edx
     shr     edx,    12
     mov     edx,    [find_local_data(memory_map+edx*4)]
@@ -588,7 +588,7 @@ write_nomem_new:
     mov     eax,    01h
     shl     edx,    2
     jc      tlb_exception
-    mov     ecx,    [find_local_data(g_dev_mem_wword)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wword)]
     mov     [edi+edx],    ecx
     ret
 
@@ -599,7 +599,7 @@ write_nomemb_new:
     shl     edx,    2
     jc      tlb_exception
     xor     edi,    3
-    mov     cl,     BYTE [find_local_data(g_dev_mem_wbyte)]
+    mov     cl,     BYTE [find_local_data(g_dev_r4300_wbyte)]
     mov     BYTE [edi+edx],    cl
     ret
 
@@ -610,7 +610,7 @@ write_nomemh_new:
     shl     edx,    2
     jc      tlb_exception
     xor     edi,    2
-    mov     cx,     WORD [find_local_data(g_dev_mem_whword)]
+    mov     cx,     WORD [find_local_data(g_dev_r4300_whword)]
     mov     WORD [edi+edx],    cx
     ret
 
@@ -620,9 +620,9 @@ write_nomemd_new:
     mov     eax,    01h
     shl     edx,    2
     jc      tlb_exception
-    mov     ecx,    [find_local_data(g_dev_mem_wdword+4)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wdword+4)]
     mov     [edi+edx],    ecx
-    mov     ecx,    [find_local_data(g_dev_mem_wdword+0)]
+    mov     ecx,    [find_local_data(g_dev_r4300_wdword+0)]
     mov     [4+edi+edx],    ecx
     ret
 
@@ -679,7 +679,7 @@ mi_exception:
     ;esp+0x24 = instr addr + flags
 ;Output:
     ;None
-    mov     edi,    [find_local_data(g_dev_mem_address)]
+    mov     edi,    [find_local_data(g_dev_r4300_address)]
     add     esp,    024h
     call    wb_base_reg
     jmp     do_interrupt
