@@ -22,6 +22,8 @@
 #ifndef M64P_DEVICE_R4300_NEW_DYNAREC_H
 #define M64P_DEVICE_R4300_NEW_DYNAREC_H
 
+#include "device/r4300/recomp_types.h" /* for precomp_instr */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -31,33 +33,64 @@
 
 struct r4300_core;
 
-extern int pcaddr;
-extern int pending_exception;
+/* This struct contains "hot" variables used by the new_dynarec
+ *
+ * For the ARM version, care has been taken to place struct members at offsets within LDR/STR offsets ranges.
+ * TODO: add static_asserts to verify that offsets are within LDR/STR offsets ranges.
+ */
+
+struct new_dynarec_hot_state
+{
+#if NEW_DYNAREC == NEW_DYNAREC_X86
+    int cycle_count;
+    int last_count;
+    int pending_exception;
+    int pcaddr;
+    uint64_t rdword;
+    int branch_target;
+    struct precomp_instr fake_pc;
+    unsigned int mini_ht[32][2];
+    unsigned char restore_candidate[512];
+    unsigned int memory_map[1048576];
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM
+    /* 0-4: Stack space used by dynarec to push/pop caller-saved register (r0-r3, r12)
+       5-6: free_space,
+       6-15: saved_context */
+    uint32_t dynarec_local[16];
+    unsigned int next_interrupt;
+    int cycle_count;
+    int last_count;
+    int pending_exception;
+    int pcaddr;
+    int stop;
+    char* invc_ptr;
+    uint32_t address;
+    uint64_t rdword;
+    uint64_t wdword;
+    uint32_t wword;
+    uint16_t whword;
+    uint8_t  wbyte;
+    uint32_t fcr0;
+    uint32_t fcr31;
+    int64_t  regs[32];
+    int64_t  hi;
+    int64_t  lo;
+    uint32_t cp0_regs[32];
+    uint32_t cp1_regs_simple[32];
+    uint32_t cp1_regs_double[32];
+    uint32_t rounding_modes[4];
+    int branch_target;
+    struct precomp_instr* pc;
+    struct precomp_instr fake_pc;
+    int ram_offset;
+    unsigned int mini_ht[32][2];
+    unsigned char restore_candidate[512];
+    unsigned int memory_map[1048576];
+#endif
+};
+
 extern unsigned int stop_after_jal;
 extern unsigned int using_tlb;
-
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-extern uint32_t g_dev_mem_address;
-extern uint8_t g_dev_mem_wbyte;
-extern uint16_t g_dev_mem_whword;
-extern uint32_t g_dev_mem_wword;
-extern uint64_t g_dev_mem_wdword;
-
-extern int64_t g_dev_r4300_regs[32];
-extern int64_t g_dev_r4300_hi;
-extern int64_t g_dev_r4300_lo;
-extern struct precomp_instr* g_dev_r4300_pc;
-extern int g_dev_r4300_stop;
-
-extern uint32_t g_dev_r4300_cp0_regs[32];
-extern unsigned int g_dev_r4300_cp0_next_interrupt;
-
-extern float* g_dev_r4300_cp1_regs_simple[32];
-extern double* g_dev_r4300_cp1_regs_double[32];
-extern uint32_t g_dev_r4300_cp1_fcr0;
-extern uint32_t g_dev_r4300_cp1_fcr31;
-#endif
 
 void invalidate_all_pages(void);
 void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size);

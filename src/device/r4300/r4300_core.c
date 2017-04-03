@@ -25,7 +25,7 @@
 #include "instr_counters.h"
 #endif
 #include "mi_controller.h"
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 #include "pure_interp.h"
 #include "recomp.h"
 
@@ -38,19 +38,7 @@
 #endif
 #include "main/main.h"
 
-
 #include <string.h>
-
-extern int64_t g_dev_r4300_regs[32];
-extern int64_t g_dev_r4300_hi;
-extern int64_t g_dev_r4300_lo;
-extern struct precomp_instr* g_dev_r4300_pc;
-extern int g_dev_r4300_stop;
-extern uint32_t g_dev_r4300_address;
-extern uint8_t g_dev_r4300_wbyte;
-extern uint16_t g_dev_r4300_whword;
-extern uint32_t g_dev_r4300_wword;
-extern uint64_t g_dev_r4300_wdword;
 
 
 void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
@@ -210,7 +198,7 @@ int64_t* r4300_regs(void)
 /* ARM dynarec uses a different memory layout */
     return g_dev.r4300.regs;
 #else
-    return g_dev_r4300_regs;
+    return g_dev.r4300.new_dynarec_hot_state.regs;
 #endif
 }
 
@@ -220,7 +208,7 @@ int64_t* r4300_mult_hi(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.hi;
 #else
-    return &g_dev_r4300_hi;
+    return &g_dev.r4300.new_dynarec_hot_state.hi;
 #endif
 }
 
@@ -230,7 +218,7 @@ int64_t* r4300_mult_lo(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.lo;
 #else
-    return &g_dev_r4300_lo;
+    return &g_dev.r4300.new_dynarec_hot_state.lo;
 #endif
 }
 
@@ -243,7 +231,7 @@ uint32_t* r4300_pc(void)
 {
 #ifdef NEW_DYNAREC
     return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
-        ? (uint32_t*)&pcaddr
+        ? (uint32_t*)&g_dev.r4300.new_dynarec_hot_state.pcaddr
         : &(*r4300_pc_struct())->addr;
 #else
     return &(*r4300_pc_struct())->addr;
@@ -256,7 +244,7 @@ struct precomp_instr** r4300_pc_struct(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.pc;
 #else
-    return &g_dev_r4300_pc;
+    return &g_dev.r4300.new_dynarec_hot_state.pc;
 #endif
 }
 
@@ -266,7 +254,7 @@ int* r4300_stop(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.stop;
 #else
-    return &g_dev_r4300_stop;
+    return &g_dev.r4300.new_dynarec_hot_state.stop;
 #endif
 }
 
@@ -281,7 +269,7 @@ uint32_t* r4300_address(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.address;
 #else
-    return &g_dev_r4300_address;
+    return &g_dev.r4300.new_dynarec_hot_state.address;
 #endif
 }
 
@@ -291,7 +279,7 @@ uint8_t*  r4300_wbyte(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.wbyte;
 #else
-    return &g_dev_r4300_wbyte;
+    return &g_dev.r4300.new_dynarec_hot_state.wbyte;
 #endif
 }
 
@@ -301,7 +289,7 @@ uint16_t* r4300_whword(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.whword;
 #else
-    return &g_dev_r4300_whword;
+    return &g_dev.r4300.new_dynarec_hot_state.whword;
 #endif
 }
 
@@ -311,7 +299,7 @@ uint32_t* r4300_wword(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.wword;
 #else
-    return &g_dev_r4300_wword;
+    return &g_dev.r4300.new_dynarec_hot_state.wword;
 #endif
 }
 
@@ -321,7 +309,7 @@ uint64_t* r4300_wdword(void)
 /* ARM dynarec uses a different memory layout */
     return &g_dev.r4300.wdword;
 #else
-    return &g_dev_r4300_wdword;
+    return &g_dev.r4300.new_dynarec_hot_state.wdword;
 #endif
 }
 
@@ -355,7 +343,7 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 #ifdef NEW_DYNAREC
         if (r4300->emumode == EMUMODE_DYNAREC)
         {
-            r4300->cp0.last_addr = pcaddr;
+            r4300->cp0.last_addr = r4300->new_dynarec_hot_state.pcaddr;
         }
         else
 #endif
@@ -372,8 +360,8 @@ void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc)
 #ifdef NEW_DYNAREC
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        pcaddr = pc;
-        pending_exception = 1;
+        r4300->new_dynarec_hot_state.pcaddr = pc;
+        r4300->new_dynarec_hot_state.pending_exception = 1;
         invalidate_all_pages();
     }
     else

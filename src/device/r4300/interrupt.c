@@ -384,16 +384,16 @@ static void wrapped_exception_general(struct r4300_core* r4300)
 #ifdef NEW_DYNAREC
     uint32_t* cp0_regs = r4300_cp0_regs();
     if (r4300->emumode == EMUMODE_DYNAREC) {
-        cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
-        pcaddr = 0x80000180;
+        cp0_regs[CP0_EPC_REG] = (r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
+        r4300->new_dynarec_hot_state.pcaddr = 0x80000180;
         cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
-        if (pcaddr & 1) {
+        if (r4300->new_dynarec_hot_state.pcaddr & 1) {
           cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         }
         else {
           cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
         }
-        pending_exception=1;
+        r4300->new_dynarec_hot_state.pending_exception=1;
     } else {
         exception_general(r4300);
     }
@@ -499,9 +499,9 @@ static void nmi_int_handler(struct device* dev)
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
         uint32_t* cp0_next_regs = r4300_cp0_regs();
-        cp0_next_regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
-        pcaddr = 0xa4000040;
-        pending_exception = 1;
+        cp0_next_regs[CP0_ERROREPC_REG]=(r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
+        r4300->new_dynarec_hot_state.pcaddr = 0xa4000040;
+        r4300->new_dynarec_hot_state.pending_exception = 1;
         invalidate_all_pages();
     }
 #endif

@@ -173,6 +173,11 @@ struct r4300_core
     uint32_t address;
 #endif
 
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+    char extra_memory[33554432];
+#endif
+    struct new_dynarec_hot_state new_dynarec_hot_state;
+
     unsigned int emumode;
 
     struct cp0 cp0;
