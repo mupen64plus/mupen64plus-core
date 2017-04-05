@@ -909,38 +909,38 @@ DECLARE_INSTRUCTION(MTLO)
 
 /* Jump & Branch instructions */
 
-DECLARE_JUMP(J,   (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &r4300_regs()[0],  0, 0)
-DECLARE_JUMP(JAL, (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &r4300_regs()[31], 0, 0)
+DECLARE_JUMP(J,   (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &r4300_regs(&g_dev.r4300)[0],  0, 0)
+DECLARE_JUMP(JAL, (jinst_index<<2) | ((PCADDR+4) & UINT32_C(0xF0000000)), 1, &r4300_regs(&g_dev.r4300)[31], 0, 0)
 
-DECLARE_JUMP(JR,   irs32, 1, &r4300_regs()[0], 0, 0)
+DECLARE_JUMP(JR,   irs32, 1, &r4300_regs(&g_dev.r4300)[0], 0, 0)
 DECLARE_JUMP(JALR, irs32, 1, &rrd,    0, 0)
 
-DECLARE_JUMP(BEQ,     PCADDR + (iimmediate+1)*4, irs == irt, &r4300_regs()[0], 0, 0)
-DECLARE_JUMP(BEQL,    PCADDR + (iimmediate+1)*4, irs == irt, &r4300_regs()[0], 1, 0)
+DECLARE_JUMP(BEQ,     PCADDR + (iimmediate+1)*4, irs == irt, &r4300_regs(&g_dev.r4300)[0], 0, 0)
+DECLARE_JUMP(BEQL,    PCADDR + (iimmediate+1)*4, irs == irt, &r4300_regs(&g_dev.r4300)[0], 1, 0)
 
-DECLARE_JUMP(BNE,     PCADDR + (iimmediate+1)*4, irs != irt, &r4300_regs()[0], 0, 0)
-DECLARE_JUMP(BNEL,    PCADDR + (iimmediate+1)*4, irs != irt, &r4300_regs()[0], 1, 0)
+DECLARE_JUMP(BNE,     PCADDR + (iimmediate+1)*4, irs != irt, &r4300_regs(&g_dev.r4300)[0], 0, 0)
+DECLARE_JUMP(BNEL,    PCADDR + (iimmediate+1)*4, irs != irt, &r4300_regs(&g_dev.r4300)[0], 1, 0)
 
-DECLARE_JUMP(BLEZ,    PCADDR + (iimmediate+1)*4, irs <= 0,   &r4300_regs()[0], 0, 0)
-DECLARE_JUMP(BLEZL,   PCADDR + (iimmediate+1)*4, irs <= 0,   &r4300_regs()[0], 1, 0)
+DECLARE_JUMP(BLEZ,    PCADDR + (iimmediate+1)*4, irs <= 0,   &r4300_regs(&g_dev.r4300)[0], 0, 0)
+DECLARE_JUMP(BLEZL,   PCADDR + (iimmediate+1)*4, irs <= 0,   &r4300_regs(&g_dev.r4300)[0], 1, 0)
 
-DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    &r4300_regs()[0], 0, 0)
-DECLARE_JUMP(BGTZL,   PCADDR + (iimmediate+1)*4, irs > 0,    &r4300_regs()[0], 1, 0)
+DECLARE_JUMP(BGTZ,    PCADDR + (iimmediate+1)*4, irs > 0,    &r4300_regs(&g_dev.r4300)[0], 0, 0)
+DECLARE_JUMP(BGTZL,   PCADDR + (iimmediate+1)*4, irs > 0,    &r4300_regs(&g_dev.r4300)[0], 1, 0)
 
-DECLARE_JUMP(BLTZ,    PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs()[0],  0, 0)
-DECLARE_JUMP(BLTZAL,  PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs()[31], 0, 0)
-DECLARE_JUMP(BLTZL,   PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs()[0],  1, 0)
-DECLARE_JUMP(BLTZALL, PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs()[31], 1, 0)
+DECLARE_JUMP(BLTZ,    PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs(&g_dev.r4300)[0],  0, 0)
+DECLARE_JUMP(BLTZAL,  PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs(&g_dev.r4300)[31], 0, 0)
+DECLARE_JUMP(BLTZL,   PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs(&g_dev.r4300)[0],  1, 0)
+DECLARE_JUMP(BLTZALL, PCADDR + (iimmediate+1)*4, irs < 0,    &r4300_regs(&g_dev.r4300)[31], 1, 0)
 
-DECLARE_JUMP(BGEZ,    PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs()[0],  0, 0)
-DECLARE_JUMP(BGEZAL,  PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs()[31], 0, 0)
-DECLARE_JUMP(BGEZL,   PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs()[0],  1, 0)
-DECLARE_JUMP(BGEZALL, PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs()[31], 1, 0)
+DECLARE_JUMP(BGEZ,    PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[0],  0, 0)
+DECLARE_JUMP(BGEZAL,  PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[31], 0, 0)
+DECLARE_JUMP(BGEZL,   PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[0],  1, 0)
+DECLARE_JUMP(BGEZALL, PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[31], 1, 0)
 
-DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs()[0], 0, 1)
-DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs()[0], 1, 1)
-DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs()[0], 0, 1)
-DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs()[0], 1, 1)
+DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
+DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
+DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
+DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
 
 /* Special instructions */
 
@@ -1350,7 +1350,7 @@ DECLARE_INSTRUCTION(MTC0)
 DECLARE_INSTRUCTION(LWC1)
 {
     const unsigned char lslfft = lfft;
-    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
+    const uint32_t lslfaddr = (uint32_t) r4300_regs(&g_dev.r4300)[lfbase] + lfoffset;
     uint64_t temp;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
@@ -1365,7 +1365,7 @@ DECLARE_INSTRUCTION(LWC1)
 DECLARE_INSTRUCTION(LDC1)
 {
     const unsigned char lslfft = lfft;
-    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
+    const uint32_t lslfaddr = (uint32_t) r4300_regs(&g_dev.r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
     *r4300_address() = lslfaddr;
@@ -1376,7 +1376,7 @@ DECLARE_INSTRUCTION(LDC1)
 DECLARE_INSTRUCTION(SWC1)
 {
     const unsigned char lslfft = lfft;
-    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
+    const uint32_t lslfaddr = (uint32_t) r4300_regs(&g_dev.r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
     *r4300_address() = lslfaddr;
@@ -1388,7 +1388,7 @@ DECLARE_INSTRUCTION(SWC1)
 DECLARE_INSTRUCTION(SDC1)
 {
     const unsigned char lslfft = lfft;
-    const uint32_t lslfaddr = (uint32_t) r4300_regs()[lfbase] + lfoffset;
+    const uint32_t lslfaddr = (uint32_t) r4300_regs(&g_dev.r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     ADD_TO_PC(1);
     *r4300_address() = lslfaddr;

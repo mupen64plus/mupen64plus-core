@@ -192,7 +192,7 @@ void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);
 
-int64_t* r4300_regs(void);
+int64_t* r4300_regs(struct r4300_core* r4300);
 int64_t* r4300_mult_hi(void);
 int64_t* r4300_mult_lo(void);
 unsigned int* r4300_llbit(void);

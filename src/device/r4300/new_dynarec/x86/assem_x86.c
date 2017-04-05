@@ -917,7 +917,7 @@ static void emit_loadreg(int r, int hr)
   if((r&63)==0)
     emit_zeroreg(hr);
   else {
-    int addr=((int)r4300_regs())+((r&63)<<3)+((r&64)>>4);
+    int addr=((int)r4300_regs(&g_dev.r4300))+((r&63)<<3)+((r&64)>>4);
     if((r&63)==HIREG) addr=(int)r4300_mult_hi()+((r&64)>>4);
     if((r&63)==LOREG) addr=(int)r4300_mult_lo()+((r&64)>>4);
     if(r==CCREG) addr=(int)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
@@ -931,7 +931,7 @@ static void emit_loadreg(int r, int hr)
 }
 static void emit_storereg(int r, int hr)
 {
-  int addr=((int)r4300_regs())+((r&63)<<3)+((r&64)>>4);
+  int addr=((int)r4300_regs(&g_dev.r4300))+((r&63)<<3)+((r&64)>>4);
   if((r&63)==HIREG) addr=(int)r4300_mult_hi()+((r&64)>>4);
   if((r&63)==LOREG) addr=(int)r4300_mult_lo()+((r&64)>>4);
   if(r==CCREG) addr=(int)&g_dev.r4300.new_dynarec_hot_state.cycle_count;

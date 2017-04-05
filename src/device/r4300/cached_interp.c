@@ -64,7 +64,7 @@
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
-      if (link_register != &r4300_regs()[0]) \
+      if (link_register != &r4300_regs(&g_dev.r4300)[0]) \
       { \
          *link_register = SE32(*r4300_pc() + 8); \
       } \
@@ -95,7 +95,7 @@
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
-      if (link_register != &r4300_regs()[0]) \
+      if (link_register != &r4300_regs(&g_dev.r4300)[0]) \
       { \
          *link_register = SE32(*r4300_pc() + 8); \
       } \

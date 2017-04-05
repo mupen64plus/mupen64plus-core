@@ -449,7 +449,7 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, uint32_t, 0x100000);
 
     *r4300_llbit() = GETDATA(curr, unsigned int);
-    COPYARRAY(r4300_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
     *r4300_mult_lo() = GETDATA(curr, int64_t);
@@ -579,7 +579,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     *r4300_cp0_last_addr() = GETDATA(curr, uint32_t);
 
     // GPR
-    COPYARRAY(r4300_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
 
     // FPR
     COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
@@ -1203,7 +1203,7 @@ int savestates_save_m64p(char *filepath)
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, unsigned int, 0x100000);
 
     PUTDATA(curr, unsigned int, *r4300_llbit());
-    PUTARRAY(r4300_regs(), curr, int64_t, 32);
+    PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     PUTDATA(curr, int64_t, *r4300_mult_lo());
     PUTDATA(curr, int64_t, *r4300_mult_hi());
@@ -1289,7 +1289,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc());
-    PUTARRAY(r4300_regs(), curr, int64_t, 32);
+    PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     PUTARRAY(r4300_cp1_regs(), curr, int64_t, 32);

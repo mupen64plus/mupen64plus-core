@@ -52,7 +52,7 @@ void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int cou
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
-    memset(r4300_regs(), 0, 32*sizeof(int64_t));
+    memset(r4300_regs(r4300), 0, 32*sizeof(int64_t));
     *r4300_mult_hi() = 0;
     *r4300_mult_lo() = 0;
     r4300->llbit = 0;
@@ -192,13 +192,13 @@ void run_r4300(struct r4300_core* r4300)
 #endif
 }
 
-int64_t* r4300_regs(void)
+int64_t* r4300_regs(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.regs;
+    return r4300->regs;
 #else
-    return g_dev.r4300.new_dynarec_hot_state.regs;
+    return r4300->new_dynarec_hot_state.regs;
 #endif
 }
 
