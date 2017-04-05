@@ -56,7 +56,7 @@ static const unsigned int precomp_instr_size = sizeof(struct precomp_instr);
 
 void dyna_jump()
 {
-    if (*r4300_stop() == 1)
+    if (*r4300_stop(&g_dev.r4300) == 1)
     {
         dyna_stop();
         return;

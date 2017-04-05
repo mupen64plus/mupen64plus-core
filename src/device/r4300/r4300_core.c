@@ -124,7 +124,7 @@ void run_r4300(struct r4300_core* r4300)
 {
     r4300->current_instruction_table = cached_interpreter_table;
 
-    *r4300_stop() = 0;
+    *r4300_stop(r4300) = 0;
     g_rom_pause = 0;
 
     /* clear instruction counters */
@@ -248,13 +248,13 @@ struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300)
 #endif
 }
 
-int* r4300_stop(void)
+int* r4300_stop(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.stop;
+    return &r4300->stop;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.stop;
+    return &r4300->new_dynarec_hot_state.stop;
 #endif
 }
 

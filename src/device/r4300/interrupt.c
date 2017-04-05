@@ -533,7 +533,7 @@ void gen_interrupt(void)
     uint32_t* cp0_regs = r4300_cp0_regs();
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
 
-    if (*r4300_stop() == 1)
+    if (*r4300_stop(&g_dev.r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
         dyna_stop();

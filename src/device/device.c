@@ -95,7 +95,7 @@ void run_device(struct device* dev)
 void stop_device(struct device* dev)
 {
     /* set stop flag so that r4300 execution will be stopped at next interrupt */
-    *r4300_stop() = 1;
+    *r4300_stop(&dev->r4300) = 1;
 }
 
 void hard_reset_device(struct device* dev)

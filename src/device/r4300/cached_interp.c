@@ -656,7 +656,7 @@ void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address
 
 void run_cached_interpreter(struct r4300_core* r4300)
 {
-    while (!*r4300_stop())
+    while (!*r4300_stop(r4300))
     {
 #ifdef COMPARE_CORE
         if ((*r4300_pc_struct(r4300))->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct(r4300))->addr < 0x80000000 || (*r4300_pc_struct(r4300))->addr >= 0xc0000000))
