@@ -54,7 +54,7 @@
 #endif
 
 #define PCADDR *r4300_pc(&g_dev.r4300)
-#define ADD_TO_PC(x) (*r4300_pc_struct()) += x;
+#define ADD_TO_PC(x) (*r4300_pc_struct(&g_dev.r4300)) += x;
 #define DECLARE_INSTRUCTION(name) static void name(void)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
@@ -70,20 +70,20 @@
       } \
       if (!likely || take_jump) \
       { \
-         (*r4300_pc_struct())++; \
+         (*r4300_pc_struct(&g_dev.r4300))++; \
          g_dev.r4300.delay_slot=1; \
          UPDATE_DEBUGGER(); \
-         (*r4300_pc_struct())->ops(); \
+         (*r4300_pc_struct(&g_dev.r4300))->ops(); \
          cp0_update_count(); \
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
          { \
-            (*r4300_pc_struct())=g_dev.r4300.cached_interp.actual->block+((jump_target-g_dev.r4300.cached_interp.actual->start)>>2); \
+            (*r4300_pc_struct(&g_dev.r4300))=g_dev.r4300.cached_interp.actual->block+((jump_target-g_dev.r4300.cached_interp.actual->start)>>2); \
          } \
       } \
       else \
       { \
-         (*r4300_pc_struct()) += 2; \
+         (*r4300_pc_struct(&g_dev.r4300)) += 2; \
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
@@ -101,10 +101,10 @@
       } \
       if (!likely || take_jump) \
       { \
-         (*r4300_pc_struct())++; \
+         (*r4300_pc_struct(&g_dev.r4300))++; \
          g_dev.r4300.delay_slot=1; \
          UPDATE_DEBUGGER(); \
-         (*r4300_pc_struct())->ops(); \
+         (*r4300_pc_struct(&g_dev.r4300))->ops(); \
          cp0_update_count(); \
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
@@ -114,7 +114,7 @@
       } \
       else \
       { \
-         (*r4300_pc_struct()) += 2; \
+         (*r4300_pc_struct(&g_dev.r4300)) += 2; \
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
@@ -158,20 +158,20 @@ static void FIN_BLOCK(void)
 {
    if (!g_dev.r4300.delay_slot)
      {
-    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct(&g_dev.r4300))-1)->addr+4);
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300));
 #endif
 Used by dynarec only, check should be unnecessary
 */
-    (*r4300_pc_struct())->ops();
+    (*r4300_pc_struct(&g_dev.r4300))->ops();
     if (g_dev.r4300.emumode == EMUMODE_DYNAREC) dyna_jump();
      }
    else
      {
     struct precomp_block *blk = g_dev.r4300.cached_interp.actual;
-    struct precomp_instr *inst = (*r4300_pc_struct());
-    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
+    struct precomp_instr *inst = (*r4300_pc_struct(&g_dev.r4300));
+    cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct(&g_dev.r4300))-1)->addr+4);
 
 /*#ifdef DBG
             if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300));
@@ -180,12 +180,12 @@ Used by dynarec only, check should be unnecessary
 */
     if (!g_dev.r4300.skip_jump)
       {
-         (*r4300_pc_struct())->ops();
+         (*r4300_pc_struct(&g_dev.r4300))->ops();
          g_dev.r4300.cached_interp.actual = blk;
-         (*r4300_pc_struct()) = inst+1;
+         (*r4300_pc_struct(&g_dev.r4300)) = inst+1;
       }
     else
-      (*r4300_pc_struct())->ops();
+      (*r4300_pc_struct(&g_dev.r4300))->ops();
 
     if (g_dev.r4300.emumode == EMUMODE_DYNAREC) dyna_jump();
      }
@@ -195,7 +195,7 @@ static void NOTCOMPILED(void)
 {
    uint32_t *mem = fast_mem_access(g_dev.r4300.cached_interp.blocks[*r4300_pc(&g_dev.r4300)>>12]->start);
 #ifdef DBG
-   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(&g_dev.r4300), (long) (*r4300_pc_struct())->ops);
+   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(&g_dev.r4300), (long) (*r4300_pc_struct(&g_dev.r4300))->ops);
 #endif
 
    if (mem != NULL)
@@ -209,7 +209,7 @@ static void NOTCOMPILED(void)
 The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
 */
-   (*r4300_pc_struct())->ops();
+   (*r4300_pc_struct(&g_dev.r4300))->ops();
    if (g_dev.r4300.emumode == EMUMODE_DYNAREC)
      dyna_jump();
 }
@@ -576,7 +576,7 @@ void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t addre
     }
 
     /* set new PC */
-    (*r4300_pc_struct()) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
+    (*r4300_pc_struct(r4300)) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
 
     /* set new PC for dynarec (eg set "return_address")*/
     if (r4300->emumode == EMUMODE_DYNAREC) {
@@ -659,13 +659,13 @@ void run_cached_interpreter(struct r4300_core* r4300)
     while (!*r4300_stop())
     {
 #ifdef COMPARE_CORE
-        if ((*r4300_pc_struct())->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct())->addr < 0x80000000 || (*r4300_pc_struct())->addr >= 0xc0000000))
-            virtual_to_physical_address(r4300, (*r4300_pc_struct())->addr, 2);
+        if ((*r4300_pc_struct(r4300))->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct(r4300))->addr < 0x80000000 || (*r4300_pc_struct(r4300))->addr >= 0xc0000000))
+            virtual_to_physical_address(r4300, (*r4300_pc_struct(r4300))->addr, 2);
         CoreCompareCallback();
 #endif
 #ifdef DBG
-        if (g_DebuggerActive) update_debugger((*r4300_pc_struct())->addr);
+        if (g_DebuggerActive) update_debugger((*r4300_pc_struct(r4300))->addr);
 #endif
-        (*r4300_pc_struct())->ops();
+        (*r4300_pc_struct(r4300))->ops();
     }
 }
