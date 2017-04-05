@@ -452,8 +452,8 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
-    *r4300_mult_lo() = GETDATA(curr, int64_t);
-    *r4300_mult_hi() = GETDATA(curr, int64_t);
+    *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
+    *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
     COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
@@ -614,8 +614,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     update_x86_rounding_mode(FCR31);
 
     // hi / lo
-    *r4300_mult_hi() = GETDATA(curr, int64_t);
-    *r4300_mult_lo() = GETDATA(curr, int64_t);
+    *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
+    *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
 
     // rdram register
     g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
@@ -1205,8 +1205,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, *r4300_llbit());
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    PUTDATA(curr, int64_t, *r4300_mult_lo());
-    PUTDATA(curr, int64_t, *r4300_mult_hi());
+    PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
+    PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
 
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
         shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
@@ -1300,8 +1300,8 @@ static int savestates_save_pj64(char *filepath, void *handle,
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
     PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
-    PUTDATA(curr, int64_t, *r4300_mult_hi());
-    PUTDATA(curr, int64_t, *r4300_mult_lo());
+    PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
+    PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
 
     PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]);
     PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]);

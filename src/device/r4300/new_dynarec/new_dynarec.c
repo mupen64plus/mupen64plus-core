@@ -10978,15 +10978,15 @@ int new_recompile_block(int addr)
 static void div64(int64_t dividend,int64_t divisor)
 {
   if(divisor) {
-    *r4300_mult_lo()=dividend/divisor;
-    *r4300_mult_hi()=dividend%divisor;
+    *r4300_mult_lo(&g_dev.r4300)=dividend/divisor;
+    *r4300_mult_hi(&g_dev.r4300)=dividend%divisor;
   }
 }
 static void divu64(uint64_t dividend,uint64_t divisor)
 {
   if(divisor) {
-    *r4300_mult_lo()=dividend/divisor;
-    *r4300_mult_hi()=dividend%divisor;
+    *r4300_mult_lo(&g_dev.r4300)=dividend/divisor;
+    *r4300_mult_hi(&g_dev.r4300)=dividend%divisor;
   }
 }
 

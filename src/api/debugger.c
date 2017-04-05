@@ -324,9 +324,9 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_REG:
             return r4300_regs(&g_dev.r4300);
         case M64P_CPU_REG_HI:
-            return r4300_mult_hi();
+            return r4300_mult_hi(&g_dev.r4300);
         case M64P_CPU_REG_LO:
-            return r4300_mult_lo();
+            return r4300_mult_lo(&g_dev.r4300);
         case M64P_CPU_REG_COP0:
             return r4300_cp0_regs();
         case M64P_CPU_REG_COP1_DOUBLE_PTR:

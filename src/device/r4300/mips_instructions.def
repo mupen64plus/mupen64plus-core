@@ -752,8 +752,8 @@ DECLARE_INSTRUCTION(MULT)
 {
     int64_t temp;
     temp = rrs * rrt;
-    *r4300_mult_hi() = temp >> 32;
-    *r4300_mult_lo() = SE32(temp);
+    *r4300_mult_hi(&g_dev.r4300) = temp >> 32;
+    *r4300_mult_lo(&g_dev.r4300) = SE32(temp);
     ADD_TO_PC(1);
 }
 
@@ -761,8 +761,8 @@ DECLARE_INSTRUCTION(MULTU)
 {
     uint64_t temp;
     temp = (uint32_t) rrs * (uint64_t) ((uint32_t) rrt);
-    *r4300_mult_hi() = (int64_t) temp >> 32;
-    *r4300_mult_lo() = SE32(temp);
+    *r4300_mult_hi(&g_dev.r4300) = (int64_t) temp >> 32;
+    *r4300_mult_lo(&g_dev.r4300) = SE32(temp);
     ADD_TO_PC(1);
 }
 
@@ -801,13 +801,13 @@ DECLARE_INSTRUCTION(DMULT)
     result3 = (result2 >> 32) + temp4;
     result4 = (result3 >> 32);
 
-    *r4300_mult_lo() = result1 | (result2 << 32);
-    *r4300_mult_hi() = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+    *r4300_mult_lo(&g_dev.r4300) = result1 | (result2 << 32);
+    *r4300_mult_hi(&g_dev.r4300) = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
     if (sign)
     {
-        *r4300_mult_hi() = ~*r4300_mult_hi();
-        if (!*r4300_mult_lo()) { (*r4300_mult_hi())++; }
-        else { *r4300_mult_lo() = ~*r4300_mult_lo() + 1; }
+        *r4300_mult_hi(&g_dev.r4300) = ~*r4300_mult_hi(&g_dev.r4300);
+        if (!*r4300_mult_lo(&g_dev.r4300)) { (*r4300_mult_hi(&g_dev.r4300))++; }
+        else { *r4300_mult_lo(&g_dev.r4300) = ~*r4300_mult_lo(&g_dev.r4300) + 1; }
     }
     ADD_TO_PC(1);
 }
@@ -833,8 +833,8 @@ DECLARE_INSTRUCTION(DMULTU)
     result3 = (result2 >> 32) + temp4;
     result4 = (result3 >> 32);
 
-    *r4300_mult_lo() = result1 | (result2 << 32);
-    *r4300_mult_hi() = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
+    *r4300_mult_lo(&g_dev.r4300) = result1 | (result2 << 32);
+    *r4300_mult_hi(&g_dev.r4300) = (result3 & UINT64_C(0xFFFFFFFF)) | (result4 << 32);
 
     ADD_TO_PC(1);
 }
@@ -843,8 +843,8 @@ DECLARE_INSTRUCTION(DIV)
 {
     if (rrt32)
     {
-        *r4300_mult_lo() = SE32(rrs32 / rrt32);
-        *r4300_mult_hi() = SE32(rrs32 % rrt32);
+        *r4300_mult_lo(&g_dev.r4300) = SE32(rrs32 / rrt32);
+        *r4300_mult_hi(&g_dev.r4300) = SE32(rrs32 % rrt32);
     }
     else { DebugMessage(M64MSG_ERROR, "DIV: divide by 0"); }
     ADD_TO_PC(1);
@@ -854,8 +854,8 @@ DECLARE_INSTRUCTION(DIVU)
 {
     if (rrt32)
     {
-        *r4300_mult_lo() = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
-        *r4300_mult_hi() = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
+        *r4300_mult_lo(&g_dev.r4300) = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
+        *r4300_mult_hi(&g_dev.r4300) = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
     }
     else { DebugMessage(M64MSG_ERROR, "DIVU: divide by 0"); }
     ADD_TO_PC(1);
@@ -865,8 +865,8 @@ DECLARE_INSTRUCTION(DDIV)
 {
     if (rrt)
     {
-        *r4300_mult_lo() = rrs / rrt;
-        *r4300_mult_hi() = rrs % rrt;
+        *r4300_mult_lo(&g_dev.r4300) = rrs / rrt;
+        *r4300_mult_hi(&g_dev.r4300) = rrs % rrt;
     }
     else { DebugMessage(M64MSG_ERROR, "DDIV: divide by 0"); }
     ADD_TO_PC(1);
@@ -876,8 +876,8 @@ DECLARE_INSTRUCTION(DDIVU)
 {
     if (rrt)
     {
-        *r4300_mult_lo() = (uint64_t) rrs / (uint64_t) rrt;
-        *r4300_mult_hi() = (uint64_t) rrs % (uint64_t) rrt;
+        *r4300_mult_lo(&g_dev.r4300) = (uint64_t) rrs / (uint64_t) rrt;
+        *r4300_mult_hi(&g_dev.r4300) = (uint64_t) rrs % (uint64_t) rrt;
     }
     else { DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0"); }
     ADD_TO_PC(1);
@@ -885,25 +885,25 @@ DECLARE_INSTRUCTION(DDIVU)
 
 DECLARE_INSTRUCTION(MFHI)
 {
-    rrd = *r4300_mult_hi();
+    rrd = *r4300_mult_hi(&g_dev.r4300);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTHI)
 {
-    *r4300_mult_hi() = rrs;
+    *r4300_mult_hi(&g_dev.r4300) = rrs;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MFLO)
 {
-    rrd = *r4300_mult_lo();
+    rrd = *r4300_mult_lo(&g_dev.r4300);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTLO)
 {
-    *r4300_mult_lo() = rrs;
+    *r4300_mult_lo(&g_dev.r4300) = rrs;
     ADD_TO_PC(1);
 }
 

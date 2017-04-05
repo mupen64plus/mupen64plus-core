@@ -1897,8 +1897,8 @@ void genmult(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MULT, 0);
 #else
     int rs, rt;
-    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo()); /* these must be done first so they are not assigned by allocate_register() */
-    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi());
+    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo(&g_dev.r4300)); /* these must be done first so they are not assigned by allocate_register() */
+    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi(&g_dev.r4300));
     rs = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rs);
     rt = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     mov_reg32_reg32(EAX, rs);
@@ -1915,8 +1915,8 @@ void genmultu(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MULTU, 0);
 #else
     int rs, rt;
-    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo());
-    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi());
+    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo(&g_dev.r4300));
+    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi(&g_dev.r4300));
     rs = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rs);
     rt = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     mov_reg32_reg32(EAX, rs);
@@ -1945,8 +1945,8 @@ void gendmultu(void)
     mov_xreg64_m64rel(RAX, (unsigned long long *) g_dev.r4300.recomp.dst->f.r.rs);
     mov_xreg64_m64rel(RDX, (unsigned long long *) g_dev.r4300.recomp.dst->f.r.rt);
     mul_reg64(RDX);
-    mov_m64rel_xreg64((unsigned long long *) r4300_mult_lo(), RAX);
-    mov_m64rel_xreg64((unsigned long long *) r4300_mult_hi(), RDX);
+    mov_m64rel_xreg64((unsigned long long *) r4300_mult_lo(&g_dev.r4300), RAX);
+    mov_m64rel_xreg64((unsigned long long *) r4300_mult_hi(&g_dev.r4300), RDX);
 #endif
 }
 
@@ -1959,8 +1959,8 @@ void gendiv(void)
     gencallinterp((unsigned long long)cached_interpreter_table.DIV, 0);
 #else
     int rs, rt;
-    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo());
-    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi());
+    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo(&g_dev.r4300));
+    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi(&g_dev.r4300));
     rs = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rs);
     rt = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     cmp_reg32_imm32(rt, 0);
@@ -1980,8 +1980,8 @@ void gendivu(void)
     gencallinterp((unsigned long long)cached_interpreter_table.DIVU, 0);
 #else
     int rs, rt;
-    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo());
-    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi());
+    allocate_register_32_manually_w(EAX, (unsigned int *)r4300_mult_lo(&g_dev.r4300));
+    allocate_register_32_manually_w(EDX, (unsigned int *)r4300_mult_hi(&g_dev.r4300));
     rs = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rs);
     rt = allocate_register_32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     cmp_reg32_imm32(rt, 0);
@@ -2017,7 +2017,7 @@ void genmfhi(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MFHI, 0);
 #else
     int rd = allocate_register_64_w((unsigned long long *) g_dev.r4300.recomp.dst->f.r.rd);
-    int _hi = allocate_register_64((unsigned long long *) r4300_mult_hi());
+    int _hi = allocate_register_64((unsigned long long *) r4300_mult_hi(&g_dev.r4300));
 
     mov_reg64_reg64(rd, _hi);
 #endif
@@ -2031,7 +2031,7 @@ void genmthi(void)
 #ifdef INTERPRET_MTHI
     gencallinterp((unsigned long long)cached_interpreter_table.MTHI, 0);
 #else
-    int _hi = allocate_register_64_w((unsigned long long *) r4300_mult_hi());
+    int _hi = allocate_register_64_w((unsigned long long *) r4300_mult_hi(&g_dev.r4300));
     int rs = allocate_register_64((unsigned long long *) g_dev.r4300.recomp.dst->f.r.rs);
 
     mov_reg64_reg64(_hi, rs);
@@ -2047,7 +2047,7 @@ void genmflo(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MFLO, 0);
 #else
     int rd = allocate_register_64_w((unsigned long long *) g_dev.r4300.recomp.dst->f.r.rd);
-    int _lo = allocate_register_64((unsigned long long *) r4300_mult_lo());
+    int _lo = allocate_register_64((unsigned long long *) r4300_mult_lo(&g_dev.r4300));
 
     mov_reg64_reg64(rd, _lo);
 #endif
@@ -2061,7 +2061,7 @@ void genmtlo(void)
 #ifdef INTERPRET_MTLO
     gencallinterp((unsigned long long)cached_interpreter_table.MTLO, 0);
 #else
-    int _lo = allocate_register_64_w((unsigned long long *)r4300_mult_lo());
+    int _lo = allocate_register_64_w((unsigned long long *)r4300_mult_lo(&g_dev.r4300));
     int rs = allocate_register_64((unsigned long long *)g_dev.r4300.recomp.dst->f.r.rs);
 
     mov_reg64_reg64(_lo, rs);

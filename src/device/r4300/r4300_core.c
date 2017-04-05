@@ -53,8 +53,8 @@ void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
     memset(r4300_regs(r4300), 0, 32*sizeof(int64_t));
-    *r4300_mult_hi() = 0;
-    *r4300_mult_lo() = 0;
+    *r4300_mult_hi(r4300) = 0;
+    *r4300_mult_lo(r4300) = 0;
     r4300->llbit = 0;
 
     *r4300_pc_struct() = NULL;
@@ -202,23 +202,23 @@ int64_t* r4300_regs(struct r4300_core* r4300)
 #endif
 }
 
-int64_t* r4300_mult_hi(void)
+int64_t* r4300_mult_hi(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.hi;
+    return &r4300->hi;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.hi;
+    return &r4300->new_dynarec_hot_state.hi;
 #endif
 }
 
-int64_t* r4300_mult_lo(void)
+int64_t* r4300_mult_lo(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.lo;
+    return &r4300->lo;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.lo;
+    return &r4300->new_dynarec_hot_state.lo;
 #endif
 }
 
