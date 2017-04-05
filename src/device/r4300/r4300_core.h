@@ -202,7 +202,7 @@ int* r4300_stop(struct r4300_core* r4300);
 
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
-uint32_t* r4300_address(void);
+uint32_t* r4300_address(struct r4300_core* r4300);
 uint8_t*  r4300_wbyte(void);
 uint16_t* r4300_whword(void);
 uint32_t* r4300_wword(void);

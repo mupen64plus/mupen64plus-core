@@ -2659,7 +2659,7 @@ static void do_readstub(int n)
     ftable=(int)g_dev.mem.readmem;
   if(type==LOADD_STUB)
     ftable=(int)g_dev.mem.readmemd;
-  emit_writeword(rs,(int)r4300_address());
+  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   emit_pusha();
@@ -2744,9 +2744,9 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)g_dev.mem.readmemd;
   #ifdef HOST_IMM_ADDR32
-  emit_writeword_imm(addr,(int)r4300_address());
+  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
   #else
-  emit_writeword(rs,(int)r4300_address());
+  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
   #endif
   emit_pusha();
   if((signed int)addr>=(signed int)0xC0000000) {
@@ -2852,7 +2852,7 @@ static void do_writestub(int n)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)r4300_address());
+  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   if(type==STOREB_STUB)
@@ -2928,7 +2928,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)r4300_address());
+  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
   if(type==STOREB_STUB)
     emit_writebyte(rt,(int)r4300_wbyte());
   if(type==STOREH_STUB)

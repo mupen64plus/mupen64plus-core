@@ -51,14 +51,14 @@ struct memory
 /* struct memory definition is required prior including this */
 #include "main/main.h"
 
-#define read_word_in_memory() g_dev.mem.readmem[*r4300_address()>>16]()
-#define read_byte_in_memory() g_dev.mem.readmemb[*r4300_address()>>16]()
-#define read_hword_in_memory() g_dev.mem.readmemh[*r4300_address()>>16]()
-#define read_dword_in_memory() g_dev.mem.readmemd[*r4300_address()>>16]()
-#define write_word_in_memory() g_dev.mem.writemem[*r4300_address()>>16]()
-#define write_byte_in_memory() g_dev.mem.writememb[*r4300_address() >>16]()
-#define write_hword_in_memory() g_dev.mem.writememh[*r4300_address() >>16]()
-#define write_dword_in_memory() g_dev.mem.writememd[*r4300_address() >>16]()
+#define read_word_in_memory() g_dev.mem.readmem[*r4300_address(&g_dev.r4300)>>16]()
+#define read_byte_in_memory() g_dev.mem.readmemb[*r4300_address(&g_dev.r4300)>>16]()
+#define read_hword_in_memory() g_dev.mem.readmemh[*r4300_address(&g_dev.r4300)>>16]()
+#define read_dword_in_memory() g_dev.mem.readmemd[*r4300_address(&g_dev.r4300)>>16]()
+#define write_word_in_memory() g_dev.mem.writemem[*r4300_address(&g_dev.r4300)>>16]()
+#define write_byte_in_memory() g_dev.mem.writememb[*r4300_address(&g_dev.r4300) >>16]()
+#define write_hword_in_memory() g_dev.mem.writememh[*r4300_address(&g_dev.r4300) >>16]()
+#define write_dword_in_memory() g_dev.mem.writememd[*r4300_address(&g_dev.r4300) >>16]()
 
 #ifndef M64P_BIG_ENDIAN
 #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
