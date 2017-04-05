@@ -176,7 +176,7 @@ void run_r4300(struct r4300_core* r4300)
             return;
         }
 
-        r4300->cp0.last_addr = *r4300_pc();
+        r4300->cp0.last_addr = *r4300_pc(r4300);
 
         run_cached_interpreter(r4300);
 
@@ -227,11 +227,11 @@ unsigned int* r4300_llbit(struct r4300_core* r4300)
     return &r4300->llbit;
 }
 
-uint32_t* r4300_pc(void)
+uint32_t* r4300_pc(struct r4300_core* r4300)
 {
 #ifdef NEW_DYNAREC
-    return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
-        ? (uint32_t*)&g_dev.r4300.new_dynarec_hot_state.pcaddr
+    return (r4300->emumode == EMUMODE_DYNAREC)
+        ? (uint32_t*)&r4300->new_dynarec_hot_state.pcaddr
         : &(*r4300_pc_struct())->addr;
 #else
     return &(*r4300_pc_struct())->addr;
@@ -336,7 +336,7 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
     {
-        *r4300_pc() = address;
+        *r4300_pc(r4300) = address;
     }
     else
     {

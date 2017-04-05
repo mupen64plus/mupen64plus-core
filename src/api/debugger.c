@@ -320,7 +320,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
     switch (cpu_data_type)
     {
         case M64P_CPU_PC:
-            return r4300_pc();
+            return r4300_pc(&g_dev.r4300);
         case M64P_CPU_REG_REG:
             return r4300_regs(&g_dev.r4300);
         case M64P_CPU_REG_HI:

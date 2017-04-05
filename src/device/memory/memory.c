@@ -969,7 +969,7 @@ static void write_ddd(void)
 #ifdef DBG
 static void readmemb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 1,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     g_dev.mem.saved_readmemb[*r4300_address()>>16]();
@@ -977,7 +977,7 @@ static void readmemb_with_bp_checks(void)
 
 static void readmemh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 2,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     g_dev.mem.saved_readmemh[*r4300_address()>>16]();
@@ -985,7 +985,7 @@ static void readmemh_with_bp_checks(void)
 
 static void readmem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 4,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     g_dev.mem.saved_readmem[*r4300_address()>>16]();
@@ -993,7 +993,7 @@ static void readmem_with_bp_checks(void)
 
 static void readmemd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 8,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     g_dev.mem.saved_readmemd[*r4300_address()>>16]();
@@ -1001,7 +1001,7 @@ static void readmemd_with_bp_checks(void)
 
 static void writememb_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 1,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 1,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return g_dev.mem.saved_writememb[*r4300_address()>>16]();
@@ -1009,7 +1009,7 @@ static void writememb_with_bp_checks(void)
 
 static void writememh_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 2,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 2,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return g_dev.mem.saved_writememh[*r4300_address()>>16]();
@@ -1017,7 +1017,7 @@ static void writememh_with_bp_checks(void)
 
 static void writemem_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 4,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return g_dev.mem.saved_writemem[*r4300_address()>>16]();
@@ -1025,7 +1025,7 @@ static void writemem_with_bp_checks(void)
 
 static void writememd_with_bp_checks(void)
 {
-    check_breakpoints_on_mem_access(*r4300_pc()-0x4, *r4300_address(), 8,
+    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(), 8,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
     return g_dev.mem.saved_writememd[*r4300_address()>>16]();

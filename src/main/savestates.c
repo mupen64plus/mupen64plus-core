@@ -508,7 +508,7 @@ int savestates_load_m64p(char *filepath)
     }
 #endif
 
-    *r4300_cp0_last_addr() = *r4300_pc();
+    *r4300_cp0_last_addr() = *r4300_pc(&g_dev.r4300);
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -1242,7 +1242,7 @@ int savestates_save_m64p(char *filepath)
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].end_odd);
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].phys_odd);
     }
-    PUTDATA(curr, uint32_t, *r4300_pc());
+    PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
 
     PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt());
     PUTDATA(curr, unsigned int, g_dev.vi.next_vi);
@@ -1288,7 +1288,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
-    PUTDATA(curr, uint32_t, *r4300_pc());
+    PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);

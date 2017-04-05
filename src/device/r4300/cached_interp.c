@@ -48,12 +48,12 @@
 // Cached interpreter functions (and fallback for dynarec).
 // -----------------------------------------------------------
 #ifdef DBG
-#define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(*r4300_pc())
+#define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300))
 #else
 #define UPDATE_DEBUGGER() do { } while(0)
 #endif
 
-#define PCADDR *r4300_pc()
+#define PCADDR *r4300_pc(&g_dev.r4300)
 #define ADD_TO_PC(x) (*r4300_pc_struct()) += x;
 #define DECLARE_INSTRUCTION(name) static void name(void)
 
@@ -66,7 +66,7 @@
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs(&g_dev.r4300)[0]) \
       { \
-         *link_register = SE32(*r4300_pc() + 8); \
+         *link_register = SE32(*r4300_pc(&g_dev.r4300) + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -86,7 +86,7 @@
          (*r4300_pc_struct()) += 2; \
          cp0_update_count(); \
       } \
-      g_dev.r4300.cp0.last_addr = *r4300_pc(); \
+      g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
       if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_OUT(void) \
@@ -97,7 +97,7 @@
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (link_register != &r4300_regs(&g_dev.r4300)[0]) \
       { \
-         *link_register = SE32(*r4300_pc() + 8); \
+         *link_register = SE32(*r4300_pc(&g_dev.r4300) + 8); \
       } \
       if (!likely || take_jump) \
       { \
@@ -117,7 +117,7 @@
          (*r4300_pc_struct()) += 2; \
          cp0_update_count(); \
       } \
-      g_dev.r4300.cp0.last_addr = *r4300_pc(); \
+      g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
       if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(void) \
@@ -160,7 +160,7 @@ static void FIN_BLOCK(void)
      {
     cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 /*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(*r4300_pc());
+            if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300));
 #endif
 Used by dynarec only, check should be unnecessary
 */
@@ -174,7 +174,7 @@ Used by dynarec only, check should be unnecessary
     cached_interpreter_dynarec_jump_to(&g_dev.r4300, ((*r4300_pc_struct())-1)->addr+4);
 
 /*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(*r4300_pc());
+            if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300));
 #endif
 Used by dynarec only, check should be unnecessary
 */
@@ -193,18 +193,18 @@ Used by dynarec only, check should be unnecessary
 
 static void NOTCOMPILED(void)
 {
-   uint32_t *mem = fast_mem_access(g_dev.r4300.cached_interp.blocks[*r4300_pc()>>12]->start);
+   uint32_t *mem = fast_mem_access(g_dev.r4300.cached_interp.blocks[*r4300_pc(&g_dev.r4300)>>12]->start);
 #ifdef DBG
-   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(), (long) (*r4300_pc_struct())->ops);
+   DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(&g_dev.r4300), (long) (*r4300_pc_struct())->ops);
 #endif
 
    if (mem != NULL)
-      recompile_block(&g_dev.r4300, mem, g_dev.r4300.cached_interp.blocks[*r4300_pc() >> 12], *r4300_pc());
+      recompile_block(&g_dev.r4300, mem, g_dev.r4300.cached_interp.blocks[*r4300_pc(&g_dev.r4300) >> 12], *r4300_pc(&g_dev.r4300));
    else
       DebugMessage(M64MSG_ERROR, "not compiled exception");
 
 /*#ifdef DBG
-            if (g_DebuggerActive) update_debugger(*r4300_pc());
+            if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300));
 #endif
 The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
