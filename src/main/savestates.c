@@ -448,7 +448,7 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, uint32_t, 0x100000);
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, uint32_t, 0x100000);
 
-    *r4300_llbit() = GETDATA(curr, unsigned int);
+    *r4300_llbit(&g_dev.r4300) = GETDATA(curr, unsigned int);
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
@@ -776,7 +776,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // The following is not available in PJ64 savestate. Keep the values as is.
     // g_dev.dp.dps_regs[DPS_TBIST_REG] = 0; g_dev.dp.dps_regs[DPS_TEST_MODE_REG] = 0;
-    // g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit() = 0;
+    // g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit(&g_dev.r4300) = 0;
 
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
@@ -1202,7 +1202,7 @@ int savestates_save_m64p(char *filepath)
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, unsigned int, 0x100000);
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, unsigned int, 0x100000);
 
-    PUTDATA(curr, unsigned int, *r4300_llbit());
+    PUTDATA(curr, unsigned int, *r4300_llbit(&g_dev.r4300));
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));

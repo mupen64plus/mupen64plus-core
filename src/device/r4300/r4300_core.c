@@ -222,9 +222,9 @@ int64_t* r4300_mult_lo(struct r4300_core* r4300)
 #endif
 }
 
-unsigned int* r4300_llbit(void)
+unsigned int* r4300_llbit(struct r4300_core* r4300)
 {
-    return &g_dev.r4300.llbit;
+    return &r4300->llbit;
 }
 
 uint32_t* r4300_pc(void)
