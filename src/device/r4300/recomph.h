@@ -273,13 +273,6 @@ void gensdl(void);
 void gensdr(void);
 void genlink_subblock(void);
 void gendelayslot(void);
-void gencheck_interrupt_reg(void);
-void gentest(void);
-void gentest_out(void);
-void gentest_idle(void);
-void gentestl(void);
-void gentestl_out(void);
-void gencheck_cop1_unusable(void);
 void genll(void);
 
 #ifdef COMPARE_CORE

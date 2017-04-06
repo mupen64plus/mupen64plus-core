@@ -564,19 +564,8 @@ ifneq ($(DYNAREC), )
   else
     SOURCE += \
       $(SRCDIR)/device/r4300/$(DYNAREC)/assemble.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gbc.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop0.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_d.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_l.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_s.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gcop1_w.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gr4300.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gregimm.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gspecial.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/gtlb.c \
+      $(SRCDIR)/device/r4300/$(DYNAREC)/dynarec.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/regcache.c \
-      $(SRCDIR)/device/r4300/$(DYNAREC)/rjump.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/dyna_start.asm
   endif
 else

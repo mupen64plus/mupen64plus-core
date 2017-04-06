@@ -36,405 +36,27 @@ void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block
 {
 }
 
-/* From gbc.c */
+/* From regcache.c */
 
-void genbc1f()
+void init_cache(struct precomp_instr* start)
 {
 }
 
-void genbc1f_out()
+void free_all_registers()
 {
 }
 
-void genbc1f_idle()
-{
-}
-
-void genbc1t()
-{
-}
-
-void genbc1t_out()
-{
-}
-
-void genbc1t_idle()
-{
-}
-
-void genbc1fl()
-{
-}
-
-void genbc1fl_out()
-{
-}
-
-void genbc1fl_idle()
-{
-}
-
-void genbc1tl()
-{
-}
-
-void genbc1tl_out()
-{
-}
-
-void genbc1tl_idle()
-{
-}
-
-/* From gcop0.c */
-
-void genmfc0()
-{
-}
-
-void genmtc0()
-{
-}
-
-/* From gcop1.c */
-
-void genmfc1()
-{
-}
-
-void gendmfc1()
-{
-}
-
-void gencfc1()
-{
-}
-
-void genmtc1()
-{
-}
-
-void gendmtc1()
-{
-}
-
-void genctc1()
-{
-}
-
-/* From gcop1_d.c */
-
-void genadd_d()
-{
-}
-
-void gensub_d()
-{
-}
-
-void genmul_d()
-{
-}
-
-void gendiv_d()
-{
-}
-
-void gensqrt_d()
-{
-}
-
-void genabs_d()
-{
-}
-
-void genmov_d()
-{
-}
-
-void genneg_d()
-{
-}
-
-void genround_l_d()
-{
-}
-
-void gentrunc_l_d()
-{
-}
-
-void genceil_l_d()
-{
-}
-
-void genfloor_l_d()
-{
-}
-
-void genround_w_d()
-{
-}
-
-void gentrunc_w_d()
-{
-}
-
-void genceil_w_d()
-{
-}
-
-void genfloor_w_d()
-{
-}
-
-void gencvt_s_d()
-{
-}
-
-void gencvt_w_d()
-{
-}
-
-void gencvt_l_d()
-{
-}
-
-void genc_f_d()
-{
-}
-
-void genc_un_d()
-{
-}
-
-void genc_eq_d()
-{
-}
-
-void genc_ueq_d()
-{
-}
-
-void genc_olt_d()
-{
-}
-
-void genc_ult_d()
-{
-}
-
-void genc_ole_d()
-{
-}
-
-void genc_ule_d()
-{
-}
-
-void genc_sf_d()
-{
-}
+/* Dynarec control functions */
 
-void genc_ngle_d()
+void dyna_jump()
 {
 }
 
-void genc_seq_d()
+void dyna_stop()
 {
 }
 
-void genc_ngl_d()
-{
-}
-
-void genc_lt_d()
-{
-}
-
-void genc_nge_d()
-{
-}
-
-void genc_le_d()
-{
-}
-
-void genc_ngt_d()
-{
-}
-
-/* From gcop1_l.c */
-
-void gencvt_s_l()
-{
-}
-
-void gencvt_d_l()
-{
-}
-
-/* From gcop1_s.c */
-
-void genadd_s()
-{
-}
-
-void gensub_s()
-{
-}
-
-void genmul_s()
-{
-}
-
-void gendiv_s()
-{
-}
-
-void gensqrt_s()
-{
-}
-
-void genabs_s()
-{
-}
-
-void genmov_s()
-{
-}
-
-void genneg_s()
-{
-}
-
-void genround_l_s()
-{
-}
-
-void gentrunc_l_s()
-{
-}
-
-void genceil_l_s()
-{
-}
-
-void genfloor_l_s()
-{
-}
-
-void genround_w_s()
-{
-}
-
-void gentrunc_w_s()
-{
-}
-
-void genceil_w_s()
-{
-}
-
-void genfloor_w_s()
-{
-}
-
-void gencvt_d_s()
-{
-}
-
-void gencvt_w_s()
-{
-}
-
-void gencvt_l_s()
-{
-}
-
-void genc_f_s()
-{
-}
-
-void genc_un_s()
-{
-}
-
-void genc_eq_s()
-{
-}
-
-void genc_ueq_s()
-{
-}
-
-void genc_olt_s()
-{
-}
-
-void genc_ult_s()
-{
-}
-
-void genc_ole_s()
-{
-}
-
-void genc_ule_s()
-{
-}
-
-void genc_sf_s()
-{
-}
-
-void genc_ngle_s()
-{
-}
-
-void genc_seq_s()
-{
-}
-
-void genc_ngl_s()
-{
-}
-
-void genc_lt_s()
-{
-}
-
-void genc_nge_s()
-{
-}
-
-void genc_le_s()
-{
-}
-
-void genc_ngt_s()
-{
-}
-
-/* From gcop1_w.c */
-
-void gencvt_s_w()
-{
-}
-
-void gencvt_d_w()
-{
-}
-
-/* From gr4300.c */
-
-void gennotcompiled()
-{
-}
-
-void genlink_subblock()
-{
-}
+/* M64P pseudo instructions */
 
 #ifdef COMPARE_CORE
 void gendebug()
@@ -446,7 +68,11 @@ void genni()
 {
 }
 
-void genreserved()
+void gennotcompiled()
+{
+}
+
+void genlink_subblock()
 {
 }
 
@@ -454,9 +80,315 @@ void genfin_block()
 {
 }
 
+/* Reserved */
+
+void genreserved()
+{
+}
+
+/* Load instructions */
+
+void genlb()
+{
+}
+
+void genlbu()
+{
+}
+
+void genlh()
+{
+}
+
+void genlhu()
+{
+}
+
+void genll()
+{
+}
+
+void genlw()
+{
+}
+
+void genlwu()
+{
+}
+
+void genlwl()
+{
+}
+
+void genlwr()
+{
+}
+
+void genld()
+{
+}
+
+void genldl()
+{
+}
+
+void genldr()
+{
+}
+
+/* Store instructions */
+
+void gensb()
+{
+}
+
+void gensh()
+{
+}
+
+void gensc()
+{
+}
+
+void gensw()
+{
+}
+
+void genswl()
+{
+}
+
+void genswr()
+{
+}
+
+void gensd()
+{
+}
+
+void gensdl()
+{
+}
+
+void gensdr()
+{
+}
+
+/* Computational instructions */
+
+void genadd()
+{
+}
+
+void genaddu()
+{
+}
+
+void genaddi()
+{
+}
+
+void genaddiu()
+{
+}
+
+void gendadd()
+{
+}
+
+void gendaddu()
+{
+}
+
+void gendaddi()
+{
+}
+
+void gendaddiu()
+{
+}
+
+void gensub()
+{
+}
+
+void gensubu()
+{
+}
+
+void gendsub()
+{
+}
+
+void gendsubu()
+{
+}
+
+void genslt()
+{
+}
+
+void gensltu()
+{
+}
+
+void genslti()
+{
+}
+
+void gensltiu()
+{
+}
+
+void genand()
+{
+}
+
+void genandi()
+{
+}
+
+void genor()
+{
+}
+
+void genori()
+{
+}
+
+void genxor()
+{
+}
+
+void genxori()
+{
+}
+
+void gennor()
+{
+}
+
+void genlui()
+{
+}
+
+/* Shift instructions */
+
 void gennop()
 {
 }
+
+void gensll()
+{
+}
+
+void gensllv()
+{
+}
+
+void gendsll()
+{
+}
+
+void gendsllv()
+{
+}
+
+void gendsll32()
+{
+}
+
+void gensrl()
+{
+}
+
+void gensrlv()
+{
+}
+
+void gendsrl()
+{
+}
+
+void gendsrlv()
+{
+}
+
+void gendsrl32()
+{
+}
+
+void gensra()
+{
+}
+
+void gensrav()
+{
+}
+
+void gendsra()
+{
+}
+
+void gendsrav()
+{
+}
+
+void gendsra32()
+{
+}
+
+/* Multiply / Divide instructions */
+
+void genmult()
+{
+}
+
+void genmultu()
+{
+}
+
+void gendmult()
+{
+}
+
+void gendmultu()
+{
+}
+
+void gendiv()
+{
+}
+
+void gendivu()
+{
+}
+
+void genddiv()
+{
+}
+
+void genddivu()
+{
+}
+
+void genmfhi()
+{
+}
+
+void genmthi()
+{
+}
+
+void genmflo()
+{
+}
+
+void genmtlo()
+{
+}
+
+/* Jump & Branch instructions */
 
 void genj()
 {
@@ -482,79 +414,11 @@ void genjal_idle()
 {
 }
 
-void genbne()
+void genjr()
 {
 }
 
-void genbne_out()
-{
-}
-
-void genbne_idle()
-{
-}
-
-void genblez()
-{
-}
-
-void genblez_idle()
-{
-}
-
-void genbgtz()
-{
-}
-
-void genbgtz_out()
-{
-}
-
-void genbgtz_idle()
-{
-}
-
-void genaddi()
-{
-}
-
-void genaddiu()
-{
-}
-
-void genslti()
-{
-}
-
-void gensltiu()
-{
-}
-
-void genandi()
-{
-}
-
-void genori()
-{
-}
-
-void genxori()
-{
-}
-
-void genlui()
-{
-}
-
-void genbeql()
-{
-}
-
-void genbeql_out()
-{
-}
-
-void genbeql_idle()
+void genjalr()
 {
 }
 
@@ -570,6 +434,30 @@ void genbeq_idle()
 {
 }
 
+void genbeql()
+{
+}
+
+void genbeql_out()
+{
+}
+
+void genbeql_idle()
+{
+}
+
+void genbne()
+{
+}
+
+void genbne_out()
+{
+}
+
+void genbne_idle()
+{
+}
+
 void genbnel()
 {
 }
@@ -579,6 +467,18 @@ void genbnel_out()
 }
 
 void genbnel_idle()
+{
+}
+
+void genblez()
+{
+}
+
+void genblez_out()
+{
+}
+
+void genblez_idle()
 {
 }
 
@@ -594,6 +494,18 @@ void genblezl_idle()
 {
 }
 
+void genbgtz()
+{
+}
+
+void genbgtz_out()
+{
+}
+
+void genbgtz_idle()
+{
+}
+
 void genbgtzl()
 {
 }
@@ -606,124 +518,6 @@ void genbgtzl_idle()
 {
 }
 
-void gendaddi()
-{
-}
-
-void gendaddiu()
-{
-}
-
-void genldl()
-{
-}
-
-void genldr()
-{
-}
-
-void genlb()
-{
-}
-
-void genlh()
-{
-}
-
-void genlwl()
-{
-}
-
-void genlw()
-{
-}
-
-void genlbu()
-{
-}
-
-void genlhu()
-{
-}
-
-void genlwr()
-{
-}
-
-void genlwu()
-{
-}
-
-void gensb()
-{
-}
-
-void gensh()
-{
-}
-
-void genswl()
-{
-}
-
-void gensw()
-{
-}
-
-void gensdl()
-{
-}
-
-void gensdr()
-{
-}
-
-void genswr()
-{
-}
-
-void genlwc1()
-{
-}
-
-void genldc1()
-{
-}
-
-void gencache()
-{
-}
-
-void genld()
-{
-}
-
-void genswc1()
-{
-}
-
-void gensdc1()
-{
-}
-
-void gensd()
-{
-}
-
-void genll()
-{
-}
-
-void gensc()
-{
-}
-
-void genblez_out()
-{
-}
-
-/* From gregimm.c */
-
 void genbltz()
 {
 }
@@ -733,42 +527,6 @@ void genbltz_out()
 }
 
 void genbltz_idle()
-{
-}
-
-void genbgez()
-{
-}
-
-void genbgez_out()
-{
-}
-
-void genbgez_idle()
-{
-}
-
-void genbltzl()
-{
-}
-
-void genbltzl_out()
-{
-}
-
-void genbltzl_idle()
-{
-}
-
-void genbgezl()
-{
-}
-
-void genbgezl_out()
-{
-}
-
-void genbgezl_idle()
 {
 }
 
@@ -784,15 +542,15 @@ void genbltzal_idle()
 {
 }
 
-void genbgezal()
+void genbltzl()
 {
 }
 
-void genbgezal_out()
+void genbltzl_out()
 {
 }
 
-void genbgezal_idle()
+void genbltzl_idle()
 {
 }
 
@@ -808,6 +566,42 @@ void genbltzall_idle()
 {
 }
 
+void genbgez()
+{
+}
+
+void genbgez_out()
+{
+}
+
+void genbgez_idle()
+{
+}
+
+void genbgezal()
+{
+}
+
+void genbgezal_out()
+{
+}
+
+void genbgezal_idle()
+{
+}
+
+void genbgezl()
+{
+}
+
+void genbgezl_out()
+{
+}
+
+void genbgezl_idle()
+{
+}
+
 void genbgezall()
 {
 }
@@ -820,41 +614,61 @@ void genbgezall_idle()
 {
 }
 
-/* From gspecial.c */
-
-void gensll()
+void genbc1f()
 {
 }
 
-void gensrl()
+void genbc1f_out()
 {
 }
 
-void gensra()
+void genbc1f_idle()
 {
 }
 
-void gensllv()
+void genbc1fl()
 {
 }
 
-void gensrlv()
+void genbc1fl_out()
 {
 }
 
-void gensrav()
+void genbc1fl_idle()
 {
 }
 
-void genjr()
+void genbc1t()
 {
 }
 
-void genjalr()
+void genbc1t_out()
 {
 }
 
-void gensyscall()
+void genbc1t_idle()
+{
+}
+
+void genbc1tl()
+{
+}
+
+void genbc1tl_out()
+{
+}
+
+void genbc1tl_idle()
+{
+}
+
+/* Special instructions */
+
+void gencache()
+{
+}
+
+void generet()
 {
 }
 
@@ -862,155 +676,17 @@ void gensync()
 {
 }
 
-void genmfhi()
+void gensyscall()
 {
 }
 
-void genmthi()
-{
-}
-
-void genmflo()
-{
-}
-
-void genmtlo()
-{
-}
-
-void gendsllv()
-{
-}
-
-void gendsrlv()
-{
-}
-
-void gendsrav()
-{
-}
-
-void genmult()
-{
-}
-
-void genmultu()
-{
-}
-
-void gendiv()
-{
-}
-
-void gendivu()
-{
-}
-
-void gendmult()
-{
-}
-
-void gendmultu()
-{
-}
-
-void genddiv()
-{
-}
-
-void genddivu()
-{
-}
-
-void genadd()
-{
-}
-
-void genaddu()
-{
-}
-
-void gensub()
-{
-}
-
-void gensubu()
-{
-}
-
-void genand()
-{
-}
-
-void genor()
-{
-}
-
-void genxor()
-{
-}
-
-void gennor()
-{
-}
-
-void genslt()
-{
-}
-
-void gensltu()
-{
-}
-
-void gendadd()
-{
-}
-
-void gendaddu()
-{
-}
-
-void gendsub()
-{
-}
-
-void gendsubu()
-{
-}
+/* Exception instructions */
 
 void genteq()
 {
 }
 
-void gendsll()
-{
-}
-
-void gendsrl()
-{
-}
-
-void gendsra()
-{
-}
-
-void gendsll32()
-{
-}
-
-void gendsrl32()
-{
-}
-
-void gendsra32()
-{
-}
-
-/* From gtlb.c */
-
-void gentlbwi()
-{
-}
+/* TLB instructions */
 
 void gentlbp()
 {
@@ -1020,31 +696,362 @@ void gentlbr()
 {
 }
 
-void generet()
-{
-}
-
 void gentlbwr()
 {
 }
 
-/* From regcache.c */
-
-void init_cache(struct precomp_instr* start)
+void gentlbwi()
 {
 }
 
-void free_all_registers()
+/* CP0 load/store instructions */
+
+void genmfc0()
 {
 }
 
-/* From rjump.c */
-
-void dyna_jump()
+void genmtc0()
 {
 }
 
-void dyna_stop()
+/* CP1 load/store instructions */
+
+void genlwc1()
 {
 }
 
+void genldc1()
+{
+}
+
+void genswc1()
+{
+}
+
+void gensdc1()
+{
+}
+
+void genmfc1()
+{
+}
+
+void gendmfc1()
+{
+}
+
+void gencfc1()
+{
+}
+
+void genmtc1()
+{
+}
+
+void gendmtc1()
+{
+}
+
+void genctc1()
+{
+}
+
+/* CP1 computational instructions */
+
+void genabs_s()
+{
+}
+
+void genabs_d()
+{
+}
+
+void genadd_s()
+{
+}
+
+void genadd_d()
+{
+}
+
+void gendiv_s()
+{
+}
+
+void gendiv_d()
+{
+}
+
+void genmov_s()
+{
+}
+
+void genmov_d()
+{
+}
+
+void genmul_s()
+{
+}
+
+void genmul_d()
+{
+}
+
+void genneg_s()
+{
+}
+
+void genneg_d()
+{
+}
+
+void gensqrt_s()
+{
+}
+
+void gensqrt_d()
+{
+}
+
+void gensub_s()
+{
+}
+
+void gensub_d()
+{
+}
+
+void gentrunc_w_s()
+{
+}
+
+void gentrunc_w_d()
+{
+}
+
+void gentrunc_l_s()
+{
+}
+
+void gentrunc_l_d()
+{
+}
+
+void genround_w_s()
+{
+}
+
+void genround_w_d()
+{
+}
+
+void genround_l_s()
+{
+}
+
+void genround_l_d()
+{
+}
+
+void genceil_w_s()
+{
+}
+
+void genceil_w_d()
+{
+}
+
+void genceil_l_s()
+{
+}
+
+void genceil_l_d()
+{
+}
+
+void genfloor_w_s()
+{
+}
+
+void genfloor_w_d()
+{
+}
+
+void genfloor_l_s()
+{
+}
+
+void genfloor_l_d()
+{
+}
+
+void gencvt_s_d()
+{
+}
+
+void gencvt_s_w()
+{
+}
+
+void gencvt_s_l()
+{
+}
+
+void gencvt_d_s()
+{
+}
+
+void gencvt_d_w()
+{
+}
+
+void gencvt_d_l()
+{
+}
+
+void gencvt_w_s()
+{
+}
+
+void gencvt_w_d()
+{
+}
+
+void gencvt_l_s()
+{
+}
+
+void gencvt_l_d()
+{
+}
+
+/* CP1 relational instructions */
+
+void genc_f_s()
+{
+}
+
+void genc_f_d()
+{
+}
+
+void genc_un_s()
+{
+}
+
+void genc_un_d()
+{
+}
+
+void genc_eq_s()
+{
+}
+
+void genc_eq_d()
+{
+}
+
+void genc_ueq_s()
+{
+}
+
+void genc_ueq_d()
+{
+}
+
+void genc_olt_s()
+{
+}
+
+void genc_olt_d()
+{
+}
+
+void genc_ult_s()
+{
+}
+
+void genc_ult_d()
+{
+}
+
+void genc_ole_s()
+{
+}
+
+void genc_ole_d()
+{
+}
+
+void genc_ule_s()
+{
+}
+
+void genc_ule_d()
+{
+}
+
+void genc_sf_s()
+{
+}
+
+void genc_sf_d()
+{
+}
+
+void genc_ngle_s()
+{
+}
+
+void genc_ngle_d()
+{
+}
+
+void genc_seq_s()
+{
+}
+
+void genc_seq_d()
+{
+}
+
+void genc_ngl_s()
+{
+}
+
+void genc_ngl_d()
+{
+}
+
+void genc_lt_s()
+{
+}
+
+void genc_lt_d()
+{
+}
+
+void genc_nge_s()
+{
+}
+
+void genc_nge_d()
+{
+}
+
+void genc_le_s()
+{
+}
+
+void genc_le_d()
+{
+}
+
+void genc_ngt_s()
+{
+}
+
+void genc_ngt_d()
+{
+}
