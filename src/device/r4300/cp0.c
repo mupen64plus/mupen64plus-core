@@ -55,7 +55,7 @@ void poweron_cp0(struct cp0* cp0)
     unsigned int* cp0_next_interrupt;
 
     cp0_regs = r4300_cp0_regs(cp0);
-    cp0_next_interrupt = r4300_cp0_next_interrupt();
+    cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     memset(cp0_regs, 0, CP0_REGS_COUNT * sizeof(cp0_regs[0]));
     cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
@@ -94,13 +94,13 @@ uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
     return &cp0->last_addr;
 }
 
-unsigned int* r4300_cp0_next_interrupt(void)
+unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-    return &g_dev.r4300.cp0.next_interrupt;
+    return &cp0->next_interrupt;
 #else
 /* ARM dynarec uses a different memory layout */
-    return &g_dev_r4300_cp0_next_interrupt;
+    return &cp0->new_dynarec_hot_state->next_interrupt;
 #endif
 }
 

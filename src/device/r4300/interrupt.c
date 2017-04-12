@@ -141,7 +141,7 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
     struct node* e;
     int special;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     special = (type == SPECIAL_INT);
 
@@ -208,7 +208,7 @@ static void remove_interrupt_event(struct cp0* cp0)
     struct node* e;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
     uint32_t count = cp0_regs[CP0_COUNT_REG];
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     e = cp0->q.first;
     cp0->q.first = e->next;
@@ -341,7 +341,7 @@ void check_interrupt(struct r4300_core* r4300)
 {
     struct node* event;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
     if (r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]) {
         cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
@@ -515,7 +515,7 @@ static void reset_hard(struct device* dev)
 
     pifbootrom_hle_execute(dev);
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
-    *r4300_cp0_next_interrupt() = 624999;
+    *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
@@ -530,7 +530,7 @@ void gen_interrupt(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
     if (*r4300_stop(&g_dev.r4300) == 1)
     {

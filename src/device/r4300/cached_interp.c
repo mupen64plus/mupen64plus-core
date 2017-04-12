@@ -87,7 +87,7 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
+      if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_OUT(void) \
    { \
@@ -118,7 +118,7 @@
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
+      if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(void) \
    { \
@@ -129,7 +129,7 @@
       if (take_jump) \
       { \
          cp0_update_count(); \
-         skip = *r4300_cp0_next_interrupt() - cp0_regs[CP0_COUNT_REG]; \
+         skip = *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) - cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \
       } \

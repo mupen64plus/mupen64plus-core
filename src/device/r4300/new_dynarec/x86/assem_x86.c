@@ -2616,7 +2616,7 @@ static void emit_extjump2(int addr, int target, int linker)
 #ifdef DEBUG_CYCLE_COUNT
   emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
   emit_add(HOST_CCREG,ECX,HOST_CCREG);
-  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
   emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
@@ -2698,7 +2698,7 @@ static void do_readstub(int n)
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
   emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
@@ -2793,7 +2793,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   // We really shouldn't need to update the count here,
   // but not doing so causes random crashes...
   emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
@@ -2899,7 +2899,7 @@ static void do_writestub(int n)
   emit_writeword(cc,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
   emit_callreg(addr);
   emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(stubs[n][6]+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
@@ -2982,7 +2982,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   }
   emit_call(((u_int *)ftable)[addr>>16]);
   emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-  emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
   emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*(adj+1),HOST_CCREG);
   emit_sub(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
@@ -3506,7 +3506,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     emit_call((int)cached_interpreter_table.MTC0);
     if(copr==9||copr==11||copr==12) {
       emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((int)r4300_cp0_next_interrupt(),ECX);
+      emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
       emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_sub(HOST_CCREG,ECX,HOST_CCREG);
       emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);

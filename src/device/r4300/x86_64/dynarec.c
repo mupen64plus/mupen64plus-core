@@ -130,7 +130,7 @@ static void gencp0_update_count(unsigned int addr)
 
 static void gencheck_interrupt(unsigned long long instr_structure)
 {
-    mov_xreg32_m32rel(EAX, (void*)(r4300_cp0_next_interrupt()));
+    mov_xreg32_m32rel(EAX, (void*)(r4300_cp0_next_interrupt(&g_dev.r4300.cp0)));
     cmp_xreg32_m32rel(EAX, (void*)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
     ja_rj(0);
     jump_start_rel8();
@@ -145,7 +145,7 @@ static void gencheck_interrupt(unsigned long long instr_structure)
 
 static void gencheck_interrupt_out(unsigned int addr)
 {
-    mov_xreg32_m32rel(EAX, (void*)(r4300_cp0_next_interrupt()));
+    mov_xreg32_m32rel(EAX, (void*)(r4300_cp0_next_interrupt(&g_dev.r4300.cp0)));
     cmp_xreg32_m32rel(EAX, (void*)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
     ja_rj(0);
     jump_start_rel8();
@@ -161,7 +161,7 @@ static void gencheck_interrupt_out(unsigned int addr)
 
 static void gencheck_interrupt_reg(void) // addr is in EAX
 {
-    mov_xreg32_m32rel(EBX, (void*)r4300_cp0_next_interrupt());
+    mov_xreg32_m32rel(EBX, (void*)r4300_cp0_next_interrupt(&g_dev.r4300.cp0));
     cmp_xreg32_m32rel(EBX, (void*)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
     ja_rj(0);
     jump_start_rel8();
@@ -2118,7 +2118,7 @@ static void gentest_idle(void)
     je_near_rj(0);
     jump_start_rel32();
 
-    mov_xreg32_m32rel(reg, (unsigned int *)(r4300_cp0_next_interrupt()));
+    mov_xreg32_m32rel(reg, (unsigned int *)(r4300_cp0_next_interrupt(&g_dev.r4300.cp0)));
     sub_xreg32_m32rel(reg, (unsigned int *)(&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]));
     cmp_reg32_imm8(reg, 3);
     jbe_rj(0);
@@ -2277,7 +2277,7 @@ void genj_idle(void)
         return;
     }
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_cp0_next_interrupt()));
+    mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_cp0_next_interrupt(&g_dev.r4300.cp0)));
     sub_xreg32_m32rel(EAX, (unsigned int *)(&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]));
     cmp_reg32_imm8(EAX, 3);
     jbe_rj(12);
@@ -2381,7 +2381,7 @@ void genjal_idle(void)
         return;
     }
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_cp0_next_interrupt()));
+    mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_cp0_next_interrupt(&g_dev.r4300.cp0)));
     sub_xreg32_m32rel(EAX, (unsigned int *)(&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]));
     cmp_reg32_imm8(EAX, 3);
     jbe_rj(12);

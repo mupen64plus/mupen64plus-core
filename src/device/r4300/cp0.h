@@ -202,7 +202,7 @@ void poweron_cp0(struct cp0* cp0);
 
 uint32_t* r4300_cp0_regs(struct cp0* cp0);
 uint32_t* r4300_cp0_last_addr(struct cp0* cp0);
-unsigned int* r4300_cp0_next_interrupt(void);
+unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0);
 
 int check_cop1_unusable(struct r4300_core* r4300);
 

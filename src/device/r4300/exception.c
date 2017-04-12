@@ -122,7 +122,7 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
         if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);
-            *r4300_cp0_next_interrupt() = 0;
+            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
         }
     }
 }
@@ -161,7 +161,7 @@ void exception_general(struct r4300_core* r4300)
         if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);
-            *r4300_cp0_next_interrupt() = 0;
+            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
         }
     }
 }

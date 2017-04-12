@@ -491,7 +491,7 @@ int savestates_load_m64p(char *filepath)
 
     savestates_load_set_pc(&g_dev.r4300, GETDATA(curr, uint32_t));
 
-    *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
+    *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
     g_dev.vi.field = GETDATA(curr, unsigned int);
 
@@ -593,7 +593,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // Initialze the interrupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
-    *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
+    *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
                   : vi_timer;
     g_dev.vi.next_vi = vi_timer;
@@ -1244,7 +1244,7 @@ int savestates_save_m64p(char *filepath)
     }
     PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
 
-    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt());
+    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt(&g_dev.r4300.cp0));
     PUTDATA(curr, unsigned int, g_dev.vi.next_vi);
     PUTDATA(curr, unsigned int, g_dev.vi.field);
 
