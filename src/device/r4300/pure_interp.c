@@ -65,7 +65,7 @@ static void InterpretOpcode(void);
         g_dev.r4300.interp_PC.addr += 4; \
         g_dev.r4300.delay_slot=1; \
         InterpretOpcode(); \
-        cp0_update_count(); \
+        cp0_update_count(&g_dev.r4300); \
         g_dev.r4300.delay_slot=0; \
         if (take_jump && !g_dev.r4300.skip_jump) \
         { \
@@ -75,7 +75,7 @@ static void InterpretOpcode(void);
       else \
       { \
          g_dev.r4300.interp_PC.addr += 8; \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
       } \
       g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
       if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
@@ -88,7 +88,7 @@ static void InterpretOpcode(void);
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (take_jump) \
       { \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
          skip = *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) - cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \

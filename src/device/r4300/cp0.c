@@ -24,7 +24,6 @@
 
 #include "cp0.h"
 #include "exception.h"
-#include "main/main.h"
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "recomp.h"
 
@@ -115,9 +114,8 @@ int check_cop1_unusable(struct r4300_core* r4300)
     return 0;
 }
 
-void cp0_update_count(void)
+void cp0_update_count(struct r4300_core* r4300)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     struct cp0* cp0 = &r4300->cp0;
     uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 

@@ -2634,6 +2634,13 @@ int dynarec_check_cop1_unusable(void)
     return check_cop1_unusable(&g_dev.r4300);
 }
 
+
+/* Parameterless version of cp0_update_count to ease usage in dynarec. */
+void dynarec_cp0_update_count(void)
+{
+    cp0_update_count(&g_dev.r4300);
+}
+
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/

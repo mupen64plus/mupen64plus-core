@@ -142,7 +142,7 @@ int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         if (si->pif.ram[0x3f] == 0x08)
         {
             si->pif.ram[0x3f] = 0;
-            cp0_update_count();
+            cp0_update_count(si->r4300);
             add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
         }
         else

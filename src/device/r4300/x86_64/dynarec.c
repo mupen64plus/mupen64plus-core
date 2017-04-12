@@ -123,7 +123,7 @@ static void gencp0_update_count(unsigned int addr)
 #else
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long)cp0_update_count);
+    mov_reg64_imm64(RAX, (unsigned long long)dynarec_cp0_update_count);
     call_reg64(RAX);
 #endif
 }

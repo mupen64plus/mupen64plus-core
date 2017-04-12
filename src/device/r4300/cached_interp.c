@@ -74,7 +74,7 @@
          g_dev.r4300.delay_slot=1; \
          UPDATE_DEBUGGER(); \
          (*r4300_pc_struct(&g_dev.r4300))->ops(); \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
          { \
@@ -84,7 +84,7 @@
       else \
       { \
          (*r4300_pc_struct(&g_dev.r4300)) += 2; \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
       if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
@@ -105,7 +105,7 @@
          g_dev.r4300.delay_slot=1; \
          UPDATE_DEBUGGER(); \
          (*r4300_pc_struct(&g_dev.r4300))->ops(); \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
          g_dev.r4300.delay_slot=0; \
          if (take_jump && !g_dev.r4300.skip_jump) \
          { \
@@ -115,7 +115,7 @@
       else \
       { \
          (*r4300_pc_struct(&g_dev.r4300)) += 2; \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
       } \
       g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300); \
       if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
@@ -128,7 +128,7 @@
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
       if (take_jump) \
       { \
-         cp0_update_count(); \
+         cp0_update_count(&g_dev.r4300); \
          skip = *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) - cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(); \

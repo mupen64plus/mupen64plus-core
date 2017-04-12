@@ -112,7 +112,7 @@ static void gencp0_update_count(unsigned int addr)
     add_m32_reg32((unsigned int*)(&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]), EAX);
 #else
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(&g_dev.r4300))), (unsigned int)(g_dev.r4300.recomp.dst+1));
-    mov_reg32_imm32(EAX, (unsigned int)cp0_update_count);
+    mov_reg32_imm32(EAX, (unsigned int)dynarec_cp0_update_count);
     call_reg32(EAX);
 #endif
 }
