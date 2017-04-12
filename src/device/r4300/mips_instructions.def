@@ -1298,7 +1298,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_STATUS_REG:
         if((rrt32 & CP0_STATUS_FR) != (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_FR))
         {
-            shuffle_fpr_data(cp0_regs[CP0_STATUS_REG], rrt32);
+            shuffle_fpr_data(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG], rrt32);
             set_fpr_pointers(&g_dev.r4300.cp1, rrt32);
         }
         cp0_regs[CP0_STATUS_REG] = rrt32;
