@@ -42,7 +42,7 @@ void poweron_cp1(struct cp1* cp1)
     *r4300_cp1_fcr0(cp1) = UINT32_C(0x511);
     *r4300_cp1_fcr31(cp1) = 0;
 
-    set_fpr_pointers(UINT32_C(0x34000000)); /* c0_status value at poweron */
+    set_fpr_pointers(cp1, UINT32_C(0x34000000)); /* c0_status value at poweron */
     update_x86_rounding_mode(*r4300_cp1_fcr31(cp1));
 }
 
@@ -150,7 +150,7 @@ void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
     }
 }
 
-void set_fpr_pointers(uint32_t newStatus)
+void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
 {
     int i;
 #if defined(M64P_BIG_ENDIAN)
@@ -158,8 +158,6 @@ void set_fpr_pointers(uint32_t newStatus)
 #else
     const int isBigEndian = 0;
 #endif
-
-    struct cp1* cp1 = &g_dev.r4300.cp1;
 
     // update the FPR register pointers
     if (newStatus & CP0_STATUS_FR)

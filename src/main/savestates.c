@@ -451,7 +451,7 @@ int savestates_load_m64p(char *filepath)
     *r4300_llbit(&g_dev.r4300) = GETDATA(curr, unsigned int);
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
+    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
     *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
     *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
     COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
@@ -587,7 +587,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // CP0
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
 
-    set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
+    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
 
