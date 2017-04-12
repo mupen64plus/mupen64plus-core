@@ -37,9 +37,6 @@
 #include "debugger/dbg_types.h"
 #endif
 
-extern uint32_t g_dev_r4300_cp0_regs[32];
-extern unsigned int g_dev_r4300_cp0_next_interrupt;
-
 /* global functions */
 void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
@@ -120,24 +117,26 @@ int check_cop1_unusable(struct r4300_core* r4300)
 
 void cp0_update_count(void)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
+    struct r4300_core* r4300 = &g_dev.r4300;
+    struct cp0* cp0 = &r4300->cp0;
+    uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
 #ifdef NEW_DYNAREC
-    if (g_dev.r4300.emumode != EMUMODE_DYNAREC)
+    if (r4300->emumode != EMUMODE_DYNAREC)
     {
 #endif
-        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc(&g_dev.r4300) - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
-        g_dev.r4300.cp0.last_addr = *r4300_pc(&g_dev.r4300);
+        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        cp0->last_addr = *r4300_pc(r4300);
 #ifdef NEW_DYNAREC
     }
 #endif
 
 #ifdef COMPARE_CORE
-   if (g_dev.r4300.delay_slot)
+   if (r4300->delay_slot)
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(*r4300_pc(&g_dev.r4300));
+   if (g_DebuggerActive && !r4300->delay_slot) update_debugger(*r4300_pc(r4300));
 #endif
 */
 }
