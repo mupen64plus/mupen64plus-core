@@ -48,7 +48,7 @@ struct cp1
 
 void poweron_cp1(struct cp1* cp1);
 
-int64_t* r4300_cp1_regs(void);
+int64_t* r4300_cp1_regs(struct cp1* cp1);
 float** r4300_cp1_regs_simple(void);
 double** r4300_cp1_regs_double(void);
 

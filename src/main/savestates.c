@@ -454,7 +454,7 @@ int savestates_load_m64p(char *filepath)
     set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
     *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
     *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
-    COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     *r4300_cp1_fcr0()  = GETDATA(curr, uint32_t);
@@ -582,7 +582,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
 
     // FPR
-    COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
 
     // CP0
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
@@ -1210,7 +1210,7 @@ int savestates_save_m64p(char *filepath)
 
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
         shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
-    PUTARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
         shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
@@ -1292,7 +1292,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    PUTARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);

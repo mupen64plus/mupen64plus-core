@@ -45,9 +45,9 @@ void poweron_cp1(struct cp1* cp1)
 }
 
 
-int64_t* r4300_cp1_regs(void)
+int64_t* r4300_cp1_regs(struct cp1* cp1)
 {
-    return g_dev.r4300.cp1.regs;
+    return cp1->regs;
 }
 
 float** r4300_cp1_regs_simple(void)
