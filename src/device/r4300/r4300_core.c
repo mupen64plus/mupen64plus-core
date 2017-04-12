@@ -52,6 +52,7 @@ void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int cou
 
     r4300->emumode = emumode;
     init_cp0(&r4300->cp0, count_per_op, new_dynarec_hot_state);
+    init_cp1(&r4300->cp1, new_dynarec_hot_state);
 
     r4300->recomp.no_compiled_jump = no_compiled_jump;
 }

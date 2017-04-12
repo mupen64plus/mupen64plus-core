@@ -4158,7 +4158,7 @@ void genlwc1(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
+    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
     mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.rdword), RDX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
@@ -4168,7 +4168,7 @@ void genlwc1(void)
     mov_reg64_imm64(RSI, (unsigned long long) g_dev.ri.rdram.dram); // 10
     and_reg32_imm32(EBX, 0x7FFFFF); // 6
     mov_reg32_preg64preg64(EAX, RBX, RSI); // 3
-    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
+    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
     mov_preg64_reg32(RBX, EAX); // 2
 #endif
 }
@@ -4204,7 +4204,7 @@ void genldc1(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
+    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
     mov_m64rel_xreg64((unsigned long long *)(&g_dev.r4300.rdword), RDX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
@@ -4214,7 +4214,7 @@ void genldc1(void)
     mov_reg64_imm64(RSI, (unsigned long long) g_dev.ri.rdram.dram); // 10
     and_reg32_imm32(EBX, 0x7FFFFF); // 6
     mov_reg64_preg64preg64(RAX, RBX, RSI); // 4
-    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
+    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft])); // 7
     mov_preg64pimm32_reg32(RBX, 4, EAX); // 6
     shr_reg64_imm8(RAX, 32); // 4
     mov_preg64_reg32(RBX, EAX); // 2
@@ -4231,7 +4231,7 @@ void genswc1(void)
 #else
     gencheck_cop1_unusable();
 
-    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.lf.ft]));
+    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft]));
     mov_reg32_preg64(ECX, RDX);
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(&g_dev.r4300)[g_dev.r4300.recomp.dst->f.lf.base]));
     add_eax_imm32((int)g_dev.r4300.recomp.dst->f.lf.offset);
@@ -4298,7 +4298,7 @@ void gensdc1(void)
 #else
     gencheck_cop1_unusable();
 
-    mov_xreg64_m64rel(RSI, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.lf.ft]));
+    mov_xreg64_m64rel(RSI, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.lf.ft]));
     mov_reg32_preg64(ECX, RSI);
     mov_reg32_preg64pimm32(EDX, RSI, 4);
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(&g_dev.r4300)[g_dev.r4300.recomp.dst->f.lf.base]));
@@ -4367,7 +4367,7 @@ void genmfc1(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MFC1, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.r.nrd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.r.nrd]));
     mov_reg32_preg64(EBX, RAX);
     mov_m32rel_xreg32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt, EBX);
     sar_reg32_imm8(EBX, 31);
@@ -4384,7 +4384,7 @@ void gendmfc1(void)
     gencallinterp((unsigned long long)cached_interpreter_table.DMFC1, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *) (&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.r.nrd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *) (&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.r.nrd]));
     mov_reg32_preg64(EBX, RAX);
     mov_reg32_preg64pimm32(ECX, RAX, 4);
     mov_m32rel_xreg32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt, EBX);
@@ -4423,7 +4423,7 @@ void genmtc1(void)
 #else
     gencheck_cop1_unusable();
     mov_xreg32_m32rel(EAX, (unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
-    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.r.nrd]));
+    mov_xreg64_m64rel(RBX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.r.nrd]));
     mov_preg64_reg32(RBX, EAX);
 #endif
 }
@@ -4439,7 +4439,7 @@ void gendmtc1(void)
     gencheck_cop1_unusable();
     mov_xreg32_m32rel(EAX, (unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     mov_xreg32_m32rel(EBX, ((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt)+1);
-    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.r.nrd]));
+    mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.r.nrd]));
     mov_preg64_reg32(RDX, EAX);
     mov_preg64pimm32_reg32(RDX, 4, EBX);
 #endif
@@ -4494,10 +4494,10 @@ void genabs_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.ABS_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fabs_();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4511,10 +4511,10 @@ void genabs_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.ABS_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fabs_();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4528,11 +4528,11 @@ void genadd_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.ADD_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fadd_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4546,11 +4546,11 @@ void genadd_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.ADD_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fadd_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4564,11 +4564,11 @@ void gendiv_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.DIV_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fdiv_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4582,11 +4582,11 @@ void gendiv_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.DIV_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fdiv_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4600,9 +4600,9 @@ void genmov_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MOV_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     mov_reg32_preg64(EBX, RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     mov_preg64_reg32(RAX, EBX);
 #endif
 }
@@ -4616,10 +4616,10 @@ void genmov_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MOV_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     mov_reg32_preg64(EBX, RAX);
     mov_reg32_preg64pimm32(ECX, RAX, 4);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     mov_preg64_reg32(RAX, EBX);
     mov_preg64pimm32_reg32(RAX, 4, ECX);
 #endif
@@ -4634,11 +4634,11 @@ void genmul_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MUL_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fmul_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4652,11 +4652,11 @@ void genmul_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.MUL_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fmul_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4670,10 +4670,10 @@ void genneg_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.NEG_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fchs();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4687,10 +4687,10 @@ void genneg_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.NEG_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fchs();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4704,10 +4704,10 @@ void gensqrt_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.SQRT_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fsqrt();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4721,10 +4721,10 @@ void gensqrt_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.SQRT_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fsqrt();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4738,11 +4738,11 @@ void gensub_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.SUB_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fsub_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -4756,11 +4756,11 @@ void gensub_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.SUB_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fsub_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -4775,9 +4775,9 @@ void gentrunc_w_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&trunc_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4793,9 +4793,9 @@ void gentrunc_w_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&trunc_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4811,9 +4811,9 @@ void gentrunc_l_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&trunc_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4829,9 +4829,9 @@ void gentrunc_l_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&trunc_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4847,9 +4847,9 @@ void genround_w_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&round_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4865,9 +4865,9 @@ void genround_w_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&round_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4883,9 +4883,9 @@ void genround_l_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&round_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4901,9 +4901,9 @@ void genround_l_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&round_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4919,9 +4919,9 @@ void genceil_w_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&ceil_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4937,9 +4937,9 @@ void genceil_w_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&ceil_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4955,9 +4955,9 @@ void genceil_l_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&ceil_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4973,9 +4973,9 @@ void genceil_l_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&ceil_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -4991,9 +4991,9 @@ void genfloor_w_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&floor_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -5009,9 +5009,9 @@ void genfloor_w_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&floor_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -5027,9 +5027,9 @@ void genfloor_l_s(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&floor_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -5045,9 +5045,9 @@ void genfloor_l_d(void)
 #else
     gencheck_cop1_unusable();
     fldcw_m16rel((unsigned short*)&floor_mode);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
     fldcw_m16rel((unsigned short*)&g_dev.r4300.cp1.rounding_mode);
 #endif
@@ -5062,9 +5062,9 @@ void gencvt_s_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -5078,9 +5078,9 @@ void gencvt_s_w(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_W, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fild_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -5094,9 +5094,9 @@ void gencvt_s_l(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_S_L, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fild_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_dword(RAX);
 #endif
 }
@@ -5110,9 +5110,9 @@ void gencvt_d_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -5126,9 +5126,9 @@ void gencvt_d_w(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_W, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fild_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -5142,9 +5142,9 @@ void gencvt_d_l(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_D_L, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fild_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fstp_preg64_qword(RAX);
 #endif
 }
@@ -5158,9 +5158,9 @@ void gencvt_w_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_W_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
 #endif
 }
@@ -5174,9 +5174,9 @@ void gencvt_w_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_W_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_dword(RAX);
 #endif
 }
@@ -5190,9 +5190,9 @@ void gencvt_l_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_L_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
 #endif
 }
@@ -5206,9 +5206,9 @@ void gencvt_l_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.CVT_L_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fd]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fd]));
     fistp_preg64_qword(RAX);
 #endif
 }
@@ -5250,9 +5250,9 @@ void genc_un_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_UN_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5272,9 +5272,9 @@ void genc_un_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_UN_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5294,9 +5294,9 @@ void genc_eq_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_EQ_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5316,9 +5316,9 @@ void genc_eq_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_EQ_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5338,9 +5338,9 @@ void genc_ueq_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_UEQ_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5361,9 +5361,9 @@ void genc_ueq_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_UEQ_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5384,9 +5384,9 @@ void genc_olt_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_OLT_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5406,9 +5406,9 @@ void genc_olt_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_OLT_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5428,9 +5428,9 @@ void genc_ult_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_ULT_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5451,9 +5451,9 @@ void genc_ult_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_ULT_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5474,9 +5474,9 @@ void genc_ole_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_OLE_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5496,9 +5496,9 @@ void genc_ole_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_OLE_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5518,9 +5518,9 @@ void genc_ule_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_ULE_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5541,9 +5541,9 @@ void genc_ule_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_ULE_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fucomip_fpreg(1);
     ffree_fpreg(0);
@@ -5564,9 +5564,9 @@ void genc_sf_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_SF_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5583,9 +5583,9 @@ void genc_sf_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_SF_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5602,9 +5602,9 @@ void genc_ngle_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGLE_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5624,9 +5624,9 @@ void genc_ngle_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGLE_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5646,9 +5646,9 @@ void genc_seq_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_SEQ_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5668,9 +5668,9 @@ void genc_seq_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_SEQ_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5690,9 +5690,9 @@ void genc_ngl_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGL_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5713,9 +5713,9 @@ void genc_ngl_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGL_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5736,9 +5736,9 @@ void genc_lt_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_LT_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5758,9 +5758,9 @@ void genc_lt_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_LT_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5780,9 +5780,9 @@ void genc_nge_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGE_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5803,9 +5803,9 @@ void genc_nge_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGE_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5826,9 +5826,9 @@ void genc_le_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_LE_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5848,9 +5848,9 @@ void genc_le_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_LE_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5870,9 +5870,9 @@ void genc_ngt_s(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGT_S, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_dword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_dword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
@@ -5893,9 +5893,9 @@ void genc_ngt_d(void)
     gencallinterp((unsigned long long)cached_interpreter_table.C_NGT_D, 0);
 #else
     gencheck_cop1_unusable();
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.ft]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.ft]));
     fld_preg64_qword(RAX);
-    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double())[g_dev.r4300.recomp.dst->f.cf.fs]));
+    mov_xreg64_m64rel(RAX, (unsigned long long *)(&(r4300_cp1_regs_double(&g_dev.r4300.cp1))[g_dev.r4300.recomp.dst->f.cf.fs]));
     fld_preg64_qword(RAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);

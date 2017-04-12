@@ -44,13 +44,19 @@ struct cp1
      * words. However, x86/gcop1.c and x86-64/gcop1.c update this variable
      * using 32-bit stores. */
     uint32_t rounding_mode;
+
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    struct new_dynarec_hot_state* new_dynarec_hot_state;
+#endif
 };
 
+void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state);
 void poweron_cp1(struct cp1* cp1);
 
 int64_t* r4300_cp1_regs(struct cp1* cp1);
-float** r4300_cp1_regs_simple(void);
-double** r4300_cp1_regs_double(void);
+float** r4300_cp1_regs_simple(struct cp1* cp1);
+double** r4300_cp1_regs_double(struct cp1* cp1);
 
 uint32_t* r4300_cp1_fcr0(void);
 uint32_t* r4300_cp1_fcr31(void);

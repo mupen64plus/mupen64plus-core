@@ -4555,10 +4555,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   if (opcode[i]==0x39) { // SWC1 (get float address)
-    emit_readword((int)&r4300_cp1_regs_simple()[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
   }
   if (opcode[i]==0x3D) { // SDC1 (get double address)
-    emit_readword((int)&r4300_cp1_regs_double()[(source[i]>>16)&0x1f],tl);
+    emit_readword((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
   }
   // Generate address + offset
   if(!using_tlb) {
@@ -4593,10 +4593,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     emit_readword_indexed(0,tl,tl);
   }
   if (opcode[i]==0x31) { // LWC1 (get target address)
-    emit_readword((int)&r4300_cp1_regs_simple()[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
   }
   if (opcode[i]==0x35) { // LDC1 (get target address)
-    emit_readword((int)&r4300_cp1_regs_double()[(source[i]>>16)&0x1f],temp);
+    emit_readword((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
   }
   if(!using_tlb) {
     if(!c) {
