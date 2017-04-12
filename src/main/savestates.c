@@ -508,7 +508,7 @@ int savestates_load_m64p(char *filepath)
     }
 #endif
 
-    *r4300_cp0_last_addr() = *r4300_pc(&g_dev.r4300);
+    *r4300_cp0_last_addr(&g_dev.r4300.cp0) = *r4300_pc(&g_dev.r4300);
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -576,7 +576,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    *r4300_cp0_last_addr() = GETDATA(curr, uint32_t);
+    *r4300_cp0_last_addr(&g_dev.r4300.cp0) = GETDATA(curr, uint32_t);
 
     // GPR
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
@@ -781,7 +781,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr());
+    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
 
     // assert(savestateData+savestateSize == curr)
 
