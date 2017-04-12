@@ -58,8 +58,8 @@ int64_t* r4300_cp1_regs(struct cp1* cp1);
 float** r4300_cp1_regs_simple(struct cp1* cp1);
 double** r4300_cp1_regs_double(struct cp1* cp1);
 
-uint32_t* r4300_cp1_fcr0(void);
-uint32_t* r4300_cp1_fcr31(void);
+uint32_t* r4300_cp1_fcr0(struct cp1* cp1);
+uint32_t* r4300_cp1_fcr31(struct cp1* cp1);
 
 void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus);
 void set_fpr_pointers(uint32_t newStatus);

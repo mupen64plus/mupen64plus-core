@@ -937,10 +937,10 @@ DECLARE_JUMP(BGEZAL,  PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.
 DECLARE_JUMP(BGEZL,   PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[0],  1, 0)
 DECLARE_JUMP(BGEZALL, PCADDR + (iimmediate+1)*4, irs >= 0,   &r4300_regs(&g_dev.r4300)[31], 1, 0)
 
-DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
-DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
-DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
-DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31()) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
+DECLARE_JUMP(BC1F,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
+DECLARE_JUMP(BC1FL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & FCR31_CMP_BIT)==0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
+DECLARE_JUMP(BC1T,  PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 0, 1)
+DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & FCR31_CMP_BIT)!=0, &r4300_regs(&g_dev.r4300)[0], 1, 1)
 
 /* Special instructions */
 
@@ -1416,11 +1416,11 @@ DECLARE_INSTRUCTION(CFC1)
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     if (rfs==31)
     {
-        rrt32 = SE32((*r4300_cp1_fcr31()));
+        rrt32 = SE32((*r4300_cp1_fcr31(&g_dev.r4300.cp1)));
     }
     if (rfs==0)
     {
-        rrt32 = SE32((*r4300_cp1_fcr0()));
+        rrt32 = SE32((*r4300_cp1_fcr0(&g_dev.r4300.cp1)));
     }
     ADD_TO_PC(1);
 }
@@ -1444,11 +1444,11 @@ DECLARE_INSTRUCTION(CTC1)
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
     if (rfs==31)
     {
-        (*r4300_cp1_fcr31()) = rrt32;
+        (*r4300_cp1_fcr31(&g_dev.r4300.cp1)) = rrt32;
         update_x86_rounding_mode(rrt32);
     }
-    //if (((*r4300_cp1_fcr31()) >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
-    //                 (int)(((*r4300_cp1_fcr31()) >> 7) & 0x1F));
+    //if (((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
+    //                 (int)(((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) >> 7) & 0x1F));
     ADD_TO_PC(1);
 }
 
@@ -1485,7 +1485,7 @@ DECLARE_INSTRUCTION(ADD_D)
 DECLARE_INSTRUCTION(DIV_S)
 {
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
-    if(((*r4300_cp1_fcr31()) & UINT32_C(0x400)) && *(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[cfft] == 0)
+    if(((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & UINT32_C(0x400)) && *(r4300_cp1_regs_simple(&g_dev.r4300.cp1))[cfft] == 0)
     {
         DebugMessage(M64MSG_ERROR, "DIV_S by 0");
     }
@@ -1496,10 +1496,10 @@ DECLARE_INSTRUCTION(DIV_S)
 DECLARE_INSTRUCTION(DIV_D)
 {
     if (check_cop1_unusable(&g_dev.r4300)) { return; }
-    if(((*r4300_cp1_fcr31()) & UINT32_C(0x400)) && *(r4300_cp1_regs_double(&g_dev.r4300.cp1))[cfft] == 0)
+    if(((*r4300_cp1_fcr31(&g_dev.r4300.cp1)) & UINT32_C(0x400)) && *(r4300_cp1_regs_double(&g_dev.r4300.cp1))[cfft] == 0)
     {
-        //(*r4300_cp1_fcr31()) |= 0x8020;
-        /*(*r4300_cp1_fcr31()) |= 0x8000;
+        //(*r4300_cp1_fcr31(&g_dev.r4300.cp1)) |= 0x8020;
+        /*(*r4300_cp1_fcr31(&g_dev.r4300.cp1)) |= 0x8000;
           Cause = 15 << 2;
           exception_general(&g_dev.r4300);*/
         DebugMessage(M64MSG_ERROR, "DIV_D by 0");

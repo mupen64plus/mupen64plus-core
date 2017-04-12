@@ -29,9 +29,6 @@
 
 #include "main/main.h"
 
-extern uint32_t g_dev_r4300_cp1_fcr0;
-extern uint32_t g_dev_r4300_cp1_fcr31;
-
 void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
@@ -42,11 +39,11 @@ void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_sta
 void poweron_cp1(struct cp1* cp1)
 {
     memset(cp1->regs, 0, 32 * sizeof(cp1->regs[0]));
-    *r4300_cp1_fcr0() = UINT32_C(0x511);
-    *r4300_cp1_fcr31() = 0;
+    *r4300_cp1_fcr0(cp1) = UINT32_C(0x511);
+    *r4300_cp1_fcr31(cp1) = 0;
 
     set_fpr_pointers(UINT32_C(0x34000000)); /* c0_status value at poweron */
-    update_x86_rounding_mode(*r4300_cp1_fcr31());
+    update_x86_rounding_mode(*r4300_cp1_fcr31(cp1));
 }
 
 
@@ -75,23 +72,23 @@ double** r4300_cp1_regs_double(struct cp1* cp1)
 #endif
 }
 
-uint32_t* r4300_cp1_fcr0(void)
+uint32_t* r4300_cp1_fcr0(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr0;
+    return &cp1->fcr0;
 #else
-    return &g_dev_r4300_cp1_fcr0;
+    return &cp1->new_dynarec_hot_state->fcr0;
 #endif
 }
 
-uint32_t* r4300_cp1_fcr31(void)
+uint32_t* r4300_cp1_fcr31(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr31;
+    return &cp1->fcr31;
 #else
-    return &g_dev_r4300_cp1_fcr31;
+    return &cp1->new_dynarec_hot_state->fcr31;
 #endif
 }
 

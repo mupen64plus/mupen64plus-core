@@ -3615,7 +3615,7 @@ void genbgezall_idle(void)
 
 static void genbc1f_test(void)
 {
-    test_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
+    test_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000);
     jne_rj(12);
     mov_m32_imm32((unsigned int*)(&g_dev.r4300.branch_taken), 1); // 10
     jmp_imm_short(10); // 2
@@ -3744,7 +3744,7 @@ void genbc1fl_idle(void)
 
 static void genbc1t_test(void)
 {
-    test_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000);
+    test_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000);
     je_rj(12);
     mov_m32_imm32((unsigned int*)(&g_dev.r4300.branch_taken), 1); // 10
     jmp_imm_short(10); // 2
@@ -4203,10 +4203,10 @@ void gencfc1(void)
 #else
     gencheck_cop1_unusable();
     if (g_dev.r4300.recomp.dst->f.r.nrd == 31) {
-        mov_eax_memoffs32((unsigned int*)&(*r4300_cp1_fcr31()));
+        mov_eax_memoffs32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)));
     }
     else {
-        mov_eax_memoffs32((unsigned int*)&(*r4300_cp1_fcr0()));
+        mov_eax_memoffs32((unsigned int*)&(*r4300_cp1_fcr0(&g_dev.r4300.cp1)));
     }
     mov_memoffs32_eax((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
     sar_reg32_imm8(EAX, 31);
@@ -4251,7 +4251,7 @@ void genctc1(void)
         return;
     }
     mov_eax_memoffs32((unsigned int*)g_dev.r4300.recomp.dst->f.r.rt);
-    mov_memoffs32_eax((unsigned int*)&(*r4300_cp1_fcr31()));
+    mov_memoffs32_eax((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)));
     and_eax_imm32(3);
 
     cmp_eax_imm32(0);
@@ -4887,7 +4887,7 @@ void genc_f_s(void)
     gencallinterp((unsigned int)cached_interpreter_table.C_F_S, 0);
 #else
     gencheck_cop1_unusable();
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000);
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000);
 #endif
 }
 
@@ -4897,7 +4897,7 @@ void genc_f_d(void)
     gencallinterp((unsigned int)cached_interpreter_table.C_F_D, 0);
 #else
     gencheck_cop1_unusable();
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000);
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000);
 #endif
 }
 
@@ -4914,9 +4914,9 @@ void genc_un_s(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jp_rj(12);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
     jmp_imm_short(10); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
 #endif
 }
 
@@ -4933,9 +4933,9 @@ void genc_un_d(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jp_rj(12);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
     jmp_imm_short(10); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
 #endif
 }
 
@@ -4952,9 +4952,9 @@ void genc_eq_s(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -4971,9 +4971,9 @@ void genc_eq_d(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jne_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -4991,9 +4991,9 @@ void genc_ueq_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5011,9 +5011,9 @@ void genc_ueq_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5030,9 +5030,9 @@ void genc_olt_s(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jae_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5049,9 +5049,9 @@ void genc_olt_d(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     jae_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5069,9 +5069,9 @@ void genc_ult_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     jae_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5089,9 +5089,9 @@ void genc_ult_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     jae_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5108,9 +5108,9 @@ void genc_ole_s(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     ja_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5127,9 +5127,9 @@ void genc_ole_d(void)
     fucomip_fpreg(1);
     ffree_fpreg(0);
     ja_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5147,9 +5147,9 @@ void genc_ule_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     ja_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5167,9 +5167,9 @@ void genc_ule_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     ja_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5185,7 +5185,7 @@ void genc_sf_s(void)
     fld_preg32_dword(EAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000);
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000);
 #endif
 }
 
@@ -5201,7 +5201,7 @@ void genc_sf_d(void)
     fld_preg32_qword(EAX);
     fcomip_fpreg(1);
     ffree_fpreg(0);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000);
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000);
 #endif
 }
 
@@ -5218,9 +5218,9 @@ void genc_ngle_s(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jp_rj(12);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
     jmp_imm_short(10); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
 #endif
 }
 
@@ -5237,9 +5237,9 @@ void genc_ngle_d(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jp_rj(12);
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
     jmp_imm_short(10); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
 #endif
 }
 
@@ -5256,9 +5256,9 @@ void genc_seq_s(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5275,9 +5275,9 @@ void genc_seq_d(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jne_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5295,9 +5295,9 @@ void genc_ngl_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5315,9 +5315,9 @@ void genc_ngl_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     jne_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5334,9 +5334,9 @@ void genc_lt_s(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jae_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5353,9 +5353,9 @@ void genc_lt_d(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     jae_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5373,9 +5373,9 @@ void genc_nge_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     jae_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5393,9 +5393,9 @@ void genc_nge_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     jae_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5412,9 +5412,9 @@ void genc_le_s(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     ja_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5431,9 +5431,9 @@ void genc_le_d(void)
     fcomip_fpreg(1);
     ffree_fpreg(0);
     ja_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5451,9 +5451,9 @@ void genc_ngt_s(void)
     ffree_fpreg(0);
     jp_rj(14);
     ja_rj(12);
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }
 
@@ -5471,8 +5471,8 @@ void genc_ngt_d(void)
     ffree_fpreg(0);
     jp_rj(14);
     ja_rj(12); // 2
-    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), 0x800000); // 10
+    or_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), 0x800000); // 10
     jmp_imm_short(10); // 2
-    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31()), ~0x800000); // 10
+    and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&g_dev.r4300.cp1)), ~0x800000); // 10
 #endif
 }

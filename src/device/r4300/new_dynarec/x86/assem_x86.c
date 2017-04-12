@@ -922,7 +922,7 @@ static void emit_loadreg(int r, int hr)
     if((r&63)==LOREG) addr=(int)r4300_mult_lo(&g_dev.r4300)+((r&64)>>4);
     if(r==CCREG) addr=(int)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
     if(r==CSREG) addr=(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_STATUS_REG];
-    if(r==FSREG) addr=(int)r4300_cp1_fcr31();
+    if(r==FSREG) addr=(int)r4300_cp1_fcr31(&g_dev.r4300.cp1);
     assem_debug("mov %x+%d,%%%s",addr,r,regname[hr]);
     output_byte(0x8B);
     output_modrm(0,5,hr);
@@ -935,7 +935,7 @@ static void emit_storereg(int r, int hr)
   if((r&63)==HIREG) addr=(int)r4300_mult_hi(&g_dev.r4300)+((r&64)>>4);
   if((r&63)==LOREG) addr=(int)r4300_mult_lo(&g_dev.r4300)+((r&64)>>4);
   if(r==CCREG) addr=(int)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
-  if(r==FSREG) addr=(int)r4300_cp1_fcr31();
+  if(r==FSREG) addr=(int)r4300_cp1_fcr31(&g_dev.r4300.cp1);
   assem_debug("mov %%%s,%x+%d",regname[hr],addr,r);
   output_byte(0x89);
   output_modrm(0,5,hr);
@@ -3598,8 +3598,8 @@ static void cop1_assemble(int i,struct regstat *i_regs)
     signed char tl=get_reg(i_regs->regmap,rt1[i]);
     if(tl>=0) {
       u_int copr=(source[i]>>11)&0x1f;
-      if(copr==0) emit_readword((int)r4300_cp1_fcr0(),tl);
-      if(copr==31) emit_readword((int)r4300_cp1_fcr31(),tl);
+      if(copr==0) emit_readword((int)r4300_cp1_fcr0(&g_dev.r4300.cp1),tl);
+      if(copr==31) emit_readword((int)r4300_cp1_fcr31(&g_dev.r4300.cp1),tl);
     }
   }
   else if (opcode2[i]==6) // CTC1
@@ -3609,7 +3609,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
     assert(sl>=0);
     if(copr==31)
     {
-      emit_writeword(sl,(int)r4300_cp1_fcr31());
+      emit_writeword(sl,(int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
       // Set the rounding mode
       char temp=get_reg(i_regs->regmap,-1);
       emit_movimm(3,temp);

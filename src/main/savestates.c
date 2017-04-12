@@ -457,9 +457,9 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    *r4300_cp1_fcr0()  = GETDATA(curr, uint32_t);
+    *r4300_cp1_fcr0(&g_dev.r4300.cp1)  = GETDATA(curr, uint32_t);
     FCR31 = GETDATA(curr, uint32_t);
-    *r4300_cp1_fcr31() = FCR31;
+    *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
     update_x86_rounding_mode(FCR31);
 
     for (i = 0; i < 32; i++)
@@ -607,10 +607,10 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(&g_dev.r4300.cp0, buffer);
 
     // FPCR
-    *r4300_cp1_fcr0() = GETDATA(curr, uint32_t);
+    *r4300_cp1_fcr0(&g_dev.r4300.cp1) = GETDATA(curr, uint32_t);
     curr += 30 * 4; // FCR1...FCR30 not supported
     FCR31 = GETDATA(curr, uint32_t);
-    *r4300_cp1_fcr31() = FCR31;
+    *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
     update_x86_rounding_mode(FCR31);
 
     // hi / lo
@@ -1214,8 +1214,8 @@ int savestates_save_m64p(char *filepath)
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
         shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0());
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31(&g_dev.r4300.cp1));
     for (i = 0; i < 32; i++)
     {
         PUTDATA(curr, short, g_dev.r4300.cp0.tlb.entries[i].mask);
@@ -1296,10 +1296,10 @@ static int savestates_save_pj64(char *filepath, void *handle,
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
         shuffle_fpr_data(UINT32_C(0x04000000), 0);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31(&g_dev.r4300.cp1));
     PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
     PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
 
