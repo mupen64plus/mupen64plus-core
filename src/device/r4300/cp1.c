@@ -43,7 +43,7 @@ void poweron_cp1(struct cp1* cp1)
     *r4300_cp1_fcr31(cp1) = 0;
 
     set_fpr_pointers(cp1, UINT32_C(0x34000000)); /* c0_status value at poweron */
-    update_x86_rounding_mode(*r4300_cp1_fcr31(cp1));
+    update_x86_rounding_mode(cp1);
 }
 
 
@@ -181,21 +181,23 @@ void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
 /* XXX: This shouldn't really be here, but rounding_mode is used by the
  * Hacktarux JIT and updated by CTC1 and saved states. Figure out a better
  * place for this. */
-void update_x86_rounding_mode(uint32_t fcr31)
+void update_x86_rounding_mode(struct cp1* cp1)
 {
+    uint32_t fcr31 = *r4300_cp1_fcr31(cp1);
+
     switch (fcr31 & 3)
     {
     case 0: /* Round to nearest, or to even if equidistant */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0x33F);
+        cp1->rounding_mode = UINT32_C(0x33F);
         break;
     case 1: /* Truncate (toward 0) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0xF3F);
+        cp1->rounding_mode = UINT32_C(0xF3F);
         break;
     case 2: /* Round up (toward +Inf) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0xB3F);
+        cp1->rounding_mode = UINT32_C(0xB3F);
         break;
     case 3: /* Round down (toward -Inf) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0x73F);
+        cp1->rounding_mode = UINT32_C(0x73F);
         break;
     }
 }

@@ -460,7 +460,7 @@ int savestates_load_m64p(char *filepath)
     *r4300_cp1_fcr0(&g_dev.r4300.cp1)  = GETDATA(curr, uint32_t);
     FCR31 = GETDATA(curr, uint32_t);
     *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
-    update_x86_rounding_mode(FCR31);
+    update_x86_rounding_mode(&g_dev.r4300.cp1);
 
     for (i = 0; i < 32; i++)
     {
@@ -611,7 +611,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     curr += 30 * 4; // FCR1...FCR30 not supported
     FCR31 = GETDATA(curr, uint32_t);
     *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
-    update_x86_rounding_mode(FCR31);
+    update_x86_rounding_mode(&g_dev.r4300.cp1);
 
     // hi / lo
     *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
