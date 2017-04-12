@@ -788,7 +788,7 @@ static void RMFC0(void)
     g_dev.r4300.recomp.dst->ops = g_dev.r4300.current_instruction_table.MFC0;
     g_dev.r4300.recomp.recomp_func = genmfc0;
     recompile_standard_r_type();
-    g_dev.r4300.recomp.dst->f.r.rd = (int64_t*) (r4300_cp0_regs() + ((g_dev.r4300.recomp.src >> 11) & 0x1F));
+    g_dev.r4300.recomp.dst->f.r.rd = (int64_t*) (r4300_cp0_regs(&g_dev.r4300.cp0) + ((g_dev.r4300.recomp.src >> 11) & 0x1F));
     g_dev.r4300.recomp.dst->f.r.nrd = (g_dev.r4300.recomp.src >> 11) & 0x1F;
     if (g_dev.r4300.recomp.dst->f.r.rt == r4300_regs(&g_dev.r4300)) RNOP();
 }

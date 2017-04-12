@@ -50,7 +50,7 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
     if (next_ai_event == 0)
         return 0;
 
-    cp0_regs = r4300_cp0_regs();
+    cp0_regs = r4300_cp0_regs(&ai->r4300->cp0);
     if (next_ai_event <= cp0_regs[CP0_COUNT_REG])
         return 0;
 

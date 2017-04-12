@@ -184,6 +184,11 @@ struct cp0
     unsigned int next_interrupt;
 #endif
 
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    struct new_dynarec_hot_state* new_dynarec_hot_state;
+#endif
+
     int special_done;
 
     uint32_t last_addr;
@@ -192,11 +197,10 @@ struct cp0
     struct tlb tlb;
 };
 
-
-void init_cp0(struct cp0* cp0, unsigned int count_per_op);
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state);
 void poweron_cp0(struct cp0* cp0);
 
-uint32_t* r4300_cp0_regs(void);
+uint32_t* r4300_cp0_regs(struct cp0* cp0);
 uint32_t* r4300_cp0_last_addr(void);
 unsigned int* r4300_cp0_next_interrupt(void);
 

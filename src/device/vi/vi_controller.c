@@ -83,7 +83,7 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs(&vi->r4300->cp0);
 
     if (reg == VI_CURRENT_REG)
     {

@@ -209,7 +209,7 @@ int savestates_load_m64p(char *filepath)
     char queue[1024];
     unsigned char additionalData[4];
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
 #ifdef USE_SDL
     SDL_LockMutex(savestates_lock);
@@ -529,7 +529,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     size_t savestateSize;
     unsigned char *savestateData, *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     /* Read and check Project64 magic number. */
     if (!read_func(handle, header, 8))
@@ -1010,7 +1010,7 @@ int savestates_save_m64p(char *filepath)
     struct savestate_work *save;
     char *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     save = malloc(sizeof(*save));
     if (!save) {
@@ -1272,7 +1272,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     size_t savestateSize;
     unsigned char *savestateData, *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     // Allocate memory for the save state data
     savestateSize = 8 + SaveRDRAMSize + 0x2754;

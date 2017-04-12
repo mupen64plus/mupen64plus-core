@@ -41,9 +41,12 @@ extern uint32_t g_dev_r4300_cp0_regs[32];
 extern unsigned int g_dev_r4300_cp0_next_interrupt;
 
 /* global functions */
-void init_cp0(struct cp0* cp0, unsigned int count_per_op)
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
     cp0->count_per_op = count_per_op;
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+    cp0->new_dynarec_hot_state = new_dynarec_hot_state;
+#endif
 }
 
 void poweron_cp0(struct cp0* cp0)
@@ -51,7 +54,7 @@ void poweron_cp0(struct cp0* cp0)
     uint32_t* cp0_regs;
     unsigned int* cp0_next_interrupt;
 
-    cp0_regs = r4300_cp0_regs();
+    cp0_regs = r4300_cp0_regs(cp0);
     cp0_next_interrupt = r4300_cp0_next_interrupt();
 
     memset(cp0_regs, 0, CP0_REGS_COUNT * sizeof(cp0_regs[0]));
@@ -76,13 +79,13 @@ void poweron_cp0(struct cp0* cp0)
 }
 
 
-uint32_t* r4300_cp0_regs(void)
+uint32_t* r4300_cp0_regs(struct cp0* cp0)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-    return g_dev.r4300.cp0.regs;
+    return cp0->regs;
 #else
 /* ARM dynarec uses a different memory layout */
-    return g_dev_r4300_cp0_regs;
+    return cp0->new_dynarec_hot_state->cp0_regs;
 #endif
 }
 
@@ -104,7 +107,7 @@ unsigned int* r4300_cp0_next_interrupt(void)
 
 int check_cop1_unusable(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
@@ -117,7 +120,7 @@ int check_cop1_unusable(struct r4300_core* r4300)
 
 void cp0_update_count(void)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
 #ifdef NEW_DYNAREC
     if (g_dev.r4300.emumode != EMUMODE_DYNAREC)

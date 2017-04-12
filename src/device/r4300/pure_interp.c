@@ -78,11 +78,11 @@ static void InterpretOpcode(void);
          cp0_update_count(); \
       } \
       g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
-      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs()[CP0_COUNT_REG]) gen_interrupt(); \
+      if (*r4300_cp0_next_interrupt() <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
-      uint32_t* cp0_regs = r4300_cp0_regs(); \
+      uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0); \
       const int take_jump = (condition); \
       int skip; \
       if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
