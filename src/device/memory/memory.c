@@ -251,22 +251,22 @@ void read_rdramd(void)
 
 void write_rdram(void)
 {
-    writew(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 void write_rdramb(void)
 {
-    writeb(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 void write_rdramh(void)
 {
-    writeh(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 void write_rdramd(void)
 {
-    writed(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -292,22 +292,22 @@ void read_rdramFBd(void)
 
 void write_rdramFB(void)
 {
-    writew(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 void write_rdramFBb(void)
 {
-    writeb(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 void write_rdramFBh(void)
 {
-    writeh(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 void write_rdramFBd(void)
 {
-    writed(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -333,22 +333,22 @@ static void read_rdramregd(void)
 
 static void write_rdramreg(void)
 {
-    writew(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_rdramregb(void)
 {
-    writeb(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rdramregh(void)
 {
-    writeh(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_rdramregd(void)
 {
-    writed(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -374,22 +374,22 @@ static void read_rspmemd(void)
 
 static void write_rspmem(void)
 {
-    writew(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_rspmemb(void)
 {
-    writeb(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rspmemh(void)
 {
-    writeh(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_rspmemd(void)
 {
-    writed(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -415,22 +415,22 @@ static void read_rspregd(void)
 
 static void write_rspreg(void)
 {
-    writew(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_rspregb(void)
 {
-    writeb(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rspregh(void)
 {
-    writeh(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_rspregd(void)
 {
-    writed(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -456,22 +456,22 @@ static void read_rspreg2d(void)
 
 static void write_rspreg2(void)
 {
-    writew(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_rspreg2b(void)
 {
-    writeb(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rspreg2h(void)
 {
-    writeh(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_rspreg2d(void)
 {
-    writed(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -497,22 +497,22 @@ static void read_dpd(void)
 
 static void write_dp(void)
 {
-    writew(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_dpb(void)
 {
-    writeb(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_dph(void)
 {
-    writeh(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_dpd(void)
 {
-    writed(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -538,22 +538,22 @@ static void read_dpsd(void)
 
 static void write_dps(void)
 {
-    writew(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_dpsb(void)
 {
-    writeb(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_dpsh(void)
 {
-    writeh(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_dpsd(void)
 {
-    writed(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -579,22 +579,22 @@ static void read_mid(void)
 
 void write_mi(void)
 {
-    writew(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 void write_mib(void)
 {
-    writeb(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 void write_mih(void)
 {
-    writeh(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 void write_mid(void)
 {
-    writed(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -620,22 +620,22 @@ static void read_vid(void)
 
 static void write_vi(void)
 {
-    writew(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_vib(void)
 {
-    writeb(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_vih(void)
 {
-    writeh(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_vid(void)
 {
-    writed(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -661,22 +661,22 @@ static void read_aid(void)
 
 static void write_ai(void)
 {
-    writew(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_aib(void)
 {
-    writeb(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_aih(void)
 {
-    writeh(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_aid(void)
 {
-    writed(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -702,22 +702,22 @@ static void read_pid(void)
 
 static void write_pi(void)
 {
-    writew(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_pib(void)
 {
-    writeb(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_pih(void)
 {
-    writeh(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_pid(void)
 {
-    writed(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -743,22 +743,22 @@ static void read_rid(void)
 
 static void write_ri(void)
 {
-    writew(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_rib(void)
 {
-    writeb(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rih(void)
 {
-    writeh(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_rid(void)
 {
-    writed(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -784,22 +784,22 @@ static void read_sid(void)
 
 static void write_si(void)
 {
-    writew(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_sib(void)
 {
-    writeb(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_sih(void)
 {
-    writeh(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_sid(void)
 {
-    writed(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 static void read_pi_flashram_status(void)
@@ -824,22 +824,22 @@ static void read_pi_flashram_statusd(void)
 
 static void write_pi_flashram_command(void)
 {
-    writew(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_pi_flashram_commandb(void)
 {
-    writeb(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_pi_flashram_commandh(void)
 {
-    writeh(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_pi_flashram_commandd(void)
 {
-    writed(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 
@@ -865,7 +865,7 @@ static void read_romd(void)
 
 static void write_rom(void)
 {
-    writew(write_cart_rom, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_cart_rom, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 
@@ -891,22 +891,22 @@ static void read_pifd(void)
 
 static void write_pif(void)
 {
-    writew(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_pifb(void)
 {
-    writeb(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_pifh(void)
 {
-    writeh(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_pifd(void)
 {
-    writed(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 /* HACK: just to get F-Zero to boot
@@ -948,22 +948,22 @@ static void read_ddd(void)
 
 static void write_dd(void)
 {
-    writew(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wword());
+    writew(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300));
 }
 
 static void write_ddb(void)
 {
-    writeb(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wbyte());
+    writeb(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_ddh(void)
 {
-    writeh(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_whword());
+    writeh(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
 }
 
 static void write_ddd(void)
 {
-    writed(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wdword());
+    writed(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
 #ifdef DBG

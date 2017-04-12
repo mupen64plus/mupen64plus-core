@@ -203,10 +203,10 @@ int* r4300_stop(struct r4300_core* r4300);
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
 uint32_t* r4300_address(struct r4300_core* r4300);
-uint8_t*  r4300_wbyte(void);
-uint16_t* r4300_whword(void);
-uint32_t* r4300_wword(void);
-uint64_t* r4300_wdword(void);
+uint8_t*  r4300_wbyte(struct r4300_core* r4300);
+uint16_t* r4300_whword(struct r4300_core* r4300);
+uint32_t* r4300_wword(struct r4300_core* r4300);
+uint64_t* r4300_wdword(struct r4300_core* r4300);
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]

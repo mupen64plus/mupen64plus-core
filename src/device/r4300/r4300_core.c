@@ -273,43 +273,43 @@ uint32_t* r4300_address(struct r4300_core* r4300)
 #endif
 }
 
-uint8_t*  r4300_wbyte(void)
+uint8_t*  r4300_wbyte(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.wbyte;
+    return &r4300->wbyte;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.wbyte;
+    return &r4300->new_dynarec_hot_state.wbyte;
 #endif
 }
 
-uint16_t* r4300_whword(void)
+uint16_t* r4300_whword(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.whword;
+    return &r4300->whword;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.whword;
+    return &r4300->new_dynarec_hot_state.whword;
 #endif
 }
 
-uint32_t* r4300_wword(void)
+uint32_t* r4300_wword(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.wword;
+    return &r4300->wword;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.wword;
+    return &r4300->new_dynarec_hot_state.wword;
 #endif
 }
 
-uint64_t* r4300_wdword(void)
+uint64_t* r4300_wdword(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.wdword;
+    return &r4300->wdword;
 #else
-    return &g_dev.r4300.new_dynarec_hot_state.wdword;
+    return &r4300->new_dynarec_hot_state.wdword;
 #endif
 }
 

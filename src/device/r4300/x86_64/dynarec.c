@@ -751,7 +751,7 @@ void gensb(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m8rel_xreg8((unsigned char *)(r4300_wbyte()), CL); // 7
+    mov_m8rel_xreg8((unsigned char *)(r4300_wbyte(&g_dev.r4300)), CL); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -818,7 +818,7 @@ void gensh(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m16rel_xreg16((unsigned short *)(r4300_whword()), CX); // 8
+    mov_m16rel_xreg16((unsigned short *)(r4300_whword(&g_dev.r4300)), CX); // 8
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -893,7 +893,7 @@ void gensw(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wword()), ECX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wword(&g_dev.r4300)), ECX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -976,8 +976,8 @@ void gensd(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wdword()), ECX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wdword())+1, EDX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wdword(&g_dev.r4300)), ECX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wdword(&g_dev.r4300))+1, EDX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -4254,7 +4254,7 @@ void genswc1(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wword()), ECX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wword(&g_dev.r4300)), ECX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -4322,8 +4322,8 @@ void gensdc1(void)
     mov_reg64_imm64(RAX, (unsigned long long) (g_dev.r4300.recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(&g_dev.r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(&g_dev.r4300)), EBX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wdword()), ECX); // 7
-    mov_m32rel_xreg32((unsigned int *)(r4300_wdword())+1, EDX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wdword(&g_dev.r4300)), ECX); // 7
+    mov_m32rel_xreg32((unsigned int *)(r4300_wdword(&g_dev.r4300))+1, EDX); // 7
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
