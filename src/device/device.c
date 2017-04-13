@@ -55,7 +55,7 @@ void init_device(struct device* dev,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing)
 {
-    init_r4300(&dev->r4300, emumode, count_per_op, no_compiled_jump);
+    init_r4300(&dev->r4300, &dev->mem, &dev->ri, emumode, count_per_op, no_compiled_jump);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);

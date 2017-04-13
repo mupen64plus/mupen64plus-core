@@ -38,6 +38,9 @@
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
+struct memory;
+struct ri_controller;
+
 struct jump_table;
 struct cached_interp
 {
@@ -185,9 +188,12 @@ struct r4300_core
     struct cp1 cp1;
 
     struct mi_controller mi;
+
+    struct memory* mem;
+    struct ri_controller* ri;
 };
 
-void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
 void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);
