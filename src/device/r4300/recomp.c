@@ -2223,7 +2223,7 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
             r4300->recomp.dst->reg_cache_infos.need_map = 0;
             r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-            if (r4300->emumode == EMUMODE_DYNAREC) gendebug();
+            if (r4300->emumode == EMUMODE_DYNAREC) gendebug(r4300);
 #endif
             RNOTCOMPILED(r4300);
             if (r4300->emumode == EMUMODE_DYNAREC) r4300->recomp.recomp_func(r4300);
@@ -2379,7 +2379,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         r4300->recomp.dst->reg_cache_infos.need_map = 0;
         r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
 #endif
 #if defined(PROFILE_R4300)
         long x86addr = (long) (block->code + block->block[i].local_addr);
@@ -2441,7 +2441,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         r4300->recomp.dst->reg_cache_infos.need_map = 0;
         r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
 #endif
         RFIN_BLOCK(r4300);
         if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
@@ -2453,7 +2453,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
             r4300->recomp.dst->reg_cache_infos.need_map = 0;
             r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
-            if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
+            if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
 #endif
             RFIN_BLOCK(r4300);
             if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
