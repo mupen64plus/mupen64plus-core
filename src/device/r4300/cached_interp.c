@@ -48,13 +48,13 @@
 // Cached interpreter functions (and fallback for dynarec).
 // -----------------------------------------------------------
 #ifdef DBG
-#define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(*r4300_pc(&g_dev.r4300))
+#define UPDATE_DEBUGGER() if (g_DebuggerActive) update_debugger(*r4300_pc(r4300))
 #else
 #define UPDATE_DEBUGGER() do { } while(0)
 #endif
 
-#define PCADDR *r4300_pc(&g_dev.r4300)
-#define ADD_TO_PC(x) (*r4300_pc_struct(&g_dev.r4300)) += x;
+#define PCADDR *r4300_pc(r4300)
+#define ADD_TO_PC(x) (*r4300_pc_struct(r4300)) += x;
 #define DECLARE_INSTRUCTION(name) static void name(void)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
@@ -140,10 +140,10 @@
    }
 
 #define CHECK_MEMORY() \
-   if (!g_dev.r4300.cached_interp.invalid_code[*r4300_address(&g_dev.r4300)>>12]) \
-      if (g_dev.r4300.cached_interp.blocks[*r4300_address(&g_dev.r4300)>>12]->block[(*r4300_address(&g_dev.r4300)&0xFFF)/4].ops != \
+   if (!g_dev.r4300.cached_interp.invalid_code[*r4300_address(r4300)>>12]) \
+      if (g_dev.r4300.cached_interp.blocks[*r4300_address(r4300)>>12]->block[(*r4300_address(r4300)&0xFFF)/4].ops != \
           g_dev.r4300.current_instruction_table.NOTCOMPILED) \
-         g_dev.r4300.cached_interp.invalid_code[*r4300_address(&g_dev.r4300)>>12] = 1;
+         g_dev.r4300.cached_interp.invalid_code[*r4300_address(r4300)>>12] = 1;
 
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning

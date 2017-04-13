@@ -46,8 +46,8 @@
 
 static void InterpretOpcode(struct r4300_core* r4300);
 
-#define PCADDR g_dev.r4300.interp_PC.addr
-#define ADD_TO_PC(x) g_dev.r4300.interp_PC.addr += x*4;
+#define PCADDR r4300->interp_PC.addr
+#define ADD_TO_PC(x) r4300->interp_PC.addr += x*4;
 #define DECLARE_INSTRUCTION(name) static void name(uint32_t op)
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(uint32_t op) \
@@ -131,16 +131,16 @@ static void InterpretOpcode(struct r4300_core* r4300);
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
 /* These macros are like those in macros.h, but they parse opcode fields. */
-#define rrt r4300_regs(&g_dev.r4300)[RT_OF(op)]
-#define rrd r4300_regs(&g_dev.r4300)[RD_OF(op)]
+#define rrt r4300_regs(r4300)[RT_OF(op)]
+#define rrd r4300_regs(r4300)[RD_OF(op)]
 #define rfs FS_OF(op)
-#define rrs r4300_regs(&g_dev.r4300)[RS_OF(op)]
+#define rrs r4300_regs(r4300)[RS_OF(op)]
 #define rsa SA_OF(op)
-#define irt r4300_regs(&g_dev.r4300)[RT_OF(op)]
+#define irt r4300_regs(r4300)[RT_OF(op)]
 #define ioffset IMM16S_OF(op)
 #define iimmediate IMM16S_OF(op)
-#define irs r4300_regs(&g_dev.r4300)[RS_OF(op)]
-#define ibase r4300_regs(&g_dev.r4300)[RS_OF(op)]
+#define irs r4300_regs(r4300)[RS_OF(op)]
+#define ibase r4300_regs(r4300)[RS_OF(op)]
 #define jinst_index JUMP_OF(op)
 #define lfbase RS_OF(op)
 #define lfft FT_OF(op)
@@ -151,17 +151,17 @@ static void InterpretOpcode(struct r4300_core* r4300);
 
 // 32 bits macros
 #ifndef M64P_BIG_ENDIAN
-#define rrt32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RT_OF(op)])
-#define rrd32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RD_OF(op)])
-#define rrs32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RS_OF(op)])
-#define irs32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RS_OF(op)])
-#define irt32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RT_OF(op)])
+#define rrt32 *((int32_t*) &r4300_regs(r4300)[RT_OF(op)])
+#define rrd32 *((int32_t*) &r4300_regs(r4300)[RD_OF(op)])
+#define rrs32 *((int32_t*) &r4300_regs(r4300)[RS_OF(op)])
+#define irs32 *((int32_t*) &r4300_regs(r4300)[RS_OF(op)])
+#define irt32 *((int32_t*) &r4300_regs(r4300)[RT_OF(op)])
 #else
-#define rrt32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RT_OF(op)] + 1)
-#define rrd32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RD_OF(op)] + 1)
-#define rrs32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RS_OF(op)] + 1)
-#define irs32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RS_OF(op)] + 1)
-#define irt32 *((int32_t*) &r4300_regs(&g_dev.r4300)[RT_OF(op)] + 1)
+#define rrt32 *((int32_t*) &r4300_regs(r4300)[RT_OF(op)] + 1)
+#define rrd32 *((int32_t*) &r4300_regs(r4300)[RD_OF(op)] + 1)
+#define rrs32 *((int32_t*) &r4300_regs(r4300)[RS_OF(op)] + 1)
+#define irs32 *((int32_t*) &r4300_regs(r4300)[RS_OF(op)] + 1)
+#define irt32 *((int32_t*) &r4300_regs(r4300)[RT_OF(op)] + 1)
 #endif
 
 // two functions are defined from the macros above but never used
