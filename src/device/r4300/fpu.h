@@ -25,6 +25,8 @@
 #include <math.h>
 #include <stdint.h>
 
+#include "main/main.h"
+
 #ifdef _MSC_VER
   #define M64P_FPU_INLINE static __inline
   #include <float.h>

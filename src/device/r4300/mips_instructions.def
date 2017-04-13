@@ -21,6 +21,8 @@
 
 /* Before #including this file the following macros must be defined:
  *
+ * DECLARE_R4300: An optionnal way of declaring teh r4300 pointer used
+ * in instructions definitions
  * PCADDR: Program counter (memory address of the current instruction).
  *
  * ADD_TO_PC(x): Increment the program counter in 'x' instructions.
@@ -80,7 +82,7 @@
 
 DECLARE_INSTRUCTION(NI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     DebugMessage(M64MSG_ERROR, "NI() @ 0x%" PRIX32, PCADDR);
     DebugMessage(M64MSG_ERROR, "opcode not implemented: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
     *r4300_stop(r4300) = 1;
@@ -90,7 +92,7 @@ DECLARE_INSTRUCTION(NI)
 
 DECLARE_INSTRUCTION(RESERVED)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     DebugMessage(M64MSG_ERROR, "reserved opcode: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
     *r4300_stop(r4300) = 1;
 }
@@ -99,7 +101,7 @@ DECLARE_INSTRUCTION(RESERVED)
 
 DECLARE_INSTRUCTION(LB)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -113,7 +115,7 @@ DECLARE_INSTRUCTION(LB)
 
 DECLARE_INSTRUCTION(LBU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -124,7 +126,7 @@ DECLARE_INSTRUCTION(LBU)
 
 DECLARE_INSTRUCTION(LH)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -138,7 +140,7 @@ DECLARE_INSTRUCTION(LH)
 
 DECLARE_INSTRUCTION(LHU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -149,7 +151,7 @@ DECLARE_INSTRUCTION(LHU)
 
 DECLARE_INSTRUCTION(LL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -164,7 +166,7 @@ DECLARE_INSTRUCTION(LL)
 
 DECLARE_INSTRUCTION(LW)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -178,7 +180,7 @@ DECLARE_INSTRUCTION(LW)
 
 DECLARE_INSTRUCTION(LWU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -189,7 +191,7 @@ DECLARE_INSTRUCTION(LWU)
 
 DECLARE_INSTRUCTION(LWL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
@@ -220,7 +222,7 @@ DECLARE_INSTRUCTION(LWL)
 
 DECLARE_INSTRUCTION(LWR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
@@ -251,7 +253,7 @@ DECLARE_INSTRUCTION(LWR)
 
 DECLARE_INSTRUCTION(LD)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -262,7 +264,7 @@ DECLARE_INSTRUCTION(LD)
 
 DECLARE_INSTRUCTION(LDL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
@@ -291,7 +293,7 @@ DECLARE_INSTRUCTION(LDL)
 
 DECLARE_INSTRUCTION(LDR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t word = 0;
@@ -321,7 +323,7 @@ DECLARE_INSTRUCTION(LDR)
 
 DECLARE_INSTRUCTION(SB)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -333,7 +335,7 @@ DECLARE_INSTRUCTION(SB)
 
 DECLARE_INSTRUCTION(SH)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -345,7 +347,7 @@ DECLARE_INSTRUCTION(SH)
 
 DECLARE_INSTRUCTION(SC)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -366,7 +368,7 @@ DECLARE_INSTRUCTION(SC)
 
 DECLARE_INSTRUCTION(SW)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -378,7 +380,7 @@ DECLARE_INSTRUCTION(SW)
 
 DECLARE_INSTRUCTION(SWL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
@@ -412,7 +414,7 @@ DECLARE_INSTRUCTION(SWL)
 
 DECLARE_INSTRUCTION(SWR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
@@ -445,7 +447,7 @@ DECLARE_INSTRUCTION(SWR)
 
 DECLARE_INSTRUCTION(SD)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
@@ -457,7 +459,7 @@ DECLARE_INSTRUCTION(SD)
 
 DECLARE_INSTRUCTION(SDL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
@@ -491,7 +493,7 @@ DECLARE_INSTRUCTION(SDL)
 
 DECLARE_INSTRUCTION(SDR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     uint64_t old_word = 0;
@@ -526,91 +528,91 @@ DECLARE_INSTRUCTION(SDR)
 
 DECLARE_INSTRUCTION(ADD)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32(rrs32 + rrt32);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ADDU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32(rrs32 + rrt32);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ADDI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = SE32(irs32 + iimmediate);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ADDIU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = SE32(irs32 + iimmediate);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADD)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs + rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADDU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs + rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADDI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = irs + iimmediate;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DADDIU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = irs + iimmediate;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SUB)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32(rrs32 - rrt32);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SUBU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32(rrs32 - rrt32);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSUB)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs - rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSUBU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs - rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SLT)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrs < rrt) { rrd = 1; }
     else { rrd = 0; }
     ADD_TO_PC(1);
@@ -618,7 +620,7 @@ DECLARE_INSTRUCTION(SLT)
 
 DECLARE_INSTRUCTION(SLTU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if ((uint64_t) rrs < (uint64_t) rrt) { rrd = 1; }
     else { rrd = 0; }
     ADD_TO_PC(1);
@@ -626,7 +628,7 @@ DECLARE_INSTRUCTION(SLTU)
 
 DECLARE_INSTRUCTION(SLTI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (irs < iimmediate) { irt = 1; }
     else { irt = 0; }
     ADD_TO_PC(1);
@@ -634,7 +636,7 @@ DECLARE_INSTRUCTION(SLTI)
 
 DECLARE_INSTRUCTION(SLTIU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if ((uint64_t) irs < (uint64_t) ((int64_t) iimmediate)) { irt = 1; }
     else { irt = 0; }
     ADD_TO_PC(1);
@@ -642,56 +644,56 @@ DECLARE_INSTRUCTION(SLTIU)
 
 DECLARE_INSTRUCTION(AND)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs & rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ANDI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = irs & (uint16_t) iimmediate;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(OR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs | rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ORI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = irs | (uint16_t) iimmediate;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(XOR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrs ^ rrt;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(XORI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = irs ^ (uint16_t) iimmediate;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(NOR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = ~(rrs | rrt);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(LUI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     irt = SE32(iimmediate << 16);
     ADD_TO_PC(1);
 }
@@ -700,111 +702,111 @@ DECLARE_INSTRUCTION(LUI)
 
 DECLARE_INSTRUCTION(NOP)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SLL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((uint32_t) rrt32 << rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SLLV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((uint32_t) rrt32 << (rrs32 & 0x1F));
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSLL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrt << rsa;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSLLV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrt << (rrs32 & 0x3F);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSLL32)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrt << (32 + rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((uint32_t) rrt32 >> rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRLV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((uint32_t) rrt32 >> (rrs32 & 0x1F));
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = (uint64_t) rrt >> rsa;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRLV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = (uint64_t) rrt >> (rrs32 & 0x3F);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRL32)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = (uint64_t) rrt >> (32 + rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRA)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((int32_t) rrt32 >> rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRAV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = SE32((int32_t) rrt32 >> (rrs32 & 0x1F));
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRA)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = rrt >> rsa;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRAV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = (int64_t) rrt >> (rrs32 & 0x3F);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(DSRA32)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = (int64_t) rrt >> (32 + rsa);
     ADD_TO_PC(1);
 }
@@ -813,7 +815,7 @@ DECLARE_INSTRUCTION(DSRA32)
 
 DECLARE_INSTRUCTION(MULT)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     int64_t temp;
     temp = rrs * rrt;
     *r4300_mult_hi(r4300) = temp >> 32;
@@ -823,7 +825,7 @@ DECLARE_INSTRUCTION(MULT)
 
 DECLARE_INSTRUCTION(MULTU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint64_t temp;
     temp = (uint32_t) rrs * (uint64_t) ((uint32_t) rrt);
     *r4300_mult_hi(r4300) = (int64_t) temp >> 32;
@@ -833,7 +835,7 @@ DECLARE_INSTRUCTION(MULTU)
 
 DECLARE_INSTRUCTION(DMULT)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint64_t op1, op2, op3, op4;
     uint64_t result1, result2, result3, result4;
     uint64_t temp1, temp2, temp3, temp4;
@@ -880,7 +882,7 @@ DECLARE_INSTRUCTION(DMULT)
 
 DECLARE_INSTRUCTION(DMULTU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint64_t op1, op2, op3, op4;
     uint64_t result1, result2, result3, result4;
     uint64_t temp1, temp2, temp3, temp4;
@@ -908,7 +910,7 @@ DECLARE_INSTRUCTION(DMULTU)
 
 DECLARE_INSTRUCTION(DIV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrt32)
     {
         *r4300_mult_lo(r4300) = SE32(rrs32 / rrt32);
@@ -920,7 +922,7 @@ DECLARE_INSTRUCTION(DIV)
 
 DECLARE_INSTRUCTION(DIVU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrt32)
     {
         *r4300_mult_lo(r4300) = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
@@ -932,7 +934,7 @@ DECLARE_INSTRUCTION(DIVU)
 
 DECLARE_INSTRUCTION(DDIV)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrt)
     {
         *r4300_mult_lo(r4300) = rrs / rrt;
@@ -944,7 +946,7 @@ DECLARE_INSTRUCTION(DDIV)
 
 DECLARE_INSTRUCTION(DDIVU)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrt)
     {
         *r4300_mult_lo(r4300) = (uint64_t) rrs / (uint64_t) rrt;
@@ -956,28 +958,28 @@ DECLARE_INSTRUCTION(DDIVU)
 
 DECLARE_INSTRUCTION(MFHI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = *r4300_mult_hi(r4300);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTHI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     *r4300_mult_hi(r4300) = rrs;
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MFLO)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     rrd = *r4300_mult_lo(r4300);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(MTLO)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     *r4300_mult_lo(r4300) = rrs;
     ADD_TO_PC(1);
 }
@@ -1021,13 +1023,13 @@ DECLARE_JUMP(BC1TL, PCADDR + (iimmediate+1)*4, ((*r4300_cp1_fcr31(&r4300->cp1)) 
 
 DECLARE_INSTRUCTION(CACHE)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(ERET)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
@@ -1050,13 +1052,13 @@ DECLARE_INSTRUCTION(ERET)
 
 DECLARE_INSTRUCTION(SYNC)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SYSCALL)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_SYS;
@@ -1067,7 +1069,7 @@ DECLARE_INSTRUCTION(SYSCALL)
 
 DECLARE_INSTRUCTION(TEQ)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (rrs == rrt)
     {
         DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
@@ -1080,7 +1082,7 @@ DECLARE_INSTRUCTION(TEQ)
 
 DECLARE_INSTRUCTION(TLBP)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     int i;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
@@ -1101,7 +1103,7 @@ DECLARE_INSTRUCTION(TLBP)
 
 DECLARE_INSTRUCTION(TLBR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     int index;
@@ -1286,7 +1288,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
 
 DECLARE_INSTRUCTION(TLBWR)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     cp0_update_count(r4300);
     cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/2 % (32 - cp0_regs[CP0_WIRED_REG]))
@@ -1297,7 +1299,7 @@ DECLARE_INSTRUCTION(TLBWR)
 
 DECLARE_INSTRUCTION(TLBWI)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     TLBWrite(r4300, cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F));
@@ -1308,7 +1310,7 @@ DECLARE_INSTRUCTION(TLBWI)
 
 DECLARE_INSTRUCTION(MFC0)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     switch(rfs)
@@ -1328,7 +1330,7 @@ DECLARE_INSTRUCTION(MFC0)
 
 DECLARE_INSTRUCTION(MTC0)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
@@ -1435,7 +1437,7 @@ DECLARE_INSTRUCTION(MTC0)
 
 DECLARE_INSTRUCTION(LWC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const unsigned char lslfft = lfft;
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     uint64_t temp;
@@ -1451,7 +1453,7 @@ DECLARE_INSTRUCTION(LWC1)
 
 DECLARE_INSTRUCTION(LDC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const unsigned char lslfft = lfft;
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
@@ -1463,7 +1465,7 @@ DECLARE_INSTRUCTION(LDC1)
 
 DECLARE_INSTRUCTION(SWC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const unsigned char lslfft = lfft;
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
@@ -1476,7 +1478,7 @@ DECLARE_INSTRUCTION(SWC1)
 
 DECLARE_INSTRUCTION(SDC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     const unsigned char lslfft = lfft;
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
@@ -1489,7 +1491,7 @@ DECLARE_INSTRUCTION(SDC1)
 
 DECLARE_INSTRUCTION(MFC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     rrt = SE32(*((int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[rfs]));
     ADD_TO_PC(1);
@@ -1497,7 +1499,7 @@ DECLARE_INSTRUCTION(MFC1)
 
 DECLARE_INSTRUCTION(DMFC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     rrt = *((int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[rfs]);
     ADD_TO_PC(1);
@@ -1505,7 +1507,7 @@ DECLARE_INSTRUCTION(DMFC1)
 
 DECLARE_INSTRUCTION(CFC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (rfs==31)
     {
@@ -1520,7 +1522,7 @@ DECLARE_INSTRUCTION(CFC1)
 
 DECLARE_INSTRUCTION(MTC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     *((int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[rfs]) = rrt32;
     ADD_TO_PC(1);
@@ -1528,7 +1530,7 @@ DECLARE_INSTRUCTION(MTC1)
 
 DECLARE_INSTRUCTION(DMTC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     *((int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[rfs]) = rrt;
     ADD_TO_PC(1);
@@ -1536,7 +1538,7 @@ DECLARE_INSTRUCTION(DMTC1)
 
 DECLARE_INSTRUCTION(CTC1)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (rfs==31)
     {
@@ -1552,7 +1554,7 @@ DECLARE_INSTRUCTION(CTC1)
 
 DECLARE_INSTRUCTION(ABS_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     abs_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1560,7 +1562,7 @@ DECLARE_INSTRUCTION(ABS_S)
 
 DECLARE_INSTRUCTION(ABS_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     abs_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1568,7 +1570,7 @@ DECLARE_INSTRUCTION(ABS_D)
 
 DECLARE_INSTRUCTION(ADD_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     add_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1576,7 +1578,7 @@ DECLARE_INSTRUCTION(ADD_S)
 
 DECLARE_INSTRUCTION(ADD_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     add_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1584,7 +1586,7 @@ DECLARE_INSTRUCTION(ADD_D)
 
 DECLARE_INSTRUCTION(DIV_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if(((*r4300_cp1_fcr31(&r4300->cp1)) & UINT32_C(0x400)) && *(r4300_cp1_regs_simple(&r4300->cp1))[cfft] == 0)
     {
@@ -1596,7 +1598,7 @@ DECLARE_INSTRUCTION(DIV_S)
 
 DECLARE_INSTRUCTION(DIV_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if(((*r4300_cp1_fcr31(&r4300->cp1)) & UINT32_C(0x400)) && *(r4300_cp1_regs_double(&r4300->cp1))[cfft] == 0)
     {
@@ -1613,7 +1615,7 @@ DECLARE_INSTRUCTION(DIV_D)
 
 DECLARE_INSTRUCTION(MOV_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     mov_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1621,7 +1623,7 @@ DECLARE_INSTRUCTION(MOV_S)
 
 DECLARE_INSTRUCTION(MOV_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     mov_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1629,7 +1631,7 @@ DECLARE_INSTRUCTION(MOV_D)
 
 DECLARE_INSTRUCTION(MUL_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     mul_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1637,7 +1639,7 @@ DECLARE_INSTRUCTION(MUL_S)
 
 DECLARE_INSTRUCTION(MUL_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     mul_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1645,7 +1647,7 @@ DECLARE_INSTRUCTION(MUL_D)
 
 DECLARE_INSTRUCTION(NEG_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     neg_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1653,7 +1655,7 @@ DECLARE_INSTRUCTION(NEG_S)
 
 DECLARE_INSTRUCTION(NEG_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     neg_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1661,7 +1663,7 @@ DECLARE_INSTRUCTION(NEG_D)
 
 DECLARE_INSTRUCTION(SQRT_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     sqrt_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1669,7 +1671,7 @@ DECLARE_INSTRUCTION(SQRT_S)
 
 DECLARE_INSTRUCTION(SQRT_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     sqrt_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1677,7 +1679,7 @@ DECLARE_INSTRUCTION(SQRT_D)
 
 DECLARE_INSTRUCTION(SUB_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     sub_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1685,7 +1687,7 @@ DECLARE_INSTRUCTION(SUB_S)
 
 DECLARE_INSTRUCTION(SUB_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     sub_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1693,7 +1695,7 @@ DECLARE_INSTRUCTION(SUB_D)
 
 DECLARE_INSTRUCTION(TRUNC_W_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     trunc_w_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1701,7 +1703,7 @@ DECLARE_INSTRUCTION(TRUNC_W_S)
 
 DECLARE_INSTRUCTION(TRUNC_W_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     trunc_w_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1709,7 +1711,7 @@ DECLARE_INSTRUCTION(TRUNC_W_D)
 
 DECLARE_INSTRUCTION(TRUNC_L_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     trunc_l_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1717,7 +1719,7 @@ DECLARE_INSTRUCTION(TRUNC_L_S)
 
 DECLARE_INSTRUCTION(TRUNC_L_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     trunc_l_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1725,7 +1727,7 @@ DECLARE_INSTRUCTION(TRUNC_L_D)
 
 DECLARE_INSTRUCTION(ROUND_W_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     round_w_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1733,7 +1735,7 @@ DECLARE_INSTRUCTION(ROUND_W_S)
 
 DECLARE_INSTRUCTION(ROUND_W_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     round_w_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1741,7 +1743,7 @@ DECLARE_INSTRUCTION(ROUND_W_D)
 
 DECLARE_INSTRUCTION(ROUND_L_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     round_l_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1749,7 +1751,7 @@ DECLARE_INSTRUCTION(ROUND_L_S)
 
 DECLARE_INSTRUCTION(ROUND_L_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     round_l_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1757,7 +1759,7 @@ DECLARE_INSTRUCTION(ROUND_L_D)
 
 DECLARE_INSTRUCTION(CEIL_W_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     ceil_w_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1765,7 +1767,7 @@ DECLARE_INSTRUCTION(CEIL_W_S)
 
 DECLARE_INSTRUCTION(CEIL_W_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     ceil_w_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1773,7 +1775,7 @@ DECLARE_INSTRUCTION(CEIL_W_D)
 
 DECLARE_INSTRUCTION(CEIL_L_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     ceil_l_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1781,7 +1783,7 @@ DECLARE_INSTRUCTION(CEIL_L_S)
 
 DECLARE_INSTRUCTION(CEIL_L_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     ceil_l_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1789,7 +1791,7 @@ DECLARE_INSTRUCTION(CEIL_L_D)
 
 DECLARE_INSTRUCTION(FLOOR_W_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     floor_w_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1797,7 +1799,7 @@ DECLARE_INSTRUCTION(FLOOR_W_S)
 
 DECLARE_INSTRUCTION(FLOOR_W_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     floor_w_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1805,7 +1807,7 @@ DECLARE_INSTRUCTION(FLOOR_W_D)
 
 DECLARE_INSTRUCTION(FLOOR_L_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     floor_l_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1813,7 +1815,7 @@ DECLARE_INSTRUCTION(FLOOR_L_S)
 
 DECLARE_INSTRUCTION(FLOOR_L_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     floor_l_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1821,7 +1823,7 @@ DECLARE_INSTRUCTION(FLOOR_L_D)
 
 DECLARE_INSTRUCTION(CVT_S_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_s_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1829,7 +1831,7 @@ DECLARE_INSTRUCTION(CVT_S_D)
 
 DECLARE_INSTRUCTION(CVT_S_W)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_s_w((int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1837,7 +1839,7 @@ DECLARE_INSTRUCTION(CVT_S_W)
 
 DECLARE_INSTRUCTION(CVT_S_L)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_s_l((int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1845,7 +1847,7 @@ DECLARE_INSTRUCTION(CVT_S_L)
 
 DECLARE_INSTRUCTION(CVT_D_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_d_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1853,7 +1855,7 @@ DECLARE_INSTRUCTION(CVT_D_S)
 
 DECLARE_INSTRUCTION(CVT_D_W)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_d_w((int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1861,7 +1863,7 @@ DECLARE_INSTRUCTION(CVT_D_W)
 
 DECLARE_INSTRUCTION(CVT_D_L)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_d_l((int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1869,7 +1871,7 @@ DECLARE_INSTRUCTION(CVT_D_L)
 
 DECLARE_INSTRUCTION(CVT_W_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_w_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1877,7 +1879,7 @@ DECLARE_INSTRUCTION(CVT_W_S)
 
 DECLARE_INSTRUCTION(CVT_W_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_w_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int32_t*) (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1885,7 +1887,7 @@ DECLARE_INSTRUCTION(CVT_W_D)
 
 DECLARE_INSTRUCTION(CVT_L_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_l_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1893,7 +1895,7 @@ DECLARE_INSTRUCTION(CVT_L_S)
 
 DECLARE_INSTRUCTION(CVT_L_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     cvt_l_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (int64_t*) (r4300_cp1_regs_double(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
@@ -1903,7 +1905,7 @@ DECLARE_INSTRUCTION(CVT_L_D)
 
 DECLARE_INSTRUCTION(C_F_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_f_s();
     ADD_TO_PC(1);
@@ -1911,7 +1913,7 @@ DECLARE_INSTRUCTION(C_F_S)
 
 DECLARE_INSTRUCTION(C_F_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_f_d();
     ADD_TO_PC(1);
@@ -1919,7 +1921,7 @@ DECLARE_INSTRUCTION(C_F_D)
 
 DECLARE_INSTRUCTION(C_UN_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_un_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1927,7 +1929,7 @@ DECLARE_INSTRUCTION(C_UN_S)
 
 DECLARE_INSTRUCTION(C_UN_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_un_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1935,7 +1937,7 @@ DECLARE_INSTRUCTION(C_UN_D)
 
 DECLARE_INSTRUCTION(C_EQ_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_eq_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1943,7 +1945,7 @@ DECLARE_INSTRUCTION(C_EQ_S)
 
 DECLARE_INSTRUCTION(C_EQ_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_eq_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1951,7 +1953,7 @@ DECLARE_INSTRUCTION(C_EQ_D)
 
 DECLARE_INSTRUCTION(C_UEQ_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ueq_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1959,7 +1961,7 @@ DECLARE_INSTRUCTION(C_UEQ_S)
 
 DECLARE_INSTRUCTION(C_UEQ_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ueq_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1967,7 +1969,7 @@ DECLARE_INSTRUCTION(C_UEQ_D)
 
 DECLARE_INSTRUCTION(C_OLT_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_olt_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1975,7 +1977,7 @@ DECLARE_INSTRUCTION(C_OLT_S)
 
 DECLARE_INSTRUCTION(C_OLT_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_olt_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1983,7 +1985,7 @@ DECLARE_INSTRUCTION(C_OLT_D)
 
 DECLARE_INSTRUCTION(C_ULT_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ult_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1991,7 +1993,7 @@ DECLARE_INSTRUCTION(C_ULT_S)
 
 DECLARE_INSTRUCTION(C_ULT_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ult_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -1999,7 +2001,7 @@ DECLARE_INSTRUCTION(C_ULT_D)
 
 DECLARE_INSTRUCTION(C_OLE_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ole_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2007,7 +2009,7 @@ DECLARE_INSTRUCTION(C_OLE_S)
 
 DECLARE_INSTRUCTION(C_OLE_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ole_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2015,7 +2017,7 @@ DECLARE_INSTRUCTION(C_OLE_D)
 
 DECLARE_INSTRUCTION(C_ULE_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ule_s((r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2023,7 +2025,7 @@ DECLARE_INSTRUCTION(C_ULE_S)
 
 DECLARE_INSTRUCTION(C_ULE_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     c_ule_d((r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2031,7 +2033,7 @@ DECLARE_INSTRUCTION(C_ULE_D)
 
 DECLARE_INSTRUCTION(C_SF_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2044,7 +2046,7 @@ DECLARE_INSTRUCTION(C_SF_S)
 
 DECLARE_INSTRUCTION(C_SF_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
         DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
@@ -2056,7 +2058,7 @@ DECLARE_INSTRUCTION(C_SF_D)
 
 DECLARE_INSTRUCTION(C_NGLE_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2069,7 +2071,7 @@ DECLARE_INSTRUCTION(C_NGLE_S)
 
 DECLARE_INSTRUCTION(C_NGLE_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
         DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
@@ -2081,7 +2083,7 @@ DECLARE_INSTRUCTION(C_NGLE_D)
 
 DECLARE_INSTRUCTION(C_SEQ_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2094,7 +2096,7 @@ DECLARE_INSTRUCTION(C_SEQ_S)
 
 DECLARE_INSTRUCTION(C_SEQ_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
         DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
@@ -2106,7 +2108,7 @@ DECLARE_INSTRUCTION(C_SEQ_D)
 
 DECLARE_INSTRUCTION(C_NGL_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2119,7 +2121,7 @@ DECLARE_INSTRUCTION(C_NGL_S)
 
 DECLARE_INSTRUCTION(C_NGL_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
         DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
@@ -2131,7 +2133,7 @@ DECLARE_INSTRUCTION(C_NGL_D)
 
 DECLARE_INSTRUCTION(C_LT_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2144,7 +2146,7 @@ DECLARE_INSTRUCTION(C_LT_S)
 
 DECLARE_INSTRUCTION(C_LT_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
@@ -2157,7 +2159,7 @@ DECLARE_INSTRUCTION(C_LT_D)
 
 DECLARE_INSTRUCTION(C_NGE_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2170,7 +2172,7 @@ DECLARE_INSTRUCTION(C_NGE_S)
 
 DECLARE_INSTRUCTION(C_NGE_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
@@ -2183,7 +2185,7 @@ DECLARE_INSTRUCTION(C_NGE_D)
 
 DECLARE_INSTRUCTION(C_LE_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2196,7 +2198,7 @@ DECLARE_INSTRUCTION(C_LE_S)
 
 DECLARE_INSTRUCTION(C_LE_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
@@ -2209,7 +2211,7 @@ DECLARE_INSTRUCTION(C_LE_D)
 
 DECLARE_INSTRUCTION(C_NGT_S)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
@@ -2222,7 +2224,7 @@ DECLARE_INSTRUCTION(C_NGT_S)
 
 DECLARE_INSTRUCTION(C_NGT_D)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
+    DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {

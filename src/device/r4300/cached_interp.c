@@ -53,6 +53,7 @@
 #define UPDATE_DEBUGGER() do { } while(0)
 #endif
 
+#define DECLARE_R4300 struct r4300_core* r4300 = &g_dev.r4300;
 #define PCADDR *r4300_pc(r4300)
 #define ADD_TO_PC(x) (*r4300_pc_struct(r4300)) += x;
 #define DECLARE_INSTRUCTION(name) static void name(void)
@@ -60,7 +61,7 @@
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(void) \
    { \
-      struct r4300_core* r4300 = &g_dev.r4300; \
+      DECLARE_R4300 \
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
@@ -92,7 +93,7 @@
    } \
    static void name##_OUT(void) \
    { \
-      struct r4300_core* r4300 = &g_dev.r4300; \
+      DECLARE_R4300 \
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
@@ -124,7 +125,7 @@
    } \
    static void name##_IDLE(void) \
    { \
-      struct r4300_core* r4300 = &g_dev.r4300; \
+      DECLARE_R4300 \
       uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
       const int take_jump = (condition); \
       int skip; \
@@ -159,7 +160,7 @@
 // -----------------------------------------------------------
 static void FIN_BLOCK(void)
 {
-   struct r4300_core* r4300 = &g_dev.r4300;
+   DECLARE_R4300
    if (!r4300->delay_slot)
      {
     cached_interpreter_dynarec_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
@@ -197,7 +198,7 @@ Used by dynarec only, check should be unnecessary
 
 static void NOTCOMPILED(void)
 {
-   struct r4300_core* r4300 = &g_dev.r4300;
+   DECLARE_R4300
    uint32_t *mem = fast_mem_access(r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
 #ifdef DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(r4300), (long) (*r4300_pc_struct(r4300))->ops);
