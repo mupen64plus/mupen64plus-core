@@ -52,44 +52,46 @@ static void InterpretOpcode(struct r4300_core* r4300);
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
    static void name(uint32_t op) \
    { \
+      struct r4300_core* r4300 = &g_dev.r4300; \
       const int take_jump = (condition); \
       const uint32_t jump_target = (destination); \
       int64_t *link_register = (link); \
-      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
-      if (link_register != &r4300_regs(&g_dev.r4300)[0]) \
+      if (cop1 && check_cop1_unusable(r4300)) return; \
+      if (link_register != &r4300_regs(r4300)[0]) \
       { \
-          *link_register = SE32(g_dev.r4300.interp_PC.addr + 8); \
+          *link_register = SE32(r4300->interp_PC.addr + 8); \
       } \
       if (!likely || take_jump) \
       { \
-        g_dev.r4300.interp_PC.addr += 4; \
-        g_dev.r4300.delay_slot=1; \
-        InterpretOpcode(&g_dev.r4300); \
-        cp0_update_count(&g_dev.r4300); \
-        g_dev.r4300.delay_slot=0; \
-        if (take_jump && !g_dev.r4300.skip_jump) \
+        r4300->interp_PC.addr += 4; \
+        r4300->delay_slot=1; \
+        InterpretOpcode(r4300); \
+        cp0_update_count(r4300); \
+        r4300->delay_slot=0; \
+        if (take_jump && !r4300->skip_jump) \
         { \
-          g_dev.r4300.interp_PC.addr = jump_target; \
+          r4300->interp_PC.addr = jump_target; \
         } \
       } \
       else \
       { \
-         g_dev.r4300.interp_PC.addr += 8; \
-         cp0_update_count(&g_dev.r4300); \
+         r4300->interp_PC.addr += 8; \
+         cp0_update_count(r4300); \
       } \
-      g_dev.r4300.cp0.last_addr = g_dev.r4300.interp_PC.addr; \
-      if (*r4300_cp0_next_interrupt(&g_dev.r4300.cp0) <= r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]) gen_interrupt(); \
+      r4300->cp0.last_addr = r4300->interp_PC.addr; \
+      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(); \
    } \
    static void name##_IDLE(uint32_t op) \
    { \
-      uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0); \
+      struct r4300_core* r4300 = &g_dev.r4300; \
+      uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
       const int take_jump = (condition); \
       int skip; \
-      if (cop1 && check_cop1_unusable(&g_dev.r4300)) return; \
+      if (cop1 && check_cop1_unusable(r4300)) return; \
       if (take_jump) \
       { \
-         cp0_update_count(&g_dev.r4300); \
-         skip = *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) - cp0_regs[CP0_COUNT_REG]; \
+         cp0_update_count(r4300); \
+         skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
          if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
          else name(op); \
       } \
