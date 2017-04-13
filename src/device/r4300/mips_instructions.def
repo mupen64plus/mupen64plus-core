@@ -1141,12 +1141,12 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                       md5_byte_t digest[16];
                       md5_init(&state);
                       md5_append(&state,
-                      (const md5_byte_t*)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
+                      (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
                       0x1000);
                       md5_finish(&state, digest);
                       for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = digest[j];*/
 
-                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
+                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
 
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
@@ -1173,12 +1173,12 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                       md5_byte_t digest[16];
                       md5_init(&state);
                       md5_append(&state,
-                      (const md5_byte_t*)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
+                      (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
                       0x1000);
                       md5_finish(&state, digest);
                       for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = digest[j];*/
 
-                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
+                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
 
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
@@ -1237,7 +1237,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                   md5_byte_t digest[16];
                   md5_init(&state);
                   md5_append(&state,
-                  (const md5_byte_t*)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
+                  (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
                   0x1000);
                   md5_finish(&state, digest);
                   for (j=0; j<16; j++)
@@ -1247,7 +1247,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                   }*/
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->adler32)
                 {
-                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
+                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
@@ -1267,7 +1267,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                   md5_byte_t digest[16];
                   md5_init(&state);
                   md5_append(&state,
-                  (const md5_byte_t*)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
+                  (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
                   0x1000);
                   md5_finish(&state, digest);
                   for (j=0; j<16; j++)
@@ -1277,7 +1277,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                   }*/
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->adler32)
                 {
-                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&g_dev.ri.rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
+                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
