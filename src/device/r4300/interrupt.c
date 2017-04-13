@@ -476,7 +476,7 @@ static void nmi_int_handler(struct device* dev)
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
-    cp0_regs[CP0_ERROREPC_REG] = *r4300_pc(&g_dev.r4300);
+    cp0_regs[CP0_ERROREPC_REG] = *r4300_pc(r4300);
     // reset the r4300 internal state
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
@@ -532,7 +532,7 @@ void gen_interrupt(void)
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
-    if (*r4300_stop(&g_dev.r4300) == 1)
+    if (*r4300_stop(r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
         dyna_stop();
