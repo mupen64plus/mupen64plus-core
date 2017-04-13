@@ -170,61 +170,77 @@ static void write_nothingd(void)
 
 static void read_nomem(void)
 {
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),0);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300), 0);
+    if (*r4300_address(r4300) == 0x00000000) return;
     read_word_in_memory();
 }
 
 static void read_nomemb(void)
 {
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),0);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),0);
+    if (*r4300_address(r4300) == 0x00000000) return;
     read_byte_in_memory();
 }
 
 static void read_nomemh(void)
 {
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),0);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),0);
+    if (*r4300_address(r4300) == 0x00000000) return;
     read_hword_in_memory();
 }
 
 static void read_nomemd(void)
 {
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),0);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),0);
+    if (*r4300_address(r4300) == 0x00000000) return;
     read_dword_in_memory();
 }
 
 static void write_nomem(void)
 {
-    invalidate_r4300_cached_code(&g_dev.r4300, *r4300_address(&g_dev.r4300), 4);
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),1);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 4);
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
+    if (*r4300_address(r4300) == 0x00000000) return;
     write_word_in_memory();
 }
 
 static void write_nomemb(void)
 {
-    invalidate_r4300_cached_code(&g_dev.r4300, *r4300_address(&g_dev.r4300), 1);
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),1);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 1);
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
+    if (*r4300_address(r4300) == 0x00000000) return;
     write_byte_in_memory();
 }
 
 static void write_nomemh(void)
 {
-    invalidate_r4300_cached_code(&g_dev.r4300, *r4300_address(&g_dev.r4300), 2);
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),1);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 2);
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
+    if (*r4300_address(r4300) == 0x00000000) return;
     write_hword_in_memory();
 }
 
 static void write_nomemd(void)
 {
-    invalidate_r4300_cached_code(&g_dev.r4300, *r4300_address(&g_dev.r4300), 8);
-    *r4300_address(&g_dev.r4300) = virtual_to_physical_address(&g_dev.r4300, *r4300_address(&g_dev.r4300),1);
-    if (*r4300_address(&g_dev.r4300) == 0x00000000) return;
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 8);
+    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
+    if (*r4300_address(r4300) == 0x00000000) return;
     write_dword_in_memory();
 }
 

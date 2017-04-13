@@ -214,6 +214,15 @@ uint16_t* r4300_whword(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
 
+#define read_word_in_memory()   r4300->mem->readmem  [*r4300_address(r4300)>>16]()
+#define read_byte_in_memory()   r4300->mem->readmemb [*r4300_address(r4300)>>16]()
+#define read_hword_in_memory()  r4300->mem->readmemh [*r4300_address(r4300)>>16]()
+#define read_dword_in_memory()  r4300->mem->readmemd [*r4300_address(r4300)>>16]()
+#define write_word_in_memory()  r4300->mem->writemem [*r4300_address(r4300)>>16]()
+#define write_byte_in_memory()  r4300->mem->writememb[*r4300_address(r4300)>>16]()
+#define write_hword_in_memory() r4300->mem->writememh[*r4300_address(r4300)>>16]()
+#define write_dword_in_memory() r4300->mem->writememd[*r4300_address(r4300)>>16]()
+
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]
  *
