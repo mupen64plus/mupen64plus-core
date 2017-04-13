@@ -140,10 +140,10 @@
    }
 
 #define CHECK_MEMORY() \
-   if (!g_dev.r4300.cached_interp.invalid_code[*r4300_address(r4300)>>12]) \
-      if (g_dev.r4300.cached_interp.blocks[*r4300_address(r4300)>>12]->block[(*r4300_address(r4300)&0xFFF)/4].ops != \
-          g_dev.r4300.current_instruction_table.NOTCOMPILED) \
-         g_dev.r4300.cached_interp.invalid_code[*r4300_address(r4300)>>12] = 1;
+   if (!r4300->cached_interp.invalid_code[*r4300_address(r4300)>>12]) \
+      if (r4300->cached_interp.blocks[*r4300_address(r4300)>>12]->block[(*r4300_address(r4300)&0xFFF)/4].ops != \
+          r4300->current_instruction_table.NOTCOMPILED) \
+         r4300->cached_interp.invalid_code[*r4300_address(r4300)>>12] = 1;
 
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
