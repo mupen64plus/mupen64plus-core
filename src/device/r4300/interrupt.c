@@ -535,7 +535,7 @@ void gen_interrupt(void)
     if (*r4300_stop(r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
-        dyna_stop();
+        dyna_stop(r4300);
     }
 
     if (!r4300->cp0.interrupt_unsafe_state)

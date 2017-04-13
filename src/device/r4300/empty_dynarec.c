@@ -48,1010 +48,1010 @@ void free_all_registers()
 
 /* Dynarec control functions */
 
-void dyna_jump()
+void dyna_jump(void)
 {
 }
 
-void dyna_stop()
+void dyna_stop(struct r4300_core* r4300)
 {
 }
 
 /* M64P pseudo instructions */
 
 #ifdef COMPARE_CORE
-void gendebug()
+void gendebug(struct r4300_core* r4300)
 {
 }
 #endif
 
-void genni()
+void genni(struct r4300_core* r4300)
 {
 }
 
-void gennotcompiled()
+void gennotcompiled(struct r4300_core* r4300)
 {
 }
 
-void genlink_subblock()
+void genlink_subblock(struct r4300_core* r4300)
 {
 }
 
-void genfin_block()
+void genfin_block(struct r4300_core* r4300)
 {
 }
 
 /* Reserved */
 
-void genreserved()
+void genreserved(struct r4300_core* r4300)
 {
 }
 
 /* Load instructions */
 
-void genlb()
+void genlb(struct r4300_core* r4300)
 {
 }
 
-void genlbu()
+void genlbu(struct r4300_core* r4300)
 {
 }
 
-void genlh()
+void genlh(struct r4300_core* r4300)
 {
 }
 
-void genlhu()
+void genlhu(struct r4300_core* r4300)
 {
 }
 
-void genll()
+void genll(struct r4300_core* r4300)
 {
 }
 
-void genlw()
+void genlw(struct r4300_core* r4300)
 {
 }
 
-void genlwu()
+void genlwu(struct r4300_core* r4300)
 {
 }
 
-void genlwl()
+void genlwl(struct r4300_core* r4300)
 {
 }
 
-void genlwr()
+void genlwr(struct r4300_core* r4300)
 {
 }
 
-void genld()
+void genld(struct r4300_core* r4300)
 {
 }
 
-void genldl()
+void genldl(struct r4300_core* r4300)
 {
 }
 
-void genldr()
+void genldr(struct r4300_core* r4300)
 {
 }
 
 /* Store instructions */
 
-void gensb()
+void gensb(struct r4300_core* r4300)
 {
 }
 
-void gensh()
+void gensh(struct r4300_core* r4300)
 {
 }
 
-void gensc()
+void gensc(struct r4300_core* r4300)
 {
 }
 
-void gensw()
+void gensw(struct r4300_core* r4300)
 {
 }
 
-void genswl()
+void genswl(struct r4300_core* r4300)
 {
 }
 
-void genswr()
+void genswr(struct r4300_core* r4300)
 {
 }
 
-void gensd()
+void gensd(struct r4300_core* r4300)
 {
 }
 
-void gensdl()
+void gensdl(struct r4300_core* r4300)
 {
 }
 
-void gensdr()
+void gensdr(struct r4300_core* r4300)
 {
 }
 
 /* Computational instructions */
 
-void genadd()
+void genadd(struct r4300_core* r4300)
 {
 }
 
-void genaddu()
+void genaddu(struct r4300_core* r4300)
 {
 }
 
-void genaddi()
+void genaddi(struct r4300_core* r4300)
 {
 }
 
-void genaddiu()
+void genaddiu(struct r4300_core* r4300)
 {
 }
 
-void gendadd()
+void gendadd(struct r4300_core* r4300)
 {
 }
 
-void gendaddu()
+void gendaddu(struct r4300_core* r4300)
 {
 }
 
-void gendaddi()
+void gendaddi(struct r4300_core* r4300)
 {
 }
 
-void gendaddiu()
+void gendaddiu(struct r4300_core* r4300)
 {
 }
 
-void gensub()
+void gensub(struct r4300_core* r4300)
 {
 }
 
-void gensubu()
+void gensubu(struct r4300_core* r4300)
 {
 }
 
-void gendsub()
+void gendsub(struct r4300_core* r4300)
 {
 }
 
-void gendsubu()
+void gendsubu(struct r4300_core* r4300)
 {
 }
 
-void genslt()
+void genslt(struct r4300_core* r4300)
 {
 }
 
-void gensltu()
+void gensltu(struct r4300_core* r4300)
 {
 }
 
-void genslti()
+void genslti(struct r4300_core* r4300)
 {
 }
 
-void gensltiu()
+void gensltiu(struct r4300_core* r4300)
 {
 }
 
-void genand()
+void genand(struct r4300_core* r4300)
 {
 }
 
-void genandi()
+void genandi(struct r4300_core* r4300)
 {
 }
 
-void genor()
+void genor(struct r4300_core* r4300)
 {
 }
 
-void genori()
+void genori(struct r4300_core* r4300)
 {
 }
 
-void genxor()
+void genxor(struct r4300_core* r4300)
 {
 }
 
-void genxori()
+void genxori(struct r4300_core* r4300)
 {
 }
 
-void gennor()
+void gennor(struct r4300_core* r4300)
 {
 }
 
-void genlui()
+void genlui(struct r4300_core* r4300)
 {
 }
 
 /* Shift instructions */
 
-void gennop()
+void gennop(struct r4300_core* r4300)
 {
 }
 
-void gensll()
+void gensll(struct r4300_core* r4300)
 {
 }
 
-void gensllv()
+void gensllv(struct r4300_core* r4300)
 {
 }
 
-void gendsll()
+void gendsll(struct r4300_core* r4300)
 {
 }
 
-void gendsllv()
+void gendsllv(struct r4300_core* r4300)
 {
 }
 
-void gendsll32()
+void gendsll32(struct r4300_core* r4300)
 {
 }
 
-void gensrl()
+void gensrl(struct r4300_core* r4300)
 {
 }
 
-void gensrlv()
+void gensrlv(struct r4300_core* r4300)
 {
 }
 
-void gendsrl()
+void gendsrl(struct r4300_core* r4300)
 {
 }
 
-void gendsrlv()
+void gendsrlv(struct r4300_core* r4300)
 {
 }
 
-void gendsrl32()
+void gendsrl32(struct r4300_core* r4300)
 {
 }
 
-void gensra()
+void gensra(struct r4300_core* r4300)
 {
 }
 
-void gensrav()
+void gensrav(struct r4300_core* r4300)
 {
 }
 
-void gendsra()
+void gendsra(struct r4300_core* r4300)
 {
 }
 
-void gendsrav()
+void gendsrav(struct r4300_core* r4300)
 {
 }
 
-void gendsra32()
+void gendsra32(struct r4300_core* r4300)
 {
 }
 
 /* Multiply / Divide instructions */
 
-void genmult()
+void genmult(struct r4300_core* r4300)
 {
 }
 
-void genmultu()
+void genmultu(struct r4300_core* r4300)
 {
 }
 
-void gendmult()
+void gendmult(struct r4300_core* r4300)
 {
 }
 
-void gendmultu()
+void gendmultu(struct r4300_core* r4300)
 {
 }
 
-void gendiv()
+void gendiv(struct r4300_core* r4300)
 {
 }
 
-void gendivu()
+void gendivu(struct r4300_core* r4300)
 {
 }
 
-void genddiv()
+void genddiv(struct r4300_core* r4300)
 {
 }
 
-void genddivu()
+void genddivu(struct r4300_core* r4300)
 {
 }
 
-void genmfhi()
+void genmfhi(struct r4300_core* r4300)
 {
 }
 
-void genmthi()
+void genmthi(struct r4300_core* r4300)
 {
 }
 
-void genmflo()
+void genmflo(struct r4300_core* r4300)
 {
 }
 
-void genmtlo()
+void genmtlo(struct r4300_core* r4300)
 {
 }
 
 /* Jump & Branch instructions */
 
-void genj()
+void genj(struct r4300_core* r4300)
 {
 }
 
-void genj_out()
+void genj_out(struct r4300_core* r4300)
 {
 }
 
-void genj_idle()
+void genj_idle(struct r4300_core* r4300)
 {
 }
 
-void genjal()
+void genjal(struct r4300_core* r4300)
 {
 }
 
-void genjal_out()
+void genjal_out(struct r4300_core* r4300)
 {
 }
 
-void genjal_idle()
+void genjal_idle(struct r4300_core* r4300)
 {
 }
 
-void genjr()
+void genjr(struct r4300_core* r4300)
 {
 }
 
-void genjalr()
+void genjalr(struct r4300_core* r4300)
 {
 }
 
-void genbeq()
+void genbeq(struct r4300_core* r4300)
 {
 }
 
-void genbeq_out()
+void genbeq_out(struct r4300_core* r4300)
 {
 }
 
-void genbeq_idle()
+void genbeq_idle(struct r4300_core* r4300)
 {
 }
 
-void genbeql()
+void genbeql(struct r4300_core* r4300)
 {
 }
 
-void genbeql_out()
+void genbeql_out(struct r4300_core* r4300)
 {
 }
 
-void genbeql_idle()
+void genbeql_idle(struct r4300_core* r4300)
 {
 }
 
-void genbne()
+void genbne(struct r4300_core* r4300)
 {
 }
 
-void genbne_out()
+void genbne_out(struct r4300_core* r4300)
 {
 }
 
-void genbne_idle()
+void genbne_idle(struct r4300_core* r4300)
 {
 }
 
-void genbnel()
+void genbnel(struct r4300_core* r4300)
 {
 }
 
-void genbnel_out()
+void genbnel_out(struct r4300_core* r4300)
 {
 }
 
-void genbnel_idle()
+void genbnel_idle(struct r4300_core* r4300)
 {
 }
 
-void genblez()
+void genblez(struct r4300_core* r4300)
 {
 }
 
-void genblez_out()
+void genblez_out(struct r4300_core* r4300)
 {
 }
 
-void genblez_idle()
+void genblez_idle(struct r4300_core* r4300)
 {
 }
 
-void genblezl()
+void genblezl(struct r4300_core* r4300)
 {
 }
 
-void genblezl_out()
+void genblezl_out(struct r4300_core* r4300)
 {
 }
 
-void genblezl_idle()
+void genblezl_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgtz()
+void genbgtz(struct r4300_core* r4300)
 {
 }
 
-void genbgtz_out()
+void genbgtz_out(struct r4300_core* r4300)
 {
 }
 
-void genbgtz_idle()
+void genbgtz_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgtzl()
+void genbgtzl(struct r4300_core* r4300)
 {
 }
 
-void genbgtzl_out()
+void genbgtzl_out(struct r4300_core* r4300)
 {
 }
 
-void genbgtzl_idle()
+void genbgtzl_idle(struct r4300_core* r4300)
 {
 }
 
-void genbltz()
+void genbltz(struct r4300_core* r4300)
 {
 }
 
-void genbltz_out()
+void genbltz_out(struct r4300_core* r4300)
 {
 }
 
-void genbltz_idle()
+void genbltz_idle(struct r4300_core* r4300)
 {
 }
 
-void genbltzal()
+void genbltzal(struct r4300_core* r4300)
 {
 }
 
-void genbltzal_out()
+void genbltzal_out(struct r4300_core* r4300)
 {
 }
 
-void genbltzal_idle()
+void genbltzal_idle(struct r4300_core* r4300)
 {
 }
 
-void genbltzl()
+void genbltzl(struct r4300_core* r4300)
 {
 }
 
-void genbltzl_out()
+void genbltzl_out(struct r4300_core* r4300)
 {
 }
 
-void genbltzl_idle()
+void genbltzl_idle(struct r4300_core* r4300)
 {
 }
 
-void genbltzall()
+void genbltzall(struct r4300_core* r4300)
 {
 }
 
-void genbltzall_out()
+void genbltzall_out(struct r4300_core* r4300)
 {
 }
 
-void genbltzall_idle()
+void genbltzall_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgez()
+void genbgez(struct r4300_core* r4300)
 {
 }
 
-void genbgez_out()
+void genbgez_out(struct r4300_core* r4300)
 {
 }
 
-void genbgez_idle()
+void genbgez_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgezal()
+void genbgezal(struct r4300_core* r4300)
 {
 }
 
-void genbgezal_out()
+void genbgezal_out(struct r4300_core* r4300)
 {
 }
 
-void genbgezal_idle()
+void genbgezal_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgezl()
+void genbgezl(struct r4300_core* r4300)
 {
 }
 
-void genbgezl_out()
+void genbgezl_out(struct r4300_core* r4300)
 {
 }
 
-void genbgezl_idle()
+void genbgezl_idle(struct r4300_core* r4300)
 {
 }
 
-void genbgezall()
+void genbgezall(struct r4300_core* r4300)
 {
 }
 
-void genbgezall_out()
+void genbgezall_out(struct r4300_core* r4300)
 {
 }
 
-void genbgezall_idle()
+void genbgezall_idle(struct r4300_core* r4300)
 {
 }
 
-void genbc1f()
+void genbc1f(struct r4300_core* r4300)
 {
 }
 
-void genbc1f_out()
+void genbc1f_out(struct r4300_core* r4300)
 {
 }
 
-void genbc1f_idle()
+void genbc1f_idle(struct r4300_core* r4300)
 {
 }
 
-void genbc1fl()
+void genbc1fl(struct r4300_core* r4300)
 {
 }
 
-void genbc1fl_out()
+void genbc1fl_out(struct r4300_core* r4300)
 {
 }
 
-void genbc1fl_idle()
+void genbc1fl_idle(struct r4300_core* r4300)
 {
 }
 
-void genbc1t()
+void genbc1t(struct r4300_core* r4300)
 {
 }
 
-void genbc1t_out()
+void genbc1t_out(struct r4300_core* r4300)
 {
 }
 
-void genbc1t_idle()
+void genbc1t_idle(struct r4300_core* r4300)
 {
 }
 
-void genbc1tl()
+void genbc1tl(struct r4300_core* r4300)
 {
 }
 
-void genbc1tl_out()
+void genbc1tl_out(struct r4300_core* r4300)
 {
 }
 
-void genbc1tl_idle()
+void genbc1tl_idle(struct r4300_core* r4300)
 {
 }
 
 /* Special instructions */
 
-void gencache()
+void gencache(struct r4300_core* r4300)
 {
 }
 
-void generet()
+void generet(struct r4300_core* r4300)
 {
 }
 
-void gensync()
+void gensync(struct r4300_core* r4300)
 {
 }
 
-void gensyscall()
+void gensyscall(struct r4300_core* r4300)
 {
 }
 
 /* Exception instructions */
 
-void genteq()
+void genteq(struct r4300_core* r4300)
 {
 }
 
 /* TLB instructions */
 
-void gentlbp()
+void gentlbp(struct r4300_core* r4300)
 {
 }
 
-void gentlbr()
+void gentlbr(struct r4300_core* r4300)
 {
 }
 
-void gentlbwr()
+void gentlbwr(struct r4300_core* r4300)
 {
 }
 
-void gentlbwi()
+void gentlbwi(struct r4300_core* r4300)
 {
 }
 
 /* CP0 load/store instructions */
 
-void genmfc0()
+void genmfc0(struct r4300_core* r4300)
 {
 }
 
-void genmtc0()
+void genmtc0(struct r4300_core* r4300)
 {
 }
 
 /* CP1 load/store instructions */
 
-void genlwc1()
+void genlwc1(struct r4300_core* r4300)
 {
 }
 
-void genldc1()
+void genldc1(struct r4300_core* r4300)
 {
 }
 
-void genswc1()
+void genswc1(struct r4300_core* r4300)
 {
 }
 
-void gensdc1()
+void gensdc1(struct r4300_core* r4300)
 {
 }
 
-void genmfc1()
+void genmfc1(struct r4300_core* r4300)
 {
 }
 
-void gendmfc1()
+void gendmfc1(struct r4300_core* r4300)
 {
 }
 
-void gencfc1()
+void gencfc1(struct r4300_core* r4300)
 {
 }
 
-void genmtc1()
+void genmtc1(struct r4300_core* r4300)
 {
 }
 
-void gendmtc1()
+void gendmtc1(struct r4300_core* r4300)
 {
 }
 
-void genctc1()
+void genctc1(struct r4300_core* r4300)
 {
 }
 
 /* CP1 computational instructions */
 
-void genabs_s()
+void genabs_s(struct r4300_core* r4300)
 {
 }
 
-void genabs_d()
+void genabs_d(struct r4300_core* r4300)
 {
 }
 
-void genadd_s()
+void genadd_s(struct r4300_core* r4300)
 {
 }
 
-void genadd_d()
+void genadd_d(struct r4300_core* r4300)
 {
 }
 
-void gendiv_s()
+void gendiv_s(struct r4300_core* r4300)
 {
 }
 
-void gendiv_d()
+void gendiv_d(struct r4300_core* r4300)
 {
 }
 
-void genmov_s()
+void genmov_s(struct r4300_core* r4300)
 {
 }
 
-void genmov_d()
+void genmov_d(struct r4300_core* r4300)
 {
 }
 
-void genmul_s()
+void genmul_s(struct r4300_core* r4300)
 {
 }
 
-void genmul_d()
+void genmul_d(struct r4300_core* r4300)
 {
 }
 
-void genneg_s()
+void genneg_s(struct r4300_core* r4300)
 {
 }
 
-void genneg_d()
+void genneg_d(struct r4300_core* r4300)
 {
 }
 
-void gensqrt_s()
+void gensqrt_s(struct r4300_core* r4300)
 {
 }
 
-void gensqrt_d()
+void gensqrt_d(struct r4300_core* r4300)
 {
 }
 
-void gensub_s()
+void gensub_s(struct r4300_core* r4300)
 {
 }
 
-void gensub_d()
+void gensub_d(struct r4300_core* r4300)
 {
 }
 
-void gentrunc_w_s()
+void gentrunc_w_s(struct r4300_core* r4300)
 {
 }
 
-void gentrunc_w_d()
+void gentrunc_w_d(struct r4300_core* r4300)
 {
 }
 
-void gentrunc_l_s()
+void gentrunc_l_s(struct r4300_core* r4300)
 {
 }
 
-void gentrunc_l_d()
+void gentrunc_l_d(struct r4300_core* r4300)
 {
 }
 
-void genround_w_s()
+void genround_w_s(struct r4300_core* r4300)
 {
 }
 
-void genround_w_d()
+void genround_w_d(struct r4300_core* r4300)
 {
 }
 
-void genround_l_s()
+void genround_l_s(struct r4300_core* r4300)
 {
 }
 
-void genround_l_d()
+void genround_l_d(struct r4300_core* r4300)
 {
 }
 
-void genceil_w_s()
+void genceil_w_s(struct r4300_core* r4300)
 {
 }
 
-void genceil_w_d()
+void genceil_w_d(struct r4300_core* r4300)
 {
 }
 
-void genceil_l_s()
+void genceil_l_s(struct r4300_core* r4300)
 {
 }
 
-void genceil_l_d()
+void genceil_l_d(struct r4300_core* r4300)
 {
 }
 
-void genfloor_w_s()
+void genfloor_w_s(struct r4300_core* r4300)
 {
 }
 
-void genfloor_w_d()
+void genfloor_w_d(struct r4300_core* r4300)
 {
 }
 
-void genfloor_l_s()
+void genfloor_l_s(struct r4300_core* r4300)
 {
 }
 
-void genfloor_l_d()
+void genfloor_l_d(struct r4300_core* r4300)
 {
 }
 
-void gencvt_s_d()
+void gencvt_s_d(struct r4300_core* r4300)
 {
 }
 
-void gencvt_s_w()
+void gencvt_s_w(struct r4300_core* r4300)
 {
 }
 
-void gencvt_s_l()
+void gencvt_s_l(struct r4300_core* r4300)
 {
 }
 
-void gencvt_d_s()
+void gencvt_d_s(struct r4300_core* r4300)
 {
 }
 
-void gencvt_d_w()
+void gencvt_d_w(struct r4300_core* r4300)
 {
 }
 
-void gencvt_d_l()
+void gencvt_d_l(struct r4300_core* r4300)
 {
 }
 
-void gencvt_w_s()
+void gencvt_w_s(struct r4300_core* r4300)
 {
 }
 
-void gencvt_w_d()
+void gencvt_w_d(struct r4300_core* r4300)
 {
 }
 
-void gencvt_l_s()
+void gencvt_l_s(struct r4300_core* r4300)
 {
 }
 
-void gencvt_l_d()
+void gencvt_l_d(struct r4300_core* r4300)
 {
 }
 
 /* CP1 relational instructions */
 
-void genc_f_s()
+void genc_f_s(struct r4300_core* r4300)
 {
 }
 
-void genc_f_d()
+void genc_f_d(struct r4300_core* r4300)
 {
 }
 
-void genc_un_s()
+void genc_un_s(struct r4300_core* r4300)
 {
 }
 
-void genc_un_d()
+void genc_un_d(struct r4300_core* r4300)
 {
 }
 
-void genc_eq_s()
+void genc_eq_s(struct r4300_core* r4300)
 {
 }
 
-void genc_eq_d()
+void genc_eq_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ueq_s()
+void genc_ueq_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ueq_d()
+void genc_ueq_d(struct r4300_core* r4300)
 {
 }
 
-void genc_olt_s()
+void genc_olt_s(struct r4300_core* r4300)
 {
 }
 
-void genc_olt_d()
+void genc_olt_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ult_s()
+void genc_ult_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ult_d()
+void genc_ult_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ole_s()
+void genc_ole_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ole_d()
+void genc_ole_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ule_s()
+void genc_ule_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ule_d()
+void genc_ule_d(struct r4300_core* r4300)
 {
 }
 
-void genc_sf_s()
+void genc_sf_s(struct r4300_core* r4300)
 {
 }
 
-void genc_sf_d()
+void genc_sf_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ngle_s()
+void genc_ngle_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ngle_d()
+void genc_ngle_d(struct r4300_core* r4300)
 {
 }
 
-void genc_seq_s()
+void genc_seq_s(struct r4300_core* r4300)
 {
 }
 
-void genc_seq_d()
+void genc_seq_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ngl_s()
+void genc_ngl_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ngl_d()
+void genc_ngl_d(struct r4300_core* r4300)
 {
 }
 
-void genc_lt_s()
+void genc_lt_s(struct r4300_core* r4300)
 {
 }
 
-void genc_lt_d()
+void genc_lt_d(struct r4300_core* r4300)
 {
 }
 
-void genc_nge_s()
+void genc_nge_s(struct r4300_core* r4300)
 {
 }
 
-void genc_nge_d()
+void genc_nge_d(struct r4300_core* r4300)
 {
 }
 
-void genc_le_s()
+void genc_le_s(struct r4300_core* r4300)
 {
 }
 
-void genc_le_d()
+void genc_le_d(struct r4300_core* r4300)
 {
 }
 
-void genc_ngt_s()
+void genc_ngt_s(struct r4300_core* r4300)
 {
 }
 
-void genc_ngt_d()
+void genc_ngt_d(struct r4300_core* r4300)
 {
 }

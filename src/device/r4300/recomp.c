@@ -2226,7 +2226,7 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
             if (r4300->emumode == EMUMODE_DYNAREC) gendebug();
 #endif
             RNOTCOMPILED(r4300);
-            if (r4300->emumode == EMUMODE_DYNAREC) r4300->recomp.recomp_func();
+            if (r4300->emumode == EMUMODE_DYNAREC) r4300->recomp.recomp_func(r4300);
         }
 #if defined(PROFILE_R4300)
         fclose(r4300->recomp.pfProfile);
@@ -2393,13 +2393,13 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
 #endif
         r4300->recomp.recomp_func = NULL;
         recomp_ops[((r4300->recomp.src >> 26) & 0x3F)](r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
         r4300->recomp.dst = block->block + i;
 
         /*if ((r4300->recomp.dst+1)->ops != NOTCOMPILED && !r4300->recomp.delay_slot_compiled &&
           i < length)
           {
-          if (r4300->emumode == EMUMODE_DYNAREC) genlink_subblock();
+          if (r4300->emumode == EMUMODE_DYNAREC) genlink_subblock(r4300);
           finished = 2;
           }*/
         if (r4300->recomp.delay_slot_compiled)
@@ -2444,7 +2444,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
 #endif
         RFIN_BLOCK(r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
         {
@@ -2456,11 +2456,11 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
             if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(); }
 #endif
             RFIN_BLOCK(r4300);
-            if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+            if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
             i++;
         }
     }
-    else if (r4300->emumode == EMUMODE_DYNAREC) { genlink_subblock(); }
+    else if (r4300->emumode == EMUMODE_DYNAREC) { genlink_subblock(r4300); }
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
@@ -2579,12 +2579,12 @@ void recompile_opcode(struct r4300_core* r4300)
 #endif
         r4300->recomp.recomp_func = NULL;
         recomp_ops[((r4300->recomp.src >> 26) & 0x3F)](r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
     }
     else
     {
         RNOP(r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(); }
+        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->recomp.recomp_func(r4300); }
     }
     r4300->recomp.delay_slot_compiled = 2;
 }

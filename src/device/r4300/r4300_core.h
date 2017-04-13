@@ -126,18 +126,18 @@ struct r4300_core
      * XXX: more work is needed to correctly encapsulate these */
     struct {
         int init_length;
-        struct precomp_instr* dst;          /* destination structure for the recompiled instruction */
-        int code_length;                    /* current real recompiled code length */
-        int max_code_length;                /* current recompiled code's buffer length */
-        unsigned char **inst_pointer;       /* output buffer for recompiled code */
-        struct precomp_block *dst_block;    /* the current block that we are recompiling */
-        uint32_t src;                       /* the current recompiled instruction */
+        struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
+        int code_length;                                /* current real recompiled code length */
+        int max_code_length;                            /* current recompiled code's buffer length */
+        unsigned char **inst_pointer;                   /* output buffer for recompiled code */
+        struct precomp_block *dst_block;                /* the current block that we are recompiling */
+        uint32_t src;                                   /* the current recompiled instruction */
         int fast_memory;
-        int no_compiled_jump;               /* use cached interpreter instead of recompiler for jumps */
-        void (*recomp_func)(void);          /* pointer to the dynarec's generator
-                                               function for the latest decoded opcode */
-        const uint32_t *SRC;                /* currently recompiled instruction in the input stream */
-        int check_nop;                      /* next instruction is nop ? */
+        int no_compiled_jump;                           /* use cached interpreter instead of recompiler for jumps */
+        void (*recomp_func)(struct r4300_core* r4300);  /* pointer to the dynarec's generator
+                                                           function for the latest decoded opcode */
+        const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+        int check_nop;                                  /* next instruction is nop ? */
         int delay_slot_compiled;
 
         uint32_t jump_to_address;

@@ -35,7 +35,7 @@ void free_block(struct r4300_core* r4300, struct precomp_block* block);
 void recompile_opcode(struct r4300_core* r4300);
 void dyna_jump(void);
 void dyna_start(void *code);
-void dyna_stop(void);
+void dyna_stop(struct r4300_core* r4300);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
 
