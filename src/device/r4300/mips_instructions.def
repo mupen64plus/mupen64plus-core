@@ -134,9 +134,14 @@ DECLARE_INSTRUCTION(LBU)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
+    unsigned int shift = bshift(lsaddr);
+    *r4300_address(r4300) = lsaddr & ~0x3;
     r4300->rdword = (uint64_t*) lsrtp;
-    read_byte_in_memory();
+    read_word_in_memory();
+    if (*r4300_address(r4300)) {
+        *lsrtp >>= shift;
+        *lsrtp &= 0xff;
+    }
 }
 
 DECLARE_INSTRUCTION(LH)
