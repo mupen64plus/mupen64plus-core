@@ -355,6 +355,7 @@ DECLARE_INSTRUCTION(SC)
     {
         *r4300_address(r4300) = lsaddr;
         *r4300_wword(r4300) = (uint32_t) *lsrtp;
+        *r4300_wmask(r4300) = ~UINT32_C(0);
         write_word_in_memory();
         CHECK_MEMORY();
         r4300->llbit = 0;
@@ -374,6 +375,7 @@ DECLARE_INSTRUCTION(SW)
     ADD_TO_PC(1);
     *r4300_address(r4300) = lsaddr;
     *r4300_wword(r4300) = (uint32_t) *lsrtp;
+    *r4300_wmask(r4300) = ~UINT32_C(0);
     write_word_in_memory();
     CHECK_MEMORY();
 }
@@ -389,6 +391,7 @@ DECLARE_INSTRUCTION(SWL)
     {
         *r4300_address(r4300) = lsaddr;
         *r4300_wword(r4300) = (uint32_t) *lsrtp;
+        *r4300_wmask(r4300) = ~UINT32_C(0);
         write_word_in_memory();
         CHECK_MEMORY();
     }
@@ -406,6 +409,7 @@ DECLARE_INSTRUCTION(SWL)
              * of its high bits into the low bits of the memory word? */
             int new_shift = (lsaddr & 3) * 8;
             *r4300_wword(r4300) = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp >> new_shift);
+            *r4300_wmask(r4300) = ~UINT32_C(0);
             write_word_in_memory();
             CHECK_MEMORY();
         }
@@ -423,6 +427,7 @@ DECLARE_INSTRUCTION(SWR)
     if ((lsaddr & 3) == 3)
     {
         *r4300_wword(r4300) = (uint32_t) *lsrtp;
+        *r4300_wmask(r4300) = ~UINT32_C(0);
         write_word_in_memory();
         CHECK_MEMORY();
     }
@@ -439,6 +444,7 @@ DECLARE_INSTRUCTION(SWR)
              * of its low bits into the high bits of the memory word? */
             int new_shift = (3 - (lsaddr & 3)) * 8;
             *r4300_wword(r4300) = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
+            *r4300_wmask(r4300) = ~UINT32_C(0);
             write_word_in_memory();
             CHECK_MEMORY();
         }
@@ -1472,6 +1478,7 @@ DECLARE_INSTRUCTION(SWC1)
     ADD_TO_PC(1);
     *r4300_address(r4300) = lslfaddr;
     *r4300_wword(r4300) = *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]);
+    *r4300_wmask(r4300) = ~UINT32_C(0);
     write_word_in_memory();
     CHECK_MEMORY();
 }

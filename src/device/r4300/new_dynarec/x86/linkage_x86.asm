@@ -57,6 +57,7 @@
 
 %define g_dev_ri_rdram_dram                                 (g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram)
 %define g_dev_r4300_address                                 (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_address)
+%define g_dev_r4300_wmask                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wmask)
 %define g_dev_r4300_wword                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wword)
 %define g_dev_r4300_wbyte                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wbyte)
 %define g_dev_r4300_whword                                  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_whword)
@@ -481,6 +482,11 @@ write_rdram_new:
     mov     edx,    [find_local_data(g_dev_r4300_address)]
     add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
     mov     ecx,    [find_local_data(g_dev_r4300_wword)]
+    mov     eax,    [find_local_data(g_dev_r4300_wmask)]
+    and     ecx,    eax
+    not     eax
+    and     eax,    [edx - 0x80000000]
+    or      ecx,    eax
     mov     [edx - 0x80000000],    ecx
     jmp     _E12
 
@@ -589,6 +595,11 @@ write_nomem_new:
     shl     edx,    2
     jc      tlb_exception
     mov     ecx,    [find_local_data(g_dev_r4300_wword)]
+    mov     eax,    [find_local_data(g_dev_r4300_wmask)]
+    and     ecx,    eax
+    not     eax
+    and     eax,    [edi+edx]
+    or      ecx,    eax
     mov     [edi+edx],    ecx
     ret
 

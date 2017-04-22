@@ -82,6 +82,7 @@ fp_stop                = offsetof_struct_new_dynarec_hot_state_stop
 fp_invc_ptr            = offsetof_struct_new_dynarec_hot_state_invc_ptr
 fp_address             = offsetof_struct_new_dynarec_hot_state_address
 fp_rdword              = offsetof_struct_new_dynarec_hot_state_rdword
+fp_wmask               = offsetof_struct_new_dynarec_hot_state_wmask
 fp_wdword              = offsetof_struct_new_dynarec_hot_state_wdword
 fp_wword               = offsetof_struct_new_dynarec_hot_state_wword
 fp_whword              = offsetof_struct_new_dynarec_hot_state_whword
@@ -474,6 +475,12 @@ GLOBAL_FUNCTION(write_rdram_new):
     ldr    r3, [fp, #fp_ram_offset]
     ldr    r2, [fp, #fp_address]
     ldr    r0, [fp, #fp_wword]
+    ldr    r12, [fp, #fp_wmask]
+    and    r0, r0, r12
+    mvn    r12, r12
+    ldr    r1, [r2, r3, lsl #2]
+    and    r12, r1, r12
+    orr    r0, r0, r12
     str    r0, [r2, r3, lsl #2]
     b      .E12
 
@@ -615,6 +622,12 @@ GLOBAL_FUNCTION(write_nomem_new):
     tst    r12, #0x40000000
     bne    tlb_exception
     ldr    r0, [fp, #fp_wword]
+    ldr    r2, [fp, #fp_wmask]
+    and    r0, r0, r2
+    mvn    r2, r2
+    ldr    r3, [r1, r12, lsl #2]
+    and    r2, r3, r2
+    orr    r0, r0, r2
     str    r0, [r1, r12, lsl #2]
     mov    pc, lr
 

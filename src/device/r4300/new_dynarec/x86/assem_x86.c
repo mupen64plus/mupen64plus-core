@@ -2859,8 +2859,10 @@ static void do_writestub(int n)
     emit_writebyte(rt,(int)r4300_wbyte(&g_dev.r4300));
   if(type==STOREH_STUB)
     emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
-  if(type==STOREW_STUB)
+  if(type==STOREW_STUB) {
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword_imm(~UINT32_C(0),(int)r4300_wmask(&g_dev.r4300));
+  }
   if(type==STORED_STUB) {
     emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
     emit_writeword(r?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
@@ -2933,8 +2935,10 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writebyte(rt,(int)r4300_wbyte(&g_dev.r4300));
   if(type==STOREH_STUB)
     emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
-  if(type==STOREW_STUB)
+  if(type==STOREW_STUB) {
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword_imm(~UINT32_C(0),(int)r4300_wmask(&g_dev.r4300));
+  }
   if(type==STORED_STUB) {
     emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
     emit_writeword(target?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);

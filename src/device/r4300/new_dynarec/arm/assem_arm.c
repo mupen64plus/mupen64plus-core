@@ -2917,8 +2917,11 @@ static void do_writestub(int n)
     emit_writebyte(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wbyte);
   if(type==STOREH_STUB)
     emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
-  if(type==STOREW_STUB)
+  if(type==STOREW_STUB) {
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(~UINT32_C(0),rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+  }
   if(type==STORED_STUB) {
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
     emit_writeword(r?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
@@ -2984,8 +2987,11 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writebyte(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wbyte);
   if(type==STOREH_STUB)
     emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
-  if(type==STOREW_STUB)
+  if(type==STOREW_STUB) {
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(~UINT32_C(0),rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+  }
   if(type==STORED_STUB) {
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
     emit_writeword(target?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);

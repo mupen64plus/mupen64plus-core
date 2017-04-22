@@ -890,12 +890,13 @@ void gensw(struct r4300_core* r4300)
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
     }
-    je_rj(49);
+    je_rj(60);
 
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_wword(r4300)), ECX); // 7
+    mov_m32rel_imm32((unsigned int *)(r4300_wmask(r4300)), ~UINT32_C(0)); // 11
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2
@@ -4251,12 +4252,13 @@ void genswc1(struct r4300_core* r4300)
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
     }
-    je_rj(49);
+    je_rj(60);
 
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_wword(r4300)), ECX); // 7
+    mov_m32rel_imm32((unsigned int *)(r4300_wmask(r4300)), ~UINT32_C(0)); // 11
     shr_reg32_imm8(EBX, 16); // 3
     mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
     call_reg64(RBX); // 2

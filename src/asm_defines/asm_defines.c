@@ -83,6 +83,7 @@ DEFINE(r4300_core, wbyte);
 DEFINE(r4300_core, whword);
 DEFINE(r4300_core, wword);
 DEFINE(r4300_core, wdword);
+DEFINE(r4300_core, wmask);
 DEFINE(r4300_core, address);
 #endif
 
@@ -128,6 +129,7 @@ DEFINE(new_dynarec_hot_state, stop);
 DEFINE(new_dynarec_hot_state, invc_ptr);
 DEFINE(new_dynarec_hot_state, address);
 DEFINE(new_dynarec_hot_state, rdword);
+DEFINE(new_dynarec_hot_state, wmask);
 DEFINE(new_dynarec_hot_state, wdword);
 DEFINE(new_dynarec_hot_state, wword);
 DEFINE(new_dynarec_hot_state, whword);
