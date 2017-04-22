@@ -171,7 +171,6 @@ struct r4300_core
     uint32_t wmask;
 
     union {
-        uint16_t whword;
         uint32_t wword;
         uint64_t wdword;
     };
@@ -216,7 +215,6 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
 uint32_t* r4300_address(struct r4300_core* r4300);
 uint32_t* r4300_wmask(struct r4300_core* r4300);
-uint16_t* r4300_whword(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
 
@@ -225,7 +223,6 @@ uint64_t* r4300_wdword(struct r4300_core* r4300);
 #define read_hword_in_memory()  r4300->mem->readmemh [*r4300_address(r4300)>>16]()
 #define read_dword_in_memory()  r4300->mem->readmemd [*r4300_address(r4300)>>16]()
 #define write_word_in_memory()  r4300->mem->writemem [*r4300_address(r4300)>>16]()
-#define write_hword_in_memory() r4300->mem->writememh[*r4300_address(r4300)>>16]()
 #define write_dword_in_memory() r4300->mem->writememd[*r4300_address(r4300)>>16]()
 
 /* Allow cached/dynarec r4300 implementations to invalidate

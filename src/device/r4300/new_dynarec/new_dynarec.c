@@ -187,13 +187,10 @@ void read_nomemb_new(void);
 void read_nomemh_new(void);
 void read_nomemd_new(void);
 void write_nomem_new(void);
-void write_nomemh_new(void);
 void write_nomemd_new(void);
 void write_rdram_new(void);
-void write_rdramh_new(void);
 void write_rdramd_new(void);
 void write_mi_new(void);
-void write_mih_new(void);
 void write_mid_new(void);
 
 /* interpreted opcode */
@@ -7634,7 +7631,6 @@ void new_dynarec_init(void)
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=-1;
   for(n=0;n<0x8000;n++) { // 0 .. 0x7FFFFFFF
     g_dev.mem.writemem[n] = write_nomem_new;
-    g_dev.mem.writememh[n] = write_nomemh_new;
     g_dev.mem.writememd[n] = write_nomemd_new;
     g_dev.mem.readmem[n] = read_nomem_new;
     g_dev.mem.readmemb[n] = read_nomemb_new;
@@ -7643,12 +7639,10 @@ void new_dynarec_init(void)
   }
   for(n=0x8000;n<0x8080;n++) { // 0x80000000 .. 0x807FFFFF
     g_dev.mem.writemem[n] = write_rdram_new;
-    g_dev.mem.writememh[n] = write_rdramh_new;
     g_dev.mem.writememd[n] = write_rdramd_new;
   }
   for(n=0xC000;n<0x10000;n++) { // 0xC0000000 .. 0xFFFFFFFF
     g_dev.mem.writemem[n] = write_nomem_new;
-    g_dev.mem.writememh[n] = write_nomemh_new;
     g_dev.mem.writememd[n] = write_nomemd_new;
     g_dev.mem.readmem[n] = read_nomem_new;
     g_dev.mem.readmemb[n] = read_nomemb_new;
@@ -7657,11 +7651,9 @@ void new_dynarec_init(void)
   }
 
   g_dev.mem.writemem[0x8430] = write_mi_new;
-  g_dev.mem.writememh[0x8430] = write_mih_new;
   g_dev.mem.writememd[0x8430] = write_mid_new;
 
   g_dev.mem.writemem[0xa430] = write_mi_new;
-  g_dev.mem.writememh[0xa430] = write_mih_new;
   g_dev.mem.writememd[0xa430] = write_mid_new;
 
   tlb_hacks();

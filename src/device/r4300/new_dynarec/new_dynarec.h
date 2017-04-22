@@ -69,7 +69,6 @@ struct new_dynarec_hot_state
     uint32_t wmask;
     uint64_t wdword;
     uint32_t wword;
-    uint16_t whword;
     uint32_t fcr0;
     uint32_t fcr31;
     int64_t  regs[32];
