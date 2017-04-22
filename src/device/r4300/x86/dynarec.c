@@ -569,7 +569,11 @@ void gensb(struct r4300_core* r4300)
 #else
     free_all_registers();
     simplify_access();
-    mov_reg8_m8(CL, (unsigned char *)r4300->recomp.dst->f.i.rt);
+
+    /* get value in EDX */
+    xor_reg32_reg32(EDX, EDX);
+    mov_reg8_m8(DL, (unsigned char *)r4300->recomp.dst->f.i.rt);
+    /* get address in both EAX and EBX */
     mov_eax_memoffs32((unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
@@ -581,29 +585,42 @@ void gensb(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->writememb);
-        cmp_reg32_imm32(EAX, (unsigned int)write_rdramb);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->writemem);
+        cmp_reg32_imm32(EAX, (unsigned int)write_rdram);
     }
-    je_rj(41);
+    je_rj(79);
 
     mov_m32_imm32((unsigned int *)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst+1)); // 10
+    /* if non RDRAM write,
+     * compute shift (ECX), word (EDX), wmask (EDX) and address (EBX) to perform a regular write */
+    mov_reg32_reg32(ECX, EBX); // 2
+    and_reg32_imm32(ECX, 3); // 6
+    xor_reg32_imm32(ECX, 3); // 6
+    shl_reg32_imm8(ECX, 3); // 3
+    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
-    mov_m8_reg8((unsigned char *)(r4300_wbyte(r4300)), CL); // 6
+    shl_reg32_cl(EDX); // 2
+    mov_m32_reg32((unsigned int *)(r4300_wword(r4300)), EDX); // 6
+    mov_reg32_imm32(EDX, 0xff); // 5
+    shl_reg32_cl(EDX); // 2
+    mov_m32_reg32((unsigned int *)(r4300_wmask(r4300)), EDX); // 6
     shr_reg32_imm8(EBX, 16); // 3
-    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->writememb); // 7
+    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->writemem); // 7
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300_address(r4300))); // 5
     jmp_imm_short(17); // 2
 
+    /* else (RDRAM write), write byte */
     mov_reg32_reg32(EAX, EBX); // 2
     and_reg32_imm32(EBX, 0x7FFFFF); // 6
     xor_reg8_imm8(BL, 3); // 3
-    mov_preg32pimm32_reg8(EBX, (unsigned int)r4300->ri->rdram.dram, CL); // 6
+    mov_preg32pimm32_reg8(EBX, (unsigned int)r4300->ri->rdram.dram, DL); // 6
 
     mov_reg32_reg32(EBX, EAX);
     shr_reg32_imm8(EBX, 12);
     cmp_preg32pimm32_imm8(EBX, (unsigned int)r4300->cached_interp.invalid_code, 0);
     jne_rj(54);
+
     mov_reg32_reg32(ECX, EBX); // 2
     shl_reg32_imm8(EBX, 2); // 3
     mov_reg32_preg32pimm32(EBX, EBX, (unsigned int)r4300->cached_interp.blocks); // 6
