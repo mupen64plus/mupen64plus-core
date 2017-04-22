@@ -221,7 +221,7 @@ static void write_nomemb(void)
     invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 1);
     *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
     if (*r4300_address(r4300) == 0x00000000) return;
-    write_byte_in_memory();
+    r4300->mem->writememb[*r4300_address(r4300)>>16]();
 }
 
 static void write_nomemh(void)
