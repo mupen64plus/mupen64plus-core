@@ -99,15 +99,6 @@ static int readd(readfn read_word, void* opaque, uint32_t address, uint64_t* val
     return result;
 }
 
-static int writeb(writefn write_word, void* opaque, uint32_t address, uint8_t value)
-{
-    unsigned int shift = bshift(address);
-    uint32_t w = (uint32_t)value << shift;
-    uint32_t mask = (uint32_t)0xff << shift;
-
-    return write_word(opaque, address, w, mask);
-}
-
 static int writeh(writefn write_word, void* opaque, uint32_t address, uint16_t value)
 {
     unsigned int shift = hshift(address);
@@ -153,10 +144,6 @@ static void read_nothingd(void)
 }
 
 static void write_nothing(void)
-{
-}
-
-static void write_nothingb(void)
 {
 }
 
@@ -214,16 +201,6 @@ static void write_nomem(void)
     write_word_in_memory();
 }
 
-static void write_nomemb(void)
-{
-    struct r4300_core* r4300 = &g_dev.r4300;
-
-    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 1);
-    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
-    if (*r4300_address(r4300) == 0x00000000) return;
-    r4300->mem->writememb[*r4300_address(r4300)>>16]();
-}
-
 static void write_nomemh(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
@@ -270,11 +247,6 @@ void write_rdram(void)
     writew(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-void write_rdramb(void)
-{
-    writeb(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 void write_rdramh(void)
 {
     writeh(write_rdram_dram, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -309,11 +281,6 @@ void read_rdramFBd(void)
 void write_rdramFB(void)
 {
     writew(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-void write_rdramFBb(void)
-{
-    writeb(write_rdram_fb, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 void write_rdramFBh(void)
@@ -352,11 +319,6 @@ static void write_rdramreg(void)
     writew(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_rdramregb(void)
-{
-    writeb(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_rdramregh(void)
 {
     writeh(write_rdram_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -391,11 +353,6 @@ static void read_rspmemd(void)
 static void write_rspmem(void)
 {
     writew(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_rspmemb(void)
-{
-    writeb(write_rsp_mem, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rspmemh(void)
@@ -434,11 +391,6 @@ static void write_rspreg(void)
     writew(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_rspregb(void)
-{
-    writeb(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_rspregh(void)
 {
     writeh(write_rsp_regs, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -473,11 +425,6 @@ static void read_rspreg2d(void)
 static void write_rspreg2(void)
 {
     writew(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_rspreg2b(void)
-{
-    writeb(write_rsp_regs2, &g_dev.sp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_rspreg2h(void)
@@ -516,11 +463,6 @@ static void write_dp(void)
     writew(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_dpb(void)
-{
-    writeb(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_dph(void)
 {
     writeh(write_dpc_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -555,11 +497,6 @@ static void read_dpsd(void)
 static void write_dps(void)
 {
     writew(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_dpsb(void)
-{
-    writeb(write_dps_regs, &g_dev.dp, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_dpsh(void)
@@ -598,11 +535,6 @@ void write_mi(void)
     writew(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-void write_mib(void)
-{
-    writeb(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 void write_mih(void)
 {
     writeh(write_mi_regs, &g_dev.r4300, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -637,11 +569,6 @@ static void read_vid(void)
 static void write_vi(void)
 {
     writew(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_vib(void)
-{
-    writeb(write_vi_regs, &g_dev.vi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_vih(void)
@@ -680,11 +607,6 @@ static void write_ai(void)
     writew(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_aib(void)
-{
-    writeb(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_aih(void)
 {
     writeh(write_ai_regs, &g_dev.ai, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -719,11 +641,6 @@ static void read_pid(void)
 static void write_pi(void)
 {
     writew(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_pib(void)
-{
-    writeb(write_pi_regs, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_pih(void)
@@ -762,11 +679,6 @@ static void write_ri(void)
     writew(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_rib(void)
-{
-    writeb(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_rih(void)
 {
     writeh(write_ri_regs, &g_dev.ri, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -803,11 +715,6 @@ static void write_si(void)
     writew(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_sib(void)
-{
-    writeb(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_sih(void)
 {
     writeh(write_si_regs, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -841,11 +748,6 @@ static void read_pi_flashram_statusd(void)
 static void write_pi_flashram_command(void)
 {
     writew(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_pi_flashram_commandb(void)
-{
-    writeb(write_flashram_command, &g_dev.pi, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
 }
 
 static void write_pi_flashram_commandh(void)
@@ -910,11 +812,6 @@ static void write_pif(void)
     writew(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_pifb(void)
-{
-    writeb(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_pifh(void)
 {
     writeh(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -967,11 +864,6 @@ static void write_dd(void)
     writew(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
-static void write_ddb(void)
-{
-    writeb(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wbyte(&g_dev.r4300));
-}
-
 static void write_ddh(void)
 {
     writeh(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_whword(&g_dev.r4300));
@@ -1013,14 +905,6 @@ static void readmemd_with_bp_checks(void)
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
     g_dev.mem.saved_readmemd[*r4300_address(&g_dev.r4300)>>16]();
-}
-
-static void writememb_with_bp_checks(void)
-{
-    check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(&g_dev.r4300), 1,
-            M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
-
-    return g_dev.mem.saved_writememb[*r4300_address(&g_dev.r4300)>>16]();
 }
 
 static void writememh_with_bp_checks(void)
@@ -1087,11 +971,9 @@ void activate_memory_break_write(struct memory* mem, uint32_t address)
 
     if (mem->saved_writemem[region] == NULL)
     {
-        mem->saved_writememb[region] = mem->writememb[region];
         mem->saved_writememh[region] = mem->writememh[region];
         mem->saved_writemem [region] = mem->writemem [region];
         mem->saved_writememd[region] = mem->writememd[region];
-        mem->writememb[region] = writememb_with_bp_checks;
         mem->writememh[region] = writememh_with_bp_checks;
         mem->writemem [region] = writemem_with_bp_checks;
         mem->writememd[region] = writememd_with_bp_checks;
@@ -1104,11 +986,9 @@ void deactivate_memory_break_write(struct memory* mem, uint32_t address)
 
     if (mem->saved_writemem[region] != NULL)
     {
-        mem->writememb[region] = mem->saved_writememb[region];
         mem->writememh[region] = mem->saved_writememh[region];
         mem->writemem [region] = mem->saved_writemem [region];
         mem->writememd[region] = mem->saved_writememd[region];
-        mem->saved_writememb[region] = NULL;
         mem->saved_writememh[region] = NULL;
         mem->saved_writemem [region] = NULL;
         mem->saved_writememd[region] = NULL;
@@ -1122,7 +1002,7 @@ int get_memory_type(struct memory* mem, uint32_t address)
 #endif
 
 #define R(x) read_ ## x ## b, read_ ## x ## h, read_ ## x, read_ ## x ## d
-#define W(x) write_ ## x ## b, write_ ## x ## h, write_ ## x, write_ ## x ## d
+#define W(x) write_ ## x ## h, write_ ## x, write_ ## x ## d
 #define RW(x) R(x), W(x)
 
 void poweron_memory(struct memory* mem)
@@ -1285,7 +1165,7 @@ void poweron_memory(struct memory* mem)
     {
         map_region(mem, 0x9000+i, M64P_MEM_ROM, R(rom), W(nothing));
         map_region(mem, 0xb000+i, M64P_MEM_ROM, R(rom),
-                   write_nothingb, write_nothingh, write_rom, write_nothingd);
+                   write_nothingh, write_rom, write_nothingd);
     }
     for(i = (g_dev.pi.cart_rom.rom_size >> 16); i < 0xfc0; ++i)
     {
@@ -1345,7 +1225,6 @@ static void map_region_r(struct memory* mem,
 
 static void map_region_w(struct memory* mem,
         uint16_t region,
-        void (*write8)(void),
         void (*write16)(void),
         void (*write32)(void),
         void (*write64)(void))
@@ -1354,11 +1233,9 @@ static void map_region_w(struct memory* mem,
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
     {
-        mem->saved_writememb[region] = write8;
         mem->saved_writememh[region] = write16;
         mem->saved_writemem [region] = write32;
         mem->saved_writememd[region] = write64;
-        mem->writememb[region] = writememb_with_bp_checks;
         mem->writememh[region] = writememh_with_bp_checks;
         mem->writemem [region] = writemem_with_bp_checks;
         mem->writememd[region] = writememd_with_bp_checks;
@@ -1366,7 +1243,6 @@ static void map_region_w(struct memory* mem,
     else
 #endif
     {
-        mem->writememb[region] = write8;
         mem->writememh[region] = write16;
         mem->writemem [region] = write32;
         mem->writememd[region] = write64;
@@ -1380,14 +1256,13 @@ void map_region(struct memory* mem,
                 void (*read16)(void),
                 void (*read32)(void),
                 void (*read64)(void),
-                void (*write8)(void),
                 void (*write16)(void),
                 void (*write32)(void),
                 void (*write64)(void))
 {
     map_region_t(mem, region, type);
     map_region_r(mem, region, read8, read16, read32, read64);
-    map_region_w(mem, region, write8, write16, write32, write64);
+    map_region_w(mem, region, write16, write32, write64);
 }
 
 uint32_t *fast_mem_access(uint32_t address)

@@ -86,7 +86,6 @@ fp_wmask               = offsetof_struct_new_dynarec_hot_state_wmask
 fp_wdword              = offsetof_struct_new_dynarec_hot_state_wdword
 fp_wword               = offsetof_struct_new_dynarec_hot_state_wword
 fp_whword              = offsetof_struct_new_dynarec_hot_state_whword
-fp_wbyte               = offsetof_struct_new_dynarec_hot_state_wbyte
 fp_fcr0                = offsetof_struct_new_dynarec_hot_state_fcr0
 fp_fcr31               = offsetof_struct_new_dynarec_hot_state_fcr31
 fp_regs                = offsetof_struct_new_dynarec_hot_state_regs
@@ -484,14 +483,6 @@ GLOBAL_FUNCTION(write_rdram_new):
     str    r0, [r2, r3, lsl #2]
     b      .E12
 
-GLOBAL_FUNCTION(write_rdramb_new):
-    ldr    r3, [fp, #fp_ram_offset]
-    ldr    r2, [fp, #fp_address]
-    ldrb   r0, [fp, #fp_wbyte]
-    eor    r2, r2, #3
-    strb   r0, [r2, r3, lsl #2]
-    b      .E12
-
 GLOBAL_FUNCTION(write_rdramh_new):
     ldr    r3, [fp, #fp_ram_offset]
     ldr    r2, [fp, #fp_address]
@@ -631,30 +622,6 @@ GLOBAL_FUNCTION(write_nomem_new):
     str    r0, [r1, r12, lsl #2]
     mov    pc, lr
 
-GLOBAL_FUNCTION(write_nomemb_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
-    bl     do_invalidate
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    ldr    lr, [fp, #fp_free_space+4]
-    lsr    r0, r1, #12
-    ldr    r3, [fp, #fp_free_space]
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #1
-    tst    r12, #0x40000000
-    bne    tlb_exception
-    eor    r1, r1, #3
-    ldrb   r0, [fp, #fp_wbyte]
-    strb   r0, [r1, r12, lsl #2]
-    mov    pc, lr
-
 GLOBAL_FUNCTION(write_nomemh_new):
     str    r3, [fp, #fp_free_space]
     str    lr, [fp, #fp_free_space+4]
@@ -714,21 +681,6 @@ GLOBAL_FUNCTION(write_mi_new):
     mov    r1, #0
     str    r1, [fp, #fp_pending_exception]
     bl     write_mi
-    ldr    lr, [fp, #fp_free_space+4]
-    ldr    r3, [fp, #fp_free_space]
-    ldr    r1, [fp, #fp_pending_exception]
-    tst    r1, r1
-    bne    mi_exception
-    mov    pc, lr
-    
-GLOBAL_FUNCTION(write_mib_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
-    add    r3, #4
-    str    r3, [fp, #fp_pcaddr]
-    mov    r1, #0
-    str    r1, [fp, #fp_pending_exception]
-    bl     write_mib
     ldr    lr, [fp, #fp_free_space+4]
     ldr    r3, [fp, #fp_free_space]
     ldr    r1, [fp, #fp_pending_exception]

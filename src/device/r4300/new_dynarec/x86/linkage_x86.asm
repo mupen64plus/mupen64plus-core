@@ -59,7 +59,6 @@
 %define g_dev_r4300_address                                 (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_address)
 %define g_dev_r4300_wmask                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wmask)
 %define g_dev_r4300_wword                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wword)
-%define g_dev_r4300_wbyte                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wbyte)
 %define g_dev_r4300_whword                                  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_whword)
 %define g_dev_r4300_wdword                                  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wdword)
 %define g_dev_r4300_stop                                    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_stop)
@@ -102,7 +101,6 @@ cglobal invalidate_block_ebp
 cglobal invalidate_block_esi
 cglobal invalidate_block_edi
 cglobal write_rdram_new
-cglobal write_rdramb_new
 cglobal write_rdramh_new
 cglobal write_rdramd_new
 cglobal read_nomem_new
@@ -110,11 +108,9 @@ cglobal read_nomemb_new
 cglobal read_nomemh_new
 cglobal read_nomemd_new
 cglobal write_nomem_new
-cglobal write_nomemb_new
 cglobal write_nomemh_new
 cglobal write_nomemd_new
 cglobal write_mi_new
-cglobal write_mib_new
 cglobal write_mih_new
 cglobal write_mid_new
 cglobal breakpoint
@@ -490,15 +486,6 @@ write_rdram_new:
     mov     [edx - 0x80000000],    ecx
     jmp     _E12
 
-write_rdramb_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    xor     edx,    3
-    add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     cl,     BYTE [find_local_data(g_dev_r4300_wbyte)]
-    mov     BYTE [edx - 0x80000000],    cl
-    jmp     _E12
-
 write_rdramh_new:
     get_got_address
     mov     edx,    [find_local_data(g_dev_r4300_address)]
@@ -603,17 +590,6 @@ write_nomem_new:
     mov     [edi+edx],    ecx
     ret
 
-write_nomemb_new:
-    call    do_invalidate
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    01h
-    shl     edx,    2
-    jc      tlb_exception
-    xor     edi,    3
-    mov     cl,     BYTE [find_local_data(g_dev_r4300_wbyte)]
-    mov     BYTE [edi+edx],    cl
-    ret
-
 write_nomemh_new:
     call    do_invalidate
     mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
@@ -644,18 +620,6 @@ write_mi_new:
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    ecx
     mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)],    0
     call    write_mi
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
-    test    ecx,    ecx
-    jne     mi_exception
-    ret
-
-write_mib_new:
-    get_got_address
-    mov     ecx,    [024h+esp]
-    add     ecx,    4
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    ecx
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)],    0
-    call    write_mib
     mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
     test    ecx,    ecx
     jne     mi_exception

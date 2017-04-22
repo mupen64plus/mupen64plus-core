@@ -31,7 +31,6 @@ struct memory
     void (*readmemh[0x10000])(void);
     void (*readmemd[0x10000])(void);
     void (*writemem[0x10000])(void);
-    void (*writememb[0x10000])(void);
     void (*writememh[0x10000])(void);
     void (*writememd[0x10000])(void);
 
@@ -41,7 +40,6 @@ struct memory
     void (*saved_readmemh[0x10000])(void);
     void (*saved_readmem [0x10000])(void);
     void (*saved_readmemd[0x10000])(void);
-    void (*saved_writememb[0x10000])(void);
     void (*saved_writememh[0x10000])(void);
     void (*saved_writemem [0x10000])(void);
     void (*saved_writememd[0x10000])(void);
@@ -87,7 +85,6 @@ void map_region(struct memory* mem,
                 void (*read16)(void),
                 void (*read32)(void),
                 void (*read64)(void),
-                void (*write8)(void),
                 void (*write16)(void),
                 void (*write32)(void),
                 void (*write64)(void));
@@ -98,7 +95,6 @@ void read_rdramb(void);
 void read_rdramh(void);
 void read_rdramd(void);
 void write_rdram(void);
-void write_rdramb(void);
 void write_rdramh(void);
 void write_rdramd(void);
 void read_rdramFB(void);
@@ -106,7 +102,6 @@ void read_rdramFBb(void);
 void read_rdramFBh(void);
 void read_rdramFBd(void);
 void write_rdramFB(void);
-void write_rdramFBb(void);
 void write_rdramFBh(void);
 void write_rdramFBd(void);
 

@@ -171,7 +171,6 @@ struct r4300_core
     uint32_t wmask;
 
     union {
-        uint8_t  wbyte;
         uint16_t whword;
         uint32_t wword;
         uint64_t wdword;
@@ -217,7 +216,6 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
 uint32_t* r4300_address(struct r4300_core* r4300);
 uint32_t* r4300_wmask(struct r4300_core* r4300);
-uint8_t*  r4300_wbyte(struct r4300_core* r4300);
 uint16_t* r4300_whword(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
