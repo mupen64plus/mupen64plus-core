@@ -2832,6 +2832,7 @@ static void do_writestub(int n)
   int addr=get_reg(i_regmap,AGEN1+(i&1));
   int rth,rt,r;
   int ds;
+  int save_rt;
   if(itype[i]==C1LS) {
     rth=get_reg(i_regmap,FTEMP|64);
     rt=get_reg(i_regmap,r=FTEMP);
@@ -2845,28 +2846,53 @@ static void do_writestub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)g_dev.mem.writememb;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
     ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
-  emit_shrimm(rs,16,addr);
-  emit_movmem_indexedx4(ftable,addr,addr);
-  if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)r4300_wbyte(&g_dev.r4300));
-  if(type==STOREH_STUB)
+
+  if(type==STOREB_STUB) {
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x3, ECX);
+    emit_xorimm(ECX, 0x3, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_movimm(0xff,rt);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wmask(&g_dev.r4300));
+    if(save_rt==ECX) { emit_xchg(rs,rt); }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, addr);
+    emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
+  }
+  if(type==STOREH_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
+  }
   if(type==STOREW_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
     emit_writeword_imm(~UINT32_C(0),(int)r4300_wmask(&g_dev.r4300));
   }
   if(type==STORED_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
     emit_writeword(r?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
   }
+
+  emit_shrimm(rs,16,addr);
+  emit_movmem_indexedx4(ftable,addr,addr);
+
   emit_pusha();
   ds=i_regs!=&regs[i];
   int real_rs=get_reg(i_regmap,rs1[i]);
@@ -2919,30 +2945,52 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   int rs=get_reg(regmap,-1);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int save_rt;
+  unsigned int shift;
   assert(rs>=0);
   assert(rt>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)g_dev.mem.writememb;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
     ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
-  if(type==STOREB_STUB)
-    emit_writebyte(rt,(int)r4300_wbyte(&g_dev.r4300));
-  if(type==STOREH_STUB)
+
+  if(type==STOREB_STUB) {
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    shift = ((addr&3)^3)<<3;
+    emit_movimm(shift,ECX);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword_imm((0xff<<shift),(int)r4300_wmask(&g_dev.r4300));
+    if(save_rt==ECX) { emit_xchg(rs,rt); }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_writeword_imm((addr&~0x3),(int)r4300_address(&g_dev.r4300));
+  }
+  if(type==STOREH_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
+  }
   if(type==STOREW_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
     emit_writeword_imm(~UINT32_C(0),(int)r4300_wmask(&g_dev.r4300));
   }
   if(type==STORED_STUB) {
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
     emit_writeword(target?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
   }
+
   emit_pusha();
   if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
     // Theoretically we can have a pagefault here, if the TLB has never

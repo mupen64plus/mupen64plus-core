@@ -2903,26 +2903,40 @@ static void do_writestub(int n)
   assert(addr>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)g_dev.mem.writememb;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
     ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   //emit_shrimm(rs,16,rs);
   //emit_movmem_indexedx4(ftable,rs,rs);
-  if(type==STOREB_STUB)
-    emit_writebyte(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wbyte);
-  if(type==STOREH_STUB)
+  if(type==STOREB_STUB) {
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x3, 2);
+    emit_xorimm(2, 0x3, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(0xff,rt);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+    emit_andimm(rs, ~0x3, rs);
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  }
+  if(type==STOREH_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
+  }
   if(type==STOREW_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
     emit_movimm(~UINT32_C(0),HOST_TEMPREG);
     emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
   }
   if(type==STORED_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
     emit_writeword(r?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
   }
@@ -2973,26 +2987,40 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   assert(rt>=0);
   int ftable=0;
   if(type==STOREB_STUB)
-    ftable=(int)g_dev.mem.writememb;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
     ftable=(int)g_dev.mem.writememh;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
     ftable=(int)g_dev.mem.writememd;
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   //emit_shrimm(rs,16,rs);
   //emit_movmem_indexedx4(ftable,rs,rs);
-  if(type==STOREB_STUB)
-    emit_writebyte(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wbyte);
-  if(type==STOREH_STUB)
+  if(type==STOREB_STUB) {
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x3, 2);
+    emit_xorimm(2, 0x3, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(0xff,rt);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+    emit_andimm(rs, ~0x3, rs);
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  }
+  if(type==STOREH_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
+  }
   if(type==STOREW_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
     emit_movimm(~UINT32_C(0),HOST_TEMPREG);
     emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
   }
   if(type==STORED_STUB) {
+    emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
     emit_writeword(target?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
   }
