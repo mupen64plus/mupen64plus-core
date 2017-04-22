@@ -2905,7 +2905,7 @@ static void do_writestub(int n)
   if(type==STOREB_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
-    ftable=(int)g_dev.mem.writememh;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
@@ -2926,8 +2926,17 @@ static void do_writestub(int n)
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==STOREH_STUB) {
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x2, 2);
+    emit_xorimm(2, 0x2, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(0xffff,rt);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+    emit_andimm(rs, ~0x3, rs);
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
-    emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
   }
   if(type==STOREW_STUB) {
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
@@ -2989,7 +2998,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(type==STOREB_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
-    ftable=(int)g_dev.mem.writememh;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
@@ -3010,8 +3019,17 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==STOREH_STUB) {
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x2, 2);
+    emit_xorimm(2, 0x2, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
+    emit_movimm(0xffff,rt);
+    emit_shl(rt, 2, rt);
+    emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wmask);
+    emit_andimm(rs, ~0x3, rs);
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
-    emit_writehword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.whword);
   }
   if(type==STOREW_STUB) {
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);

@@ -2848,7 +2848,7 @@ static void do_writestub(int n)
   if(type==STOREB_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
-    ftable=(int)g_dev.mem.writememh;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
@@ -2876,8 +2876,25 @@ static void do_writestub(int n)
     emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
   }
   if(type==STOREH_STUB) {
-    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
-    emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x2, ECX);
+    emit_xorimm(ECX, 0x2, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_movimm(0xffff,rt);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wmask(&g_dev.r4300));
+    if(save_rt==ECX) { emit_xchg(rs,rt); }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, addr);
+    emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
   }
   if(type==STOREW_STUB) {
     emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
@@ -2953,7 +2970,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(type==STOREB_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STOREH_STUB)
-    ftable=(int)g_dev.mem.writememh;
+    ftable=(int)g_dev.mem.writemem;
   if(type==STOREW_STUB)
     ftable=(int)g_dev.mem.writemem;
   if(type==STORED_STUB)
@@ -2977,8 +2994,21 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writeword_imm((addr&~0x3),(int)r4300_address(&g_dev.r4300));
   }
   if(type==STOREH_STUB) {
-    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
-    emit_writehword(rt,(int)r4300_whword(&g_dev.r4300));
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    shift = ((addr&2)^2)<<3;
+    emit_movimm(shift,ECX);
+    emit_shlcl(rt);
+    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword_imm((0xffff<<shift),(int)r4300_wmask(&g_dev.r4300));
+    if(save_rt==ECX) { emit_xchg(rs,rt); }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_writeword_imm((addr&~0x3),(int)r4300_address(&g_dev.r4300));
   }
   if(type==STOREW_STUB) {
     emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
