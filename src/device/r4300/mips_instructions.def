@@ -84,6 +84,11 @@ static unsigned int bshift(uint32_t address)
     return ((address & 3) ^ 3) << 3;
 }
 
+static unsigned int hshift(uint32_t address)
+{
+    return ((address & 2) ^ 2) << 3;
+}
+
 
 /* M64P Pseudo instructions */
 
@@ -348,9 +353,11 @@ DECLARE_INSTRUCTION(SH)
     const uint32_t lsaddr = irs32 + iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_whword(r4300) = (uint16_t) *lsrtp;
-    write_hword_in_memory();
+    unsigned int shift = hshift(lsaddr);
+    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_wword(r4300) = (uint32_t)*lsrtp << shift;
+    *r4300_wmask(r4300) = UINT32_C(0xffff) << shift;
+    write_word_in_memory();
     CHECK_MEMORY();
 }
 
