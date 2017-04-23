@@ -147,6 +147,12 @@ struct r4300_core
 
         uint32_t jump_to_address;
 
+#if defined(__x86_64__)
+        unsigned long long shift;
+#else
+        unsigned int shift;
+#endif
+
 #if defined(PROFILE_R4300)
         FILE* pfProfile;
 #endif

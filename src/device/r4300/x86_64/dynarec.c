@@ -44,6 +44,7 @@
 #include "device/r4300/instr_counters.h"
 #endif
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -218,6 +219,51 @@ static void ld_register_alloc(struct r4300_core* r4300, int *pGpr1, int *pGpr2, 
     *pBase2 = base2;
 }
 
+static void ld_register_alloc2(struct r4300_core* r4300, int *pGpr1, int *pGpr2, int *pBase1, int *pBase2)
+{
+    int gpr1, gpr2, base1, base2;
+
+#ifdef COMPARE_CORE
+    free_registers_move_start(); // to maintain parity with 32-bit core
+#endif
+
+    base2 = lock_register(ECX); // make sure we get ECX for base2
+
+    if (r4300->recomp.dst->f.i.rs == r4300->recomp.dst->f.i.rt)
+    {
+        allocate_register_32((unsigned int*)r4300->recomp.dst->f.r.rs);          // tell regcache we need to read RS register here
+        gpr1 = allocate_register_32_w((unsigned int*)r4300->recomp.dst->f.r.rt); // tell regcache we will modify RT register during this instruction
+        gpr2 = lock_register(lru_register());                      // free and lock least recently used register for usage here
+        add_reg32_imm32(gpr1, (int)r4300->recomp.dst->f.i.immediate);
+        mov_reg32_reg32(gpr2, gpr1);
+    }
+    else
+    {
+        gpr2 = allocate_register_32((unsigned int*)r4300->recomp.dst->f.r.rs);   // tell regcache we need to read RS register here
+        gpr1 = allocate_register_32_w((unsigned int*)r4300->recomp.dst->f.r.rt); // tell regcache we will modify RT register during this instruction
+        free_register(gpr2);                                       // write out gpr2 if dirty because I'm going to trash it right now
+        add_reg32_imm32(gpr2, (int)r4300->recomp.dst->f.i.immediate);
+        mov_reg32_reg32(gpr1, gpr2);
+        lock_register(gpr2);                                       // lock the freed gpr2 it so it doesn't get returned in the lru query
+    }
+    base1 = lock_register(lru_base_register());                  // get another lru register
+    unlock_register(base2);
+    unlock_register(base1);                                      // unlock the locked registers (they are
+    unlock_register(gpr2);
+    set_register_state(gpr1, NULL, 0, 0);                        // clear gpr1 state because it hasn't been written yet -
+    // we don't want it to be pushed/popped around read_rdramX call
+    *pGpr1 = gpr1;
+    *pGpr2 = gpr2;
+    *pBase1 = base1;
+    *pBase2 = base2;
+
+    /* base2 is RCX */
+    assert(gpr1 != RCX);
+    assert(gpr2 != RCX);
+    assert(base1 != RCX);
+    assert(base2 == RCX);
+}
+
 #ifdef COMPARE_CORE
 extern unsigned int op; /* api/debugger.c */
 
@@ -379,7 +425,7 @@ void genlb(struct r4300_core* r4300)
 
 void genlbu(struct r4300_core* r4300)
 {
-    int gpr1, gpr2, base1, base2 = 0;
+    int gpr1, gpr2, base1, base2;
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[28]);
 #endif
@@ -388,9 +434,9 @@ void genlbu(struct r4300_core* r4300)
 #else
     free_registers_move_start();
 
-    ld_register_alloc(r4300, &gpr1, &gpr2, &base1, &base2);
+    ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmemb);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
     if(r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -398,7 +444,7 @@ void genlbu(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdramb);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -408,22 +454,39 @@ void genlbu(struct r4300_core* r4300)
 
     mov_reg64_imm64(gpr1, (unsigned long long) (r4300->recomp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
+    /* if non RDRAM read,
+     * compute shift (base2) and address (gpr2) to perform a regular read.
+     * Save base2 content to memory as RCX can be overwritten when calling readmem function */
+    mov_reg64_reg64(base2, gpr2);
+    and_reg64_imm8(base2, 3);
+    xor_reg8_imm8(base2, 3);
+    shl_reg64_imm8(base2, 3);
+    mov_m64rel_xreg64(&r4300->recomp.shift, base2);
+    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     shr_reg32_imm8(gpr2, 16);
     mov_reg64_preg64x8preg64(gpr2, gpr2, base1);
     call_reg64(gpr2);
-    mov_xreg32_m32rel(gpr1, (unsigned int *)r4300->recomp.dst->f.i.rt);
-    jmp_imm_short(23);
+    mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
+    and_reg64_reg64(gpr2, gpr2);
+    je_rj(48);
 
+    mov_xreg32_m32rel(gpr1, (unsigned int *)r4300->recomp.dst->f.i.rt); // 7
+    mov_xreg64_m64rel(RCX, &r4300->recomp.shift); // 7
+    shr_reg64_cl(gpr1); // 3
+    jmp_imm_short(23); // 2
+
+    /* else (RDRAM read), read byte */
     jump_end_rel8();
     mov_reg64_imm64(base1, (unsigned long long) r4300->ri->rdram.dram); // 10
     and_reg32_imm32(gpr2, 0x7FFFFF); // 6
     xor_reg8_imm8(gpr2, 3); // 4
     mov_reg32_preg64preg64(gpr1, gpr2, base1); // 3
 
-    and_reg32_imm32(gpr1, 0xFF);
+    and_reg32_imm32(gpr1, 0xFF); // 6
+
     set_register_state(gpr1, (unsigned int*)r4300->recomp.dst->f.i.rt, 1, 0);
 #endif
 }

@@ -297,6 +297,7 @@ void genlbu(struct r4300_core* r4300)
 #else
     free_all_registers();
     simplify_access();
+    /* get address in both EAX and EBX */
     mov_eax_memoffs32((unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
@@ -308,20 +309,36 @@ void genlbu(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->readmemb);
-        cmp_reg32_imm32(EAX, (unsigned int)read_rdramb);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->readmem);
+        cmp_reg32_imm32(EAX, (unsigned int)read_rdram);
     }
-    je_rj(46);
+    je_rj(93);
 
     mov_m32_imm32((unsigned int *)&(*r4300_pc_struct(r4300)), (unsigned int)(r4300->recomp.dst+1)); // 10
+    /* if non RDRAM read,
+     * compute shift (ECX) and address (EBX) to perform a regular read
+     * Save ECX content to memory as ECX can be overwritten when calling readmem function */
+    mov_reg32_reg32(ECX, EBX); // 2
+    and_reg32_imm32(ECX, 3); // 6
+    xor_reg32_imm32(ECX, 3); // 6
+    shl_reg32_imm8(ECX, 3); // 3
+    mov_m32_reg32((unsigned int *)&r4300->recomp.shift, ECX); // 6
+    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
     mov_m32_imm32((unsigned int *)(&r4300->rdword), (unsigned int)r4300->recomp.dst->f.i.rt); // 10
     shr_reg32_imm8(EBX, 16); // 3
-    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->readmemb); // 7
+    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->readmem); // 7
     call_reg32(EBX); // 2
+    mov_reg32_m32(EBX, (unsigned int *)(r4300_address(r4300))); // 6
+    and_reg32_reg32(EBX, EBX); // 2
+    je_rj(31); // 2
+
     mov_reg32_m32(EAX, (unsigned int *)r4300->recomp.dst->f.i.rt); // 6
+    mov_reg32_m32(ECX, (unsigned int *)&r4300->recomp.shift); // 6
+    shr_reg32_cl(EAX); // 2
     jmp_imm_short(15); // 2
 
+    /* else (RDRAM read), read byte */
     and_reg32_imm32(EBX, 0x7FFFFF); // 6
     xor_reg8_imm8(BL, 3); // 3
     mov_reg32_preg32pimm32(EAX, EBX, (unsigned int)r4300->ri->rdram.dram); // 6
