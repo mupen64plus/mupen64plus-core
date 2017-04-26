@@ -79,6 +79,7 @@ struct rsp_core
     uint32_t mem[SP_MEM_SIZE/4];
     uint32_t regs[SP_REGS_COUNT];
     uint32_t regs2[SP_REGS2_COUNT];
+    uint32_t rsp_task_locked;
 
     struct r4300_core* r4300;
     struct rdp_core* dp;
