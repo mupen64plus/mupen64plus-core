@@ -521,25 +521,6 @@ GLOBAL_FUNCTION(read_nomem_new):
     str    r0, [fp, #fp_rdword]
     mov    pc, lr
 
-GLOBAL_FUNCTION(read_nomemb_new):
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    lsr    r0, r1, #12
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #0
-    tst    r12, r12
-    bmi    tlb_exception
-    eor    r1, r1, #3
-    ldrb   r0, [r1, r12, lsl #2]
-    str    r0, [fp, #fp_rdword]
-    mov    pc, lr
-
 GLOBAL_FUNCTION(read_nomemh_new):
     ldr    r1, [fp, #fp_address]
 #ifdef ARMv5_ONLY

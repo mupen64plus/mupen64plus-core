@@ -27,7 +27,6 @@
 struct memory
 {
     void (*readmem[0x10000])(void);
-    void (*readmemb[0x10000])(void);
     void (*readmemh[0x10000])(void);
     void (*readmemd[0x10000])(void);
     void (*writemem[0x10000])(void);
@@ -35,7 +34,6 @@ struct memory
 
 #ifdef DBG
     int memtype[0x10000];
-    void (*saved_readmemb[0x10000])(void);
     void (*saved_readmemh[0x10000])(void);
     void (*saved_readmem [0x10000])(void);
     void (*saved_readmemd[0x10000])(void);
@@ -79,7 +77,6 @@ void poweron_memory(struct memory* mem);
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
-                void (*read8)(void),
                 void (*read16)(void),
                 void (*read32)(void),
                 void (*read64)(void),
@@ -88,13 +85,11 @@ void map_region(struct memory* mem,
 
 /* XXX: cannot make them static because of dynarec + rdp fb */
 void read_rdram(void);
-void read_rdramb(void);
 void read_rdramh(void);
 void read_rdramd(void);
 void write_rdram(void);
 void write_rdramd(void);
 void read_rdramFB(void);
-void read_rdramFBb(void);
 void read_rdramFBh(void);
 void read_rdramFBd(void);
 void write_rdramFB(void);
