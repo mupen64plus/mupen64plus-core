@@ -2637,7 +2637,7 @@ static void do_readstub(int n)
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   signed char *i_regmap=i_regs->regmap;
   int addr=get_reg(i_regmap,AGEN1+(i&1));
-  int rth,rt;
+  int rth,rt,save_rt;
   int ds;
   if(itype[i]==C1LS||itype[i]==LOADLR) {
     rth=get_reg(i_regmap,FTEMP|64);
@@ -2651,15 +2651,36 @@ static void do_readstub(int n)
   if(addr<0&&itype[i]!=C1LS&&itype[i]!=LOADLR) addr=get_reg(i_regmap,-1);
   assert(addr>=0);
   int ftable=0;
-  if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)g_dev.mem.readmemb;
-  if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)g_dev.mem.readmemh;
-  if(type==LOADW_STUB)
+  if(type==LOADB_STUB||type==LOADBU_STUB) {
     ftable=(int)g_dev.mem.readmem;
-  if(type==LOADD_STUB)
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x3, ECX);
+    emit_xorimm(ECX, 0x3, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_writeword(ECX, (int)r4300_wmask(&g_dev.r4300)); /* ! reuse wmask variable to temporarily store shift */
+    if(save_rt==ECX) { emit_xchg(rs,rt); rt=save_rt; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, addr);
+    emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
+  }
+  if(type==LOADH_STUB||type==LOADHU_STUB) {
+    ftable=(int)g_dev.mem.readmemh;
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  }
+  if(type==LOADW_STUB) {
+    ftable=(int)g_dev.mem.readmem;
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  }
+  if(type==LOADD_STUB) {
     ftable=(int)g_dev.mem.readmemd;
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  }
   emit_shrimm(rs,16,addr);
   emit_movmem_indexedx4(ftable,addr,addr);
   emit_pusha();
@@ -2708,16 +2729,45 @@ static void do_readstub(int n)
     emit_loadreg(CCREG,cc);
   }
   if(rt>=0) {
-    if(type==LOADB_STUB)
-      emit_movsbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADBU_STUB)
-      emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADH_STUB)
-      emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADHU_STUB)
-      emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADW_STUB)
+    if(type==LOADB_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
       emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
+      emit_movsbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADBU_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
+      emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADH_STUB) {
+      emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADHU_STUB) {
+      emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADW_STUB) {
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
     if(type==LOADD_STUB) {
       emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
       if(rth>=0) emit_readword(((int)&g_dev.r4300.new_dynarec_hot_state.rdword)+4,rth);
@@ -2732,22 +2782,60 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   int rs=get_reg(regmap,target);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int save_rt;
+#ifdef HOST_IMM_ADDR32
+  unsigned int shift;
+#endif
   if(rs<0) rs=get_reg(regmap,-1);
   assert(rs>=0);
   int ftable=0;
-  if(type==LOADB_STUB||type==LOADBU_STUB)
-    ftable=(int)g_dev.mem.readmemb;
-  if(type==LOADH_STUB||type==LOADHU_STUB)
-    ftable=(int)g_dev.mem.readmemh;
-  if(type==LOADW_STUB)
+  if(type==LOADB_STUB||type==LOADBU_STUB) {
     ftable=(int)g_dev.mem.readmem;
-  if(type==LOADD_STUB)
+    save_rt=rt;
+    #ifdef HOST_IMM_ADDR32
+    shift = ((addr&3)^3)<<3;
+    emit_writeword_imm(addr & ~0x3,(int)r4300_address(&g_dev.r4300));
+    #else
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x3, ECX);
+    emit_xorimm(ECX, 0x3, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_writeword(ECX, (int)r4300_wmask(&g_dev.r4300)); /* ! reuse wmask variable to temporarily store shift */
+    if(save_rt==ECX) { emit_xchg(rs,rt); rt=save_rt; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, rs);
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    #endif
+  }
+  if(type==LOADH_STUB||type==LOADHU_STUB) {
+    ftable=(int)g_dev.mem.readmemh;
+    #ifdef HOST_IMM_ADDR32
+    emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+    #else
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    #endif
+  }
+  if(type==LOADW_STUB) {
+    ftable=(int)g_dev.mem.readmem;
+    #ifdef HOST_IMM_ADDR32
+    emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+    #else
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    #endif
+  }
+  if(type==LOADD_STUB) {
     ftable=(int)g_dev.mem.readmemd;
-  #ifdef HOST_IMM_ADDR32
-  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
-  #else
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
-  #endif
+    #ifdef HOST_IMM_ADDR32
+    emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+    #else
+    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    #endif
+  }
   emit_pusha();
   if((signed int)addr>=(signed int)0xC0000000) {
     // Theoretically we can have a pagefault here, if the TLB has never
@@ -2803,16 +2891,53 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     emit_loadreg(CCREG,cc);
   }
   if(rt>=0) {
-    if(type==LOADB_STUB)
-      emit_movsbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADBU_STUB)
-      emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADH_STUB)
-      emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADHU_STUB)
-      emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
-    if(type==LOADW_STUB)
+    if(type==LOADB_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+#ifdef HOST_IMM_ADDR32
+      emit_movimm(shift,ECX);
+#else
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+#endif
       emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
+      emit_movsbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADBU_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+#ifdef HOST_IMM_ADDR32
+      emit_movimm(shift,ECX);
+#else
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+#endif
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
+      emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADH_STUB) {
+      emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADHU_STUB) {
+      emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
+    if(type==LOADW_STUB) {
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+    }
     if(type==LOADD_STUB) {
       emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
       if(rth>=0) emit_readword(((int)&g_dev.r4300.new_dynarec_hot_state.rdword)+4,rth);
