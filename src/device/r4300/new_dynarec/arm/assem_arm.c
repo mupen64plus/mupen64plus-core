@@ -2743,7 +2743,12 @@ static void do_readstub(int n)
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==LOADH_STUB||type==LOADHU_STUB) {
-    ftable=(int)g_dev.mem.readmemh;
+    ftable=(int)g_dev.mem.readmem;
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x2, 2);
+    emit_xorimm(2, 0x2, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_andimm(rs, ~0x3, rs);
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==LOADW_STUB) {
@@ -2804,10 +2809,14 @@ static void do_readstub(int n)
       emit_shr(rt,2,rt);
     }
     if(type==LOADH_STUB) {
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shr(rt,2,rt);
+      emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.rdword);
       emit_movswl((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADHU_STUB) {
-      emit_movzwl((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shr(rt,2,rt);
     }
     if(type==LOADW_STUB) {
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
@@ -2838,7 +2847,12 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==LOADH_STUB||type==LOADHU_STUB) {
-    ftable=(int)g_dev.mem.readmemh;
+    ftable=(int)g_dev.mem.readmem;
+    emit_mov(rs, 2);
+    emit_andimm(2, 0x2, 2);
+    emit_xorimm(2, 0x2, 2);
+    emit_shlimm(2, 0x3, 2);
+    emit_andimm(rs, ~0x3, rs);
     emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   }
   if(type==LOADW_STUB) {
@@ -2903,10 +2917,14 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
       emit_shr(rt,2,rt);
     }
     if(type==LOADH_STUB) {
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shr(rt,2,rt);
+      emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.rdword);
       emit_movswl((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADHU_STUB) {
-      emit_movzwl((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shr(rt,2,rt);
     }
     if(type==LOADW_STUB) {
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);

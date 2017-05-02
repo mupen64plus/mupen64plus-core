@@ -2670,8 +2670,22 @@ static void do_readstub(int n)
     emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
   }
   if(type==LOADH_STUB||type==LOADHU_STUB) {
-    ftable=(int)g_dev.mem.readmemh;
-    emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+    ftable=(int)g_dev.mem.readmem;
+    save_rt=rt;
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x2, ECX);
+    emit_xorimm(ECX, 0x2, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_writeword(ECX, (int)r4300_wmask(&g_dev.r4300)); /* ! reuse wmask variable to temporarily store shift */
+    if(save_rt==ECX) { emit_xchg(rs,rt); rt=save_rt; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, addr);
+    emit_writeword(addr,(int)r4300_address(&g_dev.r4300));
   }
   if(type==LOADW_STUB) {
     ftable=(int)g_dev.mem.readmem;
@@ -2760,9 +2774,33 @@ static void do_readstub(int n)
       emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADH_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
       emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADHU_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
       emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADW_STUB) {
@@ -2813,10 +2851,25 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     #endif
   }
   if(type==LOADH_STUB||type==LOADHU_STUB) {
-    ftable=(int)g_dev.mem.readmemh;
+    ftable=(int)g_dev.mem.readmem;
+    save_rt=rt;
     #ifdef HOST_IMM_ADDR32
-    emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+    shift = ((addr&2)^2)<<3;
+    emit_writeword_imm(addr & ~0x3,(int)r4300_address(&g_dev.r4300));
     #else
+    emit_pushreg(rt);
+    emit_pushreg(rs);
+    if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_andimm(ECX, 0x2, ECX);
+    emit_xorimm(ECX, 0x2, ECX);
+    emit_shlimm(ECX, 0x3, ECX);
+    emit_writeword(ECX, (int)r4300_wmask(&g_dev.r4300)); /* ! reuse wmask variable to temporarily store shift */
+    if(save_rt==ECX) { emit_xchg(rs,rt); rt=save_rt; }
+    else if (rs!=ECX) { emit_xchg(rs,ECX); }
+    emit_popreg(rs);
+    emit_popreg(save_rt);
+    emit_andimm(rs, ~0x3, rs);
     emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
     #endif
   }
@@ -2930,9 +2983,41 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
       emit_movzbl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADH_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+#ifdef HOST_IMM_ADDR32
+      emit_movimm(shift,ECX);
+#else
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+#endif
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
       emit_movswl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADHU_STUB) {
+      emit_pushreg(rt);
+      emit_pushreg(rs);
+      if(rt==ECX) { emit_xchg(rs,rt); rt=rs; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+#ifdef HOST_IMM_ADDR32
+      emit_movimm(shift,ECX);
+#else
+      emit_readword((int)r4300_wmask(&g_dev.r4300), ECX);
+#endif
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
+      emit_shrcl(rt);
+      emit_writeword(rt, (int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+      if(save_rt==ECX) { emit_xchg(rs,rt); rt = save_rt; }
+      else if (rs!=ECX) { emit_xchg(rs,ECX); }
+      emit_popreg(rs);
+      emit_popreg(save_rt);
       emit_movzwl((int)&g_dev.r4300.new_dynarec_hot_state.rdword,rt);
     }
     if(type==LOADW_STUB) {
