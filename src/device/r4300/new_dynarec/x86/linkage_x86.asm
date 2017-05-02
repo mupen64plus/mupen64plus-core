@@ -102,7 +102,6 @@ cglobal invalidate_block_edi
 cglobal write_rdram_new
 cglobal write_rdramd_new
 cglobal read_nomem_new
-cglobal read_nomemh_new
 cglobal read_nomemd_new
 cglobal write_nomem_new
 cglobal write_nomemd_new
@@ -515,20 +514,6 @@ read_nomem_new:
     test    edx,    edx
     js      tlb_exception
     mov     ecx,    [edi+edx*4]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)],    ecx
-    ret
-
-read_nomemh_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    mov     edi,    edx
-    shr     edx,    12
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    00h
-    test    edx,    edx
-    js      tlb_exception
-    xor     edi,    2
-    movzx   ecx,    WORD [edi+edx*4]
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)],    ecx
     ret
 

@@ -183,7 +183,6 @@ void fp_exception_ds(void);
 void jump_syscall(void);
 void jump_eret(void);
 void read_nomem_new(void);
-void read_nomemh_new(void);
 void read_nomemd_new(void);
 void write_nomem_new(void);
 void write_nomemd_new(void);
@@ -7632,7 +7631,6 @@ void new_dynarec_init(void)
     g_dev.mem.writemem[n] = write_nomem_new;
     g_dev.mem.writememd[n] = write_nomemd_new;
     g_dev.mem.readmem[n] = read_nomem_new;
-    g_dev.mem.readmemh[n] = read_nomemh_new;
     g_dev.mem.readmemd[n] = read_nomemd_new;
   }
   for(n=0x8000;n<0x8080;n++) { // 0x80000000 .. 0x807FFFFF
@@ -7643,7 +7641,6 @@ void new_dynarec_init(void)
     g_dev.mem.writemem[n] = write_nomem_new;
     g_dev.mem.writememd[n] = write_nomemd_new;
     g_dev.mem.readmem[n] = read_nomem_new;
-    g_dev.mem.readmemh[n] = read_nomemh_new;
     g_dev.mem.readmemd[n] = read_nomemd_new;
   }
 
