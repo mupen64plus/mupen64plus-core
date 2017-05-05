@@ -40,20 +40,16 @@
 #define fp_regs                (offsetof(struct new_dynarec_hot_state, regs))
 #define fp_hi                  (offsetof(struct new_dynarec_hot_state, hi))
 #define fp_lo                  (offsetof(struct new_dynarec_hot_state, lo))
-#define fp_cp0_regs            (offsetof(struct new_dynarec_hot_state, cp0_regs))
-#define fp_cp0_regs(x)         (fp_cp0_regs + (x)*sizeof(uint32_t))
-#define fp_cp1_regs_simple     (offsetof(struct new_dynarec_hot_state, cp1_regs_simple))
-#define fp_cp1_regs_simple(x)  (fp_cp1_regs_simple + (x)*4)
-#define fp_cp1_regs_double     (offsetof(struct new_dynarec_hot_state, cp1_regs_double))
-#define fp_cp1_regs_double(x)  (fp_cp1_regs_double + (x)*4)
+#define fp_cp0_regs(x)         ((offsetof(struct new_dynarec_hot_state, cp0_regs)) + (x)*sizeof(uint32_t))
+#define fp_cp1_regs_simple(x)  ((offsetof(struct new_dynarec_hot_state, cp1_regs_simple)) + (x)*4)
+#define fp_cp1_regs_double(x)  ((offsetof(struct new_dynarec_hot_state, cp1_regs_double)) + (x)*4)
 #define fp_rounding_modes      (offsetof(struct new_dynarec_hot_state, rounding_modes))
 #define fp_branch_target       (offsetof(struct new_dynarec_hot_state, branch_target))
 #define fp_pc                  (offsetof(struct new_dynarec_hot_state, pc))
 #define fp_fake_pc             (offsetof(struct new_dynarec_hot_state, fake_pc))
 #define fp_fake_pc_f_r_nrd     (fp_fake_pc + offsetof(struct precomp_instr, f.r.nrd))
 #define fp_ram_offset          (offsetof(struct new_dynarec_hot_state, ram_offset))
-#define fp_mini_ht             (offsetof(struct new_dynarec_hot_state, mini_ht))
-#define fp_mini_ht(x,y)        (fp_mini_ht + 4*((y)*32+(x)))
+#define fp_mini_ht(x,y)        ((offsetof(struct new_dynarec_hot_state, mini_ht)) + 4*((y)*32+(x)))
 #define fp_restore_candidate   (offsetof(struct new_dynarec_hot_state, restore_candidate))
 #define fp_memory_map          (offsetof(struct new_dynarec_hot_state, memory_map))
 
@@ -4469,7 +4465,7 @@ static void do_preload_rhash(int r) {
 }
 
 static void do_preload_rhtbl(int ht) {
-  emit_addimm(FP,fp_mini_ht,ht);
+  emit_addimm(FP,fp_mini_ht(0,0),ht);
 }
 
 static void do_rhash(int rs,int rh) {
