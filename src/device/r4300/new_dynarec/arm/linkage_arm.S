@@ -69,9 +69,7 @@
 
 #include "asm_defines_gas.h"
 
-.global g_dev
-
-g_dev_r4300_new_dynarec_hot_state_dynarec_local = (g_dev + offsetof_struct_device_r4300_core + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
+device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300_core + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
 
 /* Defines offsets for fp addressed variables */
 fp_free_space          = offsetof_struct_new_dynarec_hot_state_dynarec_local + 20
@@ -110,6 +108,8 @@ TEXT_SECTION
 
     .align   2
     .outptr_offset  : .word out-(.outptr_pic+8)
+    .g_dev_r4300_new_dynarec_hot_state_saved_context  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
     eor    r2, r0, r0, lsl #16
@@ -378,7 +378,7 @@ GLOBAL_FUNCTION(jump_eret):
     b      .E8
 
 GLOBAL_FUNCTION(new_dyna_start):
-    ldr    r12, g_dev_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+    ldr    r12, .g_dev_r4300_new_dynarec_hot_state_saved_context
     ldr    r1, .outptr_offset
 .outptr_pic:
     add    r1, pc, r1
