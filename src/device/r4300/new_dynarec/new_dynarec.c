@@ -7625,7 +7625,7 @@ void new_dynarec_init(void)
   literalcount=0;
 #ifdef HOST_IMM8
   // Copy this into local area so we don't have to put it in every literal pool
-  invc_ptr=g_dev.r4300.cached_interp.invalid_code;
+  g_dev.r4300.new_dynarec_hot_state.invc_ptr=g_dev.r4300.cached_interp.invalid_code;
 #endif
   // TLB
   using_tlb=0;
