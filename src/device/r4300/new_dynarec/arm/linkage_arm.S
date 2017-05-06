@@ -108,7 +108,7 @@ TEXT_SECTION
 
     .align   2
     .outptr_offset  : .word out-(.outptr_pic+8)
-    .g_dev_r4300_new_dynarec_hot_state_saved_context  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+    .gdevptr_offset  : .word g_dev-(.gdevptr_pic+8)
 
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
@@ -382,7 +382,12 @@ GLOBAL_FUNCTION(jump_eret):
     b      .E8
 
 GLOBAL_FUNCTION(new_dyna_start):
-    ldr    r12, .g_dev_r4300_new_dynarec_hot_state_saved_context
+    ldr    r12, .gdevptr_offset
+.gdevptr_pic:
+    add    r12, pc, r12
+    movw   r1, #:lower16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+    movt   r1, #:upper16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+    add    r12, r12, r1
     ldr    r1, .outptr_offset
 .outptr_pic:
     add    r1, pc, r1
