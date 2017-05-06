@@ -188,7 +188,9 @@ GLOBAL_FUNCTION(verify_code_vm):
     /* r3 = length */
     cmp    r1, #0xC0000000
     blt    verify_code
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     lsr    r4, r1, #12
     add    r5, r1, r3
     sub    r5, #1
@@ -247,7 +249,9 @@ GLOBAL_FUNCTION(cc_interrupt):
     add    r10, r0, r10
     str    r1, [fp, #fp_pending_exception]
     and    r2, r2, r10, lsr #19
-    add    r3, fp, #fp_restore_candidate
+    movw   r3, #:lower16:fp_restore_candidate
+    movt   r3, #:upper16:fp_restore_candidate
+    add    r3, fp, r3
     str    r10, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r4, [r2, r3]
     mov    r10, lr
@@ -504,7 +508,9 @@ LOCAL_FUNCTION(do_invalidate):
 
 GLOBAL_FUNCTION(read_nomem_new):
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -516,7 +522,9 @@ GLOBAL_FUNCTION(read_nomem_new):
 
 GLOBAL_FUNCTION(read_nomemb_new):
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -529,7 +537,9 @@ GLOBAL_FUNCTION(read_nomemb_new):
 
 GLOBAL_FUNCTION(read_nomemh_new):
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -543,7 +553,9 @@ GLOBAL_FUNCTION(read_nomemh_new):
 
 GLOBAL_FUNCTION(read_nomemd_new):
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -563,7 +575,9 @@ GLOBAL_FUNCTION(write_nomem_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
     ldr    r3, [fp, #fp_free_space]
@@ -580,7 +594,9 @@ GLOBAL_FUNCTION(write_nomemb_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
     ldr    r3, [fp, #fp_free_space]
@@ -598,7 +614,9 @@ GLOBAL_FUNCTION(write_nomemh_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
     ldr    r3, [fp, #fp_free_space]
@@ -616,7 +634,9 @@ GLOBAL_FUNCTION(write_nomemd_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
-    add    r12, fp, #fp_memory_map
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+    add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
     ldr    r3, [fp, #fp_free_space]
@@ -715,7 +735,9 @@ LOCAL_FUNCTION(tlb_exception):
 LOCAL_FUNCTION(wb_base_reg):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
-    add    r5, fp, #fp_memory_map
+    movw   r5, #:lower16:fp_memory_map
+    movt   r5, #:upper16:fp_memory_map
+    add    r5, fp, r5
     lsr    r6, r3, #12
     ldr    r7, [r5, r6, lsl #2]
     bic    r8, r3, #3
