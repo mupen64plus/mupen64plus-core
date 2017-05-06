@@ -188,8 +188,12 @@ GLOBAL_FUNCTION(verify_code_vm):
     /* r3 = length */
     cmp    r1, #0xC0000000
     blt    verify_code
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     lsr    r4, r1, #12
     add    r5, r1, r3
@@ -249,8 +253,12 @@ GLOBAL_FUNCTION(cc_interrupt):
     add    r10, r0, r10
     str    r1, [fp, #fp_pending_exception]
     and    r2, r2, r10, lsr #19
+#ifdef ARMv5_ONLY
+    ldr    r3, =fp_restore_candidate
+#else
     movw   r3, #:lower16:fp_restore_candidate
     movt   r3, #:upper16:fp_restore_candidate
+#endif
     add    r3, fp, r3
     str    r10, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r4, [r2, r3]
@@ -385,8 +393,12 @@ GLOBAL_FUNCTION(new_dyna_start):
     ldr    r12, .gdevptr_offset
 .gdevptr_pic:
     add    r12, pc, r12
+#ifdef ARMv5_ONLY
+    ldr    r1, =device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+#else
     movw   r1, #:lower16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
     movt   r1, #:upper16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
+#endif
     add    r12, r12, r1
     ldr    r1, .outptr_offset
 .outptr_pic:
@@ -513,8 +525,12 @@ LOCAL_FUNCTION(do_invalidate):
 
 GLOBAL_FUNCTION(read_nomem_new):
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -527,8 +543,12 @@ GLOBAL_FUNCTION(read_nomem_new):
 
 GLOBAL_FUNCTION(read_nomemb_new):
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -542,8 +562,12 @@ GLOBAL_FUNCTION(read_nomemb_new):
 
 GLOBAL_FUNCTION(read_nomemh_new):
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endi
     add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -558,8 +582,12 @@ GLOBAL_FUNCTION(read_nomemh_new):
 
 GLOBAL_FUNCTION(read_nomemd_new):
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
@@ -580,8 +608,12 @@ GLOBAL_FUNCTION(write_nomem_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
@@ -599,8 +631,12 @@ GLOBAL_FUNCTION(write_nomemb_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
@@ -619,8 +655,12 @@ GLOBAL_FUNCTION(write_nomemh_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
@@ -639,8 +679,12 @@ GLOBAL_FUNCTION(write_nomemd_new):
     str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
+#endif
     add    r12, fp, r12
     ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
@@ -740,8 +784,12 @@ LOCAL_FUNCTION(tlb_exception):
 LOCAL_FUNCTION(wb_base_reg):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
+#ifdef ARMv5_ONLY
+    ldr    r5, =fp_memory_map
+#else
     movw   r5, #:lower16:fp_memory_map
     movt   r5, #:upper16:fp_memory_map
+#endif
     add    r5, fp, r5
     lsr    r6, r3, #12
     ldr    r7, [r5, r6, lsl #2]
