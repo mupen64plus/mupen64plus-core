@@ -40,7 +40,6 @@
 #define TEXT_SECTION .text
 #define END_SECTION
 
-    .cpu arm9tdmi
 #ifndef __ARM_NEON__
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__) && defined(__ARM_PCS_VFP))
     .fpu vfp
