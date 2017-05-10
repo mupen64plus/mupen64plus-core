@@ -68,7 +68,7 @@
 
 #include "asm_defines_gas.h"
 
-device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300_core + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
+device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
 
 /* Defines offsets for fp addressed variables */
 fp_free_space          = offsetof_struct_new_dynarec_hot_state_dynarec_local + 20
@@ -107,7 +107,7 @@ TEXT_SECTION
 
     .align   2
     .outptr_offset  : .word out-(.outptr_pic+8)
-    .gdevptr_offset  : .word g_dev-(.gdevptr_pic+8)
+    .savedcontextptr_offset  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context -(.savedcontextptr_pic+8)
 
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
@@ -389,16 +389,9 @@ GLOBAL_FUNCTION(jump_eret):
     b      .E8
 
 GLOBAL_FUNCTION(new_dyna_start):
-    ldr    r12, .gdevptr_offset
-.gdevptr_pic:
+    ldr    r12, .savedcontextptr_offset
+.savedcontextptr_pic:
     add    r12, pc, r12
-#ifdef ARMv5_ONLY
-    ldr    r1, =device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
-#else
-    movw   r1, #:lower16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
-    movt   r1, #:upper16:device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context
-#endif
-    add    r12, r12, r1
     ldr    r1, .outptr_offset
 .outptr_pic:
     add    r1, pc, r1
