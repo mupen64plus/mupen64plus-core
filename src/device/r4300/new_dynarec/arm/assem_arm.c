@@ -4472,15 +4472,15 @@ static void do_miniht_insert(u_int return_address,int rt,int temp) {
   emit_movimm(return_address,rt); // PC into link register
   add_to_linker((int)out,return_address,1);
   emit_pcreladdr(temp);
-  emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3,0]);
-  emit_writeword(temp,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3,1]);
+  emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3][0]);
+  emit_writeword(temp,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3][1]);
   #else
   emit_movw(return_address&0x0000FFFF,rt);
   add_to_linker((int)out,return_address,1);
   emit_pcreladdr(temp);
-  emit_writeword(temp,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3,1]);
+  emit_writeword(temp,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3][1]);
   emit_movt(return_address&0xFFFF0000,rt);
-  emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3,0]);
+  emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0xFF)>>3][0]);
   #endif
 }
 
