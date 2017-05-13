@@ -559,7 +559,7 @@ GLOBAL_FUNCTION(read_nomemh_new):
 #else
     movw   r12, #:lower16:fp_memory_map
     movt   r12, #:upper16:fp_memory_map
-#endi
+#endif
     add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
