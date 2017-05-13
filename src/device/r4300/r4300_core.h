@@ -38,6 +38,8 @@
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
+#include "osal/preproc.h"
+
 struct memory;
 struct ri_controller;
 
@@ -177,7 +179,10 @@ struct r4300_core
 #endif
 
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
-    char extra_memory[33554432];
+    /* FIXME: better put that near linkage_arm code
+     * to help generate call beyond the +/-32MB range.
+     */
+    ALIGN(4096, char extra_memory[33554432]);
 #endif
     struct new_dynarec_hot_state new_dynarec_hot_state;
 
