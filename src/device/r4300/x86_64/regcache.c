@@ -42,7 +42,7 @@ void init_cache(struct precomp_instr* start)
     g_dev.r4300.regcache_state.dirty[i] = 0;
     g_dev.r4300.regcache_state.is64bits[i] = 0;
   }
-  g_dev.r4300.regcache_state.r0 = (unsigned long long *) r4300_regs();
+  g_dev.r4300.regcache_state.r0 = (unsigned long long *) r4300_regs(&g_dev.r4300);
 }
 
 void free_all_registers(void)
@@ -606,7 +606,7 @@ static void build_wrapper(struct precomp_instr *instr, unsigned char* pCode, str
 
    *pCode++ = 0x48;
    *pCode++ = 0xB8;
-   *((unsigned long long *) pCode) = (unsigned long long) &r4300_regs()[0];
+   *((unsigned long long *) pCode) = (unsigned long long) &r4300_regs(&g_dev.r4300)[0];
    pCode += 8;
 
    for (i=7; i>=0; i--)
@@ -617,13 +617,13 @@ static void build_wrapper(struct precomp_instr *instr, unsigned char* pCode, str
        *pCode++ = 0x48;
        *pCode++ = 0x8B;
        *pCode++ = 0x80 | (i << 3);
-       riprel = (long long) ((unsigned char *) instr->reg_cache_infos.needed_registers[i] - (unsigned char *) &r4300_regs()[0]);
+       riprel = (long long) ((unsigned char *) instr->reg_cache_infos.needed_registers[i] - (unsigned char *) &r4300_regs(&g_dev.r4300)[0]);
        *((int *) pCode) = (int) riprel;
        pCode += 4;
        if (riprel >= 0x7fffffffLL || riprel < -0x80000000LL)
        {
          DebugMessage(M64MSG_ERROR, "build_wrapper error: regs[%i] offset too big for relative address from %p to %p",
-                i, (&r4300_regs()[0]), instr->reg_cache_infos.needed_registers[i]);
+                i, (&r4300_regs(&g_dev.r4300)[0]), instr->reg_cache_infos.needed_registers[i]);
          OSAL_BREAKPOINT_INTERRUPT;
        }
      }

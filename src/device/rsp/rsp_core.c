@@ -284,7 +284,7 @@ void do_SP_Task(struct rsp_core* sp)
         sp->regs2[SP_PC_REG] |= save_pc;
         new_frame();
 
-        cp0_update_count();
+        cp0_update_count(sp->r4300);
         sp->rsp_task_locked = 0;
         if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
         {
@@ -311,7 +311,7 @@ void do_SP_Task(struct rsp_core* sp)
         timed_section_end(TIMED_SECTION_AUDIO);
         sp->regs2[SP_PC_REG] |= save_pc;
 
-        cp0_update_count();
+        cp0_update_count(sp->r4300);
         sp->rsp_task_locked = 0;
         if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
         {
@@ -330,7 +330,7 @@ void do_SP_Task(struct rsp_core* sp)
         rsp.doRspCycles(0xffffffff);
         sp->regs2[SP_PC_REG] |= save_pc;
 
-        cp0_update_count();
+        cp0_update_count(sp->r4300);
         sp->rsp_task_locked = 0;
         if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
         {

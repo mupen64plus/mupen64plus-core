@@ -31,7 +31,7 @@
 
 #include "device/device.h"
 #include "device/memory/memory.h"
-#include "device/r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "device/r4300/new_dynarec/new_dynarec.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 
@@ -77,6 +77,15 @@ DEFINE(r4300_core, save_eip);
 #endif
 DEFINE(r4300_core, return_address);
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+DEFINE(r4300_core, wbyte);
+DEFINE(r4300_core, whword);
+DEFINE(r4300_core, wword);
+DEFINE(r4300_core, wdword);
+DEFINE(r4300_core, address);
+#endif
+
 DEFINE(r4300_core, cp0);
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
@@ -94,15 +103,52 @@ DEFINE(tlb, LUT_w);
 DEFINE(r4300_core, cached_interp);
 DEFINE(cached_interp, invalid_code);
 
-DEFINE(device, mem);
-
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-DEFINE(memory, wbyte);
-DEFINE(memory, whword);
-DEFINE(memory, wword);
-DEFINE(memory, wdword);
-DEFINE(memory, address);
+#ifdef NEW_DYNAREC
+DEFINE(r4300_core, new_dynarec_hot_state);
+#if NEW_DYNAREC == NEW_DYNAREC_X86
+DEFINE(new_dynarec_hot_state, cycle_count);
+DEFINE(new_dynarec_hot_state, last_count);
+DEFINE(new_dynarec_hot_state, pending_exception);
+DEFINE(new_dynarec_hot_state, pcaddr);
+DEFINE(new_dynarec_hot_state, rdword);
+DEFINE(new_dynarec_hot_state, branch_target);
+DEFINE(new_dynarec_hot_state, fake_pc);
+DEFINE(new_dynarec_hot_state, mini_ht);
+DEFINE(new_dynarec_hot_state, restore_candidate);
+DEFINE(new_dynarec_hot_state, memory_map);
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM
+DEFINE(r4300_core, extra_memory);
+DEFINE(new_dynarec_hot_state, dynarec_local);
+DEFINE(new_dynarec_hot_state, next_interrupt);
+DEFINE(new_dynarec_hot_state, cycle_count);
+DEFINE(new_dynarec_hot_state, last_count);
+DEFINE(new_dynarec_hot_state, pending_exception);
+DEFINE(new_dynarec_hot_state, pcaddr);
+DEFINE(new_dynarec_hot_state, stop);
+DEFINE(new_dynarec_hot_state, invc_ptr);
+DEFINE(new_dynarec_hot_state, address);
+DEFINE(new_dynarec_hot_state, rdword);
+DEFINE(new_dynarec_hot_state, wdword);
+DEFINE(new_dynarec_hot_state, wword);
+DEFINE(new_dynarec_hot_state, whword);
+DEFINE(new_dynarec_hot_state, wbyte);
+DEFINE(new_dynarec_hot_state, fcr0);
+DEFINE(new_dynarec_hot_state, fcr31);
+DEFINE(new_dynarec_hot_state, regs);
+DEFINE(new_dynarec_hot_state, hi);
+DEFINE(new_dynarec_hot_state, lo);
+DEFINE(new_dynarec_hot_state, cp0_regs);
+DEFINE(new_dynarec_hot_state, cp1_regs_simple);
+DEFINE(new_dynarec_hot_state, cp1_regs_double);
+DEFINE(new_dynarec_hot_state, rounding_modes);
+DEFINE(new_dynarec_hot_state, branch_target);
+DEFINE(new_dynarec_hot_state, pc);
+DEFINE(new_dynarec_hot_state, fake_pc);
+DEFINE(new_dynarec_hot_state, ram_offset);
+DEFINE(new_dynarec_hot_state, mini_ht);
+DEFINE(new_dynarec_hot_state, restore_candidate);
+DEFINE(new_dynarec_hot_state, memory_map);
+#endif
 #endif
 
 DEFINE(device, ri);

@@ -27,15 +27,14 @@
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
 #include "device/r4300/tlb.h"
-#include "main/main.h"
 
 void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     int usual_handler = 0, i;
 
     if (r4300->emumode != EMUMODE_DYNAREC && w != 2) {
-        cp0_update_count();
+        cp0_update_count(r4300);
     }
 
     cp0_regs[CP0_CAUSE_REG] = (w == 1)
@@ -64,11 +63,11 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
         if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
         {
             cp0_regs[CP0_EPC_REG] = (w != 2)
-                ? *r4300_pc()
+                ? *r4300_pc(r4300)
                 : address;
         }
         else {
-            cp0_regs[CP0_EPC_REG] = *r4300_pc();
+            cp0_regs[CP0_EPC_REG] = *r4300_pc(r4300);
         }
 
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
@@ -108,7 +107,7 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
         cp0_regs[CP0_EPC_REG] -= 4;
     }
 
-    r4300->cp0.last_addr = *r4300_pc();
+    r4300->cp0.last_addr = *r4300_pc(r4300);
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
@@ -121,20 +120,20 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
         r4300->dyna_interp = 0;
         if (r4300->delay_slot)
         {
-            r4300->skip_jump = *r4300_pc();
-            *r4300_cp0_next_interrupt() = 0;
+            r4300->skip_jump = *r4300_pc(r4300);
+            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
         }
     }
 }
 
 void exception_general(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
-    cp0_update_count();
+    cp0_update_count(r4300);
     cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
 
-    cp0_regs[CP0_EPC_REG] = *r4300_pc();
+    cp0_regs[CP0_EPC_REG] = *r4300_pc(r4300);
 
     if (r4300->delay_slot == 1 || r4300->delay_slot == 3)
     {
@@ -148,7 +147,7 @@ void exception_general(struct r4300_core* r4300)
 
     generic_jump_to(r4300, UINT32_C(0x80000180));
 
-    r4300->cp0.last_addr = *r4300_pc();
+    r4300->cp0.last_addr = *r4300_pc(r4300);
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
@@ -160,8 +159,8 @@ void exception_general(struct r4300_core* r4300)
         r4300->dyna_interp = 0;
         if (r4300->delay_slot)
         {
-            r4300->skip_jump = *r4300_pc();
-            *r4300_cp0_next_interrupt() = 0;
+            r4300->skip_jump = *r4300_pc(r4300);
+            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
         }
     }
 }

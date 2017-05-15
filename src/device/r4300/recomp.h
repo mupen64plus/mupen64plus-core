@@ -35,13 +35,14 @@ void free_block(struct r4300_core* r4300, struct precomp_block* block);
 void recompile_opcode(struct r4300_core* r4300);
 void dyna_jump(void);
 void dyna_start(void *code);
-void dyna_stop(void);
+void dyna_stop(struct r4300_core* r4300);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
 
 void dynarec_jump_to_address(void);
 void dynarec_exception_general(void);
 int dynarec_check_cop1_unusable(void);
+void dynarec_cp0_update_count(void);
 
 
 #if defined(PROFILE_R4300)

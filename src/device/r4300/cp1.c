@@ -27,66 +27,66 @@
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
-#include "main/main.h"
-
-extern float* g_dev_r4300_cp1_regs_simple[32];
-extern double* g_dev_r4300_cp1_regs_double[32];
-extern uint32_t g_dev_r4300_cp1_fcr0;
-extern uint32_t g_dev_r4300_cp1_fcr31;
+void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state)
+{
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+    cp1->new_dynarec_hot_state = new_dynarec_hot_state;
+#endif
+}
 
 void poweron_cp1(struct cp1* cp1)
 {
     memset(cp1->regs, 0, 32 * sizeof(cp1->regs[0]));
-    *r4300_cp1_fcr0() = UINT32_C(0x511);
-    *r4300_cp1_fcr31() = 0;
+    *r4300_cp1_fcr0(cp1) = UINT32_C(0x511);
+    *r4300_cp1_fcr31(cp1) = 0;
 
-    set_fpr_pointers(UINT32_C(0x34000000)); /* c0_status value at poweron */
-    update_x86_rounding_mode(*r4300_cp1_fcr31());
+    set_fpr_pointers(cp1, UINT32_C(0x34000000)); /* c0_status value at poweron */
+    update_x86_rounding_mode(cp1);
 }
 
 
-int64_t* r4300_cp1_regs(void)
+int64_t* r4300_cp1_regs(struct cp1* cp1)
 {
-    return g_dev.r4300.cp1.regs;
+    return cp1->regs;
 }
 
-float** r4300_cp1_regs_simple(void)
+float** r4300_cp1_regs_simple(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.cp1.regs_simple;
+    return cp1->regs_simple;
 #else
-    return g_dev_r4300_cp1_regs_simple;
+    return cp1->new_dynarec_hot_state->cp1_regs_simple;
 #endif
 }
 
-double** r4300_cp1_regs_double(void)
+double** r4300_cp1_regs_double(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.cp1.regs_double;
+    return cp1->regs_double;
 #else
-    return g_dev_r4300_cp1_regs_double;
+    return cp1->new_dynarec_hot_state->cp1_regs_double;
 #endif
 }
 
-uint32_t* r4300_cp1_fcr0(void)
+uint32_t* r4300_cp1_fcr0(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr0;
+    return &cp1->fcr0;
 #else
-    return &g_dev_r4300_cp1_fcr0;
+    return &cp1->new_dynarec_hot_state->fcr0;
 #endif
 }
 
-uint32_t* r4300_cp1_fcr31(void)
+uint32_t* r4300_cp1_fcr31(struct cp1* cp1)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.cp1.fcr31;
+    return &cp1->fcr31;
 #else
-    return &g_dev_r4300_cp1_fcr31;
+    return &cp1->new_dynarec_hot_state->fcr31;
 #endif
 }
 
@@ -96,7 +96,7 @@ uint32_t* r4300_cp1_fcr31(void)
    of MIPS R4000 Microprocessor User's Manual (Second Edition)
    by Joe Heinrich.
 */
-void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
+void shuffle_fpr_data(struct cp1* cp1, uint32_t oldStatus, uint32_t newStatus)
 {
 #if defined(M64P_BIG_ENDIAN)
     const int isBigEndian = 1;
@@ -115,14 +115,14 @@ void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
             // retrieve 32 FPR values from packed 32-bit FGR registers
             for (i = 0; i < 32; i++)
             {
-                temp_fgr_32[i] = *((int32_t *) &g_dev.r4300.cp1.regs[i>>1] + ((i & 1) ^ isBigEndian));
+                temp_fgr_32[i] = *((int32_t *) &cp1->regs[i>>1] + ((i & 1) ^ isBigEndian));
             }
             // unpack them into 32 64-bit registers, taking the high 32-bits from their temporary place in the upper 16 FGRs
             for (i = 0; i < 32; i++)
             {
-                int32_t high32 = *((int32_t *) &g_dev.r4300.cp1.regs[(i>>1)+16] + (i & 1));
-                *((int32_t *) &g_dev.r4300.cp1.regs[i] + isBigEndian)     = temp_fgr_32[i];
-                *((int32_t *) &g_dev.r4300.cp1.regs[i] + (isBigEndian^1)) = high32;
+                int32_t high32 = *((int32_t *) &cp1->regs[(i>>1)+16] + (i & 1));
+                *((int32_t *) &cp1->regs[i] + isBigEndian)     = temp_fgr_32[i];
+                *((int32_t *) &cp1->regs[i] + (isBigEndian^1)) = high32;
             }
         }
         else
@@ -130,25 +130,25 @@ void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus)
             // retrieve the high 32 bits from each 64-bit FGR register and store in temp array
             for (i = 0; i < 32; i++)
             {
-                temp_fgr_32[i] = *((int32_t *) &g_dev.r4300.cp1.regs[i] + (isBigEndian^1));
+                temp_fgr_32[i] = *((int32_t *) &cp1->regs[i] + (isBigEndian^1));
             }
             // take the low 32 bits from each register and pack them together into 64-bit pairs
             for (i = 0; i < 16; i++)
             {
-                uint32_t least32 = *((uint32_t *) &g_dev.r4300.cp1.regs[i*2] + isBigEndian);
-                uint32_t most32 = *((uint32_t *) &g_dev.r4300.cp1.regs[i*2+1] + isBigEndian);
-                g_dev.r4300.cp1.regs[i] = ((uint64_t) most32 << 32) | (uint64_t) least32;
+                uint32_t least32 = *((uint32_t *) &cp1->regs[i*2] + isBigEndian);
+                uint32_t most32 = *((uint32_t *) &cp1->regs[i*2+1] + isBigEndian);
+                cp1->regs[i] = ((uint64_t) most32 << 32) | (uint64_t) least32;
             }
             // store the high bits in the upper 16 FGRs, which wont be accessible in 32-bit mode
             for (i = 0; i < 32; i++)
             {
-                *((int32_t *) &g_dev.r4300.cp1.regs[(i>>1)+16] + (i & 1)) = temp_fgr_32[i];
+                *((int32_t *) &cp1->regs[(i>>1)+16] + (i & 1)) = temp_fgr_32[i];
             }
         }
     }
 }
 
-void set_fpr_pointers(uint32_t newStatus)
+void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
 {
     int i;
 #if defined(M64P_BIG_ENDIAN)
@@ -162,16 +162,16 @@ void set_fpr_pointers(uint32_t newStatus)
     {
         for (i = 0; i < 32; i++)
         {
-            (r4300_cp1_regs_double())[i] = (double*) &g_dev.r4300.cp1.regs[i];
-            (r4300_cp1_regs_simple())[i] = ((float*) &g_dev.r4300.cp1.regs[i]) + isBigEndian;
+            (r4300_cp1_regs_double(cp1))[i] = (double*) &cp1->regs[i];
+            (r4300_cp1_regs_simple(cp1))[i] = ((float*) &cp1->regs[i]) + isBigEndian;
         }
     }
     else
     {
         for (i = 0; i < 32; i++)
         {
-            (r4300_cp1_regs_double())[i] = (double*) &g_dev.r4300.cp1.regs[i>>1];
-            (r4300_cp1_regs_simple())[i] = ((float*) &g_dev.r4300.cp1.regs[i>>1]) + ((i & 1) ^ isBigEndian);
+            (r4300_cp1_regs_double(cp1))[i] = (double*) &cp1->regs[i>>1];
+            (r4300_cp1_regs_simple(cp1))[i] = ((float*) &cp1->regs[i>>1]) + ((i & 1) ^ isBigEndian);
         }
     }
 }
@@ -179,21 +179,23 @@ void set_fpr_pointers(uint32_t newStatus)
 /* XXX: This shouldn't really be here, but rounding_mode is used by the
  * Hacktarux JIT and updated by CTC1 and saved states. Figure out a better
  * place for this. */
-void update_x86_rounding_mode(uint32_t fcr31)
+void update_x86_rounding_mode(struct cp1* cp1)
 {
+    uint32_t fcr31 = *r4300_cp1_fcr31(cp1);
+
     switch (fcr31 & 3)
     {
     case 0: /* Round to nearest, or to even if equidistant */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0x33F);
+        cp1->rounding_mode = UINT32_C(0x33F);
         break;
     case 1: /* Truncate (toward 0) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0xF3F);
+        cp1->rounding_mode = UINT32_C(0xF3F);
         break;
     case 2: /* Round up (toward +Inf) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0xB3F);
+        cp1->rounding_mode = UINT32_C(0xB3F);
         break;
     case 3: /* Round down (toward -Inf) */
-        g_dev.r4300.cp1.rounding_mode = UINT32_C(0x73F);
+        cp1->rounding_mode = UINT32_C(0x73F);
         break;
     }
 }

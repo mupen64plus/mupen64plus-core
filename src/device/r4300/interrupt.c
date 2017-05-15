@@ -99,7 +99,7 @@ static void clear_queue(struct interrupt_queue* q)
 
 static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int evt2, int type2)
 {
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs((struct cp0*)cp0); /* OK to cast away const qualifier */
     uint32_t count = cp0_regs[CP0_COUNT_REG];
 
     if (evt1 - count < UINT32_C(0x80000000))
@@ -131,7 +131,7 @@ static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int e
 
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay)
 {
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
     add_interrupt_event_count(cp0, type, cp0_regs[CP0_COUNT_REG] + delay);
 }
 
@@ -140,8 +140,8 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
     struct node* event;
     struct node* e;
     int special;
-    const uint32_t* cp0_regs = r4300_cp0_regs();
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     special = (type == SPECIAL_INT);
 
@@ -206,9 +206,9 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
 static void remove_interrupt_event(struct cp0* cp0)
 {
     struct node* e;
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
     uint32_t count = cp0_regs[CP0_COUNT_REG];
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     e = cp0->q.first;
     cp0->q.first = e->next;
@@ -277,7 +277,7 @@ void remove_event(struct interrupt_queue* q, int type)
 void translate_event_queue(struct cp0* cp0, unsigned int base)
 {
     struct node* e;
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
     remove_event(&cp0->q, COMPARE_INT);
     remove_event(&cp0->q, SPECIAL_INT);
@@ -340,8 +340,8 @@ void init_interrupt(struct cp0* cp0)
 void check_interrupt(struct r4300_core* r4300)
 {
     struct node* event;
-    uint32_t* cp0_regs = r4300_cp0_regs();
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
     if (r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]) {
         cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
@@ -382,18 +382,18 @@ void check_interrupt(struct r4300_core* r4300)
 static void wrapped_exception_general(struct r4300_core* r4300)
 {
 #ifdef NEW_DYNAREC
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     if (r4300->emumode == EMUMODE_DYNAREC) {
-        cp0_regs[CP0_EPC_REG] = (pcaddr&~3)-(pcaddr&1)*4;
-        pcaddr = 0x80000180;
+        cp0_regs[CP0_EPC_REG] = (r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
+        r4300->new_dynarec_hot_state.pcaddr = 0x80000180;
         cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
-        if (pcaddr & 1) {
+        if (r4300->new_dynarec_hot_state.pcaddr & 1) {
           cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         }
         else {
           cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
         }
-        pending_exception=1;
+        r4300->new_dynarec_hot_state.pending_exception=1;
     } else {
         exception_general(r4300);
     }
@@ -404,7 +404,7 @@ static void wrapped_exception_general(struct r4300_core* r4300)
 
 void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
 
     if (!(cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00))) {
@@ -420,7 +420,7 @@ void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
 
 static void special_int_handler(struct cp0* cp0)
 {
-    const uint32_t* cp0_regs = r4300_cp0_regs();
+    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
     if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000)) {
         return;
@@ -434,7 +434,7 @@ static void special_int_handler(struct cp0* cp0)
 
 static void compare_int_handler(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     remove_interrupt_event(&r4300->cp0);
 
@@ -447,7 +447,7 @@ static void compare_int_handler(struct r4300_core* r4300)
 
 static void hw2_int_handler(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     // Hardware Interrupt 2 -- remove interrupt event from queue
     remove_interrupt_event(&r4300->cp0);
 
@@ -461,7 +461,7 @@ static void hw2_int_handler(struct r4300_core* r4300)
 static void nmi_int_handler(struct device* dev)
 {
     struct r4300_core* r4300 = &dev->r4300;
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     // Non Maskable Interrupt -- remove interrupt event from queue
     remove_interrupt_event(&r4300->cp0);
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
@@ -476,7 +476,7 @@ static void nmi_int_handler(struct device* dev)
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
-    cp0_regs[CP0_ERROREPC_REG] = *r4300_pc();
+    cp0_regs[CP0_ERROREPC_REG] = *r4300_pc(r4300);
     // reset the r4300 internal state
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
@@ -498,10 +498,9 @@ static void nmi_int_handler(struct device* dev)
 #ifdef NEW_DYNAREC
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        uint32_t* cp0_next_regs = r4300_cp0_regs();
-        cp0_next_regs[CP0_ERROREPC_REG]=(pcaddr&~3)-(pcaddr&1)*4;
-        pcaddr = 0xa4000040;
-        pending_exception = 1;
+        cp0_regs[CP0_ERROREPC_REG]=(r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
+        r4300->new_dynarec_hot_state.pcaddr = 0xa4000040;
+        r4300->new_dynarec_hot_state.pending_exception = 1;
         invalidate_all_pages();
     }
 #endif
@@ -516,7 +515,7 @@ static void reset_hard(struct device* dev)
 
     pifbootrom_hle_execute(dev);
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
-    *r4300_cp0_next_interrupt() = 624999;
+    *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
@@ -530,13 +529,13 @@ static void reset_hard(struct device* dev)
 void gen_interrupt(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
-    uint32_t* cp0_regs = r4300_cp0_regs();
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
-    if (*r4300_stop() == 1)
+    if (*r4300_stop(r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
-        dyna_stop();
+        dyna_stop(r4300);
     }
 
     if (!r4300->cp0.interrupt_unsafe_state)

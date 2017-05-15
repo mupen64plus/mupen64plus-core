@@ -37,11 +37,9 @@
     .type   name, %object;           \
     .size   name, size_
 
-#define BSS_SECTION  .bss
 #define TEXT_SECTION .text
 #define END_SECTION
 
-    .cpu arm9tdmi
 #ifndef __ARM_NEON__
 #if (defined(__VFP_FP__) && !defined(__SOFTFP__) && defined(__ARM_PCS_VFP))
     .fpu vfp
@@ -70,85 +68,47 @@
 
 #include "asm_defines_gas.h"
 
-BSS_SECTION
+device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
 
-    .align   12
-    GLOBAL_VARIABLE(extra_memory, 33554432)
-    GLOBAL_VARIABLE(dynarec_local, 64)
-    GLOBAL_VARIABLE(g_dev_r4300_cp0_next_interrupt, 4)
-    GLOBAL_VARIABLE(cycle_count, 4)
-    GLOBAL_VARIABLE(last_count, 4)
-    GLOBAL_VARIABLE(pending_exception, 4)
-    GLOBAL_VARIABLE(pcaddr, 4)
-    GLOBAL_VARIABLE(g_dev_r4300_stop, 4)
-    GLOBAL_VARIABLE(invc_ptr, 4)
-    GLOBAL_VARIABLE(g_dev_mem_address, 4)
-    GLOBAL_VARIABLE(readmem_dword, 8)
-    GLOBAL_VARIABLE(g_dev_mem_wdword, 8)
-    GLOBAL_VARIABLE(g_dev_mem_wword, 4)
-    GLOBAL_VARIABLE(g_dev_mem_whword, 2)
-    GLOBAL_VARIABLE(g_dev_mem_wbyte, 1)
-    GLOBAL_VARIABLE(g_dev_r4300_cp1_fcr0, 4)
-    GLOBAL_VARIABLE(g_dev_r4300_cp1_fcr31, 4)
-    GLOBAL_VARIABLE(g_dev_r4300_regs, 256)
-    GLOBAL_VARIABLE(g_dev_r4300_hi, 8)
-    GLOBAL_VARIABLE(g_dev_r4300_lo, 8)
-    GLOBAL_VARIABLE(g_dev_r4300_cp0_regs, 128)
-    GLOBAL_VARIABLE(g_dev_r4300_cp1_regs_simple, 128)
-    GLOBAL_VARIABLE(g_dev_r4300_cp1_regs_double, 128)
-    GLOBAL_VARIABLE(rounding_modes, 16)
-    GLOBAL_VARIABLE(branch_target, 4)
-    GLOBAL_VARIABLE(g_dev_r4300_pc, 4)
-    GLOBAL_VARIABLE(fake_pc, 132)
-    GLOBAL_VARIABLE(ram_offset, 4)
-    GLOBAL_VARIABLE(mini_ht, 256)
-    GLOBAL_VARIABLE(restore_candidate, 512)
-    GLOBAL_VARIABLE(memory_map, 4194304)
-
-extra_memory:
-    .space    33554432+64+4+4+4+4+4+4+4+4+8+8+4+2+2+4+4+256+8+8+128+128+128+16+4+4+132+4+256+512+4194304
-
-    dynarec_local                   = extra_memory                      + 33554432
-    stack_space                     = dynarec_local                     + 0  /* Stack space used by dynarec to push/pop caller-saved register (r0-r3, r12) */
-    free_space                      = dynarec_local                     + 20 /* Free space (8 bytes) */
-    saved_context                   = dynarec_local                     + 28
-    g_dev_r4300_cp0_next_interrupt  = dynarec_local                     + 64
-    cycle_count                     = g_dev_r4300_cp0_next_interrupt    + 4
-    last_count                      = cycle_count                       + 4
-    pending_exception               = last_count                        + 4
-    pcaddr                          = pending_exception                 + 4
-    g_dev_r4300_stop                = pcaddr                            + 4
-    invc_ptr                        = g_dev_r4300_stop                  + 4
-    g_dev_mem_address               = invc_ptr                          + 4
-    readmem_dword                   = g_dev_mem_address                 + 4
-    g_dev_mem_wdword                = readmem_dword                     + 8
-    g_dev_mem_wword                 = g_dev_mem_wdword                  + 8
-    g_dev_mem_whword                = g_dev_mem_wword                   + 4
-    g_dev_mem_wbyte                 = g_dev_mem_whword                  + 2 /* 1 byte free */
-    g_dev_r4300_cp1_fcr0            = g_dev_mem_whword                  + 4
-    g_dev_r4300_cp1_fcr31           = g_dev_r4300_cp1_fcr0              + 4
-    g_dev_r4300_regs                = g_dev_r4300_cp1_fcr31             + 4
-    g_dev_r4300_hi                  = g_dev_r4300_regs                  + 256
-    g_dev_r4300_lo                  = g_dev_r4300_hi                    + 8
-    g_dev_r4300_cp0_regs            = g_dev_r4300_lo                    + 8
-    g_dev_r4300_cp1_regs_simple     = g_dev_r4300_cp0_regs              + 128
-    g_dev_r4300_cp1_regs_double     = g_dev_r4300_cp1_regs_simple       + 128
-    rounding_modes                  = g_dev_r4300_cp1_regs_double       + 128
-    branch_target                   = rounding_modes                    + 16
-    g_dev_r4300_pc                  = branch_target                     + 4
-    fake_pc                         = g_dev_r4300_pc                    + 4
-    ram_offset                      = fake_pc                           + 132
-    mini_ht                         = ram_offset                        + 4
-    restore_candidate               = mini_ht                           + 256
-    memory_map                      = restore_candidate                 + 512
-
-END_SECTION
+/* Defines offsets for fp addressed variables */
+fp_free_space          = offsetof_struct_new_dynarec_hot_state_dynarec_local + 20
+fp_saved_context       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 28
+fp_next_interrupt      = offsetof_struct_new_dynarec_hot_state_next_interrupt
+fp_cycle_count         = offsetof_struct_new_dynarec_hot_state_cycle_count
+fp_last_count          = offsetof_struct_new_dynarec_hot_state_last_count
+fp_pending_exception   = offsetof_struct_new_dynarec_hot_state_pending_exception
+fp_pcaddr              = offsetof_struct_new_dynarec_hot_state_pcaddr
+fp_stop                = offsetof_struct_new_dynarec_hot_state_stop
+fp_invc_ptr            = offsetof_struct_new_dynarec_hot_state_invc_ptr
+fp_address             = offsetof_struct_new_dynarec_hot_state_address
+fp_rdword              = offsetof_struct_new_dynarec_hot_state_rdword
+fp_wdword              = offsetof_struct_new_dynarec_hot_state_wdword
+fp_wword               = offsetof_struct_new_dynarec_hot_state_wword
+fp_whword              = offsetof_struct_new_dynarec_hot_state_whword
+fp_wbyte               = offsetof_struct_new_dynarec_hot_state_wbyte
+fp_fcr0                = offsetof_struct_new_dynarec_hot_state_fcr0
+fp_fcr31               = offsetof_struct_new_dynarec_hot_state_fcr31
+fp_regs                = offsetof_struct_new_dynarec_hot_state_regs
+fp_hi                  = offsetof_struct_new_dynarec_hot_state_hi
+fp_lo                  = offsetof_struct_new_dynarec_hot_state_lo
+fp_cp0_regs            = offsetof_struct_new_dynarec_hot_state_cp0_regs
+fp_cp1_regs_simple     = offsetof_struct_new_dynarec_hot_state_cp1_regs_simple
+fp_cp1_regs_double     = offsetof_struct_new_dynarec_hot_state_cp1_regs_double
+fp_rounding_modes      = offsetof_struct_new_dynarec_hot_state_rounding_modes
+fp_branch_target       = offsetof_struct_new_dynarec_hot_state_branch_target
+fp_pc                  = offsetof_struct_new_dynarec_hot_state_pc
+fp_fake_pc             = offsetof_struct_new_dynarec_hot_state_fake_pc
+fp_ram_offset          = offsetof_struct_new_dynarec_hot_state_ram_offset
+fp_mini_ht             = offsetof_struct_new_dynarec_hot_state_mini_ht
+fp_restore_candidate   = offsetof_struct_new_dynarec_hot_state_restore_candidate
+fp_memory_map          = offsetof_struct_new_dynarec_hot_state_memory_map
 
 TEXT_SECTION
 
     .align   2
-    .dlptr_offset   : .word saved_context-(.dlptr_pic+8)
     .outptr_offset  : .word out-(.outptr_pic+8)
+    .savedcontextptr_offset  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context -(.savedcontextptr_pic+8)
+
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
     eor    r2, r0, r0, lsl #16
@@ -209,16 +169,16 @@ GLOBAL_FUNCTION(jump_vaddr_r7):
     add    r0, r7, #0
 
 GLOBAL_FUNCTION(jump_vaddr):
-    str    r10, [fp, #cycle_count-dynarec_local]
-    ldr    r9,  [fp, #last_count-dynarec_local]
+    str    r10, [fp, #fp_cycle_count]
+    ldr    r9,  [fp, #fp_last_count]
     add    r10, r9, r10 /* Count */
-    str    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
+    str    r10, [fp, #fp_cp0_regs + 36] /* Count */
     bl     get_addr_ht
-    ldr    r10, [fp, #cycle_count-dynarec_local]
+    ldr    r10, [fp, #fp_cycle_count]
     mov    pc, r0
 
 GLOBAL_FUNCTION(verify_code_ds):
-    str    r8, [fp, #branch_target-dynarec_local]
+    str    r8, [fp, #fp_branch_target]
 
 GLOBAL_FUNCTION(verify_code_vm):
     /* r0 = instruction pointer (virtual address) */
@@ -227,7 +187,13 @@ GLOBAL_FUNCTION(verify_code_vm):
     /* r3 = length */
     cmp    r1, #0xC0000000
     blt    verify_code
-    add    r12, fp, #memory_map-dynarec_local
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
     lsr    r4, r1, #12
     add    r5, r1, r3
     sub    r5, #1
@@ -273,21 +239,27 @@ GLOBAL_FUNCTION(verify_code):
 .D3:
     teqeq  r4, r5
 .D4:
-    ldr    r8, [fp, #branch_target-dynarec_local]
+    ldr    r8, [fp, #fp_branch_target]
     moveq  pc, lr
 .D5:
     bl     get_addr
     mov    pc, r0
 
 GLOBAL_FUNCTION(cc_interrupt):
-    ldr    r0, [fp, #last_count-dynarec_local]
+    ldr    r0, [fp, #fp_last_count]
     mov    r1, #0
     mov    r2, #0x1fc
     add    r10, r0, r10
-    str    r1, [fp, #pending_exception-dynarec_local]
+    str    r1, [fp, #fp_pending_exception]
     and    r2, r2, r10, lsr #19
-    add    r3, fp, #restore_candidate-dynarec_local
-    str    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
+#ifdef ARMv5_ONLY
+    ldr    r3, =fp_restore_candidate
+#else
+    movw   r3, #:lower16:fp_restore_candidate
+    movt   r3, #:upper16:fp_restore_candidate
+#endif
+    add    r3, fp, r3
+    str    r10, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r4, [r2, r3]
     mov    r10, lr
     tst    r4, r4
@@ -295,22 +267,22 @@ GLOBAL_FUNCTION(cc_interrupt):
 .E1:
     bl     gen_interrupt
     mov    lr, r10
-    ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
-    ldr    r0, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
-    ldr    r1, [fp, #pending_exception-dynarec_local]
-    ldr    r2, [fp, #g_dev_r4300_stop-dynarec_local]
-    str    r0, [fp, #last_count-dynarec_local]
+    ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r0, [fp, #fp_next_interrupt]
+    ldr    r1, [fp, #fp_pending_exception]
+    ldr    r2, [fp, #fp_stop]
+    str    r0, [fp, #fp_last_count]
     sub    r10, r10, r0
     tst    r2, r2
     bne    .E3
     tst    r1, r1
     moveq  pc, lr
 .E2:
-    ldr    r0, [fp, #pcaddr-dynarec_local]
+    ldr    r0, [fp, #fp_pcaddr]
     bl     get_addr_ht
     mov    pc, r0
 .E3:
-    add    r12, fp, #saved_context-dynarec_local
+    add    r12, fp, #fp_saved_context
     ldmia  r12, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
 .E4:
     /* Move 'dirty' blocks to the 'clean' list */
@@ -327,11 +299,11 @@ GLOBAL_FUNCTION(cc_interrupt):
     b      .E1
 
 GLOBAL_FUNCTION(do_interrupt):
-    ldr    r0, [fp, #pcaddr-dynarec_local]
+    ldr    r0, [fp, #fp_pcaddr]
     bl     get_addr_ht
-    ldr    r1, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
-    ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
-    str    r1, [fp, #last_count-dynarec_local]
+    ldr    r1, [fp, #fp_next_interrupt]
+    ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
+    str    r1, [fp, #fp_last_count]
     sub    r10, r10, r1
     add    r10, r10, #2
     mov    pc, r0
@@ -339,13 +311,13 @@ GLOBAL_FUNCTION(do_interrupt):
 GLOBAL_FUNCTION(fp_exception):
     mov    r2, #0x10000000
 .E7:
-    ldr    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
+    ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
     mov    r3, #0x80000000
-    str    r0, [fp, #g_dev_r4300_cp0_regs+56-dynarec_local] /* EPC */
+    str    r0, [fp, #fp_cp0_regs+56] /* EPC */
     orr    r1, #2
     add    r2, r2, #0x2c
-    str    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
-    str    r2, [fp, #g_dev_r4300_cp0_regs+52-dynarec_local] /* Cause */
+    str    r1, [fp, #fp_cp0_regs+48] /* Status */
+    str    r2, [fp, #fp_cp0_regs+52] /* Cause */
     add    r0, r3, #0x180
     bl     get_addr_ht
     mov    pc, r0
@@ -355,13 +327,13 @@ GLOBAL_FUNCTION(fp_exception_ds):
     b      .E7
 
 GLOBAL_FUNCTION(jump_syscall):
-    ldr    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
+    ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
     mov    r3, #0x80000000
-    str    r0, [fp, #g_dev_r4300_cp0_regs+56-dynarec_local] /* EPC */
+    str    r0, [fp, #fp_cp0_regs+56] /* EPC */
     orr    r1, #2
     mov    r2, #0x20
-    str    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
-    str    r2, [fp, #g_dev_r4300_cp0_regs+52-dynarec_local] /* Cause */
+    str    r1, [fp, #fp_cp0_regs+48] /* Status */
+    str    r2, [fp, #fp_cp0_regs+52] /* Cause */
     add    r0, r3, #0x180
     bl     get_addr_ht
     mov    pc, r0
@@ -370,26 +342,26 @@ GLOBAL_FUNCTION(indirect_jump_indexed):
     ldr    r0, [r0, r1, lsl #2]
 
 GLOBAL_FUNCTION(indirect_jump):
-    ldr    r12, [fp, #last_count-dynarec_local]
+    ldr    r12, [fp, #fp_last_count]
     add    r2, r2, r12 
-    str    r2, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
     mov    pc, r0
 
 GLOBAL_FUNCTION(jump_eret):
-    ldr    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
-    ldr    r0, [fp, #last_count-dynarec_local]
+    ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
+    ldr    r0, [fp, #fp_last_count]
     bic    r1, r1, #2
     add    r10, r0, r10
-    str    r1, [fp, #g_dev_r4300_cp0_regs+48-dynarec_local] /* Status */
-    str    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
+    str    r1, [fp, #fp_cp0_regs+48] /* Status */
+    str    r10, [fp, #fp_cp0_regs+36] /* Count */
     bl     new_dynarec_check_interrupt
-    ldr    r1, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
-    ldr    r0, [fp, #g_dev_r4300_cp0_regs+56-dynarec_local] /* EPC */
-    str    r1, [fp, #last_count-dynarec_local]
+    ldr    r1, [fp, #fp_next_interrupt]
+    ldr    r0, [fp, #fp_cp0_regs+56] /* EPC */
+    str    r1, [fp, #fp_last_count]
     subs   r10, r10, r1
     bpl    .E11
 .E8:
-    add    r6, fp, #g_dev_r4300_regs+256-dynarec_local
+    add    r6, fp, #fp_regs+256
     mov    r5, #248
     mov    r1, #0
 .E9:
@@ -400,38 +372,38 @@ GLOBAL_FUNCTION(jump_eret):
     adc    r1, r1, r1
     subs   r5, r5, #8
     bne    .E9
-    ldr    r2, [fp, #g_dev_r4300_hi-dynarec_local]
-    ldr    r3, [fp, #g_dev_r4300_hi+4-dynarec_local]
+    ldr    r2, [fp, #fp_hi]
+    ldr    r3, [fp, #fp_hi+4]
     eors   r3, r3, r2, asr #31
-    ldr    r2, [fp, #g_dev_r4300_lo-dynarec_local]
-    ldreq  r3, [fp, #g_dev_r4300_lo+4-dynarec_local]
+    ldr    r2, [fp, #fp_lo]
+    ldreq  r3, [fp, #fp_lo+4]
     eoreq  r3, r3, r2, asr #31
     subs   r3, r3, #1
     adc    r1, r1, r1
     bl     get_addr_32
     mov    pc, r0
 .E11:
-    str    r0, [fp, #pcaddr-dynarec_local]
+    str    r0, [fp, #fp_pcaddr]
     bl     cc_interrupt
-    ldr    r0, [fp, #pcaddr-dynarec_local]
+    ldr    r0, [fp, #fp_pcaddr]
     b      .E8
 
 GLOBAL_FUNCTION(new_dyna_start):
-    ldr    r12, .dlptr_offset
-.dlptr_pic:
+    ldr    r12, .savedcontextptr_offset
+.savedcontextptr_pic:
     add    r12, pc, r12
     ldr    r1, .outptr_offset
 .outptr_pic:
     add    r1, pc, r1
     mov    r0, #0xa4000000
     stmia  r12, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
-    sub    fp, r12, #saved_context-dynarec_local
+    sub    fp, r12, #fp_saved_context
     ldr    r4, [r1]
     add    r0, r0, #0x40
     bl     new_recompile_block
-    ldr    r0, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
-    ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
-    str    r0, [fp, #last_count-dynarec_local]
+    ldr    r0, [fp, #fp_next_interrupt]
+    ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
+    str    r0, [fp, #fp_last_count]
     sub    r10, r10, r0
     mov    pc, r4
 
@@ -499,44 +471,44 @@ LOCAL_FUNCTION(invalidate_addr_call):
     ldmia  fp, {r0, r1, r2, r3, r12, pc}
 
 GLOBAL_FUNCTION(write_rdram_new):
-    ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldr    r0, [fp, #g_dev_mem_wword-dynarec_local]
+    ldr    r3, [fp, #fp_ram_offset]
+    ldr    r2, [fp, #fp_address]
+    ldr    r0, [fp, #fp_wword]
     str    r0, [r2, r3, lsl #2]
     b      .E12
 
 GLOBAL_FUNCTION(write_rdramb_new):
-    ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldrb   r0, [fp, #g_dev_mem_wbyte-dynarec_local]
+    ldr    r3, [fp, #fp_ram_offset]
+    ldr    r2, [fp, #fp_address]
+    ldrb   r0, [fp, #fp_wbyte]
     eor    r2, r2, #3
     strb   r0, [r2, r3, lsl #2]
     b      .E12
 
 GLOBAL_FUNCTION(write_rdramh_new):
-    ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-    ldrh   r0, [fp, #g_dev_mem_whword-dynarec_local]
+    ldr    r3, [fp, #fp_ram_offset]
+    ldr    r2, [fp, #fp_address]
+    ldrh   r0, [fp, #fp_whword]
     eor    r2, r2, #2
     lsl    r3, r3, #2
     strh   r0, [r2, r3]
     b      .E12
 
 GLOBAL_FUNCTION(write_rdramd_new):
-    ldr    r3, [fp, #ram_offset-dynarec_local]
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
-/*    ldrd    r0, [fp, #g_dev_mem_wdword-dynarec_local]*/
-    ldr    r0, [fp, #g_dev_mem_wdword-dynarec_local]
-    ldr    r1, [fp, #g_dev_mem_wdword+4-dynarec_local]
+    ldr    r3, [fp, #fp_ram_offset]
+    ldr    r2, [fp, #fp_address]
+/*    ldrd    r0, [fp, #fp_wdword]*/
+    ldr    r0, [fp, #fp_wdword]
+    ldr    r1, [fp, #fp_wdword+4]
     add    r3, r2, r3, lsl #2
     str    r0, [r3, #4]
     str    r1, [r3]
     b      .E12
 
 LOCAL_FUNCTION(do_invalidate):
-    ldr    r2, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r2, [fp, #fp_address]
 .E12:
-    ldr    r1, [fp, #invc_ptr-dynarec_local]
+    ldr    r1, [fp, #fp_invc_ptr]
     lsr    r0, r2, #12
     ldrb   r2, [r1, r0]
     tst    r2, r2
@@ -544,20 +516,32 @@ LOCAL_FUNCTION(do_invalidate):
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomem_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
     tst    r12, r12
     bmi    tlb_exception
     ldr    r0, [r1, r12, lsl #2]
-    str    r0, [fp, #readmem_dword-dynarec_local]
+    str    r0, [fp, #fp_rdword]
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemb_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -565,12 +549,18 @@ GLOBAL_FUNCTION(read_nomemb_new):
     bmi    tlb_exception
     eor    r1, r1, #3
     ldrb   r0, [r1, r12, lsl #2]
-    str    r0, [fp, #readmem_dword-dynarec_local]
+    str    r0, [fp, #fp_rdword]
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemh_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -579,12 +569,18 @@ GLOBAL_FUNCTION(read_nomemh_new):
     lsl    r12, r12, #2
     eor    r1, r1, #2
     ldrh   r0, [r1, r12]
-    str    r0, [fp, #readmem_dword-dynarec_local]
+    str    r0, [fp, #fp_rdword]
     mov    pc, lr
 
 GLOBAL_FUNCTION(read_nomemd_new):
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
     lsr    r0, r1, #12
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #0
@@ -595,140 +591,164 @@ GLOBAL_FUNCTION(read_nomemd_new):
     add    r3, r1, #4
     ldr    r0, [r1, r12]
     ldr    r1, [r3, r12]
-    str    r0, [fp, #readmem_dword+4-dynarec_local]
-    str    r1, [fp, #readmem_dword-dynarec_local]
+    str    r0, [fp, #fp_rdword+4]
+    str    r1, [fp, #fp_rdword]
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomem_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
+    ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #free_space-dynarec_local]
+    ldr    r3, [fp, #fp_free_space]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     tst    r12, #0x40000000
     bne    tlb_exception
-    ldr    r0, [fp, #g_dev_mem_wword-dynarec_local]
+    ldr    r0, [fp, #fp_wword]
     str    r0, [r1, r12, lsl #2]
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemb_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
+    ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #free_space-dynarec_local]
+    ldr    r3, [fp, #fp_free_space]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     tst    r12, #0x40000000
     bne    tlb_exception
     eor    r1, r1, #3
-    ldrb   r0, [fp, #g_dev_mem_wbyte-dynarec_local]
+    ldrb   r0, [fp, #fp_wbyte]
     strb   r0, [r1, r12, lsl #2]
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemh_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
+    ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #free_space-dynarec_local]
+    ldr    r3, [fp, #fp_free_space]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     lsls   r12, #2
     bcs    tlb_exception
     eor    r1, r1, #2
-    ldrh   r0, [fp, #g_dev_mem_whword-dynarec_local]
+    ldrh   r0, [fp, #fp_whword]
     strh   r0, [r1, r12]
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemd_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     bl     do_invalidate
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
-    add    r12, fp, #memory_map-dynarec_local
-    ldr    lr, [fp, #free_space+4-dynarec_local]
+    ldr    r1, [fp, #fp_address]
+#ifdef ARMv5_ONLY
+    ldr    r12, =fp_memory_map
+#else
+    movw   r12, #:lower16:fp_memory_map
+    movt   r12, #:upper16:fp_memory_map
+#endif
+    add    r12, fp, r12
+    ldr    lr, [fp, #fp_free_space+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #free_space-dynarec_local]
+    ldr    r3, [fp, #fp_free_space]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     lsls   r12, #2
     bcs    tlb_exception
     add    r3, r1, #4
-    ldr    r0, [fp, #g_dev_mem_wdword+4-dynarec_local]
-    ldr    r1, [fp, #g_dev_mem_wdword-dynarec_local]
+    ldr    r0, [fp, #fp_wdword+4]
+    ldr    r1, [fp, #fp_wdword]
 /*    strd    r0, [r1, r12]*/
     str    r0, [r1, r12]
     str    r1, [r3, r12]
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mi_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     add    r3, #4
-    str    r3, [fp, #pcaddr-dynarec_local]
+    str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
-    str    r1, [fp, #pending_exception-dynarec_local]
+    str    r1, [fp, #fp_pending_exception]
     bl     write_mi
-    ldr    lr, [fp, #free_space+4-dynarec_local]
-    ldr    r3, [fp, #free_space-dynarec_local]
-    ldr    r1, [fp, #pending_exception-dynarec_local]
+    ldr    lr, [fp, #fp_free_space+4]
+    ldr    r3, [fp, #fp_free_space]
+    ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mib_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     add    r3, #4
-    str    r3, [fp, #pcaddr-dynarec_local]
+    str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
-    str    r1, [fp, #pending_exception-dynarec_local]
+    str    r1, [fp, #fp_pending_exception]
     bl     write_mib
-    ldr    lr, [fp, #free_space+4-dynarec_local]
-    ldr    r3, [fp, #free_space-dynarec_local]
-    ldr    r1, [fp, #pending_exception-dynarec_local]
+    ldr    lr, [fp, #fp_free_space+4]
+    ldr    r3, [fp, #fp_free_space]
+    ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mih_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     add    r3, #4
-    str    r3, [fp, #pcaddr-dynarec_local]
+    str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
-    str    r1, [fp, #pending_exception-dynarec_local]
+    str    r1, [fp, #fp_pending_exception]
     bl     write_mih
-    ldr    lr, [fp, #free_space+4-dynarec_local]
-    ldr    r3, [fp, #free_space-dynarec_local]
-    ldr    r1, [fp, #pending_exception-dynarec_local]
+    ldr    lr, [fp, #fp_free_space+4]
+    ldr    r3, [fp, #fp_free_space]
+    ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mid_new):
-    str    r3, [fp, #free_space-dynarec_local]
-    str    lr, [fp, #free_space+4-dynarec_local]
+    str    r3, [fp, #fp_free_space]
+    str    lr, [fp, #fp_free_space+4]
     add    r3, #4
-    str    r3, [fp, #pcaddr-dynarec_local]
+    str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
-    str    r1, [fp, #pending_exception-dynarec_local]
+    str    r1, [fp, #fp_pending_exception]
     bl     write_mid
-    ldr    lr, [fp, #free_space+4-dynarec_local]
-    ldr    r3, [fp, #free_space-dynarec_local]
-    ldr    r1, [fp, #pending_exception-dynarec_local]
+    ldr    lr, [fp, #fp_free_space+4]
+    ldr    r3, [fp, #fp_free_space]
+    ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
@@ -736,7 +756,7 @@ GLOBAL_FUNCTION(write_mid_new):
 LOCAL_FUNCTION(mi_exception):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
-    ldr    r1, [fp, #g_dev_mem_address-dynarec_local]
+    ldr    r1, [fp, #fp_address]
     bl     wb_base_reg
     b      do_interrupt
 
@@ -747,23 +767,29 @@ LOCAL_FUNCTION(tlb_exception):
     bl     wb_base_reg
     mov    r0, r3
     bl     TLB_refill_exception_new
-    ldr    r1, [fp, #g_dev_r4300_cp0_next_interrupt-dynarec_local]
-    ldr    r10, [fp, #g_dev_r4300_cp0_regs+36-dynarec_local] /* Count */
-    str    r1, [fp, #last_count-dynarec_local]
+    ldr    r1, [fp, #fp_next_interrupt]
+    ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
+    str    r1, [fp, #fp_last_count]
     sub    r10, r10, r1
     mov    pc, r0
     
 LOCAL_FUNCTION(wb_base_reg):
     /* r1 = mem addr */
     /* r3 = instr addr/flags */
-    add    r5, fp, #memory_map-dynarec_local
+#ifdef ARMv5_ONLY
+    ldr    r5, =fp_memory_map
+#else
+    movw   r5, #:lower16:fp_memory_map
+    movt   r5, #:upper16:fp_memory_map
+#endif
+    add    r5, fp, r5
     lsr    r6, r3, #12
     ldr    r7, [r5, r6, lsl #2]
     bic    r8, r3, #3
     mov    r6, #0x6000000
     orr    r6, r6, #0x22
     ldr    r0, [r8, r7, lsl #2]
-    add    r5, fp, #g_dev_r4300_regs-dynarec_local
+    add    r5, fp, #fp_regs
     mov    r7, #0xf8
     lsl    r8, r0, #16
     lsr    r4, r0, #26
@@ -773,7 +799,7 @@ LOCAL_FUNCTION(wb_base_reg):
     ldrcs  r9, [r5, r7]
     tst    r3, #2
     str    r9, [r5, r7]
-    add    r6, fp, #g_dev_r4300_regs+4-dynarec_local
+    add    r6, fp, #fp_regs+4
     asr    r5, r9, #31
     strne  r5, [r6, r7]
     mov    pc, lr

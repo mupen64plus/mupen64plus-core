@@ -87,8 +87,8 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     struct r4300_core* r4300 = (struct r4300_core*)opaque;
     uint32_t reg = mi_reg(address);
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
     switch(reg)
     {
@@ -102,7 +102,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         update_mi_intr_mask(&r4300->mi.regs[MI_INTR_MASK_REG], value & mask);
 
         check_interrupt(r4300);
-        cp0_update_count();
+        cp0_update_count(r4300);
         if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
         break;
     }

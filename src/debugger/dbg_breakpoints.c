@@ -28,6 +28,7 @@
 #include "dbg_debugger.h"
 #include "dbg_types.h"
 #include "device/memory/memory.h"
+#include "main/main.h"
 
 #ifdef DBG
 

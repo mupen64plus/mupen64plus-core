@@ -24,7 +24,6 @@
 
 #include "cp0.h"
 #include "exception.h"
-#include "main/main.h"
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "recomp.h"
 
@@ -37,13 +36,13 @@
 #include "debugger/dbg_types.h"
 #endif
 
-extern uint32_t g_dev_r4300_cp0_regs[32];
-extern unsigned int g_dev_r4300_cp0_next_interrupt;
-
 /* global functions */
-void init_cp0(struct cp0* cp0, unsigned int count_per_op)
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
     cp0->count_per_op = count_per_op;
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+    cp0->new_dynarec_hot_state = new_dynarec_hot_state;
+#endif
 }
 
 void poweron_cp0(struct cp0* cp0)
@@ -51,8 +50,8 @@ void poweron_cp0(struct cp0* cp0)
     uint32_t* cp0_regs;
     unsigned int* cp0_next_interrupt;
 
-    cp0_regs = r4300_cp0_regs();
-    cp0_next_interrupt = r4300_cp0_next_interrupt();
+    cp0_regs = r4300_cp0_regs(cp0);
+    cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
 
     memset(cp0_regs, 0, CP0_REGS_COUNT * sizeof(cp0_regs[0]));
     cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
@@ -76,35 +75,35 @@ void poweron_cp0(struct cp0* cp0)
 }
 
 
-uint32_t* r4300_cp0_regs(void)
+uint32_t* r4300_cp0_regs(struct cp0* cp0)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-    return g_dev.r4300.cp0.regs;
+    return cp0->regs;
 #else
 /* ARM dynarec uses a different memory layout */
-    return g_dev_r4300_cp0_regs;
+    return cp0->new_dynarec_hot_state->cp0_regs;
 #endif
 }
 
-uint32_t* r4300_cp0_last_addr(void)
+uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
 {
-    return &g_dev.r4300.cp0.last_addr;
+    return &cp0->last_addr;
 }
 
-unsigned int* r4300_cp0_next_interrupt(void)
+unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
-    return &g_dev.r4300.cp0.next_interrupt;
+    return &cp0->next_interrupt;
 #else
 /* ARM dynarec uses a different memory layout */
-    return &g_dev_r4300_cp0_next_interrupt;
+    return &cp0->new_dynarec_hot_state->next_interrupt;
 #endif
 }
 
 
 int check_cop1_unusable(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
     if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
@@ -115,26 +114,27 @@ int check_cop1_unusable(struct r4300_core* r4300)
     return 0;
 }
 
-void cp0_update_count(void)
+void cp0_update_count(struct r4300_core* r4300)
 {
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    struct cp0* cp0 = &r4300->cp0;
+    uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
 #ifdef NEW_DYNAREC
-    if (g_dev.r4300.emumode != EMUMODE_DYNAREC)
+    if (r4300->emumode != EMUMODE_DYNAREC)
     {
 #endif
-        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc() - g_dev.r4300.cp0.last_addr) >> 2) * g_dev.r4300.cp0.count_per_op;
-        g_dev.r4300.cp0.last_addr = *r4300_pc();
+        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        cp0->last_addr = *r4300_pc(r4300);
 #ifdef NEW_DYNAREC
     }
 #endif
 
 #ifdef COMPARE_CORE
-   if (g_dev.r4300.delay_slot)
+   if (r4300->delay_slot)
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !g_dev.r4300.delay_slot) update_debugger(*r4300_pc());
+   if (g_DebuggerActive && !r4300->delay_slot) update_debugger(*r4300_pc(r4300));
 #endif
 */
 }

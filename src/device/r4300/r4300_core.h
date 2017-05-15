@@ -38,6 +38,11 @@
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
+#include "osal/preproc.h"
+
+struct memory;
+struct ri_controller;
+
 struct jump_table;
 struct cached_interp
 {
@@ -126,18 +131,18 @@ struct r4300_core
      * XXX: more work is needed to correctly encapsulate these */
     struct {
         int init_length;
-        struct precomp_instr* dst;          /* destination structure for the recompiled instruction */
-        int code_length;                    /* current real recompiled code length */
-        int max_code_length;                /* current recompiled code's buffer length */
-        unsigned char **inst_pointer;       /* output buffer for recompiled code */
-        struct precomp_block *dst_block;    /* the current block that we are recompiling */
-        uint32_t src;                       /* the current recompiled instruction */
+        struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
+        int code_length;                                /* current real recompiled code length */
+        int max_code_length;                            /* current recompiled code's buffer length */
+        unsigned char **inst_pointer;                   /* output buffer for recompiled code */
+        struct precomp_block *dst_block;                /* the current block that we are recompiling */
+        uint32_t src;                                   /* the current recompiled instruction */
         int fast_memory;
-        int no_compiled_jump;               /* use cached interpreter instead of recompiler for jumps */
-        void (*recomp_func)(void);          /* pointer to the dynarec's generator
-                                               function for the latest decoded opcode */
-        const uint32_t *SRC;                /* currently recompiled instruction in the input stream */
-        int check_nop;                      /* next instruction is nop ? */
+        int no_compiled_jump;                           /* use cached interpreter instead of recompiler for jumps */
+        void (*recomp_func)(struct r4300_core* r4300);  /* pointer to the dynarec's generator
+                                                           function for the latest decoded opcode */
+        const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+        int check_nop;                                  /* next instruction is nop ? */
         int delay_slot_compiled;
 
         uint32_t jump_to_address;
@@ -158,6 +163,28 @@ struct r4300_core
 #endif
 #endif
 
+    /* Memory accesses variables */
+    uint64_t* rdword;
+
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    union {
+        uint8_t  wbyte;
+        uint16_t whword;
+        uint32_t wword;
+        uint64_t wdword;
+    };
+
+    uint32_t address;
+#endif
+
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+    /* FIXME: better put that near linkage_arm code
+     * to help generate call beyond the +/-32MB range.
+     */
+    ALIGN(4096, char extra_memory[33554432]);
+#endif
+    struct new_dynarec_hot_state new_dynarec_hot_state;
 
     unsigned int emumode;
 
@@ -166,22 +193,40 @@ struct r4300_core
     struct cp1 cp1;
 
     struct mi_controller mi;
+
+    struct memory* mem;
+    struct ri_controller* ri;
 };
 
-void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
 void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);
 
-int64_t* r4300_regs(void);
-int64_t* r4300_mult_hi(void);
-int64_t* r4300_mult_lo(void);
-unsigned int* r4300_llbit(void);
-uint32_t* r4300_pc(void);
-struct precomp_instr** r4300_pc_struct(void);
-int* r4300_stop(void);
+int64_t* r4300_regs(struct r4300_core* r4300);
+int64_t* r4300_mult_hi(struct r4300_core* r4300);
+int64_t* r4300_mult_lo(struct r4300_core* r4300);
+unsigned int* r4300_llbit(struct r4300_core* r4300);
+uint32_t* r4300_pc(struct r4300_core* r4300);
+struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300);
+int* r4300_stop(struct r4300_core* r4300);
 
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
+
+uint32_t* r4300_address(struct r4300_core* r4300);
+uint8_t*  r4300_wbyte(struct r4300_core* r4300);
+uint16_t* r4300_whword(struct r4300_core* r4300);
+uint32_t* r4300_wword(struct r4300_core* r4300);
+uint64_t* r4300_wdword(struct r4300_core* r4300);
+
+#define read_word_in_memory()   r4300->mem->readmem  [*r4300_address(r4300)>>16]()
+#define read_byte_in_memory()   r4300->mem->readmemb [*r4300_address(r4300)>>16]()
+#define read_hword_in_memory()  r4300->mem->readmemh [*r4300_address(r4300)>>16]()
+#define read_dword_in_memory()  r4300->mem->readmemd [*r4300_address(r4300)>>16]()
+#define write_word_in_memory()  r4300->mem->writemem [*r4300_address(r4300)>>16]()
+#define write_byte_in_memory()  r4300->mem->writememb[*r4300_address(r4300)>>16]()
+#define write_hword_in_memory() r4300->mem->writememh[*r4300_address(r4300)>>16]()
+#define write_dword_in_memory() r4300->mem->writememd[*r4300_address(r4300)>>16]()
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]

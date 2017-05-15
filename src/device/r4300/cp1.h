@@ -44,21 +44,27 @@ struct cp1
      * words. However, x86/gcop1.c and x86-64/gcop1.c update this variable
      * using 32-bit stores. */
     uint32_t rounding_mode;
+
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    struct new_dynarec_hot_state* new_dynarec_hot_state;
+#endif
 };
 
+void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state);
 void poweron_cp1(struct cp1* cp1);
 
-int64_t* r4300_cp1_regs(void);
-float** r4300_cp1_regs_simple(void);
-double** r4300_cp1_regs_double(void);
+int64_t* r4300_cp1_regs(struct cp1* cp1);
+float** r4300_cp1_regs_simple(struct cp1* cp1);
+double** r4300_cp1_regs_double(struct cp1* cp1);
 
-uint32_t* r4300_cp1_fcr0(void);
-uint32_t* r4300_cp1_fcr31(void);
+uint32_t* r4300_cp1_fcr0(struct cp1* cp1);
+uint32_t* r4300_cp1_fcr31(struct cp1* cp1);
 
-void shuffle_fpr_data(uint32_t oldStatus, uint32_t newStatus);
-void set_fpr_pointers(uint32_t newStatus);
+void shuffle_fpr_data(struct cp1* cp1, uint32_t oldStatus, uint32_t newStatus);
+void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus);
 
-void update_x86_rounding_mode(uint32_t fcr31);
+void update_x86_rounding_mode(struct cp1* cp1);
 
 #endif /* M64P_DEVICE_R4300_CP1_H */
 

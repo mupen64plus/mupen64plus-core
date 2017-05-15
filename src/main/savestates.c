@@ -209,7 +209,7 @@ int savestates_load_m64p(char *filepath)
     char queue[1024];
     unsigned char additionalData[4];
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
 #ifdef USE_SDL
     SDL_LockMutex(savestates_lock);
@@ -448,19 +448,19 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, uint32_t, 0x100000);
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, uint32_t, 0x100000);
 
-    *r4300_llbit() = GETDATA(curr, unsigned int);
-    COPYARRAY(r4300_regs(), curr, int64_t, 32);
+    *r4300_llbit(&g_dev.r4300) = GETDATA(curr, unsigned int);
+    COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
-    *r4300_mult_lo() = GETDATA(curr, int64_t);
-    *r4300_mult_hi() = GETDATA(curr, int64_t);
-    COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
+    *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
+    *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
+    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
-        shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    *r4300_cp1_fcr0()  = GETDATA(curr, uint32_t);
+        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
+    *r4300_cp1_fcr0(&g_dev.r4300.cp1)  = GETDATA(curr, uint32_t);
     FCR31 = GETDATA(curr, uint32_t);
-    *r4300_cp1_fcr31() = FCR31;
-    update_x86_rounding_mode(FCR31);
+    *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
+    update_x86_rounding_mode(&g_dev.r4300.cp1);
 
     for (i = 0; i < 32; i++)
     {
@@ -491,7 +491,7 @@ int savestates_load_m64p(char *filepath)
 
     savestates_load_set_pc(&g_dev.r4300, GETDATA(curr, uint32_t));
 
-    *r4300_cp0_next_interrupt() = GETDATA(curr, unsigned int);
+    *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) = GETDATA(curr, unsigned int);
     g_dev.vi.next_vi = GETDATA(curr, unsigned int);
     g_dev.vi.field = GETDATA(curr, unsigned int);
 
@@ -508,7 +508,7 @@ int savestates_load_m64p(char *filepath)
     }
 #endif
 
-    *r4300_cp0_last_addr() = *r4300_pc();
+    *r4300_cp0_last_addr(&g_dev.r4300.cp0) = *r4300_pc(&g_dev.r4300);
 
     free(savestateData);
     main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State loaded from: %s", namefrompath(filepath));
@@ -529,7 +529,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     size_t savestateSize;
     unsigned char *savestateData, *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     /* Read and check Project64 magic number. */
     if (!read_func(handle, header, 8))
@@ -576,24 +576,24 @@ static int savestates_load_pj64(char *filepath, void *handle,
     vi_timer = GETDATA(curr, unsigned int);
 
     // Program Counter
-    *r4300_cp0_last_addr() = GETDATA(curr, uint32_t);
+    *r4300_cp0_last_addr(&g_dev.r4300.cp0) = GETDATA(curr, uint32_t);
 
     // GPR
-    COPYARRAY(r4300_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
 
     // FPR
-    COPYARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
 
     // CP0
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
 
-    set_fpr_pointers(cp0_regs[CP0_STATUS_REG]);
+    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
 
     // Initialze the interrupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
-    *r4300_cp0_next_interrupt() = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
+    *r4300_cp0_next_interrupt(&g_dev.r4300.cp0) = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
                   : vi_timer;
     g_dev.vi.next_vi = vi_timer;
@@ -607,15 +607,15 @@ static int savestates_load_pj64(char *filepath, void *handle,
     load_eventqueue_infos(&g_dev.r4300.cp0, buffer);
 
     // FPCR
-    *r4300_cp1_fcr0() = GETDATA(curr, uint32_t);
+    *r4300_cp1_fcr0(&g_dev.r4300.cp1) = GETDATA(curr, uint32_t);
     curr += 30 * 4; // FCR1...FCR30 not supported
     FCR31 = GETDATA(curr, uint32_t);
-    *r4300_cp1_fcr31() = FCR31;
-    update_x86_rounding_mode(FCR31);
+    *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
+    update_x86_rounding_mode(&g_dev.r4300.cp1);
 
     // hi / lo
-    *r4300_mult_hi() = GETDATA(curr, int64_t);
-    *r4300_mult_lo() = GETDATA(curr, int64_t);
+    *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
+    *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
 
     // rdram register
     g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
@@ -776,12 +776,12 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // The following is not available in PJ64 savestate. Keep the values as is.
     // g_dev.dp.dps_regs[DPS_TBIST_REG] = 0; g_dev.dp.dps_regs[DPS_TEST_MODE_REG] = 0;
-    // g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit() = 0;
+    // g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit(&g_dev.r4300) = 0;
 
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
 
-    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr());
+    savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
 
     // assert(savestateData+savestateSize == curr)
 
@@ -1010,7 +1010,7 @@ int savestates_save_m64p(char *filepath)
     struct savestate_work *save;
     char *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     save = malloc(sizeof(*save));
     if (!save) {
@@ -1202,20 +1202,20 @@ int savestates_save_m64p(char *filepath)
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, unsigned int, 0x100000);
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, unsigned int, 0x100000);
 
-    PUTDATA(curr, unsigned int, *r4300_llbit());
-    PUTARRAY(r4300_regs(), curr, int64_t, 32);
+    PUTDATA(curr, unsigned int, *r4300_llbit(&g_dev.r4300));
+    PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    PUTDATA(curr, int64_t, *r4300_mult_lo());
-    PUTDATA(curr, int64_t, *r4300_mult_hi());
+    PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
+    PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
 
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
-    PUTARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+        shuffle_fpr_data(&g_dev.r4300.cp1, 0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
+    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
-        shuffle_fpr_data(UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
+        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
 
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0());
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31(&g_dev.r4300.cp1));
     for (i = 0; i < 32; i++)
     {
         PUTDATA(curr, short, g_dev.r4300.cp0.tlb.entries[i].mask);
@@ -1242,9 +1242,9 @@ int savestates_save_m64p(char *filepath)
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].end_odd);
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].phys_odd);
     }
-    PUTDATA(curr, uint32_t, *r4300_pc());
+    PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
 
-    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt());
+    PUTDATA(curr, unsigned int, *r4300_cp0_next_interrupt(&g_dev.r4300.cp0));
     PUTDATA(curr, unsigned int, g_dev.vi.next_vi);
     PUTDATA(curr, unsigned int, g_dev.vi.field);
 
@@ -1272,7 +1272,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     size_t savestateSize;
     unsigned char *savestateData, *curr;
 
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
     // Allocate memory for the save state data
     savestateSize = 8 + SaveRDRAMSize + 0x2754;
@@ -1288,20 +1288,20 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
-    PUTDATA(curr, uint32_t, *r4300_pc());
-    PUTARRAY(r4300_regs(), curr, int64_t, 32);
+    PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
+    PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(UINT32_C(0x04000000), 0);
-    PUTARRAY(r4300_cp1_regs(), curr, int64_t, 32);
+        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
+    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
     if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(UINT32_C(0x04000000), 0);
+        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
     for (i = 0; i < 30; i++)
         PUTDATA(curr, int, 0); // FCR1-30 not implemented
-    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31());
-    PUTDATA(curr, int64_t, *r4300_mult_hi());
-    PUTDATA(curr, int64_t, *r4300_mult_lo());
+    PUTDATA(curr, uint32_t, *r4300_cp1_fcr31(&g_dev.r4300.cp1));
+    PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
+    PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
 
     PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]);
     PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]);

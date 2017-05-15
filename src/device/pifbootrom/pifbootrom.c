@@ -54,8 +54,8 @@ void pifbootrom_hle_execute(struct device* dev)
     unsigned int tv_type = get_tv_type();   /* 0:PAL, 1:NTSC, 2:MPAL */
     uint32_t bsd_dom1_config = *(uint32_t*)dev->pi.cart_rom.rom;
 
-    int64_t* r4300_gpregs = r4300_regs();
-    uint32_t* cp0_regs = r4300_cp0_regs();
+    int64_t* r4300_gpregs = r4300_regs(&dev->r4300);
+    uint32_t* cp0_regs = r4300_cp0_regs(&dev->r4300.cp0);
 
     /* setup CP0 registers */
     cp0_regs[CP0_STATUS_REG] = 0x34000000;

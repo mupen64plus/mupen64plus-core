@@ -25,7 +25,7 @@
 #include "instr_counters.h"
 #endif
 #include "mi_controller.h"
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 #include "pure_interp.h"
 #include "recomp.h"
 
@@ -38,32 +38,37 @@
 #endif
 #include "main/main.h"
 
-
 #include <string.h>
 
-extern int64_t g_dev_r4300_regs[32];
-extern int64_t g_dev_r4300_hi;
-extern int64_t g_dev_r4300_lo;
-extern struct precomp_instr* g_dev_r4300_pc;
-extern int g_dev_r4300_stop;
 
-void init_r4300(struct r4300_core* r4300, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
 {
+    struct new_dynarec_hot_state* new_dynarec_hot_state =
+#if NEW_DYNAREC == NEW_DYNAREC_ARM
+        &r4300->new_dynarec_hot_state;
+#else
+        NULL;
+#endif
+
     r4300->emumode = emumode;
-    init_cp0(&r4300->cp0, count_per_op);
+    init_cp0(&r4300->cp0, count_per_op, new_dynarec_hot_state);
+    init_cp1(&r4300->cp1, new_dynarec_hot_state);
 
     r4300->recomp.no_compiled_jump = no_compiled_jump;
+
+    r4300->mem = mem;
+    r4300->ri = ri;
 }
 
 void poweron_r4300(struct r4300_core* r4300)
 {
     /* clear registers */
-    memset(r4300_regs(), 0, 32*sizeof(int64_t));
-    *r4300_mult_hi() = 0;
-    *r4300_mult_lo() = 0;
+    memset(r4300_regs(r4300), 0, 32*sizeof(int64_t));
+    *r4300_mult_hi(r4300) = 0;
+    *r4300_mult_lo(r4300) = 0;
     r4300->llbit = 0;
 
-    *r4300_pc_struct() = NULL;
+    *r4300_pc_struct(r4300) = NULL;
     r4300->delay_slot = 0;
     r4300->local_rs = 0;
     r4300->skip_jump = 0;
@@ -114,14 +119,16 @@ void poweron_r4300(struct r4300_core* r4300)
 #if !defined(NO_ASM)
 static void dynarec_setup_code(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     /* The dynarec jumps here after we call dyna_start and it prepares
      * Here we need to prepare the initial code block and jump to it
      */
-    cached_interpreter_dynarec_jump_to(&g_dev.r4300, UINT32_C(0xa4000040));
+    cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
 
     /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
-    if (!g_dev.r4300.cached_interp.actual->block || !g_dev.r4300.cached_interp.actual->code) {
-        dyna_stop();
+    if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {
+        dyna_stop(r4300);
     }
 }
 #endif
@@ -130,7 +137,7 @@ void run_r4300(struct r4300_core* r4300)
 {
     r4300->current_instruction_table = cached_interpreter_table;
 
-    *r4300_stop() = 0;
+    *r4300_stop(r4300) = 0;
     g_rom_pause = 0;
 
     /* clear instruction counters */
@@ -140,7 +147,7 @@ void run_r4300(struct r4300_core* r4300)
 
     /* XXX: might go to r4300_poweron / soft_reset ? */
     r4300->cp0.last_addr = 0xa4000040;
-    *r4300_cp0_next_interrupt() = 624999;
+    *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
 
     if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
@@ -162,7 +169,7 @@ void run_r4300(struct r4300_core* r4300)
         new_dynarec_cleanup();
 #else
         dyna_start(dynarec_setup_code);
-        (*r4300_pc_struct())++;
+        (*r4300_pc_struct(r4300))++;
 #endif
 #if defined(PROFILE_R4300)
         profile_write_end_of_code_blocks(r4300);
@@ -182,7 +189,7 @@ void run_r4300(struct r4300_core* r4300)
             return;
         }
 
-        r4300->cp0.last_addr = *r4300_pc();
+        r4300->cp0.last_addr = *r4300_pc(r4300);
 
         run_cached_interpreter(r4300);
 
@@ -198,69 +205,69 @@ void run_r4300(struct r4300_core* r4300)
 #endif
 }
 
-int64_t* r4300_regs(void)
+int64_t* r4300_regs(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return g_dev.r4300.regs;
+    return r4300->regs;
 #else
-    return g_dev_r4300_regs;
+    return r4300->new_dynarec_hot_state.regs;
 #endif
 }
 
-int64_t* r4300_mult_hi(void)
+int64_t* r4300_mult_hi(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.hi;
+    return &r4300->hi;
 #else
-    return &g_dev_r4300_hi;
+    return &r4300->new_dynarec_hot_state.hi;
 #endif
 }
 
-int64_t* r4300_mult_lo(void)
+int64_t* r4300_mult_lo(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.lo;
+    return &r4300->lo;
 #else
-    return &g_dev_r4300_lo;
+    return &r4300->new_dynarec_hot_state.lo;
 #endif
 }
 
-unsigned int* r4300_llbit(void)
+unsigned int* r4300_llbit(struct r4300_core* r4300)
 {
-    return &g_dev.r4300.llbit;
+    return &r4300->llbit;
 }
 
-uint32_t* r4300_pc(void)
+uint32_t* r4300_pc(struct r4300_core* r4300)
 {
 #ifdef NEW_DYNAREC
-    return (g_dev.r4300.emumode == EMUMODE_DYNAREC)
-        ? (uint32_t*)&pcaddr
-        : &(*r4300_pc_struct())->addr;
+    return (r4300->emumode == EMUMODE_DYNAREC)
+        ? (uint32_t*)&r4300->new_dynarec_hot_state.pcaddr
+        : &(*r4300_pc_struct(r4300))->addr;
 #else
-    return &(*r4300_pc_struct())->addr;
+    return &(*r4300_pc_struct(r4300))->addr;
 #endif
 }
 
-struct precomp_instr** r4300_pc_struct(void)
+struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.pc;
+    return &r4300->pc;
 #else
-    return &g_dev_r4300_pc;
+    return &r4300->new_dynarec_hot_state.pc;
 #endif
 }
 
-int* r4300_stop(void)
+int* r4300_stop(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &g_dev.r4300.stop;
+    return &r4300->stop;
 #else
-    return &g_dev_r4300_stop;
+    return &r4300->new_dynarec_hot_state.stop;
 #endif
 }
 
@@ -269,6 +276,55 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300)
     return r4300->emumode;
 }
 
+uint32_t* r4300_address(struct r4300_core* r4300)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &r4300->address;
+#else
+    return &r4300->new_dynarec_hot_state.address;
+#endif
+}
+
+uint8_t*  r4300_wbyte(struct r4300_core* r4300)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &r4300->wbyte;
+#else
+    return &r4300->new_dynarec_hot_state.wbyte;
+#endif
+}
+
+uint16_t* r4300_whword(struct r4300_core* r4300)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &r4300->whword;
+#else
+    return &r4300->new_dynarec_hot_state.whword;
+#endif
+}
+
+uint32_t* r4300_wword(struct r4300_core* r4300)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &r4300->wword;
+#else
+    return &r4300->new_dynarec_hot_state.wword;
+#endif
+}
+
+uint64_t* r4300_wdword(struct r4300_core* r4300)
+{
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+/* ARM dynarec uses a different memory layout */
+    return &r4300->wdword;
+#else
+    return &r4300->new_dynarec_hot_state.wdword;
+#endif
+}
 
 
 void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)
@@ -293,14 +349,14 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
     {
-        *r4300_pc() = address;
+        *r4300_pc(r4300) = address;
     }
     else
     {
 #ifdef NEW_DYNAREC
         if (r4300->emumode == EMUMODE_DYNAREC)
         {
-            r4300->cp0.last_addr = pcaddr;
+            r4300->cp0.last_addr = r4300->new_dynarec_hot_state.pcaddr;
         }
         else
 #endif
@@ -317,8 +373,8 @@ void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc)
 #ifdef NEW_DYNAREC
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        pcaddr = pc;
-        pending_exception = 1;
+        r4300->new_dynarec_hot_state.pcaddr = pc;
+        r4300->new_dynarec_hot_state.pending_exception = 1;
         invalidate_all_pages();
     }
     else

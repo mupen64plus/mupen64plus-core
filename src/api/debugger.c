@@ -128,7 +128,7 @@ EXPORT int CALL DebugGetState(m64p_dbg_state statenum)
         case M64P_DBG_CPU_DYNACORE:
             return get_r4300_emumode(&g_dev.r4300);
         case M64P_DBG_CPU_NEXT_INTERRUPT:
-            return *r4300_cp0_next_interrupt();
+            return *r4300_cp0_next_interrupt(&g_dev.r4300.cp0);
         default:
             DebugMessage(M64MSG_WARNING, "Bug: invalid m64p_dbg_state input in DebugGetState()");
             return 0;
@@ -320,21 +320,21 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
     switch (cpu_data_type)
     {
         case M64P_CPU_PC:
-            return r4300_pc();
+            return r4300_pc(&g_dev.r4300);
         case M64P_CPU_REG_REG:
-            return r4300_regs();
+            return r4300_regs(&g_dev.r4300);
         case M64P_CPU_REG_HI:
-            return r4300_mult_hi();
+            return r4300_mult_hi(&g_dev.r4300);
         case M64P_CPU_REG_LO:
-            return r4300_mult_lo();
+            return r4300_mult_lo(&g_dev.r4300);
         case M64P_CPU_REG_COP0:
-            return r4300_cp0_regs();
+            return r4300_cp0_regs(&g_dev.r4300.cp0);
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
-            return r4300_cp1_regs_double();
+            return r4300_cp1_regs_double(&g_dev.r4300.cp1);
         case M64P_CPU_REG_COP1_SIMPLE_PTR:
-            return r4300_cp1_regs_simple();
+            return r4300_cp1_regs_simple(&g_dev.r4300.cp1);
         case M64P_CPU_REG_COP1_FGR_64:
-            return r4300_cp1_regs();
+            return r4300_cp1_regs(&g_dev.r4300.cp1);
         case M64P_CPU_TLB:
             return g_dev.r4300.cp0.tlb.entries;
         default:
