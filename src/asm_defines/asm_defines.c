@@ -42,7 +42,14 @@
  * The plus one in size is to avoid the creation of zero sized array (which are illegal in C).
  * We need to subtract one in objects symbols sizes to get the correct value.
  */
+
+#ifdef _MSC_VER
+#define _DEFINE(sym, val) \
+    __pragma(const_seg(#sym)) \
+    const char sym[1+val];
+#else
 #define _DEFINE(sym, val) const char sym[1+val];
+#endif
 
 /* Export member m of structure s.
  * Suitable parsing of corresponding object file (objdump/dumpbin/awk)
@@ -101,6 +108,12 @@ DEFINE(tlb, LUT_w);
 
 DEFINE(r4300_core, cached_interp);
 DEFINE(cached_interp, invalid_code);
+
+DEFINE(device, mem);
+DEFINE(memory, readmem);
+DEFINE(memory, readmemd);
+DEFINE(memory, writemem);
+DEFINE(memory, writememd);
 
 #ifdef NEW_DYNAREC
 DEFINE(r4300_core, new_dynarec_hot_state);
