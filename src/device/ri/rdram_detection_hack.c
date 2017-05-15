@@ -23,21 +23,20 @@
 
 #include <stdint.h>
 
-#include "device/ri/ri_controller.h"
-#include "device/si/si_controller.h"
-#include "main/main.h"
+#include "device/ri/rdram.h"
+#include "device/si/cic.h"
 
 /* HACK: force detected RDRAM size
  * This hack is triggered just before initial ROM loading (see pi_controller.c)
  *
  * Proper emulation of RI/RDRAM subsystem is required to avoid this hack.
  */
-void force_detected_rdram_size_hack(void)
+void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic)
 {
-    uint32_t address = (g_dev.si.pif.cic.version != CIC_X105)
+    uint32_t address = (cic->version != CIC_X105)
         ? 0x318
         : 0x3f0;
 
-    g_dev.ri.rdram.dram[address/4] = g_dev.ri.rdram.dram_size;
+    rdram->dram[address/4] = rdram->dram_size;
 }
 
