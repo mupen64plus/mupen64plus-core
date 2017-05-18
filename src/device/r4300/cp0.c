@@ -73,6 +73,8 @@ void poweron_cp0(struct cp0* cp0)
     cp0->special_done = 0;
     cp0->last_addr = UINT32_C(0xbfc00000);
 
+    init_interrupt(cp0);
+
     poweron_tlb(&cp0->tlb);
 }
 
