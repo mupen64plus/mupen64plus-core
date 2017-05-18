@@ -45,6 +45,8 @@ int get_next_event_type(const struct interrupt_queue* q);
 int save_eventqueue_infos(struct cp0* cp0, char *buf);
 void load_eventqueue_infos(struct cp0* cp0, const char *buf);
 
+void reset_hard_handler(void* opaque);
+
 void compare_int_handler(void* opaque);
 void check_int_handler(void* opaque);
 void special_int_handler(void* opaque);

@@ -66,7 +66,8 @@ void init_device(struct device* dev,
         { &dev->sp,        rsp_interrupt_event         }, /* SP */
         { &dev->dp,        rdp_interrupt_event         }, /* DP */
         { &dev->r4300,     hw2_int_handler             }, /* HW2 */
-        { dev,             nmi_int_handler             }  /* NMI */
+        { dev,             nmi_int_handler             }, /* NMI */
+        { dev,             reset_hard_handler          }  /* reset_hard */
     };
 
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,

@@ -507,8 +507,9 @@ void nmi_int_handler(void* opaque)
 }
 
 
-static void reset_hard(struct device* dev)
+void reset_hard_handler(void* opaque)
 {
+    struct device* dev = (struct device*)opaque;
     struct r4300_core* r4300 = &dev->r4300;
 
     poweron_device(dev);
@@ -556,7 +557,7 @@ void gen_interrupt(struct r4300_core* r4300)
 
         if (r4300->reset_hard_job)
         {
-            reset_hard(&g_dev);
+            call_interrupt_handler(&r4300->cp0, 11);
             return;
         }
     }

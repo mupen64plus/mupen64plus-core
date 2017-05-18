@@ -172,7 +172,7 @@ struct interrupt_handler
     void (*callback)(void*);
 };
 
-enum { CP0_INTERRUPT_HANDLERS_COUNT = 11 };
+enum { CP0_INTERRUPT_HANDLERS_COUNT = 12 };
 
 struct cp0
 {
