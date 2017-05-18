@@ -139,7 +139,7 @@ static void gencheck_interrupt(struct r4300_core* r4300, unsigned long long inst
 
     mov_reg64_imm64(RAX, (unsigned long long) instr_structure);
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) gen_interrupt);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_gen_interrupt);
     call_reg64(RAX);
 
     jump_end_rel8();
@@ -155,7 +155,7 @@ static void gencheck_interrupt_out(struct r4300_core* r4300, unsigned int addr)
     mov_m32rel_imm32((unsigned int*)(&r4300->fake_instr.addr), addr);
     mov_reg64_imm64(RAX, (unsigned long long) (&r4300->fake_instr));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) gen_interrupt);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_gen_interrupt);
     call_reg64(RAX);
 
     jump_end_rel8();
@@ -171,7 +171,7 @@ static void gencheck_interrupt_reg(struct r4300_core* r4300) // addr is in EAX
     mov_m32rel_xreg32((unsigned int*)(&r4300->fake_instr.addr), EAX);
     mov_reg64_imm64(RAX, (unsigned long long) (&r4300->fake_instr));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) gen_interrupt);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_gen_interrupt);
     call_reg64(RAX);
 
     jump_end_rel8();

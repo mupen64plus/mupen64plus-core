@@ -265,7 +265,7 @@ GLOBAL_FUNCTION(cc_interrupt):
     tst    r4, r4
     bne    .E4
 .E1:
-    bl     gen_interrupt
+    bl     dynarec_gen_interrupt
     mov    lr, r10
     ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r0, [fp, #fp_next_interrupt]

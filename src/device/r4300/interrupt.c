@@ -526,9 +526,8 @@ static void reset_hard(struct device* dev)
 }
 
 
-void gen_interrupt(void)
+void gen_interrupt(struct r4300_core* r4300)
 {
-    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 

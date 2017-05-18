@@ -103,7 +103,7 @@ int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
         check_interrupt(r4300);
         cp0_update_count(r4300);
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt();
+        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt(r4300);
         break;
     }
 
