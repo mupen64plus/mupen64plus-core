@@ -166,6 +166,13 @@ struct interrupt_queue
     struct node* first;
 };
 
+struct interrupt_handler
+{
+    void* opaque;
+    void (*callback)(void*);
+};
+
+enum { CP0_INTERRUPT_HANDLERS_COUNT = 11 };
 
 struct cp0
 {
@@ -184,6 +191,8 @@ struct cp0
     unsigned int next_interrupt;
 #endif
 
+    struct interrupt_handler interrupt_handlers[CP0_INTERRUPT_HANDLERS_COUNT];
+
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
     struct new_dynarec_hot_state* new_dynarec_hot_state;
@@ -197,7 +206,7 @@ struct cp0
     struct tlb tlb;
 };
 
-void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state);
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers);
 void poweron_cp0(struct cp0* cp0);
 
 uint32_t* r4300_cp0_regs(struct cp0* cp0);

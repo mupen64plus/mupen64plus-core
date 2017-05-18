@@ -119,6 +119,6 @@ int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 
 void do_SP_Task(struct rsp_core* sp);
 
-void rsp_interrupt_event(struct rsp_core* sp);
+void rsp_interrupt_event(void* opaque);
 
 #endif

@@ -202,8 +202,9 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
-void ai_end_of_dma_event(struct ai_controller* ai)
+void ai_end_of_dma_event(void* opaque)
 {
+    struct ai_controller* ai = (struct ai_controller*)opaque;
     fifo_pop(ai);
     raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
 }

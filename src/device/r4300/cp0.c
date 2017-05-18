@@ -37,12 +37,14 @@
 #endif
 
 /* global functions */
-void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state)
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers)
 {
     cp0->count_per_op = count_per_op;
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
     cp0->new_dynarec_hot_state = new_dynarec_hot_state;
 #endif
+
+    memcpy(cp0->interrupt_handlers, interrupt_handlers, CP0_INTERRUPT_HANDLERS_COUNT*sizeof(*interrupt_handlers));
 }
 
 void poweron_cp0(struct cp0* cp0)

@@ -55,7 +55,22 @@ void init_device(struct device* dev,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing)
 {
-    init_r4300(&dev->r4300, &dev->mem, &dev->ri, emumode, count_per_op, no_compiled_jump);
+    struct interrupt_handler interrupt_handlers[] = {
+        { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
+        { &dev->r4300,     compare_int_handler         }, /* COMPARE */
+        { &dev->r4300,     check_int_handler           }, /* CHECK */
+        { &dev->si,        si_end_of_dma_event         }, /* SI */
+        { &dev->pi,        pi_end_of_dma_event         }, /* PI */
+        { &dev->r4300.cp0, special_int_handler         }, /* SPECIAL */
+        { &dev->ai,        ai_end_of_dma_event         }, /* AI */
+        { &dev->sp,        rsp_interrupt_event         }, /* SP */
+        { &dev->dp,        rdp_interrupt_event         }, /* DP */
+        { &dev->r4300,     hw2_int_handler             }, /* HW2 */
+        { dev,             nmi_int_handler             }  /* NMI */
+    };
+
+    init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
+            emumode, count_per_op, no_compiled_jump);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);

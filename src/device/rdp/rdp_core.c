@@ -139,8 +139,10 @@ int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     return 0;
 }
 
-void rdp_interrupt_event(struct rdp_core* dp)
+void rdp_interrupt_event(void* opaque)
 {
+    struct rdp_core* dp = (struct rdp_core*)opaque;
+
     dp->dpc_regs[DPC_STATUS_REG] &= ~DPC_STATUS_FREEZE;
     dp->dpc_regs[DPC_STATUS_REG] |= DPC_STATUS_XBUS_DMEM_DMA
         | DPC_STATUS_CBUF_READY;
