@@ -71,8 +71,9 @@
 device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_dynarec_local)
 
 /* Defines offsets for fp addressed variables */
-fp_free_space          = offsetof_struct_new_dynarec_hot_state_dynarec_local + 20
 fp_saved_context       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 28
+fp_stack_level_1       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 64
+fp_stack_level_2       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 96
 fp_next_interrupt      = offsetof_struct_new_dynarec_hot_state_next_interrupt
 fp_cycle_count         = offsetof_struct_new_dynarec_hot_state_cycle_count
 fp_last_count          = offsetof_struct_new_dynarec_hot_state_last_count
@@ -337,15 +338,6 @@ GLOBAL_FUNCTION(jump_syscall):
     bl     get_addr_ht
     mov    pc, r0
 
-GLOBAL_FUNCTION(indirect_jump_indexed):
-    ldr    r0, [r0, r1, lsl #2]
-
-GLOBAL_FUNCTION(indirect_jump):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12 
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    mov    pc, r0
-
 GLOBAL_FUNCTION(jump_eret):
     ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
     ldr    r0, [fp, #fp_last_count]
@@ -469,6 +461,154 @@ LOCAL_FUNCTION(invalidate_addr_call):
     bl     invalidate_block
     ldmia  fp, {r0, r1, r2, r3, r12, pc}
 
+GLOBAL_FUNCTION(read_byte_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    and    r12, r1, #3
+    eor    r12, r12, #3
+    lsl    r12, r12, #3
+    str    r12, [fp, #fp_stack_level_1]
+    bic    r1, r1, #3
+    str    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1+4]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1+4]
+    ldr    r12, [fp, #fp_stack_level_1]
+    ldr    r1, [fp, #fp_rdword]
+    lsr    r1, r1, r12
+    and    r1, r1, #0xff
+    str    r1, [fp, #fp_rdword]
+    mov    pc, lr
+
+GLOBAL_FUNCTION(read_hword_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    and    r12, r1, #2
+    eor    r12, r12, #2
+    lsl    r12, r12, #3
+    str    r12, [fp, #fp_stack_level_1]
+    bic    r1, r1, #3
+    str    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1+4]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1+4]
+    ldr    r12, [fp, #fp_stack_level_1]
+    ldr    r1, [fp, #fp_rdword]
+    lsr    r1, r1, r12
+#ifdef ARMv5_ONLY
+    ldr    r12, =0xffff
+#else
+    movw   r12, #0xffff
+#endif
+    and    r1, r1, r12
+    str    r1, [fp, #fp_rdword]
+    mov    pc, lr
+
+GLOBAL_FUNCTION(read_word_new):
+GLOBAL_FUNCTION(read_dword_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1]
+    mov    pc, lr
+
+GLOBAL_FUNCTION(write_byte_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    and    r12, r1, #3
+    eor    r12, r12, #3
+    lsl    r12, r12, #3
+    ldr    r2, [fp, #fp_wword]
+    lsl    r2, r2, r12
+    str    r2, [fp, #fp_wword]
+    mov    r2, #0xff
+    lsl    r2, r2, r12
+    str    r2, [fp, #fp_wmask]
+    bic    r1, r1, #3
+    str    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1]
+    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r12, [fp, #fp_next_interrupt]
+    sub    r2, r2, r12
+    str    r12, [fp, #fp_last_count]
+    mov    pc, lr
+
+GLOBAL_FUNCTION(write_hword_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    and    r12, r1, #2
+    eor    r12, r12, #2
+    lsl    r12, r12, #3
+    ldr    r2, [fp, #fp_wword]
+    lsl    r2, r2, r12
+    str    r2, [fp, #fp_wword]
+#ifdef ARMv5_ONLY
+    ldr    r2, =0xffff
+#else
+    movw   r2, #0xffff
+#endif
+    lsl    r2, r2, r12
+    str    r2, [fp, #fp_wmask]
+    bic    r1, r1, #3
+    str    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1]
+    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r12, [fp, #fp_next_interrupt]
+    sub    r2, r2, r12
+    str    r12, [fp, #fp_last_count]
+    mov    pc, lr
+
+GLOBAL_FUNCTION(write_word_new):
+    mvn    r12, #0
+    str    r12, [fp, #fp_wmask]
+    
+GLOBAL_FUNCTION(write_dword_new):
+    ldr    r12, [fp, #fp_last_count]
+    add    r2, r2, r12
+    str    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r1, [fp, #fp_address]
+    lsr    r1, r1, #16
+    ldr    r0, [r0, r1, lsl #2]
+    str    lr, [fp, #fp_stack_level_1]
+    mov    lr, pc
+    mov    pc, r0
+    ldr    lr, [fp, #fp_stack_level_1]
+    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
+    ldr    r12, [fp, #fp_next_interrupt]
+    sub    r2, r2, r12
+    str    r12, [fp, #fp_last_count]
+    mov    pc, lr
+
 GLOBAL_FUNCTION(write_rdram_new):
     ldr    r3, [fp, #fp_ram_offset]
     ldr    r2, [fp, #fp_address]
@@ -545,8 +685,8 @@ GLOBAL_FUNCTION(read_nomemd_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomem_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
+    str    r3, [fp, #fp_stack_level_2]
+    str    lr, [fp, #fp_stack_level_2+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
 #ifdef ARMv5_ONLY
@@ -556,9 +696,9 @@ GLOBAL_FUNCTION(write_nomem_new):
     movt   r12, #:upper16:fp_memory_map
 #endif
     add    r12, fp, r12
-    ldr    lr, [fp, #fp_free_space+4]
+    ldr    lr, [fp, #fp_stack_level_2+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #fp_free_space]
+    ldr    r3, [fp, #fp_stack_level_2]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     tst    r12, #0x40000000
@@ -574,8 +714,8 @@ GLOBAL_FUNCTION(write_nomem_new):
     mov    pc, lr
 
 GLOBAL_FUNCTION(write_nomemd_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
+    str    r3, [fp, #fp_stack_level_2]
+    str    lr, [fp, #fp_stack_level_2+4]
     bl     do_invalidate
     ldr    r1, [fp, #fp_address]
 #ifdef ARMv5_ONLY
@@ -585,9 +725,9 @@ GLOBAL_FUNCTION(write_nomemd_new):
     movt   r12, #:upper16:fp_memory_map
 #endif
     add    r12, fp, r12
-    ldr    lr, [fp, #fp_free_space+4]
+    ldr    lr, [fp, #fp_stack_level_2+4]
     lsr    r0, r1, #12
-    ldr    r3, [fp, #fp_free_space]
+    ldr    r3, [fp, #fp_stack_level_2]
     ldr    r12, [r12, r0, lsl #2]
     mov    r2, #1
     lsls   r12, #2
@@ -601,30 +741,30 @@ GLOBAL_FUNCTION(write_nomemd_new):
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mi_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
+    str    r3, [fp, #fp_stack_level_2]
+    str    lr, [fp, #fp_stack_level_2+4]
     add    r3, #4
     str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
     str    r1, [fp, #fp_pending_exception]
     bl     write_mi
-    ldr    lr, [fp, #fp_free_space+4]
-    ldr    r3, [fp, #fp_free_space]
+    ldr    lr, [fp, #fp_stack_level_2+4]
+    ldr    r3, [fp, #fp_stack_level_2]
     ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
     mov    pc, lr
     
 GLOBAL_FUNCTION(write_mid_new):
-    str    r3, [fp, #fp_free_space]
-    str    lr, [fp, #fp_free_space+4]
+    str    r3, [fp, #fp_stack_level_2]
+    str    lr, [fp, #fp_stack_level_2+4]
     add    r3, #4
     str    r3, [fp, #fp_pcaddr]
     mov    r1, #0
     str    r1, [fp, #fp_pending_exception]
     bl     write_mid
-    ldr    lr, [fp, #fp_free_space+4]
-    ldr    r3, [fp, #fp_free_space]
+    ldr    lr, [fp, #fp_stack_level_2+4]
+    ldr    r3, [fp, #fp_stack_level_2]
     ldr    r1, [fp, #fp_pending_exception]
     tst    r1, r1
     bne    mi_exception
