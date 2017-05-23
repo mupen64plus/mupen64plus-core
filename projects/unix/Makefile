@@ -289,7 +289,7 @@ LDLIBS += $(SDL_LDLIBS)
 
 ifeq ($(VC), 1)
   CFLAGS += -DUSE_GLES -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
-  LDLIBS += -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
+  LDLIBS += -L/opt/vc/lib -L/opt/vc/lib/GL -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
   # OSD uses non-ES code and breaks attribs of video plugins
   OSD=0
 endif
