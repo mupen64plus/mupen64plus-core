@@ -166,7 +166,7 @@ static void dma_pi_write(struct pi_controller* pi)
      * hack just before initial cart ROM loading. */
     if (pi->regs[PI_CART_ADDR_REG] == 0x10001000)
     {
-        force_detected_rdram_size_hack();
+        force_detected_rdram_size_hack(&pi->ri->rdram, pi->cic);
     }
 
     /* mark both DMA and IO as busy */
@@ -184,7 +184,8 @@ void init_pi(struct pi_controller* pi,
              struct storage_backend* flashram_storage,
              struct storage_backend* sram_storage,
              struct r4300_core* r4300,
-             struct ri_controller* ri)
+             struct ri_controller* ri,
+             const struct cic* cic)
 {
     init_cart_rom(&pi->cart_rom, rom, rom_size);
     init_flashram(&pi->flashram, flashram_storage);
@@ -194,6 +195,8 @@ void init_pi(struct pi_controller* pi,
 
     pi->r4300 = r4300;
     pi->ri = ri;
+
+    pi->cic = cic;
 }
 
 void poweron_pi(struct pi_controller* pi)

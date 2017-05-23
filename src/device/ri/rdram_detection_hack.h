@@ -22,6 +22,9 @@
 #ifndef M64P_DEVICE_RI_RDRAM_DETECTION_HACK_H
 #define M64P_DEVICE_RI_RDRAM_DETECTION_HACK_H
 
-void force_detected_rdram_size_hack(void);
+struct rdram;
+struct cic;
+
+void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic);
 
 #endif

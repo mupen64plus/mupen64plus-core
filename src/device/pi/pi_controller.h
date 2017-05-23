@@ -31,6 +31,7 @@
 
 struct r4300_core;
 struct ri_controller;
+struct cic;
 struct storage_backend;
 
 enum pi_registers
@@ -63,6 +64,8 @@ struct pi_controller
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
+
+    const struct cic* cic;
 };
 
 static uint32_t pi_reg(uint32_t address)
@@ -77,7 +80,8 @@ void init_pi(struct pi_controller* pi,
              struct storage_backend* flashram_storage,
              struct storage_backend* sram_storage,
              struct r4300_core* r4300,
-             struct ri_controller* ri);
+             struct ri_controller* ri,
+             const struct cic* cic);
 
 void poweron_pi(struct pi_controller* pi);
 
