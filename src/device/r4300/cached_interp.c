@@ -89,7 +89,7 @@
          cp0_update_count(r4300); \
       } \
       r4300->cp0.last_addr = *r4300_pc(r4300); \
-      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(); \
+      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
    } \
    static void name##_OUT(void) \
    { \
@@ -121,7 +121,7 @@
          cp0_update_count(r4300); \
       } \
       r4300->cp0.last_addr = *r4300_pc(r4300); \
-      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(); \
+      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
    } \
    static void name##_IDLE(void) \
    { \

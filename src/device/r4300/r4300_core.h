@@ -198,7 +198,7 @@ struct r4300_core
     struct ri_controller* ri;
 };
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump);
 void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);

@@ -136,8 +136,9 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
-void vi_vertical_interrupt_event(struct vi_controller* vi)
+void vi_vertical_interrupt_event(void* opaque)
 {
+    struct vi_controller* vi = (struct vi_controller*)opaque;
     gfx.updateScreen();
 
     /* allow main module to do things on VI event */

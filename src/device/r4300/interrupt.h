@@ -32,7 +32,7 @@ void init_interrupt(struct cp0* cp0);
 
 void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause);
 
-void gen_interrupt(void);
+void gen_interrupt(struct r4300_core* r4300);
 void check_interrupt(struct r4300_core* r4300);
 
 void translate_event_queue(struct cp0* cp0, unsigned int base);
@@ -44,6 +44,14 @@ int get_next_event_type(const struct interrupt_queue* q);
 
 int save_eventqueue_infos(struct cp0* cp0, char *buf);
 void load_eventqueue_infos(struct cp0* cp0, const char *buf);
+
+void reset_hard_handler(void* opaque);
+
+void compare_int_handler(void* opaque);
+void check_int_handler(void* opaque);
+void special_int_handler(void* opaque);
+void hw2_int_handler(void* opaque);
+void nmi_int_handler(void* opaque);
 
 #define VI_INT      0x001
 #define COMPARE_INT 0x002

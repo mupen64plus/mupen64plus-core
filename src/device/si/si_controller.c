@@ -164,8 +164,9 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     return 0;
 }
 
-void si_end_of_dma_event(struct si_controller* si)
+void si_end_of_dma_event(void* opaque)
 {
+    struct si_controller* si = (struct si_controller*)opaque;
     main_check_inputs();
 
     si->pif.ram[0x3f] = 0x0;

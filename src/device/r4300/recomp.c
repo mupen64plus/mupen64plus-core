@@ -2641,6 +2641,12 @@ void dynarec_cp0_update_count(void)
     cp0_update_count(&g_dev.r4300);
 }
 
+/* Parameterless version of gen_interrupt to ease usage in dynarec. */
+void dynarec_gen_interrupt(void)
+{
+    gen_interrupt(&g_dev.r4300);
+}
+
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/

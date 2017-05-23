@@ -125,7 +125,7 @@ static void gencheck_interrupt(struct r4300_core* r4300, unsigned int instr_stru
     cmp_reg32_m32(EAX, &r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]);
     ja_rj(17);
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), instr_structure); // 10
-    mov_reg32_imm32(EAX, (unsigned int)gen_interrupt); // 5
+    mov_reg32_imm32(EAX, (unsigned int)dynarec_gen_interrupt); // 5
     call_reg32(EAX); // 2
 }
 
@@ -136,7 +136,7 @@ static void gencheck_interrupt_out(struct r4300_core* r4300, unsigned int addr)
     ja_rj(27);
     mov_m32_imm32((unsigned int*)(&r4300->fake_instr.addr), addr);
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(&r4300->fake_instr));
-    mov_reg32_imm32(EAX, (unsigned int)gen_interrupt);
+    mov_reg32_imm32(EAX, (unsigned int)dynarec_gen_interrupt);
     call_reg32(EAX);
 }
 
@@ -147,7 +147,7 @@ static void gencheck_interrupt_reg(struct r4300_core* r4300) // addr is in EAX
     ja_rj(22);
     mov_memoffs32_eax((unsigned int*)(&r4300->fake_instr.addr)); // 5
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(&r4300->fake_instr)); // 10
-    mov_reg32_imm32(EAX, (unsigned int)gen_interrupt); // 5
+    mov_reg32_imm32(EAX, (unsigned int)dynarec_gen_interrupt); // 5
     call_reg32(EAX); // 2
 }
 

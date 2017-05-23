@@ -1047,7 +1047,7 @@ DECLARE_INSTRUCTION(ERET)
     r4300->llbit = 0;
     check_interrupt(r4300);
     r4300->cp0.last_addr = PCADDR;
-    if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(); }
+    if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
 }
 
 DECLARE_INSTRUCTION(SYNC)
@@ -1368,7 +1368,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COUNT_REG:
         cp0_update_count(r4300);
         r4300->cp0.interrupt_unsafe_state = 1;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(); }
+        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state = 0;
         translate_event_queue(&r4300->cp0, rrt32);
         cp0_regs[CP0_COUNT_REG] = rrt32;
@@ -1394,7 +1394,7 @@ DECLARE_INSTRUCTION(MTC0)
         ADD_TO_PC(1);
         check_interrupt(r4300);
         r4300->cp0.interrupt_unsafe_state = 1;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(); }
+        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state = 0;
         ADD_TO_PC(-1);
         break;

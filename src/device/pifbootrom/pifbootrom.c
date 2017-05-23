@@ -111,4 +111,5 @@ void pifbootrom_hle_execute(struct device* dev)
 
     /* XXX: should prepare execution of IPL3 in DMEM here :
      * e.g. jump to 0xa4000040 */
+    *r4300_cp0_last_addr(&dev->r4300.cp0) = 0xa4000040;
 }

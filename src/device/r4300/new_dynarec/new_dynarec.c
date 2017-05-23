@@ -5989,7 +5989,7 @@ static void do_ccstub(int n)
   emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
   emit_writeword(EAX,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-  emit_call((int)gen_interrupt);
+  emit_call((int)dynarec_gen_interrupt);
   emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((int)&g_dev.r4300.cp0.next_interrupt,EAX);
   emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,EBX);

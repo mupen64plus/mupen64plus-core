@@ -345,9 +345,10 @@ void do_SP_Task(struct rsp_core* sp)
     }
 }
 
-void rsp_interrupt_event(struct rsp_core* sp)
+void rsp_interrupt_event(void* opaque)
 {
-    if(!sp->rsp_task_locked)
+    struct rsp_core* sp = (struct rsp_core*)opaque;
+    if (!sp->rsp_task_locked)
     {
         /* XXX: assume task has fully completed */
         sp->regs[SP_STATUS_REG] |=

@@ -79,6 +79,6 @@ void poweron_vi(struct vi_controller* vi);
 int read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
 int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void vi_vertical_interrupt_event(struct vi_controller* vi);
+void vi_vertical_interrupt_event(void* opaque);
 
 #endif

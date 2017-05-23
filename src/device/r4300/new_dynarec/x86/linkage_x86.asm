@@ -122,7 +122,7 @@ cextern base_addr
 cextern new_recompile_block
 cextern get_addr_ht
 cextern get_addr
-cextern gen_interrupt
+cextern dynarec_gen_interrupt
 cextern clean_blocks
 cextern invalidate_block
 cextern new_dynarec_check_interrupt
@@ -257,7 +257,7 @@ cc_interrupt:
     cmp     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_restore_candidate+esi)],    0
     jne     _E4
 _E1:
-    call    gen_interrupt
+    call    dynarec_gen_interrupt
     mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
     mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
     mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
