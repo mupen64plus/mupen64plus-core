@@ -56,7 +56,8 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 
     remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
 
-    return (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
+    uint64_t dma_length = (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
+    return dma_length&~7;
 }
 
 static unsigned int get_dma_duration(struct ai_controller* ai)
@@ -139,12 +140,13 @@ void init_ai(struct ai_controller* ai,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              struct vi_controller* vi,
-             struct audio_out_backend* aout)
+             struct audio_out_backend* aout, unsigned int fixed_audio_pos)
 {
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
+    ai->fixed_audio_pos = fixed_audio_pos;
 }
 
 void poweron_ai(struct ai_controller* ai)
@@ -152,6 +154,7 @@ void poweron_ai(struct ai_controller* ai)
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
+    ai->audio_pos = 0;
 }
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
@@ -178,6 +181,15 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     switch (reg)
     {
+    case AI_DRAM_ADDR_REG:
+        masked_write(&ai->regs[AI_DRAM_ADDR_REG], value, mask);
+        if (ai->fixed_audio_pos) {
+            if (ai->audio_pos == 0)
+                ai->audio_pos = ai->regs[AI_DRAM_ADDR_REG];
+            ai->regs[AI_DRAM_ADDR_REG] = ai->audio_pos;
+        }
+        return 0;
+
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
         fifo_push(ai);
