@@ -3736,7 +3736,6 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_s_w);
   }
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x21) {
@@ -3747,13 +3746,11 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x20) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_s_l);
   }
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x21) {
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_d_l);
   }
   
@@ -3765,32 +3762,27 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x24) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_w_s);
   }
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x25) {
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_l_s);
   }
   
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x20) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_s_d);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x24) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_w_d);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x25) {
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>> 6)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     emit_call((int)cvt_l_d);
   }
   
@@ -3965,7 +3957,6 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   if(opcode2[i]==0x10) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     if((source[i]&0x3f)==0x30) emit_call((int)c_f_s);
     if((source[i]&0x3f)==0x31) emit_call((int)c_un_s);
     if((source[i]&0x3f)==0x32) emit_call((int)c_eq_s);
@@ -3986,7 +3977,6 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   if(opcode2[i]==0x11) {
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     if((source[i]&0x3f)==0x30) emit_call((int)c_f_d);
     if((source[i]&0x3f)==0x31) emit_call((int)c_un_d);
     if((source[i]&0x3f)==0x32) emit_call((int)c_eq_d);
@@ -4127,8 +4117,6 @@ static void float_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)<4)
       emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    if((source[i]&0x3f)<=4)
-      emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     switch(source[i]&0x3f)
     {
       case 0x00: emit_call((int)add_s);break;
@@ -4149,8 +4137,6 @@ static void float_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)<4)
       emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    if((source[i]&0x3f)<=4)
-      emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     switch(source[i]&0x3f)
     {
       case 0x00: emit_call((int)add_d);break;
