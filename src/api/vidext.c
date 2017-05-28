@@ -395,9 +395,7 @@ static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_GREEN_SIZE,   SDL_GL_GREEN_SIZE },
         { M64P_GL_BLUE_SIZE,    SDL_GL_BLUE_SIZE },
         { M64P_GL_ALPHA_SIZE,   SDL_GL_ALPHA_SIZE },
-#if SDL_VERSION_ATLEAST(1,3,0)
-        { M64P_GL_SWAP_CONTROL, SDL_RENDERER_PRESENTVSYNC },
-#else
+#if !SDL_VERSION_ATLEAST(1,3,0)
         { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
 #endif
         { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
@@ -420,6 +418,15 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+    if (Attr == M64P_GL_SWAP_CONTROL)
+    {
+        if (SDL_GL_SetSwapInterval(Value) != 0)
+            return M64ERR_SYSTEM_FAIL;
+        return M64ERR_SUCCESS;
+    }
+#endif
 
     /* translate the GL context type mask if necessary */
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -468,6 +475,14 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
+
+#if SDL_VERSION_ATLEAST(1,3,0)
+    if (Attr == M64P_GL_SWAP_CONTROL)
+    {
+        *pValue = SDL_GL_GetSwapInterval();
+        return M64ERR_SUCCESS;
+    }
+#endif
 
     for (i = 0; i < mapSize; i++)
     {
