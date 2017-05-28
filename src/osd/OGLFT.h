@@ -247,7 +247,6 @@ namespace OGLFT
             virtual BBox measure ( const char* s );
             virtual BBox measureRaw ( const char* s );
             virtual BBox measure ( const wchar_t* s );
-            virtual BBox measure ( const wchar_t* format, double number );
             virtual BBox measureRaw ( const wchar_t* s );
             GLuint compile ( unsigned char c );
             GLuint compile ( const wchar_t c );
@@ -293,7 +292,6 @@ namespace OGLFT
             BBox measure ( unsigned char c );
             BBox measure ( wchar_t c );
             BBox measure ( const char* s ) { return Face::measure( s ); }
-            BBox measure ( const wchar_t* format, double number ) { return Face::measure( format, number ); }
 
         private:
             void init ( void );
