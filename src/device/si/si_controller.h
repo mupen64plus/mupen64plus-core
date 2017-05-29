@@ -52,6 +52,8 @@ struct si_controller
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
+
+    unsigned int delay_si;
 };
 
 static uint32_t si_reg(uint32_t address)
@@ -70,7 +72,8 @@ void init_si(struct si_controller* si,
              struct clock_backend* clock,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
-             struct ri_controller* ri);
+             struct ri_controller* ri,
+             unsigned int delay_si);
 
 void poweron_si(struct si_controller* si);
 
