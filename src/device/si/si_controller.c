@@ -28,7 +28,7 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
-#include "main/main.h"
+#include "main/main.h" /* required for main_check_inputs */
 
 enum
 {
@@ -55,7 +55,7 @@ static void dma_si_write(struct si_controller* si)
     update_pif_write(si);
     cp0_update_count(si->r4300);
 
-    if (g_delay_si) {
+    if (si->delay_si) {
         add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
     } else {
         si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
@@ -82,7 +82,7 @@ static void dma_si_read(struct si_controller* si)
 
     cp0_update_count(si->r4300);
 
-    if (g_delay_si) {
+    if (si->delay_si) {
         add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
     } else {
         si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
@@ -101,10 +101,12 @@ void init_si(struct si_controller* si,
              struct clock_backend* clock,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
-             struct ri_controller* ri)
+             struct ri_controller* ri,
+             unsigned int delay_si)
 {
     si->r4300 = r4300;
     si->ri = ri;
+    si->delay_si = delay_si;
 
     init_pif(&si->pif,
         cins,

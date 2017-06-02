@@ -53,10 +53,11 @@ struct new_dynarec_hot_state
     unsigned char restore_candidate[512];
     unsigned int memory_map[1048576];
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
-    /* 0-4: Stack space used by dynarec to push/pop caller-saved register (r0-r3, r12)
-       5-6: free_space,
-       6-15: saved_context */
-    uint32_t dynarec_local[16];
+    /* 0-6:   used by dynarec to push/pop caller-saved register (r0-r3, r12) and possibly lr (see invalidate_addr)
+       7-15:  saved_context,
+       16-23: stack_level_1
+       24-31: stack_level_2 */
+    uint32_t dynarec_local[32];
     unsigned int next_interrupt;
     int cycle_count;
     int last_count;
@@ -66,10 +67,9 @@ struct new_dynarec_hot_state
     char* invc_ptr;
     uint32_t address;
     uint64_t rdword;
+    uint32_t wmask;
     uint64_t wdword;
     uint32_t wword;
-    uint16_t whword;
-    uint8_t  wbyte;
     uint32_t fcr0;
     uint32_t fcr31;
     int64_t  regs[32];

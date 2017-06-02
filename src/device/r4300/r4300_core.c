@@ -281,23 +281,13 @@ uint32_t* r4300_address(struct r4300_core* r4300)
 #endif
 }
 
-uint8_t*  r4300_wbyte(struct r4300_core* r4300)
+uint32_t* r4300_wmask(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-    return &r4300->wbyte;
+    return &r4300->wmask;
 #else
-    return &r4300->new_dynarec_hot_state.wbyte;
-#endif
-}
-
-uint16_t* r4300_whword(struct r4300_core* r4300)
-{
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    return &r4300->whword;
-#else
-    return &r4300->new_dynarec_hot_state.whword;
+    return &r4300->new_dynarec_hot_state.wmask;
 #endif
 }
 
