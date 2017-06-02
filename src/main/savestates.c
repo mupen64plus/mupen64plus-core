@@ -466,16 +466,16 @@ int savestates_load_m64p(char *filepath)
     {
         g_dev.r4300.cp0.tlb.entries[i].mask = GETDATA(curr, short);
         curr += 2;
-        g_dev.r4300.cp0.tlb.entries[i].vpn2 = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].vpn2 = GETDATA(curr, unsigned int);
         g_dev.r4300.cp0.tlb.entries[i].g = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].asid = GETDATA(curr, unsigned char);
         curr += 2;
-        g_dev.r4300.cp0.tlb.entries[i].pfn_even = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].pfn_even = GETDATA(curr, unsigned int);
         g_dev.r4300.cp0.tlb.entries[i].c_even = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].d_even = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].v_even = GETDATA(curr, char);
         curr++;
-        g_dev.r4300.cp0.tlb.entries[i].pfn_odd = GETDATA(curr, int);
+        g_dev.r4300.cp0.tlb.entries[i].pfn_odd = GETDATA(curr, unsigned int);
         g_dev.r4300.cp0.tlb.entries[i].c_odd = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].d_odd = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].v_odd = GETDATA(curr, char);
@@ -1220,16 +1220,16 @@ int savestates_save_m64p(char *filepath)
     {
         PUTDATA(curr, short, g_dev.r4300.cp0.tlb.entries[i].mask);
         PUTDATA(curr, short, 0);
-        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].vpn2);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].vpn2);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].g);
         PUTDATA(curr, unsigned char, g_dev.r4300.cp0.tlb.entries[i].asid);
         PUTDATA(curr, short, 0);
-        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].pfn_even);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].pfn_even);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].c_even);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].d_even);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].v_even);
         PUTDATA(curr, char, 0);
-        PUTDATA(curr, int, g_dev.r4300.cp0.tlb.entries[i].pfn_odd);
+        PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].pfn_odd);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].c_odd);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].d_odd);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].v_odd);
