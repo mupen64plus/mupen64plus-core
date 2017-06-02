@@ -117,8 +117,6 @@ char* g_gb_rom_files[GAME_CONTROLLERS_COUNT] = {
 #endif
 };
 
-int g_delay_si = 0;
-
 int g_gs_vi_counter = 0;
 
 /** static (local) variables **/
@@ -943,6 +941,7 @@ static void init_gb_ram(void* opaque, struct storage_backend* storage)
 m64p_error main_run(void)
 {
     size_t i;
+    unsigned int delay_si;
     unsigned int count_per_op;
     unsigned int emumode;
     int alternate_vi_timing, count_per_scanline;
@@ -974,7 +973,7 @@ m64p_error main_run(void)
 #ifdef NEW_DYNAREC
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
-    g_delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+    delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
     count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
@@ -1065,6 +1064,7 @@ m64p_error main_run(void)
                 gb_carts,
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
+                delay_si,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
 
     // Attach rom to plugins
