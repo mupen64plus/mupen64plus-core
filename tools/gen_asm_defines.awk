@@ -3,10 +3,6 @@ BEGIN {
   gas_file =  dest_dir"/asm_defines_gas.h";
 }
 
-NR==1 {
-  msvc = match($0, /Microsoft/);
-}
-
 {
   where = match($0, /offsetof_struct/);
   
@@ -17,10 +13,7 @@ NR==1 {
     sub(/\r/, "", offset_name);
     sub(/\n/, "", offset_name);
     
-    if(msvc != 0)
-      offset_value = $2;
-    else
-      offset_value = $1;
+    offset_value = $1;
         
     sub(/0x/, "", offset_value);
     

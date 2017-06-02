@@ -42,7 +42,14 @@
  * The plus one in size is to avoid the creation of zero sized array (which are illegal in C).
  * We need to subtract one in objects symbols sizes to get the correct value.
  */
+
+#ifdef _MSC_VER
+#define _DEFINE(sym, val) \
+    __pragma(const_seg(#sym)) \
+    const char sym[1+val];
+#else
 #define _DEFINE(sym, val) const char sym[1+val];
+#endif
 
 /* Export member m of structure s.
  * Suitable parsing of corresponding object file (objdump/dumpbin/awk)
@@ -79,10 +86,9 @@ DEFINE(r4300_core, return_address);
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
-DEFINE(r4300_core, wbyte);
-DEFINE(r4300_core, whword);
 DEFINE(r4300_core, wword);
 DEFINE(r4300_core, wdword);
+DEFINE(r4300_core, wmask);
 DEFINE(r4300_core, address);
 #endif
 
@@ -102,6 +108,12 @@ DEFINE(tlb, LUT_w);
 
 DEFINE(r4300_core, cached_interp);
 DEFINE(cached_interp, invalid_code);
+
+DEFINE(device, mem);
+DEFINE(memory, readmem);
+DEFINE(memory, readmemd);
+DEFINE(memory, writemem);
+DEFINE(memory, writememd);
 
 #ifdef NEW_DYNAREC
 DEFINE(r4300_core, new_dynarec_hot_state);
@@ -128,10 +140,9 @@ DEFINE(new_dynarec_hot_state, stop);
 DEFINE(new_dynarec_hot_state, invc_ptr);
 DEFINE(new_dynarec_hot_state, address);
 DEFINE(new_dynarec_hot_state, rdword);
+DEFINE(new_dynarec_hot_state, wmask);
 DEFINE(new_dynarec_hot_state, wdword);
 DEFINE(new_dynarec_hot_state, wword);
-DEFINE(new_dynarec_hot_state, whword);
-DEFINE(new_dynarec_hot_state, wbyte);
 DEFINE(new_dynarec_hot_state, fcr0);
 DEFINE(new_dynarec_hot_state, fcr31);
 DEFINE(new_dynarec_hot_state, regs);

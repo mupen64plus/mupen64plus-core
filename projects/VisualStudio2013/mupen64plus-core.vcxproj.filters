@@ -360,6 +360,9 @@
     <ClCompile Include="..\..\src\device\si\transferpak.c">
       <Filter>device\si</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\r4300\x86_64\dynarec.c">
+      <Filter>device\r4300\x86_64</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\device\ai\ai_controller.h">
