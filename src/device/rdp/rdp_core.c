@@ -143,10 +143,6 @@ void rdp_interrupt_event(void* opaque)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
 
-    dp->dpc_regs[DPC_STATUS_REG] &= ~DPC_STATUS_FREEZE;
-    dp->dpc_regs[DPC_STATUS_REG] |= DPC_STATUS_XBUS_DMEM_DMA
-        | DPC_STATUS_CBUF_READY;
-
     raise_rcp_interrupt(dp->r4300, MI_INTR_DP);
 }
 
