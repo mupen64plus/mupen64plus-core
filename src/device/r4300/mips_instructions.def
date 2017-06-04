@@ -214,29 +214,14 @@ DECLARE_INSTRUCTION(LWL)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t word = 0;
     ADD_TO_PC(1);
-    if ((lsaddr & 3) == 0)
-    {
-        *r4300_address(r4300) = lsaddr;
-        r4300->rdword = (uint64_t*) lsrtp;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-            *lsrtp = SE32(*lsrtp);
-    }
-    else
-    {
-        *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-        r4300->rdword = &word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from the old value? */
-            uint32_t old_mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
-            /* How many bits up do we want to add the low bits of the new value in? */
-            int new_shift = (lsaddr & 3) * 8;
-            *lsrtp = SE32(((uint32_t) *lsrtp & old_mask) | ((uint32_t) word << new_shift));
-        }
+
+    unsigned int shift = (lsaddr & 3) * 8;
+    uint32_t mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(((uint32_t)*lsrtp & mask) | ((uint32_t)value << shift));
     }
 }
 
