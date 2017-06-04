@@ -174,11 +174,10 @@ DECLARE_INSTRUCTION(LL)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp = SE32(*lsrtp);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(value);
         r4300->llbit = 1;
     }
 }
