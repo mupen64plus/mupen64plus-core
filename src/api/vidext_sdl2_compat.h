@@ -21,7 +21,7 @@
 
 #include <SDL_config.h>
 #include <SDL_surface.h>
-
+#include "main/main.h"
 #ifndef USE_GLES
 
 #ifndef SDL_VIDEO_OPENGL
@@ -375,8 +375,13 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
 {
     SDL_DisplayMode desktop_mode;
     int display = GetVideoDisplay();
-    int window_x = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
-    int window_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
+    int window_x = ConfigGetParamInt(g_CoreConfig, "ScreenPosX");
+    int window_y = ConfigGetParamInt(g_CoreConfig, "ScreenPosY");
+    if (window_x == -1 || window_y == -1)
+    {
+        window_x = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
+        window_y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(display);
+    }
     Uint32 window_flags;
     Uint32 surface_flags;
 

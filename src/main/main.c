@@ -278,6 +278,9 @@ int main_set_core_defaults(void)
     ConfigSetDefaultInt(g_CoreConfig, "CountPerScanline", -1, "Modify the default count per scanline(-1 or 0=Game default)");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
+    ConfigSetDefaultInt(g_CoreConfig, "ScreenPosX", -1, "X position of window");
+    ConfigSetDefaultInt(g_CoreConfig, "ScreenPosY", -1, "Y position of window");
+
     /* handle upgrades */
     if (bUpgrade)
     {
