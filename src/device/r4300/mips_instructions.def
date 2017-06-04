@@ -160,13 +160,11 @@ DECLARE_INSTRUCTION(LHU)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
+    uint32_t value;
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp >>= shift;
-        *lsrtp &= 0xffff;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = (value >> shift) & 0xffff;
     }
 }
 
