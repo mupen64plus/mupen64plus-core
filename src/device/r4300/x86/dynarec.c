@@ -599,16 +599,15 @@ void genld(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->readmemd);
-        cmp_reg32_imm32(EAX, (unsigned int)read_rdramd);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->readmem);
+        cmp_reg32_imm32(EAX, (unsigned int)read_rdram);
     }
-    je_rj(51);
+    je_rj(46);
 
     mov_m32_imm32((unsigned int *)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst+1)); // 10
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
     mov_m32_imm32((unsigned int *)(&r4300->rdword), (unsigned int)r4300->recomp.dst->f.i.rt); // 10
-    shr_reg32_imm8(EBX, 16); // 3
-    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->readmemd); // 7
+    mov_reg32_imm32(EBX, (unsigned int)dynarec_read_aligned_dword); // 5
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300->recomp.dst->f.i.rt)); // 5
     mov_reg32_m32(ECX, (unsigned int *)(r4300->recomp.dst->f.i.rt)+1); // 6
