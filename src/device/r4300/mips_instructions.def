@@ -409,31 +409,14 @@ DECLARE_INSTRUCTION(SDR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFF8);
-    if ((lsaddr & 7) == 7)
-    {
-        *r4300_wdword(r4300) = *lsrtp;
-        write_dword_in_memory();
+
+    unsigned int shift = (7 - (lsaddr & 7)) * 8;
+    uint64_t mask = BITS_ABOVE_MASK64((7 - (lsaddr & 7)) * 8);
+    uint64_t value = ((uint64_t)*lsrtp << shift);
+
+    if (r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask)) {
         CHECK_MEMORY();
-    }
-    else
-    {
-        r4300->rdword = &old_word;
-        read_dword_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from what was in memory
-             * before? */
-            uint64_t old_mask = BITS_BELOW_MASK64((7 - (lsaddr & 7)) * 8);
-            /* How many bits up do we need to shift the register to store some
-             * of its low bits into the high bits of the memory word? */
-            int new_shift = (7 - (lsaddr & 7)) * 8;
-            *r4300_wdword(r4300) = (old_word & old_mask) | (*lsrtp << new_shift);
-            write_dword_in_memory();
-            CHECK_MEMORY();
-        }
     }
 }
 
