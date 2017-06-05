@@ -365,33 +365,14 @@ DECLARE_INSTRUCTION(SWR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-    if ((lsaddr & 3) == 3)
-    {
-        *r4300_wword(r4300) = (uint32_t) *lsrtp;
-        *r4300_wmask(r4300) = ~UINT32_C(0);
-        write_word_in_memory();
+
+    unsigned int shift = (3 - (lsaddr & 3)) * 8;
+    uint32_t mask = BITS_ABOVE_MASK32((3 - (lsaddr & 3)) * 8);
+    uint32_t value = ((uint32_t)*lsrtp << shift);
+
+    if (r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask)) {
         CHECK_MEMORY();
-    }
-    else
-    {
-        r4300->rdword = &old_word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from what was in memory
-             * before? */
-            int32_t old_mask = BITS_BELOW_MASK32((3 - (lsaddr & 3)) * 8);
-            /* How many bits up do we need to shift the register to store some
-             * of its low bits into the high bits of the memory word? */
-            int new_shift = (3 - (lsaddr & 3)) * 8;
-            *r4300_wword(r4300) = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
-            *r4300_wmask(r4300) = ~UINT32_C(0);
-            write_word_in_memory();
-            CHECK_MEMORY();
-        }
     }
 }
 
