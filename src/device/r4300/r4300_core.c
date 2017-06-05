@@ -38,6 +38,7 @@
 #endif
 #include "main/main.h"
 
+#include <assert.h>
 #include <string.h>
 
 
@@ -337,6 +338,23 @@ int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t
     return success;
 }
 
+/* Read aligned dword from memory */
+int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t* value)
+{
+    uint32_t w[2];
+
+    assert((address & 0x7) == 0);
+
+    int success = (r4300_read_aligned_word(r4300, address, &w[0])
+        && r4300_read_aligned_word(r4300, address + 4, &w[1]));
+
+    if (success) {
+        *value = ((uint64_t)w[0] << 32) | w[1];
+    }
+
+    return success;
+}
+
 /* Write aligned word to memory.
  * address may not be word-aligned for byte or hword accesses.
  * In such case, writew (in memory.c) takes care of word alignment.
@@ -351,6 +369,15 @@ int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_
     r4300->mem->writemem[address >> 16]();
 
     return (*r4300_address(r4300) != 0);
+}
+
+/* Write aligned dword to memory */
+int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t value, uint64_t mask)
+{
+    assert((address & 0x7) == 0);
+
+    return (r4300_write_aligned_word(r4300, address, (value >> 32), (mask >> 32))
+            && r4300_write_aligned_word(r4300, address + 4, value, mask));
 }
 
 void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)
