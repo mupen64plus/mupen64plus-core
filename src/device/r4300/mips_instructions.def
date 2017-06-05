@@ -338,11 +338,10 @@ DECLARE_INSTRUCTION(SW)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_wword(r4300) = (uint32_t) *lsrtp;
-    *r4300_wmask(r4300) = ~UINT32_C(0);
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp, ~UINT32_C(0))) {
+        CHECK_MEMORY();
+    }
 }
 
 DECLARE_INSTRUCTION(SWL)
