@@ -1307,11 +1307,10 @@ DECLARE_INSTRUCTION(SWC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lslfaddr;
-    *r4300_wword(r4300) = *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]);
-    *r4300_wmask(r4300) = ~UINT32_C(0);
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    if (r4300_write_aligned_word(r4300, lslfaddr, *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]), ~UINT32_C(0))) {
+        CHECK_MEMORY();
+    }
 }
 
 DECLARE_INSTRUCTION(SDC1)
