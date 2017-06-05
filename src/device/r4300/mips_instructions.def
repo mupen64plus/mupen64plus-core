@@ -247,9 +247,8 @@ DECLARE_INSTRUCTION(LD)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_dword_in_memory();
+
+    r4300_read_aligned_dword(r4300, lsaddr, (uint64_t*)lsrtp);
 }
 
 DECLARE_INSTRUCTION(LDL)
