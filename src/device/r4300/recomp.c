@@ -2646,6 +2646,27 @@ void dynarec_gen_interrupt(void)
     gen_interrupt(&g_dev.r4300);
 }
 
+/* Parameterless version of read_aligned_dword to ease usage in dynarec. */
+int dynarec_read_aligned_dword(void)
+{
+    return r4300_read_aligned_dword(
+        &g_dev.r4300,
+        *r4300_address(&g_dev.r4300),
+        (uint64_t*)g_dev.r4300.rdword);
+}
+
+/* Parameterless version of write_aligned_dword to ease usage in dynarec. */
+int dynarec_write_aligned_dword(void)
+{
+    return r4300_write_aligned_dword(
+        &g_dev.r4300,
+        *r4300_address(&g_dev.r4300),
+        *r4300_wdword(&g_dev.r4300),
+        ~UINT64_C(0)); /* NOTE: in dynarec, we only need all-one masks */
+}
+
+
+
 /**********************************************************************
  ************** allocate memory with executable bit set ***************
  **********************************************************************/
