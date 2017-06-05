@@ -1105,7 +1105,7 @@ void gensd(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writememd);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -1113,20 +1113,19 @@ void gensd(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdramd);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
     }
-    je_rj(56);
+    je_rj(59);
 
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_wdword(r4300)), ECX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_wdword(r4300))+1, EDX); // 7
-    shr_reg32_imm8(EBX, 16); // 3
-    mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
+    mov_reg64_imm64(RBX, (unsigned long long)dynarec_write_aligned_dword); // 10
     call_reg64(RBX); // 2
     mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_address(r4300))); // 7
     jmp_imm_short(28); // 2
