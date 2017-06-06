@@ -682,8 +682,7 @@ void genlw(struct r4300_core* r4300)
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
-    shr_reg32_imm8(gpr2, 16);
-    mov_reg64_preg64x8preg64(gpr1, gpr2, base1);
+    mov_reg64_imm64(gpr1, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr1);
     mov_xreg32_m32rel(gpr1, (unsigned int *)(r4300->recomp.dst->f.i.rt));
 
