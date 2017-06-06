@@ -92,8 +92,8 @@ int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 }
 
 
-#define R(x) read_ ## x, read_ ## x ## d
-#define W(x) write_ ## x, write_ ## x ## d
+#define R(x) read_ ## x
+#define W(x) write_ ## x
 #define RW(x) R(x), W(x)
 
 void protect_framebuffers(struct rdp_core* dp)

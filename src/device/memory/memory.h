@@ -27,16 +27,12 @@
 struct memory
 {
     void (*readmem[0x10000])(void);
-    void (*readmemd[0x10000])(void);
     void (*writemem[0x10000])(void);
-    void (*writememd[0x10000])(void);
 
 #ifdef DBG
     int memtype[0x10000];
     void (*saved_readmem [0x10000])(void);
-    void (*saved_readmemd[0x10000])(void);
     void (*saved_writemem [0x10000])(void);
-    void (*saved_writememd[0x10000])(void);
 #endif
 };
 
@@ -76,19 +72,13 @@ void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
                 void (*read32)(void),
-                void (*read64)(void),
-                void (*write32)(void),
-                void (*write64)(void));
+                void (*write32)(void));
 
 /* XXX: cannot make them static because of dynarec + rdp fb */
 void read_rdram(void);
-void read_rdramd(void);
 void write_rdram(void);
-void write_rdramd(void);
 void read_rdramFB(void);
-void read_rdramFBd(void);
 void write_rdramFB(void);
-void write_rdramFBd(void);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
