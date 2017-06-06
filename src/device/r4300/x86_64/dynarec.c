@@ -413,11 +413,9 @@ void genlb(struct r4300_core* r4300)
     shl_reg64_imm8(base2, 3);
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
-    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
-    shr_reg32_imm8(gpr2, 16);
-    mov_reg64_preg64x8preg64(gpr2, gpr2, base1);
+    mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
     and_reg64_reg64(gpr2, gpr2);
