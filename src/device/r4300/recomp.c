@@ -2646,6 +2646,32 @@ void dynarec_gen_interrupt(void)
     gen_interrupt(&g_dev.r4300);
 }
 
+/* Parameterless version of read_aligned_word to ease usage in dynarec. */
+int dynarec_read_aligned_word(void)
+{
+    uint32_t value;
+
+    int result = r4300_read_aligned_word(
+        &g_dev.r4300,
+        *r4300_address(&g_dev.r4300),
+        &value);
+
+    if (result)
+        *g_dev.r4300.rdword = value;
+
+    return result;
+}
+
+/* Parameterless version of write_aligned_word to ease usage in dynarec. */
+int dynarec_write_aligned_word(void)
+{
+    return r4300_write_aligned_word(
+        &g_dev.r4300,
+        *r4300_address(&g_dev.r4300),
+        *r4300_wword(&g_dev.r4300),
+        *r4300_wmask(&g_dev.r4300));
+}
+
 /* Parameterless version of read_aligned_dword to ease usage in dynarec. */
 int dynarec_read_aligned_dword(void)
 {
