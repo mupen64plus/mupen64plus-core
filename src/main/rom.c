@@ -43,6 +43,7 @@
 #include "rom.h"
 #include "util.h"
 
+#define DEFAULT 16
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
 /* Amount of cpu cycles per vi scanline - empirically determined */
