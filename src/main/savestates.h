@@ -48,8 +48,13 @@ void savestates_deinit(void);
 int savestates_load(void);
 int savestates_save(void);
 
+#ifdef __LIBRETRO__
+int savestates_save_m64p(void *data);
+int savestates_load_m64p(const void *data);
+#else
 int savestates_save_m64p(char *filepath);
 int savestates_load_m64p(char *filepath);
+#endif
 
 void savestates_select_slot(unsigned int s);
 unsigned int savestates_get_slot(void);
