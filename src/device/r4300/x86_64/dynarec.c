@@ -854,7 +854,7 @@ void gensb(struct r4300_core* r4300)
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
     }
-    je_rj(91);
+    je_rj(88);
 
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->recomp.dst+1)); // 10
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
@@ -865,14 +865,12 @@ void gensb(struct r4300_core* r4300)
     xor_reg8_imm8(CL, 3); // 4
     shl_reg32_imm8(ECX, 3); // 3
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
-    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     shl_reg32_cl(EDX); // 2
     mov_m32rel_xreg32((unsigned int *)(r4300_wword(r4300)), EDX); // 7
     mov_reg64_imm64(RDX, 0xff); // 10
     shl_reg32_cl(EDX); // 2
     mov_m32rel_xreg32((unsigned int *)(r4300_wmask(r4300)), EDX); // 7
-    shr_reg32_imm8(EBX, 16); // 3
-    mov_reg64_preg64x8preg64(RBX, RBX, RSI);  // 4
+    mov_reg64_imm64(RBX, (unsigned long long)dynarec_write_aligned_word); // 10
     call_reg64(RBX); // 2
     mov_xreg32_m32rel(EAX, (unsigned int *)(r4300_address(r4300))); // 7
     jmp_imm_short(25); // 2
