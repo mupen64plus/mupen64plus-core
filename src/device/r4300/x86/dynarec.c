@@ -4083,14 +4083,13 @@ void genlwc1(struct r4300_core* r4300)
         mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->readmem);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram);
     }
-    je_rj(42);
+    je_rj(37);
 
     mov_m32_imm32((unsigned int *)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst+1)); // 10
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
     mov_reg32_m32(EDX, (unsigned int*)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->recomp.dst->f.lf.ft])); // 6
     mov_m32_reg32((unsigned int *)(&r4300->rdword), EDX); // 6
-    shr_reg32_imm8(EBX, 16); // 3
-    mov_reg32_preg32x4pimm32(EBX, EBX, (unsigned int)r4300->mem->readmem); // 7
+    mov_reg32_imm32(EBX, (unsigned int)dynarec_read_aligned_word); // 5
     call_reg32(EBX); // 2
     jmp_imm_short(20); // 2
 
