@@ -49,6 +49,17 @@ typedef void (*readfn)(void*,uint32_t,uint32_t*);
 typedef void (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 
 
+static void read_open_bus(void* opaque, uint32_t address, uint32_t* value)
+{
+    *value = address & 0xffff;
+    *value |= (*value << 16);
+}
+
+static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+}
+
+
 static void readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
@@ -69,12 +80,12 @@ static void* get_opaque(void)
 
 static void read_nothing(void)
 {
-    *g_dev.r4300.rdword = *r4300_address(&g_dev.r4300) & 0xFFFF;
-    *g_dev.r4300.rdword = (*g_dev.r4300.rdword << 16) | *g_dev.r4300.rdword;
+    readw(read_open_bus, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
 }
 
 static void write_nothing(void)
 {
+    writew(write_open_bus, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
 static void read_nomem(void)
@@ -405,8 +416,8 @@ void poweron_memory(struct memory* mem)
     }
     for(i = /*0x40*/0x80; i < 0x3f0; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map RDRAM registers */
@@ -414,8 +425,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa3f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdramreg));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x83f0+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa3f0+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x83f0+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa3f0+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map RSP memory */
@@ -423,8 +434,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rspmem));
     for(i = 1; i < 0x4; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map RSP registers (1) */
@@ -432,8 +443,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa404, M64P_MEM_RSPREG, &g_dev.sp, RW(rspreg));
     for(i = 0x5; i < 0x8; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map RSP registers (2) */
@@ -441,8 +452,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa408, M64P_MEM_RSP, &g_dev.sp, RW(rspreg2));
     for(i = 0x9; i < 0x10; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map DPC registers */
@@ -450,8 +461,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa410, M64P_MEM_DP, &g_dev.dp, RW(dp));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8410+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa410+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8410+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa410+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map DPS registers */
@@ -459,8 +470,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa420, M64P_MEM_DPS, &g_dev.dp, RW(dps));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8420+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa420+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8420+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa420+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map MI registers */
@@ -468,8 +479,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa430, M64P_MEM_MI, &g_dev.r4300, RW(mi));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8430+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa430+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8430+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa430+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map VI registers */
@@ -477,8 +488,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa440, M64P_MEM_VI, &g_dev.vi, RW(vi));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8440+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa440+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8440+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa440+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map AI registers */
@@ -486,8 +497,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa450, M64P_MEM_AI, &g_dev.ai, RW(ai));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8450+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa450+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8450+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa450+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map PI registers */
@@ -495,8 +506,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa460, M64P_MEM_PI, &g_dev.pi, RW(pi));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8460+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa460+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8460+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa460+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map RI registers */
@@ -504,8 +515,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa470, M64P_MEM_RI, &g_dev.ri, RW(ri));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8470+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa470+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8470+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa470+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map SI registers */
@@ -513,14 +524,14 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa480, M64P_MEM_SI, &g_dev.si, RW(si));
     for(i = 0x481; i < 0x500; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     for(i = 0x500; i < 0x800; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map flashram/sram */
@@ -530,8 +541,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xa801, M64P_MEM_NOTHING, &g_dev.pi, RW(pi_flashram_command));
     for(i = 0x802; i < 0x1000; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map cart ROM */
@@ -542,8 +553,8 @@ void poweron_memory(struct memory* mem)
     }
     for(i = (g_dev.pi.cart_rom.rom_size >> 16); i < 0xfc0; ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 
     /* map PIF RAM */
@@ -551,8 +562,8 @@ void poweron_memory(struct memory* mem)
     map_region(mem, 0xbfc0, M64P_MEM_PIF, &g_dev.si, RW(pif));
     for(i = 0xfc1; i < 0x1000; ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, &g_dev.r4300, RW(nothing));
+        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
     }
 }
 
