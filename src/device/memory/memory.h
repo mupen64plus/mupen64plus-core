@@ -26,11 +26,13 @@
 
 struct memory
 {
+    void* opaque[0x10000];
     void (*readmem[0x10000])(void);
     void (*writemem[0x10000])(void);
 
 #ifdef DBG
     int memtype[0x10000];
+    void* saved_opaque[0x10000];
     void (*saved_readmem [0x10000])(void);
     void (*saved_writemem [0x10000])(void);
 #endif
@@ -71,6 +73,7 @@ void poweron_memory(struct memory* mem);
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
+                void* opaque,
                 void (*read32)(void),
                 void (*write32)(void));
 

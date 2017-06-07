@@ -133,6 +133,15 @@ void read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
     *value = pi->flashram.status >> 32;
 }
 
+void write_flashram_status(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+}
+
+void read_flashram_command(void* opaque, uint32_t address, uint32_t* value)
+{
+    *value = 0;
+}
+
 void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
