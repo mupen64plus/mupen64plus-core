@@ -79,21 +79,12 @@ static void write_nothing(void)
 
 static void read_nomem(void)
 {
-    struct r4300_core* r4300 = (struct r4300_core*)get_opaque();
-
-    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300), 0);
-    if (*r4300_address(r4300) == 0x00000000) return;
-    read_word_in_memory();
+    readw(read_tlb_mem, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
 }
 
 static void write_nomem(void)
 {
-    struct r4300_core* r4300 = (struct r4300_core*)get_opaque();
-
-    invalidate_r4300_cached_code(r4300, *r4300_address(r4300), 4);
-    *r4300_address(r4300) = virtual_to_physical_address(r4300, *r4300_address(r4300),1);
-    if (*r4300_address(r4300) == 0x00000000) return;
-    write_word_in_memory();
+    writew(write_tlb_mem, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
 }
 
 void read_rdram(void)

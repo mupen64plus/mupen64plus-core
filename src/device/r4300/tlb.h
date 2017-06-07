@@ -66,4 +66,7 @@ void tlb_map(struct tlb* tlb, size_t entry);
 
 uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w);
 
+void read_tlb_mem(void* opaque, uint32_t address, uint32_t* value);
+void write_tlb_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
 #endif /* M64P_DEVICE_R4300_TLB_H */

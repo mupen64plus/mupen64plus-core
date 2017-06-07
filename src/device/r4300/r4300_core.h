@@ -231,9 +231,6 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
 int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask);
 int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t value, uint64_t mask);
 
-#define read_word_in_memory()   r4300->mem->readmem  [*r4300_address(r4300)>>16]()
-#define write_word_in_memory()  r4300->mem->writemem [*r4300_address(r4300)>>16]()
-
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]
  *
