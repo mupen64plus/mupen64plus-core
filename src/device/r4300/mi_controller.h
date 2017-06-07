@@ -58,8 +58,8 @@ static uint32_t mi_reg(uint32_t address)
 
 void poweron_mi(struct mi_controller* mi);
 
-int read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr);
 void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr);

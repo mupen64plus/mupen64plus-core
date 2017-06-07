@@ -58,7 +58,7 @@ void init_ri(struct ri_controller* ri,
 
 void poweron_ri(struct ri_controller* ri);
 
-int read_ri_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_ri_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #endif

@@ -75,8 +75,8 @@ void init_si(struct si_controller* si,
 
 void poweron_si(struct si_controller* si);
 
-int read_si_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_si_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void si_end_of_dma_event(void* opaque);
 

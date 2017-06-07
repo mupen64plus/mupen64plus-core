@@ -41,44 +41,36 @@ void poweron_rdram(struct rdram* rdram)
 }
 
 
-int read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = rdram_reg(address);
 
     *value = ri->rdram.regs[reg];
-
-    return 0;
 }
 
-int write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = rdram_reg(address);
 
     masked_write(&ri->rdram.regs[reg], value, mask);
-
-    return 0;
 }
 
 
-int read_rdram_dram(void* opaque, uint32_t address, uint32_t* value)
+void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t addr = rdram_dram_address(address);
 
     *value = ri->rdram.dram[addr];
-
-    return 0;
 }
 
-int write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t addr = rdram_dram_address(address);
 
     masked_write(&ri->rdram.dram[addr], value, mask);
-
-    return 0;
 }
 

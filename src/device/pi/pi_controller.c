@@ -192,17 +192,15 @@ void poweron_pi(struct pi_controller* pi)
     poweron_flashram(&pi->flashram);
 }
 
-int read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
     uint32_t reg = pi_reg(address);
 
     *value = pi->regs[reg];
-
-    return 0;
 }
 
-int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
     uint32_t reg = pi_reg(address);
@@ -212,17 +210,17 @@ int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     case PI_RD_LEN_REG:
         masked_write(&pi->regs[PI_RD_LEN_REG], value, mask);
         dma_pi_read(pi);
-        return 0;
+        return;
 
     case PI_WR_LEN_REG:
         masked_write(&pi->regs[PI_WR_LEN_REG], value, mask);
         dma_pi_write(pi);
-        return 0;
+        return;
 
     case PI_STATUS_REG:
         if (value & mask & 2)
             clear_rcp_interrupt(pi->r4300, MI_INTR_PI);
-        return 0;
+        return;
 
     case PI_BSD_DOM1_LAT_REG:
     case PI_BSD_DOM1_PWD_REG:
@@ -233,12 +231,10 @@ int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     case PI_BSD_DOM2_PGS_REG:
     case PI_BSD_DOM2_RLS_REG:
         masked_write(&pi->regs[reg], value & 0xff, mask);
-        return 0;
+        return;
     }
 
     masked_write(&pi->regs[reg], value, mask);
-
-    return 0;
 }
 
 void pi_end_of_dma_event(void* opaque)

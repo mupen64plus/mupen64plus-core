@@ -40,23 +40,19 @@ void poweron_ri(struct ri_controller* ri)
 }
 
 
-int read_ri_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_ri_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = ri_reg(address);
 
     *value = ri->regs[reg];
-
-    return 0;
 }
 
-int write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = ri_reg(address);
 
     masked_write(&ri->regs[reg], value, mask);
-
-    return 0;
 }
 

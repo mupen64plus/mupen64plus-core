@@ -315,7 +315,7 @@ void poweron_pif(struct pif* pif)
     }
 }
 
-int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
+void read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
 {
     struct si_controller* si = (struct si_controller*)opaque;
     uint32_t addr = pif_ram_address(address);
@@ -324,16 +324,14 @@ int read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
     {
         DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08" PRIX32, address);
         *value = 0;
-        return -1;
+        return;
     }
 
     memcpy(value, si->pif.ram + addr, sizeof(*value));
     *value = sl(*value);
-
-    return 0;
 }
 
-int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct si_controller* si = (struct si_controller*)opaque;
     uint32_t addr = pif_ram_address(address);
@@ -341,14 +339,12 @@ int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     if (addr >= PIF_RAM_SIZE)
     {
         DebugMessage(M64MSG_ERROR, "Invalid PIF address: %08" PRIX32, address);
-        return -1;
+        return;
     }
 
     masked_write((uint32_t*)(&si->pif.ram[addr]), sl(value), sl(mask));
 
     process_pif_ram(si);
-
-    return 0;
 }
 
 

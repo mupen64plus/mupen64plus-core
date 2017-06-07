@@ -129,8 +129,8 @@ void poweron_pif(struct pif* pif);
 
 void setup_channels_format(struct pif* pif);
 
-int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
-int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
+void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void process_pif_ram(struct si_controller* si);
 void update_pif_ram(struct si_controller* si);

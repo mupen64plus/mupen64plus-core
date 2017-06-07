@@ -45,22 +45,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef int (*readfn)(void*,uint32_t,uint32_t*);
-typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
+typedef void (*readfn)(void*,uint32_t,uint32_t*);
+typedef void (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 
 
-static int readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
+static void readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
-    int result = read_word(opaque, (address & ~0x3), &w);
+    read_word(opaque, (address & ~0x3), &w);
     *value = w;
-
-    return result;
 }
 
-static int writew(writefn write_word, void* opaque, uint32_t address, uint32_t value, uint32_t wmask)
+static void writew(writefn write_word, void* opaque, uint32_t address, uint32_t value, uint32_t wmask)
 {
-    return write_word(opaque, (address & ~0x3), value, wmask);
+    write_word(opaque, (address & ~0x3), value, wmask);
 }
 
 
@@ -293,7 +291,7 @@ static void writemem_with_bp_checks(void)
     check_breakpoints_on_mem_access(*r4300_pc(&g_dev.r4300)-0x4, *r4300_address(&g_dev.r4300), 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    return g_dev.mem.saved_writemem[*r4300_address(&g_dev.r4300)>>16]();
+    g_dev.mem.saved_writemem[*r4300_address(&g_dev.r4300)>>16]();
 }
 
 void activate_memory_break_read(struct memory* mem, uint32_t address)

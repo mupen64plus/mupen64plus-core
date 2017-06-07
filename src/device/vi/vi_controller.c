@@ -73,7 +73,7 @@ void poweron_vi(struct vi_controller* vi)
     vi->count_per_scanline = 1500;
 }
 
-int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
@@ -95,11 +95,9 @@ int read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
     }
 
     *value = vi->regs[reg];
-
-    return 0;
 }
 
-int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
@@ -112,7 +110,7 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
             masked_write(&vi->regs[VI_STATUS_REG], value, mask);
             gfx.viStatusChanged();
         }
-        return 0;
+        return;
 
     case VI_WIDTH_REG:
         if ((vi->regs[VI_WIDTH_REG] & mask) != (value & mask))
@@ -120,16 +118,14 @@ int write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
             masked_write(&vi->regs[VI_WIDTH_REG], value, mask);
             gfx.viWidthChanged();
         }
-        return 0;
+        return;
 
     case VI_CURRENT_REG:
         clear_rcp_interrupt(vi->r4300, MI_INTR_VI);
-        return 0;
+        return;
     }
 
     masked_write(&vi->regs[reg], value, mask);
-
-    return 0;
 }
 
 void vi_vertical_interrupt_event(void* opaque)
