@@ -42,9 +42,8 @@
  * If likely is nonzero, the delay slot is only executed if the jump is taken.
  * If cop1 is nonzero, a COP1 unusable check will be done.
  *
- * CHECK_MEMORY(): A snippet to be run after a store instruction,
- *                 to check if the store affected executable blocks.
- *                 The memory address of the store is in the 'address' global.
+ * CHECK_MEMORY(addr): A snippet to be run after a store instruction,
+ *                     to check if the store affected executable blocks.
  */
 
 #include "fpu.h"
@@ -294,7 +293,7 @@ DECLARE_INSTRUCTION(SB)
     unsigned int shift = bshift(lsaddr);
 
     if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp << shift, UINT32_C(0xff) << shift)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -307,7 +306,7 @@ DECLARE_INSTRUCTION(SH)
     unsigned int shift = hshift(lsaddr);
 
     if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp << shift, UINT32_C(0xffff) << shift)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -321,7 +320,7 @@ DECLARE_INSTRUCTION(SC)
     if (r4300->llbit)
     {
         if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp, ~UINT32_C(0))) {
-            CHECK_MEMORY();
+            CHECK_MEMORY(*r4300_address(r4300));
             r4300->llbit = 0;
             *lsrtp = 1;
         }
@@ -340,7 +339,7 @@ DECLARE_INSTRUCTION(SW)
     ADD_TO_PC(1);
 
     if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp, ~UINT32_C(0))) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -356,7 +355,7 @@ DECLARE_INSTRUCTION(SWL)
     uint32_t value = ((uint32_t)*lsrtp >> shift);
 
     if (r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -372,7 +371,7 @@ DECLARE_INSTRUCTION(SWR)
     uint32_t value = ((uint32_t)*lsrtp << shift);
 
     if (r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -384,7 +383,7 @@ DECLARE_INSTRUCTION(SD)
     ADD_TO_PC(1);
 
     if (r4300_write_aligned_dword(r4300, lsaddr, (uint64_t)*lsrtp, ~UINT64_C(0))) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -400,7 +399,7 @@ DECLARE_INSTRUCTION(SDL)
     uint64_t value = ((uint64_t)*lsrtp >> shift);
 
     if (r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -416,7 +415,7 @@ DECLARE_INSTRUCTION(SDR)
     uint64_t value = ((uint64_t)*lsrtp << shift);
 
     if (r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask)) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -1309,7 +1308,7 @@ DECLARE_INSTRUCTION(SWC1)
     ADD_TO_PC(1);
 
     if (r4300_write_aligned_word(r4300, lslfaddr, *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]), ~UINT32_C(0))) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
@@ -1322,7 +1321,7 @@ DECLARE_INSTRUCTION(SDC1)
     ADD_TO_PC(1);
 
     if (r4300_write_aligned_dword(r4300, lslfaddr, *((uint64_t*)(r4300_cp1_regs_double(&r4300->cp1))[lslfft]), ~UINT64_C(0))) {
-        CHECK_MEMORY();
+        CHECK_MEMORY(*r4300_address(r4300));
     }
 }
 
