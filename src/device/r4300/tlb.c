@@ -166,28 +166,3 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
     //return 0x80000000;
     return 0x00000000;
 }
-
-
-/* FIXME: still uses r4300_address to indicate TLB translation failure */
-void read_tlb_mem(void* opaque, uint32_t address, uint32_t* value)
-{
-    struct r4300_core* r4300 = (struct r4300_core*)opaque;
-
-    *r4300_address(r4300) = virtual_to_physical_address(r4300, address, 0);
-    if (*r4300_address(r4300) == 0x00000000) { return; }
-
-    r4300_read_aligned_word(r4300, *r4300_address(r4300), value);
-}
-
-/* FIXME: still uses r4300_address to indicate TLB translation failure */
-void write_tlb_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct r4300_core* r4300 = (struct r4300_core*)opaque;
-
-    invalidate_r4300_cached_code(r4300, address, 4);
-
-    *r4300_address(r4300) = virtual_to_physical_address(r4300, address, 1);
-    if (*r4300_address(r4300) == 0x00000000) { return; }
-
-    r4300_write_aligned_word(r4300, *r4300_address(r4300), value, mask);
-}

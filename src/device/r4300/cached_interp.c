@@ -140,12 +140,6 @@
       else name(); \
    }
 
-#define CHECK_MEMORY(addr) \
-   if (!r4300->cached_interp.invalid_code[addr>>12]) \
-      if (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops != \
-          r4300->current_instruction_table.NOTCOMPILED) \
-         r4300->cached_interp.invalid_code[addr>>12] = 1;
-
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
 #if defined(__GNUC__)

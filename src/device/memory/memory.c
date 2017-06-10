@@ -169,166 +169,63 @@ void poweron_memory(struct memory* mem)
     /* clear mappings */
     for(i = 0; i < 0x10000; ++i)
     {
-        map_region(mem, i, M64P_MEM_NOMEM, &g_dev.r4300, RW(tlb_mem));
+        map_region(mem, i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RDRAM */
     for(i = 0; i < /*0x40*/0x80; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
-        map_region(mem, 0xa000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
-    }
-    for(i = /*0x40*/0x80; i < 0x3f0; ++i)
-    {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0x0000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
     }
 
     /* map RDRAM registers */
-    map_region(mem, 0x83f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
-    map_region(mem, 0xa3f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x83f0+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa3f0+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x03f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
 
     /* map RSP memory */
-    map_region(mem, 0x8400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
-    map_region(mem, 0xa400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
-    for(i = 1; i < 0x4; ++i)
-    {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
 
     /* map RSP registers (1) */
-    map_region(mem, 0x8404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
-    map_region(mem, 0xa404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
-    for(i = 0x5; i < 0x8; ++i)
-    {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
 
     /* map RSP registers (2) */
-    map_region(mem, 0x8408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
-    map_region(mem, 0xa408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
-    for(i = 0x9; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
 
     /* map DPC registers */
-    map_region(mem, 0x8410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
-    map_region(mem, 0xa410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8410+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa410+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
 
     /* map DPS registers */
-    map_region(mem, 0x8420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
-    map_region(mem, 0xa420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8420+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa420+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
 
     /* map MI registers */
-    map_region(mem, 0x8430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
-    map_region(mem, 0xa430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8430+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa430+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
 
     /* map VI registers */
-    map_region(mem, 0x8440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
-    map_region(mem, 0xa440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8440+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa440+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
 
     /* map AI registers */
-    map_region(mem, 0x8450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
-    map_region(mem, 0xa450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8450+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa450+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
 
     /* map PI registers */
-    map_region(mem, 0x8460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
-    map_region(mem, 0xa460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8460+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa460+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
 
     /* map RI registers */
-    map_region(mem, 0x8470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
-    map_region(mem, 0xa470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
-    for(i = 1; i < 0x10; ++i)
-    {
-        map_region(mem, 0x8470+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa470+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
 
     /* map SI registers */
-    map_region(mem, 0x8480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
-    map_region(mem, 0xa480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
-    for(i = 0x481; i < 0x500; ++i)
-    {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
-
-    for(i = 0x500; i < 0x800; ++i)
-    {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
 
     /* map flashram/sram */
-    map_region(mem, 0x8800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
-    map_region(mem, 0xa800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
-    map_region(mem, 0x8801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
-    map_region(mem, 0xa801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
-    for(i = 0x802; i < 0x1000; ++i)
-    {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x0800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
+    map_region(mem, 0x0801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
 
     /* map cart ROM */
     for(i = 0; i < (g_dev.pi.cart_rom.rom_size >> 16); ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
-        map_region(mem, 0xb000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
-    }
-    for(i = (g_dev.pi.cart_rom.rom_size >> 16); i < 0xfc0; ++i)
-    {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0x1000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
     }
 
     /* map PIF RAM */
-    map_region(mem, 0x9fc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
-    map_region(mem, 0xbfc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
-    for(i = 0xfc1; i < 0x1000; ++i)
-    {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
-    }
+    map_region(mem, 0x1fc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
 }
 
 static void map_region_t(struct memory* mem, uint16_t region, int type)
@@ -413,8 +310,9 @@ uint32_t *fast_mem_access(uint32_t address)
     /* This code is performance critical, specially on pure interpreter mode.
      * Removing error checking saves some time, but the emulator may crash. */
 
-    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
         address = virtual_to_physical_address(&g_dev.r4300, address, 2);
+    }
 
     address &= UINT32_C(0x1ffffffc);
 

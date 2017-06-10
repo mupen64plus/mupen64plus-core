@@ -95,7 +95,6 @@ static void InterpretOpcode(struct r4300_core* r4300);
       } \
       else name(r4300, op); \
    }
-#define CHECK_MEMORY(addr)
 
 #define RD_OF(op)      (((op) >> 11) & 0x1F)
 #define RS_OF(op)      (((op) >> 21) & 0x1F)

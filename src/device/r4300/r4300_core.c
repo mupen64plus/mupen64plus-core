@@ -319,12 +319,19 @@ uint64_t* r4300_wdword(struct r4300_core* r4300)
  */
 int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value)
 {
-    *r4300_address(r4300) = address;
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 0);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    address &= UINT32_C(0x1ffffffc);
 
     uint16_t region = address >> 16;
     r4300->mem->read32[region](r4300->mem->opaque[region], address & ~UINT32_C(3), value);
 
-    return (*r4300_address(r4300) != 0);
+    return 1;
 }
 
 /* Read aligned dword from memory */
@@ -350,12 +357,24 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
  */
 int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask)
 {
-    *r4300_address(r4300) = address;
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+
+        invalidate_r4300_cached_code(r4300, address, 4);
+
+        address = virtual_to_physical_address(r4300, address, 1);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    invalidate_r4300_cached_code(r4300, address, 4);
+
+    address &= UINT32_C(0x1ffffffc);
 
     uint16_t region = address >> 16;
     r4300->mem->write32[region](r4300->mem->opaque[region], address & ~UINT32_C(3), value, mask);
 
-    return (*r4300_address(r4300) != 0);
+    return 1;
 }
 
 /* Write aligned dword to memory */
