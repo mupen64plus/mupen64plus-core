@@ -24,17 +24,20 @@
 
 #include <stdint.h>
 
+typedef void (*read32fn)(void*,uint32_t,uint32_t*);
+typedef void (*write32fn)(void*,uint32_t,uint32_t,uint32_t);
+
 struct memory
 {
     void* opaque[0x10000];
-    void (*readmem[0x10000])(void);
-    void (*writemem[0x10000])(void);
+    read32fn read32[0x10000];
+    write32fn write32[0x10000];
 
 #ifdef DBG
     int memtype[0x10000];
     void* saved_opaque[0x10000];
-    void (*saved_readmem [0x10000])(void);
-    void (*saved_writemem [0x10000])(void);
+    read32fn saved_read32[0x10000];
+    write32fn saved_write32[0x10000];
 #endif
 };
 
@@ -74,14 +77,8 @@ void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
                 void* opaque,
-                void (*read32)(void),
-                void (*write32)(void));
-
-/* XXX: cannot make them static because of dynarec + rdp fb */
-void read_rdram(void);
-void write_rdram(void);
-void read_rdramFB(void);
-void write_rdramFB(void);
+                read32fn read32,
+                write32fn write32);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

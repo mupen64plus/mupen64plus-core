@@ -45,10 +45,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef void (*readfn)(void*,uint32_t,uint32_t*);
-typedef void (*writefn)(void*,uint32_t,uint32_t,uint32_t);
-
-
 static void read_open_bus(void* opaque, uint32_t address, uint32_t* value)
 {
     *value = address & 0xffff;
@@ -59,275 +55,43 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
-
-static void readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
-{
-    uint32_t w;
-    read_word(opaque, (address & ~0x3), &w);
-    *value = w;
-}
-
-static void writew(writefn write_word, void* opaque, uint32_t address, uint32_t value, uint32_t wmask)
-{
-    write_word(opaque, (address & ~0x3), value, wmask);
-}
-
-/* XXX: temporary helper function */
-static void* get_opaque(void)
-{
-    return g_dev.mem.opaque[*r4300_address(&g_dev.r4300) >> 16];
-}
-
-static void read_nothing(void)
-{
-    readw(read_open_bus, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_nothing(void)
-{
-    writew(write_open_bus, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void read_nomem(void)
-{
-    readw(read_tlb_mem, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_nomem(void)
-{
-    writew(write_tlb_mem, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-void read_rdram(void)
-{
-    readw(read_rdram_dram, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-void write_rdram(void)
-{
-    writew(write_rdram_dram, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-void read_rdramFB(void)
-{
-    readw(read_rdram_fb, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-void write_rdramFB(void)
-{
-    writew(write_rdram_fb, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_rdramreg(void)
-{
-    readw(read_rdram_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_rdramreg(void)
-{
-    writew(write_rdram_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_rspmem(void)
-{
-    readw(read_rsp_mem, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_rspmem(void)
-{
-    writew(write_rsp_mem, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_rspreg(void)
-{
-    readw(read_rsp_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_rspreg(void)
-{
-    writew(write_rsp_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_rspreg2(void)
-{
-    readw(read_rsp_regs2, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_rspreg2(void)
-{
-    writew(write_rsp_regs2, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_dp(void)
-{
-    readw(read_dpc_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_dp(void)
-{
-    writew(write_dpc_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_dps(void)
-{
-    readw(read_dps_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_dps(void)
-{
-    writew(write_dps_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_mi(void)
-{
-    readw(read_mi_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-void write_mi(void)
-{
-    writew(write_mi_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_vi(void)
-{
-    readw(read_vi_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_vi(void)
-{
-    writew(write_vi_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_ai(void)
-{
-    readw(read_ai_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_ai(void)
-{
-    writew(write_ai_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_pi(void)
-{
-    readw(read_pi_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_pi(void)
-{
-    writew(write_pi_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_ri(void)
-{
-    readw(read_ri_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_ri(void)
-{
-    writew(write_ri_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_si(void)
-{
-    readw(read_si_regs, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_si(void)
-{
-    writew(write_si_regs, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void read_pi_flashram_status(void)
-{
-    readw(read_flashram_status, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_pi_flashram_status(void)
-{
-    writew(write_flashram_status, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void read_pi_flashram_command(void)
-{
-    readw(read_flashram_command, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_pi_flashram_command(void)
-{
-    writew(write_flashram_command, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_rom(void)
-{
-    readw(read_cart_rom, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_rom(void)
-{
-    writew(write_cart_rom, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-
-static void read_pif(void)
-{
-    readw(read_pif_ram, get_opaque(), *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_pif(void)
-{
-    writew(write_pif_ram, get_opaque(), *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
 #ifdef DBG
-static void readmem_with_bp_checks(void)
+static void read32_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
 {
-    struct r4300_core* r4300 = (struct r4300_core*)get_opaque();
+    struct r4300_core* r4300 = (struct r4300_core*)opaque;
 
-    check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, *r4300_address(r4300), 4,
+    check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    r4300->mem->saved_readmem[*r4300_address(r4300)>>16]();
+    uint16_t region = address >> 16;
+    r4300->mem->saved_read32[region](r4300->mem->saved_opaque[region], address, value);
 }
 
-static void writemem_with_bp_checks(void)
+static void write32_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    struct r4300_core* r4300 = (struct r4300_core*)get_opaque();
+    struct r4300_core* r4300 = (struct r4300_core*)opaque;
 
-    check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, *r4300_address(r4300), 4,
+    check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    r4300->mem->saved_writemem[*r4300_address(r4300)>>16]();
+    uint16_t region = address >> 16;
+    r4300->mem->saved_write32[region](r4300->mem->saved_opaque[region], address, value, mask);
 }
 
 void activate_memory_break_read(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
 
-    if (mem->saved_readmem[region] == NULL)
+    if (mem->saved_read32[region] == NULL)
     {
         /* only change opaque value if memory_break_write is not active */
-        if (mem->saved_writemem[region] == NULL) {
+        if (mem->saved_write32[region] == NULL) {
             mem->saved_opaque[region] = mem->opaque[region];
             mem->opaque[region] = &g_dev.r4300;
         }
 
-        mem->saved_readmem[region] = mem->readmem[region];
-        mem->readmem[region] = readmem_with_bp_checks;
+        mem->saved_read32[region] = mem->read32[region];
+        mem->read32[region] = read32_with_bp_checks;
     }
 }
 
@@ -335,16 +99,16 @@ void deactivate_memory_break_read(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
 
-    if (mem->saved_readmem[region] != NULL)
+    if (mem->saved_read32[region] != NULL)
     {
         /* only restore opaque value if memory_break_write is not active */
-        if (mem->saved_writemem[region] == NULL) {
+        if (mem->saved_write32[region] == NULL) {
             mem->opaque[region] = mem->saved_opaque[region];
             mem->saved_opaque[region] = NULL;
         }
 
-        mem->readmem[region] = mem->saved_readmem[region];
-        mem->saved_readmem[region] = NULL;
+        mem->read32[region] = mem->saved_read32[region];
+        mem->saved_read32[region] = NULL;
     }
 }
 
@@ -352,16 +116,16 @@ void activate_memory_break_write(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
 
-    if (mem->saved_writemem[region] == NULL)
+    if (mem->saved_write32[region] == NULL)
     {
         /* only change opaque value if memory_break_read is not active */
-        if (mem->saved_readmem[region] == NULL) {
+        if (mem->saved_read32[region] == NULL) {
             mem->saved_opaque[region] = mem->opaque[region];
             mem->opaque[region] = &g_dev.r4300;
         }
 
-        mem->saved_writemem[region] = mem->writemem[region];
-        mem->writemem[region] = writemem_with_bp_checks;
+        mem->saved_write32[region] = mem->write32[region];
+        mem->write32[region] = write32_with_bp_checks;
     }
 }
 
@@ -369,16 +133,16 @@ void deactivate_memory_break_write(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
 
-    if (mem->saved_writemem[region] != NULL)
+    if (mem->saved_write32[region] != NULL)
     {
         /* only restore opaque value if memory_break_read is not active */
-        if (mem->saved_readmem[region] == NULL) {
+        if (mem->saved_read32[region] == NULL) {
             mem->opaque[region] = mem->saved_opaque[region];
             mem->saved_opaque[region] = NULL;
         }
 
-        mem->writemem[region] = mem->saved_writemem[region];
-        mem->saved_writemem[region] = NULL;
+        mem->write32[region] = mem->saved_write32[region];
+        mem->saved_write32[region] = NULL;
     }
 }
 
@@ -398,172 +162,172 @@ void poweron_memory(struct memory* mem)
 
 #ifdef DBG
     memset(mem->saved_opaque, 0, 0x10000*sizeof(mem->saved_opaque[0]));
-    memset(mem->saved_readmem, 0, 0x10000*sizeof(mem->saved_readmem[0]));
-    memset(mem->saved_writemem, 0, 0x10000*sizeof(mem->saved_writemem[0]));
+    memset(mem->saved_read32, 0, 0x10000*sizeof(mem->saved_read32[0]));
+    memset(mem->saved_write32, 0, 0x10000*sizeof(mem->saved_write32[0]));
 #endif
 
     /* clear mappings */
     for(i = 0; i < 0x10000; ++i)
     {
-        map_region(mem, i, M64P_MEM_NOMEM, &g_dev.r4300, RW(nomem));
+        map_region(mem, i, M64P_MEM_NOMEM, &g_dev.r4300, RW(tlb_mem));
     }
 
     /* map RDRAM */
     for(i = 0; i < /*0x40*/0x80; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram));
-        map_region(mem, 0xa000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram));
+        map_region(mem, 0x8000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
+        map_region(mem, 0xa000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
     }
     for(i = /*0x40*/0x80; i < 0x3f0; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RDRAM registers */
-    map_region(mem, 0x83f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdramreg));
-    map_region(mem, 0xa3f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdramreg));
+    map_region(mem, 0x83f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
+    map_region(mem, 0xa3f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x83f0+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa3f0+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x83f0+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa3f0+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RSP memory */
-    map_region(mem, 0x8400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rspmem));
-    map_region(mem, 0xa400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rspmem));
+    map_region(mem, 0x8400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
+    map_region(mem, 0xa400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
     for(i = 1; i < 0x4; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RSP registers (1) */
-    map_region(mem, 0x8404, M64P_MEM_RSPREG, &g_dev.sp, RW(rspreg));
-    map_region(mem, 0xa404, M64P_MEM_RSPREG, &g_dev.sp, RW(rspreg));
+    map_region(mem, 0x8404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
+    map_region(mem, 0xa404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
     for(i = 0x5; i < 0x8; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RSP registers (2) */
-    map_region(mem, 0x8408, M64P_MEM_RSP, &g_dev.sp, RW(rspreg2));
-    map_region(mem, 0xa408, M64P_MEM_RSP, &g_dev.sp, RW(rspreg2));
+    map_region(mem, 0x8408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
+    map_region(mem, 0xa408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
     for(i = 0x9; i < 0x10; ++i)
     {
-        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa400+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map DPC registers */
-    map_region(mem, 0x8410, M64P_MEM_DP, &g_dev.dp, RW(dp));
-    map_region(mem, 0xa410, M64P_MEM_DP, &g_dev.dp, RW(dp));
+    map_region(mem, 0x8410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
+    map_region(mem, 0xa410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8410+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa410+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8410+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa410+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map DPS registers */
-    map_region(mem, 0x8420, M64P_MEM_DPS, &g_dev.dp, RW(dps));
-    map_region(mem, 0xa420, M64P_MEM_DPS, &g_dev.dp, RW(dps));
+    map_region(mem, 0x8420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
+    map_region(mem, 0xa420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8420+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa420+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8420+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa420+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map MI registers */
-    map_region(mem, 0x8430, M64P_MEM_MI, &g_dev.r4300, RW(mi));
-    map_region(mem, 0xa430, M64P_MEM_MI, &g_dev.r4300, RW(mi));
+    map_region(mem, 0x8430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
+    map_region(mem, 0xa430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8430+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa430+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8430+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa430+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map VI registers */
-    map_region(mem, 0x8440, M64P_MEM_VI, &g_dev.vi, RW(vi));
-    map_region(mem, 0xa440, M64P_MEM_VI, &g_dev.vi, RW(vi));
+    map_region(mem, 0x8440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
+    map_region(mem, 0xa440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8440+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa440+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8440+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa440+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map AI registers */
-    map_region(mem, 0x8450, M64P_MEM_AI, &g_dev.ai, RW(ai));
-    map_region(mem, 0xa450, M64P_MEM_AI, &g_dev.ai, RW(ai));
+    map_region(mem, 0x8450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
+    map_region(mem, 0xa450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8450+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa450+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8450+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa450+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map PI registers */
-    map_region(mem, 0x8460, M64P_MEM_PI, &g_dev.pi, RW(pi));
-    map_region(mem, 0xa460, M64P_MEM_PI, &g_dev.pi, RW(pi));
+    map_region(mem, 0x8460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
+    map_region(mem, 0xa460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8460+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa460+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8460+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa460+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map RI registers */
-    map_region(mem, 0x8470, M64P_MEM_RI, &g_dev.ri, RW(ri));
-    map_region(mem, 0xa470, M64P_MEM_RI, &g_dev.ri, RW(ri));
+    map_region(mem, 0x8470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
+    map_region(mem, 0xa470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
     for(i = 1; i < 0x10; ++i)
     {
-        map_region(mem, 0x8470+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa470+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8470+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa470+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map SI registers */
-    map_region(mem, 0x8480, M64P_MEM_SI, &g_dev.si, RW(si));
-    map_region(mem, 0xa480, M64P_MEM_SI, &g_dev.si, RW(si));
+    map_region(mem, 0x8480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
+    map_region(mem, 0xa480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
     for(i = 0x481; i < 0x500; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     for(i = 0x500; i < 0x800; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map flashram/sram */
-    map_region(mem, 0x8800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(pi_flashram_status));
-    map_region(mem, 0xa800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(pi_flashram_status));
-    map_region(mem, 0x8801, M64P_MEM_NOTHING, &g_dev.pi, RW(pi_flashram_command));
-    map_region(mem, 0xa801, M64P_MEM_NOTHING, &g_dev.pi, RW(pi_flashram_command));
+    map_region(mem, 0x8800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
+    map_region(mem, 0xa800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
+    map_region(mem, 0x8801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
+    map_region(mem, 0xa801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
     for(i = 0x802; i < 0x1000; ++i)
     {
-        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x8000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xa000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map cart ROM */
     for(i = 0; i < (g_dev.pi.cart_rom.rom_size >> 16); ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_ROM, &g_dev.pi, R(rom), W(nothing));
-        map_region(mem, 0xb000+i, M64P_MEM_ROM, &g_dev.pi, R(rom), W(rom));
+        map_region(mem, 0x9000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
+        map_region(mem, 0xb000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
     }
     for(i = (g_dev.pi.cart_rom.rom_size >> 16); i < 0xfc0; ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 
     /* map PIF RAM */
-    map_region(mem, 0x9fc0, M64P_MEM_PIF, &g_dev.si, RW(pif));
-    map_region(mem, 0xbfc0, M64P_MEM_PIF, &g_dev.si, RW(pif));
+    map_region(mem, 0x9fc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
+    map_region(mem, 0xbfc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
     for(i = 0xfc1; i < 0x1000; ++i)
     {
-        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
-        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(nothing));
+        map_region(mem, 0x9000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+        map_region(mem, 0xb000+i, M64P_MEM_NOTHING, NULL, RW(open_bus));
     }
 }
 
@@ -597,37 +361,37 @@ static void map_region_o(struct memory* mem,
 
 static void map_region_r(struct memory* mem,
         uint16_t region,
-        void (*read32)(void))
+        read32fn read32)
 {
 #ifdef DBG
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
     {
-        mem->saved_readmem [region] = read32;
-        mem->readmem [region] = readmem_with_bp_checks;
+        mem->saved_read32[region] = read32;
+        mem->read32[region] = read32_with_bp_checks;
     }
     else
 #endif
     {
-        mem->readmem [region] = read32;
+        mem->read32[region] = read32;
     }
 }
 
 static void map_region_w(struct memory* mem,
         uint16_t region,
-        void (*write32)(void))
+        write32fn write32)
 {
 #ifdef DBG
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
     {
-        mem->saved_writemem [region] = write32;
-        mem->writemem [region] = writemem_with_bp_checks;
+        mem->saved_write32[region] = write32;
+        mem->write32[region] = write32_with_bp_checks;
     }
     else
 #endif
     {
-        mem->writemem [region] = write32;
+        mem->write32[region] = write32;
     }
 }
 
@@ -635,8 +399,8 @@ void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
                 void* opaque,
-                void (*read32)(void),
-                void (*write32)(void))
+                read32fn read32,
+                write32fn write32)
 {
     map_region_t(mem, region, type);
     map_region_o(mem, region, opaque);

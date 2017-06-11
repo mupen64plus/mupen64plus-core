@@ -386,7 +386,7 @@ void genlb(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -394,7 +394,7 @@ void genlb(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -406,7 +406,7 @@ void genlb(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     /* if non RDRAM read,
      * compute shift (base2) and address (gpr2) to perform a regular read.
-     * Save base2 content to memory as RCX can be overwritten when calling readmem function */
+     * Save base2 content to memory as RCX can be overwritten when calling read32 function */
     mov_reg64_reg64(base2, gpr2);
     and_reg64_imm8(base2, 3);
     xor_reg8_imm8(base2, 3);
@@ -417,8 +417,7 @@ void genlb(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
-    mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
-    and_reg64_reg64(gpr2, gpr2);
+    and_reg64_reg64(RAX, RAX);
     je_rj(57);
 
     mov_xreg64_m64rel(gpr1, (unsigned long long*)r4300->recomp.dst->f.i.rt); // 7
@@ -452,7 +451,7 @@ void genlbu(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if(r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -460,7 +459,7 @@ void genlbu(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -472,7 +471,7 @@ void genlbu(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     /* if non RDRAM read,
      * compute shift (base2) and address (gpr2) to perform a regular read.
-     * Save base2 content to memory as RCX can be overwritten when calling readmem function */
+     * Save base2 content to memory as RCX can be overwritten when calling read32 function */
     mov_reg64_reg64(base2, gpr2);
     and_reg64_imm8(base2, 3);
     xor_reg8_imm8(base2, 3);
@@ -483,8 +482,7 @@ void genlbu(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
-    mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
-    and_reg64_reg64(gpr2, gpr2);
+    and_reg64_reg64(RAX, RAX);
     je_rj(48);
 
     mov_xreg32_m32rel(gpr1, (unsigned int *)r4300->recomp.dst->f.i.rt); // 7
@@ -518,7 +516,7 @@ void genlh(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -526,7 +524,7 @@ void genlh(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -538,7 +536,7 @@ void genlh(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     /* if non RDRAM read,
      * compute shift (base2) and address (gpr2) to perform a regular read.
-     * Save base2 content to memory as RCX can be overwritten when calling readmem function */
+     * Save base2 content to memory as RCX can be overwritten when calling read32 function */
     mov_reg64_reg64(base2, gpr2);
     and_reg64_imm8(base2, 2);
     xor_reg8_imm8(base2, 2);
@@ -549,8 +547,7 @@ void genlh(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
-    mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
-    and_reg64_reg64(gpr2, gpr2);
+    and_reg64_reg64(RAX, RAX);
     je_rj(58);
 
     mov_xreg64_m64rel(gpr1, (unsigned long long*)r4300->recomp.dst->f.i.rt); // 7
@@ -583,7 +580,7 @@ void genlhu(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -591,7 +588,7 @@ void genlhu(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -603,7 +600,7 @@ void genlhu(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     /* if non RDRAM read,
      * compute shift (base2) and address (gpr2) to perform a regular read.
-     * Save base2 content to memory as RCX can be overwritten when calling readmem function */
+     * Save base2 content to memory as RCX can be overwritten when calling read32 function */
     mov_reg64_reg64(base2, gpr2);
     and_reg64_imm8(base2, 2);
     xor_reg8_imm8(base2, 2);
@@ -614,8 +611,7 @@ void genlhu(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
-    mov_xreg32_m32rel(gpr2, (unsigned int *)(r4300_address(r4300)));
-    and_reg64_reg64(gpr2, gpr2);
+    and_reg64_reg64(RAX, RAX);
     je_rj(48);
 
     mov_xreg32_m32rel(gpr1, (unsigned int *)r4300->recomp.dst->f.i.rt); // 7
@@ -656,7 +652,7 @@ void genlw(struct r4300_core* r4300)
 
     ld_register_alloc(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -664,7 +660,7 @@ void genlw(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -705,7 +701,7 @@ void genlwu(struct r4300_core* r4300)
 
     ld_register_alloc(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -713,7 +709,7 @@ void genlwu(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(base2, (unsigned long long) read_rdram);
+        mov_reg64_imm64(base2, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(gpr1, 16);
         mov_reg64_preg64x8preg64(gpr1, gpr1, base1);
         cmp_reg64_reg64(gpr1, base2);
@@ -769,7 +765,7 @@ void genld(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -777,7 +773,7 @@ void genld(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) read_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -841,7 +837,7 @@ void gensb(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -849,7 +845,7 @@ void gensb(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -921,7 +917,7 @@ void gensh(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -929,7 +925,7 @@ void gensh(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -1006,7 +1002,7 @@ void gensw(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -1014,7 +1010,7 @@ void gensw(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -1089,7 +1085,7 @@ void gensd(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -1097,7 +1093,7 @@ void gensd(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -4270,7 +4266,7 @@ void genlwc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4278,7 +4274,7 @@ void genlwc1(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) read_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -4315,7 +4311,7 @@ void genldc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->readmem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4323,7 +4319,7 @@ void genldc1(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) read_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) read_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -4364,7 +4360,7 @@ void genswc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4372,7 +4368,7 @@ void genswc1(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);
@@ -4432,7 +4428,7 @@ void gensdc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->writemem);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4440,7 +4436,7 @@ void gensdc1(struct r4300_core* r4300)
     }
     else
     {
-        mov_reg64_imm64(RDI, (unsigned long long) write_rdram);
+        mov_reg64_imm64(RDI, (unsigned long long) write_rdram_dram);
         shr_reg32_imm8(EAX, 16);
         mov_reg64_preg64x8preg64(RAX, RAX, RSI);
         cmp_reg64_reg64(RAX, RDI);

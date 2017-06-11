@@ -315,27 +315,16 @@ uint64_t* r4300_wdword(struct r4300_core* r4300)
 
 /* Read aligned word from memory.
  * address may not be word-aligned for byte or hword accesses.
- * In such case, readw (in memory.c) takes care of word alignment.
- * FIXME: implementation relies on parameterless memory function
- * and associated address,rdword variables.
+ * Alignment is taken care of when calling mem handler.
  */
 int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value)
 {
-    uint64_t* rdword = r4300->rdword;
-    uint64_t dummy;
-
     *r4300_address(r4300) = address;
-    r4300->rdword = &dummy;
-    r4300->mem->readmem[address >> 16]();
-    r4300->rdword = rdword;
 
-    int success = (*r4300_address(r4300) != 0);
+    uint16_t region = address >> 16;
+    r4300->mem->read32[region](r4300->mem->opaque[region], address & ~UINT32_C(3), value);
 
-    if (success) {
-        *value = (uint32_t)dummy;
-    }
-
-    return success;
+    return (*r4300_address(r4300) != 0);
 }
 
 /* Read aligned dword from memory */
@@ -357,16 +346,14 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
 
 /* Write aligned word to memory.
  * address may not be word-aligned for byte or hword accesses.
- * In such case, writew (in memory.c) takes care of word alignment.
- * FIXME: implementation relies on parameterless memory function
- * and associated address,word,mask variables.
+ * Alignment is taken care of when calling mem handler.
  */
 int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask)
 {
     *r4300_address(r4300) = address;
-    *r4300_wword(r4300) = value;
-    *r4300_wmask(r4300) = mask;
-    r4300->mem->writemem[address >> 16]();
+
+    uint16_t region = address >> 16;
+    r4300->mem->write32[region](r4300->mem->opaque[region], address & ~UINT32_C(3), value, mask);
 
     return (*r4300_address(r4300) != 0);
 }
