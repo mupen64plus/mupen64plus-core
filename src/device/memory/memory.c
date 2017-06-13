@@ -45,6 +45,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
+
 static void read_open_bus(void* opaque, uint32_t address, uint32_t* value)
 {
     *value = address & 0xffff;
@@ -63,8 +65,9 @@ static void read32_with_bp_checks(void* opaque, uint32_t address, uint32_t* valu
     check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    uint16_t region = address >> 16;
-    r4300->mem->saved_read32[region](r4300->mem->saved_opaque[region], address, value);
+    const struct mem_handler* handler = &r4300->mem->saved_handlers[address >> 16];
+
+    handler->read32(handler->opaque, address, value);
 }
 
 static void write32_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -74,75 +77,84 @@ static void write32_with_bp_checks(void* opaque, uint32_t address, uint32_t valu
     check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    uint16_t region = address >> 16;
-    r4300->mem->saved_write32[region](r4300->mem->saved_opaque[region], address, value, mask);
+    const struct mem_handler* handler = &r4300->mem->saved_handlers[address >> 16];
+
+    handler->write32(handler->opaque, address, value, mask);
 }
 
 void activate_memory_break_read(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* handler = &mem->handlers[region];
+    struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
-    if (mem->saved_read32[region] == NULL)
+    if (saved_handler->read32 == NULL)
     {
         /* only change opaque value if memory_break_write is not active */
-        if (mem->saved_write32[region] == NULL) {
-            mem->saved_opaque[region] = mem->opaque[region];
-            mem->opaque[region] = &g_dev.r4300;
+        if (saved_handler->write32 == NULL) {
+            saved_handler->opaque = handler->opaque;
+            handler->opaque = &g_dev.r4300;
         }
 
-        mem->saved_read32[region] = mem->read32[region];
-        mem->read32[region] = read32_with_bp_checks;
+        saved_handler->read32 = handler->read32;
+        handler->read32 = read32_with_bp_checks;
     }
 }
 
 void deactivate_memory_break_read(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* handler = &mem->handlers[region];
+    struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
-    if (mem->saved_read32[region] != NULL)
+    if (saved_handler->read32 != NULL)
     {
         /* only restore opaque value if memory_break_write is not active */
-        if (mem->saved_write32[region] == NULL) {
-            mem->opaque[region] = mem->saved_opaque[region];
-            mem->saved_opaque[region] = NULL;
+        if (saved_handler->write32 == NULL) {
+            handler->opaque = saved_handler->opaque;
+            saved_handler->opaque = NULL;
         }
 
-        mem->read32[region] = mem->saved_read32[region];
-        mem->saved_read32[region] = NULL;
+        handler->read32 = saved_handler->read32;
+        saved_handler->read32 = NULL;
     }
 }
 
 void activate_memory_break_write(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* handler = &mem->handlers[region];
+    struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
-    if (mem->saved_write32[region] == NULL)
+    if (saved_handler->write32 == NULL)
     {
         /* only change opaque value if memory_break_read is not active */
-        if (mem->saved_read32[region] == NULL) {
-            mem->saved_opaque[region] = mem->opaque[region];
-            mem->opaque[region] = &g_dev.r4300;
+        if (saved_handler->read32 == NULL) {
+            saved_handler->opaque = handler->opaque;
+            handler->opaque = &g_dev.r4300;
         }
 
-        mem->saved_write32[region] = mem->write32[region];
-        mem->write32[region] = write32_with_bp_checks;
+        saved_handler->write32 = handler->write32;
+        handler->write32 = write32_with_bp_checks;
     }
 }
 
 void deactivate_memory_break_write(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* handler = &mem->handlers[region];
+    struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
-    if (mem->saved_write32[region] != NULL)
+    if (saved_handler->write32 != NULL)
     {
         /* only restore opaque value if memory_break_read is not active */
-        if (mem->saved_read32[region] == NULL) {
-            mem->opaque[region] = mem->saved_opaque[region];
-            mem->saved_opaque[region] = NULL;
+        if (saved_handler->read32 == NULL) {
+            handler->opaque = saved_handler->opaque;
+            saved_handler->opaque = NULL;
         }
 
-        mem->write32[region] = mem->saved_write32[region];
-        mem->saved_write32[region] = NULL;
+        handler->write32 = saved_handler->write32;
+        saved_handler->write32 = NULL;
     }
 }
 
@@ -158,74 +170,49 @@ int get_memory_type(struct memory* mem, uint32_t address)
 
 void poweron_memory(struct memory* mem)
 {
-    int i;
+    size_t i, m;
+    uint16_t ram_end = 0x0000 + (g_dev.ri.rdram.dram_size >> 16) - 1;
+    uint16_t rom_end = 0x1000 + (g_dev.pi.cart_rom.rom_size >> 16) - 1;
+
+    struct
+    {
+        uint16_t begin;
+        uint16_t end;
+        int type;
+        struct mem_handler handler;
+    } mappings[] =
+    {
+        /* clear mappings */
+        { 0x0000, 0xffff,  M64P_MEM_NOTHING,      { NULL,         RW(open_bus)          } },
+        /* memory map */
+        { 0x0000, ram_end, M64P_MEM_RDRAM,        { &g_dev.ri,    RW(rdram_dram)       } },
+        { 0x03f0, 0x03f0,  M64P_MEM_RDRAMREG,     { &g_dev.ri,    RW(rdram_regs)       } },
+        { 0x0400, 0x0400,  M64P_MEM_RSPMEM,       { &g_dev.sp,    RW(rsp_mem)          } },
+        { 0x0404, 0x0404,  M64P_MEM_RSPREG,       { &g_dev.sp,    RW(rsp_regs)         } },
+        { 0x0408, 0x0408,  M64P_MEM_RSP,          { &g_dev.sp,    RW(rsp_regs2)        } },
+        { 0x0410, 0x0410,  M64P_MEM_DP,           { &g_dev.dp,    RW(dpc_regs)         } },
+        { 0x0420, 0x0420,  M64P_MEM_DPS,          { &g_dev.dp,    RW(dps_regs)         } },
+        { 0x0430, 0x0430,  M64P_MEM_MI,           { &g_dev.r4300, RW(mi_regs)          } },
+        { 0x0440, 0x0440,  M64P_MEM_VI,           { &g_dev.vi,    RW(vi_regs)          } },
+        { 0x0450, 0x0450,  M64P_MEM_AI,           { &g_dev.ai,    RW(ai_regs)          } },
+        { 0x0460, 0x0460,  M64P_MEM_PI,           { &g_dev.pi,    RW(pi_regs)          } },
+        { 0x0470, 0x0470,  M64P_MEM_RI,           { &g_dev.ri,    RW(ri_regs)          } },
+        { 0x0480, 0x0480,  M64P_MEM_SI,           { &g_dev.si,    RW(si_regs)          } },
+        { 0x0800, 0x0800,  M64P_MEM_FLASHRAMSTAT, { &g_dev.pi,    RW(flashram_status)  } },
+        { 0x0801, 0x0801,  M64P_MEM_NOTHING,      { &g_dev.pi,    RW(flashram_command) } },
+        { 0x1000, rom_end, M64P_MEM_ROM,          { &g_dev.pi,    RW(cart_rom)         } },
+        { 0x1fc0, 0x1fc0,  M64P_MEM_PIF,          { &g_dev.si,    RW(pif_ram)          } }
+    };
 
 #ifdef DBG
-    memset(mem->saved_opaque, 0, 0x10000*sizeof(mem->saved_opaque[0]));
-    memset(mem->saved_read32, 0, 0x10000*sizeof(mem->saved_read32[0]));
-    memset(mem->saved_write32, 0, 0x10000*sizeof(mem->saved_write32[0]));
+    memset(mem->saved_handlers, 0, 0x10000*sizeof(mem->saved_handlers[0]));
 #endif
 
-    /* clear mappings */
-    for(i = 0; i < 0x10000; ++i)
-    {
-        map_region(mem, i, M64P_MEM_NOTHING, NULL, RW(open_bus));
+    for(m = 0; m < ARRAY_SIZE(mappings); ++m) {
+        for(i = mappings[m].begin; i <= mappings[m].end; ++i) {
+            map_region(mem, i, mappings[m].type, &mappings[m].handler);
+        }
     }
-
-    /* map RDRAM */
-    for(i = 0; i < /*0x40*/0x80; ++i)
-    {
-        map_region(mem, 0x0000+i, M64P_MEM_RDRAM, &g_dev.ri, RW(rdram_dram));
-    }
-
-    /* map RDRAM registers */
-    map_region(mem, 0x03f0, M64P_MEM_RDRAMREG, &g_dev.ri, RW(rdram_regs));
-
-    /* map RSP memory */
-    map_region(mem, 0x0400, M64P_MEM_RSPMEM, &g_dev.sp, RW(rsp_mem));
-
-    /* map RSP registers (1) */
-    map_region(mem, 0x0404, M64P_MEM_RSPREG, &g_dev.sp, RW(rsp_regs));
-
-    /* map RSP registers (2) */
-    map_region(mem, 0x0408, M64P_MEM_RSP, &g_dev.sp, RW(rsp_regs2));
-
-    /* map DPC registers */
-    map_region(mem, 0x0410, M64P_MEM_DP, &g_dev.dp, RW(dpc_regs));
-
-    /* map DPS registers */
-    map_region(mem, 0x0420, M64P_MEM_DPS, &g_dev.dp, RW(dps_regs));
-
-    /* map MI registers */
-    map_region(mem, 0x0430, M64P_MEM_MI, &g_dev.r4300, RW(mi_regs));
-
-    /* map VI registers */
-    map_region(mem, 0x0440, M64P_MEM_VI, &g_dev.vi, RW(vi_regs));
-
-    /* map AI registers */
-    map_region(mem, 0x0450, M64P_MEM_AI, &g_dev.ai, RW(ai_regs));
-
-    /* map PI registers */
-    map_region(mem, 0x0460, M64P_MEM_PI, &g_dev.pi, RW(pi_regs));
-
-    /* map RI registers */
-    map_region(mem, 0x0470, M64P_MEM_RI, &g_dev.ri, RW(ri_regs));
-
-    /* map SI registers */
-    map_region(mem, 0x0480, M64P_MEM_SI, &g_dev.si, RW(si_regs));
-
-    /* map flashram/sram */
-    map_region(mem, 0x0800, M64P_MEM_FLASHRAMSTAT, &g_dev.pi, RW(flashram_status));
-    map_region(mem, 0x0801, M64P_MEM_NOTHING, &g_dev.pi, RW(flashram_command));
-
-    /* map cart ROM */
-    for(i = 0; i < (g_dev.pi.cart_rom.rom_size >> 16); ++i)
-    {
-        map_region(mem, 0x1000+i, M64P_MEM_ROM, &g_dev.pi, RW(cart_rom));
-    }
-
-    /* map PIF RAM */
-    map_region(mem, 0x1fc0, M64P_MEM_PIF, &g_dev.si, RW(pif_ram));
 }
 
 static void map_region_t(struct memory* mem, uint16_t region, int type)
@@ -246,13 +233,13 @@ static void map_region_o(struct memory* mem,
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED) != -1)
     {
-        mem->saved_opaque[region] = opaque;
-        mem->opaque[region] = &g_dev.r4300;
+        mem->saved_handlers[region].opaque = opaque;
+        mem->handlers[region].opaque = &g_dev.r4300;
     }
     else
 #endif
     {
-        mem->opaque[region] = opaque;
+        mem->handlers[region].opaque = opaque;
     }
 }
 
@@ -264,13 +251,13 @@ static void map_region_r(struct memory* mem,
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
     {
-        mem->saved_read32[region] = read32;
-        mem->read32[region] = read32_with_bp_checks;
+        mem->saved_handlers[region].read32 = read32;
+        mem->handlers[region].read32 = read32_with_bp_checks;
     }
     else
 #endif
     {
-        mem->read32[region] = read32;
+        mem->handlers[region].read32 = read32;
     }
 }
 
@@ -282,27 +269,25 @@ static void map_region_w(struct memory* mem,
     if (lookup_breakpoint(((uint32_t)region << 16), 0x10000,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
     {
-        mem->saved_write32[region] = write32;
-        mem->write32[region] = write32_with_bp_checks;
+        mem->saved_handlers[region].write32 = write32;
+        mem->handlers[region].write32 = write32_with_bp_checks;
     }
     else
 #endif
     {
-        mem->write32[region] = write32;
+        mem->handlers[region].write32 = write32;
     }
 }
 
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
-                void* opaque,
-                read32fn read32,
-                write32fn write32)
+                const struct mem_handler* handler)
 {
     map_region_t(mem, region, type);
-    map_region_o(mem, region, opaque);
-    map_region_r(mem, region, read32);
-    map_region_w(mem, region, write32);
+    map_region_o(mem, region, handler->opaque);
+    map_region_r(mem, region, handler->read32);
+    map_region_w(mem, region, handler->write32);
 }
 
 uint32_t *fast_mem_access(uint32_t address)

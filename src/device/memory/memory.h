@@ -27,17 +27,20 @@
 typedef void (*read32fn)(void*,uint32_t,uint32_t*);
 typedef void (*write32fn)(void*,uint32_t,uint32_t,uint32_t);
 
+struct mem_handler
+{
+    void* opaque;
+    read32fn read32;
+    write32fn write32;
+};
+
 struct memory
 {
-    void* opaque[0x10000];
-    read32fn read32[0x10000];
-    write32fn write32[0x10000];
+    struct mem_handler handlers[0x10000];
 
 #ifdef DBG
     int memtype[0x10000];
-    void* saved_opaque[0x10000];
-    read32fn saved_read32[0x10000];
-    write32fn saved_write32[0x10000];
+    struct mem_handler saved_handlers[0x10000];
 #endif
 };
 
@@ -73,12 +76,15 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
 
 void poweron_memory(struct memory* mem);
 
+static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
+{
+    return &mem->handlers[address >> 16];
+}
+
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
-                void* opaque,
-                read32fn read32,
-                write32fn write32);
+                const struct mem_handler* handler);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

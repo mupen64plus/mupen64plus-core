@@ -268,7 +268,7 @@ void genlb(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(95);
@@ -325,7 +325,7 @@ void genlbu(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(76);
@@ -380,7 +380,7 @@ void genlh(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(95);
@@ -437,7 +437,7 @@ void genlhu(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(76);
@@ -497,7 +497,7 @@ void genlw(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(40);
@@ -535,7 +535,7 @@ void genlwu(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(40);
@@ -585,7 +585,7 @@ void genld(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(46);
@@ -642,7 +642,7 @@ void gensb(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(68);
@@ -714,7 +714,7 @@ void gensh(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(68);
@@ -786,7 +786,7 @@ void gensw(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(46);
@@ -854,7 +854,7 @@ void gensd(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(42);
@@ -4076,7 +4076,7 @@ void genlwc1(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(37);
@@ -4114,7 +4114,7 @@ void genldc1(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->read32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].read32);
         cmp_reg32_imm32(EAX, (unsigned int)read_rdram_dram);
     }
     je_rj(37);
@@ -4156,7 +4156,7 @@ void genswc1(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(46);
@@ -4214,7 +4214,7 @@ void gensdc1(struct r4300_core* r4300)
     else
     {
         shr_reg32_imm8(EAX, 16);
-        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->write32);
+        mov_reg32_preg32x4pimm32(EAX, EAX, (unsigned int)r4300->mem->handlers[0].write32);
         cmp_reg32_imm32(EAX, (unsigned int)write_rdram_dram);
     }
     je_rj(42);

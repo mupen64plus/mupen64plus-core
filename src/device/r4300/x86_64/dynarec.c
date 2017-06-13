@@ -386,7 +386,7 @@ void genlb(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -451,7 +451,7 @@ void genlbu(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if(r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -516,7 +516,7 @@ void genlh(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -580,7 +580,7 @@ void genlhu(struct r4300_core* r4300)
 
     ld_register_alloc2(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -652,7 +652,7 @@ void genlw(struct r4300_core* r4300)
 
     ld_register_alloc(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -701,7 +701,7 @@ void genlwu(struct r4300_core* r4300)
 
     ld_register_alloc(r4300, &gpr1, &gpr2, &base1, &base2);
 
-    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(base1, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_reg32_imm32(gpr1, 0xDF800000);
@@ -765,7 +765,7 @@ void genld(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -837,7 +837,7 @@ void gensb(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -917,7 +917,7 @@ void gensh(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -1002,7 +1002,7 @@ void gensw(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -1085,7 +1085,7 @@ void gensd(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
     add_eax_imm32((int)r4300->recomp.dst->f.i.immediate);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4266,7 +4266,7 @@ void genlwc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4311,7 +4311,7 @@ void genldc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->read32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].read32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4360,7 +4360,7 @@ void genswc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
@@ -4428,7 +4428,7 @@ void gensdc1(struct r4300_core* r4300)
     mov_xreg32_m32rel(EAX, (unsigned int *)(&r4300_regs(r4300)[r4300->recomp.dst->f.lf.base]));
     add_eax_imm32((int)r4300->recomp.dst->f.lf.offset);
     mov_reg32_reg32(EBX, EAX);
-    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->write32);
+    mov_reg64_imm64(RSI, (unsigned long long) r4300->mem->handlers[0].write32);
     if (r4300->recomp.fast_memory)
     {
         and_eax_imm32(0xDF800000);
