@@ -226,6 +226,11 @@ uint32_t* r4300_wmask(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
 
+/* Returns a pointer to a block of contiguous memory
+ * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
+ * Useful for getting fast access to a zone with executable code. */
+uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address);
+
 int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value);
 int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t* value);
 int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask);

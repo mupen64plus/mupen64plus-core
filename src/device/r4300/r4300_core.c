@@ -313,6 +313,20 @@ uint64_t* r4300_wdword(struct r4300_core* r4300)
 #endif
 }
 
+uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
+{
+    /* This code is performance critical, specially on pure interpreter mode.
+     * Removing error checking saves some time, but the emulator may crash. */
+
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 2);
+    }
+
+    address &= UINT32_C(0x1ffffffc);
+
+    return (uint32_t*)((uint8_t*)r4300->mem->base + address);
+}
+
 /* Read aligned word from memory.
  * address may not be word-aligned for byte or hword accesses.
  * Alignment is taken care of when calling mem handler.

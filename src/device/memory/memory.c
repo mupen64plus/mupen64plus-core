@@ -237,17 +237,3 @@ void map_region(struct memory* mem,
     map_region_r(mem, region, handler->read32);
     map_region_w(mem, region, handler->write32);
 }
-
-uint32_t *fast_mem_access(uint32_t address)
-{
-    /* This code is performance critical, specially on pure interpreter mode.
-     * Removing error checking saves some time, but the emulator may crash. */
-
-    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
-        address = virtual_to_physical_address(&g_dev.r4300, address, 2);
-    }
-
-    address &= UINT32_C(0x1ffffffc);
-
-    return (uint32_t*)((uint8_t*)g_dev.mem.base + address);
-}

@@ -193,7 +193,7 @@ Used by dynarec only, check should be unnecessary
 static void NOTCOMPILED(void)
 {
    DECLARE_R4300
-   uint32_t *mem = fast_mem_access(r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
+   uint32_t *mem = fast_mem_access(r4300, r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
 #ifdef DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(r4300), (long) (*r4300_pc_struct(r4300))->ops);
 #endif
