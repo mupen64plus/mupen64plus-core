@@ -46,6 +46,8 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 
 
 void init_device(struct device* dev,
+    /* memory */
+    void* base,
     /* r4300 */
     unsigned int emumode,
     unsigned int count_per_op,
@@ -54,11 +56,11 @@ void init_device(struct device* dev,
     /* ai */
     struct audio_out_backend* aout,
     /* pi */
-    uint8_t* rom, size_t rom_size,
+    size_t rom_size,
     struct storage_backend* flashram_storage,
     struct storage_backend* sram_storage,
     /* ri */
-    uint32_t* dram, size_t dram_size,
+    size_t dram_size,
     /* si */
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
@@ -117,15 +119,16 @@ void init_device(struct device* dev,
 #undef W
 #undef RW
 
-    init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings));
+    init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base);
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
-    init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri);
+    init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + 0x04000000), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);
-    init_pi(&dev->pi, rom, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
-    init_ri(&dev->ri, dram, dram_size);
+    init_pi(&dev->pi, (uint8_t*)base + 0x10000000, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
+    init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + 0x00000000), dram_size);
     init_si(&dev->si,
+        (uint8_t*)base + 0x1fc00000,
         pif_channel_devices,
         cins,
         mpk_storages,
@@ -133,7 +136,7 @@ void init_device(struct device* dev,
         gb_carts,
         eeprom_id, eeprom_storage,
         clock,
-        rom + 0x40,
+        (uint8_t*)base + 0x10000040,
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
 }

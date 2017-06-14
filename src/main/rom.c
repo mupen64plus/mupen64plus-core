@@ -54,8 +54,6 @@ static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
 static _romdatabase g_romdatabase;
 
-/* Global loaded rom memory space. */
-unsigned char* g_rom = NULL;
 /* Global loaded rom size. */
 int g_rom_size = 0;
 
@@ -139,11 +137,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     int i;
 
     /* check input requirements */
-    if (g_rom != NULL)
-    {
-        DebugMessage(M64MSG_ERROR, "open_rom(): previous ROM image was not freed");
-        return M64ERR_INTERNAL;
-    }
     if (romimage == NULL || !is_valid_rom(romimage))
     {
         DebugMessage(M64MSG_ERROR, "open_rom(): not a valid ROM image");
@@ -154,16 +147,13 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     g_MemHasBeenBSwapped = 0;
     /* allocate new buffer for ROM and copy into this buffer */
     g_rom_size = size;
-    g_rom = (unsigned char *) malloc(size);
-    if (g_rom == NULL)
-        return M64ERR_NO_MEMORY;
-    swap_copy_rom(g_rom, romimage, size, &imagetype);
+    swap_copy_rom((uint8_t*)g_mem_base + 0x10000000, romimage, size, &imagetype);
 
-    memcpy(&ROM_HEADER, g_rom, sizeof(m64p_rom_header));
+    memcpy(&ROM_HEADER, (uint8_t*)g_mem_base + 0x10000000, sizeof(m64p_rom_header));
 
     /* Calculate MD5 hash  */
     md5_init(&state);
-    md5_append(&state, (const md5_byte_t*)g_rom, g_rom_size);
+    md5_append(&state, (const md5_byte_t*)((uint8_t*)g_mem_base + 0x10000000), g_rom_size);
     md5_finish(&state, digest);
     for ( i = 0; i < 16; ++i )
         sprintf(buffer+i*2, "%02X", digest[i]);
@@ -237,12 +227,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
 m64p_error close_rom(void)
 {
-    if (g_rom == NULL)
-        return M64ERR_INVALID_STATE;
-
-    free(g_rom);
-    g_rom = NULL;
-
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_MemHasBeenBSwapped = 0;
     DebugMessage(M64MSG_STATUS, "Rom closed.");

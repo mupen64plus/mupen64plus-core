@@ -46,6 +46,7 @@ struct mem_mapping
 struct memory
 {
     struct mem_handler handlers[0x10000];
+    void* base;
 
 #ifdef DBG
     int memtype[0x10000];
@@ -83,7 +84,7 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count);
+void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count, void* base);
 
 static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
 {

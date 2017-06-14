@@ -174,6 +174,7 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 
 
 void init_pif(struct pif* pif,
+    uint8_t* pif_base,
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
@@ -185,6 +186,8 @@ void init_pif(struct pif* pif,
     const uint8_t* ipl3)
 {
     size_t i;
+
+    pif->ram = pif_base + 0x7c0;
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
         init_pif_channel(&pif->channels[i], &pif_channel_devices[i]);

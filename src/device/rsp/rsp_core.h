@@ -76,7 +76,7 @@ enum sp_registers2
 
 struct rsp_core
 {
-    uint32_t mem[SP_MEM_SIZE/4];
+    uint32_t* mem;
     uint32_t regs[SP_REGS_COUNT];
     uint32_t regs2[SP_REGS2_COUNT];
     uint32_t rsp_task_locked;
@@ -102,6 +102,7 @@ static uint32_t rsp_reg2(uint32_t address)
 }
 
 void init_rsp(struct rsp_core* sp,
+              uint32_t* sp_mem,
               struct r4300_core* r4300,
               struct rdp_core* dp,
               struct ri_controller* ri);

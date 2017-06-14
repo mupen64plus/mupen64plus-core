@@ -23,10 +23,7 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
-#include "device/ri/ri_controller.h"
-#include "device/rsp/rsp_core.h"
 #include "main/main.h"
 
 #ifdef DBG
@@ -147,12 +144,14 @@ int get_memory_type(struct memory* mem, uint32_t address)
 }
 #endif
 
-void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count)
+void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count, void* base)
 {
     size_t i, m;
 #ifdef DBG
     memset(mem->saved_handlers, 0, 0x10000*sizeof(mem->saved_handlers[0]));
 #endif
+
+    mem->base = base;
 
     for(m = 0; m < mappings_count; ++m) {
         uint16_t begin = mappings[m].begin >> 16;
@@ -250,12 +249,5 @@ uint32_t *fast_mem_access(uint32_t address)
 
     address &= UINT32_C(0x1ffffffc);
 
-    if (address < RDRAM_MAX_SIZE)
-        return (uint32_t*) ((uint8_t*) g_dev.ri.rdram.dram + address);
-    else if (address >= UINT32_C(0x10000000))
-        return (uint32_t*) ((uint8_t*) g_dev.pi.cart_rom.rom + (address - UINT32_C(0x10000000)));
-    else if ((address & UINT32_C(0xffffe000)) == UINT32_C(0x04000000))
-        return (uint32_t*) ((uint8_t*) g_dev.sp.mem + (address & UINT32_C(0x1ffc)));
-    else
-        return NULL;
+    return (uint32_t*)((uint8_t*)g_dev.mem.base + address);
 }

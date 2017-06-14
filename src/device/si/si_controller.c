@@ -75,6 +75,7 @@ static void dma_si_read(struct si_controller* si)
 
 
 void init_si(struct si_controller* si,
+             uint8_t* pif_base,
              const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
              struct storage_backend* mpk_storages,
@@ -91,6 +92,7 @@ void init_si(struct si_controller* si,
     si->ri = ri;
 
     init_pif(&si->pif,
+        pif_base,
         pif_channel_devices,
         cins,
         mpk_storages,

@@ -152,10 +152,12 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 }
 
 void init_rsp(struct rsp_core* sp,
+              uint32_t* sp_mem,
               struct r4300_core* r4300,
               struct rdp_core* dp,
               struct ri_controller* ri)
 {
+    sp->mem = sp_mem;
     sp->r4300 = r4300;
     sp->dp = dp;
     sp->ri = ri;

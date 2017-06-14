@@ -58,6 +58,8 @@ struct device
 
 /* Setup device "static" properties.  */
 void init_device(struct device* dev,
+    /* memory */
+    void* base,
     /* r4300 */
     unsigned int emumode,
     unsigned int count_per_op,
@@ -66,11 +68,11 @@ void init_device(struct device* dev,
     /* ai */
     struct audio_out_backend* aout,
     /* pi */
-    uint8_t* rom, size_t rom_size,
+    size_t rom_size,
     struct storage_backend* flashram_storage,
     struct storage_backend* sram_storage,
     /* ri */
-    uint32_t* dram, size_t dram_size,
+    size_t dram_size,
     /* si */
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,

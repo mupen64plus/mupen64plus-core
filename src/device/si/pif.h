@@ -97,8 +97,7 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf);
 
 struct pif
 {
-    uint8_t ram[PIF_RAM_SIZE];
-
+    uint8_t* ram;
     struct pif_channel channels[PIF_CHANNELS_COUNT];
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
@@ -115,6 +114,7 @@ static uint32_t pif_ram_address(uint32_t address)
 
 
 void init_pif(struct pif* pif,
+    uint8_t* pif_base,
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
