@@ -56,6 +56,7 @@ struct storage_backend;
 #define MM_RI_REGS          UINT32_C(0x04700000)
 #define MM_SI_REGS          UINT32_C(0x04800000)
 #define MM_DD_REGS          UINT32_C(0x05000000) /* dom2 addr1 */
+#define MM_DD_ROM           UINT32_C(0x06000000) /* dom1 addr1 */
 #define MM_FLASHRAM_STATUS  UINT32_C(0x08000000) /* dom2 addr2 */
 #define MM_FLASHRAM_COMMAND UINT32_C(0x08010000)
 #define MM_CART_ROM         UINT32_C(0x10000000) /* dom1 addr2 */

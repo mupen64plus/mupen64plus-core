@@ -195,7 +195,12 @@ void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     {
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
-        fifo_push(ai);
+        if (ai->regs[AI_LEN_REG] != 0) {
+            fifo_push(ai);
+        }
+        else {
+            /* stop sound */
+        }
         return;
 
     case AI_STATUS_REG:

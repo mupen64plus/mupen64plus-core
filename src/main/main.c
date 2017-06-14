@@ -1147,7 +1147,7 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     poweron_device(&g_dev);
-    pifbootrom_hle_execute(&g_dev);
+    pifbootrom_hle_execute(&g_dev.r4300);
     run_device(&g_dev);
 
     /* now begin to shut down */

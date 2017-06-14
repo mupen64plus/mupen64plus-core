@@ -206,6 +206,9 @@ struct r4300_core
     uint32_t special_rom;
 };
 
+#define R4300_KSEG0 UINT32_C(0x80000000)
+#define R4300_KSEG1 UINT32_C(0xa0000000)
+
 void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom);
 void poweron_r4300(struct r4300_core* r4300);
 

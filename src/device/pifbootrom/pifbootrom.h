@@ -22,10 +22,10 @@
 #ifndef M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
 #define M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
 
-struct device;
+struct r4300_core;
 
 /* Simulates end result of PIFBootROM execution.
  * This bypasses entirely the execution of real PIFBootROM */
-void pifbootrom_hle_execute(struct device* dev);
+void pifbootrom_hle_execute(struct r4300_core* r4300);
 
 #endif

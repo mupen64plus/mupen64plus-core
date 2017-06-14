@@ -308,6 +308,20 @@ void poweron_pif(struct pif* pif)
 
     memset(pif->ram, 0, PIF_RAM_SIZE);
 
+    /* HACK: for allowing pifbootrom execution */
+    unsigned int rom_type = 0;
+    unsigned int reset_type = 0;
+    unsigned int s7 = 0;
+
+    uint32_t* pif24 = (uint32_t*)(pif->ram + 0x24);
+    *pif24 = (uint32_t)
+         (((rom_type      & 0x1) << 19)
+        | ((s7            & 0x1) << 18)
+        | ((reset_type    & 0x1) << 17)
+        | ((pif->cic.seed & 0xff) << 8)
+        | 0x3f);
+    *pif24 = sl(*pif24);
+
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
         disable_pif_channel(&pif->channels[i]);
     }
