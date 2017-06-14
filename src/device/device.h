@@ -41,6 +41,26 @@ struct clock_backend;
 struct rumble_backend;
 struct storage_backend;
 
+/* memory map constants */
+#define MM_RDRAM_DRAM       UINT32_C(0x00000000)
+#define MM_RDRAM_REGS       UINT32_C(0x03f00000)
+#define MM_RSP_MEM          UINT32_C(0x04000000)
+#define MM_RSP_REGS         UINT32_C(0x04040000)
+#define MM_RSP_REGS2        UINT32_C(0x04080000)
+#define MM_DPC_REGS         UINT32_C(0x04100000)
+#define MM_DPS_REGS         UINT32_C(0x04200000)
+#define MM_MI_REGS          UINT32_C(0x04300000)
+#define MM_VI_REGS          UINT32_C(0x04400000)
+#define MM_AI_REGS          UINT32_C(0x04500000)
+#define MM_PI_REGS          UINT32_C(0x04600000)
+#define MM_RI_REGS          UINT32_C(0x04700000)
+#define MM_SI_REGS          UINT32_C(0x04800000)
+#define MM_DD_REGS          UINT32_C(0x05000000) /* dom2 addr1 */
+#define MM_FLASHRAM_STATUS  UINT32_C(0x08000000) /* dom2 addr2 */
+#define MM_FLASHRAM_COMMAND UINT32_C(0x08010000)
+#define MM_CART_ROM         UINT32_C(0x10000000) /* dom1 addr2 */
+#define MM_PIF_MEM          UINT32_C(0x1fc00000)
+
 /* Device structure is a container for the n64 submodules
  * It contains all state related to the emulated system. */
 struct device

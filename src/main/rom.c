@@ -35,6 +35,7 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
+#include "device/device.h"
 #include "device/memory/memory.h"
 #include "main.h"
 #include "md5.h"
@@ -147,13 +148,13 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     g_MemHasBeenBSwapped = 0;
     /* allocate new buffer for ROM and copy into this buffer */
     g_rom_size = size;
-    swap_copy_rom((uint8_t*)g_mem_base + 0x10000000, romimage, size, &imagetype);
+    swap_copy_rom((uint8_t*)g_mem_base + MM_CART_ROM, romimage, size, &imagetype);
 
-    memcpy(&ROM_HEADER, (uint8_t*)g_mem_base + 0x10000000, sizeof(m64p_rom_header));
+    memcpy(&ROM_HEADER, (uint8_t*)g_mem_base + MM_CART_ROM, sizeof(m64p_rom_header));
 
     /* Calculate MD5 hash  */
     md5_init(&state);
-    md5_append(&state, (const md5_byte_t*)((uint8_t*)g_mem_base + 0x10000000), g_rom_size);
+    md5_append(&state, (const md5_byte_t*)((uint8_t*)g_mem_base + MM_CART_ROM), g_rom_size);
     md5_finish(&state, digest);
     for ( i = 0; i < 16; ++i )
         sprintf(buffer+i*2, "%02X", digest[i]);

@@ -87,34 +87,33 @@ void init_device(struct device* dev,
         { dev,             reset_hard_handler          }  /* reset_hard */
     };
 
-    uint32_t ram_end = 0x00000000 + dram_size - 1;
-    uint32_t rom_end = 0x10000000 + rom_size - 1;
-
 #define R(x) read_ ## x
 #define W(x) write_ ## x
 #define RW(x) R(x), W(x)
+#define A(x,m) (x), (x) | (m)
     struct mem_mapping mappings[] = {
         /* clear mappings */
-        { 0x00000000, 0xffffffff,  M64P_MEM_NOTHING,      { NULL,        RW(open_bus)         } },
+        { 0x00000000, 0xffffffff, M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         /* memory map */
-        { 0x00000000, ram_end,     M64P_MEM_RDRAM,        { &dev->ri,    RW(rdram_dram)       } },
-        { 0x03f00000, 0x03f0ffff,  M64P_MEM_RDRAMREG,     { &dev->ri,    RW(rdram_regs)       } },
-        { 0x04000000, 0x0400ffff,  M64P_MEM_RSPMEM,       { &dev->sp,    RW(rsp_mem)          } },
-        { 0x04040000, 0x0404ffff,  M64P_MEM_RSPREG,       { &dev->sp,    RW(rsp_regs)         } },
-        { 0x04080000, 0x0408ffff,  M64P_MEM_RSP,          { &dev->sp,    RW(rsp_regs2)        } },
-        { 0x04100000, 0x0410ffff,  M64P_MEM_DP,           { &dev->dp,    RW(dpc_regs)         } },
-        { 0x04200000, 0x0420ffff,  M64P_MEM_DPS,          { &dev->dp,    RW(dps_regs)         } },
-        { 0x04300000, 0x0430ffff,  M64P_MEM_MI,           { &dev->r4300, RW(mi_regs)          } },
-        { 0x04400000, 0x0440ffff,  M64P_MEM_VI,           { &dev->vi,    RW(vi_regs)          } },
-        { 0x04500000, 0x0450ffff,  M64P_MEM_AI,           { &dev->ai,    RW(ai_regs)          } },
-        { 0x04600000, 0x0460ffff,  M64P_MEM_PI,           { &dev->pi,    RW(pi_regs)          } },
-        { 0x04700000, 0x0470ffff,  M64P_MEM_RI,           { &dev->ri,    RW(ri_regs)          } },
-        { 0x04800000, 0x0480ffff,  M64P_MEM_SI,           { &dev->si,    RW(si_regs)          } },
-        { 0x08000000, 0x0800ffff,  M64P_MEM_FLASHRAMSTAT, { &dev->pi,    RW(flashram_status)  } },
-        { 0x08010000, 0x0801ffff,  M64P_MEM_NOTHING,      { &dev->pi,    RW(flashram_command) } },
-        { 0x10000000, rom_end,     M64P_MEM_ROM,          { &dev->pi,    RW(cart_rom)         } },
-        { 0x1fc00000, 0x1fc0ffff,  M64P_MEM_PIF,          { &dev->si,    RW(pif_ram)          } }
+        { A(MM_RDRAM_DRAM, dram_size-1), M64P_MEM_RDRAM, { &dev->ri, RW(rdram_dram) } },
+        { A(MM_RDRAM_REGS, 0xffff), M64P_MEM_RDRAMREG, { &dev->ri, RW(rdram_regs) } },
+        { A(MM_RSP_MEM, 0xffff), M64P_MEM_RSPMEM, { &dev->sp, RW(rsp_mem) } },
+        { A(MM_RSP_REGS, 0xffff), M64P_MEM_RSPREG, { &dev->sp, RW(rsp_regs) } },
+        { A(MM_RSP_REGS2, 0xffff), M64P_MEM_RSP, { &dev->sp, RW(rsp_regs2) } },
+        { A(MM_DPC_REGS, 0xffff), M64P_MEM_DP, { &dev->dp, RW(dpc_regs) } },
+        { A(MM_DPS_REGS, 0xffff), M64P_MEM_DPS, { &dev->dp, RW(dps_regs) } },
+        { A(MM_MI_REGS, 0xffff), M64P_MEM_MI, { &dev->r4300, RW(mi_regs) } },
+        { A(MM_VI_REGS, 0xffff), M64P_MEM_VI, { &dev->vi, RW(vi_regs) } },
+        { A(MM_AI_REGS, 0xffff), M64P_MEM_AI, { &dev->ai, RW(ai_regs) } },
+        { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
+        { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
+        { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
+        { A(MM_FLASHRAM_STATUS, 0xffff), M64P_MEM_FLASHRAMSTAT, { &dev->pi, RW(flashram_status)  } },
+        { A(MM_FLASHRAM_COMMAND, 0xffff), M64P_MEM_NOTHING, { &dev->pi, RW(flashram_command) } },
+        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->pi, RW(cart_rom) } },
+        { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };
+#undef A
 #undef R
 #undef W
 #undef RW
@@ -123,12 +122,12 @@ void init_device(struct device* dev,
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
-    init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + 0x04000000), &dev->r4300, &dev->dp, &dev->ri);
+    init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);
-    init_pi(&dev->pi, (uint8_t*)base + 0x10000000, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
-    init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + 0x00000000), dram_size);
+    init_pi(&dev->pi, (uint8_t*)base + MM_CART_ROM, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
+    init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
-        (uint8_t*)base + 0x1fc00000,
+        (uint8_t*)base + MM_PIF_MEM,
         pif_channel_devices,
         cins,
         mpk_storages,
@@ -136,7 +135,7 @@ void init_device(struct device* dev,
         gb_carts,
         eeprom_id, eeprom_storage,
         clock,
-        (uint8_t*)base + 0x10000040,
+        (uint8_t*)base + MM_CART_ROM + 0x40,
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
 }

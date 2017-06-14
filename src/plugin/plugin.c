@@ -227,10 +227,10 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_gfx(void)
 {
     /* fill in the GFX_INFO data structure */
-    gfx_info.HEADER = (unsigned char *) g_mem_base + 0x10000000;
-    gfx_info.RDRAM = (unsigned char *) g_mem_base + 0x00000000;
-    gfx_info.DMEM = (unsigned char *) g_mem_base + 0x04000000;
-    gfx_info.IMEM = (unsigned char *) g_mem_base + 0x04001000;
+    gfx_info.HEADER = (unsigned char *) g_mem_base + MM_CART_ROM;
+    gfx_info.RDRAM = (unsigned char *) g_mem_base + MM_RDRAM_DRAM;
+    gfx_info.DMEM = (unsigned char *) g_mem_base + MM_RSP_MEM;
+    gfx_info.IMEM = (unsigned char *) g_mem_base + MM_RSP_MEM + 0x1000;
     gfx_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
     gfx_info.DPC_START_REG = &(g_dev.dp.dpc_regs[DPC_START_REG]);
     gfx_info.DPC_END_REG = &(g_dev.dp.dpc_regs[DPC_END_REG]);
@@ -324,9 +324,9 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_audio(void)
 {
     /* fill in the AUDIO_INFO data structure */
-    audio_info.RDRAM = (unsigned char *) g_mem_base + 0x00000000;
-    audio_info.DMEM = (unsigned char *) g_mem_base + 0x04000000;
-    audio_info.IMEM = (unsigned char *) g_mem_base + 0x04001000;
+    audio_info.RDRAM = (unsigned char *) g_mem_base + MM_RDRAM_DRAM;
+    audio_info.DMEM = (unsigned char *) g_mem_base + MM_RSP_MEM;
+    audio_info.IMEM = (unsigned char *) g_mem_base + MM_RSP_MEM + 0x1000;
     audio_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
     audio_info.AI_DRAM_ADDR_REG = &(g_dev.ai.regs[AI_DRAM_ADDR_REG]);
     audio_info.AI_LEN_REG = &(g_dev.ai.regs[AI_LEN_REG]);
@@ -470,9 +470,9 @@ static m64p_error plugin_connect_rsp(m64p_dynlib_handle plugin_handle)
 static m64p_error plugin_start_rsp(void)
 {
     /* fill in the RSP_INFO data structure */
-    rsp_info.RDRAM = (unsigned char *) g_mem_base + 0x00000000;
-    rsp_info.DMEM = (unsigned char *) g_mem_base + 0x04000000;
-    rsp_info.IMEM = (unsigned char *) g_mem_base + 0x04001000;
+    rsp_info.RDRAM = (unsigned char *) g_mem_base + MM_RDRAM_DRAM;
+    rsp_info.DMEM = (unsigned char *) g_mem_base + MM_RSP_MEM;
+    rsp_info.IMEM = (unsigned char *) g_mem_base + MM_RSP_MEM + 0x1000;
     rsp_info.MI_INTR_REG = &g_dev.r4300.mi.regs[MI_INTR_REG];
     rsp_info.SP_MEM_ADDR_REG = &g_dev.sp.regs[SP_MEM_ADDR_REG];
     rsp_info.SP_DRAM_ADDR_REG = &g_dev.sp.regs[SP_DRAM_ADDR_REG];
