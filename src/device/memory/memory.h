@@ -22,6 +22,7 @@
 #ifndef M64P_DEVICE_MEMORY_MEMORY_H
 #define M64P_DEVICE_MEMORY_MEMORY_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 typedef void (*read32fn)(void*,uint32_t,uint32_t*);
@@ -32,6 +33,14 @@ struct mem_handler
     void* opaque;
     read32fn read32;
     write32fn write32;
+};
+
+struct mem_mapping
+{
+    uint32_t begin;
+    uint32_t end;       /* inclusive */
+    int type;
+    struct mem_handler handler;
 };
 
 struct memory
@@ -74,7 +83,7 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-void poweron_memory(struct memory* mem);
+void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count);
 
 static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
 {

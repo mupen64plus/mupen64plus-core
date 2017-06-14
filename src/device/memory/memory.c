@@ -23,15 +23,10 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "device/ai/ai_controller.h"
 #include "device/pi/pi_controller.h"
-#include "device/r4300/new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "device/r4300/r4300_core.h"
-#include "device/rdp/rdp_core.h"
 #include "device/ri/ri_controller.h"
 #include "device/rsp/rsp_core.h"
-#include "device/si/si_controller.h"
-#include "device/vi/vi_controller.h"
 #include "main/main.h"
 
 #ifdef DBG
@@ -44,18 +39,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
-
-static void read_open_bus(void* opaque, uint32_t address, uint32_t* value)
-{
-    *value = address & 0xffff;
-    *value |= (*value << 16);
-}
-
-static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-}
 
 #ifdef DBG
 static void read32_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
@@ -164,52 +147,18 @@ int get_memory_type(struct memory* mem, uint32_t address)
 }
 #endif
 
-#define R(x) read_ ## x
-#define W(x) write_ ## x
-#define RW(x) R(x), W(x)
-
-void poweron_memory(struct memory* mem)
+void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count)
 {
     size_t i, m;
-    uint16_t ram_end = 0x0000 + (g_dev.ri.rdram.dram_size >> 16) - 1;
-    uint16_t rom_end = 0x1000 + (g_dev.pi.cart_rom.rom_size >> 16) - 1;
-
-    struct
-    {
-        uint16_t begin;
-        uint16_t end;
-        int type;
-        struct mem_handler handler;
-    } mappings[] =
-    {
-        /* clear mappings */
-        { 0x0000, 0xffff,  M64P_MEM_NOTHING,      { NULL,         RW(open_bus)          } },
-        /* memory map */
-        { 0x0000, ram_end, M64P_MEM_RDRAM,        { &g_dev.ri,    RW(rdram_dram)       } },
-        { 0x03f0, 0x03f0,  M64P_MEM_RDRAMREG,     { &g_dev.ri,    RW(rdram_regs)       } },
-        { 0x0400, 0x0400,  M64P_MEM_RSPMEM,       { &g_dev.sp,    RW(rsp_mem)          } },
-        { 0x0404, 0x0404,  M64P_MEM_RSPREG,       { &g_dev.sp,    RW(rsp_regs)         } },
-        { 0x0408, 0x0408,  M64P_MEM_RSP,          { &g_dev.sp,    RW(rsp_regs2)        } },
-        { 0x0410, 0x0410,  M64P_MEM_DP,           { &g_dev.dp,    RW(dpc_regs)         } },
-        { 0x0420, 0x0420,  M64P_MEM_DPS,          { &g_dev.dp,    RW(dps_regs)         } },
-        { 0x0430, 0x0430,  M64P_MEM_MI,           { &g_dev.r4300, RW(mi_regs)          } },
-        { 0x0440, 0x0440,  M64P_MEM_VI,           { &g_dev.vi,    RW(vi_regs)          } },
-        { 0x0450, 0x0450,  M64P_MEM_AI,           { &g_dev.ai,    RW(ai_regs)          } },
-        { 0x0460, 0x0460,  M64P_MEM_PI,           { &g_dev.pi,    RW(pi_regs)          } },
-        { 0x0470, 0x0470,  M64P_MEM_RI,           { &g_dev.ri,    RW(ri_regs)          } },
-        { 0x0480, 0x0480,  M64P_MEM_SI,           { &g_dev.si,    RW(si_regs)          } },
-        { 0x0800, 0x0800,  M64P_MEM_FLASHRAMSTAT, { &g_dev.pi,    RW(flashram_status)  } },
-        { 0x0801, 0x0801,  M64P_MEM_NOTHING,      { &g_dev.pi,    RW(flashram_command) } },
-        { 0x1000, rom_end, M64P_MEM_ROM,          { &g_dev.pi,    RW(cart_rom)         } },
-        { 0x1fc0, 0x1fc0,  M64P_MEM_PIF,          { &g_dev.si,    RW(pif_ram)          } }
-    };
-
 #ifdef DBG
     memset(mem->saved_handlers, 0, 0x10000*sizeof(mem->saved_handlers[0]));
 #endif
 
-    for(m = 0; m < ARRAY_SIZE(mappings); ++m) {
-        for(i = mappings[m].begin; i <= mappings[m].end; ++i) {
+    for(m = 0; m < mappings_count; ++m) {
+        uint16_t begin = mappings[m].begin >> 16;
+        uint16_t end   = mappings[m].end   >> 16;
+
+        for(i = begin; i <= end; ++i) {
             map_region(mem, i, mappings[m].type, &mappings[m].handler);
         }
     }
