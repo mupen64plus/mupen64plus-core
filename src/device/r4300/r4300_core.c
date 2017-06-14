@@ -341,14 +341,22 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
 
     assert((address & 0x7) == 0);
 
-    int success = (r4300_read_aligned_word(r4300, address, &w[0])
-        && r4300_read_aligned_word(r4300, address + 4, &w[1]));
-
-    if (success) {
-        *value = ((uint64_t)w[0] << 32) | w[1];
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 0);
+        if (address == 0) {
+            return 0;
+        }
     }
 
-    return success;
+    address &= UINT32_C(0x1ffffffc);
+
+    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
+    handler->read32(handler->opaque, address + 0, &w[0]);
+    handler->read32(handler->opaque, address + 4, &w[1]);
+
+    *value = ((uint64_t)w[0] << 32) | w[1];
+
+    return 1;
 }
 
 /* Write aligned word to memory.
@@ -382,8 +390,25 @@ int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64
 {
     assert((address & 0x7) == 0);
 
-    return (r4300_write_aligned_word(r4300, address, (value >> 32), (mask >> 32))
-            && r4300_write_aligned_word(r4300, address + 4, value, mask));
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+
+        invalidate_r4300_cached_code(r4300, address, 8);
+
+        address = virtual_to_physical_address(r4300, address, 1);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    invalidate_r4300_cached_code(r4300, address, 8);
+
+    address &= UINT32_C(0x1ffffffc);
+
+    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
+    handler->write32(handler->opaque, address + 0, value >> 32, mask >> 32);
+    handler->write32(handler->opaque, address + 4, value, mask);
+
+    return 1;
 }
 
 void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)
