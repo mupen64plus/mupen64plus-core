@@ -23,10 +23,11 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "device/r4300/r4300_core.h"
 
 #ifdef DBG
 #include <string.h>
+
+#include "device/r4300/r4300_core.h"
 
 #include "debugger/dbg_breakpoints.h"
 #include "debugger/dbg_memory.h"
