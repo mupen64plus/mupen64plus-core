@@ -24,7 +24,6 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "device/r4300/r4300_core.h"
-#include "main/main.h"
 
 #ifdef DBG
 #include <string.h>
@@ -38,7 +37,7 @@
 #include <stdint.h>
 
 #ifdef DBG
-static void read32_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
+void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
 {
     struct r4300_core* r4300 = (struct r4300_core*)opaque;
 
@@ -50,7 +49,7 @@ static void read32_with_bp_checks(void* opaque, uint32_t address, uint32_t* valu
     handler->read32(handler->opaque, address, value);
 }
 
-static void write32_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct r4300_core* r4300 = (struct r4300_core*)opaque;
 
@@ -65,6 +64,7 @@ static void write32_with_bp_checks(void* opaque, uint32_t address, uint32_t valu
 void activate_memory_break_read(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* dbg_handler = &mem->dbg_handler;
     struct mem_handler* handler = &mem->handlers[region];
     struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
@@ -73,11 +73,11 @@ void activate_memory_break_read(struct memory* mem, uint32_t address)
         /* only change opaque value if memory_break_write is not active */
         if (saved_handler->write32 == NULL) {
             saved_handler->opaque = handler->opaque;
-            handler->opaque = &g_dev.r4300;
+            handler->opaque = dbg_handler->opaque;
         }
 
         saved_handler->read32 = handler->read32;
-        handler->read32 = read32_with_bp_checks;
+        handler->read32 = dbg_handler->read32;
     }
 }
 
@@ -103,6 +103,7 @@ void deactivate_memory_break_read(struct memory* mem, uint32_t address)
 void activate_memory_break_write(struct memory* mem, uint32_t address)
 {
     uint16_t region = address >> 16;
+    struct mem_handler* dbg_handler = &mem->dbg_handler;
     struct mem_handler* handler = &mem->handlers[region];
     struct mem_handler* saved_handler = &mem->saved_handlers[region];
 
@@ -111,11 +112,11 @@ void activate_memory_break_write(struct memory* mem, uint32_t address)
         /* only change opaque value if memory_break_read is not active */
         if (saved_handler->read32 == NULL) {
             saved_handler->opaque = handler->opaque;
-            handler->opaque = &g_dev.r4300;
+            handler->opaque = dbg_handler->opaque;
         }
 
         saved_handler->write32 = handler->write32;
-        handler->write32 = write32_with_bp_checks;
+        handler->write32 = dbg_handler->write32;
     }
 }
 
@@ -142,13 +143,26 @@ int get_memory_type(struct memory* mem, uint32_t address)
 {
     return mem->memtype[address >> 16];
 }
+#else
+void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
+{
+}
+
+void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+}
 #endif
 
-void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count, void* base)
+void init_memory(struct memory* mem,
+                 struct mem_mapping* mappings, size_t mappings_count,
+                 void* base,
+                 struct mem_handler* dbg_handler)
 {
     size_t i, m;
+
 #ifdef DBG
     memset(mem->saved_handlers, 0, 0x10000*sizeof(mem->saved_handlers[0]));
+    memcpy(&mem->dbg_handler, dbg_handler, sizeof(*dbg_handler));
 #endif
 
     mem->base = base;
@@ -182,7 +196,7 @@ static void map_region_o(struct memory* mem,
                           M64P_BKP_FLAG_ENABLED) != -1)
     {
         mem->saved_handlers[region].opaque = opaque;
-        mem->handlers[region].opaque = &g_dev.r4300;
+        mem->handlers[region].opaque = mem->dbg_handler.opaque;
     }
     else
 #endif
@@ -200,7 +214,7 @@ static void map_region_r(struct memory* mem,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) != -1)
     {
         mem->saved_handlers[region].read32 = read32;
-        mem->handlers[region].read32 = read32_with_bp_checks;
+        mem->handlers[region].read32 = mem->dbg_handler.read32;
     }
     else
 #endif
@@ -218,7 +232,7 @@ static void map_region_w(struct memory* mem,
                           M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) != -1)
     {
         mem->saved_handlers[region].write32 = write32;
-        mem->handlers[region].write32 = write32_with_bp_checks;
+        mem->handlers[region].write32 = mem->dbg_handler.write32;
     }
     else
 #endif

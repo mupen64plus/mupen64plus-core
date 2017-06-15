@@ -51,6 +51,7 @@ struct memory
 #ifdef DBG
     int memtype[0x10000];
     struct mem_handler saved_handlers[0x10000];
+    struct mem_handler dbg_handler;
 #endif
 };
 
@@ -84,7 +85,10 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-void init_memory(struct memory* mem, struct mem_mapping* mappings, size_t mappings_count, void* base);
+void init_memory(struct memory* mem,
+                 struct mem_mapping* mappings, size_t mappings_count,
+                 void* base,
+                 struct mem_handler* dbg_handler);
 
 static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
 {
@@ -95,6 +99,9 @@ void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
                 const struct mem_handler* handler);
+
+void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value);
+void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #ifdef DBG
 void activate_memory_break_read(struct memory* mem, uint32_t address);

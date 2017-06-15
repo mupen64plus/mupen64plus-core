@@ -113,12 +113,14 @@ void init_device(struct device* dev,
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->pi, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };
+
+    struct mem_handler dbg_handler = { &dev->r4300, RW(with_bp_checks) };
 #undef A
 #undef R
 #undef W
 #undef RW
 
-    init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base);
+    init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base, &dbg_handler);
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
