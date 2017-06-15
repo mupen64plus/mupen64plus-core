@@ -44,9 +44,7 @@ void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value)
     check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ);
 
-    const struct mem_handler* handler = &r4300->mem->saved_handlers[address >> 16];
-
-    handler->read32(handler->opaque, address, value);
+    mem_read32(&r4300->mem->saved_handlers[address >> 16], address, value);
 }
 
 void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -56,9 +54,7 @@ void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32
     check_breakpoints_on_mem_access(*r4300_pc(r4300)-0x4, address, 4,
             M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE);
 
-    const struct mem_handler* handler = &r4300->mem->saved_handlers[address >> 16];
-
-    handler->write32(handler->opaque, address, value, mask);
+    mem_write32(&r4300->mem->saved_handlers[address >> 16], address, value, mask);
 }
 
 void activate_memory_break_read(struct memory* mem, uint32_t address)

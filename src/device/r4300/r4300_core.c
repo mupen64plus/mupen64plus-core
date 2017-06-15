@@ -342,8 +342,7 @@ int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t
 
     address &= UINT32_C(0x1ffffffc);
 
-    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
-    handler->read32(handler->opaque, address & ~UINT32_C(3), value);
+    mem_read32(mem_get_handler(r4300->mem, address), address & ~UINT32_C(3), value);
 
     return 1;
 }
@@ -365,8 +364,8 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
     address &= UINT32_C(0x1ffffffc);
 
     const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
-    handler->read32(handler->opaque, address + 0, &w[0]);
-    handler->read32(handler->opaque, address + 4, &w[1]);
+    mem_read32(handler, address + 0, &w[0]);
+    mem_read32(handler, address + 4, &w[1]);
 
     *value = ((uint64_t)w[0] << 32) | w[1];
 
@@ -393,8 +392,7 @@ int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_
 
     address &= UINT32_C(0x1ffffffc);
 
-    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
-    handler->write32(handler->opaque, address & ~UINT32_C(3), value, mask);
+    mem_write32(mem_get_handler(r4300->mem, address), address & ~UINT32_C(3), value, mask);
 
     return 1;
 }
@@ -419,8 +417,8 @@ int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64
     address &= UINT32_C(0x1ffffffc);
 
     const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
-    handler->write32(handler->opaque, address + 0, value >> 32, mask >> 32);
-    handler->write32(handler->opaque, address + 4, value, mask);
+    mem_write32(handler, address + 0, value >> 32, mask >> 32);
+    mem_write32(handler, address + 4, value      , mask      );
 
     return 1;
 }

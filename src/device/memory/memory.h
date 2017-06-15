@@ -95,6 +95,16 @@ static const struct mem_handler* mem_get_handler(const struct memory* mem, uint3
     return &mem->handlers[address >> 16];
 }
 
+static void mem_read32(const struct mem_handler* handler, uint32_t address, uint32_t* value)
+{
+    handler->read32(handler->opaque, address, value);
+}
+
+static void mem_write32(const struct mem_handler* handler, uint32_t address, uint32_t value, uint32_t mask)
+{
+    handler->write32(handler->opaque, address, value, mask);
+}
+
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
