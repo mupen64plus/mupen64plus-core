@@ -50,6 +50,7 @@ struct memory
 
 #ifdef DBG
     int memtype[0x10000];
+    unsigned char bp_checks[0x10000];
     struct mem_handler saved_handlers[0x10000];
     struct mem_handler dbg_handler;
 #endif
