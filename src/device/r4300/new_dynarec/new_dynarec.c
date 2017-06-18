@@ -183,10 +183,6 @@ void fp_exception(void);
 void fp_exception_ds(void);
 void jump_syscall(void);
 void jump_eret(void);
-void read_nomem_new(void);
-void write_nomem_new(void);
-void write_rdram_new(void);
-void write_mi_new(void);
 
 /* interpreted opcode */
 static void div64(int64_t dividend,int64_t divisor);
