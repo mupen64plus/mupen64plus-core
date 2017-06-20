@@ -21,13 +21,34 @@
 
 #include "cart_rom.h"
 
+#define M64P_CORE_PROTOTYPES 1
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+
 #include "pi_controller.h"
+#include "device/memory/memory.h"
+#include "device/r4300/r4300_core.h"
+#include "device/ri/rdram_detection_hack.h"
+
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
+#define CART_ROM_ADDR_MASK UINT32_C(0x03ffffff);
+
 
 void init_cart_rom(struct cart_rom* cart_rom,
-                      uint8_t* rom, size_t rom_size)
+                   uint8_t* rom, size_t rom_size,
+                   struct r4300_core* r4300,
+                   uint32_t* pi_status,
+                   struct rdram* rdram, const struct cic* cic)
 {
     cart_rom->rom = rom;
     cart_rom->rom_size = rom_size;
+
+    cart_rom->r4300 = r4300;
+    cart_rom->pi_status = pi_status;
+    cart_rom->rdram = rdram;
+    cart_rom->cic = cic;
 }
 
 void poweron_cart_rom(struct cart_rom* cart_rom)
@@ -58,5 +79,63 @@ void write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     struct pi_controller* pi = (struct pi_controller*)opaque;
     pi->cart_rom.last_write = value & mask;
     pi->cart_rom.rom_written = 1;
+}
+
+unsigned int cart_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    cart_addr &= CART_ROM_ADDR_MASK;
+
+    DebugMessage(M64MSG_WARNING, "DMA Writing to CART_ROM: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", dram_addr, cart_addr, length);
+
+    return /* length / 8 */0x1000;
+}
+
+unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    size_t i;
+    struct cart_rom* cart_rom = (struct cart_rom*)opaque;
+    const uint8_t* mem = cart_rom->rom;
+
+    /* XXX: why only for cart rom ? */
+    length = (length & UINT32_C(0x00fffffe)) + 2;
+
+    /* HACK: monitor PI DMA to trigger RDRAM size detection
+     * hack just before initial cart ROM loading. */
+    if (cart_addr == 0x10001000)
+    {
+        force_detected_rdram_size_hack(cart_rom->rdram, cart_rom->cic);
+    }
+
+    cart_addr &= CART_ROM_ADDR_MASK;
+
+
+    if (cart_addr + length < cart_rom->rom_size)
+    {
+        for(i = 0; i < length; ++i) {
+            dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+        }
+    }
+    else
+    {
+        unsigned int diff = (cart_rom->rom_size <= cart_addr)
+            ? 0
+            : cart_rom->rom_size - cart_addr;
+
+        for (i = 0; i < diff; ++i) {
+            dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+        }
+        for (; i < length; ++i) {
+            dram[(dram_addr+i)^S8] = 0;
+        }
+    }
+
+    /* invalidate cached code */
+    invalidate_r4300_cached_code(cart_rom->r4300, 0x80000000 + dram_addr, length);
+    invalidate_r4300_cached_code(cart_rom->r4300, 0xa0000000 + dram_addr, length);
+
+    /* mark IO_BUSY */
+    *cart_rom->pi_status |= PI_STATUS_IO_BUSY;
+
+    return (length / 8) + add_random_interrupt_time(cart_rom->r4300);
 }
 

@@ -29,6 +29,7 @@
 #include "flashram.h"
 #include "sram.h"
 
+struct device;
 struct r4300_core;
 struct ri_controller;
 struct cic;
@@ -52,6 +53,26 @@ enum pi_registers
     PI_REGS_COUNT
 };
 
+enum
+{
+    /* PI_STATUS - read */
+    PI_STATUS_DMA_BUSY  = 0x01,
+    PI_STATUS_IO_BUSY   = 0x02,
+    PI_STATUS_ERROR     = 0x04,
+
+    /* PI_STATUS - write */
+    PI_STATUS_RESET     = 0x01,
+    PI_STATUS_CLR_INTR  = 0x02
+};
+
+struct pi_dma_handler
+{
+    unsigned int (*dma_read)(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+    unsigned int (*dma_write)(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+};
+
+typedef void (*pi_dma_handler_getter)(struct device* dev, uint32_t address, void** opaque, const struct pi_dma_handler** handler);
+
 struct pi_controller
 {
     uint32_t regs[PI_REGS_COUNT];
@@ -60,12 +81,14 @@ struct pi_controller
     struct flashram flashram;
     struct sram sram;
 
+    struct device* dev;
+    pi_dma_handler_getter get_pi_dma_handler;
+
     int use_flashram;
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
 
-    const struct cic* cic;
 };
 
 static uint32_t pi_reg(uint32_t address)
@@ -76,6 +99,7 @@ static uint32_t pi_reg(uint32_t address)
 
 
 void init_pi(struct pi_controller* pi,
+             struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              uint8_t* rom, size_t rom_size,
              void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
              void* sram_storage, const struct storage_backend_interface* isram_storage,
@@ -89,5 +113,8 @@ void read_pi_regs(void* opaque, uint32_t address, uint32_t* value);
 void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void pi_end_of_dma_event(void* opaque);
+
+unsigned int cart_save_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int cart_save_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 
 #endif

@@ -44,6 +44,58 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
+static unsigned int dd_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+static unsigned int dd_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+
+
+static unsigned int null_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+static unsigned int null_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+
+static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
+{
+#define RW(o, x) \
+    do { \
+    static const struct pi_dma_handler h = { x ## _dma_read, x ## _dma_write }; \
+    *opaque = (o); \
+    *handler = &h; \
+    } while(0)
+
+    if (address >= MM_CART_ROM) {
+        if (address >= UINT32_C(0x1fd00000)) {
+            /* 0x1fd00000 - 0x7fffffff : 1FD00000 */
+            RW(NULL, null);
+        }
+        else {
+            /* 0x10000000 - 0x1fbfffff : dom1 addr2, cart rom */
+            RW(&dev->pi.cart_rom, cart_rom);
+        }
+    }
+    else if (address >= MM_FLASHRAM_STATUS) {
+        /* 0x08000000 - 0x0fffffff : dom2 addr2, cart save */
+        RW(&dev->pi, cart_save);
+    }
+    else if (address >= MM_DD_ROM) {
+        /* 0x06000000 - 0x07ffffff : dom1 addr1, dd rom */
+        RW(NULL, dd_rom);
+    }
+#undef RW
+}
 
 void init_device(struct device* dev,
     /* memory */
@@ -123,6 +175,7 @@ void init_device(struct device* dev,
     init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
     init_pi(&dev->pi,
+            dev, get_pi_dma_handler,
             (uint8_t*)base + MM_CART_ROM, rom_size,
             flashram_storage, iflashram_storage,
             sram_storage, isram_storage,
