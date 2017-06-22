@@ -118,7 +118,7 @@ DECLARE_INSTRUCTION(LB)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     r4300->rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
     if (*r4300_address(r4300)) {
@@ -135,7 +135,7 @@ DECLARE_INSTRUCTION(LBU)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     r4300->rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
     if (*r4300_address(r4300)) {
@@ -151,7 +151,7 @@ DECLARE_INSTRUCTION(LH)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     r4300->rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
     if (*r4300_address(r4300)) {
@@ -168,7 +168,7 @@ DECLARE_INSTRUCTION(LHU)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     r4300->rdword = (uint64_t*) lsrtp;
     read_word_in_memory();
     if (*r4300_address(r4300)) {
@@ -356,7 +356,7 @@ DECLARE_INSTRUCTION(SB)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     *r4300_wword(r4300) = (uint32_t)*lsrtp << shift;
     *r4300_wmask(r4300) = UINT32_C(0xff) << shift;
     write_word_in_memory();
@@ -370,7 +370,7 @@ DECLARE_INSTRUCTION(SH)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr & ~0x3;
+    *r4300_address(r4300) = lsaddr;
     *r4300_wword(r4300) = (uint32_t)*lsrtp << shift;
     *r4300_wmask(r4300) = UINT32_C(0xffff) << shift;
     write_word_in_memory();
