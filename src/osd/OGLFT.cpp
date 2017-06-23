@@ -372,11 +372,6 @@ namespace OGLFT
         return bbox;
     }
 
-    BBox Face::measure (const wchar_t* format, double number)
-    {
-        return measure(format, number);
-    }
-
     BBox Face::measureRaw (const wchar_t* s)
     {
         BBox bbox;

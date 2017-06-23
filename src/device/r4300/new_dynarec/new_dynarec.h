@@ -86,6 +86,8 @@ struct new_dynarec_hot_state
     unsigned int mini_ht[32][2];
     unsigned char restore_candidate[512];
     unsigned int memory_map[1048576];
+#else
+    char dummy;
 #endif
 };
 

@@ -150,8 +150,10 @@ ifeq ($(ARCH_DETECTED), 64BITS_32)
   ifeq ($(OS), FREEBSD)
     $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
   endif
-  CFLAGS += -m32
-  LDFLAGS += -Wl,-m,elf_i386
+  ifneq ($(OS),OSX)
+    CFLAGS += -m32
+    LDFLAGS += -Wl,-m,elf_i386
+  endif
 endif
 
 # set special flags per-system
@@ -185,7 +187,7 @@ ifeq ($(OS), OSX)
   OSX_SDK_PATH = $(OSX_SDK_ROOT)/$(shell ls $(OSX_SDK_ROOT) | tail -1)
 
   TARGET = libmupen64plus$(POSTFIX).dylib
-  LDFLAGS += -framework CoreFoundation -bundle -read_only_relocs suppress
+  LDFLAGS += -framework CoreFoundation -dynamiclib
   LDLIBS += -ldl
   ifeq ($(ARCH_DETECTED), 64BITS)
     ASFLAGS = -f macho64 -d LEADING_UNDERSCORE
@@ -201,6 +203,7 @@ ifeq ($(OS), OSX)
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
       endif
+	  LDFLAGS += -read_only_relocs suppress
     endif
   endif
 endif
@@ -349,7 +352,6 @@ endif
 # set base program pointers and flags
 CC       ?= $(CROSS_COMPILE)gcc
 CXX      ?= $(CROSS_COMPILE)g++
-NM        = $(CROSS_COMPILE)nm
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
@@ -686,8 +688,9 @@ $(ASM_DEFINES_OBJ): $(SRCDIR)/asm_defines/asm_defines.c
 	$(COMPILE.c) -fno-lto -o $@ $<
 
 # Script hackery for generating ASM include files for the new dynarec assembly code
-$(SRCDIR)/asm_defines/%.h: $(ASM_DEFINES_OBJ)
-	$(NM) $< | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/asm_defines/asm_defines_gas.h: $(SRCDIR)/asm_defines/asm_defines_nasm.h
+$(SRCDIR)/asm_defines/asm_defines_nasm.h: $(ASM_DEFINES_OBJ) ../../tools/gen_asm_defines.awk
+	$(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk "$<"
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm $(SRCDIR)/asm_defines/asm_defines_nasm.h

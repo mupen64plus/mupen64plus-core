@@ -37,26 +37,46 @@
 
 #include <stddef.h>
 
-/* Internally used to define a dummy array named "sym" and whose size is "val + 1" bytes.
- * This eases extraction of such information using objdump/dumpbin/nm tools.
- * The plus one in size is to avoid the creation of zero sized array (which are illegal in C).
- * We need to subtract one in objects symbols sizes to get the correct value.
- */
+#define HEX(n) ((n) >= 10 ? ('a' + ((n) - 10)) : ('0' + (n)))
 
-#ifdef _MSC_VER
-#define _DEFINE(sym, val) \
-    __pragma(const_seg(#sym)) \
-    const char sym[1+val];
-#else
-#define _DEFINE(sym, val) const char sym[1+val];
-#endif
+/* Creates a structure whose bytes form a string like
+ * "\n@ASM_DEFINE offsetof_blah_blah 0xdeadbeef\n"
+ *
+ * This should appear somewhere in the object file, and is distinctive enough
+ * that it shouldn't appear by chance.  Thus we can pipe the object file
+ * directly to awk, and extract the values without having to use
+ * platform-specific tools (e.g. objdump, dumpbin, nm).
+ */
+#define _DEFINE(str, sym, val) \
+    const struct { \
+        char before[sizeof(str)-1]; \
+        char hexval[8]; \
+        char after; \
+        char ensure_32bit[(val) > 0xffffffff ? -1 : 1]; \
+    } sym = { \
+        str, \
+        { \
+            HEX(((val) >> 28) & 0xf), \
+            HEX(((val) >> 24) & 0xf), \
+            HEX(((val) >> 20) & 0xf), \
+            HEX(((val) >> 16) & 0xf), \
+            HEX(((val) >> 12) & 0xf), \
+            HEX(((val) >>  8) & 0xf), \
+            HEX(((val) >>  4) & 0xf), \
+            HEX(((val) >>  0) & 0xf) \
+        }, \
+        '\n', \
+        {0} \
+    };
 
 /* Export member m of structure s.
- * Suitable parsing of corresponding object file (objdump/dumpbin/awk)
- * can be used to generate header suitable for inclusion in assembly files.
+ * Suitable parsing of corresponding object file (with strings) can be used to
+ * generate header suitable for inclusion in assembly files.
  */
 #define DEFINE(s, m) \
-    _DEFINE(offsetof_struct_##s##_##m, offsetof(struct s, m));
+    _DEFINE("\n@ASM_DEFINE offsetof_struct_" #s "_" #m " 0x", \
+            __offsetof_struct_##s##_##m, \
+            offsetof(struct s, m));
 
 
 /* Structure members definitions */
