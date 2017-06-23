@@ -466,19 +466,16 @@ GLOBAL_FUNCTION(read_byte_new):
     add    r2, r2, r12
     str    r2, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r1, [fp, #fp_address]
-    and    r12, r1, #3
-    eor    r12, r12, #3
-    lsl    r12, r12, #3
-    str    r12, [fp, #fp_stack_level_1]
-    bic    r1, r1, #3
-    str    r1, [fp, #fp_address]
     lsr    r1, r1, #16
     ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1+4]
+    str    lr, [fp, #fp_stack_level_1]
     mov    lr, pc
     mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1+4]
-    ldr    r12, [fp, #fp_stack_level_1]
+    ldr    lr, [fp, #fp_stack_level_1]
+    ldr    r12, [fp, #fp_address]
+    and    r12, r12, #3
+    eor    r12, r12, #3
+    lsl    r12, r12, #3
     ldr    r1, [fp, #fp_rdword]
     lsr    r1, r1, r12
     and    r1, r1, #0xff
@@ -490,19 +487,16 @@ GLOBAL_FUNCTION(read_hword_new):
     add    r2, r2, r12
     str    r2, [fp, #fp_cp0_regs+36] /* Count */
     ldr    r1, [fp, #fp_address]
-    and    r12, r1, #2
-    eor    r12, r12, #2
-    lsl    r12, r12, #3
-    str    r12, [fp, #fp_stack_level_1]
-    bic    r1, r1, #3
-    str    r1, [fp, #fp_address]
     lsr    r1, r1, #16
     ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1+4]
+    str    lr, [fp, #fp_stack_level_1]
     mov    lr, pc
     mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1+4]
-    ldr    r12, [fp, #fp_stack_level_1]
+    ldr    lr, [fp, #fp_stack_level_1]
+    ldr    r12, [fp, #fp_address]
+    and    r12, r12, #2
+    eor    r12, r12, #2
+    lsl    r12, r12, #3
     ldr    r1, [fp, #fp_rdword]
     lsr    r1, r1, r12
 #ifdef ARMv5_ONLY
@@ -542,8 +536,6 @@ GLOBAL_FUNCTION(write_byte_new):
     mov    r2, #0xff
     lsl    r2, r2, r12
     str    r2, [fp, #fp_wmask]
-    bic    r1, r1, #3
-    str    r1, [fp, #fp_address]
     lsr    r1, r1, #16
     ldr    r0, [r0, r1, lsl #2]
     str    lr, [fp, #fp_stack_level_1]
@@ -574,8 +566,6 @@ GLOBAL_FUNCTION(write_hword_new):
 #endif
     lsl    r2, r2, r12
     str    r2, [fp, #fp_wmask]
-    bic    r1, r1, #3
-    str    r1, [fp, #fp_address]
     lsr    r1, r1, #16
     ldr    r0, [r0, r1, lsl #2]
     str    lr, [fp, #fp_stack_level_1]
@@ -612,6 +602,7 @@ GLOBAL_FUNCTION(write_dword_new):
 GLOBAL_FUNCTION(write_rdram_new):
     ldr    r3, [fp, #fp_ram_offset]
     ldr    r2, [fp, #fp_address]
+	bic    r2, r2, #3
     ldr    r0, [fp, #fp_wword]
     ldr    r12, [fp, #fp_wmask]
     and    r0, r0, r12
@@ -657,6 +648,7 @@ GLOBAL_FUNCTION(read_nomem_new):
     mov    r2, #0
     tst    r12, r12
     bmi    tlb_exception
+	bic    r1, r1, #3
     ldr    r0, [r1, r12, lsl #2]
     str    r0, [fp, #fp_rdword]
     mov    pc, lr
@@ -707,6 +699,7 @@ GLOBAL_FUNCTION(write_nomem_new):
     ldr    r2, [fp, #fp_wmask]
     and    r0, r0, r2
     mvn    r2, r2
+	bic    r1, r1, #3
     ldr    r3, [r1, r12, lsl #2]
     and    r2, r3, r2
     orr    r0, r0, r2

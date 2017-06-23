@@ -412,8 +412,8 @@ void genlb(struct r4300_core* r4300)
     xor_reg8_imm8(base2, 3);
     shl_reg64_imm8(base2, 3);
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
-    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
+    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     shr_reg32_imm8(gpr2, 16);
@@ -480,8 +480,8 @@ void genlbu(struct r4300_core* r4300)
     xor_reg8_imm8(base2, 3);
     shl_reg64_imm8(base2, 3);
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
-    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
+    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     shr_reg32_imm8(gpr2, 16);
@@ -548,8 +548,8 @@ void genlh(struct r4300_core* r4300)
     xor_reg8_imm8(base2, 2);
     shl_reg64_imm8(base2, 3);
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
-    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
+    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     shr_reg32_imm8(gpr2, 16);
@@ -615,8 +615,8 @@ void genlhu(struct r4300_core* r4300)
     xor_reg8_imm8(base2, 2);
     shl_reg64_imm8(base2, 3);
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
-    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
+    and_reg64_imm32(gpr2, ~UINT32_C(3));
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
     mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
     shr_reg32_imm8(gpr2, 16);
@@ -875,8 +875,8 @@ void gensb(struct r4300_core* r4300)
     and_reg32_imm32(ECX, 3); // 6
     xor_reg8_imm8(CL, 3); // 4
     shl_reg32_imm8(ECX, 3); // 3
-    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
+    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     shl_reg32_cl(EDX); // 2
     mov_m32rel_xreg32((unsigned int *)(r4300_wword(r4300)), EDX); // 7
     mov_reg64_imm64(RDX, 0xff); // 10
@@ -957,8 +957,8 @@ void gensh(struct r4300_core* r4300)
     and_reg32_imm32(ECX, 2); // 6
     xor_reg8_imm8(CL, 2); // 4
     shl_reg32_imm8(ECX, 3); // 3
-    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
+    and_reg32_imm32(EBX, ~UINT32_C(3)); // 6
     shl_reg32_cl(EDX); // 2
     mov_m32rel_xreg32((unsigned int *)(r4300_wword(r4300)), EDX); // 7
     mov_reg64_imm64(RDX, 0xffff); // 10

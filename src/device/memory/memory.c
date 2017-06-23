@@ -52,7 +52,7 @@ typedef int (*writefn)(void*,uint32_t,uint32_t,uint32_t);
 static int readw(readfn read_word, void* opaque, uint32_t address, uint64_t* value)
 {
     uint32_t w;
-    int result = read_word(opaque, address, &w);
+    int result = read_word(opaque, (address & ~0x3), &w);
     *value = w;
 
     return result;
@@ -71,7 +71,7 @@ static int readd(readfn read_word, void* opaque, uint32_t address, uint64_t* val
 
 static int writew(writefn write_word, void* opaque, uint32_t address, uint32_t value, uint32_t wmask)
 {
-    return write_word(opaque, address, value, wmask);
+    return write_word(opaque, (address & ~0x3), value, wmask);
 }
 
 static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t value)
