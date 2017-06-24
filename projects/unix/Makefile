@@ -350,8 +350,8 @@ ifeq ($(OSD), 1)
 endif
 
 # set base program pointers and flags
-CC       ?= $(CROSS_COMPILE)gcc
-CXX      ?= $(CROSS_COMPILE)g++
+CC        = $(CROSS_COMPILE)gcc
+CXX       = $(CROSS_COMPILE)g++
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
