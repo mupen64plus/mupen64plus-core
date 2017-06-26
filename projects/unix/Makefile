@@ -352,6 +352,7 @@ endif
 # set base program pointers and flags
 CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
+STRINGS   = $(CROSS_COMPILE)strings
 AS        = nasm
 RM       ?= rm -f
 INSTALL  ?= install
@@ -690,7 +691,7 @@ $(ASM_DEFINES_OBJ): $(SRCDIR)/asm_defines/asm_defines.c
 # Script hackery for generating ASM include files for the new dynarec assembly code
 $(SRCDIR)/asm_defines/asm_defines_gas.h: $(SRCDIR)/asm_defines/asm_defines_nasm.h
 $(SRCDIR)/asm_defines/asm_defines_nasm.h: $(ASM_DEFINES_OBJ) ../../tools/gen_asm_defines.awk
-	LANG=C $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk "$<"
+	$(STRINGS) "$<" | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm $(SRCDIR)/asm_defines/asm_defines_nasm.h
