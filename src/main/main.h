@@ -40,7 +40,6 @@ extern int g_EmulatorRunning;
 extern int g_rom_pause;
 
 extern void* g_rdram;
-extern size_t g_rdram_size;
 
 extern struct device g_dev;
 
