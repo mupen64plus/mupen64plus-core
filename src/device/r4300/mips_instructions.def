@@ -1465,6 +1465,9 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_TAGHI_REG:
         cp0_regs[CP0_TAGHI_REG] = 0;
         break;
+    case CP0_ERROREPC_REG:
+        cp0_regs[CP0_ERROREPC_REG] = rrt32;
+        break;
     default:
         DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", rfs);
         *r4300_stop(r4300)=1;
