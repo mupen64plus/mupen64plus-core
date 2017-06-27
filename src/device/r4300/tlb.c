@@ -25,6 +25,7 @@
 #include "device/r4300/exception.h"
 #include "device/r4300/r4300_core.h"
 #include "main/rom.h"
+#include "main/main.h"
 
 #include <assert.h>
 #include <string.h>
@@ -103,6 +104,23 @@ void tlb_map(struct tlb* tlb, size_t entry)
 
 uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
 {
+#ifdef NEW_DYNAREC
+    if(r4300->emumode == EMUMODE_DYNAREC)
+    {
+        int map = r4300->new_dynarec_hot_state.memory_map[address >> 12];
+        if((r4300->cp0.tlb.LUT_w[address >> 12]) && (w == 1))
+            assert(map == (((r4300->cp0.tlb.LUT_w[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.ri.rdram.dram - 0x80000000) >> 2));
+        else if((r4300->cp0.tlb.LUT_r[address >> 12]) && (w == 0)) {
+            assert((map&~0x40000000) == (((r4300->cp0.tlb.LUT_r[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.ri.rdram.dram - 0x80000000) >> 2));
+            if(map & 0x40000000) assert(r4300->cp0.tlb.LUT_w[address >> 12] == 0);
+        }
+        else
+            assert(map < 0);
+
+        assert(!(address >= UINT32_C(0x7f000000) && address < UINT32_C(0x80000000) && r4300->special_rom == GOLDEN_EYE));
+    }
+#endif
+
     if (address >= UINT32_C(0x7f000000) && address < UINT32_C(0x80000000) && r4300->special_rom == GOLDEN_EYE)
     {
         /**************************************************

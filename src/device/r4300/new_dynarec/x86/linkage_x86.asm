@@ -55,11 +55,6 @@
     %define find_extern_data(a) a
 %endif
 
-%define g_dev_ri_rdram_dram                                 (g_dev + offsetof_struct_device_ri + offsetof_struct_ri_controller_rdram + offsetof_struct_rdram_dram)
-%define g_dev_r4300_address                                 (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_address)
-%define g_dev_r4300_wmask                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wmask)
-%define g_dev_r4300_wword                                   (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wword)
-%define g_dev_r4300_wdword                                  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_wdword)
 %define g_dev_r4300_stop                                    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_stop)
 %define g_dev_r4300_regs                                    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs)
 %define g_dev_r4300_hi                                      (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_hi)
@@ -71,14 +66,9 @@
 %define g_dev_r4300_new_dynarec_hot_state_last_count        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_last_count)
 %define g_dev_r4300_new_dynarec_hot_state_pending_exception (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pending_exception)
 %define g_dev_r4300_new_dynarec_hot_state_pcaddr            (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pcaddr)
-%define g_dev_r4300_new_dynarec_hot_state_rdword            (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_rdword)
 %define g_dev_r4300_new_dynarec_hot_state_branch_target     (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_branch_target)
 %define g_dev_r4300_new_dynarec_hot_state_restore_candidate (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_restore_candidate)
 %define g_dev_r4300_new_dynarec_hot_state_memory_map        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_memory_map)
-%define g_dev_mem_readmem                                   (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_readmem)
-%define g_dev_mem_readmemd                                  (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_readmemd)
-%define g_dev_mem_writemem                                  (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_writemem)
-%define g_dev_mem_writememd                                 (g_dev + offsetof_struct_device_mem + offsetof_struct_memory_writememd)
 
 cglobal jump_vaddr_eax
 cglobal jump_vaddr_ecx
@@ -103,22 +93,6 @@ cglobal invalidate_block_ebx
 cglobal invalidate_block_ebp
 cglobal invalidate_block_esi
 cglobal invalidate_block_edi
-cglobal read_byte_new
-cglobal read_hword_new
-cglobal read_word_new
-cglobal read_dword_new
-cglobal write_byte_new
-cglobal write_hword_new
-cglobal write_word_new
-cglobal write_dword_new
-cglobal write_rdram_new
-cglobal write_rdramd_new
-cglobal read_nomem_new
-cglobal read_nomemd_new
-cglobal write_nomem_new
-cglobal write_nomemd_new
-cglobal write_mi_new
-cglobal write_mid_new
 cglobal breakpoint
 
 cextern base_addr
@@ -130,9 +104,6 @@ cextern clean_blocks
 cextern invalidate_block
 cextern new_dynarec_check_interrupt
 cextern get_addr_32
-cextern write_mi
-cextern write_mid
-cextern TLB_refill_exception_new
 cextern g_dev
 
 %ifdef PIC
@@ -318,7 +289,6 @@ do_interrupt:
     mov     edx,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    edx
     sub     esi,    edx
-    add     esi,    2
     jmp     eax
 
 fp_exception:
@@ -475,314 +445,6 @@ invalidate_block_call:
     pop     edx
     pop     ecx
     pop     eax
-    ret
-
-read_byte_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_readmem)]
-    call    eax
-    mov     ecx,    [find_local_data(g_dev_r4300_address)]
-    and     ecx,    3
-    xor     ecx,    3
-    movzx   eax,    BYTE [ecx + find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)], eax
-    ret
-
-read_hword_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_readmem)]
-    call    eax
-    mov     ecx,    [find_local_data(g_dev_r4300_address)]
-    and     ecx,    2
-    xor     ecx,    2
-    movzx   eax,    WORD [ecx + find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)], eax
-    ret
-
-read_word_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_readmem)]
-    call    eax
-    ret
-
-read_dword_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_readmemd)]
-    call    eax
-    ret
-
-write_byte_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    mov     ecx,    eax
-    and     ecx,    3
-    xor     ecx,    3
-    shl     ecx,    3
-    mov     edx,    [find_local_data(g_dev_r4300_wword)]
-    shl     edx,    cl
-    mov     [find_local_data(g_dev_r4300_wword)], edx
-    mov     edx,    0xFF
-    shl     edx,    cl
-    mov     [find_local_data(g_dev_r4300_wmask)], edx
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_writemem)]
-    call    eax
-    mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
-    mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
-    sub     esi,    eax
-    ret
-
-write_hword_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    mov     ecx,    eax
-    and     ecx,    2
-    xor     ecx,    2
-    shl     ecx,    3
-    mov     edx,    [find_local_data(g_dev_r4300_wword)]
-    shl     edx,    cl
-    mov     [find_local_data(g_dev_r4300_wword)], edx
-    mov     edx,    0xFFFF
-    shl     edx,    cl
-    mov     [find_local_data(g_dev_r4300_wmask)], edx
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_writemem)]
-    call    eax
-    mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
-    mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
-    sub     esi,    eax
-    ret
-
-write_word_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_writemem)]
-    mov     DWORD [find_local_data(g_dev_r4300_wmask)], 0xFFFFFFFF
-    call    eax
-    mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
-    mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
-    sub     esi,    eax
-    ret
-
-write_dword_new:
-    get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
-    mov     [find_local_data(g_dev_r4300_cp0_regs+36)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_address)]
-    shr     eax,    16
-    mov     eax,    [eax*4 + find_local_data(g_dev_mem_writememd)]
-    call    eax
-    mov     eax,    [find_local_data(g_dev_r4300_cp0_next_interrupt)]
-    mov     esi,    [find_local_data(g_dev_r4300_cp0_regs+36)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
-    sub     esi,    eax
-    ret
-
-write_rdram_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    and     edx,    0xFFFFFFFC
-    add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     ecx,    [find_local_data(g_dev_r4300_wword)]
-    mov     eax,    [find_local_data(g_dev_r4300_wmask)]
-    and     ecx,    eax
-    not     eax
-    and     eax,    [edx - 0x80000000]
-    or      ecx,    eax
-    mov     [edx - 0x80000000],    ecx
-    jmp     _E12
-
-write_rdramd_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    add     edx,    [find_local_data(g_dev_ri_rdram_dram)]
-    mov     ecx,    [find_local_data(g_dev_r4300_wdword+4)]
-    mov     [edx - 0x80000000],         ecx
-    mov     ecx,    [find_local_data(g_dev_r4300_wdword+0)]
-    mov     [edx - 0x80000000 + 4],     ecx
-    jmp     _E12
-
-do_invalidate:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    mov     edi,    edx    ;Return edi to caller
-_E12:
-    shr     edx,    12
-    cmp     BYTE [find_local_data(g_dev_r4300_cached_interp_invalid_code + edx)],    1
-    je      _E13
-    push    edx
-    call    invalidate_block
-    pop     edx
-_E13:
-    ret
-
-read_nomem_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    mov     edi,    edx
-    shr     edx,    12
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    00h
-    test    edx,    edx
-    js      tlb_exception
-    and     edi,    0xFFFFFFFC
-    mov     ecx,    [edi+edx*4]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)],    ecx
-    ret
-
-read_nomemd_new:
-    get_got_address
-    mov     edx,    [find_local_data(g_dev_r4300_address)]
-    mov     edi,    edx
-    shr     edx,    12
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    00h
-    test    edx,    edx
-    js      tlb_exception
-    mov     ecx,    [4+edi+edx*4]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)],      ecx
-    mov     ecx,    [edi+edx*4]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword+4)],    ecx
-    ret
-
-write_nomem_new:
-    call    do_invalidate
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    01h
-    shl     edx,    2
-    jc      tlb_exception
-    mov     ecx,    [find_local_data(g_dev_r4300_wword)]
-    mov     eax,    [find_local_data(g_dev_r4300_wmask)]
-    and     ecx,    eax
-    not     eax
-    and     edi,    0xFFFFFFFC
-    and     eax,    [edi+edx]
-    or      ecx,    eax
-    mov     [edi+edx],    ecx
-    ret
-
-write_nomemd_new:
-    call    do_invalidate
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+edx*4)]
-    mov     eax,    01h
-    shl     edx,    2
-    jc      tlb_exception
-    mov     ecx,    [find_local_data(g_dev_r4300_wdword+4)]
-    mov     [edi+edx],    ecx
-    mov     ecx,    [find_local_data(g_dev_r4300_wdword+0)]
-    mov     [4+edi+edx],    ecx
-    ret
-
-write_mi_new:
-    get_got_address
-    mov     ecx,    [024h+esp]
-    add     ecx,    4
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    ecx
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)],    0
-    call    write_mi
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
-    test    ecx,    ecx
-    jne     mi_exception
-    ret
-
-write_mid_new:
-    get_got_address
-    mov     ecx,    [024h+esp]
-    add     ecx,    4
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    ecx
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)],    0
-    call    write_mid
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
-    test    ecx,    ecx
-    jne     mi_exception
-    ret
-
-mi_exception:
-;Input:
-    ;esp+0x24 = instr addr + flags
-;Output:
-    ;None
-    mov     edi,    [find_local_data(g_dev_r4300_address)]
-    add     esp,    028h
-    call    wb_base_reg
-    jmp     do_interrupt
-
-tlb_exception:
-;Input:
-    ;eax = r/w
-    ;edi = mem addr
-    ;esp+0x24 = instr addr + flags
-;Output:
-    ;None
-    add     esp,    028h
-    call    wb_base_reg
-    add     esp,    -4
-    push    eax
-    push    edi
-    push    ecx
-    call    TLB_refill_exception_new
-    add     esp,    16
-    mov     edi,    DWORD [find_local_data(g_dev_r4300_cp0_next_interrupt)]
-    mov     esi,    DWORD [find_local_data(g_dev_r4300_cp0_regs+36)]    ;Count
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    edi
-    sub     esi,    edi
-    jmp     eax
-
-wb_base_reg:
-;Input:
-    ;edi = address
-    ;esp+4 = instr addr + flags
-;Output:
-    ;ecx = instr addr + flags
-    mov     ecx,    [04h+esp]
-    mov     edx,    [04h+esp]
-    shr     ecx,    12
-    and     edx,    0FFFFFFFCh
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+ecx*4)]
-    mov     ecx,    [edx+ecx*4]
-    mov     edx,    06000022h
-    mov     ebp,    ecx
-    movsx   esi,    cx
-    shr     ecx,    26
-    shr     ebp,    21
-    sub     edi,    esi
-    add     esi,    edi
-    and     ebp,    01fh
-    rcr     edx,    cl
-    cmovc   edi,    [find_local_data(g_dev_r4300_regs+ebp*8)]
-    mov     [find_local_data(g_dev_r4300_regs+ebp*8)],    edi
-    sar     edi,    31
-    mov     ecx,    [04h+esp]
-    test    ecx,    2
-    cmove   edi,    [find_local_data(g_dev_r4300_regs+4+ebp*8)]
-    mov     [find_local_data(g_dev_r4300_regs+4+ebp*8)],    edi
-    mov     edi,    esi
     ret
 
 breakpoint:

@@ -365,29 +365,6 @@ void check_interrupt(struct r4300_core* r4300)
     }
 }
 
-static void wrapped_exception_general(struct r4300_core* r4300)
-{
-#ifdef NEW_DYNAREC
-    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    if (r4300->emumode == EMUMODE_DYNAREC) {
-        cp0_regs[CP0_EPC_REG] = (r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
-        r4300->new_dynarec_hot_state.pcaddr = 0x80000180;
-        cp0_regs[CP0_STATUS_REG] |= CP0_STATUS_EXL;
-        if (r4300->new_dynarec_hot_state.pcaddr & 1) {
-          cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
-        }
-        else {
-          cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_BD;
-        }
-        r4300->new_dynarec_hot_state.pending_exception=1;
-    } else {
-        exception_general(r4300);
-    }
-#else
-    exception_general(r4300);
-#endif
-}
-
 void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
 {
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
@@ -401,7 +378,7 @@ void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
         return;
     }
 
-    wrapped_exception_general(r4300);
+    exception_general(r4300);
 }
 
 void compare_int_handler(void* opaque)
@@ -418,7 +395,7 @@ void compare_int_handler(void* opaque)
 
 void check_int_handler(void* opaque)
 {
-    wrapped_exception_general((struct r4300_core*)opaque);
+    exception_general((struct r4300_core*)opaque);
 }
 
 void special_int_handler(void* opaque)
@@ -443,7 +420,7 @@ void hw2_int_handler(void* opaque)
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
     cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
 
-    wrapped_exception_general(r4300);
+    exception_general(r4300);
 }
 
 /* XXX: this should only require r4300 struct not device ? */
@@ -474,30 +451,27 @@ void nmi_int_handler(void* opaque)
     // reset the r4300 internal state
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
-        // clear all the compiled instruction blocks and re-initialize
-        free_blocks(r4300);
-        init_blocks(r4300);
+#ifdef NEW_DYNAREC
+        if (r4300->emumode == EMUMODE_DYNAREC)
+            invalidate_all_pages();
+        else
+#endif
+        {
+            // clear all the compiled instruction blocks and re-initialize
+            free_blocks(r4300);
+            init_blocks(r4300);
+        }
     }
     // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
-    if(r4300->delay_slot==1 || r4300->delay_slot==3)
+    if(*r4300_delay_slot(r4300)==1 || *r4300_delay_slot(r4300)==3)
     {
         cp0_regs[CP0_ERROREPC_REG]-=4;
     }
-    r4300->delay_slot = 0;
+    *r4300_delay_slot(r4300) = 0;
     r4300->dyna_interp = 0;
     // set next instruction address to reset vector
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     generic_jump_to(r4300, UINT32_C(0xa4000040));
-
-#ifdef NEW_DYNAREC
-    if (r4300->emumode == EMUMODE_DYNAREC)
-    {
-        cp0_regs[CP0_ERROREPC_REG]=(r4300->new_dynarec_hot_state.pcaddr&~3)-(r4300->new_dynarec_hot_state.pcaddr&1)*4;
-        r4300->new_dynarec_hot_state.pcaddr = 0xa4000040;
-        r4300->new_dynarec_hot_state.pending_exception = 1;
-        invalidate_all_pages();
-    }
-#endif
 }
 
 
@@ -519,8 +493,15 @@ void reset_hard_handler(void* opaque)
 
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
-        free_blocks(r4300);
-        init_blocks(r4300);
+#ifdef NEW_DYNAREC
+        if (r4300->emumode == EMUMODE_DYNAREC)
+            invalidate_all_pages();
+        else
+#endif
+        {
+            free_blocks(r4300);
+            init_blocks(r4300);
+        }
     }
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
@@ -635,7 +616,7 @@ void gen_interrupt(struct r4300_core* r4300)
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", r4300->cp0.q.first->data.type);
             remove_interrupt_event(&r4300->cp0);
-            wrapped_exception_general(r4300);
+            exception_general(r4300);
             break;
     }
 

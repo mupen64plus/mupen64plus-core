@@ -216,6 +216,7 @@ int64_t* r4300_mult_hi(struct r4300_core* r4300);
 int64_t* r4300_mult_lo(struct r4300_core* r4300);
 unsigned int* r4300_llbit(struct r4300_core* r4300);
 uint32_t* r4300_pc(struct r4300_core* r4300);
+unsigned int* r4300_delay_slot(struct r4300_core* r4300);
 struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300);
 int* r4300_stop(struct r4300_core* r4300);
 

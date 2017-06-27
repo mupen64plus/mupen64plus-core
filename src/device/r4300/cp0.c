@@ -134,11 +134,11 @@ void cp0_update_count(struct r4300_core* r4300)
 #endif
 
 #ifdef COMPARE_CORE
-   if (r4300->delay_slot)
+   if (*r4300_delay_slot(r4300))
      CoreCompareCallback();
 #endif
 /*#ifdef DBG
-   if (g_DebuggerActive && !r4300->delay_slot) update_debugger(*r4300_pc(r4300));
+   if (g_DebuggerActive && !*r4300_delay_slot(r4300)) update_debugger(*r4300_pc(r4300));
 #endif
 */
 }
