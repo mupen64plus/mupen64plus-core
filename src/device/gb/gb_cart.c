@@ -688,13 +688,14 @@ int init_gb_cart(struct gb_cart* gb_cart,
         return -1;
     }
 
-    DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s",
+    DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s%s",
             cart_type,
             type->mbc,
-            (type->extra_devices & GED_RAM)     ? " RAM" : "",
-            (type->extra_devices & GED_BATTERY) ? " BATT" : "",
-            (type->extra_devices & GED_RTC)     ? " RTC" : "",
-            (type->extra_devices & GED_RUMBLE)  ? " RUMBLE" : "");
+            (type->extra_devices & GED_RAM)            ? " RAM" : "",
+            (type->extra_devices & GED_BATTERY)        ? " BATT" : "",
+            (type->extra_devices & GED_RTC)            ? " RTC" : "",
+            (type->extra_devices & GED_RUMBLE)         ? " RUMBLE" : "",
+            (type->extra_devices & GED_ACCELEROMETER)  ? " ACCEL" : "");
 
     /* load ram (if present) */
     if (type->extra_devices & GED_RAM)
