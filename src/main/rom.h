@@ -55,6 +55,7 @@ typedef struct _rom_params
    int vitiming;
    int fixedaudiopos;
    int countperscanline;
+   int disableextramem;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -129,6 +130,7 @@ typedef struct
    unsigned char fixed_audio_pos;
    int count_per_scanline;
    unsigned char countperop;
+   unsigned char disableextramem;
    uint32_t set_flags;
 } romdatabase_entry;
 
