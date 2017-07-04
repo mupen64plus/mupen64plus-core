@@ -37,6 +37,7 @@ void init_device(struct device* dev,
     unsigned int emumode,
     unsigned int count_per_op,
     int no_compiled_jump,
+    int special_rom,
     /* ai */
     struct audio_out_backend* aout,
     /* pi */
@@ -74,7 +75,7 @@ void init_device(struct device* dev,
     };
 
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
-            emumode, count_per_op, no_compiled_jump);
+            emumode, count_per_op, no_compiled_jump, special_rom);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, &dev->r4300, &dev->dp, &dev->ri, audio_signal);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);

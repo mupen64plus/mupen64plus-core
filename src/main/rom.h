@@ -44,8 +44,6 @@ m64p_error close_rom(void);
 extern unsigned char* g_rom;
 extern int g_rom_size;
 
-extern unsigned char isGoldeneyeRom;
-
 typedef struct _rom_params
 {
    char *cheats;
@@ -57,6 +55,7 @@ typedef struct _rom_params
    int countperscanline;
    int disableextramem;
    int delaysi;
+   int special_rom;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -101,6 +100,14 @@ enum
     FLASH_RAM,
     CONTROLLER_PACK,
     NONE
+};
+
+/*ROM specific hacks */
+enum
+{
+    NORMAL_ROM,
+    GOLDEN_EYE,
+    RAT_ATTACK
 };
 
 /* Rom INI database structures and functions */
