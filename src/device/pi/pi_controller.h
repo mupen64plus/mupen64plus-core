@@ -62,6 +62,8 @@ struct pi_controller
 
     int use_flashram;
 
+    int interrupt_mod;
+
     struct r4300_core* r4300;
     struct ri_controller* ri;
 

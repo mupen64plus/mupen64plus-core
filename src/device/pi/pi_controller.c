@@ -31,6 +31,7 @@
 #include "device/r4300/r4300_core.h"
 #include "device/ri/rdram_detection_hack.h"
 #include "device/ri/ri_controller.h"
+#include "main/rom.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -72,7 +73,7 @@ static void dma_pi_read(struct pi_controller* pi)
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000 / pi->interrupt_mod /*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
 }
 
 static void dma_pi_write(struct pi_controller* pi)
@@ -111,7 +112,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000); /* XXX: 0x1000 ??? */
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000 / pi->interrupt_mod); /* XXX: 0x1000 ??? */
 
         return;
     }
@@ -124,7 +125,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000); /* XXX: 0x1000 ??? */
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000 / pi->interrupt_mod); /* XXX: 0x1000 ??? */
 
         return;
     }
@@ -144,7 +145,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
         /* schedule end of dma interrupt event */
         cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
+        add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8 / pi->interrupt_mod);
 
         return;
     }
@@ -175,7 +176,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8 / pi->interrupt_mod);
 }
 
 
@@ -197,6 +198,8 @@ void init_pi(struct pi_controller* pi,
     pi->ri = ri;
 
     pi->cic = cic;
+
+    pi->interrupt_mod = r4300->special_rom == INDIANA_JONES ? 2 : 1;
 }
 
 void poweron_pi(struct pi_controller* pi)

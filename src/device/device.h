@@ -62,6 +62,7 @@ void init_device(struct device* dev,
     unsigned int emumode,
     unsigned int count_per_op,
     int no_compiled_jump,
+    int special_rom,
     /* ai */
     struct audio_out_backend* aout, unsigned int fixed_audio_pos,
     /* pi */
