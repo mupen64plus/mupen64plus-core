@@ -106,7 +106,8 @@ enum
 {
     NORMAL_ROM,
     GOLDEN_EYE,
-    RAT_ATTACK
+    RAT_ATTACK,
+    INDIANA_JONES
 };
 
 /* Rom INI database structures and functions */
