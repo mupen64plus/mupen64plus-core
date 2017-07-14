@@ -1161,6 +1161,12 @@ DECLARE_INSTRUCTION(TLBR)
 static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
 {
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    uint32_t pc_addr = *r4300_pc(r4300);
+
+    if (pc_addr >= r4300->cp0.tlb.entries[idx].start_even && pc_addr < r4300->cp0.tlb.entries[idx].end_even && r4300->cp0.tlb.entries[idx].v_even)
+        return;
+    if (pc_addr >= r4300->cp0.tlb.entries[idx].start_odd && pc_addr < r4300->cp0.tlb.entries[idx].end_odd && r4300->cp0.tlb.entries[idx].v_odd)
+        return;
 
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {
