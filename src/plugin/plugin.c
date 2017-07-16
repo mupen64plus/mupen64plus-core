@@ -99,7 +99,8 @@ static const input_plugin_functions dummy_input = {
     dummyinput_RomClosed,
     dummyinput_RomOpen,
     dummyinput_SDL_KeyDown,
-    dummyinput_SDL_KeyUp
+    dummyinput_SDL_KeyUp,
+    dummyinput_GetGBCartInfo
 };
 
 static const rsp_plugin_functions dummy_rsp = {
@@ -370,6 +371,9 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             plugin_disconnect_input();
             return M64ERR_INPUT_INVALID;
         }
+
+        if (!GET_FUNC(ptr_GetGBCartInfo, input.getGBCartInfo, "GetGBCartInfo"))
+            DebugMessage(M64MSG_WARNING, "No Transfer Pak support in input plugin.");
 
         /* check the version info */
         (*input.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);

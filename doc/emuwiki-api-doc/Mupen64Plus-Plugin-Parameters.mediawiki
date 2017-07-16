@@ -263,7 +263,7 @@ The Mupen64Plus-Input-SDL plugin uses a separate config section for each simulat
 |-
 |plugin
 |M64TYPE_INT
-|Specifies which type of expansion pak is in the controller: 1=None, 2=Mem pak, 5=Rumble pak
+|Specifies which type of expansion pak is in the controller: 1=None, 2=Mem pak, 4=Transfer pak, 5=Rumble pak
 |-
 |mouse
 |M64TYPE_BOOL
@@ -280,6 +280,14 @@ The Mupen64Plus-Input-SDL plugin uses a separate config section for each simulat
 |AnalogPeak
 |M64TYPE_STRING
 |An absolute value of the SDL joystick axis >= AnalogPeak will saturate the N64 controller axis value (at 80).  For X, Y axes. For each axis, this must be greater than the corresponding AnalogDeadzone value
+|-
+|GBRomFile
+|M64TYPE_STRING
+|Filepath pointing to a GB Cart ROM file. Used if plugin = 4 (Transfer Pak).
+|-
+|GBSaveFile
+|M64TYPE_STRING
+|Filepath pointing to a GB Cart RAM (Save) file. Used if plugin = 4 (Transfer Pak).
 |-
 |}
 

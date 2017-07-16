@@ -112,3 +112,5 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** add (optional) RenderCallback function to input plugin. This function is called by the core after rendering on screen text (OSD) and before the graphics plugin swaps the buffers. The purpose of this function is to enable the input plugin to draw on screen content, for example buttons in a touch input plugin. If this function is not present the core will ignore it and on screen rendering by the input plugin will be disabled.
 * '''CONFIG_API_VERSION''' version 2.3.1:
 ** add new functions "ConfigExternalOpen()" "ConfigExternalClose()" "ConfigExternalGetParameter()" that allows plugins to leverage the core INI parser to read config files.
+* '''INPUT_API_VERSION''' version 2.0.2:
+** add new function "GetGBCartInfo". This function is called by the core to obtain the filepath to GB ROM and RAM (save) files.

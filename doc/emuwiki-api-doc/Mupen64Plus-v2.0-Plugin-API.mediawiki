@@ -224,6 +224,9 @@ These functions are present in all of the plugins.
 |-
 |<tt>void SDL_KeyUp(int keymod, int keysym);</tt>
 |Pass a SDL_KEYUP-style message to the input plugin
+|-
+|<tt>void GetGBCartInfo(int Controller, const char **RomFile, const char **SaveFile);</tt>
+|Pass GB Cart filepaths to emulator core.
 |}
 
 === Remove From Older Input API ===
