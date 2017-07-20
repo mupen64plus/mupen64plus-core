@@ -28,6 +28,7 @@
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 #include "device/vi/vi_controller.h"
+#include "plugin/plugin.h"
 
 enum
 {
@@ -88,8 +89,15 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
         ai->samples_format_changed = 0;
     }
 
-    /* push audio samples to external sink */
-    audio_out_push_samples(ai->aout, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    if (ai->stream_audio)
+    {
+        memcpy(ai->audio_buffer, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    }
+    else
+    {
+        /* push audio samples to external sink */
+        audio_out_push_samples(ai->aout, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    }
 
     /* schedule end of dma event */
     cp0_update_count(ai->r4300);
@@ -140,19 +148,21 @@ void init_ai(struct ai_controller* ai,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              struct vi_controller* vi,
-             struct audio_out_backend* aout, unsigned int fixed_audio_pos)
+             struct audio_out_backend* aout, unsigned int fixed_audio_pos, unsigned int stream_audio)
 {
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
     ai->fixed_audio_pos = fixed_audio_pos;
+    ai->stream_audio = stream_audio && audio.playAudio;
 }
 
 void poweron_ai(struct ai_controller* ai)
 {
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
+    memset(ai->audio_buffer, 0, 0x40000);
     ai->samples_format_changed = 0;
     ai->audio_pos = 0;
 }
@@ -165,6 +175,12 @@ int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
     if (reg == AI_LEN_REG)
     {
         *value = get_remaining_dma_length(ai);
+        if (ai->stream_audio && *value != 0)
+        {
+            unsigned int address = ai->fifo[0].length - *value;
+            unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
+            memcpy(&ai->audio_buffer[address], p + address, *value);
+        }
     }
     else
     {
@@ -217,6 +233,10 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 void ai_end_of_dma_event(void* opaque)
 {
     struct ai_controller* ai = (struct ai_controller*)opaque;
+
+    if (ai->stream_audio)
+        audio.playAudio(ai->audio_buffer, ai->fifo[0].length);
+
     fifo_pop(ai);
     raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
 }

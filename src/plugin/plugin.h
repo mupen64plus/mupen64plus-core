@@ -83,6 +83,7 @@ typedef struct _audio_plugin_functions
 	ptr_VolumeSetLevel    volumeSetLevel;
 	ptr_VolumeMute        volumeMute;
 	ptr_VolumeGetString   volumeGetString;
+	ptr_PlayAudio         playAudio;
 } audio_plugin_functions;
 
 extern audio_plugin_functions audio;

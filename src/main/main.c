@@ -1083,7 +1083,7 @@ m64p_error main_run(void)
                 emumode,
                 count_per_op,
                 no_compiled_jump,
-                &aout, ROM_PARAMS.fixedaudiopos,
+                &aout, ROM_PARAMS.fixedaudiopos, ROM_PARAMS.streamaudio,
                 g_rom, g_rom_size,
                 &fla_storage,
                 &sra_storage,

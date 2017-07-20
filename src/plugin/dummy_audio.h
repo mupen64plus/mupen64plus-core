@@ -40,6 +40,7 @@ extern int dummyaudio_VolumeGetLevel(void);
 extern void dummyaudio_VolumeSetLevel(int level);
 extern void dummyaudio_VolumeMute(void);
 extern const char * dummyaudio_VolumeGetString(void);
+extern void dummyaudio_PlayAudio(unsigned char *buffer, unsigned int size);
 
 #endif /* DUMMY_AUDIO_H */
 

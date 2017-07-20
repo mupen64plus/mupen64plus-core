@@ -54,6 +54,7 @@ typedef struct _rom_params
    unsigned char countperop;
    int vitiming;
    int fixedaudiopos;
+   int streamaudio;
    int countperscanline;
    int disableextramem;
 } rom_params;
@@ -128,6 +129,7 @@ typedef struct
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char alternate_vi_timing;
    unsigned char fixed_audio_pos;
+   unsigned char stream_audio;
    int count_per_scanline;
    unsigned char countperop;
    unsigned char disableextramem;
