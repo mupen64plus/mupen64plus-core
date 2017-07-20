@@ -70,7 +70,7 @@ static unsigned int get_dma_duration(struct ai_controller* ai)
 }
 
 
-static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
+static void do_dma(struct ai_controller* ai, struct ai_dma* dma)
 {
     /* lazy initialization of sample format */
     if (ai->samples_format_changed)
@@ -89,6 +89,13 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
     }
 
     ai->last_read = dma->length;
+
+    if (ai->delayed_carry) dma->address += 0x2000;
+
+    if (((dma->address + dma->length) & 0x1FFF) == 0)
+        ai->delayed_carry = 1;
+    else
+        ai->delayed_carry = 0;
 
     /* schedule end of dma event */
     cp0_update_count(ai->r4300);
@@ -131,6 +138,7 @@ static void fifo_pop(struct ai_controller* ai)
     else
     {
         ai->regs[AI_STATUS_REG] &= ~AI_STATUS_BUSY;
+        ai->delayed_carry = 0;
     }
 }
 
@@ -139,13 +147,12 @@ void init_ai(struct ai_controller* ai,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              struct vi_controller* vi,
-             struct audio_out_backend* aout, unsigned int fixed_audio_pos)
+             struct audio_out_backend* aout)
 {
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
-    ai->fixed_audio_pos = fixed_audio_pos;
 }
 
 void poweron_ai(struct ai_controller* ai)
@@ -153,8 +160,8 @@ void poweron_ai(struct ai_controller* ai)
     memset(ai->regs, 0, AI_REGS_COUNT*sizeof(uint32_t));
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
-    ai->audio_pos = 0;
     ai->last_read = 0;
+    ai->delayed_carry = 0;
 }
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
@@ -188,15 +195,6 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     switch (reg)
     {
-    case AI_DRAM_ADDR_REG:
-        masked_write(&ai->regs[AI_DRAM_ADDR_REG], value, mask);
-        if (ai->fixed_audio_pos) {
-            if (ai->audio_pos == 0)
-                ai->audio_pos = ai->regs[AI_DRAM_ADDR_REG];
-            ai->regs[AI_DRAM_ADDR_REG] = ai->audio_pos;
-        }
-        return 0;
-
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
         fifo_push(ai);
