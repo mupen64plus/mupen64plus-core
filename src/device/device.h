@@ -63,7 +63,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     /* ai */
-    struct audio_out_backend* aout, unsigned int fixed_audio_pos,
+    struct audio_out_backend* aout,
     /* pi */
     uint8_t* rom, size_t rom_size,
     struct storage_backend* flashram_storage,
