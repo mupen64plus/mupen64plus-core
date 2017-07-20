@@ -224,6 +224,7 @@ typedef int  (*ptr_VolumeGetLevel)(void);
 typedef void (*ptr_VolumeSetLevel)(int level);
 typedef void (*ptr_VolumeMute)(void);
 typedef const char * (*ptr_VolumeGetString)(void);
+typedef void (*ptr_PlayAudio)(unsigned char *buffer, unsigned int size);
 #if defined(M64P_PLUGIN_PROTOTYPES)
 EXPORT void CALL AiDacrateChanged(int SystemType);
 EXPORT void CALL AiLenChanged(void);
@@ -236,6 +237,7 @@ EXPORT int  CALL VolumeGetLevel(void);
 EXPORT void CALL VolumeSetLevel(int level);
 EXPORT void CALL VolumeMute(void);
 EXPORT const char * CALL VolumeGetString(void);
+EXPORT void CALL PlayAudio(unsigned char *buffer, unsigned int size);
 #endif
 
 /* input plugin function pointers */

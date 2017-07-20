@@ -87,7 +87,8 @@ static const audio_plugin_functions dummy_audio = {
     dummyaudio_VolumeGetLevel,
     dummyaudio_VolumeSetLevel,
     dummyaudio_VolumeMute,
-    dummyaudio_VolumeGetString
+    dummyaudio_VolumeGetString,
+    dummyaudio_PlayAudio
 };
 
 static const input_plugin_functions dummy_input = {
@@ -299,6 +300,9 @@ static m64p_error plugin_connect_audio(m64p_dynlib_handle plugin_handle)
             plugin_disconnect_audio();
             return M64ERR_INPUT_INVALID;
         }
+
+        if (!GET_FUNC(ptr_PlayAudio, audio.playAudio, "PlayAudio"))
+            DebugMessage(M64MSG_WARNING, "Audio plugin does not support streaming audio.");
 
         /* check the version info */
         (*audio.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);

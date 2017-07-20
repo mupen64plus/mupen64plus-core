@@ -110,3 +110,8 @@ const char *dummyaudio_VolumeGetString(void)
 {
     return "disabled";
 }
+
+void dummyaudio_PlayAudio(unsigned char *buffer, unsigned int size)
+{
+
+}
