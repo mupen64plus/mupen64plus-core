@@ -88,8 +88,7 @@ static void do_dma(struct ai_controller* ai, const struct ai_dma* dma)
         ai->samples_format_changed = 0;
     }
 
-    /* push audio samples to external sink */
-    audio_out_push_samples(ai->aout, &ai->ri->rdram.dram[dma->address/4], dma->length);
+    ai->last_read = dma->length;
 
     /* schedule end of dma event */
     cp0_update_count(ai->r4300);
@@ -155,6 +154,7 @@ void poweron_ai(struct ai_controller* ai)
     memset(ai->fifo, 0, AI_DMA_FIFO_SIZE*sizeof(struct ai_dma));
     ai->samples_format_changed = 0;
     ai->audio_pos = 0;
+    ai->last_read = 0;
 }
 
 int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
@@ -165,6 +165,13 @@ int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
     if (reg == AI_LEN_REG)
     {
         *value = get_remaining_dma_length(ai);
+        if (*value < ai->last_read)
+        {
+            unsigned int diff = ai->fifo[0].length - ai->last_read;
+            unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
+            audio_out_push_samples(ai->aout, p + diff, ai->last_read - *value);
+            ai->last_read = *value;
+        }
     }
     else
     {
@@ -217,6 +224,14 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 void ai_end_of_dma_event(void* opaque)
 {
     struct ai_controller* ai = (struct ai_controller*)opaque;
+
+    if (ai->last_read != 0)
+    {
+        unsigned int diff = ai->fifo[0].length - ai->last_read;
+        unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
+        audio_out_push_samples(ai->aout, p + diff, ai->last_read);
+    }
+
     fifo_pop(ai);
     raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
 }

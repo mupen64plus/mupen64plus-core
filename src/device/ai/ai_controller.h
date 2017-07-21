@@ -62,6 +62,7 @@ struct ai_controller
     struct audio_out_backend* aout;
     uint32_t fixed_audio_pos;
     uint32_t audio_pos;
+    uint32_t last_read;
 };
 
 static uint32_t ai_reg(uint32_t address)
