@@ -121,7 +121,8 @@ void init_device(struct device* dev,
         { &dev->dp,        rdp_interrupt_event         }, /* DP */
         { &dev->pif,       hw2_int_handler             }, /* HW2 */
         { dev,             nmi_int_handler             }, /* NMI */
-        { dev,             reset_hard_handler          }  /* reset_hard */
+        { dev,             reset_hard_handler          }, /* reset_hard */
+        { &dev->sp,        rsp_end_of_dma_event        }
     };
 
 #define R(x) read_ ## x

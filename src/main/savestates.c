@@ -57,7 +57,7 @@ enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 enum { DD_DISK_ID_OFFSET = 0x43670 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010600;  /* 1.6 */
+static const int savestate_latest_version = 0x00010700;  /* 1.7 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -839,6 +839,20 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             curr += sizeof(uint32_t);
 #endif
         }
+
+        if (version >= 0x00010700)
+        {
+            dev->sp.fifo[0].dir = GETDATA(curr, uint32_t);
+            dev->sp.fifo[0].length = GETDATA(curr, uint32_t);
+            dev->sp.fifo[0].memaddr = GETDATA(curr, uint32_t);
+            dev->sp.fifo[0].dramaddr = GETDATA(curr, uint32_t);
+            dev->sp.fifo[1].dir = GETDATA(curr, uint32_t);
+            dev->sp.fifo[1].length = GETDATA(curr, uint32_t);
+            dev->sp.fifo[1].memaddr = GETDATA(curr, uint32_t);
+            dev->sp.fifo[1].dramaddr = GETDATA(curr, uint32_t);
+        }
+        else
+            memset(dev->sp.fifo, 0, SP_DMA_FIFO_SIZE*sizeof(struct sp_dma));
     }
     else
     {
@@ -1856,6 +1870,14 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
 #else
     PUTDATA(curr, uint32_t, 0);
 #endif
+    PUTDATA(curr, uint32_t, dev->sp.fifo[0].dir);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[0].length);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[0].memaddr);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[0].dramaddr);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[1].dir);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[1].length);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[1].memaddr);
+    PUTDATA(curr, uint32_t, dev->sp.fifo[1].dramaddr);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);

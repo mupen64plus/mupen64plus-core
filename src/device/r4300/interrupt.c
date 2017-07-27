@@ -638,6 +638,11 @@ void gen_interrupt(struct r4300_core* r4300)
             call_interrupt_handler(&r4300->cp0, 10);
             break;
 
+        case RSP_DMA_EVT:
+            remove_interrupt_event(&r4300->cp0);
+            call_interrupt_handler(&r4300->cp0, 12);
+            break;
+
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", r4300->cp0.q.first->data.type);
             remove_interrupt_event(&r4300->cp0);

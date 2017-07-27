@@ -34,60 +34,103 @@
 #include "main/profile.h"
 #endif
 #include "plugin/plugin.h"
+#include "api/callbacks.h"
 
-static void dma_sp_write(struct rsp_core* sp)
+static void do_sp_dma(struct rsp_core* sp, const struct sp_dma* dma)
 {
     unsigned int i,j;
 
-    unsigned int l = sp->regs[SP_RD_LEN_REG];
+    unsigned int l = dma->length;
 
     unsigned int length = ((l & 0xfff) | 7) + 1;
     unsigned int count = ((l >> 12) & 0xff) + 1;
     unsigned int skip = ((l >> 20) & 0xfff);
 
-    unsigned int memaddr = sp->regs[SP_MEM_ADDR_REG] & 0xfff;
-    unsigned int dramaddr = sp->regs[SP_DRAM_ADDR_REG] & 0xffffff;
+    unsigned int memaddr = dma->memaddr & 0xfff;
+    unsigned int dramaddr = dma->dramaddr & 0xffffff;
 
-    unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
+    unsigned char *spmem = (unsigned char*)sp->mem + (dma->memaddr & 0x1000);
     unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
 
-    for(j=0; j<count; j++) {
-        pre_framebuffer_read(&sp->dp->fb, dramaddr);
+    if (dma->dir == SP_DMA_READ)
+    {
+        for(j=0; j<count; j++) {
+            for(i=0; i<length; i++) {
+                dram[dramaddr^S8] = spmem[memaddr^S8];
+                memaddr++;
+                dramaddr++;
+            }
 
-        for(i=0; i<length; i++) {
-            spmem[memaddr^S8] = dram[dramaddr^S8];
-            memaddr++;
-            dramaddr++;
+            post_framebuffer_write(&sp->dp->fb, dramaddr - length, length);
+            dramaddr+=skip;
         }
-        dramaddr+=skip;
+    }
+    else
+    {
+        for(j=0; j<count; j++) {
+            pre_framebuffer_read(&sp->dp->fb, dramaddr);
+
+            for(i=0; i<length; i++) {
+                spmem[memaddr^S8] = dram[dramaddr^S8];
+                memaddr++;
+                dramaddr++;
+            }
+            dramaddr+=skip;
+        }
+    }
+
+    /* schedule end of dma event */
+    cp0_update_count(sp->mi->r4300);
+    add_interrupt_event(&sp->mi->r4300->cp0, RSP_DMA_EVT, (count * length) / 8);
+}
+
+static void fifo_push(struct rsp_core* sp, uint32_t dir)
+{
+    if (sp->regs[SP_DMA_FULL_REG])
+    {
+        DebugMessage(M64MSG_WARNING, "RSP DMA attempted but FIFO queue already full.");
+        return;
+    }
+
+    if (sp->regs[SP_DMA_BUSY_REG])
+    {
+        sp->fifo[1].dir = dir;
+        sp->fifo[1].length = dir == SP_DMA_READ ? sp->regs[SP_WR_LEN_REG] : sp->regs[SP_RD_LEN_REG];
+        sp->fifo[1].memaddr = sp->regs[SP_MEM_ADDR_REG];
+        sp->fifo[1].dramaddr = sp->regs[SP_DRAM_ADDR_REG];
+        sp->regs[SP_DMA_FULL_REG] = 1;
+        sp->regs[SP_STATUS_REG] |= SP_STATUS_DMA_FULL;
+    }
+    else
+    {
+        sp->fifo[0].dir = dir;
+        sp->fifo[0].length = dir == SP_DMA_READ ? sp->regs[SP_WR_LEN_REG] : sp->regs[SP_RD_LEN_REG];
+        sp->fifo[0].memaddr = sp->regs[SP_MEM_ADDR_REG];
+        sp->fifo[0].dramaddr = sp->regs[SP_DRAM_ADDR_REG];
+        sp->regs[SP_DMA_BUSY_REG] = 1;
+        sp->regs[SP_STATUS_REG] |= SP_STATUS_DMA_BUSY;
+
+        do_sp_dma(sp, &sp->fifo[0]);
     }
 }
 
-static void dma_sp_read(struct rsp_core* sp)
+static void fifo_pop(struct rsp_core* sp)
 {
-    unsigned int i,j;
+    if (sp->regs[SP_DMA_FULL_REG])
+    {
+        sp->fifo[0].dir = sp->fifo[1].dir;
+        sp->fifo[0].length = sp->fifo[1].length;
+        sp->fifo[0].memaddr = sp->fifo[1].memaddr;
+        sp->fifo[0].dramaddr = sp->fifo[1].dramaddr;
+        sp->regs[SP_DMA_FULL_REG] = 0;
+        sp->regs[SP_STATUS_REG] &= ~SP_STATUS_DMA_FULL;
 
-    unsigned int l = sp->regs[SP_WR_LEN_REG];
-
-    unsigned int length = ((l & 0xfff) | 7) + 1;
-    unsigned int count = ((l >> 12) & 0xff) + 1;
-    unsigned int skip = ((l >> 20) & 0xfff);
-
-    unsigned int memaddr = sp->regs[SP_MEM_ADDR_REG] & 0xfff;
-    unsigned int dramaddr = sp->regs[SP_DRAM_ADDR_REG] & 0xffffff;
-
-    unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
-    unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
-
-    for(j=0; j<count; j++) {
-        for(i=0; i<length; i++) {
-            dram[dramaddr^S8] = spmem[memaddr^S8];
-            memaddr++;
-            dramaddr++;
-        }
-
-        post_framebuffer_write(&sp->dp->fb, dramaddr - length, length);
-        dramaddr+=skip;
+        do_sp_dma(sp, &sp->fifo[0]);
+    }
+    else
+    {
+        sp->regs[SP_DMA_BUSY_REG] = 0;
+        sp->regs[SP_STATUS_REG] &= ~SP_STATUS_DMA_BUSY;
     }
 }
 
@@ -176,6 +219,7 @@ void poweron_rsp(struct rsp_core* sp)
     memset(sp->mem, 0, SP_MEM_SIZE);
     memset(sp->regs, 0, SP_REGS_COUNT*sizeof(uint32_t));
     memset(sp->regs2, 0, SP_REGS2_COUNT*sizeof(uint32_t));
+    memset(sp->fifo, 0, SP_DMA_FIFO_SIZE*sizeof(struct sp_dma));
 
     sp->rsp_task_locked = 0;
     sp->mi->r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_RSP;
@@ -232,10 +276,10 @@ void write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     switch(reg)
     {
     case SP_RD_LEN_REG:
-        dma_sp_write(sp);
+        fifo_push(sp, SP_DMA_WRITE);
         break;
     case SP_WR_LEN_REG:
-        dma_sp_read(sp);
+        fifo_push(sp, SP_DMA_READ);
         break;
     case SP_SEMAPHORE_REG:
         sp->regs[SP_SEMAPHORE_REG] = 0;
@@ -353,4 +397,10 @@ void rsp_interrupt_event(void* opaque)
     {
         raise_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
+}
+
+void rsp_end_of_dma_event(void* opaque)
+{
+    struct rsp_core* sp = (struct rsp_core*)opaque;
+    fifo_pop(sp);
 }
