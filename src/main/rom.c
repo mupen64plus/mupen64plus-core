@@ -55,6 +55,8 @@ enum { DEFAULT_ALTERNATE_VI_TIMING = 0 };
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
 /* by default, Audio Signal is disabled */
 enum { DEFAULT_AUDIO_SIGNAL = 0 };
+/* by default, Delay SI is enabled */
+enum { DEFAULT_DELAY_SI = 1 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -184,6 +186,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
     ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+    ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
@@ -205,6 +208,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.audiosignal = entry->audio_signal;
         ROM_PARAMS.countperscanline = entry->count_per_scanline;
         ROM_PARAMS.disableextramem = entry->disableextramem;
+        ROM_PARAMS.delaysi = entry->delaysi;
         ROM_PARAMS.cheats = entry->cheats;
     }
     else
@@ -220,6 +224,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
         ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+        ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -463,6 +468,7 @@ void romdatabase_open(void)
             search->entry.audio_signal = DEFAULT_AUDIO_SIGNAL;
             search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+            search->entry.delaysi = DEFAULT_DELAY_SI;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
@@ -597,6 +603,10 @@ void romdatabase_open(void)
             else if (!strcmp(l.name, "DisableExtraMem"))
             {
                 search->entry.disableextramem = atoi(l.value);
+            }
+            else if (!strcmp(l.name, "DelaySI"))
+            {
+                search->entry.delaysi = atoi(l.value);
             }
             else if(!strncmp(l.name, "Cheat", 5))
             {
