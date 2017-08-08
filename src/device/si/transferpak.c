@@ -62,7 +62,7 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
 {
     uint8_t value;
 
-    DebugMessage(M64MSG_WARNING, "tpak read: %04x", address);
+    DebugMessage(M64MSG_VERBOSE, "tpak read: %04x", address);
 
     switch(address >> 12)
     {
@@ -72,7 +72,7 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
               ? 0x84
               : 0x00;
 
-        DebugMessage(M64MSG_WARNING, "tpak get cart state: %02x", value);
+        DebugMessage(M64MSG_VERBOSE, "tpak get cart state: %02x", value);
         memset(data, value, size);
         break;
 
@@ -80,7 +80,7 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
         /* get gb cart access mode */
         if (tpk->enabled)
         {
-            DebugMessage(M64MSG_WARNING, "tpak get access mode: %02x", tpk->access_mode);
+            DebugMessage(M64MSG_VERBOSE, "tpak get access mode: %02x", tpk->access_mode);
             memset(data, tpk->access_mode, size);
             if (tpk->access_mode != CART_NOT_INSERTED)
             {
@@ -97,7 +97,7 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
         /* read gb cart */
         if (tpk->enabled)
         {
-            DebugMessage(M64MSG_WARNING, "tpak read cart: %04x", address);
+            DebugMessage(M64MSG_VERBOSE, "tpak read cart: %04x", address);
             read_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
         }
         break;
@@ -111,7 +111,7 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
 {
     uint8_t value = data[size-1];
 
-    DebugMessage(M64MSG_WARNING, "tpak write: %04x <- %02x", address, value);
+    DebugMessage(M64MSG_VERBOSE, "tpak write: %04x <- %02x", address, value);
 
     switch(address >> 12)
     {
@@ -121,11 +121,11 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
         {
         case 0xfe:
             tpk->enabled = 0;
-            DebugMessage(M64MSG_WARNING, "tpak disabled");
+            DebugMessage(M64MSG_VERBOSE, "tpak disabled");
             break;
         case 0x84:
             tpk->enabled = 1;
-            DebugMessage(M64MSG_WARNING, "tpak enabled");
+            DebugMessage(M64MSG_VERBOSE, "tpak enabled");
             break;
         default:
             DebugMessage(M64MSG_WARNING, "Unknown tpak write: %04x <- %02x", address, value);
@@ -137,7 +137,7 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
         if (tpk->enabled)
         {
             tpk->bank = value;
-            DebugMessage(M64MSG_WARNING, "tpak set bank %02x", tpk->bank);
+            DebugMessage(M64MSG_VERBOSE, "tpak set bank %02x", tpk->bank);
         }
         break;
 
@@ -153,10 +153,10 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
 
             if ((value & 0xfe) != 0)
             {
-                DebugMessage(M64MSG_WARNING, "Unknwon tpak write: %04x <- %02x", address, value);
+                DebugMessage(M64MSG_WARNING, "Unknown tpak write: %04x <- %02x", address, value);
             }
 
-            DebugMessage(M64MSG_WARNING, "tpak set access mode %02x", tpk->access_mode);
+            DebugMessage(M64MSG_VERBOSE, "tpak set access mode %02x", tpk->access_mode);
         }
         break;
 
@@ -167,7 +167,7 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
         /* write gb cart */
 //        if (tpk->enabled)
         {
-            DebugMessage(M64MSG_WARNING, "tpak write gb: %04x <- %02x", address, value);
+            DebugMessage(M64MSG_VERBOSE, "tpak write gb: %04x <- %02x", address, value);
             write_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
         }
         break;
