@@ -11068,7 +11068,7 @@ static void TLBWI_new(void)
 static void TLBWR_new(void)
 {
   unsigned int i;
-  r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]/2 % (32 - r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG];
+  r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]/g_dev.r4300.cp0.count_per_op % (32 - r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG];
   /* Remove old entries */
   unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_even;
   unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_even;
