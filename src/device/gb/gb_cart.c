@@ -104,7 +104,7 @@ static void write_ram(struct storage_backend* ram, unsigned int enabled, uint16_
 static void set_ram_enable(struct gb_cart* gb_cart, uint8_t value)
 {
     gb_cart->ram_enable = ((value & 0x0f) == 0x0a) ? 1 : 0;
-    DebugMessage(M64MSG_WARNING, "RAM enable = %02x", gb_cart->ram_enable);
+    DebugMessage(M64MSG_VERBOSE, "RAM enable = %02x", gb_cart->ram_enable);
 }
 
 
@@ -143,7 +143,7 @@ static int write_gb_cart_nombc(struct gb_cart* gb_cart, uint16_t address, const 
     case (0x2000 >> 13):
     case (0x4000 >> 13):
     case (0x6000 >> 13):
-        DebugMessage(M64MSG_WARNING, "Trying to write to GB ROM %04x", address);
+        DebugMessage(M64MSG_VERBOSE, "Trying to write to GB ROM %04x", address);
         break;
 
     /* 0xa000-0xbfff: RAM */
@@ -203,7 +203,7 @@ static int write_gb_cart_mbc1(struct gb_cart* gb_cart, uint16_t address, const u
     case (0x2000 >> 13):
         bank = value & 0x1f;
         gb_cart->rom_bank = (gb_cart->rom_bank & ~UINT8_C(0x1f)) | (bank == 0) ? 1 : bank;
-        DebugMessage(M64MSG_WARNING, "MBC1 set rom bank %02x", gb_cart->rom_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC1 set rom bank %02x", gb_cart->rom_bank);
         break;
 
     /* 0x4000-0x5fff: RAM bank / upper ROM bank select (2 bits) */
@@ -217,7 +217,7 @@ static int write_gb_cart_mbc1(struct gb_cart* gb_cart, uint16_t address, const u
             /* RAM mode */
             gb_cart->ram_bank = bank;
         }
-        DebugMessage(M64MSG_WARNING, "MBC1 set ram bank %02x", gb_cart->ram_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC1 set ram bank %02x", gb_cart->ram_bank);
         break;
 
     /* 0x6000-0x7fff: ROM/RAM mode (1 bit) */
@@ -310,7 +310,7 @@ static int read_gb_cart_mbc3(struct gb_cart* gb_cart, uint16_t address, uint8_t*
             break;
 
         default:
-            DebugMessage(M64MSG_WARNING, "Unknwown device mapped in RAM/RTC space: %04x", address);
+            DebugMessage(M64MSG_WARNING, "Unknown device mapped in RAM/RTC space: %04x", address);
         }
         break;
 
@@ -337,13 +337,13 @@ static int write_gb_cart_mbc3(struct gb_cart* gb_cart, uint16_t address, const u
     case (0x2000 >> 13):
         bank = value & 0x7f;
         gb_cart->rom_bank = (bank == 0) ? 1 : bank;
-        DebugMessage(M64MSG_WARNING, "MBC3 set rom bank %02x", gb_cart->rom_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC3 set rom bank %02x", gb_cart->rom_bank);
         break;
 
     /* 0x4000-0x5fff: RAM bank / RTC register select */
     case (0x4000 >> 13):
         gb_cart->ram_bank = value;
-        DebugMessage(M64MSG_WARNING, "MBC3 set ram bank %02x", gb_cart->ram_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC3 set ram bank %02x", gb_cart->ram_bank);
         break;
 
     /* 0x6000-0x7fff: latch clock registers */
@@ -455,14 +455,14 @@ static int write_gb_cart_mbc5(struct gb_cart* gb_cart, uint16_t address, const u
             gb_cart->rom_bank &= 0x00ff;
             gb_cart->rom_bank |= (value & 0x01) << 8;
         }
-        DebugMessage(M64MSG_WARNING, "MBC5 set rom bank %04x", gb_cart->rom_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC5 set rom bank %04x", gb_cart->rom_bank);
         break;
 
     /* 0x4000-0x5fff: RAM bank select */
     case (0x4000 >> 13):
         /* TODO: add rumble selection */
         gb_cart->ram_bank = value & 0x0f;
-        DebugMessage(M64MSG_WARNING, "MBC5 set ram bank %02x", gb_cart->ram_bank);
+        DebugMessage(M64MSG_VERBOSE, "MBC5 set ram bank %02x", gb_cart->ram_bank);
         break;
 
     /* 0xa000-0xbfff: RAM bank 00-0f */
