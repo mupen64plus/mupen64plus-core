@@ -78,6 +78,8 @@ void init_device(struct device* dev,
     uint16_t eeprom_id, struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
     unsigned int delay_si,
+    /* sp */
+    unsigned int audio_signal,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline, unsigned int alternate_timing);
 

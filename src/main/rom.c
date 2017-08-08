@@ -55,6 +55,8 @@ enum { DEFAULT_ALTERNATE_VI_TIMING = 0 };
 enum { DEFAULT_FIXED_AUDIO_POS = 0 };
 /* by default, extra mem is enabled */
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
+/* by default, Audio Signal is disabled */
+enum { DEFAULT_AUDIO_SIGNAL = 0 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -182,6 +184,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
     ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
     ROM_PARAMS.fixedaudiopos = DEFAULT_FIXED_AUDIO_POS;
+    ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
     ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
     ROM_PARAMS.cheats = NULL;
@@ -203,6 +206,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.vitiming = entry->alternate_vi_timing;
         ROM_PARAMS.fixedaudiopos = entry->fixed_audio_pos;
+        ROM_PARAMS.audiosignal = entry->audio_signal;
         ROM_PARAMS.countperscanline = entry->count_per_scanline;
         ROM_PARAMS.disableextramem = entry->disableextramem;
         ROM_PARAMS.cheats = entry->cheats;
@@ -218,6 +222,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
         ROM_PARAMS.fixedaudiopos = DEFAULT_FIXED_AUDIO_POS;
+        ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
         ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
         ROM_PARAMS.cheats = NULL;
@@ -461,6 +466,7 @@ void romdatabase_open(void)
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.alternate_vi_timing = DEFAULT_ALTERNATE_VI_TIMING;
             search->entry.fixed_audio_pos = DEFAULT_FIXED_AUDIO_POS;
+            search->entry.audio_signal = DEFAULT_AUDIO_SIGNAL;
             search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
             search->entry.cheats = NULL;
@@ -515,6 +521,10 @@ void romdatabase_open(void)
             else if(!strcmp(l.name, "FixedAudioPos"))
             {
                 search->entry.fixed_audio_pos = atoi(l.value);
+            }
+            else if (!strcmp(l.name, "AudioSignal"))
+            {
+                search->entry.audio_signal = atoi(l.value);
             }
             else if(!strcmp(l.name, "CountPerScanline"))
             {

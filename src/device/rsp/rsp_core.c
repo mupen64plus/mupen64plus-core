@@ -113,7 +113,11 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 
     /* clear / set signal 0 */
     if (w & 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
-    if (w & 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
+    if (w & 0x400) {
+        sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
+        if (sp->audio_signal)
+            signal_rcp_interrupt(sp->r4300, MI_INTR_SP);
+    }
 
     /* clear / set signal 1 */
     if (w & 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
@@ -154,11 +158,13 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 void init_rsp(struct rsp_core* sp,
               struct r4300_core* r4300,
               struct rdp_core* dp,
-              struct ri_controller* ri)
+              struct ri_controller* ri,
+              uint32_t audio_signal)
 {
     sp->r4300 = r4300;
     sp->dp = dp;
     sp->ri = ri;
+    sp->audio_signal = audio_signal;
 }
 
 void poweron_rsp(struct rsp_core* sp)

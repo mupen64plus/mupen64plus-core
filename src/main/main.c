@@ -1095,6 +1095,7 @@ m64p_error main_run(void)
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
                 delay_si,
+                ROM_PARAMS.audiosignal,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline, alternate_vi_timing);
 
     // Attach rom to plugins
