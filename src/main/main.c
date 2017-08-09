@@ -996,7 +996,11 @@ m64p_error main_run(void)
 #ifdef NEW_DYNAREC
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
-    delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+    if (!ROM_PARAMS.delaysi)
+        delay_si = ROM_PARAMS.delaysi;
+    else
+        delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
+
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
     alternate_vi_timing = ConfigGetParamInt(g_CoreConfig, "ViTiming");
     count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
