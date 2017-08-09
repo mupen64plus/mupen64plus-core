@@ -52,7 +52,6 @@ typedef struct _rom_params
    m64p_system_type systemtype;
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
    unsigned char countperop;
-   int vitiming;
    int audiosignal;
    int countperscanline;
    int disableextramem;
@@ -127,7 +126,6 @@ typedef struct
    unsigned char savetype;
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
-   unsigned char alternate_vi_timing;
    unsigned char audio_signal;
    int count_per_scanline;
    unsigned char countperop;
