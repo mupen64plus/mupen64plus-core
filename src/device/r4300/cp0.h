@@ -172,6 +172,14 @@ struct interrupt_handler
     void (*callback)(void*);
 };
 
+struct exception_infos
+{
+    uint32_t EPC;
+    uint32_t fgr64;
+    struct exception_infos *previous;
+    struct exception_infos *next;
+};
+
 enum { CP0_INTERRUPT_HANDLERS_COUNT = 12 };
 
 struct cp0
@@ -204,6 +212,10 @@ struct cp0
     unsigned int count_per_op;
 
     struct tlb tlb;
+
+    struct exception_infos *current_exception;
+    struct exception_infos *skipped_exception;
+    int exception_level;
 };
 
 void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers);

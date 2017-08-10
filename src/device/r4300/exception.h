@@ -23,9 +23,15 @@
 #define M64P_DEVICE_R4300_EXCEPTION_H
 
 #include <stdint.h>
+#include "device/r4300/r4300_core.h"
 
 struct r4300_core;
 
+void poweron_exception(struct cp0* cp0);
+void add_exception_to_list(struct r4300_core* r4300);
+void remove_exception_from_list(struct r4300_core* r4300);
+void check_exception_list(struct r4300_core* r4300);
+void clear_exception_list(struct r4300_core* r4300);
 void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w);
 void exception_general(struct r4300_core* r4300);
 

@@ -76,6 +76,8 @@ void poweron_cp0(struct cp0* cp0)
     init_interrupt(cp0);
 
     poweron_tlb(&cp0->tlb);
+
+    poweron_exception(cp0);
 }
 
 
@@ -113,6 +115,7 @@ int check_cop1_unusable(struct r4300_core* r4300)
     {
         cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
         exception_general(r4300);
+        add_exception_to_list(r4300);
         return 1;
     }
     return 0;

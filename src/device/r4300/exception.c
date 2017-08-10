@@ -19,6 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <assert.h>
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "device/r4300/exception.h"
@@ -27,6 +28,114 @@
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
 #include "device/r4300/tlb.h"
+
+void poweron_exception(struct cp0* cp0)
+{
+    cp0->current_exception = NULL;
+    cp0->skipped_exception = NULL;
+    cp0->exception_level = 0;
+}
+
+void add_exception_to_list(struct r4300_core* r4300)
+{
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    if(r4300->cp0.current_exception == NULL)
+    {
+        r4300->cp0.current_exception = (struct exception_infos*) malloc(sizeof(struct exception_infos));
+        r4300->cp0.current_exception->next = NULL;
+        r4300->cp0.current_exception->previous = NULL;
+    }
+    else
+    {
+        struct exception_infos *previous_exception = r4300->cp0.current_exception;
+        r4300->cp0.current_exception->next = (struct exception_infos*) malloc(sizeof(struct exception_infos));
+        r4300->cp0.current_exception = r4300->cp0.current_exception->next;
+        r4300->cp0.current_exception->next = NULL;
+        r4300->cp0.current_exception->previous = previous_exception;
+    }
+
+    r4300->cp0.current_exception->EPC = cp0_regs[CP0_EPC_REG];
+    r4300->cp0.current_exception->fgr64 = ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) != 0) ? 1 : 0;
+
+    if(r4300->cp0.current_exception->fgr64 == 1)
+    {
+        // Switch to 32-bit mode
+        shuffle_fpr_data(&r4300->cp1, cp0_regs[CP0_STATUS_REG], 0);
+        set_fpr_pointers(&r4300->cp1, 0);
+        cp0_regs[CP0_STATUS_REG] &= ~0x04000000;
+    }
+    r4300->cp0.exception_level++;
+    assert((r4300->cp0.exception_level < 10) && (r4300->cp0.exception_level >= 0));
+}
+
+void remove_exception_from_list(struct r4300_core* r4300)
+{
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    struct exception_infos *curr = r4300->cp0.current_exception;
+
+    while(curr)
+    {
+        if(curr->EPC == cp0_regs[CP0_EPC_REG])
+        {
+            if((curr->fgr64 == 1) && ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0))
+            {
+                // Switch to 64-bit mode
+                shuffle_fpr_data(&r4300->cp1, cp0_regs[CP0_STATUS_REG], 0x04000000);
+                set_fpr_pointers(&r4300->cp1, 0x04000000);
+                cp0_regs[CP0_STATUS_REG] |= 0x04000000;
+            }
+
+            struct exception_infos *previous_exception = curr->previous;
+            struct exception_infos *next_exception = curr->next;
+            free(curr);
+
+            if(next_exception)
+            {
+                assert(next_exception == r4300->cp0.skipped_exception);
+                assert(next_exception->next == NULL);
+                free(next_exception);
+                r4300->cp0.exception_level--;
+            }
+
+            r4300->cp0.current_exception = previous_exception;
+            if(r4300->cp0.current_exception)
+                r4300->cp0.current_exception->next = NULL;
+
+            r4300->cp0.exception_level--;
+            break;
+        }
+        curr = curr->previous;
+    }
+}
+
+void check_exception_list(struct r4300_core* r4300)
+{
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    struct exception_infos *curr = r4300->cp0.current_exception;
+
+    while(curr)
+    {
+        if(curr->EPC == cp0_regs[CP0_EPC_REG])
+        {
+            if(curr != r4300->cp0.current_exception)
+                r4300->cp0.skipped_exception = curr->next;
+            break;
+        }
+        curr = curr->previous;
+    }
+}
+
+void clear_exception_list(struct r4300_core* r4300)
+{
+    while(r4300->cp0.current_exception)
+    {
+        struct exception_infos *previous_exception = r4300->cp0.current_exception->previous;
+        free(r4300->cp0.current_exception);
+        r4300->cp0.current_exception = previous_exception;
+    }
+    r4300->cp0.exception_level = 0;
+}
 
 void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
 {
