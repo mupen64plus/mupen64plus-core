@@ -49,8 +49,6 @@
 enum { DEFAULT_COUNT_PER_SCANLINE = 1500 };
 /* Number of cpu cycles per instruction */
 enum { DEFAULT_COUNT_PER_OP = 2 };
-/* by default, alternate VI timing is disabled */
-enum { DEFAULT_ALTERNATE_VI_TIMING = 0 };
 /* by default, extra mem is enabled */
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
 /* by default, Audio Signal is disabled */
@@ -181,7 +179,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
     ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
-    ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
     ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
     ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
@@ -203,7 +200,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = entry->players;
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
-        ROM_PARAMS.vitiming = entry->alternate_vi_timing;
         ROM_PARAMS.audiosignal = entry->audio_signal;
         ROM_PARAMS.countperscanline = entry->count_per_scanline;
         ROM_PARAMS.disableextramem = entry->disableextramem;
@@ -219,7 +215,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
-        ROM_PARAMS.vitiming = DEFAULT_ALTERNATE_VI_TIMING;
         ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
         ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
@@ -465,7 +460,6 @@ void romdatabase_open(void)
             search->entry.players = 0;
             search->entry.rumble = 0;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
-            search->entry.alternate_vi_timing = DEFAULT_ALTERNATE_VI_TIMING;
             search->entry.audio_signal = DEFAULT_AUDIO_SIGNAL;
             search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
@@ -511,12 +505,6 @@ void romdatabase_open(void)
                 {
                     search->entry.crc1 = search->entry.crc2 = 0;
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid CRC on line %i", lineno);
-                }
-            }
-            else if(!strcmp(l.name, "ViTiming"))
-            {
-                if(!strcmp(l.value, "Alternate")) {
-                    search->entry.alternate_vi_timing = 1;
                 }
             }
             else if (!strcmp(l.name, "AudioSignal"))
