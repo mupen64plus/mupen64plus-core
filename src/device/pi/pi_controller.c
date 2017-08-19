@@ -129,7 +129,7 @@ static void dma_pi_write(struct pi_controller* pi)
         return;
     }
 
-    longueur = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFF)+1;
+    longueur = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFE)+2;
     i = (pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF;
     longueur = (i + longueur) > pi->cart_rom.rom_size ?
                (pi->cart_rom.rom_size - i) : longueur;
