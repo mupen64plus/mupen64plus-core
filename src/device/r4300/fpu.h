@@ -504,7 +504,7 @@ M64P_FPU_INLINE void mov_d(const double* source, double* target)
 }
 M64P_FPU_INLINE void neg_d(const double* source, double* target)
 {
-    *target =- *source;
+    *target = - *source;
 }
 
 #endif /* M64P_DEVICE_R4300_FPU_H */
