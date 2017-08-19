@@ -28,6 +28,7 @@
 #include "new_dynarec/new_dynarec.h"
 #include "pure_interp.h"
 #include "recomp.h"
+#include "exception.h"
 
 #include "api/callbacks.h"
 #include "api/debugger.h"
@@ -191,6 +192,7 @@ void run_r4300(struct r4300_core* r4300)
         free_blocks(r4300);
     }
 
+    clear_exception_list(r4300);
     DebugMessage(M64MSG_INFO, "R4300 emulator finished.");
 
     /* print instruction counts */
@@ -365,6 +367,8 @@ void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc)
     else
 #endif
     {
+        clear_exception_list(r4300);
+        add_exception_to_list(r4300);
         generic_jump_to(r4300, pc);
         invalidate_r4300_cached_code(r4300, 0, 0);
     }

@@ -385,6 +385,7 @@ static void wrapped_exception_general(struct r4300_core* r4300)
     }
 #else
     exception_general(r4300);
+    add_exception_to_list(r4300);
 #endif
 }
 

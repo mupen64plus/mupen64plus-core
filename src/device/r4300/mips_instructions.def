@@ -1083,6 +1083,7 @@ DECLARE_INSTRUCTION(ERET)
         cp0_regs[CP0_STATUS_REG] &= ~CP0_STATUS_EXL;
         generic_jump_to(r4300, cp0_regs[CP0_EPC_REG]);
     }
+    remove_exception_from_list(r4300);
     r4300->llbit = 0;
     check_interrupt(r4300);
     r4300->cp0.last_addr = PCADDR;
@@ -1453,6 +1454,7 @@ DECLARE_INSTRUCTION(MTC0)
         break;
     case CP0_EPC_REG:
         cp0_regs[CP0_EPC_REG] = rrt32;
+        check_exception_list(r4300);
         break;
     case CP0_PREVID_REG:
         break;
