@@ -1087,6 +1087,7 @@ m64p_error main_run(void)
                 emumode,
                 count_per_op,
                 no_compiled_jump,
+                ROM_PARAMS.special_rom,
                 &aout,
                 g_rom, g_rom_size,
                 &fla_storage,

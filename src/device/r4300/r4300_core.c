@@ -41,7 +41,7 @@
 #include <string.h>
 
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump)
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
@@ -58,6 +58,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controll
 
     r4300->mem = mem;
     r4300->ri = ri;
+    r4300->special_rom = special_rom;
 }
 
 void poweron_r4300(struct r4300_core* r4300)
