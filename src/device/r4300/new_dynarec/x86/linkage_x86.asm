@@ -488,7 +488,7 @@ read_byte_new:
     mov     ecx,    [find_local_data(g_dev_r4300_address)]
     and     ecx,    3
     xor     ecx,    3
-    movzx   eax,    BYTE [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword) + ecx]
+    movzx   eax,    BYTE [ecx + find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)]
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)], eax
     ret
 
@@ -503,7 +503,7 @@ read_hword_new:
     mov     ecx,    [find_local_data(g_dev_r4300_address)]
     and     ecx,    2
     xor     ecx,    2
-    movzx   eax,    WORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword) + ecx]
+    movzx   eax,    WORD [ecx + find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)]
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_rdword)], eax
     ret
 
