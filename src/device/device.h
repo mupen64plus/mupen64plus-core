@@ -63,6 +63,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     int special_rom,
+    int disable_fr_exception,
     /* ai */
     struct audio_out_backend* aout,
     /* pi */

@@ -55,6 +55,7 @@ typedef struct _rom_params
    int disableextramem;
    int delaysi;
    int special_rom;
+   int disable_fr_exception;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -138,6 +139,7 @@ typedef struct
    unsigned char countperop;
    unsigned char disableextramem;
    unsigned char delaysi;
+   unsigned char disable_fr_exception;
    uint32_t set_flags;
 } romdatabase_entry;
 
