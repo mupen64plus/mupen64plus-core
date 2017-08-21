@@ -273,7 +273,6 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultBool(g_CoreConfig, "DelaySI", 1, "Delay interrupt after DMA SI read/write");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
-    ConfigSetDefaultInt(g_CoreConfig, "CountPerScanline", -1, "Modify the default count per scanline(-1 or 0=Game default)");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
     /* handle upgrades */
@@ -966,7 +965,6 @@ m64p_error main_run(void)
     unsigned int count_per_op;
     unsigned int emumode;
     unsigned int disable_extra_mem;
-    int count_per_scanline;
     int no_compiled_jump;
     struct file_storage eep;
     struct file_storage fla;
@@ -1001,7 +999,6 @@ m64p_error main_run(void)
         delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
 
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
-    count_per_scanline  = ConfigGetParamInt(g_CoreConfig, "CountPerScanline");
 
     if (ROM_PARAMS.disableextramem)
         disable_extra_mem = ROM_PARAMS.disableextramem;
@@ -1012,9 +1009,6 @@ m64p_error main_run(void)
 
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
-
-    if (count_per_scanline  <= 0)
-        count_per_scanline = ROM_PARAMS.countperscanline;
 
     cheat_add_hacks();
 
@@ -1096,7 +1090,7 @@ m64p_error main_run(void)
                 &clock,
                 delay_si,
                 ROM_PARAMS.audiosignal,
-                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype), count_per_scanline);
+                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
 
     // Attach rom to plugins
     if (!gfx.romOpen())
