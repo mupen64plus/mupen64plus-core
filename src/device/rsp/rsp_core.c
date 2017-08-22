@@ -113,11 +113,7 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 
     /* clear / set signal 0 */
     if (w & 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
-    if (w & 0x400) {
-        sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
-        if (sp->audio_signal)
-            signal_rcp_interrupt(sp->r4300, MI_INTR_SP);
-    }
+    if (w & 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
 
     /* clear / set signal 1 */
     if (w & 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
@@ -158,13 +154,11 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 void init_rsp(struct rsp_core* sp,
               struct r4300_core* r4300,
               struct rdp_core* dp,
-              struct ri_controller* ri,
-              uint32_t audio_signal)
+              struct ri_controller* ri)
 {
     sp->r4300 = r4300;
     sp->dp = dp;
     sp->ri = ri;
-    sp->audio_signal = audio_signal;
 }
 
 void poweron_rsp(struct rsp_core* sp)
@@ -271,6 +265,8 @@ void do_SP_Task(struct rsp_core* sp)
 {
     uint32_t save_pc = sp->regs2[SP_PC_REG] & ~0xfff;
 
+    uint32_t sp_delay_time;
+
     if (sp->mem[0xfc0/4] == 1)
     {
         if (sp->dp->dpc_regs[DPC_STATUS_REG] & DPC_STATUS_FREEZE) // DP frozen (DK64, BC)
@@ -290,11 +286,13 @@ void do_SP_Task(struct rsp_core* sp)
         sp->regs2[SP_PC_REG] |= save_pc;
         new_frame();
 
-        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP) {
+        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
+        {
             cp0_update_count(sp->r4300);
-            add_interrupt_event(&sp->r4300->cp0, DP_INT, 4000);
+            add_interrupt_event(&sp->r4300->cp0, DP_INT, 1000);
             sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_DP;
         }
+        sp_delay_time = 1000;
 
         protect_framebuffers(sp->dp);
     }
@@ -306,26 +304,44 @@ void do_SP_Task(struct rsp_core* sp)
         rsp.doRspCycles(0xffffffff);
         timed_section_end(TIMED_SECTION_AUDIO);
         sp->regs2[SP_PC_REG] |= save_pc;
+
+        sp_delay_time = 4000;
     }
     else
     {
         sp->regs2[SP_PC_REG] &= 0xfff;
         rsp.doRspCycles(0xffffffff);
         sp->regs2[SP_PC_REG] |= save_pc;
+
+        sp_delay_time = 0;
     }
 
     sp->rsp_task_locked = 0;
     if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
     {
-        cp0_update_count(sp->r4300);
         sp->rsp_task_locked = 1;
-        add_interrupt_event(&sp->r4300->cp0, SP_INT, 1000);
+        sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
     }
+    if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
+    {
+        cp0_update_count(sp->r4300);
+        add_interrupt_event(&sp->r4300->cp0, SP_INT, sp_delay_time);
+        sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
+    }
+
+    sp->regs[SP_STATUS_REG] &=
+        ~(SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT);
 }
 
 void rsp_interrupt_event(void* opaque)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
+
+    if (!sp->rsp_task_locked)
+    {
+        sp->regs[SP_STATUS_REG] |=
+            SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT;
+    }
 
     if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
     {

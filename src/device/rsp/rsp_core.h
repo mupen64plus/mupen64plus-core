@@ -80,7 +80,6 @@ struct rsp_core
     uint32_t regs[SP_REGS_COUNT];
     uint32_t regs2[SP_REGS2_COUNT];
     uint32_t rsp_task_locked;
-    uint32_t audio_signal;
 
     struct r4300_core* r4300;
     struct rdp_core* dp;
@@ -105,8 +104,7 @@ static uint32_t rsp_reg2(uint32_t address)
 void init_rsp(struct rsp_core* sp,
               struct r4300_core* r4300,
               struct rdp_core* dp,
-              struct ri_controller* ri,
-              uint32_t audio_signal);
+              struct ri_controller* ri);
 
 void poweron_rsp(struct rsp_core* sp);
 
