@@ -244,8 +244,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     if(strcmp(ROM_PARAMS.headername, "GOLDENEYE") == 0)
         ROM_PARAMS.special_rom = GOLDEN_EYE;
-    else if (strcmp(ROM_PARAMS.headername, "RAT ATTACK") == 0)
-        ROM_PARAMS.special_rom = RAT_ATTACK;
     else
         ROM_PARAMS.special_rom = NORMAL_ROM;
 
