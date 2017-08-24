@@ -375,6 +375,24 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_EXTRAMEM) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_EXTRAMEM)) {
+            entry->entry.disableextramem = ref->disableextramem;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_DELAYSI) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_DELAYSI)) {
+            entry->entry.delaysi = ref->delaysi;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_DELAYSI;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_FREXCEPTION) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_FREXCEPTION)) {
+            entry->entry.disable_fr_exception = ref->disable_fr_exception;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_FREXCEPTION;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -598,14 +616,17 @@ void romdatabase_open(void)
             else if (!strcmp(l.name, "DisableExtraMem"))
             {
                 search->entry.disableextramem = atoi(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
             }
             else if (!strcmp(l.name, "DelaySI"))
             {
                 search->entry.delaysi = atoi(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_DELAYSI;
             }
             else if (!strcmp(l.name, "DisableFRException"))
             {
                 search->entry.disable_fr_exception = atoi(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_FREXCEPTION;
             }
             else if(!strncmp(l.name, "Cheat", 5))
             {
