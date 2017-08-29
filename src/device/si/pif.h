@@ -34,7 +34,7 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 struct si_controller;
 
 enum { PIF_RAM_SIZE = 0x40 };
-enum { PIF_CHANNELS_COUNT = 6 };
+enum { PIF_CHANNELS_COUNT = 5 };
 
 enum pif_commands
 {
