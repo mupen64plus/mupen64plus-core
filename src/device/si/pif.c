@@ -244,7 +244,17 @@ static void setup_channels_format(struct pif* pif)
             break;
 
         default: /* setup channel */
-            i += setup_pif_channel(&pif->channels[k++], &pif->ram[i]);
+
+            /* HACK?: some games sends bogus PIF commands while accessing controller paks
+             * Yoshi Story, Top Gear Rally 2, Indiana Jones, ...
+             * When encountering such commands, we skip this bogus byte.
+             */
+            if ((i+1 < PIF_RAM_SIZE) && (pif->ram[i+1] == 0xfe)) {
+                ++i;
+            }
+            else {
+                i += setup_pif_channel(&pif->channels[k++], &pif->ram[i]);
+            }
         }
     }
 
