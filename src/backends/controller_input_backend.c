@@ -22,11 +22,6 @@
 #include "controller_input_backend.h"
 
 
-int controller_input_is_connected(struct controller_input_backend* cin)
-{
-    return cin->is_connected(cin->user_data);
-}
-
 enum pak_type controller_input_detect_pak(struct controller_input_backend* cin)
 {
     return cin->detect_pak(cin->user_data);

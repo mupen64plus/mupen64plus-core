@@ -166,12 +166,6 @@ void process_controller_command(void* opaque,
 {
     struct game_controller* cont = (struct game_controller*)opaque;
 
-    int connected = controller_input_is_connected(cont->cin);
-    if (!connected) {
-        *rx |= 0x80;
-        return;
-    }
-
     uint8_t cmd = tx_buf[0];
 
     switch (cmd)

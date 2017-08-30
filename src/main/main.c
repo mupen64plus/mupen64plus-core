@@ -1020,7 +1020,7 @@ m64p_error main_run(void)
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
         control_ids[i] = i;
-        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_is_connected, input_plugin_detect_pak, input_plugin_get_input };
+        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_detect_pak, input_plugin_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
         rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
 
@@ -1061,8 +1061,14 @@ m64p_error main_run(void)
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
+        /* if no controller is plugged, make it "disconnected" */
+        if (!Controls[i].Present) {
+            pif_channel_devices[i].opaque = NULL;
+            pif_channel_devices[i].process = NULL;
+            pif_channel_devices[i].post_setup = NULL;
+        }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
-        if (Controls[i].RawData) {
+        else if (Controls[i].RawData) {
             pif_channel_devices[i].opaque = &control_ids[i];
             pif_channel_devices[i].process = input_plugin_read_controller;
             pif_channel_devices[i].post_setup = input_plugin_controller_command;

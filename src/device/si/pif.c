@@ -131,6 +131,13 @@ static void process_channel(struct pif_channel* channel)
         return;
     }
 
+    /* set NoResponse if no device is connected */
+    if (channel->device.process == NULL) {
+        *channel->rx |= 0x80;
+        return;
+    }
+
+    /* do device processing */
     channel->device.process(channel->device.opaque,
         channel->tx, channel->tx_buf,
         channel->rx, channel->rx_buf);
@@ -194,11 +201,13 @@ void init_pif(struct pif* pif,
     }
 
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        init_game_controller(&pif->controllers[i],
-                &cins[i],
-                &mpk_storages[i],
-                &rumbles[i],
-                (gb_carts[i].rom.data != NULL) ? &gb_carts[i] : NULL);
+        if (pif_channel_devices[i].process != NULL) {
+            init_game_controller(&pif->controllers[i],
+                    &cins[i],
+                    &mpk_storages[i],
+                    &rumbles[i],
+                    (gb_carts[i].rom.data != NULL) ? &gb_carts[i] : NULL);
+        }
     }
 
     init_eeprom(&pif->eeprom, eeprom_id, eeprom_storage);
@@ -327,8 +336,11 @@ void poweron_pif(struct pif* pif)
     }
 
     poweron_af_rtc(&pif->af_rtc);
+
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        poweron_game_controller(&pif->controllers[i]);
+        if (pif->channels[i].device.process != NULL) {
+            poweron_game_controller(&pif->controllers[i]);
+        }
     }
 }
 

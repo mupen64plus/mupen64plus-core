@@ -29,7 +29,6 @@
 
 /* controller_input backend functions */
 
-int input_plugin_is_connected(void* opaque);
 enum pak_type input_plugin_detect_pak(void* opaque);
 uint32_t input_plugin_get_input(void* opaque);
 

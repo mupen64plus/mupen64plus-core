@@ -31,15 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int input_plugin_is_connected(void* opaque)
-{
-    int control_id = *(int*)opaque;
-
-    CONTROL* c = &Controls[control_id];
-
-    return c->Present;
-}
-
 enum pak_type input_plugin_detect_pak(void* opaque)
 {
     int control_id = *(int*)opaque;
