@@ -2680,6 +2680,7 @@ static void load_alloc(struct regstat *current,int i)
     if(opcode[i]==0x27||opcode[i]==0x37||opcode[i]==0x1A||opcode[i]==0x1B) // LWU/LD/LDL/LDR
     {
       current->is32&=~(1LL<<rt1[i]);
+      if(opcode[i]==0x27) current->uu&=~(1LL<<rt1[i]); // LWU: always alloc upper part in order to zero extend the destination register
       alloc_reg64(current,i,rt1[i]);
     }
     else current->is32|=1LL<<rt1[i];

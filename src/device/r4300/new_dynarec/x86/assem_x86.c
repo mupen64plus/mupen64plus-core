@@ -3098,32 +3098,40 @@ static void shift_assemble_x86(int i,struct regstat *i_regs)
         }
         else
         {
-          // FIXME: What if shift==tl ?
-          assert(shift!=tl);
           int temp=get_reg(i_regs->regmap,-1);
+          int real_tl=tl;
           int real_th=th;
           if(th<0&&opcode2[i]!=0x14) {th=temp;} // DSLLV doesn't need a temporary register
           assert(sl>=0);
           assert(sh>=0);
           if(tl==ECX&&sl!=ECX) {
             if(shift!=ECX) emit_mov(shift,ECX);
-            if(sl!=shift) emit_mov(sl,shift);
+            if((sl!=shift)&&(shift!=tl)) emit_mov(sl,shift);
             if(th>=0 && sh!=th) emit_mov(sh,th);
+            if(shift==tl) {
+              emit_pushreg(sl);
+              tl=sl;
+            }
           }
           else if(th==ECX&&sh!=ECX) {
             if(shift!=ECX) emit_mov(shift,ECX);
             if(sh!=shift) emit_mov(sh,shift);
-            if(sl!=tl) emit_mov(sl,tl);
+            if((sl!=tl)&&(shift!=tl)) emit_mov(sl,tl);
+            if(shift==tl) {
+              emit_pushreg(sl);
+              tl=sl;
+            }
           }
           else
           {
-            if(sl!=tl) emit_mov(sl,tl);
+            if((sl!=tl)&&(shift!=tl)) emit_mov(sl,tl);
             if(th>=0 && sh!=th) emit_mov(sh,th);
             if(shift!=ECX) {
-              if(i_regs->regmap[ECX]<0)
-                emit_mov(shift,ECX);
-              else
-                emit_xchg(shift,ECX);
+              if(shift==tl) {
+                emit_pushreg(sl);
+                tl=sl;
+              }
+              emit_xchg(shift,ECX);
             }
           }
           if(opcode2[i]==0x14) // DSLLV
@@ -3157,7 +3165,13 @@ static void shift_assemble_x86(int i,struct regstat *i_regs)
             emit_cmovne_reg(th==ECX?shift:th,tl==ECX?shift:tl);
             if(real_th>=0) emit_cmovne_reg(temp==ECX?shift:temp,th==ECX?shift:th);
           }
-          if(shift!=ECX&&(i_regs->regmap[ECX]>=0||temp==ECX)) emit_xchg(shift,ECX);
+          if(shift!=ECX) {
+            emit_xchg(shift,ECX);
+            if(real_tl==shift) {
+              emit_mov(sl,real_tl);
+              emit_popreg(sl);
+            }
+          }
         }
       }
     }
