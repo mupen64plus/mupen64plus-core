@@ -6,7 +6,7 @@ compiler:
   - clang
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y libsdl1.2-dev libsdl2-dev libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev pkg-config zlib1g-dev liblircclient-dev binutils-dev nasm
+  - sudo apt-get install -y libsdl1.2-dev libsdl2-dev libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev pkg-config zlib1g-dev liblircclient-dev binutils-dev nasm libegl1-mesa-dev libgles2-mesa-dev
 env:
  - OSD=0
  - OSD=1
