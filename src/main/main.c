@@ -954,19 +954,25 @@ m64p_error main_run(void)
     unsigned int emumode;
     unsigned int disable_extra_mem;
     int no_compiled_jump;
+    struct storage_backend eep_storage;
     struct file_storage eep;
+    struct storage_backend fla_storage;
     struct file_storage fla;
-    struct file_storage mpk;
+    struct storage_backend sra_storage;
     struct file_storage sra;
-    int control_ids[GAME_CONTROLLERS_COUNT];
     struct audio_out_backend aout;
     struct clock_backend clock;
+
+    int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
-    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
-    struct storage_backend fla_storage;
-    struct storage_backend sra_storage;
+    void* paks[GAME_CONTROLLERS_COUNT];
+    const struct pak_interface* ipaks[GAME_CONTROLLERS_COUNT];
+
     struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
-    struct storage_backend eep_storage;
+    struct file_storage mpk;
+
+    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
+
     struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
     struct file_storage gb_carts_rom[GAME_CONTROLLERS_COUNT];
     struct file_storage gb_carts_ram[GAME_CONTROLLERS_COUNT];
@@ -1020,7 +1026,7 @@ m64p_error main_run(void)
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
         control_ids[i] = i;
-        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_detect_pak, input_plugin_get_input };
+        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
         rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
 
@@ -1046,6 +1052,9 @@ m64p_error main_run(void)
                 close_file_storage(&gb_carts_rom[i]);
                 close_file_storage(&gb_carts_ram[i]);
                 g_gb_rom_files[i] = NULL;
+            } else {
+                /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
+                Controls[i].Plugin = PLUGIN_TRANSFER_PAK;
             }
         }
         else
@@ -1054,6 +1063,10 @@ m64p_error main_run(void)
             memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
             memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
         }
+
+        init_mempak(&g_dev.mempaks[i], &mpk_storages[i]);
+        init_rumblepak(&g_dev.rumblepaks[i], &rumbles[i]);
+        init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
     }
 
     /* setup pif channel devices */
@@ -1078,6 +1091,38 @@ m64p_error main_run(void)
             pif_channel_devices[i].opaque = &g_dev.si.pif.controllers[i];
             pif_channel_devices[i].process = process_controller_command;
             pif_channel_devices[i].post_setup = NULL;
+
+            /* plug selected pak */
+            switch(Controls[i].Plugin)
+            {
+            case PLUGIN_NONE:
+                paks[i] = NULL;
+                ipaks[i] = NULL;
+                break;
+            case PLUGIN_MEMPAK:
+                paks[i] = &g_dev.mempaks[i];
+                ipaks[i] = &g_imempak;
+                break;
+            case PLUGIN_RAW:
+                /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
+                 * so we just reproduce that behavior */
+            case PLUGIN_RUMBLE_PAK:
+                paks[i] = &g_dev.rumblepaks[i];
+                ipaks[i] = &g_irumblepak;
+                break;
+            case PLUGIN_TRANSFER_PAK:
+                paks[i] = &g_dev.transferpaks[i];
+                ipaks[i] = &g_itransferpak;
+                break;
+            }
+
+            if (ipaks[i] != NULL) {
+                DebugMessage(M64MSG_INFO, "Game controller %u has a %s plugged in",
+                    i, ipaks[i]->name);
+            } else {
+                DebugMessage(M64MSG_INFO, "Game controller %u has nothing plugged in",
+                    i);
+            }
         }
     }
 
@@ -1086,7 +1131,6 @@ m64p_error main_run(void)
         pif_channel_devices[i].process = process_cart_command;
         pif_channel_devices[i].post_setup = NULL;
     }
-
 
     init_device(&g_dev,
                 g_mem_base,
@@ -1100,10 +1144,7 @@ m64p_error main_run(void)
                 &sra_storage,
                 rdram_size,
                 pif_channel_devices,
-                cins,
-                mpk_storages,
-                rumbles,
-                gb_carts,
+                cins, paks, ipaks,
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));

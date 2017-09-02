@@ -38,7 +38,6 @@ void format_mempak(uint8_t* mempak);
 
 void init_mempak(struct mempak* mpk, struct storage_backend* storage);
 
-void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size);
-void mempak_write_command(struct mempak* mpk, uint16_t address, const uint8_t* data, size_t size);
+extern const struct pak_interface g_imempak;
 
 #endif

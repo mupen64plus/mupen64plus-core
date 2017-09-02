@@ -43,29 +43,13 @@ enum controller_status
     CONT_STATUS_PAK_ADDR_CRC_ERR = 0x04
 };
 
-static int is_pak_present(struct controller_input_backend* cin)
-{
-    enum pak_type pak = controller_input_detect_pak(cin);
-    switch (pak)
-    {
-    case PAK_MEM:
-    case PAK_RUMBLE:
-    case PAK_TRANSFER:
-        return 1;
-    case PAK_NONE:
-        return 0;
-    }
-
-    return 0;
-}
-
 void standard_controller_reset(struct game_controller* cont)
 {
     /* reset controller status */
     cont->status = 0x00;
 
     /* if pak is connected */
-    if (is_pak_present(cont->cin)) {
+    if (cont->ipak != NULL) {
         cont->status |= CONT_STATUS_PAK_PRESENT;
     }
     else {
@@ -97,23 +81,20 @@ static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
-    struct storage_backend* mpk_storage,
-    struct rumble_backend* rumble,
-    struct gb_cart* gb_cart)
+    void* pak, const struct pak_interface* ipak)
 {
     cont->cin = cin;;
-
-    init_mempak(&cont->mempak, mpk_storage);
-    init_rumblepak(&cont->rumblepak, rumble);
-    init_transferpak(&cont->transferpak, gb_cart);
+    cont->pak = pak;
+    cont->ipak = ipak;
 }
 
 void poweron_game_controller(struct game_controller* cont)
 {
     standard_controller_reset(cont);
 
-    poweron_rumblepak(&cont->rumblepak);
-    poweron_transferpak(&cont->transferpak);
+    if (cont->ipak != NULL) {
+        cont->ipak->plug(cont->pak);
+    }
 }
 
 static void pak_read_block(struct game_controller* cont,
@@ -124,15 +105,8 @@ static void pak_read_block(struct game_controller* cont,
     uint8_t  acrc = addr_acrc[1] & 0x1f;
 #endif
 
-    enum pak_type pak = controller_input_detect_pak(cont->cin);
-    switch (pak)
-    {
-    case PAK_NONE: memset(data, 0, PAK_CHUNK_SIZE); break;
-    case PAK_MEM: mempak_read_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_RUMBLE: rumblepak_read_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: transferpak_read_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
-    default:
-        DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
+    if (cont->ipak != NULL) {
+        cont->ipak->read(cont->pak, address, data, PAK_CHUNK_SIZE);
     }
 
     *dcrc = pak_data_crc(data, PAK_CHUNK_SIZE);
@@ -146,15 +120,8 @@ static void pak_write_block(struct game_controller* cont,
     uint8_t  acrc = addr_acrc[1] & 0x1f;
 #endif
 
-    enum pak_type pak = controller_input_detect_pak(cont->cin);
-    switch (pak)
-    {
-    case PAK_NONE: /* do nothing */ break;
-    case PAK_MEM: mempak_write_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_RUMBLE: rumblepak_write_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: transferpak_write_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
-    default:
-        DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
+    if (cont->ipak != NULL) {
+        cont->ipak->write(cont->pak, address, data, PAK_CHUNK_SIZE);
     }
 
     *dcrc = pak_data_crc(data, PAK_CHUNK_SIZE);

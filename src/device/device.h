@@ -33,6 +33,9 @@
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"
+#include "si/mempak.h"
+#include "si/rumblepak.h"
+#include "si/transferpak.h"
 #include "vi/vi_controller.h"
 
 struct audio_out_backend;
@@ -40,6 +43,7 @@ struct controller_input_backend;
 struct clock_backend;
 struct rumble_backend;
 struct storage_backend;
+struct pak_interface;
 
 /* memory map constants */
 #define MM_RDRAM_DRAM       UINT32_C(0x00000000)
@@ -75,6 +79,10 @@ struct device
     struct si_controller si;
     struct vi_controller vi;
     struct memory mem;
+
+    struct mempak mempaks[GAME_CONTROLLERS_COUNT];
+    struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
+    struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];
 };
 
 /* Setup device "static" properties.  */
@@ -97,9 +105,7 @@ void init_device(struct device* dev,
     /* si */
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
-    struct storage_backend* mpk_storages,
-    struct rumble_backend* rumbles,
-    struct gb_cart* gb_carts,
+    void* paks[], const struct pak_interface* ipaks[],
     uint16_t eeprom_id, struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
     /* vi */

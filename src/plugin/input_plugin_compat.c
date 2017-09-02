@@ -24,40 +24,11 @@
 #include "api/m64p_plugin.h"
 #include "main/main.h"
 #include "plugin.h"
-#include "device/si/game_controller.h"
 #include "backends/rumble_backend.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-
-enum pak_type input_plugin_detect_pak(void* opaque)
-{
-    int control_id = *(int*)opaque;
-    enum pak_type pak = PAK_NONE;
-
-    CONTROL* c = &Controls[control_id];
-
-    switch(c->Plugin)
-    {
-    case PLUGIN_NONE: pak = PAK_NONE; break;
-    case PLUGIN_MEMPAK: pak = PAK_MEM; break;
-    case PLUGIN_RUMBLE_PAK: pak = PAK_RUMBLE; break;
-    case PLUGIN_TRANSFER_PAK: pak = PAK_TRANSFER; break;
-
-    case PLUGIN_RAW:
-        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-         * so we just reproduce that behavior */
-        pak = PAK_RUMBLE; break;
-    }
-
-    /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[control_id].transferpak.gb_cart != NULL) {
-        pak = PAK_TRANSFER;
-    }
-
-    return pak;
-}
 
 uint32_t input_plugin_get_input(void* opaque)
 {

@@ -22,39 +22,32 @@
 #ifndef M64P_DEVICE_SI_GAME_CONTROLLER_H
 #define M64P_DEVICE_SI_GAME_CONTROLLER_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include "mempak.h"
-#include "rumblepak.h"
-#include "transferpak.h"
-
-enum pak_type
-{
-    PAK_NONE,
-    PAK_MEM,
-    PAK_RUMBLE,
-    PAK_TRANSFER
-};
-
 struct controller_input_backend;
-struct storage_backend;
+
+struct pak_interface
+{
+    const char* name;
+    void (*plug)(void* opaque);
+    void (*unplug)(void* opaque);
+    void (*read)(void* opaque, uint16_t address, uint8_t* data, size_t size);
+    void (*write)(void* opaque, uint16_t address, const uint8_t* data, size_t size);
+};
 
 struct game_controller
 {
     uint8_t status;
 
     struct controller_input_backend* cin;
-    struct mempak mempak;
-    struct rumblepak rumblepak;
-    struct transferpak transferpak;
+    void* pak;
+    const struct pak_interface* ipak;
 };
-
 
 void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
-    struct storage_backend* mpk_storage,
-    struct rumble_backend* rumble,
-    struct gb_cart* gb_cart);
+    void* pak, const struct pak_interface* ipak);
 
 void poweron_game_controller(struct game_controller* cont);
 

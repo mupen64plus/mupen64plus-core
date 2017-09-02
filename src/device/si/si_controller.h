@@ -29,7 +29,7 @@
 struct r4300_core;
 struct ri_controller;
 struct controller_input_backend;
-struct rumble_backend;
+struct pak_interface;
 struct storage_backend;
 
 enum si_registers
@@ -64,9 +64,7 @@ void init_si(struct si_controller* si,
              uint8_t* pif_base,
              const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
-             struct storage_backend* mpk_storages,
-             struct rumble_backend* rumbles,
-             struct gb_cart* gb_carts,
+             void* paks[], const struct pak_interface* ipaks[],
              uint16_t eeprom_id,
              struct storage_backend* eeprom_storage,
              struct clock_backend* clock,

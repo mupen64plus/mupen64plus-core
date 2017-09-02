@@ -24,16 +24,12 @@
 
 #include <stdint.h>
 
-#include "device/si/game_controller.h"
-
 struct controller_input_backend
 {
     void* user_data;
-    enum pak_type (*detect_pak)(void*);
     uint32_t (*get_input)(void*);
 };
 
-enum pak_type controller_input_detect_pak(struct controller_input_backend* cin);
 uint32_t  controller_input_get_input(struct controller_input_backend* cin);
 
 #endif

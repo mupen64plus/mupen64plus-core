@@ -22,6 +22,7 @@
 #include "rumblepak.h"
 
 #include "backends/rumble_backend.h"
+#include "device/si/game_controller.h"
 
 #include <string.h>
 
@@ -41,7 +42,22 @@ void poweron_rumblepak(struct rumblepak* rpk)
     set_rumble_reg(rpk, 0x00);
 }
 
-void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size)
+static void plug_rumblepak(void* opaque)
+{
+    struct rumblepak* rpk = (struct rumblepak*)opaque;
+
+    poweron_rumblepak(rpk);
+}
+
+static void unplug_rumblepak(void* opaque)
+{
+    struct rumblepak* rpk = (struct rumblepak*)opaque;
+
+    /* Stop rumbling if pak gets disconnected */
+    set_rumble_reg(rpk, 0x00);
+}
+
+static void read_rumblepak(void* opaque, uint16_t address, uint8_t* data, size_t size)
 {
     uint8_t value;
 
@@ -57,11 +73,22 @@ void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* da
     memset(data, value, size);
 }
 
-void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size)
+static void write_rumblepak(void* opaque, uint16_t address, const uint8_t* data, size_t size)
 {
+    struct rumblepak* rpk = (struct rumblepak*)opaque;
+
     if (address == 0xc000)
     {
         set_rumble_reg(rpk, data[size - 1]);
     }
 }
 
+/* Rumble pak definition */
+const struct pak_interface g_irumblepak =
+{
+    "Rumble pak",
+    plug_rumblepak,
+    unplug_rumblepak,
+    read_rumblepak,
+    write_rumblepak
+};

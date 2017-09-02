@@ -22,11 +22,6 @@
 #include "controller_input_backend.h"
 
 
-enum pak_type controller_input_detect_pak(struct controller_input_backend* cin)
-{
-    return cin->detect_pak(cin->user_data);
-}
-
 uint32_t controller_input_get_input(struct controller_input_backend* cin)
 {
     return cin->get_input(cin->user_data);

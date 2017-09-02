@@ -38,7 +38,6 @@ void poweron_rumblepak(struct rumblepak* rpk);
 
 void set_rumble_reg(struct rumblepak* rpk, uint8_t value);
 
-void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
-void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size);
+extern const struct pak_interface g_irumblepak;
 
 #endif

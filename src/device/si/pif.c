@@ -184,9 +184,7 @@ void init_pif(struct pif* pif,
     uint8_t* pif_base,
     const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
-    struct storage_backend* mpk_storages,
-    struct rumble_backend* rumbles,
-    struct gb_cart* gb_carts,
+    void* paks[], const struct pak_interface* ipaks[],
     uint16_t eeprom_id,
     struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
@@ -204,9 +202,7 @@ void init_pif(struct pif* pif,
         if (pif_channel_devices[i].process != NULL) {
             init_game_controller(&pif->controllers[i],
                     &cins[i],
-                    &mpk_storages[i],
-                    &rumbles[i],
-                    (gb_carts[i].rom.data != NULL) ? &gb_carts[i] : NULL);
+                    paks[i], ipaks[i]);
         }
     }
 

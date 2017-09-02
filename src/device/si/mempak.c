@@ -22,6 +22,7 @@
 #include "mempak.h"
 
 #include "backends/storage_backend.h"
+#include "device/si/game_controller.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -67,8 +68,18 @@ void init_mempak(struct mempak* mpk, struct storage_backend* storage)
     mpk->storage = storage;
 }
 
-void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, size_t size)
+static void plug_mempak(void* opaque)
 {
+}
+
+static void unplug_mempak(void* opaque)
+{
+}
+
+static void read_mempak(void* opaque, uint16_t address, uint8_t* data, size_t size)
+{
+    struct mempak* mpk = (struct mempak*)opaque;
+
     if (address < 0x8000)
     {
         memcpy(data, &mpk->storage->data[address], size);
@@ -79,8 +90,10 @@ void mempak_read_command(struct mempak* mpk, uint16_t address, uint8_t* data, si
     }
 }
 
-void mempak_write_command(struct mempak* mpk, uint16_t address, const uint8_t* data, size_t size)
+static void write_mempak(void* opaque, uint16_t address, const uint8_t* data, size_t size)
 {
+    struct mempak* mpk = (struct mempak*)opaque;
+
     if (address < 0x8000)
     {
         memcpy(&mpk->storage->data[address], data, size);
@@ -92,3 +105,12 @@ void mempak_write_command(struct mempak* mpk, uint16_t address, const uint8_t* d
     }
 }
 
+/* Memory pak definition */
+const struct pak_interface g_imempak =
+{
+    "Memory pak",
+    plug_mempak,
+    unplug_mempak,
+    read_mempak,
+    write_mempak
+};

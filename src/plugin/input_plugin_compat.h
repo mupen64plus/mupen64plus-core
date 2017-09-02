@@ -29,7 +29,6 @@
 
 /* controller_input backend functions */
 
-enum pak_type input_plugin_detect_pak(void* opaque);
 uint32_t input_plugin_get_input(void* opaque);
 
 /* PIF data processing functions */
