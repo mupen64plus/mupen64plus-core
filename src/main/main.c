@@ -1077,18 +1077,21 @@ m64p_error main_run(void)
         /* if no controller is plugged, make it "disconnected" */
         if (!Controls[i].Present) {
             pif_channel_devices[i].opaque = NULL;
+            pif_channel_devices[i].poweron = NULL;
             pif_channel_devices[i].process = NULL;
             pif_channel_devices[i].post_setup = NULL;
         }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
         else if (Controls[i].RawData) {
             pif_channel_devices[i].opaque = &control_ids[i];
+            pif_channel_devices[i].poweron = NULL;
             pif_channel_devices[i].process = input_plugin_read_controller;
             pif_channel_devices[i].post_setup = input_plugin_controller_command;
         }
         /* otherwise let the core do the processing */
         else {
-            pif_channel_devices[i].opaque = &g_dev.si.pif.controllers[i];
+            pif_channel_devices[i].opaque = &g_dev.controllers[i];
+            pif_channel_devices[i].poweron = poweron_game_controller;
             pif_channel_devices[i].process = process_controller_command;
             pif_channel_devices[i].post_setup = NULL;
 
@@ -1116,6 +1119,12 @@ m64p_error main_run(void)
                 break;
             }
 
+            /* init game_controller */
+            init_game_controller(&g_dev.controllers[i],
+                    &cins[i],
+                    paks[i],
+                    ipaks[i]);
+
             if (ipaks[i] != NULL) {
                 DebugMessage(M64MSG_INFO, "Game controller %u has a %s plugged in",
                     i, ipaks[i]->name);
@@ -1126,11 +1135,22 @@ m64p_error main_run(void)
         }
     }
 
+    /* Init cartridge serial devices
+     * FIXME: only init what's really inside the cartridge (eg either eeprom or rtc, not both)
+     */
     for (i = GAME_CONTROLLERS_COUNT; i < PIF_CHANNELS_COUNT; ++i) {
-        pif_channel_devices[i].opaque = &g_dev.si.pif;
+        pif_channel_devices[i].opaque = &g_dev;
+        pif_channel_devices[i].poweron = poweron_cart;
         pif_channel_devices[i].process = process_cart_command;
         pif_channel_devices[i].post_setup = NULL;
     }
+
+    init_eeprom(&g_dev.eeprom,
+            (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
+            &eep_storage);
+
+    init_af_rtc(&g_dev.af_rtc, &clock);
+
 
     init_device(&g_dev,
                 g_mem_base,
@@ -1144,9 +1164,6 @@ m64p_error main_run(void)
                 &sra_storage,
                 rdram_size,
                 pif_channel_devices,
-                cins, paks, ipaks,
-                (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
-                &clock,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
 
     // Attach rom to plugins

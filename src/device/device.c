@@ -63,10 +63,6 @@ void init_device(struct device* dev,
     size_t dram_size,
     /* si */
     const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    void* paks[], const struct pak_interface* ipaks[],
-    uint16_t eeprom_id, struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate)
 {
@@ -129,9 +125,6 @@ void init_device(struct device* dev,
     init_si(&dev->si,
         (uint8_t*)base + MM_PIF_MEM,
         pif_channel_devices,
-        cins, paks, ipaks,
-        eeprom_id, eeprom_storage,
-        clock,
         (uint8_t*)base + MM_CART_ROM + 0x40,
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);

@@ -544,13 +544,13 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
 
         /* extra af-rtc state */
-        g_dev.si.pif.af_rtc.control = GETDATA(curr, uint16_t);
-        g_dev.si.pif.af_rtc.now = (time_t)GETDATA(curr, int64_t);
-        g_dev.si.pif.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
+        g_dev.af_rtc.control = GETDATA(curr, uint16_t);
+        g_dev.af_rtc.now = (time_t)GETDATA(curr, int64_t);
+        g_dev.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
 
         /* extra controllers state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            g_dev.si.pif.controllers[i].status = GETDATA(curr, uint8_t);
+            g_dev.controllers[i].status = GETDATA(curr, uint8_t);
         }
 
         /* extra rpak state */
@@ -628,13 +628,13 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = 0;
 
         /* extra af-rtc state */
-        g_dev.si.pif.af_rtc.control = 0x200;
-        g_dev.si.pif.af_rtc.now = 0;
-        g_dev.si.pif.af_rtc.last_update_rtc = 0;
+        g_dev.af_rtc.control = 0x200;
+        g_dev.af_rtc.now = 0;
+        g_dev.af_rtc.last_update_rtc = 0;
 
         /* extra controllers state */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            standard_controller_reset(&g_dev.si.pif.controllers[i]);
+            standard_controller_reset(&g_dev.controllers[i]);
             poweron_rumblepak(&g_dev.rumblepaks[i]);
             poweron_transferpak(&g_dev.transferpaks[i]);
         }
@@ -965,13 +965,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.dp.fb.once = 1;
 
     /* extra af-rtc state */
-    g_dev.si.pif.af_rtc.control = 0x200;
-    g_dev.si.pif.af_rtc.now = 0;
-    g_dev.si.pif.af_rtc.last_update_rtc = 0;
+    g_dev.af_rtc.control = 0x200;
+    g_dev.af_rtc.now = 0;
+    g_dev.af_rtc.last_update_rtc = 0;
 
     /* extra controllers state */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        standard_controller_reset(&g_dev.si.pif.controllers[i]);
+        standard_controller_reset(&g_dev.controllers[i]);
         poweron_rumblepak(&g_dev.rumblepaks[i]);
         poweron_transferpak(&g_dev.transferpaks[i]);
     }
@@ -1457,12 +1457,12 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
 
-    PUTDATA(curr, uint16_t, g_dev.si.pif.af_rtc.control);
-    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.now);
-    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.last_update_rtc);
+    PUTDATA(curr, uint16_t, g_dev.af_rtc.control);
+    PUTDATA(curr, int64_t, g_dev.af_rtc.now);
+    PUTDATA(curr, int64_t, g_dev.af_rtc.last_update_rtc);
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        PUTDATA(curr, uint8_t, g_dev.si.pif.controllers[i].status);
+        PUTDATA(curr, uint8_t, g_dev.controllers[i].status);
     }
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {

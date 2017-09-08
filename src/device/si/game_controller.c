@@ -88,8 +88,10 @@ void init_game_controller(struct game_controller* cont,
     cont->ipak = ipak;
 }
 
-void poweron_game_controller(struct game_controller* cont)
+void poweron_game_controller(void* opaque)
 {
+    struct game_controller* cont = (struct game_controller*)opaque;
+
     standard_controller_reset(cont);
 
     if (cont->ipak != NULL) {

@@ -28,9 +28,6 @@
 
 struct r4300_core;
 struct ri_controller;
-struct controller_input_backend;
-struct pak_interface;
-struct storage_backend;
 
 enum si_registers
 {
@@ -63,11 +60,6 @@ static uint32_t si_reg(uint32_t address)
 void init_si(struct si_controller* si,
              uint8_t* pif_base,
              const struct pif_channel_device* pif_channel_devices,
-             struct controller_input_backend* cins,
-             void* paks[], const struct pak_interface* ipaks[],
-             uint16_t eeprom_id,
-             struct storage_backend* eeprom_storage,
-             struct clock_backend* clock,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
              struct ri_controller* ri);

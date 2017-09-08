@@ -33,17 +33,18 @@
 #include "ri/ri_controller.h"
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"
+#include "vi/vi_controller.h"
+#include "si/game_controller.h"
 #include "si/mempak.h"
 #include "si/rumblepak.h"
 #include "si/transferpak.h"
-#include "vi/vi_controller.h"
+#include "si/eeprom.h"
+#include "si/af_rtc.h"
 
 struct audio_out_backend;
-struct controller_input_backend;
-struct clock_backend;
-struct rumble_backend;
 struct storage_backend;
-struct pak_interface;
+
+enum { GAME_CONTROLLERS_COUNT = 4 };
 
 /* memory map constants */
 #define MM_RDRAM_DRAM       UINT32_C(0x00000000)
@@ -80,9 +81,13 @@ struct device
     struct vi_controller vi;
     struct memory mem;
 
+    struct game_controller controllers[GAME_CONTROLLERS_COUNT];
     struct mempak mempaks[GAME_CONTROLLERS_COUNT];
     struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
     struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];
+
+    struct eeprom eeprom;
+    struct af_rtc af_rtc;
 };
 
 /* Setup device "static" properties.  */
@@ -104,10 +109,6 @@ void init_device(struct device* dev,
     size_t dram_size,
     /* si */
     const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    void* paks[], const struct pak_interface* ipaks[],
-    uint16_t eeprom_id, struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate);
 

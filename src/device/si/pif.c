@@ -30,6 +30,7 @@
 #include "backends/controller_input_backend.h"
 #include "backends/rumble_backend.h"
 #include "backends/storage_backend.h"
+#include "device/device.h"
 #include "device/gb/gb_cart.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
@@ -63,11 +64,19 @@ void print_pif(struct pif* pif)
 }
 #endif
 
+
+void poweron_cart(void* opaque)
+{
+    struct device* dev = (struct device*)opaque;
+
+    poweron_af_rtc(&dev->af_rtc);
+}
+
 void process_cart_command(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
 {
-    struct pif* pif = (struct pif*)opaque;
+    struct device* dev = (struct device*)opaque;
 
     uint8_t cmd = tx_buf[0];
 
@@ -77,19 +86,19 @@ void process_cart_command(void* opaque,
         PIF_CHECK_COMMAND_FORMAT(1, 3)
 
         /* set type and status */
-        rx_buf[0] = (uint8_t)(pif->eeprom.type >> 0);
-        rx_buf[1] = (uint8_t)(pif->eeprom.type >> 8);
+        rx_buf[0] = (uint8_t)(dev->eeprom.type >> 0);
+        rx_buf[1] = (uint8_t)(dev->eeprom.type >> 8);
         rx_buf[2] = 0x00;
     } break;
 
     case PIF_CMD_EEPROM_READ: {
         PIF_CHECK_COMMAND_FORMAT(2, 8)
-        eeprom_read_block(&pif->eeprom, tx_buf[1], &rx_buf[0]);
+        eeprom_read_block(&dev->eeprom, tx_buf[1], &rx_buf[0]);
     } break;
 
     case PIF_CMD_EEPROM_WRITE: {
         PIF_CHECK_COMMAND_FORMAT(10, 1)
-        eeprom_write_block(&pif->eeprom, tx_buf[1], &tx_buf[2], &rx_buf[0]);
+        eeprom_write_block(&dev->eeprom, tx_buf[1], &tx_buf[2], &rx_buf[0]);
     } break;
 
     case PIF_CMD_AF_RTC_STATUS: {
@@ -103,12 +112,12 @@ void process_cart_command(void* opaque,
 
     case PIF_CMD_AF_RTC_READ: {
         PIF_CHECK_COMMAND_FORMAT(2, 9)
-        af_rtc_read_block(&pif->af_rtc, tx_buf[1], &rx_buf[0], &rx_buf[8]);
+        af_rtc_read_block(&dev->af_rtc, tx_buf[1], &rx_buf[0], &rx_buf[8]);
     } break;
 
     case PIF_CMD_AF_RTC_WRITE: {
         PIF_CHECK_COMMAND_FORMAT(10, 1)
-        af_rtc_write_block(&pif->af_rtc, tx_buf[1], &tx_buf[2], &rx_buf[0]);
+        af_rtc_write_block(&dev->af_rtc, tx_buf[1], &tx_buf[2], &rx_buf[0]);
     } break;
 
     default:
@@ -183,11 +192,6 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 void init_pif(struct pif* pif,
     uint8_t* pif_base,
     const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    void* paks[], const struct pak_interface* ipaks[],
-    uint16_t eeprom_id,
-    struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
     const uint8_t* ipl3)
 {
     size_t i;
@@ -197,17 +201,6 @@ void init_pif(struct pif* pif,
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
         init_pif_channel(&pif->channels[i], &pif_channel_devices[i]);
     }
-
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (pif_channel_devices[i].process != NULL) {
-            init_game_controller(&pif->controllers[i],
-                    &cins[i],
-                    paks[i], ipaks[i]);
-        }
-    }
-
-    init_eeprom(&pif->eeprom, eeprom_id, eeprom_storage);
-    init_af_rtc(&pif->af_rtc, clock);
 
     init_cic_using_ipl3(&pif->cic, ipl3);
 }
@@ -328,14 +321,12 @@ void poweron_pif(struct pif* pif)
     *pif24 = sl(*pif24);
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        disable_pif_channel(&pif->channels[i]);
-    }
+        struct pif_channel* channel = &pif->channels[i];
 
-    poweron_af_rtc(&pif->af_rtc);
+        disable_pif_channel(channel);
 
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (pif->channels[i].device.process != NULL) {
-            poweron_game_controller(&pif->controllers[i]);
+        if (channel->device.poweron != NULL) {
+            channel->device.poweron(channel->device.opaque);
         }
     }
 }

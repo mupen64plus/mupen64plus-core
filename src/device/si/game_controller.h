@@ -49,7 +49,7 @@ void init_game_controller(struct game_controller* cont,
     struct controller_input_backend* cin,
     void* pak, const struct pak_interface* ipak);
 
-void poweron_game_controller(struct game_controller* cont);
+void poweron_game_controller(void* opaque);
 
 void process_controller_command(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
