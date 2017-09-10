@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - controller_input_backend.h                              *
+ *   Mupen64plus - af_rtc.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2016 Bobby Smiles                                       *
+ *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,17 +19,36 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_BACKENDS_CONTROLLER_INPUT_BACKEND_H
-#define M64P_BACKENDS_CONTROLLER_INPUT_BACKEND_H
+#ifndef M64P_DEVICE_SI_AF_RTC_H
+#define M64P_DEVICE_SI_AF_RTC_H
 
 #include <stdint.h>
+#include <time.h>
 
-struct controller_input_backend
+struct clock_backend_interface;
+
+struct af_rtc
 {
-    void* user_data;
-    uint32_t (*get_input)(void*);
+    /* block 0 */
+    uint16_t control;
+    /* block 2 */
+    time_t now;
+
+    time_t last_update_rtc;
+    void* clock;
+    const struct clock_backend_interface* iclock;
 };
 
-uint32_t  controller_input_get_input(struct controller_input_backend* cin);
+void init_af_rtc(struct af_rtc* rtc,
+                 void* clock,
+                 const struct clock_backend_interface* iclock);
+
+void poweron_af_rtc(struct af_rtc* rtc);
+
+void af_rtc_read_block(struct af_rtc* rtc,
+    uint8_t block, uint8_t* data, uint8_t* status);
+
+void af_rtc_write_block(struct af_rtc* rtc,
+    uint8_t block, const uint8_t* data, uint8_t* status);
 
 #endif

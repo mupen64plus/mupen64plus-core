@@ -43,13 +43,20 @@
 #include "api/m64p_types.h"
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
-#include "backends/audio_out_backend.h"
-#include "backends/clock_backend.h"
-#include "backends/controller_input_backend.h"
-#include "backends/rumble_backend.h"
-#include "backends/storage_backend.h"
+#include "backends/api/audio_out_backend.h"
+#include "backends/api/clock_backend.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/joybus.h"
+#include "backends/api/rumble_backend.h"
+#include "backends/api/storage_backend.h"
+#include "backends/plugins_compat/plugins_compat.h"
+#include "backends/clock_ctime_plus_delta.h"
+#include "backends/file_storage.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/controllers/paks/mempak.h"
+#include "device/controllers/paks/rumblepak.h"
+#include "device/controllers/paks/transferpak.h"
 #include "device/gb/gb_cart.h"
 #include "device/pifbootrom/pifbootrom.h"
 #include "eventloop.h"
@@ -58,14 +65,10 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
-#include "plugin/input_plugin_compat.h"
-#include "plugin/emulate_speaker_via_audio_plugin.h"
-#include "plugin/get_time_using_time_plus_delta.h"
 #include "plugin/plugin.h"
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
-#include "file_storage.h"
 #include "util.h"
 
 #ifdef DBG
@@ -867,79 +870,81 @@ void new_vi(void)
     pause_loop();
 }
 
-static void open_mpk_file(struct file_storage* storage)
+static void open_mpk_file(struct file_storage* fstorage)
 {
     unsigned int i;
-    int ret = open_file_storage(storage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
+    int ret = open_file_storage(fstorage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            format_mempak(storage->data + i * MEMPAK_SIZE);
+            format_mempak(fstorage->data + i * MEMPAK_SIZE);
         }
     }
 }
 
-static void open_fla_file(struct file_storage* storage)
+static void open_fla_file(struct file_storage* fstorage)
 {
-    int ret = open_file_storage(storage, FLASHRAM_SIZE, get_flashram_path());
+    int ret = open_file_storage(fstorage, FLASHRAM_SIZE, get_flashram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_flashram(storage->data);
+        format_flashram(fstorage->data);
     }
 }
 
-static void open_sra_file(struct file_storage* storage)
+static void open_sra_file(struct file_storage* fstorage)
 {
-    int ret = open_file_storage(storage, SRAM_SIZE, get_sram_path());
+    int ret = open_file_storage(fstorage, SRAM_SIZE, get_sram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_sram(storage->data);
+        format_sram(fstorage->data);
     }
 }
 
-static void open_eep_file(struct file_storage* storage)
+static void open_eep_file(struct file_storage* fstorage)
 {
     /* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
      * whatever the real EEPROM size is.
      */
     enum { EEPROM_MAX_SIZE = 0x800 };
 
-    int ret = open_file_storage(storage, EEPROM_MAX_SIZE, get_eeprom_path());
+    int ret = open_file_storage(fstorage, EEPROM_MAX_SIZE, get_eeprom_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_eeprom(storage->data, EEPROM_MAX_SIZE);
+        format_eeprom(fstorage->data, EEPROM_MAX_SIZE);
+    }
+
+    /* Truncate to 4k bit if necessary */
+    if (ROM_SETTINGS.savetype != EEPROM_16KB) {
+        fstorage->size = 0x200;
     }
 }
 
-static void init_gb_rom(void* opaque, struct storage_backend* storage)
+static void init_gb_rom(void* opaque, void** storage, const struct storage_backend_interface** istorage)
 {
     struct file_storage* fstorage = (struct file_storage*)opaque;
 
     open_rom_file_storage(fstorage, fstorage->filename);
 
-    storage->data = fstorage->data;
-    storage->size = fstorage->size;
-    storage->user_data = fstorage;
-    storage->save = NULL;
+    *storage = fstorage;
+    *istorage = &g_ifile_storage_ro;
 }
 
-static void init_gb_ram(void* opaque, struct storage_backend* storage)
+static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const struct storage_backend_interface** istorage)
 {
     struct file_storage* fstorage = (struct file_storage*)opaque;
 
-    int ret = open_file_storage(fstorage, storage->size, fstorage->filename);
+    int ret = open_file_storage(fstorage, ram_size, fstorage->filename);
 
-    storage->data = fstorage->data;
-    storage->user_data = fstorage;
-    storage->save = save_file_storage;
+    *storage = fstorage;
+    *istorage = &g_ifile_storage;
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        memset(storage->data, 0, storage->size);
+        memset(fstorage->data, 0, fstorage->size);
     }
 }
 
@@ -954,24 +959,16 @@ m64p_error main_run(void)
     unsigned int emumode;
     unsigned int disable_extra_mem;
     int no_compiled_jump;
-    struct storage_backend eep_storage;
     struct file_storage eep;
-    struct storage_backend fla_storage;
     struct file_storage fla;
-    struct storage_backend sra_storage;
     struct file_storage sra;
-    struct audio_out_backend aout;
-    struct clock_backend clock;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
-    struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
     void* paks[GAME_CONTROLLERS_COUNT];
     const struct pak_interface* ipaks[GAME_CONTROLLERS_COUNT];
 
-    struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
+    struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
     struct file_storage mpk;
-
-    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
 
     struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
     struct file_storage gb_carts_rom[GAME_CONTROLLERS_COUNT];
@@ -1015,15 +1012,9 @@ m64p_error main_run(void)
     open_fla_file(&fla);
     open_sra_file(&sra);
 
-    /* setup backends */
-    aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
-    clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
-    fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_file_storage };
-    sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_file_storage };
-    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? PIF_PDT_EEPROM_4K : PIF_PDT_EEPROM_16K, &eep, save_file_storage };
-
     /* setup pif channel devices */
-    struct pif_channel_device pif_channel_devices[PIF_CHANNELS_COUNT];
+    void* joybus_devices[PIF_CHANNELS_COUNT];
+    const struct joybus_device_interface* ijoybus_devices[PIF_CHANNELS_COUNT];
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
@@ -1031,17 +1022,13 @@ m64p_error main_run(void)
 
         /* if no controller is plugged, make it "disconnected" */
         if (!Controls[i].Present) {
-            pif_channel_devices[i].opaque = NULL;
-            pif_channel_devices[i].poweron = NULL;
-            pif_channel_devices[i].process = NULL;
-            pif_channel_devices[i].post_setup = NULL;
+            joybus_devices[i] = NULL;
+            ijoybus_devices[i] = NULL;
         }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
         else if (Controls[i].RawData) {
-            pif_channel_devices[i].opaque = &control_ids[i];
-            pif_channel_devices[i].poweron = NULL;
-            pif_channel_devices[i].process = input_plugin_read_controller;
-            pif_channel_devices[i].post_setup = input_plugin_controller_command;
+            joybus_devices[i] = &control_ids[i];
+            ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
         }
         /* otherwise let the core do the processing */
         else {
@@ -1052,19 +1039,15 @@ m64p_error main_run(void)
             const struct game_controller_flavor* cont_flavor =
                 &g_standard_controller_flavor;
 
-            pif_channel_devices[i].opaque = &g_dev.controllers[i];
-            pif_channel_devices[i].poweron = poweron_game_controller;
-            pif_channel_devices[i].process = process_controller_command;
-            pif_channel_devices[i].post_setup = NULL;
-
-            cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_get_input };
+            joybus_devices[i] = &g_dev.controllers[i];
+            ijoybus_devices[i] = &g_ijoybus_device_controller;
 
             /* init all compatibles paks
              * FIXME: assume for now that all paks are compatible
              * Use the rom db to know which pak are compatibles
              */
-            mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
-            rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
+
+
             if (g_gb_rom_files[i] != NULL)
             {
                 char* gbsav_path = get_gbsav_path(i);
@@ -1081,7 +1064,7 @@ m64p_error main_run(void)
                 if (init_gb_cart(&gb_carts[i],
                                  &gb_carts_rom[i], init_gb_rom,
                                  &gb_carts_ram[i], init_gb_ram,
-                                 &clock) != 0)
+                                 NULL, &g_iclock_ctime_plus_delta) != 0)
                 {
                     /* could not load gb rom file so invalidate it and release other resources */
                     close_file_storage(&gb_carts_rom[i]);
@@ -1098,10 +1081,12 @@ m64p_error main_run(void)
                 memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
                 memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
             }
-
-            init_mempak(&g_dev.mempaks[i], &mpk_storages[i]);
-            init_rumblepak(&g_dev.rumblepaks[i], &rumbles[i]);
             init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
+
+            mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
+            init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
+
+            init_rumblepak(&g_dev.rumblepaks[i], &control_ids[i], &g_irumble_backend_plugin_compat);
 
             /* plug selected pak (for standard controller only) */
             if (cont_flavor == &g_standard_controller_flavor) {
@@ -1136,7 +1121,7 @@ m64p_error main_run(void)
             /* init game_controller */
             init_game_controller(&g_dev.controllers[i],
                     cont_flavor,
-                    &cins[i],
+                    &control_ids[i], &g_icontroller_input_backend_plugin_compat,
                     paks[i], ipaks[i]);
 
             if (ipaks[i] != NULL) {
@@ -1153,17 +1138,16 @@ m64p_error main_run(void)
      * FIXME: only init what's really inside the cartridge (eg either eeprom or rtc, not both)
      */
     for (i = GAME_CONTROLLERS_COUNT; i < PIF_CHANNELS_COUNT; ++i) {
-        pif_channel_devices[i].opaque = &g_dev;
-        pif_channel_devices[i].poweron = poweron_cart;
-        pif_channel_devices[i].process = process_cart_command;
-        pif_channel_devices[i].post_setup = NULL;
+        joybus_devices[i] = &g_dev.cart;
+        ijoybus_devices[i] = &g_ijoybus_device_cart;
     }
 
-    init_eeprom(&g_dev.eeprom,
-            (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000,
-            &eep_storage);
+    init_eeprom(&g_dev.cart.eeprom,
+            (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
+            &eep, &g_ifile_storage);
 
-    init_af_rtc(&g_dev.af_rtc, &clock);
+    init_af_rtc(&g_dev.cart.af_rtc,
+                NULL, &g_iclock_ctime_plus_delta);
 
 
     init_device(&g_dev,
@@ -1172,12 +1156,12 @@ m64p_error main_run(void)
                 count_per_op,
                 no_compiled_jump,
                 ROM_PARAMS.special_rom,
-                &aout,
+                &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
                 g_rom_size,
-                &fla_storage,
-                &sra_storage,
+                &fla, &g_ifile_storage,
+                &sra, &g_ifile_storage,
                 rdram_size,
-                pif_channel_devices,
+                joybus_devices, ijoybus_devices,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
 
     // Attach rom to plugins

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rumblepak.h                                             *
+ *   Mupen64plus - mempak.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,25 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_RUMBLEPAK_H
-#define M64P_DEVICE_SI_RUMBLEPAK_H
+#ifndef M64P_DEVICE_SI_MEMPAK_H
+#define M64P_DEVICE_SI_MEMPAK_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct rumble_backend;
+struct storage_backend_interface;
 
-struct rumblepak
+struct mempak
 {
-    uint8_t state;
-    struct rumble_backend* rumble;
+    void* storage;
+    const struct storage_backend_interface* istorage;
 };
 
-void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
-void poweron_rumblepak(struct rumblepak* rpk);
+enum { MEMPAK_SIZE = 0x8000 };
 
-void set_rumble_reg(struct rumblepak* rpk, uint8_t value);
+void format_mempak(uint8_t* mem);
 
-extern const struct pak_interface g_irumblepak;
+void init_mempak(struct mempak* mpk,
+                 void* storage,
+                 const struct storage_backend_interface* istorage);
+
+extern const struct pak_interface g_imempak;
 
 #endif

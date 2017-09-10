@@ -28,6 +28,7 @@
 
 struct r4300_core;
 struct ri_controller;
+struct joybus_device_interface;
 
 enum si_registers
 {
@@ -59,7 +60,8 @@ static uint32_t si_reg(uint32_t address)
 
 void init_si(struct si_controller* si,
              uint8_t* pif_base,
-             const struct pif_channel_device* pif_channel_devices,
+             void* jbds[PIF_CHANNELS_COUNT],
+             const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
              const uint8_t* ipl3,
              struct r4300_core* r4300,
              struct ri_controller* ri);

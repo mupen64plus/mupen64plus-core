@@ -23,8 +23,8 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "backends/controller_input_backend.h"
-#include "pif.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/joybus.h"
 
 #ifdef COMPARE_CORE
 #include "api/debugger.h"
@@ -62,7 +62,7 @@ static void standard_controller_reset(struct game_controller* cont)
 const struct game_controller_flavor g_standard_controller_flavor =
 {
     "Standard controller",
-    PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT,
+    JDT_JOY_ABS_COUNTERS | JDT_JOY_PORT,
     standard_controller_reset
 };
 
@@ -126,25 +126,26 @@ static void mouse_controller_reset(struct game_controller* cont)
 const struct game_controller_flavor g_mouse_controller_flavor =
 {
     "Mouse controller",
-    PIF_PDT_JOY_REL_COUNTERS,
+    JDT_JOY_REL_COUNTERS,
     mouse_controller_reset
 };
 
 
 void init_game_controller(struct game_controller* cont,
     const struct game_controller_flavor* flavor,
-    struct controller_input_backend* cin,
+    void* cin, const struct controller_input_backend_interface* icin,
     void* pak, const struct pak_interface* ipak)
 {
     cont->flavor = flavor;
-    cont->cin = cin;;
+    cont->cin = cin;
+    cont->icin = icin;
     cont->pak = pak;
     cont->ipak = ipak;
 }
 
-void poweron_game_controller(void* opaque)
+static void poweron_game_controller(void* jbd)
 {
-    struct game_controller* cont = (struct game_controller*)opaque;
+    struct game_controller* cont = (struct game_controller*)jbd;
 
     cont->flavor->reset(cont);
 
@@ -153,42 +154,42 @@ void poweron_game_controller(void* opaque)
     }
 }
 
-void process_controller_command(void* opaque,
+static void process_controller_command(void* jbd,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
 {
-    struct game_controller* cont = (struct game_controller*)opaque;
+    struct game_controller* cont = (struct game_controller*)jbd;
 
     uint8_t cmd = tx_buf[0];
 
     switch (cmd)
     {
-    case PIF_CMD_RESET:
+    case JCMD_RESET:
         cont->flavor->reset(cont);
-    case PIF_CMD_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
+    case JCMD_STATUS: {
+        JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
 
         rx_buf[0] = (uint8_t)(cont->flavor->type >> 0);
         rx_buf[1] = (uint8_t)(cont->flavor->type >> 8);
         rx_buf[2] = cont->status;
     } break;
 
-    case PIF_CMD_CONTROLLER_READ: {
-        PIF_CHECK_COMMAND_FORMAT(1, 4)
+    case JCMD_CONTROLLER_READ: {
+        JOYBUS_CHECK_COMMAND_FORMAT(1, 4)
 
-        *((uint32_t*)(rx_buf)) = controller_input_get_input(cont->cin);
+        *((uint32_t*)(rx_buf)) = cont->icin->get_input(cont->cin);
 #ifdef COMPARE_CORE
         CoreCompareDataSync(4, rx_buf);
 #endif
     } break;
 
-    case PIF_CMD_PAK_READ: {
-        PIF_CHECK_COMMAND_FORMAT(3, 33)
+    case JCMD_PAK_READ: {
+        JOYBUS_CHECK_COMMAND_FORMAT(3, 33)
         pak_read_block(cont, &tx_buf[1], &rx_buf[0], &rx_buf[32]);
     } break;
 
-    case PIF_CMD_PAK_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(35, 1)
+    case JCMD_PAK_WRITE: {
+        JOYBUS_CHECK_COMMAND_FORMAT(35, 1)
         pak_write_block(cont, &tx_buf[1], &tx_buf[3], &rx_buf[0]);
     } break;
 
@@ -198,3 +199,9 @@ void process_controller_command(void* opaque,
     }
 }
 
+const struct joybus_device_interface g_ijoybus_device_controller =
+{
+    poweron_game_controller,
+    process_controller_command,
+    NULL
+};

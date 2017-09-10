@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 struct pi_controller;
-struct storage_backend;
+struct storage_backend_interface;
 
 enum { FLASHRAM_SIZE = 0x20000 };
 
@@ -46,11 +46,13 @@ struct flashram
     unsigned int erase_offset;
     unsigned int write_pointer;
 
-    struct storage_backend* storage;
+    void* storage;
+    const struct storage_backend_interface* istorage;
 };
 
 void init_flashram(struct flashram* flashram,
-                   struct storage_backend* storage);
+                   void* storage,
+                   const struct storage_backend_interface* istorage);
 
 void poweron_flashram(struct flashram* flashram);
 

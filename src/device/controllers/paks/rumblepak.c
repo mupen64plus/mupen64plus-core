@@ -21,20 +21,22 @@
 
 #include "rumblepak.h"
 
-#include "backends/rumble_backend.h"
-#include "device/si/game_controller.h"
+#include "backends/api/rumble_backend.h"
+#include "device/controllers/game_controller.h"
 
 #include <string.h>
 
 void set_rumble_reg(struct rumblepak* rpk, uint8_t value)
 {
     rpk->state = value;
-    rumble_exec(rpk->rumble, (rpk->state == 0) ? RUMBLE_STOP : RUMBLE_START);
+    rpk->irumble->exec(rpk->rumble, (rpk->state == 0) ? RUMBLE_STOP : RUMBLE_START);
 }
 
-void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble)
+void init_rumblepak(struct rumblepak* rpk,
+    void* rumble, const struct rumble_backend_interface* irumble)
 {
     rpk->rumble = rumble;
+    rpk->irumble = irumble;
 }
 
 void poweron_rumblepak(struct rumblepak* rpk)
@@ -42,22 +44,22 @@ void poweron_rumblepak(struct rumblepak* rpk)
     set_rumble_reg(rpk, 0x00);
 }
 
-static void plug_rumblepak(void* opaque)
+static void plug_rumblepak(void* pak)
 {
-    struct rumblepak* rpk = (struct rumblepak*)opaque;
+    struct rumblepak* rpk = (struct rumblepak*)pak;
 
     poweron_rumblepak(rpk);
 }
 
-static void unplug_rumblepak(void* opaque)
+static void unplug_rumblepak(void* pak)
 {
-    struct rumblepak* rpk = (struct rumblepak*)opaque;
+    struct rumblepak* rpk = (struct rumblepak*)pak;
 
     /* Stop rumbling if pak gets disconnected */
     set_rumble_reg(rpk, 0x00);
 }
 
-static void read_rumblepak(void* opaque, uint16_t address, uint8_t* data, size_t size)
+static void read_rumblepak(void* pak, uint16_t address, uint8_t* data, size_t size)
 {
     uint8_t value;
 
@@ -73,9 +75,9 @@ static void read_rumblepak(void* opaque, uint16_t address, uint8_t* data, size_t
     memset(data, value, size);
 }
 
-static void write_rumblepak(void* opaque, uint16_t address, const uint8_t* data, size_t size)
+static void write_rumblepak(void* pak, uint16_t address, const uint8_t* data, size_t size)
 {
-    struct rumblepak* rpk = (struct rumblepak*)opaque;
+    struct rumblepak* rpk = (struct rumblepak*)pak;
 
     if (address == 0xc000)
     {

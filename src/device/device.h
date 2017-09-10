@@ -34,15 +34,15 @@
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
-#include "si/game_controller.h"
-#include "si/mempak.h"
-#include "si/rumblepak.h"
-#include "si/transferpak.h"
-#include "si/eeprom.h"
-#include "si/af_rtc.h"
+#include "controllers/game_controller.h"
+#include "controllers/paks/mempak.h"
+#include "controllers/paks/rumblepak.h"
+#include "controllers/paks/transferpak.h"
+#include "cart/cart.h"
 
-struct audio_out_backend;
-struct storage_backend;
+struct audio_out_backend_interface;
+struct storage_backend_interface;
+struct joybus_device_interface;
 
 enum { GAME_CONTROLLERS_COUNT = 4 };
 
@@ -86,8 +86,7 @@ struct device
     struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
     struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];
 
-    struct eeprom eeprom;
-    struct af_rtc af_rtc;
+    struct cart cart;
 };
 
 /* Setup device "static" properties.  */
@@ -100,15 +99,16 @@ void init_device(struct device* dev,
     int no_compiled_jump,
     int special_rom,
     /* ai */
-    struct audio_out_backend* aout,
+    void* aout, const struct audio_out_backend_interface* iaout,
     /* pi */
     size_t rom_size,
-    struct storage_backend* flashram_storage,
-    struct storage_backend* sram_storage,
+    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+    void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* ri */
     size_t dram_size,
     /* si */
-    const struct pif_channel_device* pif_channel_devices,
+    void* jbds[PIF_CHANNELS_COUNT],
+    const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate);
 

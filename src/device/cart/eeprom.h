@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_speaker_via_audio_plugin.c                      *
+ *   Mupen64plus - eeprom.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,45 +19,33 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "emulate_speaker_via_audio_plugin.h"
+#ifndef M64P_DEVICE_SI_EEPROM_H
+#define M64P_DEVICE_SI_EEPROM_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include "device/ai/ai_controller.h"
-#include "device/ri/ri_controller.h"
-#include "device/vi/vi_controller.h"
-#include "main/rom.h"
-#include "plugin/plugin.h"
+struct storage_backend_interface;
 
-void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits)
+struct eeprom
 {
-    /* not really implementable with just the zilmar spec.
-     * Try a best effort approach
-     */
-    struct ai_controller* ai = (struct ai_controller*)user_data;
-    uint32_t saved_ai_dacrate = ai->regs[AI_DACRATE_REG];
+    uint16_t type;
+    void* storage;
+    const struct storage_backend_interface* istorage;
+};
 
-    ai->regs[AI_DACRATE_REG] = ai->vi->clock / frequency - 1;
 
-    audio.aiDacrateChanged(ROM_PARAMS.systemtype);
+void format_eeprom(uint8_t* eeprom, size_t size);
 
-    ai->regs[AI_DACRATE_REG] = saved_ai_dacrate;
-}
+void init_eeprom(struct eeprom* eeprom,
+    uint16_t type,
+    void* storage,
+    const struct storage_backend_interface* istorage);
 
-void push_audio_samples_via_audio_plugin(void* user_data, const void* buffer, size_t size)
-{
-    /* abuse core & audio plugin implementation to approximate desired effect */
-    struct ai_controller* ai = (struct ai_controller*)user_data;
-    uint32_t saved_ai_length = ai->regs[AI_LEN_REG];
-    uint32_t saved_ai_dram = ai->regs[AI_DRAM_ADDR_REG];
+void eeprom_read_block(struct eeprom* eeprom,
+    uint8_t block, uint8_t* data);
 
-    /* exploit the fact that buffer points in g_dev.ri.rdram.dram to retreive dram_addr_reg value */
-    ai->regs[AI_DRAM_ADDR_REG] = (uint8_t*)buffer - (uint8_t*)ai->ri->rdram.dram;
-    ai->regs[AI_LEN_REG] = size;
+void eeprom_write_block(struct eeprom* eeprom,
+    uint8_t block, const uint8_t* data, uint8_t* status);
 
-    audio.aiLenChanged();
-
-    ai->regs[AI_LEN_REG] = saved_ai_length;
-    ai->regs[AI_DRAM_ADDR_REG] = saved_ai_dram;
-}
-
+#endif

@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mempak.h                                                *
+ *   Mupen64plus - controller_input_backend.h                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,25 +19,17 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_MEMPAK_H
-#define M64P_DEVICE_SI_MEMPAK_H
+#ifndef M64P_BACKENDS_API_CONTROLLER_INPUT_BACKEND_H
+#define M64P_BACKENDS_API_CONTROLLER_INPUT_BACKEND_H
 
-#include <stddef.h>
 #include <stdint.h>
 
-struct storage_backend;
-
-struct mempak
+struct controller_input_backend_interface
 {
-    struct storage_backend* storage;
+    /* Returns emulated controller input status (32-bit)
+     * Encoding of the input status depends on the emulated controller flavor.
+     */
+    uint32_t (*get_input)(void* cin);
 };
-
-enum { MEMPAK_SIZE = 0x8000 };
-
-void format_mempak(uint8_t* mempak);
-
-void init_mempak(struct mempak* mpk, struct storage_backend* storage);
-
-extern const struct pak_interface g_imempak;
 
 #endif

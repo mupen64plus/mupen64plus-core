@@ -76,7 +76,8 @@ static void dma_si_read(struct si_controller* si)
 
 void init_si(struct si_controller* si,
              uint8_t* pif_base,
-             const struct pif_channel_device* pif_channel_devices,
+             void* jbds[PIF_CHANNELS_COUNT],
+             const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
              const uint8_t* ipl3,
              struct r4300_core* r4300,
              struct ri_controller* ri)
@@ -86,7 +87,7 @@ void init_si(struct si_controller* si,
 
     init_pif(&si->pif,
         pif_base,
-        pif_channel_devices,
+        jbds, ijbds,
         ipl3);
 }
 

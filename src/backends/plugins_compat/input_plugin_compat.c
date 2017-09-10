@@ -19,18 +19,18 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "input_plugin_compat.h"
+#include "plugins_compat.h"
 
 #include "api/m64p_plugin.h"
-#include "main/main.h"
-#include "plugin.h"
-#include "backends/rumble_backend.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/rumble_backend.h"
+#include "plugin/plugin.h"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-uint32_t input_plugin_get_input(void* opaque)
+static uint32_t input_plugin_get_input(void* opaque)
 {
     int control_id = *(int*)opaque;
 
@@ -43,7 +43,14 @@ uint32_t input_plugin_get_input(void* opaque)
     return keys.Value;
 }
 
-void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
+const struct controller_input_backend_interface
+    g_icontroller_input_backend_plugin_compat =
+{
+    input_plugin_get_input
+};
+
+
+static void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
 {
     int control_id = *(int*)opaque;
 
@@ -54,7 +61,7 @@ void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
     static const uint8_t rumble_cmd_header[] =
     {
         0x23, 0x01, /* T=0x23, R=0x01 */
-        0x03,       /* PIF_CMD_PAK_WRITE */
+        JCMD_PAK_WRITE,
         0xc0, 0x1b, /* address=0xc000 | crc=0x1b */
     };
 
@@ -72,8 +79,14 @@ void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
     input.controllerCommand(control_id, cmd);
 }
 
+const struct rumble_backend_interface
+    g_irumble_backend_plugin_compat =
+{
+    input_plugin_rumble_exec
+};
 
-void input_plugin_read_controller(void* opaque,
+
+static void input_plugin_read_controller(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
 {
@@ -100,3 +113,10 @@ void input_plugin_controller_command(void* opaque,
     input.controllerCommand(control_id, tx);
 }
 
+const struct joybus_device_interface
+    g_ijoybus_device_plugin_compat =
+{
+    NULL,
+    input_plugin_read_controller,
+    input_plugin_controller_command,
+};

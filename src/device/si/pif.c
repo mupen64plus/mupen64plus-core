@@ -27,7 +27,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
-#include "device/device.h"
+#include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/si/n64_cic_nus_6105.h"
@@ -60,75 +60,6 @@ void print_pif(struct pif* pif)
 }
 #endif
 
-
-void poweron_cart(void* opaque)
-{
-    struct device* dev = (struct device*)opaque;
-
-    poweron_af_rtc(&dev->af_rtc);
-}
-
-void process_cart_command(void* opaque,
-    const uint8_t* tx, const uint8_t* tx_buf,
-    uint8_t* rx, uint8_t* rx_buf)
-{
-    struct device* dev = (struct device*)opaque;
-
-    uint8_t cmd = tx_buf[0];
-
-    switch (cmd)
-    {
-    case PIF_CMD_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
-
-        /* set type and status */
-        rx_buf[0] = (uint8_t)(dev->eeprom.type >> 0);
-        rx_buf[1] = (uint8_t)(dev->eeprom.type >> 8);
-        rx_buf[2] = 0x00;
-    } break;
-
-    case PIF_CMD_EEPROM_READ: {
-        PIF_CHECK_COMMAND_FORMAT(2, 8)
-        eeprom_read_block(&dev->eeprom, tx_buf[1], &rx_buf[0]);
-    } break;
-
-    case PIF_CMD_EEPROM_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(10, 1)
-        eeprom_write_block(&dev->eeprom, tx_buf[1], &tx_buf[2], &rx_buf[0]);
-    } break;
-
-    case PIF_CMD_AF_RTC_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
-
-        /* set type and status */
-        rx_buf[0] = (uint8_t)(PIF_PDT_AF_RTC >> 0);
-        rx_buf[1] = (uint8_t)(PIF_PDT_AF_RTC >> 8);
-        rx_buf[2] = 0x00;
-    } break;
-
-    case PIF_CMD_AF_RTC_READ: {
-        PIF_CHECK_COMMAND_FORMAT(2, 9)
-        af_rtc_read_block(&dev->af_rtc, tx_buf[1], &rx_buf[0], &rx_buf[8]);
-    } break;
-
-    case PIF_CMD_AF_RTC_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(10, 1)
-        af_rtc_write_block(&dev->af_rtc, tx_buf[1], &tx_buf[2], &rx_buf[0]);
-    } break;
-
-    default:
-        DebugMessage(M64MSG_WARNING, "cart: Unknown command %02x %02x %02x",
-            *tx, *rx, cmd);
-    }
-}
-
-
-static void init_pif_channel(struct pif_channel* channel,
-    const struct pif_channel_device* device)
-{
-    memcpy(&channel->device, device, sizeof(*device));
-}
-
 static void process_channel(struct pif_channel* channel)
 {
     /* don't process channel if it has been disabled */
@@ -137,24 +68,25 @@ static void process_channel(struct pif_channel* channel)
     }
 
     /* set NoResponse if no device is connected */
-    if (channel->device.process == NULL) {
+    if (channel->ijbd == NULL) {
         *channel->rx |= 0x80;
         return;
     }
 
     /* do device processing */
-    channel->device.process(channel->device.opaque,
+    channel->ijbd->process(channel->jbd,
         channel->tx, channel->tx_buf,
         channel->rx, channel->rx_buf);
 }
 
 static void post_setup_channel(struct pif_channel* channel)
 {
-    if (channel->device.post_setup == NULL) {
+    if ((channel->ijbd == NULL)
+    || (channel->ijbd->post_setup == NULL)) {
         return;
     }
 
-    channel->device.post_setup(channel->device.opaque,
+    channel->ijbd->post_setup(channel->jbd,
         channel->tx, channel->tx_buf,
         channel->rx, channel->rx_buf);
 }
@@ -187,7 +119,8 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 
 void init_pif(struct pif* pif,
     uint8_t* pif_base,
-    const struct pif_channel_device* pif_channel_devices,
+    void* jbds[PIF_CHANNELS_COUNT],
+    const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     const uint8_t* ipl3)
 {
     size_t i;
@@ -195,7 +128,8 @@ void init_pif(struct pif* pif,
     pif->ram = pif_base + 0x7c0;
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        init_pif_channel(&pif->channels[i], &pif_channel_devices[i]);
+        pif->channels[i].jbd = jbds[i];
+        pif->channels[i].ijbd = ijbds[i];
     }
 
     init_cic_using_ipl3(&pif->cic, ipl3);
@@ -321,8 +255,8 @@ void poweron_pif(struct pif* pif)
 
         disable_pif_channel(channel);
 
-        if (channel->device.poweron != NULL) {
-            channel->device.poweron(channel->device.opaque);
+        if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
+            channel->ijbd->poweron(channel->jbd);
         }
     }
 }

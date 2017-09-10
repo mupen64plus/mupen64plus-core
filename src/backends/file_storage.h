@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - storage_backend.h                                       *
+ *   Mupen64plus - file_storage.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,23 +19,26 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_BACKENDS_STORAGE_BACKEND_H
-#define M64P_BACKENDS_STORAGE_BACKEND_H
+#ifndef M64P_MAIN_FILE_STORAGE_H
+#define M64P_MAIN_FILE_STORAGE_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct storage_backend
+struct file_storage
 {
     uint8_t* data;
     size_t size;
-
-    void* user_data;
-    void (*save)(void*);
+    const char* filename;
 };
 
-uint8_t* storage_data(struct storage_backend* storage);
-size_t storage_size(struct storage_backend* storage);
-void storage_save(struct storage_backend* storage);
+
+int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
+int open_rom_file_storage(struct file_storage* storage, const char* filename);
+void close_file_storage(struct file_storage* storage);
+
+extern const struct storage_backend_interface g_ifile_storage;
+extern const struct storage_backend_interface g_ifile_storage_ro;
+extern const struct storage_backend_interface g_isubfile_storage;
 
 #endif

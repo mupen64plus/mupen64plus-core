@@ -544,9 +544,9 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
 
         /* extra af-rtc state */
-        g_dev.af_rtc.control = GETDATA(curr, uint16_t);
-        g_dev.af_rtc.now = (time_t)GETDATA(curr, int64_t);
-        g_dev.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
+        g_dev.cart.af_rtc.control = GETDATA(curr, uint16_t);
+        g_dev.cart.af_rtc.now = (time_t)GETDATA(curr, int64_t);
+        g_dev.cart.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
 
         /* extra controllers state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
@@ -575,7 +575,8 @@ int savestates_load_m64p(char *filepath)
                 memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
             }
             else {
-                memcpy(current_gb_fingerprint, g_dev.transferpaks[i].gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
+                uint8_t* rom = g_dev.transferpaks[i].gb_cart->irom_storage->data(g_dev.transferpaks[i].gb_cart->rom_storage);
+                memcpy(current_gb_fingerprint, rom + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
             }
 
             if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
@@ -628,9 +629,9 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = 0;
 
         /* extra af-rtc state */
-        g_dev.af_rtc.control = 0x200;
-        g_dev.af_rtc.now = 0;
-        g_dev.af_rtc.last_update_rtc = 0;
+        g_dev.cart.af_rtc.control = 0x200;
+        g_dev.cart.af_rtc.now = 0;
+        g_dev.cart.af_rtc.last_update_rtc = 0;
 
         /* extra controllers state */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
@@ -965,9 +966,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.dp.fb.once = 1;
 
     /* extra af-rtc state */
-    g_dev.af_rtc.control = 0x200;
-    g_dev.af_rtc.now = 0;
-    g_dev.af_rtc.last_update_rtc = 0;
+    g_dev.cart.af_rtc.control = 0x200;
+    g_dev.cart.af_rtc.now = 0;
+    g_dev.cart.af_rtc.last_update_rtc = 0;
 
     /* extra controllers state */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
@@ -1457,9 +1458,9 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
 
-    PUTDATA(curr, uint16_t, g_dev.af_rtc.control);
-    PUTDATA(curr, int64_t, g_dev.af_rtc.now);
-    PUTDATA(curr, int64_t, g_dev.af_rtc.last_update_rtc);
+    PUTDATA(curr, uint16_t, g_dev.cart.af_rtc.control);
+    PUTDATA(curr, int64_t, g_dev.cart.af_rtc.now);
+    PUTDATA(curr, int64_t, g_dev.cart.af_rtc.last_update_rtc);
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         PUTDATA(curr, uint8_t, g_dev.controllers[i].status);
@@ -1481,7 +1482,8 @@ int savestates_save_m64p(char *filepath)
             PUTARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
         }
         else {
-            PUTARRAY(g_dev.transferpaks[i].gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+            uint8_t* rom = g_dev.transferpaks[i].gb_cart->irom_storage->data(g_dev.transferpaks[i].gb_cart->rom_storage);
+            PUTARRAY(rom + GB_CART_FINGERPRINT_OFFSET, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
 
             PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->rom_bank);
             PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->ram_bank);

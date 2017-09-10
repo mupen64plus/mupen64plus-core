@@ -318,12 +318,6 @@
     <ClCompile Include="..\..\src\debugger\dbg_memory.c">
       <Filter>debugger</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\backends\audio_out_backend.c">
-      <Filter>backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\backends\clock_backend.c">
-      <Filter>backends</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\backends\controller_input_backend.c">
       <Filter>backends</Filter>
     </ClCompile>
@@ -336,13 +330,13 @@
     <ClCompile Include="..\..\src\device\device.c">
       <Filter>device</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\file_storage.c">
+    <ClCompile Include="..\..\src\backends\file_storage.c">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c">
       <Filter>device\pifbootrom</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\plugin\get_time_using_time_plus_delta.c">
+    <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c">
       <Filter>plugin</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\gb\gb_cart.c">
@@ -354,7 +348,7 @@
     <ClCompile Include="..\..\src\device\si\cic.c">
       <Filter>device\si</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\si\transferpak.c">
+    <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c">
       <Filter>device\si</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\x86_64\dynarec.c">
@@ -497,10 +491,7 @@
     <ClInclude Include="..\..\src\plugin\dummy_video.h">
       <Filter>plugin</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\plugin\input_plugin_compat.h">
-      <Filter>plugin</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h">
+    <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h">
       <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\plugin.h">
@@ -524,19 +515,19 @@
     <ClInclude Include="..\..\src\device\rsp\rsp_core.h">
       <Filter>device\rsp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\af_rtc.h">
+    <ClInclude Include="..\..\src\device\cart\af_rtc.h">
       <Filter>device\si</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\si\cic.h">
       <Filter>device\si</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\eeprom.h">
+    <ClInclude Include="..\..\src\device\cart\eeprom.h">
       <Filter>device\si</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\game_controller.h">
+    <ClInclude Include="..\..\src\device\controllers\game_controller.h">
       <Filter>device\si</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\mempak.h">
+    <ClInclude Include="..\..\src\device\controllers\paks\mempak.h">
       <Filter>device\si</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\si\n64_cic_nus_6105.h">
@@ -545,7 +536,7 @@
     <ClInclude Include="..\..\src\device\si\pif.h">
       <Filter>device\si</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\rumblepak.h">
+    <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h">
       <Filter>device\si</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\si\si_controller.h">
@@ -653,19 +644,19 @@
     <ClInclude Include="..\..\src\debugger\dbg_types.h">
       <Filter>debugger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\audio_out_backend.h">
+    <ClInclude Include="..\..\src\backends\api\audio_out_backend.h">
       <Filter>backends</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\clock_backend.h">
+    <ClInclude Include="..\..\src\backends\api\clock_backend.h">
       <Filter>backends</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\controller_input_backend.h">
+    <ClInclude Include="..\..\src\backends\api\controller_input_backend.h">
       <Filter>backends</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\rumble_backend.h">
+    <ClInclude Include="..\..\src\backends\api\rumble_backend.h">
       <Filter>backends</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\backends\storage_backend.h">
+    <ClInclude Include="..\..\src\backends\api\storage_backend.h">
       <Filter>backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\recomp_types.h">
@@ -674,13 +665,13 @@
     <ClInclude Include="..\..\src\device\device.h">
       <Filter>device</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\file_storage.h">
+    <ClInclude Include="..\..\src\backends\file_storage.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h">
       <Filter>device\pifbootrom</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\plugin\get_time_using_time_plus_delta.h">
+    <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h">
       <Filter>plugin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\gb\gb_cart.h">
@@ -689,7 +680,7 @@
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h">
       <Filter>device\gb</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\transferpak.h">
+    <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h">
       <Filter>device\si</Filter>
     </ClInclude>
   </ItemGroup>

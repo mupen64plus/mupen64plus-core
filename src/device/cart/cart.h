@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - controller_input_backend.c                              *
+ *   Mupen64plus - cart.h                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2016 Bobby Smiles                                       *
+ *   Copyright (C) 2017 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,10 +19,21 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "controller_input_backend.h"
+#ifndef M64P_DEVICE_CART_CART_H
+#define M64P_DEVICE_CART_CART_H
 
+#include "backends/api/joybus.h"
 
-uint32_t controller_input_get_input(struct controller_input_backend* cin)
+#include "af_rtc.h"
+#include "eeprom.h"
+
+struct cart
 {
-    return cin->get_input(cin->user_data);
-}
+    struct af_rtc af_rtc;
+    struct eeprom eeprom;
+};
+
+extern const struct joybus_device_interface
+    g_ijoybus_device_cart;
+
+#endif

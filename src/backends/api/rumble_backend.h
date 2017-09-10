@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - clock_backend.c                                         *
+ *   Mupen64plus - rumble_backend.h                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,10 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "clock_backend.h"
+#ifndef M64P_BACKENDS_API_RUMBLE_BACKEND_H
+#define M64P_BACKENDS_API_RUMBLE_BACKEND_H
 
+#include <stdint.h>
 
-time_t clock_get_time(struct clock_backend* clock)
+enum rumble_action
 {
-    return clock->get_time(clock->user_data);
-}
+    RUMBLE_STOP,
+    RUMBLE_START
+};
+
+struct rumble_backend_interface
+{
+    /* Start or stop rumbling
+     */
+    void (*exec)(void* rumble, enum rumble_action action);
+};
+
+#endif

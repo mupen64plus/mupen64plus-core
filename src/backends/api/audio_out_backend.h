@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - storage_backend.c                                       *
+ *   Mupen64plus - audio_out_backend.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,19 +19,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "storage_backend.h"
+#ifndef M64P_BACKENDS_API_AUDIO_OUT_BACKEND_H
+#define M64P_BACKENDS_API_AUDIO_OUT_BACKEND_H
 
-uint8_t* storage_data(struct storage_backend* storage)
-{
-    return storage->data;;
-}
+#include <stddef.h>
 
-size_t storage_size(struct storage_backend* storage)
+struct audio_out_backend_interface
 {
-    return storage->size;
-}
+    /* Allow the backend to be notified of sample format.
+     */
+    void (*set_format)(void* aout, unsigned int frequency, unsigned int bits);
 
-void storage_save(struct storage_backend* storage)
-{
-    storage->save(storage->user_data);
-}
+    /* Push samples to be played by the backend
+     */
+    void (*push_samples)(void* aout, const void* samples, size_t size);
+};
+
+#endif

@@ -20,7 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "mbc3_rtc.h"
-#include "backends/clock_backend.h"
+#include "backends/api/clock_backend.h"
 #include <string.h>
 
 /* TODO: halt bit is not implemented */
@@ -28,7 +28,7 @@
 static void update_rtc_regs(struct mbc3_rtc* rtc)
 {
     /* compute elapsed time since last update */
-    time_t now = clock_get_time(rtc->clock);
+    time_t now = rtc->iclock->get_time(rtc->clock);
     time_t diff = now - rtc->last_time;
     rtc->last_time = now;
 
@@ -67,9 +67,12 @@ static void update_rtc_regs(struct mbc3_rtc* rtc)
     }
 }
 
-void init_mbc3_rtc(struct mbc3_rtc* rtc, struct clock_backend* clock)
+void init_mbc3_rtc(struct mbc3_rtc* rtc,
+                   void* clock,
+                   const struct clock_backend_interface* iclock)
 {
     rtc->clock = clock;
+    rtc->iclock = iclock;
 }
 
 void poweron_mbc3_rtc(struct mbc3_rtc* rtc)

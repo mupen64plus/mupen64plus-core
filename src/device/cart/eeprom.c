@@ -26,25 +26,27 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "backends/storage_backend.h"
+#include "backends/api/storage_backend.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 enum { EEPROM_BLOCK_SIZE = 8 };
 
-void format_eeprom(uint8_t* eeprom, size_t size)
+void format_eeprom(uint8_t* mem, size_t size)
 {
-    memset(eeprom, 0xff, size);
+    memset(mem, 0xff, size);
 }
 
 
 void init_eeprom(struct eeprom* eeprom,
     uint16_t type,
-    struct storage_backend* storage)
+    void* storage,
+    const struct storage_backend_interface* istorage)
 {
     eeprom->type = type;
     eeprom->storage = storage;
+    eeprom->istorage = istorage;
 }
 
 void eeprom_read_block(struct eeprom* eeprom,
@@ -52,9 +54,9 @@ void eeprom_read_block(struct eeprom* eeprom,
 {
     unsigned int address = block * EEPROM_BLOCK_SIZE;
 
-    if (address < eeprom->storage->size)
+    if (address < eeprom->istorage->size(eeprom->storage))
     {
-        memcpy(data, &eeprom->storage->data[address], EEPROM_BLOCK_SIZE);
+        memcpy(data, eeprom->istorage->data(eeprom->storage) + address, EEPROM_BLOCK_SIZE);
     }
     else
     {
@@ -67,10 +69,10 @@ void eeprom_write_block(struct eeprom* eeprom,
 {
     unsigned int address = block * EEPROM_BLOCK_SIZE;
 
-    if (address < eeprom->storage->size)
+    if (address < eeprom->istorage->size(eeprom->storage))
     {
-        memcpy(&eeprom->storage->data[address], data, EEPROM_BLOCK_SIZE);
-        storage_save(eeprom->storage);
+        memcpy(eeprom->istorage->data(eeprom->storage) + address, data, EEPROM_BLOCK_SIZE);
+        eeprom->istorage->save(eeprom->storage);
         *status = 0x00;
     }
     else

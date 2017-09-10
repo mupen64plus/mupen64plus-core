@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - sram.c                                                  *
+ *   Mupen64plus - audio_plugin_compat.c                                   *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,59 +19,49 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "sram.h"
-
-#include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
-#include "backends/api/storage_backend.h"
-#include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
+#include "backends/api/audio_out_backend.h"
+#include "device/ai/ai_controller.h"
 #include "device/ri/ri_controller.h"
+#include "device/vi/vi_controller.h"
+#include "main/rom.h"
+#include "plugin/plugin.h"
 
-
-void format_sram(uint8_t* mem)
+static void audio_plugin_set_format(void* aout, unsigned int frequency, unsigned int bits)
 {
-    memset(mem, 0, SRAM_SIZE);
+    /* not really implementable with just the zilmar spec.
+     * Try a best effort approach
+     */
+    struct ai_controller* ai = (struct ai_controller*)aout;
+    uint32_t saved_ai_dacrate = ai->regs[AI_DACRATE_REG];
+
+    ai->regs[AI_DACRATE_REG] = ai->vi->clock / frequency - 1;
+
+    audio.aiDacrateChanged(ROM_PARAMS.systemtype);
+
+    ai->regs[AI_DACRATE_REG] = saved_ai_dacrate;
 }
 
-void init_sram(struct sram* sram,
-               void* storage, const struct storage_backend_interface* istorage)
+static void audio_plugin_push_samples(void* aout, const void* buffer, size_t size)
 {
-    sram->storage = storage;
-    sram->istorage = istorage;
+    /* abuse core & audio plugin implementation to approximate desired effect */
+    struct ai_controller* ai = (struct ai_controller*)aout;
+    uint32_t saved_ai_length = ai->regs[AI_LEN_REG];
+    uint32_t saved_ai_dram = ai->regs[AI_DRAM_ADDR_REG];
+
+    /* exploit the fact that buffer points in g_dev.ri.rdram.dram to retreive dram_addr_reg value */
+    ai->regs[AI_DRAM_ADDR_REG] = (uint8_t*)buffer - (uint8_t*)ai->ri->rdram.dram;
+    ai->regs[AI_LEN_REG] = size;
+
+    audio.aiLenChanged();
+
+    ai->regs[AI_LEN_REG] = saved_ai_length;
+    ai->regs[AI_DRAM_ADDR_REG] = saved_ai_dram;
 }
 
-void dma_write_sram(struct pi_controller* pi)
+const struct audio_out_backend_interface g_iaudio_out_backend_plugin_compat =
 {
-    size_t i;
-    size_t length = (pi->regs[PI_RD_LEN_REG] & 0xffffff) + 1;
-
-    uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] - 0x08000000;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-
-    for (i = 0; i < length; ++i) {
-        mem[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
-    }
-
-    pi->sram.istorage->save(pi->sram.storage);
-}
-
-void dma_read_sram(struct pi_controller* pi)
-{
-    size_t i;
-    size_t length = (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1;
-
-    const uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = (pi->regs[PI_CART_ADDR_REG] - 0x08000000) & 0xffff;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-
-    for (i = 0; i < length; ++i) {
-        dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
-    }
-}
-
+    audio_plugin_set_format,
+    audio_plugin_push_samples
+};
