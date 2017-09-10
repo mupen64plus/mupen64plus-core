@@ -1022,57 +1022,12 @@ m64p_error main_run(void)
     sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_file_storage };
     eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? PIF_PDT_EEPROM_4K : PIF_PDT_EEPROM_16K, &eep, save_file_storage };
 
-    /* setup game controllers data */
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
-    {
-        control_ids[i] = i;
-        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_get_input };
-        mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
-        rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
-
-        if (g_gb_rom_files[i] != NULL)
-        {
-            char* gbsav_path = get_gbsav_path(i);
-            char* gbrom_path = strdup(g_gb_rom_files[i]);
-
-            gb_carts_rom[i].data = NULL;
-            gb_carts_rom[i].size = 0;
-            gb_carts_rom[i].filename = gbrom_path;
-
-            gb_carts_ram[i].data = NULL;
-            gb_carts_ram[i].size = 0;
-            gb_carts_ram[i].filename = gbsav_path;
-
-            if (init_gb_cart(&gb_carts[i],
-                             &gb_carts_rom[i], init_gb_rom,
-                             &gb_carts_ram[i], init_gb_ram,
-                             &clock) != 0)
-            {
-                /* could not load gb rom file so invalidate it and release other resources */
-                close_file_storage(&gb_carts_rom[i]);
-                close_file_storage(&gb_carts_ram[i]);
-                g_gb_rom_files[i] = NULL;
-            } else {
-                /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
-                Controls[i].Plugin = PLUGIN_TRANSFER_PAK;
-            }
-        }
-        else
-        {
-            memset(&gb_carts[i], 0, sizeof(struct gb_cart));
-            memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
-            memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
-        }
-
-        init_mempak(&g_dev.mempaks[i], &mpk_storages[i]);
-        init_rumblepak(&g_dev.rumblepaks[i], &rumbles[i]);
-        init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
-    }
-
     /* setup pif channel devices */
     struct pif_channel_device pif_channel_devices[PIF_CHANNELS_COUNT];
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+
+        control_ids[i] = i;
 
         /* if no controller is plugged, make it "disconnected" */
         if (!Controls[i].Present) {
@@ -1090,7 +1045,10 @@ m64p_error main_run(void)
         }
         /* otherwise let the core do the processing */
         else {
-            /* XXX: select appropriate controller */
+            /* select appropriate controller
+             * FIXME: assume for now that only standard controller is compatible
+             * Use the rom db to know if other peripherals are compatibles (VRU, mouse, train, ...)
+             */
             const struct game_controller_flavor* cont_flavor =
                 &g_standard_controller_flavor;
 
@@ -1098,6 +1056,52 @@ m64p_error main_run(void)
             pif_channel_devices[i].poweron = poweron_game_controller;
             pif_channel_devices[i].process = process_controller_command;
             pif_channel_devices[i].post_setup = NULL;
+
+            cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_get_input };
+
+            /* init all compatibles paks
+             * FIXME: assume for now that all paks are compatible
+             * Use the rom db to know which pak are compatibles
+             */
+            mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
+            rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
+            if (g_gb_rom_files[i] != NULL)
+            {
+                char* gbsav_path = get_gbsav_path(i);
+                char* gbrom_path = strdup(g_gb_rom_files[i]);
+
+                gb_carts_rom[i].data = NULL;
+                gb_carts_rom[i].size = 0;
+                gb_carts_rom[i].filename = gbrom_path;
+
+                gb_carts_ram[i].data = NULL;
+                gb_carts_ram[i].size = 0;
+                gb_carts_ram[i].filename = gbsav_path;
+
+                if (init_gb_cart(&gb_carts[i],
+                                 &gb_carts_rom[i], init_gb_rom,
+                                 &gb_carts_ram[i], init_gb_ram,
+                                 &clock) != 0)
+                {
+                    /* could not load gb rom file so invalidate it and release other resources */
+                    close_file_storage(&gb_carts_rom[i]);
+                    close_file_storage(&gb_carts_ram[i]);
+                    g_gb_rom_files[i] = NULL;
+                } else {
+                    /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
+                    Controls[i].Plugin = PLUGIN_TRANSFER_PAK;
+                }
+            }
+            else
+            {
+                memset(&gb_carts[i], 0, sizeof(struct gb_cart));
+                memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
+                memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
+            }
+
+            init_mempak(&g_dev.mempaks[i], &mpk_storages[i]);
+            init_rumblepak(&g_dev.rumblepaks[i], &rumbles[i]);
+            init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
 
             /* plug selected pak (for standard controller only) */
             if (cont_flavor == &g_standard_controller_flavor) {
@@ -1235,7 +1239,7 @@ m64p_error main_run(void)
 #endif
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (g_gb_rom_files[i] != NULL) {
+        if (Controls[i].Present && !Controls[i].RawData && g_gb_rom_files[i] != NULL) {
             close_file_storage(&gb_carts_rom[i]);
             close_file_storage(&gb_carts_ram[i]);
         }
@@ -1269,7 +1273,7 @@ on_audio_open_failure:
 on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (g_gb_rom_files[i] != NULL) {
+        if (Controls[i].Present && !Controls[i].RawData && g_gb_rom_files[i] != NULL) {
             close_file_storage(&gb_carts_rom[i]);
             close_file_storage(&gb_carts_ram[i]);
         }
