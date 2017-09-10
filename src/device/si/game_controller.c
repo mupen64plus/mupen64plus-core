@@ -34,7 +34,6 @@
 #include <string.h>
 
 enum { PAK_CHUNK_SIZE = 0x20 };
-enum { PIF_PDT_GAME_CONTROLLER = PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT };
 
 enum controller_status
 {
@@ -43,7 +42,8 @@ enum controller_status
     CONT_STATUS_PAK_ADDR_CRC_ERR = 0x04
 };
 
-void standard_controller_reset(struct game_controller* cont)
+/* Standard controller */
+static void standard_controller_reset(struct game_controller* cont)
 {
     /* reset controller status */
     cont->status = 0x00;
@@ -58,6 +58,13 @@ void standard_controller_reset(struct game_controller* cont)
 
     /* XXX: recalibrate joysticks  */
 }
+
+const struct game_controller_flavor g_standard_controller_flavor =
+{
+    "Standard controller",
+    PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT,
+    standard_controller_reset
+};
 
 /* Pak handling functions */
 static uint8_t pak_data_crc(const uint8_t* data, size_t size)
@@ -77,26 +84,6 @@ static uint8_t pak_data_crc(const uint8_t* data, size_t size)
         }
     }
     return crc;
-}
-
-void init_game_controller(struct game_controller* cont,
-    struct controller_input_backend* cin,
-    void* pak, const struct pak_interface* ipak)
-{
-    cont->cin = cin;;
-    cont->pak = pak;
-    cont->ipak = ipak;
-}
-
-void poweron_game_controller(void* opaque)
-{
-    struct game_controller* cont = (struct game_controller*)opaque;
-
-    standard_controller_reset(cont);
-
-    if (cont->ipak != NULL) {
-        cont->ipak->plug(cont->pak);
-    }
 }
 
 static void pak_read_block(struct game_controller* cont,
@@ -129,6 +116,43 @@ static void pak_write_block(struct game_controller* cont,
     *dcrc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
+
+/* Mouse controller */
+static void mouse_controller_reset(struct game_controller* cont)
+{
+    cont->status = 0x00;
+}
+
+const struct game_controller_flavor g_mouse_controller_flavor =
+{
+    "Mouse controller",
+    PIF_PDT_JOY_REL_COUNTERS,
+    mouse_controller_reset
+};
+
+
+void init_game_controller(struct game_controller* cont,
+    const struct game_controller_flavor* flavor,
+    struct controller_input_backend* cin,
+    void* pak, const struct pak_interface* ipak)
+{
+    cont->flavor = flavor;
+    cont->cin = cin;;
+    cont->pak = pak;
+    cont->ipak = ipak;
+}
+
+void poweron_game_controller(void* opaque)
+{
+    struct game_controller* cont = (struct game_controller*)opaque;
+
+    cont->flavor->reset(cont);
+
+    if (cont->flavor == &g_standard_controller_flavor && cont->ipak != NULL) {
+        cont->ipak->plug(cont->pak);
+    }
+}
+
 void process_controller_command(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
@@ -140,13 +164,12 @@ void process_controller_command(void* opaque,
     switch (cmd)
     {
     case PIF_CMD_RESET:
-        standard_controller_reset(cont);
+        cont->flavor->reset(cont);
     case PIF_CMD_STATUS: {
         PIF_CHECK_COMMAND_FORMAT(1, 3)
 
-        /* set device type and status */
-        rx_buf[0] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 0);
-        rx_buf[1] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 8);
+        rx_buf[0] = (uint8_t)(cont->flavor->type >> 0);
+        rx_buf[1] = (uint8_t)(cont->flavor->type >> 8);
         rx_buf[2] = cont->status;
     } break;
 

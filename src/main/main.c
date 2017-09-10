@@ -1090,47 +1090,57 @@ m64p_error main_run(void)
         }
         /* otherwise let the core do the processing */
         else {
+            /* XXX: select appropriate controller */
+            const struct game_controller_flavor* cont_flavor =
+                &g_standard_controller_flavor;
+
             pif_channel_devices[i].opaque = &g_dev.controllers[i];
             pif_channel_devices[i].poweron = poweron_game_controller;
             pif_channel_devices[i].process = process_controller_command;
             pif_channel_devices[i].post_setup = NULL;
 
-            /* plug selected pak */
-            switch(Controls[i].Plugin)
-            {
-            case PLUGIN_NONE:
+            /* plug selected pak (for standard controller only) */
+            if (cont_flavor == &g_standard_controller_flavor) {
+                switch(Controls[i].Plugin)
+                {
+                case PLUGIN_NONE:
+                    paks[i] = NULL;
+                    ipaks[i] = NULL;
+                    break;
+                case PLUGIN_MEMPAK:
+                    paks[i] = &g_dev.mempaks[i];
+                    ipaks[i] = &g_imempak;
+                    break;
+                case PLUGIN_RAW:
+                    /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
+                     * so we just reproduce that behavior */
+                case PLUGIN_RUMBLE_PAK:
+                    paks[i] = &g_dev.rumblepaks[i];
+                    ipaks[i] = &g_irumblepak;
+                    break;
+                case PLUGIN_TRANSFER_PAK:
+                    paks[i] = &g_dev.transferpaks[i];
+                    ipaks[i] = &g_itransferpak;
+                    break;
+                }
+            }
+            else {
                 paks[i] = NULL;
                 ipaks[i] = NULL;
-                break;
-            case PLUGIN_MEMPAK:
-                paks[i] = &g_dev.mempaks[i];
-                ipaks[i] = &g_imempak;
-                break;
-            case PLUGIN_RAW:
-                /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-                 * so we just reproduce that behavior */
-            case PLUGIN_RUMBLE_PAK:
-                paks[i] = &g_dev.rumblepaks[i];
-                ipaks[i] = &g_irumblepak;
-                break;
-            case PLUGIN_TRANSFER_PAK:
-                paks[i] = &g_dev.transferpaks[i];
-                ipaks[i] = &g_itransferpak;
-                break;
             }
 
             /* init game_controller */
             init_game_controller(&g_dev.controllers[i],
+                    cont_flavor,
                     &cins[i],
-                    paks[i],
-                    ipaks[i]);
+                    paks[i], ipaks[i]);
 
             if (ipaks[i] != NULL) {
-                DebugMessage(M64MSG_INFO, "Game controller %u has a %s plugged in",
-                    i, ipaks[i]->name);
+                DebugMessage(M64MSG_INFO, "Game controller %u (%s) has a %s plugged in",
+                    i, cont_flavor->name, ipaks[i]->name);
             } else {
-                DebugMessage(M64MSG_INFO, "Game controller %u has nothing plugged in",
-                    i);
+                DebugMessage(M64MSG_INFO, "Game controller %u (%s) has nothing plugged in",
+                    i, cont_flavor->name);
             }
         }
     }

@@ -634,7 +634,7 @@ int savestates_load_m64p(char *filepath)
 
         /* extra controllers state */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            standard_controller_reset(&g_dev.controllers[i]);
+            g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
             poweron_rumblepak(&g_dev.rumblepaks[i]);
             poweron_transferpak(&g_dev.transferpaks[i]);
         }
@@ -971,7 +971,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     /* extra controllers state */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        standard_controller_reset(&g_dev.controllers[i]);
+        g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
         poweron_rumblepak(&g_dev.rumblepaks[i]);
         poweron_transferpak(&g_dev.transferpaks[i]);
     }

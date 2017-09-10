@@ -25,7 +25,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct game_controller;
 struct controller_input_backend;
+
+struct game_controller_flavor
+{
+    const char* name;
+    uint16_t type;
+
+    /* controller reset procedure */
+    void (*reset)(struct game_controller* cont);
+};
 
 struct pak_interface
 {
@@ -40,12 +50,16 @@ struct game_controller
 {
     uint8_t status;
 
+    const struct game_controller_flavor* flavor;
+
     struct controller_input_backend* cin;
+
     void* pak;
     const struct pak_interface* ipak;
 };
 
 void init_game_controller(struct game_controller* cont,
+    const struct game_controller_flavor* flavor,
     struct controller_input_backend* cin,
     void* pak, const struct pak_interface* ipak);
 
@@ -55,6 +69,8 @@ void process_controller_command(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf);
 
-void standard_controller_reset(struct game_controller* cont);
+/* Controller flavors */
+extern const struct game_controller_flavor g_standard_controller_flavor;
+extern const struct game_controller_flavor g_mouse_controller_flavor;
 
 #endif
