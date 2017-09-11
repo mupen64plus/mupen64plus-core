@@ -3169,6 +3169,8 @@ static void alu_assemble(int i,struct regstat *i_regs)
           assert(s1l>=0);
           assert(s2l>=0);
           if(th>=0) {
+            assert(s1h>=0);
+            assert(s2h>=0);
             #ifdef INVERTED_CARRY
             if(opcode2[i]&2) emit_sub64_32(s1l,s1h,s2l,s2h,tl,th);
             #else
@@ -3317,23 +3319,27 @@ static void alu_assemble(int i,struct regstat *i_regs)
           s2l=get_reg(i_regs->regmap,rs2[i]);
           s2h=get_reg(i_regs->regmap,rs2[i]|64);
           if(rs1[i]&&rs2[i]) {
-            assert(s1l>=0);assert(s1h>=0);
-            assert(s2l>=0);assert(s2h>=0);
+            assert(s1l>=0);
+            assert(s2l>=0);
+
+            if(s1h<0) {emit_loadreg(rs1[i]|64,tl); s1h=tl;}
+            if(s2h<0) {emit_loadreg(rs2[i]|64,th); s2h=th;}
+
             if(opcode2[i]==0x24) { // AND
-              emit_and(s1l,s2l,tl);
               emit_and(s1h,s2h,th);
+              emit_and(s1l,s2l,tl);
             } else
             if(opcode2[i]==0x25) { // OR
-              emit_or(s1l,s2l,tl);
               emit_or(s1h,s2h,th);
+              emit_or(s1l,s2l,tl);
             } else
             if(opcode2[i]==0x26) { // XOR
-              emit_xor(s1l,s2l,tl);
               emit_xor(s1h,s2h,th);
+              emit_xor(s1l,s2l,tl);
             } else
             if(opcode2[i]==0x27) { // NOR
-              emit_or(s1l,s2l,tl);
               emit_or(s1h,s2h,th);
+              emit_or(s1l,s2l,tl);
               emit_not(tl,tl);
               emit_not(th,th);
             }
