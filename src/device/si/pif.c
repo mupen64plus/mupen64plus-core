@@ -229,9 +229,18 @@ static void setup_channels_format(struct pif* pif)
             }
             break;
 
-        case 0xfd: /* channel reset */
+        case 0xfd: /* channel reset - send reset command and discard the results */ {
+            static uint8_t dummy_reset_buffer[PIF_CHANNELS_COUNT][6];
+
+            /* setup reset command Tx=1, Rx=3, cmd=0xff */
+            dummy_reset_buffer[k][0] = 0x01;
+            dummy_reset_buffer[k][1] = 0x03;
+            dummy_reset_buffer[k][2] = 0xff;
+
+            setup_pif_channel(&pif->channels[k], dummy_reset_buffer[k]);
+            ++k;
             ++i;
-            DebugMessage(M64MSG_WARNING, "PIF - channel reset - not implemented !");
+            }
             break;
 
         default: /* setup channel */

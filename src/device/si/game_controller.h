@@ -41,6 +41,8 @@ struct storage_backend;
 
 struct game_controller
 {
+    uint8_t status;
+
     struct controller_input_backend* cin;
     struct mempak mempak;
     struct rumblepak rumblepak;

@@ -36,6 +36,46 @@
 enum { PAK_CHUNK_SIZE = 0x20 };
 enum { PIF_PDT_GAME_CONTROLLER = PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT };
 
+enum controller_status
+{
+    CONT_STATUS_PAK_PRESENT      = 0x01,
+    CONT_STATUS_PAK_CHANGED      = 0x02,
+    CONT_STATUS_PAK_ADDR_CRC_ERR = 0x04
+};
+
+static int is_pak_present(struct controller_input_backend* cin)
+{
+    enum pak_type pak = controller_input_detect_pak(cin);
+    switch (pak)
+    {
+    case PAK_MEM:
+    case PAK_RUMBLE:
+    case PAK_TRANSFER:
+        return 1;
+    case PAK_NONE:
+        return 0;
+    }
+
+    return 0;
+}
+
+static void standard_controller_reset(struct game_controller* cont)
+{
+    /* reset controller status */
+    cont->status = 0x00;
+
+    /* if pak is connected */
+    if (is_pak_present(cont->cin)) {
+        cont->status |= CONT_STATUS_PAK_PRESENT;
+    }
+    else {
+        cont->status |= CONT_STATUS_PAK_CHANGED;
+    }
+
+    /* XXX: recalibrate joysticks  */
+}
+
+/* Pak handling functions */
 static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 {
     size_t i;
@@ -70,25 +110,9 @@ void init_game_controller(struct game_controller* cont,
 
 void poweron_game_controller(struct game_controller* cont)
 {
+    standard_controller_reset(cont);
+
     poweron_transferpak(&cont->transferpak);
-}
-
-static void game_controller_status(struct game_controller* cont, uint8_t* status)
-{
-    enum pak_type pak = controller_input_detect_pak(cont->cin);
-
-    switch (pak)
-    {
-    case PAK_MEM:
-    case PAK_RUMBLE:
-    case PAK_TRANSFER:
-        *status = 1;
-        break;
-
-    case PAK_NONE:
-    default:
-        *status = 0;
-    }
 }
 
 static void pak_read_block(struct game_controller* cont,
@@ -151,15 +175,15 @@ void process_controller_command(void* opaque,
 
     switch (cmd)
     {
-    case PIF_CMD_STATUS:
-    case PIF_CMD_RESET: {
+    case PIF_CMD_RESET:
+        standard_controller_reset(cont);
+    case PIF_CMD_STATUS: {
         PIF_CHECK_COMMAND_FORMAT(1, 3)
 
-        /* set device type */
+        /* set device type and status */
         rx_buf[0] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 0);
         rx_buf[1] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 8);
-
-        game_controller_status(cont, &rx_buf[2]);
+        rx_buf[2] = cont->status;
     } break;
 
     case PIF_CMD_CONTROLLER_READ: {
