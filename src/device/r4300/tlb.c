@@ -141,8 +141,9 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
     }
     //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, r4300->pc->addr);
     //getchar();
-    if (r4300->special_rom != RAT_ATTACK)
-        TLB_refill_exception(r4300, address, w);
+
+    TLB_refill_exception(r4300, address, w);
+
     //return 0x80000000;
     return 0x00000000;
 }
