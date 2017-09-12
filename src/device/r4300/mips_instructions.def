@@ -51,10 +51,10 @@
 #include "r4300_core.h"
 #include "device/memory/memory.h"
 #include "device/ri/ri_controller.h"
+#include "main/xxHash/xxhash.h"
 
 #include <inttypes.h>
 #include <stdint.h>
-#include <zlib.h> // For adler32()
 
 /* Assists unaligned memory accessors with making masks to preserve or apply
  * bits in registers and memory.
@@ -1181,25 +1181,12 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    /*int j;
-                      md5_state_t state;
-                      md5_byte_t digest[16];
-                      md5_init(&state);
-                      md5_append(&state,
-                      (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
-                      0x1000);
-                      md5_finish(&state, digest);
-                      for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = digest[j];*/
-
-                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
-
+                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
                 {
-                    /*int j;
-                      for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = 0;*/
-                    r4300->cached_interp.blocks[i]->adler32 = 0;
+                    r4300->cached_interp.blocks[i]->xxhash = 0;
                 }
             }
         }
@@ -1213,25 +1200,12 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    /*int j;
-                      md5_state_t state;
-                      md5_byte_t digest[16];
-                      md5_init(&state);
-                      md5_append(&state,
-                      (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
-                      0x1000);
-                      md5_finish(&state, digest);
-                      for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = digest[j];*/
-
-                    r4300->cached_interp.blocks[i]->adler32 = adler32(0, (const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
-
+                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
                 {
-                    /*int j;
-                      for (j=0; j<16; j++) r4300->cached_interp.blocks[i]->md5[j] = 0;*/
-                    r4300->cached_interp.blocks[i]->adler32 = 0;
+                    r4300->cached_interp.blocks[i]->xxhash = 0;
                 }
             }
         }
@@ -1273,26 +1247,9 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
         {
             for (i=r4300->cp0.tlb.entries[idx].start_even>>12; i<=r4300->cp0.tlb.entries[idx].end_even>>12; i++)
             {
-                /*if (r4300->cached_interp.blocks[i] && (r4300->cached_interp.blocks[i]->md5[0] || r4300->cached_interp.blocks[i]->md5[1] ||
-                  r4300->cached_interp.blocks[i]->md5[2] || r4300->cached_interp.blocks[i]->md5[3]))
-                  {
-                  int j;
-                  int equal = 1;
-                  md5_state_t state;
-                  md5_byte_t digest[16];
-                  md5_init(&state);
-                  md5_append(&state,
-                  (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
-                  0x1000);
-                  md5_finish(&state, digest);
-                  for (j=0; j<16; j++)
-                  if (digest[j] != r4300->cached_interp.blocks[i]->md5[j])
-                  equal = 0;
-                  if (equal) r4300->cached_interp.invalid_code[i] = 0;
-                  }*/
-                if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->adler32)
+                if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
@@ -1303,26 +1260,9 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
         {
             for (i=r4300->cp0.tlb.entries[idx].start_odd>>12; i<=r4300->cp0.tlb.entries[idx].end_odd>>12; i++)
             {
-                /*if (r4300->cached_interp.blocks[i] && (r4300->cached_interp.blocks[i]->md5[0] || r4300->cached_interp.blocks[i]->md5[1] ||
-                  r4300->cached_interp.blocks[i]->md5[2] || r4300->cached_interp.blocks[i]->md5[3]))
-                  {
-                  int j;
-                  int equal = 1;
-                  md5_state_t state;
-                  md5_byte_t digest[16];
-                  md5_init(&state);
-                  md5_append(&state,
-                  (const md5_byte_t*)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],
-                  0x1000);
-                  md5_finish(&state, digest);
-                  for (j=0; j<16; j++)
-                  if (digest[j] != r4300->cached_interp.blocks[i]->md5[j])
-                  equal = 0;
-                  if (equal) r4300->cached_interp.invalid_code[i] = 0;
-                  }*/
-                if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->adler32)
+                if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->adler32 == adler32(0,(const unsigned char *)&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4],0x1000)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
