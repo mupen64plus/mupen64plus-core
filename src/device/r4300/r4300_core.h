@@ -204,9 +204,10 @@ struct r4300_core
     struct ri_controller* ri;
 
     uint32_t special_rom;
+    uint32_t disable_fr_exception;
 };
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom);
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom, int disable_fr_exception);
 void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);

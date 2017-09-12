@@ -401,6 +401,9 @@ void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
         return;
     }
 
+    if (r4300->disable_fr_exception && (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_FR))
+        return;
+
     wrapped_exception_general(r4300);
 }
 

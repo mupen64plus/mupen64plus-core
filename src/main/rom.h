@@ -55,6 +55,7 @@ typedef struct _rom_params
    int disableextramem;
    int delaysi;
    int special_rom;
+   int disable_fr_exception;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -137,6 +138,7 @@ typedef struct
    unsigned char countperop;
    unsigned char disableextramem;
    unsigned char delaysi;
+   unsigned char disable_fr_exception;
    uint32_t set_flags;
 } romdatabase_entry;
 
@@ -149,7 +151,10 @@ enum romdatabase_entry_set_flags {
     ROMDATABASE_ENTRY_PLAYERS = BIT(4),
     ROMDATABASE_ENTRY_RUMBLE = BIT(5),
     ROMDATABASE_ENTRY_COUNTEROP = BIT(6),
-    ROMDATABASE_ENTRY_CHEATS = BIT(7)
+    ROMDATABASE_ENTRY_CHEATS = BIT(7),
+    ROMDATABASE_ENTRY_EXTRAMEM = BIT(8),
+    ROMDATABASE_ENTRY_DELAYSI = BIT(9),
+    ROMDATABASE_ENTRY_FREXCEPTION = BIT(10)
 };
 
 typedef struct _romdatabase_search
