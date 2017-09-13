@@ -353,6 +353,12 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_EXTRAMEM) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_EXTRAMEM)) {
+            entry->entry.disableextramem = ref->disableextramem;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -564,6 +570,7 @@ void romdatabase_open(void)
             else if (!strcmp(l.name, "DisableExtraMem"))
             {
                 search->entry.disableextramem = atoi(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
             }
             else if(!strncmp(l.name, "Cheat", 5))
             {

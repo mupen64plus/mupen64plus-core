@@ -143,7 +143,8 @@ enum romdatabase_entry_set_flags {
     ROMDATABASE_ENTRY_PLAYERS = BIT(4),
     ROMDATABASE_ENTRY_RUMBLE = BIT(5),
     ROMDATABASE_ENTRY_COUNTEROP = BIT(6),
-    ROMDATABASE_ENTRY_CHEATS = BIT(7)
+    ROMDATABASE_ENTRY_CHEATS = BIT(7),
+    ROMDATABASE_ENTRY_EXTRAMEM = BIT(8)
 };
 
 typedef struct _romdatabase_search
