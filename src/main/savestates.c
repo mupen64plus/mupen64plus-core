@@ -451,15 +451,14 @@ int savestates_load_m64p(char *filepath)
     *r4300_llbit(&g_dev.r4300) = GETDATA(curr, unsigned int);
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
-    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
     *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
     *r4300_mult_hi(&g_dev.r4300) = GETDATA(curr, int64_t);
-    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
-        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
+    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
+    COPYARRAY(&cp1_regs->dword, curr, int64_t, 32);
     *r4300_cp1_fcr0(&g_dev.r4300.cp1)  = GETDATA(curr, uint32_t);
     FCR31 = GETDATA(curr, uint32_t);
     *r4300_cp1_fcr31(&g_dev.r4300.cp1) = FCR31;
+    set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
     update_x86_rounding_mode(&g_dev.r4300.cp1);
 
     for (i = 0; i < 32; i++)
@@ -582,14 +581,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
     COPYARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
 
     // FPR
-    COPYARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
+    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
+    COPYARRAY(&cp1_regs->dword, curr, int64_t, 32);
 
     // CP0
     COPYARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
 
     set_fpr_pointers(&g_dev.r4300.cp1, cp0_regs[CP0_STATUS_REG]);
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
 
     // Initialze the interrupts
     vi_timer += cp0_regs[CP0_COUNT_REG];
@@ -1208,11 +1206,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
     PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
 
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // FR bit == 0 means 32-bit (MIPS I) FGR mode
-        shuffle_fpr_data(&g_dev.r4300.cp1, 0, UINT32_C(0x04000000));  // shuffle data into 64-bit register format for storage
-    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0)
-        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);  // put it back in 32-bit mode
+    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
+    PUTARRAY(&cp1_regs->dword, curr, int64_t, 32);
 
     PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
     PUTDATA(curr, uint32_t, *r4300_cp1_fcr31(&g_dev.r4300.cp1));
@@ -1290,11 +1285,8 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
-    PUTARRAY(r4300_cp1_regs(&g_dev.r4300.cp1), curr, int64_t, 32);
-    if ((cp0_regs[CP0_STATUS_REG] & UINT32_C(0x04000000)) == 0) // TODO not sure how pj64 handles this
-        shuffle_fpr_data(&g_dev.r4300.cp1, UINT32_C(0x04000000), 0);
+    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
+    PUTARRAY(&cp1_regs->dword, curr, int64_t, 32);
     PUTARRAY(cp0_regs, curr, uint32_t, CP0_REGS_COUNT);
     PUTDATA(curr, uint32_t, *r4300_cp1_fcr0(&g_dev.r4300.cp1));
     for (i = 0; i < 30; i++)

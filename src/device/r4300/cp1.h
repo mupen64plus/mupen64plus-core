@@ -25,9 +25,15 @@
 #include <stdint.h>
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 
+typedef union {
+    int64_t  dword;
+    double   float64;
+    float    float32[2];
+}cp1_reg;
+
 struct cp1
 {
-    int64_t regs[32];
+    cp1_reg regs[32];
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
@@ -54,14 +60,13 @@ struct cp1
 void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state);
 void poweron_cp1(struct cp1* cp1);
 
-int64_t* r4300_cp1_regs(struct cp1* cp1);
+cp1_reg* r4300_cp1_regs(struct cp1* cp1);
 float** r4300_cp1_regs_simple(struct cp1* cp1);
 double** r4300_cp1_regs_double(struct cp1* cp1);
 
 uint32_t* r4300_cp1_fcr0(struct cp1* cp1);
 uint32_t* r4300_cp1_fcr31(struct cp1* cp1);
 
-void shuffle_fpr_data(struct cp1* cp1, uint32_t oldStatus, uint32_t newStatus);
 void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus);
 
 void update_x86_rounding_mode(struct cp1* cp1);
