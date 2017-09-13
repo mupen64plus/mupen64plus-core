@@ -1086,7 +1086,9 @@ DECLARE_INSTRUCTION(ERET)
     r4300->llbit = 0;
     check_interrupt(r4300);
     r4300->cp0.last_addr = PCADDR;
+    r4300->cp0.interrupt_unsafe_state = 1;
     if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+    r4300->cp0.interrupt_unsafe_state = 0;
 }
 
 DECLARE_INSTRUCTION(SYNC)
