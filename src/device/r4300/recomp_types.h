@@ -84,8 +84,7 @@ struct precomp_block
    int jumps_number;
    void *riprel_table;
    int riprel_number;
-   //unsigned char md5[16];
-   unsigned int adler32;
+   unsigned int xxhash;
 };
 
 #endif /* M64P_DEVICE_R4300_RECOMP_TYPES_H */

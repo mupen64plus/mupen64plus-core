@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\src\main\file_storage.c" />
     <ClCompile Include="..\..\src\main\lirc.c" />
     <ClCompile Include="..\..\src\main\main.c" />
+    <ClCompile Include="..\..\src\main\xxHash\xxhash.c" />
     <ClCompile Include="..\..\src\main\md5.c" />
     <ClCompile Include="..\..\src\main\profile.c" />
     <ClCompile Include="..\..\src\main\rom.c" />
@@ -287,6 +288,7 @@
     <ClInclude Include="..\..\src\main\util.h" />
     <ClInclude Include="..\..\src\main\version.h" />
     <ClInclude Include="..\..\src\main\workqueue.h" />
+    <ClInclude Include="..\..\src\main\xxHash\xxhash.h" />
     <ClInclude Include="..\..\src\main\zip\crypt.h" />
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />

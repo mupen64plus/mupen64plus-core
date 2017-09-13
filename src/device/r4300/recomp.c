@@ -2345,8 +2345,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
     length = (block->end-block->start)/4;
     r4300->recomp.dst_block = block;
 
-    //for (i=0; i<16; i++) block->md5[i] = 0;
-    block->adler32 = 0;
+    block->xxhash = 0;
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
