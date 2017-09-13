@@ -51,7 +51,6 @@ typedef struct _rom_params
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
    unsigned char countperop;
    int disableextramem;
-   int delaysi;
    int special_rom;
 } rom_params;
 
@@ -132,7 +131,6 @@ typedef struct
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char countperop;
    unsigned char disableextramem;
-   unsigned char delaysi;
    uint32_t set_flags;
 } romdatabase_entry;
 

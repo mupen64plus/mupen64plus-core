@@ -53,7 +53,6 @@ void init_device(struct device* dev,
     struct gb_cart* gb_carts,
     uint16_t eeprom_id, struct storage_backend* eeprom_storage,
     struct clock_backend* clock,
-    unsigned int delay_si,
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate)
 {
@@ -87,8 +86,7 @@ void init_device(struct device* dev,
         eeprom_id, eeprom_storage,
         clock,
         rom + 0x40,
-        &dev->r4300, &dev->ri,
-        delay_si);
+        &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
 }
 

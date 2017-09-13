@@ -271,7 +271,6 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SaveStatePath", "", "Path to directory where emulator save states (snapshots) are saved. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SaveSRAMPath", "", "Path to directory where SRAM/EEPROM data (in-game saves) are stored. If this is blank, the default value of ${UserConfigPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
-    ConfigSetDefaultBool(g_CoreConfig, "DelaySI", 1, "Delay interrupt after DMA SI read/write");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
 
@@ -961,7 +960,6 @@ m64p_error main_run(void)
 {
     size_t i;
     size_t rdram_size;
-    unsigned int delay_si;
     unsigned int count_per_op;
     unsigned int emumode;
     unsigned int disable_extra_mem;
@@ -993,10 +991,6 @@ m64p_error main_run(void)
 #ifdef NEW_DYNAREC
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
-    if (!ROM_PARAMS.delaysi)
-        delay_si = ROM_PARAMS.delaysi;
-    else
-        delay_si = ConfigGetParamBool(g_CoreConfig, "DelaySI");
 
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
 
@@ -1088,7 +1082,6 @@ m64p_error main_run(void)
                 gb_carts,
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
                 &clock,
-                delay_si,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
 
     // Attach rom to plugins

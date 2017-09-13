@@ -54,22 +54,13 @@ static void dma_si_write(struct si_controller* si)
         *((uint32_t*)(&si->pif.ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
     }
 
-    update_pif_write(si);
     cp0_update_count(si->r4300);
-
-    if (si->delay_si) {
-        si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-        add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
-    } else {
-        si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
-        signal_rcp_interrupt(si->r4300, MI_INTR_SI);
-    }
+    si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
+    add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
 }
 
 static void dma_si_read(struct si_controller* si)
 {
-    int i;
-
     if (si->regs[SI_PIF_ADDR_RD64B_REG] != 0x1FC007C0)
     {
         DebugMessage(M64MSG_ERROR, "dma_si_read(): unknown SI use");
@@ -78,20 +69,9 @@ static void dma_si_read(struct si_controller* si)
 
     update_pif_read(si);
 
-    for (i = 0; i < PIF_RAM_SIZE; i += 4)
-    {
-        si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
-    }
-
     cp0_update_count(si->r4300);
-
-    if (si->delay_si) {
-        si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-        add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
-    } else {
-        si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
-        signal_rcp_interrupt(si->r4300, MI_INTR_SI);
-    }
+    si->regs[SI_STATUS_REG] |= SI_STATUS_RD_BUSY;
+    add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
 }
 
 
@@ -105,12 +85,10 @@ void init_si(struct si_controller* si,
              struct clock_backend* clock,
              const uint8_t* ipl3,
              struct r4300_core* r4300,
-             struct ri_controller* ri,
-             unsigned int delay_si)
+             struct ri_controller* ri)
 {
     si->r4300 = r4300;
     si->ri = ri;
-    si->delay_si = delay_si;
 
     init_pif(&si->pif,
         cins,
@@ -173,12 +151,26 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 void si_end_of_dma_event(void* opaque)
 {
     struct si_controller* si = (struct si_controller*)opaque;
+
+    if (si->regs[SI_STATUS_REG] & SI_STATUS_DMA_BUSY)
+    {
+        update_pif_write(si);
+    }
+    else if (si->regs[SI_STATUS_REG] & SI_STATUS_RD_BUSY)
+    {
+        int i;
+        for (i = 0; i < PIF_RAM_SIZE; i += 4)
+        {
+            si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
+        }
+    }
+
     main_check_inputs();
 
     si->pif.ram[0x3f] = 0x0;
 
     /* trigger SI interrupt */
-    si->regs[SI_STATUS_REG] &= ~SI_STATUS_DMA_BUSY;
+    si->regs[SI_STATUS_REG] &= ~(SI_STATUS_DMA_BUSY | SI_STATUS_RD_BUSY);
     si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
     raise_rcp_interrupt(si->r4300, MI_INTR_SI);
 }
