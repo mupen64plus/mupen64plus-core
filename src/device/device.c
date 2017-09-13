@@ -57,7 +57,7 @@ void init_device(struct device* dev,
     /* sp */
     unsigned int audio_signal,
     /* vi */
-    unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline)
+    unsigned int vi_clock, unsigned int expected_refresh_rate)
 {
     struct interrupt_handler interrupt_handlers[] = {
         { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
@@ -91,7 +91,7 @@ void init_device(struct device* dev,
         rom + 0x40,
         &dev->r4300, &dev->ri,
         delay_si);
-    init_vi(&dev->vi, vi_clock, expected_refresh_rate, count_per_scanline, &dev->r4300);
+    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
 }
 
 void poweron_device(struct device* dev)

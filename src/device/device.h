@@ -82,7 +82,7 @@ void init_device(struct device* dev,
     /* sp */
     unsigned int audio_signal,
     /* vi */
-    unsigned int vi_clock, unsigned int expected_refresh_rate, unsigned int count_per_scanline);
+    unsigned int vi_clock, unsigned int expected_refresh_rate);
 
 /* Setup device such that it's state is
  * what it should be after power on.

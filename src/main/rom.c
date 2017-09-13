@@ -45,8 +45,6 @@
 
 #define CHUNKSIZE 1024*128 /* Read files 128KB at a time. */
 
-/* Amount of cpu cycles per vi scanline - empirically determined */
-enum { DEFAULT_COUNT_PER_SCANLINE = 1500 };
 /* Number of cpu cycles per instruction */
 enum { DEFAULT_COUNT_PER_OP = 2 };
 /* by default, extra mem is enabled */
@@ -180,7 +178,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
     ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
     ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
-    ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
     ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
     ROM_PARAMS.cheats = NULL;
@@ -201,7 +198,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.audiosignal = entry->audio_signal;
-        ROM_PARAMS.countperscanline = entry->count_per_scanline;
         ROM_PARAMS.disableextramem = entry->disableextramem;
         ROM_PARAMS.delaysi = entry->delaysi;
         ROM_PARAMS.cheats = entry->cheats;
@@ -216,7 +212,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = 0;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.audiosignal = DEFAULT_AUDIO_SIGNAL;
-        ROM_PARAMS.countperscanline = DEFAULT_COUNT_PER_SCANLINE;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
         ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
         ROM_PARAMS.cheats = NULL;
@@ -459,7 +454,6 @@ void romdatabase_open(void)
             search->entry.rumble = 0;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.audio_signal = DEFAULT_AUDIO_SIGNAL;
-            search->entry.count_per_scanline = DEFAULT_COUNT_PER_SCANLINE;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
             search->entry.delaysi = DEFAULT_DELAY_SI;
             search->entry.cheats = NULL;
@@ -508,10 +502,6 @@ void romdatabase_open(void)
             else if (!strcmp(l.name, "AudioSignal"))
             {
                 search->entry.audio_signal = atoi(l.value);
-            }
-            else if(!strcmp(l.name, "CountPerScanline"))
-            {
-                search->entry.count_per_scanline = atoi(l.value);
             }
             else if(!strcmp(l.name, "RefMD5"))
             {

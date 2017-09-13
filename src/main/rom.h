@@ -51,7 +51,6 @@ typedef struct _rom_params
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
    unsigned char countperop;
    int audiosignal;
-   int countperscanline;
    int disableextramem;
    int delaysi;
    int special_rom;
@@ -133,7 +132,6 @@ typedef struct
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char audio_signal;
-   int count_per_scanline;
    unsigned char countperop;
    unsigned char disableextramem;
    unsigned char delaysi;
