@@ -2097,8 +2097,6 @@ void *get_addr_32(u_int vaddr,u_int flags)
 
 void *TLB_refill_exception_new(u_int inst_addr,u_int mem_addr,int w)
 {
-  if (g_dev.r4300.special_rom == RAT_ATTACK)
-    return get_addr_ht(0x80000000);
   int i;
   uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
