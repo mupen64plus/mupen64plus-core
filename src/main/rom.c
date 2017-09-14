@@ -49,8 +49,6 @@
 enum { DEFAULT_COUNT_PER_OP = 2 };
 /* by default, extra mem is enabled */
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
-/* by default, Delay SI is enabled */
-enum { DEFAULT_DELAY_SI = 1 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -176,7 +174,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
     ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
-    ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
@@ -195,7 +192,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = entry->rumble;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.disableextramem = entry->disableextramem;
-        ROM_PARAMS.delaysi = entry->delaysi;
         ROM_PARAMS.cheats = entry->cheats;
     }
     else
@@ -208,7 +204,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.rumble = 0;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
-        ROM_PARAMS.delaysi = DEFAULT_DELAY_SI;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -358,6 +353,12 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_EXTRAMEM) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_EXTRAMEM)) {
+            entry->entry.disableextramem = ref->disableextramem;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -449,7 +450,6 @@ void romdatabase_open(void)
             search->entry.rumble = 0;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
-            search->entry.delaysi = DEFAULT_DELAY_SI;
             search->entry.cheats = NULL;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
@@ -570,10 +570,7 @@ void romdatabase_open(void)
             else if (!strcmp(l.name, "DisableExtraMem"))
             {
                 search->entry.disableextramem = atoi(l.value);
-            }
-            else if (!strcmp(l.name, "DelaySI"))
-            {
-                search->entry.delaysi = atoi(l.value);
+                search->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
             }
             else if(!strncmp(l.name, "Cheat", 5))
             {
