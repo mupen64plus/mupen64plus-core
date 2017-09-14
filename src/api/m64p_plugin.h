@@ -245,6 +245,7 @@ typedef void (*ptr_InitiateControllers)(CONTROL_INFO ControlInfo);
 typedef void (*ptr_ReadController)(int Control, unsigned char *Command);
 typedef void (*ptr_SDL_KeyDown)(int keymod, int keysym);
 typedef void (*ptr_SDL_KeyUp)(int keymod, int keysym);
+typedef void (*ptr_GetGBCartInfo)(int Controller, const char **RomFile, const char **SaveFile);
 typedef void (*ptr_RenderCallback)(void);
 #if defined(M64P_PLUGIN_PROTOTYPES)
 EXPORT void CALL ControllerCommand(int Control, unsigned char *Command);
@@ -253,6 +254,7 @@ EXPORT void CALL InitiateControllers(CONTROL_INFO ControlInfo);
 EXPORT void CALL ReadController(int Control, unsigned char *Command);
 EXPORT void CALL SDL_KeyDown(int keymod, int keysym);
 EXPORT void CALL SDL_KeyUp(int keymod, int keysym);
+EXPORT void CALL GetGBCartInfo(int Controller, const char **RomFile, const char **SaveFile);
 EXPORT void CALL RenderCallback(void);
 #endif
 

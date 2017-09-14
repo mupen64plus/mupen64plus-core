@@ -37,6 +37,7 @@ extern int  dummyinput_RomOpen(void);
 extern void dummyinput_RomClosed(void);
 extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
 extern void dummyinput_SDL_KeyUp(int keymod, int keysym);
+extern void dummyinput_GetGBCartInfo(int Controller, const char **RomFile, const char **SaveFile);
 
 #endif /* DUMMY_INPUT_H */
 

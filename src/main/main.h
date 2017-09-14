@@ -43,8 +43,6 @@ extern void* g_rdram;
 
 extern struct device g_dev;
 
-extern char* g_gb_rom_files[GAME_CONTROLLERS_COUNT];
-
 extern m64p_frame_callback g_FrameCallback;
 
 extern int g_gs_vi_counter;

@@ -45,11 +45,6 @@ int egcvip_is_connected(void* opaque, enum pak_type* pak)
         *pak = PAK_RUMBLE; break;
     }
 
-    /* Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[channel].transferpak.gb_cart != NULL) {
-        *pak = PAK_TRANSFER;
-    }
-
     return c->Present;
 }
 
