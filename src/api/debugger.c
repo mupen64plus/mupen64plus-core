@@ -317,6 +317,7 @@ EXPORT void CALL DebugMemWrite8(unsigned int address, unsigned char value)
 
 EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
 {
+    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
     switch (cpu_data_type)
     {
         case M64P_CPU_PC:
@@ -334,7 +335,7 @@ EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
         case M64P_CPU_REG_COP1_SIMPLE_PTR:
             return r4300_cp1_regs_simple(&g_dev.r4300.cp1);
         case M64P_CPU_REG_COP1_FGR_64:
-            return r4300_cp1_regs(&g_dev.r4300.cp1);
+            return &cp1_regs->dword;
         case M64P_CPU_TLB:
             return g_dev.r4300.cp0.tlb.entries;
         default:
