@@ -116,47 +116,32 @@ static void dma_pi_write(struct pi_controller* pi)
         return;
     }
 
-    /* XXX: why need special treatment ? */
-    if (pi->regs[PI_CART_ADDR_REG] >= 0x1fc00000) // for paper mario
-    {
-        /* mark DMA as busy */
-        pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
-
-        /* schedule end of dma interrupt event */
-        cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000); /* XXX: 0x1000 ??? */
-
-        return;
-    }
-
     longueur = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFE)+2;
-    i = (pi->regs[PI_CART_ADDR_REG]-0x10000000)&0x3FFFFFF;
-    longueur = (i + longueur) > pi->cart_rom.rom_size ?
-               (pi->cart_rom.rom_size - i) : longueur;
-    longueur = (pi->regs[PI_DRAM_ADDR_REG] + longueur) > 0x7FFFFF ?
-               (0x7FFFFF - pi->regs[PI_DRAM_ADDR_REG]) : longueur;
-
-    if (i > pi->cart_rom.rom_size || pi->regs[PI_DRAM_ADDR_REG] > 0x7FFFFF)
-    {
-        /* mark both DMA and IO as busy */
-        pi->regs[PI_STATUS_REG] |=
-            PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY;
-
-        /* schedule end of dma interrupt event */
-        cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
-
-        return;
-    }
-
-    dram_address = pi->regs[PI_DRAM_ADDR_REG];
+    dram_address = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
     rom_address = (pi->regs[PI_CART_ADDR_REG] - 0x10000000) & 0x3ffffff;
     dram = (uint8_t*)pi->ri->rdram.dram;
     rom = pi->cart_rom.rom;
 
-    for(i = 0; i < longueur; ++i)
+    if (rom_address + longueur < pi->cart_rom.rom_size)
     {
-        dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
+        for(i = 0; i < longueur; ++i)
+        {
+            dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
+        }
+    }
+    else
+    {
+        int32_t diff = pi->cart_rom.rom_size - rom_address;
+        if (diff < 0) diff = 0;
+
+        for (i = 0; i < diff; ++i)
+        {
+            dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
+        }
+        for (i = diff; i < longueur - diff; ++i)
+        {
+            dram[(dram_address+i)^S8] = 0;
+        }
     }
 
     invalidate_r4300_cached_code(pi->r4300, 0x80000000 + dram_address, longueur);
