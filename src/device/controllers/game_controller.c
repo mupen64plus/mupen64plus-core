@@ -67,6 +67,28 @@ const struct game_controller_flavor g_standard_controller_flavor =
 };
 
 /* Pak handling functions */
+void change_pak(struct game_controller* cont,
+                void* pak, const struct pak_interface* ipak)
+{
+    cont->status &= ~(CONT_STATUS_PAK_PRESENT | CONT_STATUS_PAK_CHANGED);
+
+    /* unplug previous pak (if any) */
+    if (cont->ipak != NULL) {
+        cont->ipak->unplug(cont->pak);
+        cont->status |= CONT_STATUS_PAK_CHANGED;
+    }
+
+    /* plug new one (if any) */
+    if (ipak != NULL) {
+        ipak->plug(pak);
+        cont->status |= CONT_STATUS_PAK_PRESENT;
+    }
+
+    /* set new pak */
+    cont->pak = pak;
+    cont->ipak = ipak;
+}
+
 static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 {
     size_t i;

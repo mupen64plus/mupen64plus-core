@@ -26,12 +26,27 @@
 #include "backends/api/rumble_backend.h"
 #include "plugin/plugin.h"
 
+#include "main/main.h"
+#include <SDL.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* XXX: this is an abuse of the Zilmar Spec normally this value is reserved */
+enum { PAK_SWITCH_BUTTON = 0x4000 };
+
+/* Pak switching delay
+ * If you put too low value,
+ * some games (for instance Perfect Dark) won't be able to detect the pak change
+ * causing incorrect pak accesses */
+enum { PAK_SWITCH_DELAY = 500 };
+
 static uint32_t input_plugin_get_input(void* opaque)
 {
+    static uint32_t last_values[GAME_CONTROLLERS_COUNT] = { 0 };
+    static unsigned int switch_delay[GAME_CONTROLLERS_COUNT] = { 0 };
+
     int control_id = *(int*)opaque;
 
     BUTTONS keys = { 0 };
@@ -39,6 +54,20 @@ static uint32_t input_plugin_get_input(void* opaque)
     if (input.getKeys) {
         input.getKeys(control_id, &keys);
     }
+
+    /* disconnect current pak immediately after "pak switch" button is released */
+    if (((keys.Value & PAK_SWITCH_BUTTON) == 0) && ((last_values[control_id] & PAK_SWITCH_BUTTON))) {
+        change_pak(&g_dev.controllers[control_id], NULL, NULL);
+        switch_delay[control_id] = SDL_GetTicks();
+    }
+
+    /* switch to next pak after switch delay has expired */
+    if (switch_delay[control_id] != 0 && (SDL_GetTicks() - switch_delay[control_id]) >= 500) {
+        main_switch_pak(control_id);
+        switch_delay[control_id] = 0;
+    }
+
+    last_values[control_id] = keys.Value;
 
     return keys.Value;
 }

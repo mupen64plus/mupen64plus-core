@@ -105,7 +105,7 @@ struct device g_dev;
 /* Gameboy roms to load in transfer pak */
 /* TODO: allow ui to pass the gb rom file to the core */
 char* g_gb_rom_files[GAME_CONTROLLERS_COUNT] = {
-#if 0
+#if 1
     "./pkmb.gb",
     "./mtennis.gbc",
     "./pd.gbc",
@@ -130,6 +130,12 @@ static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to 
 static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
 static osd_message_t *l_msgPause = NULL;
+
+/* compatible paks */
+enum { PAK_MAX_SIZE = 4 };
+static size_t l_paks_idx[GAME_CONTROLLERS_COUNT];
+static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
+static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
 
 /*********************************************************************************************************
 * static functions
@@ -870,6 +876,25 @@ void new_vi(void)
     pause_loop();
 }
 
+void main_switch_pak(int control_id)
+{
+    struct game_controller* cont = &g_dev.controllers[control_id];
+
+    if (l_ipaks[l_paks_idx[control_id]] == NULL ||
+        ++l_paks_idx[control_id] >= PAK_MAX_SIZE) {
+        l_paks_idx[control_id] = 0;
+    }
+
+    change_pak(cont, l_paks[control_id][l_paks_idx[control_id]], l_ipaks[l_paks_idx[control_id]]);
+
+    if (cont->ipak != NULL) {
+        DebugMessage(M64MSG_INFO, "Controller %u pak changed to %s", control_id, cont->ipak->name);
+    }
+    else {
+        DebugMessage(M64MSG_INFO, "Removing pak from controller %u", control_id);
+    }
+}
+
 static void open_mpk_file(struct file_storage* fstorage)
 {
     unsigned int i;
@@ -951,9 +976,11 @@ static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const str
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
+
+
 m64p_error main_run(void)
 {
-    size_t i;
+    size_t i, k;
     size_t rdram_size;
     unsigned int count_per_op;
     unsigned int emumode;
@@ -964,8 +991,6 @@ m64p_error main_run(void)
     struct file_storage sra;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
-    void* paks[GAME_CONTROLLERS_COUNT];
-    const struct pak_interface* ipaks[GAME_CONTROLLERS_COUNT];
 
     struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
     struct file_storage mpk;
@@ -1006,6 +1031,28 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
+    /* Check paks compatibility for current ROM
+     * FIXME: assume for now that all paks are compatible
+     * Use the rom db to know which pak are compatibles
+     */
+    l_ipaks[0] = &g_imempak;
+    l_ipaks[1] = &g_irumblepak;
+    l_ipaks[2] = &g_itransferpak;
+    l_ipaks[3] = NULL; /* must be last */
+
+
+    /* disable GB carts if rom is not compatible with tpak */
+    for(k = 0; k < PAK_MAX_SIZE; ++k) {
+        if (l_ipaks[k] == &g_itransferpak) {
+            break;
+        }
+    }
+    if (k == PAK_MAX_SIZE) {
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            g_gb_rom_files[i] = NULL;
+        }
+    }
+
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);
     open_eep_file(&eep);
@@ -1019,6 +1066,7 @@ m64p_error main_run(void)
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
         control_ids[i] = i;
+        l_paks_idx[i] = 0;
 
         /* if no controller is plugged, make it "disconnected" */
         if (!Controls[i].Present) {
@@ -1042,91 +1090,90 @@ m64p_error main_run(void)
             joybus_devices[i] = &g_dev.controllers[i];
             ijoybus_devices[i] = &g_ijoybus_device_controller;
 
-            /* init all compatibles paks
-             * FIXME: assume for now that all paks are compatible
-             * Use the rom db to know which pak are compatibles
-             */
+            /* init all compatibles paks */
+            for(k = 0; k < PAK_MAX_SIZE; ++k) {
+                /* Memory Pak */
+                if (l_ipaks[k] == &g_imempak) {
+                    mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
+                    init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
+                    l_paks[i][k] = &g_dev.mempaks[i];
 
-
-            if (g_gb_rom_files[i] != NULL)
-            {
-                char* gbsav_path = get_gbsav_path(i);
-                char* gbrom_path = strdup(g_gb_rom_files[i]);
-
-                gb_carts_rom[i].data = NULL;
-                gb_carts_rom[i].size = 0;
-                gb_carts_rom[i].filename = gbrom_path;
-
-                gb_carts_ram[i].data = NULL;
-                gb_carts_ram[i].size = 0;
-                gb_carts_ram[i].filename = gbsav_path;
-
-                if (init_gb_cart(&gb_carts[i],
-                                 &gb_carts_rom[i], init_gb_rom,
-                                 &gb_carts_ram[i], init_gb_ram,
-                                 NULL, &g_iclock_ctime_plus_delta) != 0)
-                {
-                    /* could not load gb rom file so invalidate it and release other resources */
-                    close_file_storage(&gb_carts_rom[i]);
-                    close_file_storage(&gb_carts_ram[i]);
-                    g_gb_rom_files[i] = NULL;
-                } else {
-                    /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
-                    Controls[i].Plugin = PLUGIN_TRANSFER_PAK;
+                    if (Controls[i].Plugin == PLUGIN_MEMPAK) {
+                        l_paks_idx[i] = k;
+                    }
                 }
-            }
-            else
-            {
-                memset(&gb_carts[i], 0, sizeof(struct gb_cart));
-                memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
-                memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
-            }
-            init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
+                /* Rumble Pak */
+                else if (l_ipaks[k] == &g_irumblepak) {
+                    init_rumblepak(&g_dev.rumblepaks[i], &control_ids[i], &g_irumble_backend_plugin_compat);
+                    l_paks[i][k] = &g_dev.rumblepaks[i];
 
-            mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
-            init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
+                    if (Controls[i].Plugin == PLUGIN_RUMBLE_PAK
+                     || Controls[i].Plugin == PLUGIN_RAW) {
+                        l_paks_idx[i] = k;
+                    }
+                }
+                /* Transfer Pak */
+                else if (l_ipaks[k] == &g_itransferpak) {
+                    if (g_gb_rom_files[i] != NULL)
+                    {
+                        char* gbsav_path = get_gbsav_path(i);
+                        char* gbrom_path = strdup(g_gb_rom_files[i]);
 
-            init_rumblepak(&g_dev.rumblepaks[i], &control_ids[i], &g_irumble_backend_plugin_compat);
+                        gb_carts_rom[i].data = NULL;
+                        gb_carts_rom[i].size = 0;
+                        gb_carts_rom[i].filename = gbrom_path;
 
-            /* plug selected pak (for standard controller only) */
-            if (cont_flavor == &g_standard_controller_flavor) {
-                switch(Controls[i].Plugin)
-                {
-                case PLUGIN_NONE:
-                    paks[i] = NULL;
-                    ipaks[i] = NULL;
-                    break;
-                case PLUGIN_MEMPAK:
-                    paks[i] = &g_dev.mempaks[i];
-                    ipaks[i] = &g_imempak;
-                    break;
-                case PLUGIN_RAW:
-                    /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-                     * so we just reproduce that behavior */
-                case PLUGIN_RUMBLE_PAK:
-                    paks[i] = &g_dev.rumblepaks[i];
-                    ipaks[i] = &g_irumblepak;
-                    break;
-                case PLUGIN_TRANSFER_PAK:
-                    paks[i] = &g_dev.transferpaks[i];
-                    ipaks[i] = &g_itransferpak;
+                        gb_carts_ram[i].data = NULL;
+                        gb_carts_ram[i].size = 0;
+                        gb_carts_ram[i].filename = gbsav_path;
+
+                        if (init_gb_cart(&gb_carts[i],
+                                         &gb_carts_rom[i], init_gb_rom,
+                                         &gb_carts_ram[i], init_gb_ram,
+                                         NULL, &g_iclock_ctime_plus_delta) != 0)
+                        {
+                            /* could not load gb rom file so invalidate it and release other resources */
+                            close_file_storage(&gb_carts_rom[i]);
+                            close_file_storage(&gb_carts_ram[i]);
+                            g_gb_rom_files[i] = NULL;
+                        }
+                    }
+                    else
+                    {
+                        memset(&gb_carts[i], 0, sizeof(struct gb_cart));
+                        memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
+                        memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
+                    }
+                    init_transferpak(&g_dev.transferpaks[i], &gb_carts[i]);
+                    l_paks[i][k] = &g_dev.transferpaks[i];
+
+                    if (Controls[i].Plugin == PLUGIN_TRANSFER_PAK) {
+                        l_paks_idx[i] = k;
+                    }
+
+                }
+                /* No Pak */
+                else {
+                    l_ipaks[k] = NULL;
+                    l_paks[i][k] = NULL;
+
+                    if (Controls[i].Plugin == PLUGIN_NONE) {
+                        l_paks_idx[i] = k;
+                    }
+
                     break;
                 }
-            }
-            else {
-                paks[i] = NULL;
-                ipaks[i] = NULL;
             }
 
             /* init game_controller */
             init_game_controller(&g_dev.controllers[i],
                     cont_flavor,
                     &control_ids[i], &g_icontroller_input_backend_plugin_compat,
-                    paks[i], ipaks[i]);
+                    l_paks[i][l_paks_idx[i]], l_ipaks[l_paks_idx[i]]);
 
-            if (ipaks[i] != NULL) {
+            if (l_ipaks[l_paks_idx[i]] != NULL) {
                 DebugMessage(M64MSG_INFO, "Game controller %u (%s) has a %s plugged in",
-                    i, cont_flavor->name, ipaks[i]->name);
+                    i, cont_flavor->name, l_ipaks[l_paks_idx[i]]->name);
             } else {
                 DebugMessage(M64MSG_INFO, "Game controller %u (%s) has nothing plugged in",
                     i, cont_flavor->name);

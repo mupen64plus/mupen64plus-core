@@ -66,6 +66,10 @@ void init_game_controller(struct game_controller* cont,
     void* cin, const struct controller_input_backend_interface* icin,
     void* pak, const struct pak_interface* ipak);
 
+
+void change_pak(struct game_controller* cont,
+                void* pak, const struct pak_interface* ipak);
+
 /* Controller Joybus interface */
 extern const struct joybus_device_interface
     g_ijoybus_device_controller;

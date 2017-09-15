@@ -634,8 +634,9 @@ void event_sdl_keydown(int keysym, int keymod)
         main_set_fastforward(1);
     else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdAdvance)))
         main_advance_one();
-    else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdGameshark)))
+    else if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdGameshark))) {
         event_set_gameshark(1);
+    }
     else
     {
         /* pass all other keypresses to the input plugin */
