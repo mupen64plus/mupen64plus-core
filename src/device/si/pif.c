@@ -188,7 +188,6 @@ void init_pif(struct pif* pif,
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
         init_pif_channel(&pif->channels[i], &pif_channel_devices[i]);
-
     }
 
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
