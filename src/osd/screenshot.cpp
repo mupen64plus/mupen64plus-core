@@ -142,7 +142,7 @@ static char *GetNextScreenshotPath(void)
     // add the ROM name, convert to lowercase, convert spaces to underscores
     strcpy(ScreenshotFileName, ROM_PARAMS.headername);
     for (char *pch = ScreenshotFileName; *pch != '\0'; pch++)
-        *pch = (*pch == ' ') ? '_' : tolower(*pch);
+        *pch = ((*pch == ' ') || (*pch == ':')) ? '_' : tolower(*pch);
     strcat(ScreenshotFileName, "-###.png");
     
     // add the base path to the screenshot file name
