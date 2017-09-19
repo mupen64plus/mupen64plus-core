@@ -61,6 +61,7 @@ static uint32_t si_reg(uint32_t address)
 
 
 void init_si(struct si_controller* si,
+             const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
              struct storage_backend* mpk_storages,
              struct rumble_backend* rumbles,

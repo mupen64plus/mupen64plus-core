@@ -34,6 +34,7 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 struct si_controller;
 
 enum { PIF_RAM_SIZE = 0x40 };
+enum { PIF_CHANNELS_COUNT = 5 };
 
 enum pif_commands
 {
@@ -59,11 +60,43 @@ enum pif_peripheral_device_types
     PIF_PDT_AF_RTC           = 0x1000,  /* RTC */
 };
 
+/* snippet which helps validate command format */
+#define PIF_CHECK_COMMAND_FORMAT(expected_tx, expected_rx) \
+    if (*tx != expected_tx || *rx != expected_rx) { \
+        DebugMessage(M64MSG_WARNING, "Unexpected command format %02x %02x %02x ", \
+            *tx, *rx, cmd); \
+        *rx |= 0x40; \
+        break; \
+    }
+
+
+struct pif_channel_device
+{
+    void* opaque;
+    void (*process)(void* opaque,
+        const uint8_t* tx, const uint8_t* tx_buf,
+        uint8_t* rx, uint8_t* rx_buf);
+
+    void (*post_setup)(void* opaque,
+        uint8_t* tx, const uint8_t* tx_buf,
+        const uint8_t* rx, const uint8_t* rx_buf);
+};
+
+struct pif_channel
+{
+    struct pif_channel_device device;
+
+    uint8_t* tx;
+    uint8_t* tx_buf;
+    uint8_t* rx;
+    uint8_t* rx_buf;
+};
 
 struct pif
 {
     uint8_t ram[PIF_RAM_SIZE];
-    uint8_t cic_challenge;
+
+    struct pif_channel channels[PIF_CHANNELS_COUNT];
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
     struct eeprom eeprom;
@@ -79,6 +112,7 @@ static uint32_t pif_ram_address(uint32_t address)
 
 
 void init_pif(struct pif* pif,
+    const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
@@ -93,8 +127,12 @@ void poweron_pif(struct pif* pif);
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
 int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void update_pif_write(struct si_controller* si);
-void update_pif_read(struct si_controller* si);
+void process_pif_ram(struct si_controller* si);
+void update_pif_ram(struct si_controller* si);
+
+void process_cart_command(void* opaque,
+    const uint8_t* tx, const uint8_t* tx_buf,
+    uint8_t* rx, uint8_t* rx_buf);
 
 #endif
 

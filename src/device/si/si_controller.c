@@ -28,7 +28,6 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
-#include "main/main.h" /* required for main_check_inputs */
 
 enum
 {
@@ -67,7 +66,7 @@ static void dma_si_read(struct si_controller* si)
         return;
     }
 
-    update_pif_read(si);
+    update_pif_ram(si);
 
     cp0_update_count(si->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_RD_BUSY;
@@ -76,6 +75,7 @@ static void dma_si_read(struct si_controller* si)
 
 
 void init_si(struct si_controller* si,
+             const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
              struct storage_backend* mpk_storages,
              struct rumble_backend* rumbles,
@@ -91,6 +91,7 @@ void init_si(struct si_controller* si,
     si->ri = ri;
 
     init_pif(&si->pif,
+        pif_channel_devices,
         cins,
         mpk_storages,
         rumbles,
@@ -154,7 +155,7 @@ void si_end_of_dma_event(void* opaque)
 
     if (si->regs[SI_STATUS_REG] & SI_STATUS_DMA_BUSY)
     {
-        update_pif_write(si);
+        process_pif_ram(si);
     }
     else if (si->regs[SI_STATUS_REG] & SI_STATUS_RD_BUSY)
     {
@@ -164,10 +165,6 @@ void si_end_of_dma_event(void* opaque)
             si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
         }
     }
-
-    main_check_inputs();
-
-    si->pif.ram[0x3f] = 0x0;
 
     /* trigger SI interrupt */
     si->regs[SI_STATUS_REG] &= ~(SI_STATUS_DMA_BUSY | SI_STATUS_RD_BUSY);

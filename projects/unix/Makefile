@@ -501,10 +501,9 @@ SOURCE = \
     $(SRCDIR)/main/file_storage.c \
     $(SRCDIR)/main/workqueue.c \
     $(SRCDIR)/main/xxHash/xxhash.c \
-    $(SRCDIR)/plugin/emulate_game_controller_via_input_plugin.c \
+    $(SRCDIR)/plugin/input_plugin_compat.c \
     $(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
     $(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
-    $(SRCDIR)/plugin/rumble_via_input_plugin.c \
     $(SRCDIR)/plugin/plugin.c \
     $(SRCDIR)/plugin/dummy_video.c \
     $(SRCDIR)/plugin/dummy_audio.c \

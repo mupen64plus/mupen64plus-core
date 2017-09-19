@@ -35,6 +35,6 @@ struct rumblepak
 void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
 
 void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
-void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
+void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size);
 
 #endif

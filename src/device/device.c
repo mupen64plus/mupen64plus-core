@@ -47,6 +47,7 @@ void init_device(struct device* dev,
     /* ri */
     uint32_t* dram, size_t dram_size,
     /* si */
+    const struct pif_channel_device* pif_channel_devices,
     struct controller_input_backend* cins,
     struct storage_backend* mpk_storages,
     struct rumble_backend* rumbles,
@@ -79,6 +80,7 @@ void init_device(struct device* dev,
     init_pi(&dev->pi, rom, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
     init_ri(&dev->ri, dram, dram_size);
     init_si(&dev->si,
+        pif_channel_devices,
         cins,
         mpk_storages,
         rumbles,

@@ -73,24 +73,9 @@ void poweron_af_rtc(struct af_rtc* rtc)
     rtc->last_update_rtc = 0;
 }
 
-void af_rtc_status_command(struct af_rtc* rtc, uint8_t* cmd)
+void af_rtc_read_block(struct af_rtc* rtc,
+    uint8_t block, uint8_t* data, uint8_t* status)
 {
-    /* AF-RTC status query */
-    uint8_t* const type = &cmd[3];
-    uint8_t* const status = &cmd[5];
-
-    type[0] = (uint8_t)(PIF_PDT_AF_RTC >> 0);
-    type[1] = (uint8_t)(PIF_PDT_AF_RTC >> 8);
-    *status =  0x00;
-}
-
-void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
-{
-    /* read RTC block */
-    uint8_t block = cmd[3];
-    uint8_t* data = &cmd[4];
-    uint8_t* status = &cmd[12];
-
     switch (block)
     {
     case 0:
@@ -112,13 +97,9 @@ void af_rtc_read_command(struct af_rtc* rtc, uint8_t* cmd)
     }
 }
 
-void af_rtc_write_command(struct af_rtc* rtc, uint8_t* cmd)
+void af_rtc_write_block(struct af_rtc* rtc,
+    uint8_t block, const uint8_t* data, uint8_t* status)
 {
-    /* write RTC block */
-    uint8_t block = cmd[3];
-    const uint8_t* data = &cmd[4];
-    uint8_t* status = &cmd[12];
-
     switch (block)
     {
     case 0:

@@ -105,11 +105,10 @@
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
-    <ClCompile Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.c" />
+    <ClCompile Include="..\..\src\plugin\input_plugin_compat.c" />
     <ClCompile Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.c" />
     <ClCompile Include="..\..\src\plugin\get_time_using_time_plus_delta.c" />
     <ClCompile Include="..\..\src\plugin\plugin.c" />
-    <ClCompile Include="..\..\src\plugin\rumble_via_input_plugin.c" />
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\cp0.c" />
     <ClCompile Include="..\..\src\device\r4300\cp1.c" />
@@ -310,11 +309,10 @@
     <ClInclude Include="..\..\src\plugin\dummy_input.h" />
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
     <ClInclude Include="..\..\src\plugin\dummy_video.h" />
-    <ClInclude Include="..\..\src\plugin\emulate_game_controller_via_input_plugin.h" />
+    <ClInclude Include="..\..\src\plugin\input_plugin_compat.h" />
     <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h" />
     <ClInclude Include="..\..\src\plugin\get_time_using_time_plus_delta.h" />
     <ClInclude Include="..\..\src\plugin\plugin.h" />
-    <ClInclude Include="..\..\src\plugin\rumble_via_input_plugin.h" />
     <ClInclude Include="..\..\src\device\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
     <ClInclude Include="..\..\src\device\r4300\cp1.h" />

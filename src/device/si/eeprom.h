@@ -29,7 +29,7 @@ struct storage_backend;
 
 struct eeprom
 {
-    uint16_t id;
+    uint16_t type;
     struct storage_backend* storage;
 };
 
@@ -37,11 +37,13 @@ struct eeprom
 void format_eeprom(uint8_t* eeprom, size_t size);
 
 void init_eeprom(struct eeprom* eeprom,
-    uint16_t id,
+    uint16_t type,
     struct storage_backend* storage);
 
-void eeprom_status_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_read_command(struct eeprom* eeprom, uint8_t* cmd);
-void eeprom_write_command(struct eeprom* eeprom, uint8_t* cmd);
+void eeprom_read_block(struct eeprom* eeprom,
+    uint8_t block, uint8_t* data);
+
+void eeprom_write_block(struct eeprom* eeprom,
+    uint8_t block, const uint8_t* data, uint8_t* status);
 
 #endif

@@ -58,11 +58,10 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
-#include "plugin/emulate_game_controller_via_input_plugin.h"
+#include "plugin/input_plugin_compat.h"
 #include "plugin/emulate_speaker_via_audio_plugin.h"
 #include "plugin/get_time_using_time_plus_delta.h"
 #include "plugin/plugin.h"
-#include "plugin/rumble_via_input_plugin.h"
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
@@ -214,7 +213,7 @@ void main_message(m64p_msg_level level, unsigned int corner, const char *format,
     DebugMessage(level, "%s", buffer);
 }
 
-void main_check_inputs(void)
+static void main_check_inputs(void)
 {
 #ifdef WITH_LIRC
     lircCheckInput();
@@ -968,7 +967,7 @@ m64p_error main_run(void)
     struct file_storage fla;
     struct file_storage mpk;
     struct file_storage sra;
-    int channels[GAME_CONTROLLERS_COUNT];
+    int control_ids[GAME_CONTROLLERS_COUNT];
     struct audio_out_backend aout;
     struct clock_backend clock;
     struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
@@ -1029,10 +1028,10 @@ m64p_error main_run(void)
     /* setup game controllers data */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
     {
-        channels[i] = i;
-        cins[i] = (struct controller_input_backend){ &channels[i], egcvip_is_connected, egcvip_get_input };
+        control_ids[i] = i;
+        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_is_connected, input_plugin_detect_pak, input_plugin_get_input };
         mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
-        rumbles[i] = (struct rumble_backend){ &channels[i], rvip_exec };
+        rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
 
         if (g_gb_rom_files[i] != NULL)
         {
@@ -1066,6 +1065,32 @@ m64p_error main_run(void)
         }
     }
 
+    /* setup pif channel devices */
+    struct pif_channel_device pif_channel_devices[PIF_CHANNELS_COUNT];
+
+    for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+
+        /* if input plugin requests RawData let the input plugin do the channel device processing */
+        if (Controls[i].RawData) {
+            pif_channel_devices[i].opaque = &control_ids[i];
+            pif_channel_devices[i].process = input_plugin_read_controller;
+            pif_channel_devices[i].post_setup = input_plugin_controller_command;
+        }
+        /* otherwise let the core do the processing */
+        else {
+            pif_channel_devices[i].opaque = &g_dev.si.pif.controllers[i];
+            pif_channel_devices[i].process = process_controller_command;
+            pif_channel_devices[i].post_setup = NULL;
+        }
+    }
+
+    for (i = GAME_CONTROLLERS_COUNT; i < PIF_CHANNELS_COUNT; ++i) {
+        pif_channel_devices[i].opaque = &g_dev.si.pif;
+        pif_channel_devices[i].process = process_cart_command;
+        pif_channel_devices[i].post_setup = NULL;
+    }
+
+
     init_device(&g_dev,
                 emumode,
                 count_per_op,
@@ -1076,6 +1101,7 @@ m64p_error main_run(void)
                 &fla_storage,
                 &sra_storage,
                 g_rdram, rdram_size,
+                pif_channel_devices,
                 cins,
                 mpk_storages,
                 rumbles,
