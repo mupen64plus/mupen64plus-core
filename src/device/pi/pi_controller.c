@@ -138,7 +138,7 @@ static void dma_pi_write(struct pi_controller* pi)
         {
             dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
         }
-        for (i = diff; i < longueur - diff; ++i)
+        for (; i < longueur; ++i)
         {
             dram[(dram_address+i)^S8] = 0;
         }
