@@ -92,6 +92,9 @@ struct pif_channel
     uint8_t* rx_buf;
 };
 
+void disable_pif_channel(struct pif_channel* channel);
+size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf);
+
 struct pif
 {
     uint8_t ram[PIF_RAM_SIZE];
@@ -123,6 +126,8 @@ void init_pif(struct pif* pif,
     const uint8_t* ipl3);
 
 void poweron_pif(struct pif* pif);
+
+void setup_channels_format(struct pif* pif);
 
 int read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
 int write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
