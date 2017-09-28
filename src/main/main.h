@@ -43,7 +43,7 @@ extern void* g_mem_base;
 
 extern struct device g_dev;
 
-extern char* g_gb_rom_files[GAME_CONTROLLERS_COUNT];
+extern m64p_gb_cart_loader g_gb_cart_loader;
 
 extern m64p_frame_callback g_FrameCallback;
 

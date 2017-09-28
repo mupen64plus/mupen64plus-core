@@ -156,13 +156,20 @@ typedef enum {
   M64CMD_CORE_STATE_SET,
   M64CMD_READ_SCREEN,
   M64CMD_RESET,
-  M64CMD_ADVANCE_FRAME
+  M64CMD_ADVANCE_FRAME,
+  M64CMD_SET_GB_CART_LOADER
 } m64p_command;
 
 typedef struct {
   uint32_t address;
   int      value;
 } m64p_cheat_code;
+
+typedef struct {
+  void* cb_data;
+  int (*init_rom)(void* cb_data, int controller_num, const char** rom_filename);
+  int (*init_ram)(void* cb_data, int controller_num, const char** ram_filename);
+} m64p_gb_cart_loader;
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */

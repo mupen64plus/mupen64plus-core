@@ -674,7 +674,14 @@ int init_gb_cart(struct gb_cart* gb_cart,
 
     const uint8_t* rom_data = irom_storage->data(rom_storage);
 
-    /* check rom */
+    /* check for no cart case */
+    if (rom_data == NULL && irom_storage->size(rom_storage) == 0)
+    {
+        memset(gb_cart, 0, sizeof(*gb_cart));
+        return 0;
+    }
+
+    /* check rom size */
     if (rom_data == NULL || irom_storage->size(rom_storage) < 0x8000)
     {
         DebugMessage(M64MSG_ERROR, "Invalid GB ROM file size (< 32k)");
