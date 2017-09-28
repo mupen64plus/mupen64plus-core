@@ -55,13 +55,13 @@ struct ai_controller
     uint32_t regs[AI_REGS_COUNT];
     struct ai_dma fifo[AI_DMA_FIFO_SIZE];
     unsigned int samples_format_changed;
+    uint32_t last_read;
+    uint32_t delayed_carry;
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
     struct vi_controller* vi;
     struct audio_out_backend* aout;
-    uint32_t last_read;
-    uint32_t delayed_carry;
 };
 
 static uint32_t ai_reg(uint32_t address)

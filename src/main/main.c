@@ -458,14 +458,6 @@ void main_state_inc_slot(void)
 
 void main_state_load(const char *filename)
 {
-    if (g_EmulatorRunning)
-    {
-        rumble_exec(g_dev.si.pif.controllers[0].rumblepak.rumble, RUMBLE_STOP);
-        rumble_exec(g_dev.si.pif.controllers[1].rumblepak.rumble, RUMBLE_STOP);
-        rumble_exec(g_dev.si.pif.controllers[2].rumblepak.rumble, RUMBLE_STOP);
-        rumble_exec(g_dev.si.pif.controllers[3].rumblepak.rumble, RUMBLE_STOP);
-    }
-
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
     else

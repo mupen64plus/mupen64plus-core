@@ -48,6 +48,7 @@
 #include "device/ri/ri_controller.h"
 #include "device/rsp/rsp_core.h"
 #include "device/si/si_controller.h"
+#include "device/gb/gb_cart.h"
 #include "device/vi/vi_controller.h"
 #include "main.h"
 #include "main/list.h"
@@ -66,6 +67,9 @@
     #include "main/zip/unzip.h"
     #include "main/zip/zip.h"
 #endif
+
+enum { GB_CART_FINGERPRINT_SIZE = 0x1c };
+enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010100;  /* 1.1 */
@@ -208,6 +212,7 @@ int savestates_load_m64p(char *filepath)
     unsigned char *savestateData, *curr;
     char queue[1024];
     unsigned char additionalData[4];
+    unsigned char data_0001_0200[4096]; // 4k for extra state from v1.2
 
     uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
@@ -299,7 +304,7 @@ int savestates_load_m64p(char *filepath)
             return 0;
         }
     }
-    else // version >= 0x00010100  saves entire eventqueue plus 4-byte using_tlb flage
+    else if (version == 0x00010100) // saves entire eventqueue plus 4-byte using_tlb flags
     {
         if (gzread(f, savestateData, savestateSize) != savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
@@ -314,7 +319,23 @@ int savestates_load_m64p(char *filepath)
             return 0;
         }
     }
-    
+    else // version >= 0x00010200  saves entire eventqueue, 4-byte using_tlb flags and extra state
+    {
+        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+            gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
+            gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData) ||
+            gzread(f, data_0001_0200, sizeof(data_0001_0200)) != sizeof(data_0001_0200))
+        {
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.2 data from %s", filepath);
+            free(savestateData);
+            gzclose(f);
+#ifdef USE_SDL
+            SDL_UnlockMutex(savestates_lock);
+#endif
+            return 0;
+        }
+    }
+
     gzclose(f);
 #ifdef USE_SDL
     SDL_UnlockMutex(savestates_lock);
@@ -479,7 +500,7 @@ int savestates_load_m64p(char *filepath)
         g_dev.r4300.cp0.tlb.entries[i].d_odd = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].v_odd = GETDATA(curr, char);
         g_dev.r4300.cp0.tlb.entries[i].r = GETDATA(curr, char);
-   
+
         g_dev.r4300.cp0.tlb.entries[i].start_even = GETDATA(curr, unsigned int);
         g_dev.r4300.cp0.tlb.entries[i].end_even = GETDATA(curr, unsigned int);
         g_dev.r4300.cp0.tlb.entries[i].phys_even = GETDATA(curr, unsigned int);
@@ -506,6 +527,138 @@ int savestates_load_m64p(char *filepath)
         using_tlb = GETDATA(curr, unsigned int);
     }
 #endif
+
+    if (version >= 0x00010200)
+    {
+        curr = data_0001_0200;
+
+        /* extra ai state */
+        g_dev.ai.last_read = GETDATA(curr, uint32_t);
+        g_dev.ai.delayed_carry = GETDATA(curr, uint32_t);
+
+        /* extra cart_rom state */
+        g_dev.pi.cart_rom.last_write = GETDATA(curr, uint32_t);
+        g_dev.pi.cart_rom.rom_written = GETDATA(curr, uint32_t);
+
+        /* extra sp state */
+        g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
+
+        /* extra af-rtc state */
+        g_dev.si.pif.af_rtc.control = GETDATA(curr, uint16_t);
+        g_dev.si.pif.af_rtc.now = (time_t)GETDATA(curr, int64_t);
+        g_dev.si.pif.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
+
+        /* extra controllers state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            g_dev.si.pif.controllers[i].status = GETDATA(curr, uint8_t);
+        }
+
+        /* extra rpak state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            set_rumble_reg(&g_dev.si.pif.controllers[i].rumblepak, GETDATA(curr, uint8_t));
+        }
+
+        /* extra tpak state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            g_dev.si.pif.controllers[i].transferpak.enabled = GETDATA(curr, unsigned int);
+            g_dev.si.pif.controllers[i].transferpak.bank = GETDATA(curr, unsigned int);
+            g_dev.si.pif.controllers[i].transferpak.access_mode = GETDATA(curr, unsigned int);
+            g_dev.si.pif.controllers[i].transferpak.access_mode_changed = GETDATA(curr, unsigned int);
+
+            /* verify that gb cart saved in savestate is the same as what is currently inserted in transferpak */
+            char gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+            char current_gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+
+            COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+
+            if (g_dev.si.pif.controllers[i].transferpak.gb_cart == NULL) {
+                memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
+            }
+            else {
+                memcpy(current_gb_fingerprint, g_dev.si.pif.controllers[i].transferpak.gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
+            }
+
+            if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
+                DebugMessage(M64MSG_WARNING, "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
+                   (current_gb_fingerprint[0] == 0x00) ? "(none)" : current_gb_fingerprint,
+                   (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+
+                if (gb_fingerprint[0] != 0x00) {
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t);
+                }
+            }
+            else {
+                if (g_dev.si.pif.controllers[i].transferpak.gb_cart != NULL) {
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rom_bank = GETDATA(curr, unsigned int);
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_bank = GETDATA(curr, unsigned int);
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_enable = GETDATA(curr, unsigned int);
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->mbc1_mode = GETDATA(curr, unsigned int);
+                    COPYARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latch = GETDATA(curr, unsigned int);
+                    COPYARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
+                }
+            }
+        }
+
+        /* extra pif channels state */
+        for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
+            int offset = GETDATA(curr, int8_t);
+            if (offset >= 0) {
+                setup_pif_channel(&g_dev.si.pif.channels[i], g_dev.si.pif.ram + offset);
+            }
+            else {
+                disable_pif_channel(&g_dev.si.pif.channels[i]);
+            }
+        }
+
+        /* extra vi state */
+        g_dev.vi.count_per_scanline = GETDATA(curr, unsigned int);
+    }
+    else {
+        /* extra ai state */
+        g_dev.ai.last_read = 0;
+        g_dev.ai.delayed_carry = 0;
+
+        /* extra cart_rom state */
+        g_dev.pi.cart_rom.last_write = 0;
+        g_dev.pi.cart_rom.rom_written = 0;
+
+        /* extra sp state */
+        g_dev.sp.rsp_task_locked = 0;
+
+        /* extra af-rtc state */
+        g_dev.si.pif.af_rtc.control = 0x200;
+        g_dev.si.pif.af_rtc.now = 0;
+        g_dev.si.pif.af_rtc.last_update_rtc = 0;
+
+        /* extra controllers state */
+        for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            standard_controller_reset(&g_dev.si.pif.controllers[i]);
+            poweron_rumblepak(&g_dev.si.pif.controllers[i].rumblepak);
+            poweron_transferpak(&g_dev.si.pif.controllers[i].transferpak);
+        }
+
+        /* extra pif channels state
+         * HACK: Assume PIF was in channel processing mode (and not in CIC challenge mode)
+         * Try to parse pif ram to setup pif channels
+         */
+        setup_channels_format(&g_dev.si.pif);
+
+        /* extra vi state */
+        g_dev.vi.count_per_scanline = (g_dev.vi.regs[VI_V_SYNC_REG] == 0)
+            ? 1500
+            : ((g_dev.vi.clock / g_dev.vi.expected_refresh_rate) / (g_dev.vi.regs[VI_V_SYNC_REG] + 1));
+    }
+
+    /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
+    if (input.controllerCommand) {
+        input.controllerCommand(-1, NULL);
+    }
+
+    /* reset fb state */
+    memset(&g_dev.dp.fb, 0, sizeof(g_dev.dp.fb));
+    g_dev.dp.fb.once = 1;
 
     *r4300_cp0_last_addr(&g_dev.r4300.cp0) = *r4300_pc(&g_dev.r4300);
 
@@ -639,6 +792,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.sp.regs2[SP_PC_REG]    = GETDATA(curr, uint32_t);
     g_dev.sp.regs2[SP_IBIST_REG] = GETDATA(curr, uint32_t);
 
+    /* extra sp state */
+    g_dev.sp.rsp_task_locked = 0;
+
     // dpc_register
     g_dev.dp.dpc_regs[DPC_START_REG]    = GETDATA(curr, uint32_t);
     g_dev.dp.dpc_regs[DPC_END_REG]      = GETDATA(curr, uint32_t);
@@ -676,6 +832,12 @@ static int savestates_load_pj64(char *filepath, void *handle,
     gfx.viStatusChanged();
     gfx.viWidthChanged();
 
+    g_dev.vi.count_per_scanline = (g_dev.vi.regs[VI_V_SYNC_REG] == 0)
+        ? 1500
+        : ((g_dev.vi.clock / g_dev.vi.expected_refresh_rate) / (g_dev.vi.regs[VI_V_SYNC_REG] + 1));
+
+
+
     // ai_register
     g_dev.ai.regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
     g_dev.ai.regs[AI_LEN_REG]       = GETDATA(curr, uint32_t);
@@ -684,6 +846,10 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.ai.regs[AI_DACRATE_REG]   = GETDATA(curr, uint32_t);
     g_dev.ai.regs[AI_BITRATE_REG]   = GETDATA(curr, uint32_t);
     g_dev.ai.samples_format_changed = 1;
+
+    /* extra ai state */
+    g_dev.ai.last_read = 0;
+    g_dev.ai.delayed_carry = 0;
 
     // pi_register
     g_dev.pi.regs[PI_DRAM_ADDR_REG]    = GETDATA(curr, uint32_t);
@@ -700,6 +866,10 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.pi.regs[PI_BSD_DOM2_PGS_REG] = GETDATA(curr, uint32_t);
     g_dev.pi.regs[PI_BSD_DOM2_RLS_REG] = GETDATA(curr, uint32_t);
     read_func(handle, g_dev.pi.regs, PI_REGS_COUNT*sizeof(g_dev.pi.regs[0]));
+
+    /* extra cart_rom state */
+    g_dev.pi.cart_rom.last_write = 0;
+    g_dev.pi.cart_rom.rom_written = 0;
 
     // ri_register
     g_dev.ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
@@ -744,12 +914,12 @@ static int savestates_load_pj64(char *filepath, void *handle,
         g_dev.r4300.cp0.tlb.entries[i].vpn2 = (MyEntryHi & 0xFFFFE000) >> 13;
         //g_dev.r4300.cp0.tlb.entries[i].r = (MyEntryHi & 0xC000000000000000LL) >> 62;
         g_dev.r4300.cp0.tlb.entries[i].mask = (MyPageMask & 0x1FFE000) >> 13;
-           
+
         g_dev.r4300.cp0.tlb.entries[i].start_even = g_dev.r4300.cp0.tlb.entries[i].vpn2 << 13;
         g_dev.r4300.cp0.tlb.entries[i].end_even = g_dev.r4300.cp0.tlb.entries[i].start_even+
           (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
         g_dev.r4300.cp0.tlb.entries[i].phys_even = g_dev.r4300.cp0.tlb.entries[i].pfn_even << 12;
-           
+
         g_dev.r4300.cp0.tlb.entries[i].start_odd = g_dev.r4300.cp0.tlb.entries[i].end_even+1;
         g_dev.r4300.cp0.tlb.entries[i].end_odd = g_dev.r4300.cp0.tlb.entries[i].start_odd+
           (g_dev.r4300.cp0.tlb.entries[i].mask << 12) + 0xFFF;
@@ -760,6 +930,17 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // pif ram
     COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
+
+    /* extra pif channels state
+     * HACK: Assume PIF was in channel processing mode (and not in CIC challenge mode)
+     * Try to parse pif ram to setup pif channels
+     */
+    setup_channels_format(&g_dev.si.pif);
+
+    /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
+    if (input.controllerCommand) {
+        input.controllerCommand(-1, NULL);
+    }
 
     // RDRAM
     memset(g_dev.ri.rdram.dram, 0, RDRAM_MAX_SIZE);
@@ -778,6 +959,22 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // No flashram info in pj64 savestate.
     poweron_flashram(&g_dev.pi.flashram);
+
+    /* extra fb state */
+    memset(&g_dev.dp.fb, 0, sizeof(g_dev.dp.fb));
+    g_dev.dp.fb.once = 1;
+
+    /* extra af-rtc state */
+    g_dev.si.pif.af_rtc.control = 0x200;
+    g_dev.si.pif.af_rtc.now = 0;
+    g_dev.si.pif.af_rtc.last_update_rtc = 0;
+
+    /* extra controllers state */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        standard_controller_reset(&g_dev.si.pif.controllers[i]);
+        poweron_rumblepak(&g_dev.si.pif.controllers[i].rumblepak);
+        poweron_transferpak(&g_dev.si.pif.controllers[i].transferpak);
+    }
 
     savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
 
@@ -1024,7 +1221,7 @@ int savestates_save_m64p(char *filepath)
     save_eventqueue_infos(&g_dev.r4300.cp0, queue);
 
     // Allocate memory for the save state data
-    save->size = 16788288 + sizeof(queue) + 4;
+    save->size = 16788288 + sizeof(queue) + 4 + 4096;
     save->data = curr = malloc(save->size);
     if (save->data == NULL)
     {
@@ -1229,7 +1426,7 @@ int savestates_save_m64p(char *filepath)
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].d_odd);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].v_odd);
         PUTDATA(curr, char, g_dev.r4300.cp0.tlb.entries[i].r);
-   
+
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].start_even);
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].end_even);
         PUTDATA(curr, unsigned int, g_dev.r4300.cp0.tlb.entries[i].phys_even);
@@ -1251,6 +1448,61 @@ int savestates_save_m64p(char *filepath)
 #else
     PUTDATA(curr, unsigned int, 0);
 #endif
+
+    PUTDATA(curr, uint32_t, g_dev.ai.last_read);
+    PUTDATA(curr, uint32_t, g_dev.ai.delayed_carry);
+
+    PUTDATA(curr, uint32_t, g_dev.pi.cart_rom.last_write);
+    PUTDATA(curr, uint32_t, g_dev.pi.cart_rom.rom_written);
+
+    PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
+
+    PUTDATA(curr, uint16_t, g_dev.si.pif.af_rtc.control);
+    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.now);
+    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.last_update_rtc);
+
+    for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        PUTDATA(curr, uint8_t, g_dev.si.pif.controllers[i].status);
+    }
+
+    for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        PUTDATA(curr, uint8_t, g_dev.si.pif.controllers[i].rumblepak.state);
+    }
+
+    for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.enabled);
+        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.bank);
+        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.access_mode);
+        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.access_mode_changed);
+
+        if (g_dev.si.pif.controllers[i].transferpak.gb_cart == NULL) {
+            uint8_t gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+            memset(gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
+            PUTARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+        }
+        else {
+            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+
+            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->rom_bank);
+            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_bank);
+            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_enable);
+            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->mbc1_mode);
+
+            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latch);
+            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+            PUTDATA(curr, int64_t, g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.last_time);
+        }
+    }
+
+    for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
+       PUTDATA(curr, int8_t, (g_dev.si.pif.channels[i].tx == NULL)
+               ? (int8_t)-1
+               : (int8_t)(g_dev.si.pif.channels[i].tx - g_dev.si.pif.ram));
+    }
+
+    PUTDATA(curr, unsigned int, g_dev.vi.count_per_scanline);
+
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);

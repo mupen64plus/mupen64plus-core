@@ -62,4 +62,6 @@ void process_controller_command(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf);
 
+void standard_controller_reset(struct game_controller* cont);
+
 #endif

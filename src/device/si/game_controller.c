@@ -59,7 +59,7 @@ static int is_pak_present(struct controller_input_backend* cin)
     return 0;
 }
 
-static void standard_controller_reset(struct game_controller* cont)
+void standard_controller_reset(struct game_controller* cont)
 {
     /* reset controller status */
     cont->status = 0x00;
@@ -112,6 +112,7 @@ void poweron_game_controller(struct game_controller* cont)
 {
     standard_controller_reset(cont);
 
+    poweron_rumblepak(&cont->rumblepak);
     poweron_transferpak(&cont->transferpak);
 }
 

@@ -29,10 +29,14 @@ struct rumble_backend;
 
 struct rumblepak
 {
+    uint8_t state;
     struct rumble_backend* rumble;
 };
 
 void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
+void poweron_rumblepak(struct rumblepak* rpk);
+
+void set_rumble_reg(struct rumblepak* rpk, uint8_t value);
 
 void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
 void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size);

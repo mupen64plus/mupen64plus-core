@@ -147,7 +147,7 @@ static void post_setup_channel(struct pif_channel* channel)
         channel->rx, channel->rx_buf);
 }
 
-static void disable_pif_channel(struct pif_channel* channel)
+void disable_pif_channel(struct pif_channel* channel)
 {
     channel->tx = NULL;
     channel->rx = NULL;
@@ -155,7 +155,7 @@ static void disable_pif_channel(struct pif_channel* channel)
     channel->rx_buf = NULL;
 }
 
-static size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
+size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 {
     uint8_t tx = buf[0] & 0x3f;
     uint8_t rx = buf[1] & 0x3f;
@@ -204,7 +204,7 @@ void init_pif(struct pif* pif,
     init_cic_using_ipl3(&pif->cic, ipl3);
 }
 
-static void setup_channels_format(struct pif* pif)
+void setup_channels_format(struct pif* pif)
 {
     size_t i = 0;
     size_t k = 0;

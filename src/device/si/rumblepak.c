@@ -25,10 +25,20 @@
 
 #include <string.h>
 
+void set_rumble_reg(struct rumblepak* rpk, uint8_t value)
+{
+    rpk->state = value;
+    rumble_exec(rpk->rumble, (rpk->state == 0) ? RUMBLE_STOP : RUMBLE_START);
+}
 
 void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble)
 {
     rpk->rumble = rumble;
+}
+
+void poweron_rumblepak(struct rumblepak* rpk)
+{
+    set_rumble_reg(rpk, 0x00);
 }
 
 void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size)
@@ -49,15 +59,9 @@ void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* da
 
 void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size)
 {
-    enum rumble_action action;
-
     if (address == 0xc000)
     {
-        action = (*data == 0)
-                ? RUMBLE_STOP
-                : RUMBLE_START;
-
-        rumble_exec(rpk->rumble, action);
+        set_rumble_reg(rpk, data[size - 1]);
     }
 }
 
