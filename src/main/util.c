@@ -85,7 +85,7 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
 file_status_t load_file(const char* filename, void** buffer, size_t* size)
 {
     FILE* fd;
-    size_t l_size;
+    size_t l_size, bytes_read;
     void* l_buffer;
     int err;
     file_status_t ret;
@@ -128,8 +128,8 @@ file_status_t load_file(const char* filename, void** buffer, size_t* size)
 
     /* copy file content to buffer */
     ret = file_read_error;
-    err = fread(l_buffer, 1, l_size, fd);
-    if (err != l_size)
+    bytes_read = fread(l_buffer, 1, l_size, fd);
+    if (bytes_read != l_size)
     {
         free(l_buffer);
         goto close_file;

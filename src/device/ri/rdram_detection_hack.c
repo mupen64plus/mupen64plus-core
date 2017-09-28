@@ -37,6 +37,6 @@ void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic)
         ? 0x318
         : 0x3f0;
 
-    rdram->dram[address/4] = rdram->dram_size;
+    rdram->dram[address/4] = (uint32_t)rdram->dram_size;
 }
 

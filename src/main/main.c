@@ -821,7 +821,7 @@ static void apply_speed_limiter(void)
     sleepTimes[sleepTimesIndex%SAMPLE_COUNT] = sleepTime;
     sleepTimesIndex++;
 
-    int elementsForAverage = sleepTimesIndex > SAMPLE_COUNT ? SAMPLE_COUNT : sleepTimesIndex;
+    unsigned int elementsForAverage = sleepTimesIndex > SAMPLE_COUNT ? SAMPLE_COUNT : sleepTimesIndex;
 
     // compute the average sleepTime
     double sum = 0;
@@ -1097,7 +1097,7 @@ m64p_error main_run(void)
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
-        gb_carts_data[i].control_id = control_ids[i] = i;
+        gb_carts_data[i].control_id = control_ids[i] = (int)i;
         l_paks_idx[i] = 0;
 
         /* if no controller is plugged, make it "disconnected" */
