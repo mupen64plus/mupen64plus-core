@@ -369,6 +369,8 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
     RomSettings->status = entry->status;
     RomSettings->players = entry->players;
     RomSettings->rumble = entry->rumble;
+    RomSettings->transferpak = entry->transferpak;
+    RomSettings->mempak = entry->mempak;
 
     return M64ERR_SUCCESS;
 }

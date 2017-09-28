@@ -1031,27 +1031,23 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
-    /* Check paks compatibility for current ROM
-     * FIXME: assume for now that all paks are compatible
-     * Use the rom db to know which pak are compatibles
-     */
-    l_ipaks[0] = &g_imempak;
-    l_ipaks[1] = &g_irumblepak;
-    l_ipaks[2] = &g_itransferpak;
-    l_ipaks[3] = NULL; /* must be last */
-
-
-    /* disable GB carts if rom is not compatible with tpak */
-    for(k = 0; k < PAK_MAX_SIZE; ++k) {
-        if (l_ipaks[k] == &g_itransferpak) {
-            break;
-        }
+    /* Check paks compatibility for current ROM */
+    k = 0;
+    if (ROM_SETTINGS.mempak) {
+        l_ipaks[k++] = &g_imempak;
     }
-    if (k == PAK_MAX_SIZE) {
+    if (ROM_SETTINGS.rumble) {
+        l_ipaks[k++] = &g_irumblepak;
+    }
+    if (ROM_SETTINGS.transferpak) {
+        l_ipaks[k++] = &g_itransferpak;
+    } else {
+        /* disable GB carts if rom is not compatible with tpak */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
             g_gb_rom_files[i] = NULL;
         }
     }
+    l_ipaks[k] = NULL;
 
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);

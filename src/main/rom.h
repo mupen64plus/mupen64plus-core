@@ -130,6 +130,8 @@ typedef struct
    unsigned char rumble; /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char countperop;
    unsigned char disableextramem;
+   unsigned char transferpak; /* 0 - No, 1 - Yes boolean for transferpak support. */
+   unsigned char mempak; /* 0 - No, 1 - Yes boolean for mempak support. */
    uint32_t set_flags;
 } romdatabase_entry;
 
@@ -143,7 +145,9 @@ enum romdatabase_entry_set_flags {
     ROMDATABASE_ENTRY_RUMBLE = BIT(5),
     ROMDATABASE_ENTRY_COUNTEROP = BIT(6),
     ROMDATABASE_ENTRY_CHEATS = BIT(7),
-    ROMDATABASE_ENTRY_EXTRAMEM = BIT(8)
+    ROMDATABASE_ENTRY_EXTRAMEM = BIT(8),
+    ROMDATABASE_ENTRY_TRANSFERPAK = BIT(9),
+    ROMDATABASE_ENTRY_MEMPAK = BIT(10)
 };
 
 typedef struct _romdatabase_search

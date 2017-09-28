@@ -202,6 +202,8 @@ typedef struct
    unsigned char status;  /* Rom status on a scale from 0-5. */
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
+   unsigned char transferpak; /* 0 - No, 1 - Yes boolean for transfer pak support. */
+   unsigned char mempak; /* 0 - No, 1 - Yes boolean for memory pak support. */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */
