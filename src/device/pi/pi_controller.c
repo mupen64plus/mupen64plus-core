@@ -131,8 +131,9 @@ static void dma_pi_write(struct pi_controller* pi)
     }
     else
     {
-        int32_t diff = pi->cart_rom.rom_size - rom_address;
-        if (diff < 0) diff = 0;
+        unsigned int diff = (pi->cart_rom.rom_size <= rom_address)
+            ? 0
+            : pi->cart_rom.rom_size - rom_address;
 
         for (i = 0; i < diff; ++i)
         {
