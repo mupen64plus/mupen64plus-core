@@ -100,6 +100,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     int special_rom,
+    int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
     /* pi */

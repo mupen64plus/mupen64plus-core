@@ -126,6 +126,14 @@ static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int e
     else return 0;
 }
 
+unsigned int add_random_interrupt_time(struct r4300_core* r4300)
+{
+    if (r4300->randomize_interrupt)
+        return rand() % 0x1000;
+    else
+        return 0;
+}
+
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay)
 {
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
