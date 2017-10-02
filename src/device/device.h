@@ -39,6 +39,7 @@
 #include "controllers/paks/rumblepak.h"
 #include "controllers/paks/transferpak.h"
 #include "cart/cart.h"
+#include "gb/gb_cart.h"
 
 struct audio_out_backend_interface;
 struct storage_backend_interface;
@@ -85,6 +86,7 @@ struct device
     struct mempak mempaks[GAME_CONTROLLERS_COUNT];
     struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
     struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];
+    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
 
     struct cart cart;
 };

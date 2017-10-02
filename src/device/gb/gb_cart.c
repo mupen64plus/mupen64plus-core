@@ -669,8 +669,16 @@ int init_gb_cart(struct gb_cart* gb_cart,
 
     memset(&rtc, 0, sizeof(rtc));
 
+    memset(gb_cart, 0, sizeof(*gb_cart));
+
     /* ask to load rom and initialize rom storage backend */
     init_rom(rom_opaque, &rom_storage, &irom_storage);
+
+    /* check that init_rom succeeded */
+    if (irom_storage == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to initialize GB ROM");
+        return -1;
+    }
 
     const uint8_t* rom_data = irom_storage->data(rom_storage);
 
@@ -726,6 +734,13 @@ int init_gb_cart(struct gb_cart* gb_cart,
         if (ram_size != 0)
         {
             init_ram(ram_opaque, ram_size, &ram_storage, &iram_storage);
+
+            /* check that init_ram succeeded */
+            if (iram_storage == NULL) {
+                DebugMessage(M64MSG_ERROR, "Failed to initialize GB RAM");
+                return -1;
+            }
+
             if (iram_storage->data(ram_storage) == NULL || iram_storage->size(ram_storage) != ram_size)
             {
                 DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", ram_size);

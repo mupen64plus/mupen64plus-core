@@ -59,6 +59,21 @@ void poweron_transferpak(struct transferpak* tpk)
     }
 }
 
+void change_gb_cart(struct transferpak* tpk, struct gb_cart* gb_cart)
+{
+    tpk->enabled = 0;
+
+    if (gb_cart == NULL) {
+        tpk->access_mode = CART_NOT_INSERTED;
+    }
+    else {
+        tpk->access_mode = CART_ACCESS_MODE_0;
+        poweron_gb_cart(gb_cart);
+    }
+
+    tpk->gb_cart = gb_cart;
+}
+
 static void plug_transferpak(void* pak)
 {
     struct transferpak* tpk = (struct transferpak*)pak;
@@ -110,7 +125,10 @@ static void read_transferpak(void* pak, uint16_t address, uint8_t* data, size_t 
         if (tpk->enabled)
         {
             DebugMessage(M64MSG_VERBOSE, "tpak read cart: %04x", address);
-            read_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+
+            if (tpk->gb_cart != NULL) {
+                read_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+            }
         }
         break;
 
@@ -181,7 +199,10 @@ static void write_transferpak(void* pak, uint16_t address, const uint8_t* data, 
 //        if (tpk->enabled)
         {
             DebugMessage(M64MSG_VERBOSE, "tpak write gb: %04x <- %02x", address, value);
-            write_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+
+            if (tpk->gb_cart != NULL) {
+                write_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+            }
         }
         break;
     default:

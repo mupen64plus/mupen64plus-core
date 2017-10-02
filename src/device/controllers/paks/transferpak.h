@@ -47,5 +47,7 @@ struct transferpak
 void init_transferpak(struct transferpak* tpk, struct gb_cart* gb_cart);
 void poweron_transferpak(struct transferpak* tpk);
 
+void change_gb_cart(struct transferpak* tpk, struct gb_cart* gb_cart);
+
 extern const struct pak_interface g_itransferpak;
 #endif

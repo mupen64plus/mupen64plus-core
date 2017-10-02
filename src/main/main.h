@@ -56,6 +56,7 @@ void new_frame(void);
 void new_vi(void);
 
 void main_switch_pak(int control_id);
+void main_change_gb_cart(int control_id);
 
 int  main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);

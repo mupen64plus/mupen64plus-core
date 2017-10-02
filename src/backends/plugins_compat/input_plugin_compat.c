@@ -27,25 +27,34 @@
 #include "plugin/plugin.h"
 
 #include "main/main.h"
-#include <SDL.h>
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 /* XXX: this is an abuse of the Zilmar Spec normally this value is reserved */
-enum { PAK_SWITCH_BUTTON = 0x4000 };
+enum {
+    PAK_SWITCH_BUTTON = 0x4000,
+    GB_CART_SWITCH_BUTTON = 0x8000
+};
 
 /* Pak switching delay
  * If you put too low value,
  * some games (for instance Perfect Dark) won't be able to detect the pak change
  * causing incorrect pak accesses */
-enum { PAK_SWITCH_DELAY = 500 };
+enum { PAK_SWITCH_DELAY = 20 };
+enum { GB_CART_SWITCH_DELAY = 20 };
+
+static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask)
+{
+    return ((input & mask) == 0)
+        && ((last_input & mask) != 0);
+}
 
 static uint32_t input_plugin_get_input(void* opaque)
 {
     static uint32_t last_values[GAME_CONTROLLERS_COUNT] = { 0 };
-    static unsigned int switch_delay[GAME_CONTROLLERS_COUNT] = { 0 };
+    static unsigned int pak_switch_delays[GAME_CONTROLLERS_COUNT] = { 0 };
+    static unsigned int gb_switch_delays[GAME_CONTROLLERS_COUNT] = { 0 };
 
     int control_id = *(int*)opaque;
 
@@ -55,16 +64,26 @@ static uint32_t input_plugin_get_input(void* opaque)
         input.getKeys(control_id, &keys);
     }
 
-    /* disconnect current pak immediately after "pak switch" button is released */
-    if (((keys.Value & PAK_SWITCH_BUTTON) == 0) && ((last_values[control_id] & PAK_SWITCH_BUTTON))) {
+    /* disconnect current pak (if any) immediately after "pak switch" button is released */
+    if (is_button_released(keys.Value, last_values[control_id], PAK_SWITCH_BUTTON)) {
         change_pak(&g_dev.controllers[control_id], NULL, NULL);
-        switch_delay[control_id] = SDL_GetTicks();
+        pak_switch_delays[control_id] = PAK_SWITCH_DELAY;
     }
 
     /* switch to next pak after switch delay has expired */
-    if (switch_delay[control_id] != 0 && (SDL_GetTicks() - switch_delay[control_id]) >= 500) {
+    if (pak_switch_delays[control_id] > 0 && --pak_switch_delays[control_id] == 0) {
         main_switch_pak(control_id);
-        switch_delay[control_id] = 0;
+    }
+
+    /* disconnect current GB cart (if any) immediately after "GB cart switch" button is released */
+    if (is_button_released(keys.Value, last_values[control_id], GB_CART_SWITCH_BUTTON)) {
+        change_gb_cart(&g_dev.transferpaks[control_id], NULL);
+        gb_switch_delays[control_id] = GB_CART_SWITCH_DELAY;
+    }
+
+    /* switch to new GB cart after switch delay has expired */
+    if (gb_switch_delays[control_id] > 0 && --gb_switch_delays[control_id] == 0) {
+        main_change_gb_cart(control_id);
     }
 
     last_values[control_id] = keys.Value;

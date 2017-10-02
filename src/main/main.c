@@ -102,32 +102,71 @@ void* g_mem_base = NULL;
 
 struct device g_dev;
 
-
 #if 1
-int gb_cart_loader_init_rom(void* cb_data, int control_id, const char** rom_filename)
-{
-    char key[256];
+#include <assert.h>
 
-    snprintf(key, 256, "tpak-%u-rom", control_id + 1);
-    *rom_filename = ConfigGetParamString(g_CoreConfig, key);
-    if (*rom_filename != NULL) {
-        *rom_filename = strdup(*rom_filename);
+int gb_cart_loader_init_mem(void* cb_data, const char* mem, int control_id, const char** mem_filename)
+{
+#define MUPEN64PLUS_CFG_NAME "mupen64plus.cfg"
+
+    m64p_handle core_config;
+    char key[64];
+    char value[4096];
+    const char* configdir = NULL;
+    char* cfgfilepath = NULL;
+
+    /* reset ROM filename */
+    *mem_filename = NULL;
+
+    snprintf(key, sizeof(key), "tpak-%u-%s", control_id + 1, mem);
+
+    /* XXX: use external config API to force reload of file content */
+    configdir = ConfigGetUserConfigPath();
+    if (configdir == NULL) {
+        DebugMessage(M64MSG_ERROR, "Can't get user config path !");
+        return -1;
     }
+
+    cfgfilepath = combinepath(configdir, MUPEN64PLUS_CFG_NAME);
+    if (cfgfilepath == NULL) {
+        DebugMessage(M64MSG_ERROR, "Can't get config file path !");
+        return -1;
+    }
+
+    if (ConfigExternalOpen(cfgfilepath, &core_config) != M64ERR_SUCCESS) {
+        DebugMessage(M64MSG_ERROR, "Can't open config file %s!", cfgfilepath);
+        free(cfgfilepath);
+        return -1;
+    }
+    if (ConfigExternalGetParameter(core_config, "Core", key, value, sizeof(value)) == M64ERR_SUCCESS) {
+
+        /* expect and skip delimiting " " */
+        if (value[0] == '"') {
+            size_t len = strlen(value);
+            assert(value[len-1] == '"');
+            value[len-1] = '\0';
+            *mem_filename = strdup(value + 1);
+        }
+    }
+    else {
+        DebugMessage(M64MSG_ERROR, "Can't get parameter %s", key);
+    }
+    ConfigExternalClose(core_config);
+
+    free(cfgfilepath);
 
     return 0;
 }
 
+
+int gb_cart_loader_init_rom(void* cb_data, int control_id, const char** rom_filename)
+{
+    return gb_cart_loader_init_mem(cb_data, "rom", control_id, rom_filename);
+}
+
 int gb_cart_loader_init_ram(void* cb_data, int control_id, const char** ram_filename)
 {
-    char key[256];
-
-    snprintf(key, 256, "tpak-%u-ram", control_id + 1);
-    *ram_filename = ConfigGetParamString(g_CoreConfig, key);
-    if (*ram_filename != NULL) {
-        *ram_filename = strdup(*ram_filename);
-    }
-
-    return 0;
+    return gb_cart_loader_init_mem(cb_data, "ram", control_id, ram_filename);
 }
 
 m64p_gb_cart_loader g_gb_cart_loader =
@@ -961,6 +1000,7 @@ static void open_eep_file(struct file_storage* fstorage)
     }
 }
 
+
 struct gb_cart_data
 {
     int control_id;
@@ -968,16 +1008,26 @@ struct gb_cart_data
     struct file_storage ram_fstorage;
 };
 
+static struct gb_cart_data l_gb_carts_data[GAME_CONTROLLERS_COUNT];
+
 static void init_gb_rom(void* opaque, void** storage, const struct storage_backend_interface** istorage)
 {
     struct gb_cart_data* data = (struct gb_cart_data*)opaque;
+    const char* rom_filename = NULL;
+
+    /* reset rom storage */
+    *storage = NULL;
+    *istorage = NULL;
 
     /* Ask the core loader for rom filename */
     g_gb_cart_loader.init_rom(g_gb_cart_loader.cb_data,
-        data->control_id, &data->rom_fstorage.filename);
+        data->control_id, &rom_filename);
 
     /* Open ROM file */
-    open_rom_file_storage(&data->rom_fstorage, data->rom_fstorage.filename);
+    if (open_rom_file_storage(&data->rom_fstorage, rom_filename) != file_ok) {
+        DebugMessage(M64MSG_ERROR, "Failed to load ROM file: %s", rom_filename);
+        return;
+    }
 
     DebugMessage(M64MSG_INFO, "GB Loader ROM: %s - %zu",
             data->rom_fstorage.filename,
@@ -991,14 +1041,19 @@ static void init_gb_rom(void* opaque, void** storage, const struct storage_backe
 static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const struct storage_backend_interface** istorage)
 {
     struct gb_cart_data* data = (struct gb_cart_data*)opaque;
+    const char* ram_filename = NULL;
+
+    /* reset ram storage */
+    *storage = NULL;
+    *istorage = NULL;
 
     /* Ask the core loader for ram filename */
     g_gb_cart_loader.init_ram(g_gb_cart_loader.cb_data,
-        data->control_id, &data->ram_fstorage.filename);
+        data->control_id, &ram_filename);
 
     /* Open RAM file
      * if file doesn't exists provide default content */
-    int ret = open_file_storage(&data->ram_fstorage, ram_size, data->ram_fstorage.filename);
+    int ret = open_file_storage(&data->ram_fstorage, ram_size, ram_filename);
     if (ret == (int)file_open_error) {
         memset(data->ram_fstorage.data, 0, data->ram_fstorage.size);
     }
@@ -1011,6 +1066,42 @@ static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const str
     *storage = &data->ram_fstorage;
     *istorage = &g_ifile_storage;
 }
+
+void main_change_gb_cart(int control_id)
+{
+    struct transferpak* tpk = &g_dev.transferpaks[control_id];
+    struct gb_cart* gb_cart = &g_dev.gb_carts[control_id];
+    struct gb_cart_data* data = &l_gb_carts_data[control_id];
+
+    /* reset gb_cart_data */
+    memset(data, 0, sizeof(*data));
+    data->control_id = control_id;
+
+    if (init_gb_cart(gb_cart,
+            data, init_gb_rom,
+            data, init_gb_ram,
+            NULL, &g_iclock_ctime_plus_delta) != 0)
+    {
+        close_file_storage(&data->rom_fstorage);
+        close_file_storage(&data->ram_fstorage);
+        gb_cart = NULL;
+    }
+
+    if (gb_cart == NULL || gb_cart->read_gb_cart == NULL) {
+        gb_cart = NULL;
+    }
+
+    change_gb_cart(tpk, gb_cart);
+
+    if (tpk->gb_cart != NULL) {
+        const uint8_t* rom_data = gb_cart->irom_storage->data(gb_cart->rom_storage);
+        DebugMessage(M64MSG_INFO, "Inserting GB cart %s into transferpak %u", rom_data + 0x134, control_id);
+    }
+    else {
+        DebugMessage(M64MSG_INFO, "Removing GB cart from transferpak %u", control_id);
+    }
+}
+
 
 /*********************************************************************************************************
 * emulation thread - runs the core
@@ -1033,9 +1124,6 @@ m64p_error main_run(void)
 
     struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
     struct file_storage mpk;
-
-    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
-    struct gb_cart_data gb_carts_data[GAME_CONTROLLERS_COUNT];
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -1092,12 +1180,12 @@ m64p_error main_run(void)
     void* joybus_devices[PIF_CHANNELS_COUNT];
     const struct joybus_device_interface* ijoybus_devices[PIF_CHANNELS_COUNT];
 
-    memset(&gb_carts, 0, GAME_CONTROLLERS_COUNT*sizeof(*gb_carts));
-    memset(&gb_carts_data, 0, GAME_CONTROLLERS_COUNT*sizeof(*gb_carts_data));
+    memset(&g_dev.gb_carts, 0, GAME_CONTROLLERS_COUNT*sizeof(*g_dev.gb_carts));
+    memset(&l_gb_carts_data, 0, GAME_CONTROLLERS_COUNT*sizeof(*l_gb_carts_data));
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
-        gb_carts_data[i].control_id = control_ids[i] = (int)i;
+        l_gb_carts_data[i].control_id = control_ids[i] = (int)i;
         l_paks_idx[i] = 0;
 
         /* if no controller is plugged, make it "disconnected" */
@@ -1148,16 +1236,16 @@ m64p_error main_run(void)
                 else if (l_ipaks[k] == &g_itransferpak) {
 
                     /* init GB cart */
-                    if (init_gb_cart(&gb_carts[i],
-                            &gb_carts_data[i], init_gb_rom,
-                            &gb_carts_data[i], init_gb_ram,
+                    if (init_gb_cart(&g_dev.gb_carts[i],
+                            &l_gb_carts_data[i], init_gb_rom,
+                            &l_gb_carts_data[i], init_gb_ram,
                             NULL, &g_iclock_ctime_plus_delta) != 0)
                     {
-                        close_file_storage(&gb_carts_data[i].rom_fstorage);
-                        close_file_storage(&gb_carts_data[i].ram_fstorage);
+                        close_file_storage(&l_gb_carts_data[i].rom_fstorage);
+                        close_file_storage(&l_gb_carts_data[i].ram_fstorage);
                     }
 
-                    init_transferpak(&g_dev.transferpaks[i], (gb_carts[i].read_gb_cart == NULL) ? NULL : &gb_carts[i]);
+                    init_transferpak(&g_dev.transferpaks[i], (g_dev.gb_carts[i].read_gb_cart == NULL) ? NULL : &g_dev.gb_carts[i]);
                     l_paks[i][k] = &g_dev.transferpaks[i];
 
                     if (Controls[i].Plugin == PLUGIN_TRANSFER_PAK) {
@@ -1284,8 +1372,8 @@ m64p_error main_run(void)
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         if (Controls[i].Present && !Controls[i].RawData) {
-            close_file_storage(&gb_carts_data[i].rom_fstorage);
-            close_file_storage(&gb_carts_data[i].ram_fstorage);
+            close_file_storage(&l_gb_carts_data[i].rom_fstorage);
+            close_file_storage(&l_gb_carts_data[i].ram_fstorage);
         }
     }
 
@@ -1318,8 +1406,8 @@ on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         if (Controls[i].Present && !Controls[i].RawData) {
-            close_file_storage(&gb_carts_data[i].rom_fstorage);
-            close_file_storage(&gb_carts_data[i].ram_fstorage);
+            close_file_storage(&l_gb_carts_data[i].rom_fstorage);
+            close_file_storage(&l_gb_carts_data[i].ram_fstorage);
         }
     }
 
