@@ -1021,7 +1021,9 @@ static void init_gb_rom(void* opaque, void** storage, const struct storage_backe
     struct gb_cart_data* data = (struct gb_cart_data*)opaque;
 
     /* Ask the core loader for rom filename */
-    char* rom_filename = g_gb_cart_loader.get_rom(g_gb_cart_loader.cb_data, data->control_id);
+    char* rom_filename = (g_gb_cart_loader.get_rom == NULL)
+        ? NULL
+        : g_gb_cart_loader.get_rom(g_gb_cart_loader.cb_data, data->control_id);
 
     /* Handle the no cart case */
     if (rom_filename == NULL || strlen(rom_filename) == 0) {
@@ -1063,7 +1065,9 @@ static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const str
     struct gb_cart_data* data = (struct gb_cart_data*)opaque;
 
     /* Ask the core loader for ram filename */
-    char* ram_filename = g_gb_cart_loader.get_ram(g_gb_cart_loader.cb_data, data->control_id);
+    char* ram_filename = (g_gb_cart_loader.get_ram == NULL)
+        ? NULL
+        : g_gb_cart_loader.get_ram(g_gb_cart_loader.cb_data, data->control_id);
 
     /* Handle the no RAM case
      * if NULL or empty string generate a filename
