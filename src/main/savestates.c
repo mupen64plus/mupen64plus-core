@@ -614,6 +614,9 @@ int savestates_load_m64p(char *filepath)
 
         /* extra vi state */
         g_dev.vi.count_per_scanline = GETDATA(curr, unsigned int);
+
+        /* extra si state */
+        g_dev.si.si_type = GETDATA(curr, uint32_t);
     }
     else {
         /* extra ai state */
@@ -649,6 +652,9 @@ int savestates_load_m64p(char *filepath)
         g_dev.vi.count_per_scanline = (g_dev.vi.regs[VI_V_SYNC_REG] == 0)
             ? 1500
             : ((g_dev.vi.clock / g_dev.vi.expected_refresh_rate) / (g_dev.vi.regs[VI_V_SYNC_REG] + 1));
+
+        /* extra si state */
+        g_dev.si.si_type = 0;
     }
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
@@ -836,7 +842,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
         ? 1500
         : ((g_dev.vi.clock / g_dev.vi.expected_refresh_rate) / (g_dev.vi.regs[VI_V_SYNC_REG] + 1));
 
-
+    /* extra si state */
+    g_dev.si.si_type = 0;
 
     // ai_register
     g_dev.ai.regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
@@ -1503,6 +1510,7 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, unsigned int, g_dev.vi.count_per_scanline);
 
+    PUTDATA(curr, uint32_t, g_dev.si.si_type);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);

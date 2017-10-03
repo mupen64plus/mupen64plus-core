@@ -154,9 +154,8 @@ static void dma_pi_write(struct pi_controller* pi)
         force_detected_rdram_size_hack(&pi->ri->rdram, pi->cic);
     }
 
-    /* mark both DMA and IO as busy */
-    pi->regs[PI_STATUS_REG] |=
-        PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY;
+    /* mark DMA as busy */
+    pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
@@ -222,6 +221,8 @@ int write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     case PI_STATUS_REG:
         if (value & mask & 2)
             clear_rcp_interrupt(pi->r4300, MI_INTR_PI);
+        if (value & mask & 1)
+            DebugMessage(M64MSG_WARNING, "Unimplemented PI reset!");
         return 0;
 
     case PI_BSD_DOM1_LAT_REG:
