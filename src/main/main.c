@@ -177,7 +177,7 @@ m64p_gb_cart_loader g_gb_cart_loader =
     gb_cart_loader_get_ram
 };
 #else
-m64p_gb_cart_loader g_gb_cart_loader = {};
+m64p_gb_cart_loader g_gb_cart_loader;
 #endif
 
 
