@@ -30,10 +30,23 @@
 #include <stdint.h>
 
 /* Audio Out backend interface */
+
 extern const struct audio_out_backend_interface
     g_iaudio_out_backend_plugin_compat;
 
 /* Controller Input backend interface */
+
+struct controller_input_compat
+{
+    int control_id;
+
+    struct game_controller* cont;
+    struct transferpak* tpk;
+
+    uint32_t last_input;
+    unsigned int pak_switch_delay;
+    unsigned int gb_switch_delay;
+};
 
 extern const struct controller_input_backend_interface
     g_icontroller_input_backend_plugin_compat;

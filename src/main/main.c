@@ -1121,6 +1121,7 @@ m64p_error main_run(void)
     struct file_storage sra;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
+    struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
 
     struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
     struct file_storage mpk;
@@ -1182,11 +1183,15 @@ m64p_error main_run(void)
 
     memset(&g_dev.gb_carts, 0, GAME_CONTROLLERS_COUNT*sizeof(*g_dev.gb_carts));
     memset(&l_gb_carts_data, 0, GAME_CONTROLLERS_COUNT*sizeof(*l_gb_carts_data));
+    memset(cin_compats, 0, GAME_CONTROLLERS_COUNT*sizeof(*cin_compats));
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
-        l_gb_carts_data[i].control_id = control_ids[i] = (int)i;
+        l_gb_carts_data[i].control_id = control_ids[i] = cin_compats[i].control_id = (int)i;
         l_paks_idx[i] = 0;
+
+        cin_compats[i].cont = &g_dev.controllers[i];
+        cin_compats[i].tpk = &g_dev.transferpaks[i];
 
         /* if no controller is plugged, make it "disconnected" */
         if (!Controls[i].Present) {

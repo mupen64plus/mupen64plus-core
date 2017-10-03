@@ -52,41 +52,37 @@ static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask
 
 static uint32_t input_plugin_get_input(void* opaque)
 {
-    static uint32_t last_values[GAME_CONTROLLERS_COUNT] = { 0 };
-    static unsigned int pak_switch_delays[GAME_CONTROLLERS_COUNT] = { 0 };
-    static unsigned int gb_switch_delays[GAME_CONTROLLERS_COUNT] = { 0 };
-
-    int control_id = *(int*)opaque;
+    struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
 
     BUTTONS keys = { 0 };
 
     if (input.getKeys) {
-        input.getKeys(control_id, &keys);
+        input.getKeys(cin_compat->control_id, &keys);
     }
 
     /* disconnect current pak (if any) immediately after "pak switch" button is released */
-    if (is_button_released(keys.Value, last_values[control_id], PAK_SWITCH_BUTTON)) {
-        change_pak(&g_dev.controllers[control_id], NULL, NULL);
-        pak_switch_delays[control_id] = PAK_SWITCH_DELAY;
+    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
+        change_pak(cin_compat->cont, NULL, NULL);
+        cin_compat->pak_switch_delay = PAK_SWITCH_DELAY;
     }
 
     /* switch to next pak after switch delay has expired */
-    if (pak_switch_delays[control_id] > 0 && --pak_switch_delays[control_id] == 0) {
-        main_switch_pak(control_id);
+    if (cin_compat->pak_switch_delay > 0 && --cin_compat->pak_switch_delay == 0) {
+        main_switch_pak(cin_compat->control_id);
     }
 
     /* disconnect current GB cart (if any) immediately after "GB cart switch" button is released */
-    if (is_button_released(keys.Value, last_values[control_id], GB_CART_SWITCH_BUTTON)) {
-        change_gb_cart(&g_dev.transferpaks[control_id], NULL);
-        gb_switch_delays[control_id] = GB_CART_SWITCH_DELAY;
+    if (is_button_released(keys.Value, cin_compat->last_input, GB_CART_SWITCH_BUTTON)) {
+        change_gb_cart(cin_compat->tpk, NULL);
+        cin_compat->gb_switch_delay = GB_CART_SWITCH_DELAY;
     }
 
     /* switch to new GB cart after switch delay has expired */
-    if (gb_switch_delays[control_id] > 0 && --gb_switch_delays[control_id] == 0) {
-        main_change_gb_cart(control_id);
+    if (cin_compat->gb_switch_delay > 0 && --cin_compat->gb_switch_delay == 0) {
+        main_change_gb_cart(cin_compat->control_id);
     }
 
-    last_values[control_id] = keys.Value;
+    cin_compat->last_input = keys.Value;
 
     return keys.Value;
 }
