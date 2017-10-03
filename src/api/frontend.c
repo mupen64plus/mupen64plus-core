@@ -304,6 +304,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (ParamInt != sizeof(m64p_gb_cart_loader) || ParamPtr == NULL)
                 return M64ERR_INPUT_INVALID;
             g_gb_cart_loader = *(m64p_gb_cart_loader*)ParamPtr;
+            return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
     }
