@@ -102,7 +102,7 @@ void* g_mem_base = NULL;
 
 struct device g_dev;
 
-#if 1
+#if 0
 #include <assert.h>
 
 static char* gb_cart_loader_get_mem_file(void* cb_data, const char* mem, int control_id)
