@@ -135,6 +135,8 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case PI_STATUS_REG:
         if (value & mask & 2)
             clear_rcp_interrupt(pi->r4300, MI_INTR_PI);
+        if (value & mask & 1)
+            pi->regs[PI_STATUS_REG] = 0;
         return;
 
     case PI_BSD_DOM1_LAT_REG:
@@ -155,6 +157,6 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
-    pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
+    pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
     raise_rcp_interrupt(pi->r4300, MI_INTR_PI);
 }
