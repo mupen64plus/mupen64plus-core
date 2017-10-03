@@ -1075,9 +1075,13 @@ static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const str
 
     /* Open RAM file
      * if file doesn't exists provide default content */
-    if (open_file_storage(&data->ram_fstorage, ram_size, ram_filename) != file_ok) {
+    int err = open_file_storage(&data->ram_fstorage, ram_size, ram_filename);
+    if (err == file_open_error) {
         memset(data->ram_fstorage.data, 0, data->ram_fstorage.size);
         DebugMessage(M64MSG_INFO, "Providing default RAM content");
+    }
+    else if (err == file_read_error) {
+        DebugMessage(M64MSG_WARNING, "Size mismatch between expected RAM size and effective file size");
     }
 
     DebugMessage(M64MSG_INFO, "GB Loader RAM: %s - %zu",
