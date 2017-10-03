@@ -46,6 +46,8 @@ struct controller_input_compat
     uint32_t last_input;
     unsigned int pak_switch_delay;
     unsigned int gb_switch_delay;
+
+    unsigned int gb_cart_switch_enabled;
 };
 
 extern const struct controller_input_backend_interface

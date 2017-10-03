@@ -655,9 +655,9 @@ static const struct parsed_cart_type* parse_cart_type(uint8_t cart_type)
 }
 
 
-int init_gb_cart(struct gb_cart* gb_cart,
-        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage),
-        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage),
+void init_gb_cart(struct gb_cart* gb_cart,
+        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
+        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
         void* clock, const struct clock_backend_interface* iclock)
 {
     const struct parsed_cart_type* type;
@@ -669,31 +669,20 @@ int init_gb_cart(struct gb_cart* gb_cart,
 
     memset(&rtc, 0, sizeof(rtc));
 
-    memset(gb_cart, 0, sizeof(*gb_cart));
-
     /* ask to load rom and initialize rom storage backend */
     init_rom(rom_opaque, &rom_storage, &irom_storage);
 
-    /* check that init_rom succeeded */
+    /* handle no cart case */
     if (irom_storage == NULL) {
-        DebugMessage(M64MSG_ERROR, "Failed to initialize GB ROM");
-        return -1;
-    }
-
-    const uint8_t* rom_data = irom_storage->data(rom_storage);
-
-    /* check for no cart case */
-    if (rom_data == NULL && irom_storage->size(rom_storage) == 0)
-    {
-        memset(gb_cart, 0, sizeof(*gb_cart));
-        return 0;
+        goto no_cart;
     }
 
     /* check rom size */
+    const uint8_t* rom_data = irom_storage->data(rom_storage);
     if (rom_data == NULL || irom_storage->size(rom_storage) < 0x8000)
     {
         DebugMessage(M64MSG_ERROR, "Invalid GB ROM file size (< 32k)");
-        return -1;
+        goto error_release_rom;
     }
 
     /* get and parse cart type */
@@ -702,7 +691,7 @@ int init_gb_cart(struct gb_cart* gb_cart,
     if (type == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Invalid GB cart type (%02x)", cart_type);
-        return -1;
+        goto error_release_rom;
     }
 
     DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s%s",
@@ -738,14 +727,15 @@ int init_gb_cart(struct gb_cart* gb_cart,
             /* check that init_ram succeeded */
             if (iram_storage == NULL) {
                 DebugMessage(M64MSG_ERROR, "Failed to initialize GB RAM");
-                return -1;
+                goto error_release_ram;
             }
 
             if (iram_storage->data(ram_storage) == NULL || iram_storage->size(ram_storage) != ram_size)
             {
                 DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", ram_size);
-                return -1;
+                goto error_release_ram;
             }
+
             DebugMessage(M64MSG_INFO, "Using a %d bytes GB RAM", ram_size);
         }
     }
@@ -765,7 +755,14 @@ int init_gb_cart(struct gb_cart* gb_cart,
     gb_cart->read_gb_cart = type->read_gb_cart;
     gb_cart->write_gb_cart = type->write_gb_cart;
 
-    return 0;
+    return;
+
+error_release_ram:
+    release_ram(ram_opaque);
+error_release_rom:
+    release_rom(rom_opaque);
+no_cart:
+    memset(gb_cart, 0, sizeof(*gb_cart));
 }
 
 void poweron_gb_cart(struct gb_cart* gb_cart)

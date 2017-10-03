@@ -51,9 +51,9 @@ struct gb_cart
     int (*write_gb_cart)(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
 };
 
-int init_gb_cart(struct gb_cart* gb_cart,
-        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage),
-        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage),
+void init_gb_cart(struct gb_cart* gb_cart,
+        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
+        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
         void* clock, const struct clock_backend_interface* iclock);
 
 void poweron_gb_cart(struct gb_cart* gb_cart);

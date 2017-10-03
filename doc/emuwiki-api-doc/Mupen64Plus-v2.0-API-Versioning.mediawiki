@@ -94,6 +94,8 @@ This is the most complicated interface, because it involves 3 components: the vi
 * '''FRONTEND_API_VERSION''' version 2.1.1:
 ** Core command M64CMD_CORE_STATE_SET will now accept M64CORE_VIDEO_SIZE parameter
 *** will call the video plugin function ResizeVideoOutput()
+* '''FRONTEND_API_VERSION''' version 2.1.2:
+** added "M64CMD_SET_GB_CART_LOADER" command to allow frontend to specify GB cartridge files.
 * '''CONFIG_API_VERSION''' version 2.1.0:
 ** add new function "ConfigSaveSection()" to save only a single config section to disk
 * '''CONFIG_API_VERSION''' version 2.2.0:

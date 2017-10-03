@@ -71,15 +71,17 @@ static uint32_t input_plugin_get_input(void* opaque)
         main_switch_pak(cin_compat->control_id);
     }
 
-    /* disconnect current GB cart (if any) immediately after "GB cart switch" button is released */
-    if (is_button_released(keys.Value, cin_compat->last_input, GB_CART_SWITCH_BUTTON)) {
-        change_gb_cart(cin_compat->tpk, NULL);
-        cin_compat->gb_switch_delay = GB_CART_SWITCH_DELAY;
-    }
+    if (cin_compat->gb_cart_switch_enabled) {
+        /* disconnect current GB cart (if any) immediately after "GB cart switch" button is released */
+        if (is_button_released(keys.Value, cin_compat->last_input, GB_CART_SWITCH_BUTTON)) {
+            change_gb_cart(cin_compat->tpk, NULL);
+            cin_compat->gb_switch_delay = GB_CART_SWITCH_DELAY;
+        }
 
-    /* switch to new GB cart after switch delay has expired */
-    if (cin_compat->gb_switch_delay > 0 && --cin_compat->gb_switch_delay == 0) {
-        main_change_gb_cart(cin_compat->control_id);
+        /* switch to new GB cart after switch delay has expired */
+        if (cin_compat->gb_switch_delay > 0 && --cin_compat->gb_switch_delay == 0) {
+            main_change_gb_cart(cin_compat->control_id);
+        }
     }
 
     cin_compat->last_input = keys.Value;
