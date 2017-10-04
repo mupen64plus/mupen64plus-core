@@ -39,11 +39,13 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
 
     static const struct cic cics[] =
     {
+        { CIC_5101, 0xac },
         { CIC_X101, 0x3f },
         { CIC_X102, 0x3f },
         { CIC_X103, 0x78 },
         { CIC_X105, 0x91 },
-        { CIC_X106, 0x85 }
+        { CIC_X106, 0x85 },
+        { CIC_5167, 0xdd }
     };
 
     for (i = 0; i < 0xfc0/4; i++)
@@ -54,12 +56,14 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
         default:
             DebugMessage(M64MSG_WARNING, "Unknown CIC type (%016" PRIX64 ")! using CIC 6102.", crc);
             /* fall through */
-        case UINT64_C(0x000000D057C85244): i = 1; break; /* CIC_X102 */
+        case UINT64_C(0x000000D057C85244): i = 2; break; /* CIC_X102 */
         case UINT64_C(0x000000D0027FDF31):               /* CIC_X101 */
-        case UINT64_C(0x000000CFFB631223): i = 0; break; /* CIC_X101 */
-        case UINT64_C(0x000000D6497E414B): i = 2; break; /* CIC_X103 */
-        case UINT64_C(0x0000011A49F60E96): i = 3; break; /* CIC_X105 */
-        case UINT64_C(0x000000D6D5BE5580): i = 4; break; /* CIC_X106 */
+        case UINT64_C(0x000000CFFB631223): i = 1; break; /* CIC_X101 */
+        case UINT64_C(0x000000D6497E414B): i = 3; break; /* CIC_X103 */
+        case UINT64_C(0x0000011A49F60E96): i = 4; break; /* CIC_X105 */
+        case UINT64_C(0x000000D6D5BE5580): i = 5; break; /* CIC_X106 */
+        case UINT64_C(0x000001053BC19870): i = 6; break; /* CIC 5167 */
+        case UINT64_C(0x000000A5F80BF620): i = 0; break; /* CIC 5101 */
     }
 
     memcpy(cic, &cics[i], sizeof(*cic));
