@@ -40,18 +40,13 @@ enum
 
 static void dma_si_write(struct si_controller* si)
 {
-    int i;
-
     if (si->regs[SI_PIF_ADDR_WR64B_REG] != 0x1FC007C0)
     {
         DebugMessage(M64MSG_ERROR, "dma_si_write(): unknown SI use");
         return;
     }
 
-    for (i = 0; i < PIF_RAM_SIZE; i += 4)
-    {
-        *((uint32_t*)(&si->pif.ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
-    }
+    si->si_type = SI_DMA_WRITE;
 
     cp0_update_count(si->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
@@ -66,10 +61,10 @@ static void dma_si_read(struct si_controller* si)
         return;
     }
 
-    update_pif_ram(si);
+    si->si_type = SI_DMA_READ;
 
     cp0_update_count(si->r4300);
-    si->regs[SI_STATUS_REG] |= SI_STATUS_RD_BUSY;
+    si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
     add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
 }
 
@@ -106,6 +101,8 @@ void poweron_si(struct si_controller* si)
     memset(si->regs, 0, SI_REGS_COUNT*sizeof(uint32_t));
 
     poweron_pif(&si->pif);
+
+    si->si_type = SI_NONE;
 }
 
 
@@ -152,22 +149,30 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 void si_end_of_dma_event(void* opaque)
 {
     struct si_controller* si = (struct si_controller*)opaque;
+    int i;
 
-    if (si->regs[SI_STATUS_REG] & SI_STATUS_DMA_BUSY)
+    if (si->si_type == SI_DMA_WRITE)
     {
+        for (i = 0; i < PIF_RAM_SIZE; i += 4)
+        {
+            *((uint32_t*)(&si->pif.ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
+        }
+
         process_pif_ram(si);
     }
-    else if (si->regs[SI_STATUS_REG] & SI_STATUS_RD_BUSY)
+    else if (si->si_type == SI_DMA_READ)
     {
-        int i;
+        update_pif_ram(si);
+
         for (i = 0; i < PIF_RAM_SIZE; i += 4)
         {
             si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
         }
     }
 
+    si->si_type = SI_NONE;
     /* trigger SI interrupt */
-    si->regs[SI_STATUS_REG] &= ~(SI_STATUS_DMA_BUSY | SI_STATUS_RD_BUSY);
+    si->regs[SI_STATUS_REG] &= ~SI_STATUS_DMA_BUSY;
     si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
     raise_rcp_interrupt(si->r4300, MI_INTR_SI);
 }

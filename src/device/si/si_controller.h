@@ -32,6 +32,13 @@ struct controller_input_backend;
 struct rumble_backend;
 struct storage_backend;
 
+enum
+{
+    SI_NONE,
+    SI_DMA_READ,
+    SI_DMA_WRITE
+};
+
 enum si_registers
 {
     SI_DRAM_ADDR_REG,
@@ -52,6 +59,8 @@ struct si_controller
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
+
+    uint32_t si_type;
 };
 
 static uint32_t si_reg(uint32_t address)
