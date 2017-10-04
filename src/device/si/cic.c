@@ -43,7 +43,8 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
         { CIC_X102, 0x3f },
         { CIC_X103, 0x78 },
         { CIC_X105, 0x91 },
-        { CIC_X106, 0x85 }
+        { CIC_X106, 0x85 },
+        { CIC_5167, 0xdd }
     };
 
     for (i = 0; i < 0xfc0/4; i++)
@@ -60,6 +61,7 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
         case UINT64_C(0x000000D6497E414B): i = 2; break; /* CIC_X103 */
         case UINT64_C(0x0000011A49F60E96): i = 3; break; /* CIC_X105 */
         case UINT64_C(0x000000D6D5BE5580): i = 4; break; /* CIC_X106 */
+        case UINT64_C(0x000001053BC19870): i = 5; break; /* CIC 5167 */
     }
 
     memcpy(cic, &cics[i], sizeof(*cic));
