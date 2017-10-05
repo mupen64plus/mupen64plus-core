@@ -857,15 +857,14 @@ static void pause_loop(void)
  * Allow the core to perform various things */
 void new_vi(void)
 {
-    gs_apply_cheats();
-
-    main_check_inputs();
-
     timed_sections_refresh();
 
-    pause_loop();
+    gs_apply_cheats();
 
     apply_speed_limiter();
+    main_check_inputs();
+
+    pause_loop();
 }
 
 static void open_mpk_file(struct file_storage* storage)
