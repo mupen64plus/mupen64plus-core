@@ -493,43 +493,6 @@ static void write_pifd(void)
     writed(write_pif_ram, &g_dev.si, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
 }
 
-/* HACK: just to get F-Zero to boot
- * TODO: implement a real DD module
- */
-static int read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    *value = (address == 0xa5000508)
-           ? 0xffffffff
-           : 0x00000000;
-
-    return 0;
-}
-
-static int write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    return 0;
-}
-
-static void read_dd(void)
-{
-    readw(read_dd_regs, NULL, *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void read_ddd(void)
-{
-    readd(read_dd_regs, NULL, *r4300_address(&g_dev.r4300), g_dev.r4300.rdword);
-}
-
-static void write_dd(void)
-{
-    writew(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wword(&g_dev.r4300), *r4300_wmask(&g_dev.r4300));
-}
-
-static void write_ddd(void)
-{
-    writed(write_dd_regs, NULL, *r4300_address(&g_dev.r4300), *r4300_wdword(&g_dev.r4300));
-}
-
 #ifdef DBG
 static void readmem_with_bp_checks(void)
 {
@@ -760,10 +723,7 @@ void poweron_memory(struct memory* mem)
         map_region(mem, 0xa000+i, M64P_MEM_NOTHING, RW(nothing));
     }
 
-    /* map DD regsiters */
-    map_region(mem, 0x8500, M64P_MEM_NOTHING, RW(dd));
-    map_region(mem, 0xa500, M64P_MEM_NOTHING, RW(dd));
-    for(i = 0x501; i < 0x800; ++i)
+    for(i = 0x500; i < 0x800; ++i)
     {
         map_region(mem, 0x8000+i, M64P_MEM_NOTHING, RW(nothing));
         map_region(mem, 0xa000+i, M64P_MEM_NOTHING, RW(nothing));
