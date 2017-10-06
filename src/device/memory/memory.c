@@ -86,12 +86,14 @@ static int writed(writefn write_word, void* opaque, uint32_t address, uint64_t v
 
 static void read_nothing(void)
 {
-    *g_dev.r4300.rdword = 0;
+    *g_dev.r4300.rdword = *r4300_address(&g_dev.r4300) & 0xFFFF;
+    *g_dev.r4300.rdword = (*g_dev.r4300.rdword << 16) | *g_dev.r4300.rdword;
 }
 
 static void read_nothingd(void)
 {
-    *g_dev.r4300.rdword = 0;
+    *g_dev.r4300.rdword = *r4300_address(&g_dev.r4300) & 0xFFFF;
+    *g_dev.r4300.rdword = (*g_dev.r4300.rdword << 16) | *g_dev.r4300.rdword;
 }
 
 static void write_nothing(void)
