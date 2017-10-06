@@ -291,15 +291,16 @@ CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
 
 ifeq ($(VC), 1)
-  CFLAGS += -DUSE_GLES -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
-  LDLIBS += -L/opt/vc/lib -lGLESv2 -lEGL -lbcm_host -lvcos -lvchiq_arm
-  # OSD uses non-ES code and breaks attribs of video plugins
-  OSD=0
+  CFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
+  LDLIBS += -L/opt/vc/lib -lbrcmEGL -lbcm_host -lvcos -lvchiq_arm
+  GLES_LIB := -lbrcmGLESv2
+  USE_GLES := 1
 endif
 
 ifeq ($(USE_GLES), 1)
+  GLES_LIB ?= -lGLESv2
   CFLAGS += -DUSE_GLES
-  LDLIBS += -lGLESv2
+  LDLIBS += $(GLES_LIB)
   # OSD uses non-ES code and breaks attribs of video plugins
   OSD=0
 endif
