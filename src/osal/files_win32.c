@@ -86,30 +86,30 @@ int osal_mkdirp(const char *dirpath, int mode)
     if (mypath == NULL)
         return 1;
 
-	// if the directory path ends with a separator, remove it
-	lastchar = mypath + strlen(mypath) - 1;
-	if (strchr(OSAL_DIR_SEPARATORS, *lastchar) != NULL)
-		*lastchar = 0;
+    // if the directory path ends with a separator, remove it
+    lastchar = mypath + strlen(mypath) - 1;
+    if (strchr(OSAL_DIR_SEPARATORS, *lastchar) != NULL)
+        *lastchar = 0;
 
     // Terminate quickly if the path already exists
     if (_stat(mypath, &fileinfo) == 0 && (fileinfo.st_mode & _S_IFDIR))
-		goto goodexit;
+        goto goodexit;
 
     while ((currpath = strpbrk(currpath + 1, OSAL_DIR_SEPARATORS)) != NULL)
     {
-		// if slash is right after colon, then we are looking at drive name prefix (C:\) and should
-		// just skip it, because _stat and _mkdir will both fail for "C:"
-		if (currpath > mypath && currpath[-1] == ':')
-			continue;
+        // if slash is right after colon, then we are looking at drive name prefix (C:\) and should
+        // just skip it, because _stat and _mkdir will both fail for "C:"
+        if (currpath > mypath && currpath[-1] == ':')
+            continue;
         *currpath = '\0';
         if (_stat(mypath, &fileinfo) != 0)
         {
             if (_mkdir(mypath) != 0)
-				goto errorexit;
+                goto errorexit;
         }
         else if (!(fileinfo.st_mode & _S_IFDIR))
         {
-			goto errorexit;
+            goto errorexit;
         }
         *currpath = OSAL_DIR_SEPARATORS[0];
     }
@@ -119,11 +119,11 @@ int osal_mkdirp(const char *dirpath, int mode)
         goto errorexit;
 
 goodexit:
-	free(mypath);
+    free(mypath);
     return 0;
 errorexit:
-	free(mypath);
-	return 1;
+    free(mypath);
+    return 1;
 }
 
 const char * osal_get_shared_filepath(const char *filename, const char *firstsearch, const char *secondsearch)
@@ -158,11 +158,11 @@ const char * osal_get_user_configpath(void)
     struct _stat fileinfo;
 
     // Get item ID list for the path of user's personal directory
-    HRESULT hr = SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidl);
+    SHGetSpecialFolderLocation(NULL, CSIDL_APPDATA, &pidl);
     // get the path in a char string
     SHGetPathFromIDList(pidl, chHomePath);
     // do a bunch of crap just to free some memory
-    hr = SHGetMalloc(&pMalloc);
+    SHGetMalloc(&pMalloc);
     pMalloc->lpVtbl->Free(pMalloc, pidl);
     pMalloc->lpVtbl->Release(pMalloc);
 
