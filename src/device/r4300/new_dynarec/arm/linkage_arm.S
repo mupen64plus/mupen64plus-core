@@ -72,8 +72,6 @@ device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300
 
 /* Defines offsets for fp addressed variables */
 fp_saved_context       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 28
-fp_stack_level_1       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 64
-fp_stack_level_2       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 96
 fp_next_interrupt      = offsetof_struct_new_dynarec_hot_state_next_interrupt
 fp_cycle_count         = offsetof_struct_new_dynarec_hot_state_cycle_count
 fp_last_count          = offsetof_struct_new_dynarec_hot_state_last_count
@@ -81,11 +79,6 @@ fp_pending_exception   = offsetof_struct_new_dynarec_hot_state_pending_exception
 fp_pcaddr              = offsetof_struct_new_dynarec_hot_state_pcaddr
 fp_stop                = offsetof_struct_new_dynarec_hot_state_stop
 fp_invc_ptr            = offsetof_struct_new_dynarec_hot_state_invc_ptr
-fp_address             = offsetof_struct_new_dynarec_hot_state_address
-fp_rdword              = offsetof_struct_new_dynarec_hot_state_rdword
-fp_wmask               = offsetof_struct_new_dynarec_hot_state_wmask
-fp_wdword              = offsetof_struct_new_dynarec_hot_state_wdword
-fp_wword               = offsetof_struct_new_dynarec_hot_state_wword
 fp_fcr0                = offsetof_struct_new_dynarec_hot_state_fcr0
 fp_fcr31               = offsetof_struct_new_dynarec_hot_state_fcr31
 fp_regs                = offsetof_struct_new_dynarec_hot_state_regs
@@ -98,7 +91,6 @@ fp_rounding_modes      = offsetof_struct_new_dynarec_hot_state_rounding_modes
 fp_branch_target       = offsetof_struct_new_dynarec_hot_state_branch_target
 fp_pc                  = offsetof_struct_new_dynarec_hot_state_pc
 fp_fake_pc             = offsetof_struct_new_dynarec_hot_state_fake_pc
-fp_ram_offset          = offsetof_struct_new_dynarec_hot_state_ram_offset
 fp_mini_ht             = offsetof_struct_new_dynarec_hot_state_mini_ht
 fp_restore_candidate   = offsetof_struct_new_dynarec_hot_state_restore_candidate
 fp_memory_map          = offsetof_struct_new_dynarec_hot_state_memory_map
@@ -108,7 +100,6 @@ TEXT_SECTION
     .align   2
     .outptr_offset  : .word out-(.outptr_pic+8)
     .savedcontextptr_offset  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context -(.savedcontextptr_pic+8)
-
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
     eor    r2, r0, r0, lsl #16
@@ -305,7 +296,6 @@ GLOBAL_FUNCTION(do_interrupt):
     ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
     str    r1, [fp, #fp_last_count]
     sub    r10, r10, r1
-    add    r10, r10, #2
     mov    pc, r0
 
 GLOBAL_FUNCTION(fp_exception):
@@ -460,359 +450,6 @@ GLOBAL_FUNCTION(invalidate_addr_r12):
 LOCAL_FUNCTION(invalidate_addr_call):
     bl     invalidate_block
     ldmia  fp, {r0, r1, r2, r3, r12, pc}
-
-GLOBAL_FUNCTION(read_byte_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    ldr    r12, [fp, #fp_address]
-    and    r12, r12, #3
-    eor    r12, r12, #3
-    lsl    r12, r12, #3
-    ldr    r1, [fp, #fp_rdword]
-    lsr    r1, r1, r12
-    and    r1, r1, #0xff
-    str    r1, [fp, #fp_rdword]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(read_hword_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    ldr    r12, [fp, #fp_address]
-    and    r12, r12, #2
-    eor    r12, r12, #2
-    lsl    r12, r12, #3
-    ldr    r1, [fp, #fp_rdword]
-    lsr    r1, r1, r12
-#ifdef ARMv5_ONLY
-    ldr    r12, =0xffff
-#else
-    movw   r12, #0xffff
-#endif
-    and    r1, r1, r12
-    str    r1, [fp, #fp_rdword]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(read_word_new):
-GLOBAL_FUNCTION(read_dword_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_byte_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    and    r12, r1, #3
-    eor    r12, r12, #3
-    lsl    r12, r12, #3
-    ldr    r2, [fp, #fp_wword]
-    lsl    r2, r2, r12
-    str    r2, [fp, #fp_wword]
-    mov    r2, #0xff
-    lsl    r2, r2, r12
-    str    r2, [fp, #fp_wmask]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r12, [fp, #fp_next_interrupt]
-    sub    r2, r2, r12
-    str    r12, [fp, #fp_last_count]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_hword_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    and    r12, r1, #2
-    eor    r12, r12, #2
-    lsl    r12, r12, #3
-    ldr    r2, [fp, #fp_wword]
-    lsl    r2, r2, r12
-    str    r2, [fp, #fp_wword]
-#ifdef ARMv5_ONLY
-    ldr    r2, =0xffff
-#else
-    movw   r2, #0xffff
-#endif
-    lsl    r2, r2, r12
-    str    r2, [fp, #fp_wmask]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r12, [fp, #fp_next_interrupt]
-    sub    r2, r2, r12
-    str    r12, [fp, #fp_last_count]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_word_new):
-    mvn    r12, #0
-    str    r12, [fp, #fp_wmask]
-    
-GLOBAL_FUNCTION(write_dword_new):
-    ldr    r12, [fp, #fp_last_count]
-    add    r2, r2, r12
-    str    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r1, [fp, #fp_address]
-    lsr    r1, r1, #16
-    ldr    r0, [r0, r1, lsl #2]
-    str    lr, [fp, #fp_stack_level_1]
-    mov    lr, pc
-    mov    pc, r0
-    ldr    lr, [fp, #fp_stack_level_1]
-    ldr    r2, [fp, #fp_cp0_regs+36] /* Count */
-    ldr    r12, [fp, #fp_next_interrupt]
-    sub    r2, r2, r12
-    str    r12, [fp, #fp_last_count]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_rdram_new):
-    ldr    r3, [fp, #fp_ram_offset]
-    ldr    r2, [fp, #fp_address]
-	bic    r2, r2, #3
-    ldr    r0, [fp, #fp_wword]
-    ldr    r12, [fp, #fp_wmask]
-    and    r0, r0, r12
-    mvn    r12, r12
-    ldr    r1, [r2, r3, lsl #2]
-    and    r12, r1, r12
-    orr    r0, r0, r12
-    str    r0, [r2, r3, lsl #2]
-    b      .E12
-
-GLOBAL_FUNCTION(write_rdramd_new):
-    ldr    r3, [fp, #fp_ram_offset]
-    ldr    r2, [fp, #fp_address]
-/*    ldrd    r0, [fp, #fp_wdword]*/
-    ldr    r0, [fp, #fp_wdword]
-    ldr    r1, [fp, #fp_wdword+4]
-    add    r3, r2, r3, lsl #2
-    str    r0, [r3, #4]
-    str    r1, [r3]
-    b      .E12
-
-LOCAL_FUNCTION(do_invalidate):
-    ldr    r2, [fp, #fp_address]
-.E12:
-    ldr    r1, [fp, #fp_invc_ptr]
-    lsr    r0, r2, #12
-    ldrb   r2, [r1, r0]
-    tst    r2, r2
-    beq    invalidate_block
-    mov    pc, lr
-
-GLOBAL_FUNCTION(read_nomem_new):
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    lsr    r0, r1, #12
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #0
-    tst    r12, r12
-    bmi    tlb_exception
-	bic    r1, r1, #3
-    ldr    r0, [r1, r12, lsl #2]
-    str    r0, [fp, #fp_rdword]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(read_nomemd_new):
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    lsr    r0, r1, #12
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #0
-    tst    r12, r12
-    bmi    tlb_exception
-    lsl    r12, r12, #2
-/*    ldrd    r0, [r1, r12]*/
-    add    r3, r1, #4
-    ldr    r0, [r1, r12]
-    ldr    r1, [r3, r12]
-    str    r0, [fp, #fp_rdword+4]
-    str    r1, [fp, #fp_rdword]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_nomem_new):
-    str    r3, [fp, #fp_stack_level_2]
-    str    lr, [fp, #fp_stack_level_2+4]
-    bl     do_invalidate
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    ldr    lr, [fp, #fp_stack_level_2+4]
-    lsr    r0, r1, #12
-    ldr    r3, [fp, #fp_stack_level_2]
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #1
-    tst    r12, #0x40000000
-    bne    tlb_exception
-    ldr    r0, [fp, #fp_wword]
-    ldr    r2, [fp, #fp_wmask]
-    and    r0, r0, r2
-    mvn    r2, r2
-	bic    r1, r1, #3
-    ldr    r3, [r1, r12, lsl #2]
-    and    r2, r3, r2
-    orr    r0, r0, r2
-    str    r0, [r1, r12, lsl #2]
-    mov    pc, lr
-
-GLOBAL_FUNCTION(write_nomemd_new):
-    str    r3, [fp, #fp_stack_level_2]
-    str    lr, [fp, #fp_stack_level_2+4]
-    bl     do_invalidate
-    ldr    r1, [fp, #fp_address]
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    ldr    lr, [fp, #fp_stack_level_2+4]
-    lsr    r0, r1, #12
-    ldr    r3, [fp, #fp_stack_level_2]
-    ldr    r12, [r12, r0, lsl #2]
-    mov    r2, #1
-    lsls   r12, #2
-    bcs    tlb_exception
-    add    r3, r1, #4
-    ldr    r0, [fp, #fp_wdword+4]
-    ldr    r1, [fp, #fp_wdword]
-/*    strd    r0, [r1, r12]*/
-    str    r0, [r1, r12]
-    str    r1, [r3, r12]
-    mov    pc, lr
-    
-GLOBAL_FUNCTION(write_mi_new):
-    str    r3, [fp, #fp_stack_level_2]
-    str    lr, [fp, #fp_stack_level_2+4]
-    add    r3, #4
-    str    r3, [fp, #fp_pcaddr]
-    mov    r1, #0
-    str    r1, [fp, #fp_pending_exception]
-    bl     write_mi
-    ldr    lr, [fp, #fp_stack_level_2+4]
-    ldr    r3, [fp, #fp_stack_level_2]
-    ldr    r1, [fp, #fp_pending_exception]
-    tst    r1, r1
-    bne    mi_exception
-    mov    pc, lr
-    
-GLOBAL_FUNCTION(write_mid_new):
-    str    r3, [fp, #fp_stack_level_2]
-    str    lr, [fp, #fp_stack_level_2+4]
-    add    r3, #4
-    str    r3, [fp, #fp_pcaddr]
-    mov    r1, #0
-    str    r1, [fp, #fp_pending_exception]
-    bl     write_mid
-    ldr    lr, [fp, #fp_stack_level_2+4]
-    ldr    r3, [fp, #fp_stack_level_2]
-    ldr    r1, [fp, #fp_pending_exception]
-    tst    r1, r1
-    bne    mi_exception
-    mov    pc, lr
-    
-LOCAL_FUNCTION(mi_exception):
-    /* r1 = mem addr */
-    /* r3 = instr addr/flags */
-    ldr    r1, [fp, #fp_address]
-    bl     wb_base_reg
-    b      do_interrupt
-
-LOCAL_FUNCTION(tlb_exception):
-    /* r1 = mem addr */
-    /* r2 = r/w */
-    /* r3 = instr addr/flags */
-    bl     wb_base_reg
-    mov    r0, r3
-    bl     TLB_refill_exception_new
-    ldr    r1, [fp, #fp_next_interrupt]
-    ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
-    str    r1, [fp, #fp_last_count]
-    sub    r10, r10, r1
-    mov    pc, r0
-    
-LOCAL_FUNCTION(wb_base_reg):
-    /* r1 = mem addr */
-    /* r3 = instr addr/flags */
-#ifdef ARMv5_ONLY
-    ldr    r5, =fp_memory_map
-#else
-    movw   r5, #:lower16:fp_memory_map
-    movt   r5, #:upper16:fp_memory_map
-#endif
-    add    r5, fp, r5
-    lsr    r6, r3, #12
-    ldr    r7, [r5, r6, lsl #2]
-    bic    r8, r3, #3
-    mov    r6, #0x6000000
-    orr    r6, r6, #0x22
-    ldr    r0, [r8, r7, lsl #2]
-    add    r5, fp, #fp_regs
-    mov    r7, #0xf8
-    lsl    r8, r0, #16
-    lsr    r4, r0, #26
-    and    r7, r7, r0, lsr #18
-    sub    r9, r1, r8, asr #16
-    rors   r6, r6, r4
-    ldrcs  r9, [r5, r7]
-    tst    r3, #2
-    str    r9, [r5, r7]
-    add    r6, fp, #fp_regs+4
-    asr    r5, r9, #31
-    strne  r5, [r6, r7]
-    mov    pc, lr
 
 GLOBAL_FUNCTION(breakpoint):
     /* Set breakpoint here for debugging */
