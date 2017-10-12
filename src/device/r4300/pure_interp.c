@@ -63,10 +63,10 @@ static void InterpretOpcode(struct r4300_core* r4300);
       if (!likely || take_jump) \
       { \
         r4300->interp_PC.addr += 4; \
-        *r4300_delay_slot(r4300)=1; \
+        r4300->delay_slot=1; \
         InterpretOpcode(r4300); \
         cp0_update_count(r4300); \
-        *r4300_delay_slot(r4300)=0; \
+        r4300->delay_slot=0; \
         if (take_jump && !r4300->skip_jump) \
         { \
           r4300->interp_PC.addr = jump_target; \

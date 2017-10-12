@@ -61,7 +61,6 @@ struct new_dynarec_hot_state
     int last_count;
     int pending_exception;
     int pcaddr;
-    int delay_slot;
     int stop;
     char* invc_ptr;
     uint32_t address;

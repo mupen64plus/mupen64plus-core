@@ -463,11 +463,11 @@ void nmi_int_handler(void* opaque)
         }
     }
     // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
-    if(*r4300_delay_slot(r4300)==1 || *r4300_delay_slot(r4300)==3)
+    if(r4300->delay_slot==1 || r4300->delay_slot==3)
     {
         cp0_regs[CP0_ERROREPC_REG]-=4;
     }
-    *r4300_delay_slot(r4300) = 0;
+    r4300->delay_slot = 0;
     r4300->dyna_interp = 0;
     // set next instruction address to reset vector
     r4300->cp0.last_addr = UINT32_C(0xa4000040);

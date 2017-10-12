@@ -73,11 +73,11 @@
       if (!likely || take_jump) \
       { \
          (*r4300_pc_struct(r4300))++; \
-         *r4300_delay_slot(r4300)=1; \
+         r4300->delay_slot=1; \
          UPDATE_DEBUGGER(); \
          (*r4300_pc_struct(r4300))->ops(); \
          cp0_update_count(r4300); \
-         *r4300_delay_slot(r4300)=0; \
+         r4300->delay_slot=0; \
          if (take_jump && !r4300->skip_jump) \
          { \
             (*r4300_pc_struct(r4300))=r4300->cached_interp.actual->block+((jump_target-r4300->cached_interp.actual->start)>>2); \
@@ -105,11 +105,11 @@
       if (!likely || take_jump) \
       { \
          (*r4300_pc_struct(r4300))++; \
-         *r4300_delay_slot(r4300)=1; \
+         r4300->delay_slot=1; \
          UPDATE_DEBUGGER(); \
          (*r4300_pc_struct(r4300))->ops(); \
          cp0_update_count(r4300); \
-         *r4300_delay_slot(r4300)=0; \
+         r4300->delay_slot=0; \
          if (take_jump && !r4300->skip_jump) \
          { \
             cached_interpreter_dynarec_jump_to(r4300, jump_target); \
@@ -161,7 +161,7 @@
 static void FIN_BLOCK(void)
 {
    DECLARE_R4300
-   if (!*r4300_delay_slot(r4300))
+   if (!r4300->delay_slot)
      {
     cached_interpreter_dynarec_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
 /*#ifdef DBG

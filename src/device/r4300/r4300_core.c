@@ -70,7 +70,7 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->llbit = 0;
 
     *r4300_pc_struct(r4300) = NULL;
-    *r4300_delay_slot(r4300) = 0;
+    r4300->delay_slot = 0;
     r4300->local_rs = 0;
     r4300->skip_jump = 0;
     r4300->dyna_interp = 0;
@@ -244,16 +244,6 @@ uint32_t* r4300_pc(struct r4300_core* r4300)
         : &(*r4300_pc_struct(r4300))->addr;
 #else
     return &(*r4300_pc_struct(r4300))->addr;
-#endif
-}
-
-unsigned int* r4300_delay_slot(struct r4300_core* r4300)
-{
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    return &r4300->delay_slot;
-#else
-    return &r4300->new_dynarec_hot_state.delay_slot;
 #endif
 }
 

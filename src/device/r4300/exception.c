@@ -51,7 +51,7 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
         generic_jump_to(r4300, UINT32_C(0x80000180));
 
 
-        if (*r4300_delay_slot(r4300) == 1 || *r4300_delay_slot(r4300) == 3) {
+        if (r4300->delay_slot == 1 || r4300->delay_slot == 3) {
             cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         }
         else {
@@ -94,7 +94,7 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
                 : UINT32_C(0x80000000));
     }
 
-    if (*r4300_delay_slot(r4300) == 1 || *r4300_delay_slot(r4300) == 3)
+    if (r4300->delay_slot == 1 || r4300->delay_slot == 3)
     {
         cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         cp0_regs[CP0_EPC_REG] -= 4;
@@ -112,13 +112,13 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
         dyna_jump();
-        if (!r4300->dyna_interp) { *r4300_delay_slot(r4300) = 0; }
+        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
     }
 
     if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
     {
         r4300->dyna_interp = 0;
-        if (*r4300_delay_slot(r4300))
+        if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);
             *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
@@ -135,7 +135,7 @@ void exception_general(struct r4300_core* r4300)
 
     cp0_regs[CP0_EPC_REG] = *r4300_pc(r4300);
 
-    if (*r4300_delay_slot(r4300) == 1 || *r4300_delay_slot(r4300) == 3)
+    if (r4300->delay_slot == 1 || r4300->delay_slot == 3)
     {
         cp0_regs[CP0_CAUSE_REG] |= CP0_CAUSE_BD;
         cp0_regs[CP0_EPC_REG] -= 4;
@@ -152,12 +152,12 @@ void exception_general(struct r4300_core* r4300)
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
         dyna_jump();
-        if (!r4300->dyna_interp) { *r4300_delay_slot(r4300) = 0; }
+        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
     }
     if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
     {
         r4300->dyna_interp = 0;
-        if (*r4300_delay_slot(r4300))
+        if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);
             *r4300_cp0_next_interrupt(&r4300->cp0) = 0;

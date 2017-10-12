@@ -352,13 +352,13 @@ void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
 
 void gendelayslot(struct r4300_core* r4300)
 {
-    mov_m32rel_imm32((void*)(r4300_delay_slot(r4300), 1);
+    mov_m32rel_imm32((void*)(&r4300->delay_slot), 1);
     recompile_opcode(r4300);
 
     free_all_registers();
     gencp0_update_count(r4300, r4300->recomp.dst->addr+4);
 
-    mov_m32rel_imm32((void*)(r4300_delay_slot(r4300), 0);
+    mov_m32rel_imm32((void*)(&r4300->delay_slot), 0);
 }
 
 /* Reserved */
