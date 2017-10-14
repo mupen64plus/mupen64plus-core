@@ -158,7 +158,7 @@ void init_device(struct device* dev,
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
         { A(MM_FLASHRAM_STATUS, 0xffff), M64P_MEM_FLASHRAMSTAT, { &dev->pi, RW(flashram_status)  } },
         { A(MM_FLASHRAM_COMMAND, 0xffff), M64P_MEM_NOTHING, { &dev->pi, RW(flashram_command) } },
-        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->pi, RW(cart_rom) } },
+        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->pi.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };
 
