@@ -157,7 +157,7 @@ typedef enum {
   M64CMD_READ_SCREEN,
   M64CMD_RESET,
   M64CMD_ADVANCE_FRAME,
-  M64CMD_SET_GB_CART_LOADER
+  M64CMD_SET_MEDIA_LOADER
 } m64p_command;
 
 typedef struct {
@@ -169,22 +169,22 @@ typedef struct {
   /* Frontend-defined callback data. */
   void* cb_data;
 
-  /* Allow the frontend to specify the ROM file to load
+  /* Allow the frontend to specify the GB cart ROM file to load
    * cb_data: points to frontend-defined callback data.
    * controller_num: (0-3) tell the frontend which controller is about to load a GB cart
-   * Returns a NULL-terminated string owned by the core specifying the ROM filename to load.
+   * Returns a NULL-terminated string owned by the core specifying the GB cart ROM filename to load.
    * Empty or NULL string results in no GB cart being loaded (eg. empty transferpak).
    */
-  char* (*get_rom)(void* cb_data, int controller_num);
+  char* (*get_gb_cart_rom)(void* cb_data, int controller_num);
 
-  /* Allow the frontend to specify the RAM file to load
+  /* Allow the frontend to specify the GB cart RAM file to load
    * cb_data: points to frontend-defined callback data.
    * controller_num: (0-3) tell the frontend which controller is about to load a GB cart
-   * Returns a NULL-terminated string owned by the core specifying the RAM filename to load
+   * Returns a NULL-terminated string owned by the core specifying the GB cart RAM filename to load
    * Empty or NULL string results in the core generating a default save file with empty content.
    */
-  char* (*get_ram)(void* cb_data, int controller_num);
-} m64p_gb_cart_loader;
+  char* (*get_gb_cart_ram)(void* cb_data, int controller_num);
+} m64p_media_loader;
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */

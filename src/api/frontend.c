@@ -300,10 +300,10 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             main_advance_one();
             return M64ERR_SUCCESS;
-        case M64CMD_SET_GB_CART_LOADER:
-            if (ParamInt != sizeof(m64p_gb_cart_loader) || ParamPtr == NULL)
+        case M64CMD_SET_MEDIA_LOADER:
+            if (ParamInt != sizeof(m64p_media_loader) || ParamPtr == NULL)
                 return M64ERR_INPUT_INVALID;
-            g_gb_cart_loader = *(m64p_gb_cart_loader*)ParamPtr;
+            g_media_loader = *(m64p_media_loader*)ParamPtr;
             return M64ERR_SUCCESS;
         default:
             return M64ERR_INPUT_INVALID;
