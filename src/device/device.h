@@ -34,12 +34,18 @@
 #include "rsp/rsp_core.h"
 #include "si/si_controller.h"
 #include "vi/vi_controller.h"
+#include "controllers/game_controller.h"
+#include "controllers/paks/mempak.h"
+#include "controllers/paks/rumblepak.h"
+#include "controllers/paks/transferpak.h"
+#include "cart/cart.h"
+#include "gb/gb_cart.h"
 
-struct audio_out_backend;
-struct controller_input_backend;
-struct clock_backend;
-struct rumble_backend;
-struct storage_backend;
+struct audio_out_backend_interface;
+struct storage_backend_interface;
+struct joybus_device_interface;
+
+enum { GAME_CONTROLLERS_COUNT = 4 };
 
 /* memory map constants */
 #define MM_RDRAM_DRAM       UINT32_C(0x00000000)
@@ -75,6 +81,14 @@ struct device
     struct si_controller si;
     struct vi_controller vi;
     struct memory mem;
+
+    struct game_controller controllers[GAME_CONTROLLERS_COUNT];
+    struct mempak mempaks[GAME_CONTROLLERS_COUNT];
+    struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
+    struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];
+    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
+
+    struct cart cart;
 };
 
 /* Setup device "static" properties.  */
@@ -87,21 +101,16 @@ void init_device(struct device* dev,
     int no_compiled_jump,
     int special_rom,
     /* ai */
-    struct audio_out_backend* aout,
+    void* aout, const struct audio_out_backend_interface* iaout,
     /* pi */
     size_t rom_size,
-    struct storage_backend* flashram_storage,
-    struct storage_backend* sram_storage,
+    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+    void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* ri */
     size_t dram_size,
     /* si */
-    const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    struct storage_backend* mpk_storages,
-    struct rumble_backend* rumbles,
-    struct gb_cart* gb_carts,
-    uint16_t eeprom_id, struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
+    void* jbds[PIF_CHANNELS_COUNT],
+    const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate);
 

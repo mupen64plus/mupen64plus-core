@@ -77,8 +77,8 @@ static uint32_t pi_reg(uint32_t address)
 
 void init_pi(struct pi_controller* pi,
              uint8_t* rom, size_t rom_size,
-             struct storage_backend* flashram_storage,
-             struct storage_backend* sram_storage,
+             void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+             void* sram_storage, const struct storage_backend_interface* isram_storage,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              const struct cic* cic);

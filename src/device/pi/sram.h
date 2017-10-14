@@ -25,18 +25,20 @@
 #include <stdint.h>
 
 struct pi_controller;
-struct storage_backend;
+struct storage_backend_interface;
 
 enum { SRAM_SIZE = 0x8000 };
 
 struct sram
 {
-    struct storage_backend* storage;
+    void* storage;
+    const struct storage_backend_interface* istorage;
 };
 
 void format_sram(uint8_t* sram);
 
-void init_sram(struct sram* sram, struct storage_backend* storage);
+void init_sram(struct sram* sram,
+               void* storage, const struct storage_backend_interface* istorage);
 
 void dma_write_sram(struct pi_controller* pi);
 void dma_read_sram(struct pi_controller* pi);

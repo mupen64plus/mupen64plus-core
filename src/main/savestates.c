@@ -544,26 +544,26 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
 
         /* extra af-rtc state */
-        g_dev.si.pif.af_rtc.control = GETDATA(curr, uint16_t);
-        g_dev.si.pif.af_rtc.now = (time_t)GETDATA(curr, int64_t);
-        g_dev.si.pif.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
+        g_dev.cart.af_rtc.control = GETDATA(curr, uint16_t);
+        g_dev.cart.af_rtc.now = (time_t)GETDATA(curr, int64_t);
+        g_dev.cart.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
 
         /* extra controllers state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            g_dev.si.pif.controllers[i].status = GETDATA(curr, uint8_t);
+            g_dev.controllers[i].status = GETDATA(curr, uint8_t);
         }
 
         /* extra rpak state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            set_rumble_reg(&g_dev.si.pif.controllers[i].rumblepak, GETDATA(curr, uint8_t));
+            set_rumble_reg(&g_dev.rumblepaks[i], GETDATA(curr, uint8_t));
         }
 
         /* extra tpak state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            g_dev.si.pif.controllers[i].transferpak.enabled = GETDATA(curr, unsigned int);
-            g_dev.si.pif.controllers[i].transferpak.bank = GETDATA(curr, unsigned int);
-            g_dev.si.pif.controllers[i].transferpak.access_mode = GETDATA(curr, unsigned int);
-            g_dev.si.pif.controllers[i].transferpak.access_mode_changed = GETDATA(curr, unsigned int);
+            g_dev.transferpaks[i].enabled = GETDATA(curr, unsigned int);
+            g_dev.transferpaks[i].bank = GETDATA(curr, unsigned int);
+            g_dev.transferpaks[i].access_mode = GETDATA(curr, unsigned int);
+            g_dev.transferpaks[i].access_mode_changed = GETDATA(curr, unsigned int);
 
             /* verify that gb cart saved in savestate is the same as what is currently inserted in transferpak */
             char gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
@@ -571,11 +571,12 @@ int savestates_load_m64p(char *filepath)
 
             COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
 
-            if (g_dev.si.pif.controllers[i].transferpak.gb_cart == NULL) {
+            if (g_dev.transferpaks[i].gb_cart == NULL) {
                 memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
             }
             else {
-                memcpy(current_gb_fingerprint, g_dev.si.pif.controllers[i].transferpak.gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
+                uint8_t* rom = g_dev.transferpaks[i].gb_cart->irom_storage->data(g_dev.transferpaks[i].gb_cart->rom_storage);
+                memcpy(current_gb_fingerprint, rom + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
             }
 
             if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
@@ -588,15 +589,15 @@ int savestates_load_m64p(char *filepath)
                 }
             }
             else {
-                if (g_dev.si.pif.controllers[i].transferpak.gb_cart != NULL) {
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rom_bank = GETDATA(curr, unsigned int);
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_bank = GETDATA(curr, unsigned int);
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_enable = GETDATA(curr, unsigned int);
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->mbc1_mode = GETDATA(curr, unsigned int);
-                    COPYARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latch = GETDATA(curr, unsigned int);
-                    COPYARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
+                if (g_dev.transferpaks[i].gb_cart != NULL) {
+                    g_dev.transferpaks[i].gb_cart->rom_bank = GETDATA(curr, unsigned int);
+                    g_dev.transferpaks[i].gb_cart->ram_bank = GETDATA(curr, unsigned int);
+                    g_dev.transferpaks[i].gb_cart->ram_enable = GETDATA(curr, unsigned int);
+                    g_dev.transferpaks[i].gb_cart->mbc1_mode = GETDATA(curr, unsigned int);
+                    COPYARRAY(g_dev.transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    g_dev.transferpaks[i].gb_cart->rtc.latch = GETDATA(curr, unsigned int);
+                    COPYARRAY(g_dev.transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    g_dev.transferpaks[i].gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
                 }
             }
         }
@@ -628,15 +629,19 @@ int savestates_load_m64p(char *filepath)
         g_dev.sp.rsp_task_locked = 0;
 
         /* extra af-rtc state */
-        g_dev.si.pif.af_rtc.control = 0x200;
-        g_dev.si.pif.af_rtc.now = 0;
-        g_dev.si.pif.af_rtc.last_update_rtc = 0;
+        g_dev.cart.af_rtc.control = 0x200;
+        g_dev.cart.af_rtc.now = 0;
+        g_dev.cart.af_rtc.last_update_rtc = 0;
 
         /* extra controllers state */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            standard_controller_reset(&g_dev.si.pif.controllers[i]);
-            poweron_rumblepak(&g_dev.si.pif.controllers[i].rumblepak);
-            poweron_transferpak(&g_dev.si.pif.controllers[i].transferpak);
+            /* skip non present or controllers handled by the input plugin */
+            if (!Controls[i].Present || Controls[i].RawData)
+                continue;
+
+            g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
+            poweron_rumblepak(&g_dev.rumblepaks[i]);
+            poweron_transferpak(&g_dev.transferpaks[i]);
         }
 
         /* extra pif channels state
@@ -965,15 +970,19 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.dp.fb.once = 1;
 
     /* extra af-rtc state */
-    g_dev.si.pif.af_rtc.control = 0x200;
-    g_dev.si.pif.af_rtc.now = 0;
-    g_dev.si.pif.af_rtc.last_update_rtc = 0;
+    g_dev.cart.af_rtc.control = 0x200;
+    g_dev.cart.af_rtc.now = 0;
+    g_dev.cart.af_rtc.last_update_rtc = 0;
 
     /* extra controllers state */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        standard_controller_reset(&g_dev.si.pif.controllers[i]);
-        poweron_rumblepak(&g_dev.si.pif.controllers[i].rumblepak);
-        poweron_transferpak(&g_dev.si.pif.controllers[i].transferpak);
+        /* skip non present or controllers handled by the input plugin */
+        if (!Controls[i].Present || Controls[i].RawData)
+            continue;
+
+        g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
+        poweron_rumblepak(&g_dev.rumblepaks[i]);
+        poweron_transferpak(&g_dev.transferpaks[i]);
     }
 
     savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
@@ -1457,41 +1466,42 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
 
-    PUTDATA(curr, uint16_t, g_dev.si.pif.af_rtc.control);
-    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.now);
-    PUTDATA(curr, int64_t, g_dev.si.pif.af_rtc.last_update_rtc);
+    PUTDATA(curr, uint16_t, g_dev.cart.af_rtc.control);
+    PUTDATA(curr, int64_t, g_dev.cart.af_rtc.now);
+    PUTDATA(curr, int64_t, g_dev.cart.af_rtc.last_update_rtc);
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        PUTDATA(curr, uint8_t, g_dev.si.pif.controllers[i].status);
+        PUTDATA(curr, uint8_t, g_dev.controllers[i].status);
     }
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        PUTDATA(curr, uint8_t, g_dev.si.pif.controllers[i].rumblepak.state);
+        PUTDATA(curr, uint8_t, g_dev.rumblepaks[i].state);
     }
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.enabled);
-        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.bank);
-        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.access_mode);
-        PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.access_mode_changed);
+        PUTDATA(curr, unsigned int, g_dev.transferpaks[i].enabled);
+        PUTDATA(curr, unsigned int, g_dev.transferpaks[i].bank);
+        PUTDATA(curr, unsigned int, g_dev.transferpaks[i].access_mode);
+        PUTDATA(curr, unsigned int, g_dev.transferpaks[i].access_mode_changed);
 
-        if (g_dev.si.pif.controllers[i].transferpak.gb_cart == NULL) {
+        if (g_dev.transferpaks[i].gb_cart == NULL) {
             uint8_t gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
             memset(gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
             PUTARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
         }
         else {
-            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rom.data + GB_CART_FINGERPRINT_OFFSET, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+            uint8_t* rom = g_dev.transferpaks[i].gb_cart->irom_storage->data(g_dev.transferpaks[i].gb_cart->rom_storage);
+            PUTARRAY(rom + GB_CART_FINGERPRINT_OFFSET, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
 
-            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->rom_bank);
-            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_bank);
-            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->ram_enable);
-            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->mbc1_mode);
+            PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->rom_bank);
+            PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->ram_bank);
+            PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->ram_enable);
+            PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->mbc1_mode);
 
-            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-            PUTDATA(curr, unsigned int, g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latch);
-            PUTARRAY(g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-            PUTDATA(curr, int64_t, g_dev.si.pif.controllers[i].transferpak.gb_cart->rtc.last_time);
+            PUTARRAY(g_dev.transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+            PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->rtc.latch);
+            PUTARRAY(g_dev.transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+            PUTDATA(curr, int64_t, g_dev.transferpaks[i].gb_cart->rtc.last_time);
         }
     }
 

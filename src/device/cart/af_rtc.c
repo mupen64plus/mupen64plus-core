@@ -20,11 +20,10 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "af_rtc.h"
-#include "pif.h"
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "backends/clock_backend.h"
+#include "backends/api/clock_backend.h"
 
 #include <time.h>
 
@@ -51,7 +50,7 @@ static void time2data(uint8_t* data, time_t now)
 static void update_rtc(struct af_rtc* rtc)
 {
     /* update rtc->now */
-    time_t now = clock_get_time(rtc->clock);
+    time_t now = rtc->iclock->get_time(rtc->clock);
     rtc->now += now - rtc->last_update_rtc;
     rtc->last_update_rtc = now;
 }
@@ -59,9 +58,11 @@ static void update_rtc(struct af_rtc* rtc)
 
 
 void init_af_rtc(struct af_rtc* rtc,
-                 struct clock_backend* clock)
+                 void* clock,
+                 const struct clock_backend_interface* iclock)
 {
     rtc->clock = clock;
+    rtc->iclock = iclock;
 }
 
 void poweron_af_rtc(struct af_rtc* rtc)

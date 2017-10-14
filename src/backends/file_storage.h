@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - controller_input_backend.h                              *
+ *   Mupen64plus - file_storage.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,23 +19,26 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_BACKENDS_CONTROLLER_INPUT_BACKEND_H
-#define M64P_BACKENDS_CONTROLLER_INPUT_BACKEND_H
+#ifndef M64P_MAIN_FILE_STORAGE_H
+#define M64P_MAIN_FILE_STORAGE_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-#include "device/si/game_controller.h"
-
-struct controller_input_backend
+struct file_storage
 {
-    void* user_data;
-    int (*is_connected)(void*);
-    enum pak_type (*detect_pak)(void*);
-    uint32_t (*get_input)(void*);
+    uint8_t* data;
+    size_t size;
+    const char* filename;
 };
 
-int controller_input_is_connected(struct controller_input_backend* cin);
-enum pak_type controller_input_detect_pak(struct controller_input_backend* cin);
-uint32_t  controller_input_get_input(struct controller_input_backend* cin);
+
+int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
+int open_rom_file_storage(struct file_storage* storage, const char* filename);
+void close_file_storage(struct file_storage* storage);
+
+extern const struct storage_backend_interface g_ifile_storage;
+extern const struct storage_backend_interface g_ifile_storage_ro;
+extern const struct storage_backend_interface g_isubfile_storage;
 
 #endif

@@ -43,13 +43,20 @@
 #include "api/m64p_types.h"
 #include "api/m64p_vidext.h"
 #include "api/vidext.h"
-#include "backends/audio_out_backend.h"
-#include "backends/clock_backend.h"
-#include "backends/controller_input_backend.h"
-#include "backends/rumble_backend.h"
-#include "backends/storage_backend.h"
+#include "backends/api/audio_out_backend.h"
+#include "backends/api/clock_backend.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/joybus.h"
+#include "backends/api/rumble_backend.h"
+#include "backends/api/storage_backend.h"
+#include "backends/plugins_compat/plugins_compat.h"
+#include "backends/clock_ctime_plus_delta.h"
+#include "backends/file_storage.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/controllers/paks/mempak.h"
+#include "device/controllers/paks/rumblepak.h"
+#include "device/controllers/paks/transferpak.h"
 #include "device/gb/gb_cart.h"
 #include "device/pifbootrom/pifbootrom.h"
 #include "eventloop.h"
@@ -58,14 +65,10 @@
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "osd/screenshot.h"
-#include "plugin/input_plugin_compat.h"
-#include "plugin/emulate_speaker_via_audio_plugin.h"
-#include "plugin/get_time_using_time_plus_delta.h"
 #include "plugin/plugin.h"
 #include "profile.h"
 #include "rom.h"
 #include "savestates.h"
-#include "file_storage.h"
 #include "util.h"
 
 #ifdef DBG
@@ -99,21 +102,7 @@ void* g_mem_base = NULL;
 
 struct device g_dev;
 
-/* Gameboy roms to load in transfer pak */
-/* TODO: allow ui to pass the gb rom file to the core */
-char* g_gb_rom_files[GAME_CONTROLLERS_COUNT] = {
-#if 0
-    "./pkmb.gb",
-    "./mtennis.gbc",
-    "./pd.gbc",
-    "./pkmc.gbc",
-#else
-    NULL,
-    NULL,
-    NULL,
-    NULL
-#endif
-};
+m64p_media_loader g_media_loader;
 
 int g_gs_vi_counter = 0;
 
@@ -127,6 +116,12 @@ static int   l_MainSpeedLimit = 1;       // insert delay during vi_interrupt to 
 static osd_message_t *l_msgVol = NULL;
 static osd_message_t *l_msgFF = NULL;
 static osd_message_t *l_msgPause = NULL;
+
+/* compatible paks */
+enum { PAK_MAX_SIZE = 4 };
+static size_t l_paks_idx[GAME_CONTROLLERS_COUNT];
+static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
+static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
 
 /*********************************************************************************************************
 * static functions
@@ -170,15 +165,10 @@ static char *get_flashram_path(void)
     return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
 }
 
-static char *get_gbsav_path(unsigned int controller)
+static char *get_gb_ram_path(const char* gbrom, unsigned int control_id)
 {
-    /* gb save files names are suffixed with the controller number
-     * to avoid multiple controllers to write to the same save file.
-     */
-    const char* name = namefrompath(g_gb_rom_files[controller]);
-    return formatstr("%s%s.%u.sav", get_savesrampath(), name, controller);
+    return formatstr("%s%s.%u.sav", get_savesrampath(), gbrom, control_id);
 }
-
 
 /*********************************************************************************************************
 * helper functions
@@ -799,7 +789,7 @@ static void apply_speed_limiter(void)
     sleepTimes[sleepTimesIndex%SAMPLE_COUNT] = sleepTime;
     sleepTimesIndex++;
 
-    int elementsForAverage = sleepTimesIndex > SAMPLE_COUNT ? SAMPLE_COUNT : sleepTimesIndex;
+    unsigned int elementsForAverage = sleepTimesIndex > SAMPLE_COUNT ? SAMPLE_COUNT : sleepTimesIndex;
 
     // compute the average sleepTime
     double sum = 0;
@@ -867,88 +857,219 @@ void new_vi(void)
     pause_loop();
 }
 
-static void open_mpk_file(struct file_storage* storage)
+void main_switch_pak(int control_id)
+{
+    struct game_controller* cont = &g_dev.controllers[control_id];
+
+    if (l_ipaks[l_paks_idx[control_id]] == NULL ||
+        ++l_paks_idx[control_id] >= PAK_MAX_SIZE) {
+        l_paks_idx[control_id] = 0;
+    }
+
+    change_pak(cont, l_paks[control_id][l_paks_idx[control_id]], l_ipaks[l_paks_idx[control_id]]);
+
+    if (cont->ipak != NULL) {
+        DebugMessage(M64MSG_INFO, "Controller %u pak changed to %s", control_id, cont->ipak->name);
+    }
+    else {
+        DebugMessage(M64MSG_INFO, "Removing pak from controller %u", control_id);
+    }
+}
+
+static void open_mpk_file(struct file_storage* fstorage)
 {
     unsigned int i;
-    int ret = open_file_storage(storage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
+    int ret = open_file_storage(fstorage, GAME_CONTROLLERS_COUNT*MEMPAK_SIZE, get_mempaks_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            format_mempak(storage->data + i * MEMPAK_SIZE);
+            format_mempak(fstorage->data + i * MEMPAK_SIZE);
         }
     }
 }
 
-static void open_fla_file(struct file_storage* storage)
+static void open_fla_file(struct file_storage* fstorage)
 {
-    int ret = open_file_storage(storage, FLASHRAM_SIZE, get_flashram_path());
+    int ret = open_file_storage(fstorage, FLASHRAM_SIZE, get_flashram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_flashram(storage->data);
+        format_flashram(fstorage->data);
     }
 }
 
-static void open_sra_file(struct file_storage* storage)
+static void open_sra_file(struct file_storage* fstorage)
 {
-    int ret = open_file_storage(storage, SRAM_SIZE, get_sram_path());
+    int ret = open_file_storage(fstorage, SRAM_SIZE, get_sram_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_sram(storage->data);
+        format_sram(fstorage->data);
     }
 }
 
-static void open_eep_file(struct file_storage* storage)
+static void open_eep_file(struct file_storage* fstorage)
 {
     /* Note: EEP files are all EEPROM_MAX_SIZE bytes long,
      * whatever the real EEPROM size is.
      */
     enum { EEPROM_MAX_SIZE = 0x800 };
 
-    int ret = open_file_storage(storage, EEPROM_MAX_SIZE, get_eeprom_path());
+    int ret = open_file_storage(fstorage, EEPROM_MAX_SIZE, get_eeprom_path());
 
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
-        format_eeprom(storage->data, EEPROM_MAX_SIZE);
+        format_eeprom(fstorage->data, EEPROM_MAX_SIZE);
+    }
+
+    /* Truncate to 4k bit if necessary */
+    if (ROM_SETTINGS.savetype != EEPROM_16KB) {
+        fstorage->size = 0x200;
     }
 }
 
-static void init_gb_rom(void* opaque, struct storage_backend* storage)
+
+struct gb_cart_data
 {
-    struct file_storage* fstorage = (struct file_storage*)opaque;
+    int control_id;
+    struct file_storage rom_fstorage;
+    struct file_storage ram_fstorage;
+};
 
-    open_rom_file_storage(fstorage, fstorage->filename);
+static struct gb_cart_data l_gb_carts_data[GAME_CONTROLLERS_COUNT];
 
-    storage->data = fstorage->data;
-    storage->size = fstorage->size;
-    storage->user_data = fstorage;
-    storage->save = NULL;
+static void init_gb_rom(void* opaque, void** storage, const struct storage_backend_interface** istorage)
+{
+    struct gb_cart_data* data = (struct gb_cart_data*)opaque;
+
+    /* Ask the core loader for rom filename */
+    char* rom_filename = (g_media_loader.get_gb_cart_rom == NULL)
+        ? NULL
+        : g_media_loader.get_gb_cart_rom(g_media_loader.cb_data, data->control_id);
+
+    /* Handle the no cart case */
+    if (rom_filename == NULL || strlen(rom_filename) == 0) {
+        goto no_cart;
+    }
+
+    /* Open ROM file */
+    if (open_rom_file_storage(&data->rom_fstorage, rom_filename) != file_ok) {
+        DebugMessage(M64MSG_ERROR, "Failed to load ROM file: %s", rom_filename);
+        goto no_cart;
+    }
+
+    DebugMessage(M64MSG_INFO, "GB Loader ROM: %s - %zu",
+            data->rom_fstorage.filename,
+            data->rom_fstorage.size);
+
+    /* init GB ROM storage */
+    *storage = &data->rom_fstorage;
+    *istorage = &g_ifile_storage_ro;
+    return;
+
+no_cart:
+    free(rom_filename);
+    *storage = NULL;
+    *istorage = NULL;
 }
 
-static void init_gb_ram(void* opaque, struct storage_backend* storage)
+static void release_gb_rom(void* opaque)
 {
-    struct file_storage* fstorage = (struct file_storage*)opaque;
+    struct gb_cart_data* data = (struct gb_cart_data*)opaque;
 
-    int ret = open_file_storage(fstorage, storage->size, fstorage->filename);
+    close_file_storage(&data->rom_fstorage);
 
-    storage->data = fstorage->data;
-    storage->user_data = fstorage;
-    storage->save = save_file_storage;
+    memset(&data->rom_fstorage, 0, sizeof(data->rom_fstorage));
+}
 
-    if (ret == (int)file_open_error) {
-        /* if file doesn't exists provide default content */
-        memset(storage->data, 0, storage->size);
+static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const struct storage_backend_interface** istorage)
+{
+    struct gb_cart_data* data = (struct gb_cart_data*)opaque;
+
+    /* Ask the core loader for ram filename */
+    char* ram_filename = (g_media_loader.get_gb_cart_ram == NULL)
+        ? NULL
+        : g_media_loader.get_gb_cart_ram(g_media_loader.cb_data, data->control_id);
+
+    /* Handle the no RAM case
+     * if NULL or empty string generate a filename
+     */
+    if (ram_filename == NULL || strlen(ram_filename) == 0) {
+        free(ram_filename);
+        ram_filename = get_gb_ram_path(namefrompath(data->rom_fstorage.filename), data->control_id+1);
+    }
+
+    /* Open RAM file
+     * if file doesn't exists provide default content */
+    int err = open_file_storage(&data->ram_fstorage, ram_size, ram_filename);
+    if (err == file_open_error) {
+        memset(data->ram_fstorage.data, 0, data->ram_fstorage.size);
+        DebugMessage(M64MSG_INFO, "Providing default RAM content");
+    }
+    else if (err == file_read_error) {
+        DebugMessage(M64MSG_WARNING, "Size mismatch between expected RAM size and effective file size");
+    }
+
+    DebugMessage(M64MSG_INFO, "GB Loader RAM: %s - %zu",
+            data->ram_fstorage.filename,
+            data->ram_fstorage.size);
+
+    /* init GB RAM storage */
+    *storage = &data->ram_fstorage;
+    *istorage = &g_ifile_storage;
+}
+
+static void release_gb_ram(void* opaque)
+{
+    struct gb_cart_data* data = (struct gb_cart_data*)opaque;
+
+    close_file_storage(&data->ram_fstorage);
+
+    memset(&data->ram_fstorage, 0, sizeof(data->ram_fstorage));
+}
+
+
+
+void main_change_gb_cart(int control_id)
+{
+    struct transferpak* tpk = &g_dev.transferpaks[control_id];
+    struct gb_cart* gb_cart = &g_dev.gb_carts[control_id];
+    struct gb_cart_data* data = &l_gb_carts_data[control_id];
+
+    /* reset gb_cart_data */
+    memset(data, 0, sizeof(*data));
+    data->control_id = control_id;
+
+    init_gb_cart(gb_cart,
+            data, init_gb_rom, release_gb_rom,
+            data, init_gb_ram, release_gb_ram,
+            NULL, &g_iclock_ctime_plus_delta);
+
+    if (gb_cart->read_gb_cart == NULL) {
+        gb_cart = NULL;
+    }
+
+    change_gb_cart(tpk, gb_cart);
+
+    if (tpk->gb_cart != NULL) {
+        const uint8_t* rom_data = gb_cart->irom_storage->data(gb_cart->rom_storage);
+        DebugMessage(M64MSG_INFO, "Inserting GB cart %s into transferpak %u", rom_data + 0x134, control_id);
+    }
+    else {
+        DebugMessage(M64MSG_INFO, "Removing GB cart from transferpak %u", control_id);
     }
 }
+
 
 /*********************************************************************************************************
 * emulation thread - runs the core
 */
+
+
 m64p_error main_run(void)
 {
-    size_t i;
+    size_t i, k;
     size_t rdram_size;
     unsigned int count_per_op;
     unsigned int emumode;
@@ -956,20 +1077,13 @@ m64p_error main_run(void)
     int no_compiled_jump;
     struct file_storage eep;
     struct file_storage fla;
-    struct file_storage mpk;
     struct file_storage sra;
+
     int control_ids[GAME_CONTROLLERS_COUNT];
-    struct audio_out_backend aout;
-    struct clock_backend clock;
-    struct controller_input_backend cins[GAME_CONTROLLERS_COUNT];
-    struct rumble_backend rumbles[GAME_CONTROLLERS_COUNT];
-    struct storage_backend fla_storage;
-    struct storage_backend sra_storage;
-    struct storage_backend mpk_storages[GAME_CONTROLLERS_COUNT];
-    struct storage_backend eep_storage;
-    struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
-    struct file_storage gb_carts_rom[GAME_CONTROLLERS_COUNT];
-    struct file_storage gb_carts_ram[GAME_CONTROLLERS_COUNT];
+    struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
+
+    struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
+    struct file_storage mpk;
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
@@ -1003,83 +1117,151 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
+    /* Check paks compatibility for current ROM */
+    k = 0;
+    if (ROM_SETTINGS.mempak) {
+        l_ipaks[k++] = &g_imempak;
+    }
+    if (ROM_SETTINGS.rumble) {
+        l_ipaks[k++] = &g_irumblepak;
+    }
+    if (ROM_SETTINGS.transferpak) {
+        l_ipaks[k++] = &g_itransferpak;
+    }
+    l_ipaks[k] = NULL;
+
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);
     open_eep_file(&eep);
     open_fla_file(&fla);
     open_sra_file(&sra);
 
-    /* setup backends */
-    aout = (struct audio_out_backend){ &g_dev.ai, set_audio_format_via_audio_plugin, push_audio_samples_via_audio_plugin };
-    clock = (struct clock_backend){ NULL, get_time_using_time_plus_delta };
-    fla_storage = (struct storage_backend){ fla.data, fla.size, &fla, save_file_storage };
-    sra_storage = (struct storage_backend){ sra.data, sra.size, &sra, save_file_storage };
-    eep_storage = (struct storage_backend){ eep.data, (ROM_SETTINGS.savetype != EEPROM_16KB) ? PIF_PDT_EEPROM_4K : PIF_PDT_EEPROM_16K, &eep, save_file_storage };
-
-    /* setup game controllers data */
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i)
-    {
-        control_ids[i] = i;
-        cins[i] = (struct controller_input_backend){ &control_ids[i], input_plugin_is_connected, input_plugin_detect_pak, input_plugin_get_input };
-        mpk_storages[i] = (struct storage_backend){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, &mpk, save_file_storage };
-        rumbles[i] = (struct rumble_backend){ &control_ids[i], input_plugin_rumble_exec };
-
-        if (g_gb_rom_files[i] != NULL)
-        {
-            char* gbsav_path = get_gbsav_path(i);
-            char* gbrom_path = strdup(g_gb_rom_files[i]);
-
-            gb_carts_rom[i].data = NULL;
-            gb_carts_rom[i].size = 0;
-            gb_carts_rom[i].filename = gbrom_path;
-
-            gb_carts_ram[i].data = NULL;
-            gb_carts_ram[i].size = 0;
-            gb_carts_ram[i].filename = gbsav_path;
-
-            if (init_gb_cart(&gb_carts[i],
-                             &gb_carts_rom[i], init_gb_rom,
-                             &gb_carts_ram[i], init_gb_ram,
-                             &clock) != 0)
-            {
-                /* could not load gb rom file so invalidate it and release other resources */
-                close_file_storage(&gb_carts_rom[i]);
-                close_file_storage(&gb_carts_ram[i]);
-                g_gb_rom_files[i] = NULL;
-            }
-        }
-        else
-        {
-            memset(&gb_carts[i], 0, sizeof(struct gb_cart));
-            memset(&gb_carts_rom[i], 0, sizeof(struct file_storage));
-            memset(&gb_carts_ram[i], 0, sizeof(struct file_storage));
-        }
-    }
-
     /* setup pif channel devices */
-    struct pif_channel_device pif_channel_devices[PIF_CHANNELS_COUNT];
+    void* joybus_devices[PIF_CHANNELS_COUNT];
+    const struct joybus_device_interface* ijoybus_devices[PIF_CHANNELS_COUNT];
+
+    memset(&g_dev.gb_carts, 0, GAME_CONTROLLERS_COUNT*sizeof(*g_dev.gb_carts));
+    memset(&l_gb_carts_data, 0, GAME_CONTROLLERS_COUNT*sizeof(*l_gb_carts_data));
+    memset(cin_compats, 0, GAME_CONTROLLERS_COUNT*sizeof(*cin_compats));
 
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
+        control_ids[i] = (int)i;
+
+        /* if no controller is plugged, make it "disconnected" */
+        if (!Controls[i].Present) {
+            joybus_devices[i] = NULL;
+            ijoybus_devices[i] = NULL;
+        }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
-        if (Controls[i].RawData) {
-            pif_channel_devices[i].opaque = &control_ids[i];
-            pif_channel_devices[i].process = input_plugin_read_controller;
-            pif_channel_devices[i].post_setup = input_plugin_controller_command;
+        else if (Controls[i].RawData) {
+            joybus_devices[i] = &control_ids[i];
+            ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
         }
         /* otherwise let the core do the processing */
         else {
-            pif_channel_devices[i].opaque = &g_dev.si.pif.controllers[i];
-            pif_channel_devices[i].process = process_controller_command;
-            pif_channel_devices[i].post_setup = NULL;
+            /* select appropriate controller
+             * FIXME: assume for now that only standard controller is compatible
+             * Use the rom db to know if other peripherals are compatibles (VRU, mouse, train, ...)
+             */
+            const struct game_controller_flavor* cont_flavor =
+                &g_standard_controller_flavor;
+
+            joybus_devices[i] = &g_dev.controllers[i];
+            ijoybus_devices[i] = &g_ijoybus_device_controller;
+
+            cin_compats[i].control_id = (int)i;
+            cin_compats[i].cont = &g_dev.controllers[i];
+            cin_compats[i].tpk = &g_dev.transferpaks[i];
+
+            l_gb_carts_data[i].control_id = (int)i;
+
+            l_paks_idx[i] = 0;
+
+            /* init all compatibles paks */
+            for(k = 0; k < PAK_MAX_SIZE; ++k) {
+                /* Memory Pak */
+                if (l_ipaks[k] == &g_imempak) {
+                    mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
+                    init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
+                    l_paks[i][k] = &g_dev.mempaks[i];
+
+                    if (Controls[i].Plugin == PLUGIN_MEMPAK) {
+                        l_paks_idx[i] = k;
+                    }
+                }
+                /* Rumble Pak */
+                else if (l_ipaks[k] == &g_irumblepak) {
+                    init_rumblepak(&g_dev.rumblepaks[i], &control_ids[i], &g_irumble_backend_plugin_compat);
+                    l_paks[i][k] = &g_dev.rumblepaks[i];
+
+                    if (Controls[i].Plugin == PLUGIN_RUMBLE_PAK
+                     || Controls[i].Plugin == PLUGIN_RAW) {
+                        l_paks_idx[i] = k;
+                    }
+                }
+                /* Transfer Pak */
+                else if (l_ipaks[k] == &g_itransferpak) {
+
+                    /* init GB cart */
+                    init_gb_cart(&g_dev.gb_carts[i],
+                            &l_gb_carts_data[i], init_gb_rom, release_gb_rom,
+                            &l_gb_carts_data[i], init_gb_ram, release_gb_ram,
+                            NULL, &g_iclock_ctime_plus_delta);
+
+                    init_transferpak(&g_dev.transferpaks[i], (g_dev.gb_carts[i].read_gb_cart == NULL) ? NULL : &g_dev.gb_carts[i]);
+                    l_paks[i][k] = &g_dev.transferpaks[i];
+
+                    if (Controls[i].Plugin == PLUGIN_TRANSFER_PAK) {
+                        l_paks_idx[i] = k;
+                    }
+
+                    /* enable GB cart switch */
+                    cin_compats[i].gb_cart_switch_enabled = 1;
+                }
+                /* No Pak */
+                else {
+                    l_ipaks[k] = NULL;
+                    l_paks[i][k] = NULL;
+
+                    if (Controls[i].Plugin == PLUGIN_NONE) {
+                        l_paks_idx[i] = k;
+                    }
+
+                    break;
+                }
+            }
+
+            /* init game_controller */
+            init_game_controller(&g_dev.controllers[i],
+                    cont_flavor,
+                    &cin_compats[i], &g_icontroller_input_backend_plugin_compat,
+                    l_paks[i][l_paks_idx[i]], l_ipaks[l_paks_idx[i]]);
+
+            if (l_ipaks[l_paks_idx[i]] != NULL) {
+                DebugMessage(M64MSG_INFO, "Game controller %u (%s) has a %s plugged in",
+                    i, cont_flavor->name, l_ipaks[l_paks_idx[i]]->name);
+            } else {
+                DebugMessage(M64MSG_INFO, "Game controller %u (%s) has nothing plugged in",
+                    i, cont_flavor->name);
+            }
         }
     }
 
+    /* Init cartridge serial devices
+     * FIXME: only init what's really inside the cartridge (eg either eeprom or rtc, not both)
+     */
     for (i = GAME_CONTROLLERS_COUNT; i < PIF_CHANNELS_COUNT; ++i) {
-        pif_channel_devices[i].opaque = &g_dev.si.pif;
-        pif_channel_devices[i].process = process_cart_command;
-        pif_channel_devices[i].post_setup = NULL;
+        joybus_devices[i] = &g_dev.cart;
+        ijoybus_devices[i] = &g_ijoybus_device_cart;
     }
+
+    init_eeprom(&g_dev.cart.eeprom,
+            (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
+            &eep, &g_ifile_storage);
+
+    init_af_rtc(&g_dev.cart.af_rtc,
+                NULL, &g_iclock_ctime_plus_delta);
 
 
     init_device(&g_dev,
@@ -1088,18 +1270,12 @@ m64p_error main_run(void)
                 count_per_op,
                 no_compiled_jump,
                 ROM_PARAMS.special_rom,
-                &aout,
+                &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
                 g_rom_size,
-                &fla_storage,
-                &sra_storage,
+                &fla, &g_ifile_storage,
+                &sra, &g_ifile_storage,
                 rdram_size,
-                pif_channel_devices,
-                cins,
-                mpk_storages,
-                rumbles,
-                gb_carts,
-                (ROM_SETTINGS.savetype != EEPROM_16KB) ? 0x8000 : 0xc000, &eep_storage,
-                &clock,
+                joybus_devices, ijoybus_devices,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
 
     // Attach rom to plugins
@@ -1161,9 +1337,9 @@ m64p_error main_run(void)
 #endif
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (g_gb_rom_files[i] != NULL) {
-            close_file_storage(&gb_carts_rom[i]);
-            close_file_storage(&gb_carts_ram[i]);
+        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+            release_gb_rom(&l_gb_carts_data[i]);
+            release_gb_ram(&l_gb_carts_data[i]);
         }
     }
 
@@ -1195,9 +1371,9 @@ on_audio_open_failure:
 on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (g_gb_rom_files[i] != NULL) {
-            close_file_storage(&gb_carts_rom[i]);
-            close_file_storage(&gb_carts_ram[i]);
+        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+            release_gb_rom(&l_gb_carts_data[i]);
+            release_gb_ram(&l_gb_carts_data[i]);
         }
     }
 

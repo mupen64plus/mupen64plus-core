@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - get_time_using_time_plus_delta.c                        *
+ *   Mupen64plus - transferpak.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,17 +19,35 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "get_time_using_time_plus_delta.h"
+#ifndef M64P_DEVICE_SI_TRANSFERPAK_H
+#define M64P_DEVICE_SI_TRANSFERPAK_H
 
-#include <time.h>
+#include <stddef.h>
+#include <stdint.h>
 
+struct gb_cart;
 
-time_t get_time_using_time_plus_delta(void* user_data)
+enum cart_access_mode
 {
-    time_t user_delta = (user_data == NULL)
-        ? 0
-        : *(time_t*)user_data;
+    CART_NOT_INSERTED = 0x40,
+    CART_ACCESS_MODE_0 = 0x80,
+    CART_ACCESS_MODE_1 = 0x89
+};
 
-    return user_delta + time(NULL);
-}
+struct transferpak
+{
+    unsigned int enabled;
+    unsigned int bank;
+    unsigned int access_mode;
+    unsigned int access_mode_changed;
 
+    struct gb_cart* gb_cart;
+};
+
+void init_transferpak(struct transferpak* tpk, struct gb_cart* gb_cart);
+void poweron_transferpak(struct transferpak* tpk);
+
+void change_gb_cart(struct transferpak* tpk, struct gb_cart* gb_cart);
+
+extern const struct pak_interface g_itransferpak;
+#endif

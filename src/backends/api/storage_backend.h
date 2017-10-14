@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - eeprom.h                                                *
+ *   Mupen64plus - storage_backend.h                                       *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,31 +19,25 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_EEPROM_H
-#define M64P_DEVICE_SI_EEPROM_H
+#ifndef M64P_BACKENDS_API_STORAGE_BACKEND_H
+#define M64P_BACKENDS_API_STORAGE_BACKEND_H
 
 #include <stddef.h>
 #include <stdint.h>
 
-struct storage_backend;
-
-struct eeprom
+struct storage_backend_interface
 {
-    uint16_t type;
-    struct storage_backend* storage;
+    /* Returns a pointer to storage data
+     */
+    uint8_t* (*data)(const void* storage);
+
+    /* Returns the size of the storage
+     */
+    size_t (*size)(const void* storage);
+
+    /* Notify the storage backend that data should be persisted
+     */
+    void (*save)(void* storage);
 };
-
-
-void format_eeprom(uint8_t* eeprom, size_t size);
-
-void init_eeprom(struct eeprom* eeprom,
-    uint16_t type,
-    struct storage_backend* storage);
-
-void eeprom_read_block(struct eeprom* eeprom,
-    uint8_t block, uint8_t* data);
-
-void eeprom_write_block(struct eeprom* eeprom,
-    uint8_t block, const uint8_t* data, uint8_t* status);
 
 #endif

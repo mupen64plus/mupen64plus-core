@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - storage_backend.c                                       *
+ *   Mupen64plus - clock_backend.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,19 +19,16 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "storage_backend.h"
+#ifndef M64P_BACKENDS_API_CLOCK_BACKEND_H
+#define M64P_BACKENDS_API_CLOCK_BACKEND_H
 
-uint8_t* storage_data(struct storage_backend* storage)
-{
-    return storage->data;;
-}
+#include <time.h>
 
-size_t storage_size(struct storage_backend* storage)
+struct clock_backend_interface
 {
-    return storage->size;
-}
+    /* Returns the current time
+     */
+    time_t (*get_time)(void* clock);
+};
 
-void storage_save(struct storage_backend* storage)
-{
-    storage->save(storage->user_data);
-}
+#endif

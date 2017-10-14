@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - emulate_speaker_via_audio_plugin.h                      *
+ *   Mupen64plus - get_time_using_time_plus_delta.c                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,12 +19,21 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
-#define M64P_PLUGIN_EMULATE_SPEAKER_VIA_AUDIO_PLUGIN_H
+#include "clock_ctime_plus_delta.h"
 
-#include <stddef.h>
+#include <time.h>
 
-void set_audio_format_via_audio_plugin(void* user_data, unsigned int frequency, unsigned int bits);
-void push_audio_samples_via_audio_plugin(void* user_data, const void* buffer, size_t size);
 
-#endif
+time_t ctime_plus_delta_get_time(void* clock)
+{
+    time_t user_delta = (clock == NULL)
+        ? 0
+        : *(time_t*)clock;
+
+    return user_delta + time(NULL);
+}
+
+const struct clock_backend_interface g_iclock_ctime_plus_delta =
+{
+    ctime_plus_delta_get_time
+};

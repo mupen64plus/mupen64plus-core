@@ -43,7 +43,7 @@ extern void* g_mem_base;
 
 extern struct device g_dev;
 
-extern char* g_gb_rom_files[GAME_CONTROLLERS_COUNT];
+extern m64p_media_loader g_media_loader;
 
 extern m64p_frame_callback g_FrameCallback;
 
@@ -54,6 +54,9 @@ const char* get_savesrampath(void);
 
 void new_frame(void);
 void new_vi(void);
+
+void main_switch_pak(int control_id);
+void main_change_gb_cart(int control_id);
 
 int  main_set_core_defaults(void);
 void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);

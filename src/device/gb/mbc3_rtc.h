@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <time.h>
 
-struct clock_backend;
+struct clock_backend_interface;
 
 enum mbc3_rtc_registers
 {
@@ -49,10 +49,14 @@ struct mbc3_rtc
 
     time_t last_time;
 
-    struct clock_backend* clock;
+    void* clock;
+    const struct clock_backend_interface* iclock;
 };
 
-void init_mbc3_rtc(struct mbc3_rtc* rtc, struct clock_backend* clock);
+void init_mbc3_rtc(struct mbc3_rtc* rtc,
+                   void* clock,
+                   const struct clock_backend_interface* iclock);
+
 void poweron_mbc3_rtc(struct mbc3_rtc* rtc);
 
 uint8_t read_mbc3_rtc_regs(struct mbc3_rtc* rtc, unsigned int reg);

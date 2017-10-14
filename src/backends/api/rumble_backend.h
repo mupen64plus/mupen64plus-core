@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - controller_input_backend.c                              *
+ *   Mupen64plus - rumble_backend.h                                        *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,20 +19,22 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "controller_input_backend.h"
+#ifndef M64P_BACKENDS_API_RUMBLE_BACKEND_H
+#define M64P_BACKENDS_API_RUMBLE_BACKEND_H
 
+#include <stdint.h>
 
-int controller_input_is_connected(struct controller_input_backend* cin)
+enum rumble_action
 {
-    return cin->is_connected(cin->user_data);
-}
+    RUMBLE_STOP,
+    RUMBLE_START
+};
 
-enum pak_type controller_input_detect_pak(struct controller_input_backend* cin)
+struct rumble_backend_interface
 {
-    return cin->detect_pak(cin->user_data);
-}
+    /* Start or stop rumbling
+     */
+    void (*exec)(void* rumble, enum rumble_action action);
+};
 
-uint32_t controller_input_get_input(struct controller_input_backend* cin)
-{
-    return cin->get_input(cin->user_data);
-}
+#endif

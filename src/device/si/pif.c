@@ -27,10 +27,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_plugin.h"
 #include "api/m64p_types.h"
-#include "backends/controller_input_backend.h"
-#include "backends/rumble_backend.h"
-#include "backends/storage_backend.h"
-#include "device/gb/gb_cart.h"
+#include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/si/n64_cic_nus_6105.h"
@@ -63,67 +60,6 @@ void print_pif(struct pif* pif)
 }
 #endif
 
-void process_cart_command(void* opaque,
-    const uint8_t* tx, const uint8_t* tx_buf,
-    uint8_t* rx, uint8_t* rx_buf)
-{
-    struct pif* pif = (struct pif*)opaque;
-
-    uint8_t cmd = tx_buf[0];
-
-    switch (cmd)
-    {
-    case PIF_CMD_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
-
-        /* set type and status */
-        rx_buf[0] = (uint8_t)(pif->eeprom.type >> 0);
-        rx_buf[1] = (uint8_t)(pif->eeprom.type >> 8);
-        rx_buf[2] = 0x00;
-    } break;
-
-    case PIF_CMD_EEPROM_READ: {
-        PIF_CHECK_COMMAND_FORMAT(2, 8)
-        eeprom_read_block(&pif->eeprom, tx_buf[1], &rx_buf[0]);
-    } break;
-
-    case PIF_CMD_EEPROM_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(10, 1)
-        eeprom_write_block(&pif->eeprom, tx_buf[1], &tx_buf[2], &rx_buf[0]);
-    } break;
-
-    case PIF_CMD_AF_RTC_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
-
-        /* set type and status */
-        rx_buf[0] = (uint8_t)(PIF_PDT_AF_RTC >> 0);
-        rx_buf[1] = (uint8_t)(PIF_PDT_AF_RTC >> 8);
-        rx_buf[2] = 0x00;
-    } break;
-
-    case PIF_CMD_AF_RTC_READ: {
-        PIF_CHECK_COMMAND_FORMAT(2, 9)
-        af_rtc_read_block(&pif->af_rtc, tx_buf[1], &rx_buf[0], &rx_buf[8]);
-    } break;
-
-    case PIF_CMD_AF_RTC_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(10, 1)
-        af_rtc_write_block(&pif->af_rtc, tx_buf[1], &tx_buf[2], &rx_buf[0]);
-    } break;
-
-    default:
-        DebugMessage(M64MSG_WARNING, "cart: Unknown command %02x %02x %02x",
-            *tx, *rx, cmd);
-    }
-}
-
-
-static void init_pif_channel(struct pif_channel* channel,
-    const struct pif_channel_device* device)
-{
-    memcpy(&channel->device, device, sizeof(*device));
-}
-
 static void process_channel(struct pif_channel* channel)
 {
     /* don't process channel if it has been disabled */
@@ -131,18 +67,26 @@ static void process_channel(struct pif_channel* channel)
         return;
     }
 
-    channel->device.process(channel->device.opaque,
+    /* set NoResponse if no device is connected */
+    if (channel->ijbd == NULL) {
+        *channel->rx |= 0x80;
+        return;
+    }
+
+    /* do device processing */
+    channel->ijbd->process(channel->jbd,
         channel->tx, channel->tx_buf,
         channel->rx, channel->rx_buf);
 }
 
 static void post_setup_channel(struct pif_channel* channel)
 {
-    if (channel->device.post_setup == NULL) {
+    if ((channel->ijbd == NULL)
+    || (channel->ijbd->post_setup == NULL)) {
         return;
     }
 
-    channel->device.post_setup(channel->device.opaque,
+    channel->ijbd->post_setup(channel->jbd,
         channel->tx, channel->tx_buf,
         channel->rx, channel->rx_buf);
 }
@@ -175,14 +119,8 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 
 void init_pif(struct pif* pif,
     uint8_t* pif_base,
-    const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    struct storage_backend* mpk_storages,
-    struct rumble_backend* rumbles,
-    struct gb_cart* gb_carts,
-    uint16_t eeprom_id,
-    struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
+    void* jbds[PIF_CHANNELS_COUNT],
+    const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     const uint8_t* ipl3)
 {
     size_t i;
@@ -190,19 +128,9 @@ void init_pif(struct pif* pif,
     pif->ram = pif_base + 0x7c0;
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        init_pif_channel(&pif->channels[i], &pif_channel_devices[i]);
+        pif->channels[i].jbd = jbds[i];
+        pif->channels[i].ijbd = ijbds[i];
     }
-
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        init_game_controller(&pif->controllers[i],
-                &cins[i],
-                &mpk_storages[i],
-                &rumbles[i],
-                (gb_carts[i].rom.data != NULL) ? &gb_carts[i] : NULL);
-    }
-
-    init_eeprom(&pif->eeprom, eeprom_id, eeprom_storage);
-    init_af_rtc(&pif->af_rtc, clock);
 
     init_cic_using_ipl3(&pif->cic, ipl3);
 }
@@ -323,12 +251,13 @@ void poweron_pif(struct pif* pif)
     *pif24 = sl(*pif24);
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        disable_pif_channel(&pif->channels[i]);
-    }
+        struct pif_channel* channel = &pif->channels[i];
 
-    poweron_af_rtc(&pif->af_rtc);
-    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        poweron_game_controller(&pif->controllers[i]);
+        disable_pif_channel(channel);
+
+        if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
+            channel->ijbd->poweron(channel->jbd);
+        }
     }
 }
 

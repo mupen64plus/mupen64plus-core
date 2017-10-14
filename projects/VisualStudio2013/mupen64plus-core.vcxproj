@@ -42,11 +42,10 @@
     <ClCompile Include="..\..\src\api\debugger.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
     <ClCompile Include="..\..\src\api\vidext.c" />
-    <ClCompile Include="..\..\src\backends\audio_out_backend.c" />
-    <ClCompile Include="..\..\src\backends\clock_backend.c" />
-    <ClCompile Include="..\..\src\backends\controller_input_backend.c" />
-    <ClCompile Include="..\..\src\backends\rumble_backend.c" />
-    <ClCompile Include="..\..\src\backends\storage_backend.c" />
+    <ClCompile Include="..\..\src\backends\plugins_compat\input_plugin_compat.c" />
+    <ClCompile Include="..\..\src\backends\plugins_compat\audio_plugin_compat.c" />
+    <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c" />
+    <ClCompile Include="..\..\src\backends\file_storage.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_debugger.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
@@ -55,7 +54,6 @@
     <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\device\device.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
-    <ClCompile Include="..\..\src\main\file_storage.c" />
     <ClCompile Include="..\..\src\main\lirc.c" />
     <ClCompile Include="..\..\src\main\main.c" />
     <ClCompile Include="..\..\src\main\xxHash\xxhash.c" />
@@ -69,6 +67,13 @@
     <ClCompile Include="..\..\src\main\zip\ioapi.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
     <ClCompile Include="..\..\src\main\zip\zip.c" />
+    <ClCompile Include="..\..\src\device\cart\af_rtc.c" />
+    <ClCompile Include="..\..\src\device\cart\cart.c" />
+    <ClCompile Include="..\..\src\device\cart\eeprom.c" />
+    <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
     <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
     <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
     <ClCompile Include="..\..\src\device\memory\memory.c" />
@@ -105,9 +110,6 @@
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
     <ClCompile Include="..\..\src\plugin\dummy_video.c" />
-    <ClCompile Include="..\..\src\plugin\input_plugin_compat.c" />
-    <ClCompile Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.c" />
-    <ClCompile Include="..\..\src\plugin\get_time_using_time_plus_delta.c" />
     <ClCompile Include="..\..\src\plugin\plugin.c" />
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\cp0.c" />
@@ -234,16 +236,10 @@
     <ClCompile Include="..\..\src\device\ri\rdram_detection_hack.c" />
     <ClCompile Include="..\..\src\device\ri\ri_controller.c" />
     <ClCompile Include="..\..\src\device\rsp\rsp_core.c" />
-    <ClCompile Include="..\..\src\device\si\af_rtc.c" />
     <ClCompile Include="..\..\src\device\si\cic.c" />
-    <ClCompile Include="..\..\src\device\si\eeprom.c" />
-    <ClCompile Include="..\..\src\device\si\game_controller.c" />
-    <ClCompile Include="..\..\src\device\si\mempak.c" />
     <ClCompile Include="..\..\src\device\si\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\device\si\pif.c" />
-    <ClCompile Include="..\..\src\device\si\rumblepak.c" />
     <ClCompile Include="..\..\src\device\si\si_controller.c" />
-    <ClCompile Include="..\..\src\device\si\transferpak.c" />
     <ClCompile Include="..\..\src\device\vi\vi_controller.c" />
   </ItemGroup>
   <ItemGroup>
@@ -259,11 +255,15 @@
     <ClInclude Include="..\..\src\api\m64p_types.h" />
     <ClInclude Include="..\..\src\api\m64p_vidext.h" />
     <ClInclude Include="..\..\src\api\vidext.h" />
-    <ClInclude Include="..\..\src\backends\audio_out_backend.h" />
-    <ClInclude Include="..\..\src\backends\clock_backend.h" />
-    <ClInclude Include="..\..\src\backends\controller_input_backend.h" />
-    <ClInclude Include="..\..\src\backends\rumble_backend.h" />
-    <ClInclude Include="..\..\src\backends\storage_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\audio_out_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\clock_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\controller_input_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\joybus.h" />
+    <ClInclude Include="..\..\src\backends\api\rumble_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\storage_backend.h" />
+    <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h" />
+    <ClInclude Include="..\..\src\backends\file_storage.h" />
+    <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h" />
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />
     <ClInclude Include="..\..\src\debugger\dbg_debugger.h" />
@@ -275,7 +275,6 @@
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\device\device.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
-    <ClInclude Include="..\..\src\main\file_storage.h" />
     <ClInclude Include="..\..\src\main\lirc.h" />
     <ClInclude Include="..\..\src\main\list.h" />
     <ClInclude Include="..\..\src\main\main.h" />
@@ -292,6 +291,13 @@
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
     <ClInclude Include="..\..\src\main\zip\zip.h" />
+    <ClInclude Include="..\..\src\device\cart\af_rtc.h" />
+    <ClInclude Include="..\..\src\device\cart\cart.h" />
+    <ClInclude Include="..\..\src\device\cart\eeprom.h" />
+    <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
     <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />
     <ClInclude Include="..\..\src\device\memory\memory.h" />
@@ -309,9 +315,6 @@
     <ClInclude Include="..\..\src\plugin\dummy_input.h" />
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />
     <ClInclude Include="..\..\src\plugin\dummy_video.h" />
-    <ClInclude Include="..\..\src\plugin\input_plugin_compat.h" />
-    <ClInclude Include="..\..\src\plugin\emulate_speaker_via_audio_plugin.h" />
-    <ClInclude Include="..\..\src\plugin\get_time_using_time_plus_delta.h" />
     <ClInclude Include="..\..\src\plugin\plugin.h" />
     <ClInclude Include="..\..\src\device\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
@@ -447,16 +450,10 @@
     <ClInclude Include="..\..\src\device\ri\rdram_detection_hack.h" />
     <ClInclude Include="..\..\src\device\ri\ri_controller.h" />
     <ClInclude Include="..\..\src\device\rsp\rsp_core.h" />
-    <ClInclude Include="..\..\src\device\si\af_rtc.h" />
     <ClInclude Include="..\..\src\device\si\cic.h" />
-    <ClInclude Include="..\..\src\device\si\eeprom.h" />
-    <ClInclude Include="..\..\src\device\si\game_controller.h" />
-    <ClInclude Include="..\..\src\device\si\mempak.h" />
     <ClInclude Include="..\..\src\device\si\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\device\si\pif.h" />
-    <ClInclude Include="..\..\src\device\si\rumblepak.h" />
     <ClInclude Include="..\..\src\device\si\si_controller.h" />
-    <ClInclude Include="..\..\src\device\si\transferpak.h" />
     <ClInclude Include="..\..\src\device\vi\vi_controller.h" />
   </ItemGroup>
   <ItemGroup>

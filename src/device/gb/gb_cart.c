@@ -34,21 +34,21 @@
 /* various helper functions for ram, rom, or MBC uses */
 
 
-static void read_rom(const struct storage_backend* rom, uint16_t address, uint8_t* data, size_t size)
+static void read_rom(const void* rom_storage, const struct storage_backend_interface* irom_storage, uint16_t address, uint8_t* data, size_t size)
 {
     assert(size > 0);
 
-    if (address + size > rom->size)
+    if (address + size > irom_storage->size(rom_storage))
     {
         DebugMessage(M64MSG_WARNING, "Out of bound read from GB ROM %04x", address);
         return;
     }
 
-    memcpy(data, &rom->data[address], size);
+    memcpy(data, irom_storage->data(rom_storage) + address, size);
 }
 
 
-static void read_ram(const struct storage_backend* ram, unsigned int enabled, uint16_t address, uint8_t* data, size_t size)
+static void read_ram(const void* ram_storage, const struct storage_backend_interface* iram_storage, unsigned int enabled, uint16_t address, uint8_t* data, size_t size)
 {
     assert(size > 0);
 
@@ -60,22 +60,22 @@ static void read_ram(const struct storage_backend* ram, unsigned int enabled, ui
     }
 
     /* RAM must be present */
-    if (ram->data == NULL) {
+    if (iram_storage->data(ram_storage) == NULL) {
         DebugMessage(M64MSG_WARNING, "Trying to read from absent GB RAM %04x", address);
         memset(data, 0xff, size);
         return;
     }
 
-    if (address + size > ram->size)
+    if (address + size > iram_storage->size(ram_storage))
     {
         DebugMessage(M64MSG_WARNING, "Out of bound read from GB RAM %04x", address);
         return;
     }
 
-    memcpy(data, &ram->data[address], size);
+    memcpy(data, iram_storage->data(ram_storage) + address, size);
 }
 
-static void write_ram(struct storage_backend* ram, unsigned int enabled, uint16_t address, const uint8_t* data, size_t size)
+static void write_ram(void* ram_storage, const struct storage_backend_interface* iram_storage, unsigned int enabled, uint16_t address, const uint8_t* data, size_t size)
 {
     assert(size > 0);
 
@@ -86,18 +86,18 @@ static void write_ram(struct storage_backend* ram, unsigned int enabled, uint16_
     }
 
     /* RAM must be present */
-    if (ram->data == NULL) {
+    if (iram_storage->data(ram_storage) == NULL) {
         DebugMessage(M64MSG_WARNING, "Trying to write to absent GB RAM %04x", address);
         return;
     }
 
-    if (address + size > ram->size)
+    if (address + size > iram_storage->size(ram_storage))
     {
         DebugMessage(M64MSG_WARNING, "Out of bound write to GB RAM %04x", address);
         return;
     }
 
-    memcpy(&ram->data[address], data, size);
+    memcpy(iram_storage->data(ram_storage) + address, data, size);
 }
 
 
@@ -119,12 +119,12 @@ static int read_gb_cart_nombc(struct gb_cart* gb_cart, uint16_t address, uint8_t
     case (0x2000 >> 13):
     case (0x4000 >> 13):
     case (0x6000 >> 13):
-        read_rom(&gb_cart->rom, address, data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, address, data, size);
         break;
 
     /* 0xa000-0xbfff: RAM */
     case (0xa000 >> 13):
-        read_ram(&gb_cart->ram, 1, address - 0xa000, data, size);
+        read_ram(gb_cart->ram_storage, gb_cart->iram_storage, 1, address - 0xa000, data, size);
         break;
 
     default:
@@ -148,7 +148,7 @@ static int write_gb_cart_nombc(struct gb_cart* gb_cart, uint16_t address, const 
 
     /* 0xa000-0xbfff: RAM */
     case (0xa000 >> 13):
-        write_ram(&gb_cart->ram, 1, address - 0xa000, data, size);
+        write_ram(gb_cart->ram_storage, gb_cart->iram_storage, 1, address - 0xa000, data, size);
         break;
 
     default:
@@ -166,18 +166,18 @@ static int read_gb_cart_mbc1(struct gb_cart* gb_cart, uint16_t address, uint8_t*
     /* 0x0000-0x3fff: ROM bank 00 */
     case (0x0000 >> 13):
     case (0x2000 >> 13):
-        read_rom(&gb_cart->rom, address, data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, address, data, size);
         break;
 
     /* 0x4000-0x7fff: ROM bank 01-7f */
     case (0x4000 >> 13):
     case (0x6000 >> 13):
-        read_rom(&gb_cart->rom, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
         break;
 
     /* 0xa000-0xbfff: RAM bank 00-03 */
     case (0xa000 >> 13):
-        read_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        read_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
         break;
 
     default:
@@ -234,7 +234,7 @@ static int write_gb_cart_mbc1(struct gb_cart* gb_cart, uint16_t address, const u
 
     /* 0xa000-0xbfff: RAM bank 00-03 */
     case (0xa000 >> 13):
-        write_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        write_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
         break;
 
     default:
@@ -262,13 +262,13 @@ static int read_gb_cart_mbc3(struct gb_cart* gb_cart, uint16_t address, uint8_t*
     /* 0x0000-0x3fff: ROM bank 00 */
     case (0x0000 >> 13):
     case (0x2000 >> 13):
-        read_rom(&gb_cart->rom, address, data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, address, data, size);
         break;
 
     /* 0x4000-0x7fff: ROM bank 01-7f */
     case (0x4000 >> 13):
     case (0x6000 >> 13):
-        read_rom(&gb_cart->rom, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
         break;
 
     /* 0xa000-0xbfff: RAM bank 00-07 or RTC register 08-0c */
@@ -284,7 +284,7 @@ static int read_gb_cart_mbc3(struct gb_cart* gb_cart, uint16_t address, uint8_t*
         case 0x05:
         case 0x06:
         case 0x07:
-            read_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+            read_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
             break;
 
         /* RTC registers */
@@ -369,7 +369,7 @@ static int write_gb_cart_mbc3(struct gb_cart* gb_cart, uint16_t address, const u
         case 0x05:
         case 0x06:
         case 0x07:
-            write_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+            write_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
             break;
 
         /* RTC registers */
@@ -411,18 +411,18 @@ static int read_gb_cart_mbc5(struct gb_cart* gb_cart, uint16_t address, uint8_t*
     /* 0x0000-0x3fff: ROM bank 00 */
     case (0x0000 >> 13):
     case (0x2000 >> 13):
-        read_rom(&gb_cart->rom, address, data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, address, data, size);
         break;
 
     /* 0x4000-0x7fff: ROM bank 00-ff (???) */
     case (0x4000 >> 13):
     case (0x6000 >> 13):
-        read_rom(&gb_cart->rom, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
+        read_rom(gb_cart->rom_storage, gb_cart->irom_storage, (address - 0x4000) + (gb_cart->rom_bank * 0x4000), data, size);
         break;
 
     /* 0xa000-0xbfff: RAM bank 00-07 */
     case (0xa000 >> 13):
-        read_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        read_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
         break;
 
     default:
@@ -468,7 +468,7 @@ static int write_gb_cart_mbc5(struct gb_cart* gb_cart, uint16_t address, const u
     /* 0xa000-0xbfff: RAM bank 00-0f */
     case (0xa000 >> 13):
         /* TODO: add rumble support */
-        write_ram(&gb_cart->ram, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        write_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
         break;
 
     default:
@@ -655,37 +655,43 @@ static const struct parsed_cart_type* parse_cart_type(uint8_t cart_type)
 }
 
 
-int init_gb_cart(struct gb_cart* gb_cart,
-        void* rom_opaque, void (*init_rom)(void* opaque, struct storage_backend* rom),
-        void* ram_opaque, void (*init_ram)(void* opaque, struct storage_backend* ram),
-        struct clock_backend* clock)
+void init_gb_cart(struct gb_cart* gb_cart,
+        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
+        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
+        void* clock, const struct clock_backend_interface* iclock)
 {
     const struct parsed_cart_type* type;
-    struct storage_backend rom;
-    struct storage_backend ram;
+    void* rom_storage = NULL;
+    const struct storage_backend_interface* irom_storage = NULL;
+    void* ram_storage = NULL;
+    const struct storage_backend_interface* iram_storage = NULL;
     struct mbc3_rtc rtc;
 
-    memset(&rom, 0, sizeof(rom));
-    memset(&ram, 0, sizeof(ram));
     memset(&rtc, 0, sizeof(rtc));
 
     /* ask to load rom and initialize rom storage backend */
-    init_rom(rom_opaque, &rom);
+    init_rom(rom_opaque, &rom_storage, &irom_storage);
 
-    /* check rom */
-    if (rom.data == NULL || rom.size < 0x8000)
+    /* handle no cart case */
+    if (irom_storage == NULL) {
+        goto no_cart;
+    }
+
+    /* check rom size */
+    const uint8_t* rom_data = irom_storage->data(rom_storage);
+    if (rom_data == NULL || irom_storage->size(rom_storage) < 0x8000)
     {
         DebugMessage(M64MSG_ERROR, "Invalid GB ROM file size (< 32k)");
-        return -1;
+        goto error_release_rom;
     }
 
     /* get and parse cart type */
-    uint8_t cart_type = rom.data[0x147];
+    uint8_t cart_type = rom_data[0x147];
     type = parse_cart_type(cart_type);
     if (type == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Invalid GB cart type (%02x)", cart_type);
-        return -1;
+        goto error_release_rom;
     }
 
     DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s%s",
@@ -700,48 +706,63 @@ int init_gb_cart(struct gb_cart* gb_cart,
     /* load ram (if present) */
     if (type->extra_devices & GED_RAM)
     {
-        ram.size = 0;
-        switch(rom.data[0x149])
+        size_t ram_size = 0;
+        switch(rom_data[0x149])
         {
-        case 0x00: ram.size = (strcmp(type->mbc, "mbc2") == 0)
+        case 0x00: ram_size = (strcmp(type->mbc, "mbc2") == 0)
                             ? 0x200 /* MBC2 have an integrated 512x4bit RAM */
                             : 0;
                    break;
-        case 0x01: ram.size =  1*0x800; break;
-        case 0x02: ram.size =  4*0x800; break;
-        case 0x03: ram.size = 16*0x800; break;
-        case 0x04: ram.size = 64*0x800; break;
-        case 0x05: ram.size = 32*0x800; break;
+        case 0x01: ram_size =  1*0x800; break;
+        case 0x02: ram_size =  4*0x800; break;
+        case 0x03: ram_size = 16*0x800; break;
+        case 0x04: ram_size = 64*0x800; break;
+        case 0x05: ram_size = 32*0x800; break;
         }
 
-        if (ram.size != 0)
+        if (ram_size != 0)
         {
-            size_t size = ram.size;
+            init_ram(ram_opaque, ram_size, &ram_storage, &iram_storage);
 
-            init_ram(ram_opaque, &ram);
-            if (ram.data == NULL || ram.size != size)
-            {
-                DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", ram.size);
-                return -1;
+            /* check that init_ram succeeded */
+            if (iram_storage == NULL) {
+                DebugMessage(M64MSG_ERROR, "Failed to initialize GB RAM");
+                goto error_release_ram;
             }
-            DebugMessage(M64MSG_INFO, "Using a %d bytes GB RAM", ram.size);
+
+            if (iram_storage->data(ram_storage) == NULL || iram_storage->size(ram_storage) != ram_size)
+            {
+                DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", ram_size);
+                goto error_release_ram;
+            }
+
+            DebugMessage(M64MSG_INFO, "Using a %d bytes GB RAM", ram_size);
         }
     }
 
     /* set RTC clock (if present) */
     if (type->extra_devices & GED_RTC) {
-        init_mbc3_rtc(&rtc, clock);
+        init_mbc3_rtc(&rtc, clock, iclock);
     }
 
     /* update gb_cart */
-    gb_cart->rom = rom;
-    gb_cart->ram = ram;
+    gb_cart->rom_storage = rom_storage;
+    gb_cart->irom_storage = irom_storage;
+    gb_cart->ram_storage = ram_storage;
+    gb_cart->iram_storage = iram_storage;
     gb_cart->has_rtc = (type->extra_devices & GED_RTC) ? 1 : 0;
     gb_cart->rtc = rtc;
     gb_cart->read_gb_cart = type->read_gb_cart;
     gb_cart->write_gb_cart = type->write_gb_cart;
 
-    return 0;
+    return;
+
+error_release_ram:
+    release_ram(ram_opaque);
+error_release_rom:
+    release_rom(rom_opaque);
+no_cart:
+    memset(gb_cart, 0, sizeof(*gb_cart));
 }
 
 void poweron_gb_cart(struct gb_cart* gb_cart)

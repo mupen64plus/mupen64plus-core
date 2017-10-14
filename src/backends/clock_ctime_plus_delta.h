@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - get_time_using_time_plus_delta.h                        *
+ *   Mupen64plus - clock_ctime_plus_delta.h                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,11 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_PLUGIN_GET_TIME_USING_TIME_PLUS_DELTA_H
-#define M64P_PLUGIN_GET_TIME_USING_TIME_PLUS_DELTA_H
+#ifndef M64P_BACKENDS_CLOCK_CTIME_PLUS_DELTA_H
+#define M64P_BACKENDS_CLOCK_CTIME_PLUS_DELTA_H
 
-#include <time.h>
+#include "backends/api/clock_backend.h"
 
-time_t get_time_using_time_plus_delta(void* user_data);
+extern const struct clock_backend_interface g_iclock_ctime_plus_delta;
 
 #endif

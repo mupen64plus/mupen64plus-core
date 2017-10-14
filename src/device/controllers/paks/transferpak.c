@@ -30,6 +30,7 @@
 #include "api/callbacks.h"
 
 #include "device/gb/gb_cart.h"
+#include "device/controllers/game_controller.h"
 
 #include <string.h>
 
@@ -58,8 +59,34 @@ void poweron_transferpak(struct transferpak* tpk)
     }
 }
 
-void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t* data, size_t size)
+void change_gb_cart(struct transferpak* tpk, struct gb_cart* gb_cart)
 {
+    tpk->enabled = 0;
+
+    if (gb_cart == NULL) {
+        tpk->access_mode = CART_NOT_INSERTED;
+    }
+    else {
+        tpk->access_mode = CART_ACCESS_MODE_0;
+        poweron_gb_cart(gb_cart);
+    }
+
+    tpk->gb_cart = gb_cart;
+}
+
+static void plug_transferpak(void* pak)
+{
+    struct transferpak* tpk = (struct transferpak*)pak;
+    poweron_transferpak(tpk);
+}
+
+static void unplug_transferpak(void* pak)
+{
+}
+
+static void read_transferpak(void* pak, uint16_t address, uint8_t* data, size_t size)
+{
+    struct transferpak* tpk = (struct transferpak*)pak;
     uint8_t value;
 
     DebugMessage(M64MSG_VERBOSE, "tpak read: %04x", address);
@@ -98,7 +125,10 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
         if (tpk->enabled)
         {
             DebugMessage(M64MSG_VERBOSE, "tpak read cart: %04x", address);
-            read_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+
+            if (tpk->gb_cart != NULL) {
+                read_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+            }
         }
         break;
 
@@ -107,8 +137,9 @@ void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t
     }
 }
 
-void transferpak_write_command(struct transferpak* tpk, uint16_t address, const uint8_t* data, size_t size)
+static void write_transferpak(void* pak, uint16_t address, const uint8_t* data, size_t size)
 {
+    struct transferpak* tpk = (struct transferpak*)pak;
     uint8_t value = data[size-1];
 
     DebugMessage(M64MSG_VERBOSE, "tpak write: %04x <- %02x", address, value);
@@ -168,7 +199,10 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
 //        if (tpk->enabled)
         {
             DebugMessage(M64MSG_VERBOSE, "tpak write gb: %04x <- %02x", address, value);
-            write_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+
+            if (tpk->gb_cart != NULL) {
+                write_gb_cart(tpk->gb_cart, gb_cart_address(tpk->bank, address), data, size);
+            }
         }
         break;
     default:
@@ -176,3 +210,12 @@ void transferpak_write_command(struct transferpak* tpk, uint16_t address, const 
     }
 }
 
+/* Transfer pak definition */
+const struct pak_interface g_itransferpak =
+{
+    "Transfer pak",
+    plug_transferpak,
+    unplug_transferpak,
+    read_transferpak,
+    write_transferpak
+};

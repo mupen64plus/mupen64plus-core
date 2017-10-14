@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - clock_backend.c                                         *
+ *   Mupen64plus - audio_out_backend.h                                     *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,10 +19,20 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "clock_backend.h"
+#ifndef M64P_BACKENDS_API_AUDIO_OUT_BACKEND_H
+#define M64P_BACKENDS_API_AUDIO_OUT_BACKEND_H
 
+#include <stddef.h>
 
-time_t clock_get_time(struct clock_backend* clock)
+struct audio_out_backend_interface
 {
-    return clock->get_time(clock->user_data);
-}
+    /* Allow the backend to be notified of sample format.
+     */
+    void (*set_format)(void* aout, unsigned int frequency, unsigned int bits);
+
+    /* Push samples to be played by the backend
+     */
+    void (*push_samples)(void* aout, const void* samples, size_t size);
+};
+
+#endif

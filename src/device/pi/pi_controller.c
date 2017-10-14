@@ -131,8 +131,9 @@ static void dma_pi_write(struct pi_controller* pi)
     }
     else
     {
-        int32_t diff = pi->cart_rom.rom_size - rom_address;
-        if (diff < 0) diff = 0;
+        unsigned int diff = (pi->cart_rom.rom_size <= rom_address)
+            ? 0
+            : pi->cart_rom.rom_size - rom_address;
 
         for (i = 0; i < diff; ++i)
         {
@@ -166,15 +167,15 @@ static void dma_pi_write(struct pi_controller* pi)
 
 void init_pi(struct pi_controller* pi,
              uint8_t* rom, size_t rom_size,
-             struct storage_backend* flashram_storage,
-             struct storage_backend* sram_storage,
+             void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+             void* sram_storage, const struct storage_backend_interface* isram_storage,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              const struct cic* cic)
 {
     init_cart_rom(&pi->cart_rom, rom, rom_size);
-    init_flashram(&pi->flashram, flashram_storage);
-    init_sram(&pi->sram, sram_storage);
+    init_flashram(&pi->flashram, flashram_storage, iflashram_storage);
+    init_sram(&pi->sram, sram_storage, isram_storage);
 
     pi->use_flashram = 0;
 

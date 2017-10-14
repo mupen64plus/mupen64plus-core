@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - transferpak.h                                           *
+ *   Mupen64plus - af_rtc.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,36 +19,36 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_TRANSFERPAK_H
-#define M64P_DEVICE_SI_TRANSFERPAK_H
+#ifndef M64P_DEVICE_SI_AF_RTC_H
+#define M64P_DEVICE_SI_AF_RTC_H
 
-#include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
-struct gb_cart;
+struct clock_backend_interface;
 
-enum cart_access_mode
+struct af_rtc
 {
-    CART_NOT_INSERTED = 0x40,
-    CART_ACCESS_MODE_0 = 0x80,
-    CART_ACCESS_MODE_1 = 0x89
+    /* block 0 */
+    uint16_t control;
+    /* block 2 */
+    time_t now;
+
+    time_t last_update_rtc;
+    void* clock;
+    const struct clock_backend_interface* iclock;
 };
 
-struct transferpak
-{
-    unsigned int enabled;
-    unsigned int bank;
-    unsigned int access_mode;
-    unsigned int access_mode_changed;
+void init_af_rtc(struct af_rtc* rtc,
+                 void* clock,
+                 const struct clock_backend_interface* iclock);
 
-    struct gb_cart* gb_cart;
-};
+void poweron_af_rtc(struct af_rtc* rtc);
 
-void init_transferpak(struct transferpak* tpk, struct gb_cart* gb_cart);
-void poweron_transferpak(struct transferpak* tpk);
+void af_rtc_read_block(struct af_rtc* rtc,
+    uint8_t block, uint8_t* data, uint8_t* status);
 
-
-void transferpak_read_command(struct transferpak* tpk, uint16_t address, uint8_t* data, size_t size);
-void transferpak_write_command(struct transferpak* tpk, uint16_t address, const uint8_t* data, size_t size);
+void af_rtc_write_block(struct af_rtc* rtc,
+    uint8_t block, const uint8_t* data, uint8_t* status);
 
 #endif

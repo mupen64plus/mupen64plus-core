@@ -26,14 +26,17 @@
 #include <stdint.h>
 
 #include "mbc3_rtc.h"
-#include "backends/storage_backend.h"
+#include "backends/api/storage_backend.h"
 
-struct clock_backend;
+struct clock_backend_interface;
 
 struct gb_cart
 {
-    struct storage_backend rom;
-    struct storage_backend ram;
+    void* rom_storage;
+    const struct storage_backend_interface* irom_storage;
+
+    void* ram_storage;
+    const struct storage_backend_interface* iram_storage;
 
     unsigned int rom_bank;
     unsigned int ram_bank;
@@ -48,10 +51,10 @@ struct gb_cart
     int (*write_gb_cart)(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
 };
 
-int init_gb_cart(struct gb_cart* gb_cart,
-        void* rom_opaque, void (*init_rom)(void* user_data, struct storage_backend* rom),
-        void* ram_opaque, void (*init_ram)(void* user_data, struct storage_backend* ram),
-        struct clock_backend* clock);
+void init_gb_cart(struct gb_cart* gb_cart,
+        void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
+        void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
+        void* clock, const struct clock_backend_interface* iclock);
 
 void poweron_gb_cart(struct gb_cart* gb_cart);
 

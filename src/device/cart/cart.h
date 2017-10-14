@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rumblepak.h                                             *
+ *   Mupen64plus - cart.h                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2017 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,26 +19,21 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_RUMBLEPAK_H
-#define M64P_DEVICE_SI_RUMBLEPAK_H
+#ifndef M64P_DEVICE_CART_CART_H
+#define M64P_DEVICE_CART_CART_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "backends/api/joybus.h"
 
-struct rumble_backend;
+#include "af_rtc.h"
+#include "eeprom.h"
 
-struct rumblepak
+struct cart
 {
-    uint8_t state;
-    struct rumble_backend* rumble;
+    struct af_rtc af_rtc;
+    struct eeprom eeprom;
 };
 
-void init_rumblepak(struct rumblepak* rpk, struct rumble_backend* rumble);
-void poweron_rumblepak(struct rumblepak* rpk);
-
-void set_rumble_reg(struct rumblepak* rpk, uint8_t value);
-
-void rumblepak_read_command(struct rumblepak* rpk, uint16_t address, uint8_t* data, size_t size);
-void rumblepak_write_command(struct rumblepak* rpk, uint16_t address, const uint8_t* data, size_t size);
+extern const struct joybus_device_interface
+    g_ijoybus_device_cart;
 
 #endif

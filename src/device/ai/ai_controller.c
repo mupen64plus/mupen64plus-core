@@ -23,7 +23,7 @@
 
 #include <string.h>
 
-#include "backends/audio_out_backend.h"
+#include "backends/api/audio_out_backend.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
@@ -83,7 +83,7 @@ static void do_dma(struct ai_controller* ai, struct ai_dma* dma)
             ? 16 /* default bit rate */
             : 1 + ai->regs[AI_BITRATE_REG];
 
-        audio_out_set_format(ai->aout, frequency, bits);
+        ai->iaout->set_format(ai->aout, frequency, bits);
 
         ai->samples_format_changed = 0;
     }
@@ -147,12 +147,14 @@ void init_ai(struct ai_controller* ai,
              struct r4300_core* r4300,
              struct ri_controller* ri,
              struct vi_controller* vi,
-             struct audio_out_backend* aout)
+             void* aout,
+             const struct audio_out_backend_interface* iaout)
 {
     ai->r4300 = r4300;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
+    ai->iaout = iaout;
 }
 
 void poweron_ai(struct ai_controller* ai)
@@ -176,7 +178,7 @@ void read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
         {
             unsigned int diff = ai->fifo[0].length - ai->last_read;
             unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
-            audio_out_push_samples(ai->aout, p + diff, ai->last_read - *value);
+            ai->iaout->push_samples(ai->aout, p + diff, ai->last_read - *value);
             ai->last_read = *value;
         }
     }
@@ -228,7 +230,7 @@ void ai_end_of_dma_event(void* opaque)
     {
         unsigned int diff = ai->fifo[0].length - ai->last_read;
         unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
-        audio_out_push_samples(ai->aout, p + diff, ai->last_read);
+        ai->iaout->push_samples(ai->aout, p + diff, ai->last_read);
     }
 
     fifo_pop(ai);

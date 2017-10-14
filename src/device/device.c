@@ -54,21 +54,16 @@ void init_device(struct device* dev,
     int no_compiled_jump,
     int special_rom,
     /* ai */
-    struct audio_out_backend* aout,
+    void* aout, const struct audio_out_backend_interface* iaout,
     /* pi */
     size_t rom_size,
-    struct storage_backend* flashram_storage,
-    struct storage_backend* sram_storage,
+    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+    void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* ri */
     size_t dram_size,
     /* si */
-    const struct pif_channel_device* pif_channel_devices,
-    struct controller_input_backend* cins,
-    struct storage_backend* mpk_storages,
-    struct rumble_backend* rumbles,
-    struct gb_cart* gb_carts,
-    uint16_t eeprom_id, struct storage_backend* eeprom_storage,
-    struct clock_backend* clock,
+    void* jbds[PIF_CHANNELS_COUNT],
+    const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
     unsigned int vi_clock, unsigned int expected_refresh_rate)
 {
@@ -125,18 +120,16 @@ void init_device(struct device* dev,
             emumode, count_per_op, no_compiled_jump, special_rom);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
-    init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout);
-    init_pi(&dev->pi, (uint8_t*)base + MM_CART_ROM, rom_size, flashram_storage, sram_storage, &dev->r4300, &dev->ri, &dev->si.pif.cic);
+    init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
+    init_pi(&dev->pi,
+            (uint8_t*)base + MM_CART_ROM, rom_size,
+            flashram_storage, iflashram_storage,
+            sram_storage, isram_storage,
+            &dev->r4300, &dev->ri, &dev->si.pif.cic);
     init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
         (uint8_t*)base + MM_PIF_MEM,
-        pif_channel_devices,
-        cins,
-        mpk_storages,
-        rumbles,
-        gb_carts,
-        eeprom_id, eeprom_storage,
-        clock,
+        jbds, ijbds,
         (uint8_t*)base + MM_CART_ROM + 0x40,
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);

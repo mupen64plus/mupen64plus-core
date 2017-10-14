@@ -19,69 +19,84 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "input_plugin_compat.h"
+#include "plugins_compat.h"
 
 #include "api/m64p_plugin.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/rumble_backend.h"
+#include "plugin/plugin.h"
+
 #include "main/main.h"
-#include "plugin.h"
-#include "device/si/game_controller.h"
-#include "backends/rumble_backend.h"
 
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
-int input_plugin_is_connected(void* opaque)
+/* XXX: this is an abuse of the Zilmar Spec normally this value is reserved */
+enum {
+    PAK_SWITCH_BUTTON = 0x4000,
+    GB_CART_SWITCH_BUTTON = 0x8000
+};
+
+/* Pak switching delay
+ * If you put too low value,
+ * some games (for instance Perfect Dark) won't be able to detect the pak change
+ * causing incorrect pak accesses */
+enum { PAK_SWITCH_DELAY = 20 };
+enum { GB_CART_SWITCH_DELAY = 20 };
+
+static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask)
 {
-    int control_id = *(int*)opaque;
-
-    CONTROL* c = &Controls[control_id];
-
-    return c->Present;
+    return ((input & mask) == 0)
+        && ((last_input & mask) != 0);
 }
 
-enum pak_type input_plugin_detect_pak(void* opaque)
+static uint32_t input_plugin_get_input(void* opaque)
 {
-    int control_id = *(int*)opaque;
-    enum pak_type pak = PAK_NONE;
-
-    CONTROL* c = &Controls[control_id];
-
-    switch(c->Plugin)
-    {
-    case PLUGIN_NONE: pak = PAK_NONE; break;
-    case PLUGIN_MEMPAK: pak = PAK_MEM; break;
-    case PLUGIN_RUMBLE_PAK: pak = PAK_RUMBLE; break;
-    case PLUGIN_TRANSFER_PAK: pak = PAK_TRANSFER; break;
-
-    case PLUGIN_RAW:
-        /* historically PLUGIN_RAW has been mostly (exclusively ?) used for rumble,
-         * so we just reproduce that behavior */
-        pak = PAK_RUMBLE; break;
-    }
-
-    /* XXX: Force transfer pak if core has loaded a gb cart for this controller */
-    if (g_dev.si.pif.controllers[control_id].transferpak.gb_cart != NULL) {
-        pak = PAK_TRANSFER;
-    }
-
-    return pak;
-}
-
-uint32_t input_plugin_get_input(void* opaque)
-{
-    int control_id = *(int*)opaque;
+    struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
 
     BUTTONS keys = { 0 };
 
     if (input.getKeys) {
-        input.getKeys(control_id, &keys);
+        input.getKeys(cin_compat->control_id, &keys);
     }
+
+    /* disconnect current pak (if any) immediately after "pak switch" button is released */
+    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
+        change_pak(cin_compat->cont, NULL, NULL);
+        cin_compat->pak_switch_delay = PAK_SWITCH_DELAY;
+    }
+
+    /* switch to next pak after switch delay has expired */
+    if (cin_compat->pak_switch_delay > 0 && --cin_compat->pak_switch_delay == 0) {
+        main_switch_pak(cin_compat->control_id);
+    }
+
+    if (cin_compat->gb_cart_switch_enabled) {
+        /* disconnect current GB cart (if any) immediately after "GB cart switch" button is released */
+        if (is_button_released(keys.Value, cin_compat->last_input, GB_CART_SWITCH_BUTTON)) {
+            change_gb_cart(cin_compat->tpk, NULL);
+            cin_compat->gb_switch_delay = GB_CART_SWITCH_DELAY;
+        }
+
+        /* switch to new GB cart after switch delay has expired */
+        if (cin_compat->gb_switch_delay > 0 && --cin_compat->gb_switch_delay == 0) {
+            main_change_gb_cart(cin_compat->control_id);
+        }
+    }
+
+    cin_compat->last_input = keys.Value;
 
     return keys.Value;
 }
 
-void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
+const struct controller_input_backend_interface
+    g_icontroller_input_backend_plugin_compat =
+{
+    input_plugin_get_input
+};
+
+
+static void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
 {
     int control_id = *(int*)opaque;
 
@@ -92,7 +107,7 @@ void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
     static const uint8_t rumble_cmd_header[] =
     {
         0x23, 0x01, /* T=0x23, R=0x01 */
-        0x03,       /* PIF_CMD_PAK_WRITE */
+        JCMD_PAK_WRITE,
         0xc0, 0x1b, /* address=0xc000 | crc=0x1b */
     };
 
@@ -110,8 +125,14 @@ void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
     input.controllerCommand(control_id, cmd);
 }
 
+const struct rumble_backend_interface
+    g_irumble_backend_plugin_compat =
+{
+    input_plugin_rumble_exec
+};
 
-void input_plugin_read_controller(void* opaque,
+
+static void input_plugin_read_controller(void* opaque,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
 {
@@ -138,3 +159,10 @@ void input_plugin_controller_command(void* opaque,
     input.controllerCommand(control_id, tx);
 }
 
+const struct joybus_device_interface
+    g_ijoybus_device_plugin_compat =
+{
+    NULL,
+    input_plugin_read_controller,
+    input_plugin_controller_command,
+};

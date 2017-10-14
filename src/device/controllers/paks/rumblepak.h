@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - af_rtc.h                                                *
+ *   Mupen64plus - rumblepak.h                                             *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,34 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_AF_RTC_H
-#define M64P_DEVICE_SI_AF_RTC_H
+#ifndef M64P_DEVICE_SI_RUMBLEPAK_H
+#define M64P_DEVICE_SI_RUMBLEPAK_H
 
+#include <stddef.h>
 #include <stdint.h>
-#include <time.h>
 
-struct clock_backend;
+struct rumble_backend_interface;
 
-struct af_rtc
+struct rumblepak
 {
-    /* block 0 */
-    uint16_t control;
-    /* block 2 */
-    time_t now;
-
-    time_t last_update_rtc;
-    struct clock_backend* clock;
+    uint8_t state;
+    void* rumble;
+    const struct rumble_backend_interface* irumble;
 };
 
-void init_af_rtc(struct af_rtc* rtc,
-                 struct clock_backend* clock);
+void init_rumblepak(struct rumblepak* rpk,
+    void* rumble, const struct rumble_backend_interface* irumble);
 
-void poweron_af_rtc(struct af_rtc* rtc);
+void poweron_rumblepak(struct rumblepak* rpk);
 
-void af_rtc_read_block(struct af_rtc* rtc,
-    uint8_t block, uint8_t* data, uint8_t* status);
+void set_rumble_reg(struct rumblepak* rpk, uint8_t value);
 
-void af_rtc_write_block(struct af_rtc* rtc,
-    uint8_t block, const uint8_t* data, uint8_t* status);
+extern const struct pak_interface g_irumblepak;
 
 #endif

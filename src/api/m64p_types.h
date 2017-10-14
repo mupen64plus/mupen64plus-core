@@ -156,13 +156,35 @@ typedef enum {
   M64CMD_CORE_STATE_SET,
   M64CMD_READ_SCREEN,
   M64CMD_RESET,
-  M64CMD_ADVANCE_FRAME
+  M64CMD_ADVANCE_FRAME,
+  M64CMD_SET_MEDIA_LOADER
 } m64p_command;
 
 typedef struct {
   uint32_t address;
   int      value;
 } m64p_cheat_code;
+
+typedef struct {
+  /* Frontend-defined callback data. */
+  void* cb_data;
+
+  /* Allow the frontend to specify the GB cart ROM file to load
+   * cb_data: points to frontend-defined callback data.
+   * controller_num: (0-3) tell the frontend which controller is about to load a GB cart
+   * Returns a NULL-terminated string owned by the core specifying the GB cart ROM filename to load.
+   * Empty or NULL string results in no GB cart being loaded (eg. empty transferpak).
+   */
+  char* (*get_gb_cart_rom)(void* cb_data, int controller_num);
+
+  /* Allow the frontend to specify the GB cart RAM file to load
+   * cb_data: points to frontend-defined callback data.
+   * controller_num: (0-3) tell the frontend which controller is about to load a GB cart
+   * Returns a NULL-terminated string owned by the core specifying the GB cart RAM filename to load
+   * Empty or NULL string results in the core generating a default save file with empty content.
+   */
+  char* (*get_gb_cart_ram)(void* cb_data, int controller_num);
+} m64p_media_loader;
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */
@@ -202,6 +224,8 @@ typedef struct
    unsigned char status;  /* Rom status on a scale from 0-5. */
    unsigned char players; /* Local players 0-4, 2/3/4 way Netplay indicated by 5/6/7. */
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
+   unsigned char transferpak; /* 0 - No, 1 - Yes boolean for transfer pak support. */
+   unsigned char mempak; /* 0 - No, 1 - Yes boolean for memory pak support. */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

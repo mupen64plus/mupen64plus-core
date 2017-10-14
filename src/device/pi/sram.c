@@ -25,20 +25,22 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "backends/storage_backend.h"
+#include "backends/api/storage_backend.h"
 #include "device/memory/memory.h"
 #include "device/pi/pi_controller.h"
 #include "device/ri/ri_controller.h"
 
 
-void format_sram(uint8_t* sram)
+void format_sram(uint8_t* mem)
 {
-    memset(sram, 0, SRAM_SIZE);
+    memset(mem, 0, SRAM_SIZE);
 }
 
-void init_sram(struct sram* sram, struct storage_backend* storage)
+void init_sram(struct sram* sram,
+               void* storage, const struct storage_backend_interface* istorage)
 {
     sram->storage = storage;
+    sram->istorage = istorage;
 }
 
 void dma_write_sram(struct pi_controller* pi)
@@ -46,15 +48,16 @@ void dma_write_sram(struct pi_controller* pi)
     size_t i;
     size_t length = (pi->regs[PI_RD_LEN_REG] & 0xffffff) + 1;
 
-    uint8_t* sram = pi->sram.storage->data;
+    uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
     uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] - 0x08000000;
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
 
-    for(i = 0; i < length; ++i)
-        sram[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
+    for (i = 0; i < length; ++i) {
+        mem[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
+    }
 
-    storage_save(pi->sram.storage);
+    pi->sram.istorage->save(pi->sram.storage);
 }
 
 void dma_read_sram(struct pi_controller* pi)
@@ -62,12 +65,13 @@ void dma_read_sram(struct pi_controller* pi)
     size_t i;
     size_t length = (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1;
 
-    uint8_t* sram = pi->sram.storage->data;
+    const uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
     uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
     uint32_t cart_addr = (pi->regs[PI_CART_ADDR_REG] - 0x08000000) & 0xffff;
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
 
-    for(i = 0; i < length; ++i)
-        dram[(dram_addr+i)^S8] = sram[(cart_addr+i)^S8];
+    for (i = 0; i < length; ++i) {
+        dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+    }
 }
 

@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rumble_backend.c                                        *
+ *   Mupen64plus - plugins_compat.h                                          *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2016 Bobby Smiles                                       *
+ *   Copyright (C) 2017 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,10 +19,48 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "rumble_backend.h"
+#ifndef M64P_BACKENDS_PLUGINS_COMPAT_PLUGINS_COMPAT_H
+#define M64P_BACKENDS_PLUGINS_COMPAT_PLUGINS_COMPAT_H
 
+#include "backends/api/audio_out_backend.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/rumble_backend.h"
+#include "backends/api/joybus.h"
 
-void rumble_exec(struct rumble_backend* rumble, enum rumble_action action)
+#include <stdint.h>
+
+/* Audio Out backend interface */
+
+extern const struct audio_out_backend_interface
+    g_iaudio_out_backend_plugin_compat;
+
+/* Controller Input backend interface */
+
+struct controller_input_compat
 {
-    rumble->exec(rumble->user_data, action);
-}
+    int control_id;
+
+    struct game_controller* cont;
+    struct transferpak* tpk;
+
+    uint32_t last_input;
+    unsigned int pak_switch_delay;
+    unsigned int gb_switch_delay;
+
+    unsigned int gb_cart_switch_enabled;
+};
+
+extern const struct controller_input_backend_interface
+    g_icontroller_input_backend_plugin_compat;
+
+/* Rumble backend interface */
+
+extern const struct rumble_backend_interface
+    g_irumble_backend_plugin_compat;
+
+/* PIF data processing functions */
+
+extern const struct joybus_device_interface
+    g_ijoybus_device_plugin_compat;
+
+#endif

@@ -23,8 +23,8 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "backends/controller_input_backend.h"
-#include "pif.h"
+#include "backends/api/controller_input_backend.h"
+#include "backends/api/joybus.h"
 
 #ifdef COMPARE_CORE
 #include "api/debugger.h"
@@ -34,7 +34,6 @@
 #include <string.h>
 
 enum { PAK_CHUNK_SIZE = 0x20 };
-enum { PIF_PDT_GAME_CONTROLLER = PIF_PDT_JOY_ABS_COUNTERS | PIF_PDT_JOY_PORT };
 
 enum controller_status
 {
@@ -43,29 +42,14 @@ enum controller_status
     CONT_STATUS_PAK_ADDR_CRC_ERR = 0x04
 };
 
-static int is_pak_present(struct controller_input_backend* cin)
-{
-    enum pak_type pak = controller_input_detect_pak(cin);
-    switch (pak)
-    {
-    case PAK_MEM:
-    case PAK_RUMBLE:
-    case PAK_TRANSFER:
-        return 1;
-    case PAK_NONE:
-        return 0;
-    }
-
-    return 0;
-}
-
-void standard_controller_reset(struct game_controller* cont)
+/* Standard controller */
+static void standard_controller_reset(struct game_controller* cont)
 {
     /* reset controller status */
     cont->status = 0x00;
 
     /* if pak is connected */
-    if (is_pak_present(cont->cin)) {
+    if (cont->ipak != NULL) {
         cont->status |= CONT_STATUS_PAK_PRESENT;
     }
     else {
@@ -75,7 +59,36 @@ void standard_controller_reset(struct game_controller* cont)
     /* XXX: recalibrate joysticks  */
 }
 
+const struct game_controller_flavor g_standard_controller_flavor =
+{
+    "Standard controller",
+    JDT_JOY_ABS_COUNTERS | JDT_JOY_PORT,
+    standard_controller_reset
+};
+
 /* Pak handling functions */
+void change_pak(struct game_controller* cont,
+                void* pak, const struct pak_interface* ipak)
+{
+    cont->status &= ~(CONT_STATUS_PAK_PRESENT | CONT_STATUS_PAK_CHANGED);
+
+    /* unplug previous pak (if any) */
+    if (cont->ipak != NULL) {
+        cont->ipak->unplug(cont->pak);
+        cont->status |= CONT_STATUS_PAK_CHANGED;
+    }
+
+    /* plug new one (if any) */
+    if (ipak != NULL) {
+        ipak->plug(pak);
+        cont->status |= CONT_STATUS_PAK_PRESENT;
+    }
+
+    /* set new pak */
+    cont->pak = pak;
+    cont->ipak = ipak;
+}
+
 static uint8_t pak_data_crc(const uint8_t* data, size_t size)
 {
     size_t i;
@@ -95,27 +108,6 @@ static uint8_t pak_data_crc(const uint8_t* data, size_t size)
     return crc;
 }
 
-void init_game_controller(struct game_controller* cont,
-    struct controller_input_backend* cin,
-    struct storage_backend* mpk_storage,
-    struct rumble_backend* rumble,
-    struct gb_cart* gb_cart)
-{
-    cont->cin = cin;;
-
-    init_mempak(&cont->mempak, mpk_storage);
-    init_rumblepak(&cont->rumblepak, rumble);
-    init_transferpak(&cont->transferpak, gb_cart);
-}
-
-void poweron_game_controller(struct game_controller* cont)
-{
-    standard_controller_reset(cont);
-
-    poweron_rumblepak(&cont->rumblepak);
-    poweron_transferpak(&cont->transferpak);
-}
-
 static void pak_read_block(struct game_controller* cont,
     const uint8_t* addr_acrc, uint8_t* data, uint8_t* dcrc)
 {
@@ -124,15 +116,8 @@ static void pak_read_block(struct game_controller* cont,
     uint8_t  acrc = addr_acrc[1] & 0x1f;
 #endif
 
-    enum pak_type pak = controller_input_detect_pak(cont->cin);
-    switch (pak)
-    {
-    case PAK_NONE: memset(data, 0, PAK_CHUNK_SIZE); break;
-    case PAK_MEM: mempak_read_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_RUMBLE: rumblepak_read_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: transferpak_read_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
-    default:
-        DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
+    if (cont->ipak != NULL) {
+        cont->ipak->read(cont->pak, address, data, PAK_CHUNK_SIZE);
     }
 
     *dcrc = pak_data_crc(data, PAK_CHUNK_SIZE);
@@ -146,63 +131,87 @@ static void pak_write_block(struct game_controller* cont,
     uint8_t  acrc = addr_acrc[1] & 0x1f;
 #endif
 
-    enum pak_type pak = controller_input_detect_pak(cont->cin);
-    switch (pak)
-    {
-    case PAK_NONE: /* do nothing */ break;
-    case PAK_MEM: mempak_write_command(&cont->mempak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_RUMBLE: rumblepak_write_command(&cont->rumblepak, address, data, PAK_CHUNK_SIZE); break;
-    case PAK_TRANSFER: transferpak_write_command(&cont->transferpak, address, data, PAK_CHUNK_SIZE); break;
-    default:
-        DebugMessage(M64MSG_WARNING, "Unknown plugged pak %d", (int)pak);
+    if (cont->ipak != NULL) {
+        cont->ipak->write(cont->pak, address, data, PAK_CHUNK_SIZE);
     }
 
     *dcrc = pak_data_crc(data, PAK_CHUNK_SIZE);
 }
 
-void process_controller_command(void* opaque,
+
+/* Mouse controller */
+static void mouse_controller_reset(struct game_controller* cont)
+{
+    cont->status = 0x00;
+}
+
+const struct game_controller_flavor g_mouse_controller_flavor =
+{
+    "Mouse controller",
+    JDT_JOY_REL_COUNTERS,
+    mouse_controller_reset
+};
+
+
+void init_game_controller(struct game_controller* cont,
+    const struct game_controller_flavor* flavor,
+    void* cin, const struct controller_input_backend_interface* icin,
+    void* pak, const struct pak_interface* ipak)
+{
+    cont->flavor = flavor;
+    cont->cin = cin;
+    cont->icin = icin;
+    cont->pak = pak;
+    cont->ipak = ipak;
+}
+
+static void poweron_game_controller(void* jbd)
+{
+    struct game_controller* cont = (struct game_controller*)jbd;
+
+    cont->flavor->reset(cont);
+
+    if (cont->flavor == &g_standard_controller_flavor && cont->ipak != NULL) {
+        cont->ipak->plug(cont->pak);
+    }
+}
+
+static void process_controller_command(void* jbd,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
 {
-    struct game_controller* cont = (struct game_controller*)opaque;
-
-    int connected = controller_input_is_connected(cont->cin);
-    if (!connected) {
-        *rx |= 0x80;
-        return;
-    }
+    struct game_controller* cont = (struct game_controller*)jbd;
 
     uint8_t cmd = tx_buf[0];
 
     switch (cmd)
     {
-    case PIF_CMD_RESET:
-        standard_controller_reset(cont);
-    case PIF_CMD_STATUS: {
-        PIF_CHECK_COMMAND_FORMAT(1, 3)
+    case JCMD_RESET:
+        cont->flavor->reset(cont);
+    case JCMD_STATUS: {
+        JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
 
-        /* set device type and status */
-        rx_buf[0] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 0);
-        rx_buf[1] = (uint8_t)(PIF_PDT_GAME_CONTROLLER >> 8);
+        rx_buf[0] = (uint8_t)(cont->flavor->type >> 0);
+        rx_buf[1] = (uint8_t)(cont->flavor->type >> 8);
         rx_buf[2] = cont->status;
     } break;
 
-    case PIF_CMD_CONTROLLER_READ: {
-        PIF_CHECK_COMMAND_FORMAT(1, 4)
+    case JCMD_CONTROLLER_READ: {
+        JOYBUS_CHECK_COMMAND_FORMAT(1, 4)
 
-        *((uint32_t*)(rx_buf)) = controller_input_get_input(cont->cin);
+        *((uint32_t*)(rx_buf)) = cont->icin->get_input(cont->cin);
 #ifdef COMPARE_CORE
         CoreCompareDataSync(4, rx_buf);
 #endif
     } break;
 
-    case PIF_CMD_PAK_READ: {
-        PIF_CHECK_COMMAND_FORMAT(3, 33)
+    case JCMD_PAK_READ: {
+        JOYBUS_CHECK_COMMAND_FORMAT(3, 33)
         pak_read_block(cont, &tx_buf[1], &rx_buf[0], &rx_buf[32]);
     } break;
 
-    case PIF_CMD_PAK_WRITE: {
-        PIF_CHECK_COMMAND_FORMAT(35, 1)
+    case JCMD_PAK_WRITE: {
+        JOYBUS_CHECK_COMMAND_FORMAT(35, 1)
         pak_write_block(cont, &tx_buf[1], &tx_buf[3], &rx_buf[0]);
     } break;
 
@@ -212,3 +221,9 @@ void process_controller_command(void* opaque,
     }
 }
 
+const struct joybus_device_interface g_ijoybus_device_controller =
+{
+    poweron_game_controller,
+    process_controller_command,
+    NULL
+};

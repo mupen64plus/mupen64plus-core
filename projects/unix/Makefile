@@ -447,12 +447,18 @@ SOURCE = \
     $(SRCDIR)/api/debugger.c \
     $(SRCDIR)/api/frontend.c \
     $(SRCDIR)/api/vidext.c \
-    $(SRCDIR)/backends/audio_out_backend.c \
-    $(SRCDIR)/backends/clock_backend.c \
-    $(SRCDIR)/backends/controller_input_backend.c \
-    $(SRCDIR)/backends/rumble_backend.c \
-    $(SRCDIR)/backends/storage_backend.c \
+    $(SRCDIR)/backends/plugins_compat/audio_plugin_compat.c \
+    $(SRCDIR)/backends/plugins_compat/input_plugin_compat.c \
+    $(SRCDIR)/backends/clock_ctime_plus_delta.c \
+    $(SRCDIR)/backends/file_storage.c \
     $(SRCDIR)/device/ai/ai_controller.c \
+    $(SRCDIR)/device/cart/cart.c \
+    $(SRCDIR)/device/cart/af_rtc.c \
+    $(SRCDIR)/device/cart/eeprom.c \
+    $(SRCDIR)/device/controllers/game_controller.c \
+    $(SRCDIR)/device/controllers/paks/mempak.c \
+    $(SRCDIR)/device/controllers/paks/rumblepak.c \
+    $(SRCDIR)/device/controllers/paks/transferpak.c \
     $(SRCDIR)/device/device.c \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
@@ -479,16 +485,10 @@ SOURCE = \
     $(SRCDIR)/device/ri/rdram_detection_hack.c \
     $(SRCDIR)/device/ri/ri_controller.c \
     $(SRCDIR)/device/rsp/rsp_core.c \
-    $(SRCDIR)/device/si/af_rtc.c \
     $(SRCDIR)/device/si/cic.c \
-    $(SRCDIR)/device/si/eeprom.c \
-    $(SRCDIR)/device/si/game_controller.c \
-    $(SRCDIR)/device/si/mempak.c \
     $(SRCDIR)/device/si/n64_cic_nus_6105.c \
     $(SRCDIR)/device/si/pif.c \
-    $(SRCDIR)/device/si/rumblepak.c \
     $(SRCDIR)/device/si/si_controller.c \
-    $(SRCDIR)/device/si/transferpak.c \
     $(SRCDIR)/device/vi/vi_controller.c \
     $(SRCDIR)/main/main.c \
     $(SRCDIR)/main/util.c \
@@ -499,12 +499,8 @@ SOURCE = \
     $(SRCDIR)/main/rom.c \
     $(SRCDIR)/main/savestates.c \
     $(SRCDIR)/main/sdl_key_converter.c \
-    $(SRCDIR)/main/file_storage.c \
     $(SRCDIR)/main/workqueue.c \
     $(SRCDIR)/main/xxHash/xxhash.c \
-    $(SRCDIR)/plugin/input_plugin_compat.c \
-    $(SRCDIR)/plugin/emulate_speaker_via_audio_plugin.c \
-    $(SRCDIR)/plugin/get_time_using_time_plus_delta.c \
     $(SRCDIR)/plugin/plugin.c \
     $(SRCDIR)/plugin/dummy_video.c \
     $(SRCDIR)/plugin/dummy_audio.c \

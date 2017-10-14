@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - audio_out_backend.h                                     *
+ *   Mupen64plus - mempak.h                                                *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2016 Bobby Smiles                                       *
+ *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,19 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_BACKENDS_AUDIO_OUT_BACKEND_H
-#define M64P_BACKENDS_AUDIO_OUT_BACKEND_H
+#ifndef M64P_DEVICE_SI_MEMPAK_H
+#define M64P_DEVICE_SI_MEMPAK_H
 
 #include <stddef.h>
+#include <stdint.h>
 
-struct audio_out_backend
+struct storage_backend_interface;
+
+struct mempak
 {
-    void* user_data;
-    void (*set_format)(void*,unsigned int, unsigned int);
-    void (*push_samples)(void*,const void*,size_t);
+    void* storage;
+    const struct storage_backend_interface* istorage;
 };
 
-void audio_out_set_format(struct audio_out_backend* aout, unsigned int frequency, unsigned int bits);
-void audio_out_push_samples(struct audio_out_backend* aout, const void* buffer, size_t size);
+enum { MEMPAK_SIZE = 0x8000 };
+
+void format_mempak(uint8_t* mem);
+
+void init_mempak(struct mempak* mpk,
+                 void* storage,
+                 const struct storage_backend_interface* istorage);
+
+extern const struct pak_interface g_imempak;
 
 #endif

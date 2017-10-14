@@ -181,6 +181,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.status = entry->status;
         ROM_SETTINGS.players = entry->players;
         ROM_SETTINGS.rumble = entry->rumble;
+        ROM_SETTINGS.transferpak = entry->transferpak;
+        ROM_SETTINGS.mempak = entry->mempak;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.disableextramem = entry->disableextramem;
         ROM_PARAMS.cheats = entry->cheats;
@@ -193,6 +195,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 0;
         ROM_SETTINGS.rumble = 0;
+        ROM_SETTINGS.transferpak = 0;
+        ROM_SETTINGS.mempak = 0;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
         ROM_PARAMS.cheats = NULL;
@@ -344,6 +348,18 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_EXTRAMEM;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_TRANSFERPAK) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_TRANSFERPAK)) {
+            entry->entry.transferpak = ref->transferpak;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_TRANSFERPAK;
+        }
+
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_MEMPAK) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_MEMPAK)) {
+            entry->entry.mempak = ref->mempak;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_MEMPAK;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -436,6 +452,8 @@ void romdatabase_open(void)
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
             search->entry.cheats = NULL;
+            search->entry.transferpak = 0;
+            search->entry.mempak = 0;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
             search->next_entry = NULL;
@@ -586,6 +604,30 @@ void romdatabase_open(void)
                 }
 
                 search->entry.set_flags |= ROMDATABASE_ENTRY_CHEATS;
+            }
+            else if(!strcmp(l.name, "Transferpak"))
+            {
+                if(!strcmp(l.value, "Yes")) {
+                    search->entry.transferpak = 1;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_TRANSFERPAK;
+                } else if(!strcmp(l.value, "No")) {
+                    search->entry.transferpak = 0;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_TRANSFERPAK;
+                } else {
+                    DebugMessage(M64MSG_WARNING, "ROM Database: Invalid transferpak string on line %i", lineno);
+                }
+            }
+            else if(!strcmp(l.name, "Mempak"))
+            {
+                if(!strcmp(l.value, "Yes")) {
+                    search->entry.mempak = 1;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_MEMPAK;
+                } else if(!strcmp(l.value, "No")) {
+                    search->entry.mempak = 0;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_MEMPAK;
+                } else {
+                    DebugMessage(M64MSG_WARNING, "ROM Database: Invalid mempak string on line %i", lineno);
+                }
             }
             else
             {
