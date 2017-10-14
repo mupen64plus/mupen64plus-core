@@ -61,6 +61,7 @@ static uint32_t si_reg(uint32_t address)
 
 
 void init_si(struct si_controller* si,
+             uint8_t* pif_base,
              const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
              struct storage_backend* mpk_storages,
@@ -75,8 +76,8 @@ void init_si(struct si_controller* si,
 
 void poweron_si(struct si_controller* si);
 
-int read_si_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_si_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void si_end_of_dma_event(void* opaque);
 

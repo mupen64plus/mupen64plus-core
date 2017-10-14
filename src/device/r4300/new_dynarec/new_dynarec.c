@@ -183,14 +183,6 @@ void fp_exception(void);
 void fp_exception_ds(void);
 void jump_syscall(void);
 void jump_eret(void);
-void read_nomem_new(void);
-void read_nomemd_new(void);
-void write_nomem_new(void);
-void write_nomemd_new(void);
-void write_rdram_new(void);
-void write_rdramd_new(void);
-void write_mi_new(void);
-void write_mid_new(void);
 
 /* interpreted opcode */
 static void div64(int64_t dividend,int64_t divisor);
@@ -11122,40 +11114,45 @@ static unsigned int hshift(uint32_t address)
 
 void read_byte_new(int pcaddr, int count, int diff)
 {
+  uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = bshift(*r4300_address(r4300));
-  read_word_in_memory();
-  *r4300->rdword >>= shift;
-  *r4300->rdword &= UINT32_C(0xff);
+  if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
+    *r4300->rdword = (uint64_t)((value >> shift) & 0xff);
+  }
   r4300->delay_slot = 0;
 }
 
 void read_hword_new(int pcaddr, int count, int diff)
 {
+  uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = hshift(*r4300_address(r4300));
-  read_word_in_memory();
-  *r4300->rdword >>= shift;
-  *r4300->rdword &= UINT32_C(0xffff);
+  if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
+    *r4300->rdword = (uint64_t)((value >> shift) & 0xffff);
+  }
   r4300->delay_slot = 0;
 }
 
 void read_word_new(int pcaddr, int count, int diff)
 {
+  uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
-  read_word_in_memory();
+  if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
+    *r4300->rdword = (uint64_t)(value);
+  }
   r4300->delay_slot = 0;
 }
 
@@ -11166,7 +11163,7 @@ void read_dword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
-  read_dword_in_memory();
+  r4300_read_aligned_dword(r4300, *r4300_address(r4300), (uint64_t*)r4300->rdword);
   r4300->delay_slot = 0;
 }
 
@@ -11180,7 +11177,7 @@ void write_byte_new(int pcaddr, int count, int diff)
   unsigned int shift = bshift(*r4300_address(r4300));
   *r4300_wword(r4300) <<= shift;
   *r4300_wmask(r4300) = UINT32_C(0xff) << shift;
-  write_word_in_memory();
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
@@ -11196,7 +11193,7 @@ void write_hword_new(int pcaddr, int count, int diff)
   unsigned int shift = hshift(*r4300_address(r4300));
   *r4300_wword(r4300) <<= shift;
   *r4300_wmask(r4300) = UINT32_C(0xffff) << shift;
-  write_word_in_memory();
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
@@ -11210,7 +11207,7 @@ void write_word_new(int pcaddr, int count, int diff)
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   *r4300_wmask(r4300) = UINT32_C(0xffffffff);
-  write_word_in_memory();
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
@@ -11223,7 +11220,8 @@ void write_dword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
-  write_dword_in_memory();
+  /* NOTE: in dynarec, we only need an all-one mask */
+  r4300_write_aligned_dword(r4300, *r4300_address(r4300), *r4300_wdword(r4300), ~UINT64_C(0));
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;

@@ -75,6 +75,7 @@ static void dma_si_read(struct si_controller* si)
 
 
 void init_si(struct si_controller* si,
+             uint8_t* pif_base,
              const struct pif_channel_device* pif_channel_devices,
              struct controller_input_backend* cins,
              struct storage_backend* mpk_storages,
@@ -91,6 +92,7 @@ void init_si(struct si_controller* si,
     si->ri = ri;
 
     init_pif(&si->pif,
+        pif_base,
         pif_channel_devices,
         cins,
         mpk_storages,
@@ -109,17 +111,15 @@ void poweron_si(struct si_controller* si)
 }
 
 
-int read_si_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_si_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct si_controller* si = (struct si_controller*)opaque;
     uint32_t reg = si_reg(address);
 
     *value = si->regs[reg];
-
-    return 0;
 }
 
-int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct si_controller* si = (struct si_controller*)opaque;
     uint32_t reg = si_reg(address);
@@ -145,8 +145,6 @@ int write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
         clear_rcp_interrupt(si->r4300, MI_INTR_SI);
         break;
     }
-
-    return 0;
 }
 
 void si_end_of_dma_event(void* opaque)

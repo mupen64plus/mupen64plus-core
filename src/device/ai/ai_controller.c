@@ -164,7 +164,7 @@ void poweron_ai(struct ai_controller* ai)
     ai->delayed_carry = 0;
 }
 
-int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct ai_controller* ai = (struct ai_controller*)opaque;
     uint32_t reg = ai_reg(address);
@@ -184,11 +184,9 @@ int read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
     {
         *value = ai->regs[reg];
     }
-
-    return 0;
 }
 
-int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct ai_controller* ai = (struct ai_controller*)opaque;
     uint32_t reg = ai_reg(address);
@@ -197,12 +195,17 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
     {
     case AI_LEN_REG:
         masked_write(&ai->regs[AI_LEN_REG], value, mask);
-        fifo_push(ai);
-        return 0;
+        if (ai->regs[AI_LEN_REG] != 0) {
+            fifo_push(ai);
+        }
+        else {
+            /* stop sound */
+        }
+        return;
 
     case AI_STATUS_REG:
         clear_rcp_interrupt(ai->r4300, MI_INTR_AI);
-        return 0;
+        return;
 
     case AI_BITRATE_REG:
     case AI_DACRATE_REG:
@@ -211,12 +214,10 @@ int write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
             ai->samples_format_changed = 1;
 
         masked_write(&ai->regs[reg], value, mask);
-        return 0;
+        return;
     }
 
     masked_write(&ai->regs[reg], value, mask);
-
-    return 0;
 }
 
 void ai_end_of_dma_event(void* opaque)

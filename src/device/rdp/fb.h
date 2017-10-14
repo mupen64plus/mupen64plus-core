@@ -40,8 +40,8 @@ struct fb
 
 void poweron_fb(struct fb* fb);
 
-int read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
-int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
+void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void protect_framebuffers(struct rdp_core* dp);
 void unprotect_framebuffers(struct rdp_core* dp);

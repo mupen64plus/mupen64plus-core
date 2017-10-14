@@ -152,10 +152,12 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 }
 
 void init_rsp(struct rsp_core* sp,
+              uint32_t* sp_mem,
               struct r4300_core* r4300,
               struct rdp_core* dp,
               struct ri_controller* ri)
 {
+    sp->mem = sp_mem;
     sp->r4300 = r4300;
     sp->dp = dp;
     sp->ri = ri;
@@ -172,28 +174,24 @@ void poweron_rsp(struct rsp_core* sp)
 }
 
 
-int read_rsp_mem(void* opaque, uint32_t address, uint32_t* value)
+void read_rsp_mem(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t addr = rsp_mem_address(address);
 
     *value = sp->mem[addr];
-
-    return 0;
 }
 
-int write_rsp_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rsp_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t addr = rsp_mem_address(address);
 
     masked_write(&sp->mem[addr], value, mask);
-
-    return 0;
 }
 
 
-int read_rsp_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_rsp_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg(address);
@@ -204,11 +202,9 @@ int read_rsp_regs(void* opaque, uint32_t address, uint32_t* value)
     {
         sp->regs[SP_SEMAPHORE_REG] = 1;
     }
-
-    return 0;
 }
 
-int write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg(address);
@@ -219,7 +215,7 @@ int write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         update_sp_status(sp, value & mask);
     case SP_DMA_FULL_REG:
     case SP_DMA_BUSY_REG:
-        return 0;
+        return;
     }
 
     masked_write(&sp->regs[reg], value, mask);
@@ -236,29 +232,23 @@ int write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         sp->regs[SP_SEMAPHORE_REG] = 0;
         break;
     }
-
-    return 0;
 }
 
 
-int read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value)
+void read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg2(address);
 
     *value = sp->regs2[reg];
-
-    return 0;
 }
 
-int write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg2(address);
 
     masked_write(&sp->regs2[reg], value, mask);
-
-    return 0;
 }
 
 void do_SP_Task(struct rsp_core* sp)

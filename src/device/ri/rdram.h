@@ -63,10 +63,10 @@ void init_rdram(struct rdram* rdram,
 
 void poweron_rdram(struct rdram* rdram);
 
-int read_rdram_regs(void* opaque, uint32_t address, uint32_t* value);
-int write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-int read_rdram_dram(void* opaque, uint32_t address, uint32_t* value);
-int write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value);
+void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #endif

@@ -32,7 +32,7 @@
     %macro  cglobal 1
       global  %1
     %endmacro
-    
+
     %macro  cextern 1
       extern  %1
     %endmacro

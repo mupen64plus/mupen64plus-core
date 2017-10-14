@@ -39,7 +39,7 @@ extern int g_MemHasBeenBSwapped;
 extern int g_EmulatorRunning;
 extern int g_rom_pause;
 
-extern void* g_rdram;
+extern void* g_mem_base;
 
 extern struct device g_dev;
 

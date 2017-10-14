@@ -91,11 +91,11 @@ int         g_EmulatorRunning = 0;      // need separate boolean to tell if emul
 
 int g_rom_pause;
 
-/* g_rdram is a global to allow plugins early access (before device is initialized).
- * Please use g_dev.ri.rdram.dram instead, after device initialization.
+/* g_mem_base is global to allow plugins early access (before device is initialized).
+ * Do not use this variable directly in emulation code.
  * Initialization and DeInitialization of this variable is done at CoreStartup and CoreShutdown.
  */
-void* g_rdram = NULL;
+void* g_mem_base = NULL;
 
 struct device g_dev;
 
@@ -999,7 +999,7 @@ m64p_error main_run(void)
     /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)
     {
-        swap_buffer(g_rom, 4, g_rom_size/4);
+        swap_buffer((uint8_t*)g_mem_base + MM_CART_ROM, 4, g_rom_size/4);
         g_MemHasBeenBSwapped = 1;
     }
 
@@ -1083,15 +1083,16 @@ m64p_error main_run(void)
 
 
     init_device(&g_dev,
+                g_mem_base,
                 emumode,
                 count_per_op,
                 no_compiled_jump,
                 ROM_PARAMS.special_rom,
                 &aout,
-                g_rom, g_rom_size,
+                g_rom_size,
                 &fla_storage,
                 &sra_storage,
-                g_rdram, rdram_size,
+                rdram_size,
                 pif_channel_devices,
                 cins,
                 mpk_storages,
@@ -1146,7 +1147,7 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     poweron_device(&g_dev);
-    pifbootrom_hle_execute(&g_dev);
+    pifbootrom_hle_execute(&g_dev.r4300);
     run_device(&g_dev);
 
     /* now begin to shut down */

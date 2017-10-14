@@ -206,6 +206,9 @@ struct r4300_core
     uint32_t special_rom;
 };
 
+#define R4300_KSEG0 UINT32_C(0x80000000)
+#define R4300_KSEG1 UINT32_C(0xa0000000)
+
 void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom);
 void poweron_r4300(struct r4300_core* r4300);
 
@@ -226,10 +229,15 @@ uint32_t* r4300_wmask(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
 
-#define read_word_in_memory()   r4300->mem->readmem  [*r4300_address(r4300)>>16]()
-#define read_dword_in_memory()  r4300->mem->readmemd [*r4300_address(r4300)>>16]()
-#define write_word_in_memory()  r4300->mem->writemem [*r4300_address(r4300)>>16]()
-#define write_dword_in_memory() r4300->mem->writememd[*r4300_address(r4300)>>16]()
+/* Returns a pointer to a block of contiguous memory
+ * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
+ * Useful for getting fast access to a zone with executable code. */
+uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address);
+
+int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value);
+int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t* value);
+int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask);
+int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t value, uint64_t mask);
 
 /* Allow cached/dynarec r4300 implementations to invalidate
  * their cached code at [address, address+size]

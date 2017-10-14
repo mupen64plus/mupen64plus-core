@@ -77,28 +77,29 @@ static void pre_framebuffer_write(struct fb* fb, uint32_t address)
     }
 }
 
-int read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
+void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     pre_framebuffer_read(&dp->fb, address);
-    return read_rdram_dram(dp->ri, address, value);
+    read_rdram_dram(dp->ri, address, value);
 }
 
-int write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     pre_framebuffer_write(&dp->fb, address);
-    return write_rdram_dram(dp->ri, address, value, mask);
+    write_rdram_dram(dp->ri, address, value, mask);
 }
 
 
-#define R(x) read_ ## x, read_ ## x ## d
-#define W(x) write_ ## x, write_ ## x ## d
+#define R(x) read_ ## x
+#define W(x) write_ ## x
 #define RW(x) R(x), W(x)
 
 void protect_framebuffers(struct rdp_core* dp)
 {
     struct fb* fb = &dp->fb;
+    struct mem_handler fb_handler = { dp, RW(rdram_fb) };
 
     if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
         gfx.fBGetFrameBufferInfo(fb->infos);
@@ -121,8 +122,7 @@ void protect_framebuffers(struct rdp_core* dp)
                 end >>= 16;
                 for (j=start; j<=end; j++)
                 {
-                    map_region(dp->r4300->mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdramFB));
-                    map_region(dp->r4300->mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdramFB));
+                    map_region(dp->r4300->mem, 0x0000+j, M64P_MEM_RDRAM, &fb_handler);
                 }
                 start <<= 4;
                 end <<= 4;
@@ -147,6 +147,7 @@ void protect_framebuffers(struct rdp_core* dp)
 void unprotect_framebuffers(struct rdp_core* dp)
 {
     struct fb* fb = &dp->fb;
+    struct mem_handler ram_handler = { dp->ri, RW(rdram_dram) };
 
     if (gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite &&
             fb->infos[0].addr)
@@ -166,8 +167,7 @@ void unprotect_framebuffers(struct rdp_core* dp)
 
                 for (j=start; j<=end; j++)
                 {
-                    map_region(dp->r4300->mem, 0x8000+j, M64P_MEM_RDRAM, RW(rdram));
-                    map_region(dp->r4300->mem, 0xa000+j, M64P_MEM_RDRAM, RW(rdram));
+                    map_region(dp->r4300->mem, 0x0000+j, M64P_MEM_RDRAM, &ram_handler);
                 }
             }
         }

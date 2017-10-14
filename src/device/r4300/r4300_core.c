@@ -38,6 +38,7 @@
 #endif
 #include "main/main.h"
 
+#include <assert.h>
 #include <string.h>
 
 
@@ -312,6 +313,115 @@ uint64_t* r4300_wdword(struct r4300_core* r4300)
 #endif
 }
 
+uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
+{
+    /* This code is performance critical, specially on pure interpreter mode.
+     * Removing error checking saves some time, but the emulator may crash. */
+
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 2);
+    }
+
+    address &= UINT32_C(0x1ffffffc);
+
+    return (uint32_t*)((uint8_t*)r4300->mem->base + address);
+}
+
+/* Read aligned word from memory.
+ * address may not be word-aligned for byte or hword accesses.
+ * Alignment is taken care of when calling mem handler.
+ */
+int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value)
+{
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 0);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    address &= UINT32_C(0x1ffffffc);
+
+    mem_read32(mem_get_handler(r4300->mem, address), address & ~UINT32_C(3), value);
+
+    return 1;
+}
+
+/* Read aligned dword from memory */
+int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t* value)
+{
+    uint32_t w[2];
+
+    assert((address & 0x7) == 0);
+
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 0);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    address &= UINT32_C(0x1ffffffc);
+
+    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
+    mem_read32(handler, address + 0, &w[0]);
+    mem_read32(handler, address + 4, &w[1]);
+
+    *value = ((uint64_t)w[0] << 32) | w[1];
+
+    return 1;
+}
+
+/* Write aligned word to memory.
+ * address may not be word-aligned for byte or hword accesses.
+ * Alignment is taken care of when calling mem handler.
+ */
+int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t mask)
+{
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+
+        invalidate_r4300_cached_code(r4300, address, 4);
+
+        address = virtual_to_physical_address(r4300, address, 1);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    invalidate_r4300_cached_code(r4300, address, 4);
+
+    address &= UINT32_C(0x1ffffffc);
+
+    mem_write32(mem_get_handler(r4300->mem, address), address & ~UINT32_C(3), value, mask);
+
+    return 1;
+}
+
+/* Write aligned dword to memory */
+int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t value, uint64_t mask)
+{
+    assert((address & 0x7) == 0);
+
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+
+        invalidate_r4300_cached_code(r4300, address, 8);
+
+        address = virtual_to_physical_address(r4300, address, 1);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    invalidate_r4300_cached_code(r4300, address, 8);
+
+    address &= UINT32_C(0x1ffffffc);
+
+    const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
+    mem_write32(handler, address + 0, value >> 32, mask >> 32);
+    mem_write32(handler, address + 4, value      , mask      );
+
+    return 1;
+}
 
 void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, size_t size)
 {

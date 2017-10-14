@@ -390,62 +390,62 @@ GLOBAL_FUNCTION(new_dyna_start):
 
 GLOBAL_FUNCTION(invalidate_addr_r0):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r0, #12    
+    lsr    r0, r0, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r1):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r1, #12    
+    lsr    r0, r1, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r2):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r2, #12    
+    lsr    r0, r2, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r3):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r3, #12    
+    lsr    r0, r3, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r4):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r4, #12    
+    lsr    r0, r4, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r5):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r5, #12    
+    lsr    r0, r5, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r6):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r6, #12    
+    lsr    r0, r6, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r7):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r7, #12    
+    lsr    r0, r7, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r8):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r8, #12    
+    lsr    r0, r8, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r9):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r9, #12    
+    lsr    r0, r9, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r10):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r10, #12    
+    lsr    r0, r10, #12
     b      invalidate_addr_call
 
 GLOBAL_FUNCTION(invalidate_addr_r12):
     stmia  fp, {r0, r1, r2, r3, r12, lr}
-    lsr    r0, r12, #12    
+    lsr    r0, r12, #12
 
 LOCAL_FUNCTION(invalidate_addr_call):
     bl     invalidate_block

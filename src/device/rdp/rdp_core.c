@@ -77,17 +77,15 @@ void poweron_rdp(struct rdp_core* dp)
 }
 
 
-int read_dpc_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_dpc_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     uint32_t reg = dpc_reg(address);
 
     *value = dp->dpc_regs[reg];
-
-    return 0;
 }
 
-int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     uint32_t reg = dpc_reg(address);
@@ -102,7 +100,7 @@ int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case DPC_BUFBUSY_REG:
     case DPC_PIPEBUSY_REG:
     case DPC_TMEM_REG:
-        return 0;
+        return;
     }
 
     masked_write(&dp->dpc_regs[reg], value, mask);
@@ -117,29 +115,23 @@ int write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         signal_rcp_interrupt(dp->r4300, MI_INTR_DP);
         break;
     }
-
-    return 0;
 }
 
 
-int read_dps_regs(void* opaque, uint32_t address, uint32_t* value)
+void read_dps_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     uint32_t reg = dps_reg(address);
 
     *value = dp->dps_regs[reg];
-
-    return 0;
 }
 
-int write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+void write_dps_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     uint32_t reg = dps_reg(address);
 
     masked_write(&dp->dps_regs[reg], value, mask);
-
-    return 0;
 }
 
 void rdp_interrupt_event(void* opaque)

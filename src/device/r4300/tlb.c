@@ -24,6 +24,7 @@
 #include "api/m64p_types.h"
 #include "device/r4300/exception.h"
 #include "device/r4300/r4300_core.h"
+#include "device/memory/memory.h"
 #include "main/rom.h"
 #include "main/main.h"
 

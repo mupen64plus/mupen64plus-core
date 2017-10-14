@@ -41,10 +41,6 @@
  *     To avoid linking, pass &reg[0]
  * If likely is nonzero, the delay slot is only executed if the jump is taken.
  * If cop1 is nonzero, a COP1 unusable check will be done.
- *
- * CHECK_MEMORY(): A snippet to be run after a store instruction,
- *                 to check if the store affected executable blocks.
- *                 The memory address of the store is in the 'address' global.
  */
 
 #include "fpu.h"
@@ -97,7 +93,7 @@ DECLARE_INSTRUCTION(NI)
 {
     DECLARE_R4300
     DebugMessage(M64MSG_ERROR, "NI() @ 0x%" PRIX32, PCADDR);
-    DebugMessage(M64MSG_ERROR, "opcode not implemented: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
+    DebugMessage(M64MSG_ERROR, "opcode not implemented: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(r4300, PCADDR));
     *r4300_stop(r4300) = 1;
 }
 
@@ -106,7 +102,7 @@ DECLARE_INSTRUCTION(NI)
 DECLARE_INSTRUCTION(RESERVED)
 {
     DECLARE_R4300
-    DebugMessage(M64MSG_ERROR, "reserved opcode: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(PCADDR));
+    DebugMessage(M64MSG_ERROR, "reserved opcode: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(r4300, PCADDR));
     *r4300_stop(r4300) = 1;
 }
 
@@ -118,14 +114,11 @@ DECLARE_INSTRUCTION(LB)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
+    uint32_t value;
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp >>= shift;
-        *lsrtp &= 0xff;
-        *lsrtp = SE8(*lsrtp);
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE8((value >> shift) & 0xff);
     }
 }
 
@@ -135,13 +128,11 @@ DECLARE_INSTRUCTION(LBU)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
+    uint32_t value;
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp >>= shift;
-        *lsrtp &= 0xff;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = (value >> shift) & 0xff;
     }
 }
 
@@ -151,14 +142,11 @@ DECLARE_INSTRUCTION(LH)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
+    uint32_t value;
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp >>= shift;
-        *lsrtp &= 0xffff;
-        *lsrtp = SE16(*lsrtp);
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE16((value >> shift) & 0xffff);
     }
 }
 
@@ -168,13 +156,11 @@ DECLARE_INSTRUCTION(LHU)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
+    uint32_t value;
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp >>= shift;
-        *lsrtp &= 0xffff;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = (value >> shift) & 0xffff;
     }
 }
 
@@ -184,11 +170,10 @@ DECLARE_INSTRUCTION(LL)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp = SE32(*lsrtp);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(value);
         r4300->llbit = 1;
     }
 }
@@ -199,11 +184,10 @@ DECLARE_INSTRUCTION(LW)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *lsrtp = SE32(*lsrtp);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(value);
     }
 }
 
@@ -213,9 +197,12 @@ DECLARE_INSTRUCTION(LWU)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_word_in_memory();
+
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = value;
+    }
 }
 
 DECLARE_INSTRUCTION(LWL)
@@ -223,29 +210,14 @@ DECLARE_INSTRUCTION(LWL)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t word = 0;
     ADD_TO_PC(1);
-    if ((lsaddr & 3) == 0)
-    {
-        *r4300_address(r4300) = lsaddr;
-        r4300->rdword = (uint64_t*) lsrtp;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-            *lsrtp = SE32(*lsrtp);
-    }
-    else
-    {
-        *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-        r4300->rdword = &word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from the old value? */
-            uint32_t old_mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
-            /* How many bits up do we want to add the low bits of the new value in? */
-            int new_shift = (lsaddr & 3) * 8;
-            *lsrtp = SE32(((uint32_t) *lsrtp & old_mask) | ((uint32_t) word << new_shift));
-        }
+
+    unsigned int shift = (lsaddr & 3) * 8;
+    uint32_t mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(((uint32_t)*lsrtp & mask) | ((uint32_t)value << shift));
     }
 }
 
@@ -254,29 +226,14 @@ DECLARE_INSTRUCTION(LWR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-    if ((lsaddr & 3) == 3)
-    {
-        r4300->rdword = (uint64_t*) lsrtp;
-        read_word_in_memory();
-        if (*r4300_address(r4300)) {
-            *lsrtp = SE32(*lsrtp);
-        }
-    }
-    else
-    {
-        r4300->rdword = &word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many high bits do we want to preserve from the old value? */
-            uint32_t old_mask = BITS_ABOVE_MASK32(((lsaddr & 3) + 1) * 8);
-            /* How many bits down do we want to add the new value in? */
-            int new_shift = (3 - (lsaddr & 3)) * 8;
-            *lsrtp = SE32(((uint32_t) *lsrtp & old_mask) | ((uint32_t) word >> new_shift));
-        }
+
+    unsigned int shift = (3 - (lsaddr & 3)) * 8;
+    uint32_t mask = BITS_ABOVE_MASK32(((lsaddr & 3) + 1) * 8);
+    uint32_t value;
+
+    if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
+        *lsrtp = SE32(((uint32_t)*lsrtp & mask) | ((uint32_t)value >> shift));
     }
 }
 
@@ -286,9 +243,8 @@ DECLARE_INSTRUCTION(LD)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    r4300->rdword = (uint64_t*) lsrtp;
-    read_dword_in_memory();
+
+    r4300_read_aligned_dword(r4300, lsaddr, (uint64_t*)lsrtp);
 }
 
 DECLARE_INSTRUCTION(LDL)
@@ -296,27 +252,14 @@ DECLARE_INSTRUCTION(LDL)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t word = 0;
     ADD_TO_PC(1);
-    if ((lsaddr & 7) == 0)
-    {
-        *r4300_address(r4300) = lsaddr;
-        r4300->rdword = (uint64_t*) lsrtp;
-        read_dword_in_memory();
-    }
-    else
-    {
-        *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFF8);
-        r4300->rdword = &word;
-        read_dword_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from the old value? */
-            uint64_t old_mask = BITS_BELOW_MASK64((lsaddr & 7) * 8);
-            /* How many bits up do we want to add the low bits of the new value in? */
-            int new_shift = (lsaddr & 7) * 8;
-            *lsrtp = (*lsrtp & old_mask) | (word << new_shift);
-        }
+
+    unsigned int shift = (lsaddr & 7) * 8;
+    uint64_t mask = BITS_BELOW_MASK64((lsaddr & 7) * 8);
+    uint64_t value;
+
+    if (r4300_read_aligned_dword(r4300, lsaddr & ~UINT32_C(7), &value)) {
+        *lsrtp = ((uint64_t)*lsrtp & mask) | (value << shift);
     }
 }
 
@@ -325,26 +268,14 @@ DECLARE_INSTRUCTION(LDR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFF8);
-    if ((lsaddr & 7) == 7)
-    {
-        r4300->rdword = (uint64_t*) lsrtp;
-        read_dword_in_memory();
-    }
-    else
-    {
-        r4300->rdword = &word;
-        read_dword_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many high bits do we want to preserve from the old value? */
-            uint64_t old_mask = BITS_ABOVE_MASK64(((lsaddr & 7) + 1) * 8);
-            /* How many bits down do we want to add the high bits of the new value in? */
-            int new_shift = (7 - (lsaddr & 7)) * 8;
-            *lsrtp = (*lsrtp & old_mask) | (word >> new_shift);
-        }
+
+    unsigned int shift = (7 - (lsaddr & 7)) * 8;
+    uint64_t mask = BITS_ABOVE_MASK64(((lsaddr & 7) + 1) * 8);
+    uint64_t value;
+
+    if (r4300_read_aligned_dword(r4300, lsaddr & ~UINT32_C(7), &value)) {
+        *lsrtp = ((uint64_t)*lsrtp & mask) | (value >> shift);
     }
 }
 
@@ -357,11 +288,8 @@ DECLARE_INSTRUCTION(SB)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = bshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_wword(r4300) = (uint32_t)*lsrtp << shift;
-    *r4300_wmask(r4300) = UINT32_C(0xff) << shift;
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp << shift, UINT32_C(0xff) << shift);
 }
 
 DECLARE_INSTRUCTION(SH)
@@ -371,11 +299,8 @@ DECLARE_INSTRUCTION(SH)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
     unsigned int shift = hshift(lsaddr);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_wword(r4300) = (uint32_t)*lsrtp << shift;
-    *r4300_wmask(r4300) = UINT32_C(0xffff) << shift;
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp << shift, UINT32_C(0xffff) << shift);
 }
 
 DECLARE_INSTRUCTION(SC)
@@ -384,15 +309,13 @@ DECLARE_INSTRUCTION(SC)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    if(r4300->llbit)
+
+    if (r4300->llbit)
     {
-        *r4300_address(r4300) = lsaddr;
-        *r4300_wword(r4300) = (uint32_t) *lsrtp;
-        *r4300_wmask(r4300) = ~UINT32_C(0);
-        write_word_in_memory();
-        CHECK_MEMORY();
-        r4300->llbit = 0;
-        *lsrtp = 1;
+        if (r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp, ~UINT32_C(0))) {
+            r4300->llbit = 0;
+            *lsrtp = 1;
+        }
     }
     else
     {
@@ -406,11 +329,8 @@ DECLARE_INSTRUCTION(SW)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_wword(r4300) = (uint32_t) *lsrtp;
-    *r4300_wmask(r4300) = ~UINT32_C(0);
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_word(r4300, lsaddr, (uint32_t)*lsrtp, ~UINT32_C(0));
 }
 
 DECLARE_INSTRUCTION(SWL)
@@ -418,35 +338,13 @@ DECLARE_INSTRUCTION(SWL)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    if ((lsaddr & 3) == 0)
-    {
-        *r4300_address(r4300) = lsaddr;
-        *r4300_wword(r4300) = (uint32_t) *lsrtp;
-        *r4300_wmask(r4300) = ~UINT32_C(0);
-        write_word_in_memory();
-        CHECK_MEMORY();
-    }
-    else
-    {
-        *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-        r4300->rdword = &old_word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many high bits do we want to preserve from what was in memory
-             * before? */
-            uint32_t old_mask = BITS_ABOVE_MASK32((4 - (lsaddr & 3)) * 8);
-            /* How many bits down do we need to shift the register to store some
-             * of its high bits into the low bits of the memory word? */
-            int new_shift = (lsaddr & 3) * 8;
-            *r4300_wword(r4300) = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp >> new_shift);
-            *r4300_wmask(r4300) = ~UINT32_C(0);
-            write_word_in_memory();
-            CHECK_MEMORY();
-        }
-    }
+
+    unsigned int shift = (lsaddr & 3) * 8;
+    uint32_t mask = BITS_BELOW_MASK32((4 - (lsaddr & 3)) * 8);
+    uint32_t value = ((uint32_t)*lsrtp >> shift);
+
+    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask);
 }
 
 DECLARE_INSTRUCTION(SWR)
@@ -454,34 +352,13 @@ DECLARE_INSTRUCTION(SWR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFFC);
-    if ((lsaddr & 3) == 3)
-    {
-        *r4300_wword(r4300) = (uint32_t) *lsrtp;
-        *r4300_wmask(r4300) = ~UINT32_C(0);
-        write_word_in_memory();
-        CHECK_MEMORY();
-    }
-    else
-    {
-        r4300->rdword = &old_word;
-        read_word_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from what was in memory
-             * before? */
-            int32_t old_mask = BITS_BELOW_MASK32((3 - (lsaddr & 3)) * 8);
-            /* How many bits up do we need to shift the register to store some
-             * of its low bits into the high bits of the memory word? */
-            int new_shift = (3 - (lsaddr & 3)) * 8;
-            *r4300_wword(r4300) = ((uint32_t) old_word & old_mask) | ((uint32_t) *lsrtp << new_shift);
-            *r4300_wmask(r4300) = ~UINT32_C(0);
-            write_word_in_memory();
-            CHECK_MEMORY();
-        }
-    }
+
+    unsigned int shift = (3 - (lsaddr & 3)) * 8;
+    uint32_t mask = BITS_ABOVE_MASK32((3 - (lsaddr & 3)) * 8);
+    uint32_t value = ((uint32_t)*lsrtp << shift);
+
+    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask);
 }
 
 DECLARE_INSTRUCTION(SD)
@@ -490,10 +367,8 @@ DECLARE_INSTRUCTION(SD)
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr;
-    *r4300_wdword(r4300) = *lsrtp;
-    write_dword_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_dword(r4300, lsaddr, (uint64_t)*lsrtp, ~UINT64_C(0));
 }
 
 DECLARE_INSTRUCTION(SDL)
@@ -501,33 +376,13 @@ DECLARE_INSTRUCTION(SDL)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    if ((lsaddr & 7) == 0)
-    {
-        *r4300_address(r4300) = lsaddr;
-        *r4300_wdword(r4300) = *lsrtp;
-        write_dword_in_memory();
-        CHECK_MEMORY();
-    }
-    else
-    {
-        *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFF8);
-        r4300->rdword = &old_word;
-        read_dword_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many high bits do we want to preserve from what was in memory
-             * before? */
-            uint64_t old_mask = BITS_ABOVE_MASK64((8 - (lsaddr & 7)) * 8);
-            /* How many bits down do we need to shift the register to store some
-             * of its high bits into the low bits of the memory word? */
-            int new_shift = (lsaddr & 7) * 8;
-            *r4300_wdword(r4300) = (old_word & old_mask) | ((uint64_t) *lsrtp >> new_shift);
-            write_dword_in_memory();
-            CHECK_MEMORY();
-        }
-    }
+
+    unsigned int shift = (lsaddr & 7) * 8;
+    uint64_t mask = BITS_BELOW_MASK64((8 - (lsaddr & 7)) * 8);
+    uint64_t value = ((uint64_t)*lsrtp >> shift);
+
+    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask);
 }
 
 DECLARE_INSTRUCTION(SDR)
@@ -535,32 +390,13 @@ DECLARE_INSTRUCTION(SDR)
     DECLARE_R4300
     const uint32_t lsaddr = (uint32_t) irs32 + (uint32_t) iimmediate;
     int64_t *lsrtp = &irt;
-    uint64_t old_word = 0;
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lsaddr & UINT32_C(0xFFFFFFF8);
-    if ((lsaddr & 7) == 7)
-    {
-        *r4300_wdword(r4300) = *lsrtp;
-        write_dword_in_memory();
-        CHECK_MEMORY();
-    }
-    else
-    {
-        r4300->rdword = &old_word;
-        read_dword_in_memory();
-        if (*r4300_address(r4300))
-        {
-            /* How many low bits do we want to preserve from what was in memory
-             * before? */
-            uint64_t old_mask = BITS_BELOW_MASK64((7 - (lsaddr & 7)) * 8);
-            /* How many bits up do we need to shift the register to store some
-             * of its low bits into the high bits of the memory word? */
-            int new_shift = (7 - (lsaddr & 7)) * 8;
-            *r4300_wdword(r4300) = (old_word & old_mask) | (*lsrtp << new_shift);
-            write_dword_in_memory();
-            CHECK_MEMORY();
-        }
-    }
+
+    unsigned int shift = (7 - (lsaddr & 7)) * 8;
+    uint64_t mask = BITS_ABOVE_MASK64((7 - (lsaddr & 7)) * 8);
+    uint64_t value = ((uint64_t)*lsrtp << shift);
+
+    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask);
 }
 
 /* Computational instructions */
@@ -1426,15 +1262,10 @@ DECLARE_INSTRUCTION(LWC1)
     DECLARE_R4300
     const unsigned char lslfft = lfft;
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
-    uint64_t temp;
     if (check_cop1_unusable(r4300)) { return; }
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lslfaddr;
-    r4300->rdword = &temp;
-    read_word_in_memory();
-    if (*r4300_address(r4300)) {
-        *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]) = (uint32_t) *r4300->rdword;
-    }
+
+    r4300_read_aligned_word(r4300, lslfaddr, (uint32_t*)r4300_cp1_regs_simple(&r4300->cp1)[lslfft]);
 }
 
 DECLARE_INSTRUCTION(LDC1)
@@ -1444,9 +1275,8 @@ DECLARE_INSTRUCTION(LDC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lslfaddr;
-    r4300->rdword = (uint64_t*) (r4300_cp1_regs_double(&r4300->cp1))[lslfft];
-    read_dword_in_memory();
+
+    r4300_read_aligned_dword(r4300, lslfaddr, (uint64_t*)r4300_cp1_regs_double(&r4300->cp1)[lslfft]);
 }
 
 DECLARE_INSTRUCTION(SWC1)
@@ -1456,11 +1286,8 @@ DECLARE_INSTRUCTION(SWC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lslfaddr;
-    *r4300_wword(r4300) = *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]);
-    *r4300_wmask(r4300) = ~UINT32_C(0);
-    write_word_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_word(r4300, lslfaddr, *((uint32_t*)(r4300_cp1_regs_simple(&r4300->cp1))[lslfft]), ~UINT32_C(0));
 }
 
 DECLARE_INSTRUCTION(SDC1)
@@ -1470,10 +1297,8 @@ DECLARE_INSTRUCTION(SDC1)
     const uint32_t lslfaddr = (uint32_t) r4300_regs(r4300)[lfbase] + lfoffset;
     if (check_cop1_unusable(r4300)) { return; }
     ADD_TO_PC(1);
-    *r4300_address(r4300) = lslfaddr;
-    *r4300_wdword(r4300) = *((uint64_t*) (r4300_cp1_regs_double(&r4300->cp1))[lslfft]);
-    write_dword_in_memory();
-    CHECK_MEMORY();
+
+    r4300_write_aligned_dword(r4300, lslfaddr, *((uint64_t*)(r4300_cp1_regs_double(&r4300->cp1))[lslfft]), ~UINT64_C(0));
 }
 
 DECLARE_INSTRUCTION(MFC1)

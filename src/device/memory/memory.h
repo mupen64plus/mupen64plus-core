@@ -22,21 +22,37 @@
 #ifndef M64P_DEVICE_MEMORY_MEMORY_H
 #define M64P_DEVICE_MEMORY_MEMORY_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+typedef void (*read32fn)(void*,uint32_t,uint32_t*);
+typedef void (*write32fn)(void*,uint32_t,uint32_t,uint32_t);
+
+struct mem_handler
+{
+    void* opaque;
+    read32fn read32;
+    write32fn write32;
+};
+
+struct mem_mapping
+{
+    uint32_t begin;
+    uint32_t end;       /* inclusive */
+    int type;
+    struct mem_handler handler;
+};
 
 struct memory
 {
-    void (*readmem[0x10000])(void);
-    void (*readmemd[0x10000])(void);
-    void (*writemem[0x10000])(void);
-    void (*writememd[0x10000])(void);
+    struct mem_handler handlers[0x10000];
+    void* base;
 
 #ifdef DBG
     int memtype[0x10000];
-    void (*saved_readmem [0x10000])(void);
-    void (*saved_readmemd[0x10000])(void);
-    void (*saved_writemem [0x10000])(void);
-    void (*saved_writememd[0x10000])(void);
+    unsigned char bp_checks[0x10000];
+    struct mem_handler saved_handlers[0x10000];
+    struct mem_handler dbg_handler;
 #endif
 };
 
@@ -70,30 +86,33 @@ static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
     *dst = (*dst & ~mask) | (value & mask);
 }
 
-void poweron_memory(struct memory* mem);
+void init_memory(struct memory* mem,
+                 struct mem_mapping* mappings, size_t mappings_count,
+                 void* base,
+                 struct mem_handler* dbg_handler);
+
+static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
+{
+    return &mem->handlers[address >> 16];
+}
+
+static void mem_read32(const struct mem_handler* handler, uint32_t address, uint32_t* value)
+{
+    handler->read32(handler->opaque, address, value);
+}
+
+static void mem_write32(const struct mem_handler* handler, uint32_t address, uint32_t value, uint32_t mask)
+{
+    handler->write32(handler->opaque, address, value, mask);
+}
 
 void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
-                void (*read32)(void),
-                void (*read64)(void),
-                void (*write32)(void),
-                void (*write64)(void));
+                const struct mem_handler* handler);
 
-/* XXX: cannot make them static because of dynarec + rdp fb */
-void read_rdram(void);
-void read_rdramd(void);
-void write_rdram(void);
-void write_rdramd(void);
-void read_rdramFB(void);
-void read_rdramFBd(void);
-void write_rdramFB(void);
-void write_rdramFBd(void);
-
-/* Returns a pointer to a block of contiguous memory
- * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
- * Useful for getting fast access to a zone with executable code. */
-uint32_t *fast_mem_access(uint32_t address);
+void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value);
+void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #ifdef DBG
 void activate_memory_break_read(struct memory* mem, uint32_t address);

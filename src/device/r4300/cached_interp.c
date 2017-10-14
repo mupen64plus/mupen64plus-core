@@ -140,12 +140,6 @@
       else name(); \
    }
 
-#define CHECK_MEMORY() \
-   if (!r4300->cached_interp.invalid_code[*r4300_address(r4300)>>12]) \
-      if (r4300->cached_interp.blocks[*r4300_address(r4300)>>12]->block[(*r4300_address(r4300)&0xFFF)/4].ops != \
-          r4300->current_instruction_table.NOTCOMPILED) \
-         r4300->cached_interp.invalid_code[*r4300_address(r4300)>>12] = 1;
-
 // two functions are defined from the macros above but never used
 // these prototype declarations will prevent a warning
 #if defined(__GNUC__)
@@ -199,7 +193,7 @@ Used by dynarec only, check should be unnecessary
 static void NOTCOMPILED(void)
 {
    DECLARE_R4300
-   uint32_t *mem = fast_mem_access(r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
+   uint32_t *mem = fast_mem_access(r4300, r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
 #ifdef DBG
    DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(r4300), (long) (*r4300_pc_struct(r4300))->ops);
 #endif
