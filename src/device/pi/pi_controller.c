@@ -35,43 +35,6 @@
 #include <inttypes.h>
 
 
-unsigned int cart_save_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
-{
-    struct pi_controller* pi = (struct pi_controller*)opaque;
-    unsigned int cycles;
-
-    if (pi->use_flashram != 1)
-    {
-        cycles = sram_dma_read(&pi->sram, dram, dram_addr, cart_addr, length);
-        pi->use_flashram = -1;
-    }
-    else
-    {
-        cycles = flashram_dma_read(&pi->flashram, dram, dram_addr, cart_addr, length);
-    }
-
-    return cycles;
-}
-
-unsigned int cart_save_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
-{
-    struct pi_controller* pi = (struct pi_controller*)opaque;
-    unsigned int cycles;
-
-    if (pi->use_flashram != 1)
-    {
-        cycles = sram_dma_write(&pi->sram, dram, dram_addr, cart_addr, length);
-        pi->use_flashram = -1;
-    }
-    else
-    {
-        cycles = flashram_dma_write(&pi->flashram, dram, dram_addr, cart_addr, length);
-    }
-
-    return cycles;
-}
-
-
 static void dma_pi_read(struct pi_controller* pi)
 {
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
@@ -129,24 +92,11 @@ static void dma_pi_write(struct pi_controller* pi)
 
 void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
-             uint8_t* rom, size_t rom_size,
-             void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-             void* sram_storage, const struct storage_backend_interface* isram_storage,
              struct r4300_core* r4300,
-             struct ri_controller* ri,
-             const struct cic* cic)
+             struct ri_controller* ri)
 {
     pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
-
-    init_cart_rom(&pi->cart_rom, rom, rom_size,
-        r4300,
-        &pi->regs[PI_STATUS_REG],
-        &ri->rdram, cic);
-    init_flashram(&pi->flashram, flashram_storage, iflashram_storage);
-    init_sram(&pi->sram, sram_storage, isram_storage);
-
-    pi->use_flashram = 0;
 
     pi->r4300 = r4300;
     pi->ri = ri;
@@ -155,9 +105,6 @@ void init_pi(struct pi_controller* pi,
 void poweron_pi(struct pi_controller* pi)
 {
     memset(pi->regs, 0, PI_REGS_COUNT*sizeof(uint32_t));
-
-    poweron_cart_rom(&pi->cart_rom);
-    poweron_flashram(&pi->flashram);
 }
 
 void read_pi_regs(void* opaque, uint32_t address, uint32_t* value)

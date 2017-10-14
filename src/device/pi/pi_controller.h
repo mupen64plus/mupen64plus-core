@@ -25,15 +25,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "cart_rom.h"
-#include "flashram.h"
-#include "sram.h"
-
 struct device;
 struct r4300_core;
 struct ri_controller;
-struct cic;
-struct storage_backend;
 
 enum pi_registers
 {
@@ -77,18 +71,11 @@ struct pi_controller
 {
     uint32_t regs[PI_REGS_COUNT];
 
-    struct cart_rom cart_rom;
-    struct flashram flashram;
-    struct sram sram;
-
     struct device* dev;
     pi_dma_handler_getter get_pi_dma_handler;
 
-    int use_flashram;
-
     struct r4300_core* r4300;
     struct ri_controller* ri;
-
 };
 
 static uint32_t pi_reg(uint32_t address)
@@ -100,12 +87,8 @@ static uint32_t pi_reg(uint32_t address)
 
 void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
-             uint8_t* rom, size_t rom_size,
-             void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-             void* sram_storage, const struct storage_backend_interface* isram_storage,
              struct r4300_core* r4300,
-             struct ri_controller* ri,
-             const struct cic* cic);
+             struct ri_controller* ri);
 
 void poweron_pi(struct pi_controller* pi);
 
@@ -113,8 +96,5 @@ void read_pi_regs(void* opaque, uint32_t address, uint32_t* value);
 void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void pi_end_of_dma_event(void* opaque);
-
-unsigned int cart_save_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
-unsigned int cart_save_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 
 #endif

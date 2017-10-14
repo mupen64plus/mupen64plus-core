@@ -454,7 +454,10 @@ SOURCE = \
     $(SRCDIR)/device/ai/ai_controller.c \
     $(SRCDIR)/device/cart/cart.c \
     $(SRCDIR)/device/cart/af_rtc.c \
+    $(SRCDIR)/device/cart/cart_rom.c \
     $(SRCDIR)/device/cart/eeprom.c \
+    $(SRCDIR)/device/cart/flashram.c \
+    $(SRCDIR)/device/cart/sram.c \
     $(SRCDIR)/device/controllers/game_controller.c \
     $(SRCDIR)/device/controllers/paks/mempak.c \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \
@@ -463,10 +466,7 @@ SOURCE = \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
     $(SRCDIR)/device/memory/memory.c \
-    $(SRCDIR)/device/pi/cart_rom.c \
-    $(SRCDIR)/device/pi/flashram.c \
     $(SRCDIR)/device/pi/pi_controller.c \
-    $(SRCDIR)/device/pi/sram.c \
     $(SRCDIR)/device/pifbootrom/pifbootrom.c \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \

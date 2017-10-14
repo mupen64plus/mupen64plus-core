@@ -1250,21 +1250,10 @@ m64p_error main_run(void)
             }
         }
     }
-
-    /* Init cartridge serial devices
-     * FIXME: only init what's really inside the cartridge (eg either eeprom or rtc, not both)
-     */
     for (i = GAME_CONTROLLERS_COUNT; i < PIF_CHANNELS_COUNT; ++i) {
         joybus_devices[i] = &g_dev.cart;
         ijoybus_devices[i] = &g_ijoybus_device_cart;
     }
-
-    init_eeprom(&g_dev.cart.eeprom,
-            (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
-            &eep, &g_ifile_storage);
-
-    init_af_rtc(&g_dev.cart.af_rtc,
-                NULL, &g_iclock_ctime_plus_delta);
 
 
     init_device(&g_dev,
@@ -1275,12 +1264,15 @@ m64p_error main_run(void)
                 ROM_PARAMS.special_rom,
                 randomize_interrupt,
                 &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
-                g_rom_size,
-                &fla, &g_ifile_storage,
-                &sra, &g_ifile_storage,
                 rdram_size,
                 joybus_devices, ijoybus_devices,
-                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype));
+                vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype),
+                NULL, &g_iclock_ctime_plus_delta,
+                g_rom_size,
+                (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
+                &eep, &g_ifile_storage,
+                &fla, &g_ifile_storage,
+                &sra, &g_ifile_storage);
 
     // Attach rom to plugins
     if (!gfx.romOpen())

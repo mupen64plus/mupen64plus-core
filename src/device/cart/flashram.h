@@ -25,7 +25,6 @@
 
 #include <stdint.h>
 
-struct pi_controller;
 struct storage_backend_interface;
 
 enum { FLASHRAM_SIZE = 0x20000 };
@@ -48,19 +47,19 @@ struct flashram
 
     void* storage;
     const struct storage_backend_interface* istorage;
+    const uint8_t* dram;
 };
 
 void init_flashram(struct flashram* flashram,
                    void* storage,
-                   const struct storage_backend_interface* istorage);
+                   const struct storage_backend_interface* istorage,
+                   const uint8_t* dram);
 
 void poweron_flashram(struct flashram* flashram);
 
 void format_flashram(uint8_t* flash);
 
 void read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
-void write_flashram_status(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-void read_flashram_command(void* opaque, uint32_t address, uint32_t* value);
 void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);

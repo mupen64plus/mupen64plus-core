@@ -460,11 +460,11 @@ int savestates_load_m64p(char *filepath)
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    g_dev.pi.use_flashram = GETDATA(curr, int);
-    g_dev.pi.flashram.mode = GETDATA(curr, int);
-    g_dev.pi.flashram.status = GETDATA(curr, unsigned long long);
-    g_dev.pi.flashram.erase_offset = GETDATA(curr, unsigned int);
-    g_dev.pi.flashram.write_pointer = GETDATA(curr, unsigned int);
+    g_dev.cart.use_flashram = GETDATA(curr, int);
+    g_dev.cart.flashram.mode = GETDATA(curr, int);
+    g_dev.cart.flashram.status = GETDATA(curr, unsigned long long);
+    g_dev.cart.flashram.erase_offset = GETDATA(curr, unsigned int);
+    g_dev.cart.flashram.write_pointer = GETDATA(curr, unsigned int);
 
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, uint32_t, 0x100000);
     COPYARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, uint32_t, 0x100000);
@@ -537,8 +537,8 @@ int savestates_load_m64p(char *filepath)
         g_dev.ai.delayed_carry = GETDATA(curr, uint32_t);
 
         /* extra cart_rom state */
-        g_dev.pi.cart_rom.last_write = GETDATA(curr, uint32_t);
-        g_dev.pi.cart_rom.rom_written = GETDATA(curr, uint32_t);
+        g_dev.cart.cart_rom.last_write = GETDATA(curr, uint32_t);
+        g_dev.cart.cart_rom.rom_written = GETDATA(curr, uint32_t);
 
         /* extra sp state */
         g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
@@ -626,8 +626,8 @@ int savestates_load_m64p(char *filepath)
         g_dev.ai.delayed_carry = 0;
 
         /* extra cart_rom state */
-        g_dev.pi.cart_rom.last_write = 0;
-        g_dev.pi.cart_rom.rom_written = 0;
+        g_dev.cart.cart_rom.last_write = 0;
+        g_dev.cart.cart_rom.rom_written = 0;
 
         /* extra sp state */
         g_dev.sp.rsp_task_locked = 0;
@@ -731,7 +731,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     // check ROM header
     COPYARRAY(RomHeader, curr, unsigned int, 0x40/4);
-    if(memcmp(RomHeader, g_dev.pi.cart_rom.rom, 0x40) != 0)
+    if(memcmp(RomHeader, g_dev.cart.cart_rom.rom, 0x40) != 0)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "State ROM header does not match current ROM.");
         free(savestateData);
@@ -882,8 +882,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     read_func(handle, g_dev.pi.regs, PI_REGS_COUNT*sizeof(g_dev.pi.regs[0]));
 
     /* extra cart_rom state */
-    g_dev.pi.cart_rom.last_write = 0;
-    g_dev.pi.cart_rom.rom_written = 0;
+    g_dev.cart.cart_rom.last_write = 0;
+    g_dev.cart.cart_rom.rom_written = 0;
 
     // ri_register
     g_dev.ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
@@ -972,7 +972,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     // g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = 0; g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = 0; *r4300_llbit(&g_dev.r4300) = 0;
 
     // No flashram info in pj64 savestate.
-    poweron_flashram(&g_dev.pi.flashram);
+    poweron_flashram(&g_dev.cart.flashram);
 
     /* extra fb state */
     memset(&g_dev.dp.fb, 0, sizeof(g_dev.dp.fb));
@@ -1411,11 +1411,11 @@ int savestates_save_m64p(char *filepath)
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     PUTARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    PUTDATA(curr, int, g_dev.pi.use_flashram);
-    PUTDATA(curr, int, g_dev.pi.flashram.mode);
-    PUTDATA(curr, unsigned long long, g_dev.pi.flashram.status);
-    PUTDATA(curr, unsigned int, g_dev.pi.flashram.erase_offset);
-    PUTDATA(curr, unsigned int, g_dev.pi.flashram.write_pointer);
+    PUTDATA(curr, int, g_dev.cart.use_flashram);
+    PUTDATA(curr, int, g_dev.cart.flashram.mode);
+    PUTDATA(curr, unsigned long long, g_dev.cart.flashram.status);
+    PUTDATA(curr, unsigned int, g_dev.cart.flashram.erase_offset);
+    PUTDATA(curr, unsigned int, g_dev.cart.flashram.write_pointer);
 
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_r, curr, unsigned int, 0x100000);
     PUTARRAY(g_dev.r4300.cp0.tlb.LUT_w, curr, unsigned int, 0x100000);
@@ -1475,8 +1475,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_dev.ai.last_read);
     PUTDATA(curr, uint32_t, g_dev.ai.delayed_carry);
 
-    PUTDATA(curr, uint32_t, g_dev.pi.cart_rom.last_write);
-    PUTDATA(curr, uint32_t, g_dev.pi.cart_rom.rom_written);
+    PUTDATA(curr, uint32_t, g_dev.cart.cart_rom.last_write);
+    PUTDATA(curr, uint32_t, g_dev.cart.cart_rom.rom_written);
 
     PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
 
@@ -1557,7 +1557,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
     // Write the save state data in memory
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
-    PUTARRAY(g_dev.pi.cart_rom.rom, curr, unsigned int, 0x40/4);
+    PUTARRAY(g_dev.cart.cart_rom.rom, curr, unsigned int, 0x40/4);
     PUTDATA(curr, uint32_t, get_event(&g_dev.r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
     PUTDATA(curr, uint32_t, *r4300_pc(&g_dev.r4300));
     PUTARRAY(r4300_regs(&g_dev.r4300), curr, int64_t, 32);

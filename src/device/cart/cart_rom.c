@@ -25,8 +25,8 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 
-#include "pi_controller.h"
 #include "device/memory/memory.h"
+#include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/rdram_detection_hack.h"
 

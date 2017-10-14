@@ -177,8 +177,17 @@
     <ClCompile Include="..\..\src\device\cart\cart.c">
       <Filter>device\cart</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\cart\cart_rom.c">
+      <Filter>device\pi</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\cart\eeprom.c">
       <Filter>device\cart</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\cart\flashram.c">
+      <Filter>device\pi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\cart\sram.c">
+      <Filter>device\pi</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\controllers\game_controller.c">
       <Filter>device\controllers</Filter>
@@ -192,16 +201,7 @@
     <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c">
       <Filter>device\controllers\paks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\pi\cart_rom.c">
-      <Filter>device\pi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\pi\flashram.c">
-      <Filter>device\pi</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\pi\pi_controller.c">
-      <Filter>device\pi</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\pi\sram.c">
       <Filter>device\pi</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\plugin\dummy_audio.c">
@@ -488,8 +488,17 @@
     <ClInclude Include="..\..\src\device\cart\cart.h">
       <Filter>device\cart</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\device\cart\cart_rom.h">
+      <Filter>device\pi</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\device\cart\eeprom.h">
       <Filter>device\cart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\cart\flashram.h">
+      <Filter>device\pi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\cart\sram.h">
+      <Filter>device\pi</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\controllers\game_controller.h">
       <Filter>device\controllers</Filter>
@@ -503,16 +512,7 @@
     <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h">
       <Filter>device\controllers\paks</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\pi\cart_rom.h">
-      <Filter>device\pi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\pi\flashram.h">
-      <Filter>device\pi</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\device\pi\pi_controller.h">
-      <Filter>device\pi</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\pi\sram.h">
       <Filter>device\pi</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\dummy_audio.h">
