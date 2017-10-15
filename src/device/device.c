@@ -53,6 +53,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     int special_rom,
+    int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
     /* pi */
@@ -117,7 +118,7 @@ void init_device(struct device* dev,
 
     init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base, &dbg_handler);
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
-            emumode, count_per_op, no_compiled_jump, special_rom);
+            emumode, count_per_op, no_compiled_jump, special_rom, randomize_interrupt);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
     init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);

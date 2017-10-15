@@ -161,7 +161,7 @@ static void dma_pi_write(struct pi_controller* pi)
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, longueur/8);
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, (longueur/8) + add_random_interrupt_time(pi->r4300));
 }
 
 

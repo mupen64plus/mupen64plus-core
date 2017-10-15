@@ -55,7 +55,7 @@ static void dma_si_write(struct si_controller* si)
 
     cp0_update_count(si->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
+    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
 }
 
 static void dma_si_read(struct si_controller* si)
@@ -70,7 +70,7 @@ static void dma_si_read(struct si_controller* si)
 
     cp0_update_count(si->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_RD_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, /*0x100*/0x900);
+    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
 }
 
 

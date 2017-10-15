@@ -262,6 +262,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
+    ConfigSetDefaultBool(g_CoreConfig, "RandomizeInterrupt", 1, "Randomize PI/SI Interrupt Timing");
 
     /* handle upgrades */
     if (bUpgrade)
@@ -1075,6 +1076,7 @@ m64p_error main_run(void)
     unsigned int emumode;
     unsigned int disable_extra_mem;
     int no_compiled_jump;
+    int randomize_interrupt;
     struct file_storage eep;
     struct file_storage fla;
     struct file_storage sra;
@@ -1092,6 +1094,7 @@ m64p_error main_run(void)
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
+    randomize_interrupt = ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt");
 #ifdef NEW_DYNAREC
     stop_after_jal = ConfigGetParamBool(g_CoreConfig, "DisableSpecRecomp");
 #endif
@@ -1270,6 +1273,7 @@ m64p_error main_run(void)
                 count_per_op,
                 no_compiled_jump,
                 ROM_PARAMS.special_rom,
+                randomize_interrupt,
                 &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
                 g_rom_size,
                 &fla, &g_ifile_storage,

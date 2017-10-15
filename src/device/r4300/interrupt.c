@@ -23,6 +23,11 @@
 
 #include "interrupt.h"
 
+#ifdef __MINGW32__
+#define _CRT_RAND_S
+#include <stdlib.h>
+#endif
+
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -124,6 +129,20 @@ static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int e
         }
     }
     else return 0;
+}
+
+unsigned int add_random_interrupt_time(struct r4300_core* r4300)
+{
+    if (r4300->randomize_interrupt) {
+        unsigned int value;
+#ifdef __MINGW32__
+        rand_s(&value);
+#else
+        value = rand();
+#endif
+        return value % 0x40;
+    } else
+        return 0;
 }
 
 void add_interrupt_event(struct cp0* cp0, int type, unsigned int delay)
