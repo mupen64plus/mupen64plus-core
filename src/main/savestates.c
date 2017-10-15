@@ -555,7 +555,11 @@ int savestates_load_m64p(char *filepath)
 
         /* extra rpak state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            set_rumble_reg(&g_dev.rumblepaks[i], GETDATA(curr, uint8_t));
+            uint8_t rpk_state = GETDATA(curr, uint8_t);
+
+            if (ROM_SETTINGS.rumble) {
+                set_rumble_reg(&g_dev.rumblepaks[i], rpk_state);
+            }
         }
 
         /* extra tpak state */
@@ -640,8 +644,13 @@ int savestates_load_m64p(char *filepath)
                 continue;
 
             g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
-            poweron_rumblepak(&g_dev.rumblepaks[i]);
-            poweron_transferpak(&g_dev.transferpaks[i]);
+
+            if (ROM_SETTINGS.rumble) {
+                poweron_rumblepak(&g_dev.rumblepaks[i]);
+            }
+            if (ROM_SETTINGS.transferpak) {
+                poweron_transferpak(&g_dev.transferpaks[i]);
+            }
         }
 
         /* extra pif channels state
@@ -981,8 +990,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
             continue;
 
         g_dev.controllers[i].flavor->reset(&g_dev.controllers[i]);
-        poweron_rumblepak(&g_dev.rumblepaks[i]);
-        poweron_transferpak(&g_dev.transferpaks[i]);
+
+        if (ROM_SETTINGS.rumble) {
+            poweron_rumblepak(&g_dev.rumblepaks[i]);
+        }
+        if (ROM_SETTINGS.transferpak) {
+            poweron_transferpak(&g_dev.transferpaks[i]);
+        }
     }
 
     savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
