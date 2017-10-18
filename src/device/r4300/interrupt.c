@@ -460,9 +460,6 @@ void nmi_int_handler(void* opaque)
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
 
-    dev->vi.delay = dev->vi.next_vi = 5000;
-    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
-
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
@@ -506,9 +503,6 @@ void reset_hard_handler(void* opaque)
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
-
-    dev->vi.delay = dev->vi.next_vi = 5000;
-    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
 
     if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
     {

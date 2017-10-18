@@ -69,8 +69,8 @@ void poweron_vi(struct vi_controller* vi)
 {
     memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
     vi->field = 0;
-    vi->delay = vi->next_vi = 5000;
-    vi->count_per_scanline = 1500;
+    vi->delay = vi->next_vi = 0;
+    vi->count_per_scanline = 0;
 }
 
 void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
@@ -84,7 +84,8 @@ void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
         /* XXX: update current line number */
         cp0_update_count(vi->r4300);
 
-        vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
+        if (vi->regs[VI_V_SYNC_REG] != 0)
+            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
 
         /* wrap around VI_CURRENT_REG if needed */
         if (vi->regs[VI_CURRENT_REG] >= vi->regs[VI_V_SYNC_REG])
@@ -123,6 +124,19 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case VI_CURRENT_REG:
         clear_rcp_interrupt(vi->r4300, MI_INTR_VI);
         return;
+
+    case VI_V_SYNC_REG:
+        masked_write(&vi->regs[reg], value, mask);
+        vi->count_per_scanline = (vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1);
+        vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
+        if (vi->regs[VI_V_SYNC_REG] != 0 && vi->next_vi == 0)
+        {
+            const uint32_t* cp0_regs = r4300_cp0_regs(&vi->r4300->cp0);
+            cp0_update_count(vi->r4300);
+            vi->next_vi = cp0_regs[CP0_COUNT_REG] + vi->delay;
+            add_interrupt_event_count(&vi->r4300->cp0, VI_INT, vi->next_vi);
+        }
+        return;
     }
 
     masked_write(&vi->regs[reg], value, mask);
@@ -139,15 +153,8 @@ void vi_vertical_interrupt_event(void* opaque)
     /* toggle vi field if in interlaced mode */
     vi->field ^= (vi->regs[VI_STATUS_REG] >> 6) & 0x1;
 
-    vi->count_per_scanline = ((vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1));
-
     /* schedule next vertical interrupt */
-    vi->delay = (vi->regs[VI_V_SYNC_REG] == 0)
-            ? 500000
-            : (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
-
     vi->next_vi += vi->delay;
-
     add_interrupt_event_count(&vi->r4300->cp0, VI_INT, vi->next_vi);
 
     /* trigger interrupt */
