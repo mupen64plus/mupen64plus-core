@@ -15,5 +15,5 @@ matrix:
 before_build:
 - cmd: git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ../mupen64plus-win32-deps
 build:
-  project: projects/VisualStudio2013/mupen64plus-core.vcxproj
+  project: projects/VisualStudio2015/mupen64plus-core.vcxproj
   verbosity: minimal

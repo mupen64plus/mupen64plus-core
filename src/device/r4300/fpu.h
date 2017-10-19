@@ -44,7 +44,6 @@ static __inline double round(double x) { return floor(x + 0.5); }
 static __inline float  roundf(float x) { return (float)floor(x + 0.5); }
 static __inline double trunc(double x) { return (double)(int)x; }
 static __inline float  truncf(float x) { return (float)(int)x; }
-#define isnan _isnan
 #else
 #define M64P_FPU_INLINE static inline
 #include <fenv.h>
