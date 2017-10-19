@@ -66,8 +66,8 @@ static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaq
 
     if (address >= MM_CART_ROM) {
         if (address >= MM_CART_DOM3) {
-            /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart ??? */
-            RW(NULL, cart_dom3);
+            /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom (Paper Mario (U)) ??? */
+            RW(&dev->cart, cart_dom3);
         }
         else {
             /* 0x10000000 - 0x1fbfffff : dom1 addr2, cart rom */

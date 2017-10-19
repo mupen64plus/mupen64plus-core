@@ -212,11 +212,13 @@ unsigned int cart_dom2_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr
 
 unsigned int cart_dom3_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
-    return /* length / 8 */0x1000;
+    struct cart* cart = (struct cart*)opaque;
+    return cart_rom_dma_read(&cart->cart_rom, dram, dram_addr, cart_addr, length);
 }
 
 unsigned int cart_dom3_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
-    return /* length / 8 */0x1000;
+    struct cart* cart = (struct cart*)opaque;
+    return cart_rom_dma_write(&cart->cart_rom, dram, dram_addr, cart_addr, length);
 }
 
