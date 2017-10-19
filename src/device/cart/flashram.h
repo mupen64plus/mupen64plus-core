@@ -1,7 +1,8 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - cart_rom.c                                              *
+ *   Mupen64plus - flashram.h                                              *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,44 +20,49 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "cart_rom.h"
+#ifndef M64P_DEVICE_PI_FLASHRAM_H
+#define M64P_DEVICE_PI_FLASHRAM_H
 
-#include "pi_controller.h"
+#include <stdint.h>
 
-void init_cart_rom(struct cart_rom* cart_rom,
-                      uint8_t* rom, size_t rom_size)
+struct storage_backend_interface;
+
+enum { FLASHRAM_SIZE = 0x20000 };
+
+enum flashram_mode
 {
-    cart_rom->rom = rom;
-    cart_rom->rom_size = rom_size;
-}
+    FLASHRAM_MODE_NOPES = 0,
+    FLASHRAM_MODE_ERASE,
+    FLASHRAM_MODE_WRITE,
+    FLASHRAM_MODE_READ,
+    FLASHRAM_MODE_STATUS
+};
 
-void poweron_cart_rom(struct cart_rom* cart_rom)
+struct flashram
 {
-    cart_rom->last_write = 0;
-    cart_rom->rom_written = 0;
-}
+    enum flashram_mode mode;
+    uint64_t status;
+    unsigned int erase_offset;
+    unsigned int write_pointer;
 
+    void* storage;
+    const struct storage_backend_interface* istorage;
+    const uint8_t* dram;
+};
 
-void read_cart_rom(void* opaque, uint32_t address, uint32_t* value)
-{
-    struct pi_controller* pi = (struct pi_controller*)opaque;
-    uint32_t addr = rom_address(address);
+void init_flashram(struct flashram* flashram,
+                   void* storage,
+                   const struct storage_backend_interface* istorage,
+                   const uint8_t* dram);
 
-    if (pi->cart_rom.rom_written)
-    {
-        *value = pi->cart_rom.last_write;
-        pi->cart_rom.rom_written = 0;
-    }
-    else
-    {
-        *value = *(uint32_t*)(pi->cart_rom.rom + addr);
-    }
-}
+void poweron_flashram(struct flashram* flashram);
 
-void write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct pi_controller* pi = (struct pi_controller*)opaque;
-    pi->cart_rom.last_write = value & mask;
-    pi->cart_rom.rom_written = 1;
-}
+void format_flashram(uint8_t* flash);
 
+void read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
+void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int flashram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+
+#endif

@@ -251,13 +251,7 @@ void poweron_pif(struct pif* pif)
     *pif24 = sl(*pif24);
 
     for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        struct pif_channel* channel = &pif->channels[i];
-
-        disable_pif_channel(channel);
-
-        if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
-            channel->ijbd->poweron(channel->jbd);
-        }
+        disable_pif_channel(&pif->channels[i]);
     }
 }
 

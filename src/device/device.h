@@ -63,10 +63,10 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 #define MM_SI_REGS          UINT32_C(0x04800000)
 #define MM_DD_REGS          UINT32_C(0x05000000) /* dom2 addr1 */
 #define MM_DD_ROM           UINT32_C(0x06000000) /* dom1 addr1 */
-#define MM_FLASHRAM_STATUS  UINT32_C(0x08000000) /* dom2 addr2 */
-#define MM_FLASHRAM_COMMAND UINT32_C(0x08010000)
+#define MM_CART_DOM2        UINT32_C(0x08000000) /* dom2 addr2 */
 #define MM_CART_ROM         UINT32_C(0x10000000) /* dom1 addr2 */
 #define MM_PIF_MEM          UINT32_C(0x1fc00000)
+#define MM_CART_DOM3        UINT32_C(0x1fd00000) /* dom2 addr2 */
 
 /* Device structure is a container for the n64 submodules
  * It contains all state related to the emulated system. */
@@ -103,17 +103,20 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
-    /* pi */
-    size_t rom_size,
-    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-    void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* ri */
     size_t dram_size,
     /* si */
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
-    unsigned int vi_clock, unsigned int expected_refresh_rate);
+    unsigned int vi_clock, unsigned int expected_refresh_rate,
+    /* cart */
+    void* af_rtc_clock, const struct clock_backend_interface* iaf_rtc_clock,
+    size_t rom_size,
+    uint16_t eeprom_type,
+    void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
+    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+    void* sram_storage, const struct storage_backend_interface* isram_storage);
 
 /* Setup device such that it's state is
  * what it should be after power on.

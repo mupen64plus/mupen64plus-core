@@ -28,18 +28,15 @@
 #include "api/m64p_types.h"
 #include "backends/api/storage_backend.h"
 #include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
-#include "device/ri/ri_controller.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 
-static void flashram_command(struct pi_controller* pi, uint32_t command)
+static void flashram_command(struct flashram* flashram, uint32_t command)
 {
     unsigned int i;
-    struct flashram* flashram = &pi->flashram;
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
+    const uint8_t* dram = flashram->dram;
     uint8_t* mem = flashram->istorage->data(flashram->storage);
 
     switch (command & 0xff000000)
@@ -75,7 +72,7 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
         case FLASHRAM_MODE_WRITE:
         {
             for (i = 0; i < 128; ++i) {
-                mem[(flashram->erase_offset+i)^S8]= dram[(flashram->write_pointer+i)^S8];
+                mem[(flashram->erase_offset+i)^S8] = dram[(flashram->write_pointer+i)^S8];
             }
             flashram->istorage->save(flashram->storage);
         }
@@ -104,11 +101,12 @@ static void flashram_command(struct pi_controller* pi, uint32_t command)
 
 
 void init_flashram(struct flashram* flashram,
-                   void* storage,
-                   const struct storage_backend_interface* istorage)
+                   void* storage, const struct storage_backend_interface* istorage,
+                   const uint8_t* dram)
 {
     flashram->storage = storage;
     flashram->istorage = istorage;
+    flashram->dram = dram;
 }
 
 void poweron_flashram(struct flashram* flashram)
@@ -126,82 +124,67 @@ void format_flashram(uint8_t* flash)
 
 void read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
 {
-    struct pi_controller* pi = (struct pi_controller*)opaque;
+    struct flashram* flashram = (struct flashram*)opaque;
 
-    if ((pi->use_flashram == -1) || ((address & 0xffff) != 0))
-    {
-        DebugMessage(M64MSG_ERROR, "unknown read in read_flashram_status()");
-        return;
-    }
-
-    pi->use_flashram = 1;
-    *value = pi->flashram.status >> 32;
-}
-
-void write_flashram_status(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-}
-
-void read_flashram_command(void* opaque, uint32_t address, uint32_t* value)
-{
-    *value = 0;
+    *value = flashram->status >> 32;
 }
 
 void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    struct pi_controller* pi = (struct pi_controller*)opaque;
+    struct flashram* flashram = (struct flashram*)opaque;
 
-    if ((pi->use_flashram == -1) || ((address & 0xffff) != 0))
-    {
-        DebugMessage(M64MSG_ERROR, "unknown write in write_flashram_command()");
-        return;
-    }
-
-    pi->use_flashram = 1;
-    flashram_command(pi, value & mask);
+    flashram_command(flashram, value & mask);
 }
 
 
-void dma_read_flashram(struct pi_controller* pi)
+unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
-    unsigned int i, length;
-    struct flashram* flashram = &pi->flashram;
-    uint32_t* dram = pi->ri->rdram.dram;
-    uint8_t* mem = flashram->istorage->data(flashram->storage);
-    unsigned int dram_addr, cart_addr;
+    size_t i;
+    struct flashram* flashram = (struct flashram*)opaque;
+    const uint8_t* mem = flashram->istorage->data(flashram->storage);
+
+    /* XXX: different from cart_rom ? */
+    length = (length & UINT32_C(0x00ffffff)) + 1;
 
     switch (flashram->mode)
     {
     case FLASHRAM_MODE_STATUS:
-        dram[pi->regs[PI_DRAM_ADDR_REG]/4]   = (uint32_t)(flashram->status >> 32);
-        dram[pi->regs[PI_DRAM_ADDR_REG]/4+1] = (uint32_t)(flashram->status);
+        ((uint32_t*)dram)[dram_addr/4+0] = (uint32_t)(flashram->status >> 32);
+        ((uint32_t*)dram)[dram_addr/4+1] = (uint32_t)(flashram->status >>  0);
         break;
-    case FLASHRAM_MODE_READ:
-        length = (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1;
-        dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-        cart_addr = ((pi->regs[PI_CART_ADDR_REG]-0x08000000)&0xffff)*2;
 
-        for(i = 0; i < length; ++i)
-            ((uint8_t*)dram)[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+    case FLASHRAM_MODE_READ:
+        cart_addr = (cart_addr & 0xffff) * 2; // ???
+
+        for(i = 0; i < length; ++i) {
+            dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+        }
         break;
     default:
         DebugMessage(M64MSG_WARNING, "unknown dma_read_flashram: %x", flashram->mode);
         break;
     }
+
+    return /* length / 8 */0x1000;
 }
 
-void dma_write_flashram(struct pi_controller* pi)
+unsigned int flashram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
-    struct flashram* flashram = &pi->flashram;
+    struct flashram* flashram = (struct flashram*)opaque;
+
+    /* XXX: different from cart_rom ? */
+    length = (length & UINT32_C(0x00ffffff)) + 1;
 
     switch (flashram->mode)
     {
     case FLASHRAM_MODE_WRITE:
-        flashram->write_pointer = pi->regs[PI_DRAM_ADDR_REG];
+        flashram->write_pointer = dram_addr;
         break;
     default:
         DebugMessage(M64MSG_ERROR, "unknown dma_write_flashram: %x", flashram->mode);
         break;
     }
+
+    return /* length / 8 */0x1000;
 }
 

@@ -25,13 +25,58 @@
 #include "backends/api/joybus.h"
 
 #include "af_rtc.h"
+#include "cart_rom.h"
 #include "eeprom.h"
+#include "flashram.h"
+#include "sram.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+struct cic;
+struct r4300_core;
+struct rdram;
+struct storage_backend_interface;
 
 struct cart
 {
     struct af_rtc af_rtc;
+    struct cart_rom cart_rom;
     struct eeprom eeprom;
+    struct flashram flashram;
+    struct sram sram;
+
+    int use_flashram;
 };
+
+
+void init_cart(struct cart* cart,
+               /* AF-RTC */
+               void* af_rtc_clock, const struct clock_backend_interface* iaf_rtc_clock,
+               /* cart ROM */
+               uint8_t* rom, size_t rom_size,
+               struct r4300_core* r4300,
+               uint32_t* pi_status,
+               struct rdram* rdram, const struct cic* cic,
+               /* eeprom */
+               uint16_t eeprom_type,
+               void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
+               /* flashram */
+               void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+               /* sram */
+               void* sram_storage, const struct storage_backend_interface* isram_storage);
+
+void poweron_cart(struct cart* cart);
+
+void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value);
+void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t* value);
+void write_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+unsigned int cart_dom2_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int cart_dom2_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int cart_dom3_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int cart_dom3_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 
 extern const struct joybus_device_interface
     g_ijoybus_device_cart;

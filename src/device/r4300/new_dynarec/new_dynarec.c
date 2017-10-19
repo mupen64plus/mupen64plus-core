@@ -1700,17 +1700,17 @@ static void tlb_hacks()
         addr=0;
         break;
     }
-    u_int rom_addr=(u_int)g_dev.pi.cart_rom.rom;
+    u_int rom_addr=(u_int)g_dev.cart.cart_rom.rom;
     #ifdef ROM_COPY
     // Since memory_map is 32-bit, on 64-bit systems the rom needs to be
     // in the lower 4G of memory to use this hack.  Copy it if necessary.
-    if((void *)g_dev.pi.cart_rom.rom>(void *)0xffffffff) {
+    if((void *)g_dev.cart.cart_rom.rom>(void *)0xffffffff) {
       munmap(ROM_COPY, 67108864);
       if(mmap(ROM_COPY, 12582912,
               PROT_READ | PROT_WRITE,
               MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
               -1, 0) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
-      memcpy(ROM_COPY,g_dev.pi.cart_rom.rom,12582912);
+      memcpy(ROM_COPY,g_dev.cart.cart_rom.rom,12582912);
       rom_addr=(u_int)ROM_COPY;
     }
     #endif

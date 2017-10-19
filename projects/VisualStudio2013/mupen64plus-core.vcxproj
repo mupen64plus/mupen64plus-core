@@ -69,7 +69,10 @@
     <ClCompile Include="..\..\src\main\zip\zip.c" />
     <ClCompile Include="..\..\src\device\cart\af_rtc.c" />
     <ClCompile Include="..\..\src\device\cart\cart.c" />
+    <ClCompile Include="..\..\src\device\cart\cart_rom.c" />
     <ClCompile Include="..\..\src\device\cart\eeprom.c" />
+    <ClCompile Include="..\..\src\device\cart\flashram.c" />
+    <ClCompile Include="..\..\src\device\cart\sram.c" />
     <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
@@ -102,10 +105,7 @@
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
     <ClCompile Include="..\..\src\osd\screenshot.cpp" />
-    <ClCompile Include="..\..\src\device\pi\cart_rom.c" />
-    <ClCompile Include="..\..\src\device\pi\flashram.c" />
     <ClCompile Include="..\..\src\device\pi\pi_controller.c" />
-    <ClCompile Include="..\..\src\device\pi\sram.c" />
     <ClCompile Include="..\..\src\plugin\dummy_audio.c" />
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />
     <ClCompile Include="..\..\src\plugin\dummy_rsp.c" />
@@ -293,7 +293,10 @@
     <ClInclude Include="..\..\src\main\zip\zip.h" />
     <ClInclude Include="..\..\src\device\cart\af_rtc.h" />
     <ClInclude Include="..\..\src\device\cart\cart.h" />
+    <ClInclude Include="..\..\src\device\cart\cart_rom.h" />
     <ClInclude Include="..\..\src\device\cart\eeprom.h" />
+    <ClInclude Include="..\..\src\device\cart\flashram.h" />
+    <ClInclude Include="..\..\src\device\cart\sram.h" />
     <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
@@ -307,10 +310,7 @@
     <ClInclude Include="..\..\src\osd\OGLFT.h" />
     <ClInclude Include="..\..\src\osd\osd.h" />
     <ClInclude Include="..\..\src\osd\screenshot.h" />
-    <ClInclude Include="..\..\src\device\pi\cart_rom.h" />
-    <ClInclude Include="..\..\src\device\pi\flashram.h" />
     <ClInclude Include="..\..\src\device\pi\pi_controller.h" />
-    <ClInclude Include="..\..\src\device\pi\sram.h" />
     <ClInclude Include="..\..\src\plugin\dummy_audio.h" />
     <ClInclude Include="..\..\src\plugin\dummy_input.h" />
     <ClInclude Include="..\..\src\plugin\dummy_rsp.h" />

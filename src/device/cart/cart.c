@@ -24,15 +24,10 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 
+#include "device/ri/rdram.h"
+
 #include <stdint.h>
 #include <string.h>
-
-static void poweron_cart(void* jbd)
-{
-    struct cart* cart = (struct cart*)jbd;
-
-    poweron_af_rtc(&cart->af_rtc);
-}
 
 static void process_cart_command(void* jbd,
     const uint8_t* tx, const uint8_t* tx_buf,
@@ -93,7 +88,137 @@ static void process_cart_command(void* jbd,
 const struct joybus_device_interface
     g_ijoybus_device_cart =
 {
-    poweron_cart,
+    NULL,
     process_cart_command,
     NULL
 };
+
+void init_cart(struct cart* cart,
+               /* AF-RTC */
+               void* af_rtc_clock, const struct clock_backend_interface* iaf_rtc_clock,
+               /* cart ROM */
+               uint8_t* rom, size_t rom_size,
+               struct r4300_core* r4300,
+               uint32_t* pi_status,
+               struct rdram* rdram, const struct cic* cic,
+               /* eeprom */
+               uint16_t eeprom_type,
+               void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
+               /* flashram */
+               void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+               /* sram */
+               void* sram_storage, const struct storage_backend_interface* isram_storage)
+{
+    init_af_rtc(&cart->af_rtc,
+        af_rtc_clock, iaf_rtc_clock);
+
+    init_cart_rom(&cart->cart_rom,
+        rom, rom_size,
+        r4300,
+        pi_status,
+        rdram, cic);
+
+    init_eeprom(&cart->eeprom,
+        eeprom_type, eeprom_storage, ieeprom_storage);
+
+    init_flashram(&cart->flashram,
+        flashram_storage, iflashram_storage, (uint8_t*)rdram->dram);
+
+    init_sram(&cart->sram,
+        sram_storage, isram_storage);
+
+    cart->use_flashram = 0;
+}
+
+void poweron_cart(struct cart* cart)
+{
+    poweron_af_rtc(&cart->af_rtc);
+    poweron_cart_rom(&cart->cart_rom);
+    poweron_flashram(&cart->flashram);
+}
+
+void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value)
+{
+    struct cart* cart = (struct cart*)opaque;
+
+    if ((cart->use_flashram == -1) || ((address & 0xffff) != 0))
+    {
+        DebugMessage(M64MSG_ERROR, "unknown read in read_cart_dom2()");
+        return;
+    }
+    cart->use_flashram = 1;
+
+    read_flashram_status(&cart->flashram, address, value);
+}
+
+void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    struct cart* cart = (struct cart*)opaque;
+
+    if ((cart->use_flashram == -1) || ((address & 0xffff) != 0))
+    {
+        DebugMessage(M64MSG_ERROR, "unknown write in write_cart_dom2_()");
+        return;
+    }
+    cart->use_flashram = 1;
+
+    write_flashram_command(&cart->flashram, address, value, mask);
+}
+
+void read_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t* value)
+{
+    *value = 0;
+}
+
+void write_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+}
+
+unsigned int cart_dom2_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    struct cart* cart = (struct cart*)opaque;
+    unsigned int cycles;
+
+    if (cart->use_flashram != 1)
+    {
+        cycles = sram_dma_read(&cart->sram, dram, dram_addr, cart_addr, length);
+        cart->use_flashram = -1;
+    }
+    else
+    {
+        cycles = flashram_dma_read(&cart->flashram, dram, dram_addr, cart_addr, length);
+    }
+
+    return cycles;
+}
+
+unsigned int cart_dom2_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    struct cart* cart = (struct cart*)opaque;
+    unsigned int cycles;
+
+    if (cart->use_flashram != 1)
+    {
+        cycles = sram_dma_write(&cart->sram, dram, dram_addr, cart_addr, length);
+        cart->use_flashram = -1;
+    }
+    else
+    {
+        cycles = flashram_dma_write(&cart->flashram, dram, dram_addr, cart_addr, length);
+    }
+
+    return cycles;
+}
+
+unsigned int cart_dom3_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    struct cart* cart = (struct cart*)opaque;
+    return cart_rom_dma_read(&cart->cart_rom, dram, dram_addr, cart_addr, length);
+}
+
+unsigned int cart_dom3_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    struct cart* cart = (struct cart*)opaque;
+    return cart_rom_dma_write(&cart->cart_rom, dram, dram_addr, cart_addr, length);
+}
+

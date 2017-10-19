@@ -29,168 +29,82 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "device/ri/rdram_detection_hack.h"
 #include "device/ri/ri_controller.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-enum
-{
-    /* PI_STATUS - read */
-    PI_STATUS_DMA_BUSY  = 0x01,
-    PI_STATUS_IO_BUSY   = 0x02,
-    PI_STATUS_ERROR     = 0x04,
-
-    /* PI_STATUS - write */
-    PI_STATUS_RESET     = 0x01,
-    PI_STATUS_CLR_INTR  = 0x02
-};
 
 static void dma_pi_read(struct pi_controller* pi)
 {
-    /* XXX: end of domain is wrong ? */
-    if (pi->regs[PI_CART_ADDR_REG] >= 0x08000000 && pi->regs[PI_CART_ADDR_REG] < 0x08010000)
-    {
-        if (pi->use_flashram != 1)
-        {
-            dma_write_sram(pi);
-            pi->use_flashram = -1;
-        }
-        else
-        {
-            dma_write_flashram(pi);
-        }
+    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
+    uint32_t length = pi->regs[PI_RD_LEN_REG];
+    const uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
+
+    const struct pi_dma_handler* handler = NULL;
+    void* opaque = NULL;
+
+    pi->get_pi_dma_handler(pi->dev, cart_addr, &opaque, &handler);
+
+    if (handler == NULL) {
+        DebugMessage(M64MSG_WARNING, "Unknown PI DMA read: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", dram_addr, cart_addr, length);
+        return;
     }
-    else
-    {
-        DebugMessage(M64MSG_WARNING, "Unknown dma read in dma_pi_read()");
-    }
+
+    unsigned int cycles = handler->dma_read(opaque, dram, dram_addr, cart_addr, length);
 
     /* Mark DMA as busy */
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, 0x1000/*pi->regs[PI_RD_LEN_REG]*/); /* XXX: 0x1000 ??? */
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, cycles);
 }
 
 static void dma_pi_write(struct pi_controller* pi)
 {
-    unsigned int longueur, i;
-    uint32_t dram_address;
-    uint32_t rom_address;
-    uint8_t* dram;
-    const uint8_t* rom;
+    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
+    uint32_t length = pi->regs[PI_WR_LEN_REG];
+    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
 
-    if (pi->regs[PI_CART_ADDR_REG] < 0x10000000)
-    {
-        /* XXX: end of domain is wrong ? */
-        if (pi->regs[PI_CART_ADDR_REG] >= 0x08000000 && pi->regs[PI_CART_ADDR_REG] < 0x08010000)
-        {
-            if (pi->use_flashram != 1)
-            {
-                dma_read_sram(pi);
-                pi->use_flashram = -1;
-            }
-            else
-            {
-                dma_read_flashram(pi);
-            }
-        }
-        else if (pi->regs[PI_CART_ADDR_REG] >= 0x06000000 && pi->regs[PI_CART_ADDR_REG] < 0x08000000)
-        {
-        }
-        else
-        {
-            DebugMessage(M64MSG_WARNING, "Unknown dma write 0x%" PRIX32 " in dma_pi_write()", pi->regs[PI_CART_ADDR_REG]);
-        }
+    const struct pi_dma_handler* handler = NULL;
+    void* opaque = NULL;
 
-        /* mark DMA as busy */
-        pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+    pi->get_pi_dma_handler(pi->dev, cart_addr, &opaque, &handler);
 
-        /* schedule end of dma interrupt event */
-        cp0_update_count(pi->r4300);
-        add_interrupt_event(&pi->r4300->cp0, PI_INT, /*pi->regs[PI_WR_LEN_REG]*/0x1000); /* XXX: 0x1000 ??? */
-
+    if (handler == NULL) {
+        DebugMessage(M64MSG_WARNING, "Unknown PI DMA write: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", cart_addr, dram_addr, length);
         return;
     }
 
-    longueur = (pi->regs[PI_WR_LEN_REG] & 0xFFFFFE)+2;
-    dram_address = pi->regs[PI_DRAM_ADDR_REG] & 0x7FFFFF;
-    rom_address = (pi->regs[PI_CART_ADDR_REG] - 0x10000000) & 0x3ffffff;
-    dram = (uint8_t*)pi->ri->rdram.dram;
-    rom = pi->cart_rom.rom;
+    unsigned int cycles = handler->dma_write(opaque, dram, dram_addr, cart_addr, length);
 
-    if (rom_address + longueur < pi->cart_rom.rom_size)
-    {
-        for(i = 0; i < longueur; ++i)
-        {
-            dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
-        }
-    }
-    else
-    {
-        unsigned int diff = (pi->cart_rom.rom_size <= rom_address)
-            ? 0
-            : pi->cart_rom.rom_size - rom_address;
-
-        for (i = 0; i < diff; ++i)
-        {
-            dram[(dram_address+i)^S8] = rom[(rom_address+i)^S8];
-        }
-        for (; i < longueur; ++i)
-        {
-            dram[(dram_address+i)^S8] = 0;
-        }
-    }
-
-    invalidate_r4300_cached_code(pi->r4300, 0x80000000 + dram_address, longueur);
-    invalidate_r4300_cached_code(pi->r4300, 0xa0000000 + dram_address, longueur);
-
-    /* HACK: monitor PI DMA to trigger RDRAM size detection
-     * hack just before initial cart ROM loading. */
-    if (pi->regs[PI_CART_ADDR_REG] == 0x10001000)
-    {
-        force_detected_rdram_size_hack(&pi->ri->rdram, pi->cic);
-    }
-
-    /* mark both DMA and IO as busy */
-    pi->regs[PI_STATUS_REG] |=
-        PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY;
+    /* Mark DMA as busy */
+    pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, (longueur/8) + add_random_interrupt_time(pi->r4300));
+    add_interrupt_event(&pi->r4300->cp0, PI_INT, cycles);
 }
 
 
 void init_pi(struct pi_controller* pi,
-             uint8_t* rom, size_t rom_size,
-             void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-             void* sram_storage, const struct storage_backend_interface* isram_storage,
+             struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              struct r4300_core* r4300,
-             struct ri_controller* ri,
-             const struct cic* cic)
+             struct ri_controller* ri)
 {
-    init_cart_rom(&pi->cart_rom, rom, rom_size);
-    init_flashram(&pi->flashram, flashram_storage, iflashram_storage);
-    init_sram(&pi->sram, sram_storage, isram_storage);
-
-    pi->use_flashram = 0;
+    pi->dev = dev;
+    pi->get_pi_dma_handler = get_pi_dma_handler;
 
     pi->r4300 = r4300;
     pi->ri = ri;
-
-    pi->cic = cic;
 }
 
 void poweron_pi(struct pi_controller* pi)
 {
     memset(pi->regs, 0, PI_REGS_COUNT*sizeof(uint32_t));
-
-    poweron_cart_rom(&pi->cart_rom);
-    poweron_flashram(&pi->flashram);
 }
 
 void read_pi_regs(void* opaque, uint32_t address, uint32_t* value)

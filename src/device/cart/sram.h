@@ -1,8 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - flashram.h                                              *
+ *   Mupen64plus - sram.h                                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
- *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,50 +19,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_PI_FLASHRAM_H
-#define M64P_DEVICE_PI_FLASHRAM_H
+#ifndef M64P_DEVICE_PI_SRAM_H
+#define M64P_DEVICE_PI_SRAM_H
 
 #include <stdint.h>
 
-struct pi_controller;
 struct storage_backend_interface;
 
-enum { FLASHRAM_SIZE = 0x20000 };
+enum { SRAM_SIZE = 0x8000 };
 
-enum flashram_mode
+struct sram
 {
-    FLASHRAM_MODE_NOPES = 0,
-    FLASHRAM_MODE_ERASE,
-    FLASHRAM_MODE_WRITE,
-    FLASHRAM_MODE_READ,
-    FLASHRAM_MODE_STATUS
-};
-
-struct flashram
-{
-    enum flashram_mode mode;
-    uint64_t status;
-    unsigned int erase_offset;
-    unsigned int write_pointer;
-
     void* storage;
     const struct storage_backend_interface* istorage;
 };
 
-void init_flashram(struct flashram* flashram,
-                   void* storage,
-                   const struct storage_backend_interface* istorage);
+void format_sram(uint8_t* sram);
 
-void poweron_flashram(struct flashram* flashram);
+void init_sram(struct sram* sram,
+               void* storage, const struct storage_backend_interface* istorage);
 
-void format_flashram(uint8_t* flash);
-
-void read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
-void write_flashram_status(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-void read_flashram_command(void* opaque, uint32_t address, uint32_t* value);
-void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void dma_read_flashram(struct pi_controller* pi);
-void dma_write_flashram(struct pi_controller* pi);
+unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 
 #endif

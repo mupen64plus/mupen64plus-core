@@ -27,9 +27,8 @@
 
 #include "backends/api/storage_backend.h"
 #include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
-#include "device/ri/ri_controller.h"
 
+#define SRAM_ADDR_MASK UINT32_C(0x0000ffff)
 
 void format_sram(uint8_t* mem)
 {
@@ -43,35 +42,41 @@ void init_sram(struct sram* sram,
     sram->istorage = istorage;
 }
 
-void dma_write_sram(struct pi_controller* pi)
+unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     size_t i;
-    size_t length = (pi->regs[PI_RD_LEN_REG] & 0xffffff) + 1;
+    struct sram* sram = (struct sram*)opaque;
+    uint8_t* mem = sram->istorage->data(sram->storage);
 
-    uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] - 0x08000000;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
+    /* XXX: different from cart_rom ? */
+    length = (length & UINT32_C(0x00ffffff)) + 1;
+
+    cart_addr &= SRAM_ADDR_MASK;
 
     for (i = 0; i < length; ++i) {
         mem[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
     }
 
-    pi->sram.istorage->save(pi->sram.storage);
+    sram->istorage->save(sram->storage);
+
+    return /* length / 8 */0x1000;
 }
 
-void dma_read_sram(struct pi_controller* pi)
+unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     size_t i;
-    size_t length = (pi->regs[PI_WR_LEN_REG] & 0xffffff) + 1;
+    struct sram* sram = (struct sram*)opaque;
+    const uint8_t* mem = sram->istorage->data(sram->storage);
 
-    const uint8_t* mem = pi->sram.istorage->data(pi->sram.storage);
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
-    uint32_t cart_addr = (pi->regs[PI_CART_ADDR_REG] - 0x08000000) & 0xffff;
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
+    /* XXX: different from cart_rom ? */
+    length = (length & UINT32_C(0x00ffffff)) + 1;
+
+    cart_addr &= SRAM_ADDR_MASK;
 
     for (i = 0; i < length; ++i) {
         dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
     }
+
+    return /* length / 8 */0x1000;
 }
 

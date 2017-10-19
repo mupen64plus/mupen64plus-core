@@ -44,6 +44,46 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
+static unsigned int dd_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+static unsigned int dd_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+
+static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
+{
+#define RW(o, x) \
+    do { \
+    static const struct pi_dma_handler h = { x ## _dma_read, x ## _dma_write }; \
+    *opaque = (o); \
+    *handler = &h; \
+    } while(0)
+
+    if (address >= MM_CART_ROM) {
+        if (address >= MM_CART_DOM3) {
+            /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom (Paper Mario (U)) ??? */
+            RW(&dev->cart, cart_dom3);
+        }
+        else {
+            /* 0x10000000 - 0x1fbfffff : dom1 addr2, cart rom */
+            RW(&dev->cart.cart_rom, cart_rom);
+        }
+    }
+    else if (address >= MM_CART_DOM2) {
+        /* 0x08000000 - 0x0fffffff : dom2 addr2, cart save */
+        RW(&dev->cart, cart_dom2);
+    }
+    else if (address >= MM_DD_ROM) {
+        /* 0x06000000 - 0x07ffffff : dom1 addr1, dd rom */
+        RW(NULL, dd_rom);
+    }
+#undef RW
+}
 
 void init_device(struct device* dev,
     /* memory */
@@ -56,17 +96,20 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
-    /* pi */
-    size_t rom_size,
-    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-    void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* ri */
     size_t dram_size,
     /* si */
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
-    unsigned int vi_clock, unsigned int expected_refresh_rate)
+    unsigned int vi_clock, unsigned int expected_refresh_rate,
+    /* cart */
+    void* af_rtc_clock, const struct clock_backend_interface* iaf_rtc_clock,
+    size_t rom_size,
+    uint16_t eeprom_type,
+    void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
+    void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+    void* sram_storage, const struct storage_backend_interface* isram_storage)
 {
     struct interrupt_handler interrupt_handlers[] = {
         { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
@@ -104,9 +147,9 @@ void init_device(struct device* dev,
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
         { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
-        { A(MM_FLASHRAM_STATUS, 0xffff), M64P_MEM_FLASHRAMSTAT, { &dev->pi, RW(flashram_status)  } },
-        { A(MM_FLASHRAM_COMMAND, 0xffff), M64P_MEM_NOTHING, { &dev->pi, RW(flashram_command) } },
-        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->pi, RW(cart_rom) } },
+        { A(MM_CART_DOM2, 0xffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, R(cart_dom2), W(cart_dom2_dummy)  } },
+        { A(MM_CART_DOM2 + 0x10000, 0xffff), M64P_MEM_NOTHING, { &dev->cart, R(cart_dom2_dummy), W(cart_dom2) } },
+        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };
 
@@ -123,10 +166,8 @@ void init_device(struct device* dev,
     init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
     init_pi(&dev->pi,
-            (uint8_t*)base + MM_CART_ROM, rom_size,
-            flashram_storage, iflashram_storage,
-            sram_storage, isram_storage,
-            &dev->r4300, &dev->ri, &dev->si.pif.cic);
+            dev, get_pi_dma_handler,
+            &dev->r4300, &dev->ri);
     init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
         (uint8_t*)base + MM_PIF_MEM,
@@ -134,10 +175,22 @@ void init_device(struct device* dev,
         (uint8_t*)base + MM_CART_ROM + 0x40,
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
+
+    init_cart(&dev->cart,
+            af_rtc_clock, iaf_rtc_clock,
+            (uint8_t*)base + MM_CART_ROM, rom_size,
+            &dev->r4300,
+            &dev->pi.regs[PI_STATUS_REG],
+            &dev->ri.rdram, &dev->si.pif.cic,
+            eeprom_type, eeprom_storage, ieeprom_storage,
+            flashram_storage, iflashram_storage,
+            sram_storage, isram_storage);
 }
 
 void poweron_device(struct device* dev)
 {
+    size_t i;
+
     poweron_r4300(&dev->r4300);
     poweron_rdp(&dev->dp);
     poweron_rsp(&dev->sp);
@@ -146,6 +199,17 @@ void poweron_device(struct device* dev)
     poweron_ri(&dev->ri);
     poweron_si(&dev->si);
     poweron_vi(&dev->vi);
+
+    poweron_cart(&dev->cart);
+
+    /* poweron for controllers */
+    for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+        struct pif_channel* channel = &dev->si.pif.channels[i];
+
+        if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
+            channel->ijbd->poweron(channel->jbd);
+        }
+    }
 }
 
 void run_device(struct device* dev)

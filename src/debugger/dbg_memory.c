@@ -295,7 +295,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RSPMEM:
       return g_dev.sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
-      return *((uint32 *)(g_dev.pi.cart_rom.rom + rom_address(addr)));
+      return *((uint32 *)(g_dev.cart.cart_rom.rom + rom_address(addr)));
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
