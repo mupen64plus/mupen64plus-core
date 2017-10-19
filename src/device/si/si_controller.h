@@ -30,9 +30,9 @@ struct r4300_core;
 struct ri_controller;
 struct joybus_device_interface;
 
-enum
+enum si_dma_dir
 {
-    SI_NONE,
+    SI_NO_DMA,
     SI_DMA_READ,
     SI_DMA_WRITE
 };
@@ -52,13 +52,13 @@ enum si_registers
 struct si_controller
 {
     uint32_t regs[SI_REGS_COUNT];
+    unsigned char dma_dir;
 
     struct pif pif;
 
     struct r4300_core* r4300;
     struct ri_controller* ri;
 
-    uint32_t si_type;
 };
 
 static uint32_t si_reg(uint32_t address)
