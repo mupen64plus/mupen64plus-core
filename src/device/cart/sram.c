@@ -48,9 +48,6 @@ unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr
     struct sram* sram = (struct sram*)opaque;
     uint8_t* mem = sram->istorage->data(sram->storage);
 
-    /* XXX: different from cart_rom ? */
-    length = (length & UINT32_C(0x00ffffff)) + 1;
-
     cart_addr &= SRAM_ADDR_MASK;
 
     for (i = 0; i < length; ++i) {
@@ -67,9 +64,6 @@ unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uin
     size_t i;
     struct sram* sram = (struct sram*)opaque;
     const uint8_t* mem = sram->istorage->data(sram->storage);
-
-    /* XXX: different from cart_rom ? */
-    length = (length & UINT32_C(0x00ffffff)) + 1;
 
     cart_addr &= SRAM_ADDR_MASK;
 

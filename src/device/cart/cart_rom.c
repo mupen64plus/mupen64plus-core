@@ -96,9 +96,6 @@ unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     struct cart_rom* cart_rom = (struct cart_rom*)opaque;
     const uint8_t* mem = cart_rom->rom;
 
-    /* XXX: why only for cart rom ? */
-    length = (length & UINT32_C(0x00fffffe)) + 2;
-
     /* HACK: monitor PI DMA to trigger RDRAM size detection
      * hack just before initial cart ROM loading. */
     if (cart_addr == 0x10001000)
