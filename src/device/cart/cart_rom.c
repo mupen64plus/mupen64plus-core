@@ -26,7 +26,6 @@
 #include "api/m64p_types.h"
 
 #include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/rdram_detection_hack.h"
 
@@ -39,14 +38,12 @@
 void init_cart_rom(struct cart_rom* cart_rom,
                    uint8_t* rom, size_t rom_size,
                    struct r4300_core* r4300,
-                   uint32_t* pi_status,
                    struct rdram* rdram, const struct cic* cic)
 {
     cart_rom->rom = rom;
     cart_rom->rom_size = rom_size;
 
     cart_rom->r4300 = r4300;
-    cart_rom->pi_status = pi_status;
     cart_rom->rdram = rdram;
     cart_rom->cic = cic;
 }

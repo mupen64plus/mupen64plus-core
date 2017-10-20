@@ -34,6 +34,18 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+enum
+{
+    /* PI_STATUS - read */
+    PI_STATUS_DMA_BUSY  = 0x01,
+    PI_STATUS_IO_BUSY   = 0x02,
+    PI_STATUS_ERROR     = 0x04,
+
+    /* PI_STATUS - write */
+    PI_STATUS_RESET     = 0x01,
+    PI_STATUS_CLR_INTR  = 0x02
+};
+
 
 static void dma_pi_read(struct pi_controller* pi)
 {
