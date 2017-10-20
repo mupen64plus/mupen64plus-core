@@ -121,13 +121,8 @@ void si_end_of_dma_event(void* opaque)
 {
     struct si_controller* si = (struct si_controller*)opaque;
     size_t i;
-    uint32_t dram_addr = si->regs[SI_DRAM_ADDR_REG];
-
     /* DRAM address must be word-aligned */
-    if (dram_addr & 0x3) {
-        DebugMessage(M64MSG_ERROR, "Unaligned SI DMA DRAM address: %08x", dram_addr);
-        return;
-    }
+    uint32_t dram_addr = si->regs[SI_DRAM_ADDR_REG] & UINT32_C(0xFFFFFFFC);
 
     uint32_t* pif_ram = (uint32_t*)si->pif.ram;
     uint32_t* dram = (uint32_t*)(&si->ri->rdram.dram[rdram_dram_address(dram_addr)]);
