@@ -2751,6 +2751,7 @@ static void do_readstub(int n)
     ftable=(int)read_dword_new;
 
   emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(i_regmap,CCREG);
@@ -2821,6 +2822,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     ftable=(int)read_dword_new;
 
   emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(regmap,CCREG);
@@ -2852,7 +2854,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
 
     int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_movimm(addr-imm[i],real_rs);
+      emit_addimm(rs,-imm[i],real_rs);
     if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
@@ -2920,6 +2922,7 @@ static void do_writestub(int n)
     emit_writeword(r?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
   }
 
+  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(i_regmap,CCREG);
@@ -2986,6 +2989,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writeword(target?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
   }
 
+  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(regmap,CCREG);
@@ -3017,7 +3021,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
 
     int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_movimm(addr-imm[i],real_rs);
+      emit_addimm(rs,-imm[i],real_rs);
     if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
