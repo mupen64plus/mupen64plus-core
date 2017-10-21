@@ -30,6 +30,8 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <api/m64p_plugin.h>
+#include <api/callbacks.h>
 
 /* XXX: this is an abuse of the Zilmar Spec normally this value is reserved */
 enum {
@@ -44,6 +46,8 @@ enum {
 enum { PAK_SWITCH_DELAY = 20 };
 enum { GB_CART_SWITCH_DELAY = 20 };
 
+int PrevControlPlugin[4];
+
 static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask)
 {
     return ((input & mask) == 0)
@@ -56,19 +60,48 @@ static uint32_t input_plugin_get_input(void* opaque)
 
     BUTTONS keys = { 0 };
 
+    int hasPluginStateChanged = 0;
+    static int switchToNextPak[4] = {0};
+    static int switchToSpecificPak[4] = {0};
+
+    if(PrevControlPlugin[cin_compat->control_id] != Controls[cin_compat->control_id].Plugin) {
+        PrevControlPlugin[cin_compat->control_id] = Controls[cin_compat->control_id].Plugin;
+        hasPluginStateChanged = 1;
+        switchToSpecificPak[cin_compat->control_id] = 1;
+    }
+
     if (input.getKeys) {
         input.getKeys(cin_compat->control_id, &keys);
     }
 
-    /* disconnect current pak (if any) immediately after "pak switch" button is released */
     if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
+        hasPluginStateChanged = 1;
+        switchToNextPak[cin_compat->control_id] = 1;
+    }
+
+    /* disconnect current pak (if any) immediately after "pak switch" button is released or
+     * the input plugin has changed the pak type*/
+    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON) || hasPluginStateChanged) {
         change_pak(cin_compat->cont, NULL, NULL);
         cin_compat->pak_switch_delay = PAK_SWITCH_DELAY;
     }
 
+    if(cin_compat->pak_switch_delay > 0) {
+        --cin_compat->pak_switch_delay;
+    }
+
     /* switch to next pak after switch delay has expired */
-    if (cin_compat->pak_switch_delay > 0 && --cin_compat->pak_switch_delay == 0) {
-        main_switch_pak(cin_compat->control_id);
+    if (cin_compat->pak_switch_delay == 0) {
+
+        if (switchToNextPak[cin_compat->control_id]) {
+            main_switch_next_pak(cin_compat->control_id);
+            switchToNextPak[cin_compat->control_id] = 0;
+        }
+        else if (switchToSpecificPak[cin_compat->control_id] &&
+                Controls[cin_compat->control_id].Plugin != PLUGIN_NONE) {
+            main_switch_specific_pak(cin_compat->control_id, Controls[cin_compat->control_id].Plugin);
+            switchToSpecificPak[cin_compat->control_id] = 0;
+        }
     }
 
     if (cin_compat->gb_cart_switch_enabled) {

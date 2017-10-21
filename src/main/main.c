@@ -122,6 +122,7 @@ enum { PAK_MAX_SIZE = 4 };
 static size_t l_paks_idx[GAME_CONTROLLERS_COUNT];
 static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
 static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
+static size_t l_pak_type_idx[6];
 
 /*********************************************************************************************************
 * static functions
@@ -858,7 +859,7 @@ void new_vi(void)
     pause_loop();
 }
 
-void main_switch_pak(int control_id)
+void main_switch_next_pak(int control_id)
 {
     struct game_controller* cont = &g_dev.controllers[control_id];
 
@@ -866,6 +867,22 @@ void main_switch_pak(int control_id)
         ++l_paks_idx[control_id] >= PAK_MAX_SIZE) {
         l_paks_idx[control_id] = 0;
     }
+
+    change_pak(cont, l_paks[control_id][l_paks_idx[control_id]], l_ipaks[l_paks_idx[control_id]]);
+
+    if (cont->ipak != NULL) {
+        DebugMessage(M64MSG_INFO, "Controller %u pak changed to Next: %s", control_id, cont->ipak->name);
+    }
+    else {
+        DebugMessage(M64MSG_INFO, "Removing pak from controller %u", control_id);
+    }
+}
+
+
+void main_switch_specific_pak(int control_id, int pakType)
+{
+    struct game_controller* cont = &g_dev.controllers[control_id];
+    l_paks_idx[control_id] = l_pak_type_idx[pakType];
 
     change_pak(cont, l_paks[control_id][l_paks_idx[control_id]], l_ipaks[l_paks_idx[control_id]]);
 
@@ -1122,16 +1139,27 @@ m64p_error main_run(void)
 
     /* Check paks compatibility for current ROM */
     k = 0;
+
+    l_pak_type_idx[PLUGIN_MEMPAK] = k;
+    l_pak_type_idx[PLUGIN_NONE] = k;
+    l_pak_type_idx[PLUGIN_TRANSFER_PAK] = k;
+    l_pak_type_idx[PLUGIN_RUMBLE_PAK] = k;
+    l_pak_type_idx[PLUGIN_RAW] = k;
+    l_ipaks[k++] = NULL;
+
     if (ROM_SETTINGS.mempak) {
+        l_pak_type_idx[PLUGIN_MEMPAK] = k;
         l_ipaks[k++] = &g_imempak;
     }
     if (ROM_SETTINGS.rumble) {
+        l_pak_type_idx[PLUGIN_RUMBLE_PAK] = k;
+        l_pak_type_idx[PLUGIN_RAW] = k;
         l_ipaks[k++] = &g_irumblepak;
     }
     if (ROM_SETTINGS.transferpak) {
-        l_ipaks[k++] = &g_itransferpak;
+        l_pak_type_idx[PLUGIN_TRANSFER_PAK] = k;
+        l_ipaks[k] = &g_itransferpak;
     }
-    l_ipaks[k] = NULL;
 
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);
@@ -1230,8 +1258,6 @@ m64p_error main_run(void)
                     if (Controls[i].Plugin == PLUGIN_NONE) {
                         l_paks_idx[i] = k;
                     }
-
-                    break;
                 }
             }
 
