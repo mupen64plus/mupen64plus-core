@@ -56,7 +56,6 @@ void init_cart(struct cart* cart,
                /* cart ROM */
                uint8_t* rom, size_t rom_size,
                struct r4300_core* r4300,
-               uint32_t* pi_status,
                struct rdram* rdram, const struct cic* cic,
                /* eeprom */
                uint16_t eeprom_type,

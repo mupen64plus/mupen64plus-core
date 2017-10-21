@@ -38,42 +38,6 @@ enum
     SI_STATUS_INTERRUPT = 0x1000,
 };
 
-static void dma_si_write(struct si_controller* si)
-{
-    int i;
-
-    if (si->regs[SI_PIF_ADDR_WR64B_REG] != 0x1FC007C0)
-    {
-        DebugMessage(M64MSG_ERROR, "dma_si_write(): unknown SI use");
-        return;
-    }
-
-    for (i = 0; i < PIF_RAM_SIZE; i += 4)
-    {
-        *((uint32_t*)(&si->pif.ram[i])) = sl(si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4]);
-    }
-
-    cp0_update_count(si->r4300);
-    si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
-}
-
-static void dma_si_read(struct si_controller* si)
-{
-    if (si->regs[SI_PIF_ADDR_RD64B_REG] != 0x1FC007C0)
-    {
-        DebugMessage(M64MSG_ERROR, "dma_si_read(): unknown SI use");
-        return;
-    }
-
-    update_pif_ram(si);
-
-    cp0_update_count(si->r4300);
-    si->regs[SI_STATUS_REG] |= SI_STATUS_RD_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
-}
-
-
 void init_si(struct si_controller* si,
              uint8_t* pif_base,
              void* jbds[PIF_CHANNELS_COUNT],
@@ -94,6 +58,7 @@ void init_si(struct si_controller* si,
 void poweron_si(struct si_controller* si)
 {
     memset(si->regs, 0, SI_REGS_COUNT*sizeof(uint32_t));
+    si->dma_dir = SI_NO_DMA;
 
     poweron_pif(&si->pif);
 }
@@ -119,16 +84,33 @@ void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         break;
 
     case SI_PIF_ADDR_RD64B_REG:
-        masked_write(&si->regs[SI_PIF_ADDR_RD64B_REG], value, mask);
-        dma_si_read(si);
-        break;
-
     case SI_PIF_ADDR_WR64B_REG:
-        masked_write(&si->regs[SI_PIF_ADDR_WR64B_REG], value, mask);
-        dma_si_write(si);
+        masked_write(&si->regs[reg], value, mask);
+
+        if ((si->regs[reg] & 0x1fffffff) != 0x1fc007c0) {
+            DebugMessage(M64MSG_ERROR, "Unknown SI DMA PIF address: %08x", si->regs[reg]);
+            return;
+        }
+
+        /* if DMA already busy, error, and ignore request */
+        if (si->regs[SI_STATUS_REG] & SI_STATUS_DMA_BUSY) {
+            si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_ERROR;
+            return;
+        }
+
+        /* rd64b (1) -> dma_read (1), wr64b (4) -> dma_write (2) */
+        si->dma_dir = (reg == SI_PIF_ADDR_RD64B_REG)
+            ? SI_DMA_READ
+            : SI_DMA_WRITE;
+            //(enum si_dma_dir)(1 + (reg >> 2));
+        si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
+
+        cp0_update_count(si->r4300);
+        add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
         break;
 
     case SI_STATUS_REG:
+        /* clear si interrupt */
         si->regs[SI_STATUS_REG] &= ~SI_STATUS_INTERRUPT;
         clear_rcp_interrupt(si->r4300, MI_INTR_SI);
         break;
@@ -138,22 +120,37 @@ void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 void si_end_of_dma_event(void* opaque)
 {
     struct si_controller* si = (struct si_controller*)opaque;
+    size_t i;
+    /* DRAM address must be word-aligned */
+    uint32_t dram_addr = si->regs[SI_DRAM_ADDR_REG] & UINT32_C(0xFFFFFFFC);
 
-    if (si->regs[SI_STATUS_REG] & SI_STATUS_DMA_BUSY)
-    {
+    uint32_t* pif_ram = (uint32_t*)si->pif.ram;
+    uint32_t* dram = (uint32_t*)(&si->ri->rdram.dram[rdram_dram_address(dram_addr)]);
+
+    /* DRAM -> PIF : copy data to PIF RAM and let start the PIF processing */
+    if (si->dma_dir == SI_DMA_WRITE) {
+        for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
+            pif_ram[i] = sl(dram[i]);
+        }
+
         process_pif_ram(si);
     }
-    else if (si->regs[SI_STATUS_REG] & SI_STATUS_RD_BUSY)
-    {
-        int i;
-        for (i = 0; i < PIF_RAM_SIZE; i += 4)
-        {
-            si->ri->rdram.dram[(si->regs[SI_DRAM_ADDR_REG]+i)/4] = sl(*(uint32_t*)(&si->pif.ram[i]));
+    /* PIF -> DRAM : gather results from PIF and copy to RDRAM */
+    else if (si->dma_dir == SI_DMA_READ) {
+        update_pif_ram(si);
+
+        for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
+            dram[i] = sl(pif_ram[i]);
         }
+    } else {
+        /* shouldn't happen except potentially when loading an old savestate */
     }
 
-    /* trigger SI interrupt */
-    si->regs[SI_STATUS_REG] &= ~(SI_STATUS_DMA_BUSY | SI_STATUS_RD_BUSY);
+    /* end DMA */
+    si->dma_dir = SI_NO_DMA;
+    si->regs[SI_STATUS_REG] &= ~SI_STATUS_DMA_BUSY;
+
+    /* raise si interrupt */
     si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
     raise_rcp_interrupt(si->r4300, MI_INTR_SI);
 }

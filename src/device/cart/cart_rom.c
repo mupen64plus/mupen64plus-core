@@ -26,7 +26,6 @@
 #include "api/m64p_types.h"
 
 #include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/rdram_detection_hack.h"
 
@@ -39,14 +38,12 @@
 void init_cart_rom(struct cart_rom* cart_rom,
                    uint8_t* rom, size_t rom_size,
                    struct r4300_core* r4300,
-                   uint32_t* pi_status,
                    struct rdram* rdram, const struct cic* cic)
 {
     cart_rom->rom = rom;
     cart_rom->rom_size = rom_size;
 
     cart_rom->r4300 = r4300;
-    cart_rom->pi_status = pi_status;
     cart_rom->rdram = rdram;
     cart_rom->cic = cic;
 }
@@ -96,9 +93,6 @@ unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     struct cart_rom* cart_rom = (struct cart_rom*)opaque;
     const uint8_t* mem = cart_rom->rom;
 
-    /* XXX: why only for cart rom ? */
-    length = (length & UINT32_C(0x00fffffe)) + 2;
-
     /* HACK: monitor PI DMA to trigger RDRAM size detection
      * hack just before initial cart ROM loading. */
     if (cart_addr == 0x10001000)
@@ -132,9 +126,6 @@ unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     /* invalidate cached code */
     invalidate_r4300_cached_code(cart_rom->r4300, 0x80000000 + dram_addr, length);
     invalidate_r4300_cached_code(cart_rom->r4300, 0xa0000000 + dram_addr, length);
-
-    /* mark IO_BUSY */
-    *cart_rom->pi_status |= PI_STATUS_IO_BUSY;
 
     return (length / 8) + add_random_interrupt_time(cart_rom->r4300);
 }

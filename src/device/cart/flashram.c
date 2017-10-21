@@ -143,9 +143,6 @@ unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     struct flashram* flashram = (struct flashram*)opaque;
     const uint8_t* mem = flashram->istorage->data(flashram->storage);
 
-    /* XXX: different from cart_rom ? */
-    length = (length & UINT32_C(0x00ffffff)) + 1;
-
     switch (flashram->mode)
     {
     case FLASHRAM_MODE_STATUS:
@@ -171,9 +168,6 @@ unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
 unsigned int flashram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     struct flashram* flashram = (struct flashram*)opaque;
-
-    /* XXX: different from cart_rom ? */
-    length = (length & UINT32_C(0x00ffffff)) + 1;
 
     switch (flashram->mode)
     {

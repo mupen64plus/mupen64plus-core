@@ -34,12 +34,24 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+enum
+{
+    /* PI_STATUS - read */
+    PI_STATUS_DMA_BUSY  = 0x01,
+    PI_STATUS_IO_BUSY   = 0x02,
+    PI_STATUS_ERROR     = 0x04,
+
+    /* PI_STATUS - write */
+    PI_STATUS_RESET     = 0x01,
+    PI_STATUS_CLR_INTR  = 0x02
+};
+
 
 static void dma_pi_read(struct pi_controller* pi)
 {
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-    uint32_t length = pi->regs[PI_RD_LEN_REG];
+    uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     const uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
 
     const struct pi_dma_handler* handler = NULL;
@@ -66,7 +78,7 @@ static void dma_pi_write(struct pi_controller* pi)
 {
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
-    uint32_t length = pi->regs[PI_WR_LEN_REG];
+    uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
 
     const struct pi_dma_handler* handler = NULL;
@@ -135,6 +147,8 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case PI_STATUS_REG:
         if (value & mask & 2)
             clear_rcp_interrupt(pi->r4300, MI_INTR_PI);
+        if (value & mask & 1)
+            pi->regs[PI_STATUS_REG] = 0;
         return;
 
     case PI_BSD_DOM1_LAT_REG:
@@ -155,6 +169,6 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
-    pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
+    pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
     raise_rcp_interrupt(pi->r4300, MI_INTR_PI);
 }
