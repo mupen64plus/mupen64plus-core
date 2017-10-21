@@ -35,7 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\device\ai\ai_controller.c" />
     <ClCompile Include="..\..\src\api\callbacks.c" />
     <ClCompile Include="..\..\src\api\common.c" />
     <ClCompile Include="..\..\src\api\config.c" />
@@ -50,6 +49,19 @@
     <ClCompile Include="..\..\src\debugger\dbg_debugger.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
     <ClCompile Include="..\..\src\debugger\dbg_memory.c" />
+    <ClCompile Include="..\..\src\device\ai\ai_controller.c" />
+    <ClCompile Include="..\..\src\device\cart\af_rtc.c" />
+    <ClCompile Include="..\..\src\device\cart\cart.c" />
+    <ClCompile Include="..\..\src\device\cart\cart_rom.c" />
+    <ClCompile Include="..\..\src\device\cart\eeprom.c" />
+    <ClCompile Include="..\..\src\device\cart\flashram.c" />
+    <ClCompile Include="..\..\src\device\cart\sram.c" />
+    <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
+    <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
+    <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
     <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\device\device.c" />
@@ -67,18 +79,6 @@
     <ClCompile Include="..\..\src\main\zip\ioapi.c" />
     <ClCompile Include="..\..\src\main\zip\unzip.c" />
     <ClCompile Include="..\..\src\main\zip\zip.c" />
-    <ClCompile Include="..\..\src\device\cart\af_rtc.c" />
-    <ClCompile Include="..\..\src\device\cart\cart.c" />
-    <ClCompile Include="..\..\src\device\cart\cart_rom.c" />
-    <ClCompile Include="..\..\src\device\cart\eeprom.c" />
-    <ClCompile Include="..\..\src\device\cart\flashram.c" />
-    <ClCompile Include="..\..\src\device\cart\sram.c" />
-    <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
-    <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
-    <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
-    <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
-    <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
-    <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
     <ClCompile Include="..\..\src\device\memory\memory.c" />
     <ClCompile Include="..\..\src\osal\dynamiclib_unix.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -243,7 +243,6 @@
     <ClCompile Include="..\..\src\device\vi\vi_controller.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\device\ai\ai_controller.h" />
     <ClInclude Include="..\..\src\api\callbacks.h" />
     <ClInclude Include="..\..\src\api\config.h" />
     <ClInclude Include="..\..\src\api\debugger.h" />
@@ -271,6 +270,19 @@
     <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h" />
     <ClInclude Include="..\..\src\debugger\dbg_memory.h" />
     <ClInclude Include="..\..\src\debugger\dbg_types.h" />
+    <ClInclude Include="..\..\src\device\ai\ai_controller.h" />
+    <ClInclude Include="..\..\src\device\cart\af_rtc.h" />
+    <ClInclude Include="..\..\src\device\cart\cart.h" />
+    <ClInclude Include="..\..\src\device\cart\cart_rom.h" />
+    <ClInclude Include="..\..\src\device\cart\eeprom.h" />
+    <ClInclude Include="..\..\src\device\cart\flashram.h" />
+    <ClInclude Include="..\..\src\device\cart\sram.h" />
+    <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
+    <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
+    <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />
     <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\device\device.h" />
@@ -291,18 +303,6 @@
     <ClInclude Include="..\..\src\main\zip\ioapi.h" />
     <ClInclude Include="..\..\src\main\zip\unzip.h" />
     <ClInclude Include="..\..\src\main\zip\zip.h" />
-    <ClInclude Include="..\..\src\device\cart\af_rtc.h" />
-    <ClInclude Include="..\..\src\device\cart\cart.h" />
-    <ClInclude Include="..\..\src\device\cart\cart_rom.h" />
-    <ClInclude Include="..\..\src\device\cart\eeprom.h" />
-    <ClInclude Include="..\..\src\device\cart\flashram.h" />
-    <ClInclude Include="..\..\src\device\cart\sram.h" />
-    <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
-    <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
-    <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
-    <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
-    <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
-    <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />
     <ClInclude Include="..\..\src\device\memory\memory.h" />
     <ClInclude Include="..\..\src\osal\dynamiclib.h" />
     <ClInclude Include="..\..\src\osal\files.h" />

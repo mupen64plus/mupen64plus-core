@@ -465,19 +465,7 @@ void nmi_int_handler(void* opaque)
     // set ErrorEPC with the last instruction address
     cp0_regs[CP0_ERROREPC_REG] = *r4300_pc(r4300);
     // reset the r4300 internal state
-    if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
-    {
-#ifdef NEW_DYNAREC
-        if (r4300->emumode == EMUMODE_DYNAREC)
-            invalidate_all_pages();
-        else
-#endif
-        {
-            // clear all the compiled instruction blocks and re-initialize
-            free_blocks(r4300);
-            init_blocks(r4300);
-        }
-    }
+    invalidate_r4300_cached_code(r4300, 0, 0);
     // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
     if(r4300->delay_slot==1 || r4300->delay_slot==3)
     {
@@ -503,19 +491,7 @@ void reset_hard_handler(void* opaque)
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
-
-    if (r4300->emumode != EMUMODE_PURE_INTERPRETER)
-    {
-#ifdef NEW_DYNAREC
-        if (r4300->emumode == EMUMODE_DYNAREC)
-            invalidate_all_pages();
-        else
-#endif
-        {
-            free_blocks(r4300);
-            init_blocks(r4300);
-        }
-    }
+    invalidate_r4300_cached_code(r4300, 0, 0);
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
 

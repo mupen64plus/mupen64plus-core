@@ -471,11 +471,5 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc)
 {
     generic_jump_to(r4300, pc);
-
-#ifdef NEW_DYNAREC
-    if (r4300->emumode == EMUMODE_DYNAREC)
-        invalidate_all_pages();
-    else
-#endif
-        invalidate_r4300_cached_code(r4300, 0, 0);
+    invalidate_r4300_cached_code(r4300, 0, 0);
 }

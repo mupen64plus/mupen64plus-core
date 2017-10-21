@@ -92,7 +92,6 @@ struct new_dynarec_hot_state
 extern unsigned int stop_after_jal;
 extern unsigned int using_tlb;
 
-void invalidate_all_pages(void);
 void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size);
 void new_dynarec_init(void);
 void new_dyna_start(void);

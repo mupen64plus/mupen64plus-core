@@ -2252,30 +2252,9 @@ void invalidate_block(u_int block)
   #endif
 }
 
-void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size)
-{
-    size_t i;
-    size_t begin;
-    size_t end;
-
-    if (size == 0)
-    {
-        begin = 0;
-        end = 0xfffff;
-    }
-    else
-    {
-        begin = address >> 12;
-        end = (address+size-1) >> 12;
-    }
-
-    for(i = begin; i <= end; ++i)
-        invalidate_block(i);
-}
-
 // This is called when loading a save state.
 // Anything could have changed, so invalidate everything.
-void invalidate_all_pages(void)
+static void invalidate_all_pages(void)
 {
   u_int page;
   for(page=0;page<4096;page++)
@@ -2305,6 +2284,29 @@ void invalidate_all_pages(void)
     if(page==0x80000) page=0xC0000;
   }
   tlb_hacks();
+}
+
+void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size)
+{
+    size_t i;
+    size_t begin;
+    size_t end;
+
+    if (size == 0)
+    {
+        invalidate_all_pages();
+    }
+    else
+    {
+        begin = address >> 12;
+        end = (address+size-1) >> 12;
+
+        for(i = begin; i <= end; ++i) {
+            if(r4300->cached_interp.invalid_code[i] == 0) {
+                invalidate_block(i);
+            }
+        }
+    }
 }
 
 // If a code block was found to be unmodified (bit was set in
