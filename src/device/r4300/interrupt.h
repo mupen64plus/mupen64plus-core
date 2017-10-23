@@ -51,7 +51,6 @@ void reset_hard_handler(void* opaque);
 void compare_int_handler(void* opaque);
 void check_int_handler(void* opaque);
 void special_int_handler(void* opaque);
-void hw2_int_handler(void* opaque);
 void nmi_int_handler(void* opaque);
 
 #define VI_INT      0x001

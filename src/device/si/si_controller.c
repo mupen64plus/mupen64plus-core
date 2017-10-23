@@ -52,7 +52,8 @@ void init_si(struct si_controller* si,
     init_pif(&si->pif,
         pif_base,
         jbds, ijbds,
-        ipl3);
+        ipl3,
+        r4300);
 }
 
 void poweron_si(struct si_controller* si)
