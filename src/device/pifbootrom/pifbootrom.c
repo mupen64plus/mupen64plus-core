@@ -66,7 +66,7 @@ void pifbootrom_hle_execute(struct r4300_core* r4300)
     /* XXX: wait for SP to finish last operation (poll halt) */
 
     /* stop RSP (halt + clear interrupts) */
-    r4300_write_aligned_word(r4300, R4300_KSEG1 + MM_RSP_REGS  + 4*SP_STATUS_REG, 0x0a, ~UINT32_C(0));
+    r4300_write_aligned_word(r4300, R4300_KSEG1 + MM_RSP_REGS + 4*SP_STATUS_REG, 0x0a, ~UINT32_C(0));
 
     /* XXX: wait for SP DMA to finish (poll busy) */
 
