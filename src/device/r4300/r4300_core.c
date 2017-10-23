@@ -38,7 +38,6 @@
 #endif
 #include "main/main.h"
 
-#include <assert.h>
 #include <string.h>
 #include <time.h>
 
@@ -355,7 +354,12 @@ int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_
 {
     uint32_t w[2];
 
-    assert((address & 0x7) == 0);
+    /* XXX: unaligned dword accesses should trigger a address error,
+     * but inaccurate timing of the core can lead to unaligned address on reset
+     * so just emit a warning and keep going */
+    if ((address & 0x7) != 0) {
+        DebugMessage(M64MSG_WARNING, "Unaligned dword read %08x", address);
+    }
 
     if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
         address = virtual_to_physical_address(r4300, address, 0);
@@ -403,7 +407,12 @@ int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_
 /* Write aligned dword to memory */
 int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t value, uint64_t mask)
 {
-    assert((address & 0x7) == 0);
+    /* XXX: unaligned dword accesses should trigger a address error,
+     * but inaccurate timing of the core can lead to unaligned address on reset
+     * so just emit a warning and keep going */
+    if ((address & 0x7) != 0) {
+        DebugMessage(M64MSG_WARNING, "Unaligned dword write %08x", address);
+    }
 
     if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
 
