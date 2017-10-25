@@ -93,6 +93,8 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
         flashram->mode = FLASHRAM_MODE_READ;
         flashram->status = 0x11118004f0000000LL;
         break;
+    case 0x00000000:
+        break;
     default:
         DebugMessage(M64MSG_WARNING, "unknown flashram command: %" PRIX32, command);
         break;
