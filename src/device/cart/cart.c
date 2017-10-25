@@ -24,6 +24,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 
+#include "main/rom.h"
 #include "device/ri/rdram.h"
 
 #include <stdint.h>
@@ -125,7 +126,12 @@ void init_cart(struct cart* cart,
     init_sram(&cart->sram,
         sram_storage, isram_storage);
 
-    cart->use_flashram = 0;
+    if (ROM_SETTINGS.savetype == SRAM)
+        cart->use_flashram = -1;
+    else if (ROM_SETTINGS.savetype == FLASH_RAM)
+        cart->use_flashram = 1;
+    else
+        cart->use_flashram = 0;
 }
 
 void poweron_cart(struct cart* cart)
@@ -139,37 +145,42 @@ void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value)
 {
     struct cart* cart = (struct cart*)opaque;
 
-    if ((cart->use_flashram == -1) || ((address & 0xffff) != 0))
+    if (cart->use_flashram == -1)
     {
-        DebugMessage(M64MSG_ERROR, "unknown read in read_cart_dom2()");
-        return;
+        read_sram(&cart->sram, address, value);
     }
-    cart->use_flashram = 1;
+    else
+    {
+        if ((address & 0xffff) != 0)
+        {
+            DebugMessage(M64MSG_ERROR, "unknown read in read_cart_dom2()");
+            return;
+        }
 
-    read_flashram_status(&cart->flashram, address, value);
+        cart->use_flashram = 1;
+        read_flashram_status(&cart->flashram, address, value);
+    }
 }
 
 void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct cart* cart = (struct cart*)opaque;
 
-    if ((cart->use_flashram == -1) || ((address & 0xffff) != 0))
+    if (cart->use_flashram == -1)
     {
-        DebugMessage(M64MSG_ERROR, "unknown write in write_cart_dom2_()");
-        return;
+        write_sram(&cart->sram, address, value, mask);
     }
-    cart->use_flashram = 1;
+    else
+    {
+        if ((address & 0xffff) != 0)
+        {
+            DebugMessage(M64MSG_ERROR, "unknown write in write_cart_dom2()");
+            return;
+        }
 
-    write_flashram_command(&cart->flashram, address, value, mask);
-}
-
-void read_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t* value)
-{
-    *value = 0;
-}
-
-void write_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
+        cart->use_flashram = 1;
+        write_flashram_command(&cart->flashram, address, value, mask);
+    }
 }
 
 unsigned int cart_dom2_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)

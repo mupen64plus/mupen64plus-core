@@ -74,3 +74,24 @@ unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uin
     return /* length / 8 */0x1000;
 }
 
+void read_sram(void* opaque, uint32_t address, uint32_t* value)
+{
+    struct sram* sram = (struct sram*)opaque;
+    const uint8_t* mem = sram->istorage->data(sram->storage);
+
+    address &= SRAM_ADDR_MASK;
+
+    *value = *(uint32_t*)(mem + address);
+}
+
+void write_sram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    struct sram* sram = (struct sram*)opaque;
+    uint8_t* mem = sram->istorage->data(sram->storage);
+
+    address &= SRAM_ADDR_MASK;
+
+    *(uint32_t*)(mem + address) = value & mask;
+
+    sram->istorage->save(sram->storage);
+}
