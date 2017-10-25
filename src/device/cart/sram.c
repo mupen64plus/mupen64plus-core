@@ -32,7 +32,7 @@
 
 void format_sram(uint8_t* mem)
 {
-    memset(mem, 0, SRAM_SIZE);
+    memset(mem, 0xff, SRAM_SIZE);
 }
 
 void init_sram(struct sram* sram,
