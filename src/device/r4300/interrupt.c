@@ -449,6 +449,9 @@ void nmi_int_handler(void* opaque)
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
 
+    dev->vi.next_vi = cp0_regs[CP0_COUNT_REG] + dev->vi.delay;
+    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
+
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
     // set ErrorEPC with the last instruction address
