@@ -104,6 +104,7 @@ void init_cart(struct cart* cart,
                uint16_t eeprom_type,
                void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
                /* flashram */
+               uint32_t flashram_type,
                void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
                /* sram */
                void* sram_storage, const struct storage_backend_interface* isram_storage)
@@ -120,6 +121,7 @@ void init_cart(struct cart* cart,
         eeprom_type, eeprom_storage, ieeprom_storage);
 
     init_flashram(&cart->flashram,
+        flashram_type,
         flashram_storage, iflashram_storage, (uint8_t*)rdram->dram);
 
     init_sram(&cart->sram,

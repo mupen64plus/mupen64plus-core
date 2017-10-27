@@ -46,11 +46,11 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
         break;
     case 0x78000000:
         flashram->mode = FLASHRAM_MODE_ERASE;
-        flashram->status = 0x1111800800c20000LL;
+        flashram->status[0] = 0x11118008;
         break;
     case 0xa5000000:
         flashram->erase_offset = (command & 0xffff) * 128;
-        flashram->status = 0x1111800400c20000LL;
+        flashram->status[0] = 0x11118004;
         break;
     case 0xb4000000:
         flashram->mode = FLASHRAM_MODE_WRITE;
@@ -87,11 +87,11 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
         break;
     case 0xe1000000:
         flashram->mode = FLASHRAM_MODE_STATUS;
-        flashram->status = 0x1111800100c20000LL;
+        flashram->status[0] = 0x11118001;
         break;
     case 0xf0000000:
         flashram->mode = FLASHRAM_MODE_READ;
-        flashram->status = 0x11118004f0000000LL;
+        flashram->status[0] = 0x11118004;
         break;
     default:
         DebugMessage(M64MSG_WARNING, "unknown flashram command: %" PRIX32, command);
@@ -101,9 +101,11 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
 
 
 void init_flashram(struct flashram* flashram,
+                   uint32_t flashram_type,
                    void* storage, const struct storage_backend_interface* istorage,
                    const uint8_t* dram)
 {
+    flashram->status[1] = flashram_type;
     flashram->storage = storage;
     flashram->istorage = istorage;
     flashram->dram = dram;
@@ -112,7 +114,7 @@ void init_flashram(struct flashram* flashram,
 void poweron_flashram(struct flashram* flashram)
 {
     flashram->mode = FLASHRAM_MODE_NOPES;
-    flashram->status = 0;
+    flashram->status[0] = 0;
     flashram->erase_offset = 0;
     flashram->write_pointer = 0;
 }
@@ -126,7 +128,7 @@ void read_flashram_status(void* opaque, uint32_t address, uint32_t* value)
 {
     struct flashram* flashram = (struct flashram*)opaque;
 
-    *value = flashram->status >> 32;
+    *value = flashram->status[0];
 }
 
 void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -146,8 +148,8 @@ unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     switch (flashram->mode)
     {
     case FLASHRAM_MODE_STATUS:
-        ((uint32_t*)dram)[dram_addr/4+0] = (uint32_t)(flashram->status >> 32);
-        ((uint32_t*)dram)[dram_addr/4+1] = (uint32_t)(flashram->status >>  0);
+        ((uint32_t*)dram)[dram_addr/4+0] = flashram->status[0];
+        ((uint32_t*)dram)[dram_addr/4+1] = flashram->status[1];
         break;
 
     case FLASHRAM_MODE_READ:

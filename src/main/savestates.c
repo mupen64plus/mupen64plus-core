@@ -213,6 +213,7 @@ int savestates_load_m64p(char *filepath)
     char queue[1024];
     unsigned char additionalData[4];
     unsigned char data_0001_0200[4096]; // 4k for extra state from v1.2
+    uint64_t flashram_status;
 
     uint32_t* cp0_regs = r4300_cp0_regs(&g_dev.r4300.cp0);
 
@@ -462,7 +463,9 @@ int savestates_load_m64p(char *filepath)
 
     g_dev.cart.use_flashram = GETDATA(curr, int);
     g_dev.cart.flashram.mode = GETDATA(curr, int);
-    g_dev.cart.flashram.status = GETDATA(curr, unsigned long long);
+    flashram_status = GETDATA(curr, unsigned long long);
+    g_dev.cart.flashram.status[0] = (uint32_t)(flashram_status >> 32);
+    g_dev.cart.flashram.status[1] = (uint32_t)(flashram_status);
     g_dev.cart.flashram.erase_offset = GETDATA(curr, unsigned int);
     g_dev.cart.flashram.write_pointer = GETDATA(curr, unsigned int);
 
@@ -1229,6 +1232,7 @@ int savestates_save_m64p(char *filepath)
 {
     unsigned char outbuf[4];
     int i;
+    uint64_t flashram_status;
 
     char queue[1024];
 
@@ -1420,7 +1424,8 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, int, g_dev.cart.use_flashram);
     PUTDATA(curr, int, g_dev.cart.flashram.mode);
-    PUTDATA(curr, unsigned long long, g_dev.cart.flashram.status);
+    flashram_status = ((uint64_t)g_dev.cart.flashram.status[0] << 32) | g_dev.cart.flashram.status[1];
+    PUTDATA(curr, unsigned long long, flashram_status);
     PUTDATA(curr, unsigned int, g_dev.cart.flashram.erase_offset);
     PUTDATA(curr, unsigned int, g_dev.cart.flashram.write_pointer);
 
