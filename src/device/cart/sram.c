@@ -91,7 +91,7 @@ void write_sram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 
     address &= SRAM_ADDR_MASK;
 
-    *(uint32_t*)(mem + address) = value & mask;
+    masked_write((uint32_t*)(mem + address), value, mask);
 
     sram->istorage->save(sram->storage);
 }
