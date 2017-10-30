@@ -64,12 +64,15 @@ static void copy_pif_rdram(struct si_controller* si)
     uint32_t* pif_ram = (uint32_t*)si->pif.ram;
     uint32_t* dram = (uint32_t*)(&si->ri->rdram.dram[rdram_dram_address(dram_addr)]);
 
-    for(i = 0; i < (PIF_RAM_SIZE / 4); ++i)
-    {
-        if (si->dma_dir == SI_DMA_WRITE)
+    if (si->dma_dir == SI_DMA_WRITE) {
+        for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
             pif_ram[i] = sl(dram[i]);
-        else if (si->dma_dir == SI_DMA_READ)
+        }
+    }
+    else if (si->dma_dir == SI_DMA_READ) {
+        for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
             dram[i] = sl(pif_ram[i]);
+        }
     }
 }
 
