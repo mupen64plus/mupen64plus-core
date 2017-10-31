@@ -147,8 +147,7 @@ void init_device(struct device* dev,
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
         { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
-        { A(MM_CART_DOM2, 0xffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, R(cart_dom2), W(cart_dom2_dummy)  } },
-        { A(MM_CART_DOM2 + 0x10000, 0xffff), M64P_MEM_NOTHING, { &dev->cart, R(cart_dom2_dummy), W(cart_dom2) } },
+        { A(MM_CART_DOM2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };

@@ -69,8 +69,6 @@ void poweron_cart(struct cart* cart);
 
 void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value);
 void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-void read_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t* value);
-void write_cart_dom2_dummy(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 unsigned int cart_dom2_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 unsigned int cart_dom2_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);

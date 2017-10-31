@@ -41,5 +41,7 @@ void init_sram(struct sram* sram,
 
 unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
+void read_sram(void* opaque, uint32_t address, uint32_t* value);
+void write_sram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #endif
