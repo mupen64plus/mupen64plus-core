@@ -46,8 +46,6 @@ enum {
 enum { PAK_SWITCH_DELAY = 20 };
 enum { GB_CART_SWITCH_DELAY = 20 };
 
-int PrevControlPlugin[4];
-
 static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask)
 {
     return ((input & mask) == 0)
@@ -60,48 +58,35 @@ static uint32_t input_plugin_get_input(void* opaque)
 
     BUTTONS keys = { 0 };
 
-    int hasPluginStateChanged = 0;
-    static int switchToNextPak[4] = {0};
-    static int switchToSpecificPak[4] = {0};
-
-    if(PrevControlPlugin[cin_compat->control_id] != Controls[cin_compat->control_id].Plugin) {
-        PrevControlPlugin[cin_compat->control_id] = Controls[cin_compat->control_id].Plugin;
-        hasPluginStateChanged = 1;
-        switchToSpecificPak[cin_compat->control_id] = 1;
-    }
+    int pak_change_requested = 0;
 
     if (input.getKeys) {
         input.getKeys(cin_compat->control_id, &keys);
     }
 
-    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
-        hasPluginStateChanged = 1;
-        switchToNextPak[cin_compat->control_id] = 1;
+    /* has Controls[i].Plugin changed since last call */
+    if (cin_compat->last_pak_type != Controls[cin_compat->control_id].Plugin) {
+        pak_change_requested = 1;
+        cin_compat->main_switch_pak = main_switch_plugin_pak;
     }
 
-    /* disconnect current pak (if any) immediately after "pak switch" button is released or
-     * the input plugin has changed the pak type*/
-    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON) || hasPluginStateChanged) {
+    /* or has the PAK_SWITCH_BUTTON been released */
+    if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
+        pak_change_requested = 1;
+        cin_compat->main_switch_pak = main_switch_next_pak;
+    }
+
+    /* if so, immediately disconnect current pak (if any)
+     * and start the pak switch delay */
+    if (pak_change_requested) {
         change_pak(cin_compat->cont, NULL, NULL);
         cin_compat->pak_switch_delay = PAK_SWITCH_DELAY;
     }
 
-    if(cin_compat->pak_switch_delay > 0) {
-        --cin_compat->pak_switch_delay;
-    }
-
-    /* switch to next pak after switch delay has expired */
-    if (cin_compat->pak_switch_delay == 0) {
-
-        if (switchToNextPak[cin_compat->control_id]) {
-            main_switch_next_pak(cin_compat->control_id);
-            switchToNextPak[cin_compat->control_id] = 0;
-        }
-        else if (switchToSpecificPak[cin_compat->control_id] &&
-                Controls[cin_compat->control_id].Plugin != PLUGIN_NONE) {
-            main_switch_specific_pak(cin_compat->control_id, Controls[cin_compat->control_id].Plugin);
-            switchToSpecificPak[cin_compat->control_id] = 0;
-        }
+    /* switch to next/selected pak after switch delay has expired */
+    if (cin_compat->pak_switch_delay > 0 && --cin_compat->pak_switch_delay == 0) {
+        cin_compat->main_switch_pak(cin_compat->control_id);
+        cin_compat->main_switch_pak = NULL;
     }
 
     if (cin_compat->gb_cart_switch_enabled) {
@@ -117,6 +102,7 @@ static uint32_t input_plugin_get_input(void* opaque)
         }
     }
 
+    cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin;
     cin_compat->last_input = keys.Value;
 
     return keys.Value;

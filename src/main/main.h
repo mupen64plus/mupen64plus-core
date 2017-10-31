@@ -56,7 +56,7 @@ void new_frame(void);
 void new_vi(void);
 
 void main_switch_next_pak(int control_id);
-void main_switch_specific_pak(int control_id, int pakType);
+void main_switch_plugin_pak(int control_id);
 void main_change_gb_cart(int control_id);
 
 int  main_set_core_defaults(void);

@@ -44,6 +44,8 @@ struct controller_input_compat
     struct transferpak* tpk;
 
     uint32_t last_input;
+    int last_pak_type;
+    void (*main_switch_pak)(int control_id);
     unsigned int pak_switch_delay;
     unsigned int gb_switch_delay;
 
