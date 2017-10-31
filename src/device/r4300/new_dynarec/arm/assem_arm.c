@@ -2707,12 +2707,12 @@ static void emit_extjump2(int addr, int target, int linker)
   //assert((target>=0x80000000&&target<0x80800000)||(target>0xA4000000&&target<0xA4001000));
 //DEBUG >
 #ifdef DEBUG_CYCLE_COUNT
-  emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-  emit_add(HOST_CCREG,ECX,HOST_CCREG);
-  emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,ECX);
+  emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
+  emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
+  emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
   emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-  emit_sub(HOST_CCREG,ECX,HOST_CCREG);
-  emit_writeword(ECX,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
+  emit_sub(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
+  emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
 #endif
 //DEBUG <
   emit_call(linker);
@@ -3111,7 +3111,7 @@ static void do_cop1stub(int n)
   //else {DebugMessage(M64MSG_ERROR, "fp exception in delay slot");}
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
   if(regs[i].regmap_entry[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-  emit_movimm(start+(i-ds)*4,EAX); // Get PC
+  emit_movimm(start+(i-ds)*4,0); // Get PC
   emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG); // CHECK: is this right?  There should probably be an extra cycle...
   emit_jmp(ds?(int)fp_exception_ds:(int)fp_exception);
 }
@@ -3479,10 +3479,10 @@ static void cop0_assemble(int i,struct regstat *i_regs)
         emit_movimm((source[i]>>11)&0x1f,1);
         emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
         emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
-        if(copr==9) {
-          emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
+        if(copr==9||copr==1) {
+          emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
           emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-          emit_add(HOST_CCREG,ECX,HOST_CCREG);
+          emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
           emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
         }
@@ -3503,9 +3503,9 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
     emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
     if(copr==9||copr==11||copr==12) {
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
       emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-      emit_add(HOST_CCREG,ECX,HOST_CCREG);
+      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
     }
@@ -3524,10 +3524,10 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     emit_call((int)cached_interpreter_table.MTC0);
     if(copr==9||copr==11||copr==12) {
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,ECX);
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
       emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_sub(HOST_CCREG,ECX,HOST_CCREG);
-      emit_writeword(ECX,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
+      emit_sub(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
+      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
       emit_storereg(CCREG,HOST_CCREG);
     }
     if(copr==12||copr==9) {
@@ -3554,14 +3554,21 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     assert(opcode2[i]==0x10);
     if((source[i]&0x3f)==0x01) // TLBR
       emit_call((int)cached_interpreter_table.TLBR);
-    if((source[i]&0x3f)==0x02) // TLBWI
+    if((source[i]&0x3f)==0x02) { // TLBWI
+      assert(!is_delayslot);
+      emit_movimm((start+i*4),HOST_TEMPREG);
+      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
       emit_call((int)TLBWI_new);
+    }
     if((source[i]&0x3f)==0x06) { // TLBWR
       // The TLB entry written by TLBWR is dependent on the count,
       // so update the cycle count
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
+      assert(!is_delayslot);
+      emit_movimm((start+i*4),HOST_TEMPREG);
+      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
+      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
       if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-      emit_add(HOST_CCREG,ECX,HOST_CCREG);
+      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
       emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
       emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
       emit_call((int)TLBWR_new);
