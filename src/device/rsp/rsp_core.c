@@ -279,7 +279,7 @@ void do_SP_Task(struct rsp_core* sp)
         if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
         {
             cp0_update_count(sp->r4300);
-            add_interrupt_event(&sp->r4300->cp0, DP_INT, 1000);
+            add_interrupt_event(&sp->r4300->cp0, DP_INT, 4000);
             sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_DP;
         }
         sp_delay_time = 1000;
