@@ -3409,7 +3409,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       if(t>=0) {
         emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
         emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd));
-        if(copr==9) {
+        if(copr==9||copr==1) {
           emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
           emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
           emit_add(HOST_CCREG,ECX,HOST_CCREG);
@@ -3481,11 +3481,16 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     assert(opcode2[i]==0x10);
     if((source[i]&0x3f)==0x01) // TLBR
       emit_call((int)cached_interpreter_table.TLBR);
-    if((source[i]&0x3f)==0x02) // TLBWI
+    if((source[i]&0x3f)==0x02) {  // TLBWI
+      assert(!is_delayslot);
+      emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
       emit_call((int)TLBWI_new);
+    }
     if((source[i]&0x3f)==0x06) { // TLBWR
       // The TLB entry written by TLBWR is dependent on the count,
       // so update the cycle count
+      assert(!is_delayslot);
+      emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
       emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
       if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
       emit_add(HOST_CCREG,ECX,HOST_CCREG);
