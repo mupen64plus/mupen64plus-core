@@ -138,7 +138,7 @@ typedef struct {
 typedef struct {
     int Present;
     int RawData;
-    int  Plugin;
+    int Plugin;
 } CONTROL;
 
 typedef union {

@@ -122,6 +122,7 @@ enum { PAK_MAX_SIZE = 4 };
 static size_t l_paks_idx[GAME_CONTROLLERS_COUNT];
 static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
 static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
+static size_t l_pak_type_idx[6];
 
 /*********************************************************************************************************
 * static functions
@@ -858,14 +859,9 @@ void new_vi(void)
     pause_loop();
 }
 
-void main_switch_pak(int control_id)
+static void main_switch_pak(int control_id)
 {
     struct game_controller* cont = &g_dev.controllers[control_id];
-
-    if (l_ipaks[l_paks_idx[control_id]] == NULL ||
-        ++l_paks_idx[control_id] >= PAK_MAX_SIZE) {
-        l_paks_idx[control_id] = 0;
-    }
 
     change_pak(cont, l_paks[control_id][l_paks_idx[control_id]], l_ipaks[l_paks_idx[control_id]]);
 
@@ -875,6 +871,23 @@ void main_switch_pak(int control_id)
     else {
         DebugMessage(M64MSG_INFO, "Removing pak from controller %u", control_id);
     }
+}
+
+void main_switch_next_pak(int control_id)
+{
+    if (l_ipaks[l_paks_idx[control_id]] == NULL ||
+        ++l_paks_idx[control_id] >= PAK_MAX_SIZE) {
+        l_paks_idx[control_id] = 0;
+    }
+
+    main_switch_pak(control_id);
+}
+
+void main_switch_plugin_pak(int control_id)
+{
+    l_paks_idx[control_id] = l_pak_type_idx[Controls[control_id].Plugin];
+
+    main_switch_pak(control_id);
 }
 
 static void open_mpk_file(struct file_storage* fstorage)
@@ -1120,18 +1133,37 @@ m64p_error main_run(void)
         g_MemHasBeenBSwapped = 1;
     }
 
-    /* Check paks compatibility for current ROM */
+    /* Fill-in l_pak_type_idx and l_ipaks according to game compatibility */
     k = 0;
     if (ROM_SETTINGS.mempak) {
-        l_ipaks[k++] = &g_imempak;
+        l_pak_type_idx[PLUGIN_MEMPAK] = k;
+        l_ipaks[k] = &g_imempak;
+        ++k;
     }
     if (ROM_SETTINGS.rumble) {
-        l_ipaks[k++] = &g_irumblepak;
+        l_pak_type_idx[PLUGIN_RUMBLE_PAK] = k;
+        l_pak_type_idx[PLUGIN_RAW] = k;
+        l_ipaks[k] = &g_irumblepak;
+        ++k;
     }
     if (ROM_SETTINGS.transferpak) {
-        l_ipaks[k++] = &g_itransferpak;
+        l_pak_type_idx[PLUGIN_TRANSFER_PAK] = k;
+        l_ipaks[k] = &g_itransferpak;
+        ++k;
     }
+    l_pak_type_idx[PLUGIN_NONE] = k;
     l_ipaks[k] = NULL;
+
+    if (!ROM_SETTINGS.mempak) {
+        l_pak_type_idx[PLUGIN_MEMPAK] = k;
+    }
+    if (!ROM_SETTINGS.rumble) {
+        l_pak_type_idx[PLUGIN_RUMBLE_PAK] = k;
+        l_pak_type_idx[PLUGIN_RAW] = k;
+    }
+    if (!ROM_SETTINGS.transferpak) {
+        l_pak_type_idx[PLUGIN_TRANSFER_PAK] = k;
+    }
 
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);
@@ -1176,6 +1208,7 @@ m64p_error main_run(void)
             cin_compats[i].control_id = (int)i;
             cin_compats[i].cont = &g_dev.controllers[i];
             cin_compats[i].tpk = &g_dev.transferpaks[i];
+            cin_compats[i].last_pak_type = Controls[i].Plugin;
 
             l_gb_carts_data[i].control_id = (int)i;
 

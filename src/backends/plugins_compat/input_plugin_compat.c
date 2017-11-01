@@ -30,6 +30,8 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <api/m64p_plugin.h>
+#include <api/callbacks.h>
 
 /* XXX: this is an abuse of the Zilmar Spec normally this value is reserved */
 enum {
@@ -56,19 +58,35 @@ static uint32_t input_plugin_get_input(void* opaque)
 
     BUTTONS keys = { 0 };
 
+    int pak_change_requested = 0;
+
     if (input.getKeys) {
         input.getKeys(cin_compat->control_id, &keys);
     }
 
-    /* disconnect current pak (if any) immediately after "pak switch" button is released */
+    /* has Controls[i].Plugin changed since last call */
+    if (cin_compat->last_pak_type != Controls[cin_compat->control_id].Plugin) {
+        pak_change_requested = 1;
+        cin_compat->main_switch_pak = main_switch_plugin_pak;
+    }
+
+    /* or has the PAK_SWITCH_BUTTON been released */
     if (is_button_released(keys.Value, cin_compat->last_input, PAK_SWITCH_BUTTON)) {
+        pak_change_requested = 1;
+        cin_compat->main_switch_pak = main_switch_next_pak;
+    }
+
+    /* if so, immediately disconnect current pak (if any)
+     * and start the pak switch delay */
+    if (pak_change_requested) {
         change_pak(cin_compat->cont, NULL, NULL);
         cin_compat->pak_switch_delay = PAK_SWITCH_DELAY;
     }
 
-    /* switch to next pak after switch delay has expired */
+    /* switch to next/selected pak after switch delay has expired */
     if (cin_compat->pak_switch_delay > 0 && --cin_compat->pak_switch_delay == 0) {
-        main_switch_pak(cin_compat->control_id);
+        cin_compat->main_switch_pak(cin_compat->control_id);
+        cin_compat->main_switch_pak = NULL;
     }
 
     if (cin_compat->gb_cart_switch_enabled) {
@@ -84,6 +102,7 @@ static uint32_t input_plugin_get_input(void* opaque)
         }
     }
 
+    cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin;
     cin_compat->last_input = keys.Value;
 
     return keys.Value;
