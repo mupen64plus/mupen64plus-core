@@ -431,17 +431,6 @@ void special_int_handler(void* opaque)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-void hw2_int_handler(void* opaque)
-{
-    struct r4300_core* r4300 = (struct r4300_core*)opaque;
-    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-
-    cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
-    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
-
-    exception_general(r4300);
-}
-
 /* XXX: this should only require r4300 struct not device ? */
 /* XXX: This is completly WTF ! */
 void nmi_int_handler(void* opaque)
@@ -459,6 +448,9 @@ void nmi_int_handler(void* opaque)
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
+
+    dev->vi.next_vi = cp0_regs[CP0_COUNT_REG] + dev->vi.delay;
+    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
 
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;

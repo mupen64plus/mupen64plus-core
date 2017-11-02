@@ -21,6 +21,7 @@
 
 #include "pif.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -30,6 +31,7 @@
 #include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "device/r4300/exception.h"
 #include "device/si/n64_cic_nus_6105.h"
 #include "device/si/si_controller.h"
 #include "plugin/plugin.h"
@@ -116,23 +118,61 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
     return 2 + tx + rx;
 }
 
-
 void init_pif(struct pif* pif,
     uint8_t* pif_base,
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
-    const uint8_t* ipl3)
+    const uint8_t* ipl3,
+    struct r4300_core* r4300)
 {
     size_t i;
 
     pif->ram = pif_base + 0x7c0;
 
-    for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
+    for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
         pif->channels[i].jbd = jbds[i];
         pif->channels[i].ijbd = ijbds[i];
     }
 
     init_cic_using_ipl3(&pif->cic, ipl3);
+
+    pif->r4300 = r4300;
+}
+
+void reset_pif(struct pif* pif, unsigned int reset_type)
+{
+    size_t i;
+
+    /* HACK: for allowing pifbootrom execution */
+    unsigned int rom_type = 0;
+    unsigned int s7 = 0;
+
+    /* 0:ColdReset, 1:NMI */
+    assert((reset_type & ~0x1) == 0);
+
+    /* disable channel processing */
+    for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
+        disable_pif_channel(&pif->channels[i]);
+    }
+
+    /* set PIF_24 with reset informations */
+    uint32_t* pif24 = (uint32_t*)(pif->ram + 0x24);
+    *pif24 = (uint32_t)
+         (((rom_type      & 0x1) << 19)
+        | ((s7            & 0x1) << 18)
+        | ((reset_type    & 0x1) << 17)
+        | ((pif->cic.seed & 0xff) << 8)
+        | 0x3f);
+    *pif24 = sl(*pif24);
+
+    /* clear PIF flags */
+    pif->ram[0x3f] = 0x00;
+
+    if (reset_type) {
+        /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
+        add_interrupt_event(&pif->r4300->cp0, HW2_INT, 0);
+        add_interrupt_event(&pif->r4300->cp0, NMI_INT, 50000000);
+    }
 }
 
 void setup_channels_format(struct pif* pif)
@@ -199,8 +239,6 @@ void setup_channels_format(struct pif* pif)
 #endif
 }
 
-
-
 static void process_cic_challenge(struct pif* pif)
 {
     char challenge[30], response[30];
@@ -232,27 +270,9 @@ static void process_cic_challenge(struct pif* pif)
 
 void poweron_pif(struct pif* pif)
 {
-    size_t i;
-
     memset(pif->ram, 0, PIF_RAM_SIZE);
 
-    /* HACK: for allowing pifbootrom execution */
-    unsigned int rom_type = 0;
-    unsigned int reset_type = 0;
-    unsigned int s7 = 0;
-
-    uint32_t* pif24 = (uint32_t*)(pif->ram + 0x24);
-    *pif24 = (uint32_t)
-         (((rom_type      & 0x1) << 19)
-        | ((s7            & 0x1) << 18)
-        | ((reset_type    & 0x1) << 17)
-        | ((pif->cic.seed & 0xff) << 8)
-        | 0x3f);
-    *pif24 = sl(*pif24);
-
-    for(i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-        disable_pif_channel(&pif->channels[i]);
-    }
+    reset_pif(pif, 0); /* cold reset */
 }
 
 void read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
@@ -354,5 +374,16 @@ void update_pif_ram(struct si_controller* si)
     DebugMessage(M64MSG_INFO, "PIF post read");
     print_pif(pif);
 #endif
+}
+
+void hw2_int_handler(void* opaque)
+{
+    struct pif* pif = (struct pif*)opaque;
+    uint32_t* cp0_regs = r4300_cp0_regs(&pif->r4300->cp0);
+
+    cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
+    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
+
+    exception_general(pif->r4300);
 }
 

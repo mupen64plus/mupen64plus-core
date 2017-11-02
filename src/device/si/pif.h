@@ -29,6 +29,7 @@
 
 struct joybus_device_interface;
 struct si_controller;
+struct r4300_core;
 
 enum { PIF_RAM_SIZE = 0x40 };
 enum { PIF_CHANNELS_COUNT = 5 };
@@ -53,6 +54,8 @@ struct pif
     struct pif_channel channels[PIF_CHANNELS_COUNT];
 
     struct cic cic;
+
+    struct r4300_core* r4300;
 };
 
 static uint32_t pif_ram_address(uint32_t address)
@@ -65,9 +68,12 @@ void init_pif(struct pif* pif,
     uint8_t* pif_base,
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
-    const uint8_t* ipl3);
+    const uint8_t* ipl3,
+    struct r4300_core* r4300);
 
 void poweron_pif(struct pif* pif);
+
+void reset_pif(struct pif* pif, unsigned int reset_type);
 
 void setup_channels_format(struct pif* pif);
 
@@ -76,6 +82,8 @@ void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
 void process_pif_ram(struct si_controller* si);
 void update_pif_ram(struct si_controller* si);
+
+void hw2_int_handler(void* opaque);
 
 #endif
 

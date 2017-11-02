@@ -121,7 +121,7 @@ void init_device(struct device* dev,
         { &dev->ai,        ai_end_of_dma_event         }, /* AI */
         { &dev->sp,        rsp_interrupt_event         }, /* SP */
         { &dev->dp,        rdp_interrupt_event         }, /* DP */
-        { &dev->r4300,     hw2_int_handler             }, /* HW2 */
+        { &dev->si.pif,    hw2_int_handler             }, /* HW2 */
         { dev,             nmi_int_handler             }, /* NMI */
         { dev,             reset_hard_handler          }  /* reset_hard */
     };
@@ -230,7 +230,5 @@ void hard_reset_device(struct device* dev)
 
 void soft_reset_device(struct device* dev)
 {
-    /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
-    add_interrupt_event(&dev->r4300.cp0, HW2_INT, 0);
-    add_interrupt_event(&dev->r4300.cp0, NMI_INT, 50000000);
+    reset_pif(&dev->si.pif, 1); /* Soft reset */
 }
