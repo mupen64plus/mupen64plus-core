@@ -33,7 +33,8 @@ enum { FB_DIRTY_PAGES_COUNT = 0x800 };
 
 struct fb
 {
-    unsigned char dirty_page[FB_DIRTY_PAGES_COUNT];
+    uint32_t dirty_page[FB_DIRTY_PAGES_COUNT];
+    uint32_t dirty_page_counter;
     FrameBufferInfo infos[FB_INFOS_COUNT];
     unsigned int once;
 };
