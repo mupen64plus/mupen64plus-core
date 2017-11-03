@@ -201,3 +201,82 @@ void map_region(struct memory* mem,
         mem->handlers[region] = *handler;
     }
 }
+
+
+
+#include "device/device.h"
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#elif defined(HAVE_MMAP)
+#include <sys/mman.h>
+#else
+#include <stdlib.h>
+#endif
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
+
+enum { MEM_BASE_SIZE = 0x20000000 };
+enum { RAM_MAX_SIZE  = 0x00800000 };
+enum { ROM_MAX_SIZE  = 0x04000000 };
+
+void* init_mem_base(void)
+{
+    void* mem;
+    size_t m;
+
+    struct {
+        uint32_t begin;
+        size_t size;
+    } mappings[] = {
+        { MM_RDRAM_DRAM, RAM_MAX_SIZE }, // FIXME: use real dram_size
+        { MM_RSP_MEM,    0x00002000 },
+        { MM_DD_ROM,     0x00800000 },
+        { MM_CART_ROM,   ROM_MAX_SIZE }, // FIXME: use real rom_size
+        { MM_PIF_MEM,    0x00000800 },
+    };
+
+#if defined(_WIN32)
+    mem = VirtualAlloc(NULL, MEM_BASE_SIZE, MEM_RESERVE, PAGE_READWRITE);
+
+    for (m = 0; m < ARRAY_SIZE(mappings); ++m) {
+        if (VirtualAlloc((unsigned char*)mem + mappings[m].begin, mappings[m].size, MEM_COMMIT, PAGE_READWRITE) != 0) {
+            DebugMessage(M64MSG_ERROR, "Failed to change memory protection.");
+            VirtualFree(mem, 0, MEM_RELEASE);
+            return NULL;
+        }
+    }
+#elif defined(HAVE_MMAP)
+    mem = mmap(NULL, MEM_BASE_SIZE, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    if (mem == MAP_FAILED) {
+        return NULL;
+    }
+
+    for (m = 0; m < ARRAY_SIZE(mappings); ++m) {
+        if (mprotect((unsigned char*)mem + mappings[m].begin, mappings[m].size, PROT_READ | PROT_WRITE) != 0) {
+            DebugMessage(M64MSG_ERROR, "Failed to change memory protection.");
+            munmap(mem, MEM_BASE_SIZE);
+            return NULL;
+        }
+    }
+#else
+    mem = malloc(MEM_BASE_SIZE);
+    if (mem == NULL) {
+        return NULL;
+    }
+#endif
+
+    return mem;
+}
+
+void release_mem_base(void* mem)
+{
+#if defined(_WIN32)
+    VirtualFree(mem, 0, MEM_RELEASE);
+#elif defined(HAVE_MMAP)
+    munmap(mem, MEM_BASE_SIZE);
+#else
+    free(mem);
+#endif
+}
