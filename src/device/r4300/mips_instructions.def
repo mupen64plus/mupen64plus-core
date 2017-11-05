@@ -70,10 +70,10 @@
  */
 
 #define BITS_BELOW_MASK32(x) ((UINT32_C(1) << (x)) - 1)
-#define BITS_ABOVE_MASK32(x) (~((UINT32_C(1) << (x)) - 1))
+#define BITS_ABOVE_MASK32(x) (~(BITS_BELOW_MASK32((x))))
 
 #define BITS_BELOW_MASK64(x) ((UINT64_C(1) << (x)) - 1)
-#define BITS_ABOVE_MASK64(x) (~((UINT64_C(1) << (x)) - 1))
+#define BITS_ABOVE_MASK64(x) (~(BITS_BELOW_MASK64((x))))
 
 
 static unsigned int bshift(uint32_t address)
@@ -212,8 +212,9 @@ DECLARE_INSTRUCTION(LWL)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (lsaddr & 3) * 8;
-    uint32_t mask = BITS_BELOW_MASK32((lsaddr & 3) * 8);
+    unsigned int n = (lsaddr & 3);
+    unsigned int shift = 8 * n;
+    uint32_t mask = BITS_BELOW_MASK32(8 * n);
     uint32_t value;
 
     if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
@@ -228,8 +229,11 @@ DECLARE_INSTRUCTION(LWR)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (3 - (lsaddr & 3)) * 8;
-    uint32_t mask = BITS_ABOVE_MASK32(((lsaddr & 3) + 1) * 8);
+    unsigned int n = (lsaddr & 3);
+    unsigned int shift = 8 * (3 - n);
+    uint32_t mask = (n == 3)
+        ? UINT32_C(0)
+        : BITS_ABOVE_MASK32(8 * (n + 1));
     uint32_t value;
 
     if (r4300_read_aligned_word(r4300, lsaddr, &value)) {
@@ -254,8 +258,9 @@ DECLARE_INSTRUCTION(LDL)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (lsaddr & 7) * 8;
-    uint64_t mask = BITS_BELOW_MASK64((lsaddr & 7) * 8);
+    unsigned int n = (lsaddr & 7);
+    unsigned int shift = 8 * n;
+    uint64_t mask = BITS_BELOW_MASK64(8 * n);
     uint64_t value;
 
     if (r4300_read_aligned_dword(r4300, lsaddr & ~UINT32_C(7), &value)) {
@@ -270,8 +275,11 @@ DECLARE_INSTRUCTION(LDR)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (7 - (lsaddr & 7)) * 8;
-    uint64_t mask = BITS_ABOVE_MASK64(((lsaddr & 7) + 1) * 8);
+    unsigned int n = (lsaddr & 7);
+    unsigned int shift = 8 * (7 - n);
+    uint64_t mask = (n == 7)
+        ? UINT64_C(0)
+        : BITS_ABOVE_MASK64(8 * (n + 1));
     uint64_t value;
 
     if (r4300_read_aligned_dword(r4300, lsaddr & ~UINT32_C(7), &value)) {
@@ -340,11 +348,14 @@ DECLARE_INSTRUCTION(SWL)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (lsaddr & 3) * 8;
-    uint32_t mask = BITS_BELOW_MASK32((4 - (lsaddr & 3)) * 8);
-    uint32_t value = ((uint32_t)*lsrtp >> shift);
+    unsigned int n = (lsaddr & 3);
+    unsigned int shift = 8 * n;
+    uint32_t mask = (n == 0)
+        ? ~UINT32_C(0)
+        : BITS_BELOW_MASK32(8 * (4 - n));
+    uint32_t value = (uint32_t)*lsrtp;
 
-    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask);
+    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value >> shift, mask);
 }
 
 DECLARE_INSTRUCTION(SWR)
@@ -354,11 +365,12 @@ DECLARE_INSTRUCTION(SWR)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (3 - (lsaddr & 3)) * 8;
-    uint32_t mask = BITS_ABOVE_MASK32((3 - (lsaddr & 3)) * 8);
-    uint32_t value = ((uint32_t)*lsrtp << shift);
+    unsigned int n = (lsaddr & 3);
+    unsigned int shift = 8 * (3 - n);
+    uint32_t mask = BITS_ABOVE_MASK32(8 * (3 - n));
+    uint32_t value = (uint32_t)*lsrtp;
 
-    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value, mask);
+    r4300_write_aligned_word(r4300, lsaddr & ~UINT32_C(0x3), value << shift, mask);
 }
 
 DECLARE_INSTRUCTION(SD)
@@ -378,11 +390,14 @@ DECLARE_INSTRUCTION(SDL)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (lsaddr & 7) * 8;
-    uint64_t mask = BITS_BELOW_MASK64((8 - (lsaddr & 7)) * 8);
-    uint64_t value = ((uint64_t)*lsrtp >> shift);
+    unsigned int n = (lsaddr & 7);
+    unsigned int shift = 8 * n;
+    uint64_t mask = (n == 0)
+        ? ~UINT64_C(0)
+        : BITS_BELOW_MASK64(8 * (8 - n));
+    uint64_t value = (uint64_t)*lsrtp;
 
-    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask);
+    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value >> shift, mask);
 }
 
 DECLARE_INSTRUCTION(SDR)
@@ -392,11 +407,12 @@ DECLARE_INSTRUCTION(SDR)
     int64_t *lsrtp = &irt;
     ADD_TO_PC(1);
 
-    unsigned int shift = (7 - (lsaddr & 7)) * 8;
-    uint64_t mask = BITS_ABOVE_MASK64((7 - (lsaddr & 7)) * 8);
-    uint64_t value = ((uint64_t)*lsrtp << shift);
+    unsigned int n = (lsaddr & 7);
+    unsigned int shift = 8 * (7 - n);
+    uint64_t mask = BITS_ABOVE_MASK64(8 * (7 - n));
+    uint64_t value = (uint64_t)*lsrtp;
 
-    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value, mask);
+    r4300_write_aligned_dword(r4300, lsaddr & ~UINT32_C(0x7), value << shift, mask);
 }
 
 /* Computational instructions */
