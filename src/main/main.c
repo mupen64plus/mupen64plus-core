@@ -885,6 +885,11 @@ void main_switch_next_pak(int control_id)
 
 void main_switch_plugin_pak(int control_id)
 {
+    //Don't switch to the selected pak if it's not available for the game
+    if (l_ipaks[l_pak_type_idx[Controls[control_id].Plugin]] == NULL) {
+        Controls[control_id].Plugin = PLUGIN_NONE;
+    }
+
     l_paks_idx[control_id] = l_pak_type_idx[Controls[control_id].Plugin];
 
     main_switch_pak(control_id);
@@ -1213,6 +1218,11 @@ m64p_error main_run(void)
             l_gb_carts_data[i].control_id = (int)i;
 
             l_paks_idx[i] = 0;
+
+            //Don't use the selected pak if it's not available for the game, instead use NONE
+            if (l_ipaks[l_pak_type_idx[Controls[i].Plugin]] == NULL) {
+                Controls[i].Plugin = PLUGIN_NONE;
+            }
 
             /* init all compatibles paks */
             for(k = 0; k < PAK_MAX_SIZE; ++k) {
