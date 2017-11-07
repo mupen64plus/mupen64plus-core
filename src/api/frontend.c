@@ -93,7 +93,7 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
         return M64ERR_INTERNAL;
 
     /* allocate base memory */
-    g_mem_base = malloc(0x20000000);
+    g_mem_base = init_mem_base();
     if (g_mem_base == NULL) {
         return M64ERR_NO_MEMORY;
     }
@@ -122,7 +122,7 @@ EXPORT m64p_error CALL CoreShutdown(void)
     SDL_Quit();
 
     /* deallocate base memory */
-    free(g_mem_base);
+    release_mem_base(g_mem_base);
     g_mem_base = NULL;
 
     l_CoreInit = 0;

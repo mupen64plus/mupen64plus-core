@@ -326,7 +326,7 @@ uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
 
     address &= UINT32_C(0x1ffffffc);
 
-    return (uint32_t*)((uint8_t*)r4300->mem->base + address);
+    return mem_base_u32(r4300->mem->base, address);
 }
 
 /* Read aligned word from memory.

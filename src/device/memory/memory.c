@@ -24,6 +24,10 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 
+#include "device/device.h"
+#include "device/rsp/rsp_core.h"
+#include "device/si/pif.h"
+
 #ifdef DBG
 #include <string.h>
 
@@ -36,6 +40,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifdef DBG
 enum
@@ -200,4 +205,50 @@ void map_region(struct memory* mem,
         (void)type;
         mem->handlers[region] = *handler;
     }
+}
+
+enum {
+    MB_RDRAM_DRAM = 0,
+    MB_CART_ROM = MB_RDRAM_DRAM + RDRAM_MAX_SIZE,
+    MB_RSP_MEM  = MB_CART_ROM   + CART_ROM_MAX_SIZE,
+    MB_DD_ROM   = MB_RSP_MEM    + SP_MEM_SIZE,
+    MB_PIF_MEM  = MB_DD_ROM     + DD_ROM_MAX_SIZE,
+    MB_MAX_SIZE = MB_PIF_MEM    + PIF_ROM_SIZE + PIF_RAM_SIZE
+};
+
+void* init_mem_base(void)
+{
+    return malloc(MB_MAX_SIZE);
+}
+
+void release_mem_base(void* mem_base)
+{
+    free(mem_base);
+}
+
+uint32_t* mem_base_u32(void* mem_base, uint32_t address)
+{
+    uint32_t* mem;
+
+    if (address < RDRAM_MAX_SIZE) {
+        mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_RDRAM_DRAM + MB_RDRAM_DRAM));
+    }
+    else if (address >= MM_CART_ROM) {
+        if ((address & UINT32_C(0xfff00000)) == MM_PIF_MEM) {
+            mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_PIF_MEM + MB_PIF_MEM));
+        } else {
+            mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_CART_ROM + MB_CART_ROM));
+        }
+    }
+    else if ((address & UINT32_C(0xfe000000)) ==  MM_DD_ROM) {
+        mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_DD_ROM + MB_DD_ROM));
+    }
+    else if ((address & UINT32_C(0xffffe000)) == MM_RSP_MEM) {
+        mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_RSP_MEM + MB_RSP_MEM));
+    }
+    else {
+        mem = NULL;
+    }
+
+    return mem;
 }

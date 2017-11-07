@@ -162,22 +162,22 @@ void init_device(struct device* dev,
     init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom, randomize_interrupt);
     init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
-    init_rsp(&dev->sp, (uint32_t*)((uint8_t*)base + MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
+    init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
             &dev->r4300, &dev->ri);
-    init_ri(&dev->ri, (uint32_t*)((uint8_t*)base + MM_RDRAM_DRAM), dram_size);
+    init_ri(&dev->ri, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
-        (uint8_t*)base + MM_PIF_MEM,
+        (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
-        (uint8_t*)base + MM_CART_ROM + 0x40,
+        (uint8_t*)mem_base_u32(base, MM_CART_ROM + 0x40),
         &dev->r4300, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
 
     init_cart(&dev->cart,
             af_rtc_clock, iaf_rtc_clock,
-            (uint8_t*)base + MM_CART_ROM, rom_size,
+            (uint8_t*)mem_base_u32(base, MM_CART_ROM), rom_size,
             &dev->r4300,
             &dev->ri.rdram, &dev->si.pif.cic,
             eeprom_type, eeprom_storage, ieeprom_storage,

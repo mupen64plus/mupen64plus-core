@@ -30,8 +30,6 @@
 #include "device/si/pif.h"
 #include "osal/preproc.h"
 
-enum { RDRAM_MAX_SIZE = 0x800000 };
-
 /* globals */
 extern m64p_handle g_CoreConfig;
 
