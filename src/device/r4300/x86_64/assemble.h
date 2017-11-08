@@ -782,6 +782,14 @@ static osal_inline void mov_reg64_preg64pimm8(int reg1, int reg2, unsigned int i
    put8(imm8);
 }
 
+static osal_inline void lea_reg64_preg64x2preg64(int reg1, int reg2, int reg3)
+{
+   put8(0x48);
+   put8(0x8D);
+   put8(0x04 | (reg1 << 3));
+   put8(0x40 | (reg2 << 3) | reg3);
+}
+
 static osal_inline void mov_reg64_preg64x8preg64(int reg1, int reg2, int reg3)
 {
    put8(0x48);
