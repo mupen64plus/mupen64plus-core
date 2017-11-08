@@ -122,5 +122,8 @@ void deactivate_memory_break_write(struct memory* mem, uint32_t address);
 int get_memory_type(struct memory* mem, uint32_t address);
 #endif
 
+void* init_mem_base(void);
+void release_mem_base(void* mem);
+
 #endif
 
