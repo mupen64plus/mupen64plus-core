@@ -31,6 +31,7 @@ struct joybus_device_interface;
 struct si_controller;
 struct r4300_core;
 
+enum { PIF_ROM_SIZE = 0x7c0 };
 enum { PIF_RAM_SIZE = 0x40 };
 enum { PIF_CHANNELS_COUNT = 5 };
 
@@ -60,7 +61,7 @@ struct pif
 
 static uint32_t pif_ram_address(uint32_t address)
 {
-    return ((address & 0xfffc) - 0x7c0);
+    return ((address & 0xfffc) - PIF_ROM_SIZE);
 }
 
 

@@ -90,7 +90,7 @@ void pifbootrom_hle_execute(struct r4300_core* r4300)
     /* XXX: wait for PIF_3c[7] to be cleared */
 
     /* read and parse pif24 */
-    r4300_read_aligned_word(r4300, R4300_KSEG1 + MM_PIF_MEM + 0x7c0 + 0x24, &pif24);
+    r4300_read_aligned_word(r4300, R4300_KSEG1 + MM_PIF_MEM + PIF_ROM_SIZE + 0x24, &pif24);
     rom_type   = (pif24 >> 19) & 0x01;
     s7         = (pif24 >> 18) & 0x01;
     reset_type = (pif24 >> 17) & 0x01;
@@ -117,8 +117,8 @@ void pifbootrom_hle_execute(struct r4300_core* r4300)
     /* XXX: if XBus is used, wait until DPC_pipe_busy is cleared */
 
     /* copy IPL3 to dmem */
-    memcpy((unsigned char*)r4300->mem->base + MM_RSP_MEM + 0x40,
-           (unsigned char*)r4300->mem->base + rom_base + 0x40,
+    memcpy((unsigned char*)mem_base_u32(r4300->mem->base, MM_RSP_MEM + 0x40),
+           (unsigned char*)mem_base_u32(r4300->mem->base, rom_base + 0x40),
            0xfc0);
 
     /* XXX: compute IPL3 checksum */
@@ -129,7 +129,7 @@ void pifbootrom_hle_execute(struct r4300_core* r4300)
     /* XXX: wait for SI_RD_BUSY to be cleared, set PIF_3c[6] */
 
     /* required by CIC x105 */
-    uint32_t* imem = (uint32_t*)((uint8_t*)r4300->mem->base + MM_RSP_MEM + 0x1000);
+    uint32_t* imem = mem_base_u32(r4300->mem->base, MM_RSP_MEM + 0x1000);
     imem[0x0000/4] = 0x3c0dbfc0;
     imem[0x0004/4] = 0x8da807fc;
     imem[0x0008/4] = 0x25ad07c0;

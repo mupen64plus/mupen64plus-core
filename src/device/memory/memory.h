@@ -25,6 +25,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+enum { RDRAM_MAX_SIZE = 0x800000 };
+enum { CART_ROM_MAX_SIZE = 0x4000000 };
+enum { DD_ROM_MAX_SIZE = 0x400000 };
+
 typedef void (*read32fn)(void*,uint32_t,uint32_t*);
 typedef void (*write32fn)(void*,uint32_t,uint32_t,uint32_t);
 
@@ -110,6 +114,10 @@ void map_region(struct memory* mem,
                 uint16_t region,
                 int type,
                 const struct mem_handler* handler);
+
+void* init_mem_base(void);
+void release_mem_base(void* mem_base);
+uint32_t* mem_base_u32(void* mem_base, uint32_t address);
 
 void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value);
 void write_with_bp_checks(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
