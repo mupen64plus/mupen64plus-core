@@ -936,7 +936,7 @@ DECLARE_INSTRUCTION(ERET)
         generic_jump_to(r4300, cp0_regs[CP0_EPC_REG]);
     }
     r4300->llbit = 0;
-    check_interrupt(r4300);
+    r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]); // ???
     r4300->cp0.last_addr = PCADDR;
     if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
 }
@@ -1227,7 +1227,7 @@ DECLARE_INSTRUCTION(MTC0)
         cp0_regs[CP0_STATUS_REG] = rrt32;
         cp0_update_count(r4300);
         ADD_TO_PC(1);
-        check_interrupt(r4300);
+        r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]); // ???
         r4300->cp0.interrupt_unsafe_state = 1;
         if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state = 0;

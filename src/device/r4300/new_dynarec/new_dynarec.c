@@ -11101,7 +11101,7 @@ static void TLBWR_new(void)
 /* used in assembler files */
 void new_dynarec_check_interrupt(void)
 {
-    check_interrupt(&g_dev.r4300);
+    r4300_check_interrupt(&g_dev.r4300, CP0_CAUSE_IP2, g_dev.r4300.mi.regs[MI_INTR_REG] & g_dev.r4300.mi.regs[MI_INTR_MASK_REG]); // ???
 }
 
 static unsigned int bshift(uint32_t address)

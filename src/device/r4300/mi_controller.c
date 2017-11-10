@@ -99,14 +99,17 @@ void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case MI_INTR_MASK_REG:
         update_mi_intr_mask(&r4300->mi.regs[MI_INTR_MASK_REG], value & mask);
 
-        check_interrupt(r4300);
+        r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]);
         cp0_update_count(r4300);
         if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt(r4300);
         break;
     }
 }
 
-/* interrupt execution is immediate (if not masked) */
+/* interrupt execution is immediate (if not masked)
+ * Should only be called inside interrupt event handlers.
+ * For other cases use signal_rcp_interrupt
+ */
 void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 {
     r4300->mi.regs[MI_INTR_REG] |= mi_intr;
@@ -119,12 +122,12 @@ void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 {
     r4300->mi.regs[MI_INTR_REG] |= mi_intr;
-    check_interrupt(r4300);
+    r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]);
 }
 
 void clear_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr)
 {
     r4300->mi.regs[MI_INTR_REG] &= ~mi_intr;
-    check_interrupt(r4300);
+    r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]);
 }
 

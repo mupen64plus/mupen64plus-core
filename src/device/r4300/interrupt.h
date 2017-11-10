@@ -30,10 +30,10 @@ struct interrupt_queue;
 
 void init_interrupt(struct cp0* cp0);
 
-void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause);
+void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause_ip);
 
 void gen_interrupt(struct r4300_core* r4300);
-void check_interrupt(struct r4300_core* r4300);
+void r4300_check_interrupt(struct r4300_core* r4300, uint32_t cause_ip, int set_cause);
 
 void translate_event_queue(struct cp0* cp0, unsigned int base);
 void remove_event(struct interrupt_queue* q, int type);
