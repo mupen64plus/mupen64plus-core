@@ -39,13 +39,13 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
 
     static const struct cic cics[] =
     {
-        { CIC_5101, 0xac },
-        { CIC_X101, 0x3f },
-        { CIC_X102, 0x3f },
-        { CIC_X103, 0x78 },
-        { CIC_X105, 0x91 },
-        { CIC_X106, 0x85 },
-        { CIC_5167, 0xdd }
+        { "5101", CIC_5101, 0xac },
+        { "X101", CIC_X101, 0x3f },
+        { "X102", CIC_X102, 0x3f },
+        { "X103", CIC_X103, 0x78 },
+        { "X105", CIC_X105, 0x91 },
+        { "X106", CIC_X106, 0x85 },
+        { "5167", CIC_5167, 0xdd }
     };
 
     for (i = 0; i < 0xfc0/4; i++)
@@ -67,5 +67,7 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
     }
 
     memcpy(cic, &cics[i], sizeof(*cic));
+
+    DebugMessage(M64MSG_INFO, "Using CIC type %s", cic->name);
 }
 
