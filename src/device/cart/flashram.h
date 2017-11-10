@@ -29,6 +29,14 @@ struct storage_backend_interface;
 
 enum { FLASHRAM_SIZE = 0x20000 };
 
+/* flashram manufacture and device code */
+enum {
+    MX29L1100_ID = 0x00c2001e,
+    MX29L1101_ID = 0x00c2001d,
+    MN63F8MPN_ID = 0x003200f1,
+};
+
+
 enum flashram_mode
 {
     FLASHRAM_MODE_NOPES = 0,
@@ -41,7 +49,7 @@ enum flashram_mode
 struct flashram
 {
     enum flashram_mode mode;
-    uint64_t status;
+    uint32_t status[2];
     unsigned int erase_offset;
     unsigned int write_pointer;
 
@@ -51,6 +59,7 @@ struct flashram
 };
 
 void init_flashram(struct flashram* flashram,
+                   uint32_t flashram_type,
                    void* storage,
                    const struct storage_backend_interface* istorage,
                    const uint8_t* dram);

@@ -115,6 +115,7 @@ void init_device(struct device* dev,
     size_t rom_size,
     uint16_t eeprom_type,
     void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
+    uint32_t flashram_type,
     void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
     void* sram_storage, const struct storage_backend_interface* isram_storage);
 

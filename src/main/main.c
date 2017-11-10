@@ -1105,6 +1105,10 @@ m64p_error main_run(void)
     struct file_storage mpk_storages[GAME_CONTROLLERS_COUNT];
     struct file_storage mpk;
 
+    /* XXX: select type of flashram from db */
+    uint32_t flashram_type = MX29L1100_ID;
+
+
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
 
@@ -1314,6 +1318,7 @@ m64p_error main_run(void)
                 g_rom_size,
                 (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
                 &eep, &g_ifile_storage,
+                flashram_type,
                 &fla, &g_ifile_storage,
                 &sra, &g_ifile_storage);
 
