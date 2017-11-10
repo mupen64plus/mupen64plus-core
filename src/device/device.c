@@ -183,6 +183,7 @@ void init_device(struct device* dev,
             &dev->ri.rdram, &dev->si.pif.cic,
             eeprom_type, eeprom_storage, ieeprom_storage,
             flashram_type, flashram_storage, iflashram_storage,
+            (const uint8_t*)dev->ri.rdram.dram,
             sram_storage, isram_storage);
 }
 

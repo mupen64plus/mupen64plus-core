@@ -63,6 +63,7 @@ void init_cart(struct cart* cart,
                /* flashram */
                uint32_t flashram_type,
                void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+               const uint8_t* dram,
                /* sram */
                void* sram_storage, const struct storage_backend_interface* isram_storage);
 
