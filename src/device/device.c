@@ -46,18 +46,7 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
-static unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
-{
-    return /* length / 8 */0x1000;
-}
-
-static unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
-{
-    return /* length / 8 */0x1000;
-}
-
-
-static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
+static void get_pi_dma_handler(struct cart* cart, struct dd_controller* dd, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
 {
 #define RW(o, x) \
     do { \
@@ -69,21 +58,21 @@ static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaq
     if (address >= MM_CART_ROM) {
         if (address >= MM_CART_DOM3) {
             /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom (Paper Mario (U)) ??? */
-            RW(&dev->cart, cart_dom3);
+            RW(cart, cart_dom3);
         }
         else {
             /* 0x10000000 - 0x1fbfffff : dom1 addr2, cart rom */
-            RW(&dev->cart.cart_rom, cart_rom);
+            RW(&cart->cart_rom, cart_rom);
         }
     }
     else if (address >= MM_DOM2_ADDR2) {
         /* 0x08000000 - 0x0fffffff : dom2 addr2, cart save */
-        RW(&dev->cart, cart_dom2);
+        RW(cart, cart_dom2);
     }
     else if (address >= MM_DOM2_ADDR1) {
         /* 0x05000000 - 0x05ffffff : dom2 addr1, dd buffers */
         /* 0x06000000 - 0x07ffffff : dom1 addr1, dd rom */
-        RW(NULL, dd_dom);
+        RW(dd, dd_dom);
     }
 #undef RW
 }
@@ -114,7 +103,11 @@ void init_device(struct device* dev,
     void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
     uint32_t flashram_type,
     void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
-    void* sram_storage, const struct storage_backend_interface* isram_storage)
+    void* sram_storage, const struct storage_backend_interface* isram_storage,
+    /* dd */
+    void* dd_rtc_clock, const struct clock_backend_interface* dd_rtc_iclock,
+    size_t dd_rom_size,
+    void* dd_disk, const struct storage_backend_interface* dd_idisk)
 {
     struct interrupt_handler interrupt_handlers[] = {
         { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
@@ -152,10 +145,24 @@ void init_device(struct device* dev,
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
         { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
+        { A(MM_DOM2_ADDR1, 0xffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
+        { A(MM_DD_ROM, 0x1ffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_ram) } }
     };
+
+    /* init and map DD if present */
+    if (dd_rom_size > 0) {
+        mappings[14] = (struct mem_mapping){ A(MM_DOM2_ADDR1, 0xffffff), M64P_MEM_NOTHING, { &dev->dd, RW(dd_regs) } };
+        mappings[15] = (struct mem_mapping){ A(MM_DD_ROM, dd_rom_size-1), M64P_MEM_NOTHING, { &dev->dd, RW(dd_rom) } };
+
+        init_dd(&dev->dd,
+                dd_rtc_clock, dd_rtc_iclock,
+                (const uint32_t*)((uint8_t*)base + MM_DD_ROM), dd_rom_size,
+                dd_disk, dd_idisk,
+                &dev->r4300);
+    }
 
     struct mem_handler dbg_handler = { &dev->r4300, RW(with_bp_checks) };
 #undef A
@@ -174,16 +181,26 @@ void init_device(struct device* dev,
     init_ai(&dev->ai, &dev->mi, &dev->ri, &dev->vi, aout, iaout);
     init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
-            dev, get_pi_dma_handler,
+            get_pi_dma_handler,
+            &dev->cart, &dev->dd,
             &dev->mi, &dev->ri, &dev->dp);
     init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, si_dma_duration, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
 
+    /* FIXME: should boot on cart, unless only a disk is present, but having no cart is not yet supported by ui/core,
+     * so use another way of selecting boot device:
+     * use CART unless DD is plugged and the plugged CART is not a combo media (cart+disk).
+     */
+    uint8_t media = *((uint8_t*)mem_base_u32(base, MM_CART_ROM) + (0x3b ^ S8));
+    uint32_t rom_base = (dd_rom_size > 0 && media != 'C')
+        ? MM_DD_ROM
+        : MM_CART_ROM;
+
     init_pif(&dev->pif,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
-        (uint8_t*)mem_base_u32(base, MM_CART_ROM + 0x40),
+        (uint8_t*)mem_base_u32(base, rom_base) + 0x40,
         &dev->r4300);
 
     init_cart(&dev->cart,
@@ -222,6 +239,10 @@ void poweron_device(struct device* dev)
         if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
             channel->ijbd->poweron(channel->jbd);
         }
+    }
+
+    if (dev->dd.rom != NULL) {
+        poweron_dd(&dev->dd);
     }
 }
 

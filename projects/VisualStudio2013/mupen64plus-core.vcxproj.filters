@@ -192,6 +192,9 @@
     <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c">
       <Filter>backends</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\dd\dd_controller.c">
+      <Filter>device\dd</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\plugin\dummy_audio.c">
       <Filter>plugin</Filter>
     </ClCompile>
@@ -481,6 +484,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h">
       <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\dd\dd_controller.h">
+      <Filter>device\dd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\dummy_audio.h">
       <Filter>plugin</Filter>
