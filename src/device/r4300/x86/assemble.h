@@ -552,6 +552,13 @@ static osal_inline void mov_reg32_preg32pimm32(int reg1, int reg2, unsigned int 
    put32(imm32);
 }
 
+static osal_inline void lea_reg32_preg32x2preg32(int reg1, int reg2, int reg3)
+{
+   put8(0x8D);
+   put8(0x04 | (reg1 << 3));
+   put8(0x40 | (reg2 << 3) | reg3);
+}
+
 static osal_inline void mov_reg32_preg32x4pimm32(int reg1, int reg2, unsigned int imm32)
 {
    put8(0x8B);
