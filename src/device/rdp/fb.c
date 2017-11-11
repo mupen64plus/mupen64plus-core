@@ -22,6 +22,7 @@
 #include "fb.h"
 
 #include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
@@ -65,7 +66,7 @@ static void pre_framebuffer_read(struct fb* fb, uint32_t address)
     }
 }
 
-static void post_framebuffer_write(struct fb* fb, uint32_t address)
+static void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t mask)
 {
     size_t i;
 
@@ -81,8 +82,48 @@ static void post_framebuffer_write(struct fb* fb, uint32_t address)
         uint32_t end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
 
         if ((address >= begin) && (address <= end)) {
-            /* XXX: always assume full word access */
-            gfx.fBWrite((address & ~0x3), 4);
+            uint32_t addr = address & ~0x3;
+            size_t size = 4;
+
+            switch(mask)
+            {
+            case 0x000000ff:
+                addr += (3 ^ S8);
+                size = 1;
+                break;
+            case 0x0000ff00:
+                addr += (2 ^ S8);
+                size = 1;
+                break;
+            case 0x00ff0000:
+                addr += (1 ^ S8);
+                size = 1;
+                break;
+            case 0xff000000:
+                addr += (0 ^ S8);
+                size = 1;
+                break;
+
+            case 0x0000ffff:
+                addr += (2 ^ S16);
+                size = 2;
+                break;
+
+            case 0xffff0000:
+                addr += (0 ^ S16);
+                size = 2;
+                break;
+
+            case 0xffffffff:
+                addr += 0;
+                size = 4;
+                break;
+
+            default:
+                DebugMessage(M64MSG_WARNING, "Unknown mask %08x !!!", mask);
+            }
+
+            gfx.fBWrite(addr, size);
         }
     }
 }
@@ -98,7 +139,7 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     write_rdram_dram(dp->ri, address, value, mask);
-    post_framebuffer_write(&dp->fb, address);
+    post_framebuffer_write(&dp->fb, address, mask);
 }
 
 
