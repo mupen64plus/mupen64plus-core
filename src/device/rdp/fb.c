@@ -116,8 +116,8 @@ void protect_framebuffers(struct rdp_core* dp)
                 int end = start + fb->infos[i].width*
                           fb->infos[i].height*
                           fb->infos[i].size - 1;
-                int start1 = start;
-                int end1 = end;
+                int start1 = start >> 12;
+                int end1 = end >> 12;
                 start >>= 16;
                 end >>= 16;
                 for (j=start; j<=end; j++)
