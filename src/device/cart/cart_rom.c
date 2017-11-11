@@ -27,7 +27,6 @@
 
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "device/ri/rdram_detection_hack.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -37,15 +36,12 @@
 
 void init_cart_rom(struct cart_rom* cart_rom,
                    uint8_t* rom, size_t rom_size,
-                   struct r4300_core* r4300,
-                   struct rdram* rdram, const struct cic* cic)
+                   struct r4300_core* r4300)
 {
     cart_rom->rom = rom;
     cart_rom->rom_size = rom_size;
 
     cart_rom->r4300 = r4300;
-    cart_rom->rdram = rdram;
-    cart_rom->cic = cic;
 }
 
 void poweron_cart_rom(struct cart_rom* cart_rom)
@@ -93,15 +89,7 @@ unsigned int cart_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
     struct cart_rom* cart_rom = (struct cart_rom*)opaque;
     const uint8_t* mem = cart_rom->rom;
 
-    /* HACK: monitor PI DMA to trigger RDRAM size detection
-     * hack just before initial cart ROM loading. */
-    if (cart_addr == 0x10001000)
-    {
-        force_detected_rdram_size_hack(cart_rom->rdram, cart_rom->cic);
-    }
-
     cart_addr &= CART_ROM_ADDR_MASK;
-
 
     if (cart_addr + length < cart_rom->rom_size)
     {

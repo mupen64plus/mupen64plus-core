@@ -167,7 +167,7 @@ void init_device(struct device* dev,
     init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
-            &dev->r4300, &dev->ri);
+            &dev->r4300, &dev->ri, &dev->si.pif.cic);
     init_ri(&dev->ri, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
@@ -180,7 +180,6 @@ void init_device(struct device* dev,
             af_rtc_clock, iaf_rtc_clock,
             (uint8_t*)mem_base_u32(base, MM_CART_ROM), rom_size,
             &dev->r4300,
-            &dev->ri.rdram, &dev->si.pif.cic,
             eeprom_type, eeprom_storage, ieeprom_storage,
             flashram_type, flashram_storage, iflashram_storage,
             (const uint8_t*)dev->ri.rdram.dram,
