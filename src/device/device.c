@@ -44,12 +44,12 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
-static unsigned int dd_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+static unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     return /* length / 8 */0x1000;
 }
 
-static unsigned int dd_rom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+static unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     return /* length / 8 */0x1000;
 }
@@ -74,13 +74,14 @@ static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaq
             RW(&dev->cart.cart_rom, cart_rom);
         }
     }
-    else if (address >= MM_CART_DOM2) {
+    else if (address >= MM_DOM2_ADDR2) {
         /* 0x08000000 - 0x0fffffff : dom2 addr2, cart save */
         RW(&dev->cart, cart_dom2);
     }
-    else if (address >= MM_DD_ROM) {
+    else if (address >= MM_DOM2_ADDR1) {
+        /* 0x05000000 - 0x05ffffff : dom2 addr1, dd buffers */
         /* 0x06000000 - 0x07ffffff : dom1 addr1, dd rom */
-        RW(NULL, dd_rom);
+        RW(NULL, dd_dom);
     }
 #undef RW
 }
@@ -148,7 +149,7 @@ void init_device(struct device* dev,
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
         { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
-        { A(MM_CART_DOM2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
+        { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
     };
