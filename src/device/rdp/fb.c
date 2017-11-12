@@ -27,11 +27,12 @@
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
 #include "device/ri/ri_controller.h"
+#include "osal/preproc.h"
 #include "plugin/plugin.h"
 
 #include <string.h>
 
-static inline size_t fb_buffer_size(const FrameBufferInfo* fb_info)
+static osal_inline size_t fb_buffer_size(const FrameBufferInfo* fb_info)
 {
     return fb_info->width * fb_info->height * fb_info->size;
 }
