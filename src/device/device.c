@@ -173,7 +173,7 @@ void init_device(struct device* dev,
     init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
-            &dev->mi, &dev->ri, &dev->pif.cic);
+            &dev->mi, &dev->ri, &dev->pif.cic, &dev->dp);
     init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
