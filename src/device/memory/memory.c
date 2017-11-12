@@ -165,7 +165,7 @@ void init_memory(struct memory* mem,
                  void* base,
                  struct mem_handler* dbg_handler)
 {
-    size_t i, m;
+    size_t m;
 
 #ifdef DBG
     memset(mem->bp_checks, 0, 0x10000*sizeof(mem->bp_checks[0]));
@@ -175,19 +175,14 @@ void init_memory(struct memory* mem,
     mem->base = base;
 
     for(m = 0; m < mappings_count; ++m) {
-        uint16_t begin = mappings[m].begin >> 16;
-        uint16_t end   = mappings[m].end   >> 16;
-
-        for(i = begin; i <= end; ++i) {
-            map_region(mem, i, mappings[m].type, &mappings[m].handler);
-        }
+        apply_mem_mapping(mem, &mappings[m]);
     }
 }
 
-void map_region(struct memory* mem,
-                uint16_t region,
-                int type,
-                const struct mem_handler* handler)
+static void map_region(struct memory* mem,
+                       uint16_t region,
+                       int type,
+                       const struct mem_handler* handler)
 {
 #ifdef DBG
     /* set region type */
@@ -205,6 +200,17 @@ void map_region(struct memory* mem,
     {
         (void)type;
         mem->handlers[region] = *handler;
+    }
+}
+
+void apply_mem_mapping(struct memory* mem, const struct mem_mapping* mapping)
+{
+    size_t i;
+    uint16_t begin = mapping->begin >> 16;
+    uint16_t end   = mapping->end   >> 16;
+
+    for (i = begin; i <= end; ++i) {
+        map_region(mem, i, mapping->type, &mapping->handler);
     }
 }
 

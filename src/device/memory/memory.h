@@ -110,10 +110,7 @@ static void mem_write32(const struct mem_handler* handler, uint32_t address, uin
     handler->write32(handler->opaque, address, value, mask);
 }
 
-void map_region(struct memory* mem,
-                uint16_t region,
-                int type,
-                const struct mem_handler* handler);
+void apply_mem_mapping(struct memory* mem, const struct mem_mapping* mapping);
 
 void* init_mem_base(void);
 void release_mem_base(void* mem_base);
