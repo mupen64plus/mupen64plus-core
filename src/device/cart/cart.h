@@ -33,9 +33,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct cic;
 struct r4300_core;
-struct rdram;
 struct storage_backend_interface;
 
 struct cart
@@ -56,13 +54,13 @@ void init_cart(struct cart* cart,
                /* cart ROM */
                uint8_t* rom, size_t rom_size,
                struct r4300_core* r4300,
-               struct rdram* rdram, const struct cic* cic,
                /* eeprom */
                uint16_t eeprom_type,
                void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
                /* flashram */
                uint32_t flashram_type,
                void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+               const uint8_t* dram,
                /* sram */
                void* sram_storage, const struct storage_backend_interface* isram_storage);
 

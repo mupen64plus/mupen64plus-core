@@ -50,6 +50,7 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 /* memory map constants */
 #define MM_RDRAM_DRAM       UINT32_C(0x00000000)
 #define MM_RDRAM_REGS       UINT32_C(0x03f00000)
+
 #define MM_RSP_MEM          UINT32_C(0x04000000)
 #define MM_RSP_REGS         UINT32_C(0x04040000)
 #define MM_RSP_REGS2        UINT32_C(0x04080000)
@@ -61,9 +62,12 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 #define MM_PI_REGS          UINT32_C(0x04600000)
 #define MM_RI_REGS          UINT32_C(0x04700000)
 #define MM_SI_REGS          UINT32_C(0x04800000)
-#define MM_DD_REGS          UINT32_C(0x05000000) /* dom2 addr1 */
-#define MM_DD_ROM           UINT32_C(0x06000000) /* dom1 addr1 */
-#define MM_CART_DOM2        UINT32_C(0x08000000) /* dom2 addr2 */
+
+#define MM_DOM2_ADDR1       UINT32_C(0x05000000)
+#define MM_DD_ROM           UINT32_C(0x06000000)
+
+#define MM_DOM2_ADDR2       UINT32_C(0x08000000)
+
 #define MM_CART_ROM         UINT32_C(0x10000000) /* dom1 addr2 */
 #define MM_PIF_MEM          UINT32_C(0x1fc00000)
 #define MM_CART_DOM3        UINT32_C(0x1fd00000) /* dom2 addr2 */

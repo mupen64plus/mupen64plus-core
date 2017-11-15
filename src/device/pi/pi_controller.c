@@ -27,9 +27,11 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
+#include "device/ri/rdram_detection_hack.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -93,6 +95,13 @@ static void dma_pi_write(struct pi_controller* pi)
 
     unsigned int cycles = handler->dma_write(opaque, dram, dram_addr, cart_addr, length);
 
+    /* HACK: monitor PI DMA to trigger RDRAM size detection
+     * hack just before initial cart ROM loading. */
+    if ((cart_addr & 0x1fffffff) == (MM_CART_ROM + 0x1000))
+    {
+        force_detected_rdram_size_hack(&pi->ri->rdram, pi->cic);
+    }
+
     /* Mark DMA as busy */
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
@@ -105,13 +114,14 @@ static void dma_pi_write(struct pi_controller* pi)
 void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              struct r4300_core* r4300,
-             struct ri_controller* ri)
+             struct ri_controller* ri,
+             const struct cic* cic)
 {
     pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
-
     pi->r4300 = r4300;
     pi->ri = ri;
+    pi->cic = cic;
 }
 
 void poweron_pi(struct pi_controller* pi)

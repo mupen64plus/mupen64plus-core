@@ -342,18 +342,19 @@ void init_interrupt(struct cp0* cp0)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-void check_interrupt(struct r4300_core* r4300)
+void r4300_check_interrupt(struct r4300_core* r4300, uint32_t cause_ip, int set_cause)
 {
     struct node* event;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
 
-    if (r4300->mi.regs[MI_INTR_REG] & r4300->mi.regs[MI_INTR_MASK_REG]) {
-        cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP2) & ~CP0_CAUSE_EXCCODE_MASK;
+    if (set_cause) {
+        cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause_ip) & ~CP0_CAUSE_EXCCODE_MASK;
     }
     else {
-        cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP2;
+        cp0_regs[CP0_CAUSE_REG] &= ~cause_ip;
     }
+
     if ((cp0_regs[CP0_STATUS_REG] & (CP0_STATUS_IE | CP0_STATUS_EXL | CP0_STATUS_ERL)) != CP0_STATUS_IE) {
         return;
     }
@@ -384,10 +385,10 @@ void check_interrupt(struct r4300_core* r4300)
     }
 }
 
-void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause)
+void raise_maskable_interrupt(struct r4300_core* r4300, uint32_t cause_ip)
 {
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause) & ~CP0_CAUSE_EXCCODE_MASK;
+    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause_ip) & ~CP0_CAUSE_EXCCODE_MASK;
 
     if (!(cp0_regs[CP0_STATUS_REG] & cp0_regs[CP0_CAUSE_REG] & UINT32_C(0xff00))) {
         return;

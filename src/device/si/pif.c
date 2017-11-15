@@ -379,11 +379,7 @@ void update_pif_ram(struct si_controller* si)
 void hw2_int_handler(void* opaque)
 {
     struct pif* pif = (struct pif*)opaque;
-    uint32_t* cp0_regs = r4300_cp0_regs(&pif->r4300->cp0);
 
-    cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | CP0_STATUS_IM4;
-    cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | CP0_CAUSE_IP4) & ~CP0_CAUSE_EXCCODE_MASK;
-
-    exception_general(pif->r4300);
+    raise_maskable_interrupt(pif->r4300, CP0_CAUSE_IP4);
 }
 

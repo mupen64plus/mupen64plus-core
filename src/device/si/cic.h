@@ -35,6 +35,7 @@ enum cic_version
 
 struct cic
 {
+    const char* name;
     enum cic_version version;
     unsigned int seed;
 };
