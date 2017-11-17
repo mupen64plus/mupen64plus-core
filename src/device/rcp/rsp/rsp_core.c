@@ -261,13 +261,6 @@ void do_SP_Task(struct rsp_core* sp)
 
     if (sp->mem[0xfc0/4] == 1)
     {
-        if (sp->dp->dpc_regs[DPC_STATUS_REG] & DPC_STATUS_FREEZE) // DP frozen (DK64, BC)
-        {
-            // don't do the task now
-            // the task will be done when DP is unfreezed (see update_dpc_status)
-            return;
-        }
-
         unprotect_framebuffers(&sp->dp->fb);
 
         //gfx.processDList();
@@ -280,9 +273,13 @@ void do_SP_Task(struct rsp_core* sp)
 
         if (sp->mi->regs[MI_INTR_REG] & MI_INTR_DP)
         {
-            cp0_update_count(sp->mi->r4300);
-            add_interrupt_event(&sp->mi->r4300->cp0, DP_INT, 4000);
             sp->mi->regs[MI_INTR_REG] &= ~MI_INTR_DP;
+            if (sp->dp->dpc_regs[DPC_STATUS_REG] & DPC_STATUS_FREEZE) {
+                sp->dp->do_on_unfreeze |= DELAY_DP_INT;
+            } else {
+                cp0_update_count(sp->mi->r4300);
+                add_interrupt_event(&sp->mi->r4300->cp0, DP_INT, 4000);
+            }
         }
         sp_delay_time = 1000;
 

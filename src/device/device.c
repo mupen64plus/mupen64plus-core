@@ -177,7 +177,7 @@ void init_device(struct device* dev,
             &dev->mi, &dev->ri, &dev->pif.cic);
     init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, &dev->mi, &dev->pif, &dev->ri);
-    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi);
+    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
 
     init_pif(&dev->pif,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),

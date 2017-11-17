@@ -59,11 +59,12 @@ unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_stand
 }
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
-             struct mi_controller* mi)
+             struct mi_controller* mi, struct rdp_core* dp)
 {
     vi->clock = clock;
     vi->expected_refresh_rate = expected_refresh_rate;
     vi->mi = mi;
+    vi->dp = dp;
 }
 
 void poweron_vi(struct vi_controller* vi)
@@ -146,7 +147,10 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 void vi_vertical_interrupt_event(void* opaque)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
-    gfx.updateScreen();
+    if (vi->dp->do_on_unfreeze & DELAY_DP_INT)
+        vi->dp->do_on_unfreeze |= DELAY_UPDATESCREEN;
+    else
+        gfx.updateScreen();
 
     /* allow main module to do things on VI event */
     new_vi();
