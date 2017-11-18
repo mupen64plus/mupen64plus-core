@@ -27,7 +27,6 @@
 
 #include "api/m64p_types.h"
 #include "device/device.h"
-#include "device/si/pif.h"
 #include "osal/preproc.h"
 
 /* globals */

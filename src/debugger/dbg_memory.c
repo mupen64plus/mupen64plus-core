@@ -31,6 +31,7 @@
 #include "device/memory/memory.h"
 #include "device/mi/mi_controller.h"
 #include "device/pi/pi_controller.h"
+#include "device/pif/pif.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
 #include "device/ri/ri_controller.h"
@@ -350,7 +351,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_PIF:
       offset = pif_ram_address(addr);
       if (offset < PIF_RAM_SIZE)
-        return sl((*((uint32_t*)&g_dev.si.pif.ram[offset])));
+        return sl((*((uint32_t*)&g_dev.pif.ram[offset])));
       break;
     case M64P_MEM_MI:
       offset = mi_reg(addr);

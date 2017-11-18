@@ -24,10 +24,8 @@
 
 #include <stdint.h>
 
-#include "pif.h"
-
 struct mi_controller;
-struct r4300_core;
+struct pif;
 struct ri_controller;
 struct joybus_device_interface;
 
@@ -55,11 +53,9 @@ struct si_controller
     uint32_t regs[SI_REGS_COUNT];
     unsigned char dma_dir;
 
-    struct pif pif;
-
     struct mi_controller* mi;
+    struct pif* pif;
     struct ri_controller* ri;
-
 };
 
 static uint32_t si_reg(uint32_t address)
@@ -69,12 +65,8 @@ static uint32_t si_reg(uint32_t address)
 
 
 void init_si(struct si_controller* si,
-             uint8_t* pif_base,
-             void* jbds[PIF_CHANNELS_COUNT],
-             const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
-             const uint8_t* ipl3,
              struct mi_controller* mi,
-             struct r4300_core* r4300,
+             struct pif* pif,
              struct ri_controller* ri);
 
 void poweron_si(struct si_controller* si);

@@ -27,6 +27,7 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/mi/mi_controller.h"
+#include "device/pif/pif.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 
@@ -62,7 +63,7 @@ static void copy_pif_rdram(struct si_controller* si)
     /* DRAM address must be word-aligned */
     uint32_t dram_addr = si->regs[SI_DRAM_ADDR_REG] & ~UINT32_C(3);
 
-    uint32_t* pif_ram = (uint32_t*)si->pif.ram;
+    uint32_t* pif_ram = (uint32_t*)si->pif->ram;
     uint32_t* dram = (uint32_t*)(&si->ri->rdram.dram[rdram_dram_address(dram_addr)]);
 
     if (si->dma_dir == SI_DMA_WRITE) {
@@ -98,7 +99,7 @@ static void dma_si_read(struct si_controller* si)
 
     si->dma_dir = SI_DMA_READ;
 
-    update_pif_ram(si);
+    update_pif_ram(si->pif);
 
     cp0_update_count(si->mi->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
@@ -106,30 +107,19 @@ static void dma_si_read(struct si_controller* si)
 }
 
 void init_si(struct si_controller* si,
-             uint8_t* pif_base,
-             void* jbds[PIF_CHANNELS_COUNT],
-             const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
-             const uint8_t* ipl3,
              struct mi_controller* mi,
-             struct r4300_core* r4300,
+             struct pif* pif,
              struct ri_controller* ri)
 {
     si->mi = mi;
+    si->pif = pif;
     si->ri = ri;
-
-    init_pif(&si->pif,
-        pif_base,
-        jbds, ijbds,
-        ipl3,
-        r4300);
 }
 
 void poweron_si(struct si_controller* si)
 {
     memset(si->regs, 0, SI_REGS_COUNT*sizeof(uint32_t));
     si->dma_dir = SI_NO_DMA;
-
-    poweron_pif(&si->pif);
 }
 
 
@@ -176,7 +166,7 @@ void si_end_of_dma_event(void* opaque)
 
     /* DRAM -> PIF : start the PIF processing */
     if (si->dma_dir == SI_DMA_WRITE)
-        process_pif_ram(si);
+        process_pif_ram(si->pif);
     /* PIF -> DRAM : copy to RDRAM */
     else if (si->dma_dir == SI_DMA_READ)
         copy_pif_rdram(si);

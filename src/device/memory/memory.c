@@ -26,7 +26,7 @@
 
 #include "device/device.h"
 #include "device/rsp/rsp_core.h"
-#include "device/si/pif.h"
+#include "device/pif/pif.h"
 
 #ifdef DBG
 #include <string.h>

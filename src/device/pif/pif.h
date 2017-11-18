@@ -28,7 +28,6 @@
 #include "cic.h"
 
 struct joybus_device_interface;
-struct si_controller;
 struct r4300_core;
 
 enum { PIF_ROM_SIZE = 0x7c0 };
@@ -81,8 +80,8 @@ void setup_channels_format(struct pif* pif);
 void read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
 void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void process_pif_ram(struct si_controller* si);
-void update_pif_ram(struct si_controller* si);
+void process_pif_ram(struct pif* pif);
+void update_pif_ram(struct pif* pif);
 
 void hw2_int_handler(void* opaque);
 

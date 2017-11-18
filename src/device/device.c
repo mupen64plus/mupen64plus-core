@@ -25,6 +25,7 @@
 #include "memory/memory.h"
 #include "mi/mi_controller.h"
 #include "pi/pi_controller.h"
+#include "pif/pif.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
@@ -100,7 +101,7 @@ void init_device(struct device* dev,
     void* aout, const struct audio_out_backend_interface* iaout,
     /* ri */
     size_t dram_size,
-    /* si */
+    /* pif */
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */
@@ -124,7 +125,7 @@ void init_device(struct device* dev,
         { &dev->ai,        ai_end_of_dma_event         }, /* AI */
         { &dev->sp,        rsp_interrupt_event         }, /* SP */
         { &dev->dp,        rdp_interrupt_event         }, /* DP */
-        { &dev->si.pif,    hw2_int_handler             }, /* HW2 */
+        { &dev->pif,       hw2_int_handler             }, /* HW2 */
         { dev,             nmi_int_handler             }, /* NMI */
         { dev,             reset_hard_handler          }  /* reset_hard */
     };
@@ -152,7 +153,7 @@ void init_device(struct device* dev,
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
-        { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->si, RW(pif_ram) } }
+        { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_ram) } }
     };
 
     struct mem_handler dbg_handler = { &dev->r4300, RW(with_bp_checks) };
@@ -170,14 +171,16 @@ void init_device(struct device* dev,
     init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
-            &dev->mi, &dev->ri, &dev->si.pif.cic);
+            &dev->mi, &dev->ri, &dev->pif.cic);
     init_ri(&dev->ri, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
-    init_si(&dev->si,
+    init_si(&dev->si, &dev->mi, &dev->pif, &dev->ri);
+    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi);
+
+    init_pif(&dev->pif,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
         (uint8_t*)mem_base_u32(base, MM_CART_ROM + 0x40),
-        &dev->mi, &dev->r4300, &dev->ri);
-    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi);
+        &dev->r4300);
 
     init_cart(&dev->cart,
             af_rtc_clock, iaf_rtc_clock,
@@ -203,11 +206,13 @@ void poweron_device(struct device* dev)
     poweron_si(&dev->si);
     poweron_vi(&dev->vi);
 
+    poweron_pif(&dev->pif);
+
     poweron_cart(&dev->cart);
 
     /* poweron for controllers */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        struct pif_channel* channel = &dev->si.pif.channels[i];
+        struct pif_channel* channel = &dev->pif.channels[i];
 
         if ((channel->ijbd != NULL) && (channel->ijbd->poweron != NULL)) {
             channel->ijbd->poweron(channel->jbd);
@@ -235,5 +240,5 @@ void hard_reset_device(struct device* dev)
 
 void soft_reset_device(struct device* dev)
 {
-    reset_pif(&dev->si.pif, 1); /* Soft reset */
+    reset_pif(&dev->pif, 1); /* Soft reset */
 }

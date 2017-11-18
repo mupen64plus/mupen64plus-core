@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #include "pif.h"
+#include "n64_cic_nus_6105.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -32,8 +33,6 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/exception.h"
-#include "device/si/n64_cic_nus_6105.h"
-#include "device/si/si_controller.h"
 #include "plugin/plugin.h"
 
 #define __STDC_FORMAT_MACROS
@@ -277,7 +276,7 @@ void poweron_pif(struct pif* pif)
 
 void read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
 {
-    struct si_controller* si = (struct si_controller*)opaque;
+    struct pif* pif = (struct pif*)opaque;
     uint32_t addr = pif_ram_address(address);
 
     if (addr >= PIF_RAM_SIZE)
@@ -287,13 +286,13 @@ void read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
         return;
     }
 
-    memcpy(value, si->pif.ram + addr, sizeof(*value));
+    memcpy(value, pif->ram + addr, sizeof(*value));
     *value = sl(*value);
 }
 
 void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    struct si_controller* si = (struct si_controller*)opaque;
+    struct pif* pif = (struct pif*)opaque;
     uint32_t addr = pif_ram_address(address);
 
     if (addr >= PIF_RAM_SIZE)
@@ -302,15 +301,14 @@ void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
     }
 
-    masked_write((uint32_t*)(&si->pif.ram[addr]), sl(value), sl(mask));
+    masked_write((uint32_t*)(&pif->ram[addr]), sl(value), sl(mask));
 
-    process_pif_ram(si);
+    process_pif_ram(pif);
 }
 
 
-void process_pif_ram(struct si_controller* si)
+void process_pif_ram(struct pif* pif)
 {
-    struct pif* pif = &si->pif;
     uint8_t flags = pif->ram[0x3f];
     uint8_t clrmask = 0x00;
     size_t k;
@@ -355,10 +353,9 @@ void process_pif_ram(struct si_controller* si)
     pif->ram[0x3f] &= ~clrmask;
 }
 
-void update_pif_ram(struct si_controller* si)
+void update_pif_ram(struct pif* pif)
 {
     size_t k;
-    struct pif* pif = &si->pif;
 
     /* perform PIF/Channel communications */
     for (k = 0; k < PIF_CHANNELS_COUNT; ++k) {

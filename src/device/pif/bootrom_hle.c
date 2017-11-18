@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - pifbootrom.c                                            *
+ *   Mupen64plus - bootrom_hle.c                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,7 +19,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "pifbootrom.h"
+#include "bootrom_hle.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -45,7 +45,7 @@ static unsigned int get_tv_type(void)
     }
 }
 
-void pifbootrom_hle_execute(struct r4300_core* r4300)
+void pif_bootrom_hle_execute(struct r4300_core* r4300)
 {
     uint32_t pif24;
     unsigned int seed;       /* seed (depends on CIC version) */

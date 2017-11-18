@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 #include "device/ri/rdram.h"
-#include "device/si/cic.h"
+#include "device/pif/cic.h"
 
 /* HACK: force detected RDRAM size
  * This hack is triggered just before initial ROM loading (see pi_controller.c)

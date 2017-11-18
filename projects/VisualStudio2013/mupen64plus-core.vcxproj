@@ -62,7 +62,7 @@
     <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
     <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
     <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
-    <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c" />
+    <ClCompile Include="..\..\src\device\pif\bootrom_hle.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
     <ClCompile Include="..\..\src\device\device.c" />
     <ClCompile Include="..\..\src\main\eventloop.c" />
@@ -236,9 +236,9 @@
     <ClCompile Include="..\..\src\device\ri\rdram_detection_hack.c" />
     <ClCompile Include="..\..\src\device\ri\ri_controller.c" />
     <ClCompile Include="..\..\src\device\rsp\rsp_core.c" />
-    <ClCompile Include="..\..\src\device\si\cic.c" />
-    <ClCompile Include="..\..\src\device\si\n64_cic_nus_6105.c" />
-    <ClCompile Include="..\..\src\device\si\pif.c" />
+    <ClCompile Include="..\..\src\device\pif\cic.c" />
+    <ClCompile Include="..\..\src\device\pif\n64_cic_nus_6105.c" />
+    <ClCompile Include="..\..\src\device\pif\pif.c" />
     <ClCompile Include="..\..\src\device\si\si_controller.c" />
     <ClCompile Include="..\..\src\device\vi\vi_controller.c" />
   </ItemGroup>
@@ -283,7 +283,7 @@
     <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
     <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />
-    <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h" />
+    <ClInclude Include="..\..\src\device\pif\bootrom_hle.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
     <ClInclude Include="..\..\src\device\device.h" />
     <ClInclude Include="..\..\src\main\eventloop.h" />
@@ -450,9 +450,9 @@
     <ClInclude Include="..\..\src\device\ri\rdram_detection_hack.h" />
     <ClInclude Include="..\..\src\device\ri\ri_controller.h" />
     <ClInclude Include="..\..\src\device\rsp\rsp_core.h" />
-    <ClInclude Include="..\..\src\device\si\cic.h" />
-    <ClInclude Include="..\..\src\device\si\n64_cic_nus_6105.h" />
-    <ClInclude Include="..\..\src\device\si\pif.h" />
+    <ClInclude Include="..\..\src\device\pif\cic.h" />
+    <ClInclude Include="..\..\src\device\pif\n64_cic_nus_6105.h" />
+    <ClInclude Include="..\..\src\device\pif\pif.h" />
     <ClInclude Include="..\..\src\device\si\si_controller.h" />
     <ClInclude Include="..\..\src\device\vi\vi_controller.h" />
   </ItemGroup>

@@ -29,6 +29,7 @@
 #include "memory/memory.h"
 #include "mi/mi_controller.h"
 #include "pi/pi_controller.h"
+#include "pif/pif.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
 #include "ri/ri_controller.h"
@@ -86,6 +87,7 @@ struct device
     struct ri_controller ri;
     struct si_controller si;
     struct vi_controller vi;
+    struct pif pif;
     struct memory mem;
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
@@ -111,7 +113,7 @@ void init_device(struct device* dev,
     void* aout, const struct audio_out_backend_interface* iaout,
     /* ri */
     size_t dram_size,
-    /* si */
+    /* pif */
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */

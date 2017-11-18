@@ -466,7 +466,10 @@ SOURCE = \
     $(SRCDIR)/device/memory/memory.c \
     $(SRCDIR)/device/mi/mi_controller.c \
     $(SRCDIR)/device/pi/pi_controller.c \
-    $(SRCDIR)/device/pifbootrom/pifbootrom.c \
+    $(SRCDIR)/device/pif/bootrom_hle.c \
+    $(SRCDIR)/device/pif/cic.c \
+    $(SRCDIR)/device/pif/n64_cic_nus_6105.c \
+    $(SRCDIR)/device/pif/pif.c \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
@@ -483,9 +486,6 @@ SOURCE = \
     $(SRCDIR)/device/ri/rdram_detection_hack.c \
     $(SRCDIR)/device/ri/ri_controller.c \
     $(SRCDIR)/device/rsp/rsp_core.c \
-    $(SRCDIR)/device/si/cic.c \
-    $(SRCDIR)/device/si/n64_cic_nus_6105.c \
-    $(SRCDIR)/device/si/pif.c \
     $(SRCDIR)/device/si/si_controller.c \
     $(SRCDIR)/device/vi/vi_controller.c \
     $(SRCDIR)/main/main.c \

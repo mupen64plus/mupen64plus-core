@@ -70,7 +70,7 @@
     <Filter Include="device\vi">
       <UniqueIdentifier>{c07bc3cc-5ebb-4a54-9487-ce74c52ee078}</UniqueIdentifier>
     </Filter>
-    <Filter Include="device\pifbootrom">
+    <Filter Include="device\pif">
       <UniqueIdentifier>{0628d2cb-f4d7-4b1e-ad47-00501bd18048}</UniqueIdentifier>
     </Filter>
     <Filter Include="device\gb">
@@ -222,14 +222,14 @@
     <ClCompile Include="..\..\src\device\rsp\rsp_core.c">
       <Filter>device\rsp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\si\cic.c">
-      <Filter>device\si</Filter>
+    <ClCompile Include="..\..\src\device\pif\cic.c">
+      <Filter>device\pif</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\si\n64_cic_nus_6105.c">
-      <Filter>device\si</Filter>
+    <ClCompile Include="..\..\src\device\pif\n64_cic_nus_6105.c">
+      <Filter>device\pif</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\si\pif.c">
-      <Filter>device\si</Filter>
+    <ClCompile Include="..\..\src\device\pif\pif.c">
+      <Filter>device\pif</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\si\si_controller.c">
       <Filter>device\si</Filter>
@@ -318,8 +318,8 @@
     <ClCompile Include="..\..\src\device\device.c">
       <Filter>device</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\pifbootrom\pifbootrom.c">
-      <Filter>device\pifbootrom</Filter>
+    <ClCompile Include="..\..\src\device\pif\bootrom_hle.c">
+      <Filter>device\pif</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\plugins_compat\audio_plugin_compat.c">
       <Filter>backends\plugins_compat</Filter>
@@ -521,14 +521,14 @@
     <ClInclude Include="..\..\src\device\rsp\rsp_core.h">
       <Filter>device\rsp</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\cic.h">
-      <Filter>device\si</Filter>
+    <ClInclude Include="..\..\src\device\pif\cic.h">
+      <Filter>device\pif</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\n64_cic_nus_6105.h">
-      <Filter>device\si</Filter>
+    <ClInclude Include="..\..\src\device\pif\n64_cic_nus_6105.h">
+      <Filter>device\pif</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\si\pif.h">
-      <Filter>device\si</Filter>
+    <ClInclude Include="..\..\src\device\pif\pif.h">
+      <Filter>device\pif</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\si\si_controller.h">
       <Filter>device\si</Filter>
@@ -641,8 +641,8 @@
     <ClInclude Include="..\..\src\device\device.h">
       <Filter>device</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\pifbootrom\pifbootrom.h">
-      <Filter>device\pifbootrom</Filter>
+    <ClInclude Include="..\..\src\device\pif\bootrom_hle.h">
+      <Filter>device\pif</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\backends\api\audio_out_backend.h">
       <Filter>backends\api</Filter>

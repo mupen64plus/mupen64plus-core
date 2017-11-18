@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - pifbootrom.h                                            *
+ *   Mupen64plus - bootrom_hle.h                                           *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2016 Bobby Smiles                                       *
  *                                                                         *
@@ -19,13 +19,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
-#define M64P_DEVICE_PIFBOOTROM_PIFBOOTROM_H
+#ifndef M64P_DEVICE_PIF_BOOTROM_HLE_H
+#define M64P_DEVICE_PIF_BOOTROM_HLE_H
 
 struct r4300_core;
 
 /* Simulates end result of PIFBootROM execution.
  * This bypasses entirely the execution of real PIFBootROM */
-void pifbootrom_hle_execute(struct r4300_core* r4300);
+void pif_bootrom_hle_execute(struct r4300_core* r4300);
 
 #endif

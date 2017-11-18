@@ -433,7 +433,7 @@ int savestates_load_m64p(char *filepath)
 
     COPYARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
-    COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
+    COPYARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
     g_dev.cart.use_flashram = GETDATA(curr, int);
     g_dev.cart.flashram.mode = GETDATA(curr, int);
@@ -587,10 +587,10 @@ int savestates_load_m64p(char *filepath)
         for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
             int offset = GETDATA(curr, int8_t);
             if (offset >= 0) {
-                setup_pif_channel(&g_dev.si.pif.channels[i], g_dev.si.pif.ram + offset);
+                setup_pif_channel(&g_dev.pif.channels[i], g_dev.pif.ram + offset);
             }
             else {
-                disable_pif_channel(&g_dev.si.pif.channels[i]);
+                disable_pif_channel(&g_dev.pif.channels[i]);
             }
         }
 
@@ -637,7 +637,7 @@ int savestates_load_m64p(char *filepath)
          * HACK: Assume PIF was in channel processing mode (and not in CIC challenge mode)
          * Try to parse pif ram to setup pif channels
          */
-        setup_channels_format(&g_dev.si.pif);
+        setup_channels_format(&g_dev.pif);
 
         /* extra vi state */
         g_dev.vi.count_per_scanline = (g_dev.vi.regs[VI_V_SYNC_REG] == 0)
@@ -927,13 +927,13 @@ static int savestates_load_pj64(char *filepath, void *handle,
     }
 
     // pif ram
-    COPYARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
+    COPYARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
     /* extra pif channels state
      * HACK: Assume PIF was in channel processing mode (and not in CIC challenge mode)
      * Try to parse pif ram to setup pif channels
      */
-    setup_channels_format(&g_dev.si.pif);
+    setup_channels_format(&g_dev.pif);
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
     if (input.controllerCommand) {
@@ -1390,7 +1390,7 @@ int savestates_save_m64p(char *filepath)
 
     PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
-    PUTARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
+    PUTARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
     PUTDATA(curr, int, g_dev.cart.use_flashram);
     PUTDATA(curr, int, g_dev.cart.flashram.mode);
@@ -1502,9 +1502,9 @@ int savestates_save_m64p(char *filepath)
     }
 
     for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
-       PUTDATA(curr, int8_t, (g_dev.si.pif.channels[i].tx == NULL)
+       PUTDATA(curr, int8_t, (g_dev.pif.channels[i].tx == NULL)
                ? (int8_t)-1
-               : (int8_t)(g_dev.si.pif.channels[i].tx - g_dev.si.pif.ram));
+               : (int8_t)(g_dev.pif.channels[i].tx - g_dev.pif.ram));
     }
 
     PUTDATA(curr, unsigned int, g_dev.vi.count_per_scanline);
@@ -1664,7 +1664,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
         PUTDATA(curr, unsigned int, MyEntryLo1);
     }
 
-    PUTARRAY(g_dev.si.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
+    PUTARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
     PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);

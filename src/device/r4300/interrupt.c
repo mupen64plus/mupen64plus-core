@@ -36,7 +36,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "device/ai/ai_controller.h"
-#include "device/pifbootrom/pifbootrom.h"
+#include "device/pif/bootrom_hle.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
 #include "device/r4300/new_dynarec/new_dynarec.h"
@@ -443,7 +443,7 @@ void nmi_int_handler(void* opaque)
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
     // simulate the soft reset code which would run from the PIF ROM
-    pifbootrom_hle_execute(r4300);
+    pif_bootrom_hle_execute(r4300);
     // clear all interrupts, reset interrupt counters back to 0
     cp0_regs[CP0_COUNT_REG] = 0;
     g_gs_vi_counter = 0;
@@ -479,7 +479,7 @@ void reset_hard_handler(void* opaque)
 
     poweron_device(dev);
 
-    pifbootrom_hle_execute(r4300);
+    pif_bootrom_hle_execute(r4300);
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
