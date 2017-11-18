@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_PI_PI_CONTROLLER_H
-#define M64P_DEVICE_PI_PI_CONTROLLER_H
+#ifndef M64P_DEVICE_RCP_PI_PI_CONTROLLER_H
+#define M64P_DEVICE_RCP_PI_PI_CONTROLLER_H
 
 #include <stddef.h>
 #include <stdint.h>

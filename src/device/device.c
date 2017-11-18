@@ -21,17 +21,17 @@
 
 #include "device.h"
 
-#include "ai/ai_controller.h"
 #include "memory/memory.h"
-#include "mi/mi_controller.h"
-#include "pi/pi_controller.h"
 #include "pif/pif.h"
 #include "r4300/r4300_core.h"
-#include "rdp/rdp_core.h"
-#include "ri/ri_controller.h"
-#include "rsp/rsp_core.h"
-#include "si/si_controller.h"
-#include "vi/vi_controller.h"
+#include "rcp/ai/ai_controller.h"
+#include "rcp/mi/mi_controller.h"
+#include "rcp/pi/pi_controller.h"
+#include "rcp/rdp/rdp_core.h"
+#include "rcp/ri/ri_controller.h"
+#include "rcp/rsp/rsp_core.h"
+#include "rcp/si/si_controller.h"
+#include "rcp/vi/vi_controller.h"
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 

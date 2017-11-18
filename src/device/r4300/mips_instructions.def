@@ -46,8 +46,8 @@
 #include "fpu.h"
 #include "r4300_core.h"
 #include "device/memory/memory.h"
-#include "device/mi/mi_controller.h"
-#include "device/ri/ri_controller.h"
+#include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/ri/ri_controller.h"
 #include "main/xxHash/xxhash.h"
 
 #include <inttypes.h>

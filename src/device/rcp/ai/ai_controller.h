@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - vi_controller.h                                         *
+ *   Mupen64plus - ai_controller.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,64 +19,70 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_VI_VI_CONTROLLER_H
-#define M64P_DEVICE_VI_VI_CONTROLLER_H
+#ifndef M64P_DEVICE_RCP_AI_AI_CONTROLLER_H
+#define M64P_DEVICE_RCP_AI_AI_CONTROLLER_H
 
+#include <stddef.h>
 #include <stdint.h>
-#include "api/m64p_types.h"
 
 struct mi_controller;
+struct ri_controller;
+struct vi_controller;
+struct audio_out_backend_interface;
 
-enum vi_registers
+enum ai_registers
 {
-    VI_STATUS_REG,
-    VI_ORIGIN_REG,
-    VI_WIDTH_REG,
-    VI_V_INTR_REG,
-    VI_CURRENT_REG,
-    VI_BURST_REG,
-    VI_V_SYNC_REG,
-    VI_H_SYNC_REG,
-    VI_LEAP_REG,
-    VI_H_START_REG,
-    VI_V_START_REG,
-    VI_V_BURST_REG,
-    VI_X_SCALE_REG,
-    VI_Y_SCALE_REG,
-    VI_REGS_COUNT
+    AI_DRAM_ADDR_REG,
+    AI_LEN_REG,
+    AI_CONTROL_REG,
+    AI_STATUS_REG,
+    AI_DACRATE_REG,
+    AI_BITRATE_REG,
+    AI_REGS_COUNT
 };
 
-struct vi_controller
+struct ai_dma
 {
-    uint32_t regs[VI_REGS_COUNT];
-    unsigned int field;
-    unsigned int delay;
-    unsigned int next_vi;
+    uint32_t address;
+    uint32_t length;
+    unsigned int duration;
+};
 
-    unsigned int clock;
-    unsigned int expected_refresh_rate;
-    unsigned int count_per_scanline;
+enum { AI_DMA_FIFO_SIZE = 2 };
+
+struct ai_controller
+{
+    uint32_t regs[AI_REGS_COUNT];
+    struct ai_dma fifo[AI_DMA_FIFO_SIZE];
+    unsigned int samples_format_changed;
+    uint32_t last_read;
+    uint32_t delayed_carry;
 
     struct mi_controller* mi;
+    struct ri_controller* ri;
+    struct vi_controller* vi;
+
+    void* aout;
+    const struct audio_out_backend_interface* iaout;
 };
 
-static uint32_t vi_reg(uint32_t address)
+static uint32_t ai_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
+void init_ai(struct ai_controller* ai,
+             struct mi_controller* mi,
+             struct ri_controller* ri,
+             struct vi_controller* vi,
+             void* aout,
+             const struct audio_out_backend_interface* iaout);
 
-unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
-unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
+void poweron_ai(struct ai_controller* ai);
 
-void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
-             struct mi_controller* mi);
+void read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void poweron_vi(struct vi_controller* vi);
-
-void read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
-void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void vi_vertical_interrupt_event(void* opaque);
+void ai_end_of_dma_event(void* opaque);
 
 #endif

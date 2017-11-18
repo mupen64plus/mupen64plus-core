@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - ai_controller.h                                         *
+ *   Mupen64plus - fb.h                                                    *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,70 +19,31 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_AI_AI_CONTROLLER_H
-#define M64P_DEVICE_AI_AI_CONTROLLER_H
+#ifndef M64P_DEVICE_RCP_RDP_FB_H
+#define M64P_DEVICE_RCP_RDP_FB_H
 
-#include <stddef.h>
 #include <stdint.h>
 
-struct mi_controller;
-struct ri_controller;
-struct vi_controller;
-struct audio_out_backend_interface;
+#include "api/m64p_plugin.h"
 
-enum ai_registers
+struct rdp_core;
+
+enum { FB_INFOS_COUNT = 6 };
+enum { FB_DIRTY_PAGES_COUNT = 0x800 };
+
+struct fb
 {
-    AI_DRAM_ADDR_REG,
-    AI_LEN_REG,
-    AI_CONTROL_REG,
-    AI_STATUS_REG,
-    AI_DACRATE_REG,
-    AI_BITRATE_REG,
-    AI_REGS_COUNT
+    unsigned char dirty_page[FB_DIRTY_PAGES_COUNT];
+    FrameBufferInfo infos[FB_INFOS_COUNT];
+    unsigned int once;
 };
 
-struct ai_dma
-{
-    uint32_t address;
-    uint32_t length;
-    unsigned int duration;
-};
+void poweron_fb(struct fb* fb);
 
-enum { AI_DMA_FIFO_SIZE = 2 };
+void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
+void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-struct ai_controller
-{
-    uint32_t regs[AI_REGS_COUNT];
-    struct ai_dma fifo[AI_DMA_FIFO_SIZE];
-    unsigned int samples_format_changed;
-    uint32_t last_read;
-    uint32_t delayed_carry;
-
-    struct mi_controller* mi;
-    struct ri_controller* ri;
-    struct vi_controller* vi;
-
-    void* aout;
-    const struct audio_out_backend_interface* iaout;
-};
-
-static uint32_t ai_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
-}
-
-void init_ai(struct ai_controller* ai,
-             struct mi_controller* mi,
-             struct ri_controller* ri,
-             struct vi_controller* vi,
-             void* aout,
-             const struct audio_out_backend_interface* iaout);
-
-void poweron_ai(struct ai_controller* ai);
-
-void read_ai_regs(void* opaque, uint32_t address, uint32_t* value);
-void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void ai_end_of_dma_event(void* opaque);
+void protect_framebuffers(struct rdp_core* dp);
+void unprotect_framebuffers(struct rdp_core* dp);
 
 #endif

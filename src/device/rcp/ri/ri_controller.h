@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - si_controller.h                                         *
+ *   Mupen64plus - ri_controller.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,61 +19,46 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_SI_CONTROLLER_H
-#define M64P_DEVICE_SI_SI_CONTROLLER_H
+#ifndef M64P_DEVICE_RCP_RI_RI_CONTROLLER_H
+#define M64P_DEVICE_RCP_RI_RI_CONTROLLER_H
 
+#include <stddef.h>
 #include <stdint.h>
 
-struct mi_controller;
-struct pif;
-struct ri_controller;
-struct joybus_device_interface;
+#include "rdram.h"
 
-enum si_dma_dir
+enum ri_registers
 {
-    SI_NO_DMA,
-    SI_DMA_READ,
-    SI_DMA_WRITE
+    RI_MODE_REG,
+    RI_CONFIG_REG,
+    RI_CURRENT_LOAD_REG,
+    RI_SELECT_REG,
+    RI_REFRESH_REG,
+    RI_LATENCY_REG,
+    RI_ERROR_REG,
+    RI_WERROR_REG,
+    RI_REGS_COUNT
 };
 
-enum si_registers
+struct ri_controller
 {
-    SI_DRAM_ADDR_REG,
-    SI_PIF_ADDR_RD64B_REG,
-    SI_R2_REG, /* reserved */
-    SI_R3_REG, /* reserved */
-    SI_PIF_ADDR_WR64B_REG,
-    SI_R5_REG, /* reserved */
-    SI_STATUS_REG,
-    SI_REGS_COUNT
+    uint32_t regs[RI_REGS_COUNT];
+
+    struct rdram rdram;
 };
 
-struct si_controller
-{
-    uint32_t regs[SI_REGS_COUNT];
-    unsigned char dma_dir;
-
-    struct mi_controller* mi;
-    struct pif* pif;
-    struct ri_controller* ri;
-};
-
-static uint32_t si_reg(uint32_t address)
+static uint32_t ri_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
+void init_ri(struct ri_controller* ri,
+             uint32_t* dram,
+             size_t dram_size);
 
-void init_si(struct si_controller* si,
-             struct mi_controller* mi,
-             struct pif* pif,
-             struct ri_controller* ri);
+void poweron_ri(struct ri_controller* ri);
 
-void poweron_si(struct si_controller* si);
-
-void read_si_regs(void* opaque, uint32_t address, uint32_t* value);
-void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void si_end_of_dma_event(void* opaque);
+void read_ri_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 #endif

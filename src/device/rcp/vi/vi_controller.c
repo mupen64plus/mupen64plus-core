@@ -25,8 +25,8 @@
 
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
-#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
+#include "device/rcp/mi/mi_controller.h"
 #include "main/main.h"
 #include "plugin/plugin.h"
 

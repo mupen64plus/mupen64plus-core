@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rdram_detection_hack.c                                  *
+ *   Mupen64plus - si_controller.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,24 +19,61 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "rdram_detection_hack.h"
+#ifndef M64P_DEVICE_RCP_SI_SI_CONTROLLER_H
+#define M64P_DEVICE_RCP_SI_SI_CONTROLLER_H
 
 #include <stdint.h>
 
-#include "device/ri/rdram.h"
-#include "device/pif/cic.h"
+struct mi_controller;
+struct pif;
+struct ri_controller;
+struct joybus_device_interface;
 
-/* HACK: force detected RDRAM size
- * This hack is triggered just before initial ROM loading (see pi_controller.c)
- *
- * Proper emulation of RI/RDRAM subsystem is required to avoid this hack.
- */
-void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic)
+enum si_dma_dir
 {
-    uint32_t address = (cic->version != CIC_X105)
-        ? 0x318
-        : 0x3f0;
+    SI_NO_DMA,
+    SI_DMA_READ,
+    SI_DMA_WRITE
+};
 
-    rdram->dram[address/4] = (uint32_t)rdram->dram_size;
+enum si_registers
+{
+    SI_DRAM_ADDR_REG,
+    SI_PIF_ADDR_RD64B_REG,
+    SI_R2_REG, /* reserved */
+    SI_R3_REG, /* reserved */
+    SI_PIF_ADDR_WR64B_REG,
+    SI_R5_REG, /* reserved */
+    SI_STATUS_REG,
+    SI_REGS_COUNT
+};
+
+struct si_controller
+{
+    uint32_t regs[SI_REGS_COUNT];
+    unsigned char dma_dir;
+
+    struct mi_controller* mi;
+    struct pif* pif;
+    struct ri_controller* ri;
+};
+
+static uint32_t si_reg(uint32_t address)
+{
+    return (address & 0xffff) >> 2;
 }
 
+
+void init_si(struct si_controller* si,
+             struct mi_controller* mi,
+             struct pif* pif,
+             struct ri_controller* ri);
+
+void poweron_si(struct si_controller* si);
+
+void read_si_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void si_end_of_dma_event(void* opaque);
+
+#endif

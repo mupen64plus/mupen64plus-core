@@ -26,12 +26,12 @@
 
 #include "api/m64p_types.h"
 #include "device/device.h"
-#include "device/ai/ai_controller.h"
-#include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
-#include "device/rsp/rsp_core.h"
-#include "device/si/si_controller.h"
-#include "device/vi/vi_controller.h"
+#include "device/rcp/ai/ai_controller.h"
+#include "device/rcp/pi/pi_controller.h"
+#include "device/rcp/rsp/rsp_core.h"
+#include "device/rcp/si/si_controller.h"
+#include "device/rcp/vi/vi_controller.h"
 #include "main/rom.h"
 
 static unsigned int get_tv_type(void)

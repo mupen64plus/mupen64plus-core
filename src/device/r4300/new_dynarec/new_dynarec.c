@@ -33,7 +33,6 @@
 #include "main/main.h"
 #include "main/rom.h"
 #include "device/memory/memory.h"
-#include "device/rsp/rsp_core.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
 #include "device/r4300/interrupt.h"
@@ -42,7 +41,8 @@
 #include "device/r4300/tlb.h"
 #include "device/r4300/fpu.h"
 #include "device/r4300/exception.h"
-#include "device/mi/mi_controller.h"
+#include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/rsp/rsp_core.h"
 
 #if !defined(WIN32)
 #include <sys/mman.h>

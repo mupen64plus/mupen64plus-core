@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - fb.h                                                    *
+ *   Mupen64plus - rdram_detection_hack.h                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,31 +19,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_RDP_FB_H
-#define M64P_DEVICE_RDP_FB_H
+#ifndef M64P_DEVICE_RCP_RI_RDRAM_DETECTION_HACK_H
+#define M64P_DEVICE_RCP_RI_RDRAM_DETECTION_HACK_H
 
-#include <stdint.h>
+struct rdram;
+struct cic;
 
-#include "api/m64p_plugin.h"
-
-struct rdp_core;
-
-enum { FB_INFOS_COUNT = 6 };
-enum { FB_DIRTY_PAGES_COUNT = 0x800 };
-
-struct fb
-{
-    unsigned char dirty_page[FB_DIRTY_PAGES_COUNT];
-    FrameBufferInfo infos[FB_INFOS_COUNT];
-    unsigned int once;
-};
-
-void poweron_fb(struct fb* fb);
-
-void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
-void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
-
-void protect_framebuffers(struct rdp_core* dp);
-void unprotect_framebuffers(struct rdp_core* dp);
+void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic);
 
 #endif

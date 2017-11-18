@@ -22,9 +22,9 @@
 #include <stdint.h>
 
 #include "backends/api/audio_out_backend.h"
-#include "device/ai/ai_controller.h"
-#include "device/ri/ri_controller.h"
-#include "device/vi/vi_controller.h"
+#include "device/rcp/ai/ai_controller.h"
+#include "device/rcp/ri/ri_controller.h"
+#include "device/rcp/vi/vi_controller.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
 

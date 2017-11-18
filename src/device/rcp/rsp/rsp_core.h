@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_RSP_RSP_CORE_H
-#define M64P_DEVICE_RSP_RSP_CORE_H
+#ifndef M64P_DEVICE_RCP_RSP_RSP_CORE_H
+#define M64P_DEVICE_RCP_RSP_RSP_CORE_H
 
 #include <stdint.h>
 

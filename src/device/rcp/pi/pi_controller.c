@@ -29,10 +29,10 @@
 #include "api/m64p_types.h"
 #include "device/device.h"
 #include "device/memory/memory.h"
-#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
-#include "device/ri/ri_controller.h"
-#include "device/ri/rdram_detection_hack.h"
+#include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/ri/ri_controller.h"
+#include "device/rcp/ri/rdram_detection_hack.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>

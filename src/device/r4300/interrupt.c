@@ -35,14 +35,14 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
-#include "device/ai/ai_controller.h"
 #include "device/pif/bootrom_hle.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
 #include "device/r4300/new_dynarec/new_dynarec.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
-#include "device/vi/vi_controller.h"
+#include "device/rcp/ai/ai_controller.h"
+#include "device/rcp/vi/vi_controller.h"
 #include "main/main.h"
 #include "main/savestates.h"
 

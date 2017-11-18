@@ -24,9 +24,9 @@
 #include <string.h>
 
 #include "device/memory/memory.h"
-#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
-#include "device/rsp/rsp_core.h"
+#include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/rsp/rsp_core.h"
 #include "plugin/plugin.h"
 
 static int update_dpc_status(struct rdp_core* dp, uint32_t w)

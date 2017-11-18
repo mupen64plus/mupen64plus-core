@@ -24,10 +24,10 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "device/memory/memory.h"
-#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
-#include "device/rdp/rdp_core.h"
-#include "device/ri/ri_controller.h"
+#include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/rdp/rdp_core.h"
+#include "device/rcp/ri/ri_controller.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
 

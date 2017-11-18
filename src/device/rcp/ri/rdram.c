@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mi_controller.h                                         *
+ *   Mupen64plus - rdram.c                                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,53 +19,58 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_MI_MI_CONTROLLER_H
-#define M64P_DEVICE_MI_MI_CONTROLLER_H
+#include "rdram.h"
 
-#include <stdint.h>
+#include <string.h>
 
-struct r4300_core;
+#include "device/memory/memory.h"
+#include "device/rcp/ri/ri_controller.h"
 
-enum mi_registers
+void init_rdram(struct rdram* rdram,
+                uint32_t* dram,
+                size_t dram_size)
 {
-    MI_INIT_MODE_REG,
-    MI_VERSION_REG,
-    MI_INTR_REG,
-    MI_INTR_MASK_REG,
-    MI_REGS_COUNT
-};
-
-
-enum mi_intr
-{
-    MI_INTR_SP = 0x01,
-    MI_INTR_SI = 0x02,
-    MI_INTR_AI = 0x04,
-    MI_INTR_VI = 0x08,
-    MI_INTR_PI = 0x10,
-    MI_INTR_DP = 0x20
-};
-
-struct mi_controller
-{
-    uint32_t regs[MI_REGS_COUNT];
-
-    struct r4300_core* r4300;
-};
-
-static uint32_t mi_reg(uint32_t address)
-{
-    return (address & 0xffff) >> 2;
+    rdram->dram = dram;
+    rdram->dram_size = dram_size;
 }
 
-void init_mi(struct mi_controller* mi, struct r4300_core* r4300);
-void poweron_mi(struct mi_controller* mi);
+void poweron_rdram(struct rdram* rdram)
+{
+    memset(rdram->regs, 0, RDRAM_REGS_COUNT*sizeof(uint32_t));
+    memset(rdram->dram, 0, rdram->dram_size);
+}
 
-void read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
-void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void raise_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
-void signal_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
-void clear_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
+void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
+{
+    struct ri_controller* ri = (struct ri_controller*)opaque;
+    uint32_t reg = rdram_reg(address);
 
-#endif
+    *value = ri->rdram.regs[reg];
+}
+
+void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    struct ri_controller* ri = (struct ri_controller*)opaque;
+    uint32_t reg = rdram_reg(address);
+
+    masked_write(&ri->rdram.regs[reg], value, mask);
+}
+
+
+void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value)
+{
+    struct ri_controller* ri = (struct ri_controller*)opaque;
+    uint32_t addr = rdram_dram_address(address);
+
+    *value = ri->rdram.dram[addr];
+}
+
+void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
+{
+    struct ri_controller* ri = (struct ri_controller*)opaque;
+    uint32_t addr = rdram_dram_address(address);
+
+    masked_write(&ri->rdram.dram[addr], value, mask);
+}
+

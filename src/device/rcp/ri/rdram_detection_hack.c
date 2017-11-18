@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rdram.c                                                 *
+ *   Mupen64plus - rdram_detection_hack.c                                  *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,58 +19,24 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "rdram.h"
+#include "rdram_detection_hack.h"
 
-#include <string.h>
+#include <stdint.h>
 
-#include "device/memory/memory.h"
-#include "device/ri/ri_controller.h"
+#include "device/rcp/ri/rdram.h"
+#include "device/pif/cic.h"
 
-void init_rdram(struct rdram* rdram,
-                uint32_t* dram,
-                size_t dram_size)
+/* HACK: force detected RDRAM size
+ * This hack is triggered just before initial ROM loading (see pi_controller.c)
+ *
+ * Proper emulation of RI/RDRAM subsystem is required to avoid this hack.
+ */
+void force_detected_rdram_size_hack(struct rdram* rdram, const struct cic* cic)
 {
-    rdram->dram = dram;
-    rdram->dram_size = dram_size;
-}
+    uint32_t address = (cic->version != CIC_X105)
+        ? 0x318
+        : 0x3f0;
 
-void poweron_rdram(struct rdram* rdram)
-{
-    memset(rdram->regs, 0, RDRAM_REGS_COUNT*sizeof(uint32_t));
-    memset(rdram->dram, 0, rdram->dram_size);
-}
-
-
-void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t reg = rdram_reg(address);
-
-    *value = ri->rdram.regs[reg];
-}
-
-void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t reg = rdram_reg(address);
-
-    masked_write(&ri->rdram.regs[reg], value, mask);
-}
-
-
-void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t addr = rdram_dram_address(address);
-
-    *value = ri->rdram.dram[addr];
-}
-
-void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct ri_controller* ri = (struct ri_controller*)opaque;
-    uint32_t addr = rdram_dram_address(address);
-
-    masked_write(&ri->rdram.dram[addr], value, mask);
+    rdram->dram[address/4] = (uint32_t)rdram->dram_size;
 }
 

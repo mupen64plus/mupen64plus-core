@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - rdram.h                                                 *
+ *   Mupen64plus - vi_controller.h                                         *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *                                                                         *
@@ -19,54 +19,64 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_RI_RDRAM_H
-#define M64P_DEVICE_RI_RDRAM_H
+#ifndef M64P_DEVICE_RCP_VI_VI_CONTROLLER_H
+#define M64P_DEVICE_RCP_VI_VI_CONTROLLER_H
 
-#include <stddef.h>
 #include <stdint.h>
+#include "api/m64p_types.h"
 
-enum rdram_registers
+struct mi_controller;
+
+enum vi_registers
 {
-    RDRAM_CONFIG_REG,
-    RDRAM_DEVICE_ID_REG,
-    RDRAM_DELAY_REG,
-    RDRAM_MODE_REG,
-    RDRAM_REF_INTERVAL_REG,
-    RDRAM_REF_ROW_REG,
-    RDRAM_RAS_INTERVAL_REG,
-    RDRAM_MIN_INTERVAL_REG,
-    RDRAM_ADDR_SELECT_REG,
-    RDRAM_DEVICE_MANUF_REG,
-    RDRAM_REGS_COUNT
+    VI_STATUS_REG,
+    VI_ORIGIN_REG,
+    VI_WIDTH_REG,
+    VI_V_INTR_REG,
+    VI_CURRENT_REG,
+    VI_BURST_REG,
+    VI_V_SYNC_REG,
+    VI_H_SYNC_REG,
+    VI_LEAP_REG,
+    VI_H_START_REG,
+    VI_V_START_REG,
+    VI_V_BURST_REG,
+    VI_X_SCALE_REG,
+    VI_Y_SCALE_REG,
+    VI_REGS_COUNT
 };
 
-struct rdram
+struct vi_controller
 {
-    uint32_t regs[RDRAM_REGS_COUNT];
-    uint32_t* dram;
-    size_t dram_size;
+    uint32_t regs[VI_REGS_COUNT];
+    unsigned int field;
+    unsigned int delay;
+    unsigned int next_vi;
+
+    unsigned int clock;
+    unsigned int expected_refresh_rate;
+    unsigned int count_per_scanline;
+
+    struct mi_controller* mi;
 };
 
-static uint32_t rdram_reg(uint32_t address)
+static uint32_t vi_reg(uint32_t address)
 {
-    return (address & 0x3ff) >> 2;
+    return (address & 0xffff) >> 2;
 }
 
-static uint32_t rdram_dram_address(uint32_t address)
-{
-    return (address & 0xffffff) >> 2;
-}
 
-void init_rdram(struct rdram* rdram,
-                uint32_t* dram,
-                size_t dram_size);
+unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
+unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
 
-void poweron_rdram(struct rdram* rdram);
+void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
+             struct mi_controller* mi);
 
-void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value);
-void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void poweron_vi(struct vi_controller* vi);
 
-void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value);
-void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_vi_regs(void* opaque, uint32_t address, uint32_t* value);
+void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+
+void vi_vertical_interrupt_event(void* opaque);
 
 #endif
