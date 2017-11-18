@@ -464,6 +464,7 @@ SOURCE = \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
     $(SRCDIR)/device/memory/memory.c \
+    $(SRCDIR)/device/mi/mi_controller.c \
     $(SRCDIR)/device/pi/pi_controller.c \
     $(SRCDIR)/device/pifbootrom/pifbootrom.c \
     $(SRCDIR)/device/r4300/cached_interp.c \
@@ -472,7 +473,6 @@ SOURCE = \
     $(SRCDIR)/device/r4300/exception.c \
     $(SRCDIR)/device/r4300/instr_counters.c \
     $(SRCDIR)/device/r4300/interrupt.c \
-    $(SRCDIR)/device/r4300/mi_controller.c \
     $(SRCDIR)/device/r4300/pure_interp.c \
     $(SRCDIR)/device/r4300/r4300_core.c \
     $(SRCDIR)/device/r4300/recomp.c \

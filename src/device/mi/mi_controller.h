@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_R4300_MI_CONTROLLER_H
-#define M64P_DEVICE_R4300_MI_CONTROLLER_H
+#ifndef M64P_DEVICE_MI_MI_CONTROLLER_H
+#define M64P_DEVICE_MI_MI_CONTROLLER_H
 
 #include <stdint.h>
 
@@ -49,6 +49,8 @@ enum mi_intr
 struct mi_controller
 {
     uint32_t regs[MI_REGS_COUNT];
+
+    struct r4300_core* r4300;
 };
 
 static uint32_t mi_reg(uint32_t address)
@@ -56,13 +58,14 @@ static uint32_t mi_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
+void init_mi(struct mi_controller* mi, struct r4300_core* r4300);
 void poweron_mi(struct mi_controller* mi);
 
 void read_mi_regs(void* opaque, uint32_t address, uint32_t* value);
 void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void raise_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr);
-void signal_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr);
-void clear_rcp_interrupt(struct r4300_core* r4300, uint32_t mi_intr);
+void raise_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
+void signal_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
+void clear_rcp_interrupt(struct mi_controller* mi, uint32_t mi_intr);
 
 #endif

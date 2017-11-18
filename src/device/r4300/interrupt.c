@@ -39,7 +39,6 @@
 #include "device/pifbootrom/pifbootrom.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/exception.h"
-#include "device/r4300/mi_controller.h"
 #include "device/r4300/new_dynarec/new_dynarec.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"

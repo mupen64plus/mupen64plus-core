@@ -29,7 +29,7 @@
 #include "api/m64p_types.h"
 #include "device/ai/ai_controller.h"
 #include "device/memory/memory.h"
-#include "device/r4300/r4300_core.h"
+#include "device/mi/mi_controller.h"
 #include "device/rdp/rdp_core.h"
 #include "device/rsp/rsp_core.h"
 #include "device/vi/vi_controller.h"
@@ -231,7 +231,7 @@ static m64p_error plugin_start_gfx(void)
     gfx_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     gfx_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     gfx_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);
-    gfx_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
+    gfx_info.MI_INTR_REG = &(g_dev.mi.regs[MI_INTR_REG]);
     gfx_info.DPC_START_REG = &(g_dev.dp.dpc_regs[DPC_START_REG]);
     gfx_info.DPC_END_REG = &(g_dev.dp.dpc_regs[DPC_END_REG]);
     gfx_info.DPC_CURRENT_REG = &(g_dev.dp.dpc_regs[DPC_CURRENT_REG]);
@@ -327,7 +327,7 @@ static m64p_error plugin_start_audio(void)
     audio_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     audio_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     audio_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);
-    audio_info.MI_INTR_REG = &(g_dev.r4300.mi.regs[MI_INTR_REG]);
+    audio_info.MI_INTR_REG = &(g_dev.mi.regs[MI_INTR_REG]);
     audio_info.AI_DRAM_ADDR_REG = &(g_dev.ai.regs[AI_DRAM_ADDR_REG]);
     audio_info.AI_LEN_REG = &(g_dev.ai.regs[AI_LEN_REG]);
     audio_info.AI_CONTROL_REG = &(g_dev.ai.regs[AI_CONTROL_REG]);
@@ -473,7 +473,7 @@ static m64p_error plugin_start_rsp(void)
     rsp_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     rsp_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     rsp_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);
-    rsp_info.MI_INTR_REG = &g_dev.r4300.mi.regs[MI_INTR_REG];
+    rsp_info.MI_INTR_REG = &g_dev.mi.regs[MI_INTR_REG];
     rsp_info.SP_MEM_ADDR_REG = &g_dev.sp.regs[SP_MEM_ADDR_REG];
     rsp_info.SP_DRAM_ADDR_REG = &g_dev.sp.regs[SP_DRAM_ADDR_REG];
     rsp_info.SP_RD_LEN_REG = &g_dev.sp.regs[SP_RD_LEN_REG];

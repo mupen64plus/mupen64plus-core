@@ -29,6 +29,7 @@
 #include "dbg_types.h"
 #include "device/ai/ai_controller.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/pi/pi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
@@ -354,7 +355,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_MI:
       offset = mi_reg(addr);
       if (offset < MI_REGS_COUNT)
-        return g_dev.r4300.mi.regs[offset];
+        return g_dev.mi.regs[offset];
       break;
     default:
       break;

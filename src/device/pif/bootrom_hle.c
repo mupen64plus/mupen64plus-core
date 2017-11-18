@@ -28,7 +28,6 @@
 #include "device/device.h"
 #include "device/ai/ai_controller.h"
 #include "device/pi/pi_controller.h"
-#include "device/r4300/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rsp/rsp_core.h"
 #include "device/si/si_controller.h"

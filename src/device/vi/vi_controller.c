@@ -25,6 +25,7 @@
 
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "main/main.h"
 #include "plugin/plugin.h"
@@ -58,11 +59,11 @@ unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_stand
 }
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
-             struct r4300_core* r4300)
+             struct mi_controller* mi)
 {
     vi->clock = clock;
     vi->expected_refresh_rate = expected_refresh_rate;
-    vi->r4300 = r4300;
+    vi->mi = mi;
 }
 
 void poweron_vi(struct vi_controller* vi)
@@ -77,12 +78,12 @@ void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
-    const uint32_t* cp0_regs = r4300_cp0_regs(&vi->r4300->cp0);
+    const uint32_t* cp0_regs = r4300_cp0_regs(&vi->mi->r4300->cp0);
 
     if (reg == VI_CURRENT_REG)
     {
         /* XXX: update current line number */
-        cp0_update_count(vi->r4300);
+        cp0_update_count(vi->mi->r4300);
 
         if (vi->regs[VI_V_SYNC_REG] != 0)
             vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
@@ -122,7 +123,7 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
 
     case VI_CURRENT_REG:
-        clear_rcp_interrupt(vi->r4300, MI_INTR_VI);
+        clear_rcp_interrupt(vi->mi, MI_INTR_VI);
         return;
 
     case VI_V_SYNC_REG:
@@ -131,10 +132,10 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
         if (vi->regs[VI_V_SYNC_REG] != 0 && vi->next_vi == 0)
         {
-            const uint32_t* cp0_regs = r4300_cp0_regs(&vi->r4300->cp0);
-            cp0_update_count(vi->r4300);
+            const uint32_t* cp0_regs = r4300_cp0_regs(&vi->mi->r4300->cp0);
+            cp0_update_count(vi->mi->r4300);
             vi->next_vi = cp0_regs[CP0_COUNT_REG] + vi->delay;
-            add_interrupt_event_count(&vi->r4300->cp0, VI_INT, vi->next_vi);
+            add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, vi->next_vi);
         }
         return;
     }
@@ -155,9 +156,9 @@ void vi_vertical_interrupt_event(void* opaque)
 
     /* schedule next vertical interrupt */
     vi->next_vi += vi->delay;
-    add_interrupt_event_count(&vi->r4300->cp0, VI_INT, vi->next_vi);
+    add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, vi->next_vi);
 
     /* trigger interrupt */
-    raise_rcp_interrupt(vi->r4300, MI_INTR_VI);
+    raise_rcp_interrupt(vi->mi, MI_INTR_VI);
 }
 

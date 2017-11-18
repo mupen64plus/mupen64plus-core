@@ -27,6 +27,7 @@
 
 #include "ai/ai_controller.h"
 #include "memory/memory.h"
+#include "mi/mi_controller.h"
 #include "pi/pi_controller.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
@@ -80,6 +81,7 @@ struct device
     struct rdp_core dp;
     struct rsp_core sp;
     struct ai_controller ai;
+    struct mi_controller mi;
     struct pi_controller pi;
     struct ri_controller ri;
     struct si_controller si;

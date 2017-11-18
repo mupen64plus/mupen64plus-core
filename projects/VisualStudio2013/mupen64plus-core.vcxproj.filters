@@ -258,7 +258,7 @@
     <ClCompile Include="..\..\src\device\r4300\interrupt.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\mi_controller.c">
+    <ClCompile Include="..\..\src\device\mi\mi_controller.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\pure_interp.c">
@@ -560,7 +560,7 @@
     <ClInclude Include="..\..\src\device\r4300\macros.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\mi_controller.h">
+    <ClInclude Include="..\..\src\device\mi\mi_controller.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\ops.h">

@@ -29,6 +29,7 @@
 #include "api/m64p_types.h"
 #include "device/device.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 #include "device/ri/rdram_detection_hack.h"
@@ -72,8 +73,8 @@ static void dma_pi_read(struct pi_controller* pi)
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
     /* schedule end of dma interrupt event */
-    cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, cycles);
+    cp0_update_count(pi->mi->r4300);
+    add_interrupt_event(&pi->mi->r4300->cp0, PI_INT, cycles);
 }
 
 static void dma_pi_write(struct pi_controller* pi)
@@ -106,20 +107,20 @@ static void dma_pi_write(struct pi_controller* pi)
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
     /* schedule end of dma interrupt event */
-    cp0_update_count(pi->r4300);
-    add_interrupt_event(&pi->r4300->cp0, PI_INT, cycles);
+    cp0_update_count(pi->mi->r4300);
+    add_interrupt_event(&pi->mi->r4300->cp0, PI_INT, cycles);
 }
 
 
 void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
-             struct r4300_core* r4300,
+             struct mi_controller* mi,
              struct ri_controller* ri,
              const struct cic* cic)
 {
     pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
-    pi->r4300 = r4300;
+    pi->mi = mi;
     pi->ri = ri;
     pi->cic = cic;
 }
@@ -156,7 +157,7 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
     case PI_STATUS_REG:
         if (value & mask & 2)
-            clear_rcp_interrupt(pi->r4300, MI_INTR_PI);
+            clear_rcp_interrupt(pi->mi, MI_INTR_PI);
         if (value & mask & 1)
             pi->regs[PI_STATUS_REG] = 0;
         return;
@@ -180,5 +181,5 @@ void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
     pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
-    raise_rcp_interrupt(pi->r4300, MI_INTR_PI);
+    raise_rcp_interrupt(pi->mi, MI_INTR_PI);
 }

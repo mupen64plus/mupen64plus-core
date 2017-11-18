@@ -23,6 +23,7 @@
 
 #include "ai/ai_controller.h"
 #include "memory/memory.h"
+#include "mi/mi_controller.h"
 #include "pi/pi_controller.h"
 #include "r4300/r4300_core.h"
 #include "rdp/rdp_core.h"
@@ -143,7 +144,7 @@ void init_device(struct device* dev,
         { A(MM_RSP_REGS2, 0xffff), M64P_MEM_RSP, { &dev->sp, RW(rsp_regs2) } },
         { A(MM_DPC_REGS, 0xffff), M64P_MEM_DP, { &dev->dp, RW(dpc_regs) } },
         { A(MM_DPS_REGS, 0xffff), M64P_MEM_DPS, { &dev->dp, RW(dps_regs) } },
-        { A(MM_MI_REGS, 0xffff), M64P_MEM_MI, { &dev->r4300, RW(mi_regs) } },
+        { A(MM_MI_REGS, 0xffff), M64P_MEM_MI, { &dev->mi, RW(mi_regs) } },
         { A(MM_VI_REGS, 0xffff), M64P_MEM_VI, { &dev->vi, RW(vi_regs) } },
         { A(MM_AI_REGS, 0xffff), M64P_MEM_AI, { &dev->ai, RW(ai_regs) } },
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
@@ -161,21 +162,22 @@ void init_device(struct device* dev,
 #undef RW
 
     init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base, &dbg_handler);
-    init_r4300(&dev->r4300, &dev->mem, &dev->ri, interrupt_handlers,
+    init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->ri, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom, randomize_interrupt);
-    init_rdp(&dev->dp, &dev->r4300, &dev->sp, &dev->ri);
-    init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->r4300, &dev->dp, &dev->ri);
-    init_ai(&dev->ai, &dev->r4300, &dev->ri, &dev->vi, aout, iaout);
+    init_rdp(&dev->dp, &dev->sp, &dev->mi, &dev->ri);
+    init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->mi, &dev->dp, &dev->ri);
+    init_ai(&dev->ai, &dev->mi, &dev->ri, &dev->vi, aout, iaout);
+    init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
-            &dev->r4300, &dev->ri, &dev->si.pif.cic);
+            &dev->mi, &dev->ri, &dev->si.pif.cic);
     init_ri(&dev->ri, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
     init_si(&dev->si,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
         (uint8_t*)mem_base_u32(base, MM_CART_ROM + 0x40),
-        &dev->r4300, &dev->ri);
-    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->r4300);
+        &dev->mi, &dev->r4300, &dev->ri);
+    init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi);
 
     init_cart(&dev->cart,
             af_rtc_clock, iaf_rtc_clock,
@@ -195,6 +197,7 @@ void poweron_device(struct device* dev)
     poweron_rdp(&dev->dp);
     poweron_rsp(&dev->sp);
     poweron_ai(&dev->ai);
+    poweron_mi(&dev->mi);
     poweron_pi(&dev->pi);
     poweron_ri(&dev->ri);
     poweron_si(&dev->si);

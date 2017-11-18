@@ -24,6 +24,7 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
 #include "device/ri/ri_controller.h"
@@ -177,7 +178,7 @@ void protect_framebuffers(struct rdp_core* dp)
         /* map fb rw handlers */
         fb_mapping.begin = fb->infos[i].addr;
         fb_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-        apply_mem_mapping(dp->r4300->mem, &fb_mapping);
+        apply_mem_mapping(dp->mi->r4300->mem, &fb_mapping);
 
         /* mark all pages that are within a fb as dirty */
         for (j = fb_mapping.begin >> 12; j <= (fb_mapping.end >> 12); ++j) {
@@ -187,10 +188,10 @@ void protect_framebuffers(struct rdp_core* dp)
         /* disable dynarec "fast memory" code generation to avoid direct memory accesses */
         if (fb->once) {
             fb->once = 0;
-            dp->r4300->recomp.fast_memory = 0;
+            dp->mi->r4300->recomp.fast_memory = 0;
 
             /* also need to invalidate cached code to regen non fast memory code path */
-            invalidate_r4300_cached_code(dp->r4300, 0, 0);
+            invalidate_r4300_cached_code(dp->mi->r4300, 0, 0);
         }
     }
 }
@@ -216,6 +217,6 @@ void unprotect_framebuffers(struct rdp_core* dp)
         /* restore ram rw handlers */
         ram_mapping.begin = fb->infos[i].addr;
         ram_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-        apply_mem_mapping(dp->r4300->mem, &ram_mapping);
+        apply_mem_mapping(dp->mi->r4300->mem, &ram_mapping);
     }
 }

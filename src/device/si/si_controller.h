@@ -26,6 +26,7 @@
 
 #include "pif.h"
 
+struct mi_controller;
 struct r4300_core;
 struct ri_controller;
 struct joybus_device_interface;
@@ -56,7 +57,7 @@ struct si_controller
 
     struct pif pif;
 
-    struct r4300_core* r4300;
+    struct mi_controller* mi;
     struct ri_controller* ri;
 
 };
@@ -72,6 +73,7 @@ void init_si(struct si_controller* si,
              void* jbds[PIF_CHANNELS_COUNT],
              const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
              const uint8_t* ipl3,
+             struct mi_controller* mi,
              struct r4300_core* r4300,
              struct ri_controller* ri);
 

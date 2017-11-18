@@ -26,7 +26,7 @@
 #include <stdint.h>
 
 struct device;
-struct r4300_core;
+struct mi_controller;
 struct ri_controller;
 
 enum pi_registers
@@ -62,7 +62,7 @@ struct pi_controller
     struct device* dev;
     pi_dma_handler_getter get_pi_dma_handler;
 
-    struct r4300_core* r4300;
+    struct mi_controller* mi;
     struct ri_controller* ri;
     const struct cic* cic;
 };
@@ -76,7 +76,7 @@ static uint32_t pi_reg(uint32_t address)
 
 void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
-             struct r4300_core* r4300,
+             struct mi_controller* mi,
              struct ri_controller* ri,
              const struct cic* cic);
 

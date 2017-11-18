@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct r4300_core;
+struct mi_controller;
 struct ri_controller;
 struct vi_controller;
 struct audio_out_backend_interface;
@@ -58,7 +58,7 @@ struct ai_controller
     uint32_t last_read;
     uint32_t delayed_carry;
 
-    struct r4300_core* r4300;
+    struct mi_controller* mi;
     struct ri_controller* ri;
     struct vi_controller* vi;
 
@@ -72,7 +72,7 @@ static uint32_t ai_reg(uint32_t address)
 }
 
 void init_ai(struct ai_controller* ai,
-             struct r4300_core* r4300,
+             struct mi_controller* mi,
              struct ri_controller* ri,
              struct vi_controller* vi,
              void* aout,

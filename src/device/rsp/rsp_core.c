@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rdp/rdp_core.h"
 #include "device/ri/ri_controller.h"
@@ -95,12 +96,12 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     /* clear SP interrupt */
     if (w & 0x8)
     {
-        clear_rcp_interrupt(sp->r4300, MI_INTR_SP);
+        clear_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
     /* set SP interrupt */
     if (w & 0x10)
     {
-        signal_rcp_interrupt(sp->r4300, MI_INTR_SP);
+        signal_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
 
     /* clear / set single step */
@@ -143,7 +144,7 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     if (w & 0x800000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG7;
     if (w & 0x1000000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG7;
 
-    if (sp->rsp_task_locked && (get_event(&sp->r4300->cp0.q, SP_INT))) return;
+    if (sp->rsp_task_locked && (get_event(&sp->mi->r4300->cp0.q, SP_INT))) return;
     if (!(w & 0x1) && !(w & 0x4) && !sp->rsp_task_locked)
         return;
 
@@ -153,12 +154,12 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 
 void init_rsp(struct rsp_core* sp,
               uint32_t* sp_mem,
-              struct r4300_core* r4300,
+              struct mi_controller* mi,
               struct rdp_core* dp,
               struct ri_controller* ri)
 {
     sp->mem = sp_mem;
-    sp->r4300 = r4300;
+    sp->mi = mi;
     sp->dp = dp;
     sp->ri = ri;
 }
@@ -276,11 +277,11 @@ void do_SP_Task(struct rsp_core* sp)
         sp->regs2[SP_PC_REG] |= save_pc;
         new_frame();
 
-        if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_DP)
+        if (sp->mi->regs[MI_INTR_REG] & MI_INTR_DP)
         {
-            cp0_update_count(sp->r4300);
-            add_interrupt_event(&sp->r4300->cp0, DP_INT, 4000);
-            sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_DP;
+            cp0_update_count(sp->mi->r4300);
+            add_interrupt_event(&sp->mi->r4300->cp0, DP_INT, 4000);
+            sp->mi->regs[MI_INTR_REG] &= ~MI_INTR_DP;
         }
         sp_delay_time = 1000;
 
@@ -310,13 +311,13 @@ void do_SP_Task(struct rsp_core* sp)
     if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
     {
         sp->rsp_task_locked = 1;
-        sp->r4300->mi.regs[MI_INTR_REG] |= MI_INTR_SP;
+        sp->mi->regs[MI_INTR_REG] |= MI_INTR_SP;
     }
-    if (sp->r4300->mi.regs[MI_INTR_REG] & MI_INTR_SP)
+    if (sp->mi->regs[MI_INTR_REG] & MI_INTR_SP)
     {
-        cp0_update_count(sp->r4300);
-        add_interrupt_event(&sp->r4300->cp0, SP_INT, sp_delay_time);
-        sp->r4300->mi.regs[MI_INTR_REG] &= ~MI_INTR_SP;
+        cp0_update_count(sp->mi->r4300);
+        add_interrupt_event(&sp->mi->r4300->cp0, SP_INT, sp_delay_time);
+        sp->mi->regs[MI_INTR_REG] &= ~MI_INTR_SP;
     }
 
     sp->regs[SP_STATUS_REG] &=
@@ -335,6 +336,6 @@ void rsp_interrupt_event(void* opaque)
 
     if ((sp->regs[SP_STATUS_REG] & SP_STATUS_INTR_BREAK) != 0)
     {
-        raise_rcp_interrupt(sp->r4300, MI_INTR_SP);
+        raise_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
 }

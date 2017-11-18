@@ -26,7 +26,7 @@
 
 #include "fb.h"
 
-struct r4300_core;
+struct mi_controller;
 struct ri_controller;
 struct rsp_core;
 
@@ -76,8 +76,8 @@ struct rdp_core
 
     struct fb fb;
 
-    struct r4300_core* r4300;
     struct rsp_core* sp;
+    struct mi_controller* mi;
     struct ri_controller* ri;
 };
 
@@ -92,8 +92,8 @@ static uint32_t dps_reg(uint32_t address)
 }
 
 void init_rdp(struct rdp_core* dp,
-              struct r4300_core* r4300,
               struct rsp_core* sp,
+              struct mi_controller* mi,
               struct ri_controller* ri);
 
 void poweron_rdp(struct rdp_core* dp);

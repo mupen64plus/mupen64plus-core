@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rsp/rsp_core.h"
 #include "plugin/plugin.h"
@@ -42,7 +43,7 @@ static int update_dpc_status(struct rdp_core* dp, uint32_t w)
     {
         dp->dpc_regs[DPC_STATUS_REG] &= ~DPC_STATUS_FREEZE;
 
-        if (!(dp->sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) && !get_event(&dp->r4300->cp0.q, SP_INT))
+        if (!(dp->sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) && !get_event(&dp->mi->r4300->cp0.q, SP_INT))
         {
             do_sp_task_on_unfreeze = 1;
             dp->sp->regs[SP_STATUS_REG] &= ~SP_STATUS_YIELD;
@@ -59,12 +60,12 @@ static int update_dpc_status(struct rdp_core* dp, uint32_t w)
 
 
 void init_rdp(struct rdp_core* dp,
-              struct r4300_core* r4300,
               struct rsp_core* sp,
+              struct mi_controller* mi,
               struct ri_controller* ri)
 {
-    dp->r4300 = r4300;
     dp->sp = sp;
+    dp->mi = mi;
     dp->ri = ri;
 }
 
@@ -112,7 +113,7 @@ void write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
         break;
     case DPC_END_REG:
         gfx.processRDPList();
-        signal_rcp_interrupt(dp->r4300, MI_INTR_DP);
+        signal_rcp_interrupt(dp->mi, MI_INTR_DP);
         break;
     }
 }
@@ -138,6 +139,6 @@ void rdp_interrupt_event(void* opaque)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
 
-    raise_rcp_interrupt(dp->r4300, MI_INTR_DP);
+    raise_rcp_interrupt(dp->mi, MI_INTR_DP);
 }
 

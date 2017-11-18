@@ -25,6 +25,7 @@
 
 #include "backends/api/audio_out_backend.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 #include "device/vi/vi_controller.h"
@@ -45,12 +46,12 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
     if (ai->fifo[0].duration == 0)
         return 0;
 
-    cp0_update_count(ai->r4300);
-    next_ai_event = get_event(&ai->r4300->cp0.q, AI_INT);
+    cp0_update_count(ai->mi->r4300);
+    next_ai_event = get_event(&ai->mi->r4300->cp0.q, AI_INT);
     if (next_ai_event == 0)
         return 0;
 
-    cp0_regs = r4300_cp0_regs(&ai->r4300->cp0);
+    cp0_regs = r4300_cp0_regs(&ai->mi->r4300->cp0);
     if (next_ai_event <= cp0_regs[CP0_COUNT_REG])
         return 0;
 
@@ -98,8 +99,8 @@ static void do_dma(struct ai_controller* ai, struct ai_dma* dma)
         ai->delayed_carry = 0;
 
     /* schedule end of dma event */
-    cp0_update_count(ai->r4300);
-    add_interrupt_event(&ai->r4300->cp0, AI_INT, dma->duration);
+    cp0_update_count(ai->mi->r4300);
+    add_interrupt_event(&ai->mi->r4300->cp0, AI_INT, dma->duration);
 }
 
 static void fifo_push(struct ai_controller* ai)
@@ -144,13 +145,13 @@ static void fifo_pop(struct ai_controller* ai)
 
 
 void init_ai(struct ai_controller* ai,
-             struct r4300_core* r4300,
+             struct mi_controller* mi,
              struct ri_controller* ri,
              struct vi_controller* vi,
              void* aout,
              const struct audio_out_backend_interface* iaout)
 {
-    ai->r4300 = r4300;
+    ai->mi = mi;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
@@ -206,7 +207,7 @@ void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
 
     case AI_STATUS_REG:
-        clear_rcp_interrupt(ai->r4300, MI_INTR_AI);
+        clear_rcp_interrupt(ai->mi, MI_INTR_AI);
         return;
 
     case AI_BITRATE_REG:
@@ -234,6 +235,6 @@ void ai_end_of_dma_event(void* opaque)
     }
 
     fifo_pop(ai);
-    raise_rcp_interrupt(ai->r4300, MI_INTR_AI);
+    raise_rcp_interrupt(ai->mi, MI_INTR_AI);
 }
 

@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include "api/m64p_types.h"
 
-struct r4300_core;
+struct mi_controller;
 
 enum vi_registers
 {
@@ -57,7 +57,7 @@ struct vi_controller
     unsigned int expected_refresh_rate;
     unsigned int count_per_scanline;
 
-    struct r4300_core* r4300;
+    struct mi_controller* mi;
 };
 
 static uint32_t vi_reg(uint32_t address)
@@ -70,7 +70,7 @@ unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
 unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
-             struct r4300_core* r4300);
+             struct mi_controller* mi);
 
 void poweron_vi(struct vi_controller* vi);
 

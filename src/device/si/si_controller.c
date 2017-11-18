@@ -26,6 +26,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
+#include "device/mi/mi_controller.h"
 #include "device/r4300/r4300_core.h"
 #include "device/ri/ri_controller.h"
 
@@ -85,9 +86,9 @@ static void dma_si_write(struct si_controller* si)
 
     copy_pif_rdram(si);
 
-    cp0_update_count(si->r4300);
+    cp0_update_count(si->mi->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
+    add_interrupt_event(&si->mi->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->mi->r4300));
 }
 
 static void dma_si_read(struct si_controller* si)
@@ -99,9 +100,9 @@ static void dma_si_read(struct si_controller* si)
 
     update_pif_ram(si);
 
-    cp0_update_count(si->r4300);
+    cp0_update_count(si->mi->r4300);
     si->regs[SI_STATUS_REG] |= SI_STATUS_DMA_BUSY;
-    add_interrupt_event(&si->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->r4300));
+    add_interrupt_event(&si->mi->r4300->cp0, SI_INT, 0x900 + add_random_interrupt_time(si->mi->r4300));
 }
 
 void init_si(struct si_controller* si,
@@ -109,10 +110,11 @@ void init_si(struct si_controller* si,
              void* jbds[PIF_CHANNELS_COUNT],
              const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
              const uint8_t* ipl3,
+             struct mi_controller* mi,
              struct r4300_core* r4300,
              struct ri_controller* ri)
 {
-    si->r4300 = r4300;
+    si->mi = mi;
     si->ri = ri;
 
     init_pif(&si->pif,
@@ -163,7 +165,7 @@ void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case SI_STATUS_REG:
         /* clear si interrupt */
         si->regs[SI_STATUS_REG] &= ~SI_STATUS_INTERRUPT;
-        clear_rcp_interrupt(si->r4300, MI_INTR_SI);
+        clear_rcp_interrupt(si->mi, MI_INTR_SI);
         break;
     }
 }
@@ -185,6 +187,6 @@ void si_end_of_dma_event(void* opaque)
 
     /* raise si interrupt */
     si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;
-    raise_rcp_interrupt(si->r4300, MI_INTR_SI);
+    raise_rcp_interrupt(si->mi, MI_INTR_SI);
 }
 

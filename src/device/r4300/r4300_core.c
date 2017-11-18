@@ -24,7 +24,6 @@
 #if defined(COUNT_INSTR)
 #include "instr_counters.h"
 #endif
-#include "mi_controller.h"
 #include "new_dynarec/new_dynarec.h"
 #include "pure_interp.h"
 #include "recomp.h"
@@ -41,7 +40,7 @@
 #include <string.h>
 #include <time.h>
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers,
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers,
     unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom, int randomize_interrupt)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
@@ -58,6 +57,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct ri_controll
     r4300->recomp.no_compiled_jump = no_compiled_jump;
 
     r4300->mem = mem;
+    r4300->mi = mi;
     r4300->ri = ri;
     r4300->special_rom = special_rom;
     r4300->randomize_interrupt = randomize_interrupt;
@@ -114,9 +114,6 @@ void poweron_r4300(struct r4300_core* r4300)
 
     /* setup CP1 registers */
     poweron_cp1(&r4300->cp1);
-
-    /* setup mi */
-    poweron_mi(&r4300->mi);
 }
 
 
