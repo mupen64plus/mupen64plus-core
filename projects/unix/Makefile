@@ -482,12 +482,12 @@ SOURCE = \
     $(SRCDIR)/device/rcp/pi/pi_controller.c \
     $(SRCDIR)/device/rcp/rdp/fb.c \
     $(SRCDIR)/device/rcp/rdp/rdp_core.c \
-    $(SRCDIR)/device/rcp/ri/rdram.c \
-    $(SRCDIR)/device/rcp/ri/rdram_detection_hack.c \
     $(SRCDIR)/device/rcp/ri/ri_controller.c \
     $(SRCDIR)/device/rcp/rsp/rsp_core.c \
     $(SRCDIR)/device/rcp/si/si_controller.c \
     $(SRCDIR)/device/rcp/vi/vi_controller.c \
+    $(SRCDIR)/device/rdram/rdram.c \
+    $(SRCDIR)/device/rdram/rdram_detection_hack.c \
     $(SRCDIR)/main/main.c \
     $(SRCDIR)/main/util.c \
     $(SRCDIR)/main/cheat.c \

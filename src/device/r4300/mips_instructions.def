@@ -47,7 +47,7 @@
 #include "r4300_core.h"
 #include "device/memory/memory.h"
 #include "device/rcp/mi/mi_controller.h"
-#include "device/rcp/ri/ri_controller.h"
+#include "device/rdram/rdram.h"
 #include "main/xxHash/xxhash.h"
 
 #include <inttypes.h>
@@ -1034,7 +1034,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
+                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
@@ -1053,7 +1053,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
+                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
@@ -1102,7 +1102,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
             {
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
@@ -1115,7 +1115,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
             {
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->ri->rdram.dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }

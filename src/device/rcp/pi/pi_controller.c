@@ -32,7 +32,7 @@
 #include "device/r4300/r4300_core.h"
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/ri/ri_controller.h"
-#include "device/rcp/ri/rdram_detection_hack.h"
+#include "device/rdram/rdram_detection_hack.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -55,7 +55,7 @@ static void dma_pi_read(struct pi_controller* pi)
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
     uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
-    const uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
+    const uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
     const struct pi_dma_handler* handler = NULL;
     void* opaque = NULL;
@@ -82,7 +82,7 @@ static void dma_pi_write(struct pi_controller* pi)
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG];
     uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
     uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
-    uint8_t* dram = (uint8_t*)pi->ri->rdram.dram;
+    uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
     const struct pi_dma_handler* handler = NULL;
     void* opaque = NULL;
@@ -100,7 +100,7 @@ static void dma_pi_write(struct pi_controller* pi)
      * hack just before initial cart ROM loading. */
     if ((cart_addr & 0x1fffffff) == (MM_CART_ROM + 0x1000))
     {
-        force_detected_rdram_size_hack(&pi->ri->rdram, pi->cic);
+        force_detected_rdram_size_hack(pi->ri->rdram, pi->cic);
     }
 
     /* Mark DMA as busy */

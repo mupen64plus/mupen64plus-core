@@ -29,6 +29,7 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/ri/ri_controller.h"
 #include "device/rcp/vi/vi_controller.h"
+#include "device/rdram/rdram.h"
 
 enum
 {
@@ -178,7 +179,7 @@ void read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
         if (*value < ai->last_read)
         {
             unsigned int diff = ai->fifo[0].length - ai->last_read;
-            unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
+            unsigned char *p = (unsigned char*)&ai->ri->rdram->dram[ai->fifo[0].address/4];
             ai->iaout->push_samples(ai->aout, p + diff, ai->last_read - *value);
             ai->last_read = *value;
         }
@@ -230,7 +231,7 @@ void ai_end_of_dma_event(void* opaque)
     if (ai->last_read != 0)
     {
         unsigned int diff = ai->fifo[0].length - ai->last_read;
-        unsigned char *p = (unsigned char*)&ai->ri->rdram.dram[ai->fifo[0].address/4];
+        unsigned char *p = (unsigned char*)&ai->ri->rdram->dram[ai->fifo[0].address/4];
         ai->iaout->push_samples(ai->aout, p + diff, ai->last_read);
     }
 

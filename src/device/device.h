@@ -42,6 +42,7 @@
 #include "rcp/rsp/rsp_core.h"
 #include "rcp/si/si_controller.h"
 #include "rcp/vi/vi_controller.h"
+#include "rdram/rdram.h"
 
 struct audio_out_backend_interface;
 struct storage_backend_interface;
@@ -88,6 +89,7 @@ struct device
     struct si_controller si;
     struct vi_controller vi;
     struct pif pif;
+    struct rdram rdram;
     struct memory mem;
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
@@ -111,7 +113,7 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
-    /* ri */
+    /* rdram */
     size_t dram_size,
     /* pif */
     void* jbds[PIF_CHANNELS_COUNT],

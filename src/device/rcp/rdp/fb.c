@@ -26,8 +26,9 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rcp/mi/mi_controller.h"
-#include "device/rcp/rdp/rdp_core.h"
 #include "device/rcp/ri/ri_controller.h"
+#include "device/rcp/rdp/rdp_core.h"
+#include "device/rdram/rdram.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
 
@@ -134,13 +135,13 @@ void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
     pre_framebuffer_read(&dp->fb, address);
-    read_rdram_dram(dp->ri, address, value);
+    read_rdram_dram(dp->ri->rdram, address, value);
 }
 
 void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rdp_core* dp = (struct rdp_core*)opaque;
-    write_rdram_dram(dp->ri, address, value, mask);
+    write_rdram_dram(dp->ri->rdram, address, value, mask);
     post_framebuffer_write(&dp->fb, address, mask);
 }
 
@@ -200,7 +201,7 @@ void unprotect_framebuffers(struct rdp_core* dp)
 {
     size_t i;
     struct fb* fb = &dp->fb;
-    struct mem_mapping ram_mapping = { 0, 0, M64P_MEM_RDRAM, { dp->ri, RW(rdram_dram) } };
+    struct mem_mapping ram_mapping = { 0, 0, M64P_MEM_RDRAM, { dp->ri->rdram, RW(rdram_dram) } };
 
     /* return early if FB info is not supported or empty */
     if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite && fb->infos[0].addr)) {

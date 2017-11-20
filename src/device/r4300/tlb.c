@@ -110,9 +110,9 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
     {
         int map = r4300->new_dynarec_hot_state.memory_map[address >> 12];
         if((r4300->cp0.tlb.LUT_w[address >> 12]) && (w == 1))
-            assert(map == (((r4300->cp0.tlb.LUT_w[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.ri.rdram.dram - 0x80000000) >> 2));
+            assert(map == (((r4300->cp0.tlb.LUT_w[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.rdram.dram - 0x80000000) >> 2));
         else if((r4300->cp0.tlb.LUT_r[address >> 12]) && (w == 0)) {
-            assert((map&~0x40000000) == (((r4300->cp0.tlb.LUT_r[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.ri.rdram.dram - 0x80000000) >> 2));
+            assert((map&~0x40000000) == (((r4300->cp0.tlb.LUT_r[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.rdram.dram - 0x80000000) >> 2));
             if(map & 0x40000000) assert(r4300->cp0.tlb.LUT_w[address >> 12] == 0);
         }
         else

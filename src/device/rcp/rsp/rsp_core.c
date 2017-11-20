@@ -28,6 +28,7 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/rdp/rdp_core.h"
 #include "device/rcp/ri/ri_controller.h"
+#include "device/rdram/rdram.h"
 #include "main/main.h"
 #include "main/profile.h"
 #include "plugin/plugin.h"
@@ -46,7 +47,7 @@ static void dma_sp_write(struct rsp_core* sp)
     unsigned int dramaddr = sp->regs[SP_DRAM_ADDR_REG] & 0xffffff;
 
     unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
-    unsigned char *dram = (unsigned char*)sp->ri->rdram.dram;
+    unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
 
     for(j=0; j<count; j++) {
         for(i=0; i<length; i++) {
@@ -72,7 +73,7 @@ static void dma_sp_read(struct rsp_core* sp)
     unsigned int dramaddr = sp->regs[SP_DRAM_ADDR_REG] & 0xffffff;
 
     unsigned char *spmem = (unsigned char*)sp->mem + (sp->regs[SP_MEM_ADDR_REG] & 0x1000);
-    unsigned char *dram = (unsigned char*)sp->ri->rdram.dram;
+    unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
 
     for(j=0; j<count; j++) {
         for(i=0; i<length; i++) {

@@ -3400,7 +3400,7 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
   }
   if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
     if(!c||memtarget) {
-      //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,temp2,temp2);
+      //emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2);
       emit_readword_indexed_tlb(0,temp2,map,temp2);
       if(jaddr) add_stub(LOADW_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
@@ -3425,8 +3425,8 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
   if (opcode[i]==0x1A||opcode[i]==0x1B) { // LDL/LDR
     int temp2h=get_reg(i_regs->regmap,FTEMP|64);
     if(!c||memtarget) {
-      //if(th>=0) emit_readword_indexed((int)g_dev.ri.rdram.dram-0x80000000,temp2,temp2h);
-      //emit_readword_indexed((int)g_dev.ri.rdram.dram-0x7FFFFFFC,temp2,temp2);
+      //if(th>=0) emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2h);
+      //emit_readword_indexed((int)g_dev.rdram.dram-0x7FFFFFFC,temp2,temp2);
       emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
       if(jaddr) add_stub(LOADD_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
@@ -4691,7 +4691,7 @@ static void arch_init(void) {
   jump_table_symbols[3] = (int) cached_interpreter_table.TLBP;
 
   #ifdef RAM_OFFSET
-  g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.ri.rdram.dram-(int)0x80000000)>>2;
+  g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.rdram.dram-(int)0x80000000)>>2;
   #endif
 
   // Trampolines for jumps >32M

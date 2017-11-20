@@ -99,7 +99,7 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
-    /* ri */
+    /* rdram */
     size_t dram_size,
     /* pif */
     void* jbds[PIF_CHANNELS_COUNT],
@@ -138,8 +138,8 @@ void init_device(struct device* dev,
         /* clear mappings */
         { 0x00000000, 0xffffffff, M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         /* memory map */
-        { A(MM_RDRAM_DRAM, dram_size-1), M64P_MEM_RDRAM, { &dev->ri, RW(rdram_dram) } },
-        { A(MM_RDRAM_REGS, 0xffff), M64P_MEM_RDRAMREG, { &dev->ri, RW(rdram_regs) } },
+        { A(MM_RDRAM_DRAM, dram_size-1), M64P_MEM_RDRAM, { &dev->rdram, RW(rdram_dram) } },
+        { A(MM_RDRAM_REGS, 0xffff), M64P_MEM_RDRAMREG, { &dev->rdram, RW(rdram_regs) } },
         { A(MM_RSP_MEM, 0xffff), M64P_MEM_RSPMEM, { &dev->sp, RW(rsp_mem) } },
         { A(MM_RSP_REGS, 0xffff), M64P_MEM_RSPREG, { &dev->sp, RW(rsp_regs) } },
         { A(MM_RSP_REGS2, 0xffff), M64P_MEM_RSP, { &dev->sp, RW(rsp_regs2) } },
@@ -163,7 +163,10 @@ void init_device(struct device* dev,
 #undef RW
 
     init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base, &dbg_handler);
-    init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->ri, interrupt_handlers,
+
+    init_rdram(&dev->rdram, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
+
+    init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->rdram, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom, randomize_interrupt);
     init_rdp(&dev->dp, &dev->sp, &dev->mi, &dev->ri);
     init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->mi, &dev->dp, &dev->ri);
@@ -172,7 +175,7 @@ void init_device(struct device* dev,
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
             &dev->mi, &dev->ri, &dev->pif.cic);
-    init_ri(&dev->ri, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
+    init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi);
 
@@ -188,7 +191,7 @@ void init_device(struct device* dev,
             &dev->r4300,
             eeprom_type, eeprom_storage, ieeprom_storage,
             flashram_type, flashram_storage, iflashram_storage,
-            (const uint8_t*)dev->ri.rdram.dram,
+            (const uint8_t*)dev->rdram.dram,
             sram_storage, isram_storage);
 }
 
@@ -196,6 +199,7 @@ void poweron_device(struct device* dev)
 {
     size_t i;
 
+    poweron_rdram(&dev->rdram);
     poweron_r4300(&dev->r4300);
     poweron_rdp(&dev->dp);
     poweron_rsp(&dev->sp);

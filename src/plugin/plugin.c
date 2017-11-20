@@ -258,7 +258,7 @@ static m64p_error plugin_start_gfx(void)
 
     gfx_info.version = 2; //Version 2 added SP_STATUS_REG and RDRAM_SIZE
     gfx_info.SP_STATUS_REG = &g_dev.sp.regs[SP_STATUS_REG];
-    gfx_info.RDRAM_SIZE = (unsigned int*) &g_dev.ri.rdram.dram_size;
+    gfx_info.RDRAM_SIZE = (unsigned int*) &g_dev.rdram.dram_size;
 
     /* call the audio plugin */
     if (!gfx.initiateGFX(gfx_info))

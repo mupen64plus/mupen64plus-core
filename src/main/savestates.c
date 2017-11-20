@@ -317,16 +317,16 @@ int savestates_load_m64p(char *filepath)
     SDL_UnlockMutex(savestates_lock);
 
     // Parse savestate
-    g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     curr += 4; /* Padding from old implementation */
     g_dev.mi.regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
@@ -431,7 +431,7 @@ int savestates_load_m64p(char *filepath)
     g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
     g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
-    COPYARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    COPYARRAY(g_dev.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     COPYARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -766,16 +766,16 @@ static int savestates_load_pj64(char *filepath, void *handle,
     *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
 
     // rdram register
-    g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
-    g_dev.ri.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     // sp_register
     g_dev.sp.regs[SP_MEM_ADDR_REG]  = GETDATA(curr, uint32_t);
@@ -941,8 +941,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
     }
 
     // RDRAM
-    memset(g_dev.ri.rdram.dram, 0, RDRAM_MAX_SIZE);
-    COPYARRAY(g_dev.ri.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    memset(g_dev.rdram.dram, 0, RDRAM_MAX_SIZE);
+    COPYARRAY(g_dev.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
 
     // DMEM + IMEM
     COPYARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1248,16 +1248,16 @@ int savestates_save_m64p(char *filepath)
 
     PUTARRAY(ROM_SETTINGS.MD5, curr, char, 32);
 
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DELAY_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_REF_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_REF_ROW_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_ADDR_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DELAY_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_ROW_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
 
     PUTDATA(curr, uint32_t, 0); // Padding from old implementation
     PUTDATA(curr, uint32_t, g_dev.mi.regs[MI_INIT_MODE_REG]);
@@ -1388,7 +1388,7 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_dev.dp.dps_regs[DPS_BUFTEST_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_dev.dp.dps_regs[DPS_BUFTEST_DATA_REG]);
 
-    PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    PUTARRAY(g_dev.rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     PUTARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -1554,16 +1554,16 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
     PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
 
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_ID_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DELAY_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_REF_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_REF_ROW_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_ADDR_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_dev.ri.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DELAY_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_ROW_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
 
     PUTDATA(curr, uint32_t, g_dev.sp.regs[SP_MEM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_dev.sp.regs[SP_DRAM_ADDR_REG]);
@@ -1666,7 +1666,7 @@ static int savestates_save_pj64(char *filepath, void *handle,
 
     PUTARRAY(g_dev.pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    PUTARRAY(g_dev.ri.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    PUTARRAY(g_dev.rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
     PUTARRAY(g_dev.sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
 
     // Write the save state data to the output

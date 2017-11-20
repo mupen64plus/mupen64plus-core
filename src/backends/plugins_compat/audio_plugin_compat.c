@@ -25,6 +25,7 @@
 #include "device/rcp/ai/ai_controller.h"
 #include "device/rcp/ri/ri_controller.h"
 #include "device/rcp/vi/vi_controller.h"
+#include "device/rdram/rdram.h"
 #include "main/rom.h"
 #include "plugin/plugin.h"
 
@@ -50,8 +51,8 @@ static void audio_plugin_push_samples(void* aout, const void* buffer, size_t siz
     uint32_t saved_ai_length = ai->regs[AI_LEN_REG];
     uint32_t saved_ai_dram = ai->regs[AI_DRAM_ADDR_REG];
 
-    /* exploit the fact that buffer points in g_dev.ri.rdram.dram to retreive dram_addr_reg value */
-    ai->regs[AI_DRAM_ADDR_REG] = (uint32_t)((uint8_t*)buffer - (uint8_t*)ai->ri->rdram.dram);
+    /* exploit the fact that buffer points in g_dev.rdram.dram to retreive dram_addr_reg value */
+    ai->regs[AI_DRAM_ADDR_REG] = (uint32_t)((uint8_t*)buffer - (uint8_t*)ai->ri->rdram->dram);
     ai->regs[AI_LEN_REG] = (uint32_t)size;
 
     audio.aiLenChanged();

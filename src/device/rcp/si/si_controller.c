@@ -30,6 +30,7 @@
 #include "device/r4300/r4300_core.h"
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/ri/ri_controller.h"
+#include "device/rdram/rdram.h"
 
 enum
 {
@@ -64,7 +65,7 @@ static void copy_pif_rdram(struct si_controller* si)
     uint32_t dram_addr = si->regs[SI_DRAM_ADDR_REG] & ~UINT32_C(3);
 
     uint32_t* pif_ram = (uint32_t*)si->pif->ram;
-    uint32_t* dram = (uint32_t*)(&si->ri->rdram.dram[rdram_dram_address(dram_addr)]);
+    uint32_t* dram = (uint32_t*)(&si->ri->rdram->dram[rdram_dram_address(dram_addr)]);
 
     if (si->dma_dir == SI_DMA_WRITE) {
         for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {

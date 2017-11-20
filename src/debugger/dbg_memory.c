@@ -38,6 +38,7 @@
 #include "device/rcp/rsp/rsp_core.h"
 #include "device/rcp/si/si_controller.h"
 #include "device/rcp/vi/vi_controller.h"
+#include "device/rdram/rdram.h"
 #include "main/main.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
@@ -293,7 +294,7 @@ uint32 read_memory_32(uint32 addr){
         return read_memory_32((g_dev.r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
-      return g_dev.ri.rdram.dram[rdram_dram_address(addr)];
+      return g_dev.rdram.dram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
       return g_dev.sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
@@ -301,7 +302,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
-          return g_dev.ri.rdram.regs[offset];
+          return g_dev.rdram.regs[offset];
       break;
     case M64P_MEM_RSPREG:
       offset = rsp_reg(addr);
@@ -376,7 +377,7 @@ void write_memory_32(uint32 addr, uint32 value){
   switch(get_memory_type(&g_dev.mem, addr))
     {
     case M64P_MEM_RDRAM:
-      g_dev.ri.rdram.dram[(addr & 0xffffff) >> 2] = value;
+      g_dev.rdram.dram[(addr & 0xffffff) >> 2] = value;
       CHECK_MEM(addr)
       break;
     }

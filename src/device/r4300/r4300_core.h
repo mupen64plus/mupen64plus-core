@@ -41,7 +41,7 @@
 
 struct memory;
 struct mi_controller;
-struct ri_controller;
+struct rdram;
 
 struct jump_table;
 struct cached_interp
@@ -200,7 +200,7 @@ struct r4300_core
 
     struct memory* mem;
     struct mi_controller* mi;
-    struct ri_controller* ri;
+    struct rdram* rdram;
 
     uint32_t special_rom;
     uint32_t randomize_interrupt;
@@ -209,7 +209,7 @@ struct r4300_core
 #define R4300_KSEG0 UINT32_C(0x80000000)
 #define R4300_KSEG1 UINT32_C(0xa0000000)
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom, int randomize_interrupt);
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct rdram* rdram, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom, int randomize_interrupt);
 void poweron_r4300(struct r4300_core* r4300);
 
 void run_r4300(struct r4300_core* r4300);

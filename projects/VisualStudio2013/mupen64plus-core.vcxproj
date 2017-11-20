@@ -232,15 +232,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\device\rcp\rdp\fb.c" />
     <ClCompile Include="..\..\src\device\rcp\rdp\rdp_core.c" />
-    <ClCompile Include="..\..\src\device\rcp\ri\rdram.c" />
-    <ClCompile Include="..\..\src\device\rcp\ri\rdram_detection_hack.c" />
     <ClCompile Include="..\..\src\device\rcp\ri\ri_controller.c" />
     <ClCompile Include="..\..\src\device\rcp\rsp\rsp_core.c" />
+    <ClCompile Include="..\..\src\device\rcp\si\si_controller.c" />
+    <ClCompile Include="..\..\src\device\rcp\vi\vi_controller.c" />
+    <ClCompile Include="..\..\src\device\rdram\rdram.c" />
+    <ClCompile Include="..\..\src\device\rdram\rdram_detection_hack.c" />
     <ClCompile Include="..\..\src\device\pif\cic.c" />
     <ClCompile Include="..\..\src\device\pif\n64_cic_nus_6105.c" />
     <ClCompile Include="..\..\src\device\pif\pif.c" />
-    <ClCompile Include="..\..\src\device\rcp\si\si_controller.c" />
-    <ClCompile Include="..\..\src\device\rcp\vi\vi_controller.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\callbacks.h" />
@@ -446,15 +446,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\device\rcp\rdp\fb.h" />
     <ClInclude Include="..\..\src\device\rcp\rdp\rdp_core.h" />
-    <ClInclude Include="..\..\src\device\rcp\ri\rdram.h" />
-    <ClInclude Include="..\..\src\device\rcp\ri\rdram_detection_hack.h" />
     <ClInclude Include="..\..\src\device\rcp\ri\ri_controller.h" />
     <ClInclude Include="..\..\src\device\rcp\rsp\rsp_core.h" />
+    <ClInclude Include="..\..\src\device\rcp\si\si_controller.h" />
+    <ClInclude Include="..\..\src\device\rcp\vi\vi_controller.h" />
+    <ClInclude Include="..\..\src\device\rdram\rdram.h" />
+    <ClInclude Include="..\..\src\device\rdram\rdram_detection_hack.h" />
     <ClInclude Include="..\..\src\device\pif\cic.h" />
     <ClInclude Include="..\..\src\device\pif\n64_cic_nus_6105.h" />
     <ClInclude Include="..\..\src\device\pif\pif.h" />
-    <ClInclude Include="..\..\src\device\rcp\si\si_controller.h" />
-    <ClInclude Include="..\..\src\device\rcp\vi\vi_controller.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\device\r4300\mips_instructions.def" />

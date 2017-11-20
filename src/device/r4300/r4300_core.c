@@ -40,7 +40,7 @@
 #include <string.h>
 #include <time.h>
 
-void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct ri_controller* ri, const struct interrupt_handler* interrupt_handlers,
+void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct rdram* rdram, const struct interrupt_handler* interrupt_handlers,
     unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int special_rom, int randomize_interrupt)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
@@ -58,7 +58,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
 
     r4300->mem = mem;
     r4300->mi = mi;
-    r4300->ri = ri;
+    r4300->rdram = rdram;
     r4300->special_rom = special_rom;
     r4300->randomize_interrupt = randomize_interrupt;
     srand(time(NULL));
