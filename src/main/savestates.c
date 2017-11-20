@@ -599,6 +599,9 @@ int savestates_load_m64p(char *filepath)
 
         /* extra si state */
         g_dev.si.dma_dir = GETDATA(curr, uint8_t);
+
+        /* extra dp state */
+        g_dev.dp.do_on_unfreeze = GETDATA(curr, uint8_t);
     }
     else {
         /* extra ai state */
@@ -646,6 +649,9 @@ int savestates_load_m64p(char *filepath)
 
         /* extra si state */
         g_dev.si.dma_dir = SI_NO_DMA;
+
+        /* extra dp state */
+        g_dev.dp.do_on_unfreeze = 0;
     }
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
@@ -835,6 +841,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     /* extra si state */
     g_dev.si.dma_dir = SI_NO_DMA;
+
+    /* extra dp state */
+    g_dev.dp.do_on_unfreeze = 0;
 
     // ai_register
     g_dev.ai.regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
@@ -1510,6 +1519,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, g_dev.vi.count_per_scanline);
 
     PUTDATA(curr, uint8_t, g_dev.si.dma_dir);
+
+    PUTDATA(curr, uint8_t, g_dev.dp.do_on_unfreeze);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
