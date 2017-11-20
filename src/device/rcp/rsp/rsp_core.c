@@ -268,7 +268,7 @@ void do_SP_Task(struct rsp_core* sp)
             return;
         }
 
-        unprotect_framebuffers(sp->dp);
+        unprotect_framebuffers(&sp->dp->fb);
 
         //gfx.processDList();
         sp->regs2[SP_PC_REG] &= 0xfff;
@@ -286,7 +286,7 @@ void do_SP_Task(struct rsp_core* sp)
         }
         sp_delay_time = 1000;
 
-        protect_framebuffers(sp->dp);
+        protect_framebuffers(&sp->dp->fb);
     }
     else if (sp->mem[0xfc0/4] == 2)
     {

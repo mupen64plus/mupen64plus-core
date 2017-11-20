@@ -78,7 +78,6 @@ struct rdp_core
 
     struct rsp_core* sp;
     struct mi_controller* mi;
-    struct ri_controller* ri;
 };
 
 static uint32_t dpc_reg(uint32_t address)
@@ -94,7 +93,9 @@ static uint32_t dps_reg(uint32_t address)
 void init_rdp(struct rdp_core* dp,
               struct rsp_core* sp,
               struct mi_controller* mi,
-              struct ri_controller* ri);
+              struct memory* mem,
+              struct rdram* rdram,
+              struct r4300_core* r4300);
 
 void poweron_rdp(struct rdp_core* dp);
 

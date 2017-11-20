@@ -168,7 +168,7 @@ void init_device(struct device* dev,
 
     init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->rdram, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, special_rom, randomize_interrupt);
-    init_rdp(&dev->dp, &dev->sp, &dev->mi, &dev->ri);
+    init_rdp(&dev->dp, &dev->sp, &dev->mi, &dev->mem, &dev->rdram, &dev->r4300);
     init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->mi, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->mi, &dev->ri, &dev->vi, aout, iaout);
     init_mi(&dev->mi, &dev->r4300);

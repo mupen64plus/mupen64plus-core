@@ -26,24 +26,35 @@
 
 #include "api/m64p_plugin.h"
 
-struct rdp_core;
+struct memory;
+struct rdram;
+struct r4300_core;
 
 enum { FB_INFOS_COUNT = 6 };
 enum { FB_DIRTY_PAGES_COUNT = 0x800 };
 
 struct fb
 {
+    struct memory* mem;
+    struct rdram* rdram;
+    struct r4300_core* r4300;
+
     unsigned char dirty_page[FB_DIRTY_PAGES_COUNT];
     FrameBufferInfo infos[FB_INFOS_COUNT];
     unsigned int once;
 };
+
+void init_fb(struct fb* fb,
+             struct memory* mem,
+             struct rdram* rdram,
+             struct r4300_core* r4300);
 
 void poweron_fb(struct fb* fb);
 
 void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value);
 void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
-void protect_framebuffers(struct rdp_core* dp);
-void unprotect_framebuffers(struct rdp_core* dp);
+void protect_framebuffers(struct fb* fb);
+void unprotect_framebuffers(struct fb* fb);
 
 #endif

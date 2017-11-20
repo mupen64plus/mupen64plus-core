@@ -62,11 +62,14 @@ static int update_dpc_status(struct rdp_core* dp, uint32_t w)
 void init_rdp(struct rdp_core* dp,
               struct rsp_core* sp,
               struct mi_controller* mi,
-              struct ri_controller* ri)
+              struct memory* mem,
+              struct rdram* rdram,
+              struct r4300_core* r4300)
 {
     dp->sp = sp;
     dp->mi = mi;
-    dp->ri = ri;
+
+    init_fb(&dp->fb, mem, rdram, r4300);
 }
 
 void poweron_rdp(struct rdp_core* dp)

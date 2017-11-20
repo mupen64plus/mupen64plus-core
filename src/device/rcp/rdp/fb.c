@@ -25,9 +25,6 @@
 #include "api/callbacks.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "device/rcp/mi/mi_controller.h"
-#include "device/rcp/ri/ri_controller.h"
-#include "device/rcp/rdp/rdp_core.h"
 #include "device/rdram/rdram.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
@@ -38,13 +35,6 @@ static osal_inline size_t fb_buffer_size(const FrameBufferInfo* fb_info)
 {
     return fb_info->width * fb_info->height * fb_info->size;
 }
-
-void poweron_fb(struct fb* fb)
-{
-    memset(fb, 0, sizeof(*fb));
-    fb->once = 1;
-}
-
 
 static void pre_framebuffer_read(struct fb* fb, uint32_t address)
 {
@@ -131,18 +121,37 @@ static void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t mas
     }
 }
 
+
+void init_fb(struct fb* fb,
+             struct memory* mem,
+             struct rdram* rdram,
+             struct r4300_core* r4300)
+{
+    fb->mem = mem;
+    fb->rdram = rdram;
+    fb->r4300 = r4300;
+}
+
+void poweron_fb(struct fb* fb)
+{
+
+    memset(fb->dirty_page, 0, FB_DIRTY_PAGES_COUNT*sizeof(fb->dirty_page[0]));
+    memset(fb->infos, 0, FB_INFOS_COUNT*sizeof(fb->infos[0]));
+    fb->once = 1;
+}
+
 void read_rdram_fb(void* opaque, uint32_t address, uint32_t* value)
 {
-    struct rdp_core* dp = (struct rdp_core*)opaque;
-    pre_framebuffer_read(&dp->fb, address);
-    read_rdram_dram(dp->ri->rdram, address, value);
+    struct fb* fb = (struct fb*)opaque;
+    pre_framebuffer_read(fb, address);
+    read_rdram_dram(fb->rdram, address, value);
 }
 
 void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    struct rdp_core* dp = (struct rdp_core*)opaque;
-    write_rdram_dram(dp->ri->rdram, address, value, mask);
-    post_framebuffer_write(&dp->fb, address, mask);
+    struct fb* fb = (struct fb*)opaque;
+    write_rdram_dram(fb->rdram, address, value, mask);
+    post_framebuffer_write(fb, address, mask);
 }
 
 
@@ -150,11 +159,10 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 #define W(x) write_ ## x
 #define RW(x) R(x), W(x)
 
-void protect_framebuffers(struct rdp_core* dp)
+void protect_framebuffers(struct fb* fb)
 {
     size_t i, j;
-    struct fb* fb = &dp->fb;
-    struct mem_mapping fb_mapping = { 0, 0, M64P_MEM_RDRAM, { dp, RW(rdram_fb) } };
+    struct mem_mapping fb_mapping = { 0, 0, M64P_MEM_RDRAM, { fb, RW(rdram_fb) } };
 
     /* check API support */
     if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)) {
@@ -179,7 +187,7 @@ void protect_framebuffers(struct rdp_core* dp)
         /* map fb rw handlers */
         fb_mapping.begin = fb->infos[i].addr;
         fb_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-        apply_mem_mapping(dp->mi->r4300->mem, &fb_mapping);
+        apply_mem_mapping(fb->mem, &fb_mapping);
 
         /* mark all pages that are within a fb as dirty */
         for (j = fb_mapping.begin >> 12; j <= (fb_mapping.end >> 12); ++j) {
@@ -189,19 +197,18 @@ void protect_framebuffers(struct rdp_core* dp)
         /* disable dynarec "fast memory" code generation to avoid direct memory accesses */
         if (fb->once) {
             fb->once = 0;
-            dp->mi->r4300->recomp.fast_memory = 0;
+            fb->r4300->recomp.fast_memory = 0;
 
             /* also need to invalidate cached code to regen non fast memory code path */
-            invalidate_r4300_cached_code(dp->mi->r4300, 0, 0);
+            invalidate_r4300_cached_code(fb->r4300, 0, 0);
         }
     }
 }
 
-void unprotect_framebuffers(struct rdp_core* dp)
+void unprotect_framebuffers(struct fb* fb)
 {
     size_t i;
-    struct fb* fb = &dp->fb;
-    struct mem_mapping ram_mapping = { 0, 0, M64P_MEM_RDRAM, { dp->ri->rdram, RW(rdram_dram) } };
+    struct mem_mapping ram_mapping = { 0, 0, M64P_MEM_RDRAM, { fb->rdram, RW(rdram_dram) } };
 
     /* return early if FB info is not supported or empty */
     if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite && fb->infos[0].addr)) {
@@ -218,6 +225,6 @@ void unprotect_framebuffers(struct rdp_core* dp)
         /* restore ram rw handlers */
         ram_mapping.begin = fb->infos[i].addr;
         ram_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-        apply_mem_mapping(dp->mi->r4300->mem, &ram_mapping);
+        apply_mem_mapping(fb->mem, &ram_mapping);
     }
 }
