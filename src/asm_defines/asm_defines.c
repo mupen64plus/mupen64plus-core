@@ -65,7 +65,7 @@
         }, \
         '\n', \
         {0} \
-    };
+    }
 
 /* Export member m of structure s.
  * Suitable parsing of corresponding object file (with strings) can be used to
@@ -74,7 +74,7 @@
 #define DEFINE(s, m) \
     _DEFINE("\n@ASM_DEFINE offsetof_struct_" #s "_" #m " 0x", \
             __offsetof_struct_##s##_##m, \
-            offsetof(struct s, m));
+            offsetof(struct s, m))
 
 
 /* Structure members definitions */
