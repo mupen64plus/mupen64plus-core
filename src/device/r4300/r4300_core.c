@@ -318,6 +318,8 @@ uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
 
     if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
         address = virtual_to_physical_address(r4300, address, 2);
+        if (address == 0) // TLB exception
+            return NULL;
     }
 
     address &= UINT32_C(0x1ffffffc);
