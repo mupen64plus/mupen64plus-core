@@ -138,9 +138,6 @@
     <ClCompile Include="..\..\src\main\md5.c">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\profile.c">
-      <Filter>main</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\rom.c">
       <Filter>main</Filter>
     </ClCompile>
@@ -432,9 +429,6 @@
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\md5.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\profile.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\rom.h">

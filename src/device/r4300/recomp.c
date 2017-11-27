@@ -43,7 +43,9 @@
 #include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
 #include "main/main.h"
+#if defined(PROFILE)
 #include "main/profile.h"
+#endif
 
 static void *malloc_exec(size_t size);
 static void free_exec(void *ptr, size_t length);
@@ -2143,7 +2145,9 @@ static size_t get_block_memsize(const struct precomp_block *block)
 void init_block(struct r4300_core* r4300, struct precomp_block* block)
 {
     int i, length, already_exist = 1;
+#if defined(PROFILE)
     timed_section_start(TIMED_SECTION_COMPILER);
+#endif
 #ifdef DBG
     DebugMessage(M64MSG_INFO, "init block %" PRIX32 " - %" PRIX32, block->start, block->end);
 #endif
@@ -2313,7 +2317,9 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
             init_block(r4300, r4300->cached_interp.blocks[alt_addr>>12]);
         }
     }
+#if defined(PROFILE)
     timed_section_end(TIMED_SECTION_COMPILER);
+#endif
 }
 
 void free_block(struct r4300_core* r4300, struct precomp_block* block)
@@ -2341,7 +2347,9 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
 {
     int i;
     int length, finished = 0;
+#if defined(PROFILE)
     timed_section_start(TIMED_SECTION_COMPILER);
+#endif
     length = (block->end-block->start)/4;
     r4300->recomp.dst_block = block;
 
@@ -2476,7 +2484,9 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
     fclose(r4300->recomp.pfProfile);
     r4300->recomp.pfProfile = NULL;
 #endif
+#if defined(PROFILE)
     timed_section_end(TIMED_SECTION_COMPILER);
+#endif
 }
 
 static int is_jump(const struct r4300_core* r4300)

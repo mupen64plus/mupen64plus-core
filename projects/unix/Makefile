@@ -409,9 +409,6 @@ ifeq ($(DBG_TIMING), 1)
   CFLAGS += -DPROFILE
   LDFLAGS += -lrt
 endif
-ifeq ($(DBG_PROFILE), 1)
-  CFLAGS += -DPROFILE_R4300
-endif
 # 4. compile-time directory paths for building into the library
 ifneq ($(SHAREDIR),)
   CFLAGS += -DSHAREDIR="$(SHAREDIR)"
@@ -489,7 +486,6 @@ SOURCE = \
     $(SRCDIR)/main/cheat.c \
     $(SRCDIR)/main/eventloop.c \
     $(SRCDIR)/main/md5.c \
-    $(SRCDIR)/main/profile.c \
     $(SRCDIR)/main/rom.c \
     $(SRCDIR)/main/savestates.c \
     $(SRCDIR)/main/sdl_key_converter.c \
@@ -522,6 +518,10 @@ endif
 ifeq ($(DBG_COUNT), 1)
   CFLAGS += -DCOUNT_INSTR
   SOURCE += $(SRCDIR)/device/r4300/instr_counters.c
+endif
+ifeq ($(DBG_PROFILE), 1)
+  CFLAGS += -DPROFILE_R4300
+  SOURCE += $(SRCDIR)/main/profile.c
 endif
 
 ifneq ($(NO_ASM), 1)
