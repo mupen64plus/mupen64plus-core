@@ -1149,17 +1149,17 @@ EXPORT m64p_error CALL ConfigGetParameter(m64p_handle ConfigSectionHandle, const
     switch(ParamType)
     {
         case M64TYPE_INT:
-            if (MaxSize < sizeof(int)) return M64ERR_INPUT_INVALID;
+            if (MaxSize < (int)sizeof(int)) return M64ERR_INPUT_INVALID;
             if (var->type != M64TYPE_INT && var->type != M64TYPE_FLOAT) return M64ERR_WRONG_TYPE;
             *((int *) ParamValue) = ConfigGetParamInt(ConfigSectionHandle, ParamName);
             break;
         case M64TYPE_FLOAT:
-            if (MaxSize < sizeof(float)) return M64ERR_INPUT_INVALID;
+            if (MaxSize < (int)sizeof(float)) return M64ERR_INPUT_INVALID;
             if (var->type != M64TYPE_INT && var->type != M64TYPE_FLOAT) return M64ERR_WRONG_TYPE;
             *((float *) ParamValue) = ConfigGetParamFloat(ConfigSectionHandle, ParamName);
             break;
         case M64TYPE_BOOL:
-            if (MaxSize < sizeof(int)) return M64ERR_INPUT_INVALID;
+            if (MaxSize < (int)sizeof(int)) return M64ERR_INPUT_INVALID;
             if (var->type != M64TYPE_BOOL && var->type != M64TYPE_INT) return M64ERR_WRONG_TYPE;
             *((int *) ParamValue) = ConfigGetParamBool(ConfigSectionHandle, ParamName);
             break;

@@ -196,7 +196,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             if (ParamPtr == NULL)
                 return M64ERR_INPUT_ASSERT;
-            if (sizeof(m64p_rom_header) < ParamInt)
+            if ((int)sizeof(m64p_rom_header) < ParamInt)
                 ParamInt = sizeof(m64p_rom_header);
             memcpy(ParamPtr, &ROM_HEADER, ParamInt);
             // Mupen64Plus used to keep a m64p_rom_header with a clean ROM name
@@ -212,7 +212,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 return M64ERR_INVALID_STATE;
             if (ParamPtr == NULL)
                 return M64ERR_INPUT_ASSERT;
-            if (sizeof(m64p_rom_settings) < ParamInt)
+            if ((int)sizeof(m64p_rom_settings) < ParamInt)
                 ParamInt = sizeof(m64p_rom_settings);
             memcpy(ParamPtr, &ROM_SETTINGS, ParamInt);
             return M64ERR_SUCCESS;
@@ -357,7 +357,7 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
         return M64ERR_NOT_INIT;
     if (RomSettings == NULL)
         return M64ERR_INPUT_ASSERT;
-    if (RomSettingsLength < sizeof(m64p_rom_settings))
+    if (RomSettingsLength < (int)sizeof(m64p_rom_settings))
         return M64ERR_INPUT_INVALID;
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
