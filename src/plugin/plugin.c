@@ -99,7 +99,8 @@ static const input_plugin_functions dummy_input = {
     dummyinput_RomClosed,
     dummyinput_RomOpen,
     dummyinput_SDL_KeyDown,
-    dummyinput_SDL_KeyUp
+    dummyinput_SDL_KeyUp,
+    dummyinput_RenderCallback
 };
 
 static const rsp_plugin_functions dummy_rsp = {
