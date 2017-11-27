@@ -89,16 +89,16 @@ struct r4300_core
 
     /* from assemble.c */
     struct jump_table* jumps_table;
-    int jumps_number;
-    int max_jumps_number;
+    size_t jumps_number;
+    size_t max_jumps_number;
 
     unsigned int jump_start8;
     unsigned int jump_start32;
 
 #if defined(__x86_64__)
     struct riprelative_table* riprel_table;
-    int riprel_number;
-    int max_riprel_number;
+    size_t riprel_number;
+    size_t max_riprel_number;
 #endif
 
     /* from rjump.c */

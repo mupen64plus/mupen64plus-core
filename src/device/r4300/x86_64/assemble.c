@@ -63,7 +63,7 @@ void init_assembler(void *block_jumps_table, int block_jumps_number, void *block
     if (g_dev.r4300.jumps_number <= 512)
       g_dev.r4300.max_jumps_number = 512;
     else
-      g_dev.r4300.max_jumps_number = (g_dev.r4300.jumps_number + 511) & 0xfffffe00;
+      g_dev.r4300.max_jumps_number = (g_dev.r4300.jumps_number + 511) & ~0x1ff;
   }
   else
   {
@@ -79,7 +79,7 @@ void init_assembler(void *block_jumps_table, int block_jumps_number, void *block
     if (g_dev.r4300.riprel_number <= 512)
       g_dev.r4300.max_riprel_number = 512;
     else
-      g_dev.r4300.max_riprel_number = (g_dev.r4300.riprel_number + 511) & 0xfffffe00;
+      g_dev.r4300.max_riprel_number = (g_dev.r4300.riprel_number + 511) & ~0x1ff;
   }
   else
   {
