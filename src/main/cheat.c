@@ -46,7 +46,6 @@
 
 // local definitions
 #define CHEAT_CODE_MAGIC_VALUE 0xDEAD0000
-#define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 typedef struct cheat_code {
     unsigned int address;
