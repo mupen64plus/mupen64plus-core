@@ -274,7 +274,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             event_sdl_keyup(keysym, keymod);
             return M64ERR_SUCCESS;
         case M64CMD_SET_FRAME_CALLBACK:
-            g_FrameCallback = (m64p_frame_callback) ParamPtr;
+            *(void**)&g_FrameCallback = ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
             if (!g_EmulatorRunning)
