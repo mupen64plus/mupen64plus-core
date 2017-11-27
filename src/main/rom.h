@@ -30,7 +30,7 @@
 
 #define BIT(bitnr) (1ULL << (bitnr))
 #ifdef __GNUC__
-#define isset_bitmask(x, bitmask) ({ typeof(bitmask) _bitmask = (bitmask); \
+#define isset_bitmask(x, bitmask) __extension__ ({ typeof(bitmask) _bitmask = (bitmask); \
                                      (_bitmask & (x)) == _bitmask; })
 #else
 #define isset_bitmask(x, bitmask) ((bitmask & (x)) == bitmask)
