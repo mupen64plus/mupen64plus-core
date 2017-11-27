@@ -2339,7 +2339,7 @@ void free_block(struct r4300_core* r4300, struct precomp_block* block)
  **********************************************************************/
 void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
 {
-    uint32_t i;
+    int i;
     int length, finished = 0;
     timed_section_start(TIMED_SECTION_COMPILER);
     length = (block->end-block->start)/4;
