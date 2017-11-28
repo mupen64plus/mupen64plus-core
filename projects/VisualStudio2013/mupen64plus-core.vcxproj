@@ -103,7 +103,7 @@
     <ClCompile Include="..\..\src\osal\files_win32.c" />
     <ClCompile Include="..\..\src\osd\OGLFT.cpp" />
     <ClCompile Include="..\..\src\osd\osd.cpp" />
-    <ClCompile Include="..\..\src\osd\screenshot.cpp" />
+    <ClCompile Include="..\..\src\osd\screenshot.c" />
     <ClCompile Include="..\..\src\device\rcp\pi\pi_controller.c" />
     <ClCompile Include="..\..\src\plugin\dummy_audio.c" />
     <ClCompile Include="..\..\src\plugin\dummy_input.c" />

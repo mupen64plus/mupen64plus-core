@@ -174,7 +174,7 @@
     <ClCompile Include="..\..\src\osd\osd.cpp">
       <Filter>osd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\osd\screenshot.cpp">
+    <ClCompile Include="..\..\src\osd\screenshot.c">
       <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\file_storage.c">
