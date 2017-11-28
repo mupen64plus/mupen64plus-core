@@ -19,8 +19,9 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "osd.h"
+
 #include <SDL.h>
-// On-screen Display
 #include <SDL_opengl.h>
 #include <SDL_thread.h>
 #include <stdarg.h>
@@ -29,21 +30,13 @@
 #include <string.h>
 
 #include "OGLFT.h"
-#include "api/m64p_types.h"
-#include "osd.h"
+
+#define M64P_CORE_PROTOTYPES 1
+#include "api/m64p_config.h"
+#include "api/m64p_vidext.h"
 
 extern "C" {
-    #define M64P_CORE_PROTOTYPES 1
     #include "api/callbacks.h"
-    #include "api/config.h"
-    #include "api/m64p_config.h"
-    #include "api/m64p_vidext.h"
-    #include "api/vidext.h"
-    #include "main/list.h"
-    #include "main/main.h"
-    #include "osal/files.h"
-    #include "osal/preproc.h"
-    #include "plugin/plugin.h"
 }
 
 #define FONT_FILENAME "font.ttf"
