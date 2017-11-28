@@ -27,6 +27,8 @@
 
 #include "cic.h"
 
+#include "osal/preproc.h"
+
 struct joybus_device_interface;
 struct r4300_core;
 
@@ -58,7 +60,7 @@ struct pif
     struct r4300_core* r4300;
 };
 
-static uint32_t pif_ram_address(uint32_t address)
+static osal_inline uint32_t pif_ram_address(uint32_t address)
 {
     return ((address & 0xfffc) - PIF_ROM_SIZE);
 }

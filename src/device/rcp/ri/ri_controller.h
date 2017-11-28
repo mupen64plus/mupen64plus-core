@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct rdram;
 
 enum ri_registers
@@ -47,7 +49,7 @@ struct ri_controller
     struct rdram* rdram;
 };
 
-static uint32_t ri_reg(uint32_t address)
+static osal_inline uint32_t ri_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct mi_controller;
 struct rdp_core;
 struct ri_controller;
@@ -86,17 +88,17 @@ struct rsp_core
     struct ri_controller* ri;
 };
 
-static uint32_t rsp_mem_address(uint32_t address)
+static osal_inline uint32_t rsp_mem_address(uint32_t address)
 {
     return (address & 0x1fff) >> 2;
 }
 
-static uint32_t rsp_reg(uint32_t address)
+static osal_inline uint32_t rsp_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
-static uint32_t rsp_reg2(uint32_t address)
+static osal_inline uint32_t rsp_reg2(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

@@ -24,10 +24,11 @@
 
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct mi_controller;
-struct pif;
 struct ri_controller;
-struct joybus_device_interface;
+struct pif;
 
 enum si_dma_dir
 {
@@ -58,7 +59,7 @@ struct si_controller
     struct ri_controller* ri;
 };
 
-static uint32_t si_reg(uint32_t address)
+static osal_inline uint32_t si_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
