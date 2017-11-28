@@ -24,7 +24,7 @@
 #if !defined (OSAL_PREPROC_H)
 #define OSAL_PREPROC_H
 
-#if defined(WIN32) && !defined(__MINGW32__)
+#if _MSC_VER
 
   /* macros */
   #define OSAL_BREAKPOINT_INTERRUPT __debugbreak();
