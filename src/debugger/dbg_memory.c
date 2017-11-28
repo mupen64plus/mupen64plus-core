@@ -27,15 +27,7 @@
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 #include "dbg_types.h"
-#include "device/ai/ai_controller.h"
-#include "device/memory/memory.h"
-#include "device/pi/pi_controller.h"
-#include "device/r4300/r4300_core.h"
-#include "device/rdp/rdp_core.h"
-#include "device/ri/ri_controller.h"
-#include "device/rsp/rsp_core.h"
-#include "device/si/si_controller.h"
-#include "device/vi/vi_controller.h"
+#include "device/device.h"
 #include "main/main.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
@@ -291,7 +283,7 @@ uint32 read_memory_32(uint32 addr){
         return read_memory_32((g_dev.r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
       return M64P_MEM_INVALID;
     case M64P_MEM_RDRAM:
-      return g_dev.ri.rdram.dram[rdram_dram_address(addr)];
+      return g_dev.rdram.dram[rdram_dram_address(addr)];
     case M64P_MEM_RSPMEM:
       return g_dev.sp.mem[rsp_mem_address(addr)];
     case M64P_MEM_ROM:
@@ -299,7 +291,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
-          return g_dev.ri.rdram.regs[offset];
+          return g_dev.rdram.regs[offset];
       break;
     case M64P_MEM_RSPREG:
       offset = rsp_reg(addr);
@@ -349,12 +341,12 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_PIF:
       offset = pif_ram_address(addr);
       if (offset < PIF_RAM_SIZE)
-        return sl((*((uint32_t*)&g_dev.si.pif.ram[offset])));
+        return sl((*((uint32_t*)&g_dev.pif.ram[offset])));
       break;
     case M64P_MEM_MI:
       offset = mi_reg(addr);
       if (offset < MI_REGS_COUNT)
-        return g_dev.r4300.mi.regs[offset];
+        return g_dev.mi.regs[offset];
       break;
     default:
       break;
@@ -374,7 +366,7 @@ void write_memory_32(uint32 addr, uint32 value){
   switch(get_memory_type(&g_dev.mem, addr))
     {
     case M64P_MEM_RDRAM:
-      g_dev.ri.rdram.dram[(addr & 0xffffff) >> 2] = value;
+      g_dev.rdram.dram[(addr & 0xffffff) >> 2] = value;
       CHECK_MEM(addr)
       break;
     }

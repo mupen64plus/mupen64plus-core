@@ -58,7 +58,7 @@
 #include "device/controllers/paks/rumblepak.h"
 #include "device/controllers/paks/transferpak.h"
 #include "device/gb/gb_cart.h"
-#include "device/pifbootrom/pifbootrom.h"
+#include "device/pif/bootrom_hle.h"
 #include "eventloop.h"
 #include "main.h"
 #include "osal/files.h"
@@ -1367,7 +1367,7 @@ m64p_error main_run(void)
     StateChanged(M64CORE_EMU_STATE, M64EMU_RUNNING);
 
     poweron_device(&g_dev);
-    pifbootrom_hle_execute(&g_dev.r4300);
+    pif_bootrom_hle_execute(&g_dev.r4300);
     run_device(&g_dev);
 
     /* now begin to shut down */

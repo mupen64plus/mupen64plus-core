@@ -210,7 +210,7 @@ EXPORT void * CALL DebugMemGetPointer(m64p_dbg_memptr_type mem_ptr_type)
     switch (mem_ptr_type)
     {
         case M64P_DBG_PTR_RDRAM:
-            return g_dev.ri.rdram.dram;
+            return g_dev.rdram.dram;
         case M64P_DBG_PTR_PI_REG:
             return g_dev.pi.regs;
         case M64P_DBG_PTR_SI_REG:

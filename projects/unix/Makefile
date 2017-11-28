@@ -449,7 +449,6 @@ SOURCE = \
     $(SRCDIR)/backends/plugins_compat/input_plugin_compat.c \
     $(SRCDIR)/backends/clock_ctime_plus_delta.c \
     $(SRCDIR)/backends/file_storage.c \
-    $(SRCDIR)/device/ai/ai_controller.c \
     $(SRCDIR)/device/cart/cart.c \
     $(SRCDIR)/device/cart/af_rtc.c \
     $(SRCDIR)/device/cart/cart_rom.c \
@@ -464,30 +463,31 @@ SOURCE = \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
     $(SRCDIR)/device/memory/memory.c \
-    $(SRCDIR)/device/pi/pi_controller.c \
-    $(SRCDIR)/device/pifbootrom/pifbootrom.c \
+    $(SRCDIR)/device/pif/bootrom_hle.c \
+    $(SRCDIR)/device/pif/cic.c \
+    $(SRCDIR)/device/pif/n64_cic_nus_6105.c \
+    $(SRCDIR)/device/pif/pif.c \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
     $(SRCDIR)/device/r4300/exception.c \
     $(SRCDIR)/device/r4300/instr_counters.c \
     $(SRCDIR)/device/r4300/interrupt.c \
-    $(SRCDIR)/device/r4300/mi_controller.c \
     $(SRCDIR)/device/r4300/pure_interp.c \
     $(SRCDIR)/device/r4300/r4300_core.c \
     $(SRCDIR)/device/r4300/recomp.c \
     $(SRCDIR)/device/r4300/tlb.c \
-    $(SRCDIR)/device/rdp/fb.c \
-    $(SRCDIR)/device/rdp/rdp_core.c \
-    $(SRCDIR)/device/ri/rdram.c \
-    $(SRCDIR)/device/ri/rdram_detection_hack.c \
-    $(SRCDIR)/device/ri/ri_controller.c \
-    $(SRCDIR)/device/rsp/rsp_core.c \
-    $(SRCDIR)/device/si/cic.c \
-    $(SRCDIR)/device/si/n64_cic_nus_6105.c \
-    $(SRCDIR)/device/si/pif.c \
-    $(SRCDIR)/device/si/si_controller.c \
-    $(SRCDIR)/device/vi/vi_controller.c \
+    $(SRCDIR)/device/rcp/ai/ai_controller.c \
+    $(SRCDIR)/device/rcp/mi/mi_controller.c \
+    $(SRCDIR)/device/rcp/pi/pi_controller.c \
+    $(SRCDIR)/device/rcp/rdp/fb.c \
+    $(SRCDIR)/device/rcp/rdp/rdp_core.c \
+    $(SRCDIR)/device/rcp/ri/ri_controller.c \
+    $(SRCDIR)/device/rcp/rsp/rsp_core.c \
+    $(SRCDIR)/device/rcp/si/si_controller.c \
+    $(SRCDIR)/device/rcp/vi/vi_controller.c \
+    $(SRCDIR)/device/rdram/rdram.c \
+    $(SRCDIR)/device/rdram/rdram_detection_hack.c \
     $(SRCDIR)/main/main.c \
     $(SRCDIR)/main/util.c \
     $(SRCDIR)/main/cheat.c \

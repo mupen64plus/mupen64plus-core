@@ -25,21 +25,24 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "ai/ai_controller.h"
-#include "memory/memory.h"
-#include "pi/pi_controller.h"
-#include "r4300/r4300_core.h"
-#include "rdp/rdp_core.h"
-#include "ri/ri_controller.h"
-#include "rsp/rsp_core.h"
-#include "si/si_controller.h"
-#include "vi/vi_controller.h"
+#include "cart/cart.h"
 #include "controllers/game_controller.h"
 #include "controllers/paks/mempak.h"
 #include "controllers/paks/rumblepak.h"
 #include "controllers/paks/transferpak.h"
-#include "cart/cart.h"
 #include "gb/gb_cart.h"
+#include "memory/memory.h"
+#include "pif/pif.h"
+#include "r4300/r4300_core.h"
+#include "rcp/ai/ai_controller.h"
+#include "rcp/mi/mi_controller.h"
+#include "rcp/pi/pi_controller.h"
+#include "rcp/rdp/rdp_core.h"
+#include "rcp/ri/ri_controller.h"
+#include "rcp/rsp/rsp_core.h"
+#include "rcp/si/si_controller.h"
+#include "rcp/vi/vi_controller.h"
+#include "rdram/rdram.h"
 
 struct audio_out_backend_interface;
 struct storage_backend_interface;
@@ -80,10 +83,13 @@ struct device
     struct rdp_core dp;
     struct rsp_core sp;
     struct ai_controller ai;
+    struct mi_controller mi;
     struct pi_controller pi;
     struct ri_controller ri;
     struct si_controller si;
     struct vi_controller vi;
+    struct pif pif;
+    struct rdram rdram;
     struct memory mem;
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
@@ -107,9 +113,9 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
-    /* ri */
+    /* rdram */
     size_t dram_size,
-    /* si */
+    /* pif */
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     /* vi */

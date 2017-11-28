@@ -25,7 +25,7 @@
 #include "api/m64p_types.h"
 
 #include "main/rom.h"
-#include "device/ri/rdram.h"
+#include "device/rdram/rdram.h"
 
 #include <stdint.h>
 #include <string.h>

@@ -30,10 +30,8 @@
  */
 
 #include "device/device.h"
-#include "device/memory/memory.h"
 #include "device/r4300/new_dynarec/new_dynarec.h"
 #include "device/r4300/r4300_core.h"
-#include "device/ri/ri_controller.h"
 
 #include <stddef.h>
 
