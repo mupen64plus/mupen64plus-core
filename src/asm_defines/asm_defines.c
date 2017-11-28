@@ -50,7 +50,7 @@
         char before[sizeof(str)-1]; \
         char hexval[8]; \
         char after; \
-        char ensure_32bit[(val) > 0xffffffff ? -1 : 1]; \
+        char ensure_32bit[(val) > UINT64_C(0xffffffff) ? -1 : 1]; \
     } sym = { \
         str, \
         { \
