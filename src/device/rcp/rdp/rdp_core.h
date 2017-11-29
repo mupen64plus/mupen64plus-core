@@ -68,11 +68,17 @@ enum dps_registers
     DPS_REGS_COUNT
 };
 
+enum
+{
+    DELAY_DP_INT = 0x001,
+    DELAY_UPDATESCREEN = 0x002
+};
 
 struct rdp_core
 {
     uint32_t dpc_regs[DPC_REGS_COUNT];
     uint32_t dps_regs[DPS_REGS_COUNT];
+    unsigned char do_on_unfreeze;
 
     struct fb fb;
 

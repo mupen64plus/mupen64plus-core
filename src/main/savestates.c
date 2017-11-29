@@ -70,7 +70,7 @@ enum { GB_CART_FINGERPRINT_SIZE = 0x1c };
 enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010100;  /* 1.1 */
+static const int savestate_latest_version = 0x00010200;  /* 1.2 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -599,6 +599,9 @@ int savestates_load_m64p(char *filepath)
 
         /* extra si state */
         g_dev.si.dma_dir = GETDATA(curr, uint8_t);
+
+        /* extra dp state */
+        g_dev.dp.do_on_unfreeze = GETDATA(curr, uint8_t);
     }
     else {
         /* extra ai state */
@@ -646,6 +649,9 @@ int savestates_load_m64p(char *filepath)
 
         /* extra si state */
         g_dev.si.dma_dir = SI_NO_DMA;
+
+        /* extra dp state */
+        g_dev.dp.do_on_unfreeze = 0;
     }
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
@@ -835,6 +841,9 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
     /* extra si state */
     g_dev.si.dma_dir = SI_NO_DMA;
+
+    /* extra dp state */
+    g_dev.dp.do_on_unfreeze = 0;
 
     // ai_register
     g_dev.ai.regs[AI_DRAM_ADDR_REG] = GETDATA(curr, uint32_t);
@@ -1510,6 +1519,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, unsigned int, g_dev.vi.count_per_scanline);
 
     PUTDATA(curr, uint8_t, g_dev.si.dma_dir);
+
+    PUTDATA(curr, uint8_t, g_dev.dp.do_on_unfreeze);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
