@@ -1678,7 +1678,7 @@ static void remove_hash(int vaddr)
 #error Unsupported dynarec architecture
 #endif
 
-static void tlb_hacks()
+static void tlb_speed_hacks()
 {
   // Goldeneye hack
   if (strncmp((char *) ROM_HEADER.Name, "GOLDENEYE",9) == 0)
@@ -2284,7 +2284,7 @@ static void invalidate_all_pages(void)
     else g_dev.r4300.new_dynarec_hot_state.memory_map[page]=-1;
     if(page==0x80000) page=0xC0000;
   }
-  tlb_hacks();
+  tlb_speed_hacks();
 }
 
 void invalidate_cached_code_new_dynarec(struct r4300_core* r4300, uint32_t address, size_t size)
@@ -7612,7 +7612,7 @@ void new_dynarec_init(void)
   for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=-1;
 
-  tlb_hacks();
+  tlb_speed_hacks();
   arch_init();
 }
 

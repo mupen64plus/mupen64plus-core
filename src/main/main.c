@@ -1308,7 +1308,6 @@ m64p_error main_run(void)
                 emumode,
                 count_per_op,
                 no_compiled_jump,
-                ROM_PARAMS.special_rom,
                 randomize_interrupt,
                 &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
                 rdram_size,

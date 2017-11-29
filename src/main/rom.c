@@ -222,11 +222,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_VERBOSE, "PC = %" PRIX32, sl(ROM_HEADER.PC));
     DebugMessage(M64MSG_VERBOSE, "Save type: %d", ROM_SETTINGS.savetype);
 
-    if(strcmp(ROM_PARAMS.headername, "GOLDENEYE") == 0)
-        ROM_PARAMS.special_rom = GOLDEN_EYE;
-    else
-        ROM_PARAMS.special_rom = NORMAL_ROM;
-
     return M64ERR_SUCCESS;
 }
 

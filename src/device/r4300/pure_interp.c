@@ -172,7 +172,11 @@ static void InterpretOpcode(struct r4300_core* r4300);
 
 void InterpretOpcode(struct r4300_core* r4300)
 {
-	uint32_t op = *fast_mem_access(r4300, *r4300_pc(r4300));
+	uint32_t* op_address = fast_mem_access(r4300, *r4300_pc(r4300));
+	if (op_address == NULL)
+		return;
+	uint32_t op = *op_address;
+
 	switch ((op >> 26) & 0x3F) {
 	case 0: /* SPECIAL prefix */
 		switch (op & 0x3F) {
