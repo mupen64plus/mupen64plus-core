@@ -457,6 +457,7 @@ SOURCE = \
     $(SRCDIR)/device/device.c \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
+    $(SRCDIR)/device/gb/m64282fp.c \
     $(SRCDIR)/device/memory/memory.c \
     $(SRCDIR)/device/pif/bootrom_hle.c \
     $(SRCDIR)/device/pif/cic.c \

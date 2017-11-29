@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "m64282fp.h"
 #include "mbc3_rtc.h"
 #include "backends/api/storage_backend.h"
 
@@ -44,8 +45,10 @@ struct gb_cart
     unsigned int ram_enable;
     unsigned int mbc1_mode;
 
-    unsigned int has_rtc;
+    unsigned int extra_devices;
+
     struct mbc3_rtc rtc;
+    struct m64282fp cam;
 
     int (*read_gb_cart)(struct gb_cart* gb_cart, uint16_t address, uint8_t* data, size_t size);
     int (*write_gb_cart)(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
