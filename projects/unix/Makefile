@@ -387,6 +387,7 @@ else
     CFLAGS += -g
     INSTALL_STRIP_FLAG ?= 
   else
+    CFLAGS += -DNDEBUG
     ifneq ($(OS),OSX)
       INSTALL_STRIP_FLAG ?= -s
     endif
