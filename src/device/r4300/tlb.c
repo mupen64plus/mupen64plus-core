@@ -117,8 +117,6 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
         }
         else
             assert(map < 0);
-
-        assert(!(address >= UINT32_C(0x7f000000) && address < UINT32_C(0x80000000) && r4300->special_rom == GOLDEN_EYE));
     }
 #endif
 
