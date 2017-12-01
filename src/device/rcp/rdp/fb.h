@@ -57,4 +57,7 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 void protect_framebuffers(struct fb* fb);
 void unprotect_framebuffers(struct fb* fb);
 
+void pre_framebuffer_read(struct fb* fb, uint32_t address);
+void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t length);
+
 #endif

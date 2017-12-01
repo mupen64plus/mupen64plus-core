@@ -31,6 +31,7 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rcp/mi/mi_controller.h"
+#include "device/rcp/rdp/rdp_core.h"
 #include "device/rcp/ri/ri_controller.h"
 #include "device/rdram/rdram_detection_hack.h"
 
@@ -67,6 +68,8 @@ static void dma_pi_read(struct pi_controller* pi)
         return;
     }
 
+    pre_framebuffer_read(&pi->dp->fb, dram_addr);
+
     unsigned int cycles = handler->dma_read(opaque, dram, dram_addr, cart_addr, length);
 
     /* Mark DMA as busy */
@@ -96,6 +99,8 @@ static void dma_pi_write(struct pi_controller* pi)
 
     unsigned int cycles = handler->dma_write(opaque, dram, dram_addr, cart_addr, length);
 
+    post_framebuffer_write(&pi->dp->fb, dram_addr, length);
+
     /* HACK: monitor PI DMA to trigger RDRAM size detection
      * hack just before initial cart ROM loading. */
     if ((cart_addr & 0x1fffffff) == (MM_CART_ROM + 0x1000))
@@ -116,13 +121,15 @@ void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              struct mi_controller* mi,
              struct ri_controller* ri,
-             const struct cic* cic)
+             const struct cic* cic,
+             struct rdp_core* dp)
 {
     pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
     pi->mi = mi;
     pi->ri = ri;
     pi->cic = cic;
+    pi->dp = dp;
 }
 
 void poweron_pi(struct pi_controller* pi)

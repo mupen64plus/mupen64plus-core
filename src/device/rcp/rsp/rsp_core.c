@@ -50,6 +50,8 @@ static void dma_sp_write(struct rsp_core* sp)
     unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
 
     for(j=0; j<count; j++) {
+        pre_framebuffer_read(&sp->dp->fb, dramaddr);
+
         for(i=0; i<length; i++) {
             spmem[memaddr^S8] = dram[dramaddr^S8];
             memaddr++;
@@ -81,6 +83,8 @@ static void dma_sp_read(struct rsp_core* sp)
             memaddr++;
             dramaddr++;
         }
+
+        post_framebuffer_write(&sp->dp->fb, dramaddr - length, length);
         dramaddr+=skip;
     }
 }

@@ -36,8 +36,12 @@ static osal_inline size_t fb_buffer_size(const FrameBufferInfo* fb_info)
     return fb_info->width * fb_info->height * fb_info->size;
 }
 
-static void pre_framebuffer_read(struct fb* fb, uint32_t address)
+void pre_framebuffer_read(struct fb* fb, uint32_t address)
 {
+    if (!fb->infos[0].addr) {
+        return;
+    }
+
     size_t i;
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
@@ -59,9 +63,20 @@ static void pre_framebuffer_read(struct fb* fb, uint32_t address)
     }
 }
 
-static void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t mask)
+void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t length)
 {
-    size_t i;
+    if (!fb->infos[0].addr) {
+        return;
+    }
+
+    size_t i, j;
+    unsigned char size;
+    if (length % 4 == 0)
+        size = 4;
+    else if (length % 2 == 0)
+        size = 2;
+    else
+        size = 1;
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
 
@@ -74,49 +89,10 @@ static void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t mas
         uint32_t begin = fb->infos[i].addr;
         uint32_t end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
 
-        if ((address >= begin) && (address <= end)) {
-            uint32_t addr = address & ~0x3;
-            size_t size = 4;
-
-            switch(mask)
-            {
-            case 0x000000ff:
-                addr += (3 ^ S8);
-                size = 1;
-                break;
-            case 0x0000ff00:
-                addr += (2 ^ S8);
-                size = 1;
-                break;
-            case 0x00ff0000:
-                addr += (1 ^ S8);
-                size = 1;
-                break;
-            case 0xff000000:
-                addr += (0 ^ S8);
-                size = 1;
-                break;
-
-            case 0x0000ffff:
-                addr += (2 ^ S16);
-                size = 2;
-                break;
-
-            case 0xffff0000:
-                addr += (0 ^ S16);
-                size = 2;
-                break;
-
-            case 0xffffffff:
-                addr += 0;
-                size = 4;
-                break;
-
-            default:
-                DebugMessage(M64MSG_WARNING, "Unknown mask %08x !!!", mask);
+        for (j = 0; j < length; j += size) {
+            if ((address + j >= begin) && (address + j <= end)) {
+                gfx.fBWrite(address + j, size);
             }
-
-            gfx.fBWrite(addr, size);
         }
     }
 }
@@ -151,7 +127,52 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
 {
     struct fb* fb = (struct fb*)opaque;
     write_rdram_dram(fb->rdram, address, value, mask);
-    post_framebuffer_write(fb, address, mask);
+
+    uint32_t addr = address & ~0x3;
+    size_t size = 4;
+
+    switch(mask)
+    {
+    case 0x000000ff:
+        addr += (3 ^ S8);
+        size = 1;
+        break;
+
+    case 0x0000ff00:
+        addr += (2 ^ S8);
+        size = 1;
+        break;
+
+    case 0x00ff0000:
+        addr += (1 ^ S8);
+        size = 1;
+        break;
+
+    case 0xff000000:
+        addr += (0 ^ S8);
+        size = 1;
+        break;
+
+    case 0x0000ffff:
+        addr += (2 ^ S16);
+        size = 2;
+        break;
+
+    case 0xffff0000:
+        addr += (0 ^ S16);
+        size = 2;
+        break;
+
+    case 0xffffffff:
+        addr += 0;
+        size = 4;
+        break;
+
+    default:
+        DebugMessage(M64MSG_WARNING, "Unknown mask %08x !!!", mask);
+    }
+
+    post_framebuffer_write(fb, addr, size);
 }
 
 
@@ -211,7 +232,7 @@ void unprotect_framebuffers(struct fb* fb)
     struct mem_mapping ram_mapping = { 0, 0, M64P_MEM_RDRAM, { fb->rdram, RW(rdram_dram) } };
 
     /* return early if FB info is not supported or empty */
-    if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite && fb->infos[0].addr)) {
+    if (!fb->infos[0].addr) {
         return;
     }
 
