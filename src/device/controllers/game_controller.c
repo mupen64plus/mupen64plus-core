@@ -188,6 +188,7 @@ static void process_controller_command(void* jbd,
     {
     case JCMD_RESET:
         cont->flavor->reset(cont);
+        /* fall through */
     case JCMD_STATUS: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
 

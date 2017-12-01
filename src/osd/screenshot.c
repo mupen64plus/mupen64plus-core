@@ -29,10 +29,8 @@
 
 #include "osd.h"
 
-extern "C" {
 #define M64P_CORE_PROTOTYPES 1
 #include "api/callbacks.h"
-#include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
 #include "main/main.h"
@@ -41,7 +39,6 @@ extern "C" {
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "plugin/plugin.h"
-}
 
 /*********************************************************************************************************
 * PNG support functions for writing screenshot files
@@ -137,11 +134,12 @@ static char *GetNextScreenshotPath(void)
 {
     char *ScreenshotPath;
     char ScreenshotFileName[20 + 8 + 1];
+    char *pch;
 
     // generate the base name of the screenshot
     // add the ROM name, convert to lowercase, convert spaces to underscores
     strcpy(ScreenshotFileName, ROM_PARAMS.headername);
-    for (char *pch = ScreenshotFileName; *pch != '\0'; pch++)
+    for (pch = ScreenshotFileName; *pch != '\0'; pch++)
         *pch = ((*pch == ' ') || (*pch == ':')) ? '_' : tolower(*pch);
     strcat(ScreenshotFileName, "-###.png");
     
@@ -190,12 +188,12 @@ static char *GetNextScreenshotPath(void)
 * Global screenshot functions
 */
 
-extern "C" void ScreenshotRomOpen(void)
+void ScreenshotRomOpen(void)
 {
     CurrentShotIndex = 0;
 }
 
-extern "C" void TakeScreenshot(int iFrameNumber)
+void TakeScreenshot(int iFrameNumber)
 {
     char *filename;
 

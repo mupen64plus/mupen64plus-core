@@ -128,7 +128,7 @@ endif
 
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
-WARNFLAGS ?= -Wall -Wno-unused-function
+WARNFLAGS ?= -Wall
 CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
@@ -406,15 +406,9 @@ endif
 ifeq ($(DBG_CORE), 1)
   CFLAGS += -DCORE_DBG
 endif
-ifeq ($(DBG_COUNT), 1)
-  CFLAGS += -DCOUNT_INSTR
-endif
 ifeq ($(DBG_TIMING), 1)
   CFLAGS += -DPROFILE
   LDFLAGS += -lrt
-endif
-ifeq ($(DBG_PROFILE), 1)
-  CFLAGS += -DPROFILE_R4300
 endif
 # 4. compile-time directory paths for building into the library
 ifneq ($(SHAREDIR),)
@@ -472,7 +466,6 @@ SOURCE = \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
     $(SRCDIR)/device/r4300/exception.c \
-    $(SRCDIR)/device/r4300/instr_counters.c \
     $(SRCDIR)/device/r4300/interrupt.c \
     $(SRCDIR)/device/r4300/pure_interp.c \
     $(SRCDIR)/device/r4300/r4300_core.c \
@@ -494,7 +487,6 @@ SOURCE = \
     $(SRCDIR)/main/cheat.c \
     $(SRCDIR)/main/eventloop.c \
     $(SRCDIR)/main/md5.c \
-    $(SRCDIR)/main/profile.c \
     $(SRCDIR)/main/rom.c \
     $(SRCDIR)/main/savestates.c \
     $(SRCDIR)/main/sdl_key_converter.c \
@@ -505,7 +497,7 @@ SOURCE = \
     $(SRCDIR)/plugin/dummy_audio.c \
     $(SRCDIR)/plugin/dummy_input.c \
     $(SRCDIR)/plugin/dummy_rsp.c \
-    $(SRCDIR)/osd/screenshot.cpp
+    $(SRCDIR)/osd/screenshot.c
 
 ifeq ("$(OS)","MINGW")
 SOURCE += \
@@ -524,6 +516,15 @@ SOURCE += \
 endif
 
 # source files for optional features
+ifeq ($(DBG_COUNT), 1)
+  CFLAGS += -DCOUNT_INSTR
+  SOURCE += $(SRCDIR)/device/r4300/instr_counters.c
+endif
+ifeq ($(DBG_PROFILE), 1)
+  CFLAGS += -DPROFILE_R4300
+  SOURCE += $(SRCDIR)/main/profile.c
+endif
+
 ifneq ($(NO_ASM), 1)
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)

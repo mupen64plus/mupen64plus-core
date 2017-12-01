@@ -82,4 +82,6 @@ void dummyinput_SDL_KeyUp(int keymod, int keysym)
 {
 }
 
-
+void dummyinput_RenderCallback(void)
+{
+}

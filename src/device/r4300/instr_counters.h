@@ -22,10 +22,8 @@
 #ifndef M64P_DEVICE_R4300_INSTR_COUNTERS_H
 #define M64P_DEVICE_R4300_INSTR_COUNTERS_H
 
-#if defined(COUNT_INSTR)
 extern unsigned int instr_count[132];
 
 void instr_counters_print(void);
-#endif /* COUNT_INSTR */
 
 #endif /* M64P_DEVICE_R4300_INSTR_COUNTERS_H */

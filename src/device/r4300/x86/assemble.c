@@ -68,7 +68,7 @@ void add_jump(unsigned int pc_addr, unsigned int mi_addr)
 void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block *block)
 {
    unsigned int real_code_length, addr_dest;
-   int i;
+   size_t i;
    build_wrappers(dest, start, end, block);
    real_code_length = g_dev.r4300.recomp.code_length;
    

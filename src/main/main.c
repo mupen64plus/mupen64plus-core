@@ -66,7 +66,9 @@
 #include "osd/osd.h"
 #include "osd/screenshot.h"
 #include "plugin/plugin.h"
+#if defined(PROFILE)
 #include "profile.h"
+#endif
 #include "rom.h"
 #include "savestates.h"
 #include "util.h"
@@ -770,7 +772,9 @@ static void apply_speed_limiter(void)
 
     lastSpeedFactor = l_SpeedFactor;
 
+#if defined(PROFILE)
     timed_section_start(TIMED_SECTION_IDLE);
+#endif
 
 #ifdef DBG
     if(g_DebuggerActive) DebuggerCallback(DEBUG_UI_VI, 0);
@@ -813,7 +817,9 @@ static void apply_speed_limiter(void)
     }
 
 
+#if defined(PROFILE)
     timed_section_end(TIMED_SECTION_IDLE);
+#endif
 }
 
 /* TODO: make a GameShark module and move that there */
@@ -849,7 +855,9 @@ static void pause_loop(void)
  * Allow the core to perform various things */
 void new_vi(void)
 {
+#if defined(PROFILE)
     timed_sections_refresh();
+#endif
 
     gs_apply_cheats();
 

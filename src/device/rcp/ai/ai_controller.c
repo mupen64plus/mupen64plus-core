@@ -31,11 +31,9 @@
 #include "device/rcp/vi/vi_controller.h"
 #include "device/rdram/rdram.h"
 
-enum
-{
-    AI_STATUS_BUSY = 0x40000000,
-    AI_STATUS_FULL = 0x80000000
-};
+
+#define AI_STATUS_BUSY UINT32_C(0x40000000)
+#define AI_STATUS_FULL UINT32_C(0x80000000)
 
 
 static uint32_t get_remaining_dma_length(struct ai_controller* ai)

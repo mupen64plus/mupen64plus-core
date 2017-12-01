@@ -147,9 +147,6 @@
     <ClCompile Include="..\..\src\main\md5.c">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\profile.c">
-      <Filter>main</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\rom.c">
       <Filter>main</Filter>
     </ClCompile>
@@ -186,7 +183,7 @@
     <ClCompile Include="..\..\src\osd\osd.cpp">
       <Filter>osd</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\osd\screenshot.cpp">
+    <ClCompile Include="..\..\src\osd\screenshot.c">
       <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\file_storage.c">
@@ -232,9 +229,6 @@
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\exception.c">
-      <Filter>device\r4300</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\instr_counters.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\interrupt.c">
@@ -446,9 +440,6 @@
     <ClInclude Include="..\..\src\main\md5.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\profile.h">
-      <Filter>main</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\rom.h">
       <Filter>main</Filter>
     </ClInclude>
@@ -531,9 +522,6 @@
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\fpu.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\instr_counters.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\interrupt.h">

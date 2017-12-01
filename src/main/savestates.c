@@ -275,7 +275,7 @@ int savestates_load_m64p(char *filepath)
     }
     if (version == 0x00010000) /* original savestate version */
     {
-        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+        if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
             (gzread(f, queue, sizeof(queue)) % 4) != 0)
         {
             main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.0 data from %s", filepath);
@@ -287,7 +287,7 @@ int savestates_load_m64p(char *filepath)
     }
     else if (version == 0x00010100) // saves entire eventqueue plus 4-byte using_tlb flags
     {
-        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+        if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
             gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData))
         {
@@ -300,7 +300,7 @@ int savestates_load_m64p(char *filepath)
     }
     else // version >= 0x00010200  saves entire eventqueue, 4-byte using_tlb flags and extra state
     {
-        if (gzread(f, savestateData, savestateSize) != savestateSize ||
+        if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
             gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData) ||
             gzread(f, data_0001_0200, sizeof(data_0001_0200)) != sizeof(data_0001_0200))
@@ -1002,7 +1002,8 @@ static int savestates_load_pj64(char *filepath, void *handle,
 
 static int read_data_from_zip(void *zip, void *buffer, size_t length)
 {
-    return unzReadCurrentFile((unzFile)zip, buffer, (unsigned)length) == length;
+    int err = unzReadCurrentFile((unzFile)zip, buffer, (unsigned)length);
+    return (err >= 0) && ((size_t)err == length);
 }
 
 static int savestates_load_pj64_zip(char *filepath)
@@ -1176,6 +1177,7 @@ int savestates_load(void)
 static void savestates_save_m64p_work(struct work_struct *work)
 {
     gzFile f;
+    int gzres;
     struct savestate_work *save = container_of(work, struct savestate_work, work);
 
     SDL_LockMutex(savestates_lock);
@@ -1190,7 +1192,8 @@ static void savestates_save_m64p_work(struct work_struct *work)
         return;
     }
 
-    if (gzwrite(f, save->data, save->size) != save->size)
+    gzres = gzwrite(f, save->data, save->size);
+    if ((gzres < 0) || ((size_t)gzres != save->size))
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not write data to state file: %s", save->filepath);
         gzclose(f);

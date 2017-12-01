@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "api/m64p_types.h"
+#include "osal/preproc.h"
 
 struct mi_controller;
 struct rdp_core;
@@ -62,7 +63,7 @@ struct vi_controller
     struct rdp_core* dp;
 };
 
-static uint32_t vi_reg(uint32_t address)
+static osal_inline uint32_t vi_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

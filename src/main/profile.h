@@ -34,14 +34,8 @@ enum timed_section
     NUM_TIMED_SECTIONS
 };
 
-#ifdef PROFILE
-  void timed_section_start(enum timed_section section);
-  void timed_section_end(enum timed_section section);
-  void timed_sections_refresh(void);
-#else
-  #define timed_section_start(a)
-  #define timed_section_end(a)
-  #define timed_sections_refresh()
-#endif
+void timed_section_start(enum timed_section section);
+void timed_section_end(enum timed_section section);
+void timed_sections_refresh(void);
 
 #endif

@@ -99,7 +99,8 @@ static const input_plugin_functions dummy_input = {
     dummyinput_RomClosed,
     dummyinput_RomOpen,
     dummyinput_SDL_KeyDown,
-    dummyinput_SDL_KeyUp
+    dummyinput_SDL_KeyUp,
+    dummyinput_RenderCallback
 };
 
 static const rsp_plugin_functions dummy_rsp = {
@@ -128,7 +129,7 @@ static void EmptyFunc(void)
 
 // Handy macro to avoid code bloat when loading symbols
 #define GET_FUNC(type, field, name) \
-    ((field = (type)osal_dynlib_getproc(plugin_handle, name)) != NULL)
+    ((*(void**)(&(field)) = osal_dynlib_getproc(plugin_handle, name)) != NULL)
 
 // code to handle backwards-compatibility to video plugins with API_VERSION < 02.1.0.  This API version introduced a boolean
 // flag in the rendering callback, which told the core whether or not the current screen has been freshly redrawn since the
@@ -190,7 +191,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
         }
 
         /* set function pointers for optional functions */
-        gfx.resizeVideoOutput = (ptr_ResizeVideoOutput) osal_dynlib_getproc(plugin_handle, "ResizeVideoOutput");
+        *(void**)&gfx.resizeVideoOutput = osal_dynlib_getproc(plugin_handle, "ResizeVideoOutput");
 
         /* check the version info */
         (*gfx.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);

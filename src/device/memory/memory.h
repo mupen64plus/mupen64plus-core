@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 enum { RDRAM_MAX_SIZE = 0x800000 };
 enum { CART_ROM_MAX_SIZE = 0x4000000 };
 enum { DD_ROM_MAX_SIZE = 0x400000 };
@@ -85,7 +87,7 @@ struct memory
 
 #endif
 
-static void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
+static osal_inline void masked_write(uint32_t* dst, uint32_t value, uint32_t mask)
 {
     *dst = (*dst & ~mask) | (value & mask);
 }
@@ -95,17 +97,17 @@ void init_memory(struct memory* mem,
                  void* base,
                  struct mem_handler* dbg_handler);
 
-static const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
+static osal_inline const struct mem_handler* mem_get_handler(const struct memory* mem, uint32_t address)
 {
     return &mem->handlers[address >> 16];
 }
 
-static void mem_read32(const struct mem_handler* handler, uint32_t address, uint32_t* value)
+static osal_inline void mem_read32(const struct mem_handler* handler, uint32_t address, uint32_t* value)
 {
     handler->read32(handler->opaque, address, value);
 }
 
-static void mem_write32(const struct mem_handler* handler, uint32_t address, uint32_t value, uint32_t mask)
+static osal_inline void mem_write32(const struct mem_handler* handler, uint32_t address, uint32_t value, uint32_t mask)
 {
     handler->write32(handler->opaque, address, value, mask);
 }

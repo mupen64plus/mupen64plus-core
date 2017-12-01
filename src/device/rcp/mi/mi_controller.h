@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct r4300_core;
 
 enum mi_registers
@@ -53,7 +55,7 @@ struct mi_controller
     struct r4300_core* r4300;
 };
 
-static uint32_t mi_reg(uint32_t address)
+static osal_inline uint32_t mi_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

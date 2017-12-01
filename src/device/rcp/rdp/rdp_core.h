@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "fb.h"
+#include "osal/preproc.h"
 
 struct mi_controller;
 struct ri_controller;
@@ -86,12 +87,12 @@ struct rdp_core
     struct mi_controller* mi;
 };
 
-static uint32_t dpc_reg(uint32_t address)
+static osal_inline uint32_t dpc_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
 
-static uint32_t dps_reg(uint32_t address)
+static osal_inline uint32_t dps_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

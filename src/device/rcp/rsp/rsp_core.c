@@ -30,7 +30,9 @@
 #include "device/rcp/ri/ri_controller.h"
 #include "device/rdram/rdram.h"
 #include "main/main.h"
+#if defined(PROFILE)
 #include "main/profile.h"
+#endif
 #include "plugin/plugin.h"
 
 static void dma_sp_write(struct rsp_core* sp)
@@ -269,9 +271,13 @@ void do_SP_Task(struct rsp_core* sp)
 
         //gfx.processDList();
         sp->regs2[SP_PC_REG] &= 0xfff;
+#if defined(PROFILE)
         timed_section_start(TIMED_SECTION_GFX);
+#endif
         rsp.doRspCycles(0xffffffff);
+#if defined(PROFILE)
         timed_section_end(TIMED_SECTION_GFX);
+#endif
         sp->regs2[SP_PC_REG] |= save_pc;
         new_frame();
 
@@ -293,9 +299,13 @@ void do_SP_Task(struct rsp_core* sp)
     {
         //audio.processAList();
         sp->regs2[SP_PC_REG] &= 0xfff;
+#if defined(PROFILE)
         timed_section_start(TIMED_SECTION_AUDIO);
+#endif
         rsp.doRspCycles(0xffffffff);
+#if defined(PROFILE)
         timed_section_end(TIMED_SECTION_AUDIO);
+#endif
         sp->regs2[SP_PC_REG] |= save_pc;
 
         sp_delay_time = 4000;

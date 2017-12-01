@@ -42,6 +42,7 @@ static void process_cart_command(void* jbd,
     {
     case JCMD_RESET:
         /* TODO: perform internal reset */
+        /* fall through */
     case JCMD_STATUS: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
 

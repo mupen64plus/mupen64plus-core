@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct device;
 struct mi_controller;
 struct ri_controller;
@@ -69,7 +71,7 @@ struct pi_controller
     struct rdp_core* dp;
 };
 
-static uint32_t pi_reg(uint32_t address)
+static osal_inline uint32_t pi_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }

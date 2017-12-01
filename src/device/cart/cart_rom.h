@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct r4300_core;
 
 struct cart_rom
@@ -38,7 +40,7 @@ struct cart_rom
     struct r4300_core* r4300;
 };
 
-static uint32_t rom_address(uint32_t address)
+static osal_inline uint32_t rom_address(uint32_t address)
 {
     return (address & 0x03fffffc);
 }

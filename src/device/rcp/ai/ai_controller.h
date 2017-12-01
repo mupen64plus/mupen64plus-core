@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "osal/preproc.h"
+
 struct mi_controller;
 struct ri_controller;
 struct vi_controller;
@@ -66,7 +68,7 @@ struct ai_controller
     const struct audio_out_backend_interface* iaout;
 };
 
-static uint32_t ai_reg(uint32_t address)
+static osal_inline uint32_t ai_reg(uint32_t address)
 {
     return (address & 0xffff) >> 2;
 }
