@@ -1071,7 +1071,8 @@ void main_change_gb_cart(int control_id)
     init_gb_cart(gb_cart,
             data, init_gb_rom, release_gb_rom,
             data, init_gb_ram, release_gb_ram,
-            NULL, &g_iclock_ctime_plus_delta);
+            NULL, &g_iclock_ctime_plus_delta,
+            &data->control_id, &g_irumble_backend_plugin_compat);
 
     if (gb_cart->read_gb_cart == NULL) {
         gb_cart = NULL;
@@ -1265,7 +1266,8 @@ m64p_error main_run(void)
                     init_gb_cart(&g_dev.gb_carts[i],
                             &l_gb_carts_data[i], init_gb_rom, release_gb_rom,
                             &l_gb_carts_data[i], init_gb_ram, release_gb_ram,
-                            NULL, &g_iclock_ctime_plus_delta);
+                            NULL, &g_iclock_ctime_plus_delta,
+                            &l_gb_carts_data[i].control_id, &g_irumble_backend_plugin_compat);
 
                     init_transferpak(&g_dev.transferpaks[i], (g_dev.gb_carts[i].read_gb_cart == NULL) ? NULL : &g_dev.gb_carts[i]);
                     l_paks[i][k] = &g_dev.transferpaks[i];

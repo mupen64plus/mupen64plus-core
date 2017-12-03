@@ -27,6 +27,7 @@
 
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
+#include "backends/api/rumble_backend.h"
 
 #include <assert.h>
 #include <string.h>
@@ -434,7 +435,7 @@ static int read_gb_cart_mbc5(struct gb_cart* gb_cart, uint16_t address, uint8_t*
 
     /* 0xa000-0xbfff: RAM bank 00-07 */
     case (0xa000 >> 13):
-        read_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        read_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + ((gb_cart->ram_bank & 0x7) * 0x2000), data, size);
         break;
 
     default:
@@ -472,15 +473,16 @@ static int write_gb_cart_mbc5(struct gb_cart* gb_cart, uint16_t address, const u
 
     /* 0x4000-0x5fff: RAM bank select */
     case (0x4000 >> 13):
-        /* TODO: add rumble selection */
         gb_cart->ram_bank = value & 0x0f;
+        if (gb_cart->extra_devices & GED_RUMBLE) {
+            gb_cart->irumble->exec(gb_cart->rumble, ((gb_cart->ram_bank & 0x8) == 0) ? RUMBLE_STOP : RUMBLE_START);
+        }
         DebugMessage(M64MSG_VERBOSE, "MBC5 set ram bank %02x", gb_cart->ram_bank);
         break;
 
     /* 0xa000-0xbfff: RAM bank 00-0f */
     case (0xa000 >> 13):
-        /* TODO: add rumble support */
-        write_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + (gb_cart->ram_bank * 0x2000), data, size);
+        write_ram(gb_cart->ram_storage, gb_cart->iram_storage, gb_cart->ram_enable, (address - 0xa000) + ((gb_cart->ram_bank & 0x07)* 0x2000), data, size);
         break;
 
     default:
@@ -729,7 +731,8 @@ static const struct parsed_cart_type* parse_cart_type(uint8_t cart_type)
 void init_gb_cart(struct gb_cart* gb_cart,
         void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
         void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
-        void* clock, const struct clock_backend_interface* iclock)
+        void* clock, const struct clock_backend_interface* iclock,
+        void* rumble, const struct rumble_backend_interface* irumble)
 {
     const struct parsed_cart_type* type;
     void* rom_storage = NULL;
@@ -831,6 +834,8 @@ void init_gb_cart(struct gb_cart* gb_cart,
     gb_cart->extra_devices = type->extra_devices;
     gb_cart->rtc = rtc;
     gb_cart->cam = cam;
+    gb_cart->rumble = rumble;
+    gb_cart->irumble = irumble;
     gb_cart->read_gb_cart = type->read_gb_cart;
     gb_cart->write_gb_cart = type->write_gb_cart;
 
@@ -857,6 +862,10 @@ void poweron_gb_cart(struct gb_cart* gb_cart)
 
     if (gb_cart->extra_devices & GED_CAMERA) {
         poweron_m64282fp(&gb_cart->cam);
+    }
+
+    if (gb_cart->extra_devices & GED_RUMBLE) {
+        gb_cart->irumble->exec(gb_cart->rumble, RUMBLE_STOP);
     }
 }
 
