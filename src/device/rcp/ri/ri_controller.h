@@ -54,6 +54,16 @@ static osal_inline uint32_t ri_reg(uint32_t address)
     return (address & 0xffff) >> 2;
 }
 
+static osal_inline uint16_t ri_address_to_id_field(uint32_t address)
+{
+    /* XXX: pure guessing, need harware test */
+    return ((address >> 20) == 0x03f)
+        ? (address & 0x0007fc00) >> 10  /* RDRAM registers id_field: [19..10] */
+        : (address & 0x00f00000) >> 20; /* RDRAM memory    id_field: [23..20] */
+}
+
+
+
 void init_ri(struct ri_controller* ri, struct rdram* rdram);
 
 void poweron_ri(struct ri_controller* ri);

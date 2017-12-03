@@ -317,16 +317,16 @@ int savestates_load_m64p(char *filepath)
     SDL_UnlockMutex(savestates_lock);
 
     // Parse savestate
-    g_dev.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     curr += 4; /* Padding from old implementation */
     g_dev.mi.regs[MI_INIT_MODE_REG] = GETDATA(curr, uint32_t);
@@ -607,6 +607,20 @@ int savestates_load_m64p(char *filepath)
 
         /* extra dp state */
         g_dev.dp.do_on_unfreeze = GETDATA(curr, uint8_t);
+
+        /* extra RDRAM register state */
+        for (i = 1; i < RDRAM_MAX_MODULES_COUNT; ++i) {
+            g_dev.rdram.regs[i][RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
+            g_dev.rdram.regs[i][RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
+        }
     }
     else {
         /* extra ai state */
@@ -657,6 +671,15 @@ int savestates_load_m64p(char *filepath)
 
         /* extra dp state */
         g_dev.dp.do_on_unfreeze = 0;
+
+        /* extra rdram state
+         * Best effort, copy values from RDRAM module 0 except for DEVICE_ID
+         * which is set in accordance with the IPL3 procedure with 2M modules.
+         */
+        for (i = 0; i < RDRAM_MAX_MODULES_COUNT; ++i) {
+            memcpy(g_dev.rdram.regs[i], g_dev.rdram.regs[0], RDRAM_REGS_COUNT*sizeof(g_dev.rdram.regs[0][0]));
+            g_dev.rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
+        }
     }
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
@@ -777,16 +800,16 @@ static int savestates_load_pj64(char *filepath, void *handle,
     *r4300_mult_lo(&g_dev.r4300) = GETDATA(curr, int64_t);
 
     // rdram register
-    g_dev.rdram.regs[RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
-    g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_CONFIG_REG]       = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DEVICE_ID_REG]    = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DELAY_REG]        = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_MODE_REG]         = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_REF_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_REF_ROW_REG]      = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_RAS_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_MIN_INTERVAL_REG] = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
+    g_dev.rdram.regs[0][RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
 
     // sp_register
     g_dev.sp.regs[SP_MEM_ADDR_REG]  = GETDATA(curr, uint32_t);
@@ -995,6 +1018,15 @@ static int savestates_load_pj64(char *filepath, void *handle,
         if (ROM_SETTINGS.transferpak) {
             poweron_transferpak(&g_dev.transferpaks[i]);
         }
+    }
+
+    /* extra rdram state
+     * Best effort, copy values from RDRAM module 0 except for DEVICE_ID
+     * which is set in accordance with the IPL3 procedure with 2M modules.
+     */
+    for (i = 0; i < (SaveRDRAMSize / 0x200000); ++i) {
+        memcpy(g_dev.rdram.regs[i], g_dev.rdram.regs[0], RDRAM_REGS_COUNT*sizeof(g_dev.rdram.regs[0][0]));
+        g_dev.rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
     }
 
     savestates_load_set_pc(&g_dev.r4300, *r4300_cp0_last_addr(&g_dev.r4300.cp0));
@@ -1265,16 +1297,16 @@ int savestates_save_m64p(char *filepath)
 
     PUTARRAY(ROM_SETTINGS.MD5, curr, char, 32);
 
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DELAY_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_ROW_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DEVICE_ID_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DELAY_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_REF_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_REF_ROW_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_RAS_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_MIN_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_ADDR_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DEVICE_MANUF_REG]);
 
     PUTDATA(curr, uint32_t, 0); // Padding from old implementation
     PUTDATA(curr, uint32_t, g_dev.mi.regs[MI_INIT_MODE_REG]);
@@ -1532,6 +1564,19 @@ int savestates_save_m64p(char *filepath)
 
     PUTDATA(curr, uint8_t, g_dev.dp.do_on_unfreeze);
 
+    for (i = 1; i < RDRAM_MAX_MODULES_COUNT; ++i) {
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_CONFIG_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_DEVICE_ID_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_DELAY_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_MODE_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_REF_INTERVAL_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_REF_ROW_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_RAS_INTERVAL_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_MIN_INTERVAL_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_ADDR_SELECT_REG]);
+        PUTDATA(curr, uint32_t, g_dev.rdram.regs[i][RDRAM_DEVICE_MANUF_REG]);
+    }
+
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
 
@@ -1575,16 +1620,16 @@ static int savestates_save_pj64(char *filepath, void *handle,
     PUTDATA(curr, int64_t, *r4300_mult_hi(&g_dev.r4300));
     PUTDATA(curr, int64_t, *r4300_mult_lo(&g_dev.r4300));
 
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_CONFIG_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_ID_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DELAY_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MODE_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_REF_ROW_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_RAS_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_MIN_INTERVAL_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_ADDR_SELECT_REG]);
-    PUTDATA(curr, uint32_t, g_dev.rdram.regs[RDRAM_DEVICE_MANUF_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_CONFIG_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DEVICE_ID_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DELAY_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_MODE_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_REF_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_REF_ROW_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_RAS_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_MIN_INTERVAL_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_ADDR_SELECT_REG]);
+    PUTDATA(curr, uint32_t, g_dev.rdram.regs[0][RDRAM_DEVICE_MANUF_REG]);
 
     PUTDATA(curr, uint32_t, g_dev.sp.regs[SP_MEM_ADDR_REG]);
     PUTDATA(curr, uint32_t, g_dev.sp.regs[SP_DRAM_ADDR_REG]);
