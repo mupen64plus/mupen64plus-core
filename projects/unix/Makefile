@@ -505,7 +505,7 @@ SOURCE += \
     $(SRCDIR)/osal/files_win32.c
 else ifeq   ("$(OS)","OSX")
 SOURCE += \
-    $(SRCDIR)/osal/dynamiclib_win32.c \
+    $(SRCDIR)/osal/dynamiclib_unix.c \
     $(SRCDIR)/osal/files_macos.c
 else
 SOURCE += \
