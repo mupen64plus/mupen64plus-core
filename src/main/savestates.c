@@ -566,7 +566,7 @@ int savestates_load_m64p(char *filepath)
                    (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
 
                 if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t);
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+M64282FP_REGS_COUNT;
                 }
             }
             else {
