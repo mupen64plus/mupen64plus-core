@@ -503,7 +503,7 @@ ifeq ("$(OS)","MINGW")
 SOURCE += \
     $(SRCDIR)/osal/dynamiclib_win32.c \
     $(SRCDIR)/osal/files_win32.c
-ifeq   ("$(OS)","OSX")
+else ifeq   ("$(OS)","OSX")
 SOURCE += \
     $(SRCDIR)/osal/dynamiclib_win32.c \
     $(SRCDIR)/osal/files_macos.c
