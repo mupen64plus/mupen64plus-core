@@ -306,6 +306,9 @@
     <ClCompile Include="..\..\src\device\gb\gb_cart.c">
       <Filter>device\gb</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\gb\m64282fp.c">
+      <Filter>device\gb</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c">
       <Filter>device\gb</Filter>
     </ClCompile>
@@ -636,6 +639,9 @@
       <Filter>main\xxHash</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\gb\gb_cart.h">
+      <Filter>device\gb</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\gb\m64282fp.h">
       <Filter>device\gb</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h">

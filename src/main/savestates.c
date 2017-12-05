@@ -566,7 +566,7 @@ int savestates_load_m64p(char *filepath)
                    (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
 
                 if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t);
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+M64282FP_REGS_COUNT;
                 }
             }
             else {
@@ -579,6 +579,7 @@ int savestates_load_m64p(char *filepath)
                     g_dev.transferpaks[i].gb_cart->rtc.latch = GETDATA(curr, unsigned int);
                     COPYARRAY(g_dev.transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     g_dev.transferpaks[i].gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
+                    COPYARRAY(g_dev.transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
                 }
             }
         }
@@ -1510,6 +1511,8 @@ int savestates_save_m64p(char *filepath)
             PUTDATA(curr, unsigned int, g_dev.transferpaks[i].gb_cart->rtc.latch);
             PUTARRAY(g_dev.transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
             PUTDATA(curr, int64_t, g_dev.transferpaks[i].gb_cart->rtc.last_time);
+
+            PUTARRAY(g_dev.transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
         }
     }
 

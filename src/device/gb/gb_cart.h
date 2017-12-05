@@ -25,10 +25,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "m64282fp.h"
 #include "mbc3_rtc.h"
 #include "backends/api/storage_backend.h"
 
 struct clock_backend_interface;
+struct rumble_backend_interface;
 
 struct gb_cart
 {
@@ -44,8 +46,13 @@ struct gb_cart
     unsigned int ram_enable;
     unsigned int mbc1_mode;
 
-    unsigned int has_rtc;
+    unsigned int extra_devices;
+
     struct mbc3_rtc rtc;
+    struct m64282fp cam;
+
+    void* rumble;
+    const struct rumble_backend_interface* irumble;
 
     int (*read_gb_cart)(struct gb_cart* gb_cart, uint16_t address, uint8_t* data, size_t size);
     int (*write_gb_cart)(struct gb_cart* gb_cart, uint16_t address, const uint8_t* data, size_t size);
@@ -54,7 +61,8 @@ struct gb_cart
 void init_gb_cart(struct gb_cart* gb_cart,
         void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
         void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
-        void* clock, const struct clock_backend_interface* iclock);
+        void* clock, const struct clock_backend_interface* iclock,
+        void* rumble, const struct rumble_backend_interface* irumble);
 
 void poweron_gb_cart(struct gb_cart* gb_cart);
 

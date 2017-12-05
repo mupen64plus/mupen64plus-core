@@ -61,6 +61,7 @@
     <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
     <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
+    <ClCompile Include="..\..\src\device\gb\m64282fp.c" />
     <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
     <ClCompile Include="..\..\src\device\pif\bootrom_hle.c" />
     <ClCompile Include="..\..\src\main\cheat.c" />
@@ -280,6 +281,7 @@
     <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
     <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
+    <ClInclude Include="..\..\src\device\gb\m64282fp.h" />
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />
     <ClInclude Include="..\..\src\device\pif\bootrom_hle.h" />
     <ClInclude Include="..\..\src\main\cheat.h" />
