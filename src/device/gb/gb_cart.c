@@ -318,7 +318,7 @@ static int write_gb_cart_mbc2(struct gb_cart* gb_cart, uint16_t address, const u
 
     /* 0x2000-0x3fff: ROM bank select (low 4 bits) */
     case (0x2000 >> 13):
-        if ((address & 0x0100) == 1) {
+        if ((address & 0x0100) != 0) {
             bank = value & 0x0f;
             gb_cart->rom_bank = (bank == 0) ? 1 : bank;
             DebugMessage(M64MSG_VERBOSE, "MBC1 set rom bank %02x", gb_cart->rom_bank);
