@@ -534,6 +534,10 @@ int savestates_load_m64p(char *filepath)
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
             uint8_t rpk_state = GETDATA(curr, uint8_t);
 
+            /* skip non present or controllers handled by the input plugin */
+            if (!Controls[i].Present || Controls[i].RawData)
+                continue;
+
             if (ROM_SETTINGS.rumble) {
                 set_rumble_reg(&g_dev.rumblepaks[i], rpk_state);
             }
