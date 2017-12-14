@@ -321,7 +321,7 @@ static int write_gb_cart_mbc2(struct gb_cart* gb_cart, uint16_t address, const u
         if ((address & 0x0100) != 0) {
             bank = value & 0x0f;
             gb_cart->rom_bank = (bank == 0) ? 1 : bank;
-            DebugMessage(M64MSG_VERBOSE, "MBC1 set rom bank %02x", gb_cart->rom_bank);
+            DebugMessage(M64MSG_VERBOSE, "MBC2 set rom bank %02x", gb_cart->rom_bank);
         }
         break;
 
