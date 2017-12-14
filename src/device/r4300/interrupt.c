@@ -439,6 +439,8 @@ void nmi_int_handler(void* opaque)
     struct r4300_core* r4300 = &dev->r4300;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
+    reset_pif(&dev->pif, 1);
+
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
