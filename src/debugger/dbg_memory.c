@@ -291,7 +291,7 @@ uint32 read_memory_32(uint32 addr){
     case M64P_MEM_RDRAMREG:
       offset = rdram_reg(addr);
       if (offset < RDRAM_REGS_COUNT)
-          return g_dev.rdram.regs[offset];
+          return g_dev.rdram.regs[0][offset];
       break;
     case M64P_MEM_RSPREG:
       offset = rsp_reg(addr);
