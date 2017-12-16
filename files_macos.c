@@ -26,6 +26,8 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sysdir.h>
+#include <pwd.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -179,12 +181,13 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
 
 const char * osal_get_user_configpath(void)
 {
-    char path[1024];
-    CFURLRef homepath = CFCopyHomeDirectoryURL(); assert(homepath);
-    CFStringRef cf_string_ref = CFURLCopyFileSystemPath( homepath, kCFURLPOSIXPathStyle); assert(cf_string_ref);
-    CFStringGetCString(cf_string_ref, path, 1024, kCFStringEncodingASCII);
-    CFRelease(homepath);
-    CFRelease(cf_string_ref);
+    char path[1024] = getenv("HOME");
+    
+    if (!path) {
+        struct passwd* pwd = getpwuid(getuid());
+        if (pwd)
+            path = pwd->pw_dir;
+    }
     
     /* append the given sub-directory to the path given by the environment variable */
     if (path[strlen(path)-1] != '/')
@@ -195,7 +198,7 @@ const char * osal_get_user_configpath(void)
     if (osal_mkdirp(path, 0700) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Couldn't create directory: %s", path);
-        DebugMessage(M64MSG_ERROR, "Failed to get configuration directory; $HOME is undefined or invalid.");
+        DebugMessage(M64MSG_ERROR, "Failed to get configuration directory; Path is undefined or invalid.");
         return NULL;
     }
     return path;
@@ -213,3 +216,5 @@ const char * osal_get_user_cachepath(void)
     // in macOS, these are all the same
     return osal_get_user_configpath();
 }
+
+
