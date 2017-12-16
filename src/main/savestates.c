@@ -703,7 +703,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
 {
     char buffer[1024];
     unsigned int vi_timer, SaveRDRAMSize;
-    int i;
+    size_t i;
     uint32_t FCR31;
 
     unsigned char header[8];
