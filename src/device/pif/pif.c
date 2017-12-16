@@ -214,10 +214,17 @@ void setup_channels_format(struct pif* pif)
              */
             if ((i+1 < PIF_RAM_SIZE) && (pif->ram[i+1] == 0xfe)) {
                 ++i;
+                continue;
             }
-            else {
-                i += setup_pif_channel(&pif->channels[k++], &pif->ram[i]);
+
+            if ((i + 2) >= PIF_RAM_SIZE) {
+                DebugMessage(M64MSG_WARNING, "Truncated PIF command ! Stopping PIF channel processing");
+                i = PIF_RAM_SIZE;
+                continue;
             }
+
+
+            i += setup_pif_channel(&pif->channels[k++], &pif->ram[i]);
         }
     }
 
