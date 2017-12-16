@@ -166,12 +166,6 @@ void reset_pif(struct pif* pif, unsigned int reset_type)
 
     /* clear PIF flags */
     pif->ram[0x3f] = 0x00;
-
-    if (reset_type) {
-        /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
-        add_interrupt_event(&pif->r4300->cp0, HW2_INT, 0);
-        add_interrupt_event(&pif->r4300->cp0, NMI_INT, 50000000);
-    }
 }
 
 void setup_channels_format(struct pif* pif)

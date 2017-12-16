@@ -243,5 +243,7 @@ void hard_reset_device(struct device* dev)
 
 void soft_reset_device(struct device* dev)
 {
-    reset_pif(&dev->pif, 1); /* Soft reset */
+    /* schedule HW2 interrupt now and an NMI after 1/2 seconds */
+    add_interrupt_event(&dev->r4300.cp0, HW2_INT, 0);
+    add_interrupt_event(&dev->r4300.cp0, NMI_INT, 50000000);
 }
