@@ -482,7 +482,6 @@ SOURCE = \
     $(SRCDIR)/device/rcp/si/si_controller.c \
     $(SRCDIR)/device/rcp/vi/vi_controller.c \
     $(SRCDIR)/device/rdram/rdram.c \
-    $(SRCDIR)/device/rdram/rdram_detection_hack.c \
     $(SRCDIR)/main/main.c \
     $(SRCDIR)/main/util.c \
     $(SRCDIR)/main/cheat.c \

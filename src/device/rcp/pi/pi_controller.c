@@ -33,7 +33,6 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/rdp/rdp_core.h"
 #include "device/rcp/ri/ri_controller.h"
-#include "device/rdram/rdram_detection_hack.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -101,13 +100,6 @@ static void dma_pi_write(struct pi_controller* pi)
 
     post_framebuffer_write(&pi->dp->fb, dram_addr, length);
 
-    /* HACK: monitor PI DMA to trigger RDRAM size detection
-     * hack just before initial cart ROM loading. */
-    if ((cart_addr & 0x1fffffff) == (MM_CART_ROM + 0x1000))
-    {
-        force_detected_rdram_size_hack(pi->ri->rdram, pi->cic);
-    }
-
     /* Mark DMA as busy */
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
 
@@ -121,14 +113,12 @@ void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              struct mi_controller* mi,
              struct ri_controller* ri,
-             const struct cic* cic,
              struct rdp_core* dp)
 {
     pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
     pi->mi = mi;
     pi->ri = ri;
-    pi->cic = cic;
     pi->dp = dp;
 }
 

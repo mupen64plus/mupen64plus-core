@@ -67,7 +67,6 @@ struct pi_controller
 
     struct mi_controller* mi;
     struct ri_controller* ri;
-    const struct cic* cic;
     struct rdp_core* dp;
 };
 
@@ -82,7 +81,6 @@ void init_pi(struct pi_controller* pi,
              struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
              struct mi_controller* mi,
              struct ri_controller* ri,
-             const struct cic* cic,
              struct rdp_core* dp);
 
 void poweron_pi(struct pi_controller* pi);

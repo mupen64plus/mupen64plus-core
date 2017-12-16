@@ -345,9 +345,6 @@
     <ClCompile Include="..\..\src\device\rdram\rdram.c">
       <Filter>device\rdram</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\rdram\rdram_detection_hack.c">
-      <Filter>device\rdram</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\rcp\ai\ai_controller.c">
       <Filter>device\rcp\ai</Filter>
     </ClCompile>
@@ -678,9 +675,6 @@
       <Filter>device\controllers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\rdram\rdram.h">
-      <Filter>device\rdram</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\rdram\rdram_detection_hack.h">
       <Filter>device\rdram</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\rcp\ai\ai_controller.h">

@@ -138,7 +138,7 @@ void init_device(struct device* dev,
         { 0x00000000, 0xffffffff, M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         /* memory map */
         { A(MM_RDRAM_DRAM, dram_size-1), M64P_MEM_RDRAM, { &dev->rdram, RW(rdram_dram) } },
-        { A(MM_RDRAM_REGS, 0xffff), M64P_MEM_RDRAMREG, { &dev->rdram, RW(rdram_regs) } },
+        { A(MM_RDRAM_REGS, 0xfffff), M64P_MEM_RDRAMREG, { &dev->rdram, RW(rdram_regs) } },
         { A(MM_RSP_MEM, 0xffff), M64P_MEM_RSPMEM, { &dev->sp, RW(rsp_mem) } },
         { A(MM_RSP_REGS, 0xffff), M64P_MEM_RSPREG, { &dev->sp, RW(rsp_regs) } },
         { A(MM_RSP_REGS2, 0xffff), M64P_MEM_RSP, { &dev->sp, RW(rsp_regs2) } },
@@ -163,7 +163,7 @@ void init_device(struct device* dev,
 
     init_memory(&dev->mem, mappings, ARRAY_SIZE(mappings), base, &dbg_handler);
 
-    init_rdram(&dev->rdram, mem_base_u32(base, MM_RDRAM_DRAM), dram_size);
+    init_rdram(&dev->rdram, mem_base_u32(base, MM_RDRAM_DRAM), dram_size, &dev->r4300);
 
     init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->rdram, interrupt_handlers,
             emumode, count_per_op, no_compiled_jump, randomize_interrupt);
@@ -173,7 +173,7 @@ void init_device(struct device* dev,
     init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
             dev, get_pi_dma_handler,
-            &dev->mi, &dev->ri, &dev->pif.cic, &dev->dp);
+            &dev->mi, &dev->ri, &dev->dp);
     init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
