@@ -216,5 +216,3 @@ const char * osal_get_user_cachepath(void)
     // in macOS, these are all the same
     return osal_get_user_configpath();
 }
-
-
