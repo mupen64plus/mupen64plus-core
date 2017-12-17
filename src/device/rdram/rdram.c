@@ -202,7 +202,7 @@ void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t m
 
         /* HACK: In the IPL3 procedure, at this point,
          * the amount of detected memory can be found in s4 */
-        size_t ipl3_rdram_size = rdram->r4300->regs[20] & UINT32_C(0x0fffffff);
+        size_t ipl3_rdram_size = r4300_regs(rdram->r4300)[20] & UINT32_C(0x0fffffff);
         if (ipl3_rdram_size != rdram->dram_size) {
             DebugMessage(M64MSG_ERROR, "IPL3 detected %u MB of RDRAM != %u MB",
                 ipl3_rdram_size / (1024*1024), rdram->dram_size / (1024*1024));
