@@ -45,7 +45,7 @@ bool macSetBundlePath(char* buffer)
 {
     // the following code will enable mupen to find its data when placed in an app bundle on mac OS X.
     // returns true if path is set, returns false if path was not set
-    char path[1024];
+    char path[1024]="0";
     CFBundleRef main_bundle = CFBundleGetMainBundle(); assert(main_bundle);
     CFURLRef main_bundle_URL = CFBundleCopyBundleURL(main_bundle); assert(main_bundle_URL);
     CFStringRef cf_string_ref = CFURLCopyFileSystemPath( main_bundle_URL, kCFURLPOSIXPathStyle); assert(cf_string_ref);
@@ -161,7 +161,7 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
         return retpath;
 
     /* Special case : OS X bundles */
-    static char buf[1024];
+    static char buf[1024]="0";
     if (macSetBundlePath(buf))
     {
         sprintf(retpath, "%s%s", buf, filename);
@@ -181,8 +181,16 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
 
 const char * osal_get_user_configpath(void)
 {
-    static char path[1024];
+    static char path[1024] = "0";
     strcpy (path,getenv("HOME"));
+    
+    if (strlen(path) == 0)
+    {
+        struct passwd* pwd = getpwuid(getuid());
+        
+        if (pwd)
+            strcpy(path, pwd->pw_dir);
+    }
     
     /* append the given sub-directory to the path given by the environment variable */
     if (path[strlen(path)-1] != '/')
