@@ -181,13 +181,8 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
 
 const char * osal_get_user_configpath(void)
 {
-    char path[1024] = getenv("HOME");
-    
-    if (!path) {
-        struct passwd* pwd = getpwuid(getuid());
-        if (pwd)
-            path = pwd->pw_dir;
-    }
+    static char path[1024];
+    strcpy (path,getenv("HOME"));
     
     /* append the given sub-directory to the path given by the environment variable */
     if (path[strlen(path)-1] != '/')
