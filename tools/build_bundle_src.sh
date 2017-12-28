@@ -1,7 +1,7 @@
 #!/bin/sh
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - build_bundle_src.sh                                     *
-# *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+# *   Mupen64Plus homepage: https://mupen64plus.org/                        *
 # *   Copyright (C) 2009-2013 Richard Goedeken                              *
 # *                                                                         *
 # *   This program is free software; you can redistribute it and/or modify  *
