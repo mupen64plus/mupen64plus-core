@@ -4,8 +4,8 @@
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/4381/badge.svg)](https://scan.coverity.com/projects/mupen64plus-core)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/a1ua5t87n2w8a7fc?svg=true)](https://ci.appveyor.com/project/Narann/mupen64plus-core)
 
-More documentation can be found on the [Mupen64Plus website](http://mupen64plus.org/docs/)
-and you can find a more complete README file on the legacy [Google Code](https://code.google.com/archive/p/mupen64plus/wikis/README.wiki) site.
+More documentation can be found on the [Mupen64Plus website](https://mupen64plus.org/docs/)
+and you can find a more complete README file on the [wiki](https://mupen64plus.org/wiki/index.php/README).
 
 Mupen64Plus is based off of mupen64, originally created by Hacktarux. This
 package contains only the Mupen64Plus core library.  For a fully functional
