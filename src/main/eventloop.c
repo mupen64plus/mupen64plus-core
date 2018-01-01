@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - eventloop.c                                             *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2008-2009 Richard Goedeken                              *
  *   Copyright (C) 2008 Ebenblues Nmn Okaygo Tillin9                       *
  *                                                                         *

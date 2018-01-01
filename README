@@ -2,9 +2,9 @@ Mupen64Plus-Core README
 -----------------------
 
 More documentation can be found on the Mupen64Plus website.
-(http://mupen64plus.org/docs/)
-You can find a more complete README file on the legacy Google Code site.
-(https://code.google.com/archive/p/mupen64plus/wikis/README.wiki).
+(https://mupen64plus.org/docs/)
+You can find a more complete README file on the wiki:
+https://mupen64plus.org/wiki/index.php/README
 
 Mupen64Plus is based off of mupen64, originally created by Hacktarux. This
 package contains the only the Mupen64Plus core library.  For a fully functional

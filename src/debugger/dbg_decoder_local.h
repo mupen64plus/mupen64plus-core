@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - dbg_debugger_local.h                                    *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2010 Marshall B. Rogers <mbr@64.vg>                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *

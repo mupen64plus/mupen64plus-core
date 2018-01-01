@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - pure_interp.c                                           *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2015 Nebuleon <nebuleon.fumika@gmail.com>               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *

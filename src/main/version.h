@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 *   Mupen64plus - version.h                                               *
-*   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+*   Mupen64Plus homepage: https://mupen64plus.org/                        *
 *   Copyright (C) 2008-2012 Richard42 DarkJeztr Tillin9                   *
 *                                                                         *
 *   This program is free software; you can redistribute it and/or modify  *
