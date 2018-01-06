@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus-core - osal/files_unix.c                                  *
+ *   Mupen64plus-core - osal/files_macos.c                                 *
  *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
- *   Copyright (C) 2009 Richard Goedeken                                   *
+ *   Copyright (C) 2017 Richard Goedeken                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -45,7 +45,7 @@ bool macSetBundlePath(char* buffer)
 {
     // the following code will enable mupen to find its data when placed in an app bundle on mac OS X.
     // returns true if path is set, returns false if path was not set
-    char path[1024]="0";
+    char path[1024] = { 0 };
     CFBundleRef main_bundle = CFBundleGetMainBundle(); assert(main_bundle);
     CFURLRef main_bundle_URL = CFBundleCopyBundleURL(main_bundle); assert(main_bundle_URL);
     CFStringRef cf_string_ref = CFURLCopyFileSystemPath( main_bundle_URL, kCFURLPOSIXPathStyle); assert(cf_string_ref);
@@ -161,7 +161,7 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
         return retpath;
 
     /* Special case : OS X bundles */
-    static char buf[1024]="0";
+    char buf[1024] = { 0 };
     if (macSetBundlePath(buf))
     {
         sprintf(retpath, "%s%s", buf, filename);
@@ -181,10 +181,13 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
 
 const char * osal_get_user_configpath(void)
 {
-    static char path[1024] = "0";
-    strcpy (path,getenv("HOME"));
+    static char path[1024] = { 0 };
     
-    if (strlen(path) == 0)
+    if (getenv("HOME") != NULL)
+    {
+        strcpy(path, getenv("HOME"));
+    }
+    else
     {
         struct passwd* pwd = getpwuid(getuid());
         
@@ -204,8 +207,8 @@ const char * osal_get_user_configpath(void)
         DebugMessage(M64MSG_ERROR, "Failed to get configuration directory; Path is undefined or invalid.");
         return NULL;
     }
-    return path;
     
+    return path;
 }
 
 const char * osal_get_user_datapath(void)
