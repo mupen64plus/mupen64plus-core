@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "recomp.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,12 +41,18 @@
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp0.h"
 #include "device/r4300/ops.h"
-#include "device/r4300/recomp.h"
+#include "device/r4300/recomp_types.h"
 #include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
 #include "main/main.h"
 #if defined(PROFILE)
 #include "main/profile.h"
+#endif
+
+#if defined(__x86_64__)
+  #include "x86_64/regcache.h"
+#else
+  #include "x86/regcache.h"
 #endif
 
 static void *malloc_exec(size_t size);

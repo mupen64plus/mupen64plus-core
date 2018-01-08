@@ -30,6 +30,8 @@
 #endif
 
 #include "new_dynarec.h"
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "main/main.h"
 #include "main/rom.h"
 #include "device/memory/memory.h"

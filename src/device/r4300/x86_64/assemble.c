@@ -26,10 +26,12 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "assemble.h"
+#include "assemble_struct.h"
+#include "regcache.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
-#include "device/r4300/x86_64/assemble_struct.h"
-#include "device/r4300/x86_64/regcache.h"
+#include "main/main.h"
+#include "osal/preproc.h"
 
 /* Placeholder for RIP-relative offsets is maxmimum 32-bit signed value.
  * So, if recompiled code is run without running passe2() first, it will

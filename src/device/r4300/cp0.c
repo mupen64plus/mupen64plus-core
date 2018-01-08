@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "cp0.h"
+#include "r4300_core.h"
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
 #include "recomp.h"
 

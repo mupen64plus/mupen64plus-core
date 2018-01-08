@@ -18,6 +18,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "device/r4300/x86/assemble.h" /* needed for x86 registers constants */
+
 void jump_vaddr_eax(void);
 void jump_vaddr_ecx(void);
 void jump_vaddr_edx(void);

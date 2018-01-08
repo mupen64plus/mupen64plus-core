@@ -25,8 +25,11 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "assemble.h"
+#include "assemble_struct.h"
+#include "regcache.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
+#include "main/main.h"
 #include "osal/preproc.h"
 
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)

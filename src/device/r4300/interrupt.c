@@ -25,8 +25,8 @@
 
 #ifdef __MINGW32__
 #define _CRT_RAND_S
-#include <stdlib.h>
 #endif
+#include <stdlib.h>
 
 #include <assert.h>
 #include <stddef.h>

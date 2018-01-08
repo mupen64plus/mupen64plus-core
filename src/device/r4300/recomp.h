@@ -25,9 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "recomp_types.h"
-
 struct r4300_core;
+struct precomp_block;
 
 void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func);
 void init_block(struct r4300_core* r4300, struct precomp_block* block);
@@ -53,14 +52,6 @@ int dynarec_write_aligned_dword(void);
 
 #if defined(PROFILE_R4300)
 void profile_write_end_of_code_blocks(struct r4300_core* r4300);
-#endif
-
-#if defined(__x86_64__)
-  #include "x86_64/assemble.h"
-  #include "x86_64/regcache.h"
-#else
-  #include "x86/assemble.h"
-  #include "x86/regcache.h"
 #endif
 
 #endif /* M64P_DEVICE_R4300_RECOMP_H */
