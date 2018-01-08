@@ -29,7 +29,6 @@
 #include "mbc3_rtc.h"
 
 struct storage_backend_interface;
-struct clock_backend_interface;
 struct rumble_backend_interface;
 
 struct gb_cart
