@@ -45,6 +45,7 @@
 #include "rdram/rdram.h"
 
 struct audio_out_backend_interface;
+struct clock_backend_interface;
 struct storage_backend_interface;
 struct joybus_device_interface;
 
