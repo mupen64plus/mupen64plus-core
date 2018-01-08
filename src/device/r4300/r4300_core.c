@@ -116,23 +116,6 @@ void poweron_r4300(struct r4300_core* r4300)
 }
 
 
-#if !defined(NO_ASM) && !defined(NEW_DYNAREC)
-static void dynarec_setup_code(void)
-{
-    struct r4300_core* r4300 = &g_dev.r4300;
-
-    /* The dynarec jumps here after we call dyna_start and it prepares
-     * Here we need to prepare the initial code block and jump to it
-     */
-    cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
-
-    /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
-    if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {
-        dyna_stop(r4300);
-    }
-}
-#endif
-
 void run_r4300(struct r4300_core* r4300)
 {
     r4300->current_instruction_table = cached_interpreter_table;
