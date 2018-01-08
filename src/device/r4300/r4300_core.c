@@ -116,7 +116,7 @@ void poweron_r4300(struct r4300_core* r4300)
 }
 
 
-#if !defined(NO_ASM)
+#if !defined(NO_ASM) && !defined(NEW_DYNAREC)
 static void dynarec_setup_code(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
