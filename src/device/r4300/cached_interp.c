@@ -31,7 +31,6 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/interrupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"

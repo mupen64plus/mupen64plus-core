@@ -37,7 +37,7 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
+#include "device/r4300/cp0.h"
 #include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h" //include for function prototypes

@@ -32,7 +32,6 @@
  * (at run time) the active core is not the Pure Interpreter. */
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp1.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/interrupt.h"
 #include "device/r4300/tlb.h"
 #include "osal/preproc.h"

@@ -124,7 +124,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\exception.c" />
     <ClCompile Include="..\..\src\device\r4300\interrupt.c" />
     <ClCompile Include="..\..\src\device\rcp\mi\mi_controller.c" />
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.c">
@@ -317,7 +316,6 @@
     <ClInclude Include="..\..\src\device\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
     <ClInclude Include="..\..\src\device\r4300\cp1.h" />
-    <ClInclude Include="..\..\src\device\r4300\exception.h" />
     <ClInclude Include="..\..\src\device\r4300\fpu.h" />
     <ClInclude Include="..\..\src\device\r4300\interrupt.h" />
     <ClInclude Include="..\..\src\device\r4300\macros.h" />

@@ -32,7 +32,6 @@
 #include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "device/r4300/exception.h"
 #include "plugin/plugin.h"
 
 #define __STDC_FORMAT_MACROS
