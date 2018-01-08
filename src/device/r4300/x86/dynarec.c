@@ -43,12 +43,11 @@
 #include <stdlib.h>
 
 
-/* These are constants with addresses so that FLDCW can read them.
- * They are declared 'extern' so that other files can do the same. */
-const uint16_t trunc_mode = 0xf3f;
-const uint16_t round_mode = 0x33f;
-const uint16_t ceil_mode  = 0xb3f;
-const uint16_t floor_mode = 0x73f;
+/* These are constants with addresses so that FLDCW can read them */
+static const uint16_t trunc_mode = 0xf3f;
+static const uint16_t round_mode = 0x33f;
+static const uint16_t ceil_mode  = 0xb3f;
+static const uint16_t floor_mode = 0x73f;
 
 static const unsigned int precomp_instr_size = sizeof(struct precomp_instr);
 
