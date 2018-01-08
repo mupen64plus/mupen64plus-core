@@ -514,8 +514,7 @@ int savestates_load_m64p(char *filepath)
         g_dev.ai.delayed_carry = GETDATA(curr, uint32_t);
 
         /* extra cart_rom state */
-        g_dev.cart.cart_rom.last_write = GETDATA(curr, uint32_t);
-        g_dev.cart.cart_rom.rom_written = GETDATA(curr, uint32_t);
+        curr += 2*sizeof(uint32_t);
 
         /* extra sp state */
         g_dev.sp.rsp_task_locked = GETDATA(curr, uint32_t);
@@ -626,10 +625,6 @@ int savestates_load_m64p(char *filepath)
         /* extra ai state */
         g_dev.ai.last_read = 0;
         g_dev.ai.delayed_carry = 0;
-
-        /* extra cart_rom state */
-        g_dev.cart.cart_rom.last_write = 0;
-        g_dev.cart.cart_rom.rom_written = 0;
 
         /* extra sp state */
         g_dev.sp.rsp_task_locked = 0;
@@ -901,10 +896,6 @@ static int savestates_load_pj64(char *filepath, void *handle,
     g_dev.pi.regs[PI_BSD_DOM2_PGS_REG] = GETDATA(curr, uint32_t);
     g_dev.pi.regs[PI_BSD_DOM2_RLS_REG] = GETDATA(curr, uint32_t);
     read_func(handle, g_dev.pi.regs, PI_REGS_COUNT*sizeof(g_dev.pi.regs[0]));
-
-    /* extra cart_rom state */
-    g_dev.cart.cart_rom.last_write = 0;
-    g_dev.cart.cart_rom.rom_written = 0;
 
     // ri_register
     g_dev.ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
@@ -1506,8 +1497,8 @@ int savestates_save_m64p(char *filepath)
     PUTDATA(curr, uint32_t, g_dev.ai.last_read);
     PUTDATA(curr, uint32_t, g_dev.ai.delayed_carry);
 
-    PUTDATA(curr, uint32_t, g_dev.cart.cart_rom.last_write);
-    PUTDATA(curr, uint32_t, g_dev.cart.cart_rom.rom_written);
+    PUTDATA(curr, uint32_t, 0);
+    PUTDATA(curr, uint32_t, 0);
 
     PUTDATA(curr, uint32_t, g_dev.sp.rsp_task_locked);
 
