@@ -31,6 +31,7 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rcp/ri/ri_controller.h"
 #include "device/rdram/rdram.h"
+#include "osal/preproc.h"
 
 enum
 {
@@ -69,12 +70,12 @@ static void copy_pif_rdram(struct si_controller* si)
 
     if (si->dma_dir == SI_DMA_WRITE) {
         for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
-            pif_ram[i] = sl(dram[i]);
+            pif_ram[i] = fromhl(dram[i]);
         }
     }
     else if (si->dma_dir == SI_DMA_READ) {
         for(i = 0; i < (PIF_RAM_SIZE / 4); ++i) {
-            dram[i] = sl(pif_ram[i]);
+            dram[i] = tohl(pif_ram[i]);
         }
     }
 }
