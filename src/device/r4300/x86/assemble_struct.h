@@ -35,16 +35,16 @@ struct regcache_state {
 
 struct reg_cache
 {
-   int need_map;
-   void *needed_registers[8];
-   unsigned char jump_wrapper[62];
-   int need_cop1_check;
+    int need_map;
+    void *needed_registers[8];
+    unsigned char jump_wrapper[62];
+    int need_cop1_check;
 };
 
 struct jump_table
 {
-   unsigned int mi_addr;
-   unsigned int pc_addr;
+    unsigned int mi_addr;
+    unsigned int pc_addr;
 };
 
 #endif /* M64P_DEVICE_R4300_X86_ASSEMBLE_STRUCT_H */

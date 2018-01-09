@@ -36,24 +36,24 @@ struct regcache_state {
 
 struct reg_cache
 {
-   int need_map;
-   void *needed_registers[8];
-   unsigned char jump_wrapper[84];
-   int need_cop1_check;
+    int need_map;
+    void *needed_registers[8];
+    unsigned char jump_wrapper[84];
+    int need_cop1_check;
 };
 
 struct jump_table
 {
-  unsigned int mi_addr;
-  unsigned int pc_addr;
-  unsigned int absolute64;
+    unsigned int mi_addr;
+    unsigned int pc_addr;
+    unsigned int absolute64;
 };
 
 struct riprelative_table
 {
-  unsigned int   pc_addr;     /* index in bytes from start of x86_64 code block to the displacement value to write */
-  unsigned int   extra_bytes; /* number of remaining instruction bytes (immediate data) after 4-byte displacement */
-  unsigned char *global_dst;  /* 64-bit pointer to the data object */
+    unsigned int   pc_addr;     /* index in bytes from start of x86_64 code block to the displacement value to write */
+    unsigned int   extra_bytes; /* number of remaining instruction bytes (immediate data) after 4-byte displacement */
+    unsigned char *global_dst;  /* 64-bit pointer to the data object */
 };
 
 
