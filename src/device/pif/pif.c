@@ -32,7 +32,6 @@
 #include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "device/r4300/exception.h"
 #include "plugin/plugin.h"
 
 #define __STDC_FORMAT_MACROS
@@ -162,7 +161,7 @@ void reset_pif(struct pif* pif, unsigned int reset_type)
         | ((reset_type    & 0x1) << 17)
         | ((pif->cic.seed & 0xff) << 8)
         | 0x3f);
-    *pif24 = sl(*pif24);
+    *pif24 = fromhl(*pif24);
 
     /* clear PIF flags */
     pif->ram[0x3f] = 0x00;
@@ -288,7 +287,7 @@ void read_pif_ram(void* opaque, uint32_t address, uint32_t* value)
     }
 
     memcpy(value, pif->ram + addr, sizeof(*value));
-    *value = sl(*value);
+    *value = tohl(*value);
 }
 
 void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -302,7 +301,7 @@ void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
     }
 
-    masked_write((uint32_t*)(&pif->ram[addr]), sl(value), sl(mask));
+    masked_write((uint32_t*)(&pif->ram[addr]), fromhl(value), fromhl(mask));
 
     process_pif_ram(pif);
 }

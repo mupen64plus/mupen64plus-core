@@ -26,65 +26,65 @@
 #include <stdint.h>
 
 #if defined(__x86_64__)
-  #include "x86_64/assemble_struct.h"
+#include "x86_64/assemble_struct.h"
 #else
-  #include "x86/assemble_struct.h"
+#include "x86/assemble_struct.h"
 #endif
 
 struct precomp_instr
 {
-   void (*ops)(void);
-   union
-     {
-    struct
-      {
-         int64_t *rs;
-         int64_t *rt;
-         int16_t immediate;
-      } i;
-    struct
-      {
-         uint32_t inst_index;
-      } j;
-    struct
-      {
-         int64_t *rs;
-         int64_t *rt;
-         int64_t *rd;
-         unsigned char sa;
-         unsigned char nrd;
-      } r;
-    struct
-      {
-         unsigned char base;
-         unsigned char ft;
-         short offset;
-      } lf;
-    struct
-      {
-         unsigned char ft;
-         unsigned char fs;
-         unsigned char fd;
-      } cf;
-     } f;
-   uint32_t addr; /* word-aligned instruction address in r4300 address space */
-   unsigned int local_addr; /* byte offset to start of corresponding x86_64 instructions, from start of code block */
-   struct reg_cache reg_cache_infos;
+    void (*ops)(void);
+    union
+    {
+        struct
+        {
+            int64_t *rs;
+            int64_t *rt;
+            int16_t immediate;
+        } i;
+        struct
+        {
+            uint32_t inst_index;
+        } j;
+        struct
+        {
+            int64_t *rs;
+            int64_t *rt;
+            int64_t *rd;
+            unsigned char sa;
+            unsigned char nrd;
+        } r;
+        struct
+        {
+            unsigned char base;
+            unsigned char ft;
+            short offset;
+        } lf;
+        struct
+        {
+            unsigned char ft;
+            unsigned char fs;
+            unsigned char fd;
+        } cf;
+    } f;
+    uint32_t addr; /* word-aligned instruction address in r4300 address space */
+    unsigned int local_addr; /* byte offset to start of corresponding x86_64 instructions, from start of code block */
+    struct reg_cache reg_cache_infos;
 };
 
 struct precomp_block
 {
-   struct precomp_instr* block;
-   uint32_t start;
-   uint32_t end;
-   unsigned char *code;
-   unsigned int code_length;
-   unsigned int max_code_length;
-   void *jumps_table;
-   int jumps_number;
-   void *riprel_table;
-   int riprel_number;
-   unsigned int xxhash;
+    struct precomp_instr* block;
+    uint32_t start;
+    uint32_t end;
+    unsigned char *code;
+    unsigned int code_length;
+    unsigned int max_code_length;
+    void *jumps_table;
+    int jumps_number;
+    void *riprel_table;
+    int riprel_number;
+    unsigned int xxhash;
 };
 
 #endif /* M64P_DEVICE_R4300_RECOMP_TYPES_H */

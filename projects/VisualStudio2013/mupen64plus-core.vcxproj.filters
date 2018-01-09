@@ -228,9 +228,6 @@
     <ClCompile Include="..\..\src\device\r4300\empty_dynarec.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\device\r4300\exception.c">
-      <Filter>device\r4300</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\interrupt.c">
       <Filter>device\r4300</Filter>
     </ClCompile>
@@ -516,9 +513,6 @@
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\cp1.h">
-      <Filter>device\r4300</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\exception.h">
       <Filter>device\r4300</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\fpu.h">

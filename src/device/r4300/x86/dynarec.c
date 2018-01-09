@@ -30,7 +30,6 @@
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp0.h"
 #include "device/r4300/cp1.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/interrupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
@@ -44,12 +43,11 @@
 #include <stdlib.h>
 
 
-/* These are constants with addresses so that FLDCW can read them.
- * They are declared 'extern' so that other files can do the same. */
-const uint16_t trunc_mode = 0xf3f;
-const uint16_t round_mode = 0x33f;
-const uint16_t ceil_mode  = 0xb3f;
-const uint16_t floor_mode = 0x73f;
+/* These are constants with addresses so that FLDCW can read them */
+static const uint16_t trunc_mode = 0xf3f;
+static const uint16_t round_mode = 0x33f;
+static const uint16_t ceil_mode  = 0xb3f;
+static const uint16_t floor_mode = 0x73f;
 
 static const unsigned int precomp_instr_size = sizeof(struct precomp_instr);
 
@@ -2285,9 +2283,8 @@ void genj(struct r4300_core* r4300)
 #else
     unsigned int naddr;
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.J, 1);
         return;
@@ -2309,9 +2306,8 @@ void genj_out(struct r4300_core* r4300)
 #else
     unsigned int naddr;
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_OUT, 1);
         return;
@@ -2334,9 +2330,8 @@ void genj_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_J_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_IDLE, 1);
         return;
@@ -2361,9 +2356,8 @@ void genjal(struct r4300_core* r4300)
 #else
     unsigned int naddr;
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL, 1);
         return;
@@ -2394,9 +2388,8 @@ void genjal_out(struct r4300_core* r4300)
 #else
     unsigned int naddr;
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_OUT, 1);
         return;
@@ -2428,9 +2421,8 @@ void genjal_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_JAL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_IDLE, 1);
         return;
@@ -2460,9 +2452,8 @@ void genjr(struct r4300_core* r4300)
     unsigned int diff_wrap =
         (unsigned int)(&r4300->recomp.dst->reg_cache_infos.jump_wrapper) - (unsigned int)(r4300->recomp.dst);
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.JR, 1);
         return;
@@ -2526,9 +2517,8 @@ void genjalr(struct r4300_core* r4300)
     unsigned int diff_wrap =
         (unsigned int)(&r4300->recomp.dst->reg_cache_infos.jump_wrapper) - (unsigned int)(r4300->recomp.dst);
 
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.JALR, 1);
         return;
@@ -2662,9 +2652,8 @@ void genbeq(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQ
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ, 1);
         return;
@@ -2681,9 +2670,8 @@ void genbeq_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQ_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_OUT, 1);
         return;
@@ -2700,9 +2688,8 @@ void genbeq_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQ_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
         return;
@@ -2719,9 +2706,8 @@ void genbeql(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL, 1);
         return;
@@ -2738,9 +2724,8 @@ void genbeql_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_OUT, 1);
         return;
@@ -2757,9 +2742,8 @@ void genbeql_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BEQL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
         return;
@@ -2845,9 +2829,8 @@ void genbne(struct r4300_core* r4300)
 #ifdef INTERPRET_BNE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE, 1);
         return;
@@ -2864,9 +2847,8 @@ void genbne_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BNE_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_OUT, 1);
         return;
@@ -2883,9 +2865,8 @@ void genbne_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BNE_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_IDLE, 1);
         return;
@@ -2902,9 +2883,8 @@ void genbnel(struct r4300_core* r4300)
 #ifdef INTERPRET_BNEL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL, 1);
         return;
@@ -2921,9 +2901,8 @@ void genbnel_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BNEL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_OUT, 1);
         return;
@@ -2940,9 +2919,8 @@ void genbnel_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BNEL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
         return;
@@ -3000,9 +2978,8 @@ void genblez(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZ
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ, 1);
         return;
@@ -3019,9 +2996,8 @@ void genblez_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZ_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
         return;
@@ -3038,9 +3014,8 @@ void genblez_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZ_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
         return;
@@ -3057,9 +3032,8 @@ void genblezl(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL, 1);
         return;
@@ -3076,9 +3050,8 @@ void genblezl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
         return;
@@ -3095,9 +3068,8 @@ void genblezl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLEZL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
         return;
@@ -3155,9 +3127,8 @@ void genbgtz(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZ
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ, 1);
         return;
@@ -3174,9 +3145,8 @@ void genbgtz_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZ_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
         return;
@@ -3193,9 +3163,8 @@ void genbgtz_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZ_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
         return;
@@ -3212,9 +3181,8 @@ void genbgtzl(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL, 1);
         return;
@@ -3231,9 +3199,8 @@ void genbgtzl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
         return;
@@ -3250,9 +3217,8 @@ void genbgtzl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGTZL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
         return;
@@ -3303,9 +3269,8 @@ void genbltz(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZ
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ, 1);
         return;
@@ -3322,9 +3287,8 @@ void genbltz_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZ_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
         return;
@@ -3341,9 +3305,8 @@ void genbltz_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZ_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
         return;
@@ -3360,9 +3323,8 @@ void genbltzal(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZAL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL, 1);
         return;
@@ -3380,9 +3342,8 @@ void genbltzal_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZAL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
         return;
@@ -3400,9 +3361,8 @@ void genbltzal_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZAL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
         return;
@@ -3420,9 +3380,8 @@ void genbltzl(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL, 1);
         return;
@@ -3439,9 +3398,8 @@ void genbltzl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
         return;
@@ -3458,9 +3416,8 @@ void genbltzl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
         return;
@@ -3477,9 +3434,8 @@ void genbltzall(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZALL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL, 1);
         return;
@@ -3497,9 +3453,8 @@ void genbltzall_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZALL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
         return;
@@ -3517,9 +3472,8 @@ void genbltzall_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BLTZALL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
         return;
@@ -3571,9 +3525,8 @@ void genbgez(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZ
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ, 1);
         return;
@@ -3590,9 +3543,8 @@ void genbgez_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZ_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
         return;
@@ -3609,9 +3561,8 @@ void genbgez_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZ_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
         return;
@@ -3628,9 +3579,8 @@ void genbgezal(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZAL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL, 1);
         return;
@@ -3648,9 +3598,8 @@ void genbgezal_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZAL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
         return;
@@ -3668,9 +3617,8 @@ void genbgezal_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZAL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
         return;
@@ -3688,9 +3636,8 @@ void genbgezl(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL, 1);
         return;
@@ -3707,9 +3654,8 @@ void genbgezl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
         return;
@@ -3726,9 +3672,8 @@ void genbgezl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
         return;
@@ -3745,9 +3690,8 @@ void genbgezall(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZALL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL, 1);
         return;
@@ -3765,9 +3709,8 @@ void genbgezall_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZALL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
         return;
@@ -3785,9 +3728,8 @@ void genbgezall_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BGEZALL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
         return;
@@ -3814,9 +3756,8 @@ void genbc1f(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1F
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F, 1);
         return;
@@ -3834,9 +3775,8 @@ void genbc1f_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1F_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_OUT, 1);
         return;
@@ -3854,9 +3794,8 @@ void genbc1f_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1F_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_IDLE, 1);
         return;
@@ -3874,9 +3813,8 @@ void genbc1fl(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1FL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL, 1);
         return;
@@ -3894,9 +3832,8 @@ void genbc1fl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1FL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_OUT, 1);
         return;
@@ -3914,9 +3851,8 @@ void genbc1fl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1FL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_IDLE, 1);
         return;
@@ -3943,9 +3879,8 @@ void genbc1t(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1T
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T, 1);
         return;
@@ -3963,9 +3898,8 @@ void genbc1t_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1T_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_OUT, 1);
         return;
@@ -3983,9 +3917,8 @@ void genbc1t_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1T_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_IDLE, 1);
         return;
@@ -4003,9 +3936,8 @@ void genbc1tl(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1TL
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL, 1);
         return;
@@ -4023,9 +3955,8 @@ void genbc1tl_out(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1TL_OUT
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_OUT, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_OUT, 1);
         return;
@@ -4043,9 +3974,8 @@ void genbc1tl_idle(struct r4300_core* r4300)
 #ifdef INTERPRET_BC1TL_IDLE
     gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_IDLE, 1);
 #else
-    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC
-        && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
-        || r4300->recomp.no_compiled_jump)
+    if (((r4300->recomp.dst->addr & 0xFFF) == 0xFFC && (r4300->recomp.dst->addr < 0x80000000 || r4300->recomp.dst->addr >= 0xC0000000))
+       || r4300->recomp.no_compiled_jump)
     {
         gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_IDLE, 1);
         return;

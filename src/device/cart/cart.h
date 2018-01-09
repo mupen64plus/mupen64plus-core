@@ -34,6 +34,7 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct clock_backend_interface;
 struct storage_backend_interface;
 
 struct cart

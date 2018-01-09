@@ -28,6 +28,7 @@
 #include "api/m64p_types.h"
 #include "api/callbacks.h"
 #include "backends/api/rumble_backend.h"
+#include "backends/api/storage_backend.h"
 
 #include <assert.h>
 #include <string.h>

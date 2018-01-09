@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "cached_interp.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -29,14 +31,10 @@
 #include "api/callbacks.h"
 #include "api/debugger.h"
 #include "api/m64p_types.h"
-#include "device/memory/memory.h"
-#include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
-#include "device/r4300/interrupt.h"
 #include "device/r4300/macros.h"
 #include "device/r4300/ops.h"
+#include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/tlb.h"
 #include "main/main.h"
 
 #ifdef DBG

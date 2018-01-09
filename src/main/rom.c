@@ -36,7 +36,6 @@
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
 #include "device/device.h"
-#include "device/memory/memory.h"
 #include "main.h"
 #include "md5.h"
 #include "osal/preproc.h"
@@ -173,7 +172,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
-        (entry=ini_search_by_crc(sl(ROM_HEADER.CRC1),sl(ROM_HEADER.CRC2))) != NULL)
+        (entry=ini_search_by_crc(tohl(ROM_HEADER.CRC1),tohl(ROM_HEADER.CRC2))) != NULL)
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -207,19 +206,19 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     DebugMessage(M64MSG_INFO, "Name: %s", ROM_HEADER.Name);
     imagestring(imagetype, buffer);
     DebugMessage(M64MSG_INFO, "MD5: %s", ROM_SETTINGS.MD5);
-    DebugMessage(M64MSG_INFO, "CRC: %08" PRIX32 " %08" PRIX32, sl(ROM_HEADER.CRC1), sl(ROM_HEADER.CRC2));
+    DebugMessage(M64MSG_INFO, "CRC: %08" PRIX32 " %08" PRIX32, tohl(ROM_HEADER.CRC1), tohl(ROM_HEADER.CRC2));
     DebugMessage(M64MSG_INFO, "Imagetype: %s", buffer);
     DebugMessage(M64MSG_INFO, "Rom size: %d bytes (or %d Mb or %d Megabits)", g_rom_size, g_rom_size/1024/1024, g_rom_size/1024/1024*8);
-    DebugMessage(M64MSG_VERBOSE, "ClockRate = %" PRIX32, sl(ROM_HEADER.ClockRate));
-    DebugMessage(M64MSG_INFO, "Version: %" PRIX32, sl(ROM_HEADER.Release));
-    if(sl(ROM_HEADER.Manufacturer_ID) == 'N')
+    DebugMessage(M64MSG_VERBOSE, "ClockRate = %" PRIX32, tohl(ROM_HEADER.ClockRate));
+    DebugMessage(M64MSG_INFO, "Version: %" PRIX32, tohl(ROM_HEADER.Release));
+    if(tohl(ROM_HEADER.Manufacturer_ID) == 'N')
         DebugMessage(M64MSG_INFO, "Manufacturer: Nintendo");
     else
-        DebugMessage(M64MSG_INFO, "Manufacturer: %" PRIX32, sl(ROM_HEADER.Manufacturer_ID));
+        DebugMessage(M64MSG_INFO, "Manufacturer: %" PRIX32, tohl(ROM_HEADER.Manufacturer_ID));
     DebugMessage(M64MSG_VERBOSE, "Cartridge_ID: %" PRIX16, ROM_HEADER.Cartridge_ID);
     countrycodestring(ROM_HEADER.Country_code, buffer);
     DebugMessage(M64MSG_INFO, "Country: %s", buffer);
-    DebugMessage(M64MSG_VERBOSE, "PC = %" PRIX32, sl(ROM_HEADER.PC));
+    DebugMessage(M64MSG_VERBOSE, "PC = %" PRIX32, tohl(ROM_HEADER.PC));
     DebugMessage(M64MSG_VERBOSE, "Save type: %d", ROM_SETTINGS.savetype);
 
     return M64ERR_SUCCESS;

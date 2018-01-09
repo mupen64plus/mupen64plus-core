@@ -37,6 +37,7 @@
 #endif
 #include "main/main.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -115,23 +116,6 @@ void poweron_r4300(struct r4300_core* r4300)
     poweron_cp1(&r4300->cp1);
 }
 
-
-#if !defined(NO_ASM)
-static void dynarec_setup_code(void)
-{
-    struct r4300_core* r4300 = &g_dev.r4300;
-
-    /* The dynarec jumps here after we call dyna_start and it prepares
-     * Here we need to prepare the initial code block and jump to it
-     */
-    cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
-
-    /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
-    if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {
-        dyna_stop(r4300);
-    }
-}
-#endif
 
 void run_r4300(struct r4300_core* r4300)
 {

@@ -27,9 +27,8 @@
 
 #include "m64282fp.h"
 #include "mbc3_rtc.h"
-#include "backends/api/storage_backend.h"
 
-struct clock_backend_interface;
+struct storage_backend_interface;
 struct rumble_backend_interface;
 
 struct gb_cart

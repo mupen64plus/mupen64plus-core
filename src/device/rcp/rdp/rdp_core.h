@@ -28,7 +28,6 @@
 #include "osal/preproc.h"
 
 struct mi_controller;
-struct ri_controller;
 struct rsp_core;
 
 enum

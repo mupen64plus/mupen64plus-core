@@ -19,6 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include "recomp.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,14 +39,20 @@
 #include "api/m64p_types.h"
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
-#include "device/r4300/exception.h"
+#include "device/r4300/cp0.h"
 #include "device/r4300/ops.h"
-#include "device/r4300/recomp.h"
+#include "device/r4300/recomp_types.h"
 #include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
 #include "main/main.h"
 #if defined(PROFILE)
 #include "main/profile.h"
+#endif
+
+#if defined(__x86_64__)
+  #include "x86_64/regcache.h"
+#else
+  #include "x86/regcache.h"
 #endif
 
 static void *malloc_exec(size_t size);
@@ -2624,6 +2632,20 @@ void profile_write_end_of_code_blocks(struct r4300_core* r4300)
 }
 #endif
 
+void dynarec_setup_code(void)
+{
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    /* The dynarec jumps here after we call dyna_start and it prepares
+     * Here we need to prepare the initial code block and jump to it
+     */
+    cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
+
+    /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
+    if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {
+        dyna_stop(r4300);
+    }
+}
 
 /* Parameterless version of cached_interpreter_dynarec_jump_to to ease usage in dynarec. */
 void dynarec_jump_to_address(void)

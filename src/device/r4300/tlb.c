@@ -22,11 +22,8 @@
 #include "tlb.h"
 
 #include "api/m64p_types.h"
-#include "device/r4300/exception.h"
 #include "device/r4300/r4300_core.h"
-#include "device/memory/memory.h"
-#include "main/rom.h"
-#include "main/main.h"
+#include "device/rdram/rdram.h"
 
 #include <assert.h>
 #include <string.h>
@@ -105,30 +102,40 @@ void tlb_map(struct tlb* tlb, size_t entry)
 
 uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
 {
+    const struct tlb* tlb = &r4300->cp0.tlb;
+    unsigned int addr = address >> 12;
+
 #ifdef NEW_DYNAREC
-    if(r4300->emumode == EMUMODE_DYNAREC)
+    if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        int map = r4300->new_dynarec_hot_state.memory_map[address >> 12];
-        if((r4300->cp0.tlb.LUT_w[address >> 12]) && (w == 1))
-            assert(map == (((r4300->cp0.tlb.LUT_w[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.rdram.dram - 0x80000000) >> 2));
-        else if((r4300->cp0.tlb.LUT_r[address >> 12]) && (w == 0)) {
-            assert((map&~0x40000000) == (((r4300->cp0.tlb.LUT_r[address >> 12] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)g_dev.rdram.dram - 0x80000000) >> 2));
-            if(map & 0x40000000) assert(r4300->cp0.tlb.LUT_w[address >> 12] == 0);
+        int map = r4300->new_dynarec_hot_state.memory_map[addr];
+        if ((tlb->LUT_w[addr]) && (w == 1))
+        {
+            assert(map == (((tlb->LUT_w[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)r4300->rdram->dram - 0x80000000) >> 2));
         }
-        else
+        else if ((tlb->LUT_r[addr]) && (w == 0))
+        {
+            assert((map&~0x40000000) == (((tlb->LUT_r[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)r4300->rdram->dram - 0x80000000) >> 2));
+            if (map & 0x40000000)
+            {
+                assert(tlb->LUT_w[addr] == 0);
+            }
+        }
+        else {
             assert(map < 0);
+        }
     }
 #endif
 
     if (w == 1)
     {
-        if (r4300->cp0.tlb.LUT_w[address>>12])
-            return (r4300->cp0.tlb.LUT_w[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
+        if (tlb->LUT_w[addr])
+            return (tlb->LUT_w[addr] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
     else
     {
-        if (r4300->cp0.tlb.LUT_r[address>>12])
-            return (r4300->cp0.tlb.LUT_r[address>>12] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
+        if (tlb->LUT_r[addr])
+            return (tlb->LUT_r[addr] & UINT32_C(0xFFFFF000)) | (address & UINT32_C(0xFFF));
     }
     //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, r4300->pc->addr);
     //getchar();

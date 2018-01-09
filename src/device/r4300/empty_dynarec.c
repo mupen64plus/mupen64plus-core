@@ -22,6 +22,8 @@
 
 #include "recomp.h"
 
+struct precomp_instr;
+
 /* From assemble.c */
 
 void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)
