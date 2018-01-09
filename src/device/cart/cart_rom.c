@@ -46,8 +46,6 @@ void init_cart_rom(struct cart_rom* cart_rom,
 
 void poweron_cart_rom(struct cart_rom* cart_rom)
 {
-    cart_rom->last_write = 0;
-    cart_rom->rom_written = 0;
 }
 
 
@@ -56,22 +54,7 @@ void read_cart_rom(void* opaque, uint32_t address, uint32_t* value)
     struct cart_rom* cart_rom = (struct cart_rom*)opaque;
     uint32_t addr = rom_address(address);
 
-    if (cart_rom->rom_written)
-    {
-        *value = cart_rom->last_write;
-        cart_rom->rom_written = 0;
-    }
-    else
-    {
-        *value = *(uint32_t*)(cart_rom->rom + addr);
-    }
-}
-
-void write_cart_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
-{
-    struct cart_rom* cart_rom = (struct cart_rom*)opaque;
-    cart_rom->last_write = value & mask;
-    cart_rom->rom_written = 1;
+    *value = *(uint32_t*)(cart_rom->rom + addr);
 }
 
 unsigned int cart_rom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
