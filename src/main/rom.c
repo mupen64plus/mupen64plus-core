@@ -49,6 +49,8 @@
 enum { DEFAULT_COUNT_PER_OP = 2 };
 /* by default, extra mem is enabled */
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
+/* Default SI DMA duration */
+enum { DEFAULT_SI_DMA_DURATION = 0x900 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -164,6 +166,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
     ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+    ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
@@ -184,6 +187,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.mempak = entry->mempak;
         ROM_PARAMS.countperop = entry->countperop;
         ROM_PARAMS.disableextramem = entry->disableextramem;
+        ROM_PARAMS.sidmaduration = entry->sidmaduration;
         ROM_PARAMS.cheats = entry->cheats;
     }
     else
@@ -198,6 +202,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.mempak = 0;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+        ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -354,6 +359,13 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_MEMPAK;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_SIDMADURATION) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_SIDMADURATION)) {
+            entry->entry.sidmaduration = ref->sidmaduration;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_SIDMADURATION;
+        }
+
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -448,6 +460,7 @@ void romdatabase_open(void)
             search->entry.cheats = NULL;
             search->entry.transferpak = 0;
             search->entry.mempak = 0;
+            search->entry.sidmaduration = DEFAULT_SI_DMA_DURATION;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
             search->next_entry = NULL;
@@ -621,6 +634,15 @@ void romdatabase_open(void)
                     search->entry.set_flags |= ROMDATABASE_ENTRY_MEMPAK;
                 } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid mempak string on line %i", lineno);
+                }
+            }
+            else if(!strcmp(l.name, "SiDmaDuration"))
+            {
+                if (string_to_int(l.value, &value) && value >= 0 && value <= 0x10000) {
+                    search->entry.sidmaduration = value;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_SIDMADURATION;
+                } else {
+                    DebugMessage(M64MSG_WARNING, "ROM Database: Invalid SiDmaDuration on line %i", lineno);
                 }
             }
             else

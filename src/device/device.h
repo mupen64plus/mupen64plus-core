@@ -113,6 +113,8 @@ void init_device(struct device* dev,
     int randomize_interrupt,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
+    /* si */
+    unsigned int si_dma_duration,
     /* rdram */
     size_t dram_size,
     /* pif */
