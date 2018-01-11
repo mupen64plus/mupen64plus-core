@@ -110,7 +110,6 @@ void init_fb(struct fb* fb,
 
 void poweron_fb(struct fb* fb)
 {
-
     memset(fb->dirty_page, 0, FB_DIRTY_PAGES_COUNT*sizeof(fb->dirty_page[0]));
     memset(fb->infos, 0, FB_INFOS_COUNT*sizeof(fb->infos[0]));
     fb->once = 1;
