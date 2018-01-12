@@ -52,9 +52,11 @@
 
 #if NEW_DYNAREC == NEW_DYNAREC_X86
 #include "x86/assem_x86.h"
+#include "device/r4300/x86/assemble.h"
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
 #include "arm/arm_cpu_features.h"
 #include "arm/assem_arm.h"
+#define EAX 0 /* ??? required for syscall_assemble and do_ccstub even in ARM mode */
 #else
 #error Unsupported dynarec architecture
 #endif
