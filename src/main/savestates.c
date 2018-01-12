@@ -689,8 +689,7 @@ int savestates_load_m64p(char *filepath)
     }
 
     /* reset fb state */
-    memset(&g_dev.dp.fb, 0, sizeof(g_dev.dp.fb));
-    g_dev.dp.fb.once = 1;
+    poweron_fb(&g_dev.dp.fb);
 
     *r4300_cp0_last_addr(&g_dev.r4300.cp0) = *r4300_pc(&g_dev.r4300);
 
@@ -997,8 +996,7 @@ static int savestates_load_pj64(char *filepath, void *handle,
     poweron_flashram(&g_dev.cart.flashram);
 
     /* extra fb state */
-    memset(&g_dev.dp.fb, 0, sizeof(g_dev.dp.fb));
-    g_dev.dp.fb.once = 1;
+    poweron_fb(&g_dev.dp.fb);
 
     /* extra af-rtc state */
     g_dev.cart.af_rtc.control = 0x200;
