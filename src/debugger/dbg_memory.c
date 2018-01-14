@@ -47,59 +47,59 @@ static void *opaddr_recompiled[564];
 static disassemble_info dis_info;
 
 #define CHECK_MEM(r4300, address) \
-   invalidate_r4300_cached_code(r4300, address, 4);
+    invalidate_r4300_cached_code(r4300, address, 4);
 
-static void process_opcode_out(void *strm, const char *fmt, ...){
-  va_list ap;
-  va_start(ap, fmt);
-  char *arg;
-  char buff[256];
+static void process_opcode_out(void *strm, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char *arg;
+    char buff[256];
 
-  if(num_decoded==0)
+    if (num_decoded==0)
     {
-      if(strcmp(fmt,"%s")==0)
+        if (strcmp(fmt,"%s")==0)
+        {
+            arg = va_arg(ap, char*);
+            strcpy(opcode_recompiled[lines_recompiled],arg);
+        }
+        else
+            strcpy(opcode_recompiled[lines_recompiled],"OPCODE-X");
+        num_decoded++;
+        *(args_recompiled[lines_recompiled])=0;
+    }
+    else
     {
-      arg = va_arg(ap, char*);
-      strcpy(opcode_recompiled[lines_recompiled],arg);
+        vsprintf(buff, fmt, ap);
+        sprintf(args_recompiled[lines_recompiled],"%s%s",
+                args_recompiled[lines_recompiled],buff);
     }
-      else
-    strcpy(opcode_recompiled[lines_recompiled],"OPCODE-X");
-      num_decoded++;
-      *(args_recompiled[lines_recompiled])=0;
-    }
-  else
-    {
-      vsprintf(buff, fmt, ap);
-      sprintf(args_recompiled[lines_recompiled],"%s%s",
-          args_recompiled[lines_recompiled],buff);
-    }
-  va_end(ap);
+    va_end(ap);
 }
 
 // Callback function that will be called by libopcodes to read the
 // bytes to disassemble ('read_memory_func' member of 'disassemble_info').
-static int read_memory_func(bfd_vma memaddr, bfd_byte *myaddr,
-                            unsigned int length, disassemble_info *info) {
-  char* from = (char*)(long)(memaddr);
-  char* to =   (char*)myaddr;
+static int read_memory_func(bfd_vma memaddr, bfd_byte *myaddr, unsigned int length, disassemble_info *info)
+{
+    char* from = (char*)(long)(memaddr);
+    char* to =   (char*)myaddr;
 
-  while (length-- != 0) {
-    *to++ = *from++;
-  }
-  return (0);
+    while (length-- != 0) {
+        *to++ = *from++;
+    }
+    return (0);
 }
 
-void init_host_disassembler(void){
-
-
-  INIT_DISASSEMBLE_INFO(dis_info, stderr, process_opcode_out);
-  dis_info.fprintf_func = (fprintf_ftype) process_opcode_out;
-  dis_info.stream = stderr;
-  dis_info.bytes_per_line=1;
-  dis_info.endian = 1;
-  dis_info.mach = bfd_mach_i386_i8086;
-  dis_info.disassembler_options = (char*) "i386,suffix";
-  dis_info.read_memory_func = read_memory_func;
+void init_host_disassembler(void)
+{
+    INIT_DISASSEMBLE_INFO(dis_info, stderr, process_opcode_out);
+    dis_info.fprintf_func = (fprintf_ftype) process_opcode_out;
+    dis_info.stream = stderr;
+    dis_info.bytes_per_line=1;
+    dis_info.endian = 1;
+    dis_info.mach = bfd_mach_i386_i8086;
+    dis_info.disassembler_options = (char*) "i386,suffix";
+    dis_info.read_memory_func = read_memory_func;
 }
 
 static void decode_recompiled(struct r4300_core* r4300, uint32_t addr)
@@ -108,49 +108,48 @@ static void decode_recompiled(struct r4300_core* r4300, uint32_t addr)
 
     lines_recompiled=0;
 
-    if(r4300->cached_interp.blocks[addr>>12] == NULL)
+    if (r4300->cached_interp.blocks[addr>>12] == NULL)
         return;
 
-    if(r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == r4300->current_instruction_table.NOTCOMPILED)
-    //      recompile_block(r4300, (int *) g_dev.sp_mem, r4300->cached_interp.blocks[addr>>12], addr);
-      {
-    strcpy(opcode_recompiled[0],"INVLD");
-    strcpy(args_recompiled[0],"NOTCOMPILED");
-    opaddr_recompiled[0] = (void *) 0;
-    addr_recompiled=0;
-    lines_recompiled++;
-    return;
-      }
+    if (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == r4300->current_instruction_table.NOTCOMPILED)
+    {
+        strcpy(opcode_recompiled[0],"INVLD");
+        strcpy(args_recompiled[0],"NOTCOMPILED");
+        opaddr_recompiled[0] = (void *) 0;
+        addr_recompiled=0;
+        lines_recompiled++;
+        return;
+    }
 
     assemb = (r4300->cached_interp.blocks[addr>>12]->code) +
-      (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
+        (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
 
     end_addr = r4300->cached_interp.blocks[addr>>12]->code;
 
-    if( (addr & 0xFFF) >= 0xFFC)
+    if ((addr & 0xFFF) >= 0xFFC)
         end_addr += r4300->cached_interp.blocks[addr>>12]->code_length;
     else
         end_addr += r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
 
-    while(assemb < end_addr)
-      {
+    while (assemb < end_addr)
+    {
         opaddr_recompiled[lines_recompiled] = assemb;
         num_decoded=0;
 
         assemb += print_insn_i386((bfd_vma)(long) assemb, &dis_info);
 
         lines_recompiled++;
-      }
+    }
 
     addr_recompiled = addr;
 }
 
 char* get_recompiled_opcode(struct r4300_core* r4300, uint32_t addr, int index)
 {
-    if(addr != addr_recompiled)
+    if (addr != addr_recompiled)
         decode_recompiled(r4300, addr);
 
-    if(index < lines_recompiled)
+    if (index < lines_recompiled)
         return opcode_recompiled[index];
     else
         return NULL;
@@ -158,21 +157,21 @@ char* get_recompiled_opcode(struct r4300_core* r4300, uint32_t addr, int index)
 
 char* get_recompiled_args(struct r4300_core* r4300, uint32_t addr, int index)
 {
-    if(addr != addr_recompiled)
+    if (addr != addr_recompiled)
         decode_recompiled(r4300, addr);
 
-    if(index < lines_recompiled)
+    if (index < lines_recompiled)
         return args_recompiled[index];
     else
         return NULL;
 }
 
-void * get_recompiled_addr(struct r4300_core* r4300, uint32_t addr, int index)
+void* get_recompiled_addr(struct r4300_core* r4300, uint32_t addr, int index)
 {
-    if(addr != addr_recompiled)
+    if (addr != addr_recompiled)
         decode_recompiled(r4300, addr);
 
-    if(index < lines_recompiled)
+    if (index < lines_recompiled)
         return opaddr_recompiled[index];
     else
         return 0;
@@ -180,7 +179,7 @@ void * get_recompiled_addr(struct r4300_core* r4300, uint32_t addr, int index)
 
 int get_num_recompiled(struct r4300_core* r4300, uint32_t addr)
 {
-    if(addr != addr_recompiled)
+    if (addr != addr_recompiled)
         decode_recompiled(r4300, addr);
 
     return lines_recompiled;
@@ -190,20 +189,20 @@ int get_has_recompiled(struct r4300_core* r4300, uint32_t addr)
 {
     unsigned char *assemb, *end_addr;
 
-    if(r4300->emumode != EMUMODE_DYNAREC || r4300->cached_interp.blocks[addr>>12] == NULL)
+    if (r4300->emumode != EMUMODE_DYNAREC || r4300->cached_interp.blocks[addr>>12] == NULL)
         return FALSE;
 
     assemb = (r4300->cached_interp.blocks[addr>>12]->code) +
-      (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
+        (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].local_addr);
 
     end_addr = r4300->cached_interp.blocks[addr>>12]->code;
 
-    if( (addr & 0xFFF) >= 0xFFC)
+    if ((addr & 0xFFF) >= 0xFFC)
         end_addr += r4300->cached_interp.blocks[addr>>12]->code_length;
     else
         end_addr += r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4+1].local_addr;
     if(assemb==end_addr)
-      return FALSE;
+        return FALSE;
 
     return TRUE;
 }
@@ -227,7 +226,7 @@ char* get_recompiled_args(struct r4300_core* r4300, uint32_t addr, int index)
     return NULL;
 }
 
-void * get_recompiled_addr(struct r4300_core* r4300, uint32_t addr, int index)
+void* get_recompiled_addr(struct r4300_core* r4300, uint32_t addr, int index)
 {
     return 0;
 }
@@ -272,83 +271,84 @@ void write_memory_64_unaligned(struct device* dev, uint32_t addr, uint64_t value
     write_memory_32_unaligned(dev, addr + 4, (uint32_t) (value & 0xFFFFFFFF));
 }
 
-uint32_t read_memory_32(struct device* dev, uint32_t addr){
-  uint32_t offset;
+uint32_t read_memory_32(struct device* dev, uint32_t addr)
+{
+    uint32_t offset;
 
-  switch(get_memory_type(&dev->mem, addr))
+    switch(get_memory_type(&dev->mem, addr))
     {
-    case M64P_MEM_NOMEM:
-      if(dev->r4300.cp0.tlb.LUT_r[addr>>12])
-        return read_memory_32(dev, (dev->r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
-      return M64P_MEM_INVALID;
-    case M64P_MEM_RDRAM:
-      return dev->rdram.dram[rdram_dram_address(addr)];
-    case M64P_MEM_RSPMEM:
-      return dev->sp.mem[rsp_mem_address(addr)];
-    case M64P_MEM_ROM:
-      return *((uint32_t *)(dev->cart.cart_rom.rom + rom_address(addr)));
-    case M64P_MEM_RDRAMREG:
-      offset = rdram_reg(addr);
-      if (offset < RDRAM_REGS_COUNT)
-          return dev->rdram.regs[0][offset];
-      break;
-    case M64P_MEM_RSPREG:
-      offset = rsp_reg(addr);
-      if (offset < SP_REGS_COUNT)
-        return dev->sp.regs[offset];
-      break;
-    case M64P_MEM_RSP:
-      offset = rsp_reg2(addr);
-      if (offset < SP_REGS2_COUNT)
-        return dev->sp.regs2[offset];
-      break;
-    case M64P_MEM_DP:
-      offset = dpc_reg(addr);
-      if (offset < DPC_REGS_COUNT)
-        return dev->dp.dpc_regs[offset];
-      break;
-    case M64P_MEM_DPS:
-      offset = dps_reg(addr);
-      if (offset < DPS_REGS_COUNT)
-        return dev->dp.dps_regs[offset];
-      break;
-    case M64P_MEM_VI:
-      offset = vi_reg(addr);
-      if (offset < VI_REGS_COUNT)
-        return dev->vi.regs[offset];
-      break;
-    case M64P_MEM_AI:
-      offset = ai_reg(addr);
-      if (offset < AI_REGS_COUNT)
-        return dev->ai.regs[offset];
-      break;
-    case M64P_MEM_PI:
-      offset = pi_reg(addr);
-      if (offset < PI_REGS_COUNT)
-        return dev->pi.regs[offset];
-      break;
-    case M64P_MEM_RI:
-      offset = ri_reg(addr);
-      if (offset < RI_REGS_COUNT)
-        return dev->ri.regs[offset];
-      break;
-    case M64P_MEM_SI:
-      offset = si_reg(addr);
-      if (offset < SI_REGS_COUNT)
-        return dev->si.regs[offset];
-      break;
-    case M64P_MEM_PIF:
-      offset = pif_ram_address(addr);
-      if (offset < PIF_RAM_SIZE)
-        return tohl((*((uint32_t*)&dev->pif.ram[offset])));
-      break;
-    case M64P_MEM_MI:
-      offset = mi_reg(addr);
-      if (offset < MI_REGS_COUNT)
-        return dev->mi.regs[offset];
-      break;
-    default:
-      break;
+        case M64P_MEM_NOMEM:
+            if(dev->r4300.cp0.tlb.LUT_r[addr>>12])
+                return read_memory_32(dev, (dev->r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
+            return M64P_MEM_INVALID;
+        case M64P_MEM_RDRAM:
+            return dev->rdram.dram[rdram_dram_address(addr)];
+        case M64P_MEM_RSPMEM:
+            return dev->sp.mem[rsp_mem_address(addr)];
+        case M64P_MEM_ROM:
+            return *((uint32_t *)(dev->cart.cart_rom.rom + rom_address(addr)));
+        case M64P_MEM_RDRAMREG:
+            offset = rdram_reg(addr);
+            if (offset < RDRAM_REGS_COUNT)
+                return dev->rdram.regs[0][offset];
+            break;
+        case M64P_MEM_RSPREG:
+            offset = rsp_reg(addr);
+            if (offset < SP_REGS_COUNT)
+                return dev->sp.regs[offset];
+            break;
+        case M64P_MEM_RSP:
+            offset = rsp_reg2(addr);
+            if (offset < SP_REGS2_COUNT)
+                return dev->sp.regs2[offset];
+            break;
+        case M64P_MEM_DP:
+            offset = dpc_reg(addr);
+            if (offset < DPC_REGS_COUNT)
+                return dev->dp.dpc_regs[offset];
+            break;
+        case M64P_MEM_DPS:
+            offset = dps_reg(addr);
+            if (offset < DPS_REGS_COUNT)
+                return dev->dp.dps_regs[offset];
+            break;
+        case M64P_MEM_VI:
+            offset = vi_reg(addr);
+            if (offset < VI_REGS_COUNT)
+                return dev->vi.regs[offset];
+            break;
+        case M64P_MEM_AI:
+            offset = ai_reg(addr);
+            if (offset < AI_REGS_COUNT)
+                return dev->ai.regs[offset];
+            break;
+        case M64P_MEM_PI:
+            offset = pi_reg(addr);
+            if (offset < PI_REGS_COUNT)
+                return dev->pi.regs[offset];
+            break;
+        case M64P_MEM_RI:
+            offset = ri_reg(addr);
+            if (offset < RI_REGS_COUNT)
+                return dev->ri.regs[offset];
+            break;
+        case M64P_MEM_SI:
+            offset = si_reg(addr);
+            if (offset < SI_REGS_COUNT)
+                return dev->si.regs[offset];
+            break;
+        case M64P_MEM_PIF:
+            offset = pif_ram_address(addr);
+            if (offset < PIF_RAM_SIZE)
+                return tohl((*((uint32_t*)&dev->pif.ram[offset])));
+            break;
+        case M64P_MEM_MI:
+            offset = mi_reg(addr);
+            if (offset < MI_REGS_COUNT)
+                return dev->mi.regs[offset];
+            break;
+        default:
+            break;
     }
     return M64P_MEM_INVALID;
 }
@@ -362,12 +362,12 @@ uint32_t read_memory_32_unaligned(struct device* dev, uint32_t addr)
 }
 
 void write_memory_32(struct device* dev, uint32_t addr, uint32_t value){
-  switch(get_memory_type(&dev->mem, addr))
+    switch(get_memory_type(&dev->mem, addr))
     {
-    case M64P_MEM_RDRAM:
-      dev->rdram.dram[(addr & 0xffffff) >> 2] = value;
-      CHECK_MEM(&dev->r4300, addr)
-      break;
+        case M64P_MEM_RDRAM:
+            dev->rdram.dram[(addr & 0xffffff) >> 2] = value;
+            CHECK_MEM(&dev->r4300, addr)
+                break;
     }
 }
 
@@ -412,86 +412,86 @@ void write_memory_8(struct device* dev, uint32_t addr, uint8_t value)
 
 uint32_t get_memory_flags(struct device* dev, uint32_t addr)
 {
-int type=get_memory_type(&dev->mem, addr);
-const uint32_t addrlow = (addr & 0xFFFF);
-  uint32_t flags = 0;
+    int type=get_memory_type(&dev->mem, addr);
+    const uint32_t addrlow = (addr & 0xFFFF);
+    uint32_t flags = 0;
 
-  switch(type)
-  {
-    case M64P_MEM_NOMEM:
-      if(dev->r4300.cp0.tlb.LUT_r[addr>>12])
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_NOTHING:
-      if (((addr >> 16) == 0x8801 || (addr >> 16 == 0xA801)) && addrlow == 0)
-        flags = M64P_MEM_FLAG_WRITABLE_EMUONLY; // for flashram command
-      break;
-    case M64P_MEM_RDRAM:
-      flags = M64P_MEM_FLAG_WRITABLE;
-    case M64P_MEM_ROM:
-      flags |= M64P_MEM_FLAG_READABLE;
-      break;
-    case M64P_MEM_RDRAMREG:
-      if (addrlow < 0x28)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_RSPMEM:
-      if (addrlow < 0x2000)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_RSPREG:
-      if (addrlow < 0x20)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_RSP:
-      if (addrlow < 0x8)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_DP:
-      if (addrlow < 0x20)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_DPS:
-      if (addrlow < 0x10)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_VI:
-      if (addrlow < 0x38)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_AI:
-      if (addrlow < 0x18)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_PI:
-      if (addrlow < 0x34)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_RI:
-      if (addrlow < 0x20)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_SI:
-      if (addrlow < 0x1c)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_FLASHRAMSTAT:
-      if (addrlow == 0)
-        flags = M64P_MEM_FLAG_READABLE_EMUONLY;
-      break;
-    case M64P_MEM_PIF:
-      if (addrlow >= 0x7C0 && addrlow <= 0x7FF)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    case M64P_MEM_MI:
-      if (addrlow < 0x10)
-        flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
-      break;
-    default:
-      break;
-  }
+    switch(type)
+    {
+        case M64P_MEM_NOMEM:
+            if(dev->r4300.cp0.tlb.LUT_r[addr>>12])
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_NOTHING:
+            if (((addr >> 16) == 0x8801 || (addr >> 16 == 0xA801)) && addrlow == 0)
+                flags = M64P_MEM_FLAG_WRITABLE_EMUONLY; // for flashram command
+            break;
+        case M64P_MEM_RDRAM:
+            flags = M64P_MEM_FLAG_WRITABLE;
+        case M64P_MEM_ROM:
+            flags |= M64P_MEM_FLAG_READABLE;
+            break;
+        case M64P_MEM_RDRAMREG:
+            if (addrlow < 0x28)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_RSPMEM:
+            if (addrlow < 0x2000)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_RSPREG:
+            if (addrlow < 0x20)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_RSP:
+            if (addrlow < 0x8)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_DP:
+            if (addrlow < 0x20)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_DPS:
+            if (addrlow < 0x10)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_VI:
+            if (addrlow < 0x38)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_AI:
+            if (addrlow < 0x18)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_PI:
+            if (addrlow < 0x34)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_RI:
+            if (addrlow < 0x20)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_SI:
+            if (addrlow < 0x1c)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_FLASHRAMSTAT:
+            if (addrlow == 0)
+                flags = M64P_MEM_FLAG_READABLE_EMUONLY;
+            break;
+        case M64P_MEM_PIF:
+            if (addrlow >= 0x7C0 && addrlow <= 0x7FF)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        case M64P_MEM_MI:
+            if (addrlow < 0x10)
+                flags = M64P_MEM_FLAG_READABLE | M64P_MEM_FLAG_WRITABLE_EMUONLY;
+            break;
+        default:
+            break;
+    }
 
-  return flags;
+    return flags;
 }
 
 #endif

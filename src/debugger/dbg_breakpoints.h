@@ -37,7 +37,7 @@ void remove_breakpoint_by_address(struct memory* mem, uint32_t address);
 void remove_breakpoint_by_num(struct memory* mem, int bpt);
 void enable_breakpoint(struct memory* mem, int breakpoint);
 void disable_breakpoint(struct memory* mem, int breakpoint);
-int check_breakpoints( uint32_t address );
+int check_breakpoints(uint32_t address);
 int check_breakpoints_on_mem_access(uint32_t pc, uint32_t address, uint32_t size, uint32_t flags);
 int lookup_breakpoint(uint32_t address, uint32_t size, uint32_t flags);
 int log_breakpoint(uint32_t PC, uint32_t Flag, uint32_t Access);

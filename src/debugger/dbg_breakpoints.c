@@ -35,7 +35,7 @@ m64p_breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
 
 int add_breakpoint(struct memory* mem, uint32_t address)
 {
-    if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
+    if (g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER) {
         DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
         return -1;
     }
@@ -50,7 +50,7 @@ int add_breakpoint(struct memory* mem, uint32_t address)
 
 int add_breakpoint_struct(struct memory* mem, m64p_breakpoint *newbp)
 {
-     if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
+    if (g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER) {
         DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
         return -1;
     }
@@ -114,7 +114,7 @@ void remove_breakpoint_by_num(struct memory* mem, int bpt)
     if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED))
         disable_breakpoint(mem, bpt);
 
-    for(curBpt=bpt+1; curBpt<g_NumBreakpoints; curBpt++)
+    for (curBpt=bpt+1; curBpt<g_NumBreakpoints; curBpt++)
         g_Breakpoints[curBpt-1]=g_Breakpoints[curBpt];
 
     g_NumBreakpoints--;
@@ -122,8 +122,8 @@ void remove_breakpoint_by_num(struct memory* mem, int bpt)
 
 void remove_breakpoint_by_address(struct memory* mem, uint32_t address)
 {
-    int bpt = lookup_breakpoint( address, 1, 0 );
-    if(bpt==-1)
+    int bpt = lookup_breakpoint(address, 1, 0);
+    if (bpt == -1)
     {
         DebugMessage(M64MSG_ERROR, "Tried to remove Nonexistant breakpoint %x!", address);
     }
@@ -156,14 +156,14 @@ int lookup_breakpoint(uint32_t address, uint32_t size, uint32_t flags)
             if(g_Breakpoints[i].endaddr < g_Breakpoints[i].address)
             {
                 if((endaddr >= g_Breakpoints[i].address) ||
-                    (address <= g_Breakpoints[i].endaddr))
-                        return i;
+                        (address <= g_Breakpoints[i].endaddr))
+                    return i;
             }
             else // endaddr >= address
             {
                 if((endaddr >= g_Breakpoints[i].address) &&
-                    (address <= g_Breakpoints[i].endaddr))
-                        return i;
+                        (address <= g_Breakpoints[i].endaddr))
+                    return i;
             }
         }
     }
