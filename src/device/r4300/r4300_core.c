@@ -33,7 +33,6 @@
 #include "api/m64p_types.h"
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
-#include "debugger/dbg_types.h"
 #endif
 #include "main/main.h"
 

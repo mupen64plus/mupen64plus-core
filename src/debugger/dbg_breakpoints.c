@@ -26,16 +26,14 @@
 #include "api/m64p_types.h"
 #include "dbg_breakpoints.h"
 #include "dbg_debugger.h"
-#include "dbg_types.h"
 #include "device/memory/memory.h"
-#include "main/main.h"
 
 #ifdef DBG
 
 int g_NumBreakpoints=0;
 m64p_breakpoint g_Breakpoints[BREAKPOINTS_MAX_NUMBER];
 
-int add_breakpoint( uint32 address )
+int add_breakpoint(struct memory* mem, uint32_t address)
 {
     if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
         DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
@@ -45,12 +43,12 @@ int add_breakpoint( uint32 address )
     g_Breakpoints[g_NumBreakpoints].endaddr=address;
     BPT_SET_FLAG(g_Breakpoints[g_NumBreakpoints], M64P_BKP_FLAG_EXEC);
 
-    enable_breakpoint(g_NumBreakpoints);
+    enable_breakpoint(mem, g_NumBreakpoints);
 
     return g_NumBreakpoints++;
 }
 
-int add_breakpoint_struct(m64p_breakpoint *newbp)
+int add_breakpoint_struct(struct memory* mem, m64p_breakpoint *newbp)
 {
      if( g_NumBreakpoints == BREAKPOINTS_MAX_NUMBER ) {
         DebugMessage(M64MSG_ERROR, "BREAKPOINTS_MAX_NUMBER have been reached.");
@@ -61,68 +59,68 @@ int add_breakpoint_struct(m64p_breakpoint *newbp)
 
     if (BPT_CHECK_FLAG(g_Breakpoints[g_NumBreakpoints], M64P_BKP_FLAG_ENABLED)) {
         BPT_CLEAR_FLAG(g_Breakpoints[g_NumBreakpoints], M64P_BKP_FLAG_ENABLED);
-        enable_breakpoint( g_NumBreakpoints );
+        enable_breakpoint(mem, g_NumBreakpoints);
     }
-    
+
     return g_NumBreakpoints++;
 }
 
-void enable_breakpoint( int bpt)
+void enable_breakpoint(struct memory* mem, int bpt)
 {
     m64p_breakpoint *curBpt = g_Breakpoints + bpt;
-    uint64 bptAddr;
-    
+    uint64_t bptAddr;
+
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_READ)) {
         for (bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
-            if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
-                activate_memory_break_read(&g_dev.mem, (uint32) bptAddr);
+            if (lookup_breakpoint((uint32_t) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
+                activate_memory_break_read(mem, (uint32_t) bptAddr);
     }
 
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_WRITE)) {
         for (bptAddr = curBpt->address; bptAddr <= (curBpt->endaddr | 0xFFFF); bptAddr+=0x10000)
-            if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
-                activate_memory_break_write(&g_dev.mem, (uint32) bptAddr);
+            if (lookup_breakpoint((uint32_t) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
+                activate_memory_break_write(mem, (uint32_t) bptAddr);
     }
-    
+
     BPT_SET_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);
 }
 
-void disable_breakpoint( int bpt )
+void disable_breakpoint(struct memory* mem, int bpt)
 {
     m64p_breakpoint *curBpt = g_Breakpoints + bpt;
-    uint64 bptAddr;
+    uint64_t bptAddr;
 
     BPT_CLEAR_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);
 
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_READ)) {
         for (bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
-            if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
-                deactivate_memory_break_read(&g_dev.mem, (uint32) bptAddr);
+            if (lookup_breakpoint((uint32_t) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_READ) == -1)
+                deactivate_memory_break_read(mem, (uint32_t) bptAddr);
     }
 
     if (BPT_CHECK_FLAG((*curBpt), M64P_BKP_FLAG_WRITE)) {
         for (bptAddr = curBpt->address; bptAddr <= ((unsigned long)(curBpt->endaddr | 0xFFFF)); bptAddr+=0x10000)
-            if (lookup_breakpoint((uint32) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
-                deactivate_memory_break_write(&g_dev.mem, (uint32) bptAddr);
+            if (lookup_breakpoint((uint32_t) bptAddr & 0xFFFF0000, 0x10000, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_WRITE) == -1)
+                deactivate_memory_break_write(mem, (uint32_t) bptAddr);
     }
 
     BPT_CLEAR_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);
 }
 
-void remove_breakpoint_by_num( int bpt )
+void remove_breakpoint_by_num(struct memory* mem, int bpt)
 {
     int curBpt;
-    
+
     if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED))
-        disable_breakpoint( bpt );
+        disable_breakpoint(mem, bpt);
 
     for(curBpt=bpt+1; curBpt<g_NumBreakpoints; curBpt++)
         g_Breakpoints[curBpt-1]=g_Breakpoints[curBpt];
-    
+
     g_NumBreakpoints--;
 }
 
-void remove_breakpoint_by_address( uint32 address )
+void remove_breakpoint_by_address(struct memory* mem, uint32_t address)
 {
     int bpt = lookup_breakpoint( address, 1, 0 );
     if(bpt==-1)
@@ -130,40 +128,40 @@ void remove_breakpoint_by_address( uint32 address )
         DebugMessage(M64MSG_ERROR, "Tried to remove Nonexistant breakpoint %x!", address);
     }
     else
-        remove_breakpoint_by_num( bpt );
+        remove_breakpoint_by_num(mem, bpt);
 }
 
-void replace_breakpoint_num( int bpt, m64p_breakpoint *copyofnew )
+void replace_breakpoint_num(struct memory* mem, int bpt, m64p_breakpoint *copyofnew)
 {
     if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED))
-        disable_breakpoint(bpt);
+        disable_breakpoint(mem, bpt);
 
     memcpy(&g_Breakpoints[bpt], copyofnew, sizeof(m64p_breakpoint));
 
     if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED)) {
         BPT_CLEAR_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_ENABLED);
-        enable_breakpoint(bpt);
+        enable_breakpoint(mem, bpt);
     }
 }
 
-int lookup_breakpoint( uint32 address, uint32 size, uint32 flags)
+int lookup_breakpoint(uint32_t address, uint32_t size, uint32_t flags)
 {
     int i;
-    uint64 endaddr = ((uint64)address) + ((uint64)size) - 1;
-    
+    uint64_t endaddr = ((uint64_t)address) + ((uint64_t)size) - 1;
+
     for( i=0; i < g_NumBreakpoints; i++)
     {
         if((g_Breakpoints[i].flags & flags) == flags)
         {
             if(g_Breakpoints[i].endaddr < g_Breakpoints[i].address)
             {
-                if((endaddr >= g_Breakpoints[i].address) || 
+                if((endaddr >= g_Breakpoints[i].address) ||
                     (address <= g_Breakpoints[i].endaddr))
                         return i;
             }
             else // endaddr >= address
             {
-                if((endaddr >= g_Breakpoints[i].address) && 
+                if((endaddr >= g_Breakpoints[i].address) &&
                     (address <= g_Breakpoints[i].endaddr))
                         return i;
             }
@@ -172,13 +170,13 @@ int lookup_breakpoint( uint32 address, uint32 size, uint32 flags)
     return -1;
 }
 
-int check_breakpoints( uint32 address )
+int check_breakpoints(uint32_t address)
 {
     return lookup_breakpoint(address, 1, M64P_BKP_FLAG_ENABLED | M64P_BKP_FLAG_EXEC);
 }
 
 
-int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uint32 flags )
+int check_breakpoints_on_mem_access(uint32_t pc, uint32_t address, uint32_t size, uint32_t flags)
 {
     //This function handles memory read/write breakpoints. size specifies the address
     //range to check, flags specifies the flags that all need to be set.
@@ -200,7 +198,7 @@ int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uin
     return -1;
 }
 
-int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access)
+int log_breakpoint(uint32_t PC, uint32_t Flag, uint32_t Access)
 {
     char msg[32];
     if (Flag & M64P_BKP_FLAG_READ)

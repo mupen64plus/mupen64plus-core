@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,11 +18,11 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the Core debugger functions which will be exported
  * outside of the core library.
  */
-   
+
 #include <stdlib.h>
 
 #define M64P_CORE_PROTOTYPES 1
@@ -32,7 +32,6 @@
 #include "debugger/dbg_debugger.h"
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
-#include "debugger/dbg_types.h"
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
@@ -381,26 +380,28 @@ EXPORT int CALL DebugBreakpointLookup(unsigned int address, unsigned int size, u
 EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, m64p_breakpoint *bkp)
 {
 #ifdef DBG
+    struct memory* mem = &g_dev.mem;
+
     switch (command)
     {
         case M64P_BKP_CMD_ADD_ADDR:
-            return add_breakpoint(index);
+            return add_breakpoint(mem, index);
         case M64P_BKP_CMD_ADD_STRUCT:
-            return add_breakpoint_struct(bkp);
+            return add_breakpoint_struct(mem, bkp);
         case M64P_BKP_CMD_REPLACE:
-            replace_breakpoint_num(index, bkp);
+            replace_breakpoint_num(mem, index, bkp);
             return 0;
         case M64P_BKP_CMD_REMOVE_ADDR:
-            remove_breakpoint_by_address(index);
+            remove_breakpoint_by_address(mem, index);
             return 0;
         case M64P_BKP_CMD_REMOVE_IDX:
-            remove_breakpoint_by_num(index);
+            remove_breakpoint_by_num(mem, index);
             return 0;
         case M64P_BKP_CMD_ENABLE:
-            enable_breakpoint(index);
+            enable_breakpoint(mem, index);
             return 0;
         case M64P_BKP_CMD_DISABLE:
-            disable_breakpoint(index);
+            disable_breakpoint(mem, index);
             return 0;
         case M64P_BKP_CMD_CHECK:
             return check_breakpoints(index);

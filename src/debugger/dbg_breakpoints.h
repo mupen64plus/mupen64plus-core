@@ -23,22 +23,25 @@
 #define __BREAKPOINTS_H__
 
 #include "../api/m64p_types.h"
-#include "dbg_types.h"
+
+#include <stdint.h>
+
+struct memory;
 
 extern int g_NumBreakpoints;
 extern m64p_breakpoint g_Breakpoints[];
 
-int add_breakpoint( uint32 address );
-int add_breakpoint_struct(m64p_breakpoint *newbp);
-void remove_breakpoint_by_address( uint32 address );
-void remove_breakpoint_by_num( int bpt );
-void enable_breakpoint( int breakpoint );
-void disable_breakpoint( int breakpoint );
-int check_breakpoints( uint32 address );
-int check_breakpoints_on_mem_access( uint32 pc, uint32 address, uint32 size, uint32 flags );
-int lookup_breakpoint( uint32 address, uint32 size, uint32 flags );
-int log_breakpoint(uint32 PC, uint32 Flag, uint32 Access);
-void replace_breakpoint_num( int, m64p_breakpoint * );
+int add_breakpoint(struct memory* mem, uint32_t address);
+int add_breakpoint_struct(struct memory* mem, m64p_breakpoint *newbp);
+void remove_breakpoint_by_address(struct memory* mem, uint32_t address);
+void remove_breakpoint_by_num(struct memory* mem, int bpt);
+void enable_breakpoint(struct memory* mem, int breakpoint);
+void disable_breakpoint(struct memory* mem, int breakpoint);
+int check_breakpoints( uint32_t address );
+int check_breakpoints_on_mem_access(uint32_t pc, uint32_t address, uint32_t size, uint32_t flags);
+int lookup_breakpoint(uint32_t address, uint32_t size, uint32_t flags);
+int log_breakpoint(uint32_t PC, uint32_t Flag, uint32_t Access);
+void replace_breakpoint_num(struct memory* mem, int, m64p_breakpoint*);
 
 #endif  /* __BREAKPOINTS_H__ */
 

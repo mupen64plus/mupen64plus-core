@@ -26,7 +26,6 @@
 #include "dbg_breakpoints.h"
 #include "dbg_debugger.h"
 #include "dbg_memory.h"
-#include "dbg_types.h"
 
 #ifdef DBG
 
@@ -37,7 +36,7 @@ m64p_dbg_runstate g_dbg_runstate;
 // Holds the number of pending steps the debugger needs to perform.
 static SDL_sem *sem_pending_steps;
 
-uint32 previousPC;
+uint32_t previousPC;
 
 //]=-=-=-=-=-=-=-=-=-=-=[ Initialisation du Debugger ]=-=-=-=-=-=-=-=-=-=-=-=[
 
@@ -62,7 +61,7 @@ void destroy_debugger()
 
 //]=-=-=-=-=-=-=-=-=-=-=-=-=[ Mise-a-Jour Debugger ]=-=-=-=-=-=-=-=-=-=-=-=-=[
 
-void update_debugger(uint32 pc)
+void update_debugger(uint32_t pc)
 // Update debugger state and display.
 // Should be called after each R4300 instruction
 // Checks for breakpoint hits on PC

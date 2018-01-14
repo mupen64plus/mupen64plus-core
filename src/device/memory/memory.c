@@ -35,7 +35,6 @@
 
 #include "debugger/dbg_breakpoints.h"
 #include "debugger/dbg_memory.h"
-#include "debugger/dbg_types.h"
 #endif
 
 #include <assert.h>

@@ -26,7 +26,6 @@
 #include "api/m64p_types.h"
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
-#include "dbg_types.h"
 #include "device/device.h"
 #include "osal/preproc.h"
 

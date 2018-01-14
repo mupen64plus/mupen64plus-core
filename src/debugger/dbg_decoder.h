@@ -22,8 +22,6 @@
 #ifndef __DECODER_H__
 #define __DECODER_H__
 
-#include "dbg_types.h"
-
 #if defined(WIN32)
 typedef unsigned int uint32_t;
 typedef unsigned char bool;
@@ -44,17 +42,17 @@ struct r4k_dis_t
     r4k_lookup_func  lookup_sym;
     void *           lookup_sym_d;
     r4k_lookup_func  lookup_rel_hi16;
-    void *           lookup_rel_hi16_d;   
+    void *           lookup_rel_hi16_d;
     r4k_lookup_func  lookup_rel_lo16;
     void *           lookup_rel_lo16_d;
-    
+
     /* Private */
     char * dest;
     int length;
 }
 R4kDis;
 
-extern void r4300_decode_op ( uint32_t, char *, char *, uint32_t );
+extern void r4300_decode_op (uint32_t, char *, char *, uint32_t);
 
 
 #endif /* __DECODER_H__ */
