@@ -25,27 +25,32 @@
 
 #define MAX_DISASSEMBLY 64
 
+#include <stdint.h>
+
+struct device;
+struct r4300_core;
+
 void init_host_disassembler(void);
 
-char* get_recompiled_opcode( uint32 address, int index );
-char* get_recompiled_args( uint32 address, int index );
-void* get_recompiled_addr( uint32 address, int index );
-int get_num_recompiled( uint32 address );
-int get_has_recompiled( uint32 address );
+char* get_recompiled_opcode(struct r4300_core* r4300, uint32_t address, int index);
+char* get_recompiled_args(struct r4300_core* r4300, uint32_t address, int index);
+void* get_recompiled_addr(struct r4300_core* r4300, uint32_t address, int index);
+int get_num_recompiled(struct r4300_core* r4300, uint32_t address );
+int get_has_recompiled(struct r4300_core* r4300, uint32_t address );
 
-uint64 read_memory_64(uint32 addr);
-uint64 read_memory_64_unaligned(uint32 addr);
-void write_memory_64(uint32 addr, uint64 value);
-void write_memory_64_unaligned(uint32 addr, uint64 value);
-uint32 read_memory_32(uint32);
-uint32 read_memory_32_unaligned(uint32 addr);
-void write_memory_32(uint32, uint32);
-void write_memory_32_unaligned(uint32 addr, uint32 value);
-uint16 read_memory_16(uint32 addr);
-void write_memory_16(uint32 addr, uint16 value);
-uint8 read_memory_8(uint32 addr);
-void write_memory_8(uint32 addr, uint8 value);
-uint32 get_memory_flags(uint32);
+uint64_t read_memory_64(struct device* dev, uint32_t addr);
+uint64_t read_memory_64_unaligned(struct device* dev, uint32_t addr);
+void write_memory_64(struct device* dev, uint32_t addr, uint64_t value);
+void write_memory_64_unaligned(struct device* dev, uint32_t addr, uint64_t value);
+uint32_t read_memory_32(struct device* dev, uint32_t addr);
+uint32_t read_memory_32_unaligned(struct device* dev, uint32_t addr);
+void write_memory_32(struct device* dev, uint32_t addr, uint32_t value);
+void write_memory_32_unaligned(struct device* dev, uint32_t addr, uint32_t value);
+uint16_t read_memory_16(struct device* dev, uint32_t addr);
+void write_memory_16(struct device* dev, uint32_t addr, uint16_t value);
+uint8_t read_memory_8(struct device* dev, uint32_t addr);
+void write_memory_8(struct device* dev, uint32_t addr, uint8_t value);
+uint32_t get_memory_flags(struct device* dev, uint32_t addr);
 
 #endif /* __DEBUGGER_MEMORY_H__ */
 
