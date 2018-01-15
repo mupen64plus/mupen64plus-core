@@ -24,24 +24,25 @@
 
 #include <SDL.h>
 #include <SDL_thread.h>
+
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "api/callbacks.h"
-#include "api/config.h"
-#include "api/m64p_types.h"
-#include "device/r4300/r4300_core.h"
-#include "device/rdram/rdram.h"
 #include "cheat.h"
 #include "eventloop.h"
 #include "list.h"
-#include "osal/preproc.h"
 #include "rom.h"
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "device/r4300/r4300_core.h"
+#include "device/rdram/rdram.h"
+#include "osal/preproc.h"
 
 /* local definitions */
 #define CHEAT_CODE_MAGIC_VALUE UINT32_C(0xDEAD0000)

@@ -22,6 +22,8 @@
 #ifndef M64P_MAIN_CHEAT_H
 #define M64P_MAIN_CHEAT_H
 
+#include "api/m64p_types.h"
+
 #include "list.h"
 
 #include <stdint.h>
@@ -30,7 +32,6 @@
 #define ENTRY_VI 1
 
 struct SDL_mutex;
-struct m64p_cheat_code;
 struct r4300_core;
 
 struct cheat_ctx
