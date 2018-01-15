@@ -31,11 +31,9 @@ void cheat_apply_cheats(int entry);
 
 void cheat_init(void);
 void cheat_uninit(void);
-int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes);
-int cheat_set_enabled(const char *name, int enabled);
+int cheat_add_new(const char* name, m64p_cheat_code* code_list, int num_codes);
+int cheat_set_enabled(const char* name, int enabled);
 void cheat_delete_all(void);
 int cheat_add_hacks(void);
 
-#endif // #define CHEAT_H
-
-
+#endif
