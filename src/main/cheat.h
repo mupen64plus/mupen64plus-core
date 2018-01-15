@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef CHEAT_H
-#define CHEAT_H
+#ifndef M64P_MAIN_CHEAT_H
+#define M64P_MAIN_CHEAT_H
 
 #include "api/m64p_types.h"
 
