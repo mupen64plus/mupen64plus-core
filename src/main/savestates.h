@@ -40,16 +40,18 @@ typedef enum _savestates_type
     savestates_type_pj64_unc
 } savestates_type;
 
+struct device;
+
 savestates_job savestates_get_job(void);
 void savestates_set_job(savestates_job j, savestates_type t, const char *fn);
 void savestates_init(void);
 void savestates_deinit(void);
 
-int savestates_load(void);
-int savestates_save(void);
+int savestates_load(struct device* dev);
+int savestates_save(const struct device* dev);
 
-int savestates_save_m64p(char *filepath);
-int savestates_load_m64p(char *filepath);
+int savestates_save_m64p(const struct device* dev, char *filepath);
+int savestates_load_m64p(struct device* dev, char *filepath);
 
 void savestates_select_slot(unsigned int s);
 unsigned int savestates_get_slot(void);
