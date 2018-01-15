@@ -514,7 +514,7 @@ void gen_interrupt(struct r4300_core* r4300)
     {
         if (savestates_get_job() == savestates_job_load)
         {
-            savestates_load(&g_dev);
+            savestates_load();
             return;
         }
 
@@ -607,7 +607,7 @@ void gen_interrupt(struct r4300_core* r4300)
     {
         if (savestates_get_job() == savestates_job_save)
         {
-            savestates_save(&g_dev);
+            savestates_save();
             return;
         }
     }

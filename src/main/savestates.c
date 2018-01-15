@@ -187,7 +187,7 @@ static void savestates_clear_job(void)
 #define PUTDATA(buff, type, value) \
     do { type x = value; PUTARRAY(&x, buff, type, 1); } while(0)
 
-int savestates_load_m64p(struct device* dev, char *filepath)
+static int savestates_load_m64p(struct device* dev, char *filepath)
 {
     unsigned char header[44];
     gzFile f;
@@ -1123,7 +1123,7 @@ static savestates_type savestates_detect_type(char *filepath)
     }
 }
 
-int savestates_load(struct device* dev)
+int savestates_load(void)
 {
     FILE *fPtr = NULL;
     char *filepath = NULL;
@@ -1182,6 +1182,8 @@ int savestates_load(struct device* dev)
 
     if (filepath != NULL)
     {
+        struct device* dev = &g_dev;
+
         switch (type)
         {
             case savestates_type_m64p: ret = savestates_load_m64p(dev, filepath); break;
@@ -1237,7 +1239,7 @@ static void savestates_save_m64p_work(struct work_struct *work)
     SDL_UnlockMutex(savestates_lock);
 }
 
-int savestates_save_m64p(const struct device* dev, char *filepath)
+static int savestates_save_m64p(const struct device* dev, char *filepath)
 {
     unsigned char outbuf[4];
     int i;
@@ -1806,10 +1808,11 @@ static int savestates_save_pj64_unc(const struct device* dev, char *filepath)
     return 1;
 }
 
-int savestates_save(const struct device* dev)
+int savestates_save(void)
 {
     char *filepath;
     int ret = 0;
+    const struct device* dev = &g_dev;
 
     /* Can only save PJ64 savestates on VI / COMPARE interrupt.
        Otherwise try again in a little while. */
