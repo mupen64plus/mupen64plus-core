@@ -22,10 +22,10 @@
 #ifndef M64P_MAIN_CHEAT_H
 #define M64P_MAIN_CHEAT_H
 
-#include "api/m64p_types.h"
-
 #define ENTRY_BOOT 0
 #define ENTRY_VI 1
+
+struct m64p_cheat_code;
 
 void cheat_apply_cheats(int entry);
 
