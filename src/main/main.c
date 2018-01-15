@@ -827,15 +827,17 @@ static void apply_speed_limiter(void)
 /* TODO: make a GameShark module and move that there */
 static void gs_apply_cheats(struct cheat_ctx* ctx)
 {
-    if(g_gs_vi_counter < 60)
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    if (g_gs_vi_counter < 60)
     {
         if (g_gs_vi_counter == 0)
-            cheat_apply_cheats(ctx, ENTRY_BOOT);
+            cheat_apply_cheats(ctx, r4300, ENTRY_BOOT);
         g_gs_vi_counter++;
     }
     else
     {
-        cheat_apply_cheats(ctx, ENTRY_VI);
+        cheat_apply_cheats(ctx, r4300, ENTRY_VI);
     }
 }
 

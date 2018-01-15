@@ -24,11 +24,14 @@
 
 #include "list.h"
 
+#include <stdint.h>
+
 #define ENTRY_BOOT 0
 #define ENTRY_VI 1
 
 struct SDL_mutex;
 struct m64p_cheat_code;
+struct r4300_core;
 
 struct cheat_ctx
 {
@@ -36,7 +39,7 @@ struct cheat_ctx
     struct list_head active_cheats;
 };
 
-void cheat_apply_cheats(struct cheat_ctx* ctx, int entry);
+void cheat_apply_cheats(struct cheat_ctx* ctx, struct r4300_core* r4300, int entry);
 
 void cheat_init(struct cheat_ctx* ctx);
 void cheat_uninit(struct cheat_ctx* ctx);

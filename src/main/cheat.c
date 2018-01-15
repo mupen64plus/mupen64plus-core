@@ -32,12 +32,11 @@
 #include "api/callbacks.h"
 #include "api/config.h"
 #include "api/m64p_types.h"
-#include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "device/rdram/rdram.h"
 #include "cheat.h"
 #include "eventloop.h"
 #include "list.h"
-#include "main.h"
 #include "osal/preproc.h"
 #include "rom.h"
 
@@ -63,48 +62,48 @@ typedef struct cheat {
 } cheat_t;
 
 /* private functions */
-static uint16_t read_address_16bit(uint32_t address)
+static uint16_t read_address_16bit(struct r4300_core* r4300, uint32_t address)
 {
-    return *(uint16_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16)));
+    return *(uint16_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16)));
 }
 
-static uint8_t read_address_8bit(uint32_t address)
+static uint8_t read_address_8bit(struct r4300_core* r4300, uint32_t address)
 {
-    return *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8)));
+    return *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8)));
 }
 
-static void update_address_16bit(uint32_t address, uint16_t new_value)
+static void update_address_16bit(struct r4300_core* r4300, uint32_t address, uint16_t new_value)
 {
-    *(uint16_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16))) = new_value;
+    *(uint16_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16))) = new_value;
     /* mask out bit 24 which is used by GS codes to specify 8/16 bits */
     address &= 0xfeffffff;
-    invalidate_r4300_cached_code(&g_dev.r4300, address, 2);
+    invalidate_r4300_cached_code(r4300, address, 2);
 }
 
-static void update_address_8bit(uint32_t address, uint8_t new_value)
+static void update_address_8bit(struct r4300_core* r4300, uint32_t address, uint8_t new_value)
 {
-    *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8))) = new_value;
-    invalidate_r4300_cached_code(&g_dev.r4300, address, 1);
+    *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8))) = new_value;
+    invalidate_r4300_cached_code(r4300, address, 1);
 }
 
-static int address_equal_to_8bit(uint32_t address, uint8_t value)
+static int address_equal_to_8bit(struct r4300_core* r4300, uint32_t address, uint8_t value)
 {
     uint8_t value_read;
-    value_read = *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8)));
+    value_read = *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8)));
     return value_read == value;
 }
 
-static int address_equal_to_16bit(uint32_t address, uint16_t value)
+static int address_equal_to_16bit(struct r4300_core* r4300, uint32_t address, uint16_t value)
 {
     uint16_t value_read;
-    value_read = *(unsigned short *)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16)));
+    value_read = *(unsigned short *)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16)));
     return value_read == value;
 }
 
 /* individual application - returns 0 if we are supposed to skip the next cheat
  * (only really used on conditional codes)
  */
-static int execute_cheat(uint32_t address, uint32_t value, uint32_t* old_value)
+static int execute_cheat(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t* old_value)
 {
     switch (address & 0xFF000000)
     {
@@ -115,9 +114,9 @@ static int execute_cheat(uint32_t address, uint32_t value, uint32_t* old_value)
     case 0xF0000000:
         /* if pointer to old value is valid and uninitialized, write current value to it */
         if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE)) {
-            *old_value = read_address_8bit(address);
+            *old_value = read_address_8bit(r4300, address);
         }
-        update_address_8bit(address, (uint8_t)value);
+        update_address_8bit(r4300, address, (uint8_t)value);
         return 1;
     case 0x81000000:
     case 0x89000000:
@@ -126,26 +125,26 @@ static int execute_cheat(uint32_t address, uint32_t value, uint32_t* old_value)
     case 0xF1000000:
         /* if pointer to old value is valid and uninitialized, write current value to it */
         if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE)) {
-            *old_value = read_address_16bit(address);
+            *old_value = read_address_16bit(r4300, address);
         }
-        update_address_16bit(address, (uint16_t)value);
+        update_address_16bit(r4300, address, (uint16_t)value);
         return 1;
     case 0xD0000000:
     case 0xD8000000:
-        return address_equal_to_8bit(address, (uint8_t)value);
+        return address_equal_to_8bit(r4300, address, (uint8_t)value);
     case 0xD1000000:
     case 0xD9000000:
-        return address_equal_to_16bit(address, (uint16_t)value);
+        return address_equal_to_16bit(r4300, address, (uint16_t)value);
     case 0xD2000000:
     case 0xDB000000:
-        return !(address_equal_to_8bit(address, (uint8_t)value));
+        return !(address_equal_to_8bit(r4300, address, (uint8_t)value));
     case 0xD3000000:
     case 0xDA000000:
-        return !(address_equal_to_16bit(address, (uint16_t)value));
+        return !(address_equal_to_16bit(r4300, address, (uint16_t)value));
     case 0xEE000000:
         /* most likely, this doesnt do anything. */
-        execute_cheat(0xF1000318, 0x0040, NULL);
-        execute_cheat(0xF100031A, 0x0000, NULL);
+        execute_cheat(r4300, 0xF1000318, 0x0040, NULL);
+        execute_cheat(r4300, 0xF100031A, 0x0000, NULL);
         return 1;
     default:
         return 1;
@@ -206,7 +205,7 @@ void cheat_uninit(struct cheat_ctx* ctx)
     ctx->mutex = NULL;
 }
 
-void cheat_apply_cheats(struct cheat_ctx* ctx, int entry)
+void cheat_apply_cheats(struct cheat_ctx* ctx, struct r4300_core* r4300, int entry)
 {
     cheat_t *cheat;
     cheat_code_t *code;
@@ -231,7 +230,7 @@ void cheat_apply_cheats(struct cheat_ctx* ctx, int entry)
                 list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
                     /* code should only be written once at boot time */
                     if ((code->address & 0xF0000000) == 0xF0000000) {
-                        execute_cheat(code->address, code->value, &code->old_value);
+                        execute_cheat(r4300, code->address, code->value, &code->old_value);
                     }
                 }
                 break;
@@ -254,7 +253,7 @@ void cheat_apply_cheats(struct cheat_ctx* ctx, int entry)
                         }
 
                         /* if condition false, skip next code non-test code */
-                        if (!execute_cheat(code->address, code->value, NULL)) {
+                        if (!execute_cheat(r4300, code->address, code->value, NULL)) {
                             cond_failed = 1;
                         }
                     }
@@ -274,14 +273,14 @@ void cheat_apply_cheats(struct cheat_ctx* ctx, int entry)
                         case 0xA8000000:
                         case 0xA9000000:
                             if (event_gameshark_active()) {
-                                execute_cheat(code->address, code->value, NULL);
+                                execute_cheat(r4300, code->address, code->value, NULL);
                             }
                             break;
                             /* normal cheat code */
                         default:
                             /* exclude boot-time cheat codes */
                             if ((code->address & 0xF0000000) != 0xF0000000) {
-                                execute_cheat(code->address, code->value, &code->old_value);
+                                execute_cheat(r4300, code->address, code->value, &code->old_value);
                             }
                             break;
                         }
@@ -303,7 +302,7 @@ void cheat_apply_cheats(struct cheat_ctx* ctx, int entry)
                     /* set memory back to old value and clear saved copy of old value */
                     if(code->old_value != CHEAT_CODE_MAGIC_VALUE)
                     {
-                        execute_cheat(code->address, code->old_value, NULL);
+                        execute_cheat(r4300, code->address, code->old_value, NULL);
                         code->old_value = CHEAT_CODE_MAGIC_VALUE;
                     }
                 }
