@@ -52,7 +52,6 @@
 static int l_CoreInit = 0;
 static int l_ROMOpen = 0;
 
-
 /* functions exported outside of libmupen64plus to front-end application */
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
@@ -181,15 +180,15 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             {
                 l_ROMOpen = 1;
                 ScreenshotRomOpen();
-                cheat_init();
+                cheat_init(&g_cheat_ctx);
             }
             return rval;
         case M64CMD_ROM_CLOSE:
             if (g_EmulatorRunning || !l_ROMOpen)
                 return M64ERR_INVALID_STATE;
             l_ROMOpen = 0;
-            cheat_delete_all();
-            cheat_uninit();
+            cheat_delete_all(&g_cheat_ctx);
+            cheat_uninit(&g_cheat_ctx);
             return close_rom();
         case M64CMD_ROM_GET_HEADER:
             if (!l_ROMOpen)
@@ -329,7 +328,7 @@ EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *Code
     if (strlen(CheatName) < 1 || NumCodes < 1)
         return M64ERR_INPUT_INVALID;
 
-    if (cheat_add_new(CheatName, CodeList, NumCodes))
+    if (cheat_add_new(&g_cheat_ctx, CheatName, CodeList, NumCodes))
         return M64ERR_SUCCESS;
 
     return M64ERR_INPUT_INVALID;
@@ -342,7 +341,7 @@ EXPORT m64p_error CALL CoreCheatEnabled(const char *CheatName, int Enabled)
     if (CheatName == NULL)
         return M64ERR_INPUT_ASSERT;
 
-    if (cheat_set_enabled(CheatName, Enabled))
+    if (cheat_set_enabled(&g_cheat_ctx, CheatName, Enabled))
         return M64ERR_SUCCESS;
 
     return M64ERR_INPUT_INVALID;

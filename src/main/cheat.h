@@ -22,18 +22,27 @@
 #ifndef M64P_MAIN_CHEAT_H
 #define M64P_MAIN_CHEAT_H
 
+#include "list.h"
+
 #define ENTRY_BOOT 0
 #define ENTRY_VI 1
 
+struct SDL_mutex;
 struct m64p_cheat_code;
 
-void cheat_apply_cheats(int entry);
+struct cheat_ctx
+{
+    struct SDL_mutex* mutex;
+    struct list_head active_cheats;
+};
 
-void cheat_init(void);
-void cheat_uninit(void);
-int cheat_add_new(const char* name, m64p_cheat_code* code_list, int num_codes);
-int cheat_set_enabled(const char* name, int enabled);
-void cheat_delete_all(void);
-int cheat_add_hacks(void);
+void cheat_apply_cheats(struct cheat_ctx* ctx, int entry);
+
+void cheat_init(struct cheat_ctx* ctx);
+void cheat_uninit(struct cheat_ctx* ctx);
+int cheat_add_new(struct cheat_ctx* ctx, const char* name, m64p_cheat_code* code_list, int num_codes);
+int cheat_set_enabled(struct cheat_ctx* ctx, const char* name, int enabled);
+void cheat_delete_all(struct cheat_ctx* ctx);
+int cheat_add_hacks(struct cheat_ctx* ctx);
 
 #endif
