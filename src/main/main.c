@@ -1146,7 +1146,7 @@ m64p_error main_run(void)
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
 
-    cheat_add_hacks(&g_cheat_ctx);
+    cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
     /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)

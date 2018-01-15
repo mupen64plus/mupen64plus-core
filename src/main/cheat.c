@@ -36,7 +36,6 @@
 #include "cheat.h"
 #include "eventloop.h"
 #include "list.h"
-#include "rom.h"
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
@@ -495,7 +494,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
     return num_codes;
 }
 
-int cheat_add_hacks(struct cheat_ctx* ctx)
+int cheat_add_hacks(struct cheat_ctx* ctx, const char* rom_cheats)
 {
     char *cheat_raw = NULL;
     char *saveptr = NULL;
@@ -505,11 +504,11 @@ int cheat_add_hacks(struct cheat_ctx* ctx)
     char cheatname[32];
     m64p_cheat_code *hack;
 
-    if (!ROM_PARAMS.cheats)
+    if (!rom_cheats)
         return 0;
 
     /* copy ini entry for tokenizing */
-    cheat_raw = strdup(ROM_PARAMS.cheats);
+    cheat_raw = strdup(rom_cheats);
     if (!cheat_raw)
         goto out;
 
