@@ -266,7 +266,6 @@
     <ClInclude Include="..\..\src\debugger\dbg_decoder.h" />
     <ClInclude Include="..\..\src\debugger\dbg_decoder_local.h" />
     <ClInclude Include="..\..\src\debugger\dbg_memory.h" />
-    <ClInclude Include="..\..\src\debugger\dbg_types.h" />
     <ClInclude Include="..\..\src\device\rcp\ai\ai_controller.h" />
     <ClInclude Include="..\..\src\device\cart\af_rtc.h" />
     <ClInclude Include="..\..\src\device\cart\cart.h" />
