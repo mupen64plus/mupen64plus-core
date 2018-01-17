@@ -268,6 +268,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
     ConfigSetDefaultBool(g_CoreConfig, "DisableSpecRecomp", 1, "Disable speculative precompilation in new dynarec");
     ConfigSetDefaultBool(g_CoreConfig, "RandomizeInterrupt", 1, "Randomize PI/SI Interrupt Timing");
+    ConfigSetDefaultInt(g_CoreConfig, "SiDmaDuration", -1, "Duration of SI DMA (-1: use per game settings)");
 
     /* handle upgrades */
     if (bUpgrade)
@@ -1106,6 +1107,7 @@ m64p_error main_run(void)
     unsigned int count_per_op;
     unsigned int emumode;
     unsigned int disable_extra_mem;
+    int si_dma_duration;
     int no_compiled_jump;
     int randomize_interrupt;
     struct file_storage eep;
@@ -1141,10 +1143,15 @@ m64p_error main_run(void)
     else
         disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
 
+
     rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
 
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
+
+    si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
+    if (si_dma_duration < 0)
+        si_dma_duration = ROM_PARAMS.sidmaduration;
 
     cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
@@ -1324,6 +1331,7 @@ m64p_error main_run(void)
                 no_compiled_jump,
                 randomize_interrupt,
                 &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
+                si_dma_duration,
                 rdram_size,
                 joybus_devices, ijoybus_devices,
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype),
