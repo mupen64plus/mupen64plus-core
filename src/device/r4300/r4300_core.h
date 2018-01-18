@@ -82,9 +82,6 @@ struct r4300_core
     /* When reset_hard_job is set, next interrupt will cause hard reset */
     int reset_hard_job;
 
-    /* from regcache.c */
-    struct regcache_state regcache_state;
-
     /* from assemble.c */
     struct jump_table* jumps_table;
     size_t jumps_number;
@@ -128,6 +125,8 @@ struct r4300_core
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */
     struct {
+        struct regcache_state regcache_state;
+
         int init_length;
         struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
         int code_length;                                /* current real recompiled code length */
