@@ -564,7 +564,6 @@ ifneq ($(DYNAREC), )
     endif
 
     SOURCE += \
-      $(SRCDIR)/device/r4300/empty_dynarec.c \
       $(SRCDIR)/device/r4300/new_dynarec/new_dynarec.c
   else
     SOURCE += \
