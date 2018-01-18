@@ -2459,16 +2459,16 @@ void genjr(struct r4300_core* r4300)
     free_all_registers(r4300);
     simplify_access(r4300);
     mov_eax_memoffs32((unsigned int *)r4300->recomp.dst->f.i.rs);
-    mov_memoffs32_eax((unsigned int *)&r4300->local_rs);
+    mov_memoffs32_eax((unsigned int *)&r4300->recomp.local_rs);
 
     gendelayslot(r4300);
 
-    mov_eax_memoffs32((unsigned int *)&r4300->local_rs);
+    mov_eax_memoffs32((unsigned int *)&r4300->recomp.local_rs);
     mov_memoffs32_eax((unsigned int *)&r4300->cp0.last_addr);
 
     gencheck_interrupt_reg(r4300);
 
-    mov_eax_memoffs32((unsigned int *)&r4300->local_rs);
+    mov_eax_memoffs32((unsigned int *)&r4300->recomp.local_rs);
     mov_reg32_reg32(EBX, EAX);
     and_eax_imm32(0xFFFFF000);
     cmp_eax_imm32(r4300->recomp.dst_block->start & 0xFFFFF000);
@@ -2524,7 +2524,7 @@ void genjalr(struct r4300_core* r4300)
     free_all_registers(r4300);
     simplify_access(r4300);
     mov_eax_memoffs32((unsigned int *)r4300->recomp.dst->f.r.rs);
-    mov_memoffs32_eax((unsigned int *)&r4300->local_rs);
+    mov_memoffs32_eax((unsigned int *)&r4300->recomp.local_rs);
 
     gendelayslot(r4300);
 
@@ -2536,12 +2536,12 @@ void genjalr(struct r4300_core* r4300)
         mov_m32_imm32(((unsigned int *)(r4300->recomp.dst-1)->f.r.rd)+1, 0);
     }
 
-    mov_eax_memoffs32((unsigned int *)&r4300->local_rs);
+    mov_eax_memoffs32((unsigned int *)&r4300->recomp.local_rs);
     mov_memoffs32_eax((unsigned int *)&r4300->cp0.last_addr);
 
     gencheck_interrupt_reg(r4300);
 
-    mov_eax_memoffs32((unsigned int *)&r4300->local_rs);
+    mov_eax_memoffs32((unsigned int *)&r4300->recomp.local_rs);
     mov_reg32_reg32(EBX, EAX);
     and_eax_imm32(0xFFFFF000);
     cmp_eax_imm32(r4300->recomp.dst_block->start & 0xFFFFF000);

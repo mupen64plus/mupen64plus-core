@@ -73,7 +73,6 @@ void poweron_r4300(struct r4300_core* r4300)
 
     *r4300_pc_struct(r4300) = NULL;
     r4300->delay_slot = 0;
-    r4300->local_rs = 0;
     r4300->skip_jump = 0;
     r4300->dyna_interp = 0;
     //r4300->current_instruction_table;
@@ -105,6 +104,7 @@ void poweron_r4300(struct r4300_core* r4300)
     /* recomp init */
     r4300->recomp.fast_memory = 1;
     r4300->recomp.delay_slot_compiled = 0;
+    r4300->recomp.local_rs = 0;
 
     r4300->branch_taken = 0;
 

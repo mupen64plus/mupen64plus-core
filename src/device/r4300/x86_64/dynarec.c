@@ -2626,16 +2626,16 @@ void genjr(struct r4300_core* r4300)
     free_registers_move_start(r4300);
 
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.i.rs);
-    mov_m32rel_xreg32((unsigned int *)&r4300->local_rs, EAX);
+    mov_m32rel_xreg32((unsigned int *)&r4300->recomp.local_rs, EAX);
 
     gendelayslot(r4300);
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->local_rs);
+    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->recomp.local_rs);
     mov_m32rel_xreg32((unsigned int *)&r4300->cp0.last_addr, EAX);
 
     gencheck_interrupt_reg(r4300);
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->local_rs);
+    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->recomp.local_rs);
     mov_reg32_reg32(EBX, EAX);
     and_eax_imm32(0xFFFFF000);
     cmp_eax_imm32(r4300->recomp.dst_block->start & 0xFFFFF000);
@@ -2694,7 +2694,7 @@ void genjalr(struct r4300_core* r4300)
     free_registers_move_start(r4300);
 
     mov_xreg32_m32rel(EAX, (unsigned int *)r4300->recomp.dst->f.r.rs);
-    mov_m32rel_xreg32((unsigned int *)&r4300->local_rs, EAX);
+    mov_m32rel_xreg32((unsigned int *)&r4300->recomp.local_rs, EAX);
 
     gendelayslot(r4300);
 
@@ -2706,12 +2706,12 @@ void genjalr(struct r4300_core* r4300)
         mov_m32rel_imm32(((unsigned int *)(r4300->recomp.dst-1)->f.r.rd)+1, 0);
     }
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->local_rs);
+    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->recomp.local_rs);
     mov_m32rel_xreg32((unsigned int *)&r4300->cp0.last_addr, EAX);
 
     gencheck_interrupt_reg(r4300);
 
-    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->local_rs);
+    mov_xreg32_m32rel(EAX, (unsigned int *)&r4300->recomp.local_rs);
     mov_reg32_reg32(EBX, EAX);
     and_eax_imm32(0xFFFFF000);
     cmp_eax_imm32(r4300->recomp.dst_block->start & 0xFFFFF000);

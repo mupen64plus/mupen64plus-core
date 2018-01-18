@@ -71,7 +71,6 @@ struct r4300_core
     struct precomp_instr* pc;
 
     unsigned int delay_slot;
-    long long int local_rs;
     uint32_t skip_jump;
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -146,6 +145,8 @@ struct r4300_core
         int delay_slot_compiled;
 
         uint32_t jump_to_address;
+
+        int64_t local_rs;
 
 #if defined(__x86_64__)
         unsigned long long shift;
