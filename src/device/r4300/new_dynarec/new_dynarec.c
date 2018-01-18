@@ -7589,7 +7589,6 @@ void new_dynarec_init(void)
 #endif
   out=(u_char *)base_addr;
 
-  g_dev.r4300.rdword=&g_dev.r4300.new_dynarec_hot_state.rdword;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rs = &g_dev.r4300.new_dynarec_hot_state.rs;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rt = &g_dev.r4300.new_dynarec_hot_state.rt;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rd = &g_dev.r4300.new_dynarec_hot_state.rd;
@@ -11115,7 +11114,7 @@ void read_byte_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = bshift(*r4300_address(r4300));
   if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
-    *r4300->rdword = (uint64_t)((value >> shift) & 0xff);
+    r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xff);
   }
   r4300->delay_slot = 0;
 }
@@ -11130,7 +11129,7 @@ void read_hword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = hshift(*r4300_address(r4300));
   if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
-    *r4300->rdword = (uint64_t)((value >> shift) & 0xffff);
+    r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xffff);
   }
   r4300->delay_slot = 0;
 }
@@ -11144,7 +11143,7 @@ void read_word_new(int pcaddr, int count, int diff)
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   if (r4300_read_aligned_word(r4300, *r4300_address(r4300), &value)) {
-    *r4300->rdword = (uint64_t)(value);
+    r4300->new_dynarec_hot_state.rdword = (uint64_t)(value);
   }
   r4300->delay_slot = 0;
 }
@@ -11156,7 +11155,7 @@ void read_dword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
-  r4300_read_aligned_dword(r4300, *r4300_address(r4300), (uint64_t*)r4300->rdword);
+  r4300_read_aligned_dword(r4300, *r4300_address(r4300), (uint64_t*)&r4300->new_dynarec_hot_state.rdword);
   r4300->delay_slot = 0;
 }
 

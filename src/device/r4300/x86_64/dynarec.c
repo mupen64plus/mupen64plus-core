@@ -421,7 +421,7 @@ void genlb(struct r4300_core* r4300)
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     and_reg64_reg64(RAX, RAX);
@@ -494,7 +494,7 @@ void genlbu(struct r4300_core* r4300)
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     and_reg64_reg64(RAX, RAX);
@@ -567,7 +567,7 @@ void genlh(struct r4300_core* r4300)
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     and_reg64_reg64(RAX, RAX);
@@ -639,7 +639,7 @@ void genlhu(struct r4300_core* r4300)
     mov_m64rel_xreg64(&r4300->recomp.shift, base2);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     and_reg64_reg64(RAX, RAX);
@@ -716,7 +716,7 @@ void genlw(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr1, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr1);
     mov_xreg32_m32rel(gpr1, (unsigned int *)(r4300->recomp.dst->f.i.rt));
@@ -768,7 +768,7 @@ void genlwu(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), gpr1);
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), gpr2);
     mov_reg64_imm64(gpr1, (unsigned long long) r4300->recomp.dst->f.i.rt);
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), gpr1);
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), gpr1);
     mov_reg64_imm64(gpr2, (unsigned long long)dynarec_read_aligned_word);
     call_reg64(gpr2);
     mov_xreg32_m32rel(gpr1, (unsigned int *)r4300->recomp.dst->f.i.rt);
@@ -840,7 +840,7 @@ void genld(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_reg64_imm64(RAX, (unsigned long long) r4300->recomp.dst->f.i.rt); // 10
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), RAX); // 7
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), RAX); // 7
     mov_reg64_imm64(RBX, (unsigned long long)dynarec_read_aligned_dword); // 10
     call_reg64(RBX); // 2
     mov_xreg64_m64rel(RAX, (unsigned long long *)(r4300->recomp.dst->f.i.rt)); // 7
@@ -4313,7 +4313,7 @@ void genlwc1(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->recomp.dst->f.lf.ft])); // 7
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), RDX); // 7
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), RDX); // 7
     mov_reg64_imm64(RBX, (unsigned long long)dynarec_read_aligned_word); // 10
     call_reg64(RBX); // 2
     jmp_imm_short(28); // 2
@@ -4367,7 +4367,7 @@ void genldc1(struct r4300_core* r4300)
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX); // 7
     mov_m32rel_xreg32((unsigned int *)(r4300_address(r4300)), EBX); // 7
     mov_xreg64_m64rel(RDX, (unsigned long long *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->recomp.dst->f.lf.ft])); // 7
-    mov_m64rel_xreg64((unsigned long long *)(&r4300->rdword), RDX); // 7
+    mov_m64rel_xreg64((unsigned long long *)(&r4300->recomp.rdword), RDX); // 7
     mov_reg64_imm64(RBX, (unsigned long long)dynarec_read_aligned_dword); // 10
     call_reg64(RBX); // 2
     jmp_imm_short(39); // 2

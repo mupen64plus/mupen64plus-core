@@ -165,10 +165,11 @@ struct r4300_core
 #if defined(PROFILE_R4300)
         FILE* pfProfile;
 #endif
-    } recomp;
 
-    /* Memory accesses variables */
-    uint64_t* rdword;
+        /* Memory accesses variables */
+        uint64_t* rdword;
+
+    } recomp;
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
 /* ARM dynarec uses a different memory layout */
