@@ -162,17 +162,17 @@ void passe2(struct r4300_core* r4300, struct precomp_instr *dest, int start, int
 
 void jump_start_rel8(struct r4300_core* r4300)
 {
-    r4300->recomp.jump_start8 = r4300->recomp.code_length;
+    r4300->recomp.jump_start8 = r4300->cached_interp.code_length;
 }
 
 void jump_start_rel32(struct r4300_core* r4300)
 {
-    r4300->recomp.jump_start32 = r4300->recomp.code_length;
+    r4300->recomp.jump_start32 = r4300->cached_interp.code_length;
 }
 
 void jump_end_rel8(struct r4300_core* r4300)
 {
-    unsigned int jump_end = r4300->recomp.code_length;
+    unsigned int jump_end = r4300->cached_interp.code_length;
     int jump_vec = jump_end - r4300->recomp.jump_start8;
 
     if (jump_vec > 127 || jump_vec < -128)
@@ -181,17 +181,17 @@ void jump_end_rel8(struct r4300_core* r4300)
         OSAL_BREAKPOINT_INTERRUPT;
     }
 
-    r4300->recomp.code_length = r4300->recomp.jump_start8 - 1;
+    r4300->cached_interp.code_length = r4300->recomp.jump_start8 - 1;
     put8(jump_vec);
-    r4300->recomp.code_length = jump_end;
+    r4300->cached_interp.code_length = jump_end;
 }
 
 void jump_end_rel32(struct r4300_core* r4300)
 {
-    unsigned int jump_end = r4300->recomp.code_length;
+    unsigned int jump_end = r4300->cached_interp.code_length;
     int jump_vec = jump_end - r4300->recomp.jump_start32;
 
-    r4300->recomp.code_length = r4300->recomp.jump_start32 - 4;
+    r4300->cached_interp.code_length = r4300->recomp.jump_start32 - 4;
     put32(jump_vec);
-    r4300->recomp.code_length = jump_end;
+    r4300->cached_interp.code_length = jump_end;
 }

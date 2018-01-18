@@ -54,7 +54,9 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
     init_cp0(&r4300->cp0, count_per_op, new_dynarec_hot_state, interrupt_handlers);
     init_cp1(&r4300->cp1, new_dynarec_hot_state);
 
+#ifndef NEW_DYNAREC
     r4300->recomp.no_compiled_jump = no_compiled_jump;
+#endif
 
     r4300->mem = mem;
     r4300->mi = mi;
@@ -77,9 +79,12 @@ void poweron_r4300(struct r4300_core* r4300)
     //r4300->current_instruction_table;
     r4300->reset_hard_job = 0;
 
+    /* cached interp init */
+    r4300->cached_interp.delay_slot_compiled = 0;
+
     /* recomp init */
+#ifndef NEW_DYNAREC
     r4300->recomp.fast_memory = 1;
-    r4300->recomp.delay_slot_compiled = 0;
     r4300->recomp.local_rs = 0;
     r4300->recomp.dyna_interp = 0;
     r4300->recomp.jumps_table = NULL;
@@ -106,6 +111,7 @@ void poweron_r4300(struct r4300_core* r4300)
 #endif
 
     r4300->recomp.branch_taken = 0;
+#endif /* !NEW_DYNAREC */
 
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);

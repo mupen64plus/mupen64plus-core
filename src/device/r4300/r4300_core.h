@@ -49,6 +49,17 @@ struct cached_interp
     char invalid_code[0x100000];
     struct precomp_block* blocks[0x100000];
     struct precomp_block* actual;
+
+    int init_length;
+    struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
+    int code_length;                                /* current real recompiled code length */
+    struct precomp_block *dst_block;                /* the current block that we are recompiling */
+    uint32_t src;                                   /* the current recompiled instruction */
+    void (*recomp_func)(struct r4300_core* r4300);  /* pointer to the dynarec's generator
+                                                       function for the latest decoded opcode */
+    const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+    int check_nop;                                  /* next instruction is nop ? */
+    int delay_slot_compiled;
 };
 
 enum {
@@ -89,6 +100,7 @@ struct r4300_core
      * XXX: more work is needed to correctly encapsulate these */
     struct cached_interp cached_interp;
 
+#ifndef NEW_DYNAREC
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */
     struct recomp {
@@ -134,26 +146,12 @@ struct r4300_core
         int eax, ebx, ecx, edx, esp, ebp, esi, edi;
 #endif
 #endif
-
-        int init_length;
-        struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
-        int code_length;                                /* current real recompiled code length */
-        int max_code_length;                            /* current recompiled code's buffer length */
         unsigned char **inst_pointer;                   /* output buffer for recompiled code */
-        struct precomp_block *dst_block;                /* the current block that we are recompiling */
-        uint32_t src;                                   /* the current recompiled instruction */
+        int max_code_length;                            /* current recompiled code's buffer length */
         int fast_memory;
         int no_compiled_jump;                           /* use cached interpreter instead of recompiler for jumps */
-        void (*recomp_func)(struct r4300_core* r4300);  /* pointer to the dynarec's generator
-                                                           function for the latest decoded opcode */
-        const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
-        int check_nop;                                  /* next instruction is nop ? */
-        int delay_slot_compiled;
-
         uint32_t jump_to_address;
-
         int64_t local_rs;
-
         unsigned int dyna_interp;
 
 #if defined(__x86_64__)
@@ -175,7 +173,7 @@ struct r4300_core
             uint64_t wdword;
         };
     } recomp;
-
+#else
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
     /* FIXME: better put that near linkage_arm code
      * to help generate call beyond the +/-32MB range.
@@ -183,6 +181,7 @@ struct r4300_core
     ALIGN(4096, char extra_memory[33554432]);
 #endif
     struct new_dynarec_hot_state new_dynarec_hot_state;
+#endif /* NEW_DYNAREC */
 
     unsigned int emumode;
 

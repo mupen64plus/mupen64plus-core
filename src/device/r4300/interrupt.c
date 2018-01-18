@@ -466,7 +466,9 @@ void nmi_int_handler(void* opaque)
         cp0_regs[CP0_ERROREPC_REG]-=4;
     }
     r4300->delay_slot = 0;
+#ifndef NEW_DYNAREC
     r4300->recomp.dyna_interp = 0;
+#endif
     // set next instruction address to reset vector
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     generic_jump_to(r4300, UINT32_C(0xa4000040));

@@ -89,6 +89,7 @@ DEFINE(r4300_core, lo);
 DEFINE(r4300_core, stop);
 #endif
 
+#if !defined(NEW_DYNAREC)
 DEFINE(r4300_core, recomp);
 
 #if defined(__x86_64__)
@@ -103,6 +104,7 @@ DEFINE(recomp, save_edi);
 DEFINE(recomp, save_eip);
 #endif
 DEFINE(recomp, return_address);
+#endif /* !NEW_DYNAREC */
 
 DEFINE(r4300_core, cp0);
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
