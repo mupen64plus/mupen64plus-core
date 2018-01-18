@@ -19,23 +19,34 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef CHEAT_H
-#define CHEAT_H
+#ifndef M64P_MAIN_CHEAT_H
+#define M64P_MAIN_CHEAT_H
 
 #include "api/m64p_types.h"
+
+#include "list.h"
+
+#include <stdint.h>
 
 #define ENTRY_BOOT 0
 #define ENTRY_VI 1
 
-void cheat_apply_cheats(int entry);
+struct SDL_mutex;
+struct r4300_core;
 
-void cheat_init(void);
-void cheat_uninit(void);
-int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes);
-int cheat_set_enabled(const char *name, int enabled);
-void cheat_delete_all(void);
-int cheat_add_hacks(void);
+struct cheat_ctx
+{
+    struct SDL_mutex* mutex;
+    struct list_head active_cheats;
+};
 
-#endif // #define CHEAT_H
+void cheat_apply_cheats(struct cheat_ctx* ctx, struct r4300_core* r4300, int entry);
 
+void cheat_init(struct cheat_ctx* ctx);
+void cheat_uninit(struct cheat_ctx* ctx);
+int cheat_add_new(struct cheat_ctx* ctx, const char* name, m64p_cheat_code* code_list, int num_codes);
+int cheat_set_enabled(struct cheat_ctx* ctx, const char* name, int enabled);
+void cheat_delete_all(struct cheat_ctx* ctx);
+int cheat_add_hacks(struct cheat_ctx* ctx, const char* rom_cheats);
 
+#endif

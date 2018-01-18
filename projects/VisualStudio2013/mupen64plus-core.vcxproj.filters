@@ -593,9 +593,6 @@
     <ClInclude Include="..\..\src\debugger\dbg_memory.h">
       <Filter>debugger</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\debugger\dbg_types.h">
-      <Filter>debugger</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\recomp_types.h">
       <Filter>device\r4300</Filter>
     </ClInclude>

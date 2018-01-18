@@ -26,15 +26,15 @@ struct precomp_instr;
 
 /* From assemble.c */
 
-void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)
+void init_assembler(struct r4300_core* r4300, void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)
 {
 }
 
-void free_assembler(void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number)
+void free_assembler(struct r4300_core* r4300, void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number)
 {
 }
 
-void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block *block)
+void passe2(struct r4300_core* r4300, struct precomp_instr *dest, int start, int end, struct precomp_block *block)
 {
 }
 

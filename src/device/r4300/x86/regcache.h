@@ -22,28 +22,29 @@
 #ifndef M64P_DEVICE_R4300_X86_REGCACHE_H
 #define M64P_DEVICE_R4300_X86_REGCACHE_H
 
+struct r4300_core;
 struct precomp_instr;
 struct precomp_block;
 
-void init_cache(struct precomp_instr* start);
-void free_all_registers(void);
-void free_register(int reg);
-int allocate_register(unsigned int *addr);
-int allocate_64_register1(unsigned int *addr);
-int allocate_64_register2(unsigned int *addr);
-int is64(unsigned int *addr);
-void build_wrappers(struct precomp_instr*, int, int, struct precomp_block*);
-int lru_register(void);
-int allocate_register_w(unsigned int *addr);
-int allocate_64_register1_w(unsigned int *addr);
-int allocate_64_register2_w(unsigned int *addr);
-void set_register_state(int reg, unsigned int *addr, int dirty);
-void set_64_register_state(int reg1, int reg2, unsigned int *addr, int dirty);
-void allocate_register_manually(int reg, unsigned int *addr);
-void allocate_register_manually_w(int reg, unsigned int *addr, int load);
-void force_32(int reg);
-int lru_register_exc1(int exc1);
-void simplify_access(void);
+void init_cache(struct r4300_core* r4300, struct precomp_instr* start);
+void free_all_registers(struct r4300_core* r4300);
+void free_register(struct r4300_core* r4300, int reg);
+int allocate_register(struct r4300_core* r4300, unsigned int *addr);
+int allocate_64_register1(struct r4300_core* r4300, unsigned int *addr);
+int allocate_64_register2(struct r4300_core* r4300, unsigned int *addr);
+int is64(struct r4300_core* r4300, unsigned int *addr);
+void build_wrappers(struct r4300_core* r4300, struct precomp_instr*, int, int, struct precomp_block*);
+int lru_register(struct r4300_core* r4300);
+int allocate_register_w(struct r4300_core* r4300, unsigned int *addr);
+int allocate_64_register1_w(struct r4300_core* r4300, unsigned int *addr);
+int allocate_64_register2_w(struct r4300_core* r4300, unsigned int *addr);
+void set_register_state(struct r4300_core* r4300, int reg, unsigned int *addr, int dirty);
+void set_64_register_state(struct r4300_core* r4300, int reg1, int reg2, unsigned int *addr, int dirty);
+void allocate_register_manually(struct r4300_core* r4300, int reg, unsigned int *addr);
+void allocate_register_manually_w(struct r4300_core* r4300, int reg, unsigned int *addr, int load);
+void force_32(struct r4300_core* r4300, int reg);
+int lru_register_exc1(struct r4300_core* r4300, int exc1);
+void simplify_access(struct r4300_core* r4300);
 
 #endif /* M64P_DEVICE_R4300_X86_REGCACHE_H */
 

@@ -2213,8 +2213,8 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
             free(block->riprel_table);
             block->riprel_table = NULL;
         }
-        init_assembler(NULL, 0, NULL, 0);
-        init_cache(block->block);
+        init_assembler(r4300, NULL, 0, NULL, 0);
+        init_cache(r4300, block->block);
     }
 
     if (!already_exist)
@@ -2264,12 +2264,12 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        free_all_registers();
+        free_all_registers(r4300);
         /* calling pass2 of the assembler is not necessary here because all of the code emitted by
            gennotcompiled() and gendebug() is position-independent and contains no jumps . */
         block->code_length = r4300->recomp.code_length;
         block->max_code_length = r4300->recomp.max_code_length;
-        free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
+        free_assembler(r4300, &block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
     }
 
     /* here we're marking the block as a valid code even if it's not compiled
@@ -2368,8 +2368,8 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         r4300->recomp.code_length = block->code_length;
         r4300->recomp.max_code_length = block->max_code_length;
         r4300->recomp.inst_pointer = &block->code;
-        init_assembler(block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
-        init_cache(block->block + (func & 0xFFF) / 4);
+        init_assembler(r4300, block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
+        init_cache(r4300, block->block + (func & 0xFFF) / 4);
     }
 
 #if defined(PROFILE_R4300)
@@ -2420,7 +2420,7 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         if (r4300->recomp.delay_slot_compiled)
         {
             r4300->recomp.delay_slot_compiled--;
-            free_all_registers();
+            free_all_registers(r4300);
         }
 
         if (i >= length-2+(length>>2)) { finished = 2; }
@@ -2479,11 +2479,11 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
 
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        free_all_registers();
-        passe2(block->block, (func&0xFFF)/4, i, block);
+        free_all_registers(r4300);
+        passe2(r4300, block->block, (func&0xFFF)/4, i, block);
         block->code_length = r4300->recomp.code_length;
         block->max_code_length = r4300->recomp.max_code_length;
-        free_assembler(&block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
+        free_assembler(r4300, &block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
     }
 #ifdef DBG
     DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);

@@ -43,7 +43,7 @@ unsigned int get_event(const struct interrupt_queue* q, int type);
 int get_next_event_type(const struct interrupt_queue* q);
 unsigned int add_random_interrupt_time(struct r4300_core* r4300);
 
-int save_eventqueue_infos(struct cp0* cp0, char *buf);
+int save_eventqueue_infos(const struct cp0* cp0, char *buf);
 void load_eventqueue_infos(struct cp0* cp0, const char *buf);
 
 void reset_hard_handler(void* opaque);

@@ -61,6 +61,7 @@
 #include "device/pif/bootrom_hle.h"
 #include "eventloop.h"
 #include "main.h"
+#include "cheat.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
@@ -75,7 +76,6 @@
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
-#include "debugger/dbg_types.h"
 #endif
 
 #ifdef WITH_LIRC
@@ -95,6 +95,8 @@ int         g_EmulatorRunning = 0;      // need separate boolean to tell if emul
 
 
 int g_rom_pause;
+
+struct cheat_ctx g_cheat_ctx;
 
 /* g_mem_base is global to allow plugins early access (before device is initialized).
  * Do not use this variable directly in emulation code.
@@ -824,17 +826,19 @@ static void apply_speed_limiter(void)
 }
 
 /* TODO: make a GameShark module and move that there */
-static void gs_apply_cheats(void)
+static void gs_apply_cheats(struct cheat_ctx* ctx)
 {
-    if(g_gs_vi_counter < 60)
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    if (g_gs_vi_counter < 60)
     {
         if (g_gs_vi_counter == 0)
-            cheat_apply_cheats(ENTRY_BOOT);
+            cheat_apply_cheats(ctx, r4300, ENTRY_BOOT);
         g_gs_vi_counter++;
     }
     else
     {
-        cheat_apply_cheats(ENTRY_VI);
+        cheat_apply_cheats(ctx, r4300, ENTRY_VI);
     }
 }
 
@@ -860,7 +864,7 @@ void new_vi(void)
     timed_sections_refresh();
 #endif
 
-    gs_apply_cheats();
+    gs_apply_cheats(&g_cheat_ctx);
 
     apply_speed_limiter();
     main_check_inputs();
@@ -1145,12 +1149,11 @@ m64p_error main_run(void)
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
 
-
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
         si_dma_duration = ROM_PARAMS.sidmaduration;
 
-    cheat_add_hacks();
+    cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
     /* do byte-swapping if it's not been done yet */
     if (g_MemHasBeenBSwapped == 0)

@@ -58,32 +58,38 @@
 #define DH 6
 #define BH 7
 
-void jump_start_rel8(void);
-void jump_end_rel8(void);
-void jump_start_rel32(void);
-void jump_end_rel32(void);
-void add_jump(unsigned int pc_addr, unsigned int mi_addr);
+struct r4300_core;
+
+void jump_start_rel8(struct r4300_core* r4300);
+void jump_end_rel8(struct r4300_core* r4300);
+void jump_start_rel32(struct r4300_core* r4300);
+void jump_end_rel32(struct r4300_core* r4300);
+void add_jump(struct r4300_core* r4300, unsigned int pc_addr, unsigned int mi_addr);
 
 static osal_inline void put8(unsigned char octet)
 {
-    (*g_dev.r4300.recomp.inst_pointer)[g_dev.r4300.recomp.code_length] = octet;
-    g_dev.r4300.recomp.code_length++;
-    if (g_dev.r4300.recomp.code_length == g_dev.r4300.recomp.max_code_length)
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    (*r4300->recomp.inst_pointer)[r4300->recomp.code_length] = octet;
+    r4300->recomp.code_length++;
+    if (r4300->recomp.code_length == r4300->recomp.max_code_length)
     {
-        *g_dev.r4300.recomp.inst_pointer = (unsigned char *) realloc_exec(*g_dev.r4300.recomp.inst_pointer, g_dev.r4300.recomp.max_code_length, g_dev.r4300.recomp.max_code_length+8192);
-        g_dev.r4300.recomp.max_code_length += 8192;
+        *r4300->recomp.inst_pointer = (unsigned char *) realloc_exec(*r4300->recomp.inst_pointer, r4300->recomp.max_code_length, r4300->recomp.max_code_length+8192);
+        r4300->recomp.max_code_length += 8192;
     }
 }
 
 static osal_inline void put32(unsigned int dword)
 {
-    if ((g_dev.r4300.recomp.code_length+4) >= g_dev.r4300.recomp.max_code_length)
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    if ((r4300->recomp.code_length+4) >= r4300->recomp.max_code_length)
     {
-        *g_dev.r4300.recomp.inst_pointer = (unsigned char *) realloc_exec(*g_dev.r4300.recomp.inst_pointer, g_dev.r4300.recomp.max_code_length, g_dev.r4300.recomp.max_code_length+8192);
-        g_dev.r4300.recomp.max_code_length += 8192;
+        *r4300->recomp.inst_pointer = (unsigned char *) realloc_exec(*r4300->recomp.inst_pointer, r4300->recomp.max_code_length, r4300->recomp.max_code_length+8192);
+        r4300->recomp.max_code_length += 8192;
     }
-    *((unsigned int *)(&(*g_dev.r4300.recomp.inst_pointer)[g_dev.r4300.recomp.code_length])) = dword;
-    g_dev.r4300.recomp.code_length+=4;
+    *((unsigned int *)(&(*r4300->recomp.inst_pointer)[r4300->recomp.code_length])) = dword;
+    r4300->recomp.code_length+=4;
 }
 
 static osal_inline void mov_eax_memoffs32(unsigned int *memoffs32)
@@ -375,9 +381,11 @@ static osal_inline void mov_m32_imm32(unsigned int *m32, unsigned int imm32)
 
 static osal_inline void jmp(unsigned int mi_addr)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     put8(0xE9);
     put32(0);
-    add_jump(g_dev.r4300.recomp.code_length-4, mi_addr);
+    add_jump(r4300, r4300->recomp.code_length-4, mi_addr);
 }
 
 static osal_inline void cdq(void)

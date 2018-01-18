@@ -20,31 +20,30 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// gameshark and xploder64 reference: http://doc.kodewerx.net/hacking_n64.html 
+/* gameshark and xploder64 reference: http://doc.kodewerx.net/hacking_n64.html */
 
 #include <SDL.h>
 #include <SDL_thread.h>
+
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "api/callbacks.h"
-#include "api/config.h"
-#include "api/m64p_types.h"
-#include "device/memory/memory.h"
-#include "device/r4300/r4300_core.h"
 #include "cheat.h"
 #include "eventloop.h"
 #include "list.h"
-#include "main.h"
+
+#include "api/callbacks.h"
+#include "api/m64p_types.h"
+#include "device/r4300/r4300_core.h"
+#include "device/rdram/rdram.h"
 #include "osal/preproc.h"
-#include "rom.h"
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-
-// local definitions
+/* local definitions */
 #define CHEAT_CODE_MAGIC_VALUE UINT32_C(0xDEAD0000)
 
 typedef struct cheat_code {
@@ -62,102 +61,102 @@ typedef struct cheat {
     struct list_head list;
 } cheat_t;
 
-// local variables
-static LIST_HEAD(active_cheats);
-static SDL_mutex *cheat_mutex = NULL;
-
-// private functions
-static uint16_t read_address_16bit(uint32_t address)
+/* private functions */
+static uint16_t read_address_16bit(struct r4300_core* r4300, uint32_t address)
 {
-    return *(uint16_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16)));
+    return *(uint16_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16)));
 }
 
-static uint8_t read_address_8bit(uint32_t address)
+static uint8_t read_address_8bit(struct r4300_core* r4300, uint32_t address)
 {
-    return *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8)));
+    return *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8)));
 }
 
-static void update_address_16bit(uint32_t address, uint16_t new_value)
+static void update_address_16bit(struct r4300_core* r4300, uint32_t address, uint16_t new_value)
 {
-    *(uint16_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16))) = new_value;
-    address &= 0xfeffffff;  // mask out bit 24 which is used by GS codes to specify 8/16 bits
-    invalidate_r4300_cached_code(&g_dev.r4300, address, 2);
+    *(uint16_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16))) = new_value;
+    /* mask out bit 24 which is used by GS codes to specify 8/16 bits */
+    address &= 0xfeffffff;
+    invalidate_r4300_cached_code(r4300, address, 2);
 }
 
-static void update_address_8bit(uint32_t address, uint8_t new_value)
+static void update_address_8bit(struct r4300_core* r4300, uint32_t address, uint8_t new_value)
 {
-    *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8))) = new_value;
-    invalidate_r4300_cached_code(&g_dev.r4300, address, 1);
+    *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8))) = new_value;
+    invalidate_r4300_cached_code(r4300, address, 1);
 }
 
-static int address_equal_to_8bit(uint32_t address, uint8_t value)
+static int address_equal_to_8bit(struct r4300_core* r4300, uint32_t address, uint8_t value)
 {
     uint8_t value_read;
-    value_read = *(uint8_t*)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S8)));
+    value_read = *(uint8_t*)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S8)));
     return value_read == value;
 }
 
-static int address_equal_to_16bit(uint32_t address, uint16_t value)
+static int address_equal_to_16bit(struct r4300_core* r4300, uint32_t address, uint16_t value)
 {
     uint16_t value_read;
-    value_read = *(unsigned short *)(((unsigned char*)g_dev.rdram.dram + ((address & 0xFFFFFF)^S16)));
+    value_read = *(unsigned short *)(((unsigned char*)r4300->rdram->dram + ((address & 0xFFFFFF)^S16)));
     return value_read == value;
 }
 
-// individual application - returns 0 if we are supposed to skip the next cheat
-// (only really used on conditional codes)
-static int execute_cheat(uint32_t address, uint32_t value, uint32_t* old_value)
+/* individual application - returns 0 if we are supposed to skip the next cheat
+ * (only really used on conditional codes)
+ */
+static int execute_cheat(struct r4300_core* r4300, uint32_t address, uint32_t value, uint32_t* old_value)
 {
     switch (address & 0xFF000000)
     {
-        case 0x80000000:
-        case 0x88000000:
-        case 0xA0000000:
-        case 0xA8000000:
-        case 0xF0000000:
-            // if pointer to old value is valid and uninitialized, write current value to it
-            if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE))
-                *old_value = read_address_8bit(address);
-            update_address_8bit(address, (uint8_t)value);
-            return 1;
-        case 0x81000000:
-        case 0x89000000:
-        case 0xA1000000:
-        case 0xA9000000:
-        case 0xF1000000:
-            // if pointer to old value is valid and uninitialized, write current value to it
-            if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE))
-                *old_value = read_address_16bit(address);
-            update_address_16bit(address, (uint16_t)value);
-            return 1;
-        case 0xD0000000:
-        case 0xD8000000:
-            return address_equal_to_8bit(address, (uint8_t)value);
-        case 0xD1000000:
-        case 0xD9000000:
-            return address_equal_to_16bit(address, (uint16_t)value);
-        case 0xD2000000:
-        case 0xDB000000:
-            return !(address_equal_to_8bit(address, (uint8_t)value));
-        case 0xD3000000:
-        case 0xDA000000:
-            return !(address_equal_to_16bit(address, (uint16_t)value));
-        case 0xEE000000:
-            // most likely, this doesnt do anything.
-            execute_cheat(0xF1000318, 0x0040, NULL);
-            execute_cheat(0xF100031A, 0x0000, NULL);
-            return 1;
-        default:
-            return 1;
+    case 0x80000000:
+    case 0x88000000:
+    case 0xA0000000:
+    case 0xA8000000:
+    case 0xF0000000:
+        /* if pointer to old value is valid and uninitialized, write current value to it */
+        if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE)) {
+            *old_value = read_address_8bit(r4300, address);
+        }
+        update_address_8bit(r4300, address, (uint8_t)value);
+        return 1;
+    case 0x81000000:
+    case 0x89000000:
+    case 0xA1000000:
+    case 0xA9000000:
+    case 0xF1000000:
+        /* if pointer to old value is valid and uninitialized, write current value to it */
+        if (old_value && (*old_value == CHEAT_CODE_MAGIC_VALUE)) {
+            *old_value = read_address_16bit(r4300, address);
+        }
+        update_address_16bit(r4300, address, (uint16_t)value);
+        return 1;
+    case 0xD0000000:
+    case 0xD8000000:
+        return address_equal_to_8bit(r4300, address, (uint8_t)value);
+    case 0xD1000000:
+    case 0xD9000000:
+        return address_equal_to_16bit(r4300, address, (uint16_t)value);
+    case 0xD2000000:
+    case 0xDB000000:
+        return !(address_equal_to_8bit(r4300, address, (uint8_t)value));
+    case 0xD3000000:
+    case 0xDA000000:
+        return !(address_equal_to_16bit(r4300, address, (uint16_t)value));
+    case 0xEE000000:
+        /* most likely, this doesnt do anything. */
+        execute_cheat(r4300, 0xF1000318, 0x0040, NULL);
+        execute_cheat(r4300, 0xF100031A, 0x0000, NULL);
+        return 1;
+    default:
+        return 1;
     }
 }
 
-static cheat_t *find_or_create_cheat(const char *name)
+static cheat_t *find_or_create_cheat(struct cheat_ctx* ctx, const char *name)
 {
     cheat_t *cheat;
     int found = 0;
 
-    list_for_each_entry_t(cheat, &active_cheats, cheat_t, list) {
+    list_for_each_entry_t(cheat, &ctx->active_cheats, cheat_t, list) {
         if (strcmp(cheat->name, name) == 0) {
             found = 1;
             break;
@@ -170,8 +169,8 @@ static cheat_t *find_or_create_cheat(const char *name)
         cheat_code_t *code, *safe;
 
         list_for_each_entry_safe_t(code, safe, &cheat->cheat_codes, cheat_code_t, list) {
-             list_del(&code->list);
-             free(code);
+            list_del(&code->list);
+            free(code);
         }
 
         cheat->enabled = 0;
@@ -184,148 +183,155 @@ static cheat_t *find_or_create_cheat(const char *name)
         cheat->enabled = 0;
         cheat->was_enabled = 0;
         INIT_LIST_HEAD(&cheat->cheat_codes);
-        list_add_tail(&cheat->list, &active_cheats);
+        list_add_tail(&cheat->list, &ctx->active_cheats);
     }
 
     return cheat;
 }
 
 
-// public functions
-void cheat_init(void)
+/* public functions */
+void cheat_init(struct cheat_ctx* ctx)
 {
-    cheat_mutex = SDL_CreateMutex();
+    ctx->mutex = SDL_CreateMutex();
+    INIT_LIST_HEAD(&ctx->active_cheats);
 }
 
-void cheat_uninit(void)
+void cheat_uninit(struct cheat_ctx* ctx)
 {
-    if (cheat_mutex != NULL)
-        SDL_DestroyMutex(cheat_mutex);
-    cheat_mutex = NULL;
+    if (ctx->mutex != NULL) {
+        SDL_DestroyMutex(ctx->mutex);
+    }
+    ctx->mutex = NULL;
 }
 
-void cheat_apply_cheats(int entry)
+void cheat_apply_cheats(struct cheat_ctx* ctx, struct r4300_core* r4300, int entry)
 {
     cheat_t *cheat;
     cheat_code_t *code;
     int cond_failed;
 
-    if (list_empty(&active_cheats))
+    if (list_empty(&ctx->active_cheats))
         return;
 
-    if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
+    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_apply_cheats()");
         return;
     }
 
-    list_for_each_entry_t(cheat, &active_cheats, cheat_t, list) {
+    list_for_each_entry_t(cheat, &ctx->active_cheats, cheat_t, list) {
         if (cheat->enabled)
         {
             cheat->was_enabled = 1;
             switch(entry)
             {
-                case ENTRY_BOOT:
-                    list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
-                        // code should only be written once at boot time
-                        if((code->address & 0xF0000000) == 0xF0000000)
-                            execute_cheat(code->address, code->value, &code->old_value);
+            case ENTRY_BOOT:
+                list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
+                    /* code should only be written once at boot time */
+                    if ((code->address & 0xF0000000) == 0xF0000000) {
+                        execute_cheat(r4300, code->address, code->value, &code->old_value);
                     }
-                    break;
-                case ENTRY_VI:
-                    /* a cheat starts without failed preconditions */
-                    cond_failed = 0;
+                }
+                break;
+            case ENTRY_VI:
+                /* a cheat starts without failed preconditions */
+                cond_failed = 0;
 
-                    list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
-                        /* conditional cheat codes */
-                        if((code->address & 0xF0000000) == 0xD0000000)
-                        {
-                            /* if code needs GS button pressed and it's not, skip it */
-                            if(((code->address & 0xFF000000) == 0xD8000000 ||
-                                (code->address & 0xFF000000) == 0xD9000000 ||
-                                (code->address & 0xFF000000) == 0xDA000000 ||
-                                (code->address & 0xFF000000) == 0xDB000000) &&
-                               !event_gameshark_active())
-                                /* if condition false, skip next code non-test code */
-                                cond_failed = 1;
-
+                list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
+                    /* conditional cheat codes */
+                    if ((code->address & 0xF0000000) == 0xD0000000)
+                    {
+                        /* if code needs GS button pressed and it's not, skip it */
+                        if (((code->address & 0xFF000000) == 0xD8000000 ||
+                                    (code->address & 0xFF000000) == 0xD9000000 ||
+                                    (code->address & 0xFF000000) == 0xDA000000 ||
+                                    (code->address & 0xFF000000) == 0xDB000000) &&
+                                !event_gameshark_active()) {
                             /* if condition false, skip next code non-test code */
-                            if (!execute_cheat(code->address, code->value, NULL))
-                                cond_failed = 1;
+                            cond_failed = 1;
                         }
-                        else {
-                            /* preconditions were false for this non-test code
-                             * reset the condition state and skip the cheat
-                             */
-                            if (cond_failed) {
-                                cond_failed = 0;
-                                continue;
-                            }
 
-                            switch (code->address & 0xFF000000) {
-                            /* GS button triggers cheat code */
-                            case 0x88000000:
-                            case 0x89000000:
-                            case 0xA8000000:
-                            case 0xA9000000:
-                                if(event_gameshark_active())
-                                    execute_cheat(code->address, code->value, NULL);
-                                break;
-                            /* normal cheat code */
-                            default:
-                                /* exclude boot-time cheat codes */
-                                if((code->address & 0xF0000000) != 0xF0000000)
-                                    execute_cheat(code->address, code->value, &code->old_value);
-                                break;
-                            }
+                        /* if condition false, skip next code non-test code */
+                        if (!execute_cheat(r4300, code->address, code->value, NULL)) {
+                            cond_failed = 1;
                         }
                     }
-                    break;
-                default:
-                    break;
+                    else {
+                        /* preconditions were false for this non-test code
+                         * reset the condition state and skip the cheat
+                         */
+                        if (cond_failed) {
+                            cond_failed = 0;
+                            continue;
+                        }
+
+                        switch (code->address & 0xFF000000) {
+                        /* GS button triggers cheat code */
+                        case 0x88000000:
+                        case 0x89000000:
+                        case 0xA8000000:
+                        case 0xA9000000:
+                            if (event_gameshark_active()) {
+                                execute_cheat(r4300, code->address, code->value, NULL);
+                            }
+                            break;
+                            /* normal cheat code */
+                        default:
+                            /* exclude boot-time cheat codes */
+                            if ((code->address & 0xF0000000) != 0xF0000000) {
+                                execute_cheat(r4300, code->address, code->value, &code->old_value);
+                            }
+                            break;
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
             }
         }
-        // if cheat was enabled, but is now disabled, restore old memory values
+        /* if cheat was enabled, but is now disabled, restore old memory values */
         else if (cheat->was_enabled)
         {
             cheat->was_enabled = 0;
             switch(entry)
             {
-                case ENTRY_VI:
-                    list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
-                        // set memory back to old value and clear saved copy of old value
-                        if(code->old_value != CHEAT_CODE_MAGIC_VALUE)
-                        {
-                            execute_cheat(code->address, code->old_value, NULL);
-                            code->old_value = CHEAT_CODE_MAGIC_VALUE;
-                        }
+            case ENTRY_VI:
+                list_for_each_entry_t(code, &cheat->cheat_codes, cheat_code_t, list) {
+                    /* set memory back to old value and clear saved copy of old value */
+                    if(code->old_value != CHEAT_CODE_MAGIC_VALUE)
+                    {
+                        execute_cheat(r4300, code->address, code->old_value, NULL);
+                        code->old_value = CHEAT_CODE_MAGIC_VALUE;
                     }
-                    break;
-                default:
-                    break;
+                }
+                break;
+            default:
+                break;
             }
         }
     }
 
-    SDL_UnlockMutex(cheat_mutex);
+    SDL_UnlockMutex(ctx->mutex);
 }
 
 
-void cheat_delete_all(void)
+void cheat_delete_all(struct cheat_ctx* ctx)
 {
     cheat_t *cheat, *safe_cheat;
     cheat_code_t *code, *safe_code;
 
-    if (list_empty(&active_cheats))
+    if (list_empty(&ctx->active_cheats))
         return;
 
-    if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
+    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_delete_all()");
         return;
     }
 
-    list_for_each_entry_safe_t(cheat, safe_cheat, &active_cheats, cheat_t, list) {
+    list_for_each_entry_safe_t(cheat, safe_cheat, &ctx->active_cheats, cheat_t, list) {
         free(cheat->name);
 
         list_for_each_entry_safe_t(code, safe_code, &cheat->cheat_codes, cheat_code_t, list) {
@@ -336,55 +342,56 @@ void cheat_delete_all(void)
         free(cheat);
     }
 
-    SDL_UnlockMutex(cheat_mutex);
+    SDL_UnlockMutex(ctx->mutex);
 }
 
-int cheat_set_enabled(const char *name, int enabled)
+int cheat_set_enabled(struct cheat_ctx* ctx, const char* name, int enabled)
 {
     cheat_t *cheat = NULL;
 
-    if (list_empty(&active_cheats))
+    if (list_empty(&ctx->active_cheats))
         return 0;
 
-    if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
+    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_set_enabled()");
         return 0;
     }
 
-    list_for_each_entry_t(cheat, &active_cheats, cheat_t, list) {
+    list_for_each_entry_t(cheat, &ctx->active_cheats, cheat_t, list) {
         if (strcmp(name, cheat->name) == 0)
         {
             cheat->enabled = enabled;
-            SDL_UnlockMutex(cheat_mutex);
+            SDL_UnlockMutex(ctx->mutex);
             return 1;
         }
     }
 
-    SDL_UnlockMutex(cheat_mutex);
+    SDL_UnlockMutex(ctx->mutex);
     return 0;
 }
 
-int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
+int cheat_add_new(struct cheat_ctx* ctx, const char* name, m64p_cheat_code* code_list, int num_codes)
 {
     cheat_t *cheat;
     int i, j;
 
-    if (cheat_mutex == NULL || SDL_LockMutex(cheat_mutex) != 0)
+    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_add_new()");
         return 0;
     }
 
     /* create a new cheat function or erase the codes in an existing cheat function */
-    cheat = find_or_create_cheat(name);
+    cheat = find_or_create_cheat(ctx, name);
     if (cheat == NULL)
     {
-        SDL_UnlockMutex(cheat_mutex);
+        SDL_UnlockMutex(ctx->mutex);
         return 0;
     }
 
-    cheat->enabled = 1; /* default for new cheats is enabled */
+    /* default for new cheats is enabled */
+    cheat->enabled = 1;
 
     for (i = 0; i < num_codes; i++)
     {
@@ -409,7 +416,8 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
             }
         }
         else
-        { /* just a normal code */
+        {
+            /* just a normal code */
             cheat_code_t *code = malloc(sizeof(*code));
             code->address = code_list[i].address;
             code->value = code_list[i].value;
@@ -418,7 +426,7 @@ int cheat_add_new(const char *name, m64p_cheat_code *code_list, int num_codes)
         }
     }
 
-    SDL_UnlockMutex(cheat_mutex);
+    SDL_UnlockMutex(ctx->mutex);
     return 1;
 }
 
@@ -473,7 +481,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
         input = NULL;
 
         ret = sscanf(token, "%08" SCNx32 " %04X", &hackbuf[num_codes].address,
-                     (unsigned int*)&hackbuf[num_codes].value);
+                (unsigned int*)&hackbuf[num_codes].value);
         if (ret == 2)
             num_codes++;
     }
@@ -486,7 +494,7 @@ static int cheat_parse_hacks_code(char *code, m64p_cheat_code **hack)
     return num_codes;
 }
 
-int cheat_add_hacks(void)
+int cheat_add_hacks(struct cheat_ctx* ctx, const char* rom_cheats)
 {
     char *cheat_raw = NULL;
     char *saveptr = NULL;
@@ -496,11 +504,11 @@ int cheat_add_hacks(void)
     char cheatname[32];
     m64p_cheat_code *hack;
 
-    if (!ROM_PARAMS.cheats)
+    if (!rom_cheats)
         return 0;
 
     /* copy ini entry for tokenizing */
-    cheat_raw = strdup(ROM_PARAMS.cheats);
+    cheat_raw = strdup(rom_cheats);
     if (!cheat_raw)
         goto out;
 
@@ -517,7 +525,7 @@ int cheat_add_hacks(void)
         if (num_codes <= 0)
             continue;
 
-        cheat_add_new(cheatname, hack, num_codes);
+        cheat_add_new(ctx, cheatname, hack, num_codes);
         free(hack);
         i++;
     }

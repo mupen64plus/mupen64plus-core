@@ -23,26 +23,27 @@
 #ifndef M64P_DEVICE_R4300_X86_64_REGCACHE_H
 #define M64P_DEVICE_R4300_X86_64_REGCACHE_H
 
+struct r4300_core;
 struct precomp_instr;
 struct precomp_block;
 
-void init_cache(struct precomp_instr* start);
-void free_registers_move_start(void);
-void free_all_registers(void);
-void free_register(int reg);
-int is64(unsigned int *addr);
-int lru_register(void);
-int lru_base_register(void);
-void set_register_state(int reg, unsigned int *addr, int dirty, int is64bits);
-int lock_register(int reg);
-void unlock_register(int reg);
-int allocate_register_32(unsigned int *addr);
-int allocate_register_64(unsigned long long *addr);
-int allocate_register_32_w(unsigned int *addr);
-int allocate_register_64_w(unsigned long long *addr);
-void allocate_register_32_manually(int reg, unsigned int *addr);
-void allocate_register_32_manually_w(int reg, unsigned int *addr);
-void build_wrappers(struct precomp_instr*, int, int, struct precomp_block*);
+void init_cache(struct r4300_core* r4300, struct precomp_instr* start);
+void free_registers_move_start(struct r4300_core* r4300);
+void free_all_registers(struct r4300_core* r4300);
+void free_register(struct r4300_core* r4300, int reg);
+int is64(struct r4300_core* r4300, unsigned int *addr);
+int lru_register(struct r4300_core* r4300);
+int lru_base_register(struct r4300_core* r4300);
+void set_register_state(struct r4300_core* r4300, int reg, unsigned int *addr, int dirty, int is64bits);
+int lock_register(struct r4300_core* r4300, int reg);
+void unlock_register(struct r4300_core* r4300, int reg);
+int allocate_register_32(struct r4300_core* r4300, unsigned int *addr);
+int allocate_register_64(struct r4300_core* r4300, unsigned long long *addr);
+int allocate_register_32_w(struct r4300_core* r4300, unsigned int *addr);
+int allocate_register_64_w(struct r4300_core* r4300, unsigned long long *addr);
+void allocate_register_32_manually(struct r4300_core* r4300, int reg, unsigned int *addr);
+void allocate_register_32_manually_w(struct r4300_core* r4300, int reg, unsigned int *addr);
+void build_wrappers(struct r4300_core* r4300, struct precomp_instr*, int, int, struct precomp_block*);
 
 #endif /* M64P_DEVICE_R4300_X86_64_REGCACHE_H */
 

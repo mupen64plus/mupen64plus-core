@@ -39,7 +39,6 @@
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
-#include "debugger/dbg_types.h"
 #endif
 
 // -----------------------------------------------------------

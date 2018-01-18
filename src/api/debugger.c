@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,11 +18,11 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the Core debugger functions which will be exported
  * outside of the core library.
  */
-   
+
 #include <stdlib.h>
 
 #define M64P_CORE_PROTOTYPES 1
@@ -32,7 +32,6 @@
 #include "debugger/dbg_debugger.h"
 #include "debugger/dbg_decoder.h"
 #include "debugger/dbg_memory.h"
-#include "debugger/dbg_types.h"
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
@@ -164,14 +163,16 @@ EXPORT void CALL DebugDecodeOp(unsigned int instruction, char *op, char *args, i
 EXPORT void * CALL DebugMemGetRecompInfo(m64p_dbg_mem_info recomp_type, unsigned int address, int index)
 {
 #ifdef DBG
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     switch (recomp_type)
     {
         case M64P_DBG_RECOMP_OPCODE:
-            return get_recompiled_opcode(address, index);
+            return get_recompiled_opcode(r4300, address, index);
         case M64P_DBG_RECOMP_ARGS:
-            return get_recompiled_args(address, index);
+            return get_recompiled_args(r4300, address, index);
         case M64P_DBG_RECOMP_ADDR:
-            return get_recompiled_addr(address, index);
+            return get_recompiled_addr(r4300, address, index);
         default:
             DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetRecompInfo() called with invalid m64p_dbg_mem_info");
             return NULL;
@@ -185,16 +186,19 @@ EXPORT void * CALL DebugMemGetRecompInfo(m64p_dbg_mem_info recomp_type, unsigned
 EXPORT int CALL DebugMemGetMemInfo(m64p_dbg_mem_info mem_info_type, unsigned int address)
 {
 #ifdef DBG
+    struct device* dev = &g_dev;
+    struct r4300_core* r4300 = &dev->r4300;
+
     switch (mem_info_type)
     {
         case M64P_DBG_MEM_TYPE:
-            return get_memory_type(&g_dev.mem, address);
+            return get_memory_type(&dev->mem, address);
         case M64P_DBG_MEM_FLAGS:
-            return get_memory_flags(address);
+            return get_memory_flags(dev, address);
         case M64P_DBG_MEM_HAS_RECOMPILED:
-            return get_has_recompiled(address);
+            return get_has_recompiled(r4300, address);
         case M64P_DBG_MEM_NUM_RECOMPILED:
-            return get_num_recompiled(address);
+            return get_num_recompiled(r4300, address);
         default:
             DebugMessage(M64MSG_ERROR, "Bug: DebugMemGetMemInfo() called with invalid m64p_dbg_mem_info");
             return 0;
@@ -230,10 +234,12 @@ EXPORT void * CALL DebugMemGetPointer(m64p_dbg_memptr_type mem_ptr_type)
 EXPORT unsigned long long CALL DebugMemRead64(unsigned int address)
 {
 #ifdef DBG
+    struct device* dev = &g_dev;
+
     if ((address & 3) == 0)
-        return read_memory_64(address);
+        return read_memory_64(dev, address);
     else
-        return read_memory_64_unaligned(address);
+        return read_memory_64_unaligned(dev, address);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead64() called, but Debugger not supported in Core library");
     return 0LL;
@@ -243,10 +249,12 @@ EXPORT unsigned long long CALL DebugMemRead64(unsigned int address)
 EXPORT unsigned int CALL DebugMemRead32(unsigned int address)
 {
 #ifdef DBG
+    struct device* dev = &g_dev;
+
     if ((address & 3) == 0)
-        return read_memory_32(address);
+        return read_memory_32(dev, address);
     else
-        return read_memory_32_unaligned(address);
+        return read_memory_32_unaligned(dev, address);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead32() called, but Debugger not supported in Core library");
     return 0;
@@ -256,7 +264,9 @@ EXPORT unsigned int CALL DebugMemRead32(unsigned int address)
 EXPORT unsigned short CALL DebugMemRead16(unsigned int address)
 {
 #ifdef DBG
-    return read_memory_16(address);
+    struct device* dev = &g_dev;
+
+    return read_memory_16(dev, address);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead16() called, but Debugger not supported in Core library");
     return 0;
@@ -266,7 +276,9 @@ EXPORT unsigned short CALL DebugMemRead16(unsigned int address)
 EXPORT unsigned char CALL DebugMemRead8(unsigned int address)
 {
 #ifdef DBG
-    return read_memory_8(address);
+    struct device* dev = &g_dev;
+
+    return read_memory_8(dev, address);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemRead8() called, but Debugger not supported in Core library");
     return 0;
@@ -276,10 +288,12 @@ EXPORT unsigned char CALL DebugMemRead8(unsigned int address)
 EXPORT void CALL DebugMemWrite64(unsigned int address, unsigned long long value)
 {
 #ifdef DBG
+    struct device* dev = &g_dev;
+
     if ((address & 3) == 0)
-        write_memory_64(address, value);
+        write_memory_64(dev, address, value);
     else
-        write_memory_64_unaligned(address, value);
+        write_memory_64_unaligned(dev, address, value);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite64() called, but Debugger not supported in Core library");
 #endif
@@ -288,10 +302,12 @@ EXPORT void CALL DebugMemWrite64(unsigned int address, unsigned long long value)
 EXPORT void CALL DebugMemWrite32(unsigned int address, unsigned int value)
 {
 #ifdef DBG
+    struct device* dev = &g_dev;
+
     if ((address & 3) == 0)
-        write_memory_32(address, value);
+        write_memory_32(dev, address, value);
     else
-        write_memory_32_unaligned(address, value);
+        write_memory_32_unaligned(dev, address, value);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite32() called, but Debugger not supported in Core library");
 #endif
@@ -300,7 +316,9 @@ EXPORT void CALL DebugMemWrite32(unsigned int address, unsigned int value)
 EXPORT void CALL DebugMemWrite16(unsigned int address, unsigned short value)
 {
 #ifdef DBG
-    write_memory_16(address, value);
+    struct device* dev = &g_dev;
+
+    write_memory_16(dev, address, value);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite16() called, but Debugger not supported in Core library");
 #endif
@@ -309,7 +327,9 @@ EXPORT void CALL DebugMemWrite16(unsigned int address, unsigned short value)
 EXPORT void CALL DebugMemWrite8(unsigned int address, unsigned char value)
 {
 #ifdef DBG
-    write_memory_8(address, value);
+    struct device* dev = &g_dev;
+
+    write_memory_8(dev, address, value);
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugMemWrite8() called, but Debugger not supported in Core library");
 #endif
@@ -317,27 +337,30 @@ EXPORT void CALL DebugMemWrite8(unsigned int address, unsigned char value)
 
 EXPORT void * CALL DebugGetCPUDataPtr(m64p_dbg_cpu_data cpu_data_type)
 {
-    cp1_reg *cp1_regs = r4300_cp1_regs(&g_dev.r4300.cp1);
+    struct device* dev = &g_dev;
+    struct r4300_core* r4300 = &dev->r4300;
+
+    cp1_reg *cp1_regs = r4300_cp1_regs(&r4300->cp1);
     switch (cpu_data_type)
     {
         case M64P_CPU_PC:
-            return r4300_pc(&g_dev.r4300);
+            return r4300_pc(r4300);
         case M64P_CPU_REG_REG:
-            return r4300_regs(&g_dev.r4300);
+            return r4300_regs(r4300);
         case M64P_CPU_REG_HI:
-            return r4300_mult_hi(&g_dev.r4300);
+            return r4300_mult_hi(r4300);
         case M64P_CPU_REG_LO:
-            return r4300_mult_lo(&g_dev.r4300);
+            return r4300_mult_lo(r4300);
         case M64P_CPU_REG_COP0:
-            return r4300_cp0_regs(&g_dev.r4300.cp0);
+            return r4300_cp0_regs(&r4300->cp0);
         case M64P_CPU_REG_COP1_DOUBLE_PTR:
-            return r4300_cp1_regs_double(&g_dev.r4300.cp1);
+            return r4300_cp1_regs_double(&r4300->cp1);
         case M64P_CPU_REG_COP1_SIMPLE_PTR:
-            return r4300_cp1_regs_simple(&g_dev.r4300.cp1);
+            return r4300_cp1_regs_simple(&r4300->cp1);
         case M64P_CPU_REG_COP1_FGR_64:
             return &cp1_regs->dword;
         case M64P_CPU_TLB:
-            return g_dev.r4300.cp0.tlb.entries;
+            return r4300->cp0.tlb.entries;
         default:
             DebugMessage(M64MSG_ERROR, "Bug: DebugGetCPUDataPtr() called with invalid input m64p_dbg_cpu_data");
             return NULL;
@@ -357,26 +380,28 @@ EXPORT int CALL DebugBreakpointLookup(unsigned int address, unsigned int size, u
 EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned int index, m64p_breakpoint *bkp)
 {
 #ifdef DBG
+    struct memory* mem = &g_dev.mem;
+
     switch (command)
     {
         case M64P_BKP_CMD_ADD_ADDR:
-            return add_breakpoint(index);
+            return add_breakpoint(mem, index);
         case M64P_BKP_CMD_ADD_STRUCT:
-            return add_breakpoint_struct(bkp);
+            return add_breakpoint_struct(mem, bkp);
         case M64P_BKP_CMD_REPLACE:
-            replace_breakpoint_num(index, bkp);
+            replace_breakpoint_num(mem, index, bkp);
             return 0;
         case M64P_BKP_CMD_REMOVE_ADDR:
-            remove_breakpoint_by_address(index);
+            remove_breakpoint_by_address(mem, index);
             return 0;
         case M64P_BKP_CMD_REMOVE_IDX:
-            remove_breakpoint_by_num(index);
+            remove_breakpoint_by_num(mem, index);
             return 0;
         case M64P_BKP_CMD_ENABLE:
-            enable_breakpoint(index);
+            enable_breakpoint(mem, index);
             return 0;
         case M64P_BKP_CMD_DISABLE:
-            disable_breakpoint(index);
+            disable_breakpoint(mem, index);
             return 0;
         case M64P_BKP_CMD_CHECK:
             return check_breakpoints(index);

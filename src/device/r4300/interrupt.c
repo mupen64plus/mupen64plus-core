@@ -300,7 +300,7 @@ void translate_event_queue(struct cp0* cp0, unsigned int base)
     add_interrupt_event_count(cp0, SPECIAL_INT, 0);
 }
 
-int save_eventqueue_infos(struct cp0* cp0, char *buf)
+int save_eventqueue_infos(const struct cp0* cp0, char *buf)
 {
     int len;
     struct node* e;

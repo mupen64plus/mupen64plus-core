@@ -22,12 +22,13 @@
 #ifndef M64P_DEVICE_R4300_RECOMPH_H
 #define M64P_DEVICE_R4300_RECOMPH_H
 
+struct r4300_core;
 struct precomp_instr;
 struct precomp_block;
 
-void passe2(struct precomp_instr *dest, int start, int end, struct precomp_block* block);
-void init_assembler(void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number);
-void free_assembler(void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number);
+void passe2(struct r4300_core* r4300, struct precomp_instr *dest, int start, int end, struct precomp_block* block);
+void init_assembler(struct r4300_core* r4300, void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number);
+void free_assembler(struct r4300_core* r4300, void **block_jumps_table, int *block_jumps_number, void **block_riprel_table, int *block_riprel_number);
 
 void gencallinterp(struct r4300_core* r4300_core, uintptr_t addr, int jump);
 
