@@ -2701,7 +2701,7 @@ int dynarec_write_aligned_word(void)
         &g_dev.r4300,
         *r4300_address(&g_dev.r4300),
         *r4300_wword(&g_dev.r4300),
-        *r4300_wmask(&g_dev.r4300));
+        g_dev.r4300.recomp.wmask);
 }
 
 /* Parameterless version of read_aligned_dword to ease usage in dynarec. */

@@ -730,7 +730,7 @@ void gensb(struct r4300_core* r4300)
     mov_m32_reg32((unsigned int *)(r4300_wword(r4300)), EDX); // 6
     mov_reg32_imm32(EDX, 0xff); // 5
     shl_reg32_cl(EDX); // 2
-    mov_m32_reg32((unsigned int *)(r4300_wmask(r4300)), EDX); // 6
+    mov_m32_reg32((unsigned int *)(&r4300->recomp.wmask), EDX); // 6
     mov_reg32_imm32(EBX, (unsigned int)dynarec_write_aligned_word); // 5
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300_address(r4300))); // 5
@@ -811,7 +811,7 @@ void gensh(struct r4300_core* r4300)
     mov_m32_reg32((unsigned int *)(r4300_wword(r4300)), EDX); // 6
     mov_reg32_imm32(EDX, 0xffff); // 5
     shl_reg32_cl(EDX); // 2
-    mov_m32_reg32((unsigned int *)(r4300_wmask(r4300)), EDX); // 6
+    mov_m32_reg32((unsigned int *)(&r4300->recomp.wmask), EDX); // 6
     mov_reg32_imm32(EBX, (unsigned int)dynarec_write_aligned_word); // 5
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300_address(r4300))); // 5
@@ -883,7 +883,7 @@ void gensw(struct r4300_core* r4300)
     mov_m32_imm32((unsigned int *)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst+1)); // 10
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
     mov_m32_reg32((unsigned int *)(r4300_wword(r4300)), ECX); // 6
-    mov_m32_imm32((unsigned int *)(r4300_wmask(r4300)), ~UINT32_C(0)); // 10
+    mov_m32_imm32((unsigned int *)(&r4300->recomp.wmask), ~UINT32_C(0)); // 10
     mov_reg32_imm32(EBX, (unsigned int)dynarec_write_aligned_word); // 5
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300_address(r4300))); // 5
@@ -4202,7 +4202,7 @@ void genswc1(struct r4300_core* r4300)
     mov_m32_imm32((unsigned int *)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst+1)); // 10
     mov_m32_reg32((unsigned int *)(r4300_address(r4300)), EBX); // 6
     mov_m32_reg32((unsigned int *)(r4300_wword(r4300)), ECX); // 6
-    mov_m32_imm32((unsigned int *)(r4300_wmask(r4300)), ~UINT32_C(0)); // 10
+    mov_m32_imm32((unsigned int *)(&r4300->recomp.wmask), ~UINT32_C(0)); // 10
     mov_reg32_imm32(EBX, (unsigned int)dynarec_write_aligned_word); // 5
     call_reg32(EBX); // 2
     mov_eax_memoffs32((unsigned int *)(r4300_address(r4300))); // 5

@@ -11168,8 +11168,7 @@ void write_byte_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = bshift(*r4300_address(r4300));
   *r4300_wword(r4300) <<= shift;
-  *r4300_wmask(r4300) = UINT32_C(0xff) << shift;
-  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), UINT32_C(0xff) << shift);
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
@@ -11184,8 +11183,7 @@ void write_hword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pending_exception = 0;
   unsigned int shift = hshift(*r4300_address(r4300));
   *r4300_wword(r4300) <<= shift;
-  *r4300_wmask(r4300) = UINT32_C(0xffff) << shift;
-  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), UINT32_C(0xffff) << shift);
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
@@ -11198,8 +11196,7 @@ void write_word_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
-  *r4300_wmask(r4300) = UINT32_C(0xffffffff);
-  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), *r4300_wmask(r4300));
+  r4300_write_aligned_word(r4300, *r4300_address(r4300), *r4300_wword(r4300), UINT32_C(0xffffffff));
   r4300->delay_slot = 0;
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
