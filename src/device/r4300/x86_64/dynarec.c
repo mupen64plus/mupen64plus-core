@@ -77,23 +77,23 @@ void dyna_jump(void)
 
     if ((*r4300_pc_struct(r4300))->reg_cache_infos.need_map)
     {
-        *r4300->return_address = (unsigned long long) ((*r4300_pc_struct(r4300))->reg_cache_infos.jump_wrapper);
+        *r4300->recomp.return_address = (unsigned long long) ((*r4300_pc_struct(r4300))->reg_cache_infos.jump_wrapper);
     }
     else
     {
-        *r4300->return_address = (unsigned long long) (r4300->cached_interp.actual->code + (*r4300_pc_struct(r4300))->local_addr);
+        *r4300->recomp.return_address = (unsigned long long) (r4300->cached_interp.actual->code + (*r4300_pc_struct(r4300))->local_addr);
     }
 }
 
 void dyna_stop(struct r4300_core* r4300)
 {
-    if (r4300->save_rip == 0)
+    if (r4300->recomp.save_rip == 0)
     {
         DebugMessage(M64MSG_WARNING, "Instruction pointer is 0 at dyna_stop()");
     }
     else
     {
-        *r4300->return_address = (unsigned long long) r4300->save_rip;
+        *r4300->recomp.return_address = (unsigned long long) r4300->recomp.save_rip;
     }
 }
 
@@ -152,8 +152,8 @@ static void gencheck_interrupt_out(struct r4300_core* r4300, unsigned int addr)
     ja_rj(0);
     jump_start_rel8(r4300);
 
-    mov_m32rel_imm32((unsigned int*)(&r4300->fake_instr.addr), addr);
-    mov_reg64_imm64(RAX, (unsigned long long) (&r4300->fake_instr));
+    mov_m32rel_imm32((unsigned int*)(&r4300->recomp.fake_instr.addr), addr);
+    mov_reg64_imm64(RAX, (unsigned long long) (&r4300->recomp.fake_instr));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
     mov_reg64_imm64(RAX, (unsigned long long) dynarec_gen_interrupt);
     call_reg64(RAX);
@@ -168,8 +168,8 @@ static void gencheck_interrupt_reg(struct r4300_core* r4300) // addr is in EAX
     ja_rj(0);
     jump_start_rel8(r4300);
 
-    mov_m32rel_xreg32((unsigned int*)(&r4300->fake_instr.addr), EAX);
-    mov_reg64_imm64(RAX, (unsigned long long) (&r4300->fake_instr));
+    mov_m32rel_xreg32((unsigned int*)(&r4300->recomp.fake_instr.addr), EAX);
+    mov_reg64_imm64(RAX, (unsigned long long) (&r4300->recomp.fake_instr));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
     mov_reg64_imm64(RAX, (unsigned long long) dynarec_gen_interrupt);
     call_reg64(RAX);
@@ -270,8 +270,8 @@ void gendebug(struct r4300_core* r4300)
 {
     free_all_registers(r4300);
 
-    mov_memoffs64_rax((unsigned long long *) &r4300->debug_reg_storage);
-    mov_reg64_imm64(RAX, (unsigned long long) &r4300->debug_reg_storage);
+    mov_memoffs64_rax((unsigned long long *) &r4300->recomp.debug_reg_storage);
+    mov_reg64_imm64(RAX, (unsigned long long) &r4300->recomp.debug_reg_storage);
     mov_preg64pimm8_reg64(RAX,  8, RBX);
     mov_preg64pimm8_reg64(RAX, 16, RCX);
     mov_preg64pimm8_reg64(RAX, 24, RDX);
@@ -287,7 +287,7 @@ void gendebug(struct r4300_core* r4300)
     mov_reg64_imm64(RAX, (unsigned long long) CoreCompareCallback);
     call_reg64(RAX);
 
-    mov_reg64_imm64(RAX, (unsigned long long) &r4300->debug_reg_storage);
+    mov_reg64_imm64(RAX, (unsigned long long) &r4300->recomp.debug_reg_storage);
     mov_reg64_preg64pimm8(RDI, RAX, 56);
     mov_reg64_preg64pimm8(RSI, RAX, 48);
     mov_reg64_preg64pimm8(RBP, RAX, 40);
@@ -2289,7 +2289,7 @@ void genmtlo(struct r4300_core* r4300)
 
 static void gentest(struct r4300_core* r4300)
 {
-    cmp_m32rel_imm32((unsigned int *)(&r4300->branch_taken), 0);
+    cmp_m32rel_imm32((unsigned int *)(&r4300->recomp.branch_taken), 0);
     je_near_rj(0);
     jump_start_rel32(r4300);
 
@@ -2306,7 +2306,7 @@ static void gentest(struct r4300_core* r4300)
 
 static void gentest_out(struct r4300_core* r4300)
 {
-    cmp_m32rel_imm32((unsigned int *)(&r4300->branch_taken), 0);
+    cmp_m32rel_imm32((unsigned int *)(&r4300->recomp.branch_taken), 0);
     je_near_rj(0);
     jump_start_rel32(r4300);
 
@@ -2331,7 +2331,7 @@ static void gentest_idle(struct r4300_core* r4300)
     reg = lru_register(r4300);
     free_register(r4300, reg);
 
-    cmp_m32rel_imm32((unsigned int *)(&r4300->branch_taken), 0);
+    cmp_m32rel_imm32((unsigned int *)(&r4300->recomp.branch_taken), 0);
     je_near_rj(0);
     jump_start_rel32(r4300);
 
@@ -2350,7 +2350,7 @@ static void gentest_idle(struct r4300_core* r4300)
 
 static void gentestl(struct r4300_core* r4300)
 {
-    cmp_m32rel_imm32((unsigned int *)(&r4300->branch_taken), 0);
+    cmp_m32rel_imm32((unsigned int *)(&r4300->recomp.branch_taken), 0);
     je_near_rj(0);
     jump_start_rel32(r4300);
 
@@ -2369,7 +2369,7 @@ static void gentestl(struct r4300_core* r4300)
 
 static void gentestl_out(struct r4300_core* r4300)
 {
-    cmp_m32rel_imm32((unsigned int *)(&r4300->branch_taken), 0);
+    cmp_m32rel_imm32((unsigned int *)(&r4300->recomp.branch_taken), 0);
     je_near_rj(0);
     jump_start_rel32(r4300);
 
@@ -2759,28 +2759,28 @@ static void genbeq_test(struct r4300_core* r4300)
         int rt = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rt);
 
         cmp_reg32_reg32(rs, rt);
-        sete_m8rel((unsigned char *) &r4300->branch_taken);
+        sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rs_64bit == -1)
     {
         int rt = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rt);
 
         cmp_xreg64_m64rel(rt, (unsigned long long *) r4300->recomp.dst->f.i.rs);
-        sete_m8rel((unsigned char *) &r4300->branch_taken);
+        sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rt_64bit == -1)
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
 
         cmp_xreg64_m64rel(rs, (unsigned long long *)r4300->recomp.dst->f.i.rt);
-        sete_m8rel((unsigned char *) &r4300->branch_taken);
+        sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
         int rt = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rt);
         cmp_reg64_reg64(rs, rt);
-        sete_m8rel((unsigned char *) &r4300->branch_taken);
+        sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -2915,21 +2915,21 @@ static void genbne_test(struct r4300_core* r4300)
         int rt = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rt);
 
         cmp_reg32_reg32(rs, rt);
-        setne_m8rel((unsigned char *) &r4300->branch_taken);
+        setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rs_64bit == -1)
     {
         int rt = allocate_register_64(r4300, (unsigned long long *) r4300->recomp.dst->f.i.rt);
 
         cmp_xreg64_m64rel(rt, (unsigned long long *)r4300->recomp.dst->f.i.rs);
-        setne_m8rel((unsigned char *) &r4300->branch_taken);
+        setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rt_64bit == -1)
     {
         int rs = allocate_register_64(r4300, (unsigned long long *) r4300->recomp.dst->f.i.rs);
 
         cmp_xreg64_m64rel(rs, (unsigned long long *)r4300->recomp.dst->f.i.rt);
-        setne_m8rel((unsigned char *) &r4300->branch_taken);
+        setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
@@ -2937,7 +2937,7 @@ static void genbne_test(struct r4300_core* r4300)
         int rt = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rt);
 
         cmp_reg64_reg64(rs, rt);
-        setne_m8rel((unsigned char *) &r4300->branch_taken);
+        setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -3070,14 +3070,14 @@ static void genblez_test(struct r4300_core* r4300)
         int rs = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg32_imm32(rs, 0);
-        setle_m8rel((unsigned char *) &r4300->branch_taken);
+        setle_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg64_imm8(rs, 0);
-        setle_m8rel((unsigned char *) &r4300->branch_taken);
+        setle_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -3210,14 +3210,14 @@ static void genbgtz_test(struct r4300_core* r4300)
         int rs = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg32_imm32(rs, 0);
-        setg_m8rel((unsigned char *) &r4300->branch_taken);
+        setg_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg64_imm8(rs, 0);
-        setg_m8rel((unsigned char *) &r4300->branch_taken);
+        setg_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -3350,19 +3350,19 @@ static void genbltz_test(struct r4300_core* r4300)
         int rs = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg32_imm32(rs, 0);
-        setl_m8rel((unsigned char *) &r4300->branch_taken);
+        setl_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rs_64bit == -1)
     {
         cmp_m32rel_imm32(((unsigned int *)r4300->recomp.dst->f.i.rs)+1, 0);
-        setl_m8rel((unsigned char *) &r4300->branch_taken);
+        setl_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
 
         cmp_reg64_imm8(rs, 0);
-        setl_m8rel((unsigned char *) &r4300->branch_taken);
+        setl_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -3620,18 +3620,18 @@ static void genbgez_test(struct r4300_core* r4300)
     {
         int rs = allocate_register_32(r4300, (unsigned int *)r4300->recomp.dst->f.i.rs);
         cmp_reg32_imm32(rs, 0);
-        setge_m8rel((unsigned char *) &r4300->branch_taken);
+        setge_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else if (rs_64bit == -1)
     {
         cmp_m32rel_imm32(((unsigned int *)r4300->recomp.dst->f.i.rs)+1, 0);
-        setge_m8rel((unsigned char *) &r4300->branch_taken);
+        setge_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
     else
     {
         int rs = allocate_register_64(r4300, (unsigned long long *)r4300->recomp.dst->f.i.rs);
         cmp_reg64_imm8(rs, 0);
-        setge_m8rel((unsigned char *) &r4300->branch_taken);
+        setge_m8rel((unsigned char *) &r4300->recomp.branch_taken);
     }
 }
 
@@ -3884,7 +3884,7 @@ void genbgezall_idle(struct r4300_core* r4300)
 static void genbc1f_test(struct r4300_core* r4300)
 {
     test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31(&r4300->cp1)), 0x800000);
-    sete_m8rel((unsigned char *) &r4300->branch_taken);
+    sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
 }
 
 void genbc1f(struct r4300_core* r4300)
@@ -4016,7 +4016,7 @@ void genbc1fl_idle(struct r4300_core* r4300)
 static void genbc1t_test(struct r4300_core* r4300)
 {
     test_m32rel_imm32((unsigned int*)&(*r4300_cp1_fcr31(&r4300->cp1)), 0x800000);
-    setne_m8rel((unsigned char *) &r4300->branch_taken);
+    setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
 }
 
 void genbc1t(struct r4300_core* r4300)

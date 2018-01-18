@@ -82,39 +82,6 @@ struct r4300_core
     /* When reset_hard_job is set, next interrupt will cause hard reset */
     int reset_hard_job;
 
-    /* from assemble.c */
-    struct jump_table* jumps_table;
-    size_t jumps_number;
-    size_t max_jumps_number;
-
-    unsigned int jump_start8;
-    unsigned int jump_start32;
-
-#if defined(__x86_64__)
-    struct riprelative_table* riprel_table;
-    size_t riprel_number;
-    size_t max_riprel_number;
-#endif
-
-    /* from rjump.c */
-#if defined(__x86_64__)
-    long long save_rsp;
-    long long save_rip;
-
-    /* that's where the dynarec will restart when going back from a C function */
-    unsigned long long* return_address;
-#else
-    long save_ebp;
-    long save_ebx;
-    long save_esi;
-    long save_edi;
-    long save_esp;
-    long save_eip;
-
-    /* that's where the dynarec will restart when going back from a C function */
-    unsigned long* return_address;
-#endif
-
     /* from pure_interp.c */
     struct precomp_instr interp_PC;
 
@@ -124,8 +91,49 @@ struct r4300_core
 
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */
-    struct {
+    struct recomp {
         struct regcache_state regcache_state;
+
+        struct jump_table* jumps_table;
+        size_t jumps_number;
+        size_t max_jumps_number;
+
+        unsigned int jump_start8;
+        unsigned int jump_start32;
+
+#if defined(__x86_64__)
+        struct riprelative_table* riprel_table;
+        size_t riprel_number;
+        size_t max_riprel_number;
+#endif
+
+#if defined(__x86_64__)
+        long long save_rsp;
+        long long save_rip;
+
+        /* that's where the dynarec will restart when going back from a C function */
+        unsigned long long* return_address;
+#else
+        long save_ebp;
+        long save_ebx;
+        long save_esi;
+        long save_edi;
+        long save_esp;
+        long save_eip;
+
+        /* that's where the dynarec will restart when going back from a C function */
+        unsigned long* return_address;
+#endif
+
+        int branch_taken;
+        struct precomp_instr fake_instr;
+#ifdef COMPARE_CORE
+#if defined(__x86_64__)
+        long long debug_reg_storage[8];
+#else
+        int eax, ebx, ecx, edx, esp, ebp, esi, edi;
+#endif
+#endif
 
         int init_length;
         struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
@@ -158,17 +166,6 @@ struct r4300_core
         FILE* pfProfile;
 #endif
     } recomp;
-
-    /* from gr4300.c */
-    int branch_taken;
-    struct precomp_instr fake_instr;
-#ifdef COMPARE_CORE
-#if defined(__x86_64__)
-    long long debug_reg_storage[8];
-#else
-    int eax, ebx, ecx, edx, esp, ebp, esi, edi;
-#endif
-#endif
 
     /* Memory accesses variables */
     uint64_t* rdword;

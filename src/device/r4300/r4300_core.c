@@ -77,36 +77,35 @@ void poweron_r4300(struct r4300_core* r4300)
     //r4300->current_instruction_table;
     r4300->reset_hard_job = 0;
 
-    r4300->jumps_table = NULL;
-    r4300->jumps_number = 0;
-    r4300->max_jumps_number = 0;
-    r4300->jump_start8 = 0;
-    r4300->jump_start32 = 0;
-#if defined(__x86_64__)
-    r4300->riprel_table = NULL;
-    r4300->riprel_number = 0;
-    r4300->max_riprel_number = 0;
-#endif
-
-#if defined(__x86_64__)
-    r4300->save_rsp = 0;
-    r4300->save_rip = 0;
-#else
-    r4300->save_ebp = 0;
-    r4300->save_ebx = 0;
-    r4300->save_esi = 0;
-    r4300->save_edi = 0;
-    r4300->save_esp = 0;
-    r4300->save_eip = 0;
-#endif
-
     /* recomp init */
     r4300->recomp.fast_memory = 1;
     r4300->recomp.delay_slot_compiled = 0;
     r4300->recomp.local_rs = 0;
     r4300->recomp.dyna_interp = 0;
+    r4300->recomp.jumps_table = NULL;
+    r4300->recomp.jumps_number = 0;
+    r4300->recomp.max_jumps_number = 0;
+    r4300->recomp.jump_start8 = 0;
+    r4300->recomp.jump_start32 = 0;
+#if defined(__x86_64__)
+    r4300->recomp.riprel_table = NULL;
+    r4300->recomp.riprel_number = 0;
+    r4300->recomp.max_riprel_number = 0;
+#endif
 
-    r4300->branch_taken = 0;
+#if defined(__x86_64__)
+    r4300->recomp.save_rsp = 0;
+    r4300->recomp.save_rip = 0;
+#else
+    r4300->recomp.save_ebp = 0;
+    r4300->recomp.save_ebx = 0;
+    r4300->recomp.save_esi = 0;
+    r4300->recomp.save_edi = 0;
+    r4300->recomp.save_esp = 0;
+    r4300->recomp.save_eip = 0;
+#endif
+
+    r4300->recomp.branch_taken = 0;
 
     /* setup CP0 registers */
     poweron_cp0(&r4300->cp0);

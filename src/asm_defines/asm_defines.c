@@ -89,18 +89,20 @@ DEFINE(r4300_core, lo);
 DEFINE(r4300_core, stop);
 #endif
 
+DEFINE(r4300_core, recomp);
+
 #if defined(__x86_64__)
-DEFINE(r4300_core, save_rsp);
-DEFINE(r4300_core, save_rip);
+DEFINE(recomp, save_rsp);
+DEFINE(recomp, save_rip);
 #else
-DEFINE(r4300_core, save_ebp);
-DEFINE(r4300_core, save_esp);
-DEFINE(r4300_core, save_ebx);
-DEFINE(r4300_core, save_esi);
-DEFINE(r4300_core, save_edi);
-DEFINE(r4300_core, save_eip);
+DEFINE(recomp, save_ebp);
+DEFINE(recomp, save_esp);
+DEFINE(recomp, save_ebx);
+DEFINE(recomp, save_esi);
+DEFINE(recomp, save_edi);
+DEFINE(recomp, save_eip);
 #endif
-DEFINE(r4300_core, return_address);
+DEFINE(recomp, return_address);
 
 DEFINE(r4300_core, cp0);
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
