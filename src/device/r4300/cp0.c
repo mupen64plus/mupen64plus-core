@@ -226,12 +226,12 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
         dyna_jump();
-        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
+        if (!r4300->recomp.dyna_interp) { r4300->delay_slot = 0; }
     }
 
-    if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
+    if (r4300->emumode != EMUMODE_DYNAREC || r4300->recomp.dyna_interp)
     {
-        r4300->dyna_interp = 0;
+        r4300->recomp.dyna_interp = 0;
         if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);
@@ -266,11 +266,11 @@ void exception_general(struct r4300_core* r4300)
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
         dyna_jump();
-        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
+        if (!r4300->recomp.dyna_interp) { r4300->delay_slot = 0; }
     }
-    if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
+    if (r4300->emumode != EMUMODE_DYNAREC || r4300->recomp.dyna_interp)
     {
-        r4300->dyna_interp = 0;
+        r4300->recomp.dyna_interp = 0;
         if (r4300->delay_slot)
         {
             r4300->skip_jump = *r4300_pc(r4300);

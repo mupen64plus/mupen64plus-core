@@ -214,7 +214,7 @@ void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
     simplify_access(r4300);
 
     if (jump) {
-        mov_m32_imm32((unsigned int*)(&r4300->dyna_interp), 1);
+        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 1);
     }
 
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst));
@@ -223,7 +223,7 @@ void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
 
     if (jump)
     {
-        mov_m32_imm32((unsigned int*)(&r4300->dyna_interp), 0);
+        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 0);
         mov_reg32_imm32(EAX, (unsigned int)dyna_jump);
         call_reg32(EAX);
     }

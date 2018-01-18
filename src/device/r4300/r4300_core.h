@@ -77,7 +77,6 @@ struct r4300_core
 /* ARM dynarec uses a different memory layout */
     int stop;
 #endif
-    unsigned int dyna_interp;
     struct cpu_instruction_table current_instruction_table;
 
     /* When reset_hard_job is set, next interrupt will cause hard reset */
@@ -147,6 +146,8 @@ struct r4300_core
         uint32_t jump_to_address;
 
         int64_t local_rs;
+
+        unsigned int dyna_interp;
 
 #if defined(__x86_64__)
         unsigned long long shift;
