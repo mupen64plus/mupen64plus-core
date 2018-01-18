@@ -48,6 +48,8 @@ struct new_dynarec_hot_state
     int pcaddr;
     uint32_t address;
     uint64_t rdword;
+    uint64_t wdword;
+    uint32_t wword;
     int branch_target;
     struct precomp_instr fake_pc;
     int64_t rs;

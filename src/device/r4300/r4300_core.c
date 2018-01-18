@@ -253,26 +253,6 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300)
     return r4300->emumode;
 }
 
-uint32_t* r4300_wword(struct r4300_core* r4300)
-{
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    return &r4300->wword;
-#else
-    return &r4300->new_dynarec_hot_state.wword;
-#endif
-}
-
-uint64_t* r4300_wdword(struct r4300_core* r4300)
-{
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    return &r4300->wdword;
-#else
-    return &r4300->new_dynarec_hot_state.wdword;
-#endif
-}
-
 uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
 {
     /* This code is performance critical, specially on pure interpreter mode.

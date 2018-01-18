@@ -2921,7 +2921,7 @@ static void do_writestub(int n)
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
-    emit_writeword(r?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
+    emit_writeword(r?rth:rt,((u_int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   reglist|=1<<rs;
@@ -2988,7 +2988,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword);
-    emit_writeword(target?rth:rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wdword+4);
+    emit_writeword(target?rth:rt,((u_int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   reglist|=1<<rs;

@@ -2703,7 +2703,7 @@ int dynarec_write_aligned_word(void)
     return r4300_write_aligned_word(
         r4300,
         r4300->recomp.address,
-        *r4300_wword(r4300),
+        r4300->recomp.wword,
         r4300->recomp.wmask);
 }
 
@@ -2726,7 +2726,7 @@ int dynarec_write_aligned_dword(void)
     return r4300_write_aligned_dword(
         r4300,
         r4300->recomp.address,
-        *r4300_wdword(r4300),
+        r4300->recomp.wdword,
         ~UINT64_C(0)); /* NOTE: in dynarec, we only need all-one masks */
 }
 

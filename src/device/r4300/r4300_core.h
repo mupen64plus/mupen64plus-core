@@ -170,15 +170,11 @@ struct r4300_core
         uint64_t* rdword;
         uint32_t wmask;
         uint32_t address;
+        union {
+            uint32_t wword;
+            uint64_t wdword;
+        };
     } recomp;
-
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    union {
-        uint32_t wword;
-        uint64_t wdword;
-    };
-#endif
 
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
     /* FIXME: better put that near linkage_arm code
@@ -218,9 +214,6 @@ struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300);
 int* r4300_stop(struct r4300_core* r4300);
 
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
-
-uint32_t* r4300_wword(struct r4300_core* r4300);
-uint64_t* r4300_wdword(struct r4300_core* r4300);
 
 /* Returns a pointer to a block of contiguous memory
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary

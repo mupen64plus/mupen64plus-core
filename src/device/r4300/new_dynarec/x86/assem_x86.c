@@ -2834,20 +2834,20 @@ static void do_writestub(int n)
   emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREH_STUB){
     ftable=(int)write_hword_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREW_STUB){
     ftable=(int)write_word_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
-    emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
-    emit_writeword(r?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wdword);
+    emit_writeword(r?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   emit_pusha();
@@ -2897,20 +2897,20 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREH_STUB){
     ftable=(int)write_hword_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREW_STUB){
     ftable=(int)write_word_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
-    emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
-    emit_writeword(target?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wdword);
+    emit_writeword(target?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   emit_pusha();
