@@ -2681,15 +2681,16 @@ void dynarec_gen_interrupt(void)
 /* Parameterless version of read_aligned_word to ease usage in dynarec. */
 int dynarec_read_aligned_word(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
     uint32_t value;
 
     int result = r4300_read_aligned_word(
-        &g_dev.r4300,
-        *r4300_address(&g_dev.r4300),
+        r4300,
+        r4300->recomp.address,
         &value);
 
     if (result)
-        *g_dev.r4300.recomp.rdword = value;
+        *r4300->recomp.rdword = value;
 
     return result;
 }
@@ -2697,29 +2698,35 @@ int dynarec_read_aligned_word(void)
 /* Parameterless version of write_aligned_word to ease usage in dynarec. */
 int dynarec_write_aligned_word(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     return r4300_write_aligned_word(
-        &g_dev.r4300,
-        *r4300_address(&g_dev.r4300),
-        *r4300_wword(&g_dev.r4300),
-        g_dev.r4300.recomp.wmask);
+        r4300,
+        r4300->recomp.address,
+        *r4300_wword(r4300),
+        r4300->recomp.wmask);
 }
 
 /* Parameterless version of read_aligned_dword to ease usage in dynarec. */
 int dynarec_read_aligned_dword(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     return r4300_read_aligned_dword(
-        &g_dev.r4300,
-        *r4300_address(&g_dev.r4300),
-        (uint64_t*)g_dev.r4300.recomp.rdword);
+        r4300,
+        r4300->recomp.address,
+        (uint64_t*)r4300->recomp.rdword);
 }
 
 /* Parameterless version of write_aligned_dword to ease usage in dynarec. */
 int dynarec_write_aligned_dword(void)
 {
+    struct r4300_core* r4300 = &g_dev.r4300;
+
     return r4300_write_aligned_dword(
-        &g_dev.r4300,
-        *r4300_address(&g_dev.r4300),
-        *r4300_wdword(&g_dev.r4300),
+        r4300,
+        r4300->recomp.address,
+        *r4300_wdword(r4300),
         ~UINT64_C(0)); /* NOTE: in dynarec, we only need all-one masks */
 }
 

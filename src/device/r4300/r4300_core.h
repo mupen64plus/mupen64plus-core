@@ -169,6 +169,7 @@ struct r4300_core
         /* Memory accesses variables */
         uint64_t* rdword;
         uint32_t wmask;
+        uint32_t address;
     } recomp;
 
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -177,8 +178,6 @@ struct r4300_core
         uint32_t wword;
         uint64_t wdword;
     };
-
-    uint32_t address;
 #endif
 
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
@@ -220,7 +219,6 @@ int* r4300_stop(struct r4300_core* r4300);
 
 unsigned int get_r4300_emumode(struct r4300_core* r4300);
 
-uint32_t* r4300_address(struct r4300_core* r4300);
 uint32_t* r4300_wword(struct r4300_core* r4300);
 uint64_t* r4300_wdword(struct r4300_core* r4300);
 

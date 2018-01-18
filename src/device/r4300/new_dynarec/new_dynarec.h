@@ -46,6 +46,7 @@ struct new_dynarec_hot_state
     int last_count;
     int pending_exception;
     int pcaddr;
+    uint32_t address;
     uint64_t rdword;
     int branch_target;
     struct precomp_instr fake_pc;

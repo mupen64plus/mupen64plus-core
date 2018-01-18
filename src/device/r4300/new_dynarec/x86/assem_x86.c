@@ -2685,7 +2685,7 @@ static void do_readstub(int n)
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
   
   int cc=get_reg(i_regmap,CCREG);
@@ -2751,7 +2751,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
 
   int cc=get_reg(regmap,CCREG);
@@ -2831,7 +2831,7 @@ static void do_writestub(int n)
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
@@ -2894,7 +2894,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));

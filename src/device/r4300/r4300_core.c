@@ -253,16 +253,6 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300)
     return r4300->emumode;
 }
 
-uint32_t* r4300_address(struct r4300_core* r4300)
-{
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
-    return &r4300->address;
-#else
-    return &r4300->new_dynarec_hot_state.address;
-#endif
-}
-
 uint32_t* r4300_wword(struct r4300_core* r4300)
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
