@@ -40,7 +40,7 @@ void passe2(struct r4300_core* r4300, struct precomp_instr *dest, int start, int
 
 /* From regcache.c */
 
-void init_cache(struct precomp_instr* start)
+void init_cache(struct r4300_core* r4300, struct precomp_instr* start)
 {
 }
 
