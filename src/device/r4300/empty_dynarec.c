@@ -44,7 +44,7 @@ void init_cache(struct r4300_core* r4300, struct precomp_instr* start)
 {
 }
 
-void free_all_registers()
+void free_all_registers(struct r4300_core* r4300)
 {
 }
 
