@@ -162,7 +162,6 @@ static void FIN_BLOCK(void)
 Used by dynarec only, check should be unnecessary
 */
         (*r4300_pc_struct(r4300))->ops();
-        if (r4300->emumode == EMUMODE_DYNAREC) dyna_jump();
     }
     else
     {
@@ -184,9 +183,9 @@ Used by dynarec only, check should be unnecessary
         }
         else
             (*r4300_pc_struct(r4300))->ops();
-
-        if (r4300->emumode == EMUMODE_DYNAREC) dyna_jump();
     }
+
+    if (r4300->emumode == EMUMODE_DYNAREC) dyna_jump();
 }
 
 static void NOTCOMPILED(void)
