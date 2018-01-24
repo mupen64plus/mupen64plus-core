@@ -325,7 +325,7 @@ void genlink_subblock(struct r4300_core* r4300)
 
 void genfin_block(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned long long)cached_interpreter_table.FIN_BLOCK, 0);
+    gencallinterp(r4300, (unsigned long long)dynarec_fin_block, 0);
 }
 
 void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)

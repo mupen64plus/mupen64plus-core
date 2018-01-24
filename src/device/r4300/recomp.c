@@ -2686,6 +2686,13 @@ void dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
 
 #ifndef NO_ASM
 #ifndef NEW_DYNAREC
+void dynarec_fin_block(void)
+{
+    cached_interpreter_table.FIN_BLOCK();
+    dyna_jump();
+}
+
+
 void dynarec_setup_code(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;

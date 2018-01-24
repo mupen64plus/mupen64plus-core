@@ -144,6 +144,7 @@ void run_r4300(struct r4300_core* r4300)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300->emumode = EMUMODE_DYNAREC;
+        r4300->current_instruction_table.FIN_BLOCK = dynarec_fin_block;
 
 #ifdef NEW_DYNAREC
         new_dynarec_init();
