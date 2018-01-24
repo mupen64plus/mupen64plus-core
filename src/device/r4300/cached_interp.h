@@ -38,7 +38,7 @@ void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address
 
 void run_cached_interpreter(struct r4300_core* r4300);
 
-/* Jumps to the given address. This is for the cached interpreter / dynarec. */
-void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address);
+/* Jumps to the given address. This is for the cached interpreter. */
+void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address);
 
 #endif /* M64P_DEVICE_R4300_CACHED_INTERP_H */

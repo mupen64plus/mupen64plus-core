@@ -2677,6 +2677,13 @@ void profile_write_end_of_code_blocks(struct r4300_core* r4300)
 #endif
 #endif
 
+/* Jumps to the given address. This is for the dynarec. */
+void dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
+{
+    cached_interpreter_jump_to(r4300, address);
+    dyna_jump();
+}
+
 #ifndef NO_ASM
 #ifndef NEW_DYNAREC
 void dynarec_setup_code(void)
@@ -2686,20 +2693,20 @@ void dynarec_setup_code(void)
     /* The dynarec jumps here after we call dyna_start and it prepares
      * Here we need to prepare the initial code block and jump to it
      */
-    cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
+    dynarec_jump_to(r4300, UINT32_C(0xa4000040));
 
-    /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
+    /* Prevent segfault on failed dynarec_jump_to */
     if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {
         dyna_stop(r4300);
     }
 }
 
-/* Parameterless version of cached_interpreter_dynarec_jump_to to ease usage in dynarec. */
+/* Parameterless version of dynarec_jump_to to ease usage in dynarec. */
 void dynarec_jump_to_recomp_address(void)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
 
-    cached_interpreter_dynarec_jump_to(r4300, r4300->recomp.jump_to_address);
+    dynarec_jump_to(r4300, r4300->recomp.jump_to_address);
 }
 
 /* Parameterless version of exception_general to ease usage in dynarec. */

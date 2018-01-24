@@ -165,9 +165,9 @@ void run_r4300(struct r4300_core* r4300)
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300->emumode = EMUMODE_INTERPRETER;
         init_blocks(r4300);
-        cached_interpreter_dynarec_jump_to(r4300, UINT32_C(0xa4000040));
+        cached_interpreter_jump_to(r4300, UINT32_C(0xa4000040));
 
-        /* Prevent segfault on failed cached_interpreter_dynarec_jump_to */
+        /* Prevent segfault on failed cached_interpreter_jump_to */
         if (!r4300->cached_interp.actual->block) {
             return;
         }
@@ -401,23 +401,27 @@ void invalidate_r4300_cached_code(struct r4300_core* r4300, uint32_t address, si
 
 void generic_jump_to(struct r4300_core* r4300, uint32_t address)
 {
-    if (r4300->emumode == EMUMODE_PURE_INTERPRETER)
+    switch(r4300->emumode)
     {
+    case EMUMODE_PURE_INTERPRETER:
         *r4300_pc(r4300) = address;
-    }
-    else
-    {
+        break;
+
+    case EMUMODE_INTERPRETER:
+        cached_interpreter_jump_to(r4300, address);
+        break;
+
+    case EMUMODE_DYNAREC:
 #ifdef NEW_DYNAREC
-        if (r4300->emumode == EMUMODE_DYNAREC)
-        {
-            r4300->new_dynarec_hot_state.pcaddr = address;
-            r4300->new_dynarec_hot_state.pending_exception = 1;
-        }
-        else
+        r4300->new_dynarec_hot_state.pcaddr = address;
+        r4300->new_dynarec_hot_state.pending_exception = 1;
+#else
+        dynarec_jump_to(r4300, address);
 #endif
-        {
-            cached_interpreter_dynarec_jump_to(r4300, address);
-        }
+        break;
+    default:
+        /* should not happen */
+        break;
     }
 }
 

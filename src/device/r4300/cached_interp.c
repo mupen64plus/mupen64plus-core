@@ -109,7 +109,7 @@ static void name##_OUT(void) \
         r4300->delay_slot=0; \
         if (take_jump && !r4300->skip_jump) \
         { \
-            cached_interpreter_dynarec_jump_to(r4300, jump_target); \
+            generic_jump_to(r4300, jump_target); \
         } \
     } \
     else \
@@ -154,7 +154,7 @@ static void FIN_BLOCK(void)
     DECLARE_R4300
     if (!r4300->delay_slot)
     {
-        cached_interpreter_dynarec_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
+        generic_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
 /*
 #ifdef DBG
       if (g_DebuggerActive) update_debugger(*r4300_pc(r4300));
@@ -168,7 +168,7 @@ Used by dynarec only, check should be unnecessary
     {
         struct precomp_block *blk = r4300->cached_interp.actual;
         struct precomp_instr *inst = (*r4300_pc_struct(r4300));
-        cached_interpreter_dynarec_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
+        generic_jump_to(r4300, ((*r4300_pc_struct(r4300))-1)->addr+4);
 
 /*
 #ifdef DBG
@@ -538,7 +538,7 @@ static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
     }
 }
 
-void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
+void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     struct cached_interp* const cinterp = &r4300->cached_interp;
     struct precomp_block** b;
@@ -576,11 +576,6 @@ void cached_interpreter_dynarec_jump_to(struct r4300_core* r4300, uint32_t addre
 
     /* set new PC */
     (*r4300_pc_struct(r4300)) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
-
-    /* set new PC for dynarec (eg set "return_address")*/
-    if (r4300->emumode == EMUMODE_DYNAREC) {
-        dyna_jump();
-    }
 }
 
 

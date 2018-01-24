@@ -37,6 +37,7 @@ void dyna_start(void (*code)(void));
 void dyna_stop(struct r4300_core* r4300);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
+void dynarec_jump_to(struct r4300_core* r4300, uint32_t address);
 
 void dynarec_setup_code(void);
 void dynarec_jump_to_recomp_address(void);
