@@ -2315,7 +2315,7 @@ static void gentest_out(struct r4300_core* r4300)
     mov_m32rel_imm32(&r4300->recomp.jump_to_address, r4300->cached_interp.dst->addr + (r4300->cached_interp.dst-1)->f.i.immediate*4);
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);
     jump_end_rel32(r4300);
 
@@ -2380,7 +2380,7 @@ static void gentestl_out(struct r4300_core* r4300)
 
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);
 
     jump_end_rel32(r4300);
@@ -2471,7 +2471,7 @@ void genj_out(struct r4300_core* r4300)
     mov_m32rel_imm32(&r4300->recomp.jump_to_address, naddr);
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long)dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);
 #endif
 }
@@ -2572,7 +2572,7 @@ void genjal_out(struct r4300_core* r4300)
     mov_m32rel_imm32(&r4300->recomp.jump_to_address, naddr);
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);
 #endif
 }
@@ -2646,7 +2646,7 @@ void genjr(struct r4300_core* r4300)
     mov_m32rel_xreg32(&r4300->recomp.jump_to_address, EBX);
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);  /* will never return from call */
 
     jump_end_rel32(r4300);
@@ -2722,7 +2722,7 @@ void genjalr(struct r4300_core* r4300)
     mov_m32rel_xreg32(&r4300->recomp.jump_to_address, EBX);
     mov_reg64_imm64(RAX, (unsigned long long) (r4300->cached_interp.dst+1));
     mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_address);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_jump_to_recomp_address);
     call_reg64(RAX);  /* will never return from call */
 
     jump_end_rel32(r4300);

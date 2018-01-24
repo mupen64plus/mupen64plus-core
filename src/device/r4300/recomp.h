@@ -39,7 +39,7 @@ void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
 
 void dynarec_setup_code(void);
-void dynarec_jump_to_address(void);
+void dynarec_jump_to_recomp_address(void);
 void dynarec_exception_general(void);
 int dynarec_check_cop1_unusable(void);
 void dynarec_cp0_update_count(void);

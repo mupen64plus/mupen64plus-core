@@ -2695,9 +2695,11 @@ void dynarec_setup_code(void)
 }
 
 /* Parameterless version of cached_interpreter_dynarec_jump_to to ease usage in dynarec. */
-void dynarec_jump_to_address(void)
+void dynarec_jump_to_recomp_address(void)
 {
-    cached_interpreter_dynarec_jump_to(&g_dev.r4300, g_dev.r4300.recomp.jump_to_address);
+    struct r4300_core* r4300 = &g_dev.r4300;
+
+    cached_interpreter_dynarec_jump_to(r4300, r4300->recomp.jump_to_address);
 }
 
 /* Parameterless version of exception_general to ease usage in dynarec. */
