@@ -193,7 +193,7 @@ void gennotcompiled(struct r4300_core* r4300)
     simplify_access(r4300);
 
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->cached_interp.dst));
-    mov_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED);
+    mov_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled);
     call_reg32(EAX);
 }
 
@@ -756,7 +756,7 @@ void gensb(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -836,7 +836,7 @@ void gensh(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -906,7 +906,7 @@ void gensw(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -984,7 +984,7 @@ void gensd(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -4225,7 +4225,7 @@ void genswc1(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -4293,7 +4293,7 @@ void gensdc1(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)cached_interpreter_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif

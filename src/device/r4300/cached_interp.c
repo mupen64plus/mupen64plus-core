@@ -207,7 +207,6 @@ The preceeding update_debugger SHOULD be unnecessary since it should have been
 called before NOTCOMPILED would have been executed
 */
     (*r4300_pc_struct(r4300))->ops();
-    if (r4300->emumode == EMUMODE_DYNAREC) dyna_jump();
 }
 
 static void NOTCOMPILED2(void)

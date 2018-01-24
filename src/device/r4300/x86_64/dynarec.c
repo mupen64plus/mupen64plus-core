@@ -313,7 +313,7 @@ void gennotcompiled(struct r4300_core* r4300)
 
     mov_reg64_imm64(RAX, (unsigned long long) r4300->cached_interp.dst);
     mov_memoffs64_rax((unsigned long long *) &(*r4300_pc_struct(r4300))); /* RIP-relative will not work here */
-    mov_reg64_imm64(RAX, (unsigned long long) cached_interpreter_table.NOTCOMPILED);
+    mov_reg64_imm64(RAX, (unsigned long long) dynarec_notcompiled);
     call_reg64(RAX);
 }
 
@@ -952,7 +952,7 @@ void gensb(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1041,7 +1041,7 @@ void gensh(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1124,7 +1124,7 @@ void gensw(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -1217,7 +1217,7 @@ void gensd(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -4446,7 +4446,7 @@ void genswc1(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
@@ -4524,7 +4524,7 @@ void gensdc1(struct r4300_core* r4300)
     mov_reg32_reg32(ECX, EBX); // 2
     mov_reg64_preg64x8preg64(RBX, RBX, RDI);  // 4
     mov_reg64_preg64pimm32(RBX, RBX, (int) offsetof(struct precomp_block, block)); // 7
-    mov_reg64_imm64(RDI, (unsigned long long) cached_interpreter_table.NOTCOMPILED); // 10
+    mov_reg64_imm64(RDI, (unsigned long long) r4300->current_instruction_table.NOTCOMPILED); // 10
     and_eax_imm32(0xFFF); // 5
     shr_reg32_imm8(EAX, 2); // 3
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5

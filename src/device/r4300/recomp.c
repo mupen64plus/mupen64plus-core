@@ -2692,6 +2692,11 @@ void dynarec_fin_block(void)
     dyna_jump();
 }
 
+void dynarec_notcompiled(void)
+{
+    cached_interpreter_table.NOTCOMPILED();
+    dyna_jump();
+}
 
 void dynarec_setup_code(void)
 {
