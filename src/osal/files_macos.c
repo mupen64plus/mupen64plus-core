@@ -164,8 +164,8 @@ const char * osal_get_shared_filepath(const char *filename, const char *firstsea
     char buf[1024] = { 0 };
     if (macSetBundlePath(buf))
     {
-        sprintf(retpath, "%s%s", buf, filename);
-        return retpath;
+        if (search_dir_file(retpath, buf, filename) == 0)
+            return retpath;
     }
 
     /* otherwise check our standard paths */
