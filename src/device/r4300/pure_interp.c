@@ -117,7 +117,7 @@ static void InterpretOpcode(struct r4300_core* r4300);
 	 && ((addr) & UINT32_C(0x0FFFFFFF)) != UINT32_C(0x0FFFFFFC) \
 	 && *fast_mem_access((r4300), (addr) + 4) == 0)
 
-/* These macros are like those in macros.h, but they parse opcode fields. */
+/* These macros parse opcode fields. */
 #define rrt r4300_regs(r4300)[RT_OF(op)]
 #define rrd r4300_regs(r4300)[RD_OF(op)]
 #define rfs FS_OF(op)
