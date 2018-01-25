@@ -22,10 +22,6 @@
 #ifndef M64P_DEVICE_R4300_MACROS_H
 #define M64P_DEVICE_R4300_MACROS_H
 
-#define SE8(a) ((int64_t) ((int8_t) (a)))
-#define SE16(a) ((int64_t) ((int16_t) (a)))
-#define SE32(a) ((int64_t) ((int32_t) (a)))
-
 #define rrt *(*r4300_pc_struct(r4300))->f.r.rt
 #define rrd *(*r4300_pc_struct(r4300))->f.r.rd
 #define rfs (*r4300_pc_struct(r4300))->f.r.nrd

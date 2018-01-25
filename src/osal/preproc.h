@@ -53,6 +53,10 @@
 
 #endif
 
+/* sign-extension macros */
+#define SE8(a)  ((int64_t) ((int8_t) (a)))
+#define SE16(a) ((int64_t) ((int16_t) (a)))
+#define SE32(a) ((int64_t) ((int32_t) (a)))
 
 #ifndef M64P_BIG_ENDIAN
 #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))

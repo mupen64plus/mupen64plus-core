@@ -49,6 +49,7 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rdram/rdram.h"
 #include "main/xxHash/xxhash.h"
+#include "osal/preproc.h"
 
 #include <inttypes.h>
 #include <stdint.h>

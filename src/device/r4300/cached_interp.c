@@ -36,6 +36,7 @@
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
 #include "main/main.h"
+#include "osal/preproc.h"
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
