@@ -68,6 +68,8 @@ struct precomp_instr
         } cf;
     } f;
     uint32_t addr; /* word-aligned instruction address in r4300 address space */
+
+    /* these fields are recomp specific */
     unsigned int local_addr; /* byte offset to start of corresponding x86_64 instructions, from start of code block */
     struct reg_cache reg_cache_infos;
 };
@@ -77,6 +79,8 @@ struct precomp_block
     struct precomp_instr* block;
     uint32_t start;
     uint32_t end;
+
+    /* these fields are recomp specific */
     unsigned char *code;
     unsigned int code_length;
     unsigned int max_code_length;
