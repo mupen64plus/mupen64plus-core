@@ -27,6 +27,7 @@
 #include "dbg_breakpoints.h"
 #include "dbg_memory.h"
 #include "device/device.h"
+#include "device/r4300/cached_interp.h"
 #include "osal/preproc.h"
 
 #if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
@@ -122,7 +123,7 @@ static void decode_recompiled(struct r4300_core* r4300, uint32_t addr)
     if (r4300->cached_interp.blocks[addr>>12] == NULL)
         return;
 
-    if (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == r4300->current_instruction_table.NOTCOMPILED)
+    if (r4300->cached_interp.blocks[addr>>12]->block[(addr&0xFFF)/4].ops == r4300->cached_interp.not_compiled)
     {
         strcpy(opcode_recompiled[0],"INVLD");
         strcpy(args_recompiled[0],"NOTCOMPILED");

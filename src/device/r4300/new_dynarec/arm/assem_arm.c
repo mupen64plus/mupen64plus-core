@@ -3488,7 +3488,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
           emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
         }
-        emit_call((int)cached_interpreter_table.MFC0);
+        emit_call((int)cached_interp_MFC0);
         emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3523,7 +3523,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     }
     //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
     //else
-    emit_call((int)cached_interpreter_table.MTC0);
+    emit_call((int)cached_interp_MTC0);
     if(copr==9||copr==11||copr==12) {
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
@@ -3555,7 +3555,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
   {
     assert(opcode2[i]==0x10);
     if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interpreter_table.TLBR);
+      emit_call((int)cached_interp_TLBR);
     if((source[i]&0x3f)==0x02) { // TLBWI
       assert(!is_delayslot);
       emit_movimm((start+i*4),HOST_TEMPREG);
@@ -3576,7 +3576,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_call((int)TLBWR_new);
     }
     if((source[i]&0x3f)==0x08) // TLBP
-      emit_call((int)cached_interpreter_table.TLBP);
+      emit_call((int)cached_interp_TLBP);
     if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
@@ -4738,14 +4738,14 @@ static void arch_init(void) {
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[2]=0x1<<22; // ceil
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[3]=0x2<<22; // floor
 
-  jump_table_symbols[0] = (int) cached_interpreter_table.MFC0;
-  jump_table_symbols[1] = (int) cached_interpreter_table.MTC0;
-  jump_table_symbols[2] = (int) cached_interpreter_table.TLBR;
-  jump_table_symbols[3] = (int) cached_interpreter_table.TLBP;
-  jump_table_symbols[4] = (int) cached_interpreter_table.DMULT;
-  jump_table_symbols[5] = (int) cached_interpreter_table.DMULTU;
-  jump_table_symbols[6] = (int) cached_interpreter_table.DDIV;
-  jump_table_symbols[7] = (int) cached_interpreter_table.DDIVU;
+  jump_table_symbols[0] = (int) cached_interp_MFC0;
+  jump_table_symbols[1] = (int) cached_interp_MTC0;
+  jump_table_symbols[2] = (int) cached_interp_TLBR;
+  jump_table_symbols[3] = (int) cached_interp_TLBP;
+  jump_table_symbols[4] = (int) cached_interp_DMULT;
+  jump_table_symbols[5] = (int) cached_interp_DMULTU;
+  jump_table_symbols[6] = (int) cached_interp_DDIV;
+  jump_table_symbols[7] = (int) cached_interp_DDIVU;
 
   #ifdef RAM_OFFSET
   g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.rdram.dram-(int)0x80000000)>>2;

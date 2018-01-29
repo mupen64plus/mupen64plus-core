@@ -40,7 +40,6 @@
 #include "device/memory/memory.h"
 #include "device/r4300/cached_interp.h"
 #include "device/r4300/cp0.h"
-#include "device/r4300/ops.h"
 #include "device/r4300/recomp_types.h"
 #include "device/r4300/recomph.h" //include for function prototypes
 #include "device/r4300/tlb.h"
@@ -60,19 +59,19 @@ static void free_exec(void *ptr, size_t length);
 
 static void RSV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.RESERVED;
+    r4300->cached_interp.dst->ops = cached_interp_RESERVED;
     r4300->cached_interp.recomp_func = genreserved;
 }
 
 static void RFIN_BLOCK(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.FIN_BLOCK;
+    r4300->cached_interp.dst->ops = r4300->cached_interp.fin_block;
     r4300->cached_interp.recomp_func = genfin_block;
 }
 
 static void RNOTCOMPILED(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NOTCOMPILED;
+    r4300->cached_interp.dst->ops = r4300->cached_interp.not_compiled;
     r4300->cached_interp.recomp_func = gennotcompiled;
 }
 
@@ -116,13 +115,13 @@ static void recompile_standard_cf_type(struct r4300_core* r4300)
 
 static void RNOP(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NOP;
+    r4300->cached_interp.dst->ops = cached_interp_NOP;
     r4300->cached_interp.recomp_func = gennop;
 }
 
 static void RSLL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLL;
+    r4300->cached_interp.dst->ops = cached_interp_SLL;
     r4300->cached_interp.recomp_func = gensll;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -130,7 +129,7 @@ static void RSLL(struct r4300_core* r4300)
 
 static void RSRL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SRL;
+    r4300->cached_interp.dst->ops = cached_interp_SRL;
     r4300->cached_interp.recomp_func = gensrl;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -138,7 +137,7 @@ static void RSRL(struct r4300_core* r4300)
 
 static void RSRA(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SRA;
+    r4300->cached_interp.dst->ops = cached_interp_SRA;
     r4300->cached_interp.recomp_func = gensra;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -146,7 +145,7 @@ static void RSRA(struct r4300_core* r4300)
 
 static void RSLLV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLLV;
+    r4300->cached_interp.dst->ops = cached_interp_SLLV;
     r4300->cached_interp.recomp_func = gensllv;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -154,7 +153,7 @@ static void RSLLV(struct r4300_core* r4300)
 
 static void RSRLV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SRLV;
+    r4300->cached_interp.dst->ops = cached_interp_SRLV;
     r4300->cached_interp.recomp_func = gensrlv;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -162,7 +161,7 @@ static void RSRLV(struct r4300_core* r4300)
 
 static void RSRAV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SRAV;
+    r4300->cached_interp.dst->ops = cached_interp_SRAV;
     r4300->cached_interp.recomp_func = gensrav;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -170,39 +169,43 @@ static void RSRAV(struct r4300_core* r4300)
 
 static void RJR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.JR;
+    /* use the OUT version since we don't know until runtime
+     * if we're going to jump inside or ouside of block */
+    r4300->cached_interp.dst->ops = cached_interp_JR_OUT;
     r4300->cached_interp.recomp_func = genjr;
     recompile_standard_i_type(r4300);
 }
 
 static void RJALR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.JALR;
+    /* use the OUT version since we don't know until runtime
+     * if we're going to jump inside or ouside of block */
+    r4300->cached_interp.dst->ops = cached_interp_JALR_OUT;
     r4300->cached_interp.recomp_func = genjalr;
     recompile_standard_r_type(r4300);
 }
 
 static void RSYSCALL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SYSCALL;
+    r4300->cached_interp.dst->ops = cached_interp_SYSCALL;
     r4300->cached_interp.recomp_func = gensyscall;
 }
 
 static void RBREAK(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RSYNC(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SYNC;
+    r4300->cached_interp.dst->ops = cached_interp_SYNC;
     r4300->cached_interp.recomp_func = gensync;
 }
 
 static void RMFHI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MFHI;
+    r4300->cached_interp.dst->ops = cached_interp_MFHI;
     r4300->cached_interp.recomp_func = genmfhi;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -210,14 +213,14 @@ static void RMFHI(struct r4300_core* r4300)
 
 static void RMTHI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MTHI;
+    r4300->cached_interp.dst->ops = cached_interp_MTHI;
     r4300->cached_interp.recomp_func = genmthi;
     recompile_standard_r_type(r4300);
 }
 
 static void RMFLO(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MFLO;
+    r4300->cached_interp.dst->ops = cached_interp_MFLO;
     r4300->cached_interp.recomp_func = genmflo;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -225,14 +228,14 @@ static void RMFLO(struct r4300_core* r4300)
 
 static void RMTLO(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MTLO;
+    r4300->cached_interp.dst->ops = cached_interp_MTLO;
     r4300->cached_interp.recomp_func = genmtlo;
     recompile_standard_r_type(r4300);
 }
 
 static void RDSLLV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSLLV;
+    r4300->cached_interp.dst->ops = cached_interp_DSLLV;
     r4300->cached_interp.recomp_func = gendsllv;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -240,7 +243,7 @@ static void RDSLLV(struct r4300_core* r4300)
 
 static void RDSRLV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRLV;
+    r4300->cached_interp.dst->ops = cached_interp_DSRLV;
     r4300->cached_interp.recomp_func = gendsrlv;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -248,7 +251,7 @@ static void RDSRLV(struct r4300_core* r4300)
 
 static void RDSRAV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRAV;
+    r4300->cached_interp.dst->ops = cached_interp_DSRAV;
     r4300->cached_interp.recomp_func = gendsrav;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -256,63 +259,63 @@ static void RDSRAV(struct r4300_core* r4300)
 
 static void RMULT(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MULT;
+    r4300->cached_interp.dst->ops = cached_interp_MULT;
     r4300->cached_interp.recomp_func = genmult;
     recompile_standard_r_type(r4300);
 }
 
 static void RMULTU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MULTU;
+    r4300->cached_interp.dst->ops = cached_interp_MULTU;
     r4300->cached_interp.recomp_func = genmultu;
     recompile_standard_r_type(r4300);
 }
 
 static void RDIV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DIV;
+    r4300->cached_interp.dst->ops = cached_interp_DIV;
     r4300->cached_interp.recomp_func = gendiv;
     recompile_standard_r_type(r4300);
 }
 
 static void RDIVU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DIVU;
+    r4300->cached_interp.dst->ops = cached_interp_DIVU;
     r4300->cached_interp.recomp_func = gendivu;
     recompile_standard_r_type(r4300);
 }
 
 static void RDMULT(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DMULT;
+    r4300->cached_interp.dst->ops = cached_interp_DMULT;
     r4300->cached_interp.recomp_func = gendmult;
     recompile_standard_r_type(r4300);
 }
 
 static void RDMULTU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DMULTU;
+    r4300->cached_interp.dst->ops = cached_interp_DMULTU;
     r4300->cached_interp.recomp_func = gendmultu;
     recompile_standard_r_type(r4300);
 }
 
 static void RDDIV(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DDIV;
+    r4300->cached_interp.dst->ops = cached_interp_DDIV;
     r4300->cached_interp.recomp_func = genddiv;
     recompile_standard_r_type(r4300);
 }
 
 static void RDDIVU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DDIVU;
+    r4300->cached_interp.dst->ops = cached_interp_DDIVU;
     r4300->cached_interp.recomp_func = genddivu;
     recompile_standard_r_type(r4300);
 }
 
 static void RADD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADD;
+    r4300->cached_interp.dst->ops = cached_interp_ADD;
     r4300->cached_interp.recomp_func = genadd;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -320,7 +323,7 @@ static void RADD(struct r4300_core* r4300)
 
 static void RADDU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADDU;
+    r4300->cached_interp.dst->ops = cached_interp_ADDU;
     r4300->cached_interp.recomp_func = genaddu;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -328,7 +331,7 @@ static void RADDU(struct r4300_core* r4300)
 
 static void RSUB(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SUB;
+    r4300->cached_interp.dst->ops = cached_interp_SUB;
     r4300->cached_interp.recomp_func = gensub;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -336,7 +339,7 @@ static void RSUB(struct r4300_core* r4300)
 
 static void RSUBU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SUBU;
+    r4300->cached_interp.dst->ops = cached_interp_SUBU;
     r4300->cached_interp.recomp_func = gensubu;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -344,7 +347,7 @@ static void RSUBU(struct r4300_core* r4300)
 
 static void RAND(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.AND;
+    r4300->cached_interp.dst->ops = cached_interp_AND;
     r4300->cached_interp.recomp_func = genand;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -352,7 +355,7 @@ static void RAND(struct r4300_core* r4300)
 
 static void ROR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.OR;
+    r4300->cached_interp.dst->ops = cached_interp_OR;
     r4300->cached_interp.recomp_func = genor;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -360,7 +363,7 @@ static void ROR(struct r4300_core* r4300)
 
 static void RXOR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.XOR;
+    r4300->cached_interp.dst->ops = cached_interp_XOR;
     r4300->cached_interp.recomp_func = genxor;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -368,7 +371,7 @@ static void RXOR(struct r4300_core* r4300)
 
 static void RNOR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NOR;
+    r4300->cached_interp.dst->ops = cached_interp_NOR;
     r4300->cached_interp.recomp_func = gennor;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -376,7 +379,7 @@ static void RNOR(struct r4300_core* r4300)
 
 static void RSLT(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLT;
+    r4300->cached_interp.dst->ops = cached_interp_SLT;
     r4300->cached_interp.recomp_func = genslt;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -384,7 +387,7 @@ static void RSLT(struct r4300_core* r4300)
 
 static void RSLTU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLTU;
+    r4300->cached_interp.dst->ops = cached_interp_SLTU;
     r4300->cached_interp.recomp_func = gensltu;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -392,7 +395,7 @@ static void RSLTU(struct r4300_core* r4300)
 
 static void RDADD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DADD;
+    r4300->cached_interp.dst->ops = cached_interp_DADD;
     r4300->cached_interp.recomp_func = gendadd;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -400,7 +403,7 @@ static void RDADD(struct r4300_core* r4300)
 
 static void RDADDU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DADDU;
+    r4300->cached_interp.dst->ops = cached_interp_DADDU;
     r4300->cached_interp.recomp_func = gendaddu;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -408,7 +411,7 @@ static void RDADDU(struct r4300_core* r4300)
 
 static void RDSUB(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSUB;
+    r4300->cached_interp.dst->ops = cached_interp_DSUB;
     r4300->cached_interp.recomp_func = gendsub;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -416,7 +419,7 @@ static void RDSUB(struct r4300_core* r4300)
 
 static void RDSUBU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSUBU;
+    r4300->cached_interp.dst->ops = cached_interp_DSUBU;
     r4300->cached_interp.recomp_func = gendsubu;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -424,44 +427,44 @@ static void RDSUBU(struct r4300_core* r4300)
 
 static void RTGE(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTGEU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTLT(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTLTU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTEQ(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TEQ;
+    r4300->cached_interp.dst->ops = cached_interp_TEQ;
     r4300->cached_interp.recomp_func = genteq;
     recompile_standard_r_type(r4300);
 }
 
 static void RTNE(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RDSLL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSLL;
+    r4300->cached_interp.dst->ops = cached_interp_DSLL;
     r4300->cached_interp.recomp_func = gendsll;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -469,7 +472,7 @@ static void RDSLL(struct r4300_core* r4300)
 
 static void RDSRL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRL;
+    r4300->cached_interp.dst->ops = cached_interp_DSRL;
     r4300->cached_interp.recomp_func = gendsrl;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -477,7 +480,7 @@ static void RDSRL(struct r4300_core* r4300)
 
 static void RDSRA(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRA;
+    r4300->cached_interp.dst->ops = cached_interp_DSRA;
     r4300->cached_interp.recomp_func = gendsra;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -485,7 +488,7 @@ static void RDSRA(struct r4300_core* r4300)
 
 static void RDSLL32(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSLL32;
+    r4300->cached_interp.dst->ops = cached_interp_DSLL32;
     r4300->cached_interp.recomp_func = gendsll32;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -493,7 +496,7 @@ static void RDSLL32(struct r4300_core* r4300)
 
 static void RDSRL32(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRL32;
+    r4300->cached_interp.dst->ops = cached_interp_DSRL32;
     r4300->cached_interp.recomp_func = gendsrl32;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -501,7 +504,7 @@ static void RDSRL32(struct r4300_core* r4300)
 
 static void RDSRA32(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DSRA32;
+    r4300->cached_interp.dst->ops = cached_interp_DSRA32;
     r4300->cached_interp.recomp_func = gendsra32;
     recompile_standard_r_type(r4300);
     if (r4300->cached_interp.dst->f.r.rd == r4300_regs(r4300)) RNOP(r4300);
@@ -526,7 +529,7 @@ static void (*const recomp_special[64])(struct r4300_core* r4300) =
 static void RBLTZ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZ;
+    r4300->cached_interp.dst->ops = cached_interp_BLTZ;
     r4300->cached_interp.recomp_func = genbltz;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -534,13 +537,13 @@ static void RBLTZ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZ_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLTZ_IDLE;
             r4300->cached_interp.recomp_func = genbltz_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZ_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLTZ_OUT;
         r4300->cached_interp.recomp_func = genbltz_out;
     }
 }
@@ -548,7 +551,7 @@ static void RBLTZ(struct r4300_core* r4300)
 static void RBGEZ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZ;
+    r4300->cached_interp.dst->ops = cached_interp_BGEZ;
     r4300->cached_interp.recomp_func = genbgez;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -556,13 +559,13 @@ static void RBGEZ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZ_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGEZ_IDLE;
             r4300->cached_interp.recomp_func = genbgez_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZ_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGEZ_OUT;
         r4300->cached_interp.recomp_func = genbgez_out;
     }
 }
@@ -570,7 +573,7 @@ static void RBGEZ(struct r4300_core* r4300)
 static void RBLTZL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZL;
+    r4300->cached_interp.dst->ops = cached_interp_BLTZL;
     r4300->cached_interp.recomp_func = genbltzl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -578,13 +581,13 @@ static void RBLTZL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLTZL_IDLE;
             r4300->cached_interp.recomp_func = genbltzl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLTZL_OUT;
         r4300->cached_interp.recomp_func = genbltzl_out;
     }
 }
@@ -592,7 +595,7 @@ static void RBLTZL(struct r4300_core* r4300)
 static void RBGEZL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZL;
+    r4300->cached_interp.dst->ops = cached_interp_BGEZL;
     r4300->cached_interp.recomp_func = genbgezl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -600,57 +603,57 @@ static void RBGEZL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGEZL_IDLE;
             r4300->cached_interp.recomp_func = genbgezl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGEZL_OUT;
         r4300->cached_interp.recomp_func = genbgezl_out;
     }
 }
 
 static void RTGEI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTGEIU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTLTI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTLTIU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTEQI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RTNEI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
 }
 
 static void RBLTZAL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZAL;
+    r4300->cached_interp.dst->ops = cached_interp_BLTZAL;
     r4300->cached_interp.recomp_func = genbltzal;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -658,13 +661,13 @@ static void RBLTZAL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZAL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLTZAL_IDLE;
             r4300->cached_interp.recomp_func = genbltzal_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZAL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLTZAL_OUT;
         r4300->cached_interp.recomp_func = genbltzal_out;
     }
 }
@@ -672,7 +675,7 @@ static void RBLTZAL(struct r4300_core* r4300)
 static void RBGEZAL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZAL;
+    r4300->cached_interp.dst->ops = cached_interp_BGEZAL;
     r4300->cached_interp.recomp_func = genbgezal;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -680,13 +683,13 @@ static void RBGEZAL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZAL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGEZAL_IDLE;
             r4300->cached_interp.recomp_func = genbgezal_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZAL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGEZAL_OUT;
         r4300->cached_interp.recomp_func = genbgezal_out;
     }
 }
@@ -694,7 +697,7 @@ static void RBGEZAL(struct r4300_core* r4300)
 static void RBLTZALL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZALL;
+    r4300->cached_interp.dst->ops = cached_interp_BLTZALL;
     r4300->cached_interp.recomp_func = genbltzall;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -702,13 +705,13 @@ static void RBLTZALL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZALL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLTZALL_IDLE;
             r4300->cached_interp.recomp_func = genbltzall_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLTZALL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLTZALL_OUT;
         r4300->cached_interp.recomp_func = genbltzall_out;
     }
 }
@@ -716,7 +719,7 @@ static void RBLTZALL(struct r4300_core* r4300)
 static void RBGEZALL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZALL;
+    r4300->cached_interp.dst->ops = cached_interp_BGEZALL;
     r4300->cached_interp.recomp_func = genbgezall;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -724,13 +727,13 @@ static void RBGEZALL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZALL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGEZALL_IDLE;
             r4300->cached_interp.recomp_func = genbgezall_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGEZALL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGEZALL_OUT;
         r4300->cached_interp.recomp_func = genbgezall_out;
     }
 }
@@ -749,31 +752,31 @@ static void (*const recomp_regimm[32])(struct r4300_core* r4300) =
 
 static void RTLBR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TLBR;
+    r4300->cached_interp.dst->ops = cached_interp_TLBR;
     r4300->cached_interp.recomp_func = gentlbr;
 }
 
 static void RTLBWI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TLBWI;
+    r4300->cached_interp.dst->ops = cached_interp_TLBWI;
     r4300->cached_interp.recomp_func = gentlbwi;
 }
 
 static void RTLBWR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TLBWR;
+    r4300->cached_interp.dst->ops = cached_interp_TLBWR;
     r4300->cached_interp.recomp_func = gentlbwr;
 }
 
 static void RTLBP(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TLBP;
+    r4300->cached_interp.dst->ops = cached_interp_TLBP;
     r4300->cached_interp.recomp_func = gentlbp;
 }
 
 static void RERET(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ERET;
+    r4300->cached_interp.dst->ops = cached_interp_ERET;
     r4300->cached_interp.recomp_func = generet;
 }
 
@@ -795,7 +798,7 @@ static void (*const recomp_tlb[64])(struct r4300_core* r4300) =
 
 static void RMFC0(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MFC0;
+    r4300->cached_interp.dst->ops = cached_interp_MFC0;
     r4300->cached_interp.recomp_func = genmfc0;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.dst->f.r.rd = (int64_t*) (r4300_cp0_regs(&r4300->cp0) + ((r4300->cached_interp.src >> 11) & 0x1F));
@@ -805,7 +808,7 @@ static void RMFC0(struct r4300_core* r4300)
 
 static void RMTC0(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MTC0;
+    r4300->cached_interp.dst->ops = cached_interp_MTC0;
     r4300->cached_interp.recomp_func = genmtc0;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -831,7 +834,7 @@ static void (*const recomp_cop0[32])(struct r4300_core* r4300) =
 static void RBC1F(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1F;
+    r4300->cached_interp.dst->ops = cached_interp_BC1F;
     r4300->cached_interp.recomp_func = genbc1f;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -839,13 +842,13 @@ static void RBC1F(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1F_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BC1F_IDLE;
             r4300->cached_interp.recomp_func = genbc1f_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1F_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BC1F_OUT;
         r4300->cached_interp.recomp_func = genbc1f_out;
     }
 }
@@ -853,7 +856,7 @@ static void RBC1F(struct r4300_core* r4300)
 static void RBC1T(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1T;
+    r4300->cached_interp.dst->ops = cached_interp_BC1T;
     r4300->cached_interp.recomp_func = genbc1t;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -861,13 +864,13 @@ static void RBC1T(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1T_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BC1T_IDLE;
             r4300->cached_interp.recomp_func = genbc1t_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1T_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BC1T_OUT;
         r4300->cached_interp.recomp_func = genbc1t_out;
     }
 }
@@ -875,7 +878,7 @@ static void RBC1T(struct r4300_core* r4300)
 static void RBC1FL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1FL;
+    r4300->cached_interp.dst->ops = cached_interp_BC1FL;
     r4300->cached_interp.recomp_func = genbc1fl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -883,13 +886,13 @@ static void RBC1FL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1FL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BC1FL_IDLE;
             r4300->cached_interp.recomp_func = genbc1fl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1FL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BC1FL_OUT;
         r4300->cached_interp.recomp_func = genbc1fl_out;
     }
 }
@@ -897,7 +900,7 @@ static void RBC1FL(struct r4300_core* r4300)
 static void RBC1TL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1TL;
+    r4300->cached_interp.dst->ops = cached_interp_BC1TL;
     r4300->cached_interp.recomp_func = genbc1tl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -905,13 +908,13 @@ static void RBC1TL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1TL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BC1TL_IDLE;
             r4300->cached_interp.recomp_func = genbc1tl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BC1TL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BC1TL_OUT;
         r4300->cached_interp.recomp_func = genbc1tl_out;
     }
 }
@@ -928,245 +931,245 @@ static void (*const recomp_bc[4])(struct r4300_core* r4300) =
 
 static void RADD_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADD_S;
+    r4300->cached_interp.dst->ops = cached_interp_ADD_S;
     r4300->cached_interp.recomp_func = genadd_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RSUB_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SUB_S;
+    r4300->cached_interp.dst->ops = cached_interp_SUB_S;
     r4300->cached_interp.recomp_func = gensub_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RMUL_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MUL_S;
+    r4300->cached_interp.dst->ops = cached_interp_MUL_S;
     r4300->cached_interp.recomp_func = genmul_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RDIV_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DIV_S;
+    r4300->cached_interp.dst->ops = cached_interp_DIV_S;
     r4300->cached_interp.recomp_func = gendiv_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RSQRT_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SQRT_S;
+    r4300->cached_interp.dst->ops = cached_interp_SQRT_S;
     r4300->cached_interp.recomp_func = gensqrt_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RABS_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ABS_S;
+    r4300->cached_interp.dst->ops = cached_interp_ABS_S;
     r4300->cached_interp.recomp_func = genabs_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RMOV_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MOV_S;
+    r4300->cached_interp.dst->ops = cached_interp_MOV_S;
     r4300->cached_interp.recomp_func = genmov_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RNEG_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NEG_S;
+    r4300->cached_interp.dst->ops = cached_interp_NEG_S;
     r4300->cached_interp.recomp_func = genneg_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RROUND_L_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ROUND_L_S;
+    r4300->cached_interp.dst->ops = cached_interp_ROUND_L_S;
     r4300->cached_interp.recomp_func = genround_l_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RTRUNC_L_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TRUNC_L_S;
+    r4300->cached_interp.dst->ops = cached_interp_TRUNC_L_S;
     r4300->cached_interp.recomp_func = gentrunc_l_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCEIL_L_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CEIL_L_S;
+    r4300->cached_interp.dst->ops = cached_interp_CEIL_L_S;
     r4300->cached_interp.recomp_func = genceil_l_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RFLOOR_L_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.FLOOR_L_S;
+    r4300->cached_interp.dst->ops = cached_interp_FLOOR_L_S;
     r4300->cached_interp.recomp_func = genfloor_l_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RROUND_W_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ROUND_W_S;
+    r4300->cached_interp.dst->ops = cached_interp_ROUND_W_S;
     r4300->cached_interp.recomp_func = genround_w_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RTRUNC_W_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TRUNC_W_S;
+    r4300->cached_interp.dst->ops = cached_interp_TRUNC_W_S;
     r4300->cached_interp.recomp_func = gentrunc_w_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCEIL_W_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CEIL_W_S;
+    r4300->cached_interp.dst->ops = cached_interp_CEIL_W_S;
     r4300->cached_interp.recomp_func = genceil_w_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RFLOOR_W_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.FLOOR_W_S;
+    r4300->cached_interp.dst->ops = cached_interp_FLOOR_W_S;
     r4300->cached_interp.recomp_func = genfloor_w_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_D_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_D_S;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_D_S;
     r4300->cached_interp.recomp_func = gencvt_d_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_W_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_W_S;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_W_S;
     r4300->cached_interp.recomp_func = gencvt_w_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_L_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_L_S;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_L_S;
     r4300->cached_interp.recomp_func = gencvt_l_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_F_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_F_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_F_S;
     r4300->cached_interp.recomp_func = genc_f_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_UN_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_UN_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_UN_S;
     r4300->cached_interp.recomp_func = genc_un_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_EQ_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_EQ_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_EQ_S;
     r4300->cached_interp.recomp_func = genc_eq_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_UEQ_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_UEQ_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_UEQ_S;
     r4300->cached_interp.recomp_func = genc_ueq_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_OLT_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_OLT_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_OLT_S;
     r4300->cached_interp.recomp_func = genc_olt_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_ULT_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_ULT_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_ULT_S;
     r4300->cached_interp.recomp_func = genc_ult_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_OLE_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_OLE_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_OLE_S;
     r4300->cached_interp.recomp_func = genc_ole_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_ULE_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_ULE_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_ULE_S;
     r4300->cached_interp.recomp_func = genc_ule_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_SF_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_SF_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_SF_S;
     r4300->cached_interp.recomp_func = genc_sf_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGLE_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGLE_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGLE_S;
     r4300->cached_interp.recomp_func = genc_ngle_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_SEQ_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_SEQ_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_SEQ_S;
     r4300->cached_interp.recomp_func = genc_seq_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGL_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGL_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGL_S;
     r4300->cached_interp.recomp_func = genc_ngl_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_LT_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_LT_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_LT_S;
     r4300->cached_interp.recomp_func = genc_lt_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGE_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGE_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGE_S;
     r4300->cached_interp.recomp_func = genc_nge_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_LE_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_LE_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_LE_S;
     r4300->cached_interp.recomp_func = genc_le_s;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGT_S(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGT_S;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGT_S;
     r4300->cached_interp.recomp_func = genc_ngt_s;
     recompile_standard_cf_type(r4300);
 }
@@ -1189,245 +1192,245 @@ static void (*const recomp_s[64])(struct r4300_core* r4300) =
 
 static void RADD_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADD_D;
+    r4300->cached_interp.dst->ops = cached_interp_ADD_D;
     r4300->cached_interp.recomp_func = genadd_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RSUB_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SUB_D;
+    r4300->cached_interp.dst->ops = cached_interp_SUB_D;
     r4300->cached_interp.recomp_func = gensub_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RMUL_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MUL_D;
+    r4300->cached_interp.dst->ops = cached_interp_MUL_D;
     r4300->cached_interp.recomp_func = genmul_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RDIV_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DIV_D;
+    r4300->cached_interp.dst->ops = cached_interp_DIV_D;
     r4300->cached_interp.recomp_func = gendiv_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RSQRT_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SQRT_D;
+    r4300->cached_interp.dst->ops = cached_interp_SQRT_D;
     r4300->cached_interp.recomp_func = gensqrt_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RABS_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ABS_D;
+    r4300->cached_interp.dst->ops = cached_interp_ABS_D;
     r4300->cached_interp.recomp_func = genabs_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RMOV_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MOV_D;
+    r4300->cached_interp.dst->ops = cached_interp_MOV_D;
     r4300->cached_interp.recomp_func = genmov_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RNEG_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NEG_D;
+    r4300->cached_interp.dst->ops = cached_interp_NEG_D;
     r4300->cached_interp.recomp_func = genneg_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RROUND_L_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ROUND_L_D;
+    r4300->cached_interp.dst->ops = cached_interp_ROUND_L_D;
     r4300->cached_interp.recomp_func = genround_l_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RTRUNC_L_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TRUNC_L_D;
+    r4300->cached_interp.dst->ops = cached_interp_TRUNC_L_D;
     r4300->cached_interp.recomp_func = gentrunc_l_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCEIL_L_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CEIL_L_D;
+    r4300->cached_interp.dst->ops = cached_interp_CEIL_L_D;
     r4300->cached_interp.recomp_func = genceil_l_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RFLOOR_L_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.FLOOR_L_D;
+    r4300->cached_interp.dst->ops = cached_interp_FLOOR_L_D;
     r4300->cached_interp.recomp_func = genfloor_l_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RROUND_W_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ROUND_W_D;
+    r4300->cached_interp.dst->ops = cached_interp_ROUND_W_D;
     r4300->cached_interp.recomp_func = genround_w_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RTRUNC_W_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.TRUNC_W_D;
+    r4300->cached_interp.dst->ops = cached_interp_TRUNC_W_D;
     r4300->cached_interp.recomp_func = gentrunc_w_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCEIL_W_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CEIL_W_D;
+    r4300->cached_interp.dst->ops = cached_interp_CEIL_W_D;
     r4300->cached_interp.recomp_func = genceil_w_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RFLOOR_W_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.FLOOR_W_D;
+    r4300->cached_interp.dst->ops = cached_interp_FLOOR_W_D;
     r4300->cached_interp.recomp_func = genfloor_w_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_S_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_S_D;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_S_D;
     r4300->cached_interp.recomp_func = gencvt_s_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_W_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_W_D;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_W_D;
     r4300->cached_interp.recomp_func = gencvt_w_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_L_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_L_D;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_L_D;
     r4300->cached_interp.recomp_func = gencvt_l_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_F_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_F_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_F_D;
     r4300->cached_interp.recomp_func = genc_f_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_UN_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_UN_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_UN_D;
     r4300->cached_interp.recomp_func = genc_un_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_EQ_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_EQ_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_EQ_D;
     r4300->cached_interp.recomp_func = genc_eq_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_UEQ_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_UEQ_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_UEQ_D;
     r4300->cached_interp.recomp_func = genc_ueq_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_OLT_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_OLT_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_OLT_D;
     r4300->cached_interp.recomp_func = genc_olt_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_ULT_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_ULT_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_ULT_D;
     r4300->cached_interp.recomp_func = genc_ult_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_OLE_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_OLE_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_OLE_D;
     r4300->cached_interp.recomp_func = genc_ole_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_ULE_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_ULE_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_ULE_D;
     r4300->cached_interp.recomp_func = genc_ule_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_SF_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_SF_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_SF_D;
     r4300->cached_interp.recomp_func = genc_sf_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGLE_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGLE_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGLE_D;
     r4300->cached_interp.recomp_func = genc_ngle_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_SEQ_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_SEQ_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_SEQ_D;
     r4300->cached_interp.recomp_func = genc_seq_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGL_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGL_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGL_D;
     r4300->cached_interp.recomp_func = genc_ngl_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_LT_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_LT_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_LT_D;
     r4300->cached_interp.recomp_func = genc_lt_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGE_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGE_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGE_D;
     r4300->cached_interp.recomp_func = genc_nge_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_LE_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_LE_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_LE_D;
     r4300->cached_interp.recomp_func = genc_le_d;
     recompile_standard_cf_type(r4300);
 }
 
 static void RC_NGT_D(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.C_NGT_D;
+    r4300->cached_interp.dst->ops = cached_interp_C_NGT_D;
     r4300->cached_interp.recomp_func = genc_ngt_d;
     recompile_standard_cf_type(r4300);
 }
@@ -1450,14 +1453,14 @@ static void (*const recomp_d[64])(struct r4300_core* r4300) =
 
 static void RCVT_S_W(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_S_W;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_S_W;
     r4300->cached_interp.recomp_func = gencvt_s_w;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_D_W(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_D_W;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_D_W;
     r4300->cached_interp.recomp_func = gencvt_d_w;
     recompile_standard_cf_type(r4300);
 }
@@ -1480,14 +1483,14 @@ static void (*const recomp_w[64])(struct r4300_core* r4300) =
 
 static void RCVT_S_L(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_S_L;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_S_L;
     r4300->cached_interp.recomp_func = gencvt_s_l;
     recompile_standard_cf_type(r4300);
 }
 
 static void RCVT_D_L(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CVT_D_L;
+    r4300->cached_interp.dst->ops = cached_interp_CVT_D_L;
     r4300->cached_interp.recomp_func = gencvt_d_l;
     recompile_standard_cf_type(r4300);
 }
@@ -1510,7 +1513,7 @@ static void (*const recomp_l[64])(struct r4300_core* r4300) =
 
 static void RMFC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MFC1;
+    r4300->cached_interp.dst->ops = cached_interp_MFC1;
     r4300->cached_interp.recomp_func = genmfc1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1519,7 +1522,7 @@ static void RMFC1(struct r4300_core* r4300)
 
 static void RDMFC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DMFC1;
+    r4300->cached_interp.dst->ops = cached_interp_DMFC1;
     r4300->cached_interp.recomp_func = gendmfc1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1528,7 +1531,7 @@ static void RDMFC1(struct r4300_core* r4300)
 
 static void RCFC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CFC1;
+    r4300->cached_interp.dst->ops = cached_interp_CFC1;
     r4300->cached_interp.recomp_func = gencfc1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1537,7 +1540,7 @@ static void RCFC1(struct r4300_core* r4300)
 
 static void RMTC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.MTC1;
+    r4300->cached_interp.dst->ops = cached_interp_MTC1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.recomp_func = genmtc1;
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1545,7 +1548,7 @@ static void RMTC1(struct r4300_core* r4300)
 
 static void RDMTC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DMTC1;
+    r4300->cached_interp.dst->ops = cached_interp_DMTC1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.recomp_func = gendmtc1;
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1553,7 +1556,7 @@ static void RDMTC1(struct r4300_core* r4300)
 
 static void RCTC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CTC1;
+    r4300->cached_interp.dst->ops = cached_interp_CTC1;
     recompile_standard_r_type(r4300);
     r4300->cached_interp.recomp_func = genctc1;
     r4300->cached_interp.dst->f.r.nrd = (r4300->cached_interp.src >> 11) & 0x1F;
@@ -1609,7 +1612,7 @@ static void RREGIMM(struct r4300_core* r4300)
 static void RJ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.J;
+    r4300->cached_interp.dst->ops = cached_interp_J;
     r4300->cached_interp.recomp_func = genj;
     recompile_standard_j_type(r4300);
     target = (r4300->cached_interp.dst->f.j.inst_index<<2) | (r4300->cached_interp.dst->addr & UINT32_C(0xF0000000));
@@ -1617,13 +1620,13 @@ static void RJ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.J_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_J_IDLE;
             r4300->cached_interp.recomp_func = genj_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.J_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_J_OUT;
         r4300->cached_interp.recomp_func = genj_out;
     }
 }
@@ -1631,7 +1634,7 @@ static void RJ(struct r4300_core* r4300)
 static void RJAL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.JAL;
+    r4300->cached_interp.dst->ops = cached_interp_JAL;
     r4300->cached_interp.recomp_func = genjal;
     recompile_standard_j_type(r4300);
     target = (r4300->cached_interp.dst->f.j.inst_index<<2) | (r4300->cached_interp.dst->addr & UINT32_C(0xF0000000));
@@ -1639,13 +1642,13 @@ static void RJAL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.JAL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_JAL_IDLE;
             r4300->cached_interp.recomp_func = genjal_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.JAL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_JAL_OUT;
         r4300->cached_interp.recomp_func = genjal_out;
     }
 }
@@ -1653,7 +1656,7 @@ static void RJAL(struct r4300_core* r4300)
 static void RBEQ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQ;
+    r4300->cached_interp.dst->ops = cached_interp_BEQ;
     r4300->cached_interp.recomp_func = genbeq;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1661,13 +1664,13 @@ static void RBEQ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQ_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BEQ_IDLE;
             r4300->cached_interp.recomp_func = genbeq_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQ_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BEQ_OUT;
         r4300->cached_interp.recomp_func = genbeq_out;
     }
 }
@@ -1675,7 +1678,7 @@ static void RBEQ(struct r4300_core* r4300)
 static void RBNE(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNE;
+    r4300->cached_interp.dst->ops = cached_interp_BNE;
     r4300->cached_interp.recomp_func = genbne;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1683,13 +1686,13 @@ static void RBNE(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNE_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BNE_IDLE;
             r4300->cached_interp.recomp_func = genbne_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNE_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BNE_OUT;
         r4300->cached_interp.recomp_func = genbne_out;
     }
 }
@@ -1697,7 +1700,7 @@ static void RBNE(struct r4300_core* r4300)
 static void RBLEZ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZ;
+    r4300->cached_interp.dst->ops = cached_interp_BLEZ;
     r4300->cached_interp.recomp_func = genblez;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1705,13 +1708,13 @@ static void RBLEZ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZ_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLEZ_IDLE;
             r4300->cached_interp.recomp_func = genblez_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZ_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLEZ_OUT;
         r4300->cached_interp.recomp_func = genblez_out;
     }
 }
@@ -1719,7 +1722,7 @@ static void RBLEZ(struct r4300_core* r4300)
 static void RBGTZ(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZ;
+    r4300->cached_interp.dst->ops = cached_interp_BGTZ;
     r4300->cached_interp.recomp_func = genbgtz;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1727,20 +1730,20 @@ static void RBGTZ(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZ_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGTZ_IDLE;
             r4300->cached_interp.recomp_func = genbgtz_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZ_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGTZ_OUT;
         r4300->cached_interp.recomp_func = genbgtz_out;
     }
 }
 
 static void RADDI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADDI;
+    r4300->cached_interp.dst->ops = cached_interp_ADDI;
     r4300->cached_interp.recomp_func = genaddi;
     recompile_standard_i_type(r4300);
     if(r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1748,7 +1751,7 @@ static void RADDI(struct r4300_core* r4300)
 
 static void RADDIU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ADDIU;
+    r4300->cached_interp.dst->ops = cached_interp_ADDIU;
     r4300->cached_interp.recomp_func = genaddiu;
     recompile_standard_i_type(r4300);
     if(r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1756,7 +1759,7 @@ static void RADDIU(struct r4300_core* r4300)
 
 static void RSLTI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLTI;
+    r4300->cached_interp.dst->ops = cached_interp_SLTI;
     r4300->cached_interp.recomp_func = genslti;
     recompile_standard_i_type(r4300);
     if(r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1764,7 +1767,7 @@ static void RSLTI(struct r4300_core* r4300)
 
 static void RSLTIU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SLTIU;
+    r4300->cached_interp.dst->ops = cached_interp_SLTIU;
     r4300->cached_interp.recomp_func = gensltiu;
     recompile_standard_i_type(r4300);
     if(r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1772,7 +1775,7 @@ static void RSLTIU(struct r4300_core* r4300)
 
 static void RANDI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ANDI;
+    r4300->cached_interp.dst->ops = cached_interp_ANDI;
     r4300->cached_interp.recomp_func = genandi;
     recompile_standard_i_type(r4300);
     if(r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1780,7 +1783,7 @@ static void RANDI(struct r4300_core* r4300)
 
 static void RORI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.ORI;
+    r4300->cached_interp.dst->ops = cached_interp_ORI;
     r4300->cached_interp.recomp_func = genori;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1788,7 +1791,7 @@ static void RORI(struct r4300_core* r4300)
 
 static void RXORI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.XORI;
+    r4300->cached_interp.dst->ops = cached_interp_XORI;
     r4300->cached_interp.recomp_func = genxori;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1796,7 +1799,7 @@ static void RXORI(struct r4300_core* r4300)
 
 static void RLUI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LUI;
+    r4300->cached_interp.dst->ops = cached_interp_LUI;
     r4300->cached_interp.recomp_func = genlui;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1815,7 +1818,7 @@ static void RCOP1(struct r4300_core* r4300)
 static void RBEQL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQL;
+    r4300->cached_interp.dst->ops = cached_interp_BEQL;
     r4300->cached_interp.recomp_func = genbeql;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1823,13 +1826,13 @@ static void RBEQL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BEQL_IDLE;
             r4300->cached_interp.recomp_func = genbeql_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BEQL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BEQL_OUT;
         r4300->cached_interp.recomp_func = genbeql_out;
     }
 }
@@ -1837,7 +1840,7 @@ static void RBEQL(struct r4300_core* r4300)
 static void RBNEL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNEL;
+    r4300->cached_interp.dst->ops = cached_interp_BNEL;
     r4300->cached_interp.recomp_func = genbnel;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1845,13 +1848,13 @@ static void RBNEL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNEL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BNEL_IDLE;
             r4300->cached_interp.recomp_func = genbnel_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BNEL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BNEL_OUT;
         r4300->cached_interp.recomp_func = genbnel_out;
     }
 }
@@ -1859,7 +1862,7 @@ static void RBNEL(struct r4300_core* r4300)
 static void RBLEZL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZL;
+    r4300->cached_interp.dst->ops = cached_interp_BLEZL;
     r4300->cached_interp.recomp_func = genblezl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1867,13 +1870,13 @@ static void RBLEZL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BLEZL_IDLE;
             r4300->cached_interp.recomp_func = genblezl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BLEZL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BLEZL_OUT;
         r4300->cached_interp.recomp_func = genblezl_out;
     }
 }
@@ -1881,7 +1884,7 @@ static void RBLEZL(struct r4300_core* r4300)
 static void RBGTZL(struct r4300_core* r4300)
 {
     uint32_t target;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZL;
+    r4300->cached_interp.dst->ops = cached_interp_BGTZL;
     r4300->cached_interp.recomp_func = genbgtzl;
     recompile_standard_i_type(r4300);
     target = r4300->cached_interp.dst->addr + r4300->cached_interp.dst->f.i.immediate*4 + 4;
@@ -1889,20 +1892,20 @@ static void RBGTZL(struct r4300_core* r4300)
     {
         if (r4300->cached_interp.check_nop)
         {
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZL_IDLE;
+            r4300->cached_interp.dst->ops = cached_interp_BGTZL_IDLE;
             r4300->cached_interp.recomp_func = genbgtzl_idle;
         }
     }
     else if (target < r4300->cached_interp.dst_block->start || target >= r4300->cached_interp.dst_block->end || r4300->cached_interp.dst->addr == (r4300->cached_interp.dst_block->end-4))
     {
-        r4300->cached_interp.dst->ops = r4300->current_instruction_table.BGTZL_OUT;
+        r4300->cached_interp.dst->ops = cached_interp_BGTZL_OUT;
         r4300->cached_interp.recomp_func = genbgtzl_out;
     }
 }
 
 static void RDADDI(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DADDI;
+    r4300->cached_interp.dst->ops = cached_interp_DADDI;
     r4300->cached_interp.recomp_func = gendaddi;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1910,7 +1913,7 @@ static void RDADDI(struct r4300_core* r4300)
 
 static void RDADDIU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.DADDIU;
+    r4300->cached_interp.dst->ops = cached_interp_DADDIU;
     r4300->cached_interp.recomp_func = gendaddiu;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1918,7 +1921,7 @@ static void RDADDIU(struct r4300_core* r4300)
 
 static void RLDL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LDL;
+    r4300->cached_interp.dst->ops = cached_interp_LDL;
     r4300->cached_interp.recomp_func = genldl;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1926,7 +1929,7 @@ static void RLDL(struct r4300_core* r4300)
 
 static void RLDR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LDR;
+    r4300->cached_interp.dst->ops = cached_interp_LDR;
     r4300->cached_interp.recomp_func = genldr;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1934,7 +1937,7 @@ static void RLDR(struct r4300_core* r4300)
 
 static void RLB(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LB;
+    r4300->cached_interp.dst->ops = cached_interp_LB;
     r4300->cached_interp.recomp_func = genlb;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1942,7 +1945,7 @@ static void RLB(struct r4300_core* r4300)
 
 static void RLH(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LH;
+    r4300->cached_interp.dst->ops = cached_interp_LH;
     r4300->cached_interp.recomp_func = genlh;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1950,7 +1953,7 @@ static void RLH(struct r4300_core* r4300)
 
 static void RLWL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LWL;
+    r4300->cached_interp.dst->ops = cached_interp_LWL;
     r4300->cached_interp.recomp_func = genlwl;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1958,7 +1961,7 @@ static void RLWL(struct r4300_core* r4300)
 
 static void RLW(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LW;
+    r4300->cached_interp.dst->ops = cached_interp_LW;
     r4300->cached_interp.recomp_func = genlw;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1966,7 +1969,7 @@ static void RLW(struct r4300_core* r4300)
 
 static void RLBU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LBU;
+    r4300->cached_interp.dst->ops = cached_interp_LBU;
     r4300->cached_interp.recomp_func = genlbu;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1974,7 +1977,7 @@ static void RLBU(struct r4300_core* r4300)
 
 static void RLHU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LHU;
+    r4300->cached_interp.dst->ops = cached_interp_LHU;
     r4300->cached_interp.recomp_func = genlhu;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1982,7 +1985,7 @@ static void RLHU(struct r4300_core* r4300)
 
 static void RLWR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LWR;
+    r4300->cached_interp.dst->ops = cached_interp_LWR;
     r4300->cached_interp.recomp_func = genlwr;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1990,7 +1993,7 @@ static void RLWR(struct r4300_core* r4300)
 
 static void RLWU(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LWU;
+    r4300->cached_interp.dst->ops = cached_interp_LWU;
     r4300->cached_interp.recomp_func = genlwu;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -1998,49 +2001,49 @@ static void RLWU(struct r4300_core* r4300)
 
 static void RSB(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SB;
+    r4300->cached_interp.dst->ops = cached_interp_SB;
     r4300->cached_interp.recomp_func = gensb;
     recompile_standard_i_type(r4300);
 }
 
 static void RSH(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SH;
+    r4300->cached_interp.dst->ops = cached_interp_SH;
     r4300->cached_interp.recomp_func = gensh;
     recompile_standard_i_type(r4300);
 }
 
 static void RSWL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SWL;
+    r4300->cached_interp.dst->ops = cached_interp_SWL;
     r4300->cached_interp.recomp_func = genswl;
     recompile_standard_i_type(r4300);
 }
 
 static void RSW(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SW;
+    r4300->cached_interp.dst->ops = cached_interp_SW;
     r4300->cached_interp.recomp_func = gensw;
     recompile_standard_i_type(r4300);
 }
 
 static void RSDL(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SDL;
+    r4300->cached_interp.dst->ops = cached_interp_SDL;
     r4300->cached_interp.recomp_func = gensdl;
     recompile_standard_i_type(r4300);
 }
 
 static void RSDR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SDR;
+    r4300->cached_interp.dst->ops = cached_interp_SDR;
     r4300->cached_interp.recomp_func = gensdr;
     recompile_standard_i_type(r4300);
 }
 
 static void RSWR(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SWR;
+    r4300->cached_interp.dst->ops = cached_interp_SWR;
     r4300->cached_interp.recomp_func = genswr;
     recompile_standard_i_type(r4300);
 }
@@ -2048,41 +2051,41 @@ static void RSWR(struct r4300_core* r4300)
 static void RCACHE(struct r4300_core* r4300)
 {
     r4300->cached_interp.recomp_func = gencache;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.CACHE;
+    r4300->cached_interp.dst->ops = cached_interp_CACHE;
 }
 
 static void RLL(struct r4300_core* r4300)
 {
     r4300->cached_interp.recomp_func = genll;
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LL;
+    r4300->cached_interp.dst->ops = cached_interp_LL;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
 }
 
 static void RLWC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LWC1;
+    r4300->cached_interp.dst->ops = cached_interp_LWC1;
     r4300->cached_interp.recomp_func = genlwc1;
     recompile_standard_lf_type(r4300);
 }
 
 static void RLLD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
     recompile_standard_i_type(r4300);
 }
 
 static void RLDC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LDC1;
+    r4300->cached_interp.dst->ops = cached_interp_LDC1;
     r4300->cached_interp.recomp_func = genldc1;
     recompile_standard_lf_type(r4300);
 }
 
 static void RLD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.LD;
+    r4300->cached_interp.dst->ops = cached_interp_LD;
     r4300->cached_interp.recomp_func = genld;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -2090,7 +2093,7 @@ static void RLD(struct r4300_core* r4300)
 
 static void RSC(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SC;
+    r4300->cached_interp.dst->ops = cached_interp_SC;
     r4300->cached_interp.recomp_func = gensc;
     recompile_standard_i_type(r4300);
     if (r4300->cached_interp.dst->f.i.rt == r4300_regs(r4300)) RNOP(r4300);
@@ -2098,28 +2101,28 @@ static void RSC(struct r4300_core* r4300)
 
 static void RSWC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SWC1;
+    r4300->cached_interp.dst->ops = cached_interp_SWC1;
     r4300->cached_interp.recomp_func = genswc1;
     recompile_standard_lf_type(r4300);
 }
 
 static void RSCD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.NI;
+    r4300->cached_interp.dst->ops = cached_interp_NI;
     r4300->cached_interp.recomp_func = genni;
     recompile_standard_i_type(r4300);
 }
 
 static void RSDC1(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SDC1;
+    r4300->cached_interp.dst->ops = cached_interp_SDC1;
     r4300->cached_interp.recomp_func = gensdc1;
     recompile_standard_lf_type(r4300);
 }
 
 static void RSD(struct r4300_core* r4300)
 {
-    r4300->cached_interp.dst->ops = r4300->current_instruction_table.SD;
+    r4300->cached_interp.dst->ops = cached_interp_SD;
     r4300->cached_interp.recomp_func = gensd;
     recompile_standard_i_type(r4300);
 }
@@ -2270,7 +2273,7 @@ void init_block(struct r4300_core* r4300, struct precomp_block* block)
             r4300->cached_interp.dst = block->block + i;
             r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
             r4300->cached_interp.dst->local_addr = i * (r4300->cached_interp.init_length / length);
-            r4300->cached_interp.dst->ops = r4300->current_instruction_table.NOTCOMPILED;
+            r4300->cached_interp.dst->ops = r4300->cached_interp.not_compiled;
         }
     }
 
@@ -2401,8 +2404,8 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         if (block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
         {
             uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
-            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->current_instruction_table.NOTCOMPILED) {
-                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = r4300->current_instruction_table.NOTCOMPILED2;
+            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->cached_interp.not_compiled) {
+                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = r4300->cached_interp.not_compiled2;
             }
         }
 
@@ -2453,11 +2456,12 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
                     block->start >= UINT32_C(0xc0000000) ||
                     block->end   <  UINT32_C(0x80000000))) { finished = 2; }
-        if (r4300->cached_interp.dst->ops == r4300->current_instruction_table.ERET || finished == 1) { finished = 2; }
+        if (r4300->cached_interp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
         if (/*i >= length && */
-                (r4300->cached_interp.dst->ops == r4300->current_instruction_table.J ||
-                 r4300->cached_interp.dst->ops == r4300->current_instruction_table.J_OUT ||
-                 r4300->cached_interp.dst->ops == r4300->current_instruction_table.JR) &&
+                (r4300->cached_interp.dst->ops == cached_interp_J ||
+                 r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
+                 r4300->cached_interp.dst->ops == cached_interp_JR ||
+                 r4300->cached_interp.dst->ops == cached_interp_JR_OUT) &&
                 !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
                         block->end   <  UINT32_C(0x80000000)))) {
             finished = 1;
@@ -2535,74 +2539,76 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
 static int is_jump(const struct r4300_core* r4300)
 {
     return
-        (r4300->cached_interp.dst->ops == r4300->current_instruction_table.J ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.J_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.J_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.JAL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.JAL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.JAL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQ ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQ_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQ_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNE_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNE_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZ ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZ_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZ_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZ ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZ_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZ_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BEQL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNEL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNEL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BNEL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLEZL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGTZL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.JR ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.JALR ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZ ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZ_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZ_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZ ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZ_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZ_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZAL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZAL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZAL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZAL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZAL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZAL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZALL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZALL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BLTZALL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZALL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZALL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BGEZALL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1F ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1F_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1F_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1T ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1T_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1T_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1FL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1FL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1FL_IDLE ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1TL ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1TL_OUT ||
-         r4300->cached_interp.dst->ops == r4300->current_instruction_table.BC1TL_IDLE);
+        (r4300->cached_interp.dst->ops == cached_interp_J ||
+         r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_J_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_JAL ||
+         r4300->cached_interp.dst->ops == cached_interp_JAL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_JAL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQ ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQ_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQ_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BNE ||
+         r4300->cached_interp.dst->ops == cached_interp_BNE_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BNE_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZ ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZ_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZ_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZ ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZ_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZ_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQL ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BEQL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BNEL ||
+         r4300->cached_interp.dst->ops == cached_interp_BNEL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BNEL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZL ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLEZL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZL ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGTZL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_JR ||
+         r4300->cached_interp.dst->ops == cached_interp_JR_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_JALR ||
+         r4300->cached_interp.dst->ops == cached_interp_JALR_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZ ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZ_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZ_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZ ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZ_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZ_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZL ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZL ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZAL ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZAL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZAL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZAL ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZAL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZAL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZALL ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZALL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BLTZALL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZALL ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZALL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BGEZALL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1F ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1F_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1F_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1T ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1T_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1T_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1FL ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1FL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1FL_IDLE ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1TL ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1TL_OUT ||
+         r4300->cached_interp.dst->ops == cached_interp_BC1TL_IDLE);
 }
 
 /**********************************************************************
@@ -2688,14 +2694,19 @@ void dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
 #ifndef NEW_DYNAREC
 void dynarec_fin_block(void)
 {
-    cached_interpreter_table.FIN_BLOCK();
+    cached_interp_FIN_BLOCK();
     dyna_jump();
 }
 
 void dynarec_notcompiled(void)
 {
-    cached_interpreter_table.NOTCOMPILED();
+    cached_interp_NOTCOMPILED();
     dyna_jump();
+}
+
+void dynarec_notcompiled2(void)
+{
+    dynarec_notcompiled();
 }
 
 void dynarec_setup_code(void)

@@ -32,7 +32,6 @@
 #include "cp0.h"
 #include "cp1.h"
 
-#include "ops.h" /* for cpu_instruction_table */
 #include "recomp_types.h" /* for precomp_instr, regcache_state */
 
 #include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
@@ -49,6 +48,10 @@ struct cached_interp
     char invalid_code[0x100000];
     struct precomp_block* blocks[0x100000];
     struct precomp_block* actual;
+
+    void (*fin_block)(void);
+    void (*not_compiled)(void);
+    void (*not_compiled2)(void);
 
     int init_length;
     struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
@@ -88,7 +91,6 @@ struct r4300_core
 /* ARM dynarec uses a different memory layout */
     int stop;
 #endif
-    struct cpu_instruction_table current_instruction_table;
 
     /* When reset_hard_job is set, next interrupt will cause hard reset */
     int reset_hard_job;

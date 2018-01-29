@@ -31,7 +31,6 @@
 #include "device/r4300/cp0.h"
 #include "device/r4300/cp1.h"
 #include "device/r4300/interrupt.h"
-#include "device/r4300/ops.h"
 #include "device/r4300/recomp.h"
 #include "device/r4300/recomph.h"
 #include "device/rdram/rdram.h"
@@ -183,7 +182,7 @@ void gendebug(struct r4300_core* r4300)
 
 void genni(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.NI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_NI, 0);
 }
 
 void gennotcompiled(struct r4300_core* r4300)
@@ -243,7 +242,7 @@ void gendelayslot(struct r4300_core* r4300)
 
 void genreserved(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.RESERVED, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_RESERVED, 0);
 }
 
 /* Load instructions */
@@ -251,7 +250,7 @@ void genreserved(struct r4300_core* r4300)
 void genlb(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LB
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LB, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LB, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -316,7 +315,7 @@ void genlb(struct r4300_core* r4300)
 void genlbu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LBU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LBU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LBU, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -381,7 +380,7 @@ void genlbu(struct r4300_core* r4300)
 void genlh(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LH
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LH, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LH, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -446,7 +445,7 @@ void genlh(struct r4300_core* r4300)
 void genlhu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LHU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LHU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LHU, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -510,13 +509,13 @@ void genlhu(struct r4300_core* r4300)
 
 void genll(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LL, 0);
 }
 
 void genlw(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LW
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LW, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LW, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -563,7 +562,7 @@ void genlw(struct r4300_core* r4300)
 void genlwu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LWU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LWU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LWU, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -611,18 +610,18 @@ void genlwu(struct r4300_core* r4300)
 
 void genlwl(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LWL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LWL, 0);
 }
 
 void genlwr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LWR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LWR, 0);
 }
 
 void genld(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LD
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LD, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LD, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -670,12 +669,12 @@ void genld(struct r4300_core* r4300)
 
 void genldl(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LDL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LDL, 0);
 }
 
 void genldr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LDR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LDR, 0);
 }
 
 /* Store instructions */
@@ -683,7 +682,7 @@ void genldr(struct r4300_core* r4300)
 void gensb(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SB
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SB, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SB, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -755,7 +754,7 @@ void gensb(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -764,7 +763,7 @@ void gensb(struct r4300_core* r4300)
 void gensh(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SH
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SH, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SH, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -835,7 +834,7 @@ void gensh(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -843,13 +842,13 @@ void gensh(struct r4300_core* r4300)
 
 void gensc(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SC, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SC, 0);
 }
 
 void gensw(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SW
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SW, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SW, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -905,7 +904,7 @@ void gensw(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -913,18 +912,18 @@ void gensw(struct r4300_core* r4300)
 
 void genswl(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SWL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SWL, 0);
 }
 
 void genswr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SWR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SWR, 0);
 }
 
 void gensd(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SD
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SD, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SD, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -983,7 +982,7 @@ void gensd(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -991,12 +990,12 @@ void gensd(struct r4300_core* r4300)
 
 void gensdl(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SDL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SDL, 0);
 }
 
 void gensdr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SDR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SDR, 0);
 }
 
 /* Computational instructions */
@@ -1004,7 +1003,7 @@ void gensdr(struct r4300_core* r4300)
 void genadd(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADD
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADD, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADD, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1029,7 +1028,7 @@ void genadd(struct r4300_core* r4300)
 void genaddu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADDU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADDU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADDU, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1054,7 +1053,7 @@ void genaddu(struct r4300_core* r4300)
 void genaddi(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADDI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADDI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADDI, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rt = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rt);
@@ -1067,7 +1066,7 @@ void genaddi(struct r4300_core* r4300)
 void genaddiu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADDIU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADDIU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADDIU, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rt = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rt);
@@ -1080,7 +1079,7 @@ void genaddiu(struct r4300_core* r4300)
 void gendadd(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DADD
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DADD, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DADD, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1113,7 +1112,7 @@ void gendadd(struct r4300_core* r4300)
 void gendaddu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DADDU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DADDU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DADDU, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1146,7 +1145,7 @@ void gendaddu(struct r4300_core* r4300)
 void gendaddi(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DADDI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DADDI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DADDI, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1163,7 +1162,7 @@ void gendaddi(struct r4300_core* r4300)
 void gendaddiu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DADDIU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DADDIU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DADDIU, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1180,7 +1179,7 @@ void gendaddiu(struct r4300_core* r4300)
 void gensub(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SUB
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SUB, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SUB, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1205,7 +1204,7 @@ void gensub(struct r4300_core* r4300)
 void gensubu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SUBU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SUBU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SUBU, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1230,7 +1229,7 @@ void gensubu(struct r4300_core* r4300)
 void gendsub(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSUB
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSUB, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSUB, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1263,7 +1262,7 @@ void gendsub(struct r4300_core* r4300)
 void gendsubu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSUBU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSUBU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSUBU, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1296,7 +1295,7 @@ void gendsubu(struct r4300_core* r4300)
 void genslt(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLT, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLT, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1318,7 +1317,7 @@ void genslt(struct r4300_core* r4300)
 void gensltu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLTU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLTU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLTU, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1340,7 +1339,7 @@ void gensltu(struct r4300_core* r4300)
 void genslti(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLTI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLTI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLTI, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1361,7 +1360,7 @@ void genslti(struct r4300_core* r4300)
 void gensltiu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLTIU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLTIU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLTIU, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1382,7 +1381,7 @@ void gensltiu(struct r4300_core* r4300)
 void genand(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_AND
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.AND, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_AND, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1415,7 +1414,7 @@ void genand(struct r4300_core* r4300)
 void genandi(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ANDI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ANDI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ANDI, 0);
 #else
     int rs = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rt = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rt);
@@ -1428,7 +1427,7 @@ void genandi(struct r4300_core* r4300)
 void genor(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_OR
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.OR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_OR, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1461,7 +1460,7 @@ void genor(struct r4300_core* r4300)
 void genori(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ORI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ORI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ORI, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1477,7 +1476,7 @@ void genori(struct r4300_core* r4300)
 void genxor(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_XOR
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.XOR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_XOR, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1510,7 +1509,7 @@ void genxor(struct r4300_core* r4300)
 void genxori(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_XORI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.XORI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_XORI, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rs);
@@ -1526,7 +1525,7 @@ void genxori(struct r4300_core* r4300)
 void gennor(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_NOR
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.NOR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_NOR, 0);
 #else
     int rs1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
     int rs2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1563,7 +1562,7 @@ void gennor(struct r4300_core* r4300)
 void genlui(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LUI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LUI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LUI, 0);
 #else
     int rt = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.i.rt);
 
@@ -1580,7 +1579,7 @@ void gennop(struct r4300_core* r4300)
 void gensll(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLL, 0);
 #else
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1593,7 +1592,7 @@ void gensll(struct r4300_core* r4300)
 void gensllv(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SLLV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SLLV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SLLV, 0);
 #else
     int rt, rd;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1620,7 +1619,7 @@ void gensllv(struct r4300_core* r4300)
 void gendsll(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSLL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSLL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSLL, 0);
 #else
     int rt1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rt2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1642,7 +1641,7 @@ void gendsll(struct r4300_core* r4300)
 void gendsllv(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSLLV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSLLV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSLLV, 0);
 #else
     int rt1, rt2, rd1, rd2;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1689,7 +1688,7 @@ void gendsllv(struct r4300_core* r4300)
 void gendsll32(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSLL32
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSLL32, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSLL32, 0);
 #else
     int rt1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd1 = allocate_64_register1_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1704,7 +1703,7 @@ void gendsll32(struct r4300_core* r4300)
 void gensrl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SRL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SRL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SRL, 0);
 #else
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1717,7 +1716,7 @@ void gensrl(struct r4300_core* r4300)
 void gensrlv(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SRLV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SRLV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SRLV, 0);
 #else
     int rt, rd;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1744,7 +1743,7 @@ void gensrlv(struct r4300_core* r4300)
 void gendsrl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRL, 0);
 #else
     int rt1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rt2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1766,7 +1765,7 @@ void gendsrl(struct r4300_core* r4300)
 void gendsrlv(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRLV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRLV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRLV, 0);
 #else
     int rt1, rt2, rd1, rd2;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1813,7 +1812,7 @@ void gendsrlv(struct r4300_core* r4300)
 void gendsrl32(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRL32
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRL32, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRL32, 0);
 #else
     int rt2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd1 = allocate_64_register1_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1828,7 +1827,7 @@ void gendsrl32(struct r4300_core* r4300)
 void gensra(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SRA
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SRA, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SRA, 0);
 #else
     int rt = allocate_register(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1841,7 +1840,7 @@ void gensra(struct r4300_core* r4300)
 void gensrav(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SRAV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SRAV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SRAV, 0);
 #else
     int rt, rd;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1868,7 +1867,7 @@ void gensrav(struct r4300_core* r4300)
 void gendsra(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRA
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRA, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRA, 0);
 #else
     int rt1 = allocate_64_register1(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rt2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
@@ -1890,7 +1889,7 @@ void gendsra(struct r4300_core* r4300)
 void gendsrav(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRAV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRAV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRAV, 0);
 #else
     int rt1, rt2, rd1, rd2;
     allocate_register_manually(r4300, ECX, (unsigned int *)r4300->cached_interp.dst->f.r.rs);
@@ -1937,7 +1936,7 @@ void gendsrav(struct r4300_core* r4300)
 void gendsra32(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DSRA32
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DSRA32, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DSRA32, 0);
 #else
     int rt2 = allocate_64_register2(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rt);
     int rd = allocate_register_w(r4300, (unsigned int *)r4300->cached_interp.dst->f.r.rd);
@@ -1952,7 +1951,7 @@ void gendsra32(struct r4300_core* r4300)
 void genmult(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MULT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MULT, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MULT, 0);
 #else
     int rs, rt;
     allocate_register_manually_w(r4300, EAX, (unsigned int *)r4300_mult_lo(r4300), 0);
@@ -1967,7 +1966,7 @@ void genmult(struct r4300_core* r4300)
 void genmultu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MULTU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MULTU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MULTU, 0);
 #else
     int rs, rt;
     allocate_register_manually_w(r4300, EAX, (unsigned int *)r4300_mult_lo(r4300), 0);
@@ -1981,13 +1980,13 @@ void genmultu(struct r4300_core* r4300)
 
 void gendmult(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DMULT, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DMULT, 0);
 }
 
 void gendmultu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DMULTU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DMULTU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DMULTU, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -2026,7 +2025,7 @@ void gendmultu(struct r4300_core* r4300)
 void gendiv(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DIV
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DIV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DIV, 0);
 #else
     int rs, rt;
     allocate_register_manually_w(r4300, EAX, (unsigned int *)r4300_mult_lo(r4300), 0);
@@ -2044,7 +2043,7 @@ void gendiv(struct r4300_core* r4300)
 void gendivu(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DIVU
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DIVU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DIVU, 0);
 #else
     int rs, rt;
     allocate_register_manually_w(r4300, EAX, (unsigned int *)r4300_mult_lo(r4300), 0);
@@ -2061,18 +2060,18 @@ void gendivu(struct r4300_core* r4300)
 
 void genddiv(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DDIV, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DDIV, 0);
 }
 
 void genddivu(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DDIVU, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DDIVU, 0);
 }
 
 void genmfhi(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MFHI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MFHI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MFHI, 0);
 #else
     int rd1 = allocate_64_register1_w(r4300, (unsigned int*)r4300->cached_interp.dst->f.r.rd);
     int rd2 = allocate_64_register2_w(r4300, (unsigned int*)r4300->cached_interp.dst->f.r.rd);
@@ -2087,7 +2086,7 @@ void genmfhi(struct r4300_core* r4300)
 void genmthi(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MTHI
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MTHI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MTHI, 0);
 #else
     int hi1 = allocate_64_register1_w(r4300, (unsigned int*)r4300_mult_hi(r4300));
     int hi2 = allocate_64_register2_w(r4300, (unsigned int*)r4300_mult_hi(r4300));
@@ -2102,7 +2101,7 @@ void genmthi(struct r4300_core* r4300)
 void genmflo(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MFLO
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MFLO, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MFLO, 0);
 #else
     int rd1 = allocate_64_register1_w(r4300, (unsigned int*)r4300->cached_interp.dst->f.r.rd);
     int rd2 = allocate_64_register2_w(r4300, (unsigned int*)r4300->cached_interp.dst->f.r.rd);
@@ -2117,7 +2116,7 @@ void genmflo(struct r4300_core* r4300)
 void genmtlo(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MTLO
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MTLO, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MTLO, 0);
 #else
     int lo1 = allocate_64_register1_w(r4300, (unsigned int*)r4300_mult_lo(r4300));
     int lo2 = allocate_64_register2_w(r4300, (unsigned int*)r4300_mult_lo(r4300));
@@ -2275,14 +2274,14 @@ static void genbranchlink(struct r4300_core* r4300)
 void genj(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_J
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.J, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_J, 1);
 #else
     unsigned int naddr;
 
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.J, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_J, 1);
         return;
     }
 
@@ -2298,14 +2297,14 @@ void genj(struct r4300_core* r4300)
 void genj_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_J_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_J_OUT, 1);
 #else
     unsigned int naddr;
 
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_J_OUT, 1);
         return;
     }
 
@@ -2324,12 +2323,12 @@ void genj_out(struct r4300_core* r4300)
 void genj_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_J_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_J_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.J_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_J_IDLE, 1);
         return;
     }
 
@@ -2348,14 +2347,14 @@ void genj_idle(struct r4300_core* r4300)
 void genjal(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_JAL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_JAL, 1);
 #else
     unsigned int naddr;
 
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_JAL, 1);
         return;
     }
 
@@ -2380,14 +2379,14 @@ void genjal(struct r4300_core* r4300)
 void genjal_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_JAL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_JAL_OUT, 1);
 #else
     unsigned int naddr;
 
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_JAL_OUT, 1);
         return;
     }
 
@@ -2415,12 +2414,12 @@ void genjal_out(struct r4300_core* r4300)
 void genjal_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_JAL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_JAL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.JAL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_JAL_IDLE, 1);
         return;
     }
 
@@ -2439,7 +2438,7 @@ void genjal_idle(struct r4300_core* r4300)
 void genjr(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_JR
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.JR, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_JR_OUT, 1);
 #else
     unsigned int diff =
         (unsigned int)(&r4300->cached_interp.dst->local_addr) - (unsigned int)(r4300->cached_interp.dst);
@@ -2451,7 +2450,7 @@ void genjr(struct r4300_core* r4300)
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.JR, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_JR_OUT, 1);
         return;
     }
 
@@ -2504,7 +2503,7 @@ void genjr(struct r4300_core* r4300)
 void genjalr(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_JALR
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.JALR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_JALR_OUT, 0);
 #else
     unsigned int diff =
         (unsigned int)(&r4300->cached_interp.dst->local_addr) - (unsigned int)(r4300->cached_interp.dst);
@@ -2516,7 +2515,7 @@ void genjalr(struct r4300_core* r4300)
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.JALR, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_JALR_OUT, 1);
         return;
     }
 
@@ -2646,12 +2645,12 @@ static void genbeq_test(struct r4300_core* r4300)
 void genbeq(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQ
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQ, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQ, 1);
         return;
     }
 
@@ -2664,12 +2663,12 @@ void genbeq(struct r4300_core* r4300)
 void genbeq_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQ_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQ_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQ_OUT, 1);
         return;
     }
 
@@ -2682,12 +2681,12 @@ void genbeq_out(struct r4300_core* r4300)
 void genbeq_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQ_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQ_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQ_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQ_IDLE, 1);
         return;
     }
 
@@ -2700,12 +2699,12 @@ void genbeq_idle(struct r4300_core* r4300)
 void genbeql(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQL, 1);
         return;
     }
 
@@ -2718,12 +2717,12 @@ void genbeql(struct r4300_core* r4300)
 void genbeql_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQL_OUT, 1);
         return;
     }
 
@@ -2736,12 +2735,12 @@ void genbeql_out(struct r4300_core* r4300)
 void genbeql_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BEQL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BEQL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BEQL_IDLE, 1);
         return;
     }
 
@@ -2823,12 +2822,12 @@ static void genbne_test(struct r4300_core* r4300)
 void genbne(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNE, 1);
         return;
     }
 
@@ -2841,12 +2840,12 @@ void genbne(struct r4300_core* r4300)
 void genbne_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNE_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNE_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNE_OUT, 1);
         return;
     }
 
@@ -2859,12 +2858,12 @@ void genbne_out(struct r4300_core* r4300)
 void genbne_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNE_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNE_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNE_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNE_IDLE, 1);
         return;
     }
 
@@ -2877,12 +2876,12 @@ void genbne_idle(struct r4300_core* r4300)
 void genbnel(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNEL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNEL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNEL, 1);
         return;
     }
 
@@ -2895,12 +2894,12 @@ void genbnel(struct r4300_core* r4300)
 void genbnel_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNEL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNEL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNEL_OUT, 1);
         return;
     }
 
@@ -2913,12 +2912,12 @@ void genbnel_out(struct r4300_core* r4300)
 void genbnel_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNEL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BNEL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BNEL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BNEL_IDLE, 1);
         return;
     }
 
@@ -2972,12 +2971,12 @@ static void genblez_test(struct r4300_core* r4300)
 void genblez(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZ
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZ, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZ, 1);
         return;
     }
 
@@ -2990,12 +2989,12 @@ void genblez(struct r4300_core* r4300)
 void genblez_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZ_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZ_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZ_OUT, 1);
         return;
     }
 
@@ -3008,12 +3007,12 @@ void genblez_out(struct r4300_core* r4300)
 void genblez_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZ_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZ_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZ_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZ_IDLE, 1);
         return;
     }
 
@@ -3026,12 +3025,12 @@ void genblez_idle(struct r4300_core* r4300)
 void genblezl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZL, 1);
         return;
     }
 
@@ -3044,12 +3043,12 @@ void genblezl(struct r4300_core* r4300)
 void genblezl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZL_OUT, 1);
         return;
     }
 
@@ -3062,12 +3061,12 @@ void genblezl_out(struct r4300_core* r4300)
 void genblezl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLEZL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLEZL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLEZL_IDLE, 1);
         return;
     }
 
@@ -3121,12 +3120,12 @@ static void genbgtz_test(struct r4300_core* r4300)
 void genbgtz(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZ
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZ, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZ, 1);
         return;
     }
 
@@ -3139,12 +3138,12 @@ void genbgtz(struct r4300_core* r4300)
 void genbgtz_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZ_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZ_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZ_OUT, 1);
         return;
     }
 
@@ -3157,12 +3156,12 @@ void genbgtz_out(struct r4300_core* r4300)
 void genbgtz_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZ_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZ_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZ_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZ_IDLE, 1);
         return;
     }
 
@@ -3175,12 +3174,12 @@ void genbgtz_idle(struct r4300_core* r4300)
 void genbgtzl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZL, 1);
         return;
     }
 
@@ -3193,12 +3192,12 @@ void genbgtzl(struct r4300_core* r4300)
 void genbgtzl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZL_OUT, 1);
         return;
     }
 
@@ -3211,12 +3210,12 @@ void genbgtzl_out(struct r4300_core* r4300)
 void genbgtzl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGTZL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGTZL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGTZL_IDLE, 1);
         return;
     }
 
@@ -3263,12 +3262,12 @@ static void genbltz_test(struct r4300_core* r4300)
 void genbltz(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZ
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZ, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZ, 1);
         return;
     }
 
@@ -3281,12 +3280,12 @@ void genbltz(struct r4300_core* r4300)
 void genbltz_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZ_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZ_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZ_OUT, 1);
         return;
     }
 
@@ -3299,12 +3298,12 @@ void genbltz_out(struct r4300_core* r4300)
 void genbltz_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZ_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZ_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZ_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZ_IDLE, 1);
         return;
     }
 
@@ -3317,12 +3316,12 @@ void genbltz_idle(struct r4300_core* r4300)
 void genbltzal(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZAL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL, 1);
         return;
     }
 
@@ -3336,12 +3335,12 @@ void genbltzal(struct r4300_core* r4300)
 void genbltzal_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZAL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL_OUT, 1);
         return;
     }
 
@@ -3355,12 +3354,12 @@ void genbltzal_out(struct r4300_core* r4300)
 void genbltzal_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZAL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZAL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZAL_IDLE, 1);
         return;
     }
 
@@ -3374,12 +3373,12 @@ void genbltzal_idle(struct r4300_core* r4300)
 void genbltzl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZL, 1);
         return;
     }
 
@@ -3392,12 +3391,12 @@ void genbltzl(struct r4300_core* r4300)
 void genbltzl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZL_OUT, 1);
         return;
     }
 
@@ -3410,12 +3409,12 @@ void genbltzl_out(struct r4300_core* r4300)
 void genbltzl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZL_IDLE, 1);
         return;
     }
 
@@ -3428,12 +3427,12 @@ void genbltzl_idle(struct r4300_core* r4300)
 void genbltzall(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZALL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL, 1);
         return;
     }
 
@@ -3447,12 +3446,12 @@ void genbltzall(struct r4300_core* r4300)
 void genbltzall_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZALL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL_OUT, 1);
         return;
     }
 
@@ -3466,12 +3465,12 @@ void genbltzall_out(struct r4300_core* r4300)
 void genbltzall_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZALL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BLTZALL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BLTZALL_IDLE, 1);
         return;
     }
 
@@ -3519,12 +3518,12 @@ static void genbgez_test(struct r4300_core* r4300)
 void genbgez(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZ
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZ, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZ, 1);
         return;
     }
 
@@ -3537,12 +3536,12 @@ void genbgez(struct r4300_core* r4300)
 void genbgez_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZ_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZ_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZ_OUT, 1);
         return;
     }
 
@@ -3555,12 +3554,12 @@ void genbgez_out(struct r4300_core* r4300)
 void genbgez_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZ_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZ_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZ_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZ_IDLE, 1);
         return;
     }
 
@@ -3573,12 +3572,12 @@ void genbgez_idle(struct r4300_core* r4300)
 void genbgezal(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZAL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL, 1);
         return;
     }
 
@@ -3592,12 +3591,12 @@ void genbgezal(struct r4300_core* r4300)
 void genbgezal_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZAL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL_OUT, 1);
         return;
     }
 
@@ -3611,12 +3610,12 @@ void genbgezal_out(struct r4300_core* r4300)
 void genbgezal_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZAL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZAL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZAL_IDLE, 1);
         return;
     }
 
@@ -3630,12 +3629,12 @@ void genbgezal_idle(struct r4300_core* r4300)
 void genbgezl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZL, 1);
         return;
     }
 
@@ -3648,12 +3647,12 @@ void genbgezl(struct r4300_core* r4300)
 void genbgezl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZL_OUT, 1);
         return;
     }
 
@@ -3666,12 +3665,12 @@ void genbgezl_out(struct r4300_core* r4300)
 void genbgezl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZL_IDLE, 1);
         return;
     }
 
@@ -3684,12 +3683,12 @@ void genbgezl_idle(struct r4300_core* r4300)
 void genbgezall(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZALL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL, 1);
         return;
     }
 
@@ -3703,12 +3702,12 @@ void genbgezall(struct r4300_core* r4300)
 void genbgezall_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZALL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL_OUT, 1);
         return;
     }
 
@@ -3722,12 +3721,12 @@ void genbgezall_out(struct r4300_core* r4300)
 void genbgezall_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZALL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BGEZALL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BGEZALL_IDLE, 1);
         return;
     }
 
@@ -3750,12 +3749,12 @@ static void genbc1f_test(struct r4300_core* r4300)
 void genbc1f(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1F
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1F, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1F, 1);
         return;
     }
 
@@ -3769,12 +3768,12 @@ void genbc1f(struct r4300_core* r4300)
 void genbc1f_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1F_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1F_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1F_OUT, 1);
         return;
     }
 
@@ -3788,12 +3787,12 @@ void genbc1f_out(struct r4300_core* r4300)
 void genbc1f_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1F_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1F_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1F_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1F_IDLE, 1);
         return;
     }
 
@@ -3807,12 +3806,12 @@ void genbc1f_idle(struct r4300_core* r4300)
 void genbc1fl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1FL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1FL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1FL, 1);
         return;
     }
 
@@ -3826,12 +3825,12 @@ void genbc1fl(struct r4300_core* r4300)
 void genbc1fl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1FL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1FL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1FL_OUT, 1);
         return;
     }
 
@@ -3845,12 +3844,12 @@ void genbc1fl_out(struct r4300_core* r4300)
 void genbc1fl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1FL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1FL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1FL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1FL_IDLE, 1);
         return;
     }
 
@@ -3873,12 +3872,12 @@ static void genbc1t_test(struct r4300_core* r4300)
 void genbc1t(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1T
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1T, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1T, 1);
         return;
     }
 
@@ -3892,12 +3891,12 @@ void genbc1t(struct r4300_core* r4300)
 void genbc1t_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1T_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1T_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1T_OUT, 1);
         return;
     }
 
@@ -3911,12 +3910,12 @@ void genbc1t_out(struct r4300_core* r4300)
 void genbc1t_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1T_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1T_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1T_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1T_IDLE, 1);
         return;
     }
 
@@ -3930,12 +3929,12 @@ void genbc1t_idle(struct r4300_core* r4300)
 void genbc1tl(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1TL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1TL, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1TL, 1);
         return;
     }
 
@@ -3949,12 +3948,12 @@ void genbc1tl(struct r4300_core* r4300)
 void genbc1tl_out(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1TL_OUT
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_OUT, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1TL_OUT, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_OUT, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1TL_OUT, 1);
         return;
     }
 
@@ -3968,12 +3967,12 @@ void genbc1tl_out(struct r4300_core* r4300)
 void genbc1tl_idle(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1TL_IDLE
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_IDLE, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_BC1TL_IDLE, 1);
 #else
     if (((r4300->cached_interp.dst->addr & 0xFFF) == 0xFFC && (r4300->cached_interp.dst->addr < 0x80000000 || r4300->cached_interp.dst->addr >= 0xC0000000))
        || r4300->recomp.no_compiled_jump)
     {
-        gencallinterp(r4300, (unsigned int)cached_interpreter_table.BC1TL_IDLE, 1);
+        gencallinterp(r4300, (unsigned int)cached_interp_BC1TL_IDLE, 1);
         return;
     }
 
@@ -3992,7 +3991,7 @@ void gencache(struct r4300_core* r4300)
 
 void generet(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ERET, 1);
+    gencallinterp(r4300, (unsigned int)cached_interp_ERET, 1);
 #if 0
     dst->local_addr = code_length;
     mov_m32_imm32((void *)(&(*r4300_pc_struct(r4300))), (unsigned int)(dst));
@@ -4011,7 +4010,7 @@ void gensync(struct r4300_core* r4300)
 void gensyscall(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SYSCALL
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SYSCALL, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SYSCALL, 0);
 #else
     free_all_registers(r4300);
     simplify_access(r4300);
@@ -4024,14 +4023,14 @@ void gensyscall(struct r4300_core* r4300)
 
 void genteq(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TEQ, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TEQ, 0);
 }
 
 /* TLB instructions */
 
 void gentlbp(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TLBP, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TLBP, 0);
 #if 0
     dst->local_addr = code_length;
     mov_m32_imm32((void *)(&(*r4300_pc_struct(r4300))), (unsigned int)(dst));
@@ -4043,7 +4042,7 @@ void gentlbp(struct r4300_core* r4300)
 
 void gentlbr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TLBR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TLBR, 0);
 #if 0
     dst->local_addr = code_length;
     mov_m32_imm32((void *)(&(*r4300_pc_struct(r4300))), (unsigned int)(dst));
@@ -4055,12 +4054,12 @@ void gentlbr(struct r4300_core* r4300)
 
 void gentlbwr(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TLBWR, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TLBWR, 0);
 }
 
 void gentlbwi(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TLBWI, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TLBWI, 0);
 #if 0
     dst->local_addr = code_length;
     mov_m32_imm32((void *)(&(*r4300_pc_struct(r4300))), (unsigned int)(dst));
@@ -4074,12 +4073,12 @@ void gentlbwi(struct r4300_core* r4300)
 
 void genmfc0(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MFC0, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MFC0, 0);
 }
 
 void genmtc0(struct r4300_core* r4300)
 {
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MTC0, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MTC0, 0);
 }
 
 /* CP1 load/store instructions */
@@ -4087,7 +4086,7 @@ void genmtc0(struct r4300_core* r4300)
 void genlwc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LWC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LWC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LWC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
 
@@ -4126,7 +4125,7 @@ void genlwc1(struct r4300_core* r4300)
 void genldc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_LDC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.LDC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_LDC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
 
@@ -4167,7 +4166,7 @@ void genldc1(struct r4300_core* r4300)
 void genswc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SWC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SWC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SWC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
 
@@ -4224,7 +4223,7 @@ void genswc1(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -4233,7 +4232,7 @@ void genswc1(struct r4300_core* r4300)
 void gensdc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SDC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SDC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SDC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
 
@@ -4292,7 +4291,7 @@ void gensdc1(struct r4300_core* r4300)
     mov_reg32_imm32(EDX, sizeof(struct precomp_instr)); // 5
     mul_reg32(EDX); // 2
     mov_reg32_preg32preg32pimm32(EAX, EAX, EBX, (int)&r4300->cached_interp.dst->ops - (int)r4300->cached_interp.dst); // 7
-    cmp_reg32_imm32(EAX, (unsigned int)r4300->current_instruction_table.NOTCOMPILED); // 6
+    cmp_reg32_imm32(EAX, (unsigned int)dynarec_notcompiled); // 6
     je_rj(7); // 2
     mov_preg32pimm32_imm8(ECX, (unsigned int)r4300->cached_interp.invalid_code, 1); // 7
 #endif
@@ -4301,7 +4300,7 @@ void gensdc1(struct r4300_core* r4300)
 void genmfc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MFC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MFC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MFC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.r.nrd]));
@@ -4315,7 +4314,7 @@ void genmfc1(struct r4300_core* r4300)
 void gendmfc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DMFC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DMFC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DMFC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.r.nrd]));
@@ -4329,7 +4328,7 @@ void gendmfc1(struct r4300_core* r4300)
 void gencfc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CFC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CFC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CFC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
     if (r4300->cached_interp.dst->f.r.nrd == 31) {
@@ -4347,7 +4346,7 @@ void gencfc1(struct r4300_core* r4300)
 void genmtc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MTC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MTC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MTC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)r4300->cached_interp.dst->f.r.rt);
@@ -4359,7 +4358,7 @@ void genmtc1(struct r4300_core* r4300)
 void gendmtc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DMTC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DMTC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DMTC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)r4300->cached_interp.dst->f.r.rt);
@@ -4373,7 +4372,7 @@ void gendmtc1(struct r4300_core* r4300)
 void genctc1(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CTC1
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CTC1, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CTC1, 0);
 #else
     gencheck_cop1_unusable(r4300);
 
@@ -4410,7 +4409,7 @@ void genctc1(struct r4300_core* r4300)
 void genabs_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ABS_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ABS_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ABS_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4424,7 +4423,7 @@ void genabs_s(struct r4300_core* r4300)
 void genabs_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ABS_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ABS_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ABS_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4438,7 +4437,7 @@ void genabs_d(struct r4300_core* r4300)
 void genadd_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADD_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADD_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADD_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4453,7 +4452,7 @@ void genadd_s(struct r4300_core* r4300)
 void genadd_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ADD_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ADD_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ADD_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4468,7 +4467,7 @@ void genadd_d(struct r4300_core* r4300)
 void gendiv_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DIV_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DIV_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DIV_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4483,7 +4482,7 @@ void gendiv_s(struct r4300_core* r4300)
 void gendiv_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DIV_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.DIV_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_DIV_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4498,7 +4497,7 @@ void gendiv_d(struct r4300_core* r4300)
 void genmov_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MOV_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MOV_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MOV_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4511,7 +4510,7 @@ void genmov_s(struct r4300_core* r4300)
 void genmov_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MOV_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MOV_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MOV_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4526,7 +4525,7 @@ void genmov_d(struct r4300_core* r4300)
 void genmul_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MUL_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MUL_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MUL_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4541,7 +4540,7 @@ void genmul_s(struct r4300_core* r4300)
 void genmul_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_MUL_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.MUL_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_MUL_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4556,7 +4555,7 @@ void genmul_d(struct r4300_core* r4300)
 void genneg_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_NEG_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.NEG_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_NEG_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4570,7 +4569,7 @@ void genneg_s(struct r4300_core* r4300)
 void genneg_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_NEG_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.NEG_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_NEG_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4584,7 +4583,7 @@ void genneg_d(struct r4300_core* r4300)
 void gensqrt_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SQRT_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SQRT_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SQRT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4598,7 +4597,7 @@ void gensqrt_s(struct r4300_core* r4300)
 void gensqrt_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SQRT_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SQRT_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SQRT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4612,7 +4611,7 @@ void gensqrt_d(struct r4300_core* r4300)
 void gensub_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SUB_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SUB_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SUB_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4627,7 +4626,7 @@ void gensub_s(struct r4300_core* r4300)
 void gensub_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_SUB_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.SUB_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_SUB_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4642,7 +4641,7 @@ void gensub_d(struct r4300_core* r4300)
 void gentrunc_w_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_TRUNC_W_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TRUNC_W_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TRUNC_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&trunc_mode);
@@ -4657,7 +4656,7 @@ void gentrunc_w_s(struct r4300_core* r4300)
 void gentrunc_w_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_TRUNC_W_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TRUNC_W_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TRUNC_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&trunc_mode);
@@ -4672,7 +4671,7 @@ void gentrunc_w_d(struct r4300_core* r4300)
 void gentrunc_l_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_TRUNC_L_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TRUNC_L_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TRUNC_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&trunc_mode);
@@ -4687,7 +4686,7 @@ void gentrunc_l_s(struct r4300_core* r4300)
 void gentrunc_l_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_TRUNC_L_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.TRUNC_L_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_TRUNC_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&trunc_mode);
@@ -4702,7 +4701,7 @@ void gentrunc_l_d(struct r4300_core* r4300)
 void genround_w_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ROUND_W_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ROUND_W_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ROUND_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&round_mode);
@@ -4717,7 +4716,7 @@ void genround_w_s(struct r4300_core* r4300)
 void genround_w_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ROUND_W_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ROUND_W_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ROUND_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&round_mode);
@@ -4732,7 +4731,7 @@ void genround_w_d(struct r4300_core* r4300)
 void genround_l_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ROUND_L_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ROUND_L_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ROUND_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&round_mode);
@@ -4747,7 +4746,7 @@ void genround_l_s(struct r4300_core* r4300)
 void genround_l_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_ROUND_L_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.ROUND_L_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_ROUND_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&round_mode);
@@ -4762,7 +4761,7 @@ void genround_l_d(struct r4300_core* r4300)
 void genceil_w_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CEIL_W_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CEIL_W_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CEIL_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&ceil_mode);
@@ -4777,7 +4776,7 @@ void genceil_w_s(struct r4300_core* r4300)
 void genceil_w_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CEIL_W_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CEIL_W_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CEIL_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&ceil_mode);
@@ -4792,7 +4791,7 @@ void genceil_w_d(struct r4300_core* r4300)
 void genceil_l_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CEIL_L_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CEIL_L_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CEIL_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&ceil_mode);
@@ -4807,7 +4806,7 @@ void genceil_l_s(struct r4300_core* r4300)
 void genceil_l_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CEIL_L_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CEIL_L_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CEIL_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&ceil_mode);
@@ -4822,7 +4821,7 @@ void genceil_l_d(struct r4300_core* r4300)
 void genfloor_w_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_FLOOR_W_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.FLOOR_W_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_FLOOR_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&floor_mode);
@@ -4837,7 +4836,7 @@ void genfloor_w_s(struct r4300_core* r4300)
 void genfloor_w_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_FLOOR_W_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.FLOOR_W_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_FLOOR_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&floor_mode);
@@ -4852,7 +4851,7 @@ void genfloor_w_d(struct r4300_core* r4300)
 void genfloor_l_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_FLOOR_L_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.FLOOR_L_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_FLOOR_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&floor_mode);
@@ -4867,7 +4866,7 @@ void genfloor_l_s(struct r4300_core* r4300)
 void genfloor_l_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_FLOOR_L_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.FLOOR_L_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_FLOOR_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     fldcw_m16((unsigned short*)&floor_mode);
@@ -4882,7 +4881,7 @@ void genfloor_l_d(struct r4300_core* r4300)
 void gencvt_s_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_S_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_S_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_S_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4895,7 +4894,7 @@ void gencvt_s_d(struct r4300_core* r4300)
 void gencvt_s_w(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_S_W
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_S_W, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_S_W, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4908,7 +4907,7 @@ void gencvt_s_w(struct r4300_core* r4300)
 void gencvt_s_l(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_S_L
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_S_L, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_S_L, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4921,7 +4920,7 @@ void gencvt_s_l(struct r4300_core* r4300)
 void gencvt_d_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_D_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_D_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_D_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4934,7 +4933,7 @@ void gencvt_d_s(struct r4300_core* r4300)
 void gencvt_d_w(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_D_W
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_D_W, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_D_W, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4947,7 +4946,7 @@ void gencvt_d_w(struct r4300_core* r4300)
 void gencvt_d_l(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_D_L
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_D_L, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_D_L, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4960,7 +4959,7 @@ void gencvt_d_l(struct r4300_core* r4300)
 void gencvt_w_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_W_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_W_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4973,7 +4972,7 @@ void gencvt_w_s(struct r4300_core* r4300)
 void gencvt_w_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_W_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_W_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4986,7 +4985,7 @@ void gencvt_w_d(struct r4300_core* r4300)
 void gencvt_l_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_L_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_L_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -4999,7 +4998,7 @@ void gencvt_l_s(struct r4300_core* r4300)
 void gencvt_l_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_CVT_L_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.CVT_L_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_CVT_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.fs]));
@@ -5014,7 +5013,7 @@ void gencvt_l_d(struct r4300_core* r4300)
 void genc_f_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_F_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_F_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_F_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&r4300->cp1)), ~0x800000);
@@ -5024,7 +5023,7 @@ void genc_f_s(struct r4300_core* r4300)
 void genc_f_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_F_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_F_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_F_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     and_m32_imm32((unsigned int*)&(*r4300_cp1_fcr31(&r4300->cp1)), ~0x800000);
@@ -5034,7 +5033,7 @@ void genc_f_d(struct r4300_core* r4300)
 void genc_un_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_UN_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_UN_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_UN_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5053,7 +5052,7 @@ void genc_un_s(struct r4300_core* r4300)
 void genc_un_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_UN_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_UN_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_UN_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5072,7 +5071,7 @@ void genc_un_d(struct r4300_core* r4300)
 void genc_eq_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_EQ_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_EQ_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_EQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5091,7 +5090,7 @@ void genc_eq_s(struct r4300_core* r4300)
 void genc_eq_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_EQ_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_EQ_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_EQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5110,7 +5109,7 @@ void genc_eq_d(struct r4300_core* r4300)
 void genc_ueq_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_UEQ_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_UEQ_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_UEQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5130,7 +5129,7 @@ void genc_ueq_s(struct r4300_core* r4300)
 void genc_ueq_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_UEQ_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_UEQ_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_UEQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5150,7 +5149,7 @@ void genc_ueq_d(struct r4300_core* r4300)
 void genc_olt_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_OLT_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_OLT_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_OLT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5169,7 +5168,7 @@ void genc_olt_s(struct r4300_core* r4300)
 void genc_olt_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_OLT_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_OLT_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_OLT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5188,7 +5187,7 @@ void genc_olt_d(struct r4300_core* r4300)
 void genc_ult_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_ULT_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_ULT_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_ULT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5208,7 +5207,7 @@ void genc_ult_s(struct r4300_core* r4300)
 void genc_ult_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_ULT_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_ULT_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_ULT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5228,7 +5227,7 @@ void genc_ult_d(struct r4300_core* r4300)
 void genc_ole_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_OLE_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_OLE_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_OLE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5247,7 +5246,7 @@ void genc_ole_s(struct r4300_core* r4300)
 void genc_ole_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_OLE_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_OLE_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_OLE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5266,7 +5265,7 @@ void genc_ole_d(struct r4300_core* r4300)
 void genc_ule_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_ULE_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_ULE_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_ULE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5286,7 +5285,7 @@ void genc_ule_s(struct r4300_core* r4300)
 void genc_ule_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_ULE_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_ULE_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_ULE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5306,7 +5305,7 @@ void genc_ule_d(struct r4300_core* r4300)
 void genc_sf_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_SF_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_SF_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_SF_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5322,7 +5321,7 @@ void genc_sf_s(struct r4300_core* r4300)
 void genc_sf_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_SF_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_SF_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_SF_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5338,7 +5337,7 @@ void genc_sf_d(struct r4300_core* r4300)
 void genc_ngle_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGLE_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGLE_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGLE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5357,7 +5356,7 @@ void genc_ngle_s(struct r4300_core* r4300)
 void genc_ngle_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGLE_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGLE_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGLE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5376,7 +5375,7 @@ void genc_ngle_d(struct r4300_core* r4300)
 void genc_seq_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_SEQ_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_SEQ_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_SEQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5395,7 +5394,7 @@ void genc_seq_s(struct r4300_core* r4300)
 void genc_seq_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_SEQ_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_SEQ_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_SEQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5414,7 +5413,7 @@ void genc_seq_d(struct r4300_core* r4300)
 void genc_ngl_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGL_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGL_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGL_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5434,7 +5433,7 @@ void genc_ngl_s(struct r4300_core* r4300)
 void genc_ngl_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGL_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGL_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGL_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5454,7 +5453,7 @@ void genc_ngl_d(struct r4300_core* r4300)
 void genc_lt_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_LT_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_LT_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_LT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5473,7 +5472,7 @@ void genc_lt_s(struct r4300_core* r4300)
 void genc_lt_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_LT_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_LT_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_LT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5492,7 +5491,7 @@ void genc_lt_d(struct r4300_core* r4300)
 void genc_nge_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGE_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGE_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5512,7 +5511,7 @@ void genc_nge_s(struct r4300_core* r4300)
 void genc_nge_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGE_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGE_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5532,7 +5531,7 @@ void genc_nge_d(struct r4300_core* r4300)
 void genc_le_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_LE_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_LE_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_LE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5551,7 +5550,7 @@ void genc_le_s(struct r4300_core* r4300)
 void genc_le_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_LE_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_LE_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_LE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5570,7 +5569,7 @@ void genc_le_d(struct r4300_core* r4300)
 void genc_ngt_s(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGT_S
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGT_S, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int *)(&(r4300_cp1_regs_simple(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));
@@ -5590,7 +5589,7 @@ void genc_ngt_s(struct r4300_core* r4300)
 void genc_ngt_d(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_C_NGT_D
-    gencallinterp(r4300, (unsigned int)cached_interpreter_table.C_NGT_D, 0);
+    gencallinterp(r4300, (unsigned int)cached_interp_C_NGT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
     mov_eax_memoffs32((unsigned int*)(&(r4300_cp1_regs_double(&r4300->cp1))[r4300->cached_interp.dst->f.cf.ft]));

@@ -3444,7 +3444,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
           emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
         }
-        emit_call((int)cached_interpreter_table.MFC0);
+        emit_call((int)cached_interp_MFC0);
         emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3478,7 +3478,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     }
     //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
     //else
-    emit_call((int)cached_interpreter_table.MTC0);
+    emit_call((int)cached_interp_MTC0);
     if(copr==9||copr==11||copr==12) {
       emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
@@ -3508,7 +3508,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
   {
     assert(opcode2[i]==0x10);
     if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interpreter_table.TLBR);
+      emit_call((int)cached_interp_TLBR);
     if((source[i]&0x3f)==0x02) {  // TLBWI
       assert(!is_delayslot);
       emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
@@ -3527,7 +3527,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_call((int)TLBWR_new);
     }
     if((source[i]&0x3f)==0x08) // TLBP
-      emit_call((int)cached_interpreter_table.TLBP);
+      emit_call((int)cached_interp_TLBP);
     if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
@@ -4231,7 +4231,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULT);
+        emit_call((int)cached_interp_DMULT);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4258,7 +4258,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULTU);
+        emit_call((int)cached_interp_DMULTU);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4387,7 +4387,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIV);
+        emit_call((int)cached_interp_DDIV);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4414,7 +4414,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIVU);
+        emit_call((int)cached_interp_DDIVU);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);

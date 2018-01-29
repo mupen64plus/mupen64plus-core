@@ -31,7 +31,6 @@
 #include "api/callbacks.h"
 #include "api/debugger.h"
 #include "api/m64p_types.h"
-#include "device/r4300/ops.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
 #include "main/main.h"
@@ -53,10 +52,10 @@
 #define DECLARE_R4300 struct r4300_core* r4300 = &g_dev.r4300;
 #define PCADDR *r4300_pc(r4300)
 #define ADD_TO_PC(x) (*r4300_pc_struct(r4300)) += x;
-#define DECLARE_INSTRUCTION(name) static void name(void)
+#define DECLARE_INSTRUCTION(name) void cached_interp_##name(void)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
-static void name(void) \
+void cached_interp_##name(void) \
 { \
     DECLARE_R4300 \
     const int take_jump = (condition); \
@@ -88,7 +87,8 @@ static void name(void) \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
     if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
 } \
-static void name##_OUT(void) \
+ \
+void cached_interp_##name##_OUT(void) \
 { \
     DECLARE_R4300 \
     const int take_jump = (condition); \
@@ -120,7 +120,8 @@ static void name##_OUT(void) \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
     if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
 } \
-static void name##_IDLE(void) \
+  \
+void cached_interp_##name##_IDLE(void) \
 { \
     DECLARE_R4300 \
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
@@ -132,9 +133,9 @@ static void name##_IDLE(void) \
         cp0_update_count(r4300); \
         skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
         if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
-        else name(); \
+        else cached_interp_##name(); \
     } \
-    else name(); \
+    else cached_interp_##name(); \
 }
 
 /* These macros allow direct access to parsed opcode fields. */
@@ -171,19 +172,12 @@ static void name##_IDLE(void) \
 #define irt32 *((int32_t*) (*r4300_pc_struct(r4300))->f.i.rt + 1)
 #endif
 
-// two functions are defined from the macros above but never used
-// these prototype declarations will prevent a warning
-#if defined(__GNUC__)
-static void JR_IDLE(void) __attribute__((used));
-static void JALR_IDLE(void) __attribute__((used));
-#endif
-
 #include "mips_instructions.def"
 
 // -----------------------------------------------------------
 // Flow control 'fake' instructions
 // -----------------------------------------------------------
-static void FIN_BLOCK(void)
+void cached_interp_FIN_BLOCK(void)
 {
     DECLARE_R4300
     if (!r4300->delay_slot)
@@ -220,7 +214,7 @@ Used by dynarec only, check should be unnecessary
     }
 }
 
-static void NOTCOMPILED(void)
+void cached_interp_NOTCOMPILED(void)
 {
     DECLARE_R4300
     uint32_t *mem = fast_mem_access(r4300, r4300->cached_interp.blocks[*r4300_pc(r4300)>>12]->start);
@@ -243,292 +237,10 @@ called before NOTCOMPILED would have been executed
     (*r4300_pc_struct(r4300))->ops();
 }
 
-static void NOTCOMPILED2(void)
+void cached_interp_NOTCOMPILED2(void)
 {
-    NOTCOMPILED();
+    cached_interp_NOTCOMPILED();
 }
-
-// -----------------------------------------------------------
-// Cached interpreter instruction table
-// -----------------------------------------------------------
-const struct cpu_instruction_table cached_interpreter_table = {
-    LB,
-    LBU,
-    LH,
-    LHU,
-    LW,
-    LWL,
-    LWR,
-    SB,
-    SH,
-    SW,
-    SWL,
-    SWR,
-
-    LD,
-    LDL,
-    LDR,
-    LL,
-    LWU,
-    SC,
-    SD,
-    SDL,
-    SDR,
-    SYNC,
-
-    ADDI,
-    ADDIU,
-    SLTI,
-    SLTIU,
-    ANDI,
-    ORI,
-    XORI,
-    LUI,
-
-    DADDI,
-    DADDIU,
-
-    ADD,
-    ADDU,
-    SUB,
-    SUBU,
-    SLT,
-    SLTU,
-    AND,
-    OR,
-    XOR,
-    NOR,
-
-    DADD,
-    DADDU,
-    DSUB,
-    DSUBU,
-
-    MULT,
-    MULTU,
-    DIV,
-    DIVU,
-    MFHI,
-    MTHI,
-    MFLO,
-    MTLO,
-
-    DMULT,
-    DMULTU,
-    DDIV,
-    DDIVU,
-
-    J,
-    J_OUT,
-    J_IDLE,
-    JAL,
-    JAL_OUT,
-    JAL_IDLE,
-    // Use the _OUT versions of JR and JALR, since we don't know
-    // until runtime if they're going to jump inside or outside the block
-    JR_OUT,
-    JALR_OUT,
-    BEQ,
-    BEQ_OUT,
-    BEQ_IDLE,
-    BNE,
-    BNE_OUT,
-    BNE_IDLE,
-    BLEZ,
-    BLEZ_OUT,
-    BLEZ_IDLE,
-    BGTZ,
-    BGTZ_OUT,
-    BGTZ_IDLE,
-    BLTZ,
-    BLTZ_OUT,
-    BLTZ_IDLE,
-    BGEZ,
-    BGEZ_OUT,
-    BGEZ_IDLE,
-    BLTZAL,
-    BLTZAL_OUT,
-    BLTZAL_IDLE,
-    BGEZAL,
-    BGEZAL_OUT,
-    BGEZAL_IDLE,
-
-    BEQL,
-    BEQL_OUT,
-    BEQL_IDLE,
-    BNEL,
-    BNEL_OUT,
-    BNEL_IDLE,
-    BLEZL,
-    BLEZL_OUT,
-    BLEZL_IDLE,
-    BGTZL,
-    BGTZL_OUT,
-    BGTZL_IDLE,
-    BLTZL,
-    BLTZL_OUT,
-    BLTZL_IDLE,
-    BGEZL,
-    BGEZL_OUT,
-    BGEZL_IDLE,
-    BLTZALL,
-    BLTZALL_OUT,
-    BLTZALL_IDLE,
-    BGEZALL,
-    BGEZALL_OUT,
-    BGEZALL_IDLE,
-    BC1TL,
-    BC1TL_OUT,
-    BC1TL_IDLE,
-    BC1FL,
-    BC1FL_OUT,
-    BC1FL_IDLE,
-
-    SLL,
-    SRL,
-    SRA,
-    SLLV,
-    SRLV,
-    SRAV,
-
-    DSLL,
-    DSRL,
-    DSRA,
-    DSLLV,
-    DSRLV,
-    DSRAV,
-    DSLL32,
-    DSRL32,
-    DSRA32,
-
-    MTC0,
-    MFC0,
-
-    TLBR,
-    TLBWI,
-    TLBWR,
-    TLBP,
-    CACHE,
-    ERET,
-
-    LWC1,
-    SWC1,
-    MTC1,
-    MFC1,
-    CTC1,
-    CFC1,
-    BC1T,
-    BC1T_OUT,
-    BC1T_IDLE,
-    BC1F,
-    BC1F_OUT,
-    BC1F_IDLE,
-
-    DMFC1,
-    DMTC1,
-    LDC1,
-    SDC1,
-
-    CVT_S_D,
-    CVT_S_W,
-    CVT_S_L,
-    CVT_D_S,
-    CVT_D_W,
-    CVT_D_L,
-    CVT_W_S,
-    CVT_W_D,
-    CVT_L_S,
-    CVT_L_D,
-
-    ROUND_W_S,
-    ROUND_W_D,
-    ROUND_L_S,
-    ROUND_L_D,
-
-    TRUNC_W_S,
-    TRUNC_W_D,
-    TRUNC_L_S,
-    TRUNC_L_D,
-
-    CEIL_W_S,
-    CEIL_W_D,
-    CEIL_L_S,
-    CEIL_L_D,
-
-    FLOOR_W_S,
-    FLOOR_W_D,
-    FLOOR_L_S,
-    FLOOR_L_D,
-
-    ADD_S,
-    ADD_D,
-
-    SUB_S,
-    SUB_D,
-
-    MUL_S,
-    MUL_D,
-
-    DIV_S,
-    DIV_D,
-
-    ABS_S,
-    ABS_D,
-
-    MOV_S,
-    MOV_D,
-
-    NEG_S,
-    NEG_D,
-
-    SQRT_S,
-    SQRT_D,
-
-    C_F_S,
-    C_F_D,
-    C_UN_S,
-    C_UN_D,
-    C_EQ_S,
-    C_EQ_D,
-    C_UEQ_S,
-    C_UEQ_D,
-    C_OLT_S,
-    C_OLT_D,
-    C_ULT_S,
-    C_ULT_D,
-    C_OLE_S,
-    C_OLE_D,
-    C_ULE_S,
-    C_ULE_D,
-    C_SF_S,
-    C_SF_D,
-    C_NGLE_S,
-    C_NGLE_D,
-    C_SEQ_S,
-    C_SEQ_D,
-    C_NGL_S,
-    C_NGL_D,
-    C_LT_S,
-    C_LT_D,
-    C_NGE_S,
-    C_NGE_D,
-    C_LE_S,
-    C_LE_D,
-    C_NGT_S,
-    C_NGT_D,
-
-    SYSCALL,
-
-    TEQ,
-
-    NOP,
-    RESERVED,
-    NI,
-
-    FIN_BLOCK,
-    NOTCOMPILED,
-    NOTCOMPILED2
-};
 
 static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
@@ -660,7 +372,7 @@ void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address
             if (r4300->cached_interp.invalid_code[i] == 0)
             {
                 if (r4300->cached_interp.blocks[i] == NULL
-                 || r4300->cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != r4300->current_instruction_table.NOTCOMPILED)
+                 || r4300->cached_interp.blocks[i]->block[(addr & 0xfff) / 4].ops != r4300->cached_interp.not_compiled)
                 {
                     r4300->cached_interp.invalid_code[i] = 1;
                     /* go directly to next i */
@@ -683,7 +395,7 @@ void run_cached_interpreter(struct r4300_core* r4300)
     while (!*r4300_stop(r4300))
     {
 #ifdef COMPARE_CORE
-        if ((*r4300_pc_struct(r4300))->ops == cached_interpreter_table.FIN_BLOCK && ((*r4300_pc_struct(r4300))->addr < 0x80000000 || (*r4300_pc_struct(r4300))->addr >= 0xc0000000))
+        if ((*r4300_pc_struct(r4300))->ops == cached_interp_FIN_BLOCK && ((*r4300_pc_struct(r4300))->addr < 0x80000000 || (*r4300_pc_struct(r4300))->addr >= 0xc0000000))
             virtual_to_physical_address(r4300, (*r4300_pc_struct(r4300))->addr, 2);
         CoreCompareCallback();
 #endif

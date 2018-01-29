@@ -76,7 +76,6 @@ void poweron_r4300(struct r4300_core* r4300)
     *r4300_pc_struct(r4300) = NULL;
     r4300->delay_slot = 0;
     r4300->skip_jump = 0;
-    //r4300->current_instruction_table;
     r4300->reset_hard_job = 0;
 
     /* cached interp init */
@@ -123,8 +122,6 @@ void poweron_r4300(struct r4300_core* r4300)
 
 void run_r4300(struct r4300_core* r4300)
 {
-    r4300->current_instruction_table = cached_interpreter_table;
-
     *r4300_stop(r4300) = 0;
     g_rom_pause = 0;
 
@@ -144,8 +141,9 @@ void run_r4300(struct r4300_core* r4300)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300->emumode = EMUMODE_DYNAREC;
-        r4300->current_instruction_table.FIN_BLOCK = dynarec_fin_block;
-        r4300->current_instruction_table.NOTCOMPILED = dynarec_notcompiled;
+        r4300->cached_interp.fin_block = dynarec_fin_block;
+        r4300->cached_interp.not_compiled = dynarec_notcompiled;
+        r4300->cached_interp.not_compiled2 = dynarec_notcompiled2;
 
 #ifdef NEW_DYNAREC
         new_dynarec_init();
@@ -166,6 +164,10 @@ void run_r4300(struct r4300_core* r4300)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Cached Interpreter");
         r4300->emumode = EMUMODE_INTERPRETER;
+        r4300->cached_interp.fin_block = cached_interp_FIN_BLOCK;
+        r4300->cached_interp.not_compiled = cached_interp_NOTCOMPILED;
+        r4300->cached_interp.not_compiled2 = cached_interp_NOTCOMPILED2;
+
         init_blocks(r4300);
         cached_interpreter_jump_to(r4300, UINT32_C(0xa4000040));
 

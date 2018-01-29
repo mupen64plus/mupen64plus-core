@@ -39,7 +39,6 @@
 #include "device/r4300/cp0.h"
 #include "device/r4300/cp1.h"
 #include "device/r4300/interrupt.h"
-#include "device/r4300/ops.h"
 #include "device/r4300/tlb.h"
 #include "device/r4300/fpu.h"
 #include "device/rcp/mi/mi_controller.h"
@@ -10964,7 +10963,7 @@ static void TLBWI_new(void)
       g_dev.r4300.new_dynarec_hot_state.memory_map[i]=-1;
     }
   }
-  cached_interpreter_table.TLBWI();
+  cached_interp_TLBWI();
   //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]);
   //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].phys_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].v_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].d_even);
   //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].phys_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].v_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].d_odd);
@@ -11039,7 +11038,7 @@ static void TLBWR_new(void)
       g_dev.r4300.new_dynarec_hot_state.memory_map[i]=-1;
     }
   }
-  cached_interpreter_table.TLBWR();
+  cached_interp_TLBWR();
   /* Combine g_dev.r4300.cp0.tlb.LUT_r, g_dev.r4300.cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
   for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
