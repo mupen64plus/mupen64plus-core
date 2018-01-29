@@ -2139,17 +2139,6 @@ static void (*const recomp_ops[64])(struct r4300_core* r4300) =
     RSC     , RSWC1  , RSV  , RSV   , RSCD , RSDC1, RSV   , RSD
 };
 
-static int get_block_length(const struct precomp_block *block)
-{
-    return (block->end-block->start)/4;
-}
-
-static size_t get_block_memsize(const struct precomp_block *block)
-{
-    int length = get_block_length(block);
-    return ((length+1)+(length>>2)) * sizeof(struct precomp_instr);
-}
-
 /**********************************************************************
  ******************** initialize an empty block ***********************
  **********************************************************************/

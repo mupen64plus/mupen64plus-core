@@ -280,6 +280,20 @@ static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
     }
 }
 
+int get_block_length(const struct precomp_block *block)
+{
+    return (block->end-block->start)/4;
+}
+
+size_t get_block_memsize(const struct precomp_block *block)
+{
+    int length = get_block_length(block);
+    return ((length+1)+(length>>2)) * sizeof(struct precomp_instr);
+}
+
+
+
+
 void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     struct cached_interp* const cinterp = &r4300->cached_interp;

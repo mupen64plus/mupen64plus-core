@@ -26,6 +26,10 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct precomp_block;
+
+int get_block_length(const struct precomp_block *block);
+size_t get_block_memsize(const struct precomp_block *block);
 
 void init_blocks(struct r4300_core* r4300);
 void free_blocks(struct r4300_core* r4300);
