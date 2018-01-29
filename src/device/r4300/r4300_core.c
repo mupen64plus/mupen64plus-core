@@ -144,6 +144,7 @@ void run_r4300(struct r4300_core* r4300)
         r4300->cached_interp.fin_block = dynarec_fin_block;
         r4300->cached_interp.not_compiled = dynarec_notcompiled;
         r4300->cached_interp.not_compiled2 = dynarec_notcompiled2;
+        r4300->cached_interp.free_block = dynarec_free_block;
 
 #ifdef NEW_DYNAREC
         new_dynarec_init();
@@ -167,6 +168,7 @@ void run_r4300(struct r4300_core* r4300)
         r4300->cached_interp.fin_block = cached_interp_FIN_BLOCK;
         r4300->cached_interp.not_compiled = cached_interp_NOTCOMPILED;
         r4300->cached_interp.not_compiled2 = cached_interp_NOTCOMPILED2;
+        r4300->cached_interp.free_block = cached_interp_free_block;
 
         init_blocks(r4300);
         cached_interpreter_jump_to(r4300, UINT32_C(0xa4000040));

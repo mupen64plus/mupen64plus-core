@@ -53,6 +53,8 @@ struct cached_interp
     void (*not_compiled)(void);
     void (*not_compiled2)(void);
 
+    void (*free_block)(struct precomp_block* block);
+
     int init_length;
     struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
     int code_length;                                /* current real recompiled code length */

@@ -291,6 +291,14 @@ size_t get_block_memsize(const struct precomp_block *block)
     return ((length+1)+(length>>2)) * sizeof(struct precomp_instr);
 }
 
+void cached_interp_free_block(struct precomp_block* block)
+{
+    if (block->block) {
+        free(block->block);
+        block->block = NULL;
+    }
+}
+
 
 
 
@@ -356,7 +364,7 @@ void free_blocks(struct r4300_core* r4300)
     {
         if (cinterp->blocks[i])
         {
-            free_block(r4300, cinterp->blocks[i]);
+            r4300->cached_interp.free_block(cinterp->blocks[i]);
             free(cinterp->blocks[i]);
             cinterp->blocks[i] = NULL;
         }
