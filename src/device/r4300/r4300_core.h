@@ -53,6 +53,7 @@ struct cached_interp
     void (*not_compiled)(void);
     void (*not_compiled2)(void);
 
+    void (*init_block)(struct r4300_core* r4300, uint32_t address);
     void (*free_block)(struct precomp_block* block);
 
     int init_length;

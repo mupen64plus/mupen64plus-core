@@ -28,10 +28,10 @@
 struct r4300_core;
 struct precomp_block;
 
+void dynarec_init_block(struct r4300_core* r4300, uint32_t address);
 void dynarec_free_block(struct precomp_block* block);
 
 void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func);
-void init_block(struct r4300_core* r4300, struct precomp_block* block);
 void recompile_opcode(struct r4300_core* r4300);
 void dyna_jump(void);
 void dyna_start(void (*code)(void));

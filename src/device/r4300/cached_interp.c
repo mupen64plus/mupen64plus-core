@@ -291,6 +291,77 @@ size_t get_block_memsize(const struct precomp_block *block)
     return ((length+1)+(length>>2)) * sizeof(struct precomp_instr);
 }
 
+void cached_interp_init_block(struct r4300_core* r4300, uint32_t address)
+{
+    int i, length;
+
+    struct precomp_block** block = &r4300->cached_interp.blocks[address >> 12];
+
+    /* allocate block */
+    if (*block == NULL) {
+        *block = malloc(sizeof(struct precomp_block));
+        (*block)->block = NULL;
+        (*block)->start = address & ~UINT32_C(0xfff);
+        (*block)->end = (address & ~UINT32_C(0xfff)) + 0x1000;
+    }
+
+    struct precomp_block* b = *block;
+
+    length = get_block_length(b);
+
+#ifdef DBG
+    DebugMessage(M64MSG_INFO, "init block %" PRIX32 " - %" PRIX32, b->start, b->end);
+#endif
+
+    /* allocate block instructions */
+    if (!b->block)
+    {
+        size_t memsize = get_block_memsize(b);
+        b->block = (struct precomp_instr*)malloc(memsize);
+        if (!b->block) {
+            DebugMessage(M64MSG_ERROR, "Memory error: couldn't allocate memory for cached interpreter.");
+            return;
+        }
+
+        memset(b->block, 0, memsize);
+    }
+
+    /* reset block instructions (addr + ops) */
+    for (i = 0; i < length; ++i)
+    {
+        b->block[i].addr = b->start + 4*i;
+        b->block[i].ops = cached_interp_NOTCOMPILED;
+    }
+
+    /* here we're marking the block as a valid code even if it's not compiled
+     * yet as the game should have already set up the code correctly.
+     */
+    r4300->cached_interp.invalid_code[b->start>>12] = 0;
+
+
+    if (b->end < UINT32_C(0x80000000) || b->start >= UINT32_C(0xc0000000))
+    {
+        uint32_t paddr = virtual_to_physical_address(r4300, b->start, 2);
+
+        r4300->cached_interp.invalid_code[paddr>>12] = 0;
+        cached_interp_init_block(r4300, paddr);
+
+        paddr += b->end - b->start - 4;
+
+        r4300->cached_interp.invalid_code[paddr>>12] = 0;
+        cached_interp_init_block(r4300, paddr);
+    }
+    else
+    {
+        uint32_t alt_addr = b->start ^ UINT32_C(0x20000000);
+
+        if (r4300->cached_interp.invalid_code[alt_addr>>12])
+        {
+            cached_interp_init_block(r4300, alt_addr);
+        }
+    }
+}
+
 void cached_interp_free_block(struct precomp_block* block)
 {
     if (block->block) {
@@ -301,11 +372,9 @@ void cached_interp_free_block(struct precomp_block* block)
 
 
 
-
 void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
 {
     struct cached_interp* const cinterp = &r4300->cached_interp;
-    struct precomp_block** b;
 
     if (r4300->skip_jump) {
         return;
@@ -315,30 +384,13 @@ void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
         return;
     }
 
-    b = &cinterp->blocks[address >> 12];
-
-    cinterp->actual = *b;
-
     /* setup new block if invalid */
-    if (cinterp->invalid_code[address >> 12])
-    {
-        if (!*b)
-        {
-            *b = (struct precomp_block*)malloc(sizeof(struct precomp_block));
-            cinterp->actual = *b;
-            (*b)->code = NULL;
-            (*b)->block = NULL;
-            (*b)->jumps_table = NULL;
-            (*b)->riprel_table = NULL;
-        }
-
-        (*b)->start = (address & ~0xfff);
-        (*b)->end = (address & ~0xfff) + 0x1000;
-
-        init_block(r4300, *b);
+    if (cinterp->invalid_code[address >> 12]) {
+        r4300->cached_interp.init_block(r4300, address);
     }
 
     /* set new PC */
+    cinterp->actual = cinterp->blocks[address >> 12];
     (*r4300_pc_struct(r4300)) = cinterp->actual->block + ((address - cinterp->actual->start) >> 2);
 }
 
