@@ -600,6 +600,15 @@ ifeq ($(DEBUGGER), 1)
     $(SRCDIR)/debugger/dbg_memory.c \
     $(SRCDIR)/debugger/dbg_breakpoints.c
   LDLIBS += -lopcodes -lbfd
+
+  # UGLY libopcodes version check (we check for >= 2.29)
+  LIBOPCODES_VERSION := $(shell $(STRINGS) --version | head -n1 | cut -d ' ' -f5)
+  LIBOPCODES_VERSION_MAJOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f1 -d.)
+  LIBOPCODES_VERSION_MINOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f2 -d.)
+  LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_VERSION_MAJOR) -gt 2 -o \( $(LIBOPCODES_VERSION_MAJOR) -eq 2 -a $(LIBOPCODES_VERSION_MINOR) -ge 29 \) ] && echo true)
+  ifeq ($(LIBOPCODES_GE_2_29),true)
+    CFLAGS += -DUSE_LIBOPCODES_GE_2_29
+  endif
 endif
 
 # generate a list of object files to build, make a temporary directory for them
