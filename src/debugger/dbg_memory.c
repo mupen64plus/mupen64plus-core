@@ -45,6 +45,7 @@ static char args_recompiled[564][MAX_DISASSEMBLY*4];
 static void *opaddr_recompiled[564];
 
 static disassemble_info dis_info;
+static disassembler_ftype disassemble;
 
 #define CHECK_MEM(r4300, address) \
     invalidate_r4300_cached_code(r4300, address, 4);
@@ -97,9 +98,22 @@ void init_host_disassembler(void)
     dis_info.stream = stderr;
     dis_info.bytes_per_line=1;
     dis_info.endian = 1;
+    dis_info.arch = bfd_arch_i386;
     dis_info.mach = bfd_mach_i386_i8086;
     dis_info.disassembler_options = (char*) "i386,suffix";
     dis_info.read_memory_func = read_memory_func;
+
+#if defined(USE_LIBOPCODES_GE_2_29)
+    /* libopcode >= 2.29 cannot use print_insn_i386 directly,
+     * but can get it through disassembler function
+     * whose prototype has been also updated to allow such selection. */
+    disassemble = disassembler(dis_info.arch,
+            (dis_info.endian == BFD_ENDIAN_BIG),
+            dis_info.mach,
+            NULL);
+#else
+    disassemble = print_insn_i386;
+#endif
 }
 
 static void decode_recompiled(struct r4300_core* r4300, uint32_t addr)
@@ -136,7 +150,7 @@ static void decode_recompiled(struct r4300_core* r4300, uint32_t addr)
         opaddr_recompiled[lines_recompiled] = assemb;
         num_decoded=0;
 
-        assemb += print_insn_i386((bfd_vma)(long) assemb, &dis_info);
+        assemb += disassemble((bfd_vma)(long) assemb, &dis_info);
 
         lines_recompiled++;
     }
