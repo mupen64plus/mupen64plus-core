@@ -196,10 +196,10 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
         ROM_SETTINGS.savetype = NONE;
         ROM_SETTINGS.status = 0;
-        ROM_SETTINGS.players = 0;
-        ROM_SETTINGS.rumble = 0;
+        ROM_SETTINGS.players = 4;
+        ROM_SETTINGS.rumble = 1;
         ROM_SETTINGS.transferpak = 0;
-        ROM_SETTINGS.mempak = 0;
+        ROM_SETTINGS.mempak = 1;
         ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
         ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
@@ -453,13 +453,13 @@ void romdatabase_open(void)
             search->entry.crc2 = 0;
             search->entry.status = 0; /* Set default to 0 stars. */
             search->entry.savetype = 0;
-            search->entry.players = 0;
-            search->entry.rumble = 0;
+            search->entry.players = 4;
+            search->entry.rumble = 1;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
             search->entry.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
             search->entry.cheats = NULL;
             search->entry.transferpak = 0;
-            search->entry.mempak = 0;
+            search->entry.mempak = 1;
             search->entry.sidmaduration = DEFAULT_SI_DMA_DURATION;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
