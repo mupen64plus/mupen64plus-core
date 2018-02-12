@@ -510,7 +510,7 @@ void gen_interrupt(struct r4300_core* r4300)
         dyna_stop(r4300);
     }
 
-    if (!r4300->cp0.interrupt_unsafe_state)
+    if (!r4300->cp0.interrupt_unsafe_state && !r4300->sp->rsp_task_locked)
     {
         if (savestates_get_job() == savestates_job_load)
         {
@@ -603,7 +603,7 @@ void gen_interrupt(struct r4300_core* r4300)
             break;
     }
 
-    if (!r4300->cp0.interrupt_unsafe_state)
+    if (!r4300->cp0.interrupt_unsafe_state && !r4300->sp->rsp_task_locked)
     {
         if (savestates_get_job() == savestates_job_save)
         {
