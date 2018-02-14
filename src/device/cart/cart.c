@@ -90,6 +90,7 @@ const struct joybus_device_interface
     g_ijoybus_device_cart =
 {
     NULL,
+    NULL,
     process_cart_command,
     NULL
 };

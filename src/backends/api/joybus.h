@@ -66,6 +66,10 @@ struct joybus_device_interface
      */
     void (*poweron)(void* jbd);
 
+	/** Provides the current plugged in state
+	 */
+    int (*get_plugged_in)(void* jbd);
+
     /* Required. Perform command processing.
      */
     void (*process)(void* jbd,

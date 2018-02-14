@@ -176,6 +176,12 @@ static void poweron_game_controller(void* jbd)
     }
 }
 
+static int get_plugged_in_state(void* jbd)
+{
+    struct game_controller* cont = (struct game_controller*)jbd;
+    return cont->icin->get_pluggedin(cont->cin);
+}
+
 static void process_controller_command(void* jbd,
     const uint8_t* tx, const uint8_t* tx_buf,
     uint8_t* rx, uint8_t* rx_buf)
@@ -225,6 +231,7 @@ static void process_controller_command(void* jbd,
 const struct joybus_device_interface g_ijoybus_device_controller =
 {
     poweron_game_controller,
+    get_plugged_in_state,
     process_controller_command,
     NULL
 };

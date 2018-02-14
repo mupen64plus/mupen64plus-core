@@ -52,6 +52,12 @@ static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask
         && ((last_input & mask) != 0);
 }
 
+static int input_plugin_get_pluggedin_state(void* opaque)
+{
+    struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
+    return Controls[cin_compat->control_id].Present;
+}
+
 static uint32_t input_plugin_get_input(void* opaque)
 {
     struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
@@ -111,6 +117,7 @@ static uint32_t input_plugin_get_input(void* opaque)
 const struct controller_input_backend_interface
     g_icontroller_input_backend_plugin_compat =
 {
+    input_plugin_get_pluggedin_state,
     input_plugin_get_input
 };
 

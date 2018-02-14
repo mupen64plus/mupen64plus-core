@@ -1212,13 +1212,8 @@ m64p_error main_run(void)
 
         control_ids[i] = (int)i;
 
-        /* if no controller is plugged, make it "disconnected" */
-        if (!Controls[i].Present) {
-            joybus_devices[i] = NULL;
-            ijoybus_devices[i] = NULL;
-        }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
-        else if (Controls[i].RawData) {
+        if (Controls[i].RawData) {
             joybus_devices[i] = &control_ids[i];
             ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
         }

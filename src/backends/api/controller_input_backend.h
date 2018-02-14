@@ -54,6 +54,10 @@ enum mouse_controller_input {
 
 struct controller_input_backend_interface
 {
+    /* Returns emulated controller plugged in status (32-bit)
+     */
+    int (*get_pluggedin)(void* cin);
+
     /* Returns emulated controller input status (32-bit)
      * Encoding of the input status depends on the emulated controller flavor.
      */

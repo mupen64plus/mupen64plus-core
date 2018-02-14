@@ -68,7 +68,8 @@ static void process_channel(struct pif_channel* channel)
     }
 
     /* set NoResponse if no device is connected */
-    if (channel->ijbd == NULL) {
+    if (channel->ijbd->get_plugged_in != NULL && !channel->ijbd->get_plugged_in(channel->jbd)) {
+
         *channel->rx |= 0x80;
         return;
     }
@@ -81,7 +82,7 @@ static void process_channel(struct pif_channel* channel)
 
 static void post_setup_channel(struct pif_channel* channel)
 {
-    if ((channel->ijbd == NULL)
+    if ((channel->ijbd->get_plugged_in != NULL && !channel->ijbd->get_plugged_in(channel->jbd))
     || (channel->ijbd->post_setup == NULL)) {
         return;
     }
