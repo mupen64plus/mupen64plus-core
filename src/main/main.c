@@ -1397,7 +1397,7 @@ m64p_error main_run(void)
 #endif
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }
@@ -1431,7 +1431,7 @@ on_audio_open_failure:
 on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }

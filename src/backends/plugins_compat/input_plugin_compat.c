@@ -52,23 +52,23 @@ static int is_button_released(uint32_t input, uint32_t last_input, uint32_t mask
         && ((last_input & mask) != 0);
 }
 
-static int input_plugin_get_pluggedin_state(void* opaque)
+static m64p_error input_plugin_get_input(void* opaque, uint32_t* input_)
 {
     struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
-    return Controls[cin_compat->control_id].Present;
-}
-
-static uint32_t input_plugin_get_input(void* opaque)
-{
-    struct controller_input_compat* cin_compat = (struct controller_input_compat*)opaque;
-
     BUTTONS keys = { 0 };
 
     int pak_change_requested = 0;
 
+    /* first poll controller */
     if (input.getKeys) {
         input.getKeys(cin_compat->control_id, &keys);
     }
+
+    /* return an error if controller is not plugged */
+    if (!Controls[cin_compat->control_id].Present) {
+        return M64ERR_SYSTEM_FAIL;
+    }
+
 
     /* has Controls[i].Plugin changed since last call */
     if (cin_compat->last_pak_type != Controls[cin_compat->control_id].Plugin) {
@@ -111,13 +111,13 @@ static uint32_t input_plugin_get_input(void* opaque)
     cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin;
     cin_compat->last_input = keys.Value;
 
-    return keys.Value;
+    *input_ = keys.Value;
+    return M64ERR_SUCCESS;
 }
 
 const struct controller_input_backend_interface
     g_icontroller_input_backend_plugin_compat =
 {
-    input_plugin_get_pluggedin_state,
     input_plugin_get_input
 };
 
