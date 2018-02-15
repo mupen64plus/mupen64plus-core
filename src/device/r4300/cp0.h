@@ -168,6 +168,11 @@ struct interrupt_handler
 
 enum { CP0_INTERRUPT_HANDLERS_COUNT = 12 };
 
+enum {
+    INTR_UNSAFE_R4300 = 0x01,
+    INTR_UNSAFE_RSP = 0x02,
+};
+
 struct cp0
 {
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
@@ -177,7 +182,7 @@ struct cp0
 
     /* set to avoid savestates/reset if state may be inconsistent
      * (e.g. in the middle of an instruction) */
-    int interrupt_unsafe_state;
+    unsigned int interrupt_unsafe_state;
 
     struct interrupt_queue q;
 #if NEW_DYNAREC != NEW_DYNAREC_ARM
