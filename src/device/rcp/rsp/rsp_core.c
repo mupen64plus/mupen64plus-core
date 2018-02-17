@@ -178,6 +178,7 @@ void poweron_rsp(struct rsp_core* sp)
     memset(sp->regs2, 0, SP_REGS2_COUNT*sizeof(uint32_t));
 
     sp->rsp_task_locked = 0;
+    sp->mi->r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_RSP;
     sp->regs[SP_STATUS_REG] = 1;
 }
 
@@ -320,9 +321,11 @@ void do_SP_Task(struct rsp_core* sp)
     }
 
     sp->rsp_task_locked = 0;
+    sp->mi->r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_RSP;
     if ((sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)) == 0)
     {
         sp->rsp_task_locked = 1;
+        sp->mi->r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_RSP;
         sp->mi->regs[MI_INTR_REG] |= MI_INTR_SP;
     }
     if (sp->mi->regs[MI_INTR_REG] & MI_INTR_SP)
