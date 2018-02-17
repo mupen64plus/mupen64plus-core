@@ -726,20 +726,39 @@ static void multdiv_alloc_x86(struct regstat *current,int i)
     }
     else // 64-bit
     {
-      current->u&=~(1LL<<HIREG);
-      current->u&=~(1LL<<LOREG);
-      current->uu&=~(1LL<<HIREG);
-      current->uu&=~(1LL<<LOREG);
-      alloc_x86_reg(current,i,HIREG|64,EDX);
-      alloc_x86_reg(current,i,HIREG,EAX);
-      alloc_reg64(current,i,rs1[i]);
-      alloc_reg64(current,i,rs2[i]);
-      alloc_all(current,i);
-      current->is32&=~(1LL<<HIREG);
-      current->is32&=~(1LL<<LOREG);
-      dirty_reg(current,HIREG);
-      dirty_reg(current,LOREG);
-      minimum_free_regs[i]=HOST_REGS;
+#ifndef INTERPRETED_MULT64
+      if((opcode2[i]==0x1C)||(opcode2[i]==0x1D)) // DMULT/DMULTU
+      {
+        current->u&=~(1LL<<HIREG);
+        current->uu&=~(1LL<<HIREG);
+        alloc_x86_reg(current,i,HIREG|64,EDX);
+        alloc_x86_reg(current,i,HIREG,EAX);
+        alloc_reg64(current,i,rs1[i]);
+        alloc_reg64(current,i,rs2[i]);
+        alloc_reg_temp(current,i,-1);
+        current->is32&=~(1LL<<HIREG);
+        current->is32&=~(1LL<<LOREG);
+        dirty_reg(current,HIREG);
+        dirty_reg(current,LOREG);
+        minimum_free_regs[i]=1;
+      }
+      else
+#endif
+      {
+        // avoid running out of registers
+        if(((current->u>>LOREG)&1)||((current->uu>>LOREG)&1))
+          alloc_reg64(current,i,HIREG);
+        else
+          alloc_reg(current,i,HIREG);
+
+        alloc_reg64(current,i,LOREG);
+        alloc_reg64(current,i,rs1[i]);
+        alloc_reg64(current,i,rs2[i]);
+        current->is32&=~(1LL<<HIREG);
+        current->is32&=~(1LL<<LOREG);
+        dirty_reg(current,HIREG);
+        dirty_reg(current,LOREG);
+      }
     }
   }
   else
@@ -3419,7 +3438,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
           emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
         }
         emit_call((int)cached_interpreter_table.MFC0);
-        emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rdword,t);
+        emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
   }
@@ -3428,7 +3447,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     signed char s=get_reg(i_regs->regmap,rs1[i]);
     char copr=(source[i]>>11)&0x1f;
     assert(s>=0);
-    emit_writeword(s,(int)&g_dev.r4300.new_dynarec_hot_state.rdword);
+    emit_writeword(s,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
     emit_pusha();
     emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
     emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd));
@@ -4188,6 +4207,62 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
     }
     else // 64-bit
     {
+#ifdef INTERPRETED_MULT64
+      if(opcode2[i]==0x1C) // DMULT
+      {
+        char m1h=get_reg(i_regs->regmap,rs1[i]|64);
+        char m1l=get_reg(i_regs->regmap,rs1[i]);
+        char m2h=get_reg(i_regs->regmap,rs2[i]|64);
+        char m2l=get_reg(i_regs->regmap,rs2[i]);
+        assert(m1h>=0);
+        assert(m2h>=0);
+        assert(m1l>=0);
+        assert(m2l>=0);
+        emit_pusha();
+        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
+        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+        emit_call((int)cached_interpreter_table.DMULT);
+        emit_popa();
+        char hih=get_reg(i_regs->regmap,HIREG|64);
+        char hil=get_reg(i_regs->regmap,HIREG);
+        char loh=get_reg(i_regs->regmap,LOREG|64);
+        char lol=get_reg(i_regs->regmap,LOREG);
+        if(hih>=0) emit_loadreg(HIREG|64,hih);
+        if(hil>=0) emit_loadreg(HIREG,hil);
+        if(loh>=0) emit_loadreg(LOREG|64,loh);
+        if(lol>=0) emit_loadreg(LOREG,lol);
+      }
+      if(opcode2[i]==0x1D) // DMULTU
+      {
+        char m1h=get_reg(i_regs->regmap,rs1[i]|64);
+        char m1l=get_reg(i_regs->regmap,rs1[i]);
+        char m2h=get_reg(i_regs->regmap,rs2[i]|64);
+        char m2l=get_reg(i_regs->regmap,rs2[i]);
+        assert(m1h>=0);
+        assert(m2h>=0);
+        assert(m1l>=0);
+        assert(m2l>=0);
+        emit_pusha();
+        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
+        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+        emit_call((int)cached_interpreter_table.DMULTU);
+        emit_popa();
+        char hih=get_reg(i_regs->regmap,HIREG|64);
+        char hil=get_reg(i_regs->regmap,HIREG);
+        char loh=get_reg(i_regs->regmap,LOREG|64);
+        char lol=get_reg(i_regs->regmap,LOREG);
+        if(hih>=0) emit_loadreg(HIREG|64,hih);
+        if(hil>=0) emit_loadreg(HIREG,hil);
+        if(loh>=0) emit_loadreg(LOREG|64,loh);
+        if(lol>=0) emit_loadreg(LOREG,lol);
+      }
+#else
       if(opcode2[i]==0x1C) // DMULT
       {
         char m1h=get_reg(i_regs->regmap,rs1[i]|64);
@@ -4288,6 +4363,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_add(EAX,temp,EAX);
         emit_adcimm(0,EDX);
       }
+#endif
       if(opcode2[i]==0x1E) // DDIV
       {
         char d1h=get_reg(i_regs->regmap,rs1[i]|64);
@@ -4298,25 +4374,14 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(d2h>=0);
         assert(d1l>=0);
         assert(d2l>=0);
-        //emit_pushreg(d2h);
-        //emit_pushreg(d2l);
-        //emit_pushreg(d1h);
-        //emit_pushreg(d1l);
-        emit_addimm(ESP,-16,ESP);
-        emit_writeword_indexed(d2h,12,ESP);
-        emit_writeword_indexed(d2l,8,ESP);
-        emit_writeword_indexed(d1h,4,ESP);
-        emit_writeword_indexed(d1l,0,ESP);
-        emit_call((int)&div64);
-        //emit_popreg(d1l);
-        //emit_popreg(d1h);
-        //emit_popreg(d2l);
-        //emit_popreg(d2h);
-        emit_readword_indexed(0,ESP,d1l);
-        emit_readword_indexed(4,ESP,d1h);
-        emit_readword_indexed(8,ESP,d2l);
-        emit_readword_indexed(12,ESP,d2h);
-        emit_addimm(ESP,16,ESP);
+        emit_pusha();
+        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
+        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+        emit_call((int)cached_interpreter_table.DDIV);
+        emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
         char loh=get_reg(i_regs->regmap,LOREG|64);
@@ -4336,25 +4401,14 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(d2h>=0);
         assert(d1l>=0);
         assert(d2l>=0);
-        //emit_pushreg(d2h);
-        //emit_pushreg(d2l);
-        //emit_pushreg(d1h);
-        //emit_pushreg(d1l);
-        emit_addimm(ESP,-16,ESP);
-        emit_writeword_indexed(d2h,12,ESP);
-        emit_writeword_indexed(d2l,8,ESP);
-        emit_writeword_indexed(d1h,4,ESP);
-        emit_writeword_indexed(d1l,0,ESP);
-        emit_call((int)&divu64);
-        //emit_popreg(d1l);
-        //emit_popreg(d1h);
-        //emit_popreg(d2l);
-        //emit_popreg(d2h);
-        emit_readword_indexed(0,ESP,d1l);
-        emit_readword_indexed(4,ESP,d1h);
-        emit_readword_indexed(8,ESP,d2l);
-        emit_readword_indexed(12,ESP,d2h);
-        emit_addimm(ESP,16,ESP);
+        emit_pusha();
+        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
+        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+        emit_call((int)cached_interpreter_table.DDIVU);
+        emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
         char loh=get_reg(i_regs->regmap,LOREG|64);

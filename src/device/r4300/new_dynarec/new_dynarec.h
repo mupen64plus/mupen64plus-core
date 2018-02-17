@@ -49,6 +49,9 @@ struct new_dynarec_hot_state
     uint64_t rdword;
     int branch_target;
     struct precomp_instr fake_pc;
+    int64_t rs;
+    int64_t rt;
+    int64_t rd;
     unsigned int mini_ht[32][2];
     unsigned char restore_candidate[512];
     unsigned int memory_map[1048576];
@@ -80,6 +83,9 @@ struct new_dynarec_hot_state
     int branch_target;
     struct precomp_instr* pc;
     struct precomp_instr fake_pc;
+    int64_t rs;
+    int64_t rt;
+    int64_t rd;
     int ram_offset;
     unsigned int mini_ht[32][2];
     unsigned char restore_candidate[512];

@@ -190,8 +190,6 @@ void jump_syscall(void);
 void jump_eret(void);
 
 /* interpreted opcode */
-static void div64(int64_t dividend,int64_t divisor);
-static void divu64(uint64_t dividend,uint64_t divisor);
 static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits);
 static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits);
 static void TLBWI_new(void);
@@ -2787,20 +2785,23 @@ void multdiv_alloc(struct regstat *current,int i)
     }
     else // 64-bit
     {
-      current->u&=~(1LL<<HIREG);
-      current->u&=~(1LL<<LOREG);
-      current->uu&=~(1LL<<HIREG);
-      current->uu&=~(1LL<<LOREG);
+#ifndef INTERPRETED_MULT64
+      if((opcode2[i]==0x1C)||(opcode2[i]==0x1D)) // DMULT/DMULTU
+      {
+        current->u&=~(1LL<<HIREG);
+        current->uu&=~(1LL<<HIREG);
+        current->u&=~(1LL<<LOREG);
+        current->uu&=~(1LL<<LOREG);
+      }
+#endif
       alloc_reg64(current,i,HIREG);
-      //if(HOST_REGS>10) alloc_reg64(current,i,LOREG);
+      alloc_reg64(current,i,LOREG);
       alloc_reg64(current,i,rs1[i]);
       alloc_reg64(current,i,rs2[i]);
-      alloc_all(current,i);
       current->is32&=~(1LL<<HIREG);
       current->is32&=~(1LL<<LOREG);
       dirty_reg(current,HIREG);
       dirty_reg(current,LOREG);
-      minimum_free_regs[i]=HOST_REGS;
     }
   }
   else
@@ -7589,9 +7590,9 @@ void new_dynarec_init(void)
   out=(u_char *)base_addr;
 
   g_dev.r4300.rdword=&g_dev.r4300.new_dynarec_hot_state.rdword;
-  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rs=(long long int *)&g_dev.r4300.new_dynarec_hot_state.rdword;
-  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rt=(long long int *)&g_dev.r4300.new_dynarec_hot_state.rdword;
-  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rd=(long long int *)&g_dev.r4300.new_dynarec_hot_state.rdword;
+  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rs = &g_dev.r4300.new_dynarec_hot_state.rs;
+  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rt = &g_dev.r4300.new_dynarec_hot_state.rt;
+  g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rd = &g_dev.r4300.new_dynarec_hot_state.rd;
   int n;
   for(n=0x80000;n<0x80800;n++)
     g_dev.r4300.cached_interp.invalid_code[n]=1;
@@ -10919,21 +10920,6 @@ int new_recompile_block(int addr)
 }
 
 /* interpreted opcode */
-static void div64(int64_t dividend,int64_t divisor)
-{
-  if(divisor) {
-    *r4300_mult_lo(&g_dev.r4300)=dividend/divisor;
-    *r4300_mult_hi(&g_dev.r4300)=dividend%divisor;
-  }
-}
-static void divu64(uint64_t dividend,uint64_t divisor)
-{
-  if(divisor) {
-    *r4300_mult_lo(&g_dev.r4300)=dividend/divisor;
-    *r4300_mult_hi(&g_dev.r4300)=dividend%divisor;
-  }
-}
-
 static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
 {
   if(bits) {
