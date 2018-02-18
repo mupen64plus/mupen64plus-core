@@ -181,8 +181,14 @@ static void process_controller_command(void* jbd,
     uint8_t* rx, uint8_t* rx_buf)
 {
     struct game_controller* cont = (struct game_controller*)jbd;
-
+    uint32_t input_ = 0;
     uint8_t cmd = tx_buf[0];
+
+    /* if controller can't successfully be polled, consider it to be absent */
+    if (cont->icin->get_input(cont->cin, &input_) != M64ERR_SUCCESS) {
+        *rx |= 0x80;
+        return;
+    }
 
     switch (cmd)
     {
@@ -200,7 +206,7 @@ static void process_controller_command(void* jbd,
     case JCMD_CONTROLLER_READ: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 4)
 
-        *((uint32_t*)(rx_buf)) = cont->icin->get_input(cont->cin);
+        *((uint32_t*)(rx_buf)) = input_;
 #ifdef COMPARE_CORE
         CoreCompareDataSync(4, rx_buf);
 #endif

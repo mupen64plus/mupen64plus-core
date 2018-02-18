@@ -67,6 +67,10 @@ static void process_channel(struct pif_channel* channel)
         return;
     }
 
+    /* reset Tx/Rx just in case */
+    *channel->tx &= 0x3f;
+    *channel->rx &= 0x3f;
+
     /* set NoResponse if no device is connected */
     if (channel->ijbd == NULL) {
         *channel->rx |= 0x80;

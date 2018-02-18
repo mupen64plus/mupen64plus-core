@@ -525,8 +525,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
             uint8_t rpk_state = GETDATA(curr, uint8_t);
 
-            /* skip non present or controllers handled by the input plugin */
-            if (!Controls[i].Present || Controls[i].RawData)
+            /* skip controllers handled by the input plugin */
+            if (Controls[i].RawData)
                 continue;
 
             if (ROM_SETTINGS.rumble) {
@@ -629,8 +629,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
         /* extra controllers state */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            /* skip non present or controllers handled by the input plugin */
-            if (!Controls[i].Present || Controls[i].RawData)
+            /* skip controllers handled by the input plugin */
+            if (Controls[i].RawData)
                 continue;
 
             dev->controllers[i].flavor->reset(&dev->controllers[i]);
@@ -996,8 +996,8 @@ static int savestates_load_pj64(struct device* dev,
 
     /* extra controllers state */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        /* skip non present or controllers handled by the input plugin */
-        if (!Controls[i].Present || Controls[i].RawData)
+        /* skip controllers handled by the input plugin */
+        if (Controls[i].RawData)
             continue;
 
         dev->controllers[i].flavor->reset(&dev->controllers[i]);

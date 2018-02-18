@@ -1212,13 +1212,8 @@ m64p_error main_run(void)
 
         control_ids[i] = (int)i;
 
-        /* if no controller is plugged, make it "disconnected" */
-        if (!Controls[i].Present) {
-            joybus_devices[i] = NULL;
-            ijoybus_devices[i] = NULL;
-        }
         /* if input plugin requests RawData let the input plugin do the channel device processing */
-        else if (Controls[i].RawData) {
+        if (Controls[i].RawData) {
             joybus_devices[i] = &control_ids[i];
             ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
         }
@@ -1402,7 +1397,7 @@ m64p_error main_run(void)
 #endif
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }
@@ -1436,7 +1431,7 @@ on_audio_open_failure:
 on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (Controls[i].Present && !Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }
