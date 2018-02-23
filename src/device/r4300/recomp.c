@@ -54,9 +54,6 @@
   #include "x86/regcache.h"
 #endif
 
-static void *malloc_exec(size_t size);
-static void free_exec(void *ptr, size_t length);
-
 static void RSV(struct r4300_core* r4300)
 {
     r4300->cached_interp.dst->ops = cached_interp_RESERVED;
@@ -2127,7 +2124,7 @@ static void RSD(struct r4300_core* r4300)
     recompile_standard_i_type(r4300);
 }
 
-static void (*const recomp_ops[64])(struct r4300_core* r4300) =
+void (*const recomp_ops[64])(struct r4300_core* r4300) =
 {
     RSPECIAL, RREGIMM, RJ   , RJAL  , RBEQ , RBNE , RBLEZ , RBGTZ ,
     RADDI   , RADDIU , RSLTI, RSLTIU, RANDI, RORI , RXORI , RLUI  ,
@@ -2138,6 +2135,13 @@ static void (*const recomp_ops[64])(struct r4300_core* r4300) =
     RLL     , RLWC1  , RSV  , RSV   , RLLD , RLDC1, RSV   , RLD   ,
     RSC     , RSWC1  , RSV  , RSV   , RSCD , RSDC1, RSV   , RSD
 };
+
+
+
+#ifndef NO_ASM
+#ifndef NEW_DYNAREC
+static void *malloc_exec(size_t size);
+static void free_exec(void *ptr, size_t length);
 
 /**********************************************************************
  ******************** initialize an empty block ***********************
@@ -2235,7 +2239,7 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
             gendebug(r4300);
 #endif
             RNOTCOMPILED(r4300);
-            r4300->cached_interp.recomp_func(r4300);
+            gennotcompiled(r4300);
         }
 #if defined(PROFILE_R4300)
         fclose(r4300->recomp.pfProfile);
@@ -2308,7 +2312,7 @@ void dynarec_free_block(struct precomp_block* block)
 /**********************************************************************
  ********************* recompile a block of code **********************
  **********************************************************************/
-void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
+void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
 {
     int i;
     int length, finished = 0;
@@ -2320,21 +2324,13 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
 
     block->xxhash = 0;
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
-    if (r4300->emumode == EMUMODE_DYNAREC)
-    {
-        r4300->cached_interp.code_length = block->code_length;
-        r4300->recomp.max_code_length = block->max_code_length;
-        r4300->recomp.inst_pointer = &block->code;
-        init_assembler(r4300, block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
-        init_cache(r4300, block->block + (func & 0xFFF) / 4);
-    }
+    r4300->cached_interp.code_length = block->code_length;
+    r4300->recomp.max_code_length = block->max_code_length;
+    r4300->recomp.inst_pointer = &block->code;
+    init_assembler(r4300, block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
+    init_cache(r4300, block->block + (func & 0xFFF) / 4);
 #if defined(PROFILE_R4300)
     r4300->recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
-#endif
-
-#endif
 #endif
 
     for (i = (func & 0xFFF) / 4; finished != 2; i++)
@@ -2355,10 +2351,8 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
         r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
 #ifdef COMPARE_CORE
-        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
+        gendebug(r4300);
 #endif
 #if defined(PROFILE_R4300)
         long x86addr = (long) (block->code + block->block[i].local_addr);
@@ -2370,20 +2364,13 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
         }
 #endif
-#endif
-#endif
 
         r4300->cached_interp.recomp_func = NULL;
         recomp_ops[((r4300->cached_interp.src >> 26) & 0x3F)](r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->cached_interp.recomp_func(r4300); }
+        r4300->cached_interp.recomp_func(r4300);
+
         r4300->cached_interp.dst = block->block + i;
 
-        /*if ((r4300->cached_interp.dst+1)->ops != NOTCOMPILED && !r4300->cached_interp.delay_slot_compiled &&
-          i < length)
-          {
-          if (r4300->emumode == EMUMODE_DYNAREC) genlink_subblock(r4300);
-          finished = 2;
-          }*/
         if (r4300->cached_interp.delay_slot_compiled)
         {
             r4300->cached_interp.delay_slot_compiled--;
@@ -2406,8 +2393,6 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         }
     }
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
 #if defined(PROFILE_R4300)
     long x86addr = (long) (block->code + r4300->cached_interp.code_length);
     int mipsop = -3; /* -3 == block-postfix */
@@ -2418,8 +2403,6 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
     }
 #endif
-#endif
-#endif
 
     if (i >= length)
     {
@@ -2428,10 +2411,10 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
         r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
         r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
 #ifdef COMPARE_CORE
-        if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
+        gendebug(r4300);
 #endif
         RFIN_BLOCK(r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->cached_interp.recomp_func(r4300); }
+        genfin_block(r4300);
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
         {
@@ -2440,33 +2423,27 @@ void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct pr
             r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
             r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
 #ifdef COMPARE_CORE
-            if (r4300->emumode == EMUMODE_DYNAREC) { gendebug(r4300); }
+            gendebug(r4300);
 #endif
             RFIN_BLOCK(r4300);
-            if (r4300->emumode == EMUMODE_DYNAREC) { r4300->cached_interp.recomp_func(r4300); }
+            genfin_block(r4300);
             i++;
         }
     }
-    else if (r4300->emumode == EMUMODE_DYNAREC) { genlink_subblock(r4300); }
+    else { genlink_subblock(r4300); }
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
-    if (r4300->emumode == EMUMODE_DYNAREC)
-    {
-        free_all_registers(r4300);
-        passe2(r4300, block->block, (func&0xFFF)/4, i, block);
-        block->code_length = r4300->cached_interp.code_length;
-        block->max_code_length = r4300->recomp.max_code_length;
-        free_assembler(r4300, &block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
-    }
+    free_all_registers(r4300);
+    passe2(r4300, block->block, (func&0xFFF)/4, i, block);
+    block->code_length = r4300->cached_interp.code_length;
+    block->max_code_length = r4300->recomp.max_code_length;
+    free_assembler(r4300, &block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
+
 #ifdef DBG
     DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
 #endif
 #if defined(PROFILE_R4300)
     fclose(r4300->recomp.pfProfile);
     r4300->recomp.pfProfile = NULL;
-#endif
-#endif
 #endif
 
 #if defined(PROFILE)
@@ -2564,8 +2541,6 @@ void recompile_opcode(struct r4300_core* r4300)
     if (!is_jump(r4300))
     {
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
 #if defined(PROFILE_R4300)
         long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->cached_interp.code_length);
 
@@ -2576,23 +2551,19 @@ void recompile_opcode(struct r4300_core* r4300)
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
         }
 #endif
-#endif
-#endif
 
         r4300->cached_interp.recomp_func = NULL;
         recomp_ops[((r4300->cached_interp.src >> 26) & 0x3F)](r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->cached_interp.recomp_func(r4300); }
+        r4300->cached_interp.recomp_func(r4300);
     }
     else
     {
         RNOP(r4300);
-        if (r4300->emumode == EMUMODE_DYNAREC) { r4300->cached_interp.recomp_func(r4300); }
+        gennop(r4300);
     }
     r4300->cached_interp.delay_slot_compiled = 2;
 }
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
 #if defined(PROFILE_R4300)
 void profile_write_end_of_code_blocks(struct r4300_core* r4300)
 {
@@ -2618,8 +2589,6 @@ void profile_write_end_of_code_blocks(struct r4300_core* r4300)
     r4300->recomp.pfProfile = NULL;
 }
 #endif
-#endif
-#endif
 
 /* Jumps to the given address. This is for the dynarec. */
 void dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
@@ -2628,8 +2597,6 @@ void dynarec_jump_to(struct r4300_core* r4300, uint32_t address)
     dyna_jump();
 }
 
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
 void dynarec_fin_block(void)
 {
     cached_interp_FIN_BLOCK();
@@ -2746,9 +2713,6 @@ int dynarec_write_aligned_dword(void)
         r4300->recomp.wdword,
         ~UINT64_C(0)); /* NOTE: in dynarec, we only need all-one masks */
 }
-#endif
-#endif
-
 
 
 /**********************************************************************
@@ -2807,3 +2771,6 @@ static void free_exec(void *ptr, size_t length)
     free(ptr);
 #endif
 }
+
+#endif
+#endif

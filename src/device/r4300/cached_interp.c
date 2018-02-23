@@ -222,10 +222,12 @@ void cached_interp_NOTCOMPILED(void)
     DebugMessage(M64MSG_INFO, "NOTCOMPILED: addr = %x ops = %lx", *r4300_pc(r4300), (long) (*r4300_pc_struct(r4300))->ops);
 #endif
 
-    if (mem != NULL)
-        recompile_block(r4300, mem, r4300->cached_interp.blocks[*r4300_pc(r4300) >> 12], *r4300_pc(r4300));
-    else
+    if (mem == NULL) {
         DebugMessage(M64MSG_ERROR, "not compiled exception");
+    }
+    else {
+        r4300->cached_interp.recompile_block(r4300, mem, r4300->cached_interp.blocks[*r4300_pc(r4300) >> 12], *r4300_pc(r4300));
+    }
 
 /*
 #ifdef DBG
@@ -371,6 +373,74 @@ void cached_interp_free_block(struct precomp_block* block)
 }
 
 
+void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
+{
+    int i;
+    int length, finished = 0;
+
+    length = (block->end-block->start)/4;
+    r4300->cached_interp.dst_block = block;
+
+    block->xxhash = 0;
+
+    for (i = (func & 0xFFF) / 4; finished != 2; i++)
+    {
+        if (block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
+        {
+            uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
+            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == cached_interp_NOTCOMPILED) {
+                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = cached_interp_NOTCOMPILED2;
+            }
+        }
+
+        r4300->cached_interp.SRC = source + i;
+        r4300->cached_interp.src = source[i];
+        r4300->cached_interp.check_nop = source[i+1] == 0;
+        r4300->cached_interp.dst = block->block + i;
+        r4300->cached_interp.dst->addr = block->start + i*4;
+        recomp_ops[((r4300->cached_interp.src >> 26) & 0x3F)](r4300);
+        r4300->cached_interp.dst = block->block + i;
+
+        if (r4300->cached_interp.delay_slot_compiled)
+        {
+            r4300->cached_interp.delay_slot_compiled--;
+        }
+
+        if (i >= length-2+(length>>2)) { finished = 2; }
+        if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
+                    block->start >= UINT32_C(0xc0000000) ||
+                    block->end   <  UINT32_C(0x80000000))) { finished = 2; }
+        if (r4300->cached_interp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
+        if (/*i >= length && */
+                (r4300->cached_interp.dst->ops == cached_interp_J ||
+                 r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
+                 r4300->cached_interp.dst->ops == cached_interp_JR ||
+                 r4300->cached_interp.dst->ops == cached_interp_JR_OUT) &&
+                !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
+                        block->end   <  UINT32_C(0x80000000)))) {
+            finished = 1;
+        }
+    }
+
+    if (i >= length)
+    {
+        r4300->cached_interp.dst = block->block + i;
+        r4300->cached_interp.dst->addr = block->start + i*4;
+        r4300->cached_interp.dst->ops = cached_interp_FIN_BLOCK;
+        i++;
+        if (i < length-1+(length>>2)) // useful when last opcode is a jump
+        {
+            r4300->cached_interp.dst = block->block + i;
+            r4300->cached_interp.dst->addr = block->start + i*4;
+            r4300->cached_interp.dst->ops = cached_interp_FIN_BLOCK;
+            i++;
+        }
+    }
+
+#ifdef DBG
+    DebugMessage(M64MSG_INFO, "block recompiled (%" PRIX32 "-%" PRIX32 ")", func, block->start+i*4);
+#endif
+}
 
 void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
 {

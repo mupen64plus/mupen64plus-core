@@ -56,6 +56,10 @@ struct cached_interp
     void (*init_block)(struct r4300_core* r4300, uint32_t address);
     void (*free_block)(struct precomp_block* block);
 
+    void (*recompile_block)(struct r4300_core* r4300,
+        const uint32_t* source, struct precomp_block* block, uint32_t func);
+
+
     int init_length;
     struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
     int code_length;                                /* current real recompiled code length */
