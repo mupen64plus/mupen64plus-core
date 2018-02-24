@@ -26,7 +26,11 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct r4300_idec;
 struct precomp_block;
+struct precomp_instr;
+
+enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw);
 
 int get_block_length(const struct precomp_block *block);
 size_t get_block_memsize(const struct precomp_block *block);

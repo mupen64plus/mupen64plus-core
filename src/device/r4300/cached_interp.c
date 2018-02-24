@@ -21,6 +21,7 @@
 
 #include "cached_interp.h"
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -32,7 +33,7 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "device/r4300/r4300_core.h"
-#include "device/r4300/recomp.h"
+#include "device/r4300/idec.h"
 #include "main/main.h"
 #include "osal/preproc.h"
 
@@ -244,6 +245,459 @@ void cached_interp_NOTCOMPILED2(void)
     cached_interp_NOTCOMPILED();
 }
 
+/* TODO: implement them properly */
+#define cached_interp_BC0F        cached_interp_NI
+#define cached_interp_BC0F_IDLE   cached_interp_NI
+#define cached_interp_BC0F_OUT    cached_interp_NI
+#define cached_interp_BC0FL       cached_interp_NI
+#define cached_interp_BC0FL_IDLE  cached_interp_NI
+#define cached_interp_BC0FL_OUT   cached_interp_NI
+#define cached_interp_BC0T        cached_interp_NI
+#define cached_interp_BC0T_IDLE   cached_interp_NI
+#define cached_interp_BC0T_OUT    cached_interp_NI
+#define cached_interp_BC0TL       cached_interp_NI
+#define cached_interp_BC0TL_IDLE  cached_interp_NI
+#define cached_interp_BC0TL_OUT   cached_interp_NI
+#define cached_interp_BC2F        cached_interp_NI
+#define cached_interp_BC2F_IDLE   cached_interp_NI
+#define cached_interp_BC2F_OUT    cached_interp_NI
+#define cached_interp_BC2FL       cached_interp_NI
+#define cached_interp_BC2FL_IDLE  cached_interp_NI
+#define cached_interp_BC2FL_OUT   cached_interp_NI
+#define cached_interp_BC2T        cached_interp_NI
+#define cached_interp_BC2T_IDLE   cached_interp_NI
+#define cached_interp_BC2T_OUT    cached_interp_NI
+#define cached_interp_BC2TL       cached_interp_NI
+#define cached_interp_BC2TL_IDLE  cached_interp_NI
+#define cached_interp_BC2TL_OUT   cached_interp_NI
+#define cached_interp_BREAK       cached_interp_NI
+#define cached_interp_CFC0        cached_interp_NI
+#define cached_interp_CFC2        cached_interp_NI
+#define cached_interp_CTC0        cached_interp_NI
+#define cached_interp_CTC2        cached_interp_NI
+#define cached_interp_DMFC0       cached_interp_NI
+#define cached_interp_DMFC2       cached_interp_NI
+#define cached_interp_DMTC0       cached_interp_NI
+#define cached_interp_DMTC2       cached_interp_NI
+#define cached_interp_LDC2        cached_interp_NI
+#define cached_interp_LWC2        cached_interp_NI
+#define cached_interp_LLD         cached_interp_NI
+#define cached_interp_MFC2        cached_interp_NI
+#define cached_interp_MTC2        cached_interp_NI
+#define cached_interp_SCD         cached_interp_NI
+#define cached_interp_SDC2        cached_interp_NI
+#define cached_interp_SWC2        cached_interp_NI
+#define cached_interp_TEQI        cached_interp_NI
+#define cached_interp_TGE         cached_interp_NI
+#define cached_interp_TGEI        cached_interp_NI
+#define cached_interp_TGEIU       cached_interp_NI
+#define cached_interp_TGEU        cached_interp_NI
+#define cached_interp_TLT         cached_interp_NI
+#define cached_interp_TLTI        cached_interp_NI
+#define cached_interp_TLTIU       cached_interp_NI
+#define cached_interp_TLTU        cached_interp_NI
+#define cached_interp_TNE         cached_interp_NI
+#define cached_interp_TNEI        cached_interp_NI
+#define cached_interp_JR_IDLE     cached_interp_NI
+#define cached_interp_JALR_IDLE   cached_interp_NI
+#define cached_interp_CP1_ABS     cached_interp_RESERVED
+#define cached_interp_CP1_ADD     cached_interp_RESERVED
+#define cached_interp_CP1_CEIL_L  cached_interp_RESERVED
+#define cached_interp_CP1_CEIL_W  cached_interp_RESERVED
+#define cached_interp_CP1_C_EQ    cached_interp_RESERVED
+#define cached_interp_CP1_C_F     cached_interp_RESERVED
+#define cached_interp_CP1_C_LE    cached_interp_RESERVED
+#define cached_interp_CP1_C_LT    cached_interp_RESERVED
+#define cached_interp_CP1_C_NGE   cached_interp_RESERVED
+#define cached_interp_CP1_C_NGL   cached_interp_RESERVED
+#define cached_interp_CP1_C_NGLE  cached_interp_RESERVED
+#define cached_interp_CP1_C_NGT   cached_interp_RESERVED
+#define cached_interp_CP1_C_OLE   cached_interp_RESERVED
+#define cached_interp_CP1_C_OLT   cached_interp_RESERVED
+#define cached_interp_CP1_C_SEQ   cached_interp_RESERVED
+#define cached_interp_CP1_C_SF    cached_interp_RESERVED
+#define cached_interp_CP1_C_UEQ   cached_interp_RESERVED
+#define cached_interp_CP1_C_ULE   cached_interp_RESERVED
+#define cached_interp_CP1_C_ULT   cached_interp_RESERVED
+#define cached_interp_CP1_C_UN    cached_interp_RESERVED
+#define cached_interp_CP1_CVT_D   cached_interp_RESERVED
+#define cached_interp_CP1_CVT_L   cached_interp_RESERVED
+#define cached_interp_CP1_CVT_S   cached_interp_RESERVED
+#define cached_interp_CP1_CVT_W   cached_interp_RESERVED
+#define cached_interp_CP1_DIV     cached_interp_RESERVED
+#define cached_interp_CP1_FLOOR_L cached_interp_RESERVED
+#define cached_interp_CP1_FLOOR_W cached_interp_RESERVED
+#define cached_interp_CP1_MOV     cached_interp_RESERVED
+#define cached_interp_CP1_MUL     cached_interp_RESERVED
+#define cached_interp_CP1_NEG     cached_interp_RESERVED
+#define cached_interp_CP1_ROUND_L cached_interp_RESERVED
+#define cached_interp_CP1_ROUND_W cached_interp_RESERVED
+#define cached_interp_CP1_SQRT    cached_interp_RESERVED
+#define cached_interp_CP1_SUB     cached_interp_RESERVED
+#define cached_interp_CP1_TRUNC_L cached_interp_RESERVED
+#define cached_interp_CP1_TRUNC_W cached_interp_RESERVED
+
+#define X(op) cached_interp_##op
+static const void (*const ci_table[R4300_OPCODES_COUNT])(void) =
+{
+    #include "opcodes.md"
+};
+#undef X
+
+/* return 0:normal, 1:idle, 2:out */
+static int infer_jump_sub_type(const struct cached_interp* ci, uint32_t target, uint32_t pc)
+{
+    /* test if jumping to same location with empty delay slot */
+    if (target == pc) {
+        if (ci->check_nop) {
+            return 1;
+        }
+    }
+    else {
+        /* test if target is outside of block, or if we're at the end of block */
+        if (target < ci->dst_block->start || target >= ci->dst_block->end
+        || (pc == (ci->dst_block->end - 4))) {
+            return 2;
+        }
+    }
+
+    /* regular jump */
+    return 0;
+}
+
+enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw)
+{
+    /* assume instr->addr is already setup */
+    uint8_t dummy;
+    const struct cached_interp* ci = &r4300->cached_interp;
+    enum r4300_opcode opcode = idec->opcode;
+
+    switch(idec->opcode)
+    {
+    case R4300_OP_JALR:
+        /* use the OUT version since we don't know until runtime
+         * if we're going to jump inside or outside of block */
+        opcode += 2;
+        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        break;
+
+    case R4300_OP_JR:
+        /* use the OUT version since we don't know until runtime
+         * if we're going to jump inside or outside of block */
+        opcode += 2;
+
+        /* XXX: mips_instruction.def expects i-type */
+        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.immediate  = (int16_t)iw;
+        break;
+
+    case R4300_OP_J:
+    case R4300_OP_JAL:
+        inst->f.j.inst_index  = (iw & UINT32_C(0x3ffffff));
+        /* select normal, idle or out jump type */
+        opcode += infer_jump_sub_type(ci, (inst->addr & ~0xfffffff) | (idec_imm(iw, idec) & 0xfffffff), inst->addr);
+        break;
+
+    case R4300_OP_BC0F:
+    case R4300_OP_BC0FL:
+    case R4300_OP_BC0T:
+    case R4300_OP_BC0TL:
+    case R4300_OP_BC1F:
+    case R4300_OP_BC1FL:
+    case R4300_OP_BC1T:
+    case R4300_OP_BC1TL:
+    case R4300_OP_BC2F:
+    case R4300_OP_BC2FL:
+    case R4300_OP_BC2T:
+    case R4300_OP_BC2TL:
+    case R4300_OP_BEQ:
+    case R4300_OP_BEQL:
+    case R4300_OP_BGEZ:
+    case R4300_OP_BGEZAL:
+    case R4300_OP_BGEZALL:
+    case R4300_OP_BGEZL:
+    case R4300_OP_BGTZ:
+    case R4300_OP_BGTZL:
+    case R4300_OP_BLEZ:
+    case R4300_OP_BLEZL:
+    case R4300_OP_BLTZ:
+    case R4300_OP_BLTZAL:
+    case R4300_OP_BLTZALL:
+    case R4300_OP_BLTZL:
+    case R4300_OP_BNE:
+    case R4300_OP_BNEL:
+        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.immediate  = (int16_t)iw;
+
+        /* select normal, idle or out branch type */
+        opcode += infer_jump_sub_type(ci, inst->addr + inst->f.i.immediate*4 + 4, inst->addr);
+        break;
+
+    case R4300_OP_ADD:
+    case R4300_OP_ADDU:
+    case R4300_OP_AND:
+    case R4300_OP_DADD:
+    case R4300_OP_DADDU:
+    case R4300_OP_DSLL:
+    case R4300_OP_DSLL32:
+    case R4300_OP_DSLLV:
+    case R4300_OP_DSRA:
+    case R4300_OP_DSRA32:
+    case R4300_OP_DSRAV:
+    case R4300_OP_DSRL:
+    case R4300_OP_DSRL32:
+    case R4300_OP_DSRLV:
+    case R4300_OP_DSUB:
+    case R4300_OP_DSUBU:
+    case R4300_OP_MFHI:
+    case R4300_OP_MFLO:
+    case R4300_OP_NOR:
+    case R4300_OP_OR:
+    case R4300_OP_SLL:
+    case R4300_OP_SLLV:
+    case R4300_OP_SLT:
+    case R4300_OP_SLTU:
+    case R4300_OP_SRA:
+    case R4300_OP_SRAV:
+    case R4300_OP_SRL:
+    case R4300_OP_SRLV:
+    case R4300_OP_SUB:
+    case R4300_OP_SUBU:
+    case R4300_OP_XOR:
+        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+
+        /* optimization: nopify instruction when r0 is the destination register (rd) */
+        if (inst->f.r.nrd == 0) { opcode = R4300_OP_NOP; }
+        break;
+
+    case R4300_OP_ADDI:
+    case R4300_OP_ADDIU:
+    case R4300_OP_ANDI:
+    case R4300_OP_DADDI:
+    case R4300_OP_DADDIU:
+    case R4300_OP_LB:
+    case R4300_OP_LBU:
+    case R4300_OP_LD:
+    case R4300_OP_LDL:
+    case R4300_OP_LDR:
+    case R4300_OP_LH:
+    case R4300_OP_LHU:
+    case R4300_OP_LL:
+    case R4300_OP_LLD:
+    case R4300_OP_LUI:
+    case R4300_OP_LW:
+    case R4300_OP_LWL:
+    case R4300_OP_LWR:
+    case R4300_OP_LWU:
+    case R4300_OP_ORI:
+    case R4300_OP_SC:
+    case R4300_OP_SLTI:
+    case R4300_OP_SLTIU:
+    case R4300_OP_XORI:
+        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.immediate  = (int16_t)iw;
+
+        /* optimization: nopify instruction when r0 is the destination register (rt) */
+        if (dummy == 0) { opcode = R4300_OP_NOP; }
+        break;
+
+    case R4300_OP_LDC1:
+    case R4300_OP_LWC1:
+    case R4300_OP_SDC1:
+    case R4300_OP_SWC1:
+        idec_u53(iw, r4300, idec->u53[2], &inst->f.lf.base);
+        idec_u53(iw, r4300, idec->u53[1], &inst->f.lf.ft);
+        inst->f.lf.offset  = (uint16_t)iw;
+        break;
+
+    case R4300_OP_CFC0:
+    case R4300_OP_CFC1:
+    case R4300_OP_CFC2:
+    case R4300_OP_DMFC0:
+    case R4300_OP_DMFC1:
+    case R4300_OP_DMFC2:
+    case R4300_OP_MFC0:
+    case R4300_OP_MFC1:
+    case R4300_OP_MFC2:
+        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+
+        /* optimization: nopify instruction when r0 is the destination register (rt) */
+        if (dummy == 0) { opcode = R4300_OP_NOP; }
+        break;
+
+#define CP1_S_D(op) \
+    case R4300_OP_CP1_##op: \
+        idec_u53(iw, r4300, idec->u53[3], &dummy); \
+        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs); \
+        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft); \
+        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd); \
+        switch(dummy) \
+        { \
+        case 0x10: inst->ops = cached_interp_##op##_S; return idec->opcode; \
+        case 0x11: inst->ops = cached_interp_##op##_D; return idec->opcode; \
+        default: opcode = R4300_OP_RESERVED; \
+        } \
+        break;
+
+    CP1_S_D(ABS)
+    CP1_S_D(ADD)
+    CP1_S_D(CEIL_L)
+    CP1_S_D(CEIL_W)
+    CP1_S_D(C_EQ)
+    CP1_S_D(C_F)
+    CP1_S_D(C_LE)
+    CP1_S_D(C_LT)
+    CP1_S_D(C_NGE)
+    CP1_S_D(C_NGL)
+    CP1_S_D(C_NGLE)
+    CP1_S_D(C_NGT)
+    CP1_S_D(C_OLE)
+    CP1_S_D(C_OLT)
+    CP1_S_D(C_SEQ)
+    CP1_S_D(C_SF)
+    CP1_S_D(C_UEQ)
+    CP1_S_D(C_ULE)
+    CP1_S_D(C_ULT)
+    CP1_S_D(C_UN)
+    CP1_S_D(CVT_L)
+    CP1_S_D(CVT_W)
+    CP1_S_D(DIV)
+    CP1_S_D(FLOOR_L)
+    CP1_S_D(FLOOR_W)
+    CP1_S_D(MOV)
+    CP1_S_D(MUL)
+    CP1_S_D(NEG)
+    CP1_S_D(ROUND_L)
+    CP1_S_D(ROUND_W)
+    CP1_S_D(SQRT)
+    CP1_S_D(SUB)
+    CP1_S_D(TRUNC_L)
+    CP1_S_D(TRUNC_W)
+#undef CP1_S_D
+
+    case R4300_OP_CP1_CVT_D:
+        idec_u53(iw, r4300, idec->u53[3], &dummy);
+        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs);
+        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft);
+        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd);
+        switch(dummy)
+        {
+        case 0x10: inst->ops = cached_interp_CVT_D_S; return idec->opcode;
+        case 0x14: inst->ops = cached_interp_CVT_D_W; return idec->opcode;
+        case 0x15: inst->ops = cached_interp_CVT_D_L; return idec->opcode;
+        default: opcode = R4300_OP_RESERVED;
+        }
+        break;
+
+    case R4300_OP_CP1_CVT_S:
+        idec_u53(iw, r4300, idec->u53[3], &dummy);
+        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs);
+        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft);
+        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd);
+        switch(dummy)
+        {
+        case 0x11: inst->ops = cached_interp_CVT_S_D; return idec->opcode;
+        case 0x14: inst->ops = cached_interp_CVT_S_W; return idec->opcode;
+        case 0x15: inst->ops = cached_interp_CVT_S_L; return idec->opcode;
+        default: opcode = R4300_OP_RESERVED;
+        }
+        break;
+
+    case R4300_OP_CTC0:
+    case R4300_OP_CTC1:
+    case R4300_OP_CTC2:
+    case R4300_OP_DDIV:
+    case R4300_OP_DDIVU:
+    case R4300_OP_DIV:
+    case R4300_OP_DIVU:
+    case R4300_OP_DMTC0:
+    case R4300_OP_DMTC1:
+    case R4300_OP_DMTC2:
+    case R4300_OP_DMULT:
+    case R4300_OP_DMULTU:
+    case R4300_OP_MTC0:
+    case R4300_OP_MTC1:
+    case R4300_OP_MTC2:
+    case R4300_OP_MTHI:
+    case R4300_OP_MTLO:
+    case R4300_OP_MULT:
+    case R4300_OP_MULTU:
+    case R4300_OP_NOP:
+    case R4300_OP_TEQ:
+    case R4300_OP_TGE:
+    case R4300_OP_TGEU:
+    case R4300_OP_TLT:
+    case R4300_OP_TLTU:
+    case R4300_OP_TNE:
+        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        break;
+
+    case R4300_OP_LDC2:
+    case R4300_OP_LWC2:
+    case R4300_OP_SB:
+    case R4300_OP_SCD:
+    case R4300_OP_SD:
+    case R4300_OP_SDC2:
+    case R4300_OP_SDL:
+    case R4300_OP_SDR:
+    case R4300_OP_SH:
+    case R4300_OP_SW:
+    case R4300_OP_SWC2:
+    case R4300_OP_SWL:
+    case R4300_OP_SWR:
+    case R4300_OP_TEQI:
+    case R4300_OP_TGEI:
+    case R4300_OP_TGEIU:
+    case R4300_OP_TLTI:
+    case R4300_OP_TLTIU:
+    case R4300_OP_TNEI:
+        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
+        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.immediate  = (int16_t)iw;
+        break;
+
+    case R4300_OP_BREAK:
+    case R4300_OP_CACHE:
+    case R4300_OP_ERET:
+    case R4300_OP_SYNC:
+    case R4300_OP_SYSCALL:
+    case R4300_OP_TLBP:
+    case R4300_OP_TLBR:
+    case R4300_OP_TLBWI:
+    case R4300_OP_TLBWR:
+    case R4300_OP_RESERVED:
+        /* no need for additonal instruction parsing */
+        break;
+
+    default:
+        DebugMessage(M64MSG_ERROR, "invalid instruction: %08x", iw);
+        assert(0);
+        break;
+    }
+
+    /* set appropriate handler */
+    inst->ops = ci_table[opcode];
+
+    /* propagate opcode info to allow further processing */
+    return opcode;
+}
+
+
 static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
     if (addr >= 0x80000000 && addr < 0xc0000000)
@@ -397,7 +851,10 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
         r4300->cached_interp.check_nop = source[i+1] == 0;
         r4300->cached_interp.dst = block->block + i;
         r4300->cached_interp.dst->addr = block->start + i*4;
-        recomp_ops[((r4300->cached_interp.src >> 26) & 0x3F)](r4300);
+
+        uint32_t iw = r4300->cached_interp.src;
+        r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw);
+
         r4300->cached_interp.dst = block->block + i;
 
         if (r4300->cached_interp.delay_slot_compiled)
