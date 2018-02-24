@@ -60,18 +60,6 @@ static void RSV(struct r4300_core* r4300)
     r4300->cached_interp.recomp_func = genreserved;
 }
 
-static void RFIN_BLOCK(struct r4300_core* r4300)
-{
-    r4300->cached_interp.dst->ops = r4300->cached_interp.fin_block;
-    r4300->cached_interp.recomp_func = genfin_block;
-}
-
-static void RNOTCOMPILED(struct r4300_core* r4300)
-{
-    r4300->cached_interp.dst->ops = r4300->cached_interp.not_compiled;
-    r4300->cached_interp.recomp_func = gennotcompiled;
-}
-
 static void recompile_standard_i_type(struct r4300_core* r4300)
 {
     r4300->cached_interp.dst->f.i.rs = r4300_regs(r4300) + ((r4300->cached_interp.src >> 21) & 0x1F);
@@ -2238,7 +2226,7 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
-            RNOTCOMPILED(r4300);
+            r4300->cached_interp.dst->ops = dynarec_notcompiled;
             gennotcompiled(r4300);
         }
 #if defined(PROFILE_R4300)
@@ -2413,7 +2401,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #ifdef COMPARE_CORE
         gendebug(r4300);
 #endif
-        RFIN_BLOCK(r4300);
+        r4300->cached_interp.dst->ops = dynarec_fin_block;
         genfin_block(r4300);
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
@@ -2425,7 +2413,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
-            RFIN_BLOCK(r4300);
+            r4300->cached_interp.dst->ops = dynarec_fin_block;
             genfin_block(r4300);
             i++;
         }
@@ -2558,7 +2546,7 @@ void recompile_opcode(struct r4300_core* r4300)
     }
     else
     {
-        RNOP(r4300);
+        r4300->cached_interp.dst->ops = cached_interp_NOP;
         gennop(r4300);
     }
     r4300->cached_interp.delay_slot_compiled = 2;

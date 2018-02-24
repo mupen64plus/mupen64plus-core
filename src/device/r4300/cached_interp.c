@@ -372,7 +372,6 @@ void cached_interp_free_block(struct precomp_block* block)
     }
 }
 
-
 void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
 {
     int i;
