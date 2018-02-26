@@ -826,43 +826,52 @@ void cached_interp_free_block(struct precomp_block* block)
     }
 }
 
-void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
+void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* iw, struct precomp_block* block, uint32_t func)
 {
-    int i;
-    int length, finished = 0;
+    int i, length, length2, finished;
     struct precomp_instr* inst;
+    enum r4300_opcode opcode;
 
-    length = (block->end-block->start)/4;
+    /* ??? not sure why we need these 2 different tests */
+    int block_start_in_tlb = ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000));
+    int block_not_in_tlb = (block->start >= UINT32_C(0xc0000000) || block->end < UINT32_C(0x80000000));
 
+    length = get_block_length(block);
+    length2 = length - 2 + (length >> 2);
+
+    /* reset xxhash */
     block->xxhash = 0;
 
-    for (i = (func & 0xFFF) / 4; finished != 2; i++)
+
+    for (i = (func & 0xFFF) / 4, finished = 0; finished != 2; ++i)
     {
-        if ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
+        inst = block->block + i;
+
+        /* set decoded instruction address */
+        inst->addr = block->start + i * 4;
+
+        if (block_start_in_tlb)
         {
-            uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
+            uint32_t address2 = virtual_to_physical_address(r4300, inst->addr, 0);
             if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == cached_interp_NOTCOMPILED) {
                 r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = cached_interp_NOTCOMPILED2;
             }
         }
 
-        inst = block->block + i;
-        inst->addr = block->start + i*4;
-        uint32_t iw = source[i];
-        enum r4300_opcode opcode = r4300_decode(inst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
+        /* decode instruction */
+        opcode = r4300_decode(inst, r4300, r4300_get_idec(iw[i]), iw[i], iw[i+1], block);
 
-        if (i >= length-2+(length>>2)) { finished = 2; }
-        if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
-                    block->start >= UINT32_C(0xc0000000) ||
-                    block->end   <  UINT32_C(0x80000000))) { finished = 2; }
+        /* decode ending conditions */
+        if (i >= length2) { finished = 2; }
+        if (i >= (length-1)
+        && (block->start == UINT32_C(0xa4000000) || block_not_in_tlb)) { finished = 2; }
         if (opcode == R4300_OP_ERET || finished == 1) { finished = 2; }
         if (/*i >= length && */
                 (opcode == R4300_OP_J ||
                  opcode == R4300_OP_J_OUT ||
                  opcode == R4300_OP_JR ||
                  opcode == R4300_OP_JR_OUT) &&
-                !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
-                        block->end   <  UINT32_C(0x80000000)))) {
+                !(i >= (length-1) && block_not_in_tlb)) {
             finished = 1;
         }
     }
@@ -872,8 +881,8 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
         inst = block->block + i;
         inst->addr = block->start + i*4;
         inst->ops = cached_interp_FIN_BLOCK;
-        i++;
-        if (i < length-1+(length>>2)) // useful when last opcode is a jump
+        ++i;
+        if (i <= length2) // useful when last opcode is a jump
         {
             inst = block->block + i;
             inst->addr = block->start + i*4;

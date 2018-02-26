@@ -38,7 +38,7 @@ size_t get_block_memsize(const struct precomp_block *block);
 void cached_interp_init_block(struct r4300_core* r4300, uint32_t address);
 void cached_interp_free_block(struct precomp_block* block);
 
-void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func);
+void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* iw, struct precomp_block* block, uint32_t func);
 
 void init_blocks(struct r4300_core* r4300);
 void free_blocks(struct r4300_core* r4300);
