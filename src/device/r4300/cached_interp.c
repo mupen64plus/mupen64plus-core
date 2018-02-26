@@ -345,18 +345,17 @@ static const void (*const ci_table[R4300_OPCODES_COUNT])(void) =
 #undef X
 
 /* return 0:normal, 1:idle, 2:out */
-static int infer_jump_sub_type(const struct cached_interp* ci, uint32_t target, uint32_t pc)
+static int infer_jump_sub_type(uint32_t target, uint32_t pc, uint32_t next_iw, const struct precomp_block* block)
 {
     /* test if jumping to same location with empty delay slot */
     if (target == pc) {
-        if (ci->check_nop) {
+        if (next_iw == 0) {
             return 1;
         }
     }
     else {
         /* test if target is outside of block, or if we're at the end of block */
-        if (target < ci->dst_block->start || target >= ci->dst_block->end
-        || (pc == (ci->dst_block->end - 4))) {
+        if (target < block->start || target >= block->end || (pc == (block->end - 4))) {
             return 2;
         }
     }
@@ -365,7 +364,7 @@ static int infer_jump_sub_type(const struct cached_interp* ci, uint32_t target, 
     return 0;
 }
 
-enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw)
+enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw, uint32_t next_iw)
 {
     /* assume instr->addr is already setup */
     uint8_t dummy;
@@ -399,7 +398,7 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_JAL:
         inst->f.j.inst_index  = (iw & UINT32_C(0x3ffffff));
         /* select normal, idle or out jump type */
-        opcode += infer_jump_sub_type(ci, (inst->addr & ~0xfffffff) | (idec_imm(iw, idec) & 0xfffffff), inst->addr);
+        opcode += infer_jump_sub_type((inst->addr & ~0xfffffff) | (idec_imm(iw, idec) & 0xfffffff), inst->addr, next_iw, ci->dst_block);
         break;
 
     case R4300_OP_BC0F:
@@ -435,7 +434,7 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
         inst->f.i.immediate  = (int16_t)iw;
 
         /* select normal, idle or out branch type */
-        opcode += infer_jump_sub_type(ci, inst->addr + inst->f.i.immediate*4 + 4, inst->addr);
+        opcode += infer_jump_sub_type(inst->addr + inst->f.i.immediate*4 + 4, inst->addr, next_iw, ci->dst_block);
         break;
 
     case R4300_OP_ADD:
@@ -847,12 +846,11 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
         }
 
         r4300->cached_interp.src = source[i];
-        r4300->cached_interp.check_nop = source[i+1] == 0;
         r4300->cached_interp.dst = block->block + i;
         r4300->cached_interp.dst->addr = block->start + i*4;
 
         uint32_t iw = r4300->cached_interp.src;
-        r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw);
+        r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, source[i+1]);
 
         r4300->cached_interp.dst = block->block + i;
 

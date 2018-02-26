@@ -63,7 +63,6 @@ struct cached_interp
     struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
     struct precomp_block *dst_block;                /* the current block that we are recompiling */
     uint32_t src;                                   /* the current recompiled instruction */
-    int check_nop;                                  /* next instruction is nop ? */
 };
 
 enum {

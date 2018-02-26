@@ -587,7 +587,6 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
         r4300->recomp.SRC = source + i;
         r4300->cached_interp.src = source[i];
-        r4300->cached_interp.check_nop = source[i+1] == 0;
         r4300->cached_interp.dst = block->block + i;
         r4300->cached_interp.dst->addr = block->start + i*4;
         r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
@@ -608,7 +607,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #endif
 
         uint32_t iw = r4300->cached_interp.src;
-        enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw);
+        enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, source[i+1]);
         recomp_funcs[opcode](r4300);
 
         r4300->cached_interp.dst = block->block + i;
@@ -778,10 +777,10 @@ void recompile_opcode(struct r4300_core* r4300)
     r4300->cached_interp.dst++;
     r4300->cached_interp.dst->addr = (r4300->cached_interp.dst-1)->addr + 4;
     r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-
+    /* we disable next_iw == NOP check by passing 1, because we are already in delay slot */
 
     uint32_t iw = r4300->cached_interp.src;
-    enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw);
+    enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, 1);
 
     if (!is_jump(r4300))
     {
@@ -798,7 +797,7 @@ void recompile_opcode(struct r4300_core* r4300)
 #endif
 
         iw = r4300->cached_interp.src;
-        opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw);
+        opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, 1);
         recomp_funcs[opcode](r4300);
     }
     else
