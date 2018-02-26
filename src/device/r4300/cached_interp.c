@@ -856,11 +856,6 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
 
         r4300->cached_interp.dst = block->block + i;
 
-        if (r4300->cached_interp.delay_slot_compiled)
-        {
-            r4300->cached_interp.delay_slot_compiled--;
-        }
-
         if (i >= length-2+(length>>2)) { finished = 2; }
         if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
                     block->start >= UINT32_C(0xc0000000) ||

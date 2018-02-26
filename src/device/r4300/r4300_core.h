@@ -64,7 +64,6 @@ struct cached_interp
     struct precomp_block *dst_block;                /* the current block that we are recompiling */
     uint32_t src;                                   /* the current recompiled instruction */
     int check_nop;                                  /* next instruction is nop ? */
-    int delay_slot_compiled;
 };
 
 enum {
@@ -111,6 +110,7 @@ struct r4300_core
         int init_length;
         int code_length;                                /* current real recompiled code length */
         const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+        int delay_slot_compiled;
 
         struct regcache_state regcache_state;
 

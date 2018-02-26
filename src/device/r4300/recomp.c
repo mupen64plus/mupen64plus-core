@@ -613,9 +613,9 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
         r4300->cached_interp.dst = block->block + i;
 
-        if (r4300->cached_interp.delay_slot_compiled)
+        if (r4300->recomp.delay_slot_compiled)
         {
-            r4300->cached_interp.delay_slot_compiled--;
+            r4300->recomp.delay_slot_compiled--;
             free_all_registers(r4300);
         }
 
@@ -806,7 +806,7 @@ void recompile_opcode(struct r4300_core* r4300)
         r4300->cached_interp.dst->ops = cached_interp_NOP;
         gennop(r4300);
     }
-    r4300->cached_interp.delay_slot_compiled = 2;
+    r4300->recomp.delay_slot_compiled = 2;
 }
 
 #if defined(PROFILE_R4300)

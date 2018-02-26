@@ -78,11 +78,10 @@ void poweron_r4300(struct r4300_core* r4300)
     r4300->skip_jump = 0;
     r4300->reset_hard_job = 0;
 
-    /* cached interp init */
-    r4300->cached_interp.delay_slot_compiled = 0;
 
     /* recomp init */
 #ifndef NEW_DYNAREC
+    r4300->recomp.delay_slot_compiled = 0;
     r4300->recomp.fast_memory = 1;
     r4300->recomp.local_rs = 0;
     r4300->recomp.dyna_interp = 0;
