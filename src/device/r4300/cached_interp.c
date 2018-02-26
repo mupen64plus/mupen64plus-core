@@ -698,7 +698,7 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
 
 static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
-    if (addr >= 0x80000000 && addr < 0xc0000000)
+    if ((addr & UINT32_C(0xc0000000)) == UINT32_C(0x80000000))
     {
         if (r4300->cached_interp.invalid_code[addr>>12]) {
             r4300->cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
@@ -836,7 +836,7 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
 
     for (i = (func & 0xFFF) / 4; finished != 2; i++)
     {
-        if (block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
+        if ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
         {
             uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
             if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == cached_interp_NOTCOMPILED) {

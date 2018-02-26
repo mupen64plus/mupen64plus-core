@@ -577,7 +577,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
     for (i = (func & 0xFFF) / 4; finished != 2; i++)
     {
-        if (block->start < UINT32_C(0x80000000) || UINT32_C(block->start >= 0xc0000000))
+        if ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
         {
             uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
             if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->cached_interp.not_compiled) {
