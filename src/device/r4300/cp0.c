@@ -144,6 +144,7 @@ void cp0_update_count(struct r4300_core* r4300)
 
 static void exception_epilog(struct r4300_core* r4300)
 {
+#ifndef NO_ASM
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
 #ifndef NEW_DYNAREC
@@ -154,6 +155,7 @@ static void exception_epilog(struct r4300_core* r4300)
         r4300->delay_slot = 0;
 #endif
     }
+#endif
 
 #ifndef NEW_DYNAREC
     if (r4300->emumode != EMUMODE_DYNAREC || r4300->recomp.dyna_interp)

@@ -509,7 +509,11 @@ void gen_interrupt(struct r4300_core* r4300)
     if (*r4300_stop(r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
+#ifndef NO_ASM
+#ifndef NEW_DYNAREC
         dyna_stop(r4300);
+#endif
+#endif
     }
 
     if (!r4300->cp0.interrupt_unsafe_state)

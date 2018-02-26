@@ -421,6 +421,7 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
         cached_interpreter_jump_to(r4300, address);
         break;
 
+#ifndef NO_ASM
     case EMUMODE_DYNAREC:
 #ifdef NEW_DYNAREC
         r4300->new_dynarec_hot_state.pcaddr = address;
@@ -429,6 +430,8 @@ void generic_jump_to(struct r4300_core* r4300, uint32_t address)
         dynarec_jump_to(r4300, address);
 #endif
         break;
+#endif
+
     default:
         /* should not happen */
         break;

@@ -55,6 +55,9 @@
   #include "x86/regcache.h"
 #endif
 
+static void *malloc_exec(size_t size);
+static void free_exec(void *ptr, size_t length);
+
 #define GENCP1_S_D(func) \
 static void gencp1_##func(struct r4300_core* r4300) \
 { \
@@ -381,11 +384,6 @@ static void (*const recomp_funcs[R4300_OPCODES_COUNT])(struct r4300_core* r4300)
     genxor,
     genxori
 };
-
-#ifndef NO_ASM
-#ifndef NEW_DYNAREC
-static void *malloc_exec(size_t size);
-static void free_exec(void *ptr, size_t length);
 
 /**********************************************************************
  ******************** initialize an empty block ***********************
@@ -1018,6 +1016,3 @@ static void free_exec(void *ptr, size_t length)
     free(ptr);
 #endif
 }
-
-#endif
-#endif
