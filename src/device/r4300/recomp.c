@@ -585,7 +585,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
             }
         }
 
-        r4300->cached_interp.SRC = source + i;
+        r4300->recomp.SRC = source + i;
         r4300->cached_interp.src = source[i];
         r4300->cached_interp.check_nop = source[i+1] == 0;
         r4300->cached_interp.dst = block->block + i;
@@ -773,8 +773,8 @@ static int is_jump(const struct r4300_core* r4300)
  **********************************************************************/
 void recompile_opcode(struct r4300_core* r4300)
 {
-    r4300->cached_interp.SRC++;
-    r4300->cached_interp.src = *r4300->cached_interp.SRC;
+    r4300->recomp.SRC++;
+    r4300->cached_interp.src = *r4300->recomp.SRC;
     r4300->cached_interp.dst++;
     r4300->cached_interp.dst->addr = (r4300->cached_interp.dst-1)->addr + 4;
     r4300->cached_interp.dst->reg_cache_infos.need_map = 0;

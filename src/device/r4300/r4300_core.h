@@ -65,7 +65,6 @@ struct cached_interp
     int code_length;                                /* current real recompiled code length */
     struct precomp_block *dst_block;                /* the current block that we are recompiling */
     uint32_t src;                                   /* the current recompiled instruction */
-    const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
     int check_nop;                                  /* next instruction is nop ? */
     int delay_slot_compiled;
 };
@@ -111,6 +110,8 @@ struct r4300_core
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */
     struct recomp {
+        const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+
         struct regcache_state regcache_state;
 
         struct jump_table* jumps_table;

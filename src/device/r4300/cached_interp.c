@@ -846,7 +846,6 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
             }
         }
 
-        r4300->cached_interp.SRC = source + i;
         r4300->cached_interp.src = source[i];
         r4300->cached_interp.check_nop = source[i+1] == 0;
         r4300->cached_interp.dst = block->block + i;
