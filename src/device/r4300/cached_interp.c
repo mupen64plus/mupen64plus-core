@@ -844,11 +844,9 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
             }
         }
 
-        r4300->cached_interp.src = source[i];
         inst = block->block + i;
         inst->addr = block->start + i*4;
-
-        uint32_t iw = r4300->cached_interp.src;
+        uint32_t iw = source[i];
         enum r4300_opcode opcode = r4300_decode(inst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
 
         if (i >= length-2+(length>>2)) { finished = 2; }

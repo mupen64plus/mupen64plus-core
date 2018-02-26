@@ -71,7 +71,7 @@ void free_all_registers(struct r4300_core* r4300)
         fwrite(&mipsop, 1, 4, r4300->recomp.pfProfile); /* -5 = regcache flushing */
         fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile); // write pointer to start of register cache flushing instructions
         x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
-        fwrite(&r4300->cached_interp.src, 1, 4, r4300->recomp.pfProfile); // write 4-byte MIPS opcode for current instruction
+        fwrite(&r4300->recomp.src, 1, 4, r4300->recomp.pfProfile); // write 4-byte MIPS opcode for current instruction
         fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
     }
 #endif

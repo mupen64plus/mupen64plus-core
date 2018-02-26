@@ -280,7 +280,7 @@ void gendebug(struct r4300_core* r4300)
 
     mov_reg64_imm64(RAX, (unsigned long long) r4300->recomp.dst);
     mov_memoffs64_rax((unsigned long long *) &(*r4300_pc_struct(r4300)));
-    mov_reg32_imm32(EAX, (unsigned int) r4300->cached_interp.src);
+    mov_reg32_imm32(EAX, (unsigned int) r4300->recomp.src);
     mov_memoffs32_eax((unsigned int *) &op);
     mov_reg64_imm64(RAX, (unsigned long long) CoreCompareCallback);
     call_reg64(RAX);

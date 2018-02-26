@@ -82,7 +82,7 @@ void free_all_registers(struct r4300_core* r4300)
                 fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) // write pointer to start of register cache flushing instructions
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
         x86addr = (long long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
-        if (fwrite(&r4300->cached_interp.src, 1, 4, r4300->recomp.pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
+        if (fwrite(&r4300->recomp.src, 1, 4, r4300->recomp.pfProfile) != 4 || // write 4-byte MIPS opcode for current instruction
                 fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) // write pointer to dynamically generated x86 code for this MIPS instruction
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
     }

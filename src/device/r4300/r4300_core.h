@@ -58,8 +58,6 @@ struct cached_interp
 
     void (*recompile_block)(struct r4300_core* r4300,
         const uint32_t* source, struct precomp_block* block, uint32_t func);
-
-    uint32_t src;                                   /* the current recompiled instruction */
 };
 
 enum {
@@ -108,6 +106,7 @@ struct r4300_core
         struct precomp_block *dst_block;                /* the current block that we are recompiling */
         struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
         const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
+        uint32_t src;                                   /* the current recompiled instruction */
         int delay_slot_compiled;
 
         struct regcache_state regcache_state;

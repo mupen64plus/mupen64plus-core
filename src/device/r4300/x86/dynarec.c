@@ -165,7 +165,7 @@ void gendebug(struct r4300_core* r4300)
     mov_m32_reg32((unsigned int*)&r4300->recomp.edi, EDI);
 
     mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst));
-    mov_m32_imm32((unsigned int*)(&op), (unsigned int)(r4300->cached_interp.src));
+    mov_m32_imm32((unsigned int*)(&op), (unsigned int)(r4300->recomp.src));
     mov_reg32_imm32(EAX, (unsigned int) CoreCompareCallback);
     call_reg32(EAX);
 

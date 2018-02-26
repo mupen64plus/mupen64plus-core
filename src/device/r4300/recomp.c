@@ -61,7 +61,7 @@ static void free_exec(void *ptr, size_t length);
 #define GENCP1_S_D(func) \
 static void gencp1_##func(struct r4300_core* r4300) \
 { \
-    unsigned fmt = (r4300->cached_interp.src >> 21) & 0x1f; \
+    unsigned fmt = (r4300->recomp.src >> 21) & 0x1f; \
     switch(fmt) \
     { \
     case 0x10: gen##func##_s(r4300); break; \
@@ -107,7 +107,7 @@ GENCP1_S_D(trunc_w)
 
 static void gencp1_cvt_d(struct r4300_core* r4300)
 {
-    unsigned fmt = (r4300->cached_interp.src >> 21) & 0x1f;
+    unsigned fmt = (r4300->recomp.src >> 21) & 0x1f;
     switch(fmt)
     {
     case 0x10: gencvt_d_s(r4300); break;
@@ -119,7 +119,7 @@ static void gencp1_cvt_d(struct r4300_core* r4300)
 
 static void gencp1_cvt_s(struct r4300_core* r4300)
 {
-    unsigned fmt = (r4300->cached_interp.src >> 21) & 0x1f;
+    unsigned fmt = (r4300->recomp.src >> 21) & 0x1f;
     switch(fmt)
     {
     case 0x11: gencvt_s_d(r4300); break;
@@ -586,7 +586,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
         }
 
         r4300->recomp.SRC = source + i;
-        r4300->cached_interp.src = source[i];
+        r4300->recomp.src = source[i];
         r4300->recomp.dst = block->block + i;
         r4300->recomp.dst->addr = block->start + i*4;
         r4300->recomp.dst->reg_cache_infos.need_map = 0;
@@ -606,7 +606,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
         }
 #endif
 
-        uint32_t iw = r4300->cached_interp.src;
+        uint32_t iw = r4300->recomp.src;
         enum r4300_opcode opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
         recomp_funcs[opcode](r4300);
 
@@ -773,13 +773,13 @@ static int is_jump(const struct r4300_core* r4300)
 void recompile_opcode(struct r4300_core* r4300)
 {
     r4300->recomp.SRC++;
-    r4300->cached_interp.src = *r4300->recomp.SRC;
+    r4300->recomp.src = *r4300->recomp.SRC;
     r4300->recomp.dst++;
     r4300->recomp.dst->addr = (r4300->recomp.dst-1)->addr + 4;
     r4300->recomp.dst->reg_cache_infos.need_map = 0;
     /* we disable next_iw == NOP check by passing 1, because we are already in delay slot */
 
-    uint32_t iw = r4300->cached_interp.src;
+    uint32_t iw = r4300->recomp.src;
     enum r4300_opcode opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, 1, r4300->recomp.dst_block);
 
     if (!is_jump(r4300))
@@ -790,13 +790,13 @@ void recompile_opcode(struct r4300_core* r4300)
 
         /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
          * this MIPS instruction. */
-        if (fwrite(&r4300->cached_interp.src, 1, 4, r4300->recomp.pfProfile) != 4
+        if (fwrite(&r4300->recomp.src, 1, 4, r4300->recomp.pfProfile) != 4
         || fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) {
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
         }
 #endif
 
-        iw = r4300->cached_interp.src;
+        iw = r4300->recomp.src;
         opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, 1, r4300->recomp.dst_block);
         recomp_funcs[opcode](r4300);
     }
