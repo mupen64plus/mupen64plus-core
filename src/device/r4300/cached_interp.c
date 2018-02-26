@@ -698,13 +698,15 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
 
 static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 {
+    char* const invalid_code = r4300->cached_interp.invalid_code;
+
     if ((addr & UINT32_C(0xc0000000)) == UINT32_C(0x80000000))
     {
-        if (r4300->cached_interp.invalid_code[addr>>12]) {
-            r4300->cached_interp.invalid_code[(addr^0x20000000)>>12] = 1;
+        if (invalid_code[addr>>12]) {
+            invalid_code[(addr^0x20000000)>>12] = 1;
         }
-        if (r4300->cached_interp.invalid_code[(addr^0x20000000)>>12]) {
-            r4300->cached_interp.invalid_code[addr>>12] = 1;
+        if (invalid_code[(addr^0x20000000)>>12]) {
+            invalid_code[addr>>12] = 1;
         }
         return addr;
     }
@@ -717,17 +719,17 @@ static uint32_t update_invalid_addr(struct r4300_core* r4300, uint32_t addr)
 
             update_invalid_addr(r4300, paddr);
 
-            if (r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12]) {
-                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            if (invalid_code[(beg_paddr+0x000)>>12]) {
+                invalid_code[addr>>12] = 1;
             }
-            if (r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12]) {
-                r4300->cached_interp.invalid_code[addr>>12] = 1;
+            if (invalid_code[(beg_paddr+0xffc)>>12]) {
+                invalid_code[addr>>12] = 1;
             }
-            if (r4300->cached_interp.invalid_code[addr>>12]) {
-                r4300->cached_interp.invalid_code[(beg_paddr+0x000)>>12] = 1;
+            if (invalid_code[addr>>12]) {
+                invalid_code[(beg_paddr+0x000)>>12] = 1;
             }
-            if (r4300->cached_interp.invalid_code[addr>>12]) {
-                r4300->cached_interp.invalid_code[(beg_paddr+0xffc)>>12] = 1;
+            if (invalid_code[addr>>12]) {
+                invalid_code[(beg_paddr+0xffc)>>12] = 1;
             }
         }
         return paddr;
