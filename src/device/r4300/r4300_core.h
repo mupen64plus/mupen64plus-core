@@ -60,9 +60,7 @@ struct cached_interp
         const uint32_t* source, struct precomp_block* block, uint32_t func);
 
 
-    int init_length;
     struct precomp_instr* dst;                      /* destination structure for the recompiled instruction */
-    int code_length;                                /* current real recompiled code length */
     struct precomp_block *dst_block;                /* the current block that we are recompiling */
     uint32_t src;                                   /* the current recompiled instruction */
     int check_nop;                                  /* next instruction is nop ? */
@@ -110,6 +108,8 @@ struct r4300_core
     /* from recomp.c.
      * XXX: more work is needed to correctly encapsulate these */
     struct recomp {
+        int init_length;
+        int code_length;                                /* current real recompiled code length */
         const uint32_t *SRC;                            /* currently recompiled instruction in the input stream */
 
         struct regcache_state regcache_state;

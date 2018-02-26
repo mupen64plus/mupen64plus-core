@@ -81,9 +81,9 @@ static osal_inline void put8(unsigned char octet)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
 
-    (*r4300->recomp.inst_pointer)[r4300->cached_interp.code_length] = octet;
-    r4300->cached_interp.code_length++;
-    if (r4300->cached_interp.code_length == r4300->recomp.max_code_length)
+    (*r4300->recomp.inst_pointer)[r4300->recomp.code_length] = octet;
+    r4300->recomp.code_length++;
+    if (r4300->recomp.code_length == r4300->recomp.max_code_length)
     {
         *r4300->recomp.inst_pointer = realloc_exec(*r4300->recomp.inst_pointer, r4300->recomp.max_code_length, r4300->recomp.max_code_length+8192);
         r4300->recomp.max_code_length += 8192;
@@ -94,26 +94,26 @@ static osal_inline void put32(unsigned int dword)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
 
-    if ((r4300->cached_interp.code_length + 4) >= r4300->recomp.max_code_length)
+    if ((r4300->recomp.code_length + 4) >= r4300->recomp.max_code_length)
     {
         *r4300->recomp.inst_pointer = realloc_exec(*r4300->recomp.inst_pointer, r4300->recomp.max_code_length, r4300->recomp.max_code_length+8192);
         r4300->recomp.max_code_length += 8192;
     }
-    *((unsigned int *) (*r4300->recomp.inst_pointer + r4300->cached_interp.code_length)) = dword;
-    r4300->cached_interp.code_length += 4;
+    *((unsigned int *) (*r4300->recomp.inst_pointer + r4300->recomp.code_length)) = dword;
+    r4300->recomp.code_length += 4;
 }
 
 static osal_inline void put64(unsigned long long qword)
 {
     struct r4300_core* r4300 = &g_dev.r4300;
 
-    if ((r4300->cached_interp.code_length + 8) >= r4300->recomp.max_code_length)
+    if ((r4300->recomp.code_length + 8) >= r4300->recomp.max_code_length)
     {
         *r4300->recomp.inst_pointer = realloc_exec(*r4300->recomp.inst_pointer, r4300->recomp.max_code_length, r4300->recomp.max_code_length+8192);
         r4300->recomp.max_code_length += 8192;
     }
-    *((unsigned long long *) (*r4300->recomp.inst_pointer + r4300->cached_interp.code_length)) = qword;
-    r4300->cached_interp.code_length += 8;
+    *((unsigned long long *) (*r4300->recomp.inst_pointer + r4300->recomp.code_length)) = qword;
+    r4300->recomp.code_length += 8;
 }
 
 static osal_inline int rel_r15_offset(void *dest, const char *op_name)
@@ -567,7 +567,7 @@ static osal_inline void jmp(unsigned int mi_addr)
     put8(0x25);
     put32(0);
     put64(0);
-    add_jump(r4300, r4300->cached_interp.code_length-8, mi_addr, 1);
+    add_jump(r4300, r4300->recomp.code_length-8, mi_addr, 1);
 }
 
 static osal_inline void cdq(void)

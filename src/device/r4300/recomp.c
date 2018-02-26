@@ -445,7 +445,7 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
         r4300->recomp.max_code_length = b->max_code_length;
     }
 
-    r4300->cached_interp.code_length = 0;
+    r4300->recomp.code_length = 0;
     r4300->recomp.inst_pointer = &b->code;
 
     if (b->jumps_table)
@@ -476,7 +476,7 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
             r4300->cached_interp.dst = b->block + i;
             r4300->cached_interp.dst->addr = b->start + i*4;
             r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
+            r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
@@ -487,20 +487,20 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
         fclose(r4300->recomp.pfProfile);
         r4300->recomp.pfProfile = NULL;
 #endif
-        r4300->cached_interp.init_length = r4300->cached_interp.code_length;
+        r4300->recomp.init_length = r4300->recomp.code_length;
     }
     else
     {
 #if defined(PROFILE_R4300)
-        r4300->cached_interp.code_length = b->code_length; /* leave old instructions in their place */
+        r4300->recomp.code_length = b->code_length; /* leave old instructions in their place */
 #else
-        r4300->cached_interp.code_length = r4300->cached_interp.init_length; /* recompile everything, overwrite old recompiled instructions */
+        r4300->recomp.code_length = r4300->recomp.init_length; /* recompile everything, overwrite old recompiled instructions */
 #endif
         for (i=0; i<length; i++)
         {
             r4300->cached_interp.dst = b->block + i;
             r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = i * (r4300->cached_interp.init_length / length);
+            r4300->cached_interp.dst->local_addr = i * (r4300->recomp.init_length / length);
             r4300->cached_interp.dst->ops = r4300->cached_interp.not_compiled;
         }
     }
@@ -508,7 +508,7 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
     free_all_registers(r4300);
     /* calling pass2 of the assembler is not necessary here because all of the code emitted by
        gennotcompiled() and gendebug() is position-independent and contains no jumps . */
-    b->code_length = r4300->cached_interp.code_length;
+    b->code_length = r4300->recomp.code_length;
     b->max_code_length = r4300->recomp.max_code_length;
     free_assembler(r4300, &b->jumps_table, &b->jumps_number, &b->riprel_table, &b->riprel_number);
 
@@ -566,7 +566,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
     block->xxhash = 0;
 
-    r4300->cached_interp.code_length = block->code_length;
+    r4300->recomp.code_length = block->code_length;
     r4300->recomp.max_code_length = block->max_code_length;
     r4300->recomp.inst_pointer = &block->code;
     init_assembler(r4300, block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
@@ -591,7 +591,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
         r4300->cached_interp.dst = block->block + i;
         r4300->cached_interp.dst->addr = block->start + i*4;
         r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-        r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
+        r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
 
 #ifdef COMPARE_CORE
         gendebug(r4300);
@@ -636,7 +636,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
     }
 
 #if defined(PROFILE_R4300)
-    long x86addr = (long) (block->code + r4300->cached_interp.code_length);
+    long x86addr = (long) (block->code + r4300->recomp.code_length);
     int mipsop = -3; /* -3 == block-postfix */
     /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
      * this MIPS instruction. */
@@ -651,7 +651,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
         r4300->cached_interp.dst = block->block + i;
         r4300->cached_interp.dst->addr = block->start + i*4;
         r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-        r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
+        r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
         gendebug(r4300);
 #endif
@@ -663,7 +663,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
             r4300->cached_interp.dst = block->block + i;
             r4300->cached_interp.dst->addr = block->start + i*4;
             r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
+            r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
@@ -676,7 +676,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
     free_all_registers(r4300);
     passe2(r4300, block->block, (func&0xFFF)/4, i, block);
-    block->code_length = r4300->cached_interp.code_length;
+    block->code_length = r4300->recomp.code_length;
     block->max_code_length = r4300->recomp.max_code_length;
     free_assembler(r4300, &block->jumps_table, &block->jumps_number, &block->riprel_table, &block->riprel_number);
 
@@ -787,7 +787,7 @@ void recompile_opcode(struct r4300_core* r4300)
     {
 
 #if defined(PROFILE_R4300)
-        long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->cached_interp.code_length);
+        long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
 
         /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
          * this MIPS instruction. */

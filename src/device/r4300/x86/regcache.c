@@ -42,7 +42,7 @@ void init_cache(struct r4300_core* r4300, struct precomp_instr* start)
 void free_all_registers(struct r4300_core* r4300)
 {
 #if defined(PROFILE_R4300)
-    int freestart = r4300->cached_interp.code_length;
+    int freestart = r4300->recomp.code_length;
     int flushed = 0;
 #endif
 
@@ -70,7 +70,7 @@ void free_all_registers(struct r4300_core* r4300)
         int mipsop = -5;
         fwrite(&mipsop, 1, 4, r4300->recomp.pfProfile); /* -5 = regcache flushing */
         fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile); // write pointer to start of register cache flushing instructions
-        x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->cached_interp.code_length);
+        x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
         fwrite(&r4300->cached_interp.src, 1, 4, r4300->recomp.pfProfile); // write 4-byte MIPS opcode for current instruction
         fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile); // write pointer to dynamically generated x86 code for this MIPS instruction
     }
@@ -812,7 +812,7 @@ void build_wrappers(struct r4300_core* r4300, struct precomp_instr *instr, int s
 void simplify_access(struct r4300_core* r4300)
 {
     int i;
-    r4300->cached_interp.dst->local_addr = r4300->cached_interp.code_length;
+    r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
     for(i=0; i<8; i++) r4300->cached_interp.dst->reg_cache_infos.needed_registers[i] = NULL;
 }
 
