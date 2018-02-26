@@ -473,14 +473,14 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
 #endif
         for (i=0; i<length; i++)
         {
-            r4300->cached_interp.dst = b->block + i;
-            r4300->cached_interp.dst->addr = b->start + i*4;
-            r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
+            r4300->recomp.dst = b->block + i;
+            r4300->recomp.dst->addr = b->start + i*4;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
-            r4300->cached_interp.dst->ops = dynarec_notcompiled;
+            r4300->recomp.dst->ops = dynarec_notcompiled;
             gennotcompiled(r4300);
         }
 #if defined(PROFILE_R4300)
@@ -498,10 +498,10 @@ void dynarec_init_block(struct r4300_core* r4300, uint32_t address)
 #endif
         for (i=0; i<length; i++)
         {
-            r4300->cached_interp.dst = b->block + i;
-            r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = i * (r4300->recomp.init_length / length);
-            r4300->cached_interp.dst->ops = r4300->cached_interp.not_compiled;
+            r4300->recomp.dst = b->block + i;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = i * (r4300->recomp.init_length / length);
+            r4300->recomp.dst->ops = r4300->cached_interp.not_compiled;
         }
     }
 
@@ -562,7 +562,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
     timed_section_start(TIMED_SECTION_COMPILER);
 #endif
     length = (block->end-block->start)/4;
-    r4300->cached_interp.dst_block = block;
+    r4300->recomp.dst_block = block;
 
     block->xxhash = 0;
 
@@ -587,10 +587,10 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
         r4300->recomp.SRC = source + i;
         r4300->cached_interp.src = source[i];
-        r4300->cached_interp.dst = block->block + i;
-        r4300->cached_interp.dst->addr = block->start + i*4;
-        r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-        r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
+        r4300->recomp.dst = block->block + i;
+        r4300->recomp.dst->addr = block->start + i*4;
+        r4300->recomp.dst->reg_cache_infos.need_map = 0;
+        r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 
 #ifdef COMPARE_CORE
         gendebug(r4300);
@@ -607,10 +607,10 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #endif
 
         uint32_t iw = r4300->cached_interp.src;
-        enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, source[i+1]);
+        enum r4300_opcode opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
         recomp_funcs[opcode](r4300);
 
-        r4300->cached_interp.dst = block->block + i;
+        r4300->recomp.dst = block->block + i;
 
         if (r4300->recomp.delay_slot_compiled)
         {
@@ -622,12 +622,12 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
         if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
                     block->start >= UINT32_C(0xc0000000) ||
                     block->end   <  UINT32_C(0x80000000))) { finished = 2; }
-        if (r4300->cached_interp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
+        if (r4300->recomp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
         if (/*i >= length && */
-                (r4300->cached_interp.dst->ops == cached_interp_J ||
-                 r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
-                 r4300->cached_interp.dst->ops == cached_interp_JR ||
-                 r4300->cached_interp.dst->ops == cached_interp_JR_OUT) &&
+                (r4300->recomp.dst->ops == cached_interp_J ||
+                 r4300->recomp.dst->ops == cached_interp_J_OUT ||
+                 r4300->recomp.dst->ops == cached_interp_JR ||
+                 r4300->recomp.dst->ops == cached_interp_JR_OUT) &&
                 !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
                         block->end   <  UINT32_C(0x80000000)))) {
             finished = 1;
@@ -647,26 +647,26 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
     if (i >= length)
     {
-        r4300->cached_interp.dst = block->block + i;
-        r4300->cached_interp.dst->addr = block->start + i*4;
-        r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-        r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
+        r4300->recomp.dst = block->block + i;
+        r4300->recomp.dst->addr = block->start + i*4;
+        r4300->recomp.dst->reg_cache_infos.need_map = 0;
+        r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
         gendebug(r4300);
 #endif
-        r4300->cached_interp.dst->ops = dynarec_fin_block;
+        r4300->recomp.dst->ops = dynarec_fin_block;
         genfin_block(r4300);
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
         {
-            r4300->cached_interp.dst = block->block + i;
-            r4300->cached_interp.dst->addr = block->start + i*4;
-            r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
-            r4300->cached_interp.dst->local_addr = r4300->recomp.code_length;
+            r4300->recomp.dst = block->block + i;
+            r4300->recomp.dst->addr = block->start + i*4;
+            r4300->recomp.dst->reg_cache_infos.need_map = 0;
+            r4300->recomp.dst->local_addr = r4300->recomp.code_length;
 #ifdef COMPARE_CORE
             gendebug(r4300);
 #endif
-            r4300->cached_interp.dst->ops = dynarec_fin_block;
+            r4300->recomp.dst->ops = dynarec_fin_block;
             genfin_block(r4300);
             i++;
         }
@@ -695,76 +695,76 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 static int is_jump(const struct r4300_core* r4300)
 {
     return
-        (r4300->cached_interp.dst->ops == cached_interp_J ||
-         r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_J_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_JAL ||
-         r4300->cached_interp.dst->ops == cached_interp_JAL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_JAL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQ ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQ_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQ_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BNE ||
-         r4300->cached_interp.dst->ops == cached_interp_BNE_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BNE_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZ ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZ_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZ_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZ ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZ_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZ_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQL ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BEQL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BNEL ||
-         r4300->cached_interp.dst->ops == cached_interp_BNEL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BNEL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZL ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLEZL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZL ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGTZL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_JR ||
-         r4300->cached_interp.dst->ops == cached_interp_JR_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_JALR ||
-         r4300->cached_interp.dst->ops == cached_interp_JALR_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZ ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZ_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZ_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZ ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZ_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZ_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZL ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZL ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZAL ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZAL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZAL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZAL ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZAL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZAL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZALL ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZALL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BLTZALL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZALL ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZALL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BGEZALL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1F ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1F_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1F_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1T ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1T_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1T_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1FL ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1FL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1FL_IDLE ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1TL ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1TL_OUT ||
-         r4300->cached_interp.dst->ops == cached_interp_BC1TL_IDLE);
+        (r4300->recomp.dst->ops == cached_interp_J ||
+         r4300->recomp.dst->ops == cached_interp_J_OUT ||
+         r4300->recomp.dst->ops == cached_interp_J_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_JAL ||
+         r4300->recomp.dst->ops == cached_interp_JAL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_JAL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BEQ ||
+         r4300->recomp.dst->ops == cached_interp_BEQ_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BEQ_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BNE ||
+         r4300->recomp.dst->ops == cached_interp_BNE_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BNE_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BLEZ ||
+         r4300->recomp.dst->ops == cached_interp_BLEZ_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLEZ_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGTZ ||
+         r4300->recomp.dst->ops == cached_interp_BGTZ_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGTZ_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BEQL ||
+         r4300->recomp.dst->ops == cached_interp_BEQL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BEQL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BNEL ||
+         r4300->recomp.dst->ops == cached_interp_BNEL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BNEL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BLEZL ||
+         r4300->recomp.dst->ops == cached_interp_BLEZL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLEZL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGTZL ||
+         r4300->recomp.dst->ops == cached_interp_BGTZL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGTZL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_JR ||
+         r4300->recomp.dst->ops == cached_interp_JR_OUT ||
+         r4300->recomp.dst->ops == cached_interp_JALR ||
+         r4300->recomp.dst->ops == cached_interp_JALR_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLTZ ||
+         r4300->recomp.dst->ops == cached_interp_BLTZ_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLTZ_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGEZ ||
+         r4300->recomp.dst->ops == cached_interp_BGEZ_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGEZ_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BLTZL ||
+         r4300->recomp.dst->ops == cached_interp_BLTZL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLTZL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGEZL ||
+         r4300->recomp.dst->ops == cached_interp_BGEZL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGEZL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BLTZAL ||
+         r4300->recomp.dst->ops == cached_interp_BLTZAL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLTZAL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGEZAL ||
+         r4300->recomp.dst->ops == cached_interp_BGEZAL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGEZAL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BLTZALL ||
+         r4300->recomp.dst->ops == cached_interp_BLTZALL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BLTZALL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BGEZALL ||
+         r4300->recomp.dst->ops == cached_interp_BGEZALL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BGEZALL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BC1F ||
+         r4300->recomp.dst->ops == cached_interp_BC1F_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BC1F_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BC1T ||
+         r4300->recomp.dst->ops == cached_interp_BC1T_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BC1T_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BC1FL ||
+         r4300->recomp.dst->ops == cached_interp_BC1FL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BC1FL_IDLE ||
+         r4300->recomp.dst->ops == cached_interp_BC1TL ||
+         r4300->recomp.dst->ops == cached_interp_BC1TL_OUT ||
+         r4300->recomp.dst->ops == cached_interp_BC1TL_IDLE);
 }
 
 /**********************************************************************
@@ -774,13 +774,13 @@ void recompile_opcode(struct r4300_core* r4300)
 {
     r4300->recomp.SRC++;
     r4300->cached_interp.src = *r4300->recomp.SRC;
-    r4300->cached_interp.dst++;
-    r4300->cached_interp.dst->addr = (r4300->cached_interp.dst-1)->addr + 4;
-    r4300->cached_interp.dst->reg_cache_infos.need_map = 0;
+    r4300->recomp.dst++;
+    r4300->recomp.dst->addr = (r4300->recomp.dst-1)->addr + 4;
+    r4300->recomp.dst->reg_cache_infos.need_map = 0;
     /* we disable next_iw == NOP check by passing 1, because we are already in delay slot */
 
     uint32_t iw = r4300->cached_interp.src;
-    enum r4300_opcode opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, 1);
+    enum r4300_opcode opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, 1, r4300->recomp.dst_block);
 
     if (!is_jump(r4300))
     {
@@ -797,12 +797,12 @@ void recompile_opcode(struct r4300_core* r4300)
 #endif
 
         iw = r4300->cached_interp.src;
-        opcode = r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, 1);
+        opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, 1, r4300->recomp.dst_block);
         recomp_funcs[opcode](r4300);
     }
     else
     {
-        r4300->cached_interp.dst->ops = cached_interp_NOP;
+        r4300->recomp.dst->ops = cached_interp_NOP;
         gennop(r4300);
     }
     r4300->recomp.delay_slot_compiled = 2;

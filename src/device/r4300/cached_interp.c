@@ -364,11 +364,10 @@ static int infer_jump_sub_type(uint32_t target, uint32_t pc, uint32_t next_iw, c
     return 0;
 }
 
-enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw, uint32_t next_iw)
+enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4300, const struct r4300_idec* idec, uint32_t iw, uint32_t next_iw, const struct precomp_block* block)
 {
     /* assume instr->addr is already setup */
     uint8_t dummy;
-    const struct cached_interp* ci = &r4300->cached_interp;
     enum r4300_opcode opcode = idec->opcode;
 
     switch(idec->opcode)
@@ -398,7 +397,7 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_JAL:
         inst->f.j.inst_index  = (iw & UINT32_C(0x3ffffff));
         /* select normal, idle or out jump type */
-        opcode += infer_jump_sub_type((inst->addr & ~0xfffffff) | (idec_imm(iw, idec) & 0xfffffff), inst->addr, next_iw, ci->dst_block);
+        opcode += infer_jump_sub_type((inst->addr & ~0xfffffff) | (idec_imm(iw, idec) & 0xfffffff), inst->addr, next_iw, block);
         break;
 
     case R4300_OP_BC0F:
@@ -434,7 +433,7 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
         inst->f.i.immediate  = (int16_t)iw;
 
         /* select normal, idle or out branch type */
-        opcode += infer_jump_sub_type(inst->addr + inst->f.i.immediate*4 + 4, inst->addr, next_iw, ci->dst_block);
+        opcode += infer_jump_sub_type(inst->addr + inst->f.i.immediate*4 + 4, inst->addr, next_iw, block);
         break;
 
     case R4300_OP_ADD:
@@ -829,9 +828,9 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
 {
     int i;
     int length, finished = 0;
+    struct precomp_instr* inst;
 
     length = (block->end-block->start)/4;
-    r4300->cached_interp.dst_block = block;
 
     block->xxhash = 0;
 
@@ -846,24 +845,22 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
         }
 
         r4300->cached_interp.src = source[i];
-        r4300->cached_interp.dst = block->block + i;
-        r4300->cached_interp.dst->addr = block->start + i*4;
+        inst = block->block + i;
+        inst->addr = block->start + i*4;
 
         uint32_t iw = r4300->cached_interp.src;
-        r4300_decode(r4300->cached_interp.dst, r4300, r4300_get_idec(iw), iw, source[i+1]);
-
-        r4300->cached_interp.dst = block->block + i;
+        enum r4300_opcode opcode = r4300_decode(inst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
 
         if (i >= length-2+(length>>2)) { finished = 2; }
         if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
                     block->start >= UINT32_C(0xc0000000) ||
                     block->end   <  UINT32_C(0x80000000))) { finished = 2; }
-        if (r4300->cached_interp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
+        if (opcode == R4300_OP_ERET || finished == 1) { finished = 2; }
         if (/*i >= length && */
-                (r4300->cached_interp.dst->ops == cached_interp_J ||
-                 r4300->cached_interp.dst->ops == cached_interp_J_OUT ||
-                 r4300->cached_interp.dst->ops == cached_interp_JR ||
-                 r4300->cached_interp.dst->ops == cached_interp_JR_OUT) &&
+                (opcode == R4300_OP_J ||
+                 opcode == R4300_OP_J_OUT ||
+                 opcode == R4300_OP_JR ||
+                 opcode == R4300_OP_JR_OUT) &&
                 !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
                         block->end   <  UINT32_C(0x80000000)))) {
             finished = 1;
@@ -872,15 +869,15 @@ void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* sou
 
     if (i >= length)
     {
-        r4300->cached_interp.dst = block->block + i;
-        r4300->cached_interp.dst->addr = block->start + i*4;
-        r4300->cached_interp.dst->ops = cached_interp_FIN_BLOCK;
+        inst = block->block + i;
+        inst->addr = block->start + i*4;
+        inst->ops = cached_interp_FIN_BLOCK;
         i++;
         if (i < length-1+(length>>2)) // useful when last opcode is a jump
         {
-            r4300->cached_interp.dst = block->block + i;
-            r4300->cached_interp.dst->addr = block->start + i*4;
-            r4300->cached_interp.dst->ops = cached_interp_FIN_BLOCK;
+            inst = block->block + i;
+            inst->addr = block->start + i*4;
+            inst->ops = cached_interp_FIN_BLOCK;
             i++;
         }
     }
