@@ -554,43 +554,52 @@ void dynarec_free_block(struct precomp_block* block)
 /**********************************************************************
  ********************* recompile a block of code **********************
  **********************************************************************/
-void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func)
+void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* iw, struct precomp_block* block, uint32_t func)
 {
-    int i;
-    int length, finished = 0;
+    int i, length, length2, finished;
+    enum r4300_opcode opcode;
+
+    /* ??? not sure why we need these 2 different tests */
+    int block_start_in_tlb = ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000));
+    int block_not_in_tlb = (block->start >= UINT32_C(0xc0000000) || block->end < UINT32_C(0x80000000));
+
 #if defined(PROFILE)
     timed_section_start(TIMED_SECTION_COMPILER);
 #endif
-    length = (block->end-block->start)/4;
-    r4300->recomp.dst_block = block;
 
+    length = get_block_length(block);
+    length2 = length - 2 + (length >> 2);
+
+    /* reset xxhash */
     block->xxhash = 0;
 
+    r4300->recomp.dst_block = block;
     r4300->recomp.code_length = block->code_length;
     r4300->recomp.max_code_length = block->max_code_length;
     r4300->recomp.inst_pointer = &block->code;
     init_assembler(r4300, block->jumps_table, block->jumps_number, block->riprel_table, block->riprel_number);
     init_cache(r4300, block->block + (func & 0xFFF) / 4);
+
 #if defined(PROFILE_R4300)
     r4300->recomp.pfProfile = fopen("instructionaddrs.dat", "ab");
 #endif
 
-    for (i = (func & 0xFFF) / 4; finished != 2; i++)
+    for (i = (func & 0xFFF) / 4, finished = 0; finished != 2; ++i)
     {
-        if ((block->start & UINT32_C(0xc0000000)) != UINT32_C(0x80000000))
-        {
-            uint32_t address2 = virtual_to_physical_address(r4300, block->start + i*4, 0);
-            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->cached_interp.not_compiled) {
-                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = r4300->cached_interp.not_compiled2;
-            }
-        }
-
-        r4300->recomp.SRC = source + i;
-        r4300->recomp.src = source[i];
+        r4300->recomp.SRC = iw + i;
+        r4300->recomp.src = iw[i];
         r4300->recomp.dst = block->block + i;
         r4300->recomp.dst->addr = block->start + i*4;
         r4300->recomp.dst->reg_cache_infos.need_map = 0;
         r4300->recomp.dst->local_addr = r4300->recomp.code_length;
+
+        if (block_start_in_tlb)
+        {
+            uint32_t address2 = virtual_to_physical_address(r4300, r4300->recomp.dst->addr, 0);
+            if (r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops == r4300->cached_interp.not_compiled) {
+                r4300->cached_interp.blocks[address2>>12]->block[(address2&UINT32_C(0xFFF))/4].ops = r4300->cached_interp.not_compiled2;
+            }
+        }
 
 #ifdef COMPARE_CORE
         gendebug(r4300);
@@ -600,17 +609,15 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 
         /* write 4-byte MIPS opcode, followed by a pointer to dynamically generated x86 code for
          * this MIPS instruction. */
-        if (fwrite(source + i, 1, 4, r4300->recomp.pfProfile) != 4
+        if (fwrite(iw + i, 1, 4, r4300->recomp.pfProfile) != 4
         || fwrite(&x86addr, 1, sizeof(char *), r4300->recomp.pfProfile) != sizeof(char *)) {
             DebugMessage(M64MSG_ERROR, "Error writing R4300 instruction address profiling data");
         }
 #endif
 
-        uint32_t iw = r4300->recomp.src;
-        enum r4300_opcode opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw), iw, source[i+1], block);
+        /* decode instruction */
+        opcode = r4300_decode(r4300->recomp.dst, r4300, r4300_get_idec(iw[i]), iw[i], iw[i+1], block);
         recomp_funcs[opcode](r4300);
-
-        r4300->recomp.dst = block->block + i;
 
         if (r4300->recomp.delay_slot_compiled)
         {
@@ -618,18 +625,17 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
             free_all_registers(r4300);
         }
 
-        if (i >= length-2+(length>>2)) { finished = 2; }
-        if (i >= (length-1) && (block->start == UINT32_C(0xa4000000) ||
-                    block->start >= UINT32_C(0xc0000000) ||
-                    block->end   <  UINT32_C(0x80000000))) { finished = 2; }
-        if (r4300->recomp.dst->ops == cached_interp_ERET || finished == 1) { finished = 2; }
+        /* decode ending conditions */
+        if (i >= length2) { finished = 2; }
+        if (i >= (length-1)
+        && (block->start == UINT32_C(0xa4000000) || block_not_in_tlb)) { finished = 2; }
+        if (opcode == R4300_OP_ERET || finished == 1) { finished = 2; }
         if (/*i >= length && */
-                (r4300->recomp.dst->ops == cached_interp_J ||
-                 r4300->recomp.dst->ops == cached_interp_J_OUT ||
-                 r4300->recomp.dst->ops == cached_interp_JR ||
-                 r4300->recomp.dst->ops == cached_interp_JR_OUT) &&
-                !(i >= (length-1) && (block->start >= UINT32_C(0xc0000000) ||
-                        block->end   <  UINT32_C(0x80000000)))) {
+                (opcode == R4300_OP_J ||
+                 opcode == R4300_OP_J_OUT ||
+                 opcode == R4300_OP_JR ||
+                 opcode == R4300_OP_JR_OUT) &&
+                !(i >= (length-1) && block_not_in_tlb)) {
             finished = 1;
         }
     }
@@ -656,8 +662,8 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #endif
         r4300->recomp.dst->ops = dynarec_fin_block;
         genfin_block(r4300);
-        i++;
-        if (i < length-1+(length>>2)) // useful when last opcode is a jump
+        ++i;
+        if (i <= length2) // useful when last opcode is a jump
         {
             r4300->recomp.dst = block->block + i;
             r4300->recomp.dst->addr = block->start + i*4;
@@ -668,7 +674,7 @@ void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, s
 #endif
             r4300->recomp.dst->ops = dynarec_fin_block;
             genfin_block(r4300);
-            i++;
+            ++i;
         }
     }
     else { genlink_subblock(r4300); }
