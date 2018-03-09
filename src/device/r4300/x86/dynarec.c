@@ -1667,7 +1667,6 @@ void gendsllv(struct r4300_core* r4300)
     else
     {
         int temp1, temp2;
-        force_32(r4300, ECX);
         temp1 = lru_register(r4300);
         temp2 = lru_register_exc1(r4300, temp1);
         free_register(r4300, temp1);
@@ -1792,7 +1791,6 @@ void gendsrlv(struct r4300_core* r4300)
     else
     {
         int temp1, temp2;
-        force_32(r4300, ECX);
         temp1 = lru_register(r4300);
         temp2 = lru_register_exc1(r4300, temp1);
         free_register(r4300, temp1);
@@ -1917,7 +1915,6 @@ void gendsrav(struct r4300_core* r4300)
     else
     {
         int temp1, temp2;
-        force_32(r4300, ECX);
         temp1 = lru_register(r4300);
         temp2 = lru_register_exc1(r4300, temp1);
         free_register(r4300, temp1);
