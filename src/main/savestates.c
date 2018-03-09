@@ -61,7 +61,7 @@ enum { GB_CART_FINGERPRINT_SIZE = 0x1c };
 enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010200;  /* 1.2 */
+static const int savestate_latest_version = 0x00010300;  /* 1.3 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -178,7 +178,6 @@ static void savestates_clear_job(void)
 #define COPYARRAY(dst, buff, type, count) \
     memcpy(dst, GETARRAY(buff, type, count), sizeof(type)*count)
 #define GETDATA(buff, type) *GETARRAY(buff, type, 1)
-
 #define PUTARRAY(src, buff, type, count) \
     memcpy(buff, src, sizeof(type)*count); \
     to_little_endian_buffer(buff, sizeof(type), count); \
@@ -496,7 +495,134 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     }
 #endif
 
-    if (version >= 0x00010200)
+    if (version == 0x00010200)
+    {
+        union
+        {
+            uint8_t bytes[8];
+            uint64_t force_alignment;
+        } aligned;
+
+#define ALIGNED_GETDATA(buff, type) \
+    (COPYARRAY(aligned.bytes, buff, uint8_t, sizeof(type)), *(type*)aligned.bytes)
+
+        curr = data_0001_0200;
+
+        /* extra ai state */
+        dev->ai.last_read = GETDATA(curr, uint32_t);
+        dev->ai.delayed_carry = GETDATA(curr, uint32_t);
+
+        /* extra cart_rom state */
+        dev->cart.cart_rom.last_write = GETDATA(curr, uint32_t);
+        dev->cart.cart_rom.rom_written = GETDATA(curr, uint32_t);
+
+        /* extra sp state */
+        curr += 4; /* here there used to be rsp_task_locked */
+
+        /* extra af-rtc state */
+        dev->cart.af_rtc.control = GETDATA(curr, uint16_t);
+        dev->cart.af_rtc.now = (time_t)ALIGNED_GETDATA(curr, int64_t);
+        dev->cart.af_rtc.last_update_rtc = (time_t)ALIGNED_GETDATA(curr, int64_t);
+
+        /* extra controllers state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            dev->controllers[i].status = GETDATA(curr, uint8_t);
+        }
+
+        /* extra rpak state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            uint8_t rpk_state = GETDATA(curr, uint8_t);
+
+            /* skip controllers handled by the input plugin */
+            if (Controls[i].RawData)
+                continue;
+
+            if (ROM_SETTINGS.rumble) {
+                set_rumble_reg(&dev->rumblepaks[i], rpk_state);
+            }
+        }
+
+        /* extra tpak state */
+        for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
+            dev->transferpaks[i].enabled = ALIGNED_GETDATA(curr, unsigned int);
+            dev->transferpaks[i].bank = ALIGNED_GETDATA(curr, unsigned int);
+            dev->transferpaks[i].access_mode = ALIGNED_GETDATA(curr, unsigned int);
+            dev->transferpaks[i].access_mode_changed = ALIGNED_GETDATA(curr, unsigned int);
+
+            /* verify that gb cart saved in savestate is the same as what is currently inserted in transferpak */
+            char gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+            char current_gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+
+            COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
+
+            if (dev->transferpaks[i].gb_cart == NULL) {
+                memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
+            }
+            else {
+                uint8_t* rom = dev->transferpaks[i].gb_cart->irom_storage->data(dev->transferpaks[i].gb_cart->rom_storage);
+                memcpy(current_gb_fingerprint, rom + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
+            }
+
+            if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
+                DebugMessage(M64MSG_WARNING, "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
+                   (current_gb_fingerprint[0] == 0x00) ? "(none)" : current_gb_fingerprint,
+                   (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+
+                if (gb_fingerprint[0] != 0x00) {
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+M64282FP_REGS_COUNT;
+                }
+            }
+            else {
+                if (dev->transferpaks[i].gb_cart != NULL) {
+                    dev->transferpaks[i].gb_cart->rom_bank = ALIGNED_GETDATA(curr, unsigned int);
+                    dev->transferpaks[i].gb_cart->ram_bank = ALIGNED_GETDATA(curr, unsigned int);
+                    dev->transferpaks[i].gb_cart->ram_enable = ALIGNED_GETDATA(curr, unsigned int);
+                    dev->transferpaks[i].gb_cart->mbc1_mode = ALIGNED_GETDATA(curr, unsigned int);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    dev->transferpaks[i].gb_cart->rtc.latch = ALIGNED_GETDATA(curr, unsigned int);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)ALIGNED_GETDATA(curr, int64_t);
+
+                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
+                }
+            }
+        }
+
+        /* extra pif channels state */
+        for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
+            int offset = GETDATA(curr, int8_t);
+            if (offset >= 0) {
+                setup_pif_channel(&dev->pif.channels[i], dev->pif.ram + offset);
+            }
+            else {
+                disable_pif_channel(&dev->pif.channels[i]);
+            }
+        }
+
+        /* extra vi state */
+        dev->vi.count_per_scanline = ALIGNED_GETDATA(curr, unsigned int);
+
+        /* extra si state */
+        dev->si.dma_dir = GETDATA(curr, uint8_t);
+
+        /* extra dp state */
+        dev->dp.do_on_unfreeze = GETDATA(curr, uint8_t);
+
+        /* extra RDRAM register state */
+        for (i = 1; i < RDRAM_MAX_MODULES_COUNT; ++i) {
+            dev->rdram.regs[i][RDRAM_CONFIG_REG]       = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_DEVICE_ID_REG]    = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_DELAY_REG]        = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_MODE_REG]         = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_REF_INTERVAL_REG] = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_REF_ROW_REG]      = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_RAS_INTERVAL_REG] = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_MIN_INTERVAL_REG] = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_ADDR_SELECT_REG]  = ALIGNED_GETDATA(curr, uint32_t);
+            dev->rdram.regs[i][RDRAM_DEVICE_MANUF_REG] = ALIGNED_GETDATA(curr, uint32_t);
+        }
+    }
+    else if (version >= 0x00010300)
     {
         curr = data_0001_0200;
 
