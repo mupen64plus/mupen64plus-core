@@ -513,6 +513,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
         /* extra af-rtc state */
         dev->cart.af_rtc.control = GETDATA(curr, uint16_t);
+        curr += 2; /* padding to keep things 8-byte aligned */
         dev->cart.af_rtc.now = (time_t)GETDATA(curr, int64_t);
         dev->cart.af_rtc.last_update_rtc = (time_t)GETDATA(curr, int64_t);
 
@@ -570,10 +571,10 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                     dev->transferpaks[i].gb_cart->ram_bank = GETDATA(curr, unsigned int);
                     dev->transferpaks[i].gb_cart->ram_enable = GETDATA(curr, unsigned int);
                     dev->transferpaks[i].gb_cart->mbc1_mode = GETDATA(curr, unsigned int);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     dev->transferpaks[i].gb_cart->rtc.latch = GETDATA(curr, unsigned int);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
                 }
             }
@@ -590,14 +591,14 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             }
         }
 
-        /* extra vi state */
-        dev->vi.count_per_scanline = GETDATA(curr, unsigned int);
-
         /* extra si state */
         dev->si.dma_dir = GETDATA(curr, uint8_t);
 
         /* extra dp state */
         dev->dp.do_on_unfreeze = GETDATA(curr, uint8_t);
+
+        /* extra vi state */
+        dev->vi.count_per_scanline = GETDATA(curr, unsigned int);
 
         /* extra RDRAM register state */
         for (i = 1; i < RDRAM_MAX_MODULES_COUNT; ++i) {
@@ -1506,6 +1507,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     PUTDATA(curr, uint32_t, 0); /* here there used to be rsp_task_locked */
 
     PUTDATA(curr, uint16_t, dev->cart.af_rtc.control);
+    PUTDATA(curr, uint16_t, 0); /* padding to keep things aligned */
     PUTDATA(curr, int64_t, dev->cart.af_rtc.now);
     PUTDATA(curr, int64_t, dev->cart.af_rtc.last_update_rtc);
 
@@ -1536,11 +1538,11 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
             PUTDATA(curr, unsigned int, dev->transferpaks[i].gb_cart->ram_bank);
             PUTDATA(curr, unsigned int, dev->transferpaks[i].gb_cart->ram_enable);
             PUTDATA(curr, unsigned int, dev->transferpaks[i].gb_cart->mbc1_mode);
+            PUTDATA(curr, unsigned int, dev->transferpaks[i].gb_cart->rtc.latch);
+            PUTDATA(curr, int64_t, dev->transferpaks[i].gb_cart->rtc.last_time);
 
             PUTARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-            PUTDATA(curr, unsigned int, dev->transferpaks[i].gb_cart->rtc.latch);
             PUTARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-            PUTDATA(curr, int64_t, dev->transferpaks[i].gb_cart->rtc.last_time);
 
             PUTARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
         }
@@ -1552,11 +1554,11 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
                : (int8_t)(dev->pif.channels[i].tx - dev->pif.ram));
     }
 
-    PUTDATA(curr, unsigned int, dev->vi.count_per_scanline);
-
     PUTDATA(curr, uint8_t, dev->si.dma_dir);
 
     PUTDATA(curr, uint8_t, dev->dp.do_on_unfreeze);
+
+    PUTDATA(curr, unsigned int, dev->vi.count_per_scanline);
 
     for (i = 1; i < RDRAM_MAX_MODULES_COUNT; ++i) {
         PUTDATA(curr, uint32_t, dev->rdram.regs[i][RDRAM_CONFIG_REG]);
