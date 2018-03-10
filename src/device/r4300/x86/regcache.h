@@ -42,7 +42,6 @@ void set_register_state(struct r4300_core* r4300, int reg, unsigned int *addr, i
 void set_64_register_state(struct r4300_core* r4300, int reg1, int reg2, unsigned int *addr, int dirty);
 void allocate_register_manually(struct r4300_core* r4300, int reg, unsigned int *addr);
 void allocate_register_manually_w(struct r4300_core* r4300, int reg, unsigned int *addr, int load);
-void force_32(struct r4300_core* r4300, int reg);
 int lru_register_exc1(struct r4300_core* r4300, int exc1);
 void simplify_access(struct r4300_core* r4300);
 

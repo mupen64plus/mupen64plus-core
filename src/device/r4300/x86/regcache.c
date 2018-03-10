@@ -547,39 +547,6 @@ void set_64_register_state(struct r4300_core* r4300, int reg1, int reg2, unsigne
     r4300->regcache_state.dirty[reg2] = d;
 }
 
-void force_32(struct r4300_core* r4300, int reg)
-{
-    if (r4300->regcache_state.r64[reg] != -1)
-    {
-        struct precomp_instr *last = r4300->regcache_state.last_access[reg]+1;
-
-        while (last <= r4300->recomp.dst)
-        {
-            if (r4300->regcache_state.dirty[reg])
-                last->reg_cache_infos.needed_registers[reg] = r4300->regcache_state.reg_content[reg];
-            else
-                last->reg_cache_infos.needed_registers[reg] = NULL;
-
-            if (r4300->regcache_state.dirty[r4300->regcache_state.r64[reg]])
-                last->reg_cache_infos.needed_registers[r4300->regcache_state.r64[reg]] = r4300->regcache_state.reg_content[r4300->regcache_state.r64[reg]];
-            else
-                last->reg_cache_infos.needed_registers[r4300->regcache_state.r64[reg]] = NULL;
-
-            last++;
-        }
-
-        if (r4300->regcache_state.dirty[reg])
-        {
-            mov_m32_reg32(r4300->regcache_state.reg_content[reg], reg);
-            mov_m32_reg32(r4300->regcache_state.reg_content[r4300->regcache_state.r64[reg]], r4300->regcache_state.r64[reg]);
-            r4300->regcache_state.dirty[reg] = 0;
-        }
-        r4300->regcache_state.last_access[r4300->regcache_state.r64[reg]] = NULL;
-        r4300->regcache_state.free_since[r4300->regcache_state.r64[reg]] = r4300->recomp.dst+1;
-        r4300->regcache_state.r64[reg] = -1;
-    }
-}
-
 void allocate_register_manually(struct r4300_core* r4300, int reg, unsigned int *addr)
 {
     int i;
