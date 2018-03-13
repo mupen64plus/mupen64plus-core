@@ -47,9 +47,6 @@ static void *opaddr_recompiled[564];
 static disassemble_info dis_info;
 static disassembler_ftype disassemble;
 
-#define CHECK_MEM(r4300, address) \
-    invalidate_r4300_cached_code(r4300, address, 4);
-
 static void process_opcode_out(void *strm, const char *fmt, ...)
 {
     va_list ap;
@@ -223,8 +220,6 @@ int get_has_recompiled(struct r4300_core* r4300, uint32_t addr)
 
 #else
 
-#define CHECK_MEM(r4300, address)
-
 int get_num_recompiled(struct r4300_core* r4300, uint32_t addr)
 {
     return 0;
@@ -287,84 +282,10 @@ void write_memory_64_unaligned(struct device* dev, uint32_t addr, uint64_t value
 
 uint32_t read_memory_32(struct device* dev, uint32_t addr)
 {
-    uint32_t offset;
-
-    switch(get_memory_type(&dev->mem, addr))
-    {
-        case M64P_MEM_NOMEM:
-            if(dev->r4300.cp0.tlb.LUT_r[addr>>12])
-                return read_memory_32(dev, (dev->r4300.cp0.tlb.LUT_r[addr>>12]&0xFFFFF000)|(addr&0xFFF));
-            return M64P_MEM_INVALID;
-        case M64P_MEM_RDRAM:
-            return dev->rdram.dram[rdram_dram_address(addr)];
-        case M64P_MEM_RSPMEM:
-            return dev->sp.mem[rsp_mem_address(addr)];
-        case M64P_MEM_ROM:
-            return *((uint32_t *)(dev->cart.cart_rom.rom + rom_address(addr)));
-        case M64P_MEM_RDRAMREG:
-            offset = rdram_reg(addr);
-            if (offset < RDRAM_REGS_COUNT)
-                return dev->rdram.regs[0][offset];
-            break;
-        case M64P_MEM_RSPREG:
-            offset = rsp_reg(addr);
-            if (offset < SP_REGS_COUNT)
-                return dev->sp.regs[offset];
-            break;
-        case M64P_MEM_RSP:
-            offset = rsp_reg2(addr);
-            if (offset < SP_REGS2_COUNT)
-                return dev->sp.regs2[offset];
-            break;
-        case M64P_MEM_DP:
-            offset = dpc_reg(addr);
-            if (offset < DPC_REGS_COUNT)
-                return dev->dp.dpc_regs[offset];
-            break;
-        case M64P_MEM_DPS:
-            offset = dps_reg(addr);
-            if (offset < DPS_REGS_COUNT)
-                return dev->dp.dps_regs[offset];
-            break;
-        case M64P_MEM_VI:
-            offset = vi_reg(addr);
-            if (offset < VI_REGS_COUNT)
-                return dev->vi.regs[offset];
-            break;
-        case M64P_MEM_AI:
-            offset = ai_reg(addr);
-            if (offset < AI_REGS_COUNT)
-                return dev->ai.regs[offset];
-            break;
-        case M64P_MEM_PI:
-            offset = pi_reg(addr);
-            if (offset < PI_REGS_COUNT)
-                return dev->pi.regs[offset];
-            break;
-        case M64P_MEM_RI:
-            offset = ri_reg(addr);
-            if (offset < RI_REGS_COUNT)
-                return dev->ri.regs[offset];
-            break;
-        case M64P_MEM_SI:
-            offset = si_reg(addr);
-            if (offset < SI_REGS_COUNT)
-                return dev->si.regs[offset];
-            break;
-        case M64P_MEM_PIF:
-            offset = pif_ram_address(addr);
-            if (offset < PIF_RAM_SIZE)
-                return tohl((*((uint32_t*)&dev->pif.ram[offset])));
-            break;
-        case M64P_MEM_MI:
-            offset = mi_reg(addr);
-            if (offset < MI_REGS_COUNT)
-                return dev->mi.regs[offset];
-            break;
-        default:
-            break;
-    }
-    return M64P_MEM_INVALID;
+    uint32_t value;
+    if (r4300_read_aligned_word(&dev->r4300, addr, &value) == 0)
+        return M64P_MEM_INVALID;
+    return value;
 }
 
 uint32_t read_memory_32_unaligned(struct device* dev, uint32_t addr)
@@ -375,14 +296,9 @@ uint32_t read_memory_32_unaligned(struct device* dev, uint32_t addr)
     return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
 }
 
-void write_memory_32(struct device* dev, uint32_t addr, uint32_t value){
-    switch(get_memory_type(&dev->mem, addr))
-    {
-        case M64P_MEM_RDRAM:
-            dev->rdram.dram[(addr & 0xffffff) >> 2] = value;
-            CHECK_MEM(&dev->r4300, addr)
-                break;
-    }
+void write_memory_32(struct device* dev, uint32_t addr, uint32_t value)
+{
+    r4300_write_aligned_word(&dev->r4300, addr, value, 0xffffffff);
 }
 
 void write_memory_32_unaligned(struct device* dev, uint32_t addr, uint32_t value)
@@ -416,12 +332,12 @@ uint8_t read_memory_8(struct device* dev, uint32_t addr)
 
 void write_memory_8(struct device* dev, uint32_t addr, uint8_t value)
 {
-    uint32_t word, mask;
+    uint32_t mask;
 
-    word = read_memory_32(dev, addr & ~3);
     mask = 0xFF << ((3 - (addr & 3)) * 8);
-    word = (word & ~mask) | (value << ((3 - (addr & 3)) * 8));
-    write_memory_32(dev, addr & ~3, word);
+    value <<= ((3 - (addr & 3)) * 8);
+    
+    r4300_write_aligned_word(&dev->r4300, addr, value, mask);
 }
 
 uint32_t get_memory_flags(struct device* dev, uint32_t addr)
