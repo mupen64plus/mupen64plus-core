@@ -129,7 +129,7 @@ endif
 # base CFLAGS, LDLIBS, and LDFLAGS
 OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall
-CFLAGS += $(OPTFLAGS) $(WARNFLAGS) -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
+CFLAGS += -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
@@ -358,10 +358,10 @@ RM       ?= rm -f
 INSTALL  ?= install
 MKDIR    ?= mkdir -p
 AWK      ?= awk
-COMPILE.c = $(Q_CC)$(CC) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
-COMPILE.cc = $(Q_CXX)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.c = $(Q_CC)$(CC) $(OPTFLAGS) $(WARNFLAGS) $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
+COMPILE.cc = $(Q_CXX)$(CXX) $(OPTFLAGS) $(WARNFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -c
 COMPILE.as = $(Q_AS)$(AS) $(ASFLAGS)
-LINK.o = $(Q_LD)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(TARGET_ARCH)
+LINK.o = $(Q_LD)$(CXX) $(OPTFLAGS) $(WARNFLAGS) $(CXXFLAGS) $(LDFLAGS) $(TARGET_ARCH)
 
 ifeq ($(OS),OSX)
   LDCONFIG ?= true  # no 'ldconfig' under OSX
@@ -386,6 +386,7 @@ ifeq ($(PROFILE), 1)
 else
   ifeq ($(DEBUG), 1)
     CFLAGS += -g
+    OPTFLAGS = -O0
     INSTALL_STRIP_FLAG ?= 
   else
     CFLAGS += -DNDEBUG
