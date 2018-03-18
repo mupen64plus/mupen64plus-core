@@ -29,7 +29,6 @@
 #include "assemble_struct.h"
 #include "regcache.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h"
 #include "osal/preproc.h"
 
 /* Placeholder for RIP-relative offsets is maxmimum 32-bit signed value.

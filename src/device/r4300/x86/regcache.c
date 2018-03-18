@@ -26,7 +26,6 @@
 #include "regcache.h"
 #include "device/r4300/r4300_core.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h"
 
 void init_cache(struct r4300_core* r4300, struct precomp_instr* start)
 {

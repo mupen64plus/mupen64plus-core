@@ -28,7 +28,6 @@
 #include "assemble_struct.h"
 #include "regcache.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h"
 #include "osal/preproc.h"
 
 void init_assembler(struct r4300_core* r4300, void *block_jumps_table, int block_jumps_number, void *block_riprel_table, int block_riprel_number)

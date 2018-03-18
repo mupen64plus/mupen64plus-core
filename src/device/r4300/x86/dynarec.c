@@ -32,7 +32,6 @@
 #include "device/r4300/cp1.h"
 #include "device/r4300/interrupt.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h"
 #include "device/rdram/rdram.h"
 #include "main/main.h"
 
@@ -85,6 +84,27 @@ void dyna_stop(struct r4300_core* r4300)
 
 
 /* M64P Pseudo instructions */
+
+static void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
+{
+    free_all_registers(r4300);
+    simplify_access(r4300);
+
+    if (jump) {
+        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 1);
+    }
+
+    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst));
+    mov_reg32_imm32(EAX, addr);
+    call_reg32(EAX);
+
+    if (jump)
+    {
+        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 0);
+        mov_reg32_imm32(EAX, (unsigned int)dyna_jump);
+        call_reg32(EAX);
+    }
+}
 
 static void gencheck_cop1_unusable(struct r4300_core* r4300)
 {
@@ -148,6 +168,17 @@ static void gencheck_interrupt_reg(struct r4300_core* r4300) // addr is in EAX
     call_reg32(EAX); // 2
 }
 
+static void gendelayslot(struct r4300_core* r4300)
+{
+    mov_m32_imm32(&r4300->delay_slot, 1);
+    recompile_opcode(r4300);
+
+    free_all_registers(r4300);
+    gencp0_update_count(r4300, r4300->recomp.dst->addr+4);
+
+    mov_m32_imm32(&r4300->delay_slot, 0);
+}
+
 #ifdef COMPARE_CORE
 extern unsigned int op; /* api/debugger.c */
 
@@ -204,38 +235,6 @@ void genlink_subblock(struct r4300_core* r4300)
 void genfin_block(struct r4300_core* r4300)
 {
     gencallinterp(r4300, (unsigned int)dynarec_fin_block, 0);
-}
-
-void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
-{
-    free_all_registers(r4300);
-    simplify_access(r4300);
-
-    if (jump) {
-        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 1);
-    }
-
-    mov_m32_imm32((unsigned int*)(&(*r4300_pc_struct(r4300))), (unsigned int)(r4300->recomp.dst));
-    mov_reg32_imm32(EAX, addr);
-    call_reg32(EAX);
-
-    if (jump)
-    {
-        mov_m32_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 0);
-        mov_reg32_imm32(EAX, (unsigned int)dyna_jump);
-        call_reg32(EAX);
-    }
-}
-
-void gendelayslot(struct r4300_core* r4300)
-{
-    mov_m32_imm32(&r4300->delay_slot, 1);
-    recompile_opcode(r4300);
-
-    free_all_registers(r4300);
-    gencp0_update_count(r4300, r4300->recomp.dst->addr+4);
-
-    mov_m32_imm32(&r4300->delay_slot, 0);
 }
 
 /* Reserved */

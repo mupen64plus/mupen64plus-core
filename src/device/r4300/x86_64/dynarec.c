@@ -34,7 +34,6 @@
 #include "device/r4300/cp1.h"
 #include "device/r4300/interrupt.h"
 #include "device/r4300/recomp.h"
-#include "device/r4300/recomph.h"
 #include "device/rdram/rdram.h"
 #include "main/main.h"
 
@@ -97,6 +96,27 @@ void dyna_stop(struct r4300_core* r4300)
 
 
 /* M64P Pseudo instructions */
+
+static void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
+{
+    free_registers_move_start(r4300);
+
+    if (jump) {
+        mov_m32rel_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 1);
+    }
+
+    mov_reg64_imm64(RAX, (unsigned long long) r4300->recomp.dst);
+    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
+    mov_reg64_imm64(RAX, addr);
+    call_reg64(RAX);
+
+    if (jump)
+    {
+        mov_m32rel_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 0);
+        mov_reg64_imm64(RAX, (unsigned long long)dyna_jump);
+        call_reg64(RAX);
+    }
+}
 
 static void gencheck_cop1_unusable(struct r4300_core* r4300)
 {
@@ -173,6 +193,17 @@ static void gencheck_interrupt_reg(struct r4300_core* r4300) // addr is in EAX
     call_reg64(RAX);
 
     jump_end_rel8(r4300);
+}
+
+static void gendelayslot(struct r4300_core* r4300)
+{
+    mov_m32rel_imm32((void*)(&r4300->delay_slot), 1);
+    recompile_opcode(r4300);
+
+    free_all_registers(r4300);
+    gencp0_update_count(r4300, r4300->recomp.dst->addr+4);
+
+    mov_m32rel_imm32((void*)(&r4300->delay_slot), 0);
 }
 
 static void ld_register_alloc(struct r4300_core* r4300, int *pGpr1, int *pGpr2, int *pBase1, int *pBase2)
@@ -324,38 +355,6 @@ void genlink_subblock(struct r4300_core* r4300)
 void genfin_block(struct r4300_core* r4300)
 {
     gencallinterp(r4300, (unsigned long long)dynarec_fin_block, 0);
-}
-
-void gencallinterp(struct r4300_core* r4300, uintptr_t addr, int jump)
-{
-    free_registers_move_start(r4300);
-
-    if (jump) {
-        mov_m32rel_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 1);
-    }
-
-    mov_reg64_imm64(RAX, (unsigned long long) r4300->recomp.dst);
-    mov_m64rel_xreg64((unsigned long long *)(&(*r4300_pc_struct(r4300))), RAX);
-    mov_reg64_imm64(RAX, addr);
-    call_reg64(RAX);
-
-    if (jump)
-    {
-        mov_m32rel_imm32((unsigned int*)(&r4300->recomp.dyna_interp), 0);
-        mov_reg64_imm64(RAX, (unsigned long long)dyna_jump);
-        call_reg64(RAX);
-    }
-}
-
-void gendelayslot(struct r4300_core* r4300)
-{
-    mov_m32rel_imm32((void*)(&r4300->delay_slot), 1);
-    recompile_opcode(r4300);
-
-    free_all_registers(r4300);
-    gencp0_update_count(r4300, r4300->recomp.dst->addr+4);
-
-    mov_m32rel_imm32((void*)(&r4300->delay_slot), 0);
 }
 
 /* Reserved */
