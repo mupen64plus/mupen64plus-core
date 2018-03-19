@@ -63,578 +63,387 @@ void passe2(struct r4300_core* r4300, struct precomp_instr *dest, int start, int
 
 /* defined in <arch>/dynarec.c */
 void genlink_subblock(struct r4300_core* r4300);
+void genni(struct r4300_core* r4300);
 void gennotcompiled(struct r4300_core* r4300);
 void genfin_block(struct r4300_core* r4300);
 #ifdef COMPARE_CORE
 void gendebug(struct r4300_core* r4300);
 #endif
 
-void genreserved(struct r4300_core* r4300);
+void gen_RESERVED(struct r4300_core* r4300);
 
-void genadd(struct r4300_core* r4300);
-void genaddi(struct r4300_core* r4300);
-void genaddiu(struct r4300_core* r4300);
-void genaddu(struct r4300_core* r4300);
-void genand(struct r4300_core* r4300);
-void genandi(struct r4300_core* r4300);
-void genbc1f(struct r4300_core* r4300);
-void genbc1f_idle(struct r4300_core* r4300);
-void genbc1f_out(struct r4300_core* r4300);
-void genbc1fl(struct r4300_core* r4300);
-void genbc1fl_idle(struct r4300_core* r4300);
-void genbc1fl_out(struct r4300_core* r4300);
-void genbc1t(struct r4300_core* r4300);
-void genbc1t_idle(struct r4300_core* r4300);
-void genbc1t_out(struct r4300_core* r4300);
-void genbc1tl(struct r4300_core* r4300);
-void genbc1tl_idle(struct r4300_core* r4300);
-void genbc1tl_out(struct r4300_core* r4300);
-void genbeq(struct r4300_core* r4300);
-void genbeq_idle(struct r4300_core* r4300);
-void genbeq_out(struct r4300_core* r4300);
-void genbeql(struct r4300_core* r4300);
-void genbeql_idle(struct r4300_core* r4300);
-void genbeql_out(struct r4300_core* r4300);
-void genbgez(struct r4300_core* r4300);
-void genbgez_idle(struct r4300_core* r4300);
-void genbgez_out(struct r4300_core* r4300);
-void genbgezal(struct r4300_core* r4300);
-void genbgezal_idle(struct r4300_core* r4300);
-void genbgezal_out(struct r4300_core* r4300);
-void genbgezall(struct r4300_core* r4300);
-void genbgezall_idle(struct r4300_core* r4300);
-void genbgezall_out(struct r4300_core* r4300);
-void genbgezl(struct r4300_core* r4300);
-void genbgezl_idle(struct r4300_core* r4300);
-void genbgezl_out(struct r4300_core* r4300);
-void genbgtz(struct r4300_core* r4300);
-void genbgtz_idle(struct r4300_core* r4300);
-void genbgtz_out(struct r4300_core* r4300);
-void genbgtzl(struct r4300_core* r4300);
-void genbgtzl_idle(struct r4300_core* r4300);
-void genbgtzl_out(struct r4300_core* r4300);
-void genblez(struct r4300_core* r4300);
-void genblez_idle(struct r4300_core* r4300);
-void genblez_out(struct r4300_core* r4300);
-void genblezl(struct r4300_core* r4300);
-void genblezl_idle(struct r4300_core* r4300);
-void genblezl_out(struct r4300_core* r4300);
-void genbltzal(struct r4300_core* r4300);
-void genbltzal_idle(struct r4300_core* r4300);
-void genbltzal_out(struct r4300_core* r4300);
-void genbltzall(struct r4300_core* r4300);
-void genbltzall_idle(struct r4300_core* r4300);
-void genbltzall_out(struct r4300_core* r4300);
-void genbltz(struct r4300_core* r4300);
-void genbltz_idle(struct r4300_core* r4300);
-void genbltz_out(struct r4300_core* r4300);
-void genbltzl(struct r4300_core* r4300);
-void genbltzl_idle(struct r4300_core* r4300);
-void genbltzl_out(struct r4300_core* r4300);
-void genbne(struct r4300_core* r4300);
-void genbne_idle(struct r4300_core* r4300);
-void genbne_out(struct r4300_core* r4300);
-void genbnel(struct r4300_core* r4300);
-void genbnel_idle(struct r4300_core* r4300);
-void genbnel_out(struct r4300_core* r4300);
-void gencache(struct r4300_core* r4300);
-void gencfc1(struct r4300_core* r4300);
-void genabs_d(struct r4300_core* r4300);
-void genabs_s(struct r4300_core* r4300);
-void genadd_d(struct r4300_core* r4300);
-void genadd_s(struct r4300_core* r4300);
-void genceil_l_d(struct r4300_core* r4300);
-void genceil_l_s(struct r4300_core* r4300);
-void genceil_w_d(struct r4300_core* r4300);
-void genceil_w_s(struct r4300_core* r4300);
-void genc_eq_d(struct r4300_core* r4300);
-void genc_eq_s(struct r4300_core* r4300);
-void genc_f_d(struct r4300_core* r4300);
-void genc_f_s(struct r4300_core* r4300);
-void genc_le_d(struct r4300_core* r4300);
-void genc_le_s(struct r4300_core* r4300);
-void genc_lt_d(struct r4300_core* r4300);
-void genc_lt_s(struct r4300_core* r4300);
-void genc_nge_d(struct r4300_core* r4300);
-void genc_nge_s(struct r4300_core* r4300);
-void genc_ngl_d(struct r4300_core* r4300);
-void genc_ngle_d(struct r4300_core* r4300);
-void genc_ngle_s(struct r4300_core* r4300);
-void genc_ngl_s(struct r4300_core* r4300);
-void genc_ngt_d(struct r4300_core* r4300);
-void genc_ngt_s(struct r4300_core* r4300);
-void genc_ole_d(struct r4300_core* r4300);
-void genc_ole_s(struct r4300_core* r4300);
-void genc_olt_d(struct r4300_core* r4300);
-void genc_olt_s(struct r4300_core* r4300);
-void genc_seq_d(struct r4300_core* r4300);
-void genc_seq_s(struct r4300_core* r4300);
-void genc_sf_d(struct r4300_core* r4300);
-void genc_sf_s(struct r4300_core* r4300);
-void genc_ueq_d(struct r4300_core* r4300);
-void genc_ueq_s(struct r4300_core* r4300);
-void genc_ule_d(struct r4300_core* r4300);
-void genc_ule_s(struct r4300_core* r4300);
-void genc_ult_d(struct r4300_core* r4300);
-void genc_ult_s(struct r4300_core* r4300);
-void genc_un_d(struct r4300_core* r4300);
-void genc_un_s(struct r4300_core* r4300);
-void gencvt_d_l(struct r4300_core* r4300);
-void gencvt_d_s(struct r4300_core* r4300);
-void gencvt_d_w(struct r4300_core* r4300);
-void gencvt_l_d(struct r4300_core* r4300);
-void gencvt_l_s(struct r4300_core* r4300);
-void gencvt_s_d(struct r4300_core* r4300);
-void gencvt_s_l(struct r4300_core* r4300);
-void gencvt_s_w(struct r4300_core* r4300);
-void gencvt_w_d(struct r4300_core* r4300);
-void gencvt_w_s(struct r4300_core* r4300);
-void gendiv_d(struct r4300_core* r4300);
-void gendiv_s(struct r4300_core* r4300);
-void genfloor_l_d(struct r4300_core* r4300);
-void genfloor_l_s(struct r4300_core* r4300);
-void genfloor_w_d(struct r4300_core* r4300);
-void genfloor_w_s(struct r4300_core* r4300);
-void genmov_d(struct r4300_core* r4300);
-void genmov_s(struct r4300_core* r4300);
-void genmul_d(struct r4300_core* r4300);
-void genmul_s(struct r4300_core* r4300);
-void genneg_d(struct r4300_core* r4300);
-void genneg_s(struct r4300_core* r4300);
-void genround_l_d(struct r4300_core* r4300);
-void genround_l_s(struct r4300_core* r4300);
-void genround_w_d(struct r4300_core* r4300);
-void genround_w_s(struct r4300_core* r4300);
-void gensqrt_d(struct r4300_core* r4300);
-void gensqrt_s(struct r4300_core* r4300);
-void gensub_d(struct r4300_core* r4300);
-void gensub_s(struct r4300_core* r4300);
-void gentrunc_l_d(struct r4300_core* r4300);
-void gentrunc_l_s(struct r4300_core* r4300);
-void gentrunc_w_d(struct r4300_core* r4300);
-void gentrunc_w_s(struct r4300_core* r4300);
-void genctc1(struct r4300_core* r4300);
-void gendadd(struct r4300_core* r4300);
-void gendaddi(struct r4300_core* r4300);
-void gendaddiu(struct r4300_core* r4300);
-void gendaddu(struct r4300_core* r4300);
-void genddiv(struct r4300_core* r4300);
-void genddivu(struct r4300_core* r4300);
-void gendiv(struct r4300_core* r4300);
-void gendivu(struct r4300_core* r4300);
-void gendmfc1(struct r4300_core* r4300);
-void gendmtc1(struct r4300_core* r4300);
-void gendmult(struct r4300_core* r4300);
-void gendmultu(struct r4300_core* r4300);
-void gendsll32(struct r4300_core* r4300);
-void gendsll(struct r4300_core* r4300);
-void gendsllv(struct r4300_core* r4300);
-void gendsra32(struct r4300_core* r4300);
-void gendsra(struct r4300_core* r4300);
-void gendsrav(struct r4300_core* r4300);
-void gendsrl32(struct r4300_core* r4300);
-void gendsrl(struct r4300_core* r4300);
-void gendsrlv(struct r4300_core* r4300);
-void gendsub(struct r4300_core* r4300);
-void gendsubu(struct r4300_core* r4300);
-void generet(struct r4300_core* r4300);
-void genj(struct r4300_core* r4300);
-void genj_idle(struct r4300_core* r4300);
-void genj_out(struct r4300_core* r4300);
-void genjal(struct r4300_core* r4300);
-void genjal_idle(struct r4300_core* r4300);
-void genjal_out(struct r4300_core* r4300);
-void genjalr(struct r4300_core* r4300);
-void genjr(struct r4300_core* r4300);
-void genlb(struct r4300_core* r4300);
-void genlbu(struct r4300_core* r4300);
-void genldc1(struct r4300_core* r4300);
-void genldl(struct r4300_core* r4300);
-void genldr(struct r4300_core* r4300);
-void genld(struct r4300_core* r4300);
-void genlh(struct r4300_core* r4300);
-void genlhu(struct r4300_core* r4300);
-void genll(struct r4300_core* r4300);
-void genlui(struct r4300_core* r4300);
-void genlwc1(struct r4300_core* r4300);
-void genlwl(struct r4300_core* r4300);
-void genlwr(struct r4300_core* r4300);
-void genlw(struct r4300_core* r4300);
-void genlwu(struct r4300_core* r4300);
-void genmfc0(struct r4300_core* r4300);
-void genmfc1(struct r4300_core* r4300);
-void genmfhi(struct r4300_core* r4300);
-void genmflo(struct r4300_core* r4300);
-void genmtc0(struct r4300_core* r4300);
-void genmtc1(struct r4300_core* r4300);
-void genmthi(struct r4300_core* r4300);
-void genmtlo(struct r4300_core* r4300);
-void genmult(struct r4300_core* r4300);
-void genmultu(struct r4300_core* r4300);
-void genni(struct r4300_core* r4300);
-void gennop(struct r4300_core* r4300);
-void gennor(struct r4300_core* r4300);
-void genori(struct r4300_core* r4300);
-void genor(struct r4300_core* r4300);
-void gensb(struct r4300_core* r4300);
-void gensc(struct r4300_core* r4300);
-void gensdc1(struct r4300_core* r4300);
-void gensdl(struct r4300_core* r4300);
-void gensdr(struct r4300_core* r4300);
-void gensd(struct r4300_core* r4300);
-void gensh(struct r4300_core* r4300);
-void gensll(struct r4300_core* r4300);
-void gensllv(struct r4300_core* r4300);
-void genslti(struct r4300_core* r4300);
-void gensltiu(struct r4300_core* r4300);
-void genslt(struct r4300_core* r4300);
-void gensltu(struct r4300_core* r4300);
-void gensra(struct r4300_core* r4300);
-void gensrav(struct r4300_core* r4300);
-void gensrl(struct r4300_core* r4300);
-void gensrlv(struct r4300_core* r4300);
-void gensub(struct r4300_core* r4300);
-void gensubu(struct r4300_core* r4300);
-void genswc1(struct r4300_core* r4300);
-void genswl(struct r4300_core* r4300);
-void genswr(struct r4300_core* r4300);
-void gensw(struct r4300_core* r4300);
-void gensync(struct r4300_core* r4300);
-void gensyscall(struct r4300_core* r4300);
-void genteq(struct r4300_core* r4300);
-void gentlbp(struct r4300_core* r4300);
-void gentlbr(struct r4300_core* r4300);
-void gentlbwi(struct r4300_core* r4300);
-void gentlbwr(struct r4300_core* r4300);
-void genxori(struct r4300_core* r4300);
-void genxor(struct r4300_core* r4300);
+void gen_ADD(struct r4300_core* r4300);
+void gen_ADDI(struct r4300_core* r4300);
+void gen_ADDIU(struct r4300_core* r4300);
+void gen_ADDU(struct r4300_core* r4300);
+void gen_AND(struct r4300_core* r4300);
+void gen_ANDI(struct r4300_core* r4300);
+void gen_BC1F(struct r4300_core* r4300);
+void gen_BC1F_IDLE(struct r4300_core* r4300);
+void gen_BC1F_OUT(struct r4300_core* r4300);
+void gen_BC1FL(struct r4300_core* r4300);
+void gen_BC1FL_IDLE(struct r4300_core* r4300);
+void gen_BC1FL_OUT(struct r4300_core* r4300);
+void gen_BC1T(struct r4300_core* r4300);
+void gen_BC1T_IDLE(struct r4300_core* r4300);
+void gen_BC1T_OUT(struct r4300_core* r4300);
+void gen_BC1TL(struct r4300_core* r4300);
+void gen_BC1TL_IDLE(struct r4300_core* r4300);
+void gen_BC1TL_OUT(struct r4300_core* r4300);
+void gen_BEQ(struct r4300_core* r4300);
+void gen_BEQ_IDLE(struct r4300_core* r4300);
+void gen_BEQ_OUT(struct r4300_core* r4300);
+void gen_BEQL(struct r4300_core* r4300);
+void gen_BEQL_IDLE(struct r4300_core* r4300);
+void gen_BEQL_OUT(struct r4300_core* r4300);
+void gen_BGEZ(struct r4300_core* r4300);
+void gen_BGEZ_IDLE(struct r4300_core* r4300);
+void gen_BGEZ_OUT(struct r4300_core* r4300);
+void gen_BGEZAL(struct r4300_core* r4300);
+void gen_BGEZAL_IDLE(struct r4300_core* r4300);
+void gen_BGEZAL_OUT(struct r4300_core* r4300);
+void gen_BGEZALL(struct r4300_core* r4300);
+void gen_BGEZALL_IDLE(struct r4300_core* r4300);
+void gen_BGEZALL_OUT(struct r4300_core* r4300);
+void gen_BGEZL(struct r4300_core* r4300);
+void gen_BGEZL_IDLE(struct r4300_core* r4300);
+void gen_BGEZL_OUT(struct r4300_core* r4300);
+void gen_BGTZ(struct r4300_core* r4300);
+void gen_BGTZ_IDLE(struct r4300_core* r4300);
+void gen_BGTZ_OUT(struct r4300_core* r4300);
+void gen_BGTZL(struct r4300_core* r4300);
+void gen_BGTZL_IDLE(struct r4300_core* r4300);
+void gen_BGTZL_OUT(struct r4300_core* r4300);
+void gen_BLEZ(struct r4300_core* r4300);
+void gen_BLEZ_IDLE(struct r4300_core* r4300);
+void gen_BLEZ_OUT(struct r4300_core* r4300);
+void gen_BLEZL(struct r4300_core* r4300);
+void gen_BLEZL_IDLE(struct r4300_core* r4300);
+void gen_BLEZL_OUT(struct r4300_core* r4300);
+void gen_BLTZAL(struct r4300_core* r4300);
+void gen_BLTZAL_IDLE(struct r4300_core* r4300);
+void gen_BLTZAL_OUT(struct r4300_core* r4300);
+void gen_BLTZALL(struct r4300_core* r4300);
+void gen_BLTZALL_IDLE(struct r4300_core* r4300);
+void gen_BLTZALL_OUT(struct r4300_core* r4300);
+void gen_BLTZ(struct r4300_core* r4300);
+void gen_BLTZ_IDLE(struct r4300_core* r4300);
+void gen_BLTZ_OUT(struct r4300_core* r4300);
+void gen_BLTZL(struct r4300_core* r4300);
+void gen_BLTZL_IDLE(struct r4300_core* r4300);
+void gen_BLTZL_OUT(struct r4300_core* r4300);
+void gen_BNE(struct r4300_core* r4300);
+void gen_BNE_IDLE(struct r4300_core* r4300);
+void gen_BNE_OUT(struct r4300_core* r4300);
+void gen_BNEL(struct r4300_core* r4300);
+void gen_BNEL_IDLE(struct r4300_core* r4300);
+void gen_BNEL_OUT(struct r4300_core* r4300);
+void gen_CACHE(struct r4300_core* r4300);
+void gen_CFC1(struct r4300_core* r4300);
+void gen_CP1_ABS_D(struct r4300_core* r4300);
+void gen_CP1_ABS_S(struct r4300_core* r4300);
+void gen_CP1_ADD_D(struct r4300_core* r4300);
+void gen_CP1_ADD_S(struct r4300_core* r4300);
+void gen_CP1_CEIL_L_D(struct r4300_core* r4300);
+void gen_CP1_CEIL_L_S(struct r4300_core* r4300);
+void gen_CP1_CEIL_W_D(struct r4300_core* r4300);
+void gen_CP1_CEIL_W_S(struct r4300_core* r4300);
+void gen_CP1_C_EQ_D(struct r4300_core* r4300);
+void gen_CP1_C_EQ_S(struct r4300_core* r4300);
+void gen_CP1_C_F_D(struct r4300_core* r4300);
+void gen_CP1_C_F_S(struct r4300_core* r4300);
+void gen_CP1_C_LE_D(struct r4300_core* r4300);
+void gen_CP1_C_LE_S(struct r4300_core* r4300);
+void gen_CP1_C_LT_D(struct r4300_core* r4300);
+void gen_CP1_C_LT_S(struct r4300_core* r4300);
+void gen_CP1_C_NGE_D(struct r4300_core* r4300);
+void gen_CP1_C_NGE_S(struct r4300_core* r4300);
+void gen_CP1_C_NGL_D(struct r4300_core* r4300);
+void gen_CP1_C_NGLE_D(struct r4300_core* r4300);
+void gen_CP1_C_NGLE_S(struct r4300_core* r4300);
+void gen_CP1_C_NGL_S(struct r4300_core* r4300);
+void gen_CP1_C_NGT_D(struct r4300_core* r4300);
+void gen_CP1_C_NGT_S(struct r4300_core* r4300);
+void gen_CP1_C_OLE_D(struct r4300_core* r4300);
+void gen_CP1_C_OLE_S(struct r4300_core* r4300);
+void gen_CP1_C_OLT_D(struct r4300_core* r4300);
+void gen_CP1_C_OLT_S(struct r4300_core* r4300);
+void gen_CP1_C_SEQ_D(struct r4300_core* r4300);
+void gen_CP1_C_SEQ_S(struct r4300_core* r4300);
+void gen_CP1_C_SF_D(struct r4300_core* r4300);
+void gen_CP1_C_SF_S(struct r4300_core* r4300);
+void gen_CP1_C_UEQ_D(struct r4300_core* r4300);
+void gen_CP1_C_UEQ_S(struct r4300_core* r4300);
+void gen_CP1_C_ULE_D(struct r4300_core* r4300);
+void gen_CP1_C_ULE_S(struct r4300_core* r4300);
+void gen_CP1_C_ULT_D(struct r4300_core* r4300);
+void gen_CP1_C_ULT_S(struct r4300_core* r4300);
+void gen_CP1_C_UN_D(struct r4300_core* r4300);
+void gen_CP1_C_UN_S(struct r4300_core* r4300);
+void gen_CP1_CVT_D_L(struct r4300_core* r4300);
+void gen_CP1_CVT_D_S(struct r4300_core* r4300);
+void gen_CP1_CVT_D_W(struct r4300_core* r4300);
+void gen_CP1_CVT_L_D(struct r4300_core* r4300);
+void gen_CP1_CVT_L_S(struct r4300_core* r4300);
+void gen_CP1_CVT_S_D(struct r4300_core* r4300);
+void gen_CP1_CVT_S_L(struct r4300_core* r4300);
+void gen_CP1_CVT_S_W(struct r4300_core* r4300);
+void gen_CP1_CVT_W_D(struct r4300_core* r4300);
+void gen_CP1_CVT_W_S(struct r4300_core* r4300);
+void gen_CP1_DIV_D(struct r4300_core* r4300);
+void gen_CP1_DIV_S(struct r4300_core* r4300);
+void gen_CP1_FLOOR_L_D(struct r4300_core* r4300);
+void gen_CP1_FLOOR_L_S(struct r4300_core* r4300);
+void gen_CP1_FLOOR_W_D(struct r4300_core* r4300);
+void gen_CP1_FLOOR_W_S(struct r4300_core* r4300);
+void gen_CP1_MOV_D(struct r4300_core* r4300);
+void gen_CP1_MOV_S(struct r4300_core* r4300);
+void gen_CP1_MUL_D(struct r4300_core* r4300);
+void gen_CP1_MUL_S(struct r4300_core* r4300);
+void gen_CP1_NEG_D(struct r4300_core* r4300);
+void gen_CP1_NEG_S(struct r4300_core* r4300);
+void gen_CP1_ROUND_L_D(struct r4300_core* r4300);
+void gen_CP1_ROUND_L_S(struct r4300_core* r4300);
+void gen_CP1_ROUND_W_D(struct r4300_core* r4300);
+void gen_CP1_ROUND_W_S(struct r4300_core* r4300);
+void gen_CP1_SQRT_D(struct r4300_core* r4300);
+void gen_CP1_SQRT_S(struct r4300_core* r4300);
+void gen_CP1_SUB_D(struct r4300_core* r4300);
+void gen_CP1_SUB_S(struct r4300_core* r4300);
+void gen_CP1_TRUNC_L_D(struct r4300_core* r4300);
+void gen_CP1_TRUNC_L_S(struct r4300_core* r4300);
+void gen_CP1_TRUNC_W_D(struct r4300_core* r4300);
+void gen_CP1_TRUNC_W_S(struct r4300_core* r4300);
+void gen_CTC1(struct r4300_core* r4300);
+void gen_DADD(struct r4300_core* r4300);
+void gen_DADDI(struct r4300_core* r4300);
+void gen_DADDIU(struct r4300_core* r4300);
+void gen_DADDU(struct r4300_core* r4300);
+void gen_DDIV(struct r4300_core* r4300);
+void gen_DDIVU(struct r4300_core* r4300);
+void gen_DIV(struct r4300_core* r4300);
+void gen_DIVU(struct r4300_core* r4300);
+void gen_DMFC1(struct r4300_core* r4300);
+void gen_DMTC1(struct r4300_core* r4300);
+void gen_DMULT(struct r4300_core* r4300);
+void gen_DMULTU(struct r4300_core* r4300);
+void gen_DSLL32(struct r4300_core* r4300);
+void gen_DSLL(struct r4300_core* r4300);
+void gen_DSLLV(struct r4300_core* r4300);
+void gen_DSRA32(struct r4300_core* r4300);
+void gen_DSRA(struct r4300_core* r4300);
+void gen_DSRAV(struct r4300_core* r4300);
+void gen_DSRL32(struct r4300_core* r4300);
+void gen_DSRL(struct r4300_core* r4300);
+void gen_DSRLV(struct r4300_core* r4300);
+void gen_DSUB(struct r4300_core* r4300);
+void gen_DSUBU(struct r4300_core* r4300);
+void gen_ERET(struct r4300_core* r4300);
+void gen_J(struct r4300_core* r4300);
+void gen_J_IDLE(struct r4300_core* r4300);
+void gen_J_OUT(struct r4300_core* r4300);
+void gen_JAL(struct r4300_core* r4300);
+void gen_JAL_IDLE(struct r4300_core* r4300);
+void gen_JAL_OUT(struct r4300_core* r4300);
+void gen_JALR(struct r4300_core* r4300);
+void gen_JR(struct r4300_core* r4300);
+void gen_LB(struct r4300_core* r4300);
+void gen_LBU(struct r4300_core* r4300);
+void gen_LDC1(struct r4300_core* r4300);
+void gen_LDL(struct r4300_core* r4300);
+void gen_LDR(struct r4300_core* r4300);
+void gen_LD(struct r4300_core* r4300);
+void gen_LH(struct r4300_core* r4300);
+void gen_LHU(struct r4300_core* r4300);
+void gen_LL(struct r4300_core* r4300);
+void gen_LUI(struct r4300_core* r4300);
+void gen_LWC1(struct r4300_core* r4300);
+void gen_LWL(struct r4300_core* r4300);
+void gen_LWR(struct r4300_core* r4300);
+void gen_LW(struct r4300_core* r4300);
+void gen_LWU(struct r4300_core* r4300);
+void gen_MFC0(struct r4300_core* r4300);
+void gen_MFC1(struct r4300_core* r4300);
+void gen_MFHI(struct r4300_core* r4300);
+void gen_MFLO(struct r4300_core* r4300);
+void gen_MTC0(struct r4300_core* r4300);
+void gen_MTC1(struct r4300_core* r4300);
+void gen_MTHI(struct r4300_core* r4300);
+void gen_MTLO(struct r4300_core* r4300);
+void gen_MULT(struct r4300_core* r4300);
+void gen_MULTU(struct r4300_core* r4300);
+void gen_NOP(struct r4300_core* r4300);
+void gen_NOR(struct r4300_core* r4300);
+void gen_ORI(struct r4300_core* r4300);
+void gen_OR(struct r4300_core* r4300);
+void gen_SB(struct r4300_core* r4300);
+void gen_SC(struct r4300_core* r4300);
+void gen_SDC1(struct r4300_core* r4300);
+void gen_SDL(struct r4300_core* r4300);
+void gen_SDR(struct r4300_core* r4300);
+void gen_SD(struct r4300_core* r4300);
+void gen_SH(struct r4300_core* r4300);
+void gen_SLL(struct r4300_core* r4300);
+void gen_SLLV(struct r4300_core* r4300);
+void gen_SLTI(struct r4300_core* r4300);
+void gen_SLTIU(struct r4300_core* r4300);
+void gen_SLT(struct r4300_core* r4300);
+void gen_SLTU(struct r4300_core* r4300);
+void gen_SRA(struct r4300_core* r4300);
+void gen_SRAV(struct r4300_core* r4300);
+void gen_SRL(struct r4300_core* r4300);
+void gen_SRLV(struct r4300_core* r4300);
+void gen_SUB(struct r4300_core* r4300);
+void gen_SUBU(struct r4300_core* r4300);
+void gen_SWC1(struct r4300_core* r4300);
+void gen_SWL(struct r4300_core* r4300);
+void gen_SWR(struct r4300_core* r4300);
+void gen_SW(struct r4300_core* r4300);
+void gen_SYNC(struct r4300_core* r4300);
+void gen_SYSCALL(struct r4300_core* r4300);
+void gen_TEQ(struct r4300_core* r4300);
+void gen_TLBP(struct r4300_core* r4300);
+void gen_TLBR(struct r4300_core* r4300);
+void gen_TLBWI(struct r4300_core* r4300);
+void gen_TLBWR(struct r4300_core* r4300);
+void gen_XORI(struct r4300_core* r4300);
+void gen_XOR(struct r4300_core* r4300);
 
 #define GENCP1_S_D(func) \
-static void gencp1_##func(struct r4300_core* r4300) \
+static void gen_CP1_##func(struct r4300_core* r4300) \
 { \
     unsigned fmt = (r4300->recomp.src >> 21) & 0x1f; \
     switch(fmt) \
     { \
-    case 0x10: gen##func##_s(r4300); break; \
-    case 0x11: gen##func##_d(r4300); break; \
-    default: genreserved(r4300); \
+    case 0x10: gen_CP1_##func##_S(r4300); break; \
+    case 0x11: gen_CP1_##func##_D(r4300); break; \
+    default: gen_RESERVED(r4300); \
     } \
 }
 
-GENCP1_S_D(abs)
-GENCP1_S_D(add)
-GENCP1_S_D(ceil_l)
-GENCP1_S_D(ceil_w)
-GENCP1_S_D(c_eq)
-GENCP1_S_D(c_f)
-GENCP1_S_D(c_le)
-GENCP1_S_D(c_lt)
-GENCP1_S_D(c_nge)
-GENCP1_S_D(c_ngl)
-GENCP1_S_D(c_ngle)
-GENCP1_S_D(c_ngt)
-GENCP1_S_D(c_ole)
-GENCP1_S_D(c_olt)
-GENCP1_S_D(c_seq)
-GENCP1_S_D(c_sf)
-GENCP1_S_D(c_ueq)
-GENCP1_S_D(c_ule)
-GENCP1_S_D(c_ult)
-GENCP1_S_D(c_un)
-GENCP1_S_D(cvt_l)
-GENCP1_S_D(cvt_w)
-GENCP1_S_D(div)
-GENCP1_S_D(floor_l)
-GENCP1_S_D(floor_w)
-GENCP1_S_D(mov)
-GENCP1_S_D(mul)
-GENCP1_S_D(neg)
-GENCP1_S_D(round_l)
-GENCP1_S_D(round_w)
-GENCP1_S_D(sqrt)
-GENCP1_S_D(sub)
-GENCP1_S_D(trunc_l)
-GENCP1_S_D(trunc_w)
+GENCP1_S_D(ABS)
+GENCP1_S_D(ADD)
+GENCP1_S_D(CEIL_L)
+GENCP1_S_D(CEIL_W)
+GENCP1_S_D(C_EQ)
+GENCP1_S_D(C_F)
+GENCP1_S_D(C_LE)
+GENCP1_S_D(C_LT)
+GENCP1_S_D(C_NGE)
+GENCP1_S_D(C_NGL)
+GENCP1_S_D(C_NGLE)
+GENCP1_S_D(C_NGT)
+GENCP1_S_D(C_OLE)
+GENCP1_S_D(C_OLT)
+GENCP1_S_D(C_SEQ)
+GENCP1_S_D(C_SF)
+GENCP1_S_D(C_UEQ)
+GENCP1_S_D(C_ULE)
+GENCP1_S_D(C_ULT)
+GENCP1_S_D(C_UN)
+GENCP1_S_D(CVT_L)
+GENCP1_S_D(CVT_W)
+GENCP1_S_D(DIV)
+GENCP1_S_D(FLOOR_L)
+GENCP1_S_D(FLOOR_W)
+GENCP1_S_D(MOV)
+GENCP1_S_D(MUL)
+GENCP1_S_D(NEG)
+GENCP1_S_D(ROUND_L)
+GENCP1_S_D(ROUND_W)
+GENCP1_S_D(SQRT)
+GENCP1_S_D(SUB)
+GENCP1_S_D(TRUNC_L)
+GENCP1_S_D(TRUNC_W)
 
-static void gencp1_cvt_d(struct r4300_core* r4300)
+static void gen_CP1_CVT_D(struct r4300_core* r4300)
 {
     unsigned fmt = (r4300->recomp.src >> 21) & 0x1f;
     switch(fmt)
     {
-    case 0x10: gencvt_d_s(r4300); break;
-    case 0x14: gencvt_d_w(r4300); break;
-    case 0x15: gencvt_d_l(r4300); break;
-    default: genreserved(r4300);
+    case 0x10: gen_CP1_CVT_D_S(r4300); break;
+    case 0x14: gen_CP1_CVT_D_W(r4300); break;
+    case 0x15: gen_CP1_CVT_D_L(r4300); break;
+    default: gen_RESERVED(r4300);
     }
 }
 
-static void gencp1_cvt_s(struct r4300_core* r4300)
+static void gen_CP1_CVT_S(struct r4300_core* r4300)
 {
     unsigned fmt = (r4300->recomp.src >> 21) & 0x1f;
     switch(fmt)
     {
-    case 0x11: gencvt_s_d(r4300); break;
-    case 0x14: gencvt_s_w(r4300); break;
-    case 0x15: gencvt_s_l(r4300); break;
-    default: genreserved(r4300);
+    case 0x11: gen_CP1_CVT_S_D(r4300); break;
+    case 0x14: gen_CP1_CVT_S_W(r4300); break;
+    case 0x15: gen_CP1_CVT_S_L(r4300); break;
+    default: gen_RESERVED(r4300);
     }
 }
 
 /* TODO: implement them properly */
-#define genbc0f       genni
-#define genbc0f_idle  genni
-#define genbc0f_out   genni
-#define genbc0fl      genni
-#define genbc0fl_idle genni
-#define genbc0fl_out  genni
-#define genbc0t       genni
-#define genbc0t_idle  genni
-#define genbc0t_out   genni
-#define genbc0tl      genni
-#define genbc0tl_idle genni
-#define genbc0tl_out  genni
-#define genbc2f       genni
-#define genbc2f_idle  genni
-#define genbc2f_out   genni
-#define genbc2fl      genni
-#define genbc2fl_idle genni
-#define genbc2fl_out  genni
-#define genbc2t       genni
-#define genbc2t_idle  genni
-#define genbc2t_out   genni
-#define genbc2tl      genni
-#define genbc2tl_idle genni
-#define genbc2tl_out  genni
-#define genbreak      genni
-#define gencfc0       genni
-#define gencfc2       genni
-#define genctc0       genni
-#define genctc2       genni
-#define gendmfc0      genni
-#define gendmfc2      genni
-#define gendmtc0      genni
-#define gendmtc2      genni
-#define genjr_idle    genni
-#define genjr_out     genjr
-#define genjalr_idle  genni
-#define genjalr_out   genjalr
-#define genldc2       genni
-#define genlwc2       genni
-#define genlld        genni
-#define genmfc2       genni
-#define genmtc2       genni
-#define genscd        genni
-#define gensdc2       genni
-#define genswc2       genni
-#define genteqi       genni
-#define gentge        genni
-#define gentgei       genni
-#define gentgeiu      genni
-#define gentgeu       genni
-#define gentlt        genni
-#define gentlti       genni
-#define gentltiu      genni
-#define gentltu       genni
-#define gentne        genni
-#define gentnei       genni
+#define gen_BC0F       genni
+#define gen_BC0F_IDLE  genni
+#define gen_BC0F_OUT   genni
+#define gen_BC0FL      genni
+#define gen_BC0FL_IDLE genni
+#define gen_BC0FL_OUT  genni
+#define gen_BC0T       genni
+#define gen_BC0T_IDLE  genni
+#define gen_BC0T_OUT   genni
+#define gen_BC0TL      genni
+#define gen_BC0TL_IDLE genni
+#define gen_BC0TL_OUT  genni
+#define gen_BC2F       genni
+#define gen_BC2F_IDLE  genni
+#define gen_BC2F_OUT   genni
+#define gen_BC2FL      genni
+#define gen_BC2FL_IDLE genni
+#define gen_BC2FL_OUT  genni
+#define gen_BC2T       genni
+#define gen_BC2T_IDLE  genni
+#define gen_BC2T_OUT   genni
+#define gen_BC2TL      genni
+#define gen_BC2TL_IDLE genni
+#define gen_BC2TL_OUT  genni
+#define gen_BREAK      genni
+#define gen_CFC0       genni
+#define gen_CFC2       genni
+#define gen_CTC0       genni
+#define gen_CTC2       genni
+#define gen_DMFC0      genni
+#define gen_DMFC2      genni
+#define gen_DMTC0      genni
+#define gen_DMTC2      genni
+#define gen_JR_IDLE    genni
+#define gen_JR_OUT     gen_JR
+#define gen_JALR_IDLE  genni
+#define gen_JALR_OUT   gen_JALR
+#define gen_LDC2       genni
+#define gen_LWC2       genni
+#define gen_LLD        genni
+#define gen_MFC2       genni
+#define gen_MTC2       genni
+#define gen_SCD        genni
+#define gen_SDC2       genni
+#define gen_SWC2       genni
+#define gen_TEQI       genni
+#define gen_TGE        genni
+#define gen_TGEI       genni
+#define gen_TGEIU      genni
+#define gen_TGEU       genni
+#define gen_TLT        genni
+#define gen_TLTI       genni
+#define gen_TLTIU      genni
+#define gen_TLTU       genni
+#define gen_TNE        genni
+#define gen_TNEI       genni
 
-#define gen_bj(op) gen##op, gen##op##_idle, gen##op##_out
-
+#define X(op) gen_##op
 static void (*const recomp_funcs[R4300_OPCODES_COUNT])(struct r4300_core* r4300) =
 {
-    genreserved,
-
-    genadd,
-    genaddi,
-    genaddiu,
-    genaddu,
-    genand,
-    genandi,
-    gen_bj(bc0f),
-    gen_bj(bc0fl),
-    gen_bj(bc0t),
-    gen_bj(bc0tl),
-    gen_bj(bc1f),
-    gen_bj(bc1fl),
-    gen_bj(bc1t),
-    gen_bj(bc1tl),
-    gen_bj(bc2f),
-    gen_bj(bc2fl),
-    gen_bj(bc2t),
-    gen_bj(bc2tl),
-    gen_bj(beq),
-    gen_bj(beql),
-    gen_bj(bgez),
-    gen_bj(bgezal),
-    gen_bj(bgezall),
-    gen_bj(bgezl),
-    gen_bj(bgtz),
-    gen_bj(bgtzl),
-    gen_bj(blez),
-    gen_bj(blezl),
-    gen_bj(bltz),
-    gen_bj(bltzal),
-    gen_bj(bltzall),
-    gen_bj(bltzl),
-    gen_bj(bne),
-    gen_bj(bnel),
-    genbreak,
-    gencache,
-    gencfc0,
-    gencfc1,
-    gencfc2,
-    gencp1_abs,
-    gencp1_add,
-    gencp1_ceil_l,
-    gencp1_ceil_w,
-    gencp1_c_eq,
-    gencp1_c_f,
-    gencp1_c_le,
-    gencp1_c_lt,
-    gencp1_c_nge,
-    gencp1_c_ngl,
-    gencp1_c_ngle,
-    gencp1_c_ngt,
-    gencp1_c_ole,
-    gencp1_c_olt,
-    gencp1_c_seq,
-    gencp1_c_sf,
-    gencp1_c_ueq,
-    gencp1_c_ule,
-    gencp1_c_ult,
-    gencp1_c_un,
-    gencp1_cvt_d,
-    gencp1_cvt_l,
-    gencp1_cvt_s,
-    gencp1_cvt_w,
-    gencp1_div,
-    gencp1_floor_l,
-    gencp1_floor_w,
-    gencp1_mov,
-    gencp1_mul,
-    gencp1_neg,
-    gencp1_round_l,
-    gencp1_round_w,
-    gencp1_sqrt,
-    gencp1_sub,
-    gencp1_trunc_l,
-    gencp1_trunc_w,
-    genctc0,
-    genctc1,
-    genctc2,
-    gendadd,
-    gendaddi,
-    gendaddiu,
-    gendaddu,
-    genddiv,
-    genddivu,
-    gendiv,
-    gendivu,
-    gendmfc0,
-    gendmfc1,
-    gendmfc2,
-    gendmtc0,
-    gendmtc1,
-    gendmtc2,
-    gendmult,
-    gendmultu,
-    gendsll,
-    gendsll32,
-    gendsllv,
-    gendsra,
-    gendsra32,
-    gendsrav,
-    gendsrl,
-    gendsrl32,
-    gendsrlv,
-    gendsub,
-    gendsubu,
-    generet,
-    gen_bj(j),
-    gen_bj(jal),
-    gen_bj(jalr),
-    gen_bj(jr),
-    genlb,
-    genlbu,
-    genld,
-    genldc1,
-    genldc2,
-    genldl,
-    genldr,
-    genlh,
-    genlhu,
-    genll,
-    genlld,
-    genlui,
-    genlw,
-    genlwc1,
-    genlwc2,
-    genlwl,
-    genlwr,
-    genlwu,
-    genmfc0,
-    genmfc1,
-    genmfc2,
-    genmfhi,
-    genmflo,
-    genmtc0,
-    genmtc1,
-    genmtc2,
-    genmthi,
-    genmtlo,
-    genmult,
-    genmultu,
-    gennop,
-    gennor,
-    genor,
-    genori,
-    gensb,
-    gensc,
-    genscd,
-    gensd,
-    gensdc1,
-    gensdc2,
-    gensdl,
-    gensdr,
-    gensh,
-    gensll,
-    gensllv,
-    genslt,
-    genslti,
-    gensltiu,
-    gensltu,
-    gensra,
-    gensrav,
-    gensrl,
-    gensrlv,
-    gensub,
-    gensubu,
-    gensw,
-    genswc1,
-    genswc2,
-    genswl,
-    genswr,
-    gensync,
-    gensyscall,
-    genteq,
-    genteqi,
-    gentge,
-    gentgei,
-    gentgeiu,
-    gentgeu,
-    gentlbp,
-    gentlbr,
-    gentlbwi,
-    gentlbwr,
-    gentlt,
-    gentlti,
-    gentltiu,
-    gentltu,
-    gentne,
-    gentnei,
-    genxor,
-    genxori
+#include "opcodes.md"
 };
+#undef X
 
 /**********************************************************************
  ******************** initialize an empty block ***********************
@@ -1004,7 +813,7 @@ void recompile_opcode(struct r4300_core* r4300)
 #undef JCASE
 #undef CASE
         r4300->recomp.dst->ops = cached_interp_NOP;
-        gennop(r4300);
+        gen_NOP(r4300);
         break;
 
     default:

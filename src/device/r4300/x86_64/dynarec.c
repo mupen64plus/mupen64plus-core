@@ -359,7 +359,7 @@ void genfin_block(struct r4300_core* r4300)
 
 /* Reserved */
 
-void genreserved(struct r4300_core* r4300)
+void gen_RESERVED(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[0]);
@@ -369,7 +369,7 @@ void genreserved(struct r4300_core* r4300)
 
 /* Load instructions */
 
-void genlb(struct r4300_core* r4300)
+void gen_LB(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2;
 #if defined(COUNT_INSTR)
@@ -442,7 +442,7 @@ void genlb(struct r4300_core* r4300)
 #endif
 }
 
-void genlbu(struct r4300_core* r4300)
+void gen_LBU(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2;
 #if defined(COUNT_INSTR)
@@ -515,7 +515,7 @@ void genlbu(struct r4300_core* r4300)
 #endif
 }
 
-void genlh(struct r4300_core* r4300)
+void gen_LH(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2;
 #if defined(COUNT_INSTR)
@@ -587,7 +587,7 @@ void genlh(struct r4300_core* r4300)
 #endif
 }
 
-void genlhu(struct r4300_core* r4300)
+void gen_LHU(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2;
 #if defined(COUNT_INSTR)
@@ -659,7 +659,7 @@ void genlhu(struct r4300_core* r4300)
 #endif
 }
 
-void genll(struct r4300_core* r4300)
+void gen_LL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[42]);
@@ -667,7 +667,7 @@ void genll(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_LL, 0);
 }
 
-void genlw(struct r4300_core* r4300)
+void gen_LW(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2 = 0;
 #if defined(COUNT_INSTR)
@@ -724,7 +724,7 @@ void genlw(struct r4300_core* r4300)
 #endif
 }
 
-void genlwu(struct r4300_core* r4300)
+void gen_LWU(struct r4300_core* r4300)
 {
     int gpr1, gpr2, base1, base2 = 0;
 #if defined(COUNT_INSTR)
@@ -780,7 +780,7 @@ void genlwu(struct r4300_core* r4300)
 #endif
 }
 
-void genlwl(struct r4300_core* r4300)
+void gen_LWL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[27]);
@@ -788,7 +788,7 @@ void genlwl(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_LWL, 0);
 }
 
-void genlwr(struct r4300_core* r4300)
+void gen_LWR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[31]);
@@ -796,7 +796,7 @@ void genlwr(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_LWR, 0);
 }
 
-void genld(struct r4300_core* r4300)
+void gen_LD(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[41]);
@@ -854,7 +854,7 @@ void genld(struct r4300_core* r4300)
 #endif
 }
 
-void genldl(struct r4300_core* r4300)
+void gen_LDL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[22]);
@@ -862,7 +862,7 @@ void genldl(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_LDL, 0);
 }
 
-void genldr(struct r4300_core* r4300)
+void gen_LDR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[23]);
@@ -872,7 +872,7 @@ void genldr(struct r4300_core* r4300)
 
 /* Store instructions */
 
-void gensb(struct r4300_core* r4300)
+void gen_SB(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[32]);
@@ -961,7 +961,7 @@ void gensb(struct r4300_core* r4300)
 #endif
 }
 
-void gensh(struct r4300_core* r4300)
+void gen_SH(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[33]);
@@ -1050,7 +1050,7 @@ void gensh(struct r4300_core* r4300)
 #endif
 }
 
-void gensc(struct r4300_core* r4300)
+void gen_SC(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[46]);
@@ -1058,7 +1058,7 @@ void gensc(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_SC, 0);
 }
 
-void gensw(struct r4300_core* r4300)
+void gen_SW(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[34]);
@@ -1133,7 +1133,7 @@ void gensw(struct r4300_core* r4300)
 #endif
 }
 
-void genswl(struct r4300_core* r4300)
+void gen_SWL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[35]);
@@ -1141,7 +1141,7 @@ void genswl(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_SWL, 0);
 }
 
-void genswr(struct r4300_core* r4300)
+void gen_SWR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[36]);
@@ -1149,7 +1149,7 @@ void genswr(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_SWR, 0);
 }
 
-void gensd(struct r4300_core* r4300)
+void gen_SD(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[45]);
@@ -1226,7 +1226,7 @@ void gensd(struct r4300_core* r4300)
 #endif
 }
 
-void gensdl(struct r4300_core* r4300)
+void gen_SDL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[37]);
@@ -1234,7 +1234,7 @@ void gensdl(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_SDL, 0);
 }
 
-void gensdr(struct r4300_core* r4300)
+void gen_SDR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[38]);
@@ -1244,7 +1244,7 @@ void gensdr(struct r4300_core* r4300)
 
 /* Computational instructions */
 
-void genadd(struct r4300_core* r4300)
+void gen_ADD(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[79]);
@@ -1270,7 +1270,7 @@ void genadd(struct r4300_core* r4300)
 #endif
 }
 
-void genaddu(struct r4300_core* r4300)
+void gen_ADDU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[80]);
@@ -1296,7 +1296,7 @@ void genaddu(struct r4300_core* r4300)
 #endif
 }
 
-void genaddi(struct r4300_core* r4300)
+void gen_ADDI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[8]);
@@ -1312,7 +1312,7 @@ void genaddi(struct r4300_core* r4300)
 #endif
 }
 
-void genaddiu(struct r4300_core* r4300)
+void gen_ADDIU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[9]);
@@ -1328,7 +1328,7 @@ void genaddiu(struct r4300_core* r4300)
 #endif
 }
 
-void gendadd(struct r4300_core* r4300)
+void gen_DADD(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[89]);
@@ -1354,7 +1354,7 @@ void gendadd(struct r4300_core* r4300)
 #endif
 }
 
-void gendaddu(struct r4300_core* r4300)
+void gen_DADDU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[90]);
@@ -1380,7 +1380,7 @@ void gendaddu(struct r4300_core* r4300)
 #endif
 }
 
-void gendaddi(struct r4300_core* r4300)
+void gen_DADDI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[20]);
@@ -1396,7 +1396,7 @@ void gendaddi(struct r4300_core* r4300)
 #endif
 }
 
-void gendaddiu(struct r4300_core* r4300)
+void gen_DADDIU(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_DADDIU
     gencallinterp(r4300, (unsigned long long)cached_interp_DADDIU, 0);
@@ -1409,7 +1409,7 @@ void gendaddiu(struct r4300_core* r4300)
 #endif
 }
 
-void gensub(struct r4300_core* r4300)
+void gen_SUB(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[81]);
@@ -1437,7 +1437,7 @@ void gensub(struct r4300_core* r4300)
 #endif
 }
 
-void gensubu(struct r4300_core* r4300)
+void gen_SUBU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[82]);
@@ -1465,7 +1465,7 @@ void gensubu(struct r4300_core* r4300)
 #endif
 }
 
-void gendsub(struct r4300_core* r4300)
+void gen_DSUB(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[91]);
@@ -1493,7 +1493,7 @@ void gendsub(struct r4300_core* r4300)
 #endif
 }
 
-void gendsubu(struct r4300_core* r4300)
+void gen_DSUBU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[92]);
@@ -1521,7 +1521,7 @@ void gendsubu(struct r4300_core* r4300)
 #endif
 }
 
-void genslt(struct r4300_core* r4300)
+void gen_SLT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[87]);
@@ -1539,7 +1539,7 @@ void genslt(struct r4300_core* r4300)
 #endif
 }
 
-void gensltu(struct r4300_core* r4300)
+void gen_SLTU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[88]);
@@ -1557,7 +1557,7 @@ void gensltu(struct r4300_core* r4300)
 #endif
 }
 
-void genslti(struct r4300_core* r4300)
+void gen_SLTI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[10]);
@@ -1575,7 +1575,7 @@ void genslti(struct r4300_core* r4300)
 #endif
 }
 
-void gensltiu(struct r4300_core* r4300)
+void gen_SLTIU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[11]);
@@ -1593,7 +1593,7 @@ void gensltiu(struct r4300_core* r4300)
 #endif
 }
 
-void genand(struct r4300_core* r4300)
+void gen_AND(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[83]);
@@ -1619,7 +1619,7 @@ void genand(struct r4300_core* r4300)
 #endif
 }
 
-void genandi(struct r4300_core* r4300)
+void gen_ANDI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[12]);
@@ -1635,7 +1635,7 @@ void genandi(struct r4300_core* r4300)
 #endif
 }
 
-void genor(struct r4300_core* r4300)
+void gen_OR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[84]);
@@ -1661,7 +1661,7 @@ void genor(struct r4300_core* r4300)
 #endif
 }
 
-void genori(struct r4300_core* r4300)
+void gen_ORI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[13]);
@@ -1677,7 +1677,7 @@ void genori(struct r4300_core* r4300)
 #endif
 }
 
-void genxor(struct r4300_core* r4300)
+void gen_XOR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[85]);
@@ -1703,7 +1703,7 @@ void genxor(struct r4300_core* r4300)
 #endif
 }
 
-void genxori(struct r4300_core* r4300)
+void gen_XORI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[14]);
@@ -1719,7 +1719,7 @@ void genxori(struct r4300_core* r4300)
 #endif
 }
 
-void gennor(struct r4300_core* r4300)
+void gen_NOR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[86]);
@@ -1750,7 +1750,7 @@ void gennor(struct r4300_core* r4300)
 #endif
 }
 
-void genlui(struct r4300_core* r4300)
+void gen_LUI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[15]);
@@ -1766,11 +1766,11 @@ void genlui(struct r4300_core* r4300)
 
 /* Shift instructions */
 
-void gennop(struct r4300_core* r4300)
+void gen_NOP(struct r4300_core* r4300)
 {
 }
 
-void gensll(struct r4300_core* r4300)
+void gen_SLL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[55]);
@@ -1786,7 +1786,7 @@ void gensll(struct r4300_core* r4300)
 #endif
 }
 
-void gensllv(struct r4300_core* r4300)
+void gen_SLLV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[58]);
@@ -1816,7 +1816,7 @@ void gensllv(struct r4300_core* r4300)
 #endif
 }
 
-void gendsll(struct r4300_core* r4300)
+void gen_DSLL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[93]);
@@ -1832,7 +1832,7 @@ void gendsll(struct r4300_core* r4300)
 #endif
 }
 
-void gendsllv(struct r4300_core* r4300)
+void gen_DSLLV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[68]);
@@ -1864,7 +1864,7 @@ void gendsllv(struct r4300_core* r4300)
 #endif
 }
 
-void gendsll32(struct r4300_core* r4300)
+void gen_DSLL32(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[97]);
@@ -1880,7 +1880,7 @@ void gendsll32(struct r4300_core* r4300)
 #endif
 }
 
-void gensrl(struct r4300_core* r4300)
+void gen_SRL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[56]);
@@ -1896,7 +1896,7 @@ void gensrl(struct r4300_core* r4300)
 #endif
 }
 
-void gensrlv(struct r4300_core* r4300)
+void gen_SRLV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[59]);
@@ -1926,7 +1926,7 @@ void gensrlv(struct r4300_core* r4300)
 #endif
 }
 
-void gendsrl(struct r4300_core* r4300)
+void gen_DSRL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[94]);
@@ -1942,7 +1942,7 @@ void gendsrl(struct r4300_core* r4300)
 #endif
 }
 
-void gendsrlv(struct r4300_core* r4300)
+void gen_DSRLV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[69]);
@@ -1974,7 +1974,7 @@ void gendsrlv(struct r4300_core* r4300)
 #endif
 }
 
-void gendsrl32(struct r4300_core* r4300)
+void gen_DSRL32(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[98]);
@@ -1990,7 +1990,7 @@ void gendsrl32(struct r4300_core* r4300)
 #endif
 }
 
-void gensra(struct r4300_core* r4300)
+void gen_SRA(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[57]);
@@ -2006,7 +2006,7 @@ void gensra(struct r4300_core* r4300)
 #endif
 }
 
-void gensrav(struct r4300_core* r4300)
+void gen_SRAV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[60]);
@@ -2036,7 +2036,7 @@ void gensrav(struct r4300_core* r4300)
 #endif
 }
 
-void gendsra(struct r4300_core* r4300)
+void gen_DSRA(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[95]);
@@ -2052,7 +2052,7 @@ void gendsra(struct r4300_core* r4300)
 #endif
 }
 
-void gendsrav(struct r4300_core* r4300)
+void gen_DSRAV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[70]);
@@ -2084,7 +2084,7 @@ void gendsrav(struct r4300_core* r4300)
 #endif
 }
 
-void gendsra32(struct r4300_core* r4300)
+void gen_DSRA32(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[99]);
@@ -2102,7 +2102,7 @@ void gendsra32(struct r4300_core* r4300)
 
 /* Multiply / Divide instructions */
 
-void genmult(struct r4300_core* r4300)
+void gen_MULT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[71]);
@@ -2120,7 +2120,7 @@ void genmult(struct r4300_core* r4300)
 #endif
 }
 
-void genmultu(struct r4300_core* r4300)
+void gen_MULTU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[72]);
@@ -2138,7 +2138,7 @@ void genmultu(struct r4300_core* r4300)
 #endif
 }
 
-void gendmult(struct r4300_core* r4300)
+void gen_DMULT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[75]);
@@ -2146,7 +2146,7 @@ void gendmult(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_DMULT, 0);
 }
 
-void gendmultu(struct r4300_core* r4300)
+void gen_DMULTU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[76]);
@@ -2164,7 +2164,7 @@ void gendmultu(struct r4300_core* r4300)
 #endif
 }
 
-void gendiv(struct r4300_core* r4300)
+void gen_DIV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[73]);
@@ -2185,7 +2185,7 @@ void gendiv(struct r4300_core* r4300)
 #endif
 }
 
-void gendivu(struct r4300_core* r4300)
+void gen_DIVU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[74]);
@@ -2206,7 +2206,7 @@ void gendivu(struct r4300_core* r4300)
 #endif
 }
 
-void genddiv(struct r4300_core* r4300)
+void gen_DDIV(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[77]);
@@ -2214,7 +2214,7 @@ void genddiv(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_DDIV, 0);
 }
 
-void genddivu(struct r4300_core* r4300)
+void gen_DDIVU(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[78]);
@@ -2222,7 +2222,7 @@ void genddivu(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_DDIVU, 0);
 }
 
-void genmfhi(struct r4300_core* r4300)
+void gen_MFHI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[64]);
@@ -2237,7 +2237,7 @@ void genmfhi(struct r4300_core* r4300)
 #endif
 }
 
-void genmthi(struct r4300_core* r4300)
+void gen_MTHI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[65]);
@@ -2252,7 +2252,7 @@ void genmthi(struct r4300_core* r4300)
 #endif
 }
 
-void genmflo(struct r4300_core* r4300)
+void gen_MFLO(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[66]);
@@ -2267,7 +2267,7 @@ void genmflo(struct r4300_core* r4300)
 #endif
 }
 
-void genmtlo(struct r4300_core* r4300)
+void gen_MTLO(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[67]);
@@ -2417,7 +2417,7 @@ static void genbranchlink(struct r4300_core* r4300)
     }
 }
 
-void genj(struct r4300_core* r4300)
+void gen_J(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[2]);
@@ -2443,7 +2443,7 @@ void genj(struct r4300_core* r4300)
 #endif
 }
 
-void genj_out(struct r4300_core* r4300)
+void gen_J_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[2]);
@@ -2473,7 +2473,7 @@ void genj_out(struct r4300_core* r4300)
 #endif
 }
 
-void genj_idle(struct r4300_core* r4300)
+void gen_J_IDLE(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[2]);
@@ -2496,11 +2496,11 @@ void genj_idle(struct r4300_core* r4300)
     and_eax_imm32(0xFFFFFFFC);  // 5
     add_m32rel_xreg32((unsigned int *)(&r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]), EAX); // 7
 
-    genj(r4300);
+    gen_J(r4300);
 #endif
 }
 
-void genjal(struct r4300_core* r4300)
+void gen_JAL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[3]);
@@ -2535,7 +2535,7 @@ void genjal(struct r4300_core* r4300)
 #endif
 }
 
-void genjal_out(struct r4300_core* r4300)
+void gen_JAL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[3]);
@@ -2574,7 +2574,7 @@ void genjal_out(struct r4300_core* r4300)
 #endif
 }
 
-void genjal_idle(struct r4300_core* r4300)
+void gen_JAL_IDLE(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[3]);
@@ -2597,11 +2597,11 @@ void genjal_idle(struct r4300_core* r4300)
     and_eax_imm32(0xFFFFFFFC);  // 5
     add_m32rel_xreg32((unsigned int *)(&r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]), EAX); // 7
 
-    genjal(r4300);
+    gen_JAL(r4300);
 #endif
 }
 
-void genjr(struct r4300_core* r4300)
+void gen_JR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[61]);
@@ -2669,7 +2669,7 @@ void genjr(struct r4300_core* r4300)
 #endif
 }
 
-void genjalr(struct r4300_core* r4300)
+void gen_JALR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[62]);
@@ -2781,7 +2781,7 @@ static void genbeq_test(struct r4300_core* r4300)
     }
 }
 
-void genbeq(struct r4300_core* r4300)
+void gen_BEQ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[4]);
@@ -2802,7 +2802,7 @@ void genbeq(struct r4300_core* r4300)
 #endif
 }
 
-void genbeq_out(struct r4300_core* r4300)
+void gen_BEQ_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[4]);
@@ -2823,7 +2823,7 @@ void genbeq_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbeq_idle(struct r4300_core* r4300)
+void gen_BEQ_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQ_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BEQ_IDLE, 1);
@@ -2837,11 +2837,11 @@ void genbeq_idle(struct r4300_core* r4300)
 
     genbeq_test(r4300);
     gentest_idle(r4300);
-    genbeq(r4300);
+    gen_BEQ(r4300);
 #endif
 }
 
-void genbeql(struct r4300_core* r4300)
+void gen_BEQL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[16]);
@@ -2862,7 +2862,7 @@ void genbeql(struct r4300_core* r4300)
 #endif
 }
 
-void genbeql_out(struct r4300_core* r4300)
+void gen_BEQL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[16]);
@@ -2883,7 +2883,7 @@ void genbeql_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbeql_idle(struct r4300_core* r4300)
+void gen_BEQL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BEQL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BEQL_IDLE, 1);
@@ -2897,7 +2897,7 @@ void genbeql_idle(struct r4300_core* r4300)
 
     genbeq_test(r4300);
     gentest_idle(r4300);
-    genbeql(r4300);
+    gen_BEQL(r4300);
 #endif
 }
 
@@ -2938,7 +2938,7 @@ static void genbne_test(struct r4300_core* r4300)
     }
 }
 
-void genbne(struct r4300_core* r4300)
+void gen_BNE(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[5]);
@@ -2959,7 +2959,7 @@ void genbne(struct r4300_core* r4300)
 #endif
 }
 
-void genbne_out(struct r4300_core* r4300)
+void gen_BNE_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[5]);
@@ -2980,7 +2980,7 @@ void genbne_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbne_idle(struct r4300_core* r4300)
+void gen_BNE_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNE_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BNE_IDLE, 1);
@@ -2994,11 +2994,11 @@ void genbne_idle(struct r4300_core* r4300)
 
     genbne_test(r4300);
     gentest_idle(r4300);
-    genbne(r4300);
+    gen_BNE(r4300);
 #endif
 }
 
-void genbnel(struct r4300_core* r4300)
+void gen_BNEL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[17]);
@@ -3019,7 +3019,7 @@ void genbnel(struct r4300_core* r4300)
 #endif
 }
 
-void genbnel_out(struct r4300_core* r4300)
+void gen_BNEL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[17]);
@@ -3040,7 +3040,7 @@ void genbnel_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbnel_idle(struct r4300_core* r4300)
+void gen_BNEL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BNEL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BNEL_IDLE, 1);
@@ -3054,7 +3054,7 @@ void genbnel_idle(struct r4300_core* r4300)
 
     genbne_test(r4300);
     gentest_idle(r4300);
-    genbnel(r4300);
+    gen_BNEL(r4300);
 #endif
 }
 
@@ -3078,7 +3078,7 @@ static void genblez_test(struct r4300_core* r4300)
     }
 }
 
-void genblez(struct r4300_core* r4300)
+void gen_BLEZ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[6]);
@@ -3099,7 +3099,7 @@ void genblez(struct r4300_core* r4300)
 #endif
 }
 
-void genblez_out(struct r4300_core* r4300)
+void gen_BLEZ_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[6]);
@@ -3120,7 +3120,7 @@ void genblez_out(struct r4300_core* r4300)
 #endif
 }
 
-void genblez_idle(struct r4300_core* r4300)
+void gen_BLEZ_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZ_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLEZ_IDLE, 1);
@@ -3134,11 +3134,11 @@ void genblez_idle(struct r4300_core* r4300)
 
     genblez_test(r4300);
     gentest_idle(r4300);
-    genblez(r4300);
+    gen_BLEZ(r4300);
 #endif
 }
 
-void genblezl(struct r4300_core* r4300)
+void gen_BLEZL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[18]);
@@ -3159,7 +3159,7 @@ void genblezl(struct r4300_core* r4300)
 #endif
 }
 
-void genblezl_out(struct r4300_core* r4300)
+void gen_BLEZL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[18]);
@@ -3180,7 +3180,7 @@ void genblezl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genblezl_idle(struct r4300_core* r4300)
+void gen_BLEZL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLEZL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLEZL_IDLE, 1);
@@ -3194,7 +3194,7 @@ void genblezl_idle(struct r4300_core* r4300)
 
     genblez_test(r4300);
     gentest_idle(r4300);
-    genblezl(r4300);
+    gen_BLEZL(r4300);
 #endif
 }
 
@@ -3218,7 +3218,7 @@ static void genbgtz_test(struct r4300_core* r4300)
     }
 }
 
-void genbgtz(struct r4300_core* r4300)
+void gen_BGTZ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[7]);
@@ -3239,7 +3239,7 @@ void genbgtz(struct r4300_core* r4300)
 #endif
 }
 
-void genbgtz_out(struct r4300_core* r4300)
+void gen_BGTZ_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[7]);
@@ -3260,7 +3260,7 @@ void genbgtz_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgtz_idle(struct r4300_core* r4300)
+void gen_BGTZ_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZ_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGTZ_IDLE, 1);
@@ -3274,11 +3274,11 @@ void genbgtz_idle(struct r4300_core* r4300)
 
     genbgtz_test(r4300);
     gentest_idle(r4300);
-    genbgtz(r4300);
+    gen_BGTZ(r4300);
 #endif
 }
 
-void genbgtzl(struct r4300_core* r4300)
+void gen_BGTZL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[19]);
@@ -3299,7 +3299,7 @@ void genbgtzl(struct r4300_core* r4300)
 #endif
 }
 
-void genbgtzl_out(struct r4300_core* r4300)
+void gen_BGTZL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[19]);
@@ -3320,7 +3320,7 @@ void genbgtzl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgtzl_idle(struct r4300_core* r4300)
+void gen_BGTZL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGTZL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGTZL_IDLE, 1);
@@ -3334,7 +3334,7 @@ void genbgtzl_idle(struct r4300_core* r4300)
 
     genbgtz_test(r4300);
     gentest_idle(r4300);
-    genbgtzl(r4300);
+    gen_BGTZL(r4300);
 #endif
 }
 
@@ -3363,7 +3363,7 @@ static void genbltz_test(struct r4300_core* r4300)
     }
 }
 
-void genbltz(struct r4300_core* r4300)
+void gen_BLTZ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[47]);
@@ -3384,7 +3384,7 @@ void genbltz(struct r4300_core* r4300)
 #endif
 }
 
-void genbltz_out(struct r4300_core* r4300)
+void gen_BLTZ_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[47]);
@@ -3405,7 +3405,7 @@ void genbltz_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbltz_idle(struct r4300_core* r4300)
+void gen_BLTZ_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZ_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLTZ_IDLE, 1);
@@ -3419,11 +3419,11 @@ void genbltz_idle(struct r4300_core* r4300)
 
     genbltz_test(r4300);
     gentest_idle(r4300);
-    genbltz(r4300);
+    gen_BLTZ(r4300);
 #endif
 }
 
-void genbltzal(struct r4300_core* r4300)
+void gen_BLTZAL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[51]);
@@ -3445,7 +3445,7 @@ void genbltzal(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzal_out(struct r4300_core* r4300)
+void gen_BLTZAL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[51]);
@@ -3467,7 +3467,7 @@ void genbltzal_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzal_idle(struct r4300_core* r4300)
+void gen_BLTZAL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZAL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLTZAL_IDLE, 1);
@@ -3482,11 +3482,11 @@ void genbltzal_idle(struct r4300_core* r4300)
     genbltz_test(r4300);
     genbranchlink(r4300);
     gentest_idle(r4300);
-    genbltzal(r4300);
+    gen_BLTZAL(r4300);
 #endif
 }
 
-void genbltzl(struct r4300_core* r4300)
+void gen_BLTZL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[49]);
@@ -3507,7 +3507,7 @@ void genbltzl(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzl_out(struct r4300_core* r4300)
+void gen_BLTZL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[49]);
@@ -3528,7 +3528,7 @@ void genbltzl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzl_idle(struct r4300_core* r4300)
+void gen_BLTZL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLTZL_IDLE, 1);
@@ -3542,11 +3542,11 @@ void genbltzl_idle(struct r4300_core* r4300)
 
     genbltz_test(r4300);
     gentest_idle(r4300);
-    genbltzl(r4300);
+    gen_BLTZL(r4300);
 #endif
 }
 
-void genbltzall(struct r4300_core* r4300)
+void gen_BLTZALL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[53]);
@@ -3568,7 +3568,7 @@ void genbltzall(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzall_out(struct r4300_core* r4300)
+void gen_BLTZALL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[53]);
@@ -3590,7 +3590,7 @@ void genbltzall_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbltzall_idle(struct r4300_core* r4300)
+void gen_BLTZALL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BLTZALL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BLTZALL_IDLE, 1);
@@ -3605,7 +3605,7 @@ void genbltzall_idle(struct r4300_core* r4300)
     genbltz_test(r4300);
     genbranchlink(r4300);
     gentest_idle(r4300);
-    genbltzall(r4300);
+    gen_BLTZALL(r4300);
 #endif
 }
 
@@ -3632,7 +3632,7 @@ static void genbgez_test(struct r4300_core* r4300)
     }
 }
 
-void genbgez(struct r4300_core* r4300)
+void gen_BGEZ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[48]);
@@ -3653,7 +3653,7 @@ void genbgez(struct r4300_core* r4300)
 #endif
 }
 
-void genbgez_out(struct r4300_core* r4300)
+void gen_BGEZ_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[48]);
@@ -3674,7 +3674,7 @@ void genbgez_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgez_idle(struct r4300_core* r4300)
+void gen_BGEZ_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZ_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGEZ_IDLE, 1);
@@ -3688,11 +3688,11 @@ void genbgez_idle(struct r4300_core* r4300)
 
     genbgez_test(r4300);
     gentest_idle(r4300);
-    genbgez(r4300);
+    gen_BGEZ(r4300);
 #endif
 }
 
-void genbgezal(struct r4300_core* r4300)
+void gen_BGEZAL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[52]);
@@ -3714,7 +3714,7 @@ void genbgezal(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezal_out(struct r4300_core* r4300)
+void gen_BGEZAL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[52]);
@@ -3736,7 +3736,7 @@ void genbgezal_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezal_idle(struct r4300_core* r4300)
+void gen_BGEZAL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZAL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGEZAL_IDLE, 1);
@@ -3751,11 +3751,11 @@ void genbgezal_idle(struct r4300_core* r4300)
     genbgez_test(r4300);
     genbranchlink(r4300);
     gentest_idle(r4300);
-    genbgezal(r4300);
+    gen_BGEZAL(r4300);
 #endif
 }
 
-void genbgezl(struct r4300_core* r4300)
+void gen_BGEZL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[50]);
@@ -3776,7 +3776,7 @@ void genbgezl(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezl_out(struct r4300_core* r4300)
+void gen_BGEZL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[50]);
@@ -3797,7 +3797,7 @@ void genbgezl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezl_idle(struct r4300_core* r4300)
+void gen_BGEZL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGEZL_IDLE, 1);
@@ -3811,11 +3811,11 @@ void genbgezl_idle(struct r4300_core* r4300)
 
     genbgez_test(r4300);
     gentest_idle(r4300);
-    genbgezl(r4300);
+    gen_BGEZL(r4300);
 #endif
 }
 
-void genbgezall(struct r4300_core* r4300)
+void gen_BGEZALL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[54]);
@@ -3837,7 +3837,7 @@ void genbgezall(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezall_out(struct r4300_core* r4300)
+void gen_BGEZALL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[54]);
@@ -3859,7 +3859,7 @@ void genbgezall_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbgezall_idle(struct r4300_core* r4300)
+void gen_BGEZALL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BGEZALL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BGEZALL_IDLE, 1);
@@ -3874,7 +3874,7 @@ void genbgezall_idle(struct r4300_core* r4300)
     genbgez_test(r4300);
     genbranchlink(r4300);
     gentest_idle(r4300);
-    genbgezall(r4300);
+    gen_BGEZALL(r4300);
 #endif
 }
 
@@ -3884,7 +3884,7 @@ static void genbc1f_test(struct r4300_core* r4300)
     sete_m8rel((unsigned char *) &r4300->recomp.branch_taken);
 }
 
-void genbc1f(struct r4300_core* r4300)
+void gen_BC1F(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[100]);
@@ -3906,7 +3906,7 @@ void genbc1f(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1f_out(struct r4300_core* r4300)
+void gen_BC1F_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[100]);
@@ -3928,7 +3928,7 @@ void genbc1f_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1f_idle(struct r4300_core* r4300)
+void gen_BC1F_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1F_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BC1F_IDLE, 1);
@@ -3943,11 +3943,11 @@ void genbc1f_idle(struct r4300_core* r4300)
     gencheck_cop1_unusable(r4300);
     genbc1f_test(r4300);
     gentest_idle(r4300);
-    genbc1f(r4300);
+    gen_BC1F(r4300);
 #endif
 }
 
-void genbc1fl(struct r4300_core* r4300)
+void gen_BC1FL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[102]);
@@ -3969,7 +3969,7 @@ void genbc1fl(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1fl_out(struct r4300_core* r4300)
+void gen_BC1FL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[102]);
@@ -3991,7 +3991,7 @@ void genbc1fl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1fl_idle(struct r4300_core* r4300)
+void gen_BC1FL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1FL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BC1FL_IDLE, 1);
@@ -4006,7 +4006,7 @@ void genbc1fl_idle(struct r4300_core* r4300)
     gencheck_cop1_unusable(r4300);
     genbc1f_test(r4300);
     gentest_idle(r4300);
-    genbc1fl(r4300);
+    gen_BC1FL(r4300);
 #endif
 }
 
@@ -4016,7 +4016,7 @@ static void genbc1t_test(struct r4300_core* r4300)
     setne_m8rel((unsigned char *) &r4300->recomp.branch_taken);
 }
 
-void genbc1t(struct r4300_core* r4300)
+void gen_BC1T(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[101]);
@@ -4038,7 +4038,7 @@ void genbc1t(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1t_out(struct r4300_core* r4300)
+void gen_BC1T_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[101]);
@@ -4060,7 +4060,7 @@ void genbc1t_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1t_idle(struct r4300_core* r4300)
+void gen_BC1T_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1T_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BC1T_IDLE, 1);
@@ -4075,11 +4075,11 @@ void genbc1t_idle(struct r4300_core* r4300)
     gencheck_cop1_unusable(r4300);
     genbc1t_test(r4300);
     gentest_idle(r4300);
-    genbc1t(r4300);
+    gen_BC1T(r4300);
 #endif
 }
 
-void genbc1tl(struct r4300_core* r4300)
+void gen_BC1TL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[103]);
@@ -4101,7 +4101,7 @@ void genbc1tl(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1tl_out(struct r4300_core* r4300)
+void gen_BC1TL_OUT(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[103]);
@@ -4123,7 +4123,7 @@ void genbc1tl_out(struct r4300_core* r4300)
 #endif
 }
 
-void genbc1tl_idle(struct r4300_core* r4300)
+void gen_BC1TL_IDLE(struct r4300_core* r4300)
 {
 #ifdef INTERPRET_BC1TL_IDLE
     gencallinterp(r4300, (unsigned long long)cached_interp_BC1TL_IDLE, 1);
@@ -4138,17 +4138,17 @@ void genbc1tl_idle(struct r4300_core* r4300)
     gencheck_cop1_unusable(r4300);
     genbc1t_test(r4300);
     gentest_idle(r4300);
-    genbc1tl(r4300);
+    gen_BC1TL(r4300);
 #endif
 }
 
 /* Special instructions */
 
-void gencache(struct r4300_core* r4300)
+void gen_CACHE(struct r4300_core* r4300)
 {
 }
 
-void generet(struct r4300_core* r4300)
+void gen_ERET(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[108]);
@@ -4165,11 +4165,11 @@ void generet(struct r4300_core* r4300)
 #endif
 }
 
-void gensync(struct r4300_core* r4300)
+void gen_SYNC(struct r4300_core* r4300)
 {
 }
 
-void gensyscall(struct r4300_core* r4300)
+void gen_SYSCALL(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[63]);
@@ -4186,7 +4186,7 @@ void gensyscall(struct r4300_core* r4300)
 
 /* Exception instructions */
 
-void genteq(struct r4300_core* r4300)
+void gen_TEQ(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[96]);
@@ -4196,7 +4196,7 @@ void genteq(struct r4300_core* r4300)
 
 /* TLB instructions */
 
-void gentlbp(struct r4300_core* r4300)
+void gen_TLBP(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[105]);
@@ -4211,7 +4211,7 @@ void gentlbp(struct r4300_core* r4300)
 #endif
 }
 
-void gentlbr(struct r4300_core* r4300)
+void gen_TLBR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[106]);
@@ -4226,7 +4226,7 @@ void gentlbr(struct r4300_core* r4300)
 #endif
 }
 
-void gentlbwr(struct r4300_core* r4300)
+void gen_TLBWR(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[107]);
@@ -4234,7 +4234,7 @@ void gentlbwr(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_TLBWR, 0);
 }
 
-void gentlbwi(struct r4300_core* r4300)
+void gen_TLBWI(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[104]);
@@ -4251,7 +4251,7 @@ void gentlbwi(struct r4300_core* r4300)
 
 /* CP0 load/store instructions */
 
-void genmfc0(struct r4300_core* r4300)
+void gen_MFC0(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[109]);
@@ -4259,7 +4259,7 @@ void genmfc0(struct r4300_core* r4300)
     gencallinterp(r4300, (unsigned long long)cached_interp_MFC0, 0);
 }
 
-void genmtc0(struct r4300_core* r4300)
+void gen_MTC0(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[110]);
@@ -4269,7 +4269,7 @@ void genmtc0(struct r4300_core* r4300)
 
 /* CP1 load/store instructions */
 
-void genlwc1(struct r4300_core* r4300)
+void gen_LWC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[39]);
@@ -4323,7 +4323,7 @@ void genlwc1(struct r4300_core* r4300)
 #endif
 }
 
-void genldc1(struct r4300_core* r4300)
+void gen_LDC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[40]);
@@ -4379,7 +4379,7 @@ void genldc1(struct r4300_core* r4300)
 #endif
 }
 
-void genswc1(struct r4300_core* r4300)
+void gen_SWC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[43]);
@@ -4455,7 +4455,7 @@ void genswc1(struct r4300_core* r4300)
 #endif
 }
 
-void gensdc1(struct r4300_core* r4300)
+void gen_SDC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[44]);
@@ -4533,7 +4533,7 @@ void gensdc1(struct r4300_core* r4300)
 #endif
 }
 
-void genmfc1(struct r4300_core* r4300)
+void gen_MFC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[111]);
@@ -4550,7 +4550,7 @@ void genmfc1(struct r4300_core* r4300)
 #endif
 }
 
-void gendmfc1(struct r4300_core* r4300)
+void gen_DMFC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[112]);
@@ -4567,7 +4567,7 @@ void gendmfc1(struct r4300_core* r4300)
 #endif
 }
 
-void gencfc1(struct r4300_core* r4300)
+void gen_CFC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[113]);
@@ -4588,7 +4588,7 @@ void gencfc1(struct r4300_core* r4300)
 #endif
 }
 
-void genmtc1(struct r4300_core* r4300)
+void gen_MTC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[114]);
@@ -4603,7 +4603,7 @@ void genmtc1(struct r4300_core* r4300)
 #endif
 }
 
-void gendmtc1(struct r4300_core* r4300)
+void gen_DMTC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[115]);
@@ -4620,7 +4620,7 @@ void gendmtc1(struct r4300_core* r4300)
 #endif
 }
 
-void genctc1(struct r4300_core* r4300)
+void gen_CTC1(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[116]);
@@ -4660,12 +4660,12 @@ void genctc1(struct r4300_core* r4300)
 
 /* CP1 computational instructions */
 
-void genabs_s(struct r4300_core* r4300)
+void gen_CP1_ABS_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[124]);
 #endif
-#ifdef INTERPRET_ABS_S
+#ifdef INTERPRET_CP1_ABS_S
     gencallinterp(r4300, (unsigned long long)cached_interp_ABS_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4677,12 +4677,12 @@ void genabs_s(struct r4300_core* r4300)
 #endif
 }
 
-void genabs_d(struct r4300_core* r4300)
+void gen_CP1_ABS_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[124]);
 #endif
-#ifdef INTERPRET_ABS_D
+#ifdef INTERPRET_CP1_ABS_D
     gencallinterp(r4300, (unsigned long long)cached_interp_ABS_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4694,12 +4694,12 @@ void genabs_d(struct r4300_core* r4300)
 #endif
 }
 
-void genadd_s(struct r4300_core* r4300)
+void gen_CP1_ADD_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[119]);
 #endif
-#ifdef INTERPRET_ADD_S
+#ifdef INTERPRET_CP1_ADD_S
     gencallinterp(r4300, (unsigned long long)cached_interp_ADD_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4712,12 +4712,12 @@ void genadd_s(struct r4300_core* r4300)
 #endif
 }
 
-void genadd_d(struct r4300_core* r4300)
+void gen_CP1_ADD_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[119]);
 #endif
-#ifdef INTERPRET_ADD_D
+#ifdef INTERPRET_CP1_ADD_D
     gencallinterp(r4300, (unsigned long long)cached_interp_ADD_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4730,12 +4730,12 @@ void genadd_d(struct r4300_core* r4300)
 #endif
 }
 
-void gendiv_s(struct r4300_core* r4300)
+void gen_CP1_DIV_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[122]);
 #endif
-#ifdef INTERPRET_DIV_S
+#ifdef INTERPRET_CP1_DIV_S
     gencallinterp(r4300, (unsigned long long)cached_interp_DIV_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4748,12 +4748,12 @@ void gendiv_s(struct r4300_core* r4300)
 #endif
 }
 
-void gendiv_d(struct r4300_core* r4300)
+void gen_CP1_DIV_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[122]);
 #endif
-#ifdef INTERPRET_DIV_D
+#ifdef INTERPRET_CP1_DIV_D
     gencallinterp(r4300, (unsigned long long)cached_interp_DIV_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4766,12 +4766,12 @@ void gendiv_d(struct r4300_core* r4300)
 #endif
 }
 
-void genmov_s(struct r4300_core* r4300)
+void gen_CP1_MOV_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[125]);
 #endif
-#ifdef INTERPRET_MOV_S
+#ifdef INTERPRET_CP1_MOV_S
     gencallinterp(r4300, (unsigned long long)cached_interp_MOV_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4782,12 +4782,12 @@ void genmov_s(struct r4300_core* r4300)
 #endif
 }
 
-void genmov_d(struct r4300_core* r4300)
+void gen_CP1_MOV_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[125]);
 #endif
-#ifdef INTERPRET_MOV_D
+#ifdef INTERPRET_CP1_MOV_D
     gencallinterp(r4300, (unsigned long long)cached_interp_MOV_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4800,12 +4800,12 @@ void genmov_d(struct r4300_core* r4300)
 #endif
 }
 
-void genmul_s(struct r4300_core* r4300)
+void gen_CP1_MUL_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[121]);
 #endif
-#ifdef INTERPRET_MUL_S
+#ifdef INTERPRET_CP1_MUL_S
     gencallinterp(r4300, (unsigned long long)cached_interp_MUL_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4818,12 +4818,12 @@ void genmul_s(struct r4300_core* r4300)
 #endif
 }
 
-void genmul_d(struct r4300_core* r4300)
+void gen_CP1_MUL_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[121]);
 #endif
-#ifdef INTERPRET_MUL_D
+#ifdef INTERPRET_CP1_MUL_D
     gencallinterp(r4300, (unsigned long long)cached_interp_MUL_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4836,12 +4836,12 @@ void genmul_d(struct r4300_core* r4300)
 #endif
 }
 
-void genneg_s(struct r4300_core* r4300)
+void gen_CP1_NEG_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[126]);
 #endif
-#ifdef INTERPRET_NEG_S
+#ifdef INTERPRET_CP1_NEG_S
     gencallinterp(r4300, (unsigned long long)cached_interp_NEG_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4853,12 +4853,12 @@ void genneg_s(struct r4300_core* r4300)
 #endif
 }
 
-void genneg_d(struct r4300_core* r4300)
+void gen_CP1_NEG_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[126]);
 #endif
-#ifdef INTERPRET_NEG_D
+#ifdef INTERPRET_CP1_NEG_D
     gencallinterp(r4300, (unsigned long long)cached_interp_NEG_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4870,12 +4870,12 @@ void genneg_d(struct r4300_core* r4300)
 #endif
 }
 
-void gensqrt_s(struct r4300_core* r4300)
+void gen_CP1_SQRT_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[123]);
 #endif
-#ifdef INTERPRET_SQRT_S
+#ifdef INTERPRET_CP1_SQRT_S
     gencallinterp(r4300, (unsigned long long)cached_interp_SQRT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4887,12 +4887,12 @@ void gensqrt_s(struct r4300_core* r4300)
 #endif
 }
 
-void gensqrt_d(struct r4300_core* r4300)
+void gen_CP1_SQRT_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[123]);
 #endif
-#ifdef INTERPRET_SQRT_D
+#ifdef INTERPRET_CP1_SQRT_D
     gencallinterp(r4300, (unsigned long long)cached_interp_SQRT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4904,12 +4904,12 @@ void gensqrt_d(struct r4300_core* r4300)
 #endif
 }
 
-void gensub_s(struct r4300_core* r4300)
+void gen_CP1_SUB_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[120]);
 #endif
-#ifdef INTERPRET_SUB_S
+#ifdef INTERPRET_CP1_SUB_S
     gencallinterp(r4300, (unsigned long long)cached_interp_SUB_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4922,12 +4922,12 @@ void gensub_s(struct r4300_core* r4300)
 #endif
 }
 
-void gensub_d(struct r4300_core* r4300)
+void gen_CP1_SUB_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[120]);
 #endif
-#ifdef INTERPRET_SUB_D
+#ifdef INTERPRET_CP1_SUB_D
     gencallinterp(r4300, (unsigned long long)cached_interp_SUB_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4940,12 +4940,12 @@ void gensub_d(struct r4300_core* r4300)
 #endif
 }
 
-void gentrunc_w_s(struct r4300_core* r4300)
+void gen_CP1_TRUNC_W_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[128]);
 #endif
-#ifdef INTERPRET_TRUNC_W_S
+#ifdef INTERPRET_CP1_TRUNC_W_S
     gencallinterp(r4300, (unsigned long long)cached_interp_TRUNC_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4958,12 +4958,12 @@ void gentrunc_w_s(struct r4300_core* r4300)
 #endif
 }
 
-void gentrunc_w_d(struct r4300_core* r4300)
+void gen_CP1_TRUNC_W_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[128]);
 #endif
-#ifdef INTERPRET_TRUNC_W_D
+#ifdef INTERPRET_CP1_TRUNC_W_D
     gencallinterp(r4300, (unsigned long long)cached_interp_TRUNC_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4976,12 +4976,12 @@ void gentrunc_w_d(struct r4300_core* r4300)
 #endif
 }
 
-void gentrunc_l_s(struct r4300_core* r4300)
+void gen_CP1_TRUNC_L_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[128]);
 #endif
-#ifdef INTERPRET_TRUNC_L_S
+#ifdef INTERPRET_CP1_TRUNC_L_S
     gencallinterp(r4300, (unsigned long long)cached_interp_TRUNC_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -4994,12 +4994,12 @@ void gentrunc_l_s(struct r4300_core* r4300)
 #endif
 }
 
-void gentrunc_l_d(struct r4300_core* r4300)
+void gen_CP1_TRUNC_L_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[128]);
 #endif
-#ifdef INTERPRET_TRUNC_L_D
+#ifdef INTERPRET_CP1_TRUNC_L_D
     gencallinterp(r4300, (unsigned long long)cached_interp_TRUNC_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5012,12 +5012,12 @@ void gentrunc_l_d(struct r4300_core* r4300)
 #endif
 }
 
-void genround_w_s(struct r4300_core* r4300)
+void gen_CP1_ROUND_W_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[127]);
 #endif
-#ifdef INTERPRET_ROUND_W_S
+#ifdef INTERPRET_CP1_ROUND_W_S
     gencallinterp(r4300, (unsigned long long)cached_interp_ROUND_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5030,12 +5030,12 @@ void genround_w_s(struct r4300_core* r4300)
 #endif
 }
 
-void genround_w_d(struct r4300_core* r4300)
+void gen_CP1_ROUND_W_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[127]);
 #endif
-#ifdef INTERPRET_ROUND_W_D
+#ifdef INTERPRET_CP1_ROUND_W_D
     gencallinterp(r4300, (unsigned long long)cached_interp_ROUND_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5048,12 +5048,12 @@ void genround_w_d(struct r4300_core* r4300)
 #endif
 }
 
-void genround_l_s(struct r4300_core* r4300)
+void gen_CP1_ROUND_L_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[127]);
 #endif
-#ifdef INTERPRET_ROUND_L_S
+#ifdef INTERPRET_CP1_ROUND_L_S
     gencallinterp(r4300, (unsigned long long)cached_interp_ROUND_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5066,12 +5066,12 @@ void genround_l_s(struct r4300_core* r4300)
 #endif
 }
 
-void genround_l_d(struct r4300_core* r4300)
+void gen_CP1_ROUND_L_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[127]);
 #endif
-#ifdef INTERPRET_ROUND_L_D
+#ifdef INTERPRET_CP1_ROUND_L_D
     gencallinterp(r4300, (unsigned long long)cached_interp_ROUND_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5084,12 +5084,12 @@ void genround_l_d(struct r4300_core* r4300)
 #endif
 }
 
-void genceil_w_s(struct r4300_core* r4300)
+void gen_CP1_CEIL_W_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[129]);
 #endif
-#ifdef INTERPRET_CEIL_W_S
+#ifdef INTERPRET_CP1_CEIL_W_S
     gencallinterp(r4300, (unsigned long long)cached_interp_CEIL_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5102,12 +5102,12 @@ void genceil_w_s(struct r4300_core* r4300)
 #endif
 }
 
-void genceil_w_d(struct r4300_core* r4300)
+void gen_CP1_CEIL_W_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[129]);
 #endif
-#ifdef INTERPRET_CEIL_W_D
+#ifdef INTERPRET_CP1_CEIL_W_D
     gencallinterp(r4300, (unsigned long long)cached_interp_CEIL_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5120,12 +5120,12 @@ void genceil_w_d(struct r4300_core* r4300)
 #endif
 }
 
-void genceil_l_s(struct r4300_core* r4300)
+void gen_CP1_CEIL_L_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[129]);
 #endif
-#ifdef INTERPRET_CEIL_L_S
+#ifdef INTERPRET_CP1_CEIL_L_S
     gencallinterp(r4300, (unsigned long long)cached_interp_CEIL_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5138,12 +5138,12 @@ void genceil_l_s(struct r4300_core* r4300)
 #endif
 }
 
-void genceil_l_d(struct r4300_core* r4300)
+void gen_CP1_CEIL_L_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[129]);
 #endif
-#ifdef INTERPRET_CEIL_L_D
+#ifdef INTERPRET_CP1_CEIL_L_D
     gencallinterp(r4300, (unsigned long long)cached_interp_CEIL_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5156,12 +5156,12 @@ void genceil_l_d(struct r4300_core* r4300)
 #endif
 }
 
-void genfloor_w_s(struct r4300_core* r4300)
+void gen_CP1_FLOOR_W_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[130]);
 #endif
-#ifdef INTERPRET_FLOOR_W_S
+#ifdef INTERPRET_CP1_FLOOR_W_S
     gencallinterp(r4300, (unsigned long long)cached_interp_FLOOR_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5174,12 +5174,12 @@ void genfloor_w_s(struct r4300_core* r4300)
 #endif
 }
 
-void genfloor_w_d(struct r4300_core* r4300)
+void gen_CP1_FLOOR_W_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[130]);
 #endif
-#ifdef INTERPRET_FLOOR_W_D
+#ifdef INTERPRET_CP1_FLOOR_W_D
     gencallinterp(r4300, (unsigned long long)cached_interp_FLOOR_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5192,12 +5192,12 @@ void genfloor_w_d(struct r4300_core* r4300)
 #endif
 }
 
-void genfloor_l_s(struct r4300_core* r4300)
+void gen_CP1_FLOOR_L_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[130]);
 #endif
-#ifdef INTERPRET_FLOOR_L_S
+#ifdef INTERPRET_CP1_FLOOR_L_S
     gencallinterp(r4300, (unsigned long long)cached_interp_FLOOR_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5210,12 +5210,12 @@ void genfloor_l_s(struct r4300_core* r4300)
 #endif
 }
 
-void genfloor_l_d(struct r4300_core* r4300)
+void gen_CP1_FLOOR_L_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[130]);
 #endif
-#ifdef INTERPRET_FLOOR_L_D
+#ifdef INTERPRET_CP1_FLOOR_L_D
     gencallinterp(r4300, (unsigned long long)cached_interp_FLOOR_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5228,12 +5228,12 @@ void genfloor_l_d(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_s_d(struct r4300_core* r4300)
+void gen_CP1_CVT_S_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_S_D
+#ifdef INTERPRET_CP1_CVT_S_D
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_S_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5244,12 +5244,12 @@ void gencvt_s_d(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_s_w(struct r4300_core* r4300)
+void gen_CP1_CVT_S_W(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_S_W
+#ifdef INTERPRET_CP1_CVT_S_W
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_S_W, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5260,12 +5260,12 @@ void gencvt_s_w(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_s_l(struct r4300_core* r4300)
+void gen_CP1_CVT_S_L(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_S_L
+#ifdef INTERPRET_CP1_CVT_S_L
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_S_L, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5276,12 +5276,12 @@ void gencvt_s_l(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_d_s(struct r4300_core* r4300)
+void gen_CP1_CVT_D_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_D_S
+#ifdef INTERPRET_CP1_CVT_D_S
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_D_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5292,12 +5292,12 @@ void gencvt_d_s(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_d_w(struct r4300_core* r4300)
+void gen_CP1_CVT_D_W(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_D_W
+#ifdef INTERPRET_CP1_CVT_D_W
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_D_W, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5308,12 +5308,12 @@ void gencvt_d_w(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_d_l(struct r4300_core* r4300)
+void gen_CP1_CVT_D_L(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_D_L
+#ifdef INTERPRET_CP1_CVT_D_L
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_D_L, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5324,12 +5324,12 @@ void gencvt_d_l(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_w_s(struct r4300_core* r4300)
+void gen_CP1_CVT_W_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_W_S
+#ifdef INTERPRET_CP1_CVT_W_S
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_W_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5340,12 +5340,12 @@ void gencvt_w_s(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_w_d(struct r4300_core* r4300)
+void gen_CP1_CVT_W_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_W_D
+#ifdef INTERPRET_CP1_CVT_W_D
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_W_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5356,12 +5356,12 @@ void gencvt_w_d(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_l_s(struct r4300_core* r4300)
+void gen_CP1_CVT_L_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_L_S
+#ifdef INTERPRET_CP1_CVT_L_S
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_L_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5372,12 +5372,12 @@ void gencvt_l_s(struct r4300_core* r4300)
 #endif
 }
 
-void gencvt_l_d(struct r4300_core* r4300)
+void gen_CP1_CVT_L_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[117]);
 #endif
-#ifdef INTERPRET_CVT_L_D
+#ifdef INTERPRET_CP1_CVT_L_D
     gencallinterp(r4300, (unsigned long long)cached_interp_CVT_L_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5390,12 +5390,12 @@ void gencvt_l_d(struct r4300_core* r4300)
 
 /* CP1 relational instructions */
 
-void genc_f_s(struct r4300_core* r4300)
+void gen_CP1_C_F_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_F_S
+#ifdef INTERPRET_CP1_C_F_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_F_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5403,12 +5403,12 @@ void genc_f_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_f_d(struct r4300_core* r4300)
+void gen_CP1_C_F_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_F_D
+#ifdef INTERPRET_CP1_C_F_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_F_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5416,12 +5416,12 @@ void genc_f_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_un_s(struct r4300_core* r4300)
+void gen_CP1_C_UN_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_UN_S
+#ifdef INTERPRET_CP1_C_UN_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_UN_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5438,12 +5438,12 @@ void genc_un_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_un_d(struct r4300_core* r4300)
+void gen_CP1_C_UN_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_UN_D
+#ifdef INTERPRET_CP1_C_UN_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_UN_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5460,12 +5460,12 @@ void genc_un_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_eq_s(struct r4300_core* r4300)
+void gen_CP1_C_EQ_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_EQ_S
+#ifdef INTERPRET_CP1_C_EQ_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_EQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5482,12 +5482,12 @@ void genc_eq_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_eq_d(struct r4300_core* r4300)
+void gen_CP1_C_EQ_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_EQ_D
+#ifdef INTERPRET_CP1_C_EQ_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_EQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5504,12 +5504,12 @@ void genc_eq_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ueq_s(struct r4300_core* r4300)
+void gen_CP1_C_UEQ_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_UEQ_S
+#ifdef INTERPRET_CP1_C_UEQ_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_UEQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5527,12 +5527,12 @@ void genc_ueq_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ueq_d(struct r4300_core* r4300)
+void gen_CP1_C_UEQ_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_UEQ_D
+#ifdef INTERPRET_CP1_C_UEQ_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_UEQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5550,12 +5550,12 @@ void genc_ueq_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_olt_s(struct r4300_core* r4300)
+void gen_CP1_C_OLT_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_OLT_S
+#ifdef INTERPRET_CP1_C_OLT_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_OLT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5572,12 +5572,12 @@ void genc_olt_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_olt_d(struct r4300_core* r4300)
+void gen_CP1_C_OLT_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_OLT_D
+#ifdef INTERPRET_CP1_C_OLT_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_OLT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5594,12 +5594,12 @@ void genc_olt_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ult_s(struct r4300_core* r4300)
+void gen_CP1_C_ULT_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_ULT_S
+#ifdef INTERPRET_CP1_C_ULT_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_ULT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5617,12 +5617,12 @@ void genc_ult_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ult_d(struct r4300_core* r4300)
+void gen_CP1_C_ULT_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_ULT_D
+#ifdef INTERPRET_CP1_C_ULT_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_ULT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5640,12 +5640,12 @@ void genc_ult_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ole_s(struct r4300_core* r4300)
+void gen_CP1_C_OLE_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_OLE_S
+#ifdef INTERPRET_CP1_C_OLE_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_OLE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5662,12 +5662,12 @@ void genc_ole_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ole_d(struct r4300_core* r4300)
+void gen_CP1_C_OLE_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_OLE_D
+#ifdef INTERPRET_CP1_C_OLE_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_OLE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5684,12 +5684,12 @@ void genc_ole_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ule_s(struct r4300_core* r4300)
+void gen_CP1_C_ULE_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_ULE_S
+#ifdef INTERPRET_CP1_C_ULE_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_ULE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5707,12 +5707,12 @@ void genc_ule_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ule_d(struct r4300_core* r4300)
+void gen_CP1_C_ULE_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_ULE_D
+#ifdef INTERPRET_CP1_C_ULE_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_ULE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5730,12 +5730,12 @@ void genc_ule_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_sf_s(struct r4300_core* r4300)
+void gen_CP1_C_SF_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_SF_S
+#ifdef INTERPRET_CP1_C_SF_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_SF_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5749,12 +5749,12 @@ void genc_sf_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_sf_d(struct r4300_core* r4300)
+void gen_CP1_C_SF_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_SF_D
+#ifdef INTERPRET_CP1_C_SF_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_SF_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5768,12 +5768,12 @@ void genc_sf_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngle_s(struct r4300_core* r4300)
+void gen_CP1_C_NGLE_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGLE_S
+#ifdef INTERPRET_CP1_C_NGLE_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGLE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5790,12 +5790,12 @@ void genc_ngle_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngle_d(struct r4300_core* r4300)
+void gen_CP1_C_NGLE_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGLE_D
+#ifdef INTERPRET_CP1_C_NGLE_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGLE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5812,12 +5812,12 @@ void genc_ngle_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_seq_s(struct r4300_core* r4300)
+void gen_CP1_C_SEQ_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_SEQ_S
+#ifdef INTERPRET_CP1_C_SEQ_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_SEQ_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5834,12 +5834,12 @@ void genc_seq_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_seq_d(struct r4300_core* r4300)
+void gen_CP1_C_SEQ_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_SEQ_D
+#ifdef INTERPRET_CP1_C_SEQ_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_SEQ_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5856,12 +5856,12 @@ void genc_seq_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngl_s(struct r4300_core* r4300)
+void gen_CP1_C_NGL_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGL_S
+#ifdef INTERPRET_CP1_C_NGL_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGL_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5879,12 +5879,12 @@ void genc_ngl_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngl_d(struct r4300_core* r4300)
+void gen_CP1_C_NGL_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGL_D
+#ifdef INTERPRET_CP1_C_NGL_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGL_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5902,12 +5902,12 @@ void genc_ngl_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_lt_s(struct r4300_core* r4300)
+void gen_CP1_C_LT_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_LT_S
+#ifdef INTERPRET_CP1_C_LT_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_LT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5924,12 +5924,12 @@ void genc_lt_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_lt_d(struct r4300_core* r4300)
+void gen_CP1_C_LT_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_LT_D
+#ifdef INTERPRET_CP1_C_LT_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_LT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5946,12 +5946,12 @@ void genc_lt_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_nge_s(struct r4300_core* r4300)
+void gen_CP1_C_NGE_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGE_S
+#ifdef INTERPRET_CP1_C_NGE_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5969,12 +5969,12 @@ void genc_nge_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_nge_d(struct r4300_core* r4300)
+void gen_CP1_C_NGE_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGE_D
+#ifdef INTERPRET_CP1_C_NGE_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -5992,12 +5992,12 @@ void genc_nge_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_le_s(struct r4300_core* r4300)
+void gen_CP1_C_LE_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_LE_S
+#ifdef INTERPRET_CP1_C_LE_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_LE_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -6014,12 +6014,12 @@ void genc_le_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_le_d(struct r4300_core* r4300)
+void gen_CP1_C_LE_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_LE_D
+#ifdef INTERPRET_CP1_C_LE_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_LE_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -6036,12 +6036,12 @@ void genc_le_d(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngt_s(struct r4300_core* r4300)
+void gen_CP1_C_NGT_S(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGT_S
+#ifdef INTERPRET_CP1_C_NGT_S
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGT_S, 0);
 #else
     gencheck_cop1_unusable(r4300);
@@ -6059,12 +6059,12 @@ void genc_ngt_s(struct r4300_core* r4300)
 #endif
 }
 
-void genc_ngt_d(struct r4300_core* r4300)
+void gen_CP1_C_NGT_D(struct r4300_core* r4300)
 {
 #if defined(COUNT_INSTR)
     inc_m32rel(&instr_count[118]);
 #endif
-#ifdef INTERPRET_C_NGT_D
+#ifdef INTERPRET_CP1_C_NGT_D
     gencallinterp(r4300, (unsigned long long)cached_interp_C_NGT_D, 0);
 #else
     gencheck_cop1_unusable(r4300);
