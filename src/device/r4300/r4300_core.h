@@ -204,6 +204,15 @@ struct r4300_core
 #define R4300_KSEG0 UINT32_C(0x80000000)
 #define R4300_KSEG1 UINT32_C(0xa0000000)
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#define R4300_REGS_OFFSET \
+    offsetof(struct r4300_core, regs)
+#else
+#define R4300_REGS_OFFSET (\
+    offsetof(struct r4300_core, new_dynarec_hot_state) + \
+    offsetof(struct new_dynarec_hot_state, regs))
+#endif
+
 void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct rdram* rdram, const struct interrupt_handler* interrupt_handlers, unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int randomize_interrupt);
 void poweron_r4300(struct r4300_core* r4300);
 

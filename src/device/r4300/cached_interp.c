@@ -376,10 +376,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
         /* use the OUT version since we don't know until runtime
          * if we're going to jump inside or outside of block */
         opcode += 2;
-        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
-        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
-        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        inst->f.r.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.r.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
+        inst->f.r.rd = IDEC_U53(r4300, iw, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, idec->u53[3], &inst->f.r.sa);
         break;
 
     case R4300_OP_JR:
@@ -388,8 +388,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
         opcode += 2;
 
         /* XXX: mips_instruction.def expects i-type */
-        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.i.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
         inst->f.i.immediate  = (int16_t)iw;
         break;
 
@@ -428,8 +428,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_BLTZL:
     case R4300_OP_BNE:
     case R4300_OP_BNEL:
-        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.i.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
         inst->f.i.immediate  = (int16_t)iw;
 
         /* select normal, idle or out branch type */
@@ -467,10 +467,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_SUB:
     case R4300_OP_SUBU:
     case R4300_OP_XOR:
-        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
-        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
-        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        inst->f.r.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.r.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
+        inst->f.r.rd = IDEC_U53(r4300, iw, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, idec->u53[3], &inst->f.r.sa);
 
         /* optimization: nopify instruction when r0 is the destination register (rd) */
         if (inst->f.r.nrd == 0) { opcode = R4300_OP_NOP; }
@@ -500,8 +500,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_SLTI:
     case R4300_OP_SLTIU:
     case R4300_OP_XORI:
-        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.i.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
         inst->f.i.immediate  = (int16_t)iw;
 
         /* optimization: nopify instruction when r0 is the destination register (rt) */
@@ -512,8 +512,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_LWC1:
     case R4300_OP_SDC1:
     case R4300_OP_SWC1:
-        idec_u53(iw, r4300, idec->u53[2], &inst->f.lf.base);
-        idec_u53(iw, r4300, idec->u53[1], &inst->f.lf.ft);
+        idec_u53(iw, idec->u53[2], &inst->f.lf.base);
+        idec_u53(iw, idec->u53[1], &inst->f.lf.ft);
         inst->f.lf.offset  = (uint16_t)iw;
         break;
 
@@ -526,10 +526,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_MFC0:
     case R4300_OP_MFC1:
     case R4300_OP_MFC2:
-        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
-        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
-        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        inst->f.r.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.r.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
+        inst->f.r.rd = IDEC_U53(r4300, iw, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, idec->u53[3], &inst->f.r.sa);
 
         /* optimization: nopify instruction when r0 is the destination register (rt) */
         if (dummy == 0) { opcode = R4300_OP_NOP; }
@@ -537,10 +537,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
 
 #define CP1_S_D(op) \
     case R4300_OP_CP1_##op: \
-        idec_u53(iw, r4300, idec->u53[3], &dummy); \
-        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs); \
-        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft); \
-        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd); \
+        idec_u53(iw, idec->u53[3], &dummy); \
+        idec_u53(iw, idec->u53[2], &inst->f.cf.fs); \
+        idec_u53(iw, idec->u53[1], &inst->f.cf.ft); \
+        idec_u53(iw, idec->u53[0], &inst->f.cf.fd); \
         switch(dummy) \
         { \
         case 0x10: inst->ops = cached_interp_##op##_S; return idec->opcode; \
@@ -586,10 +586,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
 #undef CP1_S_D
 
     case R4300_OP_CP1_CVT_D:
-        idec_u53(iw, r4300, idec->u53[3], &dummy);
-        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs);
-        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft);
-        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd);
+        idec_u53(iw, idec->u53[3], &dummy);
+        idec_u53(iw, idec->u53[2], &inst->f.cf.fs);
+        idec_u53(iw, idec->u53[1], &inst->f.cf.ft);
+        idec_u53(iw, idec->u53[0], &inst->f.cf.fd);
         switch(dummy)
         {
         case 0x10: inst->ops = cached_interp_CVT_D_S; return idec->opcode;
@@ -600,10 +600,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
         break;
 
     case R4300_OP_CP1_CVT_S:
-        idec_u53(iw, r4300, idec->u53[3], &dummy);
-        idec_u53(iw, r4300, idec->u53[2], &inst->f.cf.fs);
-        idec_u53(iw, r4300, idec->u53[1], &inst->f.cf.ft);
-        idec_u53(iw, r4300, idec->u53[0], &inst->f.cf.fd);
+        idec_u53(iw, idec->u53[3], &dummy);
+        idec_u53(iw, idec->u53[2], &inst->f.cf.fs);
+        idec_u53(iw, idec->u53[1], &inst->f.cf.ft);
+        idec_u53(iw, idec->u53[0], &inst->f.cf.fd);
         switch(dummy)
         {
         case 0x11: inst->ops = cached_interp_CVT_S_D; return idec->opcode;
@@ -639,10 +639,10 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_TLT:
     case R4300_OP_TLTU:
     case R4300_OP_TNE:
-        inst->f.r.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.r.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
-        inst->f.r.rd = idec_u53(iw, r4300, idec->u53[0], &inst->f.r.nrd);
-        idec_u53(iw, r4300, idec->u53[3], &inst->f.r.sa);
+        inst->f.r.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.r.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
+        inst->f.r.rd = IDEC_U53(r4300, iw, idec->u53[0], &inst->f.r.nrd);
+        idec_u53(iw, idec->u53[3], &inst->f.r.sa);
         break;
 
     case R4300_OP_LDC2:
@@ -664,8 +664,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_TLTI:
     case R4300_OP_TLTIU:
     case R4300_OP_TNEI:
-        inst->f.i.rs = idec_u53(iw, r4300, idec->u53[2], &dummy);
-        inst->f.i.rt = idec_u53(iw, r4300, idec->u53[1], &dummy);
+        inst->f.i.rs = IDEC_U53(r4300, iw, idec->u53[2], &dummy);
+        inst->f.i.rt = IDEC_U53(r4300, iw, idec->u53[1], &dummy);
         inst->f.i.immediate  = (int16_t)iw;
         break;
 

@@ -544,54 +544,53 @@ const struct r4300_idec* r4300_get_idec(uint32_t iw) {
 	return &r4300_op_table[escape->offset + ((iw >> escape->shift) & escape->mask)];
 }
 
-/* FIXME: don't require r4300 instance, returns an offset from r4300 pointer */
-void* idec_u53(uint32_t iw, struct r4300_core* r4300, uint8_t u53, uint8_t* u5)
+size_t idec_u53(uint32_t iw, uint8_t u53, uint8_t* u5)
 {
-    void* p = NULL;
+    size_t o = 0;
     uint8_t r = (iw >> U53_SHIFT(u53)) & 0x1f;
 
     switch (U53_TYPE(u53))
     {
     case IDEC_REGTYPE_NONE:
-        p = NULL;
+        o = 0;
         break;
     case IDEC_REGTYPE_GPR:
-        p = r4300_regs(r4300) + r;
+        o = R4300_REGS_OFFSET + r * sizeof(int64_t);
         break;
     case IDEC_REGTYPE_CPR0:
-        p = r4300_cp0_regs(&r4300->cp0) + r;
+        o = R4300_CP0_REGS_OFFSET + r * sizeof(uint32_t);
         break;
     case IDEC_REGTYPE_FPR32:
-        p = r4300_cp1_regs_simple(&r4300->cp1) + r;
+        o = R4300_CP1_REGS_S_OFFSET + r * sizeof(float*);
         break;
     case IDEC_REGTYPE_FPR64:
-        p = r4300_cp1_regs_double(&r4300->cp1) + r;
+        o = R4300_CP1_REGS_D_OFFSET + r * sizeof(double*);
         break;
     case IDEC_REGTYPE_FPR:
         switch((iw >> U53_SHIFT(U53_FMT) & 0x1f))
         {
         case 16: /* S */
         case 20: /* W */
-            p = r4300_cp1_regs_simple(&r4300->cp1) + r;
+            o = R4300_CP1_REGS_S_OFFSET + r * sizeof(float*);
             break;
         case 17: /* D */
         case 21: /* L */
-            p = r4300_cp1_regs_double(&r4300->cp1) + r;
+            o = R4300_CP1_REGS_D_OFFSET + r * sizeof(double*);
             break;
         default: /* reserved instruction - (ex: LEGO)*/ break;
         }
         break;
     case IDEC_REGTYPE_FCR:
-        p = (r == 0)
-            ? r4300_cp1_fcr0(&r4300->cp1)
-            : r4300_cp1_fcr31(&r4300->cp1);
+        o = (r == 0)
+            ? R4300_CP1_FCR0_OFFSET
+            : R4300_CP1_FCR31_OFFSET;
         break;
 
     default: assert(0);
     }
 
     *u5 = r;
-    return p;
+    return o;
 }
 
 #define X(op) #op

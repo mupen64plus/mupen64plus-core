@@ -27,8 +27,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct r4300_core;
-
 #define X(op) R4300_OP_##op
 enum r4300_opcode
 {
@@ -80,7 +78,9 @@ static osal_inline int64_t idec_imm(uint32_t iw, const struct r4300_idec* idec)
 const struct r4300_idec* r4300_get_idec(uint32_t iw);
 
 /* decode register */
-void* idec_u53(uint32_t iw, struct r4300_core* r4300, uint8_t u53, uint8_t* u5);
+size_t idec_u53(uint32_t iw, uint8_t u53, uint8_t* u5);
+
+#define IDEC_U53(r4300, iw, u53, u5) (void*)(((char*)(r4300)) + idec_u53((iw), (u53), (u5)))
 
 const char* g_r4300_opcodes[R4300_OPCODES_COUNT];
 
