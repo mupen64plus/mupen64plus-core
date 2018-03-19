@@ -919,11 +919,9 @@ void cached_interpreter_jump_to(struct r4300_core* r4300, uint32_t address)
 }
 
 
-void init_blocks(struct r4300_core* r4300)
+void init_blocks(struct cached_interp* cinterp)
 {
     size_t i;
-    struct cached_interp* cinterp = &r4300->cached_interp;
-
     for (i = 0; i < 0x100000; ++i)
     {
         cinterp->invalid_code[i] = 1;
@@ -931,16 +929,14 @@ void init_blocks(struct r4300_core* r4300)
     }
 }
 
-void free_blocks(struct r4300_core* r4300)
+void free_blocks(struct cached_interp* cinterp)
 {
     size_t i;
-    struct cached_interp* cinterp = &r4300->cached_interp;
-
     for (i = 0; i < 0x100000; ++i)
     {
         if (cinterp->blocks[i])
         {
-            r4300->cached_interp.free_block(cinterp->blocks[i]);
+            cinterp->free_block(cinterp->blocks[i]);
             free(cinterp->blocks[i]);
             cinterp->blocks[i] = NULL;
         }

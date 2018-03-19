@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 struct r4300_core;
+struct cached_interp;
 struct r4300_idec;
 struct precomp_block;
 struct precomp_instr;
@@ -40,8 +41,8 @@ void cached_interp_free_block(struct precomp_block* block);
 
 void cached_interp_recompile_block(struct r4300_core* r4300, const uint32_t* iw, struct precomp_block* block, uint32_t func);
 
-void init_blocks(struct r4300_core* r4300);
-void free_blocks(struct r4300_core* r4300);
+void init_blocks(struct cached_interp* cinterp);
+void free_blocks(struct cached_interp* cinterp);
 
 void invalidate_cached_code_hacktarux(struct r4300_core* r4300, uint32_t address, size_t size);
 
