@@ -140,6 +140,11 @@ void run_r4300(struct r4300_core* r4300)
     {
         DebugMessage(M64MSG_INFO, "Starting R4300 emulator: Dynamic Recompiler");
         r4300->emumode = EMUMODE_DYNAREC;
+#ifdef NEW_DYNAREC
+        new_dynarec_init();
+        new_dyna_start();
+        new_dynarec_cleanup();
+#else
         r4300->cached_interp.fin_block = dynarec_fin_block;
         r4300->cached_interp.not_compiled = dynarec_notcompiled;
         r4300->cached_interp.not_compiled2 = dynarec_notcompiled2;
@@ -147,11 +152,6 @@ void run_r4300(struct r4300_core* r4300)
         r4300->cached_interp.free_block = dynarec_free_block;
         r4300->cached_interp.recompile_block = dynarec_recompile_block;
 
-#ifdef NEW_DYNAREC
-        new_dynarec_init();
-        new_dyna_start();
-        new_dynarec_cleanup();
-#else
         init_blocks(r4300);
         dyna_start(dynarec_setup_code);
         (*r4300_pc_struct(r4300))++;
