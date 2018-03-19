@@ -114,16 +114,7 @@
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\cp0.c" />
     <ClCompile Include="..\..\src\device\r4300\cp1.c" />
-    <ClCompile Include="..\..\src\device\r4300\empty_dynarec.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\src\device\r4300\idec.c" />
     <ClCompile Include="..\..\src\device\r4300\interrupt.c" />
     <ClCompile Include="..\..\src\device\rcp\mi\mi_controller.c" />
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.c">
@@ -172,7 +163,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\pure_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\r4300_core.c" />
-    <ClCompile Include="..\..\src\device\r4300\recomp.c" />
+    <ClCompile Include="..\..\src\device\r4300\recomp.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\tlb.c" />
     <ClCompile Include="..\..\src\device\r4300\x86\assemble.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
@@ -316,8 +312,8 @@
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
     <ClInclude Include="..\..\src\device\r4300\cp1.h" />
     <ClInclude Include="..\..\src\device\r4300\fpu.h" />
+    <ClInclude Include="..\..\src\device\r4300\idec.h" />
     <ClInclude Include="..\..\src\device\r4300\interrupt.h" />
-    <ClInclude Include="..\..\src\device\r4300\macros.h" />
     <ClInclude Include="..\..\src\device\rcp\mi\mi_controller.h" />
     <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm\arm_cpu_features.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -359,12 +355,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\..\src\device\r4300\ops.h" />
     <ClInclude Include="..\..\src\device\r4300\pure_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\r4300_core.h" />
     <ClInclude Include="..\..\src\device\r4300\recomp.h" />
     <ClInclude Include="..\..\src\device\r4300\recomp_types.h" />
-    <ClInclude Include="..\..\src\device\r4300\recomph.h" />
     <ClInclude Include="..\..\src\device\r4300\tlb.h" />
     <ClInclude Include="..\..\src\device\r4300\x86\assemble.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
@@ -451,6 +445,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\device\r4300\mips_instructions.def" />
+    <None Include="..\..\src\device\r4300\opcodes.md" />
     <None Include="..\..\src\device\r4300\new_dynarec\arm\linkage_arm.S">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
