@@ -105,11 +105,15 @@ typedef enum {joyFullscreen,
               joySave,
               joyLoad,
               joyIncrement,
+              joyReset,
+              joySpeedDown,
+              joySpeedUp,
               joyScreenshot,
               joyMute,
               joyIncrease,
               joyDecrease,
               joyForward,
+              joyAdvance,
               joyGameshark
 } eJoyCommand;
 
@@ -119,11 +123,15 @@ static const char *JoyCmdName[] = { "Joy Mapping Fullscreen",
                                     "Joy Mapping Save State",
                                     "Joy Mapping Load State",
                                     "Joy Mapping Increment Slot",
+                                    "Joy Mapping Reset",
+                                    "Joy Mapping Speed Down",
+                                    "Joy Mapping Speed Up",
                                     "Joy Mapping Screenshot",
                                     "Joy Mapping Mute",
                                     "Joy Mapping Increase Volume",
                                     "Joy Mapping Decrease Volume",
                                     "Joy Mapping Fast Forward",
+                                    "Joy Mapping Frame Advance",
                                     "Joy Mapping Gameshark"};
 
 static const int NumJoyCommands = sizeof(JoyCmdName) / sizeof(const char *);
@@ -374,6 +382,12 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                         main_state_load(NULL); /* load using current slot */
                     else if (cmd == joyIncrement)
                         main_state_inc_slot();
+                    else if (cmd == joyReset)
+                        main_reset(0);
+                    else if (cmd == joySpeedDown)
+                        main_speeddown(5);
+                    else if (cmd == joySpeedUp)
+                        main_speedup(5);
                     else if (cmd == joyScreenshot)
                         main_take_next_screenshot();
                     else if (cmd == joyMute)
@@ -384,6 +398,8 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                         main_volume_up();
                     else if (cmd == joyForward)
                         main_set_fastforward(1);
+                    else if (cmd == joyAdvance)
+                        main_advance_one();
                     else if (cmd == joyGameshark)
                         event_set_gameshark(1);
                 }
