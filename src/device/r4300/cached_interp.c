@@ -338,7 +338,7 @@ void cached_interp_NOTCOMPILED2(void)
 #define cached_interp_CP1_TRUNC_W cached_interp_RESERVED
 
 #define X(op) cached_interp_##op
-static const void (*const ci_table[R4300_OPCODES_COUNT])(void) =
+static void (*const ci_table[R4300_OPCODES_COUNT])(void) =
 {
     #include "opcodes.md"
 };
