@@ -4361,7 +4361,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULT);
+        emit_call((int)cached_interp_DMULT);
         restore_regs(0x100f);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
@@ -4389,7 +4389,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULTU);
+        emit_call((int)cached_interp_DMULTU);
         restore_regs(0x100f);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
@@ -4481,7 +4481,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIV);
+        emit_call((int)cached_interp_DDIV);
         restore_regs(0x100f);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
@@ -4509,7 +4509,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIVU);
+        emit_call((int)cached_interp_DDIVU);
         restore_regs(0x100f);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
