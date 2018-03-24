@@ -27,11 +27,6 @@
 #define ESI 6
 #define EDI 7
 
-void dynarec_gen_interrupt(void)
-{
-    gen_interrupt(&g_dev.r4300);
-}
-
 void jump_vaddr_eax(void);
 void jump_vaddr_ecx(void);
 void jump_vaddr_edx(void);

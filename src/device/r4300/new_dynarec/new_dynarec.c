@@ -272,6 +272,11 @@ static signed char regmap[MAXBLOCK][HOST_REGS];
 static signed char regmap_entry[MAXBLOCK][HOST_REGS];
 #endif
 
+void dynarec_gen_interrupt(void)
+{
+    gen_interrupt(&g_dev.r4300);
+}
+
 static void clear_all_regs(signed char regmap[])
 {
   int hr;
