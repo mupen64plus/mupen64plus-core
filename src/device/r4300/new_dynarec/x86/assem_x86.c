@@ -18,7 +18,14 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "device/r4300/x86/assemble.h" /* needed for x86 registers constants */
+#define EAX 0
+#define ECX 1
+#define EDX 2
+#define EBX 3
+#define ESP 4
+#define EBP 5
+#define ESI 6
+#define EDI 7
 
 void jump_vaddr_eax(void);
 void jump_vaddr_ecx(void);
@@ -2685,7 +2692,7 @@ static void do_readstub(int n)
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
   
   int cc=get_reg(i_regmap,CCREG);
@@ -2751,7 +2758,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
 
   int cc=get_reg(regmap,CCREG);
@@ -2831,23 +2838,23 @@ static void do_writestub(int n)
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword(rs,(int)r4300_address(&g_dev.r4300));
+  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREH_STUB){
     ftable=(int)write_hword_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREW_STUB){
     ftable=(int)write_word_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
-    emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
-    emit_writeword(r?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wdword);
+    emit_writeword(r?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   emit_pusha();
@@ -2894,23 +2901,23 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword_imm(addr,(int)r4300_address(&g_dev.r4300));
+  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREH_STUB){
     ftable=(int)write_hword_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STOREW_STUB){
     ftable=(int)write_word_new;
-    emit_writeword(rt,(int)r4300_wword(&g_dev.r4300));
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
   }
   if(type==STORED_STUB){
     ftable=(int)write_dword_new;
-    emit_writeword(rt,(int)r4300_wdword(&g_dev.r4300));
-    emit_writeword(target?rth:rt,(int)r4300_wdword(&g_dev.r4300)+4);
+    emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wdword);
+    emit_writeword(target?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
   emit_pusha();
@@ -3437,7 +3444,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
           emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
           emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
         }
-        emit_call((int)cached_interpreter_table.MFC0);
+        emit_call((int)cached_interp_MFC0);
         emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3471,7 +3478,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     }
     //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
     //else
-    emit_call((int)cached_interpreter_table.MTC0);
+    emit_call((int)cached_interp_MTC0);
     if(copr==9||copr==11||copr==12) {
       emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
       emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
@@ -3501,7 +3508,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
   {
     assert(opcode2[i]==0x10);
     if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interpreter_table.TLBR);
+      emit_call((int)cached_interp_TLBR);
     if((source[i]&0x3f)==0x02) {  // TLBWI
       assert(!is_delayslot);
       emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
@@ -3520,7 +3527,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_call((int)TLBWR_new);
     }
     if((source[i]&0x3f)==0x08) // TLBP
-      emit_call((int)cached_interpreter_table.TLBP);
+      emit_call((int)cached_interp_TLBP);
     if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
@@ -4224,7 +4231,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULT);
+        emit_call((int)cached_interp_DMULT);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4251,7 +4258,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DMULTU);
+        emit_call((int)cached_interp_DMULTU);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4380,7 +4387,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIV);
+        emit_call((int)cached_interp_DDIV);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
@@ -4407,7 +4414,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interpreter_table.DDIVU);
+        emit_call((int)cached_interp_DDIVU);
         emit_popa();
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);

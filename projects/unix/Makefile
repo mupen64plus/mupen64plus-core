@@ -468,10 +468,10 @@ SOURCE = \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
+    $(SRCDIR)/device/r4300/idec.c \
     $(SRCDIR)/device/r4300/interrupt.c \
     $(SRCDIR)/device/r4300/pure_interp.c \
     $(SRCDIR)/device/r4300/r4300_core.c \
-    $(SRCDIR)/device/r4300/recomp.c \
     $(SRCDIR)/device/r4300/tlb.c \
     $(SRCDIR)/device/rcp/ai/ai_controller.c \
     $(SRCDIR)/device/rcp/mi/mi_controller.c \
@@ -564,17 +564,15 @@ ifneq ($(DYNAREC), )
     endif
 
     SOURCE += \
-      $(SRCDIR)/device/r4300/empty_dynarec.c \
       $(SRCDIR)/device/r4300/new_dynarec/new_dynarec.c
   else
     SOURCE += \
+      $(SRCDIR)/device/r4300/recomp.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/assemble.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/dynarec.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/regcache.c \
       $(SRCDIR)/device/r4300/$(DYNAREC)/dyna_start.asm
   endif
-else
-  SOURCE += $(SRCDIR)/device/r4300/empty_dynarec.c
 endif
 
 ifeq ($(LIRC), 1)

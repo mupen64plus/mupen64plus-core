@@ -30,6 +30,7 @@
 #include "api/debugger.h"
 #include "api/m64p_types.h"
 #include "device/r4300/r4300_core.h"
+#include "osal/preproc.h"
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
@@ -116,11 +117,7 @@ static void InterpretOpcode(struct r4300_core* r4300);
 	 && ((addr) & UINT32_C(0x0FFFFFFF)) != UINT32_C(0x0FFFFFFC) \
 	 && *fast_mem_access((r4300), (addr) + 4) == 0)
 
-#define SE8(a) ((int64_t) ((int8_t) (a)))
-#define SE16(a) ((int64_t) ((int16_t) (a)))
-#define SE32(a) ((int64_t) ((int32_t) (a)))
-
-/* These macros are like those in macros.h, but they parse opcode fields. */
+/* These macros parse opcode fields. */
 #define rrt r4300_regs(r4300)[RT_OF(op)]
 #define rrd r4300_regs(r4300)[RD_OF(op)]
 #define rfs FS_OF(op)

@@ -46,7 +46,10 @@ struct new_dynarec_hot_state
     int last_count;
     int pending_exception;
     int pcaddr;
+    uint32_t address;
     uint64_t rdword;
+    uint64_t wdword;
+    uint32_t wword;
     int branch_target;
     struct precomp_instr fake_pc;
     int64_t rs;
@@ -68,7 +71,6 @@ struct new_dynarec_hot_state
     char* invc_ptr;
     uint32_t address;
     uint64_t rdword;
-    uint32_t wmask;
     uint64_t wdword;
     uint32_t wword;
     uint32_t fcr0;

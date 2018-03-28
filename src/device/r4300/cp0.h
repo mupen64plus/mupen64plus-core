@@ -205,6 +205,16 @@ struct cp0
     struct tlb tlb;
 };
 
+#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#define R4300_CP0_REGS_OFFSET (\
+    offsetof(struct r4300_core, cp0) + \
+    offsetof(struct cp0, regs))
+#else
+#define R4300_CP0_REGS_OFFSET (\
+    offsetof(struct r4300_core, new_dynarec_hot_state) + \
+    offsetof(struct new_dynarec_hot_state, cp0_regs))
+#endif
+
 void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers);
 void poweron_cp0(struct cp0* cp0);
 

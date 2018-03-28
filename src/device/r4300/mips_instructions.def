@@ -21,6 +21,14 @@
 
 /* Before #including this file the following macros must be defined:
  *
+ * instruction operands accessor macros:
+ * rrt, rrd, rfs, rrs, rsa,
+ * rrt32, rrd32, rrs32, irs32, irt32,
+ * irt, irs, ibase, ioffset, iimmediate,
+ * jinst_index,
+ * lfbase, lfft, lfoffset,
+ * cfft, cffs, cffd
+ *
  * DECLARE_R4300: An optionnal way of declaring teh r4300 pointer used
  * in instructions definitions
  * PCADDR: Program counter (memory address of the current instruction).
@@ -49,6 +57,7 @@
 #include "device/rcp/mi/mi_controller.h"
 #include "device/rdram/rdram.h"
 #include "main/xxHash/xxhash.h"
+#include "osal/preproc.h"
 
 #include <inttypes.h>
 #include <stdint.h>

@@ -28,18 +28,24 @@
 struct r4300_core;
 struct precomp_block;
 
-void recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func);
-void init_block(struct r4300_core* r4300, struct precomp_block* block);
-void free_block(struct r4300_core* r4300, struct precomp_block* block);
+void dynarec_init_block(struct r4300_core* r4300, uint32_t address);
+void dynarec_free_block(struct precomp_block* block);
+void dynarec_recompile_block(struct r4300_core* r4300, const uint32_t* source, struct precomp_block* block, uint32_t func);
 void recompile_opcode(struct r4300_core* r4300);
 void dyna_jump(void);
 void dyna_start(void (*code)(void));
 void dyna_stop(struct r4300_core* r4300);
 void *realloc_exec(void *ptr, size_t oldsize, size_t newsize);
 
+void (*const recomp_ops[64])(struct r4300_core* r4300);
 
+void dynarec_jump_to(struct r4300_core* r4300, uint32_t address);
+
+void dynarec_fin_block(void);
+void dynarec_notcompiled(void);
+void dynarec_notcompiled2(void);
 void dynarec_setup_code(void);
-void dynarec_jump_to_address(void);
+void dynarec_jump_to_recomp_address(void);
 void dynarec_exception_general(void);
 int dynarec_check_cop1_unusable(void);
 void dynarec_cp0_update_count(void);

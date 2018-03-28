@@ -142,6 +142,38 @@ void cp0_update_count(struct r4300_core* r4300)
 */
 }
 
+static void exception_epilog(struct r4300_core* r4300)
+{
+#ifndef NO_ASM
+    if (r4300->emumode == EMUMODE_DYNAREC)
+    {
+#ifndef NEW_DYNAREC
+        dyna_jump();
+        if (!r4300->recomp.dyna_interp) { r4300->delay_slot = 0; }
+#else
+        /* ??? for new_dynarec dyna_interp is always 0 so that means delay_slot = 0 path is always taken */
+        r4300->delay_slot = 0;
+#endif
+    }
+#endif
+
+#ifndef NEW_DYNAREC
+    if (r4300->emumode != EMUMODE_DYNAREC || r4300->recomp.dyna_interp)
+    {
+        r4300->recomp.dyna_interp = 0;
+#else
+    if (r4300->emumode != EMUMODE_DYNAREC)
+    {
+#endif
+        if (r4300->delay_slot)
+        {
+            r4300->skip_jump = *r4300_pc(r4300);
+            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
+        }
+    }
+}
+
+
 void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
 {
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
@@ -223,21 +255,7 @@ void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
 
     r4300->cp0.last_addr = *r4300_pc(r4300);
 
-    if (r4300->emumode == EMUMODE_DYNAREC)
-    {
-        dyna_jump();
-        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
-    }
-
-    if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
-    {
-        r4300->dyna_interp = 0;
-        if (r4300->delay_slot)
-        {
-            r4300->skip_jump = *r4300_pc(r4300);
-            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
-        }
-    }
+    exception_epilog(r4300);
 }
 
 void exception_general(struct r4300_core* r4300)
@@ -263,19 +281,6 @@ void exception_general(struct r4300_core* r4300)
 
     r4300->cp0.last_addr = *r4300_pc(r4300);
 
-    if (r4300->emumode == EMUMODE_DYNAREC)
-    {
-        dyna_jump();
-        if (!r4300->dyna_interp) { r4300->delay_slot = 0; }
-    }
-    if (r4300->emumode != EMUMODE_DYNAREC || r4300->dyna_interp)
-    {
-        r4300->dyna_interp = 0;
-        if (r4300->delay_slot)
-        {
-            r4300->skip_jump = *r4300_pc(r4300);
-            *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
-        }
-    }
+    exception_epilog(r4300);
 }
 

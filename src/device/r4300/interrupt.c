@@ -460,13 +460,15 @@ void nmi_int_handler(void* opaque)
     cp0_regs[CP0_ERROREPC_REG] = *r4300_pc(r4300);
     // reset the r4300 internal state
     invalidate_r4300_cached_code(r4300, 0, 0);
-    // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->dyna_interp flags
+    // adjust ErrorEPC if we were in a delay slot, and clear the r4300->delay_slot and r4300->recomp.dyna_interp flags
     if(r4300->delay_slot==1 || r4300->delay_slot==3)
     {
         cp0_regs[CP0_ERROREPC_REG]-=4;
     }
     r4300->delay_slot = 0;
-    r4300->dyna_interp = 0;
+#ifndef NEW_DYNAREC
+    r4300->recomp.dyna_interp = 0;
+#endif
     // set next instruction address to reset vector
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     generic_jump_to(r4300, UINT32_C(0xa4000040));
@@ -507,7 +509,11 @@ void gen_interrupt(struct r4300_core* r4300)
     if (*r4300_stop(r4300) == 1)
     {
         g_gs_vi_counter = 0; // debug
+#ifndef NO_ASM
+#ifndef NEW_DYNAREC
         dyna_stop(r4300);
+#endif
+#endif
     }
 
     if (!r4300->cp0.interrupt_unsafe_state)

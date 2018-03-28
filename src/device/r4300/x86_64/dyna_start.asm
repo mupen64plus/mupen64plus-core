@@ -40,10 +40,10 @@
     %endmacro
 %endif
 
-%define g_dev_r4300_save_rsp       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rsp)
-%define g_dev_r4300_save_rip       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_save_rip)
-%define g_dev_r4300_return_address (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_return_address)
-%define g_dev_r4300_regs           (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs)
+%define g_dev_r4300_recomp_save_rsp       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_recomp + offsetof_struct_recomp_save_rsp)
+%define g_dev_r4300_recomp_save_rip       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_recomp + offsetof_struct_recomp_save_rip)
+%define g_dev_r4300_recomp_return_address (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_recomp + offsetof_struct_recomp_return_address)
+%define g_dev_r4300_regs                  (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_regs)
 
 cglobal dyna_start
 
@@ -67,25 +67,25 @@ dyna_start:
     push r14
     push r15
     push rbp
-    mov  [rel g_dev_r4300_save_rsp], rsp
+    mov  [rel g_dev_r4300_recomp_save_rsp], rsp
     lea  r15, [rel g_dev_r4300_regs] ;store the base location of the r4300 registers in r15 for addressing
     call _A1
     jmp  _A2
 _A1:
     pop  rax
-    mov  [rel g_dev_r4300_save_rip], rax
+    mov  [rel g_dev_r4300_recomp_save_rip], rax
     sub  rsp, 0x20
     and  rsp, 0xFFFFFFFFFFFFFFF0 ;ensure that stack is 16-byte aligned
     mov  rax, rsp
     sub  rax, 8
-    mov  [rel g_dev_r4300_return_address], rax
+    mov  [rel g_dev_r4300_recomp_return_address], rax
 %ifdef WIN64
     call rcx
 %else
     call rdi
 %endif
 _A2:
-    mov  rsp, [rel g_dev_r4300_save_rsp]
+    mov  rsp, [rel g_dev_r4300_recomp_save_rsp]
     pop  rbp
     pop  r15
     pop  r14
@@ -97,6 +97,6 @@ _A2:
     pop rdi
 %endif
 
-    mov  QWORD [rel g_dev_r4300_save_rsp], 0
-    mov  QWORD [rel g_dev_r4300_save_rip], 0
+    mov  QWORD [rel g_dev_r4300_recomp_save_rsp], 0
+    mov  QWORD [rel g_dev_r4300_recomp_save_rip], 0
     ret
