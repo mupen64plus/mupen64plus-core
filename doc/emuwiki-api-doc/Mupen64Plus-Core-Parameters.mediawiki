@@ -179,6 +179,18 @@ With this joystick event string, the emulator will shut down when joystick 0 but
 |M64TYPE_STRING
 |Joystick event string for advancing the save state slot
 |-
+|Joy Mapping Reset
+|M64TYPE_STRING
+|Joystick event string for resetting the emulator
+|-
+|Joy Mapping Speed Down
+|M64TYPE_STRING
+|Joystick event string for slowing down the emulator
+|-
+|Joy Mapping Speed Up
+|M64TYPE_STRING
+|Joystick event string for speeding up the emulator
+|-
 |Joy Mapping Screenshot
 |M64TYPE_STRING
 |Joystick event string for taking a screenshot
@@ -202,6 +214,10 @@ With this joystick event string, the emulator will shut down when joystick 0 but
 |Joy Mapping Fast Forward
 |M64TYPE_STRING
 |Joystick event string for temporarily going really fast
+|-
+|Joy Mapping Frame Advance
+|M64TYPE_STRING
+|Joystick event string for advancing by one frame when paused
 |-
 |Joy Mapping Gameshark
 |M64TYPE_STRING

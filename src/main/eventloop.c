@@ -105,11 +105,15 @@ typedef enum {joyFullscreen,
               joySave,
               joyLoad,
               joyIncrement,
+              joyReset,
+              joySpeedDown,
+              joySpeedUp,
               joyScreenshot,
               joyMute,
               joyIncrease,
               joyDecrease,
               joyForward,
+              joyAdvance,
               joyGameshark
 } eJoyCommand;
 
@@ -119,11 +123,15 @@ static const char *JoyCmdName[] = { "Joy Mapping Fullscreen",
                                     "Joy Mapping Save State",
                                     "Joy Mapping Load State",
                                     "Joy Mapping Increment Slot",
+                                    "Joy Mapping Reset",
+                                    "Joy Mapping Speed Down",
+                                    "Joy Mapping Speed Up",
                                     "Joy Mapping Screenshot",
                                     "Joy Mapping Mute",
                                     "Joy Mapping Increase Volume",
                                     "Joy Mapping Decrease Volume",
                                     "Joy Mapping Fast Forward",
+                                    "Joy Mapping Frame Advance",
                                     "Joy Mapping Gameshark"};
 
 static const int NumJoyCommands = sizeof(JoyCmdName) / sizeof(const char *);
@@ -374,6 +382,12 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                         main_state_load(NULL); /* load using current slot */
                     else if (cmd == joyIncrement)
                         main_state_inc_slot();
+                    else if (cmd == joyReset)
+                        main_reset(0);
+                    else if (cmd == joySpeedDown)
+                        main_speeddown(5);
+                    else if (cmd == joySpeedUp)
+                        main_speedup(5);
                     else if (cmd == joyScreenshot)
                         main_take_next_screenshot();
                     else if (cmd == joyMute)
@@ -384,6 +398,8 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                         main_volume_up();
                     else if (cmd == joyForward)
                         main_set_fastforward(1);
+                    else if (cmd == joyAdvance)
+                        main_advance_one();
                     else if (cmd == joyGameshark)
                         event_set_gameshark(1);
                 }
@@ -548,12 +564,16 @@ int event_set_core_defaults(void)
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joySave], "",       "Joystick event string for saving the emulator state");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyLoad], "",       "Joystick event string for loading the emulator state");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyIncrement], "",  "Joystick event string for advancing the save state slot");
+    ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyReset], "",      "Joystick event string for resetting the emulator");
+    ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joySpeedDown], "",  "Joystick event string for slowing down the emulator");
+    ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joySpeedUp], "",    "Joystick event string for speeding up the emulator");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyScreenshot], "", "Joystick event string for taking a screenshot");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyPause], "",      "Joystick event string for pausing the emulator");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyMute], "",       "Joystick event string for muting/unmuting the sound");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyIncrease], "",   "Joystick event string for increasing the volume");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyDecrease], "",   "Joystick event string for decreasing the volume");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyForward], "",    "Joystick event string for fast-forward");
+    ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyAdvance], "",    "Joystick event string for advancing by one frame when paused");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyGameshark], "",  "Joystick event string for pressing the game shark button");
 
     if (bSaveConfig)
