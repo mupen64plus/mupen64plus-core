@@ -146,6 +146,20 @@ typedef m64p_error (*ptr_VidExt_GL_SwapBuffers)(void);
 EXPORT m64p_error CALL VidExt_GL_SwapBuffers(void);
 #endif
 
+/* VidExt_GL_GetDefaultFramebuffer()
+ *
+ * On some platforms (for instance, iOS) the default framebuffer object
+ * depends on the surface being rendered to, and might be different from 0.
+ * This function should be called after VidExt_SetVideoMode to retrieve the
+ * name of the default FBO.
+ * Calling this function may have performance implications
+ * and it should not be called every time the default FBO is bound.
+ */
+typedef uint32_t (*ptr_VidExt_GL_GetDefaultFramebuffer)(void);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT uint32_t CALL VidExt_GL_GetDefaultFramebuffer(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
