@@ -961,6 +961,137 @@ static void open_eep_file(struct file_storage* fstorage)
     }
 }
 
+static void load_dd_rom(uint8_t* rom, size_t* rom_size)
+{
+    /* ask the core loader for DD disk filename */
+    char* dd_ipl_rom_filename = (g_media_loader.get_dd_rom == NULL)
+        ? NULL
+        : g_media_loader.get_dd_rom(g_media_loader.cb_data);
+
+    if ((dd_ipl_rom_filename == NULL) || (strlen(dd_ipl_rom_filename) == 0)) {
+        goto no_dd;
+    }
+
+    struct file_storage dd_rom;
+    memset(&dd_rom, 0, sizeof(dd_rom));
+
+    if (open_rom_file_storage(&dd_rom, dd_ipl_rom_filename) != file_ok) {
+        DebugMessage(M64MSG_ERROR, "Failed to load DD IPL ROM: %s. Disabling 64DD", dd_ipl_rom_filename);
+        goto no_dd;
+    }
+
+    DebugMessage(M64MSG_INFO, "DD IPL ROM: %s", dd_ipl_rom_filename);
+
+    /* load and swap DD IPL ROM */
+    *rom_size = g_ifile_storage_ro.size(&dd_rom);
+    memcpy(rom, g_ifile_storage_ro.data(&dd_rom), *rom_size);
+    close_file_storage(&dd_rom);
+
+    /* fetch 1st word to identify IPL ROM format */
+    /* FIXME: use more robust ROM detection heuristic - do the same for regular ROMs */
+    uint32_t pi_bsd_dom1_config = 0
+        | ((uint32_t)rom[0] << 24)
+        | ((uint32_t)rom[1] << 16)
+        | ((uint32_t)rom[2] <<  8)
+        | ((uint32_t)rom[3] <<  0);
+
+    switch (pi_bsd_dom1_config)
+    {
+    case 0x80270740: /* Z64 - big endian */
+        to_big_endian_buffer(rom, 4, *rom_size/4);
+        break;
+
+    case 0x40072780: /* N64 - little endian */
+        to_little_endian_buffer(rom, 4, *rom_size/4);
+        break;
+
+    case 0x27804007: /* V64 - bi-endian */
+        swap_buffer(rom, 2, *rom_size/2);
+        break;
+
+    default: /* unknown */
+        DebugMessage(M64MSG_ERROR, "Invalid DD IPL ROM: Disabling 64DD.");
+        *rom_size = 0;
+        return;
+    }
+
+    return;
+
+no_dd:
+    free(dd_ipl_rom_filename);
+    *rom_size = 0;
+}
+
+static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk)
+{
+    const char* format_desc;
+    /* ask the core loader for DD disk filename */
+    char* dd_disk_filename = (g_media_loader.get_dd_disk == NULL)
+        ? NULL
+        : g_media_loader.get_dd_disk(g_media_loader.cb_data);
+
+    /* handle the no disk case */
+    if (dd_disk_filename == NULL || strlen(dd_disk_filename) == 0) {
+        goto no_disk;
+    }
+
+    /* open file */
+    if (open_rom_file_storage(dd_disk, dd_disk_filename) != file_ok) {
+        DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+        goto no_disk;
+    }
+
+    /* FIXME: handle byte swapping */
+
+
+    switch (dd_disk->size)
+    {
+    case MAME_FORMAT_DUMP_SIZE:
+        /* already in a compatible format */
+        *dd_idisk = &g_ifile_storage;
+        format_desc = "MAME";
+        break;
+
+    case SDK_FORMAT_DUMP_SIZE: {
+        /* convert to mame format */
+        uint8_t* buffer = malloc(MAME_FORMAT_DUMP_SIZE);
+        if (buffer == NULL) {
+            DebugMessage(M64MSG_ERROR, "Failed to allocate memory for MAME disk dump");
+            close_file_storage(dd_disk);
+            goto no_disk;
+        }
+
+        dd_convert_to_mame(buffer, dd_disk->data);
+        free(dd_disk->data);
+        dd_disk->data = buffer;
+        dd_disk->size = MAME_FORMAT_DUMP_SIZE;
+        *dd_idisk = &g_ifile_storage_dd_sdk_dump;
+        format_desc = "SDK";
+        } break;
+
+    default:
+        DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", dd_disk->size);
+        close_file_storage(dd_disk);
+        goto no_disk;
+    }
+
+    DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
+            dd_disk->filename,
+            dd_disk->size,
+            format_desc);
+
+    uint32_t w = *(uint32_t*)dd_disk->data;
+    if (w == DD_REGION_JP || w == DD_REGION_US) {
+        DebugMessage(M64MSG_WARNING, "Loading a saved disk ");
+    }
+
+    return;
+
+no_disk:
+    free(dd_disk_filename);
+    *dd_idisk = NULL;
+}
+
 
 struct gb_cart_data
 {
@@ -1113,6 +1244,8 @@ m64p_error main_run(void)
     struct file_storage eep;
     struct file_storage fla;
     struct file_storage sra;
+    size_t dd_rom_size;
+    struct file_storage dd_disk;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1199,6 +1332,17 @@ m64p_error main_run(void)
     open_eep_file(&eep);
     open_fla_file(&fla);
     open_sra_file(&sra);
+
+    /* Load 64DD IPL ROM and Disk */
+    const struct clock_backend_interface* dd_rtc_iclock = NULL;
+    const struct storage_backend_interface* dd_idisk = NULL;
+    memset(&dd_disk, 0, sizeof(dd_disk));
+
+    load_dd_rom((uint8_t*)mem_base_u32(g_mem_base, MM_DD_ROM), &dd_rom_size);
+    if (dd_rom_size > 0) {
+        dd_rtc_iclock = &g_iclock_ctime_plus_delta;
+        load_dd_disk(&dd_disk, &dd_idisk);
+    }
 
     /* setup pif channel devices */
     void* joybus_devices[PIF_CHANNELS_COUNT];
@@ -1336,7 +1480,10 @@ m64p_error main_run(void)
                 &eep, &g_ifile_storage,
                 flashram_type,
                 &fla, &g_ifile_storage,
-                &sra, &g_ifile_storage);
+                &sra, &g_ifile_storage,
+                NULL, dd_rtc_iclock,
+                dd_rom_size,
+                &dd_disk, dd_idisk);
 
     // Attach rom to plugins
     if (!gfx.romOpen())
@@ -1407,6 +1554,7 @@ m64p_error main_run(void)
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
+    close_file_storage(&dd_disk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1442,6 +1590,7 @@ on_gfx_open_failure:
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
+    close_file_storage(&dd_disk);
 
     return M64ERR_PLUGIN_FAIL;
 }

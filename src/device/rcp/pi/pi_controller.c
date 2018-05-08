@@ -28,6 +28,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "device/device.h"
+#include "device/dd/dd_controller.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "device/rcp/mi/mi_controller.h"
@@ -60,7 +61,7 @@ static void dma_pi_read(struct pi_controller* pi)
     const struct pi_dma_handler* handler = NULL;
     void* opaque = NULL;
 
-    pi->get_pi_dma_handler(pi->dev, cart_addr, &opaque, &handler);
+    pi->get_pi_dma_handler(pi->cart, pi->dd, cart_addr, &opaque, &handler);
 
     if (handler == NULL) {
         DebugMessage(M64MSG_WARNING, "Unknown PI DMA read: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", dram_addr, cart_addr, length);
@@ -89,7 +90,7 @@ static void dma_pi_write(struct pi_controller* pi)
     const struct pi_dma_handler* handler = NULL;
     void* opaque = NULL;
 
-    pi->get_pi_dma_handler(pi->dev, cart_addr, &opaque, &handler);
+    pi->get_pi_dma_handler(pi->cart, pi->dd, cart_addr, &opaque, &handler);
 
     if (handler == NULL) {
         DebugMessage(M64MSG_WARNING, "Unknown PI DMA write: 0x%" PRIX32 " -> 0x%" PRIX32 " (0x%" PRIX32 ")", cart_addr, dram_addr, length);
@@ -110,13 +111,16 @@ static void dma_pi_write(struct pi_controller* pi)
 
 
 void init_pi(struct pi_controller* pi,
-             struct device* dev, pi_dma_handler_getter get_pi_dma_handler,
+             pi_dma_handler_getter get_pi_dma_handler,
+             struct cart* cart,
+             struct dd_controller* dd,
              struct mi_controller* mi,
              struct ri_controller* ri,
              struct rdp_core* dp)
 {
-    pi->dev = dev;
     pi->get_pi_dma_handler = get_pi_dma_handler;
+    pi->cart = cart;
+    pi->dd = dd;
     pi->mi = mi;
     pi->ri = ri;
     pi->dp = dp;
@@ -142,6 +146,14 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
     switch (reg)
     {
+    case PI_CART_ADDR_REG:
+        if (pi->dd != NULL) {
+            masked_write(&pi->regs[PI_CART_ADDR_REG], value, mask);
+            dd_on_pi_cart_addr_write(pi->dd, pi->regs[PI_CART_ADDR_REG]);
+            return;
+        }
+        break;
+
     case PI_RD_LEN_REG:
         masked_write(&pi->regs[PI_RD_LEN_REG], value, mask);
         dma_pi_read(pi);
@@ -178,5 +190,13 @@ void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
     pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
+
+    if (pi->dd != NULL) {
+        if ((pi->regs[PI_CART_ADDR_REG] == MM_DD_C2S_BUFFER) ||
+            (pi->regs[PI_CART_ADDR_REG] == MM_DD_DS_BUFFER)) {
+            dd_update_bm(pi->dd);
+        }
+    }
+
     raise_rcp_interrupt(pi->mi, MI_INTR_PI);
 }

@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "api/callbacks.h"
 #include "api/m64p_common.h"
@@ -227,8 +228,25 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 
 static m64p_error plugin_start_gfx(void)
 {
+    uint8_t media = *((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM) + (0x3b ^ S8));
+
+    /* Here we feed 64DD IPL ROM header to GFX plugin if 64DD is present.
+     * We use g_media_loader.get_dd_rom to detect 64DD presence
+     * instead of g_dev because the latter is not yet initialized at plugin_start time */
+    /* XXX: Not sure it is the best way to convey which game is being played to the GFX plugin
+     * as 64DD IPL is the same for all 64DD games... */
+    char* dd_ipl_rom_filename = (g_media_loader.get_dd_rom == NULL)
+        ? NULL
+        : g_media_loader.get_dd_rom(g_media_loader.cb_data);
+
+    uint32_t rom_base = (dd_ipl_rom_filename != NULL && strlen(dd_ipl_rom_filename) != 0 && media != 'C')
+        ? MM_DD_ROM
+        : MM_CART_ROM;
+
+    free(dd_ipl_rom_filename);
+
     /* fill in the GFX_INFO data structure */
-    gfx_info.HEADER = (unsigned char *)mem_base_u32(g_mem_base, MM_CART_ROM);
+    gfx_info.HEADER = (unsigned char *)mem_base_u32(g_mem_base, rom_base);
     gfx_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     gfx_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     gfx_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);
