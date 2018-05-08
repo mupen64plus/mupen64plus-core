@@ -193,4 +193,17 @@ In the Core Video Extension function ResizeWindow, the SDL function SetVideoMode
 |This function is used to swap the front/back buffers after rendering an output video frame.
 |}
 <br />
-
+{| border="1"
+|Prototype
+|'''<tt>uint32_t VidExt_GL_GetDefaultFramebuffer(void)</tt>'''
+|-
+|Input Parameters
+|N/A
+|-
+|Requirements
+|The video extension must be initialized before calling this function.  The rendering window should already be created.
+|-
+|Usage
+|On some platforms (for instance, iOS) the default framebuffer object depends on the surface being rendered to, and might be different from 0. This function should be called to retrieve the name of the default FBO. Calling this function may have performance implications and it should not be called every time the default FBO is bound.
+|}
+<br />
