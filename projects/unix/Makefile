@@ -271,6 +271,19 @@ endif
 CFLAGS += $(LIBPNG_CFLAGS)
 LDLIBS += $(LIBPNG_LDLIBS)
 
+ifeq ($(OPENCV), 1)
+  # OpenCV lib
+  ifeq ($(origin OPENCV_CFLAGS) $(origin OPENCV_LDLIBS), undefined undefined)
+    ifeq ($(shell $(PKG_CONFIG) --modversion opencv 2>/dev/null),)
+      $(error No OpenCV development libraries found!)
+    endif
+    OPENCV_CFLAGS += $(shell $(PKG_CONFIG) --cflags opencv)
+    OPENCV_LDLIBS += $(shell $(PKG_CONFIG) --libs opencv)
+  endif
+  CFLAGS += $(OPENCV_CFLAGS)
+  LDLIBS += $(OPENCV_LDLIBS)
+endif
+
 # test for presence of SDL
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
   SDL_CONFIG = $(CROSS_COMPILE)sdl2-config
@@ -446,6 +459,7 @@ SOURCE = \
     $(SRCDIR)/backends/plugins_compat/input_plugin_compat.c \
     $(SRCDIR)/backends/clock_ctime_plus_delta.c \
     $(SRCDIR)/backends/file_storage.c \
+    $(SRCDIR)/backends/dummy_video_backend.c \
     $(SRCDIR)/device/cart/cart.c \
     $(SRCDIR)/device/cart/af_rtc.c \
     $(SRCDIR)/device/cart/cart_rom.c \
@@ -613,6 +627,12 @@ ifeq ($(DEBUGGER), 1)
   endif
 endif
 
+ifeq ($(OPENCV), 1)
+  SOURCE += $(SRCDIR)/backends/opencv_video_backend.cpp
+  CFLAGS += -DM64P_OPENCV
+endif
+
+
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(SRCDIR)/asm_defines/asm_defines.c)
@@ -647,6 +667,7 @@ targets:
 	@echo "    PIC=(1|0)      == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)      == Enable/disable build of OpenGL On-screen display"
 	@echo "    NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec"
+	@echo "    OPENCV=1       == Enable OpenCV support"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path    == install/uninstall prefix (default: /usr/local/)"

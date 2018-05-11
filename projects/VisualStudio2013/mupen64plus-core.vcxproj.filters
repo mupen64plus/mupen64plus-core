@@ -192,6 +192,12 @@
     <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c">
       <Filter>backends</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\backends\dummy_video_backend.c">
+      <Filter>backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\backends\opencv_video_backend.cpp">
+      <Filter>backends</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\dd\dd_controller.c">
       <Filter>device\dd</Filter>
     </ClCompile>
@@ -485,6 +491,12 @@
     <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h">
       <Filter>backends</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\backends\dummy_video_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\opencv_video_backend.h">
+      <Filter>backends</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\device\dd\dd_controller.h">
       <Filter>device\dd</Filter>
     </ClInclude>
@@ -618,6 +630,9 @@
       <Filter>backends\api</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\backends\api\storage_backend.h">
+      <Filter>backends\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\backends\api\video_backend.h">
       <Filter>backends\api</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h">

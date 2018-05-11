@@ -45,6 +45,8 @@
     <ClCompile Include="..\..\src\backends\plugins_compat\audio_plugin_compat.c" />
     <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c" />
     <ClCompile Include="..\..\src\backends\file_storage.c" />
+    <ClCompile Include="..\..\src\backends\opencv_video_backend.cpp" />
+    <ClCompile Include="..\..\src\backends\dummy_video_backend.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_debugger.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
@@ -254,8 +256,11 @@
     <ClInclude Include="..\..\src\backends\api\joybus.h" />
     <ClInclude Include="..\..\src\backends\api\rumble_backend.h" />
     <ClInclude Include="..\..\src\backends\api\storage_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\video_backend.h" />
     <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h" />
     <ClInclude Include="..\..\src\backends\file_storage.h" />
+    <ClInclude Include="..\..\src\backends\opencv_video_backend.h" />
+    <ClInclude Include="..\..\src\backends\dummy_video_backend.h" />
     <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h" />
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />
@@ -656,8 +661,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;M64P_OPENCV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -668,7 +673,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x86\vc12\lib\opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -682,8 +687,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;M64P_OPENCV;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -693,7 +698,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x64\vc12\lib\opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -707,8 +712,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;NEW_DYNAREC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;M64P_OPENCV;NEW_DYNAREC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -721,7 +726,7 @@
       </DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x86\vc12\lib\opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -738,8 +743,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;NEW_DYNAREC=1;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;M64P_OPENCV;NEW_DYNAREC=1;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -751,7 +756,7 @@
       </DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x64\vc12\lib\opencv_world300d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -764,8 +769,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;M64P_OPENCV;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -774,7 +779,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x86\vc12\lib\opencv_world300.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -788,8 +793,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;M64P_OPENCV;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -798,7 +803,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x64\vc12\lib\opencv_world300.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -811,8 +816,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;NEW_DYNAREC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_OSD;M64P_PARALLEL;M64P_OPENCV;NEW_DYNAREC=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -821,7 +826,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x86\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x86\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x86\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x86\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x86\vc12\lib\opencv_world300.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -835,8 +840,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;NEW_DYNAREC=1;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\..\mupen64plus-win32-deps-deps\SDL-1.2.15\include;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\include;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\include;..\..\..\mupen64plus-win32-deps\freetype-2.6\include;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_DEPRECATE;DYNAREC;M64P_PARALLEL;M64P_OSD;M64P_OPENCV;NEW_DYNAREC=1;__x86_64__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -845,7 +850,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shell32.lib;opengl32.lib;glu32.lib;..\..\..\mupen64plus-win32-deps\SDL-1.2.15\lib\x64\SDL.lib;..\..\..\mupen64plus-win32-deps\zlib-1.2.8\lib\x64\zlib.lib;..\..\..\mupen64plus-win32-deps\libpng-1.6.18\lib\x64\libpng16.lib;..\..\..\mupen64plus-win32-deps\freetype-2.6\lib\x64\freetype26.lib;..\..\..\mupen64plus-win32-deps\opencv-3.0.0\x64\vc12\lib\opencv_world300.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)mupen64plus.dll</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>

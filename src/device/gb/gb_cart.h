@@ -30,6 +30,23 @@
 
 struct storage_backend_interface;
 struct rumble_backend_interface;
+struct video_input_backend_interface;
+
+enum pocket_cam_registers
+{
+    /* TODO: use pretty names for registers */
+    POCKET_CAM_REGS_COUNT = 0x36
+};
+
+struct pocket_cam
+{
+    uint8_t regs[POCKET_CAM_REGS_COUNT];
+
+    void* vin;
+    const struct video_input_backend_interface* ivin;
+
+    uint8_t* ram;
+};
 
 struct gb_cart
 {
@@ -48,7 +65,7 @@ struct gb_cart
     unsigned int extra_devices;
 
     struct mbc3_rtc rtc;
-    struct m64282fp cam;
+    struct pocket_cam cam;
 
     void* rumble;
     const struct rumble_backend_interface* irumble;
@@ -61,7 +78,8 @@ void init_gb_cart(struct gb_cart* gb_cart,
         void* rom_opaque, void (*init_rom)(void* user_data, void** rom_storage, const struct storage_backend_interface** irom_storage), void (*release_rom)(void* user_data),
         void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
         void* clock, const struct clock_backend_interface* iclock,
-        void* rumble, const struct rumble_backend_interface* irumble);
+        void* rumble, const struct rumble_backend_interface* irumble,
+        void* vin, const struct video_input_backend_interface* ivin);
 
 void poweron_gb_cart(struct gb_cart* gb_cart);
 

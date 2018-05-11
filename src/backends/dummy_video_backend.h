@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - m64282fp.h                                              *
+ *   Mupen64plus - dummy_video_backend.h                                   *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
- *   Copyright (C) 2017 Bobby Smiles                                       *
+ *   Copyright (C) 2018 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,32 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_GB_M64282FP_H
-#define M64P_DEVICE_GB_M64282FP_H
+#ifndef M64P_BACKENDS_DUMMY_VIDEO_BACKEND_H
+#define M64P_BACKENDS_DUMMY_VIDEO_BACKEND_H
 
-#include <stdint.h>
+#include "api/video_backend.h"
 
-enum
-{
-    M64282FP_SENSOR_W = 128,
-    M64282FP_SENSOR_H = 128,
-};
-
-enum m64282fp_registers
-{
-    M64282FP_Z_O,
-    M64282FP_N_VH_G,
-    M64282FP_C_LO,
-    M64282FP_C_HI,
-    M64282FP_P,
-    M64282FP_M,
-    M64282FP_X,
-    M64282FP_E_I_V,
-    M64282FP_REGS_COUNT
-};
-
-void process_m64282fp_image(
-    uint8_t img[M64282FP_SENSOR_H][M64282FP_SENSOR_W],
-    const uint8_t regs[M64282FP_REGS_COUNT]);
+extern const struct video_input_backend_interface g_idummy_video_input_backend;
 
 #endif

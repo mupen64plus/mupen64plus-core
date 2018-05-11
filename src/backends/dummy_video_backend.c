@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - m64282fp.h                                              *
+ *   Mupen64plus - dummy_video_backend.c                                   *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
- *   Copyright (C) 2017 Bobby Smiles                                       *
+ *   Copyright (C) 2018 Bobby Smiles                                       *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,32 +19,28 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_GB_M64282FP_H
-#define M64P_DEVICE_GB_M64282FP_H
+#include "backends/dummy_video_backend.h"
+#include "backends/api/video_backend.h"
 
-#include <stdint.h>
+#include "api/m64p_types.h"
 
-enum
+static m64p_error dummy_video_open(void* vin, unsigned int width, unsigned int height)
 {
-    M64282FP_SENSOR_W = 128,
-    M64282FP_SENSOR_H = 128,
-};
+    return M64ERR_SUCCESS;
+}
 
-enum m64282fp_registers
+static void dummy_video_close(void* vin)
 {
-    M64282FP_Z_O,
-    M64282FP_N_VH_G,
-    M64282FP_C_LO,
-    M64282FP_C_HI,
-    M64282FP_P,
-    M64282FP_M,
-    M64282FP_X,
-    M64282FP_E_I_V,
-    M64282FP_REGS_COUNT
+}
+
+static m64p_error dummy_grab_image(void* vin, void* data)
+{
+    return M64ERR_UNSUPPORTED;
+}
+
+const struct video_input_backend_interface g_idummy_video_input_backend =
+{
+    dummy_video_open,
+    dummy_video_close,
+    dummy_grab_image
 };
-
-void process_m64282fp_image(
-    uint8_t img[M64282FP_SENSOR_H][M64282FP_SENSOR_W],
-    const uint8_t regs[M64282FP_REGS_COUNT]);
-
-#endif
