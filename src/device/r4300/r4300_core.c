@@ -44,7 +44,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
     unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int randomize_interrupt)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
+#ifdef NEW_DYNAREC
         &r4300->new_dynarec_hot_state;
 #else
         NULL;
@@ -200,8 +200,7 @@ void run_r4300(struct r4300_core* r4300)
 
 int64_t* r4300_regs(struct r4300_core* r4300)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
     return r4300->regs;
 #else
     return r4300->new_dynarec_hot_state.regs;
@@ -210,8 +209,7 @@ int64_t* r4300_regs(struct r4300_core* r4300)
 
 int64_t* r4300_mult_hi(struct r4300_core* r4300)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
     return &r4300->hi;
 #else
     return &r4300->new_dynarec_hot_state.hi;
@@ -220,8 +218,7 @@ int64_t* r4300_mult_hi(struct r4300_core* r4300)
 
 int64_t* r4300_mult_lo(struct r4300_core* r4300)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
     return &r4300->lo;
 #else
     return &r4300->new_dynarec_hot_state.lo;
@@ -246,8 +243,7 @@ uint32_t* r4300_pc(struct r4300_core* r4300)
 
 struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
     return &r4300->pc;
 #else
     return &r4300->new_dynarec_hot_state.pc;
@@ -256,8 +252,7 @@ struct precomp_instr** r4300_pc_struct(struct r4300_core* r4300)
 
 int* r4300_stop(struct r4300_core* r4300)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
     return &r4300->stop;
 #else
     return &r4300->new_dynarec_hot_state.stop;

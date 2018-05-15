@@ -7581,7 +7581,9 @@ void new_dynarec_init(void)
             -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
 #else
 #if defined(WIN32)
-  base_addr = VirtualAlloc(NULL, 1<<TARGET_SIZE_2, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+  DWORD dummy;
+  assert(VirtualProtect((void*)g_dev.r4300.extra_memory, 33554432, PAGE_EXECUTE_READWRITE, &dummy));
+  base_addr = (void*)g_dev.r4300.extra_memory;
 #else
   if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,

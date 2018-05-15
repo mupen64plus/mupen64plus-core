@@ -24,7 +24,7 @@
 
 #include "cp0.h"
 #include "r4300_core.h"
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 #include "recomp.h"
 
 #ifdef COMPARE_CORE
@@ -39,7 +39,7 @@
 void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers)
 {
     cp0->count_per_op = count_per_op;
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
+#ifdef NEW_DYNAREC
     cp0->new_dynarec_hot_state = new_dynarec_hot_state;
 #endif
 
@@ -80,10 +80,10 @@ void poweron_cp0(struct cp0* cp0)
 
 uint32_t* r4300_cp0_regs(struct cp0* cp0)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
     return cp0->regs;
 #else
-/* ARM dynarec uses a different memory layout */
+	/* New dynarec uses a different memory layout */
     return cp0->new_dynarec_hot_state->cp0_regs;
 #endif
 }
@@ -95,10 +95,10 @@ uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
 
 unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
     return &cp0->next_interrupt;
 #else
-/* ARM dynarec uses a different memory layout */
+	/* New dynarec uses a different memory layout */
     return &cp0->new_dynarec_hot_state->next_interrupt;
 #endif
 }
