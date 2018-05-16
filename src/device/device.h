@@ -27,6 +27,7 @@
 
 #include "cart/cart.h"
 #include "controllers/game_controller.h"
+#include "controllers/paks/biopak.h"
 #include "controllers/paks/mempak.h"
 #include "controllers/paks/rumblepak.h"
 #include "controllers/paks/transferpak.h"
@@ -99,6 +100,7 @@ struct device
     struct memory mem;
 
     struct game_controller controllers[GAME_CONTROLLERS_COUNT];
+    struct biopak biopaks[GAME_CONTROLLERS_COUNT];
     struct mempak mempaks[GAME_CONTROLLERS_COUNT];
     struct rumblepak rumblepaks[GAME_CONTROLLERS_COUNT];
     struct transferpak transferpaks[GAME_CONTROLLERS_COUNT];

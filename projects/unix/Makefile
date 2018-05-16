@@ -453,6 +453,7 @@ SOURCE = \
     $(SRCDIR)/device/cart/flashram.c \
     $(SRCDIR)/device/cart/sram.c \
     $(SRCDIR)/device/controllers/game_controller.c \
+    $(SRCDIR)/device/controllers/paks/biopak.c \
     $(SRCDIR)/device/controllers/paks/mempak.c \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \
     $(SRCDIR)/device/controllers/paks/transferpak.c \
