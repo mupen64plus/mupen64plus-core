@@ -57,6 +57,7 @@
     <ClCompile Include="..\..\src\device\cart\flashram.c" />
     <ClCompile Include="..\..\src\device\cart\sram.c" />
     <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
+    <ClCompile Include="..\..\src\device\controllers\paks\biopak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
@@ -271,6 +272,7 @@
     <ClInclude Include="..\..\src\device\cart\flashram.h" />
     <ClInclude Include="..\..\src\device\cart\sram.h" />
     <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
+    <ClInclude Include="..\..\src\device\controllers\paks\biopak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />

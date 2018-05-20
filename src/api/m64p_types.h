@@ -240,6 +240,7 @@ typedef struct
    unsigned char rumble;  /* 0 - No, 1 - Yes boolean for rumble support. */
    unsigned char transferpak; /* 0 - No, 1 - Yes boolean for transfer pak support. */
    unsigned char mempak; /* 0 - No, 1 - Yes boolean for memory pak support. */
+   unsigned char biopak; /* 0 - No, 1 - Yes boolean for bio pak support. */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

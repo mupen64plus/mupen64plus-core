@@ -35,6 +35,7 @@ extern "C" {
 #define PLUGIN_RUMBLE_PAK           3 /* not implemented for non raw data */
 #define PLUGIN_TRANSFER_PAK         4 /* not implemented for non raw data */
 #define PLUGIN_RAW                  5 /* the controller plugin is passed in raw data */
+#define PLUGIN_BIO_PAK              6
 
 /***** Structures *****/
 typedef struct {

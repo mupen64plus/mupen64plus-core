@@ -54,6 +54,7 @@
 #include "backends/file_storage.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/controllers/paks/biopak.h"
 #include "device/controllers/paks/mempak.h"
 #include "device/controllers/paks/rumblepak.h"
 #include "device/controllers/paks/transferpak.h"
@@ -122,7 +123,7 @@ static osd_message_t *l_msgFF = NULL;
 static osd_message_t *l_msgPause = NULL;
 
 /* compatible paks */
-enum { PAK_MAX_SIZE = 4 };
+enum { PAK_MAX_SIZE = 5 };
 static size_t l_paks_idx[GAME_CONTROLLERS_COUNT];
 static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
 static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
@@ -1297,6 +1298,9 @@ m64p_error main_run(void)
 
     /* Fill-in l_pak_type_idx and l_ipaks according to game compatibility */
     k = 0;
+    if (ROM_SETTINGS.biopak) {
+        l_ipaks[k++] = &g_ibiopak;
+    }
     if (ROM_SETTINGS.mempak) {
         l_pak_type_idx[PLUGIN_MEMPAK] = k;
         l_ipaks[k] = &g_imempak;
@@ -1389,8 +1393,17 @@ m64p_error main_run(void)
 
             /* init all compatibles paks */
             for(k = 0; k < PAK_MAX_SIZE; ++k) {
+                /* Bio Pak */
+                if (l_ipaks[k] == &g_ibiopak) {
+                    init_biopak(&g_dev.biopaks[i], 64);
+                    l_paks[i][k] = &g_dev.biopaks[i];
+
+                    if (Controls[i].Plugin == PLUGIN_BIO_PAK) {
+                        l_paks_idx[i] = k;
+                    }
+                }
                 /* Memory Pak */
-                if (l_ipaks[k] == &g_imempak) {
+                else if (l_ipaks[k] == &g_imempak) {
                     mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
                     init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
                     l_paks[i][k] = &g_dev.mempaks[i];
