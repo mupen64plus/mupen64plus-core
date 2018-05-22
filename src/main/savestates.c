@@ -571,7 +571,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                    (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
 
                 if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+M64282FP_REGS_COUNT;
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+POCKET_CAM_REGS_COUNT;
                 }
             }
             else {
@@ -585,7 +585,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                     COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)ALIGNED_GETDATA(curr, int64_t);
 
-                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
                 }
             }
         }
@@ -690,7 +690,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                    (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
 
                 if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+M64282FP_REGS_COUNT;
+                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+POCKET_CAM_REGS_COUNT;
                 }
             }
             else {
@@ -703,7 +703,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                     dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
                     COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
                     COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
+                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
                 }
             }
         }
@@ -1729,7 +1729,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
             PUTARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
             PUTARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
 
-            PUTARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, M64282FP_REGS_COUNT);
+            PUTARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
         }
     }
 

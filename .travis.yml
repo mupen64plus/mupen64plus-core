@@ -18,6 +18,7 @@ addons:
     - liblircclient-dev
     - binutils-dev
     - nasm
+    - libopencv-dev
 env:
  - OSD=0
  - OSD=1
@@ -51,6 +52,7 @@ matrix:
           - mxe-i686-w64-mingw32.shared-freetype
           - mxe-i686-w64-mingw32.shared-libpng
           - mxe-i686-w64-mingw32.shared-zlib
+          - mxe-i686-w64-mingw32.shared-opencv
           - mxe-i686-w64-mingw32.shared-pkgconf
           - nasm
       script:
@@ -72,6 +74,7 @@ matrix:
           - mxe-x86-64-w64-mingw32.shared-freetype
           - mxe-x86-64-w64-mingw32.shared-libpng
           - mxe-x86-64-w64-mingw32.shared-zlib
+          - mxe-x86-64-w64-mingw32.shared-opencv
           - mxe-i686-w64-mingw32.shared-pkgconf
           - nasm
       script:
