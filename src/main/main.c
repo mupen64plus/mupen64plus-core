@@ -94,7 +94,7 @@ m64p_handle g_CoreConfig = NULL;
 
 m64p_frame_callback g_FrameCallback = NULL;
 
-int         g_MemHasBeenBSwapped = 0;   // store byte-swapped flag so we don't swap twice when re-playing game
+int         g_RomWordsLittleEndian = 0; // after loading, ROM words are in native N64 byte order (big endian). We will swap them on x86
 int         g_EmulatorRunning = 0;      // need separate boolean to tell if emulator is running, since --nogui doesn't use a thread
 
 
@@ -1297,12 +1297,14 @@ m64p_error main_run(void)
 
     cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
-    /* do byte-swapping if it's not been done yet */
-    if (g_MemHasBeenBSwapped == 0)
+    /* do byte-swapping if it hasn't been done yet */
+#if !defined(M64P_BIG_ENDIAN)
+    if (g_RomWordsLittleEndian == 0)
     {
         swap_buffer((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM), 4, g_rom_size/4);
-        g_MemHasBeenBSwapped = 1;
+        g_RomWordsLittleEndian = 1;
     }
+#endif
 
     /* Fill-in l_pak_type_idx and l_ipaks according to game compatibility */
     k = 0;

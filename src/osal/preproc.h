@@ -58,29 +58,26 @@
 #define SE16(a) ((int64_t) ((int16_t) (a)))
 #define SE32(a) ((int64_t) ((int32_t) (a)))
 
-#ifndef M64P_BIG_ENDIAN
-#if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
-#define tohl(x) __builtin_bswap32((x))
+#if !defined(M64P_BIG_ENDIAN)
+  #if defined(__GNUC__) && (__GNUC__ > 4  || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+    #define tohl(x) __builtin_bswap32((x))
+  #else
+    #define tohl(x) \
+    ( \
+    (((x) & 0x000000FF) << 24) | \
+    (((x) & 0x0000FF00) <<  8) | \
+    (((x) & 0x00FF0000) >>  8) | \
+    (((x) & 0xFF000000) >> 24) \
+    )
+  #endif
+  #define S8 3
+  #define S16 2
+  #define Sh16 1
 #else
-#define tohl(x) \
-( \
-(((x) & 0x000000FF) << 24) | \
-(((x) & 0x0000FF00) <<  8) | \
-(((x) & 0x00FF0000) >>  8) | \
-(((x) & 0xFF000000) >> 24) \
-)
-#endif
-#define S8 3
-#define S16 2
-#define Sh16 1
-
-#else
-
-#define tohl(x) (x)
-#define S8 0
-#define S16 0
-#define Sh16 0
-
+  #define tohl(x) (x)
+  #define S8 0
+  #define S16 0
+  #define Sh16 0
 #endif
 
 #define fromhl(x) tohl((x))
