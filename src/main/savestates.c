@@ -535,57 +535,79 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
             uint8_t rpk_state = GETDATA(curr, uint8_t);
 
-            /* skip controllers handled by the input plugin */
-            if (Controls[i].RawData)
-                continue;
-
-            if (ROM_SETTINGS.rumble) {
+            /* init rumble pak state if enabled and not controlled by the input plugin */
+            if (ROM_SETTINGS.rumble && !Controls[i].RawData) {
                 set_rumble_reg(&dev->rumblepaks[i], rpk_state);
             }
         }
 
         /* extra tpak state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            dev->transferpaks[i].enabled = ALIGNED_GETDATA(curr, unsigned int);
-            dev->transferpaks[i].bank = ALIGNED_GETDATA(curr, unsigned int);
-            dev->transferpaks[i].access_mode = ALIGNED_GETDATA(curr, unsigned int);
-            dev->transferpaks[i].access_mode_changed = ALIGNED_GETDATA(curr, unsigned int);
-
-            /* verify that gb cart saved in savestate is the same as what is currently inserted in transferpak */
             char gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
-            char current_gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+            uint8_t rtc_regs[MBC3_RTC_REGS_COUNT];
+            uint8_t rtc_latched_regs[MBC3_RTC_REGS_COUNT];
+            uint8_t cam_regs[POCKET_CAM_REGS_COUNT];
+            unsigned int rom_bank, ram_bank, ram_enable, mbc1_mode, rtc_latch;
+            time_t rtc_last_time;
 
+            unsigned int enabled = ALIGNED_GETDATA(curr, unsigned int);
+            unsigned int bank = ALIGNED_GETDATA(curr, unsigned int);
+            unsigned int access_mode = ALIGNED_GETDATA(curr, unsigned int);
+            unsigned int access_mode_changed = ALIGNED_GETDATA(curr, unsigned int);
             COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
-
-            if (dev->transferpaks[i].gb_cart == NULL) {
-                memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
+            if (gb_fingerprint[0] != 0) {
+                rom_bank = ALIGNED_GETDATA(curr, unsigned int);
+                ram_bank = ALIGNED_GETDATA(curr, unsigned int);
+                ram_enable = ALIGNED_GETDATA(curr, unsigned int);
+                mbc1_mode = ALIGNED_GETDATA(curr, unsigned int);
+                COPYARRAY(rtc_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                rtc_latch = ALIGNED_GETDATA(curr, unsigned int);
+                COPYARRAY(rtc_latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                rtc_last_time = (time_t)ALIGNED_GETDATA(curr, int64_t);
+                COPYARRAY(cam_regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
             }
-            else {
-                uint8_t* rom = dev->transferpaks[i].gb_cart->irom_storage->data(dev->transferpaks[i].gb_cart->rom_storage);
-                memcpy(current_gb_fingerprint, rom + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
-            }
 
-            if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
-                DebugMessage(M64MSG_WARNING, "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
-                   (current_gb_fingerprint[0] == 0x00) ? "(none)" : current_gb_fingerprint,
-                   (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+            if (ROM_SETTINGS.transferpak && !Controls[i].RawData) {
 
-                if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+POCKET_CAM_REGS_COUNT;
-                }
-            }
-            else {
-                if (dev->transferpaks[i].gb_cart != NULL) {
-                    dev->transferpaks[i].gb_cart->rom_bank = ALIGNED_GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->ram_bank = ALIGNED_GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->ram_enable = ALIGNED_GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->mbc1_mode = ALIGNED_GETDATA(curr, unsigned int);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    dev->transferpaks[i].gb_cart->rtc.latch = ALIGNED_GETDATA(curr, unsigned int);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)ALIGNED_GETDATA(curr, int64_t);
+                /* init transferpak state if enabled and not controlled by input plugin */
+                dev->transferpaks[i].enabled = enabled;
+                dev->transferpaks[i].bank = bank;
+                dev->transferpaks[i].access_mode = access_mode;
+                dev->transferpaks[i].access_mode_changed = access_mode_changed;
 
-                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
+                /* if it holds a valid cartridge init gbcart */
+                if (dev->transferpaks[i].gb_cart != NULL
+                 && dev->transferpaks[i].gb_cart->irom_storage != NULL) {
+                    const uint8_t* rom = dev->transferpaks[i].gb_cart->irom_storage->data
+                                        (dev->transferpaks[i].gb_cart->rom_storage);
+
+                    /* verify that gb cart saved in savestate is the same
+                     * as what is currently inserted in transferpak */
+                    if (gb_fingerprint[0] != 0
+                     && memcmp(gb_fingerprint,
+                               rom + GB_CART_FINGERPRINT_OFFSET,
+                               GB_CART_FINGERPRINT_SIZE) == 0) {
+
+                        /* init gbcart state */
+                        dev->transferpaks[i].gb_cart->rom_bank = rom_bank;
+                        dev->transferpaks[i].gb_cart->ram_bank = ram_bank;
+                        dev->transferpaks[i].gb_cart->ram_enable = ram_enable;
+                        dev->transferpaks[i].gb_cart->mbc1_mode = mbc1_mode;
+                        dev->transferpaks[i].gb_cart->rtc.latch = rtc_latch;
+                        dev->transferpaks[i].gb_cart->rtc.last_time = rtc_last_time;
+
+                        memcpy(dev->transferpaks[i].gb_cart->rtc.regs, rtc_regs, MBC3_RTC_REGS_COUNT);
+                        memcpy(dev->transferpaks[i].gb_cart->rtc.latched_regs, rtc_latched_regs, MBC3_RTC_REGS_COUNT);
+                        memcpy(dev->transferpaks[i].gb_cart->cam.regs, cam_regs, POCKET_CAM_REGS_COUNT);
+                    }
+                    else {
+                        DebugMessage(M64MSG_WARNING,
+                            "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
+                            (rom[GB_CART_FINGERPRINT_OFFSET] == 0x00) ? "(none)" : (const char*)(rom + GB_CART_FINGERPRINT_OFFSET),
+                            (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+
+                        poweron_gb_cart(dev->transferpaks[i].gb_cart);
+                    }
                 }
             }
         }
@@ -654,56 +676,79 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
             uint8_t rpk_state = GETDATA(curr, uint8_t);
 
-            /* skip controllers handled by the input plugin */
-            if (Controls[i].RawData)
-                continue;
-
-            if (ROM_SETTINGS.rumble) {
+            /* init rumble pak state if enabled and not controlled by the input plugin */
+            if (ROM_SETTINGS.rumble && !Controls[i].RawData) {
                 set_rumble_reg(&dev->rumblepaks[i], rpk_state);
             }
         }
 
         /* extra tpak state */
         for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            dev->transferpaks[i].enabled = GETDATA(curr, unsigned int);
-            dev->transferpaks[i].bank = GETDATA(curr, unsigned int);
-            dev->transferpaks[i].access_mode = GETDATA(curr, unsigned int);
-            dev->transferpaks[i].access_mode_changed = GETDATA(curr, unsigned int);
-
-            /* verify that gb cart saved in savestate is the same as what is currently inserted in transferpak */
             char gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
-            char current_gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
+            uint8_t rtc_regs[MBC3_RTC_REGS_COUNT];
+            uint8_t rtc_latched_regs[MBC3_RTC_REGS_COUNT];
+            uint8_t cam_regs[POCKET_CAM_REGS_COUNT];
+            unsigned int rom_bank, ram_bank, ram_enable, mbc1_mode, rtc_latch;
+            time_t rtc_last_time;
 
+            unsigned int enabled = GETDATA(curr, unsigned int);
+            unsigned int bank = GETDATA(curr, unsigned int);
+            unsigned int access_mode = GETDATA(curr, unsigned int);
+            unsigned int access_mode_changed = GETDATA(curr, unsigned int);
             COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
-
-            if (dev->transferpaks[i].gb_cart == NULL) {
-                memset(current_gb_fingerprint, 0, GB_CART_FINGERPRINT_SIZE);
+            if (gb_fingerprint[0] != 0) {
+                rom_bank = GETDATA(curr, unsigned int);
+                ram_bank = GETDATA(curr, unsigned int);
+                ram_enable = GETDATA(curr, unsigned int);
+                mbc1_mode = GETDATA(curr, unsigned int);
+                rtc_latch = GETDATA(curr, unsigned int);
+                rtc_last_time = (time_t)GETDATA(curr, int64_t);
+                COPYARRAY(rtc_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                COPYARRAY(rtc_latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
+                COPYARRAY(cam_regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
             }
-            else {
-                uint8_t* rom = dev->transferpaks[i].gb_cart->irom_storage->data(dev->transferpaks[i].gb_cart->rom_storage);
-                memcpy(current_gb_fingerprint, rom + GB_CART_FINGERPRINT_OFFSET, GB_CART_FINGERPRINT_SIZE);
-            }
 
-            if (memcmp(gb_fingerprint, current_gb_fingerprint, GB_CART_FINGERPRINT_SIZE) != 0) {
-                DebugMessage(M64MSG_WARNING, "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
-                   (current_gb_fingerprint[0] == 0x00) ? "(none)" : current_gb_fingerprint,
-                   (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+            if (ROM_SETTINGS.transferpak && !Controls[i].RawData) {
 
-                if (gb_fingerprint[0] != 0x00) {
-                    curr += 5*sizeof(unsigned int)+MBC3_RTC_REGS_COUNT*2+sizeof(uint64_t)+POCKET_CAM_REGS_COUNT;
-                }
-            }
-            else {
-                if (dev->transferpaks[i].gb_cart != NULL) {
-                    dev->transferpaks[i].gb_cart->rom_bank = GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->ram_bank = GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->ram_enable = GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->mbc1_mode = GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->rtc.latch = GETDATA(curr, unsigned int);
-                    dev->transferpaks[i].gb_cart->rtc.last_time = (time_t)GETDATA(curr, int64_t);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->rtc.latched_regs, curr, uint8_t, MBC3_RTC_REGS_COUNT);
-                    COPYARRAY(dev->transferpaks[i].gb_cart->cam.regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
+                /* init transferpak state if enabled and not controlled by input plugin */
+                dev->transferpaks[i].enabled = enabled;
+                dev->transferpaks[i].bank = bank;
+                dev->transferpaks[i].access_mode = access_mode;
+                dev->transferpaks[i].access_mode_changed = access_mode_changed;
+
+                /* if it holds a valid cartridge init gbcart */
+                if (dev->transferpaks[i].gb_cart != NULL
+                 && dev->transferpaks[i].gb_cart->irom_storage != NULL) {
+                    const uint8_t* rom = dev->transferpaks[i].gb_cart->irom_storage->data
+                                        (dev->transferpaks[i].gb_cart->rom_storage);
+
+                    /* verify that gb cart saved in savestate is the same
+                     * as what is currently inserted in transferpak */
+                    if (gb_fingerprint[0] != 0
+                     && memcmp(gb_fingerprint,
+                               rom + GB_CART_FINGERPRINT_OFFSET,
+                               GB_CART_FINGERPRINT_SIZE) == 0) {
+
+                        /* init gbcart state */
+                        dev->transferpaks[i].gb_cart->rom_bank = rom_bank;
+                        dev->transferpaks[i].gb_cart->ram_bank = ram_bank;
+                        dev->transferpaks[i].gb_cart->ram_enable = ram_enable;
+                        dev->transferpaks[i].gb_cart->mbc1_mode = mbc1_mode;
+                        dev->transferpaks[i].gb_cart->rtc.latch = rtc_latch;
+                        dev->transferpaks[i].gb_cart->rtc.last_time = rtc_last_time;
+
+                        memcpy(dev->transferpaks[i].gb_cart->rtc.regs, rtc_regs, MBC3_RTC_REGS_COUNT);
+                        memcpy(dev->transferpaks[i].gb_cart->rtc.latched_regs, rtc_latched_regs, MBC3_RTC_REGS_COUNT);
+                        memcpy(dev->transferpaks[i].gb_cart->cam.regs, cam_regs, POCKET_CAM_REGS_COUNT);
+                    }
+                    else {
+                        DebugMessage(M64MSG_WARNING,
+                            "Savestate GB cart mismatch. Current GB cart: %s. Expected GB cart : %s",
+                            (rom[GB_CART_FINGERPRINT_OFFSET] == 0x00) ? "(none)" : (const char*)(rom + GB_CART_FINGERPRINT_OFFSET),
+                            (gb_fingerprint[0] == 0x00) ? "(none)" : gb_fingerprint);
+
+                        poweron_gb_cart(dev->transferpaks[i].gb_cart);
+                    }
                 }
             }
         }
