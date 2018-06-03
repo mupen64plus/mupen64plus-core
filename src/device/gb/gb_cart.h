@@ -30,7 +30,7 @@
 
 struct storage_backend_interface;
 struct rumble_backend_interface;
-struct video_input_backend_interface;
+struct video_capture_backend_interface;
 
 enum pocket_cam_registers
 {
@@ -42,8 +42,8 @@ struct pocket_cam
 {
     uint8_t regs[POCKET_CAM_REGS_COUNT];
 
-    void* vin;
-    const struct video_input_backend_interface* ivin;
+    void* vcap;
+    const struct video_capture_backend_interface* ivcap;
 
     uint8_t* ram;
 };
@@ -79,7 +79,7 @@ void init_gb_cart(struct gb_cart* gb_cart,
         void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
         void* clock, const struct clock_backend_interface* iclock,
         void* rumble, const struct rumble_backend_interface* irumble,
-        void* vin, const struct video_input_backend_interface* ivin);
+        void* vcap, const struct video_capture_backend_interface* ivcap);
 
 void poweron_gb_cart(struct gb_cart* gb_cart);
 
