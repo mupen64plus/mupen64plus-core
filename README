@@ -51,43 +51,44 @@ projects/unix directory, then build using make:
 Type 'make' by itself to view all available build options:
 
  $ make
- Mupen64Plus makefile. 
+ Mupen64Plus-core makefile.
    Targets:
-     all           == Build Mupen64Plus and all plugins
-     clean         == remove object files
-     install       == Install Mupen64Plus and all plugins
-     uninstall     == Uninstall Mupen64Plus and all plugins
-   Options:
-     BITS=32       == build 32-bit binaries on 64-bit machine
-     LIRC=1        == enable LIRC support
-     NO_ASM=1      == build without assembly (no dynamic recompiler or MMX/SSE code)
-     USE_GLES=1    == build against GLESv2 instead of OpenGL
-     VC=1          == build against Broadcom Videocore GLESv2
-     NEON=1        == (ARM only) build for hard floating point environments
-     VFP_HARD=1    == (ARM only) full hardware floating point ABI
-     SHAREDIR=path == extra path to search for shared data files
+     all            == Build Mupen64Plus core library
+     clean          == remove object files
+     install        == Install Mupen64Plus core library
+     uninstall      == Uninstall Mupen64Plus core library
+   Build Options:
+     BITS=32        == build 32-bit binaries on 64-bit machine
+     LIRC=1         == enable LIRC support
+     NO_ASM=1       == build without assembly (no dynamic recompiler or MMX/SSE code)
+     USE_GLES=1     == build against GLESv2 instead of OpenGL
+     VC=1           == build against Broadcom Videocore GLESv2
+     NEON=1         == (ARM only) build for hard floating point environments
+     VFP_HARD=1     == (ARM only) full hardware floating point ABI
+     SHAREDIR=path  == extra path to search for shared data files
+     OPTFLAGS=flag  == compiler optimization (default: -O3 -flto)
      WARNFLAGS=flag == compiler warning levels (default: -Wall)
-     OPTFLAGS=flag == compiler optimization (default: -O3)
-     PIC=(1|0)     == Force enable/disable of position independent code
-     OSD=(1|0)     == Enable/disable build of OpenGL On-screen display
-     NEW_DYNAREC=1 == Replace dynamic recompiler with Ari64's experimental dynarec
-     POSTFIX=name  == String added to the name of the the build (default: '')
+     PIC=(1|0)      == Force enable/disable of position independent code
+     OSD=(1|0)      == Enable/disable build of OpenGL On-screen display
+     NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec
+     OPENCV=1       == Enable OpenCV support
+     POSTFIX=name   == String added to the name of the the build (default: '')
    Install Options:
-     PREFIX=path   == install/uninstall prefix (default: /usr/local/)
-     SHAREDIR=path == path to install shared data (default: PREFIX/share/mupen64plus/)
-     LIBDIR=path   == path to install plugin libs (default: PREFIX/lib)
-     INCDIR=path   == path to install core header files (default: PREFIX/include/mupen64plus)
-     DESTDIR=path  == path to prepend to all installation paths (only for packagers)
+     PREFIX=path    == install/uninstall prefix (default: /usr/local/)
+     SHAREDIR=path  == path to install shared data files (default: PREFIX/share/mupen64plus)
+     LIBDIR=path    == path to install core library (default: PREFIX/lib)
+     INCDIR=path    == path to install core header files (default: PREFIX/include/mupen64plus)
+     DESTDIR=path   == path to prepend to all installation paths (only for packagers)
    Debugging Options:
-     PROFILE=1     == build gprof instrumentation into binaries for profiling
-     DEBUG=1       == add debugging symbols to binaries
-     DEBUGGER=1    == build graphical debugger
-     DBG_CORE=1    == print debugging info in r4300 core
-     DBG_COUNT=1   == print R4300 instruction count totals (64-bit dynarec only)
-     DBG_COMPARE=1 == enable core-synchronized r4300 debugging
-     DBG_TIMING=1  == print timing data
-     DBG_PROFILE=1 == dump profiling data for r4300 dynarec to data file
-     V=1           == show verbose compiler output
+     PROFILE=1      == build gprof instrumentation into binaries for profiling
+     DEBUG=1        == add debugging symbols to binaries
+     DEBUGGER=1     == build debugger API into core for front-ends.  runs slower.
+     DBG_CORE=1     == print debugging info in r4300 core
+     DBG_COUNT=1    == print R4300 instruction count totals (64-bit dynarec only)
+     DBG_COMPARE=1  == enable core-synchronized r4300 debugging
+     DBG_TIMING=1   == print timing data
+     DBG_PROFILE=1  == dump profiling data for r4300 dynarec to data file
+     V=1            == show verbose compiler output
 
 3. Installation
 ---------------
