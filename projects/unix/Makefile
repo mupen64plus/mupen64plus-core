@@ -455,11 +455,12 @@ SOURCE = \
     $(SRCDIR)/api/debugger.c \
     $(SRCDIR)/api/frontend.c \
     $(SRCDIR)/api/vidext.c \
+    $(SRCDIR)/backends/api/video_capture_backend.c \
     $(SRCDIR)/backends/plugins_compat/audio_plugin_compat.c \
     $(SRCDIR)/backends/plugins_compat/input_plugin_compat.c \
     $(SRCDIR)/backends/clock_ctime_plus_delta.c \
+    $(SRCDIR)/backends/dummy_video_capture.c \
     $(SRCDIR)/backends/file_storage.c \
-    $(SRCDIR)/backends/dummy_video_backend.c \
     $(SRCDIR)/device/cart/cart.c \
     $(SRCDIR)/device/cart/af_rtc.c \
     $(SRCDIR)/device/cart/cart_rom.c \
@@ -629,7 +630,7 @@ ifeq ($(DEBUGGER), 1)
 endif
 
 ifeq ($(OPENCV), 1)
-  SOURCE += $(SRCDIR)/backends/opencv_video_backend.cpp
+  SOURCE += $(SRCDIR)/backends/opencv_video_capture.cpp
   CFLAGS += -DM64P_OPENCV
 endif
 

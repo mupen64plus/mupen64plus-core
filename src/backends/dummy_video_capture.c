@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - video_backend.h                                         *
+ *   Mupen64plus - dummy_video_capture.c                                   *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2017 Bobby Smiles                                       *
  *                                                                         *
@@ -19,26 +19,66 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_BACKENDS_API_VIDEO_BACKEND_H
-#define M64P_BACKENDS_API_VIDEO_BACKEND_H
+#include "backends/api/video_capture_backend.h"
 
-#include "api/m64p_types.h"
+#include <stdlib.h>
+#include <string.h>
 
-struct video_input_backend_interface
+/* Dummy video capture backend
+ *
+ * Returns a black frame
+ */
+struct dummy_video_capture
 {
-    /* Open a video stream with following properties (width, height)
-     * Returns M64ERR_SUCCESS on success.
-     */
-    m64p_error (*open)(void* vin, unsigned int width, unsigned int height);
-
-    /* Close a previsouly opened video stream.
-     */
-    void (*close)(void* vin);
-
-    /* Grab a BGR image on an open stream
-     * Returns M64ERR_SUCCESS on success.
-     */
-    m64p_error (*grab_image)(void* vin, void* data);
+    /* BGR frame size (no stride) */
+    size_t size;
 };
 
-#endif
+static m64p_error dummy_init(void** vcap, const char* config)
+{
+    struct dummy_video_capture* dummy = malloc(sizeof(*dummy));
+    if (dummy == NULL) {
+        *vcap = NULL;
+        return M64ERR_NO_MEMORY;
+    }
+
+    memset(dummy, 0, sizeof(*dummy));
+
+    *vcap = dummy;
+    return M64ERR_SUCCESS;
+}
+
+static void dummy_release(void* vcap)
+{
+    free(vcap);
+}
+
+static m64p_error dummy_open(void* vcap, unsigned int width, unsigned int height)
+{
+    struct dummy_video_capture* dummy = (struct dummy_video_capture*)vcap;
+    dummy->size = 3 * width * height;
+    return M64ERR_SUCCESS;
+}
+
+static void dummy_close(void* vcap)
+{
+    struct dummy_video_capture* dummy = (struct dummy_video_capture*)vcap;
+    dummy->size = 0;
+}
+
+static m64p_error dummy_grab_image(void* vcap, void* data)
+{
+    struct dummy_video_capture* dummy = (struct dummy_video_capture*)vcap;
+    memset(data, 0, dummy->size);
+    return M64ERR_SUCCESS;
+}
+
+const struct video_capture_backend_interface g_idummy_video_capture_backend =
+{
+    "dummy",
+    dummy_init,
+    dummy_release,
+    dummy_open,
+    dummy_close,
+    dummy_grab_image
+};

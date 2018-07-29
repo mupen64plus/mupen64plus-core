@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - opencv_video_backend.h                                  *
+ *   Mupen64plus - opencv_video_capture.cpp                                *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2017 Bobby Smiles                                       *
  *                                                                         *
@@ -34,59 +34,46 @@
 #error "Unsupported version of OpenCV"
 #endif
 
-#include <cstdlib>
+#include <string>
+
+struct opencv_video_capture
+{
+    unsigned int width;
+    unsigned int height;
+
+    std::string device;
+    cv::VideoCapture cap;
+};
+
 
 extern "C"
 {
-#include "backends/opencv_video_backend.h"
-#include "backends/api/video_backend.h"
+
+#include "backends/api/video_capture_backend.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/callbacks.h"
+#include "api/m64p_config.h"
 #include "api/m64p_types.h"
 #include "main/util.h"
 
-/* Implements video_input_backend.
- * Needs device field to be set before calling.
- */
-static m64p_error opencv_video_open(void* vin, unsigned int width, unsigned int height)
+extern "C" const struct video_capture_backend_interface g_iopencv_video_capture_backend;
+
+
+
+static m64p_error opencv_init_full(struct opencv_video_capture** cv, const char* dev)
 {
     try {
-        int dev_num;
-        struct opencv_video_backend* b = static_cast<struct opencv_video_backend*>(vin);
-
-        /* allocate memory for cv::VideoCapture */
-        cv::VideoCapture* cap = static_cast<cv::VideoCapture*>(std::malloc(sizeof(cv::VideoCapture)));
-        if (cap == NULL) {
-            DebugMessage(M64MSG_ERROR, "Failed to allocated memory for video device %s", b->device);
-            return M64ERR_NO_MEMORY;
+        std::string device;
+        if (dev != NULL) {
+            device = dev;
         }
 
-        /* placement new to call cv::VideoCapture constructor */
-        new(cap)cv::VideoCapture();
+        *cv = new opencv_video_capture();
 
-
-        /* open device (we support both device number or path */
-        if (string_to_int(b->device, &dev_num)) {
-            cap->open(dev_num);
-        }
-        else {
-            cap->open(b->device);
-        }
-
-        if (!cap->isOpened()) {
-            DebugMessage(M64MSG_ERROR, "Failed to open video device %s", b->device);
-            std::free(cap);
-            return M64ERR_SYSTEM_FAIL;
-        }
-
-        /* TODO: adapt capture resolution to the desired resolution */
-
-        DebugMessage(M64MSG_INFO, "Video successfully opened: %s", b->device);
-
-        b->cap = cap;
-        b->width = width;
-        b->height = height;
+        (*cv)->width = 0;
+        (*cv)->height = 0;
+        (*cv)->device = std::move(device);
 
         return M64ERR_SUCCESS;
     }
@@ -94,24 +81,82 @@ static m64p_error opencv_video_open(void* vin, unsigned int width, unsigned int 
     catch(...) { return M64ERR_INTERNAL; }
 }
 
-static void opencv_video_close(void* vin)
+static m64p_error opencv_init(void** vcap, const char* section)
 {
     try {
-        struct opencv_video_backend* b = static_cast<struct opencv_video_backend*>(vin);
+        /* default parameters */
+        const char* device = "0";
 
-        if (b->cap != NULL) {
-            /* explicit call to cv::VideoCapture destructor */
-            static_cast<cv::VideoCapture*>(b->cap)->~VideoCapture();
+        if (section && strlen(section) > 0) {
+            m64p_handle config = NULL;
 
-            /* free allocated memory */
-            std::free(b->cap);
-            b->cap = NULL;
+            ConfigOpenSection(section, &config);
+
+            /* set default parameters */
+            ConfigSetDefaultString(config, "device", device, "Device to use for capture or \"0\" for default.");
+
+            /* get parameters */
+            device = ConfigGetParamString(config, "device");
         }
 
-        if (b->device != NULL) {
-            std::free(b->device);
-            b->device = NULL;
+        return opencv_init_full(reinterpret_cast<struct opencv_video_capture**>(vcap), device);
+    }
+    /* C++ exception must not cross C-API boundaries */
+    catch(...) { return M64ERR_INTERNAL; }
+}
+
+static void opencv_release(void* vcap)
+{
+    try {
+        struct opencv_video_capture* cv = static_cast<struct opencv_video_capture*>(vcap);
+        if (cv == NULL) {
+            return;
         }
+
+        delete cv;
+    }
+    /* C++ exception must not cross C-API boundaries */
+    catch(...) { return; }
+}
+
+static m64p_error opencv_open(void* vcap, unsigned int width, unsigned int height)
+{
+    try {
+        int dev_num;
+        struct opencv_video_capture* cv = static_cast<struct opencv_video_capture*>(vcap);
+
+        /* open device (we support both device number or path */
+        if (string_to_int(cv->device.c_str(), &dev_num)) {
+            cv->cap.open(dev_num);
+        }
+        else {
+            cv->cap.open(cv->device);
+        }
+
+        if (!cv->cap.isOpened()) {
+            DebugMessage(M64MSG_ERROR, "Failed to open video device %s", cv->device.c_str());
+            return M64ERR_SYSTEM_FAIL;
+        }
+
+        /* TODO: adapt capture resolution to the desired resolution */
+
+        DebugMessage(M64MSG_INFO, "Video successfully opened: %s", cv->device.c_str());
+
+        cv->width = width;
+        cv->height = height;
+
+        return M64ERR_SUCCESS;
+    }
+    /* C++ exception must not cross C-API boundaries */
+    catch(...) { return M64ERR_INTERNAL; }
+}
+
+static void opencv_close(void* vcap)
+{
+    try {
+        struct opencv_video_capture* cv = static_cast<struct opencv_video_capture*>(vcap);
+
+        cv->cap.release();
 
         DebugMessage(M64MSG_INFO, "Video closed");
     }
@@ -119,21 +164,20 @@ static void opencv_video_close(void* vin)
     catch(...) { return; }
 }
 
-static m64p_error opencv_grab_image(void* vin, void* data)
+static m64p_error opencv_grab_image(void* vcap, void* data)
 {
     try {
-        struct opencv_video_backend* b = static_cast<struct opencv_video_backend*>(vin);
-        cv::VideoCapture* cap = static_cast<cv::VideoCapture*>(b->cap);
+        struct opencv_video_capture* cv = static_cast<struct opencv_video_capture*>(vcap);
 
         /* read next frame */
         cv::Mat frame;
-        if (cap == NULL || !cap->read(frame)) {
+        if (!cv->cap.read(frame)) {
             DebugMessage(M64MSG_ERROR, "Failed to grab frame !");
             return M64ERR_SYSTEM_FAIL;
         }
 
         /* resize image to desired resolution */
-        cv::Mat output = cv::Mat(b->height, b->width, CV_8UC3, data);
+        cv::Mat output = cv::Mat(cv->height, cv->width, CV_8UC3, data);
         cv::resize(frame, output, output.size(), 0, 0, cv::INTER_AREA);
 
         return M64ERR_SUCCESS;
@@ -158,10 +202,14 @@ void cv_imshow(const char* name, unsigned int width, unsigned int height, int ch
 }
 #endif
 
-const struct video_input_backend_interface g_iopencv_video_input_backend =
+
+extern "C" const struct video_capture_backend_interface g_iopencv_video_capture_backend =
 {
-    opencv_video_open,
-    opencv_video_close,
+    "opencv",
+    opencv_init,
+    opencv_release,
+    opencv_open,
+    opencv_close,
     opencv_grab_image
 };
 

@@ -41,11 +41,13 @@
     <ClCompile Include="..\..\src\api\debugger.c" />
     <ClCompile Include="..\..\src\api\frontend.c" />
     <ClCompile Include="..\..\src\api\vidext.c" />
+    <ClCompile Include="..\..\src\backends\api\video_capture_backend.c" />
     <ClCompile Include="..\..\src\backends\plugins_compat\input_plugin_compat.c" />
     <ClCompile Include="..\..\src\backends\plugins_compat\audio_plugin_compat.c" />
     <ClCompile Include="..\..\src\backends\clock_ctime_plus_delta.c" />
+    <ClCompile Include="..\..\src\backends\dummy_video_capture.c" />
     <ClCompile Include="..\..\src\backends\file_storage.c" />
-    <ClCompile Include="..\..\src\backends\opencv_video_backend.cpp">
+    <ClCompile Include="..\..\src\backends\opencv_video_capture.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
@@ -55,7 +57,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\backends\dummy_video_backend.c" />
     <ClCompile Include="..\..\src\debugger\dbg_breakpoints.c" />
     <ClCompile Include="..\..\src\debugger\dbg_debugger.c" />
     <ClCompile Include="..\..\src\debugger\dbg_decoder.c" />
@@ -266,20 +267,9 @@
     <ClInclude Include="..\..\src\backends\api\joybus.h" />
     <ClInclude Include="..\..\src\backends\api\rumble_backend.h" />
     <ClInclude Include="..\..\src\backends\api\storage_backend.h" />
-    <ClInclude Include="..\..\src\backends\api\video_backend.h" />
+    <ClInclude Include="..\..\src\backends\api\video_capture_backend.h" />
     <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h" />
     <ClInclude Include="..\..\src\backends\file_storage.h" />
-    <ClInclude Include="..\..\src\backends\opencv_video_backend.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\src\backends\dummy_video_backend.h" />
     <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h" />
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h" />
     <ClInclude Include="..\..\src\debugger\dbg_breakpoints.h" />

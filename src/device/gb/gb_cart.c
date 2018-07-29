@@ -29,9 +29,9 @@
 #include "api/callbacks.h"
 #include "backends/api/rumble_backend.h"
 #include "backends/api/storage_backend.h"
-#include "backends/api/video_backend.h"
+#include "backends/api/video_capture_backend.h"
 #if 0
-#include "backends/opencv_video_backend.h"
+void cv_imshow(const char* name, unsigned int width, unsigned int height, int channels, void* data);
 #else
 #define cv_imshow(...)
 #endif
@@ -665,7 +665,7 @@ static void grab_pocket_cam_image(struct pocket_cam* cam)
 #endif
 
     /* grab BGR image */
-    if (cam->ivin->grab_image(cam->vin, bgr) != M64ERR_SUCCESS) {
+    if (cam->ivcap->grab_image(cam->vcap, bgr) != M64ERR_SUCCESS) {
         memset(cam->ram, UINT8_C(0xff), sizeof(tiles));
         return;
     }
@@ -708,12 +708,12 @@ static void grab_pocket_cam_image(struct pocket_cam* cam)
     memcpy(cam->ram, tiles, sizeof(tiles));
 }
 
-static void init_pocket_cam(struct pocket_cam* cam, uint8_t* ram, void* vin, const struct video_input_backend_interface* ivin)
+static void init_pocket_cam(struct pocket_cam* cam, uint8_t* ram, void* vcap, const struct video_capture_backend_interface* ivcap)
 {
     cam->ram = ram;
 
-    cam->vin = vin;
-    cam->ivin = ivin;
+    cam->vcap = vcap;
+    cam->ivcap = ivcap;
 }
 
 static void poweron_pocket_cam(struct pocket_cam* cam)
@@ -969,7 +969,7 @@ void init_gb_cart(struct gb_cart* gb_cart,
         void* ram_opaque, void (*init_ram)(void* user_data, size_t ram_size, void** ram_storage, const struct storage_backend_interface** iram_storage), void (*release_ram)(void* user_data),
         void* clock, const struct clock_backend_interface* iclock,
         void* rumble, const struct rumble_backend_interface* irumble,
-        void* vin, const struct video_input_backend_interface* ivin)
+        void* vcap, const struct video_capture_backend_interface* ivcap)
 {
     const struct parsed_cart_type* type;
     void* rom_storage = NULL;
@@ -1060,7 +1060,7 @@ void init_gb_cart(struct gb_cart* gb_cart,
     }
 
     if (type->extra_devices & GED_CAMERA) {
-        init_pocket_cam(&cam, iram_storage->data(ram_storage), vin, ivin);
+        init_pocket_cam(&cam, iram_storage->data(ram_storage), vcap, ivcap);
     }
 
     /* update gb_cart */
