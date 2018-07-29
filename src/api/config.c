@@ -554,12 +554,17 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
                 }
                 else if (is_numeric(l.value))
                 {
-                    int val_int = (int) strtol(l.value, NULL, 10);
-                    float val_float = (float) strtod(l.value, NULL);
-                    if ((val_float - val_int) != 0.0)
+                    /* preserve values as floats if they are written in the config as floats */
+                    if (strchr(l.value, '.'))
+                    {
+                        float val_float = (float) strtod(l.value, NULL);
                         ConfigSetDefaultFloat((m64p_handle) current_section, l.name, val_float, lastcomment);
+                    }
                     else
+                    {
+                        int val_int = (int) strtol(l.value, NULL, 10);
                         ConfigSetDefaultInt((m64p_handle) current_section, l.name, val_int, lastcomment);
+                    }
                 }
                 else
                 {
