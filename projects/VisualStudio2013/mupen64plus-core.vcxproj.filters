@@ -19,9 +19,6 @@
     <Filter Include="plugin">
       <UniqueIdentifier>{f8d14190-4f81-4bfa-bb8d-5a10c2292396}</UniqueIdentifier>
     </Filter>
-    <Filter Include="main\zip">
-      <UniqueIdentifier>{05c49d60-e191-4e2f-85bd-c972e1cf97e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="backends">
       <UniqueIdentifier>{4e08d3a7-cb15-4bc5-8d8a-04fea5461fb1}</UniqueIdentifier>
     </Filter>
@@ -60,9 +57,6 @@
     </Filter>
     <Filter Include="backends\plugins_compat">
       <UniqueIdentifier>{da1e6509-b45c-44b5-b5af-22461efed567}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="main\xxHash">
-      <UniqueIdentifier>{90e007c6-198a-4334-8bae-9f40b48e9569}</UniqueIdentifier>
     </Filter>
     <Filter Include="device\cart">
       <UniqueIdentifier>{c5515050-4fb5-4679-be02-0d6ca91b776f}</UniqueIdentifier>
@@ -103,6 +97,18 @@
     <Filter Include="device\rcp\vi">
       <UniqueIdentifier>{ba830992-ba04-4afc-aac4-7538801f1eb5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="subprojects\md5">
+      <UniqueIdentifier>{bafd976c-f27f-4d58-b4cb-880174adc9d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="subprojects\minizip">
+      <UniqueIdentifier>{05c49d60-e191-4e2f-85bd-c972e1cf97e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="subprojects\oglft">
+      <UniqueIdentifier>{e064708a-0ea3-4bf5-b4e1-1e74f85197c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="subprojects\xxhash">
+      <UniqueIdentifier>{90e007c6-198a-4334-8bae-9f40b48e9569}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\api\callbacks.c">
@@ -123,15 +129,6 @@
     <ClCompile Include="..\..\src\api\vidext.c">
       <Filter>api</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\ioapi.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\unzip.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\zip\zip.c">
-      <Filter>main\zip</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\cheat.c">
       <Filter>main</Filter>
     </ClCompile>
@@ -142,9 +139,6 @@
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\main.c">
-      <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\main\md5.c">
       <Filter>main</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main\rom.c">
@@ -176,9 +170,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\osal\files_win32.c">
       <Filter>osal</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osd\OGLFT.cpp">
-      <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\osd\osd.cpp">
       <Filter>osd</Filter>
@@ -309,9 +300,6 @@
     <ClCompile Include="..\..\src\backends\plugins_compat\input_plugin_compat.c">
       <Filter>backends\plugins_compat</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main\xxHash\xxhash.c">
-      <Filter>main\xxHash</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\device\gb\gb_cart.c">
       <Filter>device\gb</Filter>
     </ClCompile>
@@ -384,6 +372,24 @@
     <ClCompile Include="..\..\src\device\rcp\rdp\fb.c">
       <Filter>device\rcp\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\subprojects\md5\md5.c">
+      <Filter>subprojects\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\minizip\ioapi.c">
+      <Filter>subprojects\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\minizip\unzip.c">
+      <Filter>subprojects\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\minizip\zip.c">
+      <Filter>subprojects\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\oglft\OGLFT.cpp">
+      <Filter>subprojects\oglft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\xxhash\xxhash.c">
+      <Filter>subprojects\xxhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\callbacks.h">
@@ -422,18 +428,6 @@
     <ClInclude Include="..\..\src\api\vidext_sdl2_compat.h">
       <Filter>api</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\crypt.h">
-      <Filter>main\zip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\ioapi.h">
-      <Filter>main\zip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\unzip.h">
-      <Filter>main\zip</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\zip\zip.h">
-      <Filter>main\zip</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\main\cheat.h">
       <Filter>main</Filter>
     </ClInclude>
@@ -447,9 +441,6 @@
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\main.h">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\main\md5.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\rom.h">
@@ -481,9 +472,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\osal\preproc.h">
       <Filter>osal</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osd\OGLFT.h">
-      <Filter>osd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\osd\osd.h">
       <Filter>osd</Filter>
@@ -638,9 +626,6 @@
     <ClInclude Include="..\..\src\backends\plugins_compat\plugins_compat.h">
       <Filter>backends\plugins_compat</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\main\xxHash\xxhash.h">
-      <Filter>main\xxHash</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\device\gb\gb_cart.h">
       <Filter>device\gb</Filter>
     </ClInclude>
@@ -712,6 +697,27 @@
     </ClInclude>
     <ClInclude Include="..\..\src\device\rcp\rdp\fb.h">
       <Filter>device\rcp\rdp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\md5\md5.h">
+      <Filter>subprojects\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\minizip\crypt.h">
+      <Filter>subprojects\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\minizip\ioapi.h">
+      <Filter>subprojects\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\minizip\unzip.h">
+      <Filter>subprojects\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\minizip\zip.h">
+      <Filter>subprojects\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\oglft\OGLFT.h">
+      <Filter>subprojects\oglft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\xxhash\xxhash.h">
+      <Filter>subprojects\xxhash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -21,15 +21,17 @@
 
 #include "osd.h"
 
+#include <OGLFT.h>
+
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_thread.h>
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "OGLFT.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
