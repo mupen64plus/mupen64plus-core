@@ -25,6 +25,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "idec.h"
+
 struct r4300_core;
 struct cached_interp;
 struct r4300_idec;
