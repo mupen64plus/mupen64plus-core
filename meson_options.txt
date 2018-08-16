@@ -1,0 +1,30 @@
+option('vc', type : 'boolean', value : false,
+       description : 'Build against Broadcom Videocore GLESv2')
+option('gles', type : 'boolean', value : false,
+       description : 'Build against GLESv2 instead of OpenGL')
+option('osd', type : 'boolean', value : true,
+       description : 'Enable/Disable build of OpenGL on-screen display')
+option('new_dynarec', type : 'boolean', value : false,
+       description : 'Replace dynamic recompiler with Ari64\'s experimental dynarec')
+option('lirc', type : 'boolean', value : false,
+       description : 'Enable LIRC support')
+option('debugger', type : 'boolean', value : false,
+       description : 'Build debugger API into core for front-ends. Runs slower.')
+option('dbg_compare', type : 'boolean', value : false,
+       description : 'Enable core-synchronized r4300 debugging')
+option('dbg_core', type : 'boolean', value : false,
+       description : 'Print debugging info in r4300 core')
+option('dbg_count', type : 'boolean', value : false,
+       description : 'Print r4300 instruction count totls (64-bit dynarec only)')
+option('dbg_timing', type : 'boolean', value : false,
+       description : 'Print timing data')
+option('dbg_profile', type : 'boolean', value : false,
+       description : 'Dump profiling data for r4300 dynarec to data file')
+option('no_asm', type : 'boolean', value : false,
+       description : 'build without assembly (no dynamic recompiler or MMX/SSE code)')
+option('sharedir', type : 'string', value : '',
+       description : 'path to install shared data files. Leaving empty will use the per-platform default.')
+option('arm_fpu', type : 'combo', choices : ['', 'neon', 'vfp-hard', 'vfp-soft'],  value : '',
+       description : 'ARM FPU mode.')
+option('opencv', type : 'boolean', value : true,
+       description : 'Enable OpenCV support')

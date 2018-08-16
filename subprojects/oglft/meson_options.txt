@@ -1,0 +1,2 @@
+option('ftdir', type : 'string', value : '',
+       description : 'path where to search for pre-build Freetype2 library.')
