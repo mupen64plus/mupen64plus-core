@@ -816,7 +816,7 @@ void recompile_opcode(struct r4300_core* r4300)
         gen_NOP(r4300);
         break;
 
-    default:
+    default: {
 #if defined(PROFILE_R4300)
         long x86addr = (long) ((*r4300->recomp.inst_pointer) + r4300->recomp.code_length);
 
@@ -828,6 +828,7 @@ void recompile_opcode(struct r4300_core* r4300)
         }
 #endif
         recomp_funcs[opcode](r4300);
+    }
     }
 
     r4300->recomp.delay_slot_compiled = 2;
