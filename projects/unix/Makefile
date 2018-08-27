@@ -446,6 +446,7 @@ endif
 
 SRCDIR = ../../src
 OBJDIR = _obj$(POSTFIX)
+SUBDIR = ../../subprojects
 
 # list of required source files for compilation
 SOURCE = \
@@ -504,18 +505,28 @@ SOURCE = \
     $(SRCDIR)/main/util.c \
     $(SRCDIR)/main/cheat.c \
     $(SRCDIR)/main/eventloop.c \
-    $(SRCDIR)/main/md5.c \
     $(SRCDIR)/main/rom.c \
     $(SRCDIR)/main/savestates.c \
     $(SRCDIR)/main/sdl_key_converter.c \
     $(SRCDIR)/main/workqueue.c \
-    $(SRCDIR)/main/xxHash/xxhash.c \
     $(SRCDIR)/plugin/plugin.c \
     $(SRCDIR)/plugin/dummy_video.c \
     $(SRCDIR)/plugin/dummy_audio.c \
     $(SRCDIR)/plugin/dummy_input.c \
     $(SRCDIR)/plugin/dummy_rsp.c \
     $(SRCDIR)/osd/screenshot.c
+
+# MD5 lib
+SOURCE += \
+    $(SUBDIR)/md5/md5.c
+CFLAGS += -I$(SUBDIR)/md5
+
+
+# xxhash
+SOURCE += \
+    $(SUBDIR)/xxhash/xxhash.c
+CFLAGS += -I$(SUBDIR)/xxhash
+
 
 ifeq ("$(OS)","MINGW")
 SOURCE += \
@@ -533,8 +544,11 @@ endif
 
 ifeq ($(OSD), 1)
 SOURCE += \
-    $(SRCDIR)/osd/OGLFT.cpp \
     $(SRCDIR)/osd/osd.cpp
+
+# oglft
+SOURCE += $(SUBDIR)/oglft/OGLFT.cpp
+CXXFLAGS += -I$(SUBDIR)/oglft
 endif
 
 # source files for optional features
@@ -599,13 +613,13 @@ endif
 
 ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
   SOURCE += \
-    $(SRCDIR)/main/zip/ioapi.c \
-    $(SRCDIR)/main/zip/zip.c \
-    $(SRCDIR)/main/zip/unzip.c
+    $(SUBDIR)/minizip/ioapi.c \
+    $(SUBDIR)/minizip/zip.c \
+    $(SUBDIR)/minizip/unzip.c
 
-  CFLAGS += -DNOCRYPT -DNOUNCRYPT
+  CFLAGS += -DNOCRYPT -DNOUNCRYPT -I$(SUBDIR)/minizip
 else
-  CFLAGS += $(shell $(PKG_CONFIG) --cflags minizip) -DLIBMINIZIP
+  CFLAGS += $(shell $(PKG_CONFIG) --cflags minizip)
   LDLIBS +=  $(shell $(PKG_CONFIG) --libs minizip)
 endif
 
@@ -636,9 +650,11 @@ endif
 
 
 # generate a list of object files to build, make a temporary directory for them
-OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter %.c,   $(SOURCE)))
+OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter $(SRCDIR)/%.c,   $(SOURCE)))
+OBJECTS += $(patsubst $(SUBDIR)/%.c,   $(OBJDIR)/subprojects/%.o, $(filter $(SUBDIR)/%.c,   $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(SRCDIR)/asm_defines/asm_defines.c)
-OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter %.cpp, $(SOURCE)))
+OBJECTS += $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(filter $(SRCDIR)/%.cpp, $(SOURCE)))
+OBJECTS += $(patsubst $(SUBDIR)/%.cpp, $(OBJDIR)/subprojects/%.o, $(filter $(SUBDIR)/%.cpp, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.S, $(OBJDIR)/%.o, $(filter %.S, $(SOURCE)))
 OBJECTS += $(patsubst $(SRCDIR)/%.asm, $(OBJDIR)/%.o, $(filter %.asm, $(SOURCE)))
 OBJDIRS = $(dir $(OBJECTS))
@@ -739,6 +755,13 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(COMPILE.cc) -o $@ $<
+
+$(OBJDIR)/subprojects/%.o: $(SUBDIR)/%.c
+	$(COMPILE.c) -o $@ $<
+
+$(OBJDIR)/subprojects/%.o: $(SUBDIR)/%.cpp
+	$(COMPILE.cc) -o $@ $<
+
 
 $(TARGET): $(OBJECTS)
 	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@

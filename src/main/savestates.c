@@ -31,6 +31,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <zlib.h>
+#include <unzip.h>
+#include <zip.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/callbacks.h"
@@ -48,14 +50,6 @@
 #include "savestates.h"
 #include "util.h"
 #include "workqueue.h"
-
-#ifdef LIBMINIZIP
-    #include <unzip.h>
-    #include <zip.h>
-#else
-    #include "main/zip/unzip.h"
-    #include "main/zip/zip.h"
-#endif
 
 enum { GB_CART_FINGERPRINT_SIZE = 0x1c };
 enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };

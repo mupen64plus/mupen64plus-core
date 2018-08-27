@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <md5.h>
 
 #define M64P_CORE_PROTOTYPES 1
 #include "callbacks.h"
@@ -38,7 +39,6 @@
 #include "main/cheat.h"
 #include "main/eventloop.h"
 #include "main/main.h"
-#include "main/md5.h"
 #include "main/rom.h"
 #include "main/savestates.h"
 #include "main/util.h"
