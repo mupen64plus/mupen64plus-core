@@ -22,10 +22,6 @@
 #ifndef __LIST_H__
 #define __LIST_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 
 #include "osal/preproc.h"
@@ -120,9 +116,5 @@ static osal_inline int list_empty(const struct list_head *head)
          &pos->member != (head); \
          pos = safe, \
          safe = list_entry(safe->member.next, type, member))
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

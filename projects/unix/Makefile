@@ -544,7 +544,8 @@ endif
 
 ifeq ($(OSD), 1)
 SOURCE += \
-    $(SRCDIR)/osd/osd.cpp
+    $(SRCDIR)/osd/osd.c \
+    $(SRCDIR)/osd/oglft_c.cpp
 
 # oglft
 SOURCE += $(SUBDIR)/oglft/OGLFT.cpp

@@ -22,15 +22,7 @@
 #ifndef M64P_MAIN_SCREENSHOT_H
 #define M64P_MAIN_SCREENSHOT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void ScreenshotRomOpen(void);
 void TakeScreenshot(int iFrameNumber);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

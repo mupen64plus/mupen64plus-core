@@ -174,7 +174,10 @@
     <ClCompile Include="..\..\src\osal\files_win32.c">
       <Filter>osal</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\osd\osd.cpp">
+    <ClCompile Include="..\..\src\osd\oglft_c.cpp">
+      <Filter>osd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\osd\osd.c">
       <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\file_storage.c">
@@ -475,6 +478,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\osal\preproc.h">
       <Filter>osal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\osd\oglft_c.h">
+      <Filter>osd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\osd\osd.h">
       <Filter>osd</Filter>
