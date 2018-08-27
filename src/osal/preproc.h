@@ -42,6 +42,8 @@
   #define isnan _isnan
 
 #else  /* Not WIN32 */
+  /* for strcasecmp */
+  #include <strings.h>
 
   /* macros */
   #define OSAL_BREAKPOINT_INTERRUPT __asm__(" int $3; ");
