@@ -68,13 +68,13 @@
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
-#include "osd/screenshot.h"
 #include "plugin/plugin.h"
 #if defined(PROFILE)
 #include "profile.h"
 #endif
 #include "rom.h"
 #include "savestates.h"
+#include "screenshot.h"
 #include "util.h"
 
 #ifdef DBG

@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "osd.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "api/callbacks.h"
@@ -38,6 +37,7 @@
 #include "main/util.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
+#include "osd/osd.h"
 #include "plugin/plugin.h"
 
 /*********************************************************************************************************

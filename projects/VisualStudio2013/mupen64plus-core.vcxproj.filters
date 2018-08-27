@@ -147,6 +147,9 @@
     <ClCompile Include="..\..\src\main\savestates.c">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\main\screenshot.c">
+      <Filter>main</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\main\sdl_key_converter.c">
       <Filter>main</Filter>
     </ClCompile>
@@ -172,9 +175,6 @@
       <Filter>osal</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\osd\osd.cpp">
-      <Filter>osd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\osd\screenshot.c">
       <Filter>osd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\backends\file_storage.c">
@@ -449,6 +449,9 @@
     <ClInclude Include="..\..\src\main\savestates.h">
       <Filter>main</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\main\screenshot.h">
+      <Filter>main</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\main\sdl_key_converter.h">
       <Filter>main</Filter>
     </ClInclude>
@@ -474,9 +477,6 @@
       <Filter>osal</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\osd\osd.h">
-      <Filter>osd</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\osd\screenshot.h">
       <Filter>osd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\backends\file_storage.h">
