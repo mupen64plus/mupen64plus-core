@@ -67,7 +67,7 @@ static struct work_struct *workqueue_get_work(struct workqueue_thread *thread)
             list_del_init(&work->list);
         } else {
             list_add(&thread->list, &workqueue_mgmt.thread_queue);
-	    SDL_CondWait(thread->work_avail, workqueue_mgmt.lock);
+	        SDL_CondWait(thread->work_avail, workqueue_mgmt.lock);
         }
         SDL_UnlockMutex(workqueue_mgmt.lock);
 
@@ -169,7 +169,7 @@ void workqueue_shutdown(void)
 
     if (!list_empty(&workqueue_mgmt.work_queue))
         DebugMessage(M64MSG_WARNING, "Stopped workqueue with work still pending");
- 
+
     SDL_DestroyMutex(workqueue_mgmt.lock);
 }
 
