@@ -58,7 +58,7 @@ static struct work_struct *workqueue_get_work(struct workqueue_thread *thread)
     int found = 0;
     struct work_struct *work;
 
-    while (1) {
+    for (;;) {
         SDL_LockMutex(workqueue_mgmt.lock);
         list_del_init(&thread->list);
         if (!list_empty(&workqueue_mgmt.work_queue)) {
@@ -83,7 +83,7 @@ static int workqueue_thread_handler(void *data)
     struct workqueue_thread *thread = data;
     struct work_struct *work;
 
-    while (1) {
+    for (;;) {
         work = workqueue_get_work(thread);
         if (work->func == workqueue_dismiss) {
             free(work);
