@@ -266,21 +266,19 @@ static void main_check_inputs(void)
 int main_set_core_defaults(void)
 {
     float fConfigParamsVersion;
-    int bSaveConfig = 0, bUpgrade = 0;
+    int bUpgrade = 0;
 
     if (ConfigGetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fConfigParamsVersion, sizeof(float)) != M64ERR_SUCCESS)
     {
         DebugMessage(M64MSG_WARNING, "No version number in 'Core' config section. Setting defaults.");
         ConfigDeleteSection("Core");
         ConfigOpenSection("Core", &g_CoreConfig);
-        bSaveConfig = 1;
     }
     else if (((int) fConfigParamsVersion) != ((int) CONFIG_PARAM_VERSION))
     {
         DebugMessage(M64MSG_WARNING, "Incompatible version %.2f in 'Core' config section: current is %.2f. Setting defaults.", fConfigParamsVersion, (float) CONFIG_PARAM_VERSION);
         ConfigDeleteSection("Core");
         ConfigOpenSection("Core", &g_CoreConfig);
-        bSaveConfig = 1;
     }
     else if ((CONFIG_PARAM_VERSION - fConfigParamsVersion) >= 0.0001f)
     {
@@ -288,7 +286,6 @@ int main_set_core_defaults(void)
         ConfigSetParameter(g_CoreConfig, "Version", M64TYPE_FLOAT, &fVersion);
         DebugMessage(M64MSG_INFO, "Updating parameter set version in 'Core' config section to %.2f", fVersion);
         bUpgrade = 1;
-        bSaveConfig = 1;
     }
 
     /* parameters controlling the operation of the core */
@@ -324,9 +321,6 @@ int main_set_core_defaults(void)
                 ConfigSetParameter(g_CoreConfig, "SaveSRAMPath", M64TYPE_STRING, pccSaveStatePath);
         }
     }
-
-    if (bSaveConfig)
-        ConfigSaveSection("Core");
 
     /* set config parameters for keyboard and joystick commands */
     return event_set_core_defaults();
