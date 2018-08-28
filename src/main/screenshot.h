@@ -19,14 +19,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef M64P_MAIN_SCREENSHOT_H
+#define M64P_MAIN_SCREENSHOT_H
 
 void ScreenshotRomOpen(void);
 void TakeScreenshot(int iFrameNumber);
 
-#ifdef __cplusplus
-}
 #endif
-

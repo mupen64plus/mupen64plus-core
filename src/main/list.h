@@ -22,10 +22,6 @@
 #ifndef __LIST_H__
 #define __LIST_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 
 #include "osal/preproc.h"
@@ -87,7 +83,7 @@ static osal_inline int list_empty(const struct list_head *head)
 #ifdef __GNUC__
 
 #define container_of(ptr, type, member) __extension__ ({ \
-    const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+    const __typeof__( ((type *)0)->member ) *__mptr = (ptr); \
     (type *)( (char *)__mptr - offsetof(type,member) );})
 
 #else
@@ -120,9 +116,5 @@ static osal_inline int list_empty(const struct list_head *head)
          &pos->member != (head); \
          pos = safe, \
          safe = list_entry(safe->member.next, type, member))
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

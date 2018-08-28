@@ -21,7 +21,7 @@
 
 #include "osd.h"
 
-#include <OGLFT.h>
+#include "oglft_c.h"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -36,10 +36,7 @@
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
 #include "api/m64p_vidext.h"
-
-extern "C" {
-    #include "api/callbacks.h"
-}
+#include "api/callbacks.h"
 
 #define FONT_FILENAME "font.ttf"
 
@@ -50,7 +47,7 @@ static PTRGLACTIVETEXTURE pglActiveTexture = NULL;
 static int l_OsdInitialized = 0;
 
 static LIST_HEAD(l_messageQueue);
-static OGLFT::Monochrome *l_font;
+static struct OGLFT_Face* l_font;
 static float l_fLineHeight = -1.0;
 
 static void animation_none(osd_message_t *);
@@ -75,73 +72,73 @@ static void draw_message(osd_message_t *msg, int width, int height)
     float x = 0.,
           y = 0.;
 
-    if(!l_font || !l_font->isValid())
+    if (!l_font || !OGLFT_Face_isValid(l_font))
         return;
 
     // set color. alpha is hard coded to 1. animation can change this
-    l_font->setForegroundColor(msg->color[R], msg->color[G], msg->color[B], 1.0);
-    l_font->setBackgroundColor(0.0, 0.0, 0.0, 0.0);
+    OGLFT_Face_setForegroundColor(l_font, msg->color[R], msg->color[G], msg->color[B], 1.f);
+    OGLFT_Face_setBackgroundColor(l_font, 0.f, 0.f, 0.f, 0.f);
 
     // set justification based on corner
     switch(msg->corner)
     {
         case OSD_TOP_LEFT:
-            l_font->setVerticalJustification(OGLFT::Face::TOP);
-            l_font->setHorizontalJustification(OGLFT::Face::LEFT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_TOP);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_LEFT);
             x = 0.;
             y = (float)height;
             break;
         case OSD_TOP_CENTER:
-            l_font->setVerticalJustification(OGLFT::Face::TOP);
-            l_font->setHorizontalJustification(OGLFT::Face::CENTER);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_TOP);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_CENTER);
             x = ((float)width)/2.0f;
             y = (float)height;
             break;
         case OSD_TOP_RIGHT:
-            l_font->setVerticalJustification(OGLFT::Face::TOP);
-            l_font->setHorizontalJustification(OGLFT::Face::RIGHT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_TOP);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_RIGHT);
             x = (float)width;
             y = (float)height;
             break;
         case OSD_MIDDLE_LEFT:
-            l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
-            l_font->setHorizontalJustification(OGLFT::Face::LEFT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_MIDDLE);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_LEFT);
             x = 0.;
             y = ((float)height)/2.0f;
             break;
         case OSD_MIDDLE_CENTER:
-            l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
-            l_font->setHorizontalJustification(OGLFT::Face::CENTER);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_MIDDLE);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_CENTER);
             x = ((float)width)/2.0f;
             y = ((float)height)/2.0f;
             break;
         case OSD_MIDDLE_RIGHT:
-            l_font->setVerticalJustification(OGLFT::Face::MIDDLE);
-            l_font->setHorizontalJustification(OGLFT::Face::RIGHT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_MIDDLE);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_RIGHT);
             x = (float)width;
             y = ((float)height)/2.0f;
             break;
         case OSD_BOTTOM_LEFT:
-            l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
-            l_font->setHorizontalJustification(OGLFT::Face::LEFT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_BOTTOM);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_LEFT);
             x = 0.;
             y = 0.;
             break;
         case OSD_BOTTOM_CENTER:
-            l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
-            l_font->setHorizontalJustification(OGLFT::Face::CENTER);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_BOTTOM);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_CENTER);
             x = ((float)width)/2.0f;
             y = 0.;
             break;
         case OSD_BOTTOM_RIGHT:
-            l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
-            l_font->setHorizontalJustification(OGLFT::Face::RIGHT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_BOTTOM);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_RIGHT);
             x = (float)width;
             y = 0.;
             break;
         default:
-            l_font->setVerticalJustification(OGLFT::Face::BOTTOM);
-            l_font->setHorizontalJustification(OGLFT::Face::LEFT);
+            OGLFT_Face_setVerticalJustification(l_font, OGLFT_FACE_VERTICAL_JUSTIFICATION_BOTTOM);
+            OGLFT_Face_setHorizontalJustification(l_font, OGLFT_FACE_HORIZONTAL_JUSTIFICATION_LEFT);
             x = 0.;
             y = 0.;
             break;
@@ -158,15 +155,11 @@ static void draw_message(osd_message_t *msg, int width, int height)
     // get the bounding box if invalid
     if (msg->sizebox[0] == 0 && msg->sizebox[2] == 0)  // xmin and xmax
     {
-        OGLFT::BBox bbox = l_font->measure_nominal(msg->text);
-        msg->sizebox[0] = bbox.x_min_;
-        msg->sizebox[1] = bbox.y_min_;
-        msg->sizebox[2] = bbox.x_max_;
-        msg->sizebox[3] = bbox.y_max_;
+        OGLFT_Face_measure_nominal(l_font, msg->text, msg->sizebox);
     }
 
     // draw the text line
-    l_font->draw(x, y, msg->text, msg->sizebox);
+    OGLFT_Face_draw(l_font, x, y, msg->text, msg->sizebox);
 }
 
 // null animation handler
@@ -193,13 +186,13 @@ static void animation_fade(osd_message_t *msg)
     if(total_frames != 0.)
         alpha = elapsed_frames / total_frames;
 
-    l_font->setForegroundColor(msg->color[R], msg->color[G], msg->color[B], alpha);
+    OGLFT_Face_setForegroundColor(l_font, msg->color[R], msg->color[G], msg->color[B], alpha);
 }
 
 // sets message Y offset depending on where they are in the message queue
 static float get_message_offset(osd_message_t *msg, float fLinePos)
 {
-    float offset = (float) (l_font->height() * fLinePos);
+    float offset = (float) (OGLFT_Face_height(l_font) * fLinePos);
 
     switch(msg->corner)
     {
@@ -215,10 +208,10 @@ static float get_message_offset(osd_message_t *msg, float fLinePos)
 }
 
 // public functions
-extern "C"
 void osd_init(int width, int height)
 {
     const char *fontpath;
+    int i;
 
     osd_list_lock = SDL_CreateMutex();
     if (!osd_list_lock) {
@@ -226,7 +219,7 @@ void osd_init(int width, int height)
         return;
     }
 
-    if (!OGLFT::Init_FT())
+    if (!OGLFT_Init_FT())
     {
         DebugMessage(M64MSG_ERROR, "Could not initialize freetype library.");
         return;
@@ -234,9 +227,9 @@ void osd_init(int width, int height)
 
     fontpath = ConfigGetSharedDataFilepath(FONT_FILENAME);
 
-    l_font = new OGLFT::Monochrome(fontpath, (float) height / 35.0f);  // make font size proportional to screen height
+    l_font = OGLFT_Monochrome_create(fontpath, (float) height / 35.f);  // make font size proportional to screen height
 
-    if (!l_font || !l_font->isValid())
+    if (!l_font || !OGLFT_Face_isValid(l_font))
     {
         DebugMessage(M64MSG_ERROR, "Could not construct face from %s", fontpath);
         return;
@@ -253,7 +246,7 @@ void osd_init(int width, int height)
 #endif
 
     // clear statics
-    for (int i = 0; i < OSD_NUM_CORNERS; i++)
+    for (i = 0; i < OSD_NUM_CORNERS; i++)
         fCornerScroll[i] = 0.0;
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -272,7 +265,6 @@ void osd_init(int width, int height)
     l_OsdInitialized = 1;
 }
 
-extern "C"
 void osd_exit(void)
 {
     osd_message_t *msg, *safe;
@@ -280,7 +272,7 @@ void osd_exit(void)
     // delete font renderer
     if (l_font)
     {
-        delete l_font;
+        OGLFT_Face_destroy(l_font);
         l_font = NULL;
     }
 
@@ -294,7 +286,7 @@ void osd_exit(void)
     SDL_UnlockMutex(osd_list_lock);
 
     // shut down the Freetype library
-    OGLFT::Uninit_FT();
+    OGLFT_Uninit_FT();
 
     SDL_DestroyMutex(osd_list_lock);
 
@@ -303,7 +295,6 @@ void osd_exit(void)
 }
 
 // renders the current osd message queue to the screen
-extern "C"
 void osd_render()
 {
     osd_message_t *msg, *safe;
@@ -339,7 +330,7 @@ void osd_render()
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    gluOrtho2D(viewport[0],viewport[2],viewport[1],viewport[3]);
+    glOrtho(viewport[0],viewport[2],viewport[1],viewport[3], -1, 1);
 
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -367,8 +358,9 @@ void osd_render()
     // get line height if invalid
     if (l_fLineHeight < 0.0)
     {
-        OGLFT::BBox bbox = l_font->measure("01abjZpqRGB");
-        l_fLineHeight = (bbox.y_max_ - bbox.y_min_) / 30.0f;
+        float bbox[4];
+        OGLFT_Face_measure(l_font, "01abjZpqRGB", bbox);
+        l_fLineHeight = (bbox[3] - bbox[1]) / 30.f; // y_max - y_min
     }
 
     // keeps track of next message position for each corner
@@ -416,7 +408,7 @@ void osd_render()
     SDL_UnlockMutex(osd_list_lock);
 
     // do the scrolling
-    for (int i = 0; i < OSD_NUM_CORNERS; i++)
+    for (i = 0; i < OSD_NUM_CORNERS; i++)
     {
         fCornerScroll[i] += 0.1f;
         if (fCornerScroll[i] >= 0.0)
@@ -430,7 +422,7 @@ void osd_render()
     glPopMatrix();
 
     // restore the attributes
-    for (int i = 0; i < 8; i++)
+    for (i = 0; i < 8; i++)
     {
         pglActiveTexture(GL_TEXTURE0_ARB + i);
         if (bTexture2D[i])
@@ -455,7 +447,6 @@ void osd_render()
 // creates a new osd_message_t, adds it to the message queue and returns it in case
 // the user wants to modify its parameters. Note, if the message can't be created,
 // NULL is returned.
-extern "C"
 osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
 {
     va_list ap;
@@ -516,7 +507,6 @@ osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
 }
 
 // update message string
-extern "C"
 void osd_update_message(osd_message_t *msg, const char *fmt, ...)
 {
     va_list ap;
@@ -563,7 +553,6 @@ static void osd_remove_message(osd_message_t *msg)
 }
 
 // remove message from message queue and free it
-extern "C"
 void osd_delete_message(osd_message_t *msg)
 {
     if (!l_OsdInitialized || !msg) return;
@@ -575,7 +564,6 @@ void osd_delete_message(osd_message_t *msg)
 }
 
 // set message so it doesn't automatically expire in a certain number of frames.
-extern "C"
 void osd_message_set_static(osd_message_t *msg)
 {
     if (!l_OsdInitialized || !msg) return;
@@ -586,7 +574,6 @@ void osd_message_set_static(osd_message_t *msg)
 }
 
 // set message so it doesn't automatically get freed when finished transition.
-extern "C"
 void osd_message_set_user_managed(osd_message_t *msg)
 {
     if (!l_OsdInitialized || !msg) return;

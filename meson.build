@@ -91,14 +91,14 @@ src = [
     'src/main/eventloop.c',
     'src/main/rom.c',
     'src/main/savestates.c',
+    'src/main/screenshot.c',
     'src/main/sdl_key_converter.c',
     'src/main/workqueue.c',
     'src/plugin/plugin.c',
     'src/plugin/dummy_video.c',
     'src/plugin/dummy_audio.c',
     'src/plugin/dummy_input.c',
-    'src/plugin/dummy_rsp.c',
-    'src/osd/screenshot.c']
+    'src/plugin/dummy_rsp.c']
 
 # API export script
 vscript = 'src/api/api_export.ver'
@@ -275,7 +275,10 @@ if with_osd
   oglft_dep = dependency('oglft', fallback : ['oglft', 'oglft_dep'],
       default_options : ['ftdir=' + join_paths(m64pwindeppath, 'freetype-2.6')])
   extra_dep += [oglft_dep]
-  src += ['src/osd/osd.cpp']
+  src += [
+    'src/osd/osd.c',
+    'src/osd/oglft_c.cpp'
+  ]
   cflags += ['-DM64P_OSD']
 endif
 

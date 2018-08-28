@@ -27,10 +27,10 @@
 
 #include <time.h>
 
-static unsigned char byte2bcd(int n)
+static uint8_t byte2bcd(int n)
 {
     n %= 100;
-    return ((n / 10) << 4) | (n % 10);
+    return (uint8_t)(((n / 10) << 4) | (n % 10));
 }
 
 static void time2data(uint8_t* data, time_t now)

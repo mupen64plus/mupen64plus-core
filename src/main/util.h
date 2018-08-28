@@ -23,10 +23,6 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -214,10 +210,6 @@ typedef struct _ini_line
  * (so their lifetime is associated to that of 'lineptr').
  */
 ini_line ini_parse_line(char **lineptr);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // __UTIL_H__
 
