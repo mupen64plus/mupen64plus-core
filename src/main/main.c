@@ -68,13 +68,13 @@
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
-#include "osd/screenshot.h"
 #include "plugin/plugin.h"
 #if defined(PROFILE)
 #include "profile.h"
 #endif
 #include "rom.h"
 #include "savestates.h"
+#include "screenshot.h"
 #include "util.h"
 
 #ifdef DBG
@@ -1463,7 +1463,10 @@ m64p_error main_run(void)
                 }
                 /* Memory Pak */
                 else if (l_ipaks[k] == &g_imempak) {
-                    mpk_storages[i] = (struct file_storage){ mpk.data + i * MEMPAK_SIZE, MEMPAK_SIZE, (void*)&mpk} ;
+                    mpk_storages[i].data = mpk.data + i * MEMPAK_SIZE;
+                    mpk_storages[i].size = MEMPAK_SIZE;
+                    mpk_storages[i].filename = (void*)&mpk; /* OK for isubfile_storage */
+
                     init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);
                     l_paks[i][k] = &g_dev.mempaks[i];
 

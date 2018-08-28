@@ -507,14 +507,14 @@ SOURCE = \
     $(SRCDIR)/main/eventloop.c \
     $(SRCDIR)/main/rom.c \
     $(SRCDIR)/main/savestates.c \
+    $(SRCDIR)/main/screenshot.c \
     $(SRCDIR)/main/sdl_key_converter.c \
     $(SRCDIR)/main/workqueue.c \
     $(SRCDIR)/plugin/plugin.c \
     $(SRCDIR)/plugin/dummy_video.c \
     $(SRCDIR)/plugin/dummy_audio.c \
     $(SRCDIR)/plugin/dummy_input.c \
-    $(SRCDIR)/plugin/dummy_rsp.c \
-    $(SRCDIR)/osd/screenshot.c
+    $(SRCDIR)/plugin/dummy_rsp.c
 
 # MD5 lib
 SOURCE += \
@@ -544,7 +544,8 @@ endif
 
 ifeq ($(OSD), 1)
 SOURCE += \
-    $(SRCDIR)/osd/osd.cpp
+    $(SRCDIR)/osd/osd.c \
+    $(SRCDIR)/osd/oglft_c.cpp
 
 # oglft
 SOURCE += $(SUBDIR)/oglft/OGLFT.cpp

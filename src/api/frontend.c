@@ -44,7 +44,7 @@
 #include "main/util.h"
 #include "main/version.h"
 #include "main/workqueue.h"
-#include "osd/screenshot.h"
+#include "main/screenshot.h"
 #include "plugin/plugin.h"
 #include "vidext.h"
 

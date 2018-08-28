@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,7 +18,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the Core config functions which will be exported
  * outside of the core library.
  */
@@ -307,7 +307,7 @@ static config_section * section_deepcopy(config_section *orig_section)
             case M64TYPE_BOOL:
                 new_var->val.integer = orig_var->val.integer;
                 break;
-                
+
             case M64TYPE_FLOAT:
                 new_var->val.number = orig_var->val.number;
                 break;
