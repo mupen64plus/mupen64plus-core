@@ -1,3 +1,4 @@
+
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - Makefile                                                *
 # *   Mupen64Plus homepage: https://mupen64plus.org/                        *
@@ -122,6 +123,13 @@ ifneq ("$(filter mips,$(HOST_CPU))","")
   NO_ASM := 1
   $(warning Architecture "$(HOST_CPU)" not officially supported.)
 endif
+ifneq ("$(filter aarch64,$(HOST_CPU))","")
+    CPU := AARCH
+    ARCH_DETECTED := 64BITS
+    PIC ?= 1
+    NEW_DYNAREC := 1
+    NO_ASM := 1
+endif
 ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'https://github.com/mupen64plus/mupen64plus-core/issues')
 endif
@@ -131,7 +139,7 @@ OPTFLAGS ?= -O3 -flto
 WARNFLAGS ?= -Wall
 CFLAGS += -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../../src/asm_defines -DM64P_PARALLEL
 CXXFLAGS += -fvisibility-inlines-hidden
-LDLIBS +=  -lm
+LDLIBS +=  -lm -fPIC
 
 # Since we are building a shared library, we must compile with -fPIC on some architectures
 # On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
