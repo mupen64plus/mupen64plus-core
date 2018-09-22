@@ -28,6 +28,7 @@
 #include <string.h>
 
 #define M64P_CORE_PROTOTYPES 1
+#include "osal/preproc.h"
 #include "../osd/osd.h"
 #include "callbacks.h"
 #include "m64p_types.h"
@@ -371,7 +372,7 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
     return M64ERR_SYSTEM_FAIL;
 }
 
-EXPORT void * CALL VidExt_GL_GetProcAddress(const char* Proc)
+EXPORT m64p_function CALL VidExt_GL_GetProcAddress(const char* Proc)
 {
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
@@ -380,7 +381,11 @@ EXPORT void * CALL VidExt_GL_GetProcAddress(const char* Proc)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return NULL;
 
-    return SDL_GL_GetProcAddress(Proc);
+/* WARN: assume cast to m64p_function is supported by platform and disable warning accordingly */
+OSAL_WARNING_PUSH
+OSAL_NO_WARNING_FPTR_VOIDP_CAST
+    return (m64p_function)SDL_GL_GetProcAddress(Proc);
+OSAL_WARNING_POP
 }
 
 typedef struct {

@@ -31,6 +31,10 @@
   #define ALIGN(BYTES,DATA) __declspec(align(BYTES)) DATA
   #define osal_inline __inline
 
+  #define OSAL_WARNING_PUSH __pragma(warning(push))
+  #define OSAL_WARNING_POP  __pragma(warning(pop))
+  #define OSAL_NO_WARNING_FPTR_VOIDP_CAST __pragma(warning(disable:4055 4152))
+
   /* string functions */
   #define osal_insensitive_strcmp(x, y) _stricmp(x, y)
   #define snprintf _snprintf
@@ -49,6 +53,10 @@
   #define OSAL_BREAKPOINT_INTERRUPT __asm__(" int $3; ");
   #define ALIGN(BYTES,DATA) DATA __attribute__((aligned(BYTES)))
   #define osal_inline inline
+
+  #define OSAL_WARNING_PUSH _Pragma("GCC diagnostic push")
+  #define OSAL_WARNING_POP  _Pragma("GCC diagnostic pop")
+  #define OSAL_NO_WARNING_FPTR_VOIDP_CAST _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
 
   /* string functions */
   #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)

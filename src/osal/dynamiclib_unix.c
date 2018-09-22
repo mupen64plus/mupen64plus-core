@@ -24,12 +24,17 @@
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
+#include "osal/preproc.h"
 #include "dynamiclib.h"
 
-void * osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedureName)
+m64p_function osal_dynlib_getproc(m64p_dynlib_handle LibHandle, const char *pccProcedureName)
 {
     if (pccProcedureName == NULL)
         return NULL;
 
-    return dlsym(LibHandle, pccProcedureName);
+/* WARN: assume cast to m64p_function is supported by platform and disable warning accordingly */
+OSAL_WARNING_PUSH
+OSAL_NO_WARNING_FPTR_VOIDP_CAST
+    return (m64p_function)dlsym(LibHandle, pccProcedureName);
+OSAL_WARNING_POP
 }
