@@ -37,7 +37,7 @@ extern "C" {
  * This function should be called from within the InitiateGFX() video plugin
  * function call. The default SDL implementation of this function simply calls
  * SDL_InitSubSystem(SDL_INIT_VIDEO). It does not open a rendering window or
- * switch video modes. 
+ * switch video modes.
  */
 typedef m64p_error (*ptr_VidExt_Init)(void);
 #if defined(M64P_CORE_PROTOTYPES)
@@ -49,7 +49,7 @@ EXPORT m64p_error CALL VidExt_Init(void);
  * This function closes any open rendering window and shuts down the video
  * system. The default SDL implementation of this function calls
  * SDL_QuitSubSystem(SDL_INIT_VIDEO). This function should be called from
- * within the RomClose() video plugin function. 
+ * within the RomClose() video plugin function.
  */
 typedef m64p_error (*ptr_VidExt_Quit)(void);
 #if defined(M64P_CORE_PROTOTYPES)
@@ -109,7 +109,7 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void);
  *
  * This function is used to get a pointer to an OpenGL extension function. This
  * is only necessary on the Windows platform, because the OpenGL implementation
- * shipped with Windows only supports OpenGL version 1.1. 
+ * shipped with Windows only supports OpenGL version 1.1.
  */
 typedef void * (*ptr_VidExt_GL_GetProcAddress)(const char *);
 #if defined(M64P_CORE_PROTOTYPES)
@@ -128,7 +128,7 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr, int);
 
 /* VidExt_GL_GetAttribute()
  *
- * This function is used to get the value of OpenGL attributes.  These values may 
+ * This function is used to get the value of OpenGL attributes.  These values may
  * be changed when calling VidExt_SetVideoMode.
  */
 typedef m64p_error (*ptr_VidExt_GL_GetAttribute)(m64p_GLattr, int *);
