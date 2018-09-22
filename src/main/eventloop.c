@@ -509,7 +509,6 @@ void event_initialize(void)
 int event_set_core_defaults(void)
 {
     float fConfigParamsVersion;
-    int bSaveConfig = 0;
 
     if (ConfigOpenSection("CoreEvents", &l_CoreEventsConfig) != M64ERR_SUCCESS || l_CoreEventsConfig == NULL)
     {
@@ -522,14 +521,12 @@ int event_set_core_defaults(void)
         DebugMessage(M64MSG_WARNING, "No version number in 'CoreEvents' config section. Setting defaults.");
         ConfigDeleteSection("CoreEvents");
         ConfigOpenSection("CoreEvents", &l_CoreEventsConfig);
-        bSaveConfig = 1;
     }
     else if (((int) fConfigParamsVersion) != ((int) CONFIG_PARAM_VERSION))
     {
         DebugMessage(M64MSG_WARNING, "Incompatible version %.2f in 'CoreEvents' config section: current is %.2f. Setting defaults.", fConfigParamsVersion, (float) CONFIG_PARAM_VERSION);
         ConfigDeleteSection("CoreEvents");
         ConfigOpenSection("CoreEvents", &l_CoreEventsConfig);
-        bSaveConfig = 1;
     }
     else if ((CONFIG_PARAM_VERSION - fConfigParamsVersion) >= 0.0001f)
     {
@@ -537,7 +534,6 @@ int event_set_core_defaults(void)
         float fVersion = CONFIG_PARAM_VERSION;
         ConfigSetParameter(l_CoreEventsConfig, "Version", M64TYPE_FLOAT, &fVersion);
         DebugMessage(M64MSG_INFO, "Updating parameter set version in 'CoreEvents' config section to %.2f", fVersion);
-        bSaveConfig = 1;
     }
 
     ConfigSetDefaultFloat(l_CoreEventsConfig, "Version", CONFIG_PARAM_VERSION,  "Mupen64Plus CoreEvents config parameter set version number.  Please don't change this version number.");
@@ -575,9 +571,6 @@ int event_set_core_defaults(void)
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyForward], "",    "Joystick event string for fast-forward");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyAdvance], "",    "Joystick event string for advancing by one frame when paused");
     ConfigSetDefaultString(l_CoreEventsConfig, JoyCmdName[joyGameshark], "",  "Joystick event string for pressing the game shark button");
-
-    if (bSaveConfig)
-        ConfigSaveSection("CoreEvents");
 
     return 1;
 }

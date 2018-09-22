@@ -52,6 +52,11 @@
 
 typedef void * m64p_handle;
 
+/* Generic function pointer returned from osal_dynlib_getproc (and the like)
+ * Don't use it directly, cast to proper type before using it.
+ */
+typedef void (*m64p_function)(void);
+
 typedef void (*m64p_frame_callback)(unsigned int FrameIndex);
 typedef void (*m64p_input_callback)(void);
 typedef void (*m64p_audio_callback)(void);
@@ -388,18 +393,18 @@ typedef enum {
 
 typedef struct {
   unsigned int Functions;
-  m64p_error (*VidExtFuncInit)(void);
-  m64p_error (*VidExtFuncQuit)(void);
-  m64p_error (*VidExtFuncListModes)(m64p_2d_size *, int *);
-  m64p_error (*VidExtFuncSetMode)(int, int, int, int, int);
-  void *     (*VidExtFuncGLGetProc)(const char*);
-  m64p_error (*VidExtFuncGLSetAttr)(m64p_GLattr, int);
-  m64p_error (*VidExtFuncGLGetAttr)(m64p_GLattr, int *);
-  m64p_error (*VidExtFuncGLSwapBuf)(void);
-  m64p_error (*VidExtFuncSetCaption)(const char *);
-  m64p_error (*VidExtFuncToggleFS)(void);
-  m64p_error (*VidExtFuncResizeWindow)(int, int);
-  uint32_t   (*VidExtFuncGLGetDefaultFramebuffer)(void);
+  m64p_error    (*VidExtFuncInit)(void);
+  m64p_error    (*VidExtFuncQuit)(void);
+  m64p_error    (*VidExtFuncListModes)(m64p_2d_size *, int *);
+  m64p_error    (*VidExtFuncSetMode)(int, int, int, int, int);
+  m64p_function (*VidExtFuncGLGetProc)(const char*);
+  m64p_error    (*VidExtFuncGLSetAttr)(m64p_GLattr, int);
+  m64p_error    (*VidExtFuncGLGetAttr)(m64p_GLattr, int *);
+  m64p_error    (*VidExtFuncGLSwapBuf)(void);
+  m64p_error    (*VidExtFuncSetCaption)(const char *);
+  m64p_error    (*VidExtFuncToggleFS)(void);
+  m64p_error    (*VidExtFuncResizeWindow)(int, int);
+  uint32_t      (*VidExtFuncGLGetDefaultFramebuffer)(void);
 } m64p_video_extension_functions;
 
 #endif /* define M64P_TYPES_H */
