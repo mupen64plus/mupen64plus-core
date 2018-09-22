@@ -111,9 +111,9 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void);
  * is only necessary on the Windows platform, because the OpenGL implementation
  * shipped with Windows only supports OpenGL version 1.1.
  */
-typedef void * (*ptr_VidExt_GL_GetProcAddress)(const char *);
+typedef m64p_function (*ptr_VidExt_GL_GetProcAddress)(const char *);
 #if defined(M64P_CORE_PROTOTYPES)
-EXPORT void * CALL VidExt_GL_GetProcAddress(const char *);
+EXPORT m64p_function CALL VidExt_GL_GetProcAddress(const char *);
 #endif
 
 /* VidExt_GL_SetAttribute()
