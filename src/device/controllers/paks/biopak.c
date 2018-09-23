@@ -30,6 +30,8 @@
 
 #include <SDL_timer.h>
 
+#include <string.h>
+
 void init_biopak(struct biopak* bpk,
     unsigned int bpm)
 {
