@@ -1,0 +1,4 @@
+[wrap-git]
+directory = freetype2
+url = https://github.com/bsmiles32/freetype2.git
+revision = meson-2.9.1

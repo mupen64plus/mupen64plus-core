@@ -11,7 +11,7 @@ host_system = host_machine.system()
 
 # Provide pre-compiled fallback for windows
 # TODO: provide proper wrap
-freetype2_dep = dependency('freetype2', required : false)
+freetype2_dep = dependency('freetype2', fallback : ['freetype2', 'freetype_dep'], required : false)
 if not freetype2_dep.found()
 
   if host_system == 'windows'
