@@ -24,26 +24,26 @@ install:
   # XXX Use a Ninja with QuLogic's patch: https://github.com/ninja-build/ninja/issues/1219
   # Use the x86 python only when building for x86 for the cpython tests.
   # For all other archs (including, say, arm), use the x64 python.
-  - cmd: if %platform%==x86 (set MESON_PYTHON_PATH=C:\Python36) else (set MESON_PYTHON_PATH=C:\Python36-x64)
+  - cmd: if %platform%==x86 (set PYTHON_ROOT=C:\Python36) else (set PYTHON_ROOT=C:\Python36-x64)
   - cmd: set MESON_FIXED_NINJA=1
-  - cmd: echo "MESON_PYTHON_PATH=%MESON_PYTHON_PATH%"
-  - cmd: curl -fsS -o "%MESON_PYTHON_PATH%\Scripts\ninja.exe" https://nirbheek.in/files/binaries/ninja/win32/ninja.exe
+  - cmd: echo "PYTHON_ROOT=%PYTHON_ROOT%"
+  - cmd: curl -fsS -o "%PYTHON_ROOT%\Scripts\ninja.exe" https://nirbheek.in/files/binaries/ninja/win32/ninja.exe
   - cmd: if %compiler%==msvc2010 (call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" %platform%)
   - cmd: if %compiler%==msvc2013 (call "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\vcvarsall.bat" %platform%)
   - cmd: if %compiler%==msvc2015 (call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %platform%)
-  - cmd: set PATH=%MESON_PYTHON_PATH%;%MESON_PYTHON_PATH%\Scripts;%PATH%
+  - cmd: set PATH=%cd%;%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
   - cmd: echo %PATH%
-  - cmd: python.exe --version
-  - cmd: ninja.exe --version
-  - cmd: python.exe -m pip install meson
+  - cmd: python --version
+  - cmd: ninja --version
+  - cmd: pip install meson
   - cmd: git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ../mupen64plus-win32-deps
 
 build_script:
   - cmd: echo Building on %platform% with %compiler%
   # FIXME: disable OSD and opencv for now, because missing dependencies
-  - cmd: python.exe %MESON_PYTHON_PATH%\Scripts\meson.py --backend=ninja -Dopencv=false %meson_configure% builddir
-  - cmd: python.exe %MESON_PYTHON_PATH%\Scripts\meson.py configure builddir
-  - cmd: ninja.exe -C builddir
+  - cmd: meson --backend=ninja -Dopencv=false %meson_configure% builddir
+  - cmd: meson configure builddir
+  - cmd: ninja -C builddir
 
 on_finish:
   - cmd: set PATH=%ORIG_PATH%
