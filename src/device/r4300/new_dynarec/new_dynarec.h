@@ -28,8 +28,9 @@
 #include <stdint.h>
 
 #define NEW_DYNAREC_X86 1
-#define NEW_DYNAREC_AMD64 2
+#define NEW_DYNAREC_X64 2
 #define NEW_DYNAREC_ARM 3
+#define NEW_DYNAREC_ARM64 4
 
 struct r4300_core;
 
@@ -44,7 +45,11 @@ struct new_dynarec_hot_state
 #ifdef NEW_DYNAREC
     /* 0-6:   used by dynarec to push/pop caller-saved register (r0-r3, r12) and possibly lr (see invalidate_addr)
        7-15:  saved_context*/
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+    uint32_t dynarec_local[256];
+#else
     uint32_t dynarec_local[16];
+#endif
     unsigned int next_interrupt;
     int cycle_count;
     int last_count;
@@ -71,10 +76,10 @@ struct new_dynarec_hot_state
     int64_t rs;
     int64_t rt;
     int64_t rd;
-    int ram_offset;
-    unsigned int mini_ht[32][2];
+    intptr_t ram_offset;
+    uintptr_t mini_ht[32][2];
     unsigned char restore_candidate[512];
-    unsigned int memory_map[1048576];
+    uintptr_t memory_map[1048576];
 #else
     char dummy;
 #endif

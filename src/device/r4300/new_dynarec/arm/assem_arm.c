@@ -56,14 +56,6 @@ void invalidate_addr_r8(void);
 void invalidate_addr_r9(void);
 void invalidate_addr_r10(void);
 void invalidate_addr_r12(void);
-void read_byte_new(int pcaddr, int count, int diff);
-void read_hword_new(int pcaddr, int count, int diff);
-void read_word_new(int pcaddr, int count, int diff);
-void read_dword_new(int pcaddr, int count, int diff);
-void write_byte_new(int pcaddr, int count, int diff);
-void write_hword_new(int pcaddr, int count, int diff);
-void write_word_new(int pcaddr, int count, int diff);
-void write_dword_new(int pcaddr, int count, int diff);
 
 static void *dyna_linker(void * src, u_int vaddr);
 static void *dyna_linker_ds(void * src, u_int vaddr);
