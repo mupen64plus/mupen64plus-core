@@ -107,6 +107,12 @@ EXPORT m64p_error CALL DebugSetRunState(m64p_dbg_runstate runstate)
 {
 #ifdef DBG
     g_dbg_runstate = runstate; /* in debugger/debugger.c */
+    if (runstate == M64P_DBG_RUNSTATE_RUNNING)
+    {
+        /* clear out last breakpoint state when resuming */
+        breakpointFlag = 0;
+        breakpointAccessed = 0;
+    }
     return M64ERR_SUCCESS;
 #else
     return M64ERR_UNSUPPORTED;
@@ -415,3 +421,12 @@ EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned in
 #endif
 }
 
+EXPORT void CALL DebugBreakpointTriggeredBy(uint32_t *flags, uint32_t *accessed)
+{
+#ifdef DBG
+    *flags = breakpointFlag;
+    *accessed = breakpointAccessed;
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugBreakpointTriggeredBy() called, but Debugger not supported in Core library");
+#endif
+}

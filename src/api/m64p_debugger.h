@@ -194,6 +194,16 @@ typedef int (*ptr_DebugBreakpointCommand)(m64p_dbg_bkp_command, unsigned int, m6
 EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command, unsigned int, m64p_breakpoint *);
 #endif
 
+/* DebugBreakpointTriggeredBy()
+ *
+ * This function is used to retrieve the trigger flags and address for the
+ * most recently triggered breakpoint.
+ */
+typedef void (*ptr_DebugBreakpointTriggeredBy)(uint32_t *, uint32_t *);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT void CALL DebugBreakpointTriggeredBy(uint32_t *, uint32_t *);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
