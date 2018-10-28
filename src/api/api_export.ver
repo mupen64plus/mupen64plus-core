@@ -59,6 +59,7 @@ DebugSetCallbacks;
 DebugSetCoreCompare;
 DebugSetRunState;
 DebugStep;
+DebugVirtualToPhysical;
 PluginGetVersion;
 VidExt_GL_GetProcAddress;
 VidExt_GL_SetAttribute;

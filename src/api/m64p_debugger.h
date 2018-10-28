@@ -204,6 +204,16 @@ typedef void (*ptr_DebugBreakpointTriggeredBy)(uint32_t *, uint32_t *);
 EXPORT void CALL DebugBreakpointTriggeredBy(uint32_t *, uint32_t *);
 #endif
 
+/* DebugVirtualToPhysical()
+ *
+ * This function is used to translate virtual addresses to physical addresses.
+ * Memory read/write breakpoints operate on physical addresses.
+ */
+typedef uint32_t (*ptr_DebugVirtualToPhysical)(uint32_t);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT uint32_t CALL DebugVirtualToPhysical(uint32_t);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
