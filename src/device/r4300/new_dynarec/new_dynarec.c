@@ -201,8 +201,10 @@ void jump_eret(void);
 /* interpreted opcode */
 static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits);
 static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits);
-static void TLBWI_new(void);
-static void TLBWR_new(void);
+static void TLBWI_new(int pcaddr, int count, int diff);
+static void TLBWR_new(int pcaddr, int count, int diff);
+static void MFC0_new(int copr, int count, int diff);
+static void MTC0_new(int copr, int count, int diff, int pcaddr);
 static void read_byte_new(int pcaddr, int count, int diff);
 static void read_hword_new(int pcaddr, int count, int diff);
 static void read_word_new(int pcaddr, int count, int diff);
@@ -2850,7 +2852,6 @@ static void cop0_alloc(struct regstat *current,int i)
   {
     if(rt1[i]) {
       clear_const(current,rt1[i]);
-      alloc_all(current,i);
       alloc_reg(current,i,rt1[i]);
       current->is32|=1LL<<rt1[i];
       dirty_reg(current,rt1[i]);
@@ -2861,10 +2862,8 @@ static void cop0_alloc(struct regstat *current,int i)
     if(rs1[i]){
       clear_const(current,rs1[i]);
       alloc_reg(current,i,rs1[i]);
-      alloc_all(current,i);
     }
     else {
-      alloc_all(current,i); // FIXME: Keep r0
       current->u&=~1LL;
       alloc_reg(current,i,0);
     }
@@ -2873,9 +2872,13 @@ static void cop0_alloc(struct regstat *current,int i)
   {
     // TLBR/TLBWI/TLBWR/TLBP/ERET
     assert(opcode2[i]==0x10);
-    alloc_all(current,i);
+
+    if((source[i]&0x3f)==0x18) // ERET
+    {
+      alloc_all(current,i);
+      minimum_free_regs[i]=HOST_REGS;
+    }
   }
-  minimum_free_regs[i]=HOST_REGS;
 }
 
 static void cop1_alloc(struct regstat *current,int i)
@@ -10994,20 +10997,26 @@ static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
   return original;
 }
 
-static void TLBWI_new(void)
+static void TLBWI_new(int pcaddr, int count, int diff)
 {
   unsigned int i;
+  struct r4300_core* r4300 = &g_dev.r4300;
+
+  /* Update count + pcaddr*/
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300->new_dynarec_hot_state.pcaddr = pcaddr;
+
   /* Remove old entries */
-  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_even;
-  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_even;
-  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_odd;
+  unsigned int old_start_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even;
+  unsigned int old_end_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even;
+  unsigned int old_start_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
     {
       invalidate_block(i);
-      g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
   }
   for (i=old_start_odd>>12; i<=old_end_odd>>12; i++)
@@ -11015,74 +11024,81 @@ static void TLBWI_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       invalidate_block(i);
-      g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
   }
   cached_interp_TLBWI();
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].phys_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].v_even,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].d_even);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].phys_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].v_odd,g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].d_odd);
-  /* Combine g_dev.r4300.cp0.tlb.LUT_r, g_dev.r4300.cp0.tlb.LUT_w, and invalid_code into a single table
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].phys_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].v_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].d_even);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].phys_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].v_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].d_odd);
+  /* Combine r4300->cp0.tlb.LUT_r, r4300->cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
+  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
   {
-    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(g_dev.r4300.cp0.tlb.LUT_r[i]) {
-        g_dev.r4300.new_dynarec_hot_state.memory_map[i]=((g_dev.r4300.cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+      if(r4300->cp0.tlb.LUT_r[i]) {
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
-        if(!g_dev.r4300.cp0.tlb.LUT_w[i]||!g_dev.r4300.cached_interp.invalid_code[i]) {
-          g_dev.r4300.new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
+        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
+          r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
         }else{
-          assert(g_dev.r4300.cp0.tlb.LUT_r[i]==g_dev.r4300.cp0.tlb.LUT_w[i]);
+          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
         }
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      else r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
-    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,g_dev.r4300.new_dynarec_hot_state.memory_map[i],g_dev.r4300.new_dynarec_hot_state.memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
-  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
+  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
   {
-    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(g_dev.r4300.cp0.tlb.LUT_r[i]) {
-        g_dev.r4300.new_dynarec_hot_state.memory_map[i]=((g_dev.r4300.cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+      if(r4300->cp0.tlb.LUT_r[i]) {
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
-        if(!g_dev.r4300.cp0.tlb.LUT_w[i]||!g_dev.r4300.cached_interp.invalid_code[i]) {
-          g_dev.r4300.new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
+        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
+          r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
         }else{
-          assert(g_dev.r4300.cp0.tlb.LUT_r[i]==g_dev.r4300.cp0.tlb.LUT_w[i]);
+          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
         }
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      else r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
-    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,g_dev.r4300.new_dynarec_hot_state.memory_map[i],g_dev.r4300.new_dynarec_hot_state.memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified
 }
 
-static void TLBWR_new(void)
+static void TLBWR_new(int pcaddr, int count, int diff)
 {
   unsigned int i;
-  r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]/g_dev.r4300.cp0.count_per_op % (32 - r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_WIRED_REG];
+  struct r4300_core* r4300 = &g_dev.r4300;
+
+  /* Update count + pcaddr*/
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300->new_dynarec_hot_state.pcaddr = pcaddr;
+
+  r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG];
   /* Remove old entries */
-  unsigned int old_start_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_even;
-  unsigned int old_end_even=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_even;
-  unsigned int old_start_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_odd;
+  unsigned int old_start_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_even;
+  unsigned int old_end_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_even;
+  unsigned int old_start_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
     {
       invalidate_block(i);
-      g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
   }
   for (i=old_start_odd>>12; i<=old_end_odd>>12; i++)
@@ -11090,54 +11106,80 @@ static void TLBWR_new(void)
     if(i<0x80000||i>0xBFFFF)
     {
       invalidate_block(i);
-      g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
   }
   cached_interp_TLBWR();
-  /* Combine g_dev.r4300.cp0.tlb.LUT_r, g_dev.r4300.cp0.tlb.LUT_w, and invalid_code into a single table
+  /* Combine r4300->cp0.tlb.LUT_r, r4300->cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
+  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
   {
-    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(g_dev.r4300.cp0.tlb.LUT_r[i]) {
-        g_dev.r4300.new_dynarec_hot_state.memory_map[i]=((g_dev.r4300.cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+      if(r4300->cp0.tlb.LUT_r[i]) {
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
-        if(!g_dev.r4300.cp0.tlb.LUT_w[i]||!g_dev.r4300.cached_interp.invalid_code[i]) {
-          g_dev.r4300.new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
+        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
+          r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
         }else{
-          assert(g_dev.r4300.cp0.tlb.LUT_r[i]==g_dev.r4300.cp0.tlb.LUT_w[i]);
+          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
         }
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      else r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
-    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,g_dev.r4300.new_dynarec_hot_state.memory_map[i],g_dev.r4300.new_dynarec_hot_state.memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
-  for (i=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=g_dev.r4300.cp0.tlb.entries[r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
+  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
   {
-    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,g_dev.r4300.cp0.tlb.LUT_r[i],g_dev.r4300.cp0.tlb.LUT_w[i]);
+    //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(g_dev.r4300.cp0.tlb.LUT_r[i]) {
-        g_dev.r4300.new_dynarec_hot_state.memory_map[i]=((g_dev.r4300.cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+      if(r4300->cp0.tlb.LUT_r[i]) {
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
-        if(!g_dev.r4300.cp0.tlb.LUT_w[i]||!g_dev.r4300.cached_interp.invalid_code[i]) {
-          g_dev.r4300.new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
+        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
+          r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
         }else{
-          assert(g_dev.r4300.cp0.tlb.LUT_r[i]==g_dev.r4300.cp0.tlb.LUT_w[i]);
+          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
         }
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else g_dev.r4300.new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
+      else r4300->new_dynarec_hot_state.memory_map[i]=(uintptr_t)-1;
     }
-    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,g_dev.r4300.new_dynarec_hot_state.memory_map[i],g_dev.r4300.new_dynarec_hot_state.memory_map[i]<<2);
+    //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+}
+
+static void MFC0_new(int copr, int count, int diff)
+{
+  struct r4300_core* r4300 = &g_dev.r4300;
+  r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
+  *r4300_pc_struct(r4300) = &r4300->new_dynarec_hot_state.fake_pc;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  cached_interp_MFC0();
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+}
+
+static void MTC0_new(int copr, int count, int diff, int pcaddr)
+{
+  struct r4300_core* r4300 = &g_dev.r4300;
+  r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
+  *r4300_pc_struct(r4300) = &r4300->new_dynarec_hot_state.fake_pc;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300->new_dynarec_hot_state.pcaddr = pcaddr;
+  r4300->new_dynarec_hot_state.pending_exception = 0;
+  cached_interp_MTC0();
+  // Add one cycle if an exception occured while writing to status register
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] += ((copr == 12) && r4300->new_dynarec_hot_state.pending_exception) * g_dev.r4300.cp0.count_per_op;
+  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
 }
 
 /* used in assembler files */
@@ -11169,6 +11211,7 @@ static void read_byte_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xff);
   }
   r4300->delay_slot = 0;
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
 }
 
 static void read_hword_new(int pcaddr, int count, int diff)
@@ -11184,6 +11227,7 @@ static void read_hword_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xffff);
   }
   r4300->delay_slot = 0;
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
 }
 
 static void read_word_new(int pcaddr, int count, int diff)
@@ -11198,6 +11242,7 @@ static void read_word_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)(value);
   }
   r4300->delay_slot = 0;
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
 }
 
 static void read_dword_new(int pcaddr, int count, int diff)
@@ -11209,6 +11254,7 @@ static void read_dword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.pending_exception = 0;
   r4300_read_aligned_dword(r4300, r4300->new_dynarec_hot_state.address, (uint64_t*)&r4300->new_dynarec_hot_state.rdword);
   r4300->delay_slot = 0;
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
 }
 
 static void write_byte_new(int pcaddr, int count, int diff)
@@ -11267,3 +11313,4 @@ static void write_dword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
   r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
 }
+

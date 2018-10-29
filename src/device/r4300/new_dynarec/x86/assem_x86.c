@@ -3435,16 +3435,22 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
-        emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd));
-        if(copr==9||copr==1) {
-          emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-          emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-          emit_add(HOST_CCREG,ECX,HOST_CCREG);
-          emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-          emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
+        emit_pusha();
+
+        int cc=get_reg(i_regs->regmap,CCREG);
+        if(cc<0) {
+          cc=HOST_CCREG;
+          emit_loadreg(CCREG,cc);
         }
-        emit_call((int)cached_interp_MFC0);
+
+        //Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_RANDOM_REG)
+        emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
+        emit_pushreg(cc);
+        emit_pushimm(copr);
+
+        emit_call((int)MFC0_new);
+        emit_addimm(ESP,12,ESP);
+        emit_popa();
         emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3454,81 +3460,95 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     signed char s=get_reg(i_regs->regmap,rs1[i]);
     char copr=(source[i]>>11)&0x1f;
     assert(s>=0);
-    emit_writeword(s,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
     emit_pusha();
-    emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
-    emit_writebyte_imm((source[i]>>11)&0x1f,(int)&(g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd));
-    if(copr==9||copr==11||copr==12) {
-      if((copr==12||copr==9)&&!is_delayslot) {
-        wb_register(rs1[i],i_regs->regmap,i_regs->dirty,i_regs->is32);
-      }
-      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-      emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-      emit_add(HOST_CCREG,ECX,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
+    emit_writeword(s,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+
+    int cc=get_reg(i_regs->regmap,CCREG);
+    if(cc<0) {
+      cc=HOST_CCREG;
+      emit_loadreg(CCREG,cc);
     }
-    // What a mess.  The status register (12) can enable interrupts,
-    // so needs a special case to handle a pending interrupt.
-    // The interrupt must be taken immediately, because a subsequent
-    // instruction might disable interrupts again.
-    if((copr==12||copr==9)&&!is_delayslot) {
-      emit_writeword_imm(start+i*4+(copr==12)*4,(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_writebyte_imm(0,(int)&g_dev.r4300.new_dynarec_hot_state.pending_exception);
-    }
-    //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
-    //else
-    emit_call((int)cached_interp_MTC0);
-    if(copr==9||copr==11||copr==12) {
-      emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
-      emit_addimm(HOST_CCREG,-(int)CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_sub(HOST_CCREG,ECX,HOST_CCREG);
-      emit_writeword(ECX,(int)&g_dev.r4300.new_dynarec_hot_state.last_count);
-      emit_storereg(CCREG,HOST_CCREG);
-    }
+
+    // Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG)
+    // Always update the pcaddr even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_STATUS_REG)
+    emit_pushimm(start+i*4+(copr==CP0_STATUS_REG)*4);
+    emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
+    emit_pushreg(cc);
+    emit_pushimm(copr);
+
+    emit_call((int)MTC0_new);
+    emit_addimm(ESP,16,ESP);
     emit_popa();
-    if(copr==12||copr==9) {
+
+    if(copr==CP0_COUNT_REG||copr==CP0_STATUS_REG) {
       assert(!is_delayslot);
-      //if(is_delayslot) output_byte(0xcc);
       emit_cmpmem_imm_byte((int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,0);
       int jaddr=(int)out;
       emit_jeq(0);
-      if(copr==12){
-        emit_readword((int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],EAX);
-        emit_addimm(EAX,(int)CLOCK_DIVIDER,EAX);
-        emit_writeword(EAX,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-      }
+      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+      wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
       emit_jmp((int)&do_interrupt);
       set_jump_target(jaddr,(int)out);
     }
+
+    if(copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG){
+      if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
+        emit_loadreg(CCREG,cc);
+      }
+    }
+
     cop1_usable=0;
   }
   else
   {
     assert(opcode2[i]==0x10);
-    if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interp_TLBR);
-    if((source[i]&0x3f)==0x02) {  // TLBWI
-      assert(!is_delayslot);
-      emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_call((int)TLBWI_new);
-    }
-    if((source[i]&0x3f)==0x06) { // TLBWR
-      // The TLB entry written by TLBWR is dependent on the count,
-      // so update the cycle count
-      assert(!is_delayslot);
-      emit_writeword_imm((start+i*4),(int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-      if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-      emit_add(HOST_CCREG,ECX,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-      emit_call((int)TLBWR_new);
-    }
     if((source[i]&0x3f)==0x08) // TLBP
+    {
+      emit_pusha();
       emit_call((int)cached_interp_TLBP);
-    if((source[i]&0x3f)==0x18) // ERET
+      emit_popa();
+    }
+    else if((source[i]&0x3f)==0x01) // TLBR
+    {
+      emit_pusha();
+      emit_call((int)cached_interp_TLBR);
+      emit_popa();
+    }
+    else if((source[i]&0x3f)==0x02) {  // TLBWI
+      assert(!is_delayslot);
+      emit_pusha();
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=HOST_CCREG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
+      emit_pushreg(cc);
+      emit_pushimm(start+i*4);
+      emit_call((int)TLBWI_new);
+      emit_addimm(ESP,12,ESP);
+      emit_popa();
+    }
+    else if((source[i]&0x3f)==0x06) { // TLBWR
+      assert(!is_delayslot);
+      emit_pusha();
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=HOST_CCREG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
+      emit_pushreg(cc);
+      emit_pushimm(start+i*4);
+      emit_call((int)TLBWR_new);
+      emit_addimm(ESP,12,ESP);
+      emit_popa();
+    }
+    else if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
       int count=ccadj[i];

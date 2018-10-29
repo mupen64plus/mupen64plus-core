@@ -206,7 +206,7 @@ static Variable_t var[] = {
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.stop, sizeof(g_dev.r4300.new_dynarec_hot_state.stop), "r4300_stop"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.invc_ptr, sizeof(g_dev.r4300.new_dynarec_hot_state.invc_ptr), "invc_ptr"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.address, sizeof(g_dev.r4300.new_dynarec_hot_state.address), "mem_address"},
-  {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rdword, sizeof(g_dev.r4300.new_dynarec_hot_state.rdword), "readmem_dword"},
+  {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rdword, sizeof(g_dev.r4300.new_dynarec_hot_state.rdword), "mem_rdword"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.wdword, sizeof(g_dev.r4300.new_dynarec_hot_state.wdword), "mem_wdword"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.wword, sizeof(g_dev.r4300.new_dynarec_hot_state.wword), "mem_wword"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr0, sizeof(g_dev.r4300.new_dynarec_hot_state.fcr0), "cp1_fcr0"},
@@ -373,8 +373,8 @@ typedef struct{
 }Function_t;
 
 static Function_t func[] = {
-  {(intptr_t)cached_interp_MFC0, "MFC0"},
-  {(intptr_t)cached_interp_MTC0, "MTC0"},
+  {(intptr_t)MFC0_new, "MFC0"},
+  {(intptr_t)MTC0_new, "MTC0"},
   {(intptr_t)cached_interp_TLBR, "TLBR"},
   {(intptr_t)cached_interp_TLBP, "TLBP"},
   {(intptr_t)cached_interp_DMULT, "DMULT"},

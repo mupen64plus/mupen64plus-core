@@ -101,8 +101,6 @@ static const u_int invalidate_addr_reg[16] = {
   0};
 
 static u_int jump_table_symbols[] = {
-  (int)NULL /*MFC0*/,
-  (int)NULL /*MTC0*/,
   (int)NULL /*TLBR*/,
   (int)NULL /*TLBP*/,
   (int)NULL /*DMULT*/,
@@ -123,6 +121,8 @@ static u_int jump_table_symbols[] = {
   (int)do_interrupt,
   (int)TLBWI_new,
   (int)TLBWR_new,
+  (int)MFC0_new,
+  (int)MTC0_new,
   (int)jump_vaddr_r0,
   (int)jump_vaddr_r1,
   (int)jump_vaddr_r2,
@@ -2750,15 +2750,15 @@ static void do_readstub(int n)
 
   int cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
   int ds=i_regs!=&regs[i];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -2821,7 +2821,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
 
   int cc=get_reg(regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
@@ -2830,9 +2830,9 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(!ds) i_regs=&regs[i];
   else i_regs=&branch_regs[i-1];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(adj+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(adj+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -2921,15 +2921,15 @@ static void do_writestub(int n)
 
   int cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
   int ds=i_regs!=&regs[i];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -2988,7 +2988,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
 
   int cc=get_reg(regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
@@ -2997,9 +2997,9 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(!ds) i_regs=&regs[i];
   else i_regs=&branch_regs[i-1];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(adj+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(adj+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -3463,24 +3463,32 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
 
 static void cop0_assemble(int i,struct regstat *i_regs)
 {
+  u_int hr,reglist=0;
+  for(hr=0;hr<HOST_REGS;hr++) {
+    if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+  }
+
   if(opcode2[i]==0) // MFC0
   {
     if(rt1[i]) {
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_addimm(FP,fp_fake_pc,0);
-        emit_movimm((source[i]>>11)&0x1f,1);
-        emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
-        if(copr==9||copr==1) {
-          emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-          emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-          emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-          emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-          emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
+        save_regs(reglist);
+
+        int cc=get_reg(i_regs->regmap,CCREG);
+        if(cc<0) {
+          cc=ARG2_REG;
+          emit_loadreg(CCREG,cc);
         }
-        emit_call((int)cached_interp_MFC0);
+
+        //Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_RANDOM_REG)
+        emit_movimm(copr,ARG1_REG);
+        if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+        emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+
+        emit_call((int)MFC0_new);
+        restore_regs(reglist);
         emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3490,86 +3498,96 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     signed char s=get_reg(i_regs->regmap,rs1[i]);
     char copr=(source[i]>>11)&0x1f;
     assert(s>=0);
+    save_regs(reglist);
     emit_writeword(s,(u_int)&g_dev.r4300.new_dynarec_hot_state.rt);
-    wb_register(rs1[i],i_regs->regmap,i_regs->dirty,i_regs->is32);
-    emit_addimm(FP,fp_fake_pc,0);
-    emit_movimm((source[i]>>11)&0x1f,1);
-    emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-    emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
-    if(copr==9||copr==11||copr==12) {
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-      emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
+
+    int cc=get_reg(i_regs->regmap,CCREG);
+    if(cc<0) {
+      cc=ARG2_REG;
+      emit_loadreg(CCREG,cc);
     }
-    // What a mess.  The status register (12) can enable interrupts,
-    // so needs a special case to handle a pending interrupt.
-    // The interrupt must be taken immediately, because a subsequent
-    // instruction might disable interrupts again.
-    if((copr==12||copr==9)&&!is_delayslot) {
-      emit_movimm(start+i*4+(copr==12)*4,0);
-      emit_movimm(0,1);
-      emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_writeword(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.pending_exception);
-    }
-    //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
-    //else
-    emit_call((int)cached_interp_MTC0);
-    if(copr==9||copr==11||copr==12) {
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
-      emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_sub(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
-      emit_storereg(CCREG,HOST_CCREG);
-    }
+
+    // Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG)
+    // Always update the pcaddr even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_STATUS_REG)
+    emit_movimm(copr,ARG1_REG);
+    if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+    emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+    emit_movimm(start+i*4+(copr==CP0_STATUS_REG)*4,ARG4_REG);
+
+    emit_call((int)MTC0_new);
+    restore_regs(reglist);
+
     if(copr==12||copr==9) {
       assert(!is_delayslot);
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,HOST_TEMPREG);
       emit_test(HOST_TEMPREG,HOST_TEMPREG);
       int jaddr=(int)out;
       emit_jeq(0);
-      if(copr==12){
-        emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_TEMPREG);
-        emit_addimm(HOST_TEMPREG,(int)CLOCK_DIVIDER,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG, (u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-      }
+      u_int cmask=~i_regs->wasconst;
+      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+      wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
+      wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
       emit_jmp((int)&do_interrupt);
       set_jump_target(jaddr,(int)out);
     }
-    emit_loadreg(rs1[i],s);
-    if(get_reg(i_regs->regmap,rs1[i]|64)>=0)
-      emit_loadreg(rs1[i]|64,get_reg(i_regs->regmap,rs1[i]|64));
+
+    if(copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG){
+      if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
+        emit_loadreg(CCREG,cc);
+      }
+    }
+
     cop1_usable=0;
   }
   else
   {
     assert(opcode2[i]==0x10);
-    if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interp_TLBR);
-    if((source[i]&0x3f)==0x02) { // TLBWI
-      assert(!is_delayslot);
-      emit_movimm((start+i*4),HOST_TEMPREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_call((int)TLBWI_new);
-    }
-    if((source[i]&0x3f)==0x06) { // TLBWR
-      // The TLB entry written by TLBWR is dependent on the count,
-      // so update the cycle count
-      assert(!is_delayslot);
-      emit_movimm((start+i*4),HOST_TEMPREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-      if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-      emit_call((int)TLBWR_new);
-    }
     if((source[i]&0x3f)==0x08) // TLBP
+    {
+      save_regs(reglist);
       emit_call((int)cached_interp_TLBP);
-    if((source[i]&0x3f)==0x18) // ERET
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x01) // TLBR
+    {
+      save_regs(reglist);
+      emit_call((int)cached_interp_TLBR);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x02) {  // TLBWI
+      assert(!is_delayslot);
+      save_regs(reglist);
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=ARG2_REG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_movimm(start+i*4,ARG1_REG);
+      if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+      emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+
+      emit_call((int)TLBWI_new);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x06) { // TLBWR
+      assert(!is_delayslot);
+      save_regs(reglist);
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=ARG2_REG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_movimm(start+i*4,ARG1_REG);
+      if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+      emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+      emit_call((int)TLBWR_new);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
       int count=ccadj[i];
@@ -4730,14 +4748,12 @@ static void arch_init(void) {
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[2]=0x1<<22; // ceil
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[3]=0x2<<22; // floor
 
-  jump_table_symbols[0] = (int) cached_interp_MFC0;
-  jump_table_symbols[1] = (int) cached_interp_MTC0;
-  jump_table_symbols[2] = (int) cached_interp_TLBR;
-  jump_table_symbols[3] = (int) cached_interp_TLBP;
-  jump_table_symbols[4] = (int) cached_interp_DMULT;
-  jump_table_symbols[5] = (int) cached_interp_DMULTU;
-  jump_table_symbols[6] = (int) cached_interp_DDIV;
-  jump_table_symbols[7] = (int) cached_interp_DDIVU;
+  jump_table_symbols[0] = (int) cached_interp_TLBR;
+  jump_table_symbols[1] = (int) cached_interp_TLBP;
+  jump_table_symbols[2] = (int) cached_interp_DMULT;
+  jump_table_symbols[3] = (int) cached_interp_DMULTU;
+  jump_table_symbols[4] = (int) cached_interp_DDIV;
+  jump_table_symbols[5] = (int) cached_interp_DDIVU;
 
   #ifdef RAM_OFFSET
   g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.rdram.dram-(int)0x80000000)>>2;
