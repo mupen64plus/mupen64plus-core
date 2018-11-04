@@ -29,7 +29,7 @@
 
 #define FRONTEND_API_VERSION 0x020102
 #define CONFIG_API_VERSION   0x020301
-#define DEBUG_API_VERSION    0x020000
+#define DEBUG_API_VERSION    0x020001
 #define VIDEXT_API_VERSION   0x030100
 
 #define VERSION_PRINTF_SPLIT(x) (((x) >> 16) & 0xffff), (((x) >> 8) & 0xff), ((x) & 0xff)

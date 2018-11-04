@@ -105,6 +105,9 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** add new function "ConfigSetParameterHelp()" sets the value of one of the emulator's configuration parameters.
 * '''CONFIG_API_VERSION''' version 2.3.1:
 ** add new functions "ConfigExternalOpen()" "ConfigExternalClose()" "ConfigExternalGetParameter()" that allows plugins to leverage the core INI parser to read config files.
+* '''DEBUG_API_VERSION''' version 2.0.1:
+** add new function "DebugBreakpointTriggeredBy()" which allows a front-end application to determine which memory address and action (read, write, execute) caused a breakpoint to fire.
+** add new function "DebugVirtualToPhysical()" which allows a front-end application to find the physical address which corresponds to a given virtual address.
 * '''VIDEO_API_VERSION''' version 2.1.0:
 ** video render callback function now takes a boolean (int) parameter, which specifies whether the video frame has been re-drawn since the last time the render callback was called. This allows us to take screenshots without the On-Screen-Display text
 * '''VIDEO_API_VERSION''' version 2.2.0:
@@ -116,3 +119,4 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** add VidExt_GL_GetDefaultFramebuffer() function in video extension. This function should be called to get the name of the default FBO.
 * '''INPUT_API_VERSION''' version 2.0.1:
 ** add (optional) RenderCallback function to input plugin. This function is called by the core after rendering on screen text (OSD) and before the graphics plugin swaps the buffers. The purpose of this function is to enable the input plugin to draw on screen content, for example buttons in a touch input plugin. If this function is not present the core will ignore it and on screen rendering by the input plugin will be disabled.
+
