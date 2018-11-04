@@ -38,6 +38,9 @@ static SDL_sem *sem_pending_steps;
 
 uint32_t previousPC;
 
+uint32_t breakpointAccessed;
+uint32_t breakpointFlag;
+
 //]=-=-=-=-=-=-=-=-=-=-=[ Initialisation du Debugger ]=-=-=-=-=-=-=-=-=-=-=-=[
 
 void init_debugger()
@@ -73,6 +76,8 @@ void update_debugger(uint32_t pc)
         if (bpt != -1) {
             g_dbg_runstate = M64P_DBG_RUNSTATE_PAUSED;
 
+            breakpointAccessed = 0;
+            breakpointFlag = M64P_BKP_FLAG_EXEC;
             if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
                 log_breakpoint(pc, M64P_BKP_FLAG_EXEC, 0);
         }

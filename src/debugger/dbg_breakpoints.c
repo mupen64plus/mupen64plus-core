@@ -186,6 +186,8 @@ int check_breakpoints_on_mem_access(uint32_t pc, uint32_t address, uint32_t size
     if (g_dbg_runstate == M64P_DBG_RUNSTATE_RUNNING) {
         bpt = lookup_breakpoint(address, size, flags);
         if (bpt != -1) {
+            breakpointAccessed = address;
+            breakpointFlag = flags;
             if (BPT_CHECK_FLAG(g_Breakpoints[bpt], M64P_BKP_FLAG_LOG))
                 log_breakpoint(pc, flags, address);
 

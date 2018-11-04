@@ -31,6 +31,9 @@ extern m64p_dbg_runstate g_dbg_runstate;
 
 extern uint32_t previousPC;
 
+extern uint32_t breakpointAccessed;
+extern uint32_t breakpointFlag;
+
 void init_debugger(void);
 void update_debugger(uint32_t pc);
 void destroy_debugger(void);

@@ -229,6 +229,35 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |}
 <br />
 {| border="1"
+|Prototype
+|'''<tt>void DebugBreakpointTriggeredBy(uint32_t *flags, uint32_t *accessed)</tt>'''
+|-
+|Input Parameters
+|'''<tt>flags</tt>''' Pointer to store the breakpoint flag trigger reason for the most recent breakpoint<br />
+'''<tt>accessed</tt>''' Pointer to store the trigger address for the most recent breakpoint
+|-
+|Requirements
+|The Mupen64Plus library must be built with debugger support and must be initialized, the emulator core must be executing a ROM, and the debugger must be active before calling this function.
+|-
+|Usage
+|This function is used to programmatically access the trigger reason and address for the most recently triggered breakpoint. The meaning of the '''<tt>flags</tt>''' value are the same as the '''<tt>m64p_dbg_bkp_flags</tt>''' enumerated in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]. For memory read/write breakpoints, the value of '''<tt>accessed</tt>''' will be set to the ''physical'' address accessed; exec breakpoints will not populate this value as the necessary information is already encoded in the program counter.
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>uint32_t DebugVirtualToPhysical(uint32_t address)</tt>'''
+|-
+|Input Parameters
+|'''<tt>address</tt>''' A ''virtual'' address in R4300 memory
+|-
+|Requirements
+|The Mupen64Plus library must be built with debugger support and must be initialized, the emulator core must be executing a ROM, and the debugger must be active before calling this function.
+|-
+|Usage
+|This function resolves the ''physical'' address in R4300 memory corresponding to the provided ''virtual'' address. Memory read and write breakpoints only operate in terms of physical addresses, thus this function is provided to assist in the necessary virtual to physical translations.
+|}
+<br />
+{| border="1"
 !Command!!Return Value!!Function!!<tt>index</tt> Parameter!!<tt>ptr</tt> Parameter
 |-
 |M64P_BKP_CMD_ADD_ADDR

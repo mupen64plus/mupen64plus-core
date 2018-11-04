@@ -35,6 +35,7 @@
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "device/r4300/tlb.h"
 #include "m64p_debugger.h"
 #include "m64p_types.h"
 #include "main/main.h"
@@ -107,6 +108,12 @@ EXPORT m64p_error CALL DebugSetRunState(m64p_dbg_runstate runstate)
 {
 #ifdef DBG
     g_dbg_runstate = runstate; /* in debugger/debugger.c */
+    if (runstate == M64P_DBG_RUNSTATE_RUNNING)
+    {
+        /* clear out last breakpoint state when resuming */
+        breakpointFlag = 0;
+        breakpointAccessed = 0;
+    }
     return M64ERR_SUCCESS;
 #else
     return M64ERR_UNSUPPORTED;
@@ -415,3 +422,32 @@ EXPORT int CALL DebugBreakpointCommand(m64p_dbg_bkp_command command, unsigned in
 #endif
 }
 
+EXPORT void CALL DebugBreakpointTriggeredBy(uint32_t *flags, uint32_t *accessed)
+{
+#ifdef DBG
+    *flags = breakpointFlag;
+    *accessed = breakpointAccessed;
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugBreakpointTriggeredBy() called, but Debugger not supported in Core library");
+#endif
+}
+
+EXPORT uint32_t CALL DebugVirtualToPhysical(uint32_t address)
+{
+#ifdef DBG
+    struct device* dev = &g_dev;
+    struct r4300_core* r4300 = &dev->r4300;
+
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address(r4300, address, 0);
+        if (address == 0) {
+            return 0;
+        }
+    }
+
+    address &= UINT32_C(0x1fffffff);
+    return address;
+#else
+    DebugMessage(M64MSG_ERROR, "Bug: DebugVirtualToPhysical() called, but Debugger not supported in Core library");
+#endif
+}
