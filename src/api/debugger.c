@@ -449,5 +449,6 @@ EXPORT uint32_t CALL DebugVirtualToPhysical(uint32_t address)
     return address;
 #else
     DebugMessage(M64MSG_ERROR, "Bug: DebugVirtualToPhysical() called, but Debugger not supported in Core library");
+    return address;
 #endif
 }
