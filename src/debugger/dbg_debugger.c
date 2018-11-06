@@ -22,6 +22,7 @@
 
 #include <SDL.h>
 
+#include "api/callbacks.h"
 #include "api/debugger.h"
 #include "dbg_breakpoints.h"
 #include "dbg_debugger.h"
@@ -45,6 +46,12 @@ uint32_t breakpointFlag;
 
 void init_debugger()
 {
+    if (!DebuggerCallbacksAreSet())
+    {
+        DebugMessage(M64MSG_WARNING, "Front-end debugger callbacks are not set, so debugger will remain disabled.");
+        return;
+    }
+    
     g_DebuggerActive = 1;
     g_dbg_runstate = M64P_DBG_RUNSTATE_PAUSED;
 

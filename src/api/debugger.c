@@ -52,6 +52,14 @@ static void (*callback_core_data_sync)(int, void *) = NULL;
 
 /* global Functions for use by the Core */
 
+int DebuggerCallbacksAreSet(void)
+{
+    if (callback_ui_init != NULL && callback_ui_update != NULL && callback_ui_vi != NULL)
+        return 1;
+    else
+        return 0;
+}
+
 void DebuggerCallback(eDbgCallbackType type, unsigned int param)
 {
     if (type == DEBUG_UI_INIT)
