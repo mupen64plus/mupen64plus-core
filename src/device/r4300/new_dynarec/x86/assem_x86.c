@@ -2163,7 +2163,7 @@ static void emit_writeword_indexed(int rt, int addr, int rs)
     output_w32(addr);
   }
 }
-static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writeword_indexed(rt, addr+(int)g_dev.rdram.dram-0x80000000, rs);
   else {
@@ -2187,11 +2187,11 @@ static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int te
     }
   }
 }
-static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int temp)
+static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map)
 {
   assert(rh>=0);
-  emit_writeword_indexed_tlb(rh, addr, rs, map, temp);
-  emit_writeword_indexed_tlb(rl, addr+4, rs, map, temp);
+  emit_writeword_indexed_tlb(rh, addr, rs, map);
+  emit_writeword_indexed_tlb(rl, addr+4, rs, map);
 }
 static void emit_writehword(int rt, int addr)
 {
@@ -2216,7 +2216,7 @@ static void emit_writehword_indexed(int rt, int addr, int rs)
     output_w32(addr);
   }
 }
-static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writehword_indexed(rt, addr+(int)g_dev.rdram.dram-0x80000000, rs);
   else {
@@ -2278,7 +2278,7 @@ static void emit_writebyte_indexed(int rt, int addr, int rs)
     emit_xchg(EAX,rt);
   }
 }
-static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writebyte_indexed(rt, addr+(int)g_dev.rdram.dram-0x80000000, rs);
   else
@@ -2305,7 +2305,7 @@ static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int te
   else
   {
     emit_xchg(EAX,rt);
-    emit_writebyte_indexed_tlb(EAX,addr,rs==EAX?rt:rs,map==EAX?rt:map,temp);
+    emit_writebyte_indexed_tlb(EAX,addr,rs==EAX?rt:rs,map==EAX?rt:map);
     emit_xchg(EAX,rt);
   }
 }
@@ -3115,12 +3115,6 @@ static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
   return map;
 }
 
-static void gen_tlb_addr_r(int ar, int map) {
-  if(map>=0) {
-    emit_leairrx4(0,ar,map,ar);
-  }
-}
-
 static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 {
   if(c) {
@@ -3146,12 +3140,6 @@ static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
   if(!c||addr<0x80800000||addr>=0xC0000000) {
     *jaddr=(int)out;
     emit_jc(0);
-  }
-}
-
-static void gen_tlb_addr_w(int ar, int map) {
-  if(map>=0) {
-    emit_leairrx1(0,ar,map,ar);
   }
 }
 

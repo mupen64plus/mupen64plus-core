@@ -228,7 +228,8 @@ static u_int jump_table_symbols[] = {
   (int)write_byte_new,
   (int)write_hword_new,
   (int)write_word_new,
-  (int)write_dword_new
+  (int)write_dword_new,
+  (int)breakpoint
 };
 
 /* Linker */
@@ -2076,29 +2077,24 @@ static void emit_writeword_dualindexedx4(int rt, int rs1, int rs2)
   assem_debug("str %s,%s,%s lsl #2",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7800000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writeword_indexed(rt, addr, rs);
   else {
-    assert(addr==0);
-    emit_writeword_dualindexedx4(rt, rs, map);
-  }
-}
-static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int temp)
-{
-  if(map<0) {
-    if(rh>=0) emit_writeword_indexed(rh, addr, rs);
-    emit_writeword_indexed(rl, addr+4, rs);
-  }else{
-    assert(rh>=0);
-    if(temp!=rs) emit_addimm(map,1,temp);
-    emit_writeword_indexed_tlb(rh, addr, rs, map, temp);
-    if(temp!=rs) emit_writeword_indexed_tlb(rl, addr, rs, temp, temp);
-    else {
-      emit_addimm(rs,4,rs);
-      emit_writeword_indexed_tlb(rl, addr, rs, map, temp);
+    if(addr==0) {
+      emit_writeword_dualindexedx4(rt, rs, map);
+    }else{
+      assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+      emit_writeword_indexed(rt,addr,HOST_TEMPREG);
     }
   }
+}
+static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map)
+{
+  assert(rh>=0);
+  emit_writeword_indexed_tlb(rh, addr, rs, map);
+  emit_writeword_indexed_tlb(rl, addr+4, rs, map);
 }
 static void emit_writehword_indexed(int rt, int offset, int rs)
 {
@@ -2110,13 +2106,13 @@ static void emit_writehword_indexed(int rt, int offset, int rs)
     output_w32(0xe14000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
-static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writehword_indexed(rt, addr, rs);
   else {
-    assem_debug("add %s,%s,%s,lsl #2",regname[temp],regname[rs],regname[map]);
-    output_w32(0xe0800000|rd_rn_rm(temp,rs,map)|(2<<7));
-    emit_writehword_indexed(rt,addr,temp);
+    assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+    output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+    emit_writehword_indexed(rt,addr,HOST_TEMPREG);
   }
 }
 static void emit_writebyte_indexed(int rt, int offset, int rs)
@@ -2134,15 +2130,16 @@ static void emit_writebyte_dualindexedx4(int rt, int rs1, int rs2)
   assem_debug("strb %s,%s,%s lsl #2",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7c00000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writebyte_indexed(rt, addr, rs);
   else {
     if(addr==0) {
       emit_writebyte_dualindexedx4(rt, rs, map);
     }else{
-      emit_addimm(rs,addr,temp);
-      emit_writebyte_dualindexedx4(rt, temp, map);
+      assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+      emit_writebyte_indexed(rt,addr,HOST_TEMPREG);
     }
   }
 }
@@ -3190,13 +3187,6 @@ static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
   return map;
 }
 
-static void gen_tlb_addr_r(int ar, int map) {
-  if(map>=0) {
-    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
-  }
-}
-
 static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 {
   if(c) {
@@ -3228,21 +3218,6 @@ static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
     emit_testimm(map,0x40000000);
     *jaddr=(int)out;
     emit_jne(0);
-  }
-}
-
-static void gen_tlb_addr_w(int ar, int map) {
-  if(map>=0) {
-    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
-  }
-}
-
-// This reverses the above operation
-static void gen_orig_addr_w(int ar, int map) {
-  if(map>=0) {
-    assem_debug("sub %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0400100|rd_rn_rm(ar,ar,map));
   }
 }
 
