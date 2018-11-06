@@ -1986,6 +1986,31 @@ static void emit_movswl_tlb(int addr, int map, int rt)
     output_w32(addr);
   }
 }
+static void emit_movswl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movswl_indexed(addr+(int)g_dev.rdram.dram-0x80000000, rs, rt);
+  else {
+    assem_debug("movswl %x(%%%s,%%%s,4),%%%s",addr,regname[rs],regname[map],regname[rt]);
+    assert(rs!=ESP);
+    output_byte(0x0F);
+    output_byte(0xBF);
+    if(addr==0&&rs!=EBP) {
+      output_modrm(0,4,rt);
+      output_sib(2,map,rs);
+    }
+    else if(addr<128&&addr>=-128) {
+      output_modrm(1,4,rt);
+      output_sib(2,map,rs);
+      output_byte(addr);
+    }
+    else
+    {
+      output_modrm(2,4,rt);
+      output_sib(2,map,rs);
+      output_w32(addr);
+    }
+  }
+}
 static void emit_movzbl(int addr, int rt)
 {
   assem_debug("movzbl %x,%%%s",addr,regname[rt]);
@@ -2067,6 +2092,31 @@ static void emit_movzwl_tlb(int addr, int map, int rt)
     output_modrm(0,4,rt);
     output_sib(2,map,5);
     output_w32(addr);
+  }
+}
+static void emit_movzwl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movzwl_indexed(addr+(int)g_dev.rdram.dram-0x80000000, rs, rt);
+  else {
+    assem_debug("movzwl %x(%%%s,%%%s,4),%%%s",addr,regname[rs],regname[map],regname[rt]);
+    assert(rs!=ESP);
+    output_byte(0x0F);
+    output_byte(0xB7);
+    if(addr==0&&rs!=EBP) {
+      output_modrm(0,4,rt);
+      output_sib(2,map,rs);
+    }
+    else if(addr<128&&addr>=-128) {
+      output_modrm(1,4,rt);
+      output_sib(2,map,rs);
+      output_byte(addr);
+    }
+    else
+    {
+      output_modrm(2,4,rt);
+      output_sib(2,map,rs);
+      output_w32(addr);
+    }
   }
 }
 /*
@@ -2164,6 +2214,31 @@ static void emit_writehword_indexed(int rt, int addr, int rs)
   {
     output_modrm(2,rs,rt);
     output_w32(addr);
+  }
+}
+static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+{
+  if(map<0) emit_writehword_indexed(rt, addr+(int)g_dev.rdram.dram-0x80000000, rs);
+  else {
+    assem_debug("movw %%%s,%x(%%%s,%%%s,1)",regname[rt]+1,addr,regname[rs],regname[map]);
+    assert(rs!=ESP);
+    output_byte(0x66);
+    output_byte(0x89);
+    if(addr==0&&rs!=EBP) {
+      output_modrm(0,4,rt);
+      output_sib(0,map,rs);
+    }
+    else if(addr<128&&addr>=-128) {
+      output_modrm(1,4,rt);
+      output_sib(0,map,rs);
+      output_byte(addr);
+    }
+    else
+    {
+      output_modrm(2,4,rt);
+      output_sib(0,map,rs);
+      output_w32(addr);
+    }
   }
 }
 static void emit_writebyte(int rt, int addr)
@@ -3312,7 +3387,6 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
   }
   if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
     if(!c||memtarget) {
-      //emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2);
       emit_readword_indexed_tlb(0,temp2,map,temp2);
       if(jaddr) add_stub(LOADW_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
@@ -3362,25 +3436,11 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
       }
       emit_and(temp,tl,tl);
       emit_or(temp2,tl,tl);
-      //emit_storereg(rt1[i],tl); // DEBUG
-    /*emit_pusha();
-    //save_regs(0x100f);
-        emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-        if(get_reg(i_regs->regmap,CCREG)<0)
-          emit_loadreg(CCREG,HOST_CCREG);
-        emit_add(HOST_CCREG,ECX,HOST_CCREG);
-        emit_addimm(HOST_CCREG,2*ccadj[i],HOST_CCREG);
-        emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-    emit_call((int)memdebug);
-    emit_popa();
-    //restore_regs(0x100f);*/
     }
   }
   if (opcode[i]==0x1A||opcode[i]==0x1B) { // LDL/LDR
     int temp2h=get_reg(i_regs->regmap,FTEMP|64);
     if(!c||memtarget) {
-      //if(th>=0) emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2h);
-      //emit_readword_indexed((int)g_dev.rdram.dram-0x7FFFFFFC,temp2,temp2);
       emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
       if(jaddr) add_stub(LOADD_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }

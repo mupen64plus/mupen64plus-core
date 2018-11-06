@@ -1948,6 +1948,22 @@ static void emit_movswl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000f0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
+static void emit_movswl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movswl_indexed(addr,rs,rt);
+  else {
+    if(addr==0) {
+      emit_shlimm(map,2,HOST_TEMPREG);
+      assem_debug("ldrsh %s,%s+%s",regname[rt],regname[rs],regname[HOST_TEMPREG]);
+      output_w32(0xe19000f0|rd_rn_rm(rt,rs,HOST_TEMPREG));
+    }else{
+      assert(addr>-256&&addr<256);
+      assem_debug("add %s,%s,%s,lsl #2",regname[rt],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(rt,rs,map)|(2<<7));
+      emit_movswl_indexed(addr, rt, rt);
+    }
+  }
+}
 static void emit_movzbl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-4096&&offset<4096);
@@ -1983,6 +1999,22 @@ static void emit_movzwl_indexed(int offset, int rs, int rt)
     output_w32(0xe1d000b0|rd_rn_rm(rt,rs,0)|((offset<<4)&0xf00)|(offset&0xf));
   }else{
     output_w32(0xe15000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
+  }
+}
+static void emit_movzwl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movzwl_indexed(addr,rs,rt);
+  else {
+    if(addr==0) {
+      emit_shlimm(map,2,HOST_TEMPREG);
+      assem_debug("ldrh %s,%s+%s",regname[rt],regname[rs],regname[HOST_TEMPREG]);
+      output_w32(0xe19000b0|rd_rn_rm(rt,rs,HOST_TEMPREG));
+    }else{
+      assert(addr>-256&&addr<256);
+      assem_debug("add %s,%s,%s,lsl #2",regname[rt],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(rt,rs,map)|(2<<7));
+      emit_movzwl_indexed(addr, rt, rt);
+    }
   }
 }
 static void emit_readword(int addr, int rt)
@@ -2076,6 +2108,15 @@ static void emit_writehword_indexed(int rt, int offset, int rs)
     output_w32(0xe1c000b0|rd_rn_rm(rt,rs,0)|((offset<<4)&0xf00)|(offset&0xf));
   }else{
     output_w32(0xe14000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
+  }
+}
+static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+{
+  if(map<0) emit_writehword_indexed(rt, addr, rs);
+  else {
+    assem_debug("add %s,%s,%s,lsl #2",regname[temp],regname[rs],regname[map]);
+    output_w32(0xe0800000|rd_rn_rm(temp,rs,map)|(2<<7));
+    emit_writehword_indexed(rt,addr,temp);
   }
 }
 static void emit_writebyte_indexed(int rt, int offset, int rs)
