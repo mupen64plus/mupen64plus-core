@@ -2598,7 +2598,7 @@ static void emit_jno_unlikely(int a)
 // Save registers before function call
 static void save_regs(u_int reglist)
 {
-  reglist&=0x100f; // only save the caller-save registers, r0-r3, r12
+  reglist&=CALLER_SAVED_REGS; // only save the caller-save registers, r0-r3, r12
   if(!reglist) return;
   assem_debug("stmia fp,{");
   if(reglist&1) assem_debug("r0, ");
@@ -2612,7 +2612,7 @@ static void save_regs(u_int reglist)
 // Restore registers after function call
 static void restore_regs(u_int reglist)
 {
-  reglist&=0x100f; // only restore the caller-save registers, r0-r3, r12
+  reglist&=CALLER_SAVED_REGS; // only restore the caller-save registers, r0-r3, r12
   if(!reglist) return;
   assem_debug("ldmia fp,{");
   if(reglist&1) assem_debug("r0, ");
@@ -4364,7 +4364,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(m2h>=0);
         assert(m1l>=0);
         assert(m2l>=0);
-        save_regs(0x100f);
+        save_regs(CALLER_SAVED_REGS);
         emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
         emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
         emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
@@ -4372,7 +4372,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
         emit_call((int)cached_interp_DMULT);
-        restore_regs(0x100f);
+        restore_regs(CALLER_SAVED_REGS);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
         signed char loh=get_reg(i_regs->regmap,LOREG|64);
@@ -4392,7 +4392,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(m2h>=0);
         assert(m1l>=0);
         assert(m2l>=0);
-        save_regs(0x100f);
+        save_regs(CALLER_SAVED_REGS);
         emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
         emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
         emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
@@ -4400,7 +4400,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
         emit_call((int)cached_interp_DMULTU);
-        restore_regs(0x100f);
+        restore_regs(CALLER_SAVED_REGS);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
         signed char loh=get_reg(i_regs->regmap,LOREG|64);
@@ -4484,7 +4484,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(d2h>=0);
         assert(d1l>=0);
         assert(d2l>=0);
-        save_regs(0x100f);
+        save_regs(CALLER_SAVED_REGS);
         emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
         emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
         emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
@@ -4492,7 +4492,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
         emit_call((int)cached_interp_DDIV);
-        restore_regs(0x100f);
+        restore_regs(CALLER_SAVED_REGS);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
         signed char loh=get_reg(i_regs->regmap,LOREG|64);
@@ -4512,7 +4512,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(d2h>=0);
         assert(d1l>=0);
         assert(d2l>=0);
-        save_regs(0x100f);
+        save_regs(CALLER_SAVED_REGS);
         emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
         emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
         emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
@@ -4520,7 +4520,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
         emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
         emit_call((int)cached_interp_DDIVU);
-        restore_regs(0x100f);
+        restore_regs(CALLER_SAVED_REGS);
         signed char hih=get_reg(i_regs->regmap,HIREG|64);
         signed char hil=get_reg(i_regs->regmap,HIREG);
         signed char loh=get_reg(i_regs->regmap,LOREG|64);

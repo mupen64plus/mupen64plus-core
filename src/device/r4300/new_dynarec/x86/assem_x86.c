@@ -18,15 +18,6 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define EAX 0
-#define ECX 1
-#define EDX 2
-#define EBX 3
-#define ESP 4
-#define EBP 5
-#define ESI 6
-#define EDI 7
-
 void jump_vaddr_eax(void);
 void jump_vaddr_ecx(void);
 void jump_vaddr_edx(void);
@@ -72,12 +63,6 @@ static const u_int invalidate_block_reg[8] = {
   (int)invalidate_block_ebp,
   (int)invalidate_block_esi,
   (int)invalidate_block_edi };
-
-static const u_short rounding_modes[4] = {
-  0x33F, // round
-  0xF3F, // trunc
-  0xB3F, // ceil
-  0x73F};// floor
 
 /* Linker */
 static void set_jump_target(int addr,int target)
@@ -2566,7 +2551,7 @@ static void emit_fldcw_indexed(int addr,int r)
   assem_debug("fldcw %x(%%%s)",addr,regname[r]);
   output_byte(0xd9);
   output_modrm(0,4,5);
-  output_sib(1,r,5);
+  output_sib(2,r,5);
   output_w32(addr);
 }
 static void emit_fldcw(int addr)
@@ -3622,7 +3607,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
       char temp=get_reg(i_regs->regmap,-1);
       emit_movimm(3,temp);
       emit_and(sl,temp,temp);
-      emit_fldcw_indexed((int)&rounding_modes,temp);
+      emit_fldcw_indexed((int)&g_dev.r4300.new_dynarec_hot_state.rounding_modes,temp);
     }
   }
 }
@@ -3717,10 +3702,10 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   }
   if((source[i]&0x3f)<0x10) {
     emit_fnstcw_stack();
-    if((source[i]&3)==0) emit_fldcw((int)&rounding_modes[0]); //DebugMessage(M64MSG_VERBOSE, "round");
-    if((source[i]&3)==1) emit_fldcw((int)&rounding_modes[1]); //DebugMessage(M64MSG_VERBOSE, "trunc");
-    if((source[i]&3)==2) emit_fldcw((int)&rounding_modes[2]); //DebugMessage(M64MSG_VERBOSE, "ceil");
-    if((source[i]&3)==3) emit_fldcw((int)&rounding_modes[3]); //DebugMessage(M64MSG_VERBOSE, "floor");
+    if((source[i]&3)==0) emit_fldcw((int)&g_dev.r4300.new_dynarec_hot_state.rounding_modes[0]); //DebugMessage(M64MSG_VERBOSE, "round");
+    if((source[i]&3)==1) emit_fldcw((int)&g_dev.r4300.new_dynarec_hot_state.rounding_modes[1]); //DebugMessage(M64MSG_VERBOSE, "trunc");
+    if((source[i]&3)==2) emit_fldcw((int)&g_dev.r4300.new_dynarec_hot_state.rounding_modes[2]); //DebugMessage(M64MSG_VERBOSE, "ceil");
+    if((source[i]&3)==3) emit_fldcw((int)&g_dev.r4300.new_dynarec_hot_state.rounding_modes[3]); //DebugMessage(M64MSG_VERBOSE, "floor");
   }
   if((source[i]&0x3f)==0x24||(source[i]&0x3c)==0x0c) { // cvt_w_*
     if(opcode2[i]!=0x10||((source[i]>>11)&0x1f)!=((source[i]>>6)&0x1f))
@@ -4496,4 +4481,10 @@ static void literal_pool(int n) {}
 static void literal_pool_jumpover(int n) {}
 
 // CPU-architecture-specific initialization, not needed for x86
-static void arch_init(void) {}
+static void arch_init(void)
+{
+  g_dev.r4300.new_dynarec_hot_state.rounding_modes[0]=0x33F; // round
+  g_dev.r4300.new_dynarec_hot_state.rounding_modes[1]=0xF3F; // trunc
+  g_dev.r4300.new_dynarec_hot_state.rounding_modes[2]=0xB3F; // ceil
+  g_dev.r4300.new_dynarec_hot_state.rounding_modes[3]=0x73F; // floor
+}

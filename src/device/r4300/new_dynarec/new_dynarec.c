@@ -2238,7 +2238,7 @@ void invalidate_block(u_int block)
   while(head!=NULL) {
     uintptr_t start,end;
     if(vpage>2047||(head->vaddr>>12)==block) { // Ignore vaddr hash collision
-      get_bounds((intptr_t)head->addr,(u_int *)&start,(u_int *)&end);
+      get_bounds((intptr_t)head->addr,&start,&end);
       //DebugMessage(M64MSG_VERBOSE, "start: %x end: %x",start,end);
       if((start!=0)&&(page<2048)&&((start-(uintptr_t)g_dev.rdram.dram)>=0)&&((end-(uintptr_t)g_dev.rdram.dram)<0x800000)) {
         if(((start-(uintptr_t)g_dev.rdram.dram)>>12)<=page&&((end-1-(uintptr_t)g_dev.rdram.dram)>>12)>=page) {
@@ -2271,12 +2271,12 @@ void invalidate_block(u_int block)
   if(g_dev.r4300.cp0.tlb.LUT_w[block]) {
     assert(g_dev.r4300.cp0.tlb.LUT_r[block]==g_dev.r4300.cp0.tlb.LUT_w[block]);
     // CHECK: Is this right?
-    g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((g_dev.r4300.cp0.tlb.LUT_w[block]&0xFFFFF000)-(block<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+    g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((g_dev.r4300.cp0.tlb.LUT_w[block]&0xFFFFF000)-(block<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
     u_int real_block=g_dev.r4300.cp0.tlb.LUT_w[block]>>12;
     g_dev.r4300.cached_interp.invalid_code[real_block]=1;
-    if(real_block>=0x80000&&real_block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[real_block]=((uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+    if(real_block>=0x80000&&real_block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[real_block]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
   }
-  else if(block>=0x80000&&block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+  else if(block>=0x80000&&block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
   #ifdef USE_MINI_HT
   memset(g_dev.r4300.new_dynarec_hot_state.mini_ht,-1,sizeof(g_dev.r4300.new_dynarec_hot_state.mini_ht));
   #endif
@@ -2306,7 +2306,7 @@ static void invalidate_all_pages(void)
   // TLB
   for(page=0;page<0x100000;page++) {
     if(g_dev.r4300.cp0.tlb.LUT_r[page]) {
-      g_dev.r4300.new_dynarec_hot_state.memory_map[page]=((g_dev.r4300.cp0.tlb.LUT_r[page]&0xFFFFF000)-(page<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+      g_dev.r4300.new_dynarec_hot_state.memory_map[page]=((g_dev.r4300.cp0.tlb.LUT_r[page]&0xFFFFF000)-(page<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
       if(!g_dev.r4300.cp0.tlb.LUT_w[page]||!g_dev.r4300.cached_interp.invalid_code[page])
         g_dev.r4300.new_dynarec_hot_state.memory_map[page]|=WRITE_PROTECT; // Write protect
     }
@@ -2357,9 +2357,9 @@ void clean_blocks(u_int page)
           //DebugMessage(M64MSG_VERBOSE, "Possibly Restore %x (%x)",head->vaddr, (intptr_t)head->addr);
           u_int i;
           u_int inv=0;
-          get_bounds((intptr_t)head->addr,(u_int *)&start,(u_int *)&end);
+          get_bounds((intptr_t)head->addr,&start,&end);
           if(start-(uintptr_t)g_dev.rdram.dram<0x800000) {
-            for(i=(start-(uintptr_t)g_dev.rdram.dram+0x80000000)>>12;i<=(end-1-(uintptr_t)g_dev.rdram.dram+0x80000000)>>12;i++) {
+            for(i=(start-(uintptr_t)g_dev.rdram.dram+(uintptr_t)0x80000000)>>12;i<=(end-1-(uintptr_t)g_dev.rdram.dram+(uintptr_t)0x80000000)>>12;i++) {
               inv|=g_dev.r4300.cached_interp.invalid_code[i];
             }
           }
@@ -5043,14 +5043,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
             if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
               #ifdef RAM_OFFSET
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
               #endif
               emit_movimm((constmap[i][rs]+offset)&0xFFFFFFFC,ra);
             }else if (opcode[i]==0x1a||opcode[i]==0x1b) { // LDL/LDR
               #ifdef RAM_OFFSET
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
               #endif
               emit_movimm((constmap[i][rs]+offset)&0xFFFFFFF8,ra);
@@ -5061,7 +5061,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
               #endif
               #ifdef RAM_OFFSET
               if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+                emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
               #endif
               emit_movimm(constmap[i][rs]+offset,ra);
@@ -5117,14 +5117,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
         if (opcode[i+1]==0x22||opcode[i+1]==0x26) { // LWL/LWR
           #ifdef RAM_OFFSET
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
           #endif
           emit_movimm((constmap[i+1][rs]+offset)&0xFFFFFFFC,ra);
         }else if (opcode[i+1]==0x1a||opcode[i+1]==0x1b) { // LDL/LDR
           #ifdef RAM_OFFSET
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+            emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
           #endif
           emit_movimm((constmap[i+1][rs]+offset)&0xFFFFFFF8,ra);
@@ -5135,7 +5135,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
           #endif
           #ifdef RAM_OFFSET
           if((itype[i+1]==LOAD||opcode[i+1]==0x31||opcode[i+1]==0x35)&&(signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
-            emit_movimm(constmap[i+1][rs]+offset+(intptr_t)g_dev.rdram.dram-0x80000000,ra);
+            emit_movimm(constmap[i+1][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
           #endif
           emit_movimm(constmap[i+1][rs]+offset,ra);
@@ -5179,7 +5179,7 @@ static int get_final_value(int hr, int i, int *value)
           #endif
           #ifdef RAM_OFFSET
           if((signed int)constmap[i][hr]+imm[i+2]<(signed int)0x80800000)
-            *value=constmap[i][hr]+imm[i+2]+(intptr_t)g_dev.rdram.dram-0x80000000;
+            *value=constmap[i][hr]+imm[i+2]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
           else
           #endif
           // Precompute load address
@@ -5194,7 +5194,7 @@ static int get_final_value(int hr, int i, int *value)
         #endif
         #ifdef RAM_OFFSET
         if((signed int)constmap[i][hr]+imm[i+1]<(signed int)0x80800000)
-          *value=constmap[i][hr]+imm[i+1]+(intptr_t)g_dev.rdram.dram-0x80000000;
+          *value=constmap[i][hr]+imm[i+1]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
         else
         #endif
         // Precompute load address
@@ -7658,7 +7658,7 @@ void new_dynarec_init(void)
   for(n=0;n<524288;n++) // 0 .. 0x7FFFFFFF
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=(uintptr_t)-1;
   for(n=524288;n<526336;n++) // 0x80000000 .. 0x807FFFFF
-    g_dev.r4300.new_dynarec_hot_state.memory_map[n]=((uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+    g_dev.r4300.new_dynarec_hot_state.memory_map[n]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
   for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=(uintptr_t)-1;
 
@@ -7705,13 +7705,13 @@ int new_recompile_block(int addr)
     pagelimit = 0xa4001000;
   }
   else if ((int)addr >= 0x80000000 && (int)addr < 0x80800000) {
-    source = (u_int *)((uintptr_t)g_dev.rdram.dram+start-0x80000000);
+    source = (u_int *)((uintptr_t)g_dev.rdram.dram+start-(uintptr_t)0x80000000);
     pagelimit = 0x80800000;
   }
   else if ((signed int)addr >= (signed int)0xC0000000) {
     //DebugMessage(M64MSG_VERBOSE, "addr=%x mm=%x",(u_int)addr,(g_dev.r4300.new_dynarec_hot_state.memory_map[start>>12]<<2));
     //if(g_dev.r4300.cp0.tlb.LUT_r[start>>12])
-      //source = (u_int *)(((intptr_t)g_dev.rdram.dram)+(g_dev.r4300.cp0.tlb.LUT_r[start>>12]&0xFFFFF000)+(((int)addr)&0xFFF)-0x80000000);
+    //source = (u_int *)(((intptr_t)g_dev.rdram.dram)+(g_dev.r4300.cp0.tlb.LUT_r[start>>12]&0xFFFFF000)+(((int)addr)&0xFFF)-(intptr_t)0x80000000);
     if((intptr_t)g_dev.r4300.new_dynarec_hot_state.memory_map[start>>12]>=0) {
       source = (u_int *)((uintptr_t)(start+(uintptr_t)(g_dev.r4300.new_dynarec_hot_state.memory_map[start>>12]<<2)));
       pagelimit=(start+4096)&0xFFFFF000;
@@ -10867,7 +10867,7 @@ int new_recompile_block(int addr)
           u_int r=requires_32bit[i]|!!(requires_32bit[i]>>32);
           assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
           assem_debug("jump_in: %x (restricted - %x)",start+i*4,r);
-          //intptr_t entry_point=(int)out;
+          //intptr_t entry_point=(intptr_t)out;
           ////assem_debug("entry_point: %x",entry_point);
           //load_regs_entry(i);
           //if(entry_point==(intptr_t)out)
@@ -11039,7 +11039,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
     if(i<0x80000||i>0xBFFFF)
     {
       if(r4300->cp0.tlb.LUT_r[i]) {
-        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
           r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
@@ -11060,7 +11060,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
     if(i<0x80000||i>0xBFFFF)
     {
       if(r4300->cp0.tlb.LUT_r[i]) {
-        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
           r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
@@ -11118,7 +11118,7 @@ static void TLBWR_new(int pcaddr, int count, int diff)
     if(i<0x80000||i>0xBFFFF)
     {
       if(r4300->cp0.tlb.LUT_r[i]) {
-        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
           r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect
@@ -11139,7 +11139,7 @@ static void TLBWR_new(int pcaddr, int count, int diff)
     if(i<0x80000||i>0xBFFFF)
     {
       if(r4300->cp0.tlb.LUT_r[i]) {
-        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-0x80000000)>>2;
+        r4300->new_dynarec_hot_state.memory_map[i]=((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-(i<<12)+(uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
         // FIXME: should make sure the physical page is invalid too
         if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
           r4300->new_dynarec_hot_state.memory_map[i]|=WRITE_PROTECT; // Write protect

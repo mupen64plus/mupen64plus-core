@@ -33,6 +33,7 @@
 
 #define FP 11
 #define LR 14
+#define CALLER_SAVED_REGS 0x100f
 #define HOST_TEMPREG 14
 
 // Note: FP is set to &dynarec_local when executing generated code.
