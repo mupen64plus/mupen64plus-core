@@ -173,10 +173,8 @@ struct r4300_core
         uint64_t* rdword;
         uint32_t wmask;
         uint32_t address;
-        union {
-            uint32_t wword;
-            uint64_t wdword;
-        };
+        uint32_t wword;
+        uint64_t wdword;
     } recomp;
 #else
 #if NEW_DYNAREC == NEW_DYNAREC_ARM
