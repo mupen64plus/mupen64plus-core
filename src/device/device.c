@@ -159,7 +159,7 @@ void init_device(struct device* dev,
 
         init_dd(&dev->dd,
                 dd_rtc_clock, dd_rtc_iclock,
-                (const uint32_t*)((uint8_t*)base + MM_DD_ROM), dd_rom_size,
+                mem_base_u32(base, MM_DD_ROM), dd_rom_size,
                 dd_disk, dd_idisk,
                 &dev->r4300);
     }
