@@ -157,6 +157,11 @@ if cc.get_id() == 'msvc' and host_cpu == 'x86_64'
   cflags += '-D__x86_64__'
 endif
 
+# Disable 'unsafe' functions warning on msvc
+if cc.get_id() == 'msvc'
+  cflags += '-D_CRT_SECURE_NO_WARNINGS'
+endif
+
 
 # Add some architectures defines
 armflags = []
