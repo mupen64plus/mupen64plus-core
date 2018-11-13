@@ -128,10 +128,17 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
 
     case VI_V_SYNC_REG:
-        masked_write(&vi->regs[reg], value, mask);
-        vi->count_per_scanline = (vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1);
-        vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
-        if (vi->regs[VI_V_SYNC_REG] != 0 && vi->next_vi == 0)
+        if ((vi->regs[VI_V_SYNC_REG] & mask) != (value & mask))
+        {
+            masked_write(&vi->regs[VI_V_SYNC_REG], value, mask);
+            vi->count_per_scanline = (vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1);
+            vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
+        }
+        return;
+
+    case VI_V_INTR_REG:
+        masked_write(&vi->regs[VI_V_INTR_REG], value, mask);
+        if (!get_event(&vi->mi->r4300->cp0.q, VI_INT) && (vi->regs[VI_V_INTR_REG] < vi->regs[VI_V_SYNC_REG]))
         {
             const uint32_t* cp0_regs = r4300_cp0_regs(&vi->mi->r4300->cp0);
             cp0_update_count(vi->mi->r4300);
