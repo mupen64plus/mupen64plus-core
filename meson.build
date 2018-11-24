@@ -316,7 +316,12 @@ endif
 
 # Add OpenCV video capture support
 if with_opencv
-  opencv_dep = dependency('opencv', fallback : ['opencv', 'opencv_dep'])
+  # Since version 4.0 OpenCV pc file has the major version as suffix,
+  # so we try that first and try opencv without suffix as a fallback.
+  opencv_dep = dependency('opencv4', required : false)
+  if not opencv_dep.found()
+    opencv_dep = dependency('opencv')
+  endif
   extra_dep += [opencv_dep]
   src += ['src/backends/opencv_video_capture.cpp']
   cflags += ['-DM64P_OPENCV']
