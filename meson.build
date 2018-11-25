@@ -219,6 +219,7 @@ zlib_dep = dependency('zlib', fallback : ['zlib', 'zlib_dep'])
 # XXX: use wrap file instead
 minizip_dep = dependency('minizip', fallback : ['minizip', 'minizip_dep'])
 png_dep = dependency('libpng', fallback : ['libpng', 'png_dep'])
+# XXX: use wrap file instead
 xxhash_dep = dependency('xxhash', fallback : ['xxhash', 'xxhash_dep'])
 # try sdl2 first, and fallback to sdl1 otherwise
 sdl_dep = dependency('sdl2', fallback : ['sdl2', 'sdl2_dep'], required : false)
