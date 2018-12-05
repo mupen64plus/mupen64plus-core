@@ -2717,11 +2717,8 @@ static void load_alloc(struct regstat *current,int i)
     // If using TLB, need a register for pointer to the mapping table
     if(using_tlb) alloc_reg(current,i,TLREG);
 
-    // LWU/LD/LDL/LDR need a temporary register
-    if(opcode[i]==0x22||opcode[i]==0x26||opcode[i]==0x1A||opcode[i]==0x1B) {
-      alloc_reg_temp(current,i,-1);
-      minimum_free_regs[i]=1;
-    }
+    alloc_reg_temp(current,i,-1);
+    minimum_free_regs[i]=1;
   }
   else
   {
@@ -3828,6 +3825,7 @@ static void load_assemble(int i,struct regstat *i_regs)
   intptr_t jaddr=0;
   int memtarget=0,c=0;
   u_int hr,reglist=0;
+  int agr=AGEN1+(i&1);
   th=get_reg(i_regs->regmap,rt1[i]|64);
   tl=get_reg(i_regs->regmap,rt1[i]);
   s=get_reg(i_regs->regmap,rs1[i]);
@@ -3843,14 +3841,13 @@ static void load_assemble(int i,struct regstat *i_regs)
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
 #endif
   }
-  if(tl<0) tl=get_reg(i_regs->regmap,-1);
-  if(offset||s<0||c) addr=tl;
+
+  int temp=get_reg(i_regs->regmap,agr);
+  if(temp<0) temp=get_reg(i_regs->regmap,-1);
+  if(tl<0) tl=temp;
+  if(offset||s<0||c) addr=temp;
   else addr=s;
-  //DebugMessage(M64MSG_VERBOSE, "load_assemble: c=%d",c);
-  //if(c) DebugMessage(M64MSG_VERBOSE, "load_assemble: const=%x",(int)constmap[i][s]+offset);
   assert(tl>=0); // Even if the load is a NOP, we must check for pagefaults and I/O
-  reglist&=~(1<<tl);
-  if(th>=0) reglist&=~(1<<th);
   if(!using_tlb) {
     #ifndef NATIVE_64
     if(!c) {
@@ -3892,7 +3889,7 @@ static void load_assemble(int i,struct regstat *i_regs)
     cache=get_reg(i_regs->regmap,MMREG);
     assert(map>=0);
     reglist&=~(1<<map);
-    map=do_tlb_r(addr,tl,map,cache,x,-1,-1,c,constmap[i][s]+offset);
+    map=do_tlb_r(addr,temp,map,cache,x,-1,-1,c,constmap[i][s]+offset);
 #ifndef INTERPRET_LOAD
     do_tlb_r_branch(map,c,constmap[i][s]+offset,&jaddr);
 #else
@@ -3910,9 +3907,9 @@ static void load_assemble(int i,struct regstat *i_regs)
         #endif
         {
           int x=0;
-          if(!c) emit_xorimm(addr,3,tl);
+          if(!c) emit_xorimm(addr,3,temp);
           else x=((constmap[i][s]+offset)^3)-(constmap[i][s]+offset);
-          emit_movsbl_indexed_tlb(x,tl,map,tl);
+          emit_movsbl_indexed_tlb(x,temp,map,tl);
         }
       }
       if(jaddr)
@@ -3931,9 +3928,9 @@ static void load_assemble(int i,struct regstat *i_regs)
         #endif
         {
           int x=0;
-          if(!c) emit_xorimm(addr,2,tl);
+          if(!c) emit_xorimm(addr,2,temp);
           else x=((constmap[i][s]+offset)^2)-(constmap[i][s]+offset);
-          emit_movswl_indexed_tlb(x,tl,map,tl);
+          emit_movswl_indexed_tlb(x,temp,map,tl);
         }
       }
       if(jaddr)
@@ -3968,9 +3965,9 @@ static void load_assemble(int i,struct regstat *i_regs)
         #endif
         {
           int x=0;
-          if(!c) emit_xorimm(addr,3,tl);
+          if(!c) emit_xorimm(addr,3,temp);
           else x=((constmap[i][s]+offset)^3)-(constmap[i][s]+offset);
-          emit_movzbl_indexed_tlb(x,tl,map,tl);
+          emit_movzbl_indexed_tlb(x,temp,map,tl);
         }
       }
       if(jaddr)
@@ -3989,9 +3986,9 @@ static void load_assemble(int i,struct regstat *i_regs)
         #endif
         {
           int x=0;
-          if(!c) emit_xorimm(addr,2,tl);
+          if(!c) emit_xorimm(addr,2,temp);
           else x=((constmap[i][s]+offset)^2)-(constmap[i][s]+offset);
-          emit_movzwl_indexed_tlb(x,tl,map,tl);
+          emit_movzwl_indexed_tlb(x,temp,map,tl);
         }
       }
       if(jaddr)
@@ -4849,7 +4846,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
     int agr=AGEN1+(i&1);
     int mgr=MGEN1+(i&1);
     if(itype[i]==LOAD) {
-      ra=get_reg(i_regs->regmap,rt1[i]);
+      ra=get_reg(i_regs->regmap,agr);
       if(ra<0) ra=get_reg(i_regs->regmap,-1);
       assert(ra>=0);
     }
@@ -4911,40 +4908,69 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
             }
           }
         }
-        if(rs1[i]!=rt1[i]||itype[i]!=LOAD) {
-          if(!entry||entry[ra]!=agr) {
-            if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
-              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
-              if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
-              else
-              #endif
-              emit_movimm((constmap[i][rs]+offset)&0xFFFFFFFC,ra);
-            }else if (opcode[i]==0x1a||opcode[i]==0x1b) { // LDL/LDR
-              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
-              if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
-                emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
-              else
-              #endif
-              emit_movimm((constmap[i][rs]+offset)&0xFFFFFFF8,ra);
-            }else{
-              #ifdef HOST_IMM_ADDR32
-              if((itype[i]!=LOAD&&opcode[i]!=0x31&&opcode[i]!=0x35) ||
-                 (using_tlb&&((signed int)constmap[i][rs]+offset)>=(signed int)0xC0000000))
-              #endif
-              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
-              #ifndef INTERPRET_LOAD
-              if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
-              #else
-              if((opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
-              #endif
-                emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
-              else
-              #endif
-              emit_movimm(constmap[i][rs]+offset,ra);
-            }
-          } // else did it in the previous cycle
-        } // else load_consts already did it
+        
+        if(!entry||entry[ra]!=agr) {
+          if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
+            // on x86 when source reg is constant
+            // address generation is always required
+            // ROREG not required
+            #if defined(RAM_OFFSET) && !defined(NATIVE_64)
+            // on arm when source reg is constant
+            // address generation is always required
+            // When loading from rdram, add rdram address to load address to avoid loading ROREG
+            // ROREG only required when not loading from rdram (eg: using tlb)
+            if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
+              emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
+            else
+            // on arm64 and x64 when source reg is constant
+            // address generation is always required
+            // ROREG is always required 
+            #endif
+            emit_movimm((constmap[i][rs]+offset)&0xFFFFFFFC,ra);
+          }else if (opcode[i]==0x1a||opcode[i]==0x1b) { // LDL/LDR
+            // on x86 when source reg is constant
+            // address generation is always required
+            // ROREG not required
+            #if defined(RAM_OFFSET) && !defined(NATIVE_64)
+            // on arm when source reg is constant
+            // address generation is always required
+            // When loading from rdram, add rdram address to load address to avoid loading ROREG
+            // ROREG only required when not loading from rdram (eg: using tlb)
+            if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
+              emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
+            else
+            // on arm64 and x64 when source reg is constant
+            // address generation is always required
+            // ROREG is always required 
+            #endif
+            emit_movimm((constmap[i][rs]+offset)&0xFFFFFFF8,ra);
+          }else{
+            #ifdef HOST_IMM_ADDR32
+            // on x86 when source reg is constant
+            // LB/LBU/LH/LHU/LW/LWU/LD/LWC1/LDC1 doesn't need address generation when not using tlb (avoid allocating temp register for address generation?)
+            // SDL/SDR/SB/SH/SW/SD/SWC1/SDC1 always need address generation
+            // ROREG not required
+            if((itype[i]!=LOAD&&opcode[i]!=0x31&&opcode[i]!=0x35) ||
+               (using_tlb&&((signed int)constmap[i][rs]+offset)>=(signed int)0xC0000000))
+            #endif
+            #if defined(RAM_OFFSET) && !defined(NATIVE_64) 
+            // address generation is always required
+            // When LB/LBU/LH/LHU/LW/LWU/LD/LWC1/LDC1 loading from rdram, add rdram address to load address to avoid loading ROREG
+            // ROREG only required for SDL/SDR/SB/SH/SW/SD/SWC1/SDC1 and when not loading from rdram (eg: using tlb)
+            #ifndef INTERPRET_LOAD
+            if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
+            #else
+            if((opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
+            #endif
+              emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
+            else
+            #endif
+            // on arm64 and x64 when source reg is constant
+            // address generation is always required
+            // ROREG is always required 
+            emit_movimm(constmap[i][rs]+offset,ra);
+          }
+        } // else did it in the previous cycle
       }
       if(offset&&!c&&rs1[i]) {
         if(rs>=0) {
@@ -4990,7 +5016,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
       int rs=get_reg(regs[i+1].regmap,rs1[i+1]);
       int offset=imm[i+1];
       int c=(regs[i+1].wasconst>>rs)&1;
-      if(c&&(rs1[i+1]!=rt1[i+1]||itype[i+1]!=LOAD)) {
+      if(c) {
         if (opcode[i+1]==0x22||opcode[i+1]==0x26) { // LWL/LWR
           #if defined(RAM_OFFSET) && !defined(NATIVE_64)
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
@@ -5049,40 +5075,6 @@ static int get_final_value(int hr, int i, int *value)
     if(itype[i]==UJUMP||itype[i]==RJUMP||itype[i]==CJUMP||itype[i]==SJUMP) {
       *value=constmap[i][hr];
       return 1;
-    }
-    if(!bt[i+1]) {
-      if(itype[i+1]==UJUMP||itype[i+1]==RJUMP||itype[i+1]==CJUMP||itype[i+1]==SJUMP) {
-        // Load in delay slot, out-of-order execution
-        if(itype[i+2]==LOAD&&rs1[i+2]==reg&&rt1[i+2]==reg&&((regs[i+1].wasconst>>hr)&1))
-        {
-          #ifdef HOST_IMM_ADDR32
-          if(!using_tlb||((signed int)constmap[i][hr]+imm[i+2])<(signed int)0xC0000000) return 0;
-          #endif
-          #if defined(RAM_OFFSET) && !defined(NATIVE_64) && !defined(INTERPRET_LOAD)
-          if((signed int)constmap[i][hr]+imm[i+2]<(signed int)0x80800000)
-            *value=constmap[i][hr]+imm[i+2]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
-          else
-          #endif
-          // Precompute load address
-          *value=constmap[i][hr]+imm[i+2];
-          return 1;
-        }
-      }
-      if(itype[i+1]==LOAD&&rs1[i+1]==reg&&rt1[i+1]==reg)
-      {
-        #ifdef HOST_IMM_ADDR32
-        if(!using_tlb||((signed int)constmap[i][hr]+imm[i+1])<(signed int)0xC0000000) return 0;
-        #endif
-        #if defined(RAM_OFFSET) && !defined(NATIVE_64) && !defined(INTERPRET_LOAD)
-        if((signed int)constmap[i][hr]+imm[i+1]<(signed int)0x80800000)
-          *value=constmap[i][hr]+imm[i+1]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
-        else
-        #endif
-        // Precompute load address
-        *value=constmap[i][hr]+imm[i+1];
-        //DebugMessage(M64MSG_VERBOSE, "c=%x imm=%x",(intptr_t)constmap[i][hr],imm[i+1]);
-        return 1;
-      }
     }
   }
   *value=constmap[i][hr];
@@ -10011,24 +10003,6 @@ int new_recompile_block(int addr)
               }
             }
           }
-          // Preload target address for load instruction (non-constant)
-          if(itype[i+1]==LOAD&&rs1[i+1]&&get_reg(regs[i+1].regmap,rs1[i+1])<0) {
-            if((hr=get_reg(regs[i+1].regmap,rt1[i+1]))>=0)
-            {
-              if(regs[i].regmap[hr]<0&&regs[i+1].regmap_entry[hr]<0&&free_regs>0)
-              {
-                regs[i].regmap[hr]=rs1[i+1];
-                regmap_pre[i+1][hr]=rs1[i+1];
-                regs[i+1].regmap_entry[hr]=rs1[i+1];
-                regs[i].isconst&=~(1<<hr);
-                regs[i].isconst|=regs[i+1].isconst&(1<<hr);
-                constmap[i][hr]=constmap[i+1][hr];
-                regs[i+1].wasdirty&=~(1LL<<hr);
-                regs[i].dirty&=~(1LL<<hr);
-				free_regs--;
-              }
-            }
-          }
           // Load source into target register 
           if(lt1[i+1]&&get_reg(regs[i+1].regmap,rs1[i+1])<0) {
             if((hr=get_reg(regs[i+1].regmap,rt1[i+1]))>=0)
@@ -10089,8 +10063,8 @@ int new_recompile_block(int addr)
             }
           }
           #endif
-          // Address for store instruction (non-constant)
-          if(itype[i+1]==STORE||itype[i+1]==STORELR||opcode[i+1]==0x39||opcode[i+1]==0x3D) { // SB/SH/SW/SD/SWC1/SDC1
+          // Address for load/store instruction (non-constant)
+          if(itype[i+1]==LOAD||itype[i+1]==STORE||itype[i+1]==STORELR||opcode[i+1]==0x39||opcode[i+1]==0x3D) { // SWC1/SDC1
             if(get_reg(regs[i+1].regmap,rs1[i+1])<0) {
               hr=get_reg2(regs[i].regmap,regs[i+1].regmap,-1);
               if(hr<0) hr=get_reg(regs[i+1].regmap,-1);
@@ -10148,11 +10122,9 @@ int new_recompile_block(int addr)
             }
           }
           if(itype[i+1]==LOAD||itype[i+1]==LOADLR||itype[i+1]==STORE||itype[i+1]==STORELR/*||itype[i+1]==C1LS*/) {
-            if(itype[i+1]==LOAD) 
-              hr=get_reg(regs[i+1].regmap,rt1[i+1]);
             if(itype[i+1]==LOADLR||opcode[i+1]==0x31||opcode[i+1]==0x35) // LWC1/LDC1
               hr=get_reg(regs[i+1].regmap,FTEMP);
-            if(itype[i+1]==STORE||itype[i+1]==STORELR||opcode[i+1]==0x39||opcode[i+1]==0x3D) { // SWC1/SDC1
+            if(itype[i+1]==LOAD||itype[i+1]==STORE||itype[i+1]==STORELR||opcode[i+1]==0x39||opcode[i+1]==0x3D) { // SWC1/SDC1
               hr=get_reg(regs[i+1].regmap,AGEN1+((i+1)&1));
               if(hr<0) hr=get_reg(regs[i+1].regmap,-1);
             }

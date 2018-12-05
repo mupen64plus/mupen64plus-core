@@ -2734,7 +2734,7 @@ static void do_readstub(int n)
   set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
-  int rs=stubs[n][4];
+  int addr=stubs[n][4];
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   signed char *i_regmap=i_regs->regmap;
   int rth,rt;
@@ -2745,7 +2745,7 @@ static void do_readstub(int n)
     rth=get_reg(i_regmap,rt1[i]|64);
     rt=get_reg(i_regmap,rt1[i]);
   }
-  assert(rs>=0);
+  assert(addr>=0);
 
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
@@ -2757,7 +2757,7 @@ static void do_readstub(int n)
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
   
   int cc=get_reg(i_regmap,CCREG);
@@ -2779,10 +2779,7 @@ static void do_readstub(int n)
   int jaddr=(int)out;
   emit_jeq(0);
 
-  int real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
-  if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-    emit_addimm(rs,-imm[i],real_rs);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
   emit_jmp((int)&do_interrupt);
@@ -2807,11 +2804,13 @@ static void do_readstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_readstub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_readstub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
 {
   assem_debug("inline_readstub");
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int agr=get_reg(regmap,AGEN1+(i&1));
+  assert(agr<0);
 
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
@@ -2823,7 +2822,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword_imm(addr_const,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
 
   int cc=get_reg(regmap,CCREG);
@@ -2844,7 +2843,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   emit_addimm(ESP,12,ESP);
   emit_popa();
 
-  if((signed int)addr>=(signed int)0xC0000000) {
+  if((signed int)addr_const>=(signed int)0xC0000000) {
     // Theoretically we can have a pagefault here, if the TLB has never
     // been enabled and the address is outside the range 80000000..BFFFFFFF
     // Write out the registers so the pagefault can be handled.  This is
@@ -2853,10 +2852,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     int jaddr=(int)out;
     emit_jeq(0);
 
-    int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
-    if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_movimm(addr-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -2887,7 +2883,7 @@ static void do_writestub(int n)
   set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
-  int rs=stubs[n][4];
+  int addr=stubs[n][4];
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   signed char *i_regmap=i_regs->regmap;
   int rth,rt,r;
@@ -2899,11 +2895,11 @@ static void do_writestub(int n)
     rth=get_reg(i_regmap,rs2[i]|64);
     rt=get_reg(i_regmap,r=rs2[i]);
   }
-  assert(rs>=0);
+  assert(addr>=0);
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword(rs,(int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
@@ -2943,10 +2939,7 @@ static void do_writestub(int n)
   int jaddr=(int)out;
   emit_jeq(0);
 
-  int real_rs=get_reg(i_regmap,rs1[i]);
-  if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-    emit_addimm(rs,-imm[i],real_rs);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
   
   emit_jmp((int)&do_interrupt);
@@ -2958,15 +2951,17 @@ static void do_writestub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_writestub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_writestub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
 {
   assem_debug("inline_writestub");
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
+  int agr=get_reg(regmap,AGEN1+(i&1));
   assert(rt>=0);
+  assert(agr<0);
 
   int ftable=0;
-  emit_writeword_imm(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword_imm(addr_const,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(int)&g_dev.r4300.new_dynarec_hot_state.wword);
@@ -3005,7 +3000,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   emit_addimm(ESP,12,ESP);
   emit_popa();
 
-  if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
+  if(((signed int)addr_const>=(signed int)0xC0000000)||((addr_const>>16)==0xa430)||((addr_const>>16)==0x8430)) {
     // Theoretically we can have a pagefault here, if the TLB has never
     // been enabled and the address is outside the range 80000000..BFFFFFFF
     // Write out the registers so the pagefault can be handled.  This is
@@ -3014,10 +3009,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     int jaddr=(int)out;
     emit_jeq(0);
 
-    int real_rs=get_reg(regmap,rs1[i]);
-    if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_movimm(addr-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
    
     emit_jmp((int)&do_interrupt);
