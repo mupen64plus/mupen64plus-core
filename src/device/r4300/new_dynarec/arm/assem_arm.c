@@ -1256,6 +1256,7 @@ static void emit_storereg(int r, int hr)
   if((r&63)==LOREG) offset=fp_lo+((r&64)>>4);
   if(r==CCREG) offset=fp_cycle_count;
   if(r==FSREG) offset=fp_fcr31;
+  assert((r&63)<=CCREG);
   assert(offset<4096);
   assem_debug("str %s,fp+%d",regname[hr],offset);
   output_w32(0xe5800000|rd_rn_rm(hr,FP,0)|offset);

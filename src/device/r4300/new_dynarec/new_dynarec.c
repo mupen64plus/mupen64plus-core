@@ -1662,6 +1662,7 @@ static void alloc_all(struct regstat *cur,int i)
 
 static void add_to_linker(intptr_t addr,u_int target,int ext)
 {
+  assert(linkcount<MAXBLOCK);
   link_addr[linkcount][0]=addr;
   link_addr[linkcount][1]=target;
   link_addr[linkcount][2]=ext;  
@@ -1670,6 +1671,7 @@ static void add_to_linker(intptr_t addr,u_int target,int ext)
 
 static void add_stub(int type,intptr_t addr,intptr_t retaddr,int a,intptr_t b,intptr_t c,int d,int e)
 {
+  assert(stubcount<MAXBLOCK*3);
   stubs[stubcount][0]=type;
   stubs[stubcount][1]=addr;
   stubs[stubcount][2]=retaddr;
@@ -5164,7 +5166,7 @@ static void wb_dirtys(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty)
       if(i_regmap[hr]>0) {
         if(i_regmap[hr]!=CCREG) {
           if((i_dirty>>hr)&1) {
-            if(i_regmap[hr]<64) {
+            if((i_regmap[hr]<64)&&((i_regmap[hr]&63)<CCREG)) {
               emit_storereg(i_regmap[hr],hr);
               if( ((i_is32>>i_regmap[hr])&1) ) {
                 #ifdef DESTRUCTIVE_WRITEBACK
@@ -5175,7 +5177,7 @@ static void wb_dirtys(signed char i_regmap[],uint64_t i_is32,uint64_t i_dirty)
                 emit_storereg(i_regmap[hr]|64,HOST_TEMPREG);
                 #endif
               }
-            }else{
+            }else if((i_regmap[hr]&63)<CCREG){
               if( !((i_is32>>(i_regmap[hr]&63))&1) ) {
                 emit_storereg(i_regmap[hr],hr);
               }

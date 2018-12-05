@@ -105,7 +105,7 @@ static u_int get_clean_addr(int addr)
   u_char *ptr=(u_char *)addr;
   assert(ptr[20]==0xE8); // call instruction
   assert(ptr[25]==0x83); // pop (add esp,4) instruction
-  if(ptr[28]==0xE9) return *(u_int *)(ptr+29)+addr+33; // follow jmp
+  if(ptr[28]==0xE9) return *(int*)(ptr+29)+addr+33; // follow jmp
   else return(addr+28);
 }
 
@@ -957,6 +957,7 @@ static void emit_storereg(int r, int hr)
   if((r&63)==LOREG) addr=(int)r4300_mult_lo(&g_dev.r4300)+((r&64)>>4);
   if(r==CCREG) addr=(int)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
   if(r==FSREG) addr=(int)r4300_cp1_fcr31(&g_dev.r4300.cp1);
+  assert((r&63)<=CCREG);
   assem_debug("mov %%%s,%x+%d",regname[hr],addr,r);
   output_byte(0x89);
   output_modrm(0,5,hr);
@@ -4007,7 +4008,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   if(opcode2[i]==0x10) {
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
+    emit_pushimm((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     if((source[i]&0x3f)==0x30) emit_call((int)c_f_s);
     if((source[i]&0x3f)==0x31) emit_call((int)c_un_s);
     if((source[i]&0x3f)==0x32) emit_call((int)c_eq_s);
@@ -4028,7 +4029,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   if(opcode2[i]==0x11) {
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f]);
     emit_pushmem((int)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>11)&0x1f]);
-    emit_pushmem((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
+    emit_pushimm((int)r4300_cp1_fcr31(&g_dev.r4300.cp1));
     if((source[i]&0x3f)==0x30) emit_call((int)c_f_d);
     if((source[i]&0x3f)==0x31) emit_call((int)c_un_d);
     if((source[i]&0x3f)==0x32) emit_call((int)c_eq_d);
@@ -4046,7 +4047,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)==0x3e) emit_call((int)c_le_d);
     if((source[i]&0x3f)==0x3f) emit_call((int)c_ngt_d);
   }
-  emit_addimm(ESP,8,ESP);
+  emit_addimm(ESP,12,ESP);
   emit_popa();
   emit_loadreg(FSREG,fs);
   return;
