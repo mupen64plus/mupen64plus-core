@@ -2782,7 +2782,7 @@ static void do_readstub(int n)
   int real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
   if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
     emit_addimm(rs,-imm[i],real_rs);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
   emit_jmp((int)&do_interrupt);
@@ -2856,7 +2856,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
       emit_movimm(addr-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -2946,7 +2946,7 @@ static void do_writestub(int n)
   int real_rs=get_reg(i_regmap,rs1[i]);
   if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
     emit_addimm(rs,-imm[i],real_rs);
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
   
   emit_jmp((int)&do_interrupt);
@@ -3017,7 +3017,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     int real_rs=get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
       emit_movimm(addr-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
    
     emit_jmp((int)&do_interrupt);
@@ -3077,7 +3077,7 @@ static void do_cop1stub(int n)
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   int ds=stubs[n][6];
   if(!ds) {
-    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     //if(i_regs!=&regs[i]) DebugMessage(M64MSG_VERBOSE, "oops: regs[i]=%x i_regs=%x",(int)&regs[i],(int)i_regs);
   }
   //else {DebugMessage(M64MSG_VERBOSE, "fp exception in delay slot");}
@@ -3520,7 +3520,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       emit_cmpmem_imm_byte((int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,0);
       int jaddr=(int)out;
       emit_jeq(0);
-      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
       wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
       emit_jmp((int)&do_interrupt);
       set_jump_target(jaddr,(int)out);

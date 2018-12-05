@@ -2668,12 +2668,12 @@ static void restore_regs(u_int reglist)
 }
 
 // Write back consts using r14 so we don't disturb the other registers
-static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,int i)
+static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,u_int isconst,int i)
 {
   int hr;
   for(hr=0;hr<HOST_REGS;hr++) {
     if(hr!=EXCLUDE_REG&&i_regmap[hr]>=0&&((i_dirty>>hr)&1)) {
-      if(((regs[i].isconst>>hr)&1)&&i_regmap[hr]>0) {
+      if(((isconst>>hr)&1)&&i_regmap[hr]>0) {
         if(i_regmap[hr]<64 || !((i_is32>>(i_regmap[hr]&63))&1) ) {
           int value=constmap[i][hr];
           if(value==0) {
@@ -2814,9 +2814,9 @@ static void do_readstub(int n)
   if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
     emit_addimm(rs,-imm[i],real_rs);
   u_int cmask=ds?-1:((~i_regs->wasconst)|(real_rs<0?0:(1<<real_rs)));
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
-  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
 
   emit_jmp((int)&do_interrupt);
   set_jump_target(jaddr,(int)out);
@@ -2892,7 +2892,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
       emit_addimm(rs,-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -2985,9 +2985,9 @@ static void do_writestub(int n)
   if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
     emit_addimm(rs,-imm[i],real_rs);
   u_int cmask=ds?-1:((~i_regs->wasconst)|(real_rs<0?0:(1<<real_rs)));
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
   wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
-  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
 
   emit_jmp((int)&do_interrupt);
   set_jump_target(jaddr,(int)out);
@@ -3059,7 +3059,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
     if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
       emit_addimm(rs,-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -3142,7 +3142,7 @@ static void do_cop1stub(int n)
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   int ds=stubs[n][6];
   if(!ds) {
-    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     //if(i_regs!=&regs[i]) DebugMessage(M64MSG_VERBOSE, "oops: regs[i]=%x i_regs=%x",(int)&regs[i],(int)i_regs);
   }
   //else {DebugMessage(M64MSG_ERROR, "fp exception in delay slot");}
@@ -3545,9 +3545,9 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       int jaddr=(int)out;
       emit_jeq(0);
       u_int cmask=~i_regs->wasconst;
-      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
       wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
-      wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+      wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
       emit_jmp((int)&do_interrupt);
       set_jump_target(jaddr,(int)out);
     }
