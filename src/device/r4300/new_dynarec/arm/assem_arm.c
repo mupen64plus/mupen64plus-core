@@ -2025,6 +2025,10 @@ static void emit_readword(int addr, int rt)
   assem_debug("ldr %s,fp+%d",regname[rt],offset);
   output_w32(0xe5900000|rd_rn_rm(rt,FP,0)|offset);
 }
+static void emit_readptr(int addr, int rt)
+{
+  emit_readword(addr,rt);
+}
 static void emit_movsbl(int addr, int rt)
 {
   u_int offset = addr-(u_int)&g_dev.r4300.new_dynarec_hot_state;

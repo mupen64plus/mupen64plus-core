@@ -162,7 +162,6 @@ static void nullf() {}
 #define MAXBLOCK 4096
 #define MAX_OUTPUT_BLOCK_SIZE 262144
 #define CLOCK_DIVIDER g_dev.r4300.cp0.count_per_op
-#define WRITE_PROTECT ((uintptr_t)1<<((sizeof(uintptr_t)<<3)-2))
 
 struct regstat
 {
@@ -445,7 +444,7 @@ static void lsn(u_char hsn[], int i, int *preferred_reg)
       hsn[rs2[i+j]]=j;
     }
     // On some architectures stores need invc_ptr
-    #if defined(HOST_IMM8)
+    #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
     if(itype[i+j]==STORE || itype[i+j]==STORELR || (opcode[i+j]&0x3b)==0x39) {
       hsn[INVCP]=j;
     }
@@ -1788,7 +1787,8 @@ static void ll_remove_matching_addrs(struct ll_entry **head,intptr_t addr,int sh
        (((uintptr_t)((*cur)->addr)-(uintptr_t)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((addr-(uintptr_t)base_addr)>>shift))
     {
       if(head>=jump_dirty&&head<(jump_dirty+4096)){
-        u_int copy,length;
+        uintptr_t copy;
+        u_int length;
         get_copy_addr((*cur)->addr,&copy,&length);
         u_int* ptr=(u_int*)copy;
         ptr[length>>2]--;
@@ -1819,7 +1819,8 @@ static void ll_clear(struct ll_entry **head)
     *head=0;
     while(cur) {
       if(head>=jump_dirty&&head<(jump_dirty+4096)){
-        u_int copy,length;
+        uintptr_t copy;
+        u_int length;
         get_copy_addr(cur->addr,&copy,&length);
         u_int* ptr=(u_int*)copy;
         ptr[length>>2]--;
@@ -2749,7 +2750,7 @@ static void store_alloc(struct regstat *current,int i)
   }
   // If using TLB, need a register for pointer to the mapping table
   if(using_tlb) alloc_reg(current,i,TLREG);
-  #if defined(HOST_IMM8)
+  #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
   // On CPUs without 32-bit immediates we need a pointer to invalid_code
   else alloc_reg(current,i,INVCP);
   #endif
@@ -2773,7 +2774,7 @@ static void c1ls_alloc(struct regstat *current,int i)
   }
   // If using TLB, need a register for pointer to the mapping table
   if(using_tlb) alloc_reg(current,i,TLREG);
-  #if defined(HOST_IMM8)
+  #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
   // On CPUs without 32-bit immediates we need a pointer to invalid_code
   else if((opcode[i]&0x3b)==0x39) // SWC1/SDC1
     alloc_reg(current,i,INVCP);
@@ -3847,11 +3848,16 @@ static void load_assemble(int i,struct regstat *i_regs)
   reglist&=~(1<<tl);
   if(th>=0) reglist&=~(1<<th);
   if(!using_tlb) {
+    #ifndef NATIVE_64
     if(!c) {
+    #endif
       #ifdef RAM_OFFSET
       map=get_reg(i_regs->regmap,ROREG);
       if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
       #endif
+    #ifdef NATIVE_64
+    if(!c) {
+    #endif
 //#define R29_HACK 1
       #ifdef R29_HACK
       // Strmnnrmn's speed hack
@@ -4140,7 +4146,7 @@ static void store_assemble(int i,struct regstat *i_regs)
       // source register, so we need to make a copy first and use that.
       addr=temp;
       #endif
-      #if defined(HOST_IMM8)
+      #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
       int ir=get_reg(i_regs->regmap,INVCP);
       assert(ir>=0);
       emit_cmpmem_indexedsr12_reg(ir,addr,1);
@@ -4365,7 +4371,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
   if(!c||!memtarget)
     add_stub(STORELR_STUB,jaddr,(intptr_t)out,0,(intptr_t)i_regs,rs2[i],ccadj[i],reglist);
   if(!using_tlb) {
-    #if defined(HOST_IMM8)
+    #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
     int ir=get_reg(i_regs->regmap,INVCP);
     assert(ir>=0);
     emit_cmpmem_indexedsr12_reg(ir,temp,1);
@@ -4431,15 +4437,17 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   if (opcode[i]==0x39) { // SWC1 (get float address)
-    emit_readword((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
+    emit_readptr((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
   }
   if (opcode[i]==0x3D) { // SDC1 (get double address)
-    emit_readword((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
+    emit_readptr((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
   }
   // Generate address + offset
   if(!using_tlb) {
     #ifdef RAM_OFFSET
+    #ifndef NATIVE_64
     if (!c||opcode[i]==0x39||opcode[i]==0x3D) // SWC1/SDC1
+    #endif
     {
       map=get_reg(i_regs->regmap,ROREG);
       if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
@@ -4469,10 +4477,10 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     emit_readword_indexed(0,tl,tl);
   }
   if (opcode[i]==0x31) { // LWC1 (get target address)
-    emit_readword((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
+    emit_readptr((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
   }
   if (opcode[i]==0x35) { // LDC1 (get target address)
-    emit_readword((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
+    emit_readptr((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
   }
   if(!using_tlb) {
     if(!c) {
@@ -4529,7 +4537,7 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
       #ifndef DESTRUCTIVE_SHIFT
       temp=offset||c||s<0?ar:s;
       #endif
-      #if defined(HOST_IMM8)
+      #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
       int ir=get_reg(i_regs->regmap,INVCP);
       assert(ir>=0);
       emit_cmpmem_indexedsr12_reg(ir,temp,1);
@@ -4719,6 +4727,10 @@ static void wb_invalidate(signed char pre[],signed char entry[],uint64_t dirty,u
         if(pre[hr]>=0&&(pre[hr]&63)<TEMPREG) {
           int nr;
           if((nr=get_reg(entry,pre[hr]))>=0) {
+            #if NEW_DYNAREC == NEW_DYNAREC_X64
+            if(pre[hr]>=INVCP) emit_mov64(hr,nr);
+            else
+            #endif
             emit_mov(hr,nr);
           }
         }
@@ -4878,14 +4890,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
         if(rs1[i]!=rt1[i]||itype[i]!=LOAD) {
           if(!entry||entry[ra]!=agr) {
             if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
-              #ifdef RAM_OFFSET
+              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
                 emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
               #endif
               emit_movimm((constmap[i][rs]+offset)&0xFFFFFFFC,ra);
             }else if (opcode[i]==0x1a||opcode[i]==0x1b) { // LDL/LDR
-              #ifdef RAM_OFFSET
+              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
               if((signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
                 emit_movimm(((constmap[i][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
@@ -4896,7 +4908,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
               if((itype[i]!=LOAD&&opcode[i]!=0x31&&opcode[i]!=0x35) ||
                  (using_tlb&&((signed int)constmap[i][rs]+offset)>=(signed int)0xC0000000))
               #endif
-              #ifdef RAM_OFFSET
+              #if defined(RAM_OFFSET) && !defined(NATIVE_64)
               if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
                 emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
@@ -4952,14 +4964,14 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
       int c=(regs[i+1].wasconst>>rs)&1;
       if(c&&(rs1[i+1]!=rt1[i+1]||itype[i+1]!=LOAD)) {
         if (opcode[i+1]==0x22||opcode[i+1]==0x26) { // LWL/LWR
-          #ifdef RAM_OFFSET
+          #if defined(RAM_OFFSET) && !defined(NATIVE_64)
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
             emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFFC)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
           #endif
           emit_movimm((constmap[i+1][rs]+offset)&0xFFFFFFFC,ra);
         }else if (opcode[i+1]==0x1a||opcode[i+1]==0x1b) { // LDL/LDR
-          #ifdef RAM_OFFSET
+          #if defined(RAM_OFFSET) && !defined(NATIVE_64)
           if((signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
             emit_movimm(((constmap[i+1][rs]+offset)&0xFFFFFFF8)+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
@@ -4970,7 +4982,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
           if((itype[i+1]!=LOAD&&opcode[i+1]!=0x31&&opcode[i+1]!=0x35) ||
              (using_tlb&&((signed int)constmap[i+1][rs]+offset)>=(signed int)0xC0000000))
           #endif
-          #ifdef RAM_OFFSET
+          #if defined(RAM_OFFSET) && !defined(NATIVE_64)
           if((itype[i+1]==LOAD||opcode[i+1]==0x31||opcode[i+1]==0x35)&&(signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
             emit_movimm(constmap[i+1][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
@@ -5014,7 +5026,7 @@ static int get_final_value(int hr, int i, int *value)
           #ifdef HOST_IMM_ADDR32
           if(!using_tlb||((signed int)constmap[i][hr]+imm[i+2])<(signed int)0xC0000000) return 0;
           #endif
-          #ifdef RAM_OFFSET
+          #if defined(RAM_OFFSET) && !defined(NATIVE_64)
           if((signed int)constmap[i][hr]+imm[i+2]<(signed int)0x80800000)
             *value=constmap[i][hr]+imm[i+2]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
           else
@@ -5029,7 +5041,7 @@ static int get_final_value(int hr, int i, int *value)
         #ifdef HOST_IMM_ADDR32
         if(!using_tlb||((signed int)constmap[i][hr]+imm[i+1])<(signed int)0xC0000000) return 0;
         #endif
-        #ifdef RAM_OFFSET
+        #if defined(RAM_OFFSET) && !defined(NATIVE_64)
         if((signed int)constmap[i][hr]+imm[i+1]<(signed int)0x80800000)
           *value=constmap[i][hr]+imm[i+1]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
         else
@@ -7488,7 +7500,7 @@ void new_dynarec_init(void)
   expirep=16384; // Expiry pointer, +2 blocks
   g_dev.r4300.new_dynarec_hot_state.pending_exception=0;
   literalcount=0;
-#ifdef HOST_IMM8
+#if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
   // Copy this into local area so we don't have to put it in every literal pool
   g_dev.r4300.new_dynarec_hot_state.invc_ptr=g_dev.r4300.cached_interp.invalid_code;
 #endif

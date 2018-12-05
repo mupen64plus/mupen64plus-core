@@ -32,6 +32,8 @@
 #define NEW_DYNAREC_ARM 3
 #define NEW_DYNAREC_ARM64 4
 
+#define WRITE_PROTECT ((uintptr_t)1<<((sizeof(uintptr_t)<<3)-2))
+
 struct r4300_core;
 
 /* This struct contains "hot" variables used by the new_dynarec

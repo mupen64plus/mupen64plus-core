@@ -1878,6 +1878,10 @@ static void emit_readword_indexed_tlb(int addr, int rs, int map, int rt)
     }
   }
 }
+static void emit_readptr(int addr, int rt)
+{
+  emit_readword(addr,rt);
+}
 static void emit_movmem_indexedx4(int addr, int rs, int rt)
 {
   assem_debug("mov (%x,%%%s,4),%%%s",addr,regname[rs],regname[rt]);
