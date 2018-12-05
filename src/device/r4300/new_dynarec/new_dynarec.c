@@ -200,8 +200,8 @@ void jump_eret(void);
 void breakpoint(void);
 
 /* interpreted opcode */
-static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits);
-static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits);
+static void ldl_merge(void);
+static void ldr_merge(void);
 static void TLBWI_new(int pcaddr, int count, int diff);
 static void TLBWR_new(int pcaddr, int count, int diff);
 static void MFC0_new(int copr, int count, int diff);
@@ -10813,8 +10813,11 @@ int new_recompile_block(int addr)
 }
 
 /* interpreted opcode */
-static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
+static void ldl_merge(void)
 {
+  uint64_t original = g_dev.r4300.new_dynarec_hot_state.rt;
+  uint64_t loaded = g_dev.r4300.new_dynarec_hot_state.rs;
+  u_int bits = g_dev.r4300.new_dynarec_hot_state.rd;
   if(bits) {
     original<<=64-bits;
     original>>=64-bits;
@@ -10822,10 +10825,13 @@ static uint64_t ldl_merge(uint64_t original,uint64_t loaded,u_int bits)
     original|=loaded;
   }
   else original=loaded;
-  return original;
+  g_dev.r4300.new_dynarec_hot_state.rt=original;
 }
-static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
+static void ldr_merge(void)
 {
+  uint64_t original = g_dev.r4300.new_dynarec_hot_state.rt;
+  uint64_t loaded = g_dev.r4300.new_dynarec_hot_state.rs;
+  u_int bits = g_dev.r4300.new_dynarec_hot_state.rd;
   if(bits^56) {
     original>>=64-(bits^56);
     original<<=64-(bits^56);
@@ -10833,7 +10839,7 @@ static uint64_t ldr_merge(uint64_t original,uint64_t loaded,u_int bits)
     original|=loaded;
   }
   else original=loaded;
-  return original;
+  g_dev.r4300.new_dynarec_hot_state.rt=original;
 }
 
 static void TLBWI_new(int pcaddr, int count, int diff)

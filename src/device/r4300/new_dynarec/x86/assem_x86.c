@@ -3442,19 +3442,16 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
       assert(temp2h>=0);
       emit_andimm(temp,56,temp);
       emit_pusha();
-      emit_pushreg(temp);
-      emit_pushreg(temp2h);
-      emit_pushreg(temp2);
-      emit_pushreg(th);
-      emit_pushreg(tl);
+      emit_writeword(temp,(int)&g_dev.r4300.new_dynarec_hot_state.rd);
+      emit_writeword(temp2,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+      emit_writeword(temp2h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+      emit_writeword(tl,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+      emit_writeword(th,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
       if(opcode[i]==0x1A) emit_call((int)ldl_merge);
       if(opcode[i]==0x1B) emit_call((int)ldr_merge);
-      emit_addimm(ESP,20,ESP);
-      emit_storereg(rt1[i],EAX);
-      emit_storereg(rt1[i]|64,EDX);
       emit_popa();
-      emit_loadreg(rt1[i],tl);
-      emit_loadreg(rt1[i]|64,th);
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,tl);
+      emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt+4,th);
     }
   }
 }
