@@ -8723,6 +8723,27 @@ int new_recompile_block(int addr)
           pagespan_alloc(&current,i);
           break;
       }
+
+      // Make sure the allocator didn't do anything bad
+      for(hr=0;hr<HOST_REGS;hr++)
+      {
+        int r;
+        r=current.regmap[hr];
+        if(r>=0) {
+          if(r==regmap_pre[i][hr]) {
+            // If it was dirty before, make sure it's still dirty
+            if((regs[i].wasdirty>>hr)&1) {
+              if (!((current.dirty>>hr)&1))
+              {
+                //FIXME: delayslot_alloc realloc registers removed from cache by jump instruction, thus the missing dirty flag
+                assert(itype[i]==CJUMP);
+                current.dirty|=1LL<<hr;
+              }
+              //assert (((current.dirty>>hr)&1)!=0);
+            }
+          }
+        }
+      }
       
       // Drop the upper half of registers that have become 32-bit
       current.uu|=current.is32&((1LL<<rt1[i])|(1LL<<rt2[i]));
