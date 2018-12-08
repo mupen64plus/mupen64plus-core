@@ -3826,7 +3826,7 @@ static void load_assemble(int i,struct regstat *i_regs)
   int s,th,tl,addr,map=-1,cache=-1;
   int offset;
   intptr_t jaddr=0;
-  int memtarget,c=0;
+  int memtarget=0,c=0;
   u_int hr,reglist=0;
   th=get_reg(i_regs->regmap,rt1[i]|64);
   tl=get_reg(i_regs->regmap,rt1[i]);
@@ -3838,8 +3838,10 @@ static void load_assemble(int i,struct regstat *i_regs)
   if(i_regs->regmap[HOST_CCREG]==CCREG) reglist&=~(1<<HOST_CCREG);
   if(s>=0) {
     c=(i_regs->wasconst>>s)&1;
+#ifndef INTERPRET_LOAD
     memtarget=((signed int)(constmap[i][s]+offset))<(signed int)0x80800000;
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
+#endif
   }
   if(tl<0) tl=get_reg(i_regs->regmap,-1);
   if(offset||s<0||c) addr=tl;
@@ -3866,6 +3868,7 @@ static void load_assemble(int i,struct regstat *i_regs)
       if(rs1[i]!=29||start<0x80001000||start>=0x80800000)
       #endif
       {
+#ifndef INTERPRET_LOAD
         emit_cmpimm(addr,0x800000);
         jaddr=(intptr_t)out;
         #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
@@ -3875,6 +3878,10 @@ static void load_assemble(int i,struct regstat *i_regs)
         else
         #endif
         emit_jno(0);
+#else
+        jaddr=(intptr_t)out;
+        emit_jmp(0);
+#endif
       }
     }
   }else{ // using tlb
@@ -3886,7 +3893,11 @@ static void load_assemble(int i,struct regstat *i_regs)
     assert(map>=0);
     reglist&=~(1<<map);
     map=do_tlb_r(addr,tl,map,cache,x,-1,-1,c,constmap[i][s]+offset);
+#ifndef INTERPRET_LOAD
     do_tlb_r_branch(map,c,constmap[i][s]+offset,&jaddr);
+#else
+    do_tlb_r_branch_debug(map,c,constmap[i][s]+offset,&jaddr);
+#endif
   }
   int dummy=(rt1[i]==0)||(tl!=get_reg(i_regs->regmap,rt1[i])); // ignore loads to r0 and unneeded reg
   if (opcode[i]==0x20) { // LB
@@ -4043,7 +4054,7 @@ static void store_assemble(int i,struct regstat *i_regs)
   int offset;
   intptr_t jaddr=0;
   int type=0;
-  int memtarget,c=0;
+  int memtarget=0,c=0;
   int agr=AGEN1+(i&1);
   u_int hr,reglist=0;
   th=get_reg(i_regs->regmap,rs2[i]|64);
@@ -4054,8 +4065,10 @@ static void store_assemble(int i,struct regstat *i_regs)
   offset=imm[i];
   if(s>=0) {
     c=(i_regs->wasconst>>s)&1;
+#ifndef INTERPRET_STORE
     memtarget=((signed int)(constmap[i][s]+offset))<(signed int)0x80800000;
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
+#endif
   }
   assert(tl>=0);
   assert(temp>=0);
@@ -4084,6 +4097,7 @@ static void store_assemble(int i,struct regstat *i_regs)
       if(rs1[i]!=29||start<0x80001000||start>=0x80800000)
       #endif
       {
+#ifndef INTERPRET_STORE
         jaddr=(intptr_t)out;
         #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
         // Hint to branch predictor that the branch is unlikely to be taken
@@ -4092,6 +4106,10 @@ static void store_assemble(int i,struct regstat *i_regs)
         else
         #endif
         emit_jno(0);
+#else
+        jaddr=(intptr_t)out;
+        emit_jmp(0);
+#endif
       }
     }
   }else{ // using tlb
@@ -4103,7 +4121,11 @@ static void store_assemble(int i,struct regstat *i_regs)
     assert(map>=0);
     reglist&=~(1<<map);
     map=do_tlb_w(addr,temp,map,cache,x,c,constmap[i][s]+offset);
+#ifndef INTERPRET_STORE
     do_tlb_w_branch(map,c,constmap[i][s]+offset,&jaddr);
+#else
+    do_tlb_w_branch_debug(map,c,constmap[i][s]+offset,&jaddr);
+#endif
   }
 
   if (opcode[i]==0x28) { // SB
@@ -4911,7 +4933,11 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
                  (using_tlb&&((signed int)constmap[i][rs]+offset)>=(signed int)0xC0000000))
               #endif
               #if defined(RAM_OFFSET) && !defined(NATIVE_64)
-              if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000) 
+              #ifndef INTERPRET_LOAD
+              if((itype[i]==LOAD||opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
+              #else
+              if((opcode[i]==0x31||opcode[i]==0x35)&&(signed int)constmap[i][rs]+offset<(signed int)0x80800000)
+              #endif
                 emit_movimm(constmap[i][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
               else
               #endif
@@ -4985,7 +5011,11 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
              (using_tlb&&((signed int)constmap[i+1][rs]+offset)>=(signed int)0xC0000000))
           #endif
           #if defined(RAM_OFFSET) && !defined(NATIVE_64)
+          #ifndef INTERPRET_LOAD
           if((itype[i+1]==LOAD||opcode[i+1]==0x31||opcode[i+1]==0x35)&&(signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
+          #else
+          if((opcode[i+1]==0x31||opcode[i+1]==0x35)&&(signed int)constmap[i+1][rs]+offset<(signed int)0x80800000) 
+          #endif
             emit_movimm(constmap[i+1][rs]+offset+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000,ra);
           else
           #endif
@@ -5028,7 +5058,7 @@ static int get_final_value(int hr, int i, int *value)
           #ifdef HOST_IMM_ADDR32
           if(!using_tlb||((signed int)constmap[i][hr]+imm[i+2])<(signed int)0xC0000000) return 0;
           #endif
-          #if defined(RAM_OFFSET) && !defined(NATIVE_64)
+          #if defined(RAM_OFFSET) && !defined(NATIVE_64) && !defined(INTERPRET_LOAD)
           if((signed int)constmap[i][hr]+imm[i+2]<(signed int)0x80800000)
             *value=constmap[i][hr]+imm[i+2]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
           else
@@ -5043,7 +5073,7 @@ static int get_final_value(int hr, int i, int *value)
         #ifdef HOST_IMM_ADDR32
         if(!using_tlb||((signed int)constmap[i][hr]+imm[i+1])<(signed int)0xC0000000) return 0;
         #endif
-        #if defined(RAM_OFFSET) && !defined(NATIVE_64)
+        #if defined(RAM_OFFSET) && !defined(NATIVE_64) && !defined(INTERPRET_LOAD)
         if((signed int)constmap[i][hr]+imm[i+1]<(signed int)0x80800000)
           *value=constmap[i][hr]+imm[i+1]+(intptr_t)g_dev.rdram.dram-(intptr_t)0x80000000;
         else

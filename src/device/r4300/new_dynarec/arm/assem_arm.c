@@ -3191,6 +3191,15 @@ static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
   }
   return map;
 }
+static int do_tlb_r_branch_debug(int map, int c, u_int addr, int *jaddr)
+{
+  if(!c) {
+    emit_test(map,map);
+    *jaddr=(int)out;
+    emit_js(0);
+  }
+  return map;
+}
 
 static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 {
@@ -3220,6 +3229,14 @@ static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
 {
   if(!c||addr<0x80800000||addr>=0xC0000000) {
+    emit_testimm(map,0x40000000);
+    *jaddr=(int)out;
+    emit_jne(0);
+  }
+}
+static void do_tlb_w_branch_debug(int map, int c, u_int addr, int *jaddr)
+{
+  if(!c) {
     emit_testimm(map,0x40000000);
     *jaddr=(int)out;
     emit_jne(0);
