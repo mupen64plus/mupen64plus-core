@@ -48,6 +48,12 @@
 #include <sys/mman.h>
 #endif
 
+#if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
+void recomp_dbg_init(void);
+void recomp_dbg_cleanup(void);
+void recomp_dbg_block(int addr);
+#endif
+
 #if NEW_DYNAREC == NEW_DYNAREC_X86
 #include "x86/assem_x86.h"
 #elif  NEW_DYNAREC == NEW_DYNAREC_X64
@@ -7600,12 +7606,18 @@ static void disassemble_inst(int i)
 void new_dynarec_init(void)
 {
   DebugMessage(M64MSG_INFO, "Init new dynarec");
+  
+#if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
+  recomp_dbg_init();
+#endif
 
 #if NEW_DYNAREC >= NEW_DYNAREC_ARM
-  if ((base_addr = mmap ((u_char *)BASE_ADDR, 1<<TARGET_SIZE_2,
+#if !defined(WIN32)
+  if ((base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
             PROT_READ | PROT_WRITE | PROT_EXEC,
             MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
             -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
+#endif
 #else
 #if defined(WIN32)
   DWORD dummy;
@@ -7653,6 +7665,10 @@ void new_dynarec_init(void)
 
 void new_dynarec_cleanup(void)
 {
+#if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
+  recomp_dbg_cleanup();
+#endif
+
   int n;
   for(n=0;n<4096;n++) ll_clear(jump_in+n);
   for(n=0;n<4096;n++) ll_clear(jump_out+n);
@@ -7670,6 +7686,10 @@ void new_dynarec_cleanup(void)
 
 int new_recompile_block(int addr)
 {
+#if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
+  recomp_dbg_block(addr);
+#endif
+
   assem_debug("NOTCOMPILED: addr = %x -> %x", (int)addr, (intptr_t)out);
 #if COUNT_NOTCOMPILEDS
   notcompiledCount++;
