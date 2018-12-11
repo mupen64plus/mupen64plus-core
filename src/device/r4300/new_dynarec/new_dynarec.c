@@ -1971,7 +1971,15 @@ static void *dynamic_linker(void * src, u_int vaddr)
 
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+      //TODO: Avoid disabling link between blocks for conditional branches
+      int *ptr=(int*)src;
+      if((*ptr&0xfc000000)==0x14000000) { //b
+        add_link(vaddr, add_pointer(src,head->addr));
+      }
+#else
       add_link(vaddr, add_pointer(src,head->addr));
+#endif
       return head->addr;
     }
     head=head->next;
@@ -2589,11 +2597,13 @@ static void shift_alloc(struct regstat *current,int i)
       if(rs2[i]) alloc_reg(current,i,rs2[i]);
       alloc_reg64(current,i,rt1[i]);
       current->is32&=~(1LL<<rt1[i]);
+#if NEW_DYNAREC!=NEW_DYNAREC_ARM64
       if(opcode2[i]==0x16||opcode2[i]==0x17) // DSRLV and DSRAV need a temporary register
       {
         alloc_reg_temp(current,i,-1);
         minimum_free_regs[i]=1;
       }
+#endif
     }
     clear_const(current,rs1[i]);
     clear_const(current,rs2[i]);
@@ -4834,7 +4844,7 @@ static void wb_invalidate(signed char pre[],signed char entry[],uint64_t dirty,u
         if(pre[hr]>=0&&(pre[hr]&63)<TEMPREG) {
           int nr;
           if((nr=get_reg(entry,pre[hr]))>=0) {
-            #if NEW_DYNAREC == NEW_DYNAREC_X64
+            #ifdef NATIVE_64
             if(pre[hr]>=INVCP) emit_mov64(hr,nr);
             else
             #endif
@@ -5946,10 +5956,19 @@ static void do_ccstub(int n)
     if(internal_branch(branch_regs[i].is32,ba[i]))
       load_needed_regs(branch_regs[i].regmap,regs[(ba[i]-start)>>2].regmap_entry);
     else if(itype[i]==RJUMP) {
-      if(get_reg(branch_regs[i].regmap,RTEMP)>=0)
-        emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.pcaddr,get_reg(branch_regs[i].regmap,RTEMP));
-      else
-        emit_loadreg(rs1[i],get_reg(branch_regs[i].regmap,rs1[i]));
+      int r=get_reg(branch_regs[i].regmap,rs1[i]);
+      if((rs1[i]==rt1[i+1]||rs1[i]==rt2[i+1])&&(rs1[i]!=0)) {
+        r=get_reg(branch_regs[i].regmap,RTEMP);
+      }
+#if NEW_DYNAREC==NEW_DYNAREC_ARM64
+      if(r==18) {
+        // x18 is used for trampoline jumps, move it to another register (x0)
+        emit_mov(r,0);
+        r=0;
+        stubs[n][2]=jump_vaddr_reg[0];
+      }
+#endif
+      emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.pcaddr,r);
     }
   }else if(stubs[n][6]==NOTTAKEN) {
     if(i<slen-2) load_needed_regs(branch_regs[i].regmap,regmap_pre[i+2]);
@@ -6027,17 +6046,11 @@ static void ujump_assemble(int i,struct regstat *i_regs)
     if(rt>=0) {
       #ifdef USE_MINI_HT
       if(internal_branch(branch_regs[i].is32,return_address)) {
-        int temp=rt+1;
-        if(temp==EXCLUDE_REG||temp>=HOST_REGS||
-           branch_regs[i].regmap[temp]>=0)
-        {
-          temp=get_reg(branch_regs[i].regmap,-1);
-        }
+        int temp=-1; //x86 doesn't need a temp reg
         #ifdef HOST_TEMPREG
         if(temp<0) temp=HOST_TEMPREG;
         #endif
-        if(temp>=0) do_miniht_insert(return_address,rt,temp);
-        else emit_movimm(return_address,rt);
+        do_miniht_insert(return_address,rt,temp);
       }
       else
       #endif
@@ -6180,8 +6193,13 @@ static void rjump_assemble(int i,struct regstat *i_regs)
   else
   #endif
   {
-    //if(rs!=EAX) emit_mov(rs,EAX);
-    //emit_jmp((intptr_t)jump_vaddr_eax);
+#if NEW_DYNAREC==NEW_DYNAREC_ARM64
+  if(rs==18) {
+    // x18 is used for trampoline jumps, move it to another register (x0)
+    emit_mov(rs,0);
+    rs=0;
+  }
+#endif
     emit_jmp(jump_vaddr_reg[rs]);
   }
   /* Check hash table
@@ -7571,15 +7589,25 @@ void new_dynarec_init(void)
 
 #if NEW_DYNAREC >= NEW_DYNAREC_ARM
 #if !defined(WIN32)
-  if ((base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-            -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
+#define FIXED_CACHE_ADDR
+#ifdef FIXED_CACHE_ADDR
+  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+                    -1, 0);
+#else
+  base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_PRIVATE | MAP_ANONYMOUS,
+                    -1, 0);
+#endif
+  if(base_addr==(void*)-1) DebugMessage(M64MSG_ERROR, "mmap() failed");
 #endif
 #else
 #if defined(WIN32)
   DWORD dummy;
-  assert(VirtualProtect((void*)g_dev.r4300.extra_memory, 33554432, PAGE_EXECUTE_READWRITE, &dummy));
+  BOOL res=VirtualProtect((void*)g_dev.r4300.extra_memory, 33554432, PAGE_EXECUTE_READWRITE, &dummy);
+  assert(res!=0);
   base_addr = (void*)g_dev.r4300.extra_memory;
 #else
   if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
@@ -7589,7 +7617,7 @@ void new_dynarec_init(void)
 #endif
 #endif
 
-  assert(((uintptr_t)g_dev.rdram.dram&3)==0); // 4 bytes aligned 
+  assert(((uintptr_t)g_dev.rdram.dram&(sizeof(uintptr_t)-1))==0); // 4/8 bytes aligned 
   out=(u_char *)base_addr;
 
   g_dev.r4300.new_dynarec_hot_state.pc = &g_dev.r4300.new_dynarec_hot_state.fake_pc;
@@ -8555,7 +8583,7 @@ int new_recompile_block(int addr)
             #ifdef USE_MINI_HT
             if(rs1[i]==31) { // JALR
               alloc_reg(&current,i,RHASH);
-              #ifndef HOST_IMM_ADDR32
+              #if !defined(HOST_IMM_ADDR32)&&(NEW_DYNAREC!=NEW_DYNAREC_X64)
               alloc_reg(&current,i,RHTBL);
               #endif
             }
@@ -8957,7 +8985,7 @@ int new_recompile_block(int addr)
           #ifdef USE_MINI_HT
           if(rs1[i-1]==31) { // JALR
             alloc_reg(&branch_regs[i-1],i-1,RHASH);
-            #ifndef HOST_IMM_ADDR32
+            #if !defined(HOST_IMM_ADDR32)&&(NEW_DYNAREC!=NEW_DYNAREC_X64)
             alloc_reg(&branch_regs[i-1],i-1,RHTBL);
             #endif
           }
@@ -10774,7 +10802,13 @@ int new_recompile_block(int addr)
       void *stub=out;
       void *addr=check_addr(link_addr[i][1]);
       emit_extjump(link_addr[i][0],link_addr[i][1]);
+#if NEW_DYNAREC==NEW_DYNAREC_ARM64
+      //TODO: Avoid disabling link between blocks for conditional branches
+      u_char *ptr=(u_char *)link_addr[i][0];
+      if(addr&&((ptr[3]&0xfc)==0x14)) {
+#else
       if(addr) {
+#endif
         set_jump_target(link_addr[i][0],(intptr_t)addr);
         add_link(link_addr[i][1],stub);
       }

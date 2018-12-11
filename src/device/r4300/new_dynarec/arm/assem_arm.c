@@ -3012,6 +3012,7 @@ static int do_dirty_stub(int i)
 
 static void do_dirty_stub_ds(void)
 {
+  assert((int)start>=(int)0xC0000000);
   // Careful about the code output here, verify_dirty needs to parse it.
   #ifdef ARMv5_ONLY
   emit_loadlp((int)start<(int)0xC0000000?(int)source:(int)start,1);

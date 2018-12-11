@@ -115,6 +115,12 @@
     <Filter Include="device\dd">
       <UniqueIdentifier>{ff19301d-1e15-4787-8e09-d608004dd009}</UniqueIdentifier>
     </Filter>
+    <Filter Include="device\r4300\new_dynarec\x64">
+      <UniqueIdentifier>{23daae91-0471-4a19-a7e8-70975acb835a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec\arm64">
+      <UniqueIdentifier>{8f211c2b-70bb-4714-bcbb-c77abd1af54d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\api\callbacks.c">
@@ -401,6 +407,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\device\r4300\new_dynarec\recomp_dbg.c">
       <Filter>device\r4300\new_dynarec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\r4300\new_dynarec\x64\assem_x64.c">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\r4300\new_dynarec\arm64\assem_arm64.c">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -734,6 +746,12 @@
     <ClInclude Include="..\..\subprojects\minizip\zip.h">
       <Filter>subprojects\minizip</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\x64\assem_x64.h">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm64\assem_arm64.h">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\device\r4300\mips_instructions.def">
@@ -745,6 +763,9 @@
     <None Include="..\..\src\device\r4300\new_dynarec\arm\linkage_arm.S">
       <Filter>device\r4300\new_dynarec\arm</Filter>
     </None>
+    <None Include="..\..\src\device\r4300\new_dynarec\arm64\linkage_arm64.S">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\device\r4300\new_dynarec\x86\linkage_x86.asm">
@@ -755,6 +776,9 @@
     </CustomBuild>
     <CustomBuild Include="..\..\src\device\r4300\x86\dyna_start.asm">
       <Filter>device\r4300\x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\device\r4300\new_dynarec\x64\linkage_x64.asm">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

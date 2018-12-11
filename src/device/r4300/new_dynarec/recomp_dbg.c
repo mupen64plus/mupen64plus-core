@@ -33,7 +33,9 @@
 #error arm dynarec debug only available on x86
 #endif
 #elif RECOMPILER_DEBUG == 4 //ARM64
+#if NEW_DYNAREC != 2 //x64
 #error arm64 dynarec debug only available on x64
+#endif
 #endif
 
 #undef NEW_DYNAREC
@@ -121,35 +123,6 @@ void jump_vaddr_x25(void){}
 void jump_vaddr_x26(void){}
 void jump_vaddr_x27(void){}
 void jump_vaddr_x28(void){}
-void invalidate_addr_x0(void){}
-void invalidate_addr_x1(void){}
-void invalidate_addr_x2(void){}
-void invalidate_addr_x3(void){}
-void invalidate_addr_x4(void){}
-void invalidate_addr_x5(void){}
-void invalidate_addr_x6(void){}
-void invalidate_addr_x7(void){}
-void invalidate_addr_x8(void){}
-void invalidate_addr_x9(void){}
-void invalidate_addr_x10(void){}
-void invalidate_addr_x11(void){}
-void invalidate_addr_x12(void){}
-void invalidate_addr_x13(void){}
-void invalidate_addr_x14(void){}
-void invalidate_addr_x15(void){}
-void invalidate_addr_x16(void){}
-void invalidate_addr_x17(void){}
-void invalidate_addr_x18(void){}
-void invalidate_addr_x19(void){}
-void invalidate_addr_x20(void){}
-void invalidate_addr_x21(void){}
-void invalidate_addr_x22(void){}
-void invalidate_addr_x23(void){}
-void invalidate_addr_x24(void){}
-void invalidate_addr_x25(void){}
-void invalidate_addr_x26(void){}
-void invalidate_addr_x27(void){}
-void invalidate_addr_x28(void){}
 static void __clear_cache(char* begin, char *end){}
 #endif
 
@@ -169,7 +142,12 @@ ALIGN(4096, static char recomp_dbg_extra_memory[33554432]);
     #define BRANCH_INST 0x10a
     #define ARCH_NAME "x86"
 #elif RECOMPILER_DEBUG == NEW_DYNAREC_X64
-    #error to be done
+    #define ARCHITECTURE CS_ARCH_X86
+    #define MODE CS_MODE_64
+    #define INSTRUCTION instr[i].detail->x86
+    #define CALL_INST 0x38
+    #define BRANCH_INST 0x10a
+    #define ARCH_NAME "x64"
 #elif RECOMPILER_DEBUG == NEW_DYNAREC_ARM
     #define ARCHITECTURE CS_ARCH_ARM
     #define MODE CS_MODE_LITTLE_ENDIAN
@@ -451,35 +429,6 @@ static Function_t func[] = {
   {(intptr_t)jump_vaddr_x26, "jump_vaddr_x26"},
   {(intptr_t)jump_vaddr_x27, "jump_vaddr_x27"},
   {(intptr_t)jump_vaddr_x28, "jump_vaddr_x28"},
-  {(intptr_t)invalidate_addr_x0," invalidate_addr_x0"},
-  {(intptr_t)invalidate_addr_x1," invalidate_addr_x1"},
-  {(intptr_t)invalidate_addr_x2," invalidate_addr_x2"},
-  {(intptr_t)invalidate_addr_x3," invalidate_addr_x3"},
-  {(intptr_t)invalidate_addr_x4," invalidate_addr_x4"},
-  {(intptr_t)invalidate_addr_x5," invalidate_addr_x5"},
-  {(intptr_t)invalidate_addr_x6," invalidate_addr_x6"},
-  {(intptr_t)invalidate_addr_x7," invalidate_addr_x7"},
-  {(intptr_t)invalidate_addr_x8," invalidate_addr_x8"},
-  {(intptr_t)invalidate_addr_x9," invalidate_addr_x9"},
-  {(intptr_t)invalidate_addr_x10," invalidate_addr_x10"},
-  {(intptr_t)invalidate_addr_x11," invalidate_addr_x11"},
-  {(intptr_t)invalidate_addr_x12," invalidate_addr_x12"},
-  {(intptr_t)invalidate_addr_x13," invalidate_addr_x13"},
-  {(intptr_t)invalidate_addr_x14," invalidate_addr_x14"},
-  {(intptr_t)invalidate_addr_x15," invalidate_addr_x15"},
-  {(intptr_t)invalidate_addr_x16," invalidate_addr_x16"},
-  {(intptr_t)invalidate_addr_x17," invalidate_addr_x17"},
-  {(intptr_t)invalidate_addr_x18," invalidate_addr_x18"},
-  {(intptr_t)invalidate_addr_x19," invalidate_addr_x19"},
-  {(intptr_t)invalidate_addr_x20," invalidate_addr_x20"},
-  {(intptr_t)invalidate_addr_x21," invalidate_addr_x21"},
-  {(intptr_t)invalidate_addr_x22," invalidate_addr_x22"},
-  {(intptr_t)invalidate_addr_x23," invalidate_addr_x23"},
-  {(intptr_t)invalidate_addr_x24," invalidate_addr_x24"},
-  {(intptr_t)invalidate_addr_x25," invalidate_addr_x25"},
-  {(intptr_t)invalidate_addr_x26," invalidate_addr_x26"},
-  {(intptr_t)invalidate_addr_x27," invalidate_addr_x27"},
-  {(intptr_t)invalidate_addr_x28," invalidate_addr_x28"},
 #endif
   {(intptr_t)dyna_linker, "dyna_linker"},
   {(intptr_t)dyna_linker_ds, "dyna_linker_ds"},
@@ -576,6 +525,7 @@ static Function_t func[] = {
   {(intptr_t)abs_d, "abs_d"},
   {(intptr_t)mov_d, "mov_d"},
   {(intptr_t)neg_d, "neg_d"},
+  {(intptr_t)breakpoint, "breakpoint"},
   {-1, NULL}
 };
 
@@ -812,13 +762,20 @@ static void debugging(int i, FILE * pFile)
 
 static int disasm_block[] = {0xa4000040};
 
-static void replace_addr(int32_t addr, Variable_t * var, char * op_str, size_t size)
+static void replace_addr(intptr_t real_addr, intptr_t addr, size_t addr_size, Variable_t * var, char * op_str, size_t op_size)
 {
   char right[256];
-  char addr_str[16];
+  char addr_str[32];
   char * ptr = NULL;
+  char * ptr2 = NULL;
   
-  sprintf(addr_str, "0x%x", addr);
+  if(addr_size == 4)
+    sprintf(addr_str, "0x%x", addr);
+  else if(addr_size == 8)
+    sprintf(addr_str, "0x%llx", addr);
+  else
+    assert(0);
+
   ptr = strstr(op_str, addr_str);
   
   if(ptr == NULL) {
@@ -829,13 +786,19 @@ static void replace_addr(int32_t addr, Variable_t * var, char * op_str, size_t s
     assert(*(ptr-2) == '-');
     *(ptr-2) = '+';
   }
-  
-  *ptr = '\0';
-  memcpy(right, (ptr + strlen(addr_str)), size - (ptr - op_str)); /* copy right part after address */
-  if((addr - var->addr) == 0)
-    snprintf(op_str, size, "%s%s%s", op_str, var->name, right);
+
+  ptr2 = strstr(op_str, "rip");
+  if(ptr2 == NULL)
+    *ptr = '\0';
   else
-    snprintf(op_str, size, "%s%s+%d%s", op_str, var->name, (addr - var->addr), right);
+    *ptr2 = '\0';
+
+  memcpy(right, (ptr + strlen(addr_str)), op_size - (ptr - op_str)); /* copy right part after address */
+
+  if((real_addr - var->addr) == 0)
+    snprintf(op_str, op_size, "%s%s%s", op_str, var->name, right);
+  else
+    snprintf(op_str, op_size, "%s%s+%d%s", op_str, var->name, (real_addr - var->addr), right);
 }
 
 void recomp_dbg_init(void)
@@ -860,6 +823,35 @@ void recomp_dbg_init(void)
   /* Capstone init */
   if(cs_open(ARCHITECTURE, MODE, &handle) != CS_ERR_OK) return;
   cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
+
+ #if RECOMPILER_DEBUG >= NEW_DYNAREC_ARM
+  FILE * pFile = fopen ("jump_table.txt","w");
+  uintptr_t * src = (uintptr_t *)((char *)base_addr+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE);
+
+  while((char *)src<(char *)base_addr+(1<<TARGET_SIZE_2))
+  {
+    cs_insn *instr;
+    size_t count = cs_disasm(handle, (uint8_t*)src, sizeof(uintptr_t), (uintptr_t)src, 0, &instr);
+
+    for(uint32_t i = 0; i < count; i++)
+      fprintf(pFile, "0x%" PRIxPTR ": %s %s\n", (uintptr_t)instr[i].address, instr[i].mnemonic, instr[i].op_str);
+
+    cs_free(instr, count);
+    src++;
+
+    uint32_t j = 0;
+    while(func[j].addr != -1) {
+      if(*src>>2 == func[j].addr>>2)
+        break;
+      j++;
+    }
+    
+    fprintf(pFile, "0x%" PRIxPTR ": 0x%" PRIxPTR " (%s)\n", (uintptr_t)src, (uintptr_t)*src, func[j].name);
+    src++;
+  }
+  fflush(pFile);
+  fclose(pFile);
+#endif
 }
 
 void recomp_dbg_cleanup(void)
@@ -903,37 +895,92 @@ extern unsigned int using_tlb;
   end=(uint32_t *)recomp_dbg_out;
 
 #if 0
+  struct ll_entry *head;
+  u_int page;
+
   for(int i=0;i<linkcount;i++){
-    if(!link_addr[i][2])
-      dynamic_linker((void*)link_addr[i][0],0xa4000044);
+    if(!link_addr[i][2]) { //external jumps
+      int already_linked=0;
+      page=(0x80000000^link_addr[i][1])>>12;
+      if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[link_addr[i][1]>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[page^0x80000]^0x80000000)>>12;
+      if(page>2048) page=2048+(page&2047);
+      head=jump_in[page];
+      while(head!=NULL) {
+        if(head->vaddr==link_addr[i][1]&&head->reg32==0) {
+          already_linked=1;
+          break;
+        }
+        head=head->next;
+      }
+      if(already_linked==0)
+        dynamic_linker((void*)link_addr[i][0],addr); //linking on itself
+    }
   }
 
-  for(int i = 0; i < 4096; i++)
-  {
-    struct ll_entry *head;
-    head=jump_out[i];
-    while(head!=NULL) {
-      intptr_t addr=get_pointer(head->addr);
-      addr=(intptr_t)kill_pointer(head->addr);
-      head=head->next;
-    }
+  page=(0x80000000^addr)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[page^0x80000]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
 
-    head=jump_dirty[i];
-    while(head!=NULL) {
-      verify_dirty(head->addr);
+  //Check current recompiled address (not all entry points)
+  int found=0;
+  head=jump_in[page];
+  while(head!=NULL) {
+    if(head->vaddr==addr&&head->reg32==0) {
+      assert(found==0); //No possible duplicates in jump_in
+      assert(isclean(head->addr)==1); //Just being recompiled so not dirty
+      found=1;
+    }
+    head=head->next;
+  }
+
+  page=(0x80000000^addr)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(page>2048) page=2048+(page&2047);
+
+  int not_dirty=0;
+  found=0;
+  head=jump_dirty[page];
+  while(head!=NULL) {
+    if(head->vaddr==addr&&head->reg32==0) {
+
+      if(found==1)
+        printf("Duplicates in jump_dirty\n");
+
+      //Possible duplicates in jump_dirty, only one could be clean at a time
+      if(not_dirty==0)
+        not_dirty=verify_dirty(head->addr);
+      else
+      {
+        assert(verify_dirty(head->addr)==0);
+      }
+
+      assert(isclean(head->addr)==0);
+      void* clean=get_clean_addr(head->addr);
+      assert(isclean(clean)==1);
+
+      //TODO: assert get_bounds
       uintptr_t start,end;
       get_bounds(head->addr, &start, &end);
-      isclean(head->addr);
-      void* clean=get_clean_addr(head->addr);
-      head=head->next;
-    }
 
-    head=jump_in[i];
-    while(head!=NULL) {
-      isclean(head->addr);
-      head=head->next;
+      found=1;
     }
+    head=head->next;
   }
+
+  page=(addr^0x80000000)>>12;
+  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[addr>>12]^0x80000000)>>12;
+  if(page>4095) page=2048+(page&2047);
+
+  head=jump_out[page];
+
+  while(head!=NULL) {
+    if(head->vaddr==addr&&head->reg32==0) {
+      intptr_t addr=get_pointer(head->addr);
+      addr=(intptr_t)kill_pointer(head->addr);
+    }
+    head=head->next;
+  }
+  
 #endif
 
   int disasm=0;
@@ -1004,32 +1051,39 @@ extern unsigned int using_tlb;
       }
     }
 #else
-    if(INSTRUCTION.disp || INSTRUCTION.operands[1].imm) {
+    if(INSTRUCTION.disp /*|| (INSTRUCTION.operands[1].imm && INSTRUCTION.operands[1].type == X86_OP_IMM)*/) {
       char op_str[256];
       uint32_t j = 0;
+      uint32_t off = 0;
+      int64_t addr = INSTRUCTION.disp;
 
       strcpy(op_str, instr[i].op_str);
 
+      char *ptr = strstr(op_str, "rip");
+      if(ptr != NULL) // rip relative
+        addr = addr + instr[i+1].address;
+
       while(var[j].addr != -1) {
-        if(INSTRUCTION.disp >= var[j].addr && INSTRUCTION.disp < (var[j].addr + var[j].size))
+        if(addr >= var[j].addr && addr < (var[j].addr + var[j].size))
           break;
         j++;
       }
 
+      //TODO: remove replace_addr?
       if(var[j].addr != -1)
-        replace_addr(INSTRUCTION.disp, &var[j], op_str, sizeof(op_str));
+        replace_addr(addr, INSTRUCTION.disp, sizeof(INSTRUCTION.disp), &var[j], op_str, sizeof(op_str));
 
-      uint32_t k = 0;
-      while(var[k].addr != -1) {
-        if(INSTRUCTION.operands[1].imm >= var[k].addr && INSTRUCTION.operands[1].imm < (var[k].addr + var[k].size))
-          break;
-        k++;
-      }
+      //uint32_t k = 0;
+      //while(var[k].addr != -1) {
+      //  if(INSTRUCTION.operands[1].imm >= var[k].addr && INSTRUCTION.operands[1].imm < (var[k].addr + var[k].size))
+      //    break;
+      //  k++;
+      //}
+      //
+      //if(var[k].addr != -1)
+      //  replace_addr(addr, INSTRUCTION.operands[1].imm, sizeof(INSTRUCTION.operands[1].imm), &var[k], op_str, sizeof(op_str));
 
-      if(var[k].addr != -1)
-        replace_addr(INSTRUCTION.operands[1].imm, &var[k], op_str, sizeof(op_str));
-
-      if((var[j].addr != -1) || (var[k].addr != -1))
+      if((var[j].addr != -1) /*|| (var[k].addr != -1)*/)
       {
         fprintf(pFile, "0x%" PRIxPTR ": %s %s\n", (uintptr_t)instr[i].address, instr[i].mnemonic, op_str);
         continue;
@@ -1040,11 +1094,11 @@ extern unsigned int using_tlb;
     if(instr[i].id == CALL_INST || instr[i].id == BRANCH_INST) {
       uint32_t j = 0;
       intptr_t addr = (intptr_t)INSTRUCTION.operands[0].imm;
-      int * paddr = (int*)addr;
+      intptr_t * paddr = (intptr_t*)addr;
 
       while(func[j].addr != -1) {
-#if RECOMPILER_DEBUG == NEW_DYNAREC_ARM
-        if((addr>>2 == func[j].addr>>2) || ((*(paddr+1))>>2 == func[j].addr>>2)) // check jump_table_symbols on ARM 
+#if RECOMPILER_DEBUG >= NEW_DYNAREC_ARM
+        if((addr>>2 == func[j].addr>>2) || ((*(paddr+1))>>2 == func[j].addr>>2)) // check jump_table_symbols on ARM
 #else
         if(addr>>2 == func[j].addr>>2)
 #endif

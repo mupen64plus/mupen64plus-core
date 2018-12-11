@@ -124,12 +124,10 @@ ifneq ("$(filter mips,$(HOST_CPU))","")
   $(warning Architecture "$(HOST_CPU)" not officially supported.)
 endif
 ifneq ("$(filter aarch64,$(HOST_CPU))","")
-    CPU := AARCH
+    CPU := ARM
     ARCH_DETECTED := 64BITS
     PIC ?= 1
     NEW_DYNAREC := 1
-    NO_ASM := 1
-    LDFLAGS += -fPIC
 endif
 ifeq ("$(CPU)","NONE")
   $(error CPU type "$(HOST_CPU)" not supported.  Please file bug report at 'https://github.com/mupen64plus/mupen64plus-core/issues')
@@ -580,11 +578,14 @@ ifneq ($(NO_ASM), 1)
     endif
   endif
   ifeq ($(CPU), ARM)
-    ifeq ($(ARCH_DETECTED), 32BITS)
+    ifeq ($(ARCH_DETECTED), 64BITS)
+      DYNAREC = arm64
+    else
       DYNAREC = arm
     endif
   endif
 endif
+
 ifneq ($(DYNAREC), )
   CFLAGS += -DDYNAREC
 
@@ -593,15 +594,21 @@ ifneq ($(DYNAREC), )
       CFLAGS += -DNEW_DYNAREC=1
       SOURCE += \
         $(SRCDIR)/device/r4300/new_dynarec/x86/linkage_x86.asm
+    else ifeq ($(DYNAREC), x86_64)
+      CFLAGS += -DNEW_DYNAREC=2
+      SOURCE += \
+        $(SRCDIR)/device/r4300/new_dynarec/x64/linkage_x64.asm
+    else ifeq ($(DYNAREC), arm)
+      CFLAGS += -DNEW_DYNAREC=3
+      SOURCE += \
+       $(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S \
+       $(SRCDIR)/device/r4300/new_dynarec/arm/arm_cpu_features.c
+    else ifeq ($(DYNAREC), arm64)
+      CFLAGS += -DNEW_DYNAREC=4
+      SOURCE += \
+       $(SRCDIR)/device/r4300/new_dynarec/arm64/linkage_arm64.S
     else
-      ifeq ($(DYNAREC), arm)
-        CFLAGS += -DNEW_DYNAREC=3
-        SOURCE += \
-         $(SRCDIR)/device/r4300/new_dynarec/arm/linkage_arm.S \
-         $(SRCDIR)/device/r4300/new_dynarec/arm/arm_cpu_features.c
-      else
-        $(error NEW_DYNAREC is only supported on 32 bit x86 and 32 bit armel)
-      endif
+        $(error NEW_DYNAREC is not supported on this architecture)
     endif
 
     SOURCE += \

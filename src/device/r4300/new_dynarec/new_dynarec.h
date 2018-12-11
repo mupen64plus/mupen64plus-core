@@ -47,7 +47,7 @@ struct new_dynarec_hot_state
 #ifdef NEW_DYNAREC
     /* 0-6:   used by dynarec to push/pop caller-saved register (r0-r3, r12) and possibly lr (see invalidate_addr)
        7-15:  saved_context*/
-#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+#if (NEW_DYNAREC == NEW_DYNAREC_ARM64) || (NEW_DYNAREC == NEW_DYNAREC_X64)
     uint64_t dynarec_local[32];
 #else
     uint32_t dynarec_local[16];
