@@ -923,15 +923,15 @@ extern unsigned int using_tlb;
     while(head!=NULL) {
       verify_dirty(head->addr);
       uintptr_t start,end;
-      get_bounds((intptr_t)head->addr, &start, &end);
-      isclean((intptr_t)head->addr);
-      uintptr_t clean=get_clean_addr((intptr_t)head->addr);
+      get_bounds(head->addr, &start, &end);
+      isclean(head->addr);
+      void* clean=get_clean_addr(head->addr);
       head=head->next;
     }
 
     head=jump_in[i];
     while(head!=NULL) {
-      isclean((intptr_t)head->addr);
+      isclean(head->addr);
       head=head->next;
     }
   }

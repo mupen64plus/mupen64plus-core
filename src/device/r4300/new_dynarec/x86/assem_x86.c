@@ -31,14 +31,6 @@ void invalidate_block_ebx(void);
 void invalidate_block_ebp(void);
 void invalidate_block_esi(void);
 void invalidate_block_edi(void);
-void read_byte_new(int pcaddr, int count, int diff);
-void read_hword_new(int pcaddr, int count, int diff);
-void read_word_new(int pcaddr, int count, int diff);
-void read_dword_new(int pcaddr, int count, int diff);
-void write_byte_new(int pcaddr, int count, int diff);
-void write_hword_new(int pcaddr, int count, int diff);
-void write_word_new(int pcaddr, int count, int diff);
-void write_dword_new(int pcaddr, int count, int diff);
 
 // We need these for cmovcc instructions on x86
 static const u_int const_zero=0;
@@ -86,6 +78,17 @@ static void set_jump_target(int addr,int target)
   }
 }
 
+static void *add_pointer(void *src, void* addr)
+{
+  int *ptr=(int*)src;
+  int *ptr2=(int*)((u_int)ptr+(u_int)*ptr+4);
+  assert((*ptr2&0xFF)==0x68);                   //push
+  assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
+  //assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
+  u_int offset=(u_int)addr-(u_int)ptr-4;
+  *ptr=offset;
+  return (void*)ptr2;
+}
 static void *kill_pointer(void *stub)
 {
   int *i_ptr=*((int **)((int)stub+6));
@@ -98,88 +101,67 @@ static int get_pointer(void *stub)
   return *i_ptr+(int)i_ptr+4;
 }
 
-// Find the "clean" entry point from a "dirty" entry point
-// by skipping past the call to verify_code
-static u_int get_clean_addr(int addr)
+// Returns a pointer to the "clean" entry point from a "dirty" entry point. Returns null if not a dirty stub
+static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
 {
   u_char *ptr=(u_char *)addr;
-  assert(ptr[20]==0xE8); // call instruction
-  assert(ptr[25]==0x83); // pop (add esp,4) instruction
-  if(ptr[28]==0xE9) return *(int*)(ptr+29)+addr+33; // follow jmp
-  else return(addr+28);
-}
 
-static int verify_dirty(void *addr)
-{
-  u_char *ptr=(u_char *)addr;
-  assert(ptr[5]==0xB8);
-  u_int source=*(u_int *)(ptr+6);
-  u_int copy=*(u_int *)(ptr+11);
-  u_int len=*(u_int *)(ptr+16);
-  assert(ptr[20]==0xE8); // call instruction
-  u_int verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    unsigned int page=source>>12;
-    unsigned int map_value=g_dev.r4300.new_dynarec_hot_state.memory_map[page];
-    if(map_value>=0x80000000) return 0;
-    while(page<((source+len-1)>>12)) {
-      if((g_dev.r4300.new_dynarec_hot_state.memory_map[++page]<<2)!=(map_value<<2)) return 0;
-    }
-    source = source+(map_value<<2);
+  //pcaddr
+  if(*ptr==0x68) //pushimm
+    ptr+=5;
+  else
+    return NULL;
+
+  //source
+  if(*ptr==(0xB8+EAX)) //movimm to EAX
+  {
+    *source=*(u_int *)(ptr+1);
+    ptr+=5;
   }
-  //DebugMessage(M64MSG_VERBOSE, "verify_dirty: %x %x %x",source,copy,len);
-  return !memcmp((void *)source,(void *)copy,len);
-}
+  else
+    return NULL;
 
-static void get_copy_addr(void *addr, u_int *copy, u_int *length)
-{
-  u_char *ptr=(u_char *)addr;
-  assert(ptr[5]==0xB8);
-  *copy=*(u_int *)(ptr+11);
-  *length=*(u_int *)(ptr+16);
-  assert(ptr[20]==0xE8); // call instruction
-}
-
-// This doesn't necessarily find all clean entry points, just
-// guarantees that it's not dirty
-static int isclean(int addr)
-{
-  u_char *ptr=(u_char *)addr;
-  if(ptr[5]!=0xB8) return 1; // mov imm,%eax
-  if(ptr[10]!=0xBB) return 1; // mov imm,%ebx
-  if(ptr[15]!=0xB9) return 1; // mov imm,%ecx
-  if(ptr[20]!=0xE8) return 1; // call instruction
-  if(ptr[25]!=0x83) return 1; // pop (add esp,4) instruction
-  return 0;
-}
-
-static void get_bounds(int addr,u_int *start,u_int *end)
-{
-  u_char *ptr=(u_char *)addr;
-  assert(ptr[5]==0xB8);
-  u_int source=*(u_int *)(ptr+6);
-  //u_int copy=*(u_int *)(ptr+11);
-  u_int len=*(u_int *)(ptr+16);
-  assert(ptr[20]==0xE8); // call instruction
-  u_int verifier=*(u_int *)(ptr+21)+(u_int)ptr+25;
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    if(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]>=0x80000000) source = 0;
-    else source = source+(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]<<2);
+  //copy
+  if(*ptr==(0xB8+EDX)) //movimm to EDX
+  {
+    *copy=*(u_int *)(ptr+1);
+    ptr+=5;
   }
-  if(start) *start=source;
-  if(end) *end=source+len;
-}
+  else
+    return NULL;
 
-static void *add_pointer(void *src, void* addr)
-{
-  int *ptr=(int*)src;
-  int *ptr2=(int*)((u_int)ptr+(u_int)*ptr+4);
-  assert((*ptr2&0xFF)==0x68);                   //push
-  assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
-  //assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
-  u_int offset=(u_int)addr-(u_int)ptr-4;
-  *ptr=offset;
-  return (void*)ptr2;
+  //slen
+  if(*ptr==(0xB8+ECX)) //movimm to ECX
+  {
+    *len=*(u_int *)(ptr+1);
+    ptr+=5;
+  }
+  else
+    return NULL;
+
+  //verifier
+  if(*ptr==0xE8) // call instruction
+  {
+    *verifier=*(int*)(ptr+1)+(int)ptr+5;
+    ptr+=5;
+  }
+  else
+    return NULL;
+
+  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
+    return NULL;
+
+  // pop (add esp,4) instruction
+  if(*ptr==0x83)
+    ptr+=3;
+  else
+    return NULL;
+
+  // clean entry point
+  if(*ptr==0xE9)
+    return (void*)(*(int*)(ptr+1)+(int)ptr+5); // follow jmp
+  else
+    return (void*)ptr;
 }
 
 /* Register allocation */

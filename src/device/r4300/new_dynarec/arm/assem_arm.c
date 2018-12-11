@@ -305,7 +305,31 @@ static void add_literal(int addr,int val)
   literals[literalcount][0]=addr;
   literals[literalcount][1]=val;
   literalcount++; 
-} 
+}
+
+static void *add_pointer(void *src, void* addr)
+{
+  int *ptr=(int*)src;
+  assert((*ptr&0x0f000000)==0x0a000000); //jmp
+  int offset=(int)(((u_int)*ptr+2)<<8)>>6;
+  void *ptr2=(void*)((u_int)ptr+(u_int)offset);
+#ifdef ARMv5_ONLY
+  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
+  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
+  //assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
+  //assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
+#else
+  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
+  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
+  assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
+  assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
+  //assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
+  //assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
+#endif
+  *ptr=(*ptr&0xFF000000)|((((u_int)addr-(u_int)ptr-8)<<6)>>8);
+  __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
+  return ptr2;
+}
 
 static void *kill_pointer(void *stub)
 {
@@ -346,172 +370,64 @@ static int get_pointer(void *stub)
   return (int)i_ptr+((*i_ptr<<8)>>6)+8;
 }
 
-// Find the "clean" entry point from a "dirty" entry point
-// by skipping past the call to verify_code
-static u_int get_clean_addr(int addr)
-{
-  int *ptr=(int *)addr;
-  #ifdef ARMv5_ONLY
-  ptr+=4;
-  #else
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  ptr++;
-  if((*ptr&0xFF000000)==0xea000000) {
-    return (int)ptr+((*ptr<<8)>>6)+8; // follow jump
-  }
-  return (u_int)ptr;
-}
-
-static int verify_dirty(void *addr)
+// Returns a pointer to the "clean" entry point from a "dirty" entry point. Returns null if not a dirty stub
+static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
 {
   u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  u_int source=l_ptr[0];
-  u_int copy=l_ptr[1];
-  u_int len=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  u_int source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[2]<<16)&0xFFF0000)+((ptr[2]<<12)&0xF0000000);
-  u_int copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  u_int len=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-
-  //Trampoline jump
-  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
-      verifier=*((u_int*)(verifier+4));
-
-  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
-
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    unsigned int page=source>>12;
-    unsigned int map_value=g_dev.r4300.new_dynarec_hot_state.memory_map[page];
-    if(map_value>=0x80000000) return 0;
-    while(page<((source+len-1)>>12)) {
-      if((g_dev.r4300.new_dynarec_hot_state.memory_map[++page]<<2)!=(map_value<<2)) return 0;
-    }
-    source = source+(map_value<<2);
-  }
-  //DebugMessage(M64MSG_VERBOSE, "verify_dirty: %x %x %x",source,copy,len);
-  return !memcmp((void *)source,(void *)copy,len);
-}
-
-static void get_copy_addr(void *addr, u_int *copy, u_int *length)
-{
-  u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  *copy=l_ptr[1];
-  *length=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  *copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  *length=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-}
-
-// This doesn't necessarily find all clean entry points, just
-// guarantees that it's not dirty
-static int isclean(int addr)
-{
-  #ifdef ARMv5_ONLY
-  int *ptr=((u_int *)addr)+4;
-  #else
-  int *ptr=((u_int *)addr)+6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  if((*ptr&0xFF000000)!=0xeb000000) return 1; // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-  if(verifier==(u_int)verify_code) return 0;
-  if(verifier==(u_int)verify_code_vm) return 0;
-  if(verifier==(u_int)verify_code_ds) return 0;
-  verifier=*((u_int*)(verifier+4));
-  if(verifier==(u_int)verify_code) return 0;
-  if(verifier==(u_int)verify_code_vm) return 0;
-  if(verifier==(u_int)verify_code_ds) return 0;
-  return 1;
-}
-
-static void get_bounds(int addr,u_int *start,u_int *end)
-{
-  u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  u_int source=l_ptr[0];
-  //u_int copy=l_ptr[1];
-  u_int len=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  u_int source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[2]<<16)&0xFFF0000)+((ptr[2]<<12)&0xF0000000);
-  //u_int copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  u_int len=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-
-  //Trampoline jump
-  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
-      verifier=*((u_int*)(verifier+4));
-
-  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
-
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    if(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]>=0x80000000) source = 0;
-    else source = source+(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]<<2);
-  }
-  *start=source;
-  *end=source+len;
-}
-
-static void *add_pointer(void *src, void* addr)
-{
-  int *ptr=(int*)src;
-  assert((*ptr&0x0f000000)==0x0a000000); //jmp
-  int offset=(int)(((u_int)*ptr+2)<<8)>>6;
-  void *ptr2=(void*)((u_int)ptr+(u_int)offset);
 #ifdef ARMv5_ONLY
-  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x05900000); //ldr
-  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x05900000); //ldr
-  //assert((*(int*)((u_int)ptr2+8)&0x0f000000)==0x0b000000); //bl
-  //assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x01a00000); //mov
+  assert(0);
 #else
-  assert((*(int*)((u_int)ptr2)&0x0ff00000)==0x03000000); //movw
-  assert((*(int*)((u_int)ptr2+4)&0x0ff00000)==0x03400000); //movt
-  assert((*(int*)((u_int)ptr2+8)&0x0ff00000)==0x03000000); //movw
-  assert((*(int*)((u_int)ptr2+12)&0x0ff00000)==0x03400000); //movt
-  //assert((*(int*)((u_int)ptr2+16)&0x0f000000)==0x0b000000); //bl
-  //assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
+  //source
+  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
+  {
+    *source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
+    ptr+=2;
+  }
+  else
+    return NULL;
+
+  //copy
+  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
+  {
+    *copy=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
+    ptr+=2;
+  }
+  else
+    return NULL;
+
+  //slen
+  if((*ptr&0xFFF00000)==0xe3000000) //movw
+  {
+    *len=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000);
+    ptr+=2;
+  }
+  else
+    return NULL;
 #endif
-  *ptr=(*ptr&0xFF000000)|((((u_int)addr-(u_int)ptr-8)<<6)>>8);
-  __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
-  return ptr2;
+
+  if((*ptr&0xFF000000)!=0xeb000000) // not call instruction
+    ptr++;
+
+  if((*ptr&0xFF000000)==0xeb000000) // call instruction
+  {
+    *verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
+    ptr++;
+  }
+  else
+    return NULL;
+
+  //Trampoline jump
+  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
+    *verifier=*((uintptr_t*)(*verifier+4));
+
+  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
+    return NULL;
+
+  // clean entry point
+  if((*ptr&0xFF000000)==0xea000000) // jmp instruction
+    return (void*)((int)ptr+((signed int)(*ptr<<8)>>6)+8); // follow jump
+  else
+    return (void*)ptr;
 }
 
 /* Register allocation */
@@ -3083,8 +2999,8 @@ static int do_dirty_stub(int i)
   emit_loadlp(slen*4,3);
   #else
   emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
+  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((u_int)copy)&0xFFFF0000,2);
   emit_movw(slen*4,3);
   #endif
@@ -3106,8 +3022,8 @@ static void do_dirty_stub_ds(void)
   emit_loadlp(slen*4,3);
   #else
   emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
+  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((u_int)copy)&0xFFFF0000,2);
   emit_movw(slen*4,3);
   #endif
