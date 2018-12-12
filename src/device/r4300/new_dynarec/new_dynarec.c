@@ -7596,6 +7596,7 @@ void new_dynarec_init(void)
   assert(((uintptr_t)g_dev.rdram.dram&3)==0); // 4 bytes aligned 
   out=(u_char *)base_addr;
 
+  g_dev.r4300.new_dynarec_hot_state.pc = &g_dev.r4300.new_dynarec_hot_state.fake_pc;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rs = &g_dev.r4300.new_dynarec_hot_state.rs;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rt = &g_dev.r4300.new_dynarec_hot_state.rt;
   g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.rd = &g_dev.r4300.new_dynarec_hot_state.rd;
@@ -11137,7 +11138,6 @@ static void MFC0_new(int copr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
-  *r4300_pc_struct(r4300) = &r4300->new_dynarec_hot_state.fake_pc;
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
   cached_interp_MFC0();
   assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
@@ -11147,7 +11147,6 @@ static void MTC0_new(int copr, int count, int diff, int pcaddr)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
-  *r4300_pc_struct(r4300) = &r4300->new_dynarec_hot_state.fake_pc;
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr;
   r4300->new_dynarec_hot_state.pending_exception = 0;

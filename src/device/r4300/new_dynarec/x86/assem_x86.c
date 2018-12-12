@@ -4271,7 +4271,6 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(m1l>=0);
         assert(m2l>=0);
         emit_pusha();
-        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
         emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
@@ -4298,7 +4297,6 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(m1l>=0);
         assert(m2l>=0);
         emit_pusha();
-        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
         emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
         emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
@@ -4427,7 +4425,6 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(d1l>=0);
         assert(d2l>=0);
         emit_pusha();
-        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
         emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
@@ -4454,7 +4451,6 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert(d1l>=0);
         assert(d2l>=0);
         emit_pusha();
-        emit_writeword_imm((int)&g_dev.r4300.new_dynarec_hot_state.fake_pc,(int)&(*r4300_pc_struct(&g_dev.r4300)));
         emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
         emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
         emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
