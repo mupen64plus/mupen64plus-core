@@ -4223,7 +4223,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_mov(m1,EAX);
         emit_imul(m2);
       }
-      if(opcode2[i]==0x19) // MULTU
+      else if(opcode2[i]==0x19) // MULTU
       {
         char m1=get_reg(i_regs->regmap,rs1[i]);
         char m2=get_reg(i_regs->regmap,rs2[i]);
@@ -4232,7 +4232,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_mov(m1,EAX);
         emit_mul(m2);
       }
-      if(opcode2[i]==0x1A) // DIV
+      else if(opcode2[i]==0x1A) // DIV
       {
         char d1=get_reg(i_regs->regmap,rs1[i]);
         char d2=get_reg(i_regs->regmap,rs2[i]);
@@ -4244,7 +4244,7 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         emit_jeq((int)out+8);
         emit_idiv(d2);
       }
-      if(opcode2[i]==0x1B) // DIVU
+      else if(opcode2[i]==0x1B) // DIVU
       {
         char d1=get_reg(i_regs->regmap,rs1[i]);
         char d2=get_reg(i_regs->regmap,rs2[i]);
@@ -4259,61 +4259,8 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
     }
     else // 64-bit
     {
-#ifdef INTERPRETED_MULT64
-      if(opcode2[i]==0x1C) // DMULT
-      {
-        char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char m1l=get_reg(i_regs->regmap,rs1[i]);
-        char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        emit_pusha();
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULT);
-        emit_popa();
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char m1l=get_reg(i_regs->regmap,rs1[i]);
-        char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        emit_pusha();
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULTU);
-        emit_popa();
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-#else
-      if(opcode2[i]==0x1C) // DMULT
+#ifndef INTERPRETED_MULT64
+      if(opcode2[i]==0x1C||opcode2[i]==0x1D)
       {
         char m1h=get_reg(i_regs->regmap,rs1[i]|64);
         char m1l=get_reg(i_regs->regmap,rs1[i]);
@@ -4327,140 +4274,115 @@ static void multdiv_assemble_x86(int i,struct regstat *i_regs)
         assert((m2l>=0)&&(m2l!=EAX)&&(m2l!=EDX));
         assert((temp>=0)&&(temp!=EAX)&&(temp!=EDX));
 
-        // Multiply m2l*m1l
-        emit_mov(m1l,EAX);
-        emit_mul(m2l);
-        emit_storereg(LOREG,EAX);
-        emit_mov(EDX,temp);
+        if(opcode2[i]==0x1C) // DMULT
+        {
+          // Multiply m2l*m1l
+          emit_mov(m1l,EAX);
+          emit_mul(m2l);
+          emit_storereg(LOREG,EAX);
+          emit_mov(EDX,temp);
 
-        // Multiply m2l*m1h
-        emit_mov(m1h,EAX);
-        emit_mul(m2l);
-        emit_add(EAX,temp,temp);
-        emit_adcimm(0,EDX);
-        emit_storereg(HIREG,EDX);
+          // Multiply m2l*m1h
+          emit_mov(m1h,EAX);
+          emit_mul(m2l);
+          emit_add(EAX,temp,temp);
+          emit_adcimm(0,EDX);
+          emit_storereg(HIREG,EDX);
 
-        // Multiply m2h*m1l
-        emit_mov(m1l,EAX);
-        emit_mul(m2h);
-        emit_add(EAX,temp,temp);
-        emit_adcimm(0,EDX);
-        emit_storereg(LOREG|64,temp);
-        emit_mov(EDX,temp);
+          // Multiply m2h*m1l
+          emit_mov(m1l,EAX);
+          emit_mul(m2h);
+          emit_add(EAX,temp,temp);
+          emit_adcimm(0,EDX);
+          emit_storereg(LOREG|64,temp);
+          emit_mov(EDX,temp);
 
-        // Multiply m2h*m1h
-        emit_mov(m1h,EAX);
-        emit_mul(m2h);
-        emit_add(EAX,temp,EAX);
-        emit_adcimm(0,EDX);
-        emit_loadreg(HIREG,temp);
-        emit_add(EAX,temp,EAX);
-        emit_adcimm(0,EDX);
+          // Multiply m2h*m1h
+          emit_mov(m1h,EAX);
+          emit_mul(m2h);
+          emit_add(EAX,temp,EAX);
+          emit_adcimm(0,EDX);
+          emit_loadreg(HIREG,temp);
+          emit_add(EAX,temp,EAX);
+          emit_adcimm(0,EDX);
 
-        // If m1<0 subtract m2 from the high 64bit part
-        emit_testimm(m1h,0x80000000);
-        emit_jeq((int)out+10);
-        emit_sub(EAX,m2l,EAX);
-        emit_sbb(m2h,EDX);
+          // If m1<0 subtract m2 from the high 64bit part
+          emit_testimm(m1h,0x80000000);
+          emit_jeq((int)out+10);
+          emit_sub(EAX,m2l,EAX);
+          emit_sbb(m2h,EDX);
 
-        // If m2<0 subtract m1 from the high 64bit part
-        emit_testimm(m2h,0x80000000);
-        emit_jeq((int)out+10);
-        emit_sub(EAX,m1l,EAX);
-        emit_sbb(m1h,EDX);
+          // If m2<0 subtract m1 from the high 64bit part
+          emit_testimm(m2h,0x80000000);
+          emit_jeq((int)out+10);
+          emit_sub(EAX,m1l,EAX);
+          emit_sbb(m1h,EDX);
+        }
+        else if(opcode2[i]==0x1D) // DMULTU
+        {
+          // Multiply m2l*m1l
+          emit_mov(m1l,EAX);
+          emit_mul(m2l);
+          emit_storereg(LOREG,EAX);
+          emit_mov(EDX,temp);
+
+          // Multiply m2l*m1h
+          emit_mov(m1h,EAX);
+          emit_mul(m2l);
+          emit_add(EAX,temp,temp);
+          emit_adcimm(0,EDX);
+          emit_storereg(HIREG,EDX);
+
+          // Multiply m2h*m1l
+          emit_mov(m1l, EAX);
+          emit_mul(m2h);
+          emit_add(EAX,temp,temp);
+          emit_adcimm(0,EDX);
+          emit_storereg(LOREG|64,temp);
+          emit_mov(EDX,temp);
+
+          // Multiply m2h*m1h
+          emit_mov(m1h,EAX);
+          emit_mul(m2h);
+          emit_add(EAX,temp,EAX);
+          emit_adcimm(0, EDX);
+          emit_loadreg(HIREG,temp);
+          emit_add(EAX,temp,EAX);
+          emit_adcimm(0,EDX);
+        }
       }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char m1l=get_reg(i_regs->regmap,rs1[i]);
-        char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char m2l=get_reg(i_regs->regmap,rs2[i]);
-        char temp=get_reg(i_regs->regmap,-1);
-
-        assert((m1h>=0)&&(m1h!=EAX)&&(m1h!=EDX));
-        assert((m2h>=0)&&(m2h!=EAX)&&(m2h!=EDX));
-        assert((m1l>=0)&&(m1l!=EAX)&&(m1l!=EDX));
-        assert((m2l>=0)&&(m2l!=EAX)&&(m2l!=EDX));
-        assert((temp>=0)&&(temp!=EAX)&&(temp!=EDX));
-
-        // Multiply m2l*m1l
-        emit_mov(m1l,EAX);
-        emit_mul(m2l);
-        emit_storereg(LOREG,EAX);
-        emit_mov(EDX,temp);
-
-        // Multiply m2l*m1h
-        emit_mov(m1h,EAX);
-        emit_mul(m2l);
-        emit_add(EAX,temp,temp);
-        emit_adcimm(0,EDX);
-        emit_storereg(HIREG,EDX);
-
-        // Multiply m2h*m1l
-        emit_mov(m1l, EAX);
-        emit_mul(m2h);
-        emit_add(EAX,temp,temp);
-        emit_adcimm(0,EDX);
-        emit_storereg(LOREG|64,temp);
-        emit_mov(EDX,temp);
-
-        // Multiply m2h*m1h
-        emit_mov(m1h,EAX);
-        emit_mul(m2h);
-        emit_add(EAX,temp,EAX);
-        emit_adcimm(0, EDX);
-        emit_loadreg(HIREG,temp);
-        emit_add(EAX,temp,EAX);
-        emit_adcimm(0,EDX);
-      }
+      else
 #endif
-      if(opcode2[i]==0x1E) // DDIV
       {
-        char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char d1l=get_reg(i_regs->regmap,rs1[i]);
-        char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
-        emit_pusha();
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIV);
-        emit_popa();
+        char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+        char r1l=get_reg(i_regs->regmap,rs1[i]);
+        char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+        char r2l=get_reg(i_regs->regmap,rs2[i]);
         char hih=get_reg(i_regs->regmap,HIREG|64);
         char hil=get_reg(i_regs->regmap,HIREG);
         char loh=get_reg(i_regs->regmap,LOREG|64);
         char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1F) // DDIVU
-      {
-        char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char d1l=get_reg(i_regs->regmap,rs1[i]);
-        char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
+        assert(r1h>=0);
+        assert(r2h>=0);
+        assert(r1l>=0);
+        assert(r2l>=0);
+
+        emit_writeword(r1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(r2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(r2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
         emit_pusha();
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIVU);
+
+        if(opcode2[i]==0x1C) // DMULT
+          emit_call((int)cached_interp_DMULT);
+        else if(opcode2[i]==0x1D) // DMULTU
+          emit_call((int)cached_interp_DMULTU);
+        else if(opcode2[i]==0x1E) // DDIV
+          emit_call((int)cached_interp_DDIV);
+        else if(opcode2[i]==0x1F) // DDIVU
+          emit_call((int)cached_interp_DDIVU);
+
         emit_popa();
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
         if(loh>=0) emit_loadreg(LOREG|64,loh);

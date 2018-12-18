@@ -61,7 +61,7 @@
 %define g_dev_r4300_new_dynarec_hot_state_hi                (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_hi)
 %define g_dev_r4300_new_dynarec_hot_state_lo                (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_lo)
 %define g_dev_r4300_new_dynarec_hot_state_cp0_regs          (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cp0_regs)
-%define g_dev_r4300_new_dynarec_hot_state_next_interrupt	(g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_next_interrupt)
+%define g_dev_r4300_new_dynarec_hot_state_next_interrupt    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_next_interrupt)
 %define g_dev_r4300_new_dynarec_hot_state_cycle_count       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cycle_count)
 %define g_dev_r4300_new_dynarec_hot_state_last_count        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_last_count)
 %define g_dev_r4300_new_dynarec_hot_state_pending_exception (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pending_exception)
@@ -311,18 +311,8 @@ fp_exception_ds:
     jmp     _E7
 
 jump_syscall:
-    get_got_address
     mov     edx,    020h
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)]
-    add     esp,    -12
-    or      ecx,    2
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)],    ecx     ;Status
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+52)],    edx     ;Cause
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+56)],    eax     ;EPC
-    push    080000180h
-    call    get_addr_ht
-    add     esp,    16
-    jmp     eax
+    jmp     _E7
 
 jump_eret:
     get_got_address

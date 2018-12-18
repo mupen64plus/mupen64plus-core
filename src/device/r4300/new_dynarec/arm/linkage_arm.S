@@ -300,12 +300,12 @@ GLOBAL_FUNCTION(do_interrupt):
 
 GLOBAL_FUNCTION(fp_exception):
     mov    r2, #0x10000000
+    add    r2, r2, #0x2c
 .E7:
     ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
     mov    r3, #0x80000000
     str    r0, [fp, #fp_cp0_regs+56] /* EPC */
     orr    r1, #2
-    add    r2, r2, #0x2c
     str    r1, [fp, #fp_cp0_regs+48] /* Status */
     str    r2, [fp, #fp_cp0_regs+52] /* Cause */
     add    r0, r3, #0x180
@@ -314,19 +314,12 @@ GLOBAL_FUNCTION(fp_exception):
 
 GLOBAL_FUNCTION(fp_exception_ds):
     mov    r2, #0x90000000 /* Set high bit if delay slot */
+    add    r2, r2, #0x2c
     b      .E7
 
 GLOBAL_FUNCTION(jump_syscall):
-    ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
-    mov    r3, #0x80000000
-    str    r0, [fp, #fp_cp0_regs+56] /* EPC */
-    orr    r1, #2
     mov    r2, #0x20
-    str    r1, [fp, #fp_cp0_regs+48] /* Status */
-    str    r2, [fp, #fp_cp0_regs+52] /* Cause */
-    add    r0, r3, #0x180
-    bl     get_addr_ht
-    mov    pc, r0
+    b      .E7
 
 GLOBAL_FUNCTION(jump_eret):
     ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
