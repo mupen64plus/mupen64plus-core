@@ -3411,6 +3411,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
+        reglist&=~(1<<t);
         save_regs(reglist);
 
         int cc=get_reg(i_regs->regmap,CCREG);
@@ -4198,7 +4199,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(lo>=0);
         emit_smull(m1,m2,hi,lo);
       }
-      if(opcode2[i]==0x19) // MULTU
+      else if(opcode2[i]==0x19) // MULTU
       {
         signed char m1=get_reg(i_regs->regmap,rs1[i]);
         signed char m2=get_reg(i_regs->regmap,rs2[i]);
@@ -4210,7 +4211,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(lo>=0);
         emit_umull(m1,m2,hi,lo);
       }
-      if(opcode2[i]==0x1A) // DIV
+      else if(opcode2[i]==0x1A) // DIV
       {
         signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
         signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
@@ -4251,7 +4252,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
           emit_negmi(remainder,remainder);
         }
       }
-      if(opcode2[i]==0x1B) // DIVU
+      else if(opcode2[i]==0x1B) // DIVU
       {
         signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
         signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
@@ -4288,65 +4289,8 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
     }
     else // 64-bit
     {
-#ifdef INTERPRETED_MULT64
-      if(opcode2[i]==0x1C) // DMULT
-      {
-        signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char m1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        save_regs(CALLER_SAVED_REGS);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULT);
-        restore_regs(CALLER_SAVED_REGS);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char m1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        save_regs(CALLER_SAVED_REGS);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULTU);
-        restore_regs(CALLER_SAVED_REGS);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-#else
-      if(opcode2[i]==0x1C) // DMULT
+#ifndef INTERPRETED_MULT64
+      if(opcode2[i]==0x1C||opcode2[i]==0x1D)
       {
         signed char b_1=get_reg(i_regs->regmap,rs1[i]|64);
         signed char b_0=get_reg(i_regs->regmap,rs1[i]);
@@ -4364,102 +4308,80 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(a_2>=0);
         assert(a_1>=0);
         assert(a_0>=0);
-        
-        emit_umull(b_0,c_0,a_1,a_0);
-        emit_zeroreg(a_2);
-        emit_smlal(b_0,c_1,a_2,a_1);
-        emit_testimm(b_0,0x80000000);
-        emit_addne(a_2,c_1,a_2);
-        emit_zeroreg(a_3);
-        emit_smlal(b_1,c_0,a_3,a_1);
-        emit_testimm(c_0,0x80000000);
-        emit_addne(a_3,b_1,a_3);
-        emit_sarimm(a_2,31,HOST_TEMPREG);
-        emit_adds(a_2,a_3,a_2);
-        emit_adcsarimm(HOST_TEMPREG,a_3,a_3,31);
-        emit_smlal(b_1,c_1,a_3,a_2);
+
+        if(opcode2[i]==0x1C) // DMULT
+        { 
+          emit_umull(b_0,c_0,a_1,a_0);
+          emit_zeroreg(a_2);
+          emit_smlal(b_0,c_1,a_2,a_1);
+          emit_testimm(b_0,0x80000000);
+          emit_addne(a_2,c_1,a_2);
+          emit_zeroreg(a_3);
+          emit_smlal(b_1,c_0,a_3,a_1);
+          emit_testimm(c_0,0x80000000);
+          emit_addne(a_3,b_1,a_3);
+          emit_sarimm(a_2,31,HOST_TEMPREG);
+          emit_adds(a_2,a_3,a_2);
+          emit_adcsarimm(HOST_TEMPREG,a_3,a_3,31);
+          emit_smlal(b_1,c_1,a_3,a_2);
+        }
+        else if(opcode2[i]==0x1D) // DMULTU
+        {
+          emit_umull(b_0,c_0,a_1,a_0);
+          emit_zeroreg(a_2);
+          emit_umlal(b_0,c_1,a_2,a_1);
+          emit_zeroreg(a_3);
+          emit_umlal(b_1,c_0,a_3,a_1);
+          emit_zeroreg(HOST_TEMPREG);
+          emit_adds(a_2,a_3,a_2);
+          emit_adcimm(HOST_TEMPREG,0,a_3);
+          emit_umlal(b_1,c_1,a_3,a_2);
+        }
       }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        signed char b_1=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char b_0=get_reg(i_regs->regmap,rs1[i]);
-        signed char c_1=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char c_0=get_reg(i_regs->regmap,rs2[i]);
-        assert(b_1>=0);
-        assert(b_0>=0);
-        assert(c_1>=0);
-        assert(c_0>=0);
-        signed char a_3=get_reg(i_regs->regmap,HIREG|64);
-        signed char a_2=get_reg(i_regs->regmap,HIREG);
-        signed char a_1=get_reg(i_regs->regmap,LOREG|64);
-        signed char a_0=get_reg(i_regs->regmap,LOREG);
-        assert(a_3>=0);
-        assert(a_2>=0);
-        assert(a_1>=0);
-        assert(a_0>=0);
-        
-        emit_umull(b_0,c_0,a_1,a_0);
-        emit_zeroreg(a_2);
-        emit_umlal(b_0,c_1,a_2,a_1);
-        emit_zeroreg(a_3);
-        emit_umlal(b_1,c_0,a_3,a_1);
-        emit_zeroreg(HOST_TEMPREG);
-        emit_adds(a_2,a_3,a_2);
-        emit_adcimm(HOST_TEMPREG,0,a_3);
-        emit_umlal(b_1,c_1,a_3,a_2);
-      }
+      else
 #endif
-      if(opcode2[i]==0x1E) // DDIV
       {
-        signed char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char d1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
-        save_regs(CALLER_SAVED_REGS);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIV);
-        restore_regs(CALLER_SAVED_REGS);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1F) // DDIVU
-      {
-        signed char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char d1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
-        save_regs(CALLER_SAVED_REGS);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIVU);
-        restore_regs(CALLER_SAVED_REGS);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
+        u_int reglist=0;
+        char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+        char r1l=get_reg(i_regs->regmap,rs1[i]);
+        char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+        char r2l=get_reg(i_regs->regmap,rs2[i]);
+        char hih=get_reg(i_regs->regmap,HIREG|64);
+        char hil=get_reg(i_regs->regmap,HIREG);
+        char loh=get_reg(i_regs->regmap,LOREG|64);
+        char lol=get_reg(i_regs->regmap,LOREG);
+        assert(r1h>=0);
+        assert(r2h>=0);
+        assert(r1l>=0);
+        assert(r2l>=0);
+
+        for(int hr=0;hr<HOST_REGS;hr++) {
+          if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+        }
+
+        //Don't save lo and hi regs are they will be overwritten anyway
+        if(hih>=0) reglist&=~(1<<hih);
+        if(hil>=0) reglist&=~(1<<hil);
+        if(loh>=0) reglist&=~(1<<loh);
+        if(lol>=0) reglist&=~(1<<lol);
+
+        emit_writeword(r1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(r2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(r2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+
+        save_regs(reglist);
+
+        if(opcode2[i]==0x1C) // DMULT
+          emit_call((int)cached_interp_DMULT);
+        else if(opcode2[i]==0x1D) // DMULTU
+          emit_call((int)cached_interp_DMULTU);
+        else if(opcode2[i]==0x1E) // DDIV
+          emit_call((int)cached_interp_DDIV);
+        else if(opcode2[i]==0x1F) // DDIVU
+          emit_call((int)cached_interp_DDIVU);
+
+        restore_regs(reglist);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
         if(loh>=0) emit_loadreg(LOREG|64,loh);
