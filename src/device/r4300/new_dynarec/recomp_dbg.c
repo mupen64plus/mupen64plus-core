@@ -200,7 +200,6 @@ static Variable_t var[] = {
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.dynarec_local, sizeof(g_dev.r4300.new_dynarec_hot_state.dynarec_local), "dynarec_local"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.next_interrupt, sizeof(g_dev.r4300.new_dynarec_hot_state.next_interrupt), "next_interrupt"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cycle_count, sizeof(g_dev.r4300.new_dynarec_hot_state.cycle_count), "cycle_count"},
-  {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.last_count, sizeof(g_dev.r4300.new_dynarec_hot_state.last_count), "last_count"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.pending_exception, sizeof(g_dev.r4300.new_dynarec_hot_state.pending_exception), "pending_exception"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.pcaddr, sizeof(g_dev.r4300.new_dynarec_hot_state.pcaddr), "pcaddr"},
   {(intptr_t)&g_dev.r4300.new_dynarec_hot_state.stop, sizeof(g_dev.r4300.new_dynarec_hot_state.stop), "r4300_stop"},

@@ -5964,14 +5964,13 @@ static void do_ccstub(int n)
   emit_jmp(stubs[n][2]); // return address
   
   /* This works but uses a lot of memory...
-  emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
+  emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,ECX);
   emit_add(HOST_CCREG,ECX,EAX);
   emit_writeword(EAX,(intptr_t)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
   emit_call((intptr_t)dynarec_gen_interrupt);
   emit_readword((intptr_t)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],HOST_CCREG);
   emit_readword((intptr_t)&g_dev.r4300.cp0.next_interrupt,EAX);
   emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.pending_exception,EBX);
-  emit_writeword(EAX,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.last_count);
   emit_sub(HOST_CCREG,EAX,HOST_CCREG);
   emit_test(EBX,EBX);
   intptr_t jne_instr=(intptr_t)out;
@@ -6203,12 +6202,9 @@ static void rjump_assemble(int i,struct regstat *i_regs)
   emit_pushreg(temp);
 //DEBUG >
 #ifdef DEBUG_CYCLE_COUNT
-  emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.last_count,ECX);
-  emit_add(HOST_CCREG,ECX,HOST_CCREG);
   emit_readword((intptr_t)&g_dev.r4300.cp0.next_interrupt,ECX);
+  emit_add(HOST_CCREG,ECX,HOST_CCREG);
   emit_writeword(HOST_CCREG,(intptr_t)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-  emit_sub(HOST_CCREG,ECX,HOST_CCREG);
-  emit_writeword(ECX,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.last_count);
 #endif
 //DEBUG <
   emit_storereg(CCREG,HOST_CCREG);
@@ -10980,7 +10976,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
   struct r4300_core* r4300 = &g_dev.r4300;
 
   /* Update count + pcaddr*/
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr;
 
   /* Remove old entries */
@@ -11052,7 +11048,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified
 }
 
 static void TLBWR_new(int pcaddr, int count, int diff)
@@ -11061,7 +11057,7 @@ static void TLBWR_new(int pcaddr, int count, int diff)
   struct r4300_core* r4300 = &g_dev.r4300;
 
   /* Update count + pcaddr*/
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr;
 
   r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG];
@@ -11131,30 +11127,29 @@ static void TLBWR_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,r4300->new_dynarec_hot_state.memory_map[i],r4300->new_dynarec_hot_state.memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void MFC0_new(int copr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   cached_interp_MFC0();
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void MTC0_new(int copr, int count, int diff, int pcaddr)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   r4300->new_dynarec_hot_state.fake_pc.f.r.nrd = copr;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   cached_interp_MTC0();
   // Add one cycle if an exception occured while writing to status register
   r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] += ((copr == 12) && r4300->new_dynarec_hot_state.pending_exception) * g_dev.r4300.cp0.count_per_op;
-  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
-  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.next_interrupt - diff;
 }
 
 /* used in assembler files */
@@ -11177,7 +11172,7 @@ static void read_byte_new(int pcaddr, int count, int diff)
 {
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
@@ -11186,14 +11181,14 @@ static void read_byte_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void read_hword_new(int pcaddr, int count, int diff)
 {
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
@@ -11202,14 +11197,14 @@ static void read_hword_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)((value >> shift) & 0xffff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void read_word_new(int pcaddr, int count, int diff)
 {
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
@@ -11217,25 +11212,25 @@ static void read_word_new(int pcaddr, int count, int diff)
     r4300->new_dynarec_hot_state.rdword = (uint64_t)(value);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void read_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   r4300_read_aligned_dword(r4300, r4300->new_dynarec_hot_state.address, (uint64_t*)&r4300->new_dynarec_hot_state.rdword);
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.last_count + count + diff)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (r4300->new_dynarec_hot_state.next_interrupt + count + diff)); // Make sure count was not modified 
 }
 
 static void write_byte_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
@@ -11243,14 +11238,13 @@ static void write_byte_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.wword <<= shift;
   r4300_write_aligned_word(r4300, r4300->new_dynarec_hot_state.address, r4300->new_dynarec_hot_state.wword, UINT32_C(0xff) << shift);
   r4300->delay_slot = 0;
-  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
-  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.next_interrupt - diff;
 }
 
 static void write_hword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
@@ -11258,34 +11252,31 @@ static void write_hword_new(int pcaddr, int count, int diff)
   r4300->new_dynarec_hot_state.wword <<= shift;
   r4300_write_aligned_word(r4300, r4300->new_dynarec_hot_state.address, r4300->new_dynarec_hot_state.wword, UINT32_C(0xffff) << shift);
   r4300->delay_slot = 0;
-  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
-  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.next_interrupt - diff;
 }
 
 static void write_word_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   r4300_write_aligned_word(r4300, r4300->new_dynarec_hot_state.address, r4300->new_dynarec_hot_state.wword, UINT32_C(0xffffffff));
   r4300->delay_slot = 0;
-  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
-  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.next_interrupt - diff;
 }
 
 static void write_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.last_count + count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = r4300->new_dynarec_hot_state.next_interrupt + count + diff;
   r4300->new_dynarec_hot_state.pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   r4300->new_dynarec_hot_state.pending_exception = 0;
   /* NOTE: in dynarec, we only need an all-one mask */
   r4300_write_aligned_dword(r4300, r4300->new_dynarec_hot_state.address, r4300->new_dynarec_hot_state.wdword, ~UINT64_C(0));
   r4300->delay_slot = 0;
-  r4300->new_dynarec_hot_state.last_count = *r4300_cp0_next_interrupt(&r4300->cp0);
-  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.last_count - diff;
+  r4300->new_dynarec_hot_state.cycle_count = r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] - r4300->new_dynarec_hot_state.next_interrupt - diff;
 }
 

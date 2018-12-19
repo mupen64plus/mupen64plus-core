@@ -63,7 +63,6 @@
 %define g_dev_r4300_new_dynarec_hot_state_cp0_regs          (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cp0_regs)
 %define g_dev_r4300_new_dynarec_hot_state_next_interrupt    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_next_interrupt)
 %define g_dev_r4300_new_dynarec_hot_state_cycle_count       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cycle_count)
-%define g_dev_r4300_new_dynarec_hot_state_last_count        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_last_count)
 %define g_dev_r4300_new_dynarec_hot_state_pending_exception (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pending_exception)
 %define g_dev_r4300_new_dynarec_hot_state_pcaddr            (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pcaddr)
 %define g_dev_r4300_new_dynarec_hot_state_branch_target     (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_branch_target)
@@ -143,7 +142,7 @@ jump_vaddr:
     add     esp,    -12
     push    edi
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi    ;CCREG
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
+    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi    ;Count
     call    get_addr_ht
     mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
@@ -220,7 +219,7 @@ _D5:
 
 cc_interrupt:
     get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
+    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
     add     esp,    -28                 ;Align stack
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi    ;Count
     shr     esi,    19
@@ -235,7 +234,6 @@ _E1:
     mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
     mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_stop)]
     add     esp,    28
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
     sub     esi,    eax
     test    ecx,    ecx
     jne     _E3
@@ -287,7 +285,6 @@ do_interrupt:
     add     esp,    16
     mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
     mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    edx
     sub     esi,    edx
     jmp     eax
 
@@ -317,14 +314,13 @@ jump_syscall:
 jump_eret:
     get_got_address
     mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)]        ;Status
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)]
+    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
     and     ecx,    0FFFFFFFDh
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi        ;Count
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)],    ecx        ;Status
     call    new_dynarec_check_interrupt
     mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
     mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    eax
     sub     esi,    eax
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi
     mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+56)]        ;EPC
@@ -377,7 +373,6 @@ new_dyna_start:
     get_got_address
     mov     edi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
     mov     esi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_last_count)],    edi
     sub     esi,    edi
     jmp     DWORD [find_local_data(base_addr)]
 

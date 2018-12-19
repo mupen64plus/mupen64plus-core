@@ -129,7 +129,6 @@ DEFINE(r4300_core, extra_memory);
 DEFINE(new_dynarec_hot_state, dynarec_local);
 DEFINE(new_dynarec_hot_state, next_interrupt);
 DEFINE(new_dynarec_hot_state, cycle_count);
-DEFINE(new_dynarec_hot_state, last_count);
 DEFINE(new_dynarec_hot_state, pending_exception);
 DEFINE(new_dynarec_hot_state, pcaddr);
 DEFINE(new_dynarec_hot_state, stop);
