@@ -403,8 +403,8 @@ GLOBAL_FUNCTION(new_dyna_start):
     add    x16, x16, :lo12:g_dev
     movl   x1, (device_r4300_new_dynarec_hot_state_dynarec_local + saved_context)
     add    x16, x16, x1
-    adrp   x1, base_addr
-    add    x1, x1, :lo12:base_addr
+    adrp   x1, base_addr_rx
+    add    x1, x1, :lo12:base_addr_rx
     mov    w0, #0xa4000000
     stp    x19,x20,[x16,#0]
     stp    x21,x22,[x16,#16]

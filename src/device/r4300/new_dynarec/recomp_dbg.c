@@ -43,6 +43,7 @@
 
 /* Rename non-static variables */
 #define base_addr                               recomp_dbg_base_addr
+#define base_addr_rx                            recomp_dbg_base_addr_rx
 #define out                                     recomp_dbg_out
 #define using_tlb                               recomp_dbg_using_tlb
 #define stop_after_jal                          recomp_dbg_stop_after_jal
@@ -806,7 +807,7 @@ void recomp_dbg_init(void)
   var[0].addr = (uintptr_t)g_dev.rdram.dram - 0x80000000;
   var[0].size = g_dev.rdram.dram_size;
 
-  recomp_dbg_base_addr = (void*)recomp_dbg_extra_memory;
+  recomp_dbg_base_addr = recomp_dbg_base_addr_rx = (void*)recomp_dbg_extra_memory;
 
   /* New dynarec init */
   recomp_dbg_out=(u_char *)recomp_dbg_base_addr;

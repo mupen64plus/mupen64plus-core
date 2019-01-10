@@ -224,6 +224,7 @@ static void load_regs_entry(int t);
 static void load_all_consts(signed char regmap[],int is32,u_int dirty,u_int isconst,int i);
 
 void *base_addr;
+void *base_addr_rx;
 u_char *out;
 unsigned int using_tlb;
 unsigned int stop_after_jal;
@@ -1971,23 +1972,24 @@ static void *dynamic_linker(void * src, u_int vaddr)
 
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
+      void* src_rw=(void*)(((intptr_t)src-(intptr_t)base_addr_rx)+(intptr_t)base_addr);
 #if NEW_DYNAREC == NEW_DYNAREC_ARM64
       //TODO: Avoid disabling link between blocks for conditional branches
-      int *ptr=(int*)src;
+      int *ptr=(int*)src_rw;
       if((*ptr&0xfc000000)==0x14000000) { //b
-        add_link(vaddr, add_pointer(src,head->addr));
+        add_link(vaddr, add_pointer(src_rw,head->addr));
       }
 #else
-      add_link(vaddr, add_pointer(src,head->addr));
+      add_link(vaddr, add_pointer(src_rw,head->addr));
 #endif
-      return head->addr;
+      return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
     }
     head=head->next;
   }
 
   uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
 
   head=jump_dirty[vpage];
   while(head!=NULL) {
@@ -2018,7 +2020,7 @@ static void *dynamic_linker(void * src, u_int vaddr)
             ht_bin[1]=(intptr_t)head->addr;
             ht_bin[0]=vaddr;
           }
-          return get_clean_addr(head->addr);
+          return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
         }
       }
     }
@@ -2096,7 +2098,7 @@ void *get_addr(u_int vaddr)
       ht_bin[2]=ht_bin[0];
       ht_bin[1]=(intptr_t)head->addr;
       ht_bin[0]=vaddr;
-      return head->addr;
+      return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
     }
     head=head->next;
   }
@@ -2129,7 +2131,7 @@ void *get_addr(u_int vaddr)
             ht_bin[1]=(intptr_t)head->addr;
             ht_bin[0]=vaddr;
           }
-          return get_clean_addr(head->addr);
+          return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
         }
       }
     }
@@ -2150,8 +2152,8 @@ void *get_addr_ht(u_int vaddr)
 {
   //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
   uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   return get_addr(vaddr);
 }
 
@@ -2160,8 +2162,8 @@ void *get_addr_32(u_int vaddr,u_int flags)
   //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
   struct r4300_core* r4300 = &g_dev.r4300;
   uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)ht_bin[1];
-  if(ht_bin[2]==vaddr) return (void *)ht_bin[3];
+  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
   if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
@@ -2187,7 +2189,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
         //ht_bin[1]=(intptr_t)head->addr;
         //ht_bin[0]=vaddr;
       }
-      return head->addr;
+      return (void *)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
     }
     head=head->next;
   }
@@ -2223,7 +2225,7 @@ void *get_addr_32(u_int vaddr,u_int flags)
             //ht_bin[1]=(intptr_t)head->addr;
             //ht_bin[0]=vaddr;
           }
-          return get_clean_addr(head->addr);
+          return (void *)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
         }
       }
     }
@@ -2395,7 +2397,7 @@ static void invalidate_all_pages(void)
     }
   }
   #if NEW_DYNAREC >= NEW_DYNAREC_ARM
-  __clear_cache((char *)base_addr,(char *)base_addr+(1<<TARGET_SIZE_2));
+  __clear_cache((char *)base_addr_rx,(char *)base_addr_rx+(1<<TARGET_SIZE_2));
   //cacheflush((void *)base_addr,(void *)base_addr+(1<<TARGET_SIZE_2),0);
   #endif
   #ifdef USE_MINI_HT
@@ -7587,35 +7589,73 @@ void new_dynarec_init(void)
   recomp_dbg_init();
 #endif
 
-#if NEW_DYNAREC >= NEW_DYNAREC_ARM
-#if !defined(WIN32)
-#define FIXED_CACHE_ADDR
-#ifdef FIXED_CACHE_ADDR
+#if !defined(RECOMP_DBG)
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+
+#define FIXED_CACHE_ADDR 1    // Put the dynarec cache at extra_memory address 
+#define DYNAMIC_CACHE_ADDR 2  // Put the dynarec cache at random address
+#define DOUBLE_CACHE_ADDR 3   // Put the dynarec cache at random address with RW address != RX address
+
+// Default to fixed cache address
+#define CACHE_ADDR FIXED_CACHE_ADDR
+
+#if CACHE_ADDR==DOUBLE_CACHE_ADDR
+  #include <unistd.h>
+  #include <sys/types.h>
+  #include <fcntl.h>
+
+  int fd = shm_open("/new_dynarec", O_RDWR | O_CREAT | O_EXCL, 0600);
+  assert(fd!=-1);
+  shm_unlink("/new_dynarec");
+  ftruncate(fd, 1<<TARGET_SIZE_2);
+  base_addr = mmap((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+                 PROT_READ | PROT_WRITE,
+                 MAP_FIXED | MAP_SHARED, fd, 0);
+
+  assert(base_addr!=(void*)-1);
+
+  base_addr_rx = mmap(NULL, 1<<TARGET_SIZE_2,
+                 PROT_READ | PROT_EXEC,
+                 MAP_SHARED, fd, 0);
+
+  assert(base_addr_rx!=(void*)-1);
+  close(fd);
+#elif CACHE_ADDR==FIXED_CACHE_ADDR
   base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
                     PROT_READ | PROT_WRITE | PROT_EXEC,
                     MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
                     -1, 0);
-#else
+  base_addr_rx = base_addr;
+#else /*DYNAMIC_CACHE_ADDR*/
   base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
                     PROT_READ | PROT_WRITE | PROT_EXEC,
                     MAP_PRIVATE | MAP_ANONYMOUS,
                     -1, 0);
+  base_addr_rx = base_addr;
 #endif
-  if(base_addr==(void*)-1) DebugMessage(M64MSG_ERROR, "mmap() failed");
-#endif
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM
+  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+                    -1, 0);
+  base_addr_rx = base_addr;
 #else
 #if defined(WIN32)
   DWORD dummy;
   BOOL res=VirtualProtect((void*)g_dev.r4300.extra_memory, 33554432, PAGE_EXECUTE_READWRITE, &dummy);
   assert(res!=0);
-  base_addr = (void*)g_dev.r4300.extra_memory;
+  base_addr = base_addr_rx = (void*)g_dev.r4300.extra_memory;
 #else
-  if ((base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            MAP_PRIVATE | MAP_ANONYMOUS,
-            -1, 0)) <= 0) {DebugMessage(M64MSG_ERROR, "mmap() failed");}
+  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+                    PROT_READ | PROT_WRITE | PROT_EXEC,
+                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
+                    -1, 0);
+  base_addr_rx = base_addr;
 #endif
 #endif
+#endif
+
+  if(base_addr==(void*)-1) DebugMessage(M64MSG_ERROR, "mmap() failed");
 
   assert(((uintptr_t)g_dev.rdram.dram&(sizeof(uintptr_t)-1))==0); // 4/8 bytes aligned 
   out=(u_char *)base_addr;
@@ -7663,10 +7703,12 @@ void new_dynarec_cleanup(void)
   for(n=0;n<4096;n++) ll_clear(jump_out+n);
   for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   assert(copy_size==0);
+#if !defined(RECOMP_DBG)
 #if defined(WIN32)
   VirtualFree(base_addr, 0, MEM_RELEASE);
 #else
   if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
+#endif
 #endif
   #ifdef ROM_COPY
   if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
@@ -10896,7 +10938,9 @@ int new_recompile_block(int addr)
   ptr[slen]=dirty_entry_count;
 
   #if NEW_DYNAREC >= NEW_DYNAREC_ARM
-  __clear_cache((char *)beginning,out);
+  intptr_t beginning_rx=((intptr_t)beginning-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
+  intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
+  __clear_cache((char *)beginning_rx,(char *)out_rx);
   //cacheflush((void *)beginning,out,0);
   #endif
 
