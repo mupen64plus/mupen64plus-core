@@ -108,15 +108,15 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
 #ifdef NEW_DYNAREC
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-        int map = r4300->new_dynarec_hot_state.memory_map[addr];
+        intptr_t map = r4300->new_dynarec_hot_state.memory_map[addr];
         if ((tlb->LUT_w[addr]) && (w == 1))
         {
-            assert(map == (((tlb->LUT_w[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)r4300->rdram->dram - 0x80000000) >> 2));
+            assert(map == (((tlb->LUT_w[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (uintptr_t)r4300->rdram->dram - (uintptr_t)0x80000000) >> 2));
         }
         else if ((tlb->LUT_r[addr]) && (w == 0))
         {
-            assert((map&~0x40000000) == (((tlb->LUT_r[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (unsigned int)r4300->rdram->dram - 0x80000000) >> 2));
-            if (map & 0x40000000)
+            assert((map&~WRITE_PROTECT) == (((tlb->LUT_r[addr] & 0xFFFFF000) - (address & 0xFFFFF000) + (uintptr_t)r4300->rdram->dram - (uintptr_t)0x80000000) >> 2));
+            if (map & WRITE_PROTECT)
             {
                 assert(tlb->LUT_w[addr] == 0);
             }

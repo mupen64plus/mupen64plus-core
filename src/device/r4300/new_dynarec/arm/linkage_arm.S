@@ -74,7 +74,6 @@ device_r4300_new_dynarec_hot_state_dynarec_local = (offsetof_struct_device_r4300
 fp_saved_context       = offsetof_struct_new_dynarec_hot_state_dynarec_local + 28
 fp_next_interrupt      = offsetof_struct_new_dynarec_hot_state_next_interrupt
 fp_cycle_count         = offsetof_struct_new_dynarec_hot_state_cycle_count
-fp_last_count          = offsetof_struct_new_dynarec_hot_state_last_count
 fp_pending_exception   = offsetof_struct_new_dynarec_hot_state_pending_exception
 fp_pcaddr              = offsetof_struct_new_dynarec_hot_state_pcaddr
 fp_stop                = offsetof_struct_new_dynarec_hot_state_stop
@@ -102,66 +101,54 @@ TEXT_SECTION
     .savedcontextptr_offset  : .word g_dev + device_r4300_new_dynarec_hot_state_dynarec_local + fp_saved_context -(.savedcontextptr_pic+8)
 
 GLOBAL_FUNCTION(jump_vaddr_r0):
-    eor    r2, r0, r0, lsl #16
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r1):
-    eor    r2, r1, r1, lsl #16
     mov    r0, r1
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r2):
     mov    r0, r2
-    eor    r2, r2, r2, lsl #16
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r3):
-    eor    r2, r3, r3, lsl #16
     mov    r0, r3
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r4):
-    eor    r2, r4, r4, lsl #16
     mov    r0, r4
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r5):
-    eor    r2, r5, r5, lsl #16
     mov    r0, r5
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r6):
-    eor    r2, r6, r6, lsl #16
     mov    r0, r6
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r8):
-    eor    r2, r8, r8, lsl #16
     mov    r0, r8
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r9):
-    eor    r2, r9, r9, lsl #16
     mov    r0, r9
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r10):
-    eor    r2, r10, r10, lsl #16
     mov    r0, r10
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r12):
-    eor    r2, r12, r12, lsl #16
     mov    r0, r12
     b      jump_vaddr
 
 GLOBAL_FUNCTION(jump_vaddr_r7):
-    eor    r2, r7, r7, lsl #16
     add    r0, r7, #0
 
 GLOBAL_FUNCTION(jump_vaddr):
     str    r10, [fp, #fp_cycle_count]
-    ldr    r9,  [fp, #fp_last_count]
+    ldr    r9,  [fp, #fp_next_interrupt]
     add    r10, r9, r10 /* Count */
     str    r10, [fp, #fp_cp0_regs + 36] /* Count */
     bl     get_addr_ht
@@ -237,7 +224,7 @@ GLOBAL_FUNCTION(verify_code):
     mov    pc, r0
 
 GLOBAL_FUNCTION(cc_interrupt):
-    ldr    r0, [fp, #fp_last_count]
+    ldr    r0, [fp, #fp_next_interrupt]
     mov    r1, #0
     mov    r2, #0x1fc
     add    r10, r0, r10
@@ -262,7 +249,6 @@ GLOBAL_FUNCTION(cc_interrupt):
     ldr    r0, [fp, #fp_next_interrupt]
     ldr    r1, [fp, #fp_pending_exception]
     ldr    r2, [fp, #fp_stop]
-    str    r0, [fp, #fp_last_count]
     sub    r10, r10, r0
     tst    r2, r2
     bne    .E3
@@ -294,18 +280,17 @@ GLOBAL_FUNCTION(do_interrupt):
     bl     get_addr_ht
     ldr    r1, [fp, #fp_next_interrupt]
     ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
-    str    r1, [fp, #fp_last_count]
     sub    r10, r10, r1
     mov    pc, r0
 
 GLOBAL_FUNCTION(fp_exception):
     mov    r2, #0x10000000
+    add    r2, r2, #0x2c
 .E7:
     ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
     mov    r3, #0x80000000
     str    r0, [fp, #fp_cp0_regs+56] /* EPC */
     orr    r1, #2
-    add    r2, r2, #0x2c
     str    r1, [fp, #fp_cp0_regs+48] /* Status */
     str    r2, [fp, #fp_cp0_regs+52] /* Cause */
     add    r0, r3, #0x180
@@ -314,23 +299,16 @@ GLOBAL_FUNCTION(fp_exception):
 
 GLOBAL_FUNCTION(fp_exception_ds):
     mov    r2, #0x90000000 /* Set high bit if delay slot */
+    add    r2, r2, #0x2c
     b      .E7
 
 GLOBAL_FUNCTION(jump_syscall):
-    ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
-    mov    r3, #0x80000000
-    str    r0, [fp, #fp_cp0_regs+56] /* EPC */
-    orr    r1, #2
     mov    r2, #0x20
-    str    r1, [fp, #fp_cp0_regs+48] /* Status */
-    str    r2, [fp, #fp_cp0_regs+52] /* Cause */
-    add    r0, r3, #0x180
-    bl     get_addr_ht
-    mov    pc, r0
+    b      .E7
 
 GLOBAL_FUNCTION(jump_eret):
     ldr    r1, [fp, #fp_cp0_regs+48] /* Status */
-    ldr    r0, [fp, #fp_last_count]
+    ldr    r0, [fp, #fp_next_interrupt]
     bic    r1, r1, #2
     add    r10, r0, r10
     str    r1, [fp, #fp_cp0_regs+48] /* Status */
@@ -338,7 +316,6 @@ GLOBAL_FUNCTION(jump_eret):
     bl     new_dynarec_check_interrupt
     ldr    r1, [fp, #fp_next_interrupt]
     ldr    r0, [fp, #fp_cp0_regs+56] /* EPC */
-    str    r1, [fp, #fp_last_count]
     subs   r10, r10, r1
     bpl    .E11
 .E8:
@@ -384,7 +361,6 @@ GLOBAL_FUNCTION(new_dyna_start):
     bl     new_recompile_block
     ldr    r0, [fp, #fp_next_interrupt]
     ldr    r10, [fp, #fp_cp0_regs+36] /* Count */
-    str    r0, [fp, #fp_last_count]
     sub    r10, r10, r0
     mov    pc, r4
 

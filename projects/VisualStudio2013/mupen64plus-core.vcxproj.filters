@@ -97,17 +97,29 @@
     <Filter Include="device\rcp\vi">
       <UniqueIdentifier>{ba830992-ba04-4afc-aac4-7538801f1eb5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="subprojects">
+      <UniqueIdentifier>{27554d80-a417-4e23-8beb-ee0d70bb282f}</UniqueIdentifier>
+    </Filter>
     <Filter Include="subprojects\md5">
-      <UniqueIdentifier>{bafd976c-f27f-4d58-b4cb-880174adc9d5}</UniqueIdentifier>
+      <UniqueIdentifier>{8eff5a55-cd16-4582-97bf-7eb08afe59bc}</UniqueIdentifier>
     </Filter>
     <Filter Include="subprojects\minizip">
-      <UniqueIdentifier>{05c49d60-e191-4e2f-85bd-c972e1cf97e2}</UniqueIdentifier>
+      <UniqueIdentifier>{11be67bc-8d5a-4efd-aefb-31bbeec5aad8}</UniqueIdentifier>
     </Filter>
     <Filter Include="subprojects\oglft">
-      <UniqueIdentifier>{e064708a-0ea3-4bf5-b4e1-1e74f85197c2}</UniqueIdentifier>
+      <UniqueIdentifier>{16a4986e-7be6-4bd3-8cd4-ef7370155db4}</UniqueIdentifier>
     </Filter>
     <Filter Include="subprojects\xxhash">
-      <UniqueIdentifier>{90e007c6-198a-4334-8bae-9f40b48e9569}</UniqueIdentifier>
+      <UniqueIdentifier>{d5c557d7-774e-48e6-b9c2-75d3ae05bfea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\dd">
+      <UniqueIdentifier>{ff19301d-1e15-4787-8e09-d608004dd009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec\x64">
+      <UniqueIdentifier>{23daae91-0471-4a19-a7e8-70975acb835a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="device\r4300\new_dynarec\arm64">
+      <UniqueIdentifier>{8f211c2b-70bb-4714-bcbb-c77abd1af54d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -191,9 +203,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\backends\opencv_video_capture.cpp">
       <Filter>backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\device\dd\dd_controller.c">
-      <Filter>device\dd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\plugin\dummy_audio.c">
       <Filter>plugin</Filter>
@@ -375,8 +384,17 @@
     <ClCompile Include="..\..\src\device\rcp\rdp\fb.c">
       <Filter>device\rcp\rdp</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\dd\dd_controller.c">
+      <Filter>device\dd</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\subprojects\md5\md5.c">
       <Filter>subprojects\md5</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\oglft\OGLFT.cpp">
+      <Filter>subprojects\oglft</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\subprojects\xxhash\xxhash.c">
+      <Filter>subprojects\xxhash</Filter>
     </ClCompile>
     <ClCompile Include="..\..\subprojects\minizip\ioapi.c">
       <Filter>subprojects\minizip</Filter>
@@ -387,11 +405,14 @@
     <ClCompile Include="..\..\subprojects\minizip\zip.c">
       <Filter>subprojects\minizip</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\subprojects\oglft\OGLFT.cpp">
-      <Filter>subprojects\oglft</Filter>
+    <ClCompile Include="..\..\src\device\r4300\new_dynarec\recomp_dbg.c">
+      <Filter>device\r4300\new_dynarec</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\subprojects\xxhash\xxhash.c">
-      <Filter>subprojects\xxhash</Filter>
+    <ClCompile Include="..\..\src\device\r4300\new_dynarec\x64\assem_x64.c">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\device\r4300\new_dynarec\arm64\assem_arm64.c">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -490,9 +511,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\backends\clock_ctime_plus_delta.h">
       <Filter>backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\device\dd\dd_controller.h">
-      <Filter>device\dd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\plugin\dummy_audio.h">
       <Filter>plugin</Filter>
@@ -704,8 +722,17 @@
     <ClInclude Include="..\..\src\device\rcp\rdp\fb.h">
       <Filter>device\rcp\rdp</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\device\dd\dd_controller.h">
+      <Filter>device\dd</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\subprojects\md5\md5.h">
       <Filter>subprojects\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\oglft\OGLFT.h">
+      <Filter>subprojects\oglft</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\subprojects\xxhash\xxhash.h">
+      <Filter>subprojects\xxhash</Filter>
     </ClInclude>
     <ClInclude Include="..\..\subprojects\minizip\crypt.h">
       <Filter>subprojects\minizip</Filter>
@@ -719,11 +746,11 @@
     <ClInclude Include="..\..\subprojects\minizip\zip.h">
       <Filter>subprojects\minizip</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\subprojects\oglft\OGLFT.h">
-      <Filter>subprojects\oglft</Filter>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\x64\assem_x64.h">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\subprojects\xxhash\xxhash.h">
-      <Filter>subprojects\xxhash</Filter>
+    <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm64\assem_arm64.h">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -736,6 +763,9 @@
     <None Include="..\..\src\device\r4300\new_dynarec\arm\linkage_arm.S">
       <Filter>device\r4300\new_dynarec\arm</Filter>
     </None>
+    <None Include="..\..\src\device\r4300\new_dynarec\arm64\linkage_arm64.S">
+      <Filter>device\r4300\new_dynarec\arm64</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\..\src\device\r4300\new_dynarec\x86\linkage_x86.asm">
@@ -746,6 +776,9 @@
     </CustomBuild>
     <CustomBuild Include="..\..\src\device\r4300\x86\dyna_start.asm">
       <Filter>device\r4300\x86</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\device\r4300\new_dynarec\x64\linkage_x64.asm">
+      <Filter>device\r4300\new_dynarec\x64</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

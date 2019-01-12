@@ -56,14 +56,6 @@ void invalidate_addr_r8(void);
 void invalidate_addr_r9(void);
 void invalidate_addr_r10(void);
 void invalidate_addr_r12(void);
-void read_byte_new(int pcaddr, int count, int diff);
-void read_hword_new(int pcaddr, int count, int diff);
-void read_word_new(int pcaddr, int count, int diff);
-void read_dword_new(int pcaddr, int count, int diff);
-void write_byte_new(int pcaddr, int count, int diff);
-void write_hword_new(int pcaddr, int count, int diff);
-void write_word_new(int pcaddr, int count, int diff);
-void write_dword_new(int pcaddr, int count, int diff);
 
 static void *dyna_linker(void * src, u_int vaddr);
 static void *dyna_linker_ds(void * src, u_int vaddr);
@@ -109,8 +101,6 @@ static const u_int invalidate_addr_reg[16] = {
   0};
 
 static u_int jump_table_symbols[] = {
-  (int)NULL /*MFC0*/,
-  (int)NULL /*MTC0*/,
   (int)NULL /*TLBR*/,
   (int)NULL /*TLBP*/,
   (int)NULL /*DMULT*/,
@@ -131,6 +121,8 @@ static u_int jump_table_symbols[] = {
   (int)do_interrupt,
   (int)TLBWI_new,
   (int)TLBWR_new,
+  (int)MFC0_new,
+  (int)MTC0_new,
   (int)jump_vaddr_r0,
   (int)jump_vaddr_r1,
   (int)jump_vaddr_r2,
@@ -236,7 +228,8 @@ static u_int jump_table_symbols[] = {
   (int)write_byte_new,
   (int)write_hword_new,
   (int)write_word_new,
-  (int)write_dword_new
+  (int)write_dword_new,
+  (int)breakpoint
 };
 
 /* Linker */
@@ -312,189 +305,6 @@ static void add_literal(int addr,int val)
   literals[literalcount][0]=addr;
   literals[literalcount][1]=val;
   literalcount++; 
-} 
-
-static void *kill_pointer(void *stub)
-{
-#ifdef ARMv5_ONLY
-  int *ptr=(int *)(stub+4);
-  assert((*ptr&0x0ff00000)==0x05900000); //ldr
-  u_int offset=*ptr&0xfff;
-  int **l_ptr=(void *)ptr+offset+8;
-  int *i_ptr=*l_ptr;
-#else
-  int *ptr=(int *)(stub+8);
-  int *ptr2=(int *)(stub+12);
-  assert((*ptr&0x0ff00000)==0x03000000); //movw
-  assert((*ptr2&0x0ff00000)==0x03400000); //movt
-  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
-#endif
-  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
-  set_jump_target((int)i_ptr,(int)stub);
-  return i_ptr;
-}
-
-static int get_pointer(void *stub)
-{
-#ifdef ARMv5_ONLY
-  int *ptr=(int *)(stub+4);
-  assert((*ptr&0x0ff00000)==0x05900000); //ldr
-  u_int offset=*ptr&0xfff;
-  int **l_ptr=(void *)ptr+offset+8;
-  int *i_ptr=*l_ptr;
-#else
-  int *ptr=(int *)(stub+8);
-  int *ptr2=(int *)(stub+12);
-  assert((*ptr&0x0ff00000)==0x03000000); //movw
-  assert((*ptr2&0x0ff00000)==0x03400000); //movt
-  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
-#endif
-  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
-  return (int)i_ptr+((*i_ptr<<8)>>6)+8;
-}
-
-// Find the "clean" entry point from a "dirty" entry point
-// by skipping past the call to verify_code
-static u_int get_clean_addr(int addr)
-{
-  int *ptr=(int *)addr;
-  #ifdef ARMv5_ONLY
-  ptr+=4;
-  #else
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  ptr++;
-  if((*ptr&0xFF000000)==0xea000000) {
-    return (int)ptr+((*ptr<<8)>>6)+8; // follow jump
-  }
-  return (u_int)ptr;
-}
-
-static int verify_dirty(void *addr)
-{
-  u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  u_int source=l_ptr[0];
-  u_int copy=l_ptr[1];
-  u_int len=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  u_int source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[2]<<16)&0xFFF0000)+((ptr[2]<<12)&0xF0000000);
-  u_int copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  u_int len=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-
-  //Trampoline jump
-  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
-      verifier=*((u_int*)(verifier+4));
-
-  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
-
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    unsigned int page=source>>12;
-    unsigned int map_value=g_dev.r4300.new_dynarec_hot_state.memory_map[page];
-    if(map_value>=0x80000000) return 0;
-    while(page<((source+len-1)>>12)) {
-      if((g_dev.r4300.new_dynarec_hot_state.memory_map[++page]<<2)!=(map_value<<2)) return 0;
-    }
-    source = source+(map_value<<2);
-  }
-  //DebugMessage(M64MSG_VERBOSE, "verify_dirty: %x %x %x",source,copy,len);
-  return !memcmp((void *)source,(void *)copy,len);
-}
-
-static void get_copy_addr(void *addr, u_int *copy, u_int *length)
-{
-  u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  *copy=l_ptr[1];
-  *length=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  *copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  *length=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-}
-
-// This doesn't necessarily find all clean entry points, just
-// guarantees that it's not dirty
-static int isclean(int addr)
-{
-  #ifdef ARMv5_ONLY
-  int *ptr=((u_int *)addr)+4;
-  #else
-  int *ptr=((u_int *)addr)+6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  if((*ptr&0xFF000000)!=0xeb000000) return 1; // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-  if(verifier==(u_int)verify_code) return 0;
-  if(verifier==(u_int)verify_code_vm) return 0;
-  if(verifier==(u_int)verify_code_ds) return 0;
-  verifier=*((u_int*)(verifier+4));
-  if(verifier==(u_int)verify_code) return 0;
-  if(verifier==(u_int)verify_code_vm) return 0;
-  if(verifier==(u_int)verify_code_ds) return 0;
-  return 1;
-}
-
-static void get_bounds(int addr,u_int *start,u_int *end)
-{
-  u_int *ptr=(u_int *)addr;
-  #ifdef ARMv5_ONLY
-  // get from literal pool
-  assert((*ptr&0xFFF00000)==0xe5900000);
-  u_int offset=*ptr&0xfff;
-  u_int *l_ptr=(void *)ptr+offset+8;
-  u_int source=l_ptr[0];
-  //u_int copy=l_ptr[1];
-  u_int len=l_ptr[2];
-  ptr+=4;
-  #else
-  // ARMv7 movw/movt
-  assert((*ptr&0xFFF00000)==0xe3000000);
-  u_int source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[2]<<16)&0xFFF0000)+((ptr[2]<<12)&0xF0000000);
-  //u_int copy=(ptr[1]&0xFFF)+((ptr[1]>>4)&0xF000)+((ptr[3]<<16)&0xFFF0000)+((ptr[3]<<12)&0xF0000000);
-  u_int len=(ptr[4]&0xFFF)+((ptr[4]>>4)&0xF000);
-  ptr+=6;
-  #endif
-  if((*ptr&0xFF000000)!=0xeb000000) ptr++;
-  assert((*ptr&0xFF000000)==0xeb000000); // bl instruction
-  u_int verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-
-  //Trampoline jump
-  if(verifier!=(u_int)verify_code&&verifier!=(u_int)verify_code_vm&&verifier!=(u_int)verify_code_ds)
-      verifier=*((u_int*)(verifier+4));
-
-  assert(verifier==(u_int)verify_code||verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds);
-
-  if(verifier==(u_int)verify_code_vm||verifier==(u_int)verify_code_ds) {
-    if(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]>=0x80000000) source = 0;
-    else source = source+(g_dev.r4300.new_dynarec_hot_state.memory_map[source>>12]<<2);
-  }
-  *start=source;
-  *end=source+len;
 }
 
 static void *add_pointer(void *src, void* addr)
@@ -519,6 +329,105 @@ static void *add_pointer(void *src, void* addr)
   *ptr=(*ptr&0xFF000000)|((((u_int)addr-(u_int)ptr-8)<<6)>>8);
   __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
   return ptr2;
+}
+
+static void *kill_pointer(void *stub)
+{
+#ifdef ARMv5_ONLY
+  int *ptr=(int *)(stub+4);
+  assert((*ptr&0x0ff00000)==0x05900000); //ldr
+  u_int offset=*ptr&0xfff;
+  int **l_ptr=(void *)ptr+offset+8;
+  int *i_ptr=*l_ptr;
+#else
+  int *ptr=(int *)((int)stub+8);
+  int *ptr2=(int *)((int)stub+12);
+  assert((*ptr&0x0ff00000)==0x03000000); //movw
+  assert((*ptr2&0x0ff00000)==0x03400000); //movt
+  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
+#endif
+  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
+  set_jump_target((int)i_ptr,(int)stub);
+  return i_ptr;
+}
+
+static int get_pointer(void *stub)
+{
+#ifdef ARMv5_ONLY
+  int *ptr=(int *)(stub+4);
+  assert((*ptr&0x0ff00000)==0x05900000); //ldr
+  u_int offset=*ptr&0xfff;
+  int **l_ptr=(void *)ptr+offset+8;
+  int *i_ptr=*l_ptr;
+#else
+  int *ptr=(int *)((int)stub+8);
+  int *ptr2=(int *)((int)stub+12);
+  assert((*ptr&0x0ff00000)==0x03000000); //movw
+  assert((*ptr2&0x0ff00000)==0x03400000); //movt
+  int *i_ptr=(int*)((*ptr&0xfff)|((*ptr>>4)&0xf000)|((*ptr2&0xfff)<<16)|((*ptr2&0xf0000)<<12));
+#endif
+  assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
+  return (int)i_ptr+((*i_ptr<<8)>>6)+8;
+}
+
+// Returns a pointer to the "clean" entry point from a "dirty" entry point. Returns null if not a dirty stub
+static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
+{
+  u_int *ptr=(u_int *)addr;
+#ifdef ARMv5_ONLY
+  assert(0);
+#else
+  //source
+  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
+  {
+    *source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
+    ptr+=2;
+  }
+  else
+    return NULL;
+
+  //copy
+  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
+  {
+    *copy=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
+    ptr+=2;
+  }
+  else
+    return NULL;
+
+  //slen
+  if((*ptr&0xFFF00000)==0xe3000000) //movw
+  {
+    *len=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000);
+    ptr+=2;
+  }
+  else
+    return NULL;
+#endif
+
+  if((*ptr&0xFF000000)!=0xeb000000) // not call instruction
+    ptr++;
+
+  if((*ptr&0xFF000000)==0xeb000000) // call instruction
+  {
+    *verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
+    ptr++;
+  }
+  else
+    return NULL;
+
+  //Trampoline jump
+  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
+    *verifier=*((uintptr_t*)(*verifier+4));
+
+  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
+    return NULL;
+
+  // clean entry point
+  if((*ptr&0xFF000000)==0xea000000) // jmp instruction
+    return (void*)((int)ptr+((signed int)(*ptr<<8)>>6)+8); // follow jump
+  else
+    return (void*)ptr;
 }
 
 /* Register allocation */
@@ -1085,7 +994,7 @@ static u_int genjmp(u_int addr)
     {
       if(addr==jump_table_symbols[n])
       {
-        offset=BASE_ADDR+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE+n*8-(int)out-8;
+        offset=(int)base_addr+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE+n*8-(int)out-8;
         break;
       }
     }
@@ -1263,6 +1172,7 @@ static void emit_storereg(int r, int hr)
   if((r&63)==LOREG) offset=fp_lo+((r&64)>>4);
   if(r==CCREG) offset=fp_cycle_count;
   if(r==FSREG) offset=fp_fcr31;
+  assert((r&63)<=CCREG);
   assert(offset<4096);
   assem_debug("str %s,fp+%d",regname[hr],offset);
   output_w32(0xe5800000|rd_rn_rm(hr,FP,0)|offset);
@@ -1956,6 +1866,22 @@ static void emit_movswl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000f0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
+static void emit_movswl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movswl_indexed(addr,rs,rt);
+  else {
+    if(addr==0) {
+      emit_shlimm(map,2,HOST_TEMPREG);
+      assem_debug("ldrsh %s,%s+%s",regname[rt],regname[rs],regname[HOST_TEMPREG]);
+      output_w32(0xe19000f0|rd_rn_rm(rt,rs,HOST_TEMPREG));
+    }else{
+      assert(addr>-256&&addr<256);
+      assem_debug("add %s,%s,%s,lsl #2",regname[rt],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(rt,rs,map)|(2<<7));
+      emit_movswl_indexed(addr, rt, rt);
+    }
+  }
+}
 static void emit_movzbl_indexed(int offset, int rs, int rt)
 {
   assert(offset>-4096&&offset<4096);
@@ -1993,12 +1919,32 @@ static void emit_movzwl_indexed(int offset, int rs, int rt)
     output_w32(0xe15000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
   }
 }
+static void emit_movzwl_indexed_tlb(int addr, int rs, int map, int rt)
+{
+  if(map<0) emit_movzwl_indexed(addr,rs,rt);
+  else {
+    if(addr==0) {
+      emit_shlimm(map,2,HOST_TEMPREG);
+      assem_debug("ldrh %s,%s+%s",regname[rt],regname[rs],regname[HOST_TEMPREG]);
+      output_w32(0xe19000b0|rd_rn_rm(rt,rs,HOST_TEMPREG));
+    }else{
+      assert(addr>-256&&addr<256);
+      assem_debug("add %s,%s,%s,lsl #2",regname[rt],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(rt,rs,map)|(2<<7));
+      emit_movzwl_indexed(addr, rt, rt);
+    }
+  }
+}
 static void emit_readword(int addr, int rt)
 {
   u_int offset = addr-(u_int)&g_dev.r4300.new_dynarec_hot_state;
   assert(offset<4096);
   assem_debug("ldr %s,fp+%d",regname[rt],offset);
   output_w32(0xe5900000|rd_rn_rm(rt,FP,0)|offset);
+}
+static void emit_readptr(int addr, int rt)
+{
+  emit_readword(addr,rt);
 }
 static void emit_movsbl(int addr, int rt)
 {
@@ -2052,29 +1998,24 @@ static void emit_writeword_dualindexedx4(int rt, int rs1, int rs2)
   assem_debug("str %s,%s,%s lsl #2",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7800000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writeword_indexed(rt, addr, rs);
   else {
-    assert(addr==0);
-    emit_writeword_dualindexedx4(rt, rs, map);
-  }
-}
-static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map, int temp)
-{
-  if(map<0) {
-    if(rh>=0) emit_writeword_indexed(rh, addr, rs);
-    emit_writeword_indexed(rl, addr+4, rs);
-  }else{
-    assert(rh>=0);
-    if(temp!=rs) emit_addimm(map,1,temp);
-    emit_writeword_indexed_tlb(rh, addr, rs, map, temp);
-    if(temp!=rs) emit_writeword_indexed_tlb(rl, addr, rs, temp, temp);
-    else {
-      emit_addimm(rs,4,rs);
-      emit_writeword_indexed_tlb(rl, addr, rs, map, temp);
+    if(addr==0) {
+      emit_writeword_dualindexedx4(rt, rs, map);
+    }else{
+      assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+      emit_writeword_indexed(rt,addr,HOST_TEMPREG);
     }
   }
+}
+static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map)
+{
+  assert(rh>=0);
+  emit_writeword_indexed_tlb(rh, addr, rs, map);
+  emit_writeword_indexed_tlb(rl, addr+4, rs, map);
 }
 static void emit_writehword_indexed(int rt, int offset, int rs)
 {
@@ -2084,6 +2025,15 @@ static void emit_writehword_indexed(int rt, int offset, int rs)
     output_w32(0xe1c000b0|rd_rn_rm(rt,rs,0)|((offset<<4)&0xf00)|(offset&0xf));
   }else{
     output_w32(0xe14000b0|rd_rn_rm(rt,rs,0)|(((-offset)<<4)&0xf00)|((-offset)&0xf));
+  }
+}
+static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
+{
+  if(map<0) emit_writehword_indexed(rt, addr, rs);
+  else {
+    assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+    output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+    emit_writehword_indexed(rt,addr,HOST_TEMPREG);
   }
 }
 static void emit_writebyte_indexed(int rt, int offset, int rs)
@@ -2101,15 +2051,16 @@ static void emit_writebyte_dualindexedx4(int rt, int rs1, int rs2)
   assem_debug("strb %s,%s,%s lsl #2",regname[rt],regname[rs1],regname[rs2]);
   output_w32(0xe7c00000|rd_rn_rm(rt,rs1,rs2)|0x100);
 }
-static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map, int temp)
+static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 {
   if(map<0) emit_writebyte_indexed(rt, addr, rs);
   else {
     if(addr==0) {
       emit_writebyte_dualindexedx4(rt, rs, map);
     }else{
-      emit_addimm(rs,addr,temp);
-      emit_writebyte_dualindexedx4(rt, temp, map);
+      assem_debug("add %s,%s,%s,lsl #2",regname[HOST_TEMPREG],regname[rs],regname[map]);
+      output_w32(0xe0800000|rd_rn_rm(HOST_TEMPREG,rs,map)|(2<<7));
+      emit_writebyte_indexed(rt,addr,HOST_TEMPREG);
     }
   }
 }
@@ -2606,7 +2557,7 @@ static void emit_jno_unlikely(int a)
 // Save registers before function call
 static void save_regs(u_int reglist)
 {
-  reglist&=0x100f; // only save the caller-save registers, r0-r3, r12
+  reglist&=CALLER_SAVED_REGS; // only save the caller-save registers, r0-r3, r12
   if(!reglist) return;
   assem_debug("stmia fp,{");
   if(reglist&1) assem_debug("r0, ");
@@ -2620,7 +2571,7 @@ static void save_regs(u_int reglist)
 // Restore registers after function call
 static void restore_regs(u_int reglist)
 {
-  reglist&=0x100f; // only restore the caller-save registers, r0-r3, r12
+  reglist&=CALLER_SAVED_REGS; // only restore the caller-save registers, r0-r3, r12
   if(!reglist) return;
   assem_debug("ldmia fp,{");
   if(reglist&1) assem_debug("r0, ");
@@ -2632,13 +2583,13 @@ static void restore_regs(u_int reglist)
   output_w32(0xe89b0000|reglist);
 }
 
-// Write back consts using r14 so we don't disturb the other registers
-static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,int i)
+// Write back consts using r14 so we don't disturb the other registers (load constant to HOST_TEMPREG, useless if load_all_consts already did it!)
+static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,u_int isconst,int i)
 {
   int hr;
   for(hr=0;hr<HOST_REGS;hr++) {
     if(hr!=EXCLUDE_REG&&i_regmap[hr]>=0&&((i_dirty>>hr)&1)) {
-      if(((regs[i].isconst>>hr)&1)&&i_regmap[hr]>0) {
+      if(((isconst>>hr)&1)&&i_regmap[hr]>0) {
         if(i_regmap[hr]<64 || !((i_is32>>(i_regmap[hr]&63))&1) ) {
           int value=constmap[i][hr];
           if(value==0) {
@@ -2709,12 +2660,9 @@ static void emit_extjump2(int addr, int target, int linker)
   //assert((target>=0x80000000&&target<0x80800000)||(target>0xA4000000&&target<0xA4001000));
 //DEBUG >
 #ifdef DEBUG_CYCLE_COUNT
-  emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-  emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
   emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
+  emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
   emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-  emit_sub(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-  emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
 #endif
 //DEBUG <
   emit_call(linker);
@@ -2728,7 +2676,7 @@ static void do_readstub(int n)
   set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
-  int rs=stubs[n][4];
+  int addr=stubs[n][4];
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   u_int reglist=stubs[n][7];
   signed char *i_regmap=i_regs->regmap;
@@ -2741,7 +2689,7 @@ static void do_readstub(int n)
     rth=get_reg(i_regmap,rt1[i]|64);
     rt=get_reg(i_regmap,rt1[i]);
   }
-  assert(rs>=0);
+  assert(addr>=0);
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
     ftable=(int)read_byte_new;
@@ -2752,21 +2700,20 @@ static void do_readstub(int n)
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
-  reglist|=1<<rs;
+  emit_writeword(addr,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   save_regs(reglist);
 
   int cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
   int ds=i_regs!=&regs[i];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -2774,14 +2721,9 @@ static void do_readstub(int n)
   emit_test(HOST_TEMPREG,HOST_TEMPREG);
   int jaddr=(int)out;
   emit_jeq(0);
-
-  int real_rs=(itype[i]==LOADLR)?-1:get_reg(i_regmap,rs1[i]);
-  if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-    emit_addimm(rs,-imm[i],real_rs);
-  u_int cmask=ds?-1:((~i_regs->wasconst)|(real_rs<0?0:(1<<real_rs)));
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
-  wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
-  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
+  wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
   emit_jmp((int)&do_interrupt);
   set_jump_target(jaddr,(int)out);
@@ -2805,13 +2747,14 @@ static void do_readstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_readstub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_readstub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
 {
-  int rs=get_reg(regmap,target);
+  int addr=get_reg(regmap,-1);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
-  if(rs<0) rs=get_reg(regmap,-1);
-  assert(rs>=0);
+  int agr=get_reg(regmap,AGEN1+(i&1));
+  assert(agr<0);
+  assert(addr>=0);
 
   int ftable=0;
   if(type==LOADB_STUB||type==LOADBU_STUB)
@@ -2823,13 +2766,12 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(type==LOADD_STUB)
     ftable=(int)read_dword_new;
 
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
-  reglist|=1<<rs;
+  emit_writeword(addr,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   save_regs(reglist);
 
   int cc=get_reg(regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
@@ -2838,13 +2780,13 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
   if(!ds) i_regs=&regs[i];
   else i_regs=&branch_regs[i-1];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(adj+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(adj+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
-  if((signed int)addr>=(signed int)0xC0000000) {
+  if((signed int)addr_const>=(signed int)0xC0000000) {
     // Theoretically we can have a pagefault here, if the TLB has never
     // been enabled and the address is outside the range 80000000..BFFFFFFF
     // Write out the registers so the pagefault can be handled.  This is
@@ -2854,10 +2796,7 @@ static void inline_readstub(int type, int i, u_int addr, signed char regmap[], i
     int jaddr=(int)out;
     emit_jeq(0);
 
-    int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
-    if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_addimm(rs,-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -2889,7 +2828,7 @@ static void do_writestub(int n)
   set_jump_target(stubs[n][1],(int)out);
   int type=stubs[n][0];
   int i=stubs[n][3];
-  int rs=stubs[n][4];
+  int addr=stubs[n][4];
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   u_int reglist=stubs[n][7];
   signed char *i_regmap=i_regs->regmap;
@@ -2902,10 +2841,10 @@ static void do_writestub(int n)
     rth=get_reg(i_regmap,rs2[i]|64);
     rt=get_reg(i_regmap,r=rs2[i]);
   }
-  assert(rs>=0);
+  assert(addr>=0);
   assert(rt>=0);
   int ftable=0;
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword(addr,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
@@ -2924,20 +2863,19 @@ static void do_writestub(int n)
     emit_writeword(r?rth:rt,((u_int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
-  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(i_regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
   int ds=i_regs!=&regs[i];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(stubs[n][6]+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
@@ -2946,13 +2884,8 @@ static void do_writestub(int n)
   int jaddr=(int)out;
   emit_jeq(0);
 
-  int real_rs=get_reg(i_regmap,rs1[i]);
-  if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-    emit_addimm(rs,-imm[i],real_rs);
-  u_int cmask=ds?-1:((~i_regs->wasconst)|(real_rs<0?0:(1<<real_rs)));
-  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
-  wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty&cmask);
-  if(!ds) wb_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+  if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
+  wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
   emit_jmp((int)&do_interrupt);
   set_jump_target(jaddr,(int)out);
@@ -2963,16 +2896,18 @@ static void do_writestub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_writestub(int type, int i, u_int addr, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_writestub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
 {
-  int rs=get_reg(regmap,-1);
+  int addr=get_reg(regmap,-1);
   int rth=get_reg(regmap,target|64);
   int rt=get_reg(regmap,target);
-  assert(rs>=0);
+  int agr=get_reg(regmap,AGEN1+(i&1));
+  assert(agr<0);
+  assert(addr>=0);
   assert(rt>=0);
 
   int ftable=0;
-  emit_writeword(rs,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
+  emit_writeword(addr,(u_int)&g_dev.r4300.new_dynarec_hot_state.address);
   if(type==STOREB_STUB){
     ftable=(int)write_byte_new;
     emit_writeword(rt,(u_int)&g_dev.r4300.new_dynarec_hot_state.wword);
@@ -2991,12 +2926,11 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     emit_writeword(target?rth:rt,((u_int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
-  reglist|=1<<rs;
   save_regs(reglist);
 
   int cc=get_reg(regmap,CCREG);
   if(cc<0) {
-    cc=1;
+    cc=ARG2_REG;
     emit_loadreg(CCREG,cc);
   }
 
@@ -3005,13 +2939,13 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
   if(!ds) i_regs=&regs[i];
   else i_regs=&branch_regs[i-1];
 
-  emit_movimm((start+(i+1)*4)+ds,0);
-  if(cc!=1) emit_mov(cc,1);
-  emit_movimm(CLOCK_DIVIDER*(adj+1),2);
+  emit_movimm((start+(i+1)*4)+ds,ARG1_REG);
+  if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+  emit_movimm(CLOCK_DIVIDER*(adj+1),ARG3_REG);
   emit_call((int)ftable);
   restore_regs(reglist);
 
-  if(((signed int)addr>=(signed int)0xC0000000)||((addr>>16)==0xa430)||((addr>>16)==0x8430)) {
+  if(((signed int)addr_const>=(signed int)0xC0000000)||((addr_const>>16)==0xa430)||((addr_const>>16)==0x8430)) {
     // Theoretically we can have a pagefault here, if the TLB has never
     // been enabled and the address is outside the range 80000000..BFFFFFFF
     // Write out the registers so the pagefault can be handled.  This is
@@ -3021,10 +2955,7 @@ static void inline_writestub(int type, int i, u_int addr, signed char regmap[], 
     int jaddr=(int)out;
     emit_jeq(0);
 
-    int real_rs=(itype[i]==LOADLR)?-1:get_reg(regmap,rs1[i]);
-    if((real_rs>=0)&&(((i_regs->wasdirty)>>real_rs)&1))
-      emit_addimm(rs,-imm[i],real_rs);
-    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty&(real_rs<0?-1:~(1<<real_rs)),i);
+    if(!ds) load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
 
     emit_jmp((int)&do_interrupt);
@@ -3065,8 +2996,8 @@ static int do_dirty_stub(int i)
   emit_loadlp(slen*4,3);
   #else
   emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
+  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((u_int)copy)&0xFFFF0000,2);
   emit_movw(slen*4,3);
   #endif
@@ -3081,6 +3012,7 @@ static int do_dirty_stub(int i)
 
 static void do_dirty_stub_ds(void)
 {
+  assert((int)start>=(int)0xC0000000);
   // Careful about the code output here, verify_dirty needs to parse it.
   #ifdef ARMv5_ONLY
   emit_loadlp((int)start<(int)0xC0000000?(int)source:(int)start,1);
@@ -3088,8 +3020,8 @@ static void do_dirty_stub_ds(void)
   emit_loadlp(slen*4,3);
   #else
   emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
+  emit_movw(((u_int)copy)&0x0000FFFF,2);
   emit_movt(((u_int)copy)&0xFFFF0000,2);
   emit_movw(slen*4,3);
   #endif
@@ -3107,7 +3039,7 @@ static void do_cop1stub(int n)
   struct regstat *i_regs=(struct regstat *)stubs[n][5];
   int ds=stubs[n][6];
   if(!ds) {
-    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,i);
+    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
     //if(i_regs!=&regs[i]) DebugMessage(M64MSG_VERBOSE, "oops: regs[i]=%x i_regs=%x",(int)&regs[i],(int)i_regs);
   }
   //else {DebugMessage(M64MSG_ERROR, "fp exception in delay slot");}
@@ -3156,12 +3088,14 @@ static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
   }
   return map;
 }
-
-static void gen_tlb_addr_r(int ar, int map) {
-  if(map>=0) {
-    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
+static int do_tlb_r_branch_debug(int map, int c, u_int addr, int *jaddr)
+{
+  if(!c) {
+    emit_test(map,map);
+    *jaddr=(int)out;
+    emit_js(0);
   }
+  return map;
 }
 
 static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
@@ -3197,19 +3131,12 @@ static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
     emit_jne(0);
   }
 }
-
-static void gen_tlb_addr_w(int ar, int map) {
-  if(map>=0) {
-    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
-  }
-}
-
-// This reverses the above operation
-static void gen_orig_addr_w(int ar, int map) {
-  if(map>=0) {
-    assem_debug("sub %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0400100|rd_rn_rm(ar,ar,map));
+static void do_tlb_w_branch_debug(int map, int c, u_int addr, int *jaddr)
+{
+  if(!c) {
+    emit_testimm(map,0x40000000);
+    *jaddr=(int)out;
+    emit_jne(0);
   }
 }
 
@@ -3471,24 +3398,33 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
 
 static void cop0_assemble(int i,struct regstat *i_regs)
 {
+  u_int hr,reglist=0;
+  for(hr=0;hr<HOST_REGS;hr++) {
+    if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+  }
+
   if(opcode2[i]==0) // MFC0
   {
     if(rt1[i]) {
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_addimm(FP,fp_fake_pc,0);
-        emit_movimm((source[i]>>11)&0x1f,1);
-        emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
-        if(copr==9||copr==1) {
-          emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-          emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-          emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-          emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-          emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
+        reglist&=~(1<<t);
+        save_regs(reglist);
+
+        int cc=get_reg(i_regs->regmap,CCREG);
+        if(cc<0) {
+          cc=ARG2_REG;
+          emit_loadreg(CCREG,cc);
         }
-        emit_call((int)cached_interp_MFC0);
+
+        //Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_RANDOM_REG)
+        emit_movimm(copr,ARG1_REG);
+        if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+        emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+
+        emit_call((int)MFC0_new);
+        restore_regs(reglist);
         emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
     }
@@ -3498,86 +3434,94 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     signed char s=get_reg(i_regs->regmap,rs1[i]);
     char copr=(source[i]>>11)&0x1f;
     assert(s>=0);
+    save_regs(reglist);
     emit_writeword(s,(u_int)&g_dev.r4300.new_dynarec_hot_state.rt);
-    wb_register(rs1[i],i_regs->regmap,i_regs->dirty,i_regs->is32);
-    emit_addimm(FP,fp_fake_pc,0);
-    emit_movimm((source[i]>>11)&0x1f,1);
-    emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-    emit_writebyte(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.fake_pc.f.r.nrd);
-    if(copr==9||copr==11||copr==12) {
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-      emit_loadreg(CCREG,HOST_CCREG); // TODO: do proper reg alloc
-      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
+
+    int cc=get_reg(i_regs->regmap,CCREG);
+    if(cc<0) {
+      cc=ARG2_REG;
+      emit_loadreg(CCREG,cc);
     }
-    // What a mess.  The status register (12) can enable interrupts,
-    // so needs a special case to handle a pending interrupt.
-    // The interrupt must be taken immediately, because a subsequent
-    // instruction might disable interrupts again.
-    if((copr==12||copr==9)&&!is_delayslot) {
-      emit_movimm(start+i*4+(copr==12)*4,0);
-      emit_movimm(0,1);
-      emit_writeword(0,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_writeword(1,(u_int)&g_dev.r4300.new_dynarec_hot_state.pending_exception);
-    }
-    //else if(copr==12&&is_delayslot) emit_call((int)MTC0_R12);
-    //else
-    emit_call((int)cached_interp_MTC0);
-    if(copr==9||copr==11||copr==12) {
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_CCREG);
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.next_interrupt,HOST_TEMPREG);
-      emit_addimm(HOST_CCREG,-CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_sub(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.last_count);
-      emit_storereg(CCREG,HOST_CCREG);
-    }
+
+    // Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG)
+    // Always update the pcaddr even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_STATUS_REG)
+    emit_movimm(copr,ARG1_REG);
+    if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+    emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+    emit_movimm(start+i*4+(copr==CP0_STATUS_REG)*4,ARG4_REG);
+
+    emit_call((int)MTC0_new);
+    restore_regs(reglist);
+
     if(copr==12||copr==9) {
       assert(!is_delayslot);
       emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,HOST_TEMPREG);
       emit_test(HOST_TEMPREG,HOST_TEMPREG);
       int jaddr=(int)out;
       emit_jeq(0);
-      if(copr==12){
-        emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG],HOST_TEMPREG);
-        emit_addimm(HOST_TEMPREG,(int)CLOCK_DIVIDER,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG, (u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-      }
+      load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
+      wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
       emit_jmp((int)&do_interrupt);
       set_jump_target(jaddr,(int)out);
     }
-    emit_loadreg(rs1[i],s);
-    if(get_reg(i_regs->regmap,rs1[i]|64)>=0)
-      emit_loadreg(rs1[i]|64,get_reg(i_regs->regmap,rs1[i]|64));
+
+    if(copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG){
+      if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
+        emit_loadreg(CCREG,cc);
+      }
+    }
+
     cop1_usable=0;
   }
   else
   {
     assert(opcode2[i]==0x10);
-    if((source[i]&0x3f)==0x01) // TLBR
-      emit_call((int)cached_interp_TLBR);
-    if((source[i]&0x3f)==0x02) { // TLBWI
-      assert(!is_delayslot);
-      emit_movimm((start+i*4),HOST_TEMPREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_call((int)TLBWI_new);
-    }
-    if((source[i]&0x3f)==0x06) { // TLBWR
-      // The TLB entry written by TLBWR is dependent on the count,
-      // so update the cycle count
-      assert(!is_delayslot);
-      emit_movimm((start+i*4),HOST_TEMPREG);
-      emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pcaddr);
-      emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.last_count,HOST_TEMPREG);
-      if(i_regs->regmap[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-      emit_add(HOST_CCREG,HOST_TEMPREG,HOST_CCREG);
-      emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG);
-      emit_writeword(HOST_CCREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_COUNT_REG]);
-      emit_call((int)TLBWR_new);
-    }
     if((source[i]&0x3f)==0x08) // TLBP
+    {
+      save_regs(reglist);
       emit_call((int)cached_interp_TLBP);
-    if((source[i]&0x3f)==0x18) // ERET
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x01) // TLBR
+    {
+      save_regs(reglist);
+      emit_call((int)cached_interp_TLBR);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x02) {  // TLBWI
+      assert(!is_delayslot);
+      save_regs(reglist);
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=ARG2_REG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_movimm(start+i*4,ARG1_REG);
+      if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+      emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+
+      emit_call((int)TLBWI_new);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x06) { // TLBWR
+      assert(!is_delayslot);
+      save_regs(reglist);
+
+      int cc=get_reg(i_regs->regmap,CCREG);
+      if(cc<0) {
+        cc=ARG2_REG;
+        emit_loadreg(CCREG,cc);
+      }
+
+      emit_movimm(start+i*4,ARG1_REG);
+      if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
+      emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
+      emit_call((int)TLBWR_new);
+      restore_regs(reglist);
+    }
+    else if((source[i]&0x3f)==0x18) // ERET
     {
       assert(!is_delayslot);
       int count=ccadj[i];
@@ -4253,7 +4197,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(lo>=0);
         emit_smull(m1,m2,hi,lo);
       }
-      if(opcode2[i]==0x19) // MULTU
+      else if(opcode2[i]==0x19) // MULTU
       {
         signed char m1=get_reg(i_regs->regmap,rs1[i]);
         signed char m2=get_reg(i_regs->regmap,rs2[i]);
@@ -4265,7 +4209,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(lo>=0);
         emit_umull(m1,m2,hi,lo);
       }
-      if(opcode2[i]==0x1A) // DIV
+      else if(opcode2[i]==0x1A) // DIV
       {
         signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
         signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
@@ -4306,7 +4250,7 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
           emit_negmi(remainder,remainder);
         }
       }
-      if(opcode2[i]==0x1B) // DIVU
+      else if(opcode2[i]==0x1B) // DIVU
       {
         signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
         signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
@@ -4343,65 +4287,8 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
     }
     else // 64-bit
     {
-#ifdef INTERPRETED_MULT64
-      if(opcode2[i]==0x1C) // DMULT
-      {
-        signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char m1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        save_regs(0x100f);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULT);
-        restore_regs(0x100f);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char m1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char m2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1h>=0);
-        assert(m2h>=0);
-        assert(m1l>=0);
-        assert(m2l>=0);
-        save_regs(0x100f);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(m1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(m1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(m2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(m2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DMULTU);
-        restore_regs(0x100f);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-#else
-      if(opcode2[i]==0x1C) // DMULT
+#ifndef INTERPRETED_MULT64
+      if(opcode2[i]==0x1C||opcode2[i]==0x1D)
       {
         signed char b_1=get_reg(i_regs->regmap,rs1[i]|64);
         signed char b_0=get_reg(i_regs->regmap,rs1[i]);
@@ -4419,102 +4306,80 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(a_2>=0);
         assert(a_1>=0);
         assert(a_0>=0);
-        
-        emit_umull(b_0,c_0,a_1,a_0);
-        emit_zeroreg(a_2);
-        emit_smlal(b_0,c_1,a_2,a_1);
-        emit_testimm(b_0,0x80000000);
-        emit_addne(a_2,c_1,a_2);
-        emit_zeroreg(a_3);
-        emit_smlal(b_1,c_0,a_3,a_1);
-        emit_testimm(c_0,0x80000000);
-        emit_addne(a_3,b_1,a_3);
-        emit_sarimm(a_2,31,HOST_TEMPREG);
-        emit_adds(a_2,a_3,a_2);
-        emit_adcsarimm(HOST_TEMPREG,a_3,a_3,31);
-        emit_smlal(b_1,c_1,a_3,a_2);
+
+        if(opcode2[i]==0x1C) // DMULT
+        { 
+          emit_umull(b_0,c_0,a_1,a_0);
+          emit_zeroreg(a_2);
+          emit_smlal(b_0,c_1,a_2,a_1);
+          emit_testimm(b_0,0x80000000);
+          emit_addne(a_2,c_1,a_2);
+          emit_zeroreg(a_3);
+          emit_smlal(b_1,c_0,a_3,a_1);
+          emit_testimm(c_0,0x80000000);
+          emit_addne(a_3,b_1,a_3);
+          emit_sarimm(a_2,31,HOST_TEMPREG);
+          emit_adds(a_2,a_3,a_2);
+          emit_adcsarimm(HOST_TEMPREG,a_3,a_3,31);
+          emit_smlal(b_1,c_1,a_3,a_2);
+        }
+        else if(opcode2[i]==0x1D) // DMULTU
+        {
+          emit_umull(b_0,c_0,a_1,a_0);
+          emit_zeroreg(a_2);
+          emit_umlal(b_0,c_1,a_2,a_1);
+          emit_zeroreg(a_3);
+          emit_umlal(b_1,c_0,a_3,a_1);
+          emit_zeroreg(HOST_TEMPREG);
+          emit_adds(a_2,a_3,a_2);
+          emit_adcimm(HOST_TEMPREG,0,a_3);
+          emit_umlal(b_1,c_1,a_3,a_2);
+        }
       }
-      if(opcode2[i]==0x1D) // DMULTU
-      {
-        signed char b_1=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char b_0=get_reg(i_regs->regmap,rs1[i]);
-        signed char c_1=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char c_0=get_reg(i_regs->regmap,rs2[i]);
-        assert(b_1>=0);
-        assert(b_0>=0);
-        assert(c_1>=0);
-        assert(c_0>=0);
-        signed char a_3=get_reg(i_regs->regmap,HIREG|64);
-        signed char a_2=get_reg(i_regs->regmap,HIREG);
-        signed char a_1=get_reg(i_regs->regmap,LOREG|64);
-        signed char a_0=get_reg(i_regs->regmap,LOREG);
-        assert(a_3>=0);
-        assert(a_2>=0);
-        assert(a_1>=0);
-        assert(a_0>=0);
-        
-        emit_umull(b_0,c_0,a_1,a_0);
-        emit_zeroreg(a_2);
-        emit_umlal(b_0,c_1,a_2,a_1);
-        emit_zeroreg(a_3);
-        emit_umlal(b_1,c_0,a_3,a_1);
-        emit_zeroreg(HOST_TEMPREG);
-        emit_adds(a_2,a_3,a_2);
-        emit_adcimm(HOST_TEMPREG,0,a_3);
-        emit_umlal(b_1,c_1,a_3,a_2);
-      }
+      else
 #endif
-      if(opcode2[i]==0x1E) // DDIV
       {
-        signed char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char d1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
-        save_regs(0x100f);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIV);
-        restore_regs(0x100f);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
-        if(hih>=0) emit_loadreg(HIREG|64,hih);
-        if(hil>=0) emit_loadreg(HIREG,hil);
-        if(loh>=0) emit_loadreg(LOREG|64,loh);
-        if(lol>=0) emit_loadreg(LOREG,lol);
-      }
-      if(opcode2[i]==0x1F) // DDIVU
-      {
-        signed char d1h=get_reg(i_regs->regmap,rs1[i]|64);
-        signed char d1l=get_reg(i_regs->regmap,rs1[i]);
-        signed char d2h=get_reg(i_regs->regmap,rs2[i]|64);
-        signed char d2l=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1h>=0);
-        assert(d2h>=0);
-        assert(d1l>=0);
-        assert(d2l>=0);
-        save_regs(0x100f);
-        emit_addimm(FP,fp_fake_pc,HOST_TEMPREG);
-        emit_writeword(HOST_TEMPREG,(u_int)&g_dev.r4300.new_dynarec_hot_state.pc);
-        emit_writeword(d1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
-        emit_writeword(d1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
-        emit_writeword(d2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
-        emit_writeword(d2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
-        emit_call((int)cached_interp_DDIVU);
-        restore_regs(0x100f);
-        signed char hih=get_reg(i_regs->regmap,HIREG|64);
-        signed char hil=get_reg(i_regs->regmap,HIREG);
-        signed char loh=get_reg(i_regs->regmap,LOREG|64);
-        signed char lol=get_reg(i_regs->regmap,LOREG);
+        u_int reglist=0;
+        char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+        char r1l=get_reg(i_regs->regmap,rs1[i]);
+        char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+        char r2l=get_reg(i_regs->regmap,rs2[i]);
+        char hih=get_reg(i_regs->regmap,HIREG|64);
+        char hil=get_reg(i_regs->regmap,HIREG);
+        char loh=get_reg(i_regs->regmap,LOREG|64);
+        char lol=get_reg(i_regs->regmap,LOREG);
+        assert(r1h>=0);
+        assert(r2h>=0);
+        assert(r1l>=0);
+        assert(r2l>=0);
+
+        for(int hr=0;hr<HOST_REGS;hr++) {
+          if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+        }
+
+        //Don't save lo and hi regs are they will be overwritten anyway
+        if(hih>=0) reglist&=~(1<<hih);
+        if(hil>=0) reglist&=~(1<<hil);
+        if(loh>=0) reglist&=~(1<<loh);
+        if(lol>=0) reglist&=~(1<<lol);
+
+        emit_writeword(r1l,(int)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r1h,((int)&g_dev.r4300.new_dynarec_hot_state.rs)+4);
+        emit_writeword(r2l,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
+        emit_writeword(r2h,((int)&g_dev.r4300.new_dynarec_hot_state.rt)+4);
+
+        save_regs(reglist);
+
+        if(opcode2[i]==0x1C) // DMULT
+          emit_call((int)cached_interp_DMULT);
+        else if(opcode2[i]==0x1D) // DMULTU
+          emit_call((int)cached_interp_DMULTU);
+        else if(opcode2[i]==0x1E) // DDIV
+          emit_call((int)cached_interp_DDIV);
+        else if(opcode2[i]==0x1F) // DDIVU
+          emit_call((int)cached_interp_DDIVU);
+
+        restore_regs(reglist);
         if(hih>=0) emit_loadreg(HIREG|64,hih);
         if(hil>=0) emit_loadreg(HIREG,hil);
         if(loh>=0) emit_loadreg(LOREG|64,loh);
@@ -4702,7 +4567,7 @@ static void do_clear_cache(void)
       for(j=0;j<32;j++) 
       {
         if(bitmap&(1<<j)) {
-          start=BASE_ADDR+i*131072+j*4096;
+          start=(int)base_addr+i*131072+j*4096;
           end=start+4095;
           j++;
           while(j<32) {
@@ -4738,14 +4603,12 @@ static void arch_init(void) {
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[2]=0x1<<22; // ceil
   g_dev.r4300.new_dynarec_hot_state.rounding_modes[3]=0x2<<22; // floor
 
-  jump_table_symbols[0] = (int) cached_interp_MFC0;
-  jump_table_symbols[1] = (int) cached_interp_MTC0;
-  jump_table_symbols[2] = (int) cached_interp_TLBR;
-  jump_table_symbols[3] = (int) cached_interp_TLBP;
-  jump_table_symbols[4] = (int) cached_interp_DMULT;
-  jump_table_symbols[5] = (int) cached_interp_DMULTU;
-  jump_table_symbols[6] = (int) cached_interp_DDIV;
-  jump_table_symbols[7] = (int) cached_interp_DDIVU;
+  jump_table_symbols[0] = (int) cached_interp_TLBR;
+  jump_table_symbols[1] = (int) cached_interp_TLBP;
+  jump_table_symbols[2] = (int) cached_interp_DMULT;
+  jump_table_symbols[3] = (int) cached_interp_DMULTU;
+  jump_table_symbols[4] = (int) cached_interp_DDIV;
+  jump_table_symbols[5] = (int) cached_interp_DDIVU;
 
   #ifdef RAM_OFFSET
   g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.rdram.dram-(int)0x80000000)>>2;
@@ -4754,8 +4617,8 @@ static void arch_init(void) {
   // Trampolines for jumps >32M
   int *ptr,*ptr2;
   ptr=(int *)jump_table_symbols;
-  ptr2=(int *)((void *)BASE_ADDR+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE);
-  while((void *)ptr<(void *)jump_table_symbols+sizeof(jump_table_symbols))
+  ptr2=(int *)((char *)base_addr+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE);
+  while((char *)ptr<(char *)jump_table_symbols+sizeof(jump_table_symbols))
   {
     int offset=*ptr-(int)ptr2-8;
     if(offset>=-33554432&&offset<33554432) {
@@ -4772,10 +4635,10 @@ static void arch_init(void) {
   // Jumping thru the trampolines created above slows things down by about 1%.
   // If part of the cache is beyond the 32M limit, avoid using this area
   // initially.  It will be used later if the cache gets full.
-  /*if((u_int)dyna_linker-33554432>(u_int)BASE_ADDR) {
-    if((u_int)dyna_linker-33554432<(u_int)BASE_ADDR+(1<<(TARGET_SIZE_2-1))) {
+  /*if((u_int)dyna_linker-33554432>(u_int)base_addr) {
+    if((u_int)dyna_linker-33554432<(u_int)base_addr+(1<<(TARGET_SIZE_2-1))) {
       out=(u_char *)(((u_int)dyna_linker-33554432)&~4095);
-      expirep=((((int)out-BASE_ADDR)>>(TARGET_SIZE_2-16))+16384)&65535;
+      expirep=((((int)out-(int)base_addr)>>(TARGET_SIZE_2-16))+16384)&65535;
     }
   }*/
 }

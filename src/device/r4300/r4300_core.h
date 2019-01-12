@@ -34,7 +34,7 @@
 
 #include "recomp_types.h" /* for precomp_instr, regcache_state */
 
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 
 #include "osal/preproc.h"
 
@@ -69,8 +69,8 @@ enum {
 
 struct r4300_core
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     int64_t regs[32];
     int64_t hi;
     int64_t lo;
@@ -82,8 +82,8 @@ struct r4300_core
     unsigned int delay_slot;
     uint32_t skip_jump;
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     int stop;
 #endif
 
@@ -177,12 +177,10 @@ struct r4300_core
         uint64_t wdword;
     } recomp;
 #else
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
     /* FIXME: better put that near linkage_arm code
      * to help generate call beyond the +/-32MB range.
      */
     ALIGN(4096, char extra_memory[33554432]);
-#endif
     struct new_dynarec_hot_state new_dynarec_hot_state;
 #endif /* NEW_DYNAREC */
 
@@ -202,7 +200,7 @@ struct r4300_core
 #define R4300_KSEG0 UINT32_C(0x80000000)
 #define R4300_KSEG1 UINT32_C(0xa0000000)
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
 #define R4300_REGS_OFFSET \
     offsetof(struct r4300_core, regs)
 #else

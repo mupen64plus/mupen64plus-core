@@ -33,12 +33,12 @@
 
 #define FP 11
 #define LR 14
+#define CALLER_SAVED_REGS 0x100f
 #define HOST_TEMPREG 14
 
 // Note: FP is set to &dynarec_local when executing generated code.
 // Thus the local variables are actually global and not on the stack.
 
-#define BASE_ADDR ((int)(&g_dev.r4300.extra_memory))
 #define TARGET_SIZE_2 25 // 2^25 = 32 megabytes
 #define JUMP_TABLE_SIZE (sizeof(jump_table_symbols)*2)
 

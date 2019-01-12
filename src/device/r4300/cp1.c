@@ -25,11 +25,11 @@
 #include "cp0.h"
 #include "cp1.h"
 
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 
 void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
+#ifdef NEW_DYNAREC
     cp1->new_dynarec_hot_state = new_dynarec_hot_state;
 #endif
 }
@@ -52,8 +52,8 @@ cp1_reg* r4300_cp1_regs(struct cp1* cp1)
 
 float** r4300_cp1_regs_simple(struct cp1* cp1)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     return cp1->regs_simple;
 #else
     return cp1->new_dynarec_hot_state->cp1_regs_simple;
@@ -62,8 +62,8 @@ float** r4300_cp1_regs_simple(struct cp1* cp1)
 
 double** r4300_cp1_regs_double(struct cp1* cp1)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     return cp1->regs_double;
 #else
     return cp1->new_dynarec_hot_state->cp1_regs_double;
@@ -72,8 +72,8 @@ double** r4300_cp1_regs_double(struct cp1* cp1)
 
 uint32_t* r4300_cp1_fcr0(struct cp1* cp1)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     return &cp1->fcr0;
 #else
     return &cp1->new_dynarec_hot_state->fcr0;
@@ -82,8 +82,8 @@ uint32_t* r4300_cp1_fcr0(struct cp1* cp1)
 
 uint32_t* r4300_cp1_fcr31(struct cp1* cp1)
 {
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     return &cp1->fcr31;
 #else
     return &cp1->new_dynarec_hot_state->fcr31;

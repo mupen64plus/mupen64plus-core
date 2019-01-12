@@ -23,7 +23,7 @@
 #define M64P_DEVICE_R4300_CP1_H
 
 #include <stdint.h>
-#include "new_dynarec/new_dynarec.h" /* for NEW_DYNAREC_ARM */
+#include "new_dynarec/new_dynarec.h"
 
 typedef union {
     int64_t  dword;
@@ -35,8 +35,8 @@ struct cp1
 {
     cp1_reg regs[32];
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifndef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     uint32_t fcr0;
     uint32_t fcr31;
 
@@ -51,13 +51,13 @@ struct cp1
      * using 32-bit stores. */
     uint32_t rounding_mode;
 
-#if NEW_DYNAREC == NEW_DYNAREC_ARM
-/* ARM dynarec uses a different memory layout */
+#ifdef NEW_DYNAREC
+	/* New dynarec uses a different memory layout */
     struct new_dynarec_hot_state* new_dynarec_hot_state;
 #endif
 };
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
 #define R4300_CP1_REGS_S_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
     offsetof(struct cp1, regs_simple))
@@ -67,7 +67,7 @@ struct cp1
     offsetof(struct new_dynarec_hot_state, cp1_regs_simple))
 #endif
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
 #define R4300_CP1_REGS_D_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
     offsetof(struct cp1, regs_double))
@@ -77,7 +77,7 @@ struct cp1
     offsetof(struct new_dynarec_hot_state, cp1_regs_double))
 #endif
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
 #define R4300_CP1_FCR0_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
     offsetof(struct cp1, fcr0))
@@ -87,7 +87,7 @@ struct cp1
     offsetof(struct new_dynarec_hot_state, fcr0))
 #endif
 
-#if NEW_DYNAREC != NEW_DYNAREC_ARM
+#ifndef NEW_DYNAREC
 #define R4300_CP1_FCR31_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
     offsetof(struct cp1, fcr31))

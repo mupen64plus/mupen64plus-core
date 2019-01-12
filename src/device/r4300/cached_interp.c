@@ -52,7 +52,15 @@
 
 #define DECLARE_R4300 struct r4300_core* r4300 = &g_dev.r4300;
 #define PCADDR *r4300_pc(r4300)
+#ifdef NEW_DYNAREC
+#define ADD_TO_PC(x) \
+    if (r4300->emumode != EMUMODE_DYNAREC) \
+      (*r4300_pc_struct(r4300)) += x; \
+    else \
+      assert(*r4300_pc_struct(r4300) == &r4300->new_dynarec_hot_state.fake_pc)
+#else
 #define ADD_TO_PC(x) (*r4300_pc_struct(r4300)) += x;
+#endif
 #define DECLARE_INSTRUCTION(name) void cached_interp_##name(void)
 
 #define DECLARE_JUMP(name, destination, condition, link, likely, cop1) \
