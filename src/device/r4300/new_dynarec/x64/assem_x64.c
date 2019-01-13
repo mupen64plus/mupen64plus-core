@@ -41,14 +41,14 @@ static const uintptr_t jump_vaddr_reg[8] = {
   (uintptr_t)jump_vaddr_eax,
   (uintptr_t)jump_vaddr_ecx,
   (uintptr_t)jump_vaddr_edx,
-#ifdef _MSC_VER
+#ifdef _WIN32
   (uintptr_t)jump_vaddr_ebx,
 #else
   0,
 #endif
   0,
   (uintptr_t)jump_vaddr_ebp,
-#ifdef _MSC_VER
+#ifdef _WIN32
   0,
 #else
   (uintptr_t)jump_vaddr_esi,

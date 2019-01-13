@@ -44,7 +44,7 @@
 #define TARGET_SIZE_2 25 // 2^25 = 32 megabytes
 #define JUMP_TABLE_SIZE 0 // Not needed for x86
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 /* Microsoft x64 calling convention:
    func(rcx, rdx, r8, r9) {return rax;}
    callee-save: %rbx %rbp %rdi %rsi %rsp %r12-%r15
