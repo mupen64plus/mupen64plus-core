@@ -1,2 +1,7 @@
 /projects/unix/_obj*/
 /projects/unix/libmupen64plus*.so*
+/subprojects/packagecache/
+/subprojects/libpng-*/
+/subprojects/SDL2-*/
+/subprojects/zlib-*/
+/subprojects/freetype2*/

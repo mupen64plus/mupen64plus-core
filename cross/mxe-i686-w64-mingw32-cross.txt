@@ -1,0 +1,15 @@
+[binaries]
+c = '/usr/lib/mxe/usr/bin/i686-w64-mingw32.shared-gcc'
+cpp = '/usr/lib/mxe/usr/bin/i686-w64-mingw32.shared-g++'
+ar = '/usr/lib/mxe/usr/bin/i686-w64-mingw32.shared-ar'
+pkgconfig = '/usr/lib/mxe/usr/bin/i686-w64-mingw32.shared-pkg-config'
+strip = '/usr/lib/mxe/usr/bin/i686-w64-mingw32.shared-strip'
+
+[properties]
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86'
+cpu = 'i686'
+endian = 'little'

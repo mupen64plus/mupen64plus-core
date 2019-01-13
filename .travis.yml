@@ -1,12 +1,11 @@
 sudo: required
 dist: trusty
-language: cpp
-compiler:
-  - gcc
-  - clang
+language: python
+python: 3.6
 addons:
   apt:
     packages:
+    - python3-pip
     - libsdl1.2-dev
     - libsdl2-dev
     - libfreetype6-dev
@@ -19,20 +18,43 @@ addons:
     - binutils-dev
     - nasm
     - libopencv-dev
+
 env:
- - OSD=0
- - OSD=1
- - NO_ASM=1
- - LIRC=1
- - PROFILE=1
- - DEBUGGER=1
- - DBG_CORE=1
- - DBG_COUNT=1
- - DBG_COMPARE=1
- - COUNT_INSTR=1
+ - CC=gcc MESON_CONFIGURE="-Dosd=true"
+ - CC=gcc MESON_CONFIGURE="-Dosd=false"
+ - CC=gcc MESON_CONFIGURE="-Dno_asm=true"
+ - CC=gcc MESON_CONFIGURE="-Dlirc=true"
+ - CC=gcc MESON_CONFIGURE="-Ddebugger=true"
+ - CC=gcc MESON_CONFIGURE="-Ddbg_compare=true"
+ - CC=gcc MESON_CONFIGURE="-Ddbg_core=true"
+ - CC=gcc MESON_CONFIGURE="-Ddbg_count=true"
+ - CC=gcc MESON_CONFIGURE="-Ddbg_profile=true"
+ - CC=gcc MESON_CONFIGURE="-Ddbg_timing=true"
+ - CC=clang MESON_CONFIGURE="-Dosd=true"
+ - CC=clang MESON_CONFIGURE="-Dosd=false"
+ - CC=clang MESON_CONFIGURE="-Dno_asm=true"
+ - CC=clang MESON_CONFIGURE="-Dlirc=true"
+ - CC=clang MESON_CONFIGURE="-Ddebugger=true"
+ - CC=clang MESON_CONFIGURE="-Ddbg_compare=true"
+ - CC=clang MESON_CONFIGURE="-Ddbg_core=true"
+ - CC=clang MESON_CONFIGURE="-Ddbg_count=true"
+ - CC=clang MESON_CONFIGURE="-Ddbg_profile=true"
+ - CC=clang MESON_CONFIGURE="-Ddbg_timing=true"
+
+install:
+  - python3 --version
+  - export PATH="`pwd`/build:${PATH}"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip && unzip -q ninja-linux.zip -d build; fi
+  - pip3 install meson
+
 script:
- - make -C projects/unix V=1 clean && LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
- - make -C projects/unix V=1 clean && LDFLAGS="-Wl,--no-add-needed -Wl,--no-undefined" OPTFLAGS="-O2" make SDL_CONFIG=sdl2-config CC="${CC}" CXX="${CXX}" -j$(nproc) -C projects/unix V=1 all
+  # XXX: disable LTO for now to avoid clang link failure
+  - meson -Db_lto=false "$MESON_CONFIGURE" builddir
+  # disable LTO when using clang, because broken Travis packages can't find LLVMgold.so plugin at linkk time...
+  #- if [[ "${CC%%+*}" == "clang" ]]; then meson configure -Db_lto=false builddir; fi
+  # Print configuration just to make sure we got it right
+  - meson configure builddir
+  - ninja -C builddir
 
 # extra mxe build entries
 matrix:
@@ -56,8 +78,10 @@ matrix:
           - mxe-i686-w64-mingw32.shared-pkgconf
           - nasm
       script:
-      - make UNAME=MINGW CROSS_COMPILE="${MXE_CPU}-w64-mingw32.shared-" CC="${MXE_CPU}-w64-mingw32.shared-gcc" CXX="${MXE_CPU}-w64-mingw32.shared-g++" HOST_CPU="${MXE_CPU}" SDL_CONFIG="${MXE_CPU}-w64-mingw32.shared-sdl2-config" -C projects/unix V=1  clean && 
-        make UNAME=MINGW CROSS_COMPILE="${MXE_CPU}-w64-mingw32.shared-" CC="${MXE_CPU}-w64-mingw32.shared-gcc" CXX="${MXE_CPU}-w64-mingw32.shared-g++" HOST_CPU="${MXE_CPU}" SDL_CONFIG="${MXE_CPU}-w64-mingw32.shared-sdl2-config" -C projects/unix V=1 -j$(nproc) all
+        # XXX: disable LTO for now to avoid subprojects linking failure
+        - meson -Db_lto=false --cross-file cross/mxe-i686-w64-mingw32-cross.txt builddir
+        - meson configure builddir
+        - ninja -C builddir
 
     - env:
       - MXE_CPU=x86_64
@@ -75,8 +99,10 @@ matrix:
           - mxe-x86-64-w64-mingw32.shared-libpng
           - mxe-x86-64-w64-mingw32.shared-zlib
           - mxe-x86-64-w64-mingw32.shared-opencv
-          - mxe-i686-w64-mingw32.shared-pkgconf
+          - mxe-x86-64-w64-mingw32.shared-pkgconf
           - nasm
       script:
-      - make UNAME=MINGW CROSS_COMPILE="${MXE_CPU}-w64-mingw32.shared-" CC="${MXE_CPU}-w64-mingw32.shared-gcc" CXX="${MXE_CPU}-w64-mingw32.shared-g++" HOST_CPU="${MXE_CPU}" SDL_CONFIG="${MXE_CPU}-w64-mingw32.shared-sdl2-config" -C projects/unix V=1  clean && 
-        make UNAME=MINGW CROSS_COMPILE="${MXE_CPU}-w64-mingw32.shared-" CC="${MXE_CPU}-w64-mingw32.shared-gcc" CXX="${MXE_CPU}-w64-mingw32.shared-g++" HOST_CPU="${MXE_CPU}" SDL_CONFIG="${MXE_CPU}-w64-mingw32.shared-sdl2-config" -C projects/unix V=1 -j$(nproc) all
+        # XXX: disable LTO for now to avoid subprojects linking failure
+        - meson -Db_lto=false --cross-file cross/mxe-x86-64-w64-mingw32-cross.txt builddir
+        - meson configure builddir
+        - ninja -C builddir
