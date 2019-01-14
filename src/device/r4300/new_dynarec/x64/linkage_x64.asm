@@ -180,7 +180,7 @@ verify_code_vm:
     lea     r10d,   [-1+ARG1_REG64+ARG3_REG64*1]
     shr     CCREG,  12
     shr     r10d,   12
-    mov     r11,    g_dev_r4300_new_dynarec_hot_state_memory_map
+    lea     r11,    [rel g_dev_r4300_new_dynarec_hot_state_memory_map]
     mov     rax,    [r11+CCREG64*8]
     test    rax,    rax
     js      _D4
@@ -235,7 +235,7 @@ cc_interrupt:
     shr     CCREG,    19
     mov     DWORD [rel g_dev_r4300_new_dynarec_hot_state_pending_exception],    0
     and     CCREG,    01fch
-    mov     r10,    g_dev_r4300_new_dynarec_hot_state_restore_candidate
+    lea     r10,    [rel g_dev_r4300_new_dynarec_hot_state_restore_candidate]
     cmp     DWORD [r10+CCREG64],    0
     jne     _E4
 _E1:
@@ -338,7 +338,7 @@ _E8:
     mov     r9,     248
     xor     r10d,    r10d
 _E9:
-    mov     r8,     g_dev_r4300_new_dynarec_hot_state_regs
+    lea     r8,     [rel g_dev_r4300_new_dynarec_hot_state_regs]
     mov     ecx,    [r8+r9]
     mov     edx,    [r8+r9+4]
     sar     ecx,    31
@@ -347,13 +347,13 @@ _E9:
     adc     r10d,    r10d
     sub     r9,     8
     jne     _E9
-    mov     r8,     g_dev_r4300_new_dynarec_hot_state_hi
+    lea     r8,     [rel g_dev_r4300_new_dynarec_hot_state_hi]
     mov     ecx,    [r8+r9]
     mov     edx,    [r8+r9+4]
     sar     ecx,    31
     xor     edx,    ecx
     jne     _E10
-    mov     r8,     g_dev_r4300_new_dynarec_hot_state_lo
+    lea     r8,     [rel g_dev_r4300_new_dynarec_hot_state_lo]
     mov     ecx,    [r8+r9]
     mov     edx,    [r8+r9+4]
     sar     ecx,    31
