@@ -1925,7 +1925,7 @@ static void ll_clear(struct ll_entry **head)
 }
 
 // Dereference the pointers and remove if it matches
-static void ll_kill_pointers(struct ll_entry *head,int addr,int shift)
+static void ll_kill_pointers(struct ll_entry *head,intptr_t addr,int shift)
 {
   while(head) {
     uintptr_t ptr=get_pointer(head->addr);
