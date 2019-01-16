@@ -1972,6 +1972,7 @@ static void *dynamic_linker(void * src, u_int vaddr)
 
   while(head!=NULL) {
     if(head->vaddr==vaddr&&head->reg32==0) {
+#ifndef DISABLE_BLOCK_LINKING
       void* src_rw=(void*)(((intptr_t)src-(intptr_t)base_addr_rx)+(intptr_t)base_addr);
 #if NEW_DYNAREC == NEW_DYNAREC_ARM64
       //TODO: Avoid disabling link between blocks for conditional branches
@@ -1981,6 +1982,7 @@ static void *dynamic_linker(void * src, u_int vaddr)
       }
 #else
       add_link(vaddr, add_pointer(src_rw,head->addr));
+#endif
 #endif
       return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
     }
@@ -7390,11 +7392,14 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
   void *stub=out;
   void *compiled_target_addr=check_addr(target_addr);
   emit_extjump_ds((intptr_t)branch_addr,target_addr);
+#ifndef DISABLE_BLOCK_LINKING
   if(compiled_target_addr) {
     set_jump_target((intptr_t)branch_addr,(intptr_t)compiled_target_addr);
     add_link(target_addr,stub);
   }
-  else set_jump_target((intptr_t)branch_addr,(intptr_t)stub);
+  else
+#endif
+    set_jump_target((intptr_t)branch_addr,(intptr_t)stub);
   if(likely[i]) {
     // Not-taken path
     set_jump_target((intptr_t)nottaken,(intptr_t)out);
@@ -7405,11 +7410,14 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
     void *stub=out;
     void *compiled_target_addr=check_addr(target_addr);
     emit_extjump_ds((intptr_t)branch_addr,target_addr);
+#ifndef DISABLE_BLOCK_LINKING
     if(compiled_target_addr) {
       set_jump_target((intptr_t)branch_addr,(intptr_t)compiled_target_addr);
       add_link(target_addr,stub);
     }
-    else set_jump_target((intptr_t)branch_addr,(intptr_t)stub);
+    else
+#endif
+      set_jump_target((intptr_t)branch_addr,(intptr_t)stub);
   }
 }
 
@@ -10844,6 +10852,7 @@ int new_recompile_block(int addr)
       void *stub=out;
       void *addr=check_addr(link_addr[i][1]);
       emit_extjump(link_addr[i][0],link_addr[i][1]);
+#ifndef DISABLE_BLOCK_LINKING
 #if NEW_DYNAREC==NEW_DYNAREC_ARM64
       //TODO: Avoid disabling link between blocks for conditional branches
       u_char *ptr=(u_char *)link_addr[i][0];
@@ -10854,7 +10863,9 @@ int new_recompile_block(int addr)
         set_jump_target(link_addr[i][0],(intptr_t)addr);
         add_link(link_addr[i][1],stub);
       }
-      else set_jump_target(link_addr[i][0],(intptr_t)stub);
+      else
+#endif
+        set_jump_target(link_addr[i][0],(intptr_t)stub);
     }
     else
     {
