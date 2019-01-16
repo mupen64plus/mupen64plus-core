@@ -85,6 +85,7 @@ static void *dyna_linker(void * src, u_int vaddr);
 static void *dyna_linker_ds(void * src, u_int vaddr);
 static void invalidate_addr(u_int addr);
 
+static uintptr_t literals[1024][2];
 static unsigned int needs_clear_cache[1<<(TARGET_SIZE_2-17)];
 
 static const uintptr_t jump_vaddr_reg[32] = {
@@ -287,6 +288,14 @@ static void set_jump_target(intptr_t addr,uintptr_t target)
     assert(0); /*Should not happen*/
 }
 
+/* Literal pool */
+static void add_literal(uintptr_t addr,uintptr_t val)
+{
+  literals[literalcount][0]=addr;
+  literals[literalcount][1]=val;
+  literalcount++; 
+}
+
 static void *add_pointer(void *src, void* addr)
 {
   int *ptr=(int*)src;
@@ -344,6 +353,12 @@ static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u
     *source|=(ptr[1]>>10)&0xfff;
     ptr+=2;
   }
+  else if((ptr[0]&0xFF000000)==0x58000000) //ldr pc relative
+  {
+    int offset=(((signed int)(ptr[0]<<8)>>13)<<2);
+    *source=(uintptr_t)(*((uintptr_t*)((intptr_t)ptr+offset)));
+    ptr++;
+  }
   else
     return NULL;
 
@@ -360,6 +375,12 @@ static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u
     *copy=((intptr_t)ptr_rx&~0xfffLL)+((intptr_t)offset<<12);
     *copy|=(ptr[1]>>10)&0xfff;
     ptr+=2;
+  }
+  else if((ptr[0]&0xFF000000)==0x58000000) //ldr pc relative
+  {
+    int offset=(((signed int)(ptr[0]<<8)>>13)<<2);
+    *copy=(uintptr_t)(*((uintptr_t*)((intptr_t)ptr+offset)));
+    ptr++;
   }
   else
     return NULL;
@@ -960,6 +981,12 @@ static void output_w32(u_int word)
   out+=4;
 }
 
+static void output_w64(uint64_t dword)
+{
+  *((uint64_t *)out)=dword;
+  out+=8;
+}
+
 static u_int genjmp(intptr_t addr)
 {
   if(addr<4) return 0;
@@ -1110,6 +1137,12 @@ static uint32_t genimm(uint64_t imm, uint32_t regsize, uint32_t * encoded) {
 
   *encoded = (N << 12) | (immr << 6) | (Nimms & 0x3f);
   return 1;
+}
+
+static void emit_loadlp(uintptr_t addr,u_int rt)
+{
+  add_literal((uintptr_t)out,addr);
+  output_w32(0x58000000|rt);
 }
 
 static void emit_mov(int rs,int rt)
@@ -3115,14 +3148,24 @@ static void wb_consts(signed char i_regmap[],uint64_t i_is32,u_int i_dirty,u_int
 
 static void literal_pool(int n)
 {
-  if(!literalcount) return;
-  assert(0); /* Should not happen */
+  if((!literalcount)||(n!=0)) return;
+  u_int *ptr;
+  int i;
+  for(i=0;i<literalcount;i++)
+  {
+    ptr=(u_int *)literals[i][0];
+    intptr_t offset=(intptr_t)out-(intptr_t)ptr;
+    assert(offset>=-1048576LL&&offset<1048576LL);
+    assert((offset&3)==0);
+    *ptr|=((offset>>2)<<5);
+    output_w64(literals[i][1]);
+  }
+  literalcount=0;
 }
 
 static void literal_pool_jumpover(int n)
 {
-  if(!literalcount) return;
-  assert(0); /* Should not happen */
+  (void)n;
 }
 
 static void emit_extjump2(intptr_t addr, int target, intptr_t linker)
@@ -3468,27 +3511,37 @@ static intptr_t do_dirty_stub(int i)
   assem_debug("do_dirty_stub %x",start+i*4);
 
   // Careful about the code output here, verify_dirty and get_bounds needs to parse it.
+  intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
+  intptr_t offset=(((intptr_t)source&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
   u_int pcaddr=start+i*4;
+
   if((int)start<(int)0xC0000000){
     if((uintptr_t)source<4294967296LL){
       emit_movz_lsl16(((uintptr_t)source>>16)&0xffff,1);
       emit_movk(((uintptr_t)source)&0xffff,1);
-    }else{
+  	}else if(offset>=-4294967296LL&&offset<4294967296LL){
       emit_adrp((intptr_t)source,1);
       emit_addimm64(1,((intptr_t)source&0xfffLL),1);
+    }else{
+      emit_loadlp((intptr_t)source,1); 
     }
   }else{
     emit_movz_lsl16(((u_int)start>>16)&0xffff,1);
     emit_movk(((u_int)start)&0xffff,1);
   }
+
   //copy
+  offset=(((intptr_t)copy&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
   if((uintptr_t)copy<4294967296LL){
     emit_movz_lsl16(((uintptr_t)copy>>16)&0xffff,2);
     emit_movk(((uintptr_t)copy)&0xffff,2);
-  }else{
+  }else if(offset>=-4294967296LL&&offset<4294967296LL){
     emit_adrp((intptr_t)copy,2);
     emit_addimm64(2,((intptr_t)copy&0xfffLL),2);
+  }else{
+    emit_loadlp((intptr_t)copy,2);
   }
+	
   //slen
   emit_movz(slen*4,3);
   //pcaddr
@@ -3504,28 +3557,37 @@ static intptr_t do_dirty_stub(int i)
 
 static void do_dirty_stub_ds(void)
 {
+  intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
+  intptr_t offset=(((intptr_t)source&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
   u_int pcaddr=start+1;
+
   assert((int)start>=(int)0xC0000000);
   // Careful about the code output here, verify_dirty and get_bounds needs to parse it.
   if((int)start<(int)0xC0000000){
     if((uintptr_t)source<4294967296LL){
       emit_movz_lsl16(((uintptr_t)source>>16)&0xffff,1);
       emit_movk(((uintptr_t)source)&0xffff,1);
-    }else{
+    }else if(offset>=-4294967296LL&&offset<4294967296LL){
       emit_adrp((intptr_t)source,1);
       emit_addimm64(1,((intptr_t)source&0xfffLL),1);
+    }else{
+      emit_loadlp((intptr_t)source,1);
     }
   }else{
     emit_movz_lsl16(((u_int)start>>16)&0xffff,1);
     emit_movk(((u_int)start)&0xffff,1);
   }
+
   //copy
+  offset=(((intptr_t)copy&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
   if((uintptr_t)copy<4294967296LL){
     emit_movz_lsl16(((uintptr_t)copy>>16)&0xffff,2);
     emit_movk(((uintptr_t)copy)&0xffff,2);
-  }else{
+  }else if(offset>=-4294967296LL&&offset<4294967296LL){
     emit_adrp((intptr_t)copy,2);
     emit_addimm64(2,((intptr_t)copy&0xfffLL),2);
+  }else{
+    emit_loadlp((intptr_t)copy,2);
   }
   //slen
   emit_movz(slen*4,3);
