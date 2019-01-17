@@ -111,8 +111,6 @@ static u_int jump_table_symbols[] = {
   (int)dyna_linker,
   (int)dyna_linker_ds,
   (int)verify_code,
-  (int)verify_code_vm,
-  (int)verify_code_ds,
   (int)cc_interrupt,
   (int)fp_exception,
   (int)fp_exception_ds,
@@ -368,66 +366,6 @@ static int get_pointer(void *stub)
 #endif
   assert((*i_ptr&0x0f000000)==0x0a000000); //jmp
   return (int)i_ptr+((*i_ptr<<8)>>6)+8;
-}
-
-// Returns a pointer to the "clean" entry point from a "dirty" entry point. Returns null if not a dirty stub
-static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
-{
-  u_int *ptr=(u_int *)addr;
-#ifdef ARMv5_ONLY
-  assert(0);
-#else
-  //source
-  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
-  {
-    *source=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
-    ptr+=2;
-  }
-  else
-    return NULL;
-
-  //copy
-  if(((ptr[0]&0xFFF00000)==0xe3000000)&&((ptr[1]&0xFFF00000)==0xe3400000)) //movw/movt
-  {
-    *copy=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000)+((ptr[1]<<16)&0xFFF0000)+((ptr[1]<<12)&0xF0000000);
-    ptr+=2;
-  }
-  else
-    return NULL;
-
-  //slen
-  if((*ptr&0xFFF00000)==0xe3000000) //movw
-  {
-    *len=(ptr[0]&0xFFF)+((ptr[0]>>4)&0xF000);
-    ptr+=2;
-  }
-  else
-    return NULL;
-#endif
-
-  if((*ptr&0xFF000000)!=0xeb000000) // not call instruction
-    ptr++;
-
-  if((*ptr&0xFF000000)==0xeb000000) // call instruction
-  {
-    *verifier=(int)ptr+((signed int)(*ptr<<8)>>6)+8; // get target of bl
-    ptr++;
-  }
-  else
-    return NULL;
-
-  //Trampoline jump
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    *verifier=*((uintptr_t*)(*verifier+4));
-
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    return NULL;
-
-  // clean entry point
-  if((*ptr&0xFF000000)==0xea000000) // jmp instruction
-    return (void*)((int)ptr+((signed int)(*ptr<<8)>>6)+8); // follow jump
-  else
-    return (void*)ptr;
 }
 
 /* Register allocation */
@@ -888,7 +826,7 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
   DebugMessage(M64MSG_ERROR, "This shouldn't happen");exit(1);
 }
 // Allocate a specific ARM register.
-static void alloc_arm_reg(struct regstat *cur,int i,signed char reg,char hr)
+static void alloc_arm_reg(struct regstat *cur,int i,signed char reg,int hr)
 {
   int n;
   int dirty=0;
@@ -2986,23 +2924,16 @@ static void do_invstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static int do_dirty_stub(int i)
+static int do_dirty_stub(int i, struct ll_entry * head)
 {
-  assem_debug("do_dirty_stub %x",start+i*4);
-  // Careful about the code output here, verify_dirty needs to parse it.
+  assem_debug("do_dirty_stub %x",head->vaddr);
   #ifdef ARMv5_ONLY
-  emit_loadlp((int)start<(int)0xC0000000?(int)source:(int)start,1);
-  emit_loadlp((int)copy,2);
-  emit_loadlp(slen*4,3);
+  emit_loadlp((int)head,ARG1_REG);
   #else
-  emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
-  emit_movt(((u_int)copy)&0xFFFF0000,2);
-  emit_movw(slen*4,3);
+  emit_movw(((u_int)head)&0x0000FFFF,ARG1_REG);
+  emit_movt(((u_int)head)&0xFFFF0000,ARG1_REG);
   #endif
-  emit_movimm(start+i*4,0);
-  emit_call((int)start<(int)0xC0000000?(int)&verify_code:(int)&verify_code_vm);
+  emit_call((int)&verify_code);
   int entry=(int)out;
   load_regs_entry(i);
   if(entry==(int)out) entry=instr_addr[i];
@@ -3010,23 +2941,16 @@ static int do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds(void)
+static void do_dirty_stub_ds(struct ll_entry * head)
 {
-  assert((int)start>=(int)0xC0000000);
-  // Careful about the code output here, verify_dirty needs to parse it.
+  assem_debug("do_dirty_stub_ds %x",head->vaddr);
   #ifdef ARMv5_ONLY
-  emit_loadlp((int)start<(int)0xC0000000?(int)source:(int)start,1);
-  emit_loadlp((int)copy,2);
-  emit_loadlp(slen*4,3);
+  emit_loadlp((int)head,ARG1_REG);
   #else
-  emit_movw(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0x0000FFFF,1);
-  emit_movt(((int)start<(int)0xC0000000?(u_int)source:(u_int)start)&0xFFFF0000,1);
-  emit_movw(((u_int)copy)&0x0000FFFF,2);
-  emit_movt(((u_int)copy)&0xFFFF0000,2);
-  emit_movw(slen*4,3);
+  emit_movw(((u_int)head)&0x0000FFFF,ARG1_REG);
+  emit_movt(((u_int)head)&0xFFFF0000,ARG1_REG);
   #endif
-  emit_movimm(start+1,0);
-  emit_call((int)&verify_code_ds);
+  emit_call((int)&verify_code);
 }
 
 static void do_cop1stub(int n)

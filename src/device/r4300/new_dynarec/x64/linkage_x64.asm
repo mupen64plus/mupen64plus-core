@@ -83,8 +83,6 @@ cglobal jump_vaddr_ebx
 cglobal jump_vaddr_ebp
 cglobal jump_vaddr_esi
 cglobal jump_vaddr_edi
-cglobal verify_code_ds
-cglobal verify_code_vm
 cglobal verify_code
 cglobal cc_interrupt
 cglobal do_interrupt
@@ -112,6 +110,7 @@ cextern invalidate_block
 cextern new_dynarec_check_interrupt
 cextern get_addr_32
 cextern g_dev
+cextern verify_dirty
 
 section .bss
 align 4
@@ -162,68 +161,17 @@ jump_vaddr:
     mov     CCREG,    DWORD[rel g_dev_r4300_new_dynarec_hot_state_cycle_count]
     jmp     rax
 
-verify_code_ds:
-    ;ARG1_REG = source (virtual address)
-    ;ARG2_REG64 = copy
-    ;ARG3_REG = length
-    ;ARG4_REG = pcaddr
-
-verify_code_vm:
-    ;ARG1_REG = source (virtual address)
-    ;ARG2_REG64 = copy
-    ;ARG3_REG = length
-    ;ARG4_REG = pcaddr
-    cmp     ARG1_REG,    0C0000000h
-    jl      verify_code
-    mov     [rel g_dev_r4300_new_dynarec_hot_state_cycle_count],    CCREG
-    mov     CCREG,  ARG1_REG
-    lea     r10d,   [-1+ARG1_REG64+ARG3_REG64*1]
-    shr     CCREG,  12
-    shr     r10d,   12
-    lea     r11,    [rel g_dev_r4300_new_dynarec_hot_state_memory_map]
-    mov     rax,    [r11+CCREG64*8]
-    test    rax,    rax
-    js      _D4
-    lea     ARG1_REG64,   [ARG1_REG64+rax*4]
-_D1:
-    xor     rax,    [r11+CCREG64*8]
-    shl     rax,    2
-    jne     _D4
-    mov     rax,    [r11+CCREG64*8]
-    inc     CCREG
-    cmp     CCREG,  r10d
-    jbe     _D1
-    mov     CCREG,  [rel g_dev_r4300_new_dynarec_hot_state_cycle_count]
 
 verify_code:
-    ;ARG1_REG64 = source
-    ;ARG2_REG64 = copy
-    ;ARG3_REG = length
-    ;ARG4_REG = pcaddr
-    mov     eax,    [-4+ARG1_REG64+ARG3_REG64*1]
-    xor     eax,    [-4+ARG2_REG64+ARG3_REG64*1]
-    jne     _D5
-    mov     eax,    ARG3_REG
-    add     ARG3_REG,    -4
-    je      _D3
-    test    eax,    4
-    cmove   ARG3_REG,    eax
-_D2:
-    mov     eax,    [-4+ARG1_REG64+ARG3_REG64*1]
-    xor     eax,    [-4+ARG2_REG64+ARG3_REG64*1]
-    jne     _D5
-    mov     eax,    [-8+ARG1_REG64+ARG3_REG64*1]
-    xor     eax,    [-8+ARG2_REG64+ARG3_REG64*1]
-    jne     _D5
-    add     ARG3_REG64,    -8
-    jne     _D2
-_D3:
-    ret
-_D4:
-    mov     CCREG,    [rel g_dev_r4300_new_dynarec_hot_state_cycle_count]
-_D5:
+    ;ARG1_REG64 = head
     add     rsp,    -8
-    mov     ARG1_REG,    ARG4_REG
+    call    verify_dirty
+    test    eax,eax
+    jne     _D1
+    add     rsp,    8
+    ret
+_D1:
+    mov     ARG1_REG,    eax
     call    get_addr
     add     rsp,    16
     jmp     rax
@@ -275,7 +223,6 @@ _E3:
     ret             ;exit dynarec
 _E4:
     ;Move 'dirty' blocks to the 'clean' list
-    
     mov     edx,    DWORD[r10+CCREG64]
     mov     DWORD [r10+CCREG64],    0
     shl     CCREG,    3

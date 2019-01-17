@@ -101,69 +101,6 @@ static int get_pointer(void *stub)
   return *i_ptr+(int)i_ptr+4;
 }
 
-// Returns a pointer to the "clean" entry point from a "dirty" entry point. Returns null if not a dirty stub
-static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
-{
-  u_char *ptr=(u_char *)addr;
-
-  //pcaddr
-  if(*ptr==0x68) //pushimm
-    ptr+=5;
-  else
-    return NULL;
-
-  //source
-  if(*ptr==(0xB8+EAX)) //movimm to EAX
-  {
-    *source=*(u_int *)(ptr+1);
-    ptr+=5;
-  }
-  else
-    return NULL;
-
-  //copy
-  if(*ptr==(0xB8+EDX)) //movimm to EDX
-  {
-    *copy=*(u_int *)(ptr+1);
-    ptr+=5;
-  }
-  else
-    return NULL;
-
-  //slen
-  if(*ptr==(0xB8+ECX)) //movimm to ECX
-  {
-    *len=*(u_int *)(ptr+1);
-    ptr+=5;
-  }
-  else
-    return NULL;
-
-  //verifier
-  if(*ptr==0xE8) // call instruction
-  {
-    *verifier=*(int*)(ptr+1)+(int)ptr+5;
-    ptr+=5;
-  }
-  else
-    return NULL;
-
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    return NULL;
-
-  // pop (add esp,4) instruction
-  if(*ptr==0x83)
-    ptr+=3;
-  else
-    return NULL;
-
-  // clean entry point
-  if(*ptr==0xE9)
-    return (void*)(*(int*)(ptr+1)+(int)ptr+5); // follow jmp
-  else
-    return (void*)ptr;
-}
-
 /* Register allocation */
 
 // Note: registers are allocated clean (unmodified state)
@@ -3014,15 +2951,11 @@ static void do_invstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static int do_dirty_stub(int i)
+static int do_dirty_stub(int i, struct ll_entry * head)
 {
-  assem_debug("do_dirty_stub %x",start+i*4);
-  emit_pushimm(start+i*4);
-  emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
-  emit_movimm((int)copy,EDX);
-  emit_movimm(slen*4,ECX);
-  emit_call((int)start<(int)0xC0000000?(int)&verify_code:(int)&verify_code_vm);
-  emit_addimm(ESP,4,ESP);
+  assem_debug("do_dirty_stub %x",head->vaddr);
+  emit_movimm((int)head,EAX);
+  emit_call((int)&verify_code);
   int entry=(int)out;
   load_regs_entry(i);
   if(entry==(int)out) entry=instr_addr[i];
@@ -3030,15 +2963,11 @@ static int do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds(void)
+static void do_dirty_stub_ds(struct ll_entry * head)
 {
-  assert((int)start>=(int)0xC0000000);
-  emit_pushimm(start+1);
-  emit_movimm((int)start<(int)0xC0000000?(int)source:(int)start,EAX);
-  emit_movimm((int)copy,EDX);
-  emit_movimm(slen*4,ECX);
-  emit_call((int)&verify_code_ds);
-  emit_addimm(ESP,4,ESP);
+  assem_debug("do_dirty_stub_ds %x",head->vaddr);
+  emit_movimm((int)head,EAX);
+  emit_call((int)&verify_code);
 }
 
 static void do_cop1stub(int n)

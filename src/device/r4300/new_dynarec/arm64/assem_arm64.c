@@ -133,8 +133,6 @@ static uintptr_t jump_table_symbols[] = {
   (intptr_t)dyna_linker,
   (intptr_t)dyna_linker_ds,
   (intptr_t)verify_code,
-  (intptr_t)verify_code_vm,
-  (intptr_t)verify_code_ds,
   (intptr_t)cc_interrupt,
   (intptr_t)fp_exception,
   (intptr_t)fp_exception_ds,
@@ -332,88 +330,6 @@ static intptr_t get_pointer(void *stub)
   int *i_ptr=(int*)((intptr_t)ptr+offset);
   assert((*i_ptr&0xfc000000)==0x14000000); //b
   return (intptr_t)i_ptr+(((signed int)(*i_ptr<<6)>>6)<<2);
-}
-
-// Returns a pointer to the instruction located after the call to verifier or null if not a dirty stub
-static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
-{
-  u_int *ptr=(u_int *)addr;
-
-  //source
-  if(((ptr[0]&0xFFE00000)==0x52A00000)&&((ptr[1]&0xFFE00000)==0x72800000)) //movz/movk
-  {
-    *source=(((ptr[0]>>5)&0xffff)<<16)|((ptr[1]>>5)&0xffff);
-    ptr+=2;
-  }
-  else if(((ptr[0]&0x9F000000)==0x90000000)&&((ptr[1]&0xFF000000)==0x91000000)) //adrp/add
-  {
-    u_int *ptr_rx=(u_int *)(((intptr_t)ptr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-    int offset=(((signed int)(ptr[0]<<8)>>13)<<2)|((ptr[0]>>29)&0x3);
-    *source=((intptr_t)ptr_rx&~0xfffLL)+((intptr_t)offset<<12);
-    *source|=(ptr[1]>>10)&0xfff;
-    ptr+=2;
-  }
-  else if((ptr[0]&0xFF000000)==0x58000000) //ldr pc relative
-  {
-    int offset=(((signed int)(ptr[0]<<8)>>13)<<2);
-    *source=(uintptr_t)(*((uintptr_t*)((intptr_t)ptr+offset)));
-    ptr++;
-  }
-  else
-    return NULL;
-
-  //copy
-  if(((ptr[0]&0xFFE00000)==0x52A00000)&&((ptr[1]&0xFFE00000)==0x72800000)) //movz/movk
-  {
-    *copy=(((ptr[0]>>5)&0xffff)<<16)|((ptr[1]>>5)&0xffff);
-    ptr+=2;
-  }
-  else if(((ptr[0]&0x9F000000)==0x90000000)&&((ptr[1]&0xFF000000)==0x91000000)) //adrp/add
-  {
-    u_int *ptr_rx=(u_int *)(((intptr_t)ptr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-    int offset=(((signed int)(ptr[0]<<8)>>13)<<2)|((ptr[0]>>29)&0x3);
-    *copy=((intptr_t)ptr_rx&~0xfffLL)+((intptr_t)offset<<12);
-    *copy|=(ptr[1]>>10)&0xfff;
-    ptr+=2;
-  }
-  else if((ptr[0]&0xFF000000)==0x58000000) //ldr pc relative
-  {
-    int offset=(((signed int)(ptr[0]<<8)>>13)<<2);
-    *copy=(uintptr_t)(*((uintptr_t*)((intptr_t)ptr+offset)));
-    ptr++;
-  }
-  else
-    return NULL;
-
-  //slen
-  if((*ptr&0xFFE00000)==0x52800000) //movz
-  {
-    *len=(ptr[0]>>5)&0xffff;
-    ptr+=3;
-  }
-  else
-    return NULL;
-
-  if((*ptr&0xFC000000)==0x94000000) // call instruction
-  {
-    *verifier=((signed int)(*ptr<<6)>>4)+(intptr_t)ptr;
-    ptr++;
-  }
-  else
-    return NULL;
-
-  //Trampoline jump
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    *verifier=*((uintptr_t*)(*verifier+8));
-
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    return NULL;
-
-  // clean entry point
-  if((*ptr&0xFC000000)==0x14000000) // jmp instruction
-    return (void*)((intptr_t)ptr+(((signed int)(*ptr<<6)>>6)<<2)); // follow jump
-  else
-    return (void*)ptr;
 }
 
 /* Register allocation */
@@ -3506,48 +3422,24 @@ static void do_invstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static intptr_t do_dirty_stub(int i)
+static intptr_t do_dirty_stub(int i, struct ll_entry * head)
 {
-  assem_debug("do_dirty_stub %x",start+i*4);
-
-  // Careful about the code output here, verify_dirty and get_bounds needs to parse it.
+  assem_debug("do_dirty_stub %x",head->vaddr);
   intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
-  intptr_t offset=(((intptr_t)source&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
-  u_int pcaddr=start+i*4;
+  intptr_t offset=(((intptr_t)head&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
 
-  if((int)start<(int)0xC0000000){
-    if((uintptr_t)source<4294967296LL){
-      emit_movz_lsl16(((uintptr_t)source>>16)&0xffff,1);
-      emit_movk(((uintptr_t)source)&0xffff,1);
+  if((uintptr_t)head<4294967296LL){
+    emit_movz_lsl16(((uintptr_t)head>>16)&0xffff,ARG1_REG);
+    emit_movk(((uintptr_t)head)&0xffff,ARG1_REG);
   	}else if(offset>=-4294967296LL&&offset<4294967296LL){
-      emit_adrp((intptr_t)source,1);
-      emit_addimm64(1,((intptr_t)source&0xfffLL),1);
+    emit_adrp((intptr_t)head,ARG1_REG);
+    emit_addimm64(ARG1_REG,((intptr_t)head&0xfffLL),ARG1_REG);
     }else{
-      emit_loadlp((intptr_t)source,1); 
-    }
-  }else{
-    emit_movz_lsl16(((u_int)start>>16)&0xffff,1);
-    emit_movk(((u_int)start)&0xffff,1);
+      emit_loadlp((intptr_t)head,ARG1_REG); 
   }
 
-  //copy
-  offset=(((intptr_t)copy&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
-  if((uintptr_t)copy<4294967296LL){
-    emit_movz_lsl16(((uintptr_t)copy>>16)&0xffff,2);
-    emit_movk(((uintptr_t)copy)&0xffff,2);
-  }else if(offset>=-4294967296LL&&offset<4294967296LL){
-    emit_adrp((intptr_t)copy,2);
-    emit_addimm64(2,((intptr_t)copy&0xfffLL),2);
-  }else{
-    emit_loadlp((intptr_t)copy,2);
-  }
+  emit_call((intptr_t)verify_code);
 	
-  //slen
-  emit_movz(slen*4,3);
-  //pcaddr
-  emit_movz_lsl16(((u_int)pcaddr>>16)&0xffff,0);
-  emit_movk(((u_int)pcaddr)&0xffff,0);
-  emit_call((int)start<(int)0xC0000000?(intptr_t)&verify_code:(intptr_t)&verify_code_vm);
   intptr_t entry=(intptr_t)out;
   load_regs_entry(i);
   if(entry==(intptr_t)out) entry=instr_addr[i];
@@ -3555,46 +3447,23 @@ static intptr_t do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds(void)
+static void do_dirty_stub_ds(struct ll_entry *head)
 {
+  assem_debug("do_dirty_stub_ds %x",head->vaddr);
   intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
-  intptr_t offset=(((intptr_t)source&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
-  u_int pcaddr=start+1;
+  intptr_t offset=(((intptr_t)head&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
 
-  assert((int)start>=(int)0xC0000000);
-  // Careful about the code output here, verify_dirty and get_bounds needs to parse it.
-  if((int)start<(int)0xC0000000){
-    if((uintptr_t)source<4294967296LL){
-      emit_movz_lsl16(((uintptr_t)source>>16)&0xffff,1);
-      emit_movk(((uintptr_t)source)&0xffff,1);
+  if((uintptr_t)head<4294967296LL){
+    emit_movz_lsl16(((uintptr_t)head>>16)&0xffff,ARG1_REG);
+    emit_movk(((uintptr_t)head)&0xffff,ARG1_REG);
     }else if(offset>=-4294967296LL&&offset<4294967296LL){
-      emit_adrp((intptr_t)source,1);
-      emit_addimm64(1,((intptr_t)source&0xfffLL),1);
+    emit_adrp((intptr_t)head,ARG1_REG);
+    emit_addimm64(ARG1_REG,((intptr_t)head&0xfffLL),ARG1_REG);
     }else{
-      emit_loadlp((intptr_t)source,1);
-    }
-  }else{
-    emit_movz_lsl16(((u_int)start>>16)&0xffff,1);
-    emit_movk(((u_int)start)&0xffff,1);
+      emit_loadlp((intptr_t)head,ARG1_REG);
   }
 
-  //copy
-  offset=(((intptr_t)copy&~0xfffLL)-((intptr_t)out_rx&~0xfffLL));
-  if((uintptr_t)copy<4294967296LL){
-    emit_movz_lsl16(((uintptr_t)copy>>16)&0xffff,2);
-    emit_movk(((uintptr_t)copy)&0xffff,2);
-  }else if(offset>=-4294967296LL&&offset<4294967296LL){
-    emit_adrp((intptr_t)copy,2);
-    emit_addimm64(2,((intptr_t)copy&0xfffLL),2);
-  }else{
-    emit_loadlp((intptr_t)copy,2);
-  }
-  //slen
-  emit_movz(slen*4,3);
-  //pcaddr
-  emit_movz_lsl16(((u_int)pcaddr>>16)&0xffff,0);
-  emit_movk(((u_int)pcaddr)&0xffff,0);
-  emit_call((intptr_t)&verify_code_ds);
+  emit_call((intptr_t)verify_code);
 }
 
 static void do_cop1stub(int n)

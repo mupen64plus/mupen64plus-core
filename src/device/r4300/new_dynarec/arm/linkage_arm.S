@@ -155,71 +155,12 @@ GLOBAL_FUNCTION(jump_vaddr):
     ldr    r10, [fp, #fp_cycle_count]
     mov    pc, r0
 
-GLOBAL_FUNCTION(verify_code_ds):
-    str    r8, [fp, #fp_branch_target]
-
-GLOBAL_FUNCTION(verify_code_vm):
-    /* r0 = instruction pointer (virtual address) */
-    /* r1 = source (virtual address) */
-    /* r2 = target */
-    /* r3 = length */
-    cmp    r1, #0xC0000000
-    blt    verify_code
-#ifdef ARMv5_ONLY
-    ldr    r12, =fp_memory_map
-#else
-    movw   r12, #:lower16:fp_memory_map
-    movt   r12, #:upper16:fp_memory_map
-#endif
-    add    r12, fp, r12
-    lsr    r4, r1, #12
-    add    r5, r1, r3
-    sub    r5, #1
-    ldr    r6, [r12, r4, lsl #2]
-    lsr    r5, r5, #12
-    movs   r7, r6
-    bmi    .D5
-    add    r1, r1, r6, lsl #2
-    lsl    r6, r6, #2
-.D1:
-    add    r4, r4, #1
-    teq    r6, r7, lsl #2
-    bne    .D5
-    ldr    r7, [r12, r4, lsl #2]
-    cmp    r4, r5
-    bls    .D1
-
 GLOBAL_FUNCTION(verify_code):
-    /* r1 = source */
-    /* r2 = target */
-    /* r3 = length */
-    tst    r3, #4
-    mov    r4, #0
-    add    r3, r1, r3
-    mov    r5, #0
-    ldrne  r4, [r1], #4
-    mov    r12, #0
-    ldrne  r5, [r2], #4
-    teq    r1, r3
-    beq    .D3
-.D2:
-    ldr    r7, [r1], #4
-    eor    r9, r4, r5
-    ldr    r8, [r2], #4
-    orrs   r9, r9, r12
-    bne    .D4
-    ldr    r4, [r1], #4
-    eor    r12, r7, r8
-    ldr    r5, [r2], #4
-    cmp    r1, r3
-    bcc    .D2
-    teq    r7, r8
-.D3:
-    teqeq  r4, r5
-.D4:
-    ldr    r8, [fp, #fp_branch_target]
-    moveq  pc, lr
-.D5:
+    /* r0 = head */
+    mov    r9, lr
+    bl     verify_dirty
+    tst    r0, r0
+    moveq  pc, r9
     bl     get_addr
     mov    pc, r0
 

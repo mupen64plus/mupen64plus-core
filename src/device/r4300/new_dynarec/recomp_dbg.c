@@ -436,8 +436,6 @@ static Function_t func[] = {
   {(intptr_t)TLBWI_new, "TLBWI_new"},
   {(intptr_t)TLBWR_new, "TLBWR_new"},
   {(intptr_t)verify_code, "verify_code"},
-  {(intptr_t)verify_code_vm, "verify_code_vm"},
-  {(intptr_t)verify_code_ds, "verify_code_ds"},
   {(intptr_t)cc_interrupt, "cc_interrupt"},
   {(intptr_t)fp_exception, "fp_exception"},
   {(intptr_t)fp_exception_ds, "fp_exception_ds"},
@@ -894,95 +892,6 @@ extern unsigned int using_tlb;
   beginning=(uint32_t *)recomp_dbg_out;
   recomp_dbg_new_recompile_block(addr);
   end=(uint32_t *)recomp_dbg_out;
-
-#if 0
-  struct ll_entry *head;
-  u_int page;
-
-  for(int i=0;i<linkcount;i++){
-    if(!link_addr[i][2]) { //external jumps
-      int already_linked=0;
-      page=(0x80000000^link_addr[i][1])>>12;
-      if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[link_addr[i][1]>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[page^0x80000]^0x80000000)>>12;
-      if(page>2048) page=2048+(page&2047);
-      head=jump_in[page];
-      while(head!=NULL) {
-        if(head->vaddr==link_addr[i][1]&&head->reg32==0) {
-          already_linked=1;
-          break;
-        }
-        head=head->next;
-      }
-      if(already_linked==0)
-        dynamic_linker((void*)link_addr[i][0],addr); //linking on itself
-    }
-  }
-
-  page=(0x80000000^addr)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[page^0x80000]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-
-  //Check current recompiled address (not all entry points)
-  int found=0;
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==addr&&head->reg32==0) {
-      assert(found==0); //No possible duplicates in jump_in
-      assert(isclean(head->addr)==1); //Just being recompiled so not dirty
-      found=1;
-    }
-    head=head->next;
-  }
-
-  page=(0x80000000^addr)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(page>2048) page=2048+(page&2047);
-
-  int not_dirty=0;
-  found=0;
-  head=jump_dirty[page];
-  while(head!=NULL) {
-    if(head->vaddr==addr&&head->reg32==0) {
-
-      if(found==1)
-        printf("Duplicates in jump_dirty\n");
-
-      //Possible duplicates in jump_dirty, only one could be clean at a time
-      if(not_dirty==0)
-        not_dirty=verify_dirty(head->addr);
-      else
-      {
-        assert(verify_dirty(head->addr)==0);
-      }
-
-      assert(isclean(head->addr)==0);
-      void* clean=get_clean_addr(head->addr);
-      assert(isclean(clean)==1);
-
-      //TODO: assert get_bounds
-      uintptr_t start,end;
-      get_bounds(head->addr, &start, &end);
-
-      found=1;
-    }
-    head=head->next;
-  }
-
-  page=(addr^0x80000000)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[addr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[addr>>12]^0x80000000)>>12;
-  if(page>4095) page=2048+(page&2047);
-
-  head=jump_out[page];
-
-  while(head!=NULL) {
-    if(head->vaddr==addr&&head->reg32==0) {
-      intptr_t addr=get_pointer(head->addr);
-      addr=(intptr_t)kill_pointer(head->addr);
-    }
-    head=head->next;
-  }
-  
-#endif
 
   int disasm=0;
   int block, inst;
