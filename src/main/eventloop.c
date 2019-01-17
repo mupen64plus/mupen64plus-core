@@ -461,7 +461,7 @@ void event_initialize(void)
                 if (phrase_str[1] == '*')
                 {
                     joy_min = 0;
-                    joy_max = NumJoysticks;
+                    joy_max = NumJoysticks - 1;
                 }
                 else if (phrase_str[1] >= '0' && phrase_str[1] <= '9')
                 {
