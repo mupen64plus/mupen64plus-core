@@ -1959,70 +1959,48 @@ static void add_link(u_int vaddr,void *src)
   //inv_debug("add_link: Pointer is to %x\n",(intptr_t)ptr);
 }
 
-static void *dynamic_linker(void * src, u_int vaddr)
+struct ll_entry *get_clean(struct r4300_core* r4300,u_int vaddr,u_int flags)
 {
   u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
   head=jump_in[page];
-
   while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-#ifndef DISABLE_BLOCK_LINKING
-      void* src_rw=(void*)(((intptr_t)src-(intptr_t)base_addr_rx)+(intptr_t)base_addr);
-#if NEW_DYNAREC == NEW_DYNAREC_ARM64
-      //TODO: Avoid disabling link between blocks for conditional branches
-      int *ptr=(int*)src_rw;
-      if((*ptr&0xfc000000)==0x14000000) { //b
-        add_link(vaddr, add_pointer(src_rw,head->addr));
-      }
-#else
-      add_link(vaddr, add_pointer(src_rw,head->addr));
-#endif
-#endif
-      return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
+      return head;
     }
     head=head->next;
   }
+  return NULL;
+}
 
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-
+struct ll_entry *get_dirty(struct r4300_core* r4300,u_int vaddr,u_int flags)
+{
+  u_int page=(vaddr^0x80000000)>>12;
+  u_int vpage=page;
+  if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
+  if(page>2048) page=2048+(page&2047);
+  if(vpage>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
+  if(vpage>2048) vpage=2048+(vpage&2047);
+  struct ll_entry *head;
   head=jump_dirty[vpage];
   while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],*r4300_cp0_next_interrupt(&g_dev.r4300.cp0),vaddr,(int)head->addr);
+    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
       // Don't restore blocks which are about to expire from the cache
       if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
         if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          g_dev.r4300.cached_interp.invalid_code[vaddr>>12]=0;
-          g_dev.r4300.new_dynarec_hot_state.memory_map[vaddr>>12]|=WRITE_PROTECT;
+          r4300->cached_interp.invalid_code[vaddr>>12]=0;
+          r4300->new_dynarec_hot_state.memory_map[vaddr>>12]|=WRITE_PROTECT;
           if(vpage<2048) {
-            if(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) {
-              g_dev.r4300.cached_interp.invalid_code[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              g_dev.r4300.new_dynarec_hot_state.memory_map[g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]>>12]|=WRITE_PROTECT;
+            if(r4300->cp0.tlb.LUT_r[vaddr>>12]) {
+              r4300->cached_interp.invalid_code[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
+              r4300->new_dynarec_hot_state.memory_map[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]|=WRITE_PROTECT;
             }
-            g_dev.r4300.new_dynarec_hot_state.restore_candidate[vpage>>3]|=1<<(vpage&7);
+            r4300->new_dynarec_hot_state.restore_candidate[vpage>>3]|=1<<(vpage&7);
           }
-          else g_dev.r4300.new_dynarec_hot_state.restore_candidate[page>>3]|=1<<(page&7);
-          uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(intptr_t)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+          else r4300->new_dynarec_hot_state.restore_candidate[page>>3]|=1<<(page&7);
+          return head;
         }
       }
     }
@@ -2034,48 +2012,126 @@ static void *dynamic_linker(void * src, u_int vaddr)
 static void *dyna_linker(void * src, u_int vaddr)
 {
   assert((vaddr&1)==0);
-  void *addr=dynamic_linker(src,vaddr);
-  if(addr==NULL)
-  {
-    if(new_recompile_block(vaddr)==0)
-    {
-      addr=dynamic_linker(src,vaddr);
-      assert(addr!=NULL);
+  struct r4300_core* r4300 = &g_dev.r4300;
+  struct ll_entry *head;
+
+#ifndef DISABLE_BLOCK_LINKING
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    void* src_rw=(void*)(((intptr_t)src-(intptr_t)base_addr_rx)+(intptr_t)base_addr);
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+    //TODO: Avoid disabling link between blocks for conditional branches
+    int *ptr=(int*)src_rw;
+    if((*ptr&0xfc000000)==0x14000000) { //b
+      add_link(vaddr, add_pointer(src_rw,head->addr));
+    }
+#else
+    add_link(vaddr, add_pointer(src_rw,head->addr));
+#endif
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+#endif
+
+  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+
+#ifdef DISABLE_BLOCK_LINKING
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    ht_bin[3]=ht_bin[1];
+    ht_bin[2]=ht_bin[0];
+    ht_bin[1]=(intptr_t)head->addr;
+    ht_bin[0]=vaddr;
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+#endif
+
+  head=get_dirty(r4300,vaddr,~0);
+  if(head!=NULL){
+    if(ht_bin[0]==vaddr) {
+      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
     }
     else
     {
-      struct r4300_core* r4300 = &g_dev.r4300;
-      assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
-      assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
-      r4300->delay_slot = vaddr&1;
-      TLB_refill_exception(r4300, vaddr&~1, 2);
-      addr=get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(intptr_t)head->addr;
+      ht_bin[0]=vaddr;
     }
+    return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
-  return addr;
+
+  int r=new_recompile_block(vaddr);
+  if(r==0) return dyna_linker(src,vaddr);
+  // Execute in unmapped page, generate pagefault execption
+  assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
+  assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
+  r4300->delay_slot = vaddr&1;
+  TLB_refill_exception(r4300, vaddr&~1, 2);
+  return get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
 }
 
 static void *dyna_linker_ds(void * src, u_int vaddr)
 {
-  void *addr=dynamic_linker(src,vaddr);
-  if(addr==NULL)
-  {
-    if(new_recompile_block((vaddr&0xFFFFFFF8)+1)==0)
-    {
-      addr=dynamic_linker(src,vaddr);
-      assert(addr!=NULL);
+  struct r4300_core* r4300 = &g_dev.r4300;
+  struct ll_entry *head;
+
+#ifndef DISABLE_BLOCK_LINKING
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    void* src_rw=(void*)(((intptr_t)src-(intptr_t)base_addr_rx)+(intptr_t)base_addr);
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+    //TODO: Avoid disabling link between blocks for conditional branches
+    int *ptr=(int*)src_rw;
+    if((*ptr&0xfc000000)==0x14000000) { //b
+      add_link(vaddr, add_pointer(src_rw,head->addr));
+    }
+#else
+    add_link(vaddr, add_pointer(src_rw,head->addr));
+#endif
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+#endif
+
+  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+
+#ifdef DISABLE_BLOCK_LINKING
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    ht_bin[3]=ht_bin[1];
+    ht_bin[2]=ht_bin[0];
+    ht_bin[1]=(intptr_t)head->addr;
+    ht_bin[0]=vaddr;
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+#endif
+
+  head=get_dirty(r4300,vaddr,~0);
+  if(head!=NULL){
+    if(ht_bin[0]==vaddr) {
+      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
     }
     else
     {
-      struct r4300_core* r4300 = &g_dev.r4300;
-      assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
-      assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
-      r4300->delay_slot = vaddr&1;
-      TLB_refill_exception(r4300, vaddr&~1, 2);
-      addr=get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
+      ht_bin[3]=ht_bin[1];
+      ht_bin[2]=ht_bin[0];
+      ht_bin[1]=(intptr_t)head->addr;
+      ht_bin[0]=vaddr;
     }
+    return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
-  return addr;
+
+  int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
+  if(r==0) return dyna_linker_ds(src,vaddr);
+  // Execute in unmapped page, generate pagefault execption
+  assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
+  assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
+  r4300->delay_slot = vaddr&1;
+  TLB_refill_exception(r4300, vaddr&~1, 2);
+  return get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
 }
 
 // Get address from virtual address
@@ -2083,63 +2139,33 @@ static void *dyna_linker_ds(void * src, u_int vaddr)
 void *get_addr(u_int vaddr)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
   struct ll_entry *head;
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr %x,page %d)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,page);
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match %x: %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    ht_bin[3]=ht_bin[1];
+    ht_bin[2]=ht_bin[0];
+    ht_bin[1]=(intptr_t)head->addr;
+    ht_bin[0]=vaddr;
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+
+  head=get_dirty(r4300,vaddr,~0);
+  if(head!=NULL){
+    if(ht_bin[0]==vaddr) {
+      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
+    }
+    else
+    {
       ht_bin[3]=ht_bin[1];
       ht_bin[2]=ht_bin[0];
       ht_bin[1]=(intptr_t)head->addr;
       ht_bin[0]=vaddr;
-      return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
     }
-    head=head->next;
+    return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr match dirty %x: %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          r4300->cached_interp.invalid_code[vaddr>>12]=0;
-          r4300->new_dynarec_hot_state.memory_map[vaddr>>12]|=WRITE_PROTECT;
-          if(vpage<2048) {
-            if(r4300->cp0.tlb.LUT_r[vaddr>>12]) {
-              r4300->cached_interp.invalid_code[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              r4300->new_dynarec_hot_state.memory_map[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]|=WRITE_PROTECT;
-            }
-            r4300->new_dynarec_hot_state.restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else r4300->new_dynarec_hot_state.restore_candidate[page>>3]|=1<<(page&7);
-          uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
-          }
-          else
-          {
-            ht_bin[3]=ht_bin[1];
-            ht_bin[2]=ht_bin[0];
-            ht_bin[1]=(intptr_t)head->addr;
-            ht_bin[0]=vaddr;
-          }
-          return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-        }
-      }
-    }
-    head=head->next;
-  }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr no-match %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
+
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -2149,10 +2175,10 @@ void *get_addr(u_int vaddr)
   TLB_refill_exception(r4300, vaddr&~1, 2);
   return get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
 }
+
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_ht %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr);
   uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
@@ -2161,79 +2187,40 @@ void *get_addr_ht(u_int vaddr)
 
 void *get_addr_32(u_int vaddr,u_int flags)
 {
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 %x,flags %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
-  struct r4300_core* r4300 = &g_dev.r4300;
   uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
   if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  u_int page=(vaddr^0x80000000)>>12;
-  u_int vpage=page;
-  if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
-  if(vpage>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
-  if(vpage>2048) vpage=2048+(vpage&2047);
+
+  struct r4300_core* r4300 = &g_dev.r4300;
   struct ll_entry *head;
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match %x: %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(int)head->addr);
-      if(head->reg32==0) {
-        uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-        if(ht_bin[0]==-1) {
-          ht_bin[1]=(intptr_t)head->addr;
-          ht_bin[0]=vaddr;
-        }else if(ht_bin[2]==-1) {
-          ht_bin[3]=(intptr_t)head->addr;
-          ht_bin[2]=vaddr;
-        }
-        //ht_bin[3]=ht_bin[1];
-        //ht_bin[2]=ht_bin[0];
-        //ht_bin[1]=(intptr_t)head->addr;
-        //ht_bin[0]=vaddr;
-      }
-      return (void *)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-    }
-    head=head->next;
-  }
-  head=jump_dirty[vpage];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&(head->reg32&flags)==0) {
-      //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 match dirty %x: %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,(intptr_t)head->addr);
-      // Don't restore blocks which are about to expire from the cache
-      if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        if(verify_dirty(head->addr)) {
-          //DebugMessage(M64MSG_VERBOSE, "restore candidate: %x (%d) d=%d",vaddr,page,g_dev.r4300.cached_interp.invalid_code[vaddr>>12]);
-          r4300->cached_interp.invalid_code[vaddr>>12]=0;
-          r4300->new_dynarec_hot_state.memory_map[vaddr>>12]|=WRITE_PROTECT;
-          if(vpage<2048) {
-            if(r4300->cp0.tlb.LUT_r[vaddr>>12]) {
-              r4300->cached_interp.invalid_code[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]=0;
-              r4300->new_dynarec_hot_state.memory_map[r4300->cp0.tlb.LUT_r[vaddr>>12]>>12]|=WRITE_PROTECT;
-            }
-            r4300->new_dynarec_hot_state.restore_candidate[vpage>>3]|=1<<(vpage&7);
-          }
-          else r4300->new_dynarec_hot_state.restore_candidate[page>>3]|=1<<(page&7);
-          if(head->reg32==0) {
-            uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-            if(ht_bin[0]==-1) {
-              ht_bin[1]=(intptr_t)head->addr;
-              ht_bin[0]=vaddr;
-            }else if(ht_bin[2]==-1) {
-              ht_bin[3]=(intptr_t)head->addr;
-              ht_bin[2]=vaddr;
-            }
-            //ht_bin[3]=ht_bin[1];
-            //ht_bin[2]=ht_bin[0];
-            //ht_bin[1]=(intptr_t)head->addr;
-            //ht_bin[0]=vaddr;
-          }
-          return (void *)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-        }
+  head=get_clean(r4300,vaddr,flags);
+  if(head!=NULL){
+    if(head->reg32==0) {
+      if(ht_bin[0]==-1) {
+        ht_bin[1]=(intptr_t)head->addr;
+        ht_bin[0]=vaddr;
+      }else if(ht_bin[2]==-1) {
+        ht_bin[3]=(intptr_t)head->addr;
+        ht_bin[2]=vaddr;
       }
     }
-    head=head->next;
+    return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
-  //DebugMessage(M64MSG_VERBOSE, "TRACE: count=%d next=%d (get_addr_32 no-match %x,flags %x)",r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG],g_dev.r4300.cp0.next_interrupt,vaddr,flags);
+
+  head=get_dirty(r4300,vaddr,flags);
+  if(head!=NULL){
+     if(head->reg32==0) {
+       if(ht_bin[0]==-1) {
+         ht_bin[1]=(intptr_t)head->addr;
+         ht_bin[0]=vaddr;
+       }else if(ht_bin[2]==-1) {
+         ht_bin[3]=(intptr_t)head->addr;
+         ht_bin[2]=vaddr;
+       }
+     }
+    return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  }
+
   int r=new_recompile_block(vaddr);
   if(r==0) return get_addr(vaddr);
   // Execute in unmapped page, generate pagefault execption
@@ -2257,39 +2244,35 @@ static void *check_addr(u_int vaddr)
     if(((ht_bin[3]-MAX_OUTPUT_BLOCK_SIZE-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
       if(isclean((void *)ht_bin[3])) return (void *)ht_bin[3];
   }
-  u_int page=(vaddr^0x80000000)>>12;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
-  if(page>2048) page=2048+(page&2047);
+
+  struct r4300_core* r4300 = &g_dev.r4300;
   struct ll_entry *head;
-  head=jump_in[page];
-  while(head!=NULL) {
-    if(head->vaddr==vaddr&&head->reg32==0) {
-      if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
-        // Update existing entry with current address
-        if(ht_bin[0]==vaddr) {
-          ht_bin[1]=(intptr_t)head->addr;
-          return head->addr;
-        }
-        if(ht_bin[2]==vaddr) {
-          ht_bin[3]=(intptr_t)head->addr;
-          return head->addr;
-        }
-        // Insert into hash table with low priority.
-        // Don't evict existing entries, as they are probably
-        // addresses that are being accessed frequently.
-        if(ht_bin[0]==-1) {
-          ht_bin[1]=(intptr_t)head->addr;
-          ht_bin[0]=vaddr;
-        }else if(ht_bin[2]==-1) {
-          ht_bin[3]=(intptr_t)head->addr;
-          ht_bin[2]=vaddr;
-        }
+  head=get_clean(r4300,vaddr,~0);
+  if(head!=NULL){
+    if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
+      // Update existing entry with current address
+      if(ht_bin[0]==vaddr) {
+        ht_bin[1]=(intptr_t)head->addr;
         return head->addr;
       }
+      if(ht_bin[2]==vaddr) {
+        ht_bin[3]=(intptr_t)head->addr;
+        return head->addr;
+      }
+      // Insert into hash table with low priority.
+      // Don't evict existing entries, as they are probably
+      // addresses that are being accessed frequently.
+      if(ht_bin[0]==-1) {
+        ht_bin[1]=(intptr_t)head->addr;
+        ht_bin[0]=vaddr;
+      }else if(ht_bin[2]==-1) {
+        ht_bin[3]=(intptr_t)head->addr;
+        ht_bin[2]=vaddr;
+      }
+      return head->addr;
     }
-    head=head->next;
   }
-  return 0;
+  return NULL;
 }
 
 // This is called when we write to a compiled block (see do_invstub)
