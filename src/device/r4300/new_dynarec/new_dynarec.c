@@ -7490,6 +7490,13 @@ static void pagespan_ds(void)
   intptr_t branch=(intptr_t)out;
   emit_jeq(0);
   store_regs_bt(regs[0].regmap,regs[0].is32,regs[0].dirty,-1);
+#if NEW_DYNAREC==NEW_DYNAREC_ARM64
+  if(btaddr==18) {
+    // x18 is used for trampoline jumps, move it to another register (x0)
+    emit_mov(btaddr,0);
+    btaddr=0;
+  }
+#endif
   emit_jmp(jump_vaddr_reg[btaddr]);
   set_jump_target(branch,(intptr_t)out);
   store_regs_bt(regs[0].regmap,regs[0].is32,regs[0].dirty,start+4);
