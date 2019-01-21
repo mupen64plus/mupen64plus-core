@@ -280,7 +280,7 @@ static char *copy;
 static int expirep;
 static u_int dirty_entry_count;
 static u_int copy_size;
-static uintptr_t hash_table[65536][4];
+static struct ll_entry* hash_table[65536][2];
 static struct ll_entry *jump_in[4096];
 static struct ll_entry *jump_dirty[4096];
 static struct ll_entry *jump_out[4096];
@@ -1687,14 +1687,13 @@ static void add_stub(int type,intptr_t addr,intptr_t retaddr,int a,intptr_t b,in
 static void remove_hash(u_int vaddr)
 {
   //DebugMessage(M64MSG_VERBOSE, "remove hash: %x",vaddr);
-  uintptr_t *ht_bin=hash_table[(((vaddr)>>16)^vaddr)&0xFFFF];
-  if(ht_bin[2]==vaddr) {
-    ht_bin[2]=ht_bin[3]=-1;
+  struct ll_entry **ht_bin=hash_table[(((vaddr)>>16)^vaddr)&0xFFFF];
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) {
+    ht_bin[1]=NULL;
   }
-  if(ht_bin[0]==vaddr) {
-    ht_bin[0]=ht_bin[2];
-    ht_bin[1]=ht_bin[3];
-    ht_bin[2]=ht_bin[3]=-1;
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+    ht_bin[0]=ht_bin[1];
+    ht_bin[1]=NULL;
   }
 }
 
@@ -1841,21 +1840,8 @@ static void get_bounds(void* addr,uintptr_t *start,uintptr_t *end)
   if(end) *end=source+len;
 }
 
-// Add virtual address mapping to linked list
-static void ll_add(struct ll_entry **head,int vaddr,void *addr)
-{
-  struct ll_entry *new_entry;
-  new_entry=(struct ll_entry *)malloc(sizeof(struct ll_entry));
-  assert(new_entry!=NULL);
-  new_entry->vaddr=vaddr;
-  new_entry->reg32=0;
-  new_entry->addr=addr;
-  new_entry->next=*head;
-  *head=new_entry;
-}
-
 // Add virtual address mapping for 32-bit compiled block
-static void ll_add_32(struct ll_entry **head,int vaddr,u_int reg32,void *addr)
+static struct ll_entry *ll_add_32(struct ll_entry **head,int vaddr,u_int reg32,void *addr)
 {
   struct ll_entry *new_entry;
   new_entry=(struct ll_entry *)malloc(sizeof(struct ll_entry));
@@ -1865,6 +1851,13 @@ static void ll_add_32(struct ll_entry **head,int vaddr,u_int reg32,void *addr)
   new_entry->addr=addr;
   new_entry->next=*head;
   *head=new_entry;
+  return new_entry;
+}
+
+// Add virtual address mapping to linked list
+static struct ll_entry *ll_add(struct ll_entry **head,int vaddr,void *addr)
+{
+  return ll_add_32(head,vaddr,0,addr);
 }
 
 static void ll_remove_matching_addrs(struct ll_entry **head,intptr_t addr,int shift)
@@ -1954,7 +1947,7 @@ static void add_link(u_int vaddr,void *src)
   if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) page=(g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
   if(page>4095) page=2048+(page&2047);
   inv_debug("add_link: %x -> %x (%d)\n",(intptr_t)src,vaddr,page);
-  ll_add(jump_out+page,vaddr,src);
+  (void)ll_add(jump_out+page,vaddr,src);
   //int ptr=get_pointer(src);
   //inv_debug("add_link: Pointer is to %x\n",(intptr_t)ptr);
 }
@@ -2032,32 +2025,28 @@ static void *dyna_linker(void * src, u_int vaddr)
   }
 #endif
 
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[0]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[1]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
 
 #ifdef DISABLE_BLOCK_LINKING
   head=get_clean(r4300,vaddr,~0);
   if(head!=NULL){
-    ht_bin[3]=ht_bin[1];
-    ht_bin[2]=ht_bin[0];
-    ht_bin[1]=(intptr_t)head->addr;
-    ht_bin[0]=vaddr;
+    ht_bin[1]=ht_bin[0];
+    ht_bin[0]=head;
     return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
 #endif
 
   head=get_dirty(r4300,vaddr,~0);
   if(head!=NULL){
-    if(ht_bin[0]==vaddr) {
-      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
+    if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+      ht_bin[0]=head; // Replace existing entry
     }
     else
     {
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(intptr_t)head->addr;
-      ht_bin[0]=vaddr;
+      ht_bin[1]=ht_bin[0];
+      ht_bin[0]=head;
     }
     return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
@@ -2094,32 +2083,28 @@ static void *dyna_linker_ds(void * src, u_int vaddr)
   }
 #endif
 
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[0]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[1]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
 
 #ifdef DISABLE_BLOCK_LINKING
   head=get_clean(r4300,vaddr,~0);
   if(head!=NULL){
-    ht_bin[3]=ht_bin[1];
-    ht_bin[2]=ht_bin[0];
-    ht_bin[1]=(intptr_t)head->addr;
-    ht_bin[0]=vaddr;
+    ht_bin[1]=ht_bin[0];
+    ht_bin[0]=head;
     return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
 #endif
 
   head=get_dirty(r4300,vaddr,~0);
   if(head!=NULL){
-    if(ht_bin[0]==vaddr) {
-      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
+    if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+      ht_bin[0]=head; // Replace existing entry
     }
     else
     {
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(intptr_t)head->addr;
-      ht_bin[0]=vaddr;
+      ht_bin[1]=ht_bin[0];
+      ht_bin[0]=head;
     }
     return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
@@ -2140,28 +2125,24 @@ void *get_addr(u_int vaddr)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct ll_entry *head;
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
 
   head=get_clean(r4300,vaddr,~0);
   if(head!=NULL){
-    ht_bin[3]=ht_bin[1];
-    ht_bin[2]=ht_bin[0];
-    ht_bin[1]=(intptr_t)head->addr;
-    ht_bin[0]=vaddr;
+    ht_bin[1]=ht_bin[0];
+    ht_bin[0]=head;
     return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
 
   head=get_dirty(r4300,vaddr,~0);
   if(head!=NULL){
-    if(ht_bin[0]==vaddr) {
-      ht_bin[1]=(intptr_t)head->addr; // Replace existing entry
+    if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+      ht_bin[0]=head; // Replace existing entry
     }
     else
     {
-      ht_bin[3]=ht_bin[1];
-      ht_bin[2]=ht_bin[0];
-      ht_bin[1]=(intptr_t)head->addr;
-      ht_bin[0]=vaddr;
+      ht_bin[1]=ht_bin[0];
+      ht_bin[0]=head;
     }
     return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
@@ -2179,29 +2160,27 @@ void *get_addr(u_int vaddr)
 // Look up address in hash table first
 void *get_addr_ht(u_int vaddr)
 {
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[0]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[1]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   return get_addr(vaddr);
 }
 
 void *get_addr_32(u_int vaddr,u_int flags)
 {
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) return (void *)(((intptr_t)ht_bin[1]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
-  if(ht_bin[2]==vaddr) return (void *)(((intptr_t)ht_bin[3]-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[0]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) return (void *)(((intptr_t)ht_bin[1]->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
 
   struct r4300_core* r4300 = &g_dev.r4300;
   struct ll_entry *head;
   head=get_clean(r4300,vaddr,flags);
   if(head!=NULL){
     if(head->reg32==0) {
-      if(ht_bin[0]==-1) {
-        ht_bin[1]=(intptr_t)head->addr;
-        ht_bin[0]=vaddr;
-      }else if(ht_bin[2]==-1) {
-        ht_bin[3]=(intptr_t)head->addr;
-        ht_bin[2]=vaddr;
+      if(ht_bin[0]==NULL) {
+        ht_bin[0]=head;
+      }else if(ht_bin[1]==NULL) {
+        ht_bin[1]=head;
       }
     }
     return (void*)(((intptr_t)head->addr-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
@@ -2210,13 +2189,11 @@ void *get_addr_32(u_int vaddr,u_int flags)
   head=get_dirty(r4300,vaddr,flags);
   if(head!=NULL){
      if(head->reg32==0) {
-       if(ht_bin[0]==-1) {
-         ht_bin[1]=(intptr_t)head->addr;
-         ht_bin[0]=vaddr;
-       }else if(ht_bin[2]==-1) {
-         ht_bin[3]=(intptr_t)head->addr;
-         ht_bin[2]=vaddr;
-       }
+      if(ht_bin[0]==NULL) {
+        ht_bin[0]=head;
+      }else if(ht_bin[1]==NULL) {
+        ht_bin[1]=head;
+      }
      }
     return (void*)(((intptr_t)get_clean_addr(head->addr)-(intptr_t)base_addr)+(intptr_t)base_addr_rx);
   }
@@ -2235,14 +2212,15 @@ void *get_addr_32(u_int vaddr,u_int flags)
 // but don't return addresses which are about to expire from the cache
 static void *check_addr(u_int vaddr)
 {
-  uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-  if(ht_bin[0]==vaddr) {
-    if(((ht_bin[1]-MAX_OUTPUT_BLOCK_SIZE-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
-      if(isclean((void *)ht_bin[1])) return (void *)ht_bin[1];
+  struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+
+  if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+    if((((uintptr_t)ht_bin[0]->addr-MAX_OUTPUT_BLOCK_SIZE-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(isclean(ht_bin[0]->addr)) return ht_bin[0]->addr;
   }
-  if(ht_bin[2]==vaddr) {
-    if(((ht_bin[3]-MAX_OUTPUT_BLOCK_SIZE-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
-      if(isclean((void *)ht_bin[3])) return (void *)ht_bin[3];
+  if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) {
+    if((((uintptr_t)ht_bin[1]->addr-MAX_OUTPUT_BLOCK_SIZE-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2)))
+      if(isclean(ht_bin[1]->addr)) return ht_bin[1]->addr;
   }
 
   struct r4300_core* r4300 = &g_dev.r4300;
@@ -2251,23 +2229,21 @@ static void *check_addr(u_int vaddr)
   if(head!=NULL){
     if((((uintptr_t)head->addr-(uintptr_t)out)<<(32-TARGET_SIZE_2))>0x60000000+(MAX_OUTPUT_BLOCK_SIZE<<(32-TARGET_SIZE_2))) {
       // Update existing entry with current address
-      if(ht_bin[0]==vaddr) {
-        ht_bin[1]=(intptr_t)head->addr;
+      if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+        ht_bin[0]=head;
         return head->addr;
       }
-      if(ht_bin[2]==vaddr) {
-        ht_bin[3]=(intptr_t)head->addr;
+      if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) {
+        ht_bin[1]=head;
         return head->addr;
       }
       // Insert into hash table with low priority.
       // Don't evict existing entries, as they are probably
       // addresses that are being accessed frequently.
-      if(ht_bin[0]==-1) {
-        ht_bin[1]=(intptr_t)head->addr;
-        ht_bin[0]=vaddr;
-      }else if(ht_bin[2]==-1) {
-        ht_bin[3]=(intptr_t)head->addr;
-        ht_bin[2]=vaddr;
+      if(ht_bin[0]==NULL) {
+        ht_bin[0]=head;
+      }else if(ht_bin[1]==NULL) {
+        ht_bin[1]=head;
       }
       return head->addr;
     }
@@ -2464,14 +2440,14 @@ void clean_blocks(u_int page)
               inv_debug("INV: Restored %x (%x/%x)\n",head->vaddr, (intptr_t)head->addr, (intptr_t)clean_addr);
               //DebugMessage(M64MSG_VERBOSE, "page=%x, addr=%x",page,head->vaddr);
               //assert(head->vaddr>>12==(page|0x80000));
-              ll_add_32(jump_in+ppage,head->vaddr,head->reg32,clean_addr);
-              uintptr_t *ht_bin=hash_table[((head->vaddr>>16)^head->vaddr)&0xFFFF];
+              struct ll_entry *clean_head=ll_add_32(jump_in+ppage,head->vaddr,head->reg32,clean_addr);
+              struct ll_entry **ht_bin=hash_table[((head->vaddr>>16)^head->vaddr)&0xFFFF];
               if(!head->reg32) {
-                if(ht_bin[0]==head->vaddr) {
-                  ht_bin[1]=(intptr_t)clean_addr; // Replace existing entry
+                if(ht_bin[0]&&ht_bin[0]->vaddr==head->vaddr) {
+                  ht_bin[0]=clean_head; // Replace existing entry
                 }
-                if(ht_bin[2]==head->vaddr) {
-                  ht_bin[3]=(intptr_t)clean_addr; // Replace existing entry
+                if(ht_bin[1]&&ht_bin[1]->vaddr==head->vaddr) {
+                  ht_bin[1]=clean_head; // Replace existing entry
                 }
               }
             }
@@ -6189,34 +6165,6 @@ static void rjump_assemble(int i,struct regstat *i_regs)
 #endif
     emit_jmp(jump_vaddr_reg[rs]);
   }
-  /* Check hash table
-  temp=!rs;
-  emit_mov(rs,temp);
-  emit_shrimm(rs,16,rs);
-  emit_xor(temp,rs,rs);
-  emit_movzwl_reg(rs,rs);
-  emit_shlimm(rs,4,rs);
-  emit_cmpmem_indexed((intptr_t)hash_table,rs,temp);
-  emit_jne((intptr_t)out+14);
-  emit_readword_indexed((intptr_t)hash_table+4,rs,rs);
-  emit_jmpreg(rs);
-  emit_cmpmem_indexed((intptr_t)hash_table+8,rs,temp);
-  emit_addimm_no_flags(8,rs);
-  emit_jeq((intptr_t)out-17);
-  // No hit on hash table, call compiler
-  emit_pushreg(temp);
-//DEBUG >
-#ifdef DEBUG_CYCLE_COUNT
-  emit_readword((intptr_t)&g_dev.r4300.cp0.next_interrupt,ECX);
-  emit_add(HOST_CCREG,ECX,HOST_CCREG);
-  emit_writeword(HOST_CCREG,(intptr_t)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-#endif
-//DEBUG <
-  emit_storereg(CCREG,HOST_CCREG);
-  emit_call((intptr_t)get_addr);
-  emit_loadreg(CCREG,HOST_CCREG);
-  emit_addimm(ESP,4,ESP);
-  emit_jmpreg(EAX);*/
   #ifdef CORTEX_A8_BRANCH_PREDICTION_HACK
   if(rt1[i]!=31&&i<slen-2&&(((uintptr_t)out)&7)) emit_mov(13,13);
   #endif
@@ -7415,10 +7363,10 @@ static void pagespan_ds(void)
   if(page>2048) page=2048+(page&2047);
   if(vpage>262143&&g_dev.r4300.cp0.tlb.LUT_r[vaddr>>12]) vpage&=2047; // jump_dirty uses a hash of the virtual address instead
   if(vpage>2048) vpage=2048+(vpage&2047);
-  ll_add(jump_dirty+vpage,vaddr,(void *)out);
+  (void)ll_add(jump_dirty+vpage,vaddr,(void *)out);
   dirty_entry_count++;
   do_dirty_stub_ds();
-  ll_add(jump_in+page,vaddr,(void *)out);
+  (void)ll_add(jump_in+page,vaddr,(void *)out);
   assert(regs[0].regmap_entry[HOST_CCREG]==CCREG);
   if(regs[0].regmap[HOST_CCREG]!=CCREG)
     wb_register(CCREG,regs[0].regmap_entry,regs[0].wasdirty,regs[0].was32);
@@ -7666,7 +7614,7 @@ void new_dynarec_init(void)
   for(n=0x80000;n<0x80800;n++)
     g_dev.r4300.cached_interp.invalid_code[n]=1;
   for(n=0;n<65536;n++)
-    hash_table[n][0]=hash_table[n][2]=(uintptr_t)-1;
+    hash_table[n][0]=hash_table[n][1]=NULL;
   memset(g_dev.r4300.new_dynarec_hot_state.mini_ht,-1,sizeof(g_dev.r4300.new_dynarec_hot_state.mini_ht));
   memset(g_dev.r4300.new_dynarec_hot_state.restore_candidate,0,sizeof(g_dev.r4300.new_dynarec_hot_state.restore_candidate));
   copy_size=0;
@@ -10890,20 +10838,20 @@ int new_recompile_block(int addr)
         {
           assem_debug("%8x (%d) <- %8x",instr_addr[i],i,start+i*4);
           assem_debug("jump_in: %x",start+i*4);
-          ll_add(jump_dirty+vpage,vaddr,(void *)out);
+          (void)ll_add(jump_dirty+vpage,vaddr,(void *)out);
           dirty_entry_count++;
           intptr_t entry_point=do_dirty_stub(i);
-          ll_add(jump_in+page,vaddr,(void *)entry_point);
+          struct ll_entry *head=ll_add(jump_in+page,vaddr,(void *)entry_point);
           // If there was an existing entry in the hash table,
           // replace it with the new address.
           // Don't add new entries.  We'll insert the
           // ones that actually get used in check_addr().
-          uintptr_t *ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
-          if(ht_bin[0]==vaddr) {
-            ht_bin[1]=entry_point;
+          struct ll_entry **ht_bin=hash_table[((vaddr>>16)^vaddr)&0xFFFF];
+          if(ht_bin[0]&&ht_bin[0]->vaddr==vaddr) {
+            ht_bin[0]=head;
           }
-          if(ht_bin[2]==vaddr) {
-            ht_bin[3]=entry_point;
+          if(ht_bin[1]&&ht_bin[1]->vaddr==vaddr) {
+            ht_bin[1]=head;
           }
         }
         else
@@ -10919,10 +10867,10 @@ int new_recompile_block(int addr)
           //else
           //  emit_jmp(instr_addr[i]);
           //ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
-          ll_add_32(jump_dirty+vpage,vaddr,r,(void *)out);
+          (void)ll_add_32(jump_dirty+vpage,vaddr,r,(void *)out);
           dirty_entry_count++;
           intptr_t entry_point=do_dirty_stub(i);
-          ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
+          (void)ll_add_32(jump_in+page,vaddr,r,(void *)entry_point);
         }
       }
     }
@@ -10989,18 +10937,17 @@ int new_recompile_block(int addr)
       case 2:
         // Clear hash table
         for(i=0;i<32;i++) {
-          uintptr_t *ht_bin=hash_table[((expirep&2047)<<5)+i];
-          if(((ht_bin[3]-(uintptr_t)base_addr)>>shift)==((base-(uintptr_t)base_addr)>>shift) ||
-             ((ht_bin[3]-(uintptr_t)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((base-(uintptr_t)base_addr)>>shift)) {
-            inv_debug("EXP: Remove hash %x -> %x\n",ht_bin[2],ht_bin[3]);
-            ht_bin[2]=ht_bin[3]=(uintptr_t)-1;
+          struct ll_entry **ht_bin=hash_table[((expirep&2047)<<5)+i];
+          if(ht_bin[1]&&((((uintptr_t)ht_bin[1]->addr-(uintptr_t)base_addr)>>shift)==((base-(uintptr_t)base_addr)>>shift) ||
+             (((uintptr_t)ht_bin[1]->addr-(uintptr_t)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((base-(uintptr_t)base_addr)>>shift))) {
+            inv_debug("EXP: Remove hash %x -> %x\n",ht_bin[1]->vaddr,ht_bin[1]->addr);
+            ht_bin[1]=NULL;
           }
-          if(((ht_bin[1]-(uintptr_t)base_addr)>>shift)==((base-(uintptr_t)base_addr)>>shift) ||
-             ((ht_bin[1]-(uintptr_t)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((base-(uintptr_t)base_addr)>>shift)) {
-            inv_debug("EXP: Remove hash %x -> %x\n",ht_bin[0],ht_bin[1]);
-            ht_bin[0]=ht_bin[2];
-            ht_bin[1]=ht_bin[3];
-            ht_bin[2]=ht_bin[3]=(uintptr_t)-1;
+          if(ht_bin[0]&&((((uintptr_t)ht_bin[0]->addr-(uintptr_t)base_addr)>>shift)==((base-(uintptr_t)base_addr)>>shift) ||
+             (((uintptr_t)ht_bin[0]->addr-(uintptr_t)base_addr-MAX_OUTPUT_BLOCK_SIZE)>>shift)==((base-(uintptr_t)base_addr)>>shift))) {
+            inv_debug("EXP: Remove hash %x -> %x\n",ht_bin[0]->vaddr,ht_bin[0]->addr);
+            ht_bin[0]=ht_bin[1];
+            ht_bin[1]=NULL;
           }
         }
         break;
