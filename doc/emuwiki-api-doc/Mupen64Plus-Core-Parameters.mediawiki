@@ -59,10 +59,6 @@ These are standard parameters which are used by the Mupen64Plus Core library.  T
 |M64TYPE_INT
 |Force number of cycles per emulated instruction when set greater than 0.
 |-
-|DelaySI
-|M64TYPE_BOOL
-|Delay interrupt after DMA SI read/write.
-|-
 |DisableSpecRecomp
 |M64TYPE_BOOL
 |Disable speculative precompilation in new dynarec.
