@@ -140,6 +140,11 @@ CFLAGS += -ffast-math -fno-strict-aliasing -fvisibility=hidden -I../../src -I../
 CXXFLAGS += -fvisibility-inlines-hidden
 LDLIBS +=  -lm
 
+# directory paths
+SRCDIR = ../../src
+OBJDIR = _obj$(POSTFIX)
+SUBDIR = ../../subprojects
+
 # Since we are building a shared library, we must compile with -fPIC on some architectures
 # On 32-bit x86 systems we do not want to use -fPIC because we don't have to and it has a big performance penalty on this arch
 ifeq ($(PIC), 1)
@@ -267,6 +272,21 @@ ifeq ($(origin ZLIB_CFLAGS) $(origin ZLIB_LDLIBS), undefined undefined)
 endif
 CFLAGS += $(ZLIB_CFLAGS)
 LDLIBS += $(ZLIB_LDLIBS)
+
+ifeq ($(origin MINIZIP_CFLAGS) $(origin MINIZIP_LDLIBS), undefined undefined)
+  ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
+    CFLAGS += -DNOCRYPT -DNOUNCRYPT -I$(SUBDIR)/minizip
+    MINIZIP_SOURCE = \
+      $(SUBDIR)/minizip/ioapi.c \
+      $(SUBDIR)/minizip/zip.c \
+      $(SUBDIR)/minizip/unzip.c
+  else
+    MINIZIP_CFLAGS = $(shell $(PKG_CONFIG) --cflags minizip)
+    MINIZIP_LDLIBS =  $(shell $(PKG_CONFIG) --libs minizip)
+  endif
+endif
+CFLAGS += $(MINIZIP_CFLAGS)
+LDLIBS += $(MINIZIP_LDLIBS)
 
 ifeq ($(origin LIBPNG_CFLAGS) $(origin LIBPNG_LDLIBS), undefined undefined)
   ifeq ($(shell $(PKG_CONFIG) --modversion libpng 2>/dev/null),)
@@ -451,10 +471,6 @@ ifeq ($(INCDIR),)
   INCDIR := $(PREFIX)/include/mupen64plus
 endif
 
-SRCDIR = ../../src
-OBJDIR = _obj$(POSTFIX)
-SUBDIR = ../../subprojects
-
 # list of required source files for compilation
 SOURCE = \
     $(SRCDIR)/api/callbacks.c \
@@ -521,7 +537,8 @@ SOURCE = \
     $(SRCDIR)/plugin/dummy_video.c \
     $(SRCDIR)/plugin/dummy_audio.c \
     $(SRCDIR)/plugin/dummy_input.c \
-    $(SRCDIR)/plugin/dummy_rsp.c
+    $(SRCDIR)/plugin/dummy_rsp.c \
+    $(MINIZIP_SOURCE)
 
 # MD5 lib
 SOURCE += \
@@ -627,19 +644,6 @@ ifeq ($(LIRC), 1)
   SOURCE += $(SRCDIR)/main/lirc.c
   LDLIBS += -llirc_client
 endif
-
-ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
-  SOURCE += \
-    $(SUBDIR)/minizip/ioapi.c \
-    $(SUBDIR)/minizip/zip.c \
-    $(SUBDIR)/minizip/unzip.c
-
-  CFLAGS += -DNOCRYPT -DNOUNCRYPT -I$(SUBDIR)/minizip
-else
-  CFLAGS += $(shell $(PKG_CONFIG) --cflags minizip)
-  LDLIBS +=  $(shell $(PKG_CONFIG) --libs minizip)
-endif
-
 
 ifeq ($(DEBUGGER), 1)
   SOURCE += \
