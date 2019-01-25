@@ -1436,7 +1436,7 @@ EXPORT float CALL ConfigGetParamFloat(m64p_handle ConfigSectionHandle, const cha
         return 0.0;
     }
 
-    /* translate the actual variable type to an int */
+    /* translate the actual variable type to a float */
     switch(var->type)
     {
         case M64TYPE_INT:
@@ -1480,7 +1480,7 @@ EXPORT int CALL ConfigGetParamBool(m64p_handle ConfigSectionHandle, const char *
         return 0;
     }
 
-    /* translate the actual variable type to an int */
+    /* translate the actual variable type to an int (0 or 1) */
     switch(var->type)
     {
         case M64TYPE_INT:
@@ -1525,7 +1525,7 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
         return "";
     }
 
-    /* translate the actual variable type to an int */
+    /* translate the actual variable type to a string */
     switch(var->type)
     {
         case M64TYPE_INT:
