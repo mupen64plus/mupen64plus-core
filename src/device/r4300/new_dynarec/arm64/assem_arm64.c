@@ -2261,7 +2261,6 @@ static void emit_writeword_dualindexedx4(int rt, int rs1, int rs2)
 
 static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 {
-  assert(map>=0);
   if(map<0) emit_writeword_indexed(rt, addr, rs);
   else {
     if(addr==0) {
@@ -2276,6 +2275,9 @@ static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 
 static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map)
 {
+  //emit_writeword_indexed_tlb modifies HOST_TEMPREG when addr!=0
+  if(map==HOST_TEMPREG) assert(addr==0);
+  assert(map>=0);
   assert(rh>=0);
   emit_writeword_indexed_tlb(rh, addr, rs, map);
   emit_writeword_indexed_tlb(rl, addr+4, rs, map);
@@ -2290,7 +2292,6 @@ static void emit_writehword_indexed(int rt, int offset, int rs)
 
 static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
 {
-  assert(map>=0);
   if(map<0) emit_writehword_indexed(rt, addr, rs);
   else {
     if(addr==0) {
@@ -2314,7 +2315,6 @@ static void emit_writebyte_indexed(int rt, int offset, int rs)
 
 static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 {
-  assert(map>=0);
   if(map<0) emit_writebyte_indexed(rt, addr, rs);
   else {
     if(addr==0) {
@@ -3585,6 +3585,21 @@ static void do_tlb_w_branch_debug(int map, int c, u_int addr, intptr_t *jaddr)
   }
 }
 
+static void gen_addr(int ar, int map) {
+  if(map>=0) {
+    assem_debug("add %s,%s,%s lsl #2",regname64[ar],regname64[ar],regname64[map]);
+    output_w32(0x8b000000|map<<16|2<<10|ar<<5|ar);
+  }
+}
+
+// This reverses the above operation
+static void gen_orig_addr(int ar, int map) {
+  if(map>=0) {
+    assem_debug("sub %s,%s,%s lsl #2",regname64[ar],regname64[ar],regname64[map]);
+    output_w32(0xcb000000|map<<16|2<<10|ar<<5|ar);
+  }
+}
+
 // Generate the address of the memory_map entry, relative to dynarec_local
 static void generate_map_const(u_int addr,int tr) {
   //DebugMessage(M64MSG_VERBOSE, "generate_map_const(%x,%s)",addr,regname[tr]);
@@ -3710,10 +3725,6 @@ static void loadlr_assemble_arm64(int i,struct regstat *i_regs)
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
   }
   if(!using_tlb) {
-    #ifdef RAM_OFFSET
-    map=get_reg(i_regs->regmap,ROREG);
-    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-    #endif
     if(!c) {
       emit_shlimm(addr,3,temp);
       if (opcode[i]==0x22||opcode[i]==0x26) {
@@ -3732,6 +3743,10 @@ static void loadlr_assemble_arm64(int i,struct regstat *i_regs)
         emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
       }
     }
+    #ifdef RAM_OFFSET
+    map=get_reg(i_regs->regmap,ROREG);
+    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+    #endif
   }else{ // using tlb
     int a;
     if(c) {

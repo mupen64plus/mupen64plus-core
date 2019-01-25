@@ -3676,10 +3676,6 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
   }
   if(!using_tlb) {
-    #ifdef RAM_OFFSET
-    map=get_reg(i_regs->regmap,ROREG);
-    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-    #endif
     if(!c) {
       emit_lea8(addr,temp);
       if (opcode[i]==0x22||opcode[i]==0x26) {
@@ -3698,6 +3694,10 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
         emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
       }
     }
+    #ifdef RAM_OFFSET
+    map=get_reg(i_regs->regmap,ROREG);
+    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+    #endif
   }else{ // using tlb
     int a;
     if(c) {

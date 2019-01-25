@@ -3876,16 +3876,7 @@ static void load_assemble(int i,struct regstat *i_regs)
   else addr=s;
   assert(tl>=0); // Even if the load is a NOP, we must check for pagefaults and I/O
   if(!using_tlb) {
-    #ifndef NATIVE_64
     if(!c) {
-    #endif
-      #ifdef RAM_OFFSET
-      map=get_reg(i_regs->regmap,ROREG);
-      if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-      #endif
-    #ifdef NATIVE_64
-    if(!c) {
-    #endif
 //#define R29_HACK 1
       #ifdef R29_HACK
       // Strmnnrmn's speed hack
@@ -3907,6 +3898,15 @@ static void load_assemble(int i,struct regstat *i_regs)
         emit_jmp(0);
 #endif
       }
+    }
+    #ifndef NATIVE_64
+    if(!c)
+    #endif
+    {
+      #ifdef RAM_OFFSET
+      map=get_reg(i_regs->regmap,ROREG);
+      if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+      #endif
     }
   }else{ // using tlb
     int x=0;
@@ -4103,10 +4103,6 @@ static void store_assemble(int i,struct regstat *i_regs)
   if(offset||s<0||c) addr=temp;
   else addr=s;
   if(!using_tlb) {
-    #ifdef RAM_OFFSET
-    map=get_reg(i_regs->regmap,ROREG);
-    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-    #endif
     if(!c) {
       #ifdef R29_HACK
       // Strmnnrmn's speed hack
@@ -4136,6 +4132,10 @@ static void store_assemble(int i,struct regstat *i_regs)
 #endif
       }
     }
+    #ifdef RAM_OFFSET
+    map=get_reg(i_regs->regmap,ROREG);
+    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+    #endif
   }else{ // using tlb
     int x=0;
     if (opcode[i]==0x28) x=3; // SB
@@ -4279,6 +4279,10 @@ static void storelr_assemble(int i,struct regstat *i_regs)
       emit_jmp(0);
     }
   }
+#if NEW_DYNAREC >= NEW_DYNAREC_ARM
+  gen_addr(temp,map);
+  map=-1;
+#endif
 
   if (opcode[i]==0x2C||opcode[i]==0x2D) { // SDL/SDR
     temp2=get_reg(i_regs->regmap,FTEMP);
@@ -4419,6 +4423,11 @@ static void storelr_assemble(int i,struct regstat *i_regs)
   if(!c||!memtarget)
     add_stub(STORELR_STUB,jaddr,(intptr_t)out,0,(intptr_t)i_regs,rs2[i],ccadj[i],reglist);
   if(!using_tlb) {
+    #if NEW_DYNAREC >= NEW_DYNAREC_ARM
+    map=get_reg(i_regs->regmap,ROREG);
+    if(map<0) map=HOST_TEMPREG;
+    gen_orig_addr(temp,map);
+    #endif
     #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
     int ir=get_reg(i_regs->regmap,INVCP);
     assert(ir>=0);
@@ -7572,7 +7581,7 @@ void new_dynarec_init(void)
 
   if(base_addr==(void*)-1) DebugMessage(M64MSG_ERROR, "mmap() failed");
 
-  assert(((uintptr_t)g_dev.rdram.dram&(sizeof(uintptr_t)-1))==0); // 4/8 bytes aligned 
+  assert(((uintptr_t)g_dev.rdram.dram&7)==0); //8 bytes aligned 
   out=(u_char *)base_addr;
 
   g_dev.r4300.new_dynarec_hot_state.pc = &g_dev.r4300.new_dynarec_hot_state.fake_pc;

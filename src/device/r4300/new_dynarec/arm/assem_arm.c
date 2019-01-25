@@ -1951,6 +1951,8 @@ static void emit_writeword_indexed_tlb(int rt, int addr, int rs, int map)
 }
 static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int map)
 {
+  //emit_writeword_indexed_tlb modifies HOST_TEMPREG when addr!=0
+  if(map==HOST_TEMPREG) assert(addr==0);
   assert(rh>=0);
   emit_writeword_indexed_tlb(rh, addr, rs, map);
   emit_writeword_indexed_tlb(rl, addr+4, rs, map);
@@ -3064,6 +3066,21 @@ static void do_tlb_w_branch_debug(int map, int c, u_int addr, int *jaddr)
   }
 }
 
+static void gen_addr(int ar, int map) {
+  if(map>=0) {
+    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
+    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
+  }
+}
+
+// This reverses the above operation
+static void gen_orig_addr(int ar, int map) {
+  if(map>=0) {
+    assem_debug("sub %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
+    output_w32(0xe0400100|rd_rn_rm(ar,ar,map));
+  }
+}
+
 // Generate the address of the memory_map entry, relative to dynarec_local
 static void generate_map_const(u_int addr,int reg) {
   //DebugMessage(M64MSG_VERBOSE, "generate_map_const(%x,%s)",addr,regname[reg]);
@@ -3207,10 +3224,6 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
   }
   if(!using_tlb) {
     if(!c) {
-      #ifdef RAM_OFFSET
-      map=get_reg(i_regs->regmap,ROREG);
-      if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-      #endif
       emit_shlimm(addr,3,temp);
       if (opcode[i]==0x22||opcode[i]==0x26) {
         emit_andimm(addr,0xFFFFFFFC,temp2); // LWL/LWR
@@ -3220,6 +3233,10 @@ static void loadlr_assemble_arm(int i,struct regstat *i_regs)
       emit_cmpimm(addr,0x800000);
       jaddr=(int)out;
       emit_jno(0);
+      #ifdef RAM_OFFSET
+      map=get_reg(i_regs->regmap,ROREG);
+      if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+      #endif
     }
     else {
       if (opcode[i]==0x22||opcode[i]==0x26) {
