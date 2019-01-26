@@ -115,75 +115,6 @@ static intptr_t get_pointer(void *stub)
   return *((int *)i_ptr)+(intptr_t)i_ptr+4;
 }
 
-// Returns a pointer to the instruction located after the call to verifier or null if not a dirty stub
-static void * parse_dirty_stub(void* addr, uintptr_t *source, uintptr_t *copy, u_int *len, uintptr_t *verifier)
-{
-  u_char *ptr=(u_char *)addr;
-
-  //source
-  if(*ptr==(0xB8+(ARG1_REG&7))) //movimm to ARG1_REG;
-  {
-    *source=*(u_int *)(ptr+1);
-    ptr+=5;
-  }
-  else if(*ptr==0x48) //movimm64 to ARG1_REG;
-  {
-    *source=*(uintptr_t *)(ptr+2);
-    ptr+=10;
-  }
-  else
-    return NULL;
-
-  //copy
-  if(*ptr==0x48) //movimm64 to ARG2_REG;
-  {
-    *copy=*(uintptr_t *)(ptr+2);
-    ptr+=10;
-  }
-  else
-    return NULL;
-
-  //slen
-  if(*ptr==(0xB8+(ARG3_REG&7)))
-  {
-    *len=*(u_int *)(ptr+1);
-    ptr+=5;
-  }
-  else if(*ptr==0x41)
-  {
-    *len=*(u_int *)(ptr+2);
-    ptr+=6;
-  }
-  else
-    return NULL;
-
-  //pcaddr
-  if(*ptr==(0xB8+(ARG4_REG&7)))
-    ptr+=5;
-  else if(*ptr==0x41)
-    ptr+=6;
-  else
-    return NULL;
-
-  //verifier
-  if(*ptr==0xE8) // call instruction
-  {
-    *verifier=(intptr_t)(ptr+1)+*((int *)(ptr+1))+4; // follow branch
-    ptr+=5;
-  }
-  else
-    return NULL;
-
-  if(*verifier!=(uintptr_t)verify_code&&*verifier!=(uintptr_t)verify_code_vm&&*verifier!=(uintptr_t)verify_code_ds)
-    return NULL;
-
-  // clean entry point
-  if(*ptr==0xe9)
-    return (void*)(*((int *)(ptr+1))+(intptr_t)(ptr+1)+4); // follow jmp
-  else
-    return (void*)ptr;
-}
-
 /* Register allocation */
 
 // Note: registers are allocated clean (unmodified state)
@@ -3403,20 +3334,11 @@ static void do_invstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static intptr_t do_dirty_stub(int i)
+static intptr_t do_dirty_stub(int i, struct ll_entry * head)
 {
-  assem_debug("do_dirty_stub %x",start+i*4);
-
-  // Careful about the code output here, verify_dirty and get_bounds needs to parse it.
-  if((int)start<(int)0xC0000000){
-    emit_movimm64((intptr_t)source,ARG1_REG);
-  }else{
-    emit_movimm(start,ARG1_REG);
-  }
-  emit_movimm64((intptr_t)copy,ARG2_REG);
-  emit_movimm(slen*4,ARG3_REG);
-  emit_movimm(start+i*4,ARG4_REG);
-  emit_call((int)start<(int)0xC0000000?(intptr_t)&verify_code:(intptr_t)&verify_code_vm);
+  assem_debug("do_dirty_stub %x",head->vaddr);
+  emit_movimm64((intptr_t)head,ARG1_REG);
+  emit_call((intptr_t)verify_code);
   intptr_t entry=(intptr_t)out;
   load_regs_entry(i);
   if(entry==(intptr_t)out) entry=instr_addr[i];
@@ -3424,18 +3346,11 @@ static intptr_t do_dirty_stub(int i)
   return entry;
 }
 
-static void do_dirty_stub_ds()
+static void do_dirty_stub_ds(struct ll_entry *head)
 {
-  assert((int)start>=(int)0xC0000000);
-  if((int)start<(int)0xC0000000){
-    emit_movimm64((intptr_t)source,ARG1_REG);
-  }else{
-    emit_movimm(start,ARG1_REG);
-  }
-  emit_movimm64((intptr_t)copy,ARG2_REG);
-  emit_movimm(slen*4,ARG3_REG);
-  emit_movimm(start+1,ARG4_REG);
-  emit_call((intptr_t)&verify_code_ds);
+  assem_debug("do_dirty_stub_ds %x",head->vaddr);
+  emit_movimm64((intptr_t)head,ARG1_REG);
+  emit_call((intptr_t)verify_code);
 }
 
 static void do_cop1stub(int n)
@@ -3761,10 +3676,6 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
     if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
   }
   if(!using_tlb) {
-    #ifdef RAM_OFFSET
-    map=get_reg(i_regs->regmap,ROREG);
-    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-    #endif
     if(!c) {
       emit_lea8(addr,temp);
       if (opcode[i]==0x22||opcode[i]==0x26) {
@@ -3783,6 +3694,10 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
         emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
       }
     }
+    #ifdef RAM_OFFSET
+    map=get_reg(i_regs->regmap,ROREG);
+    if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
+    #endif
   }else{ // using tlb
     int a;
     if(c) {

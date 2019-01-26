@@ -198,73 +198,17 @@ GLOBAL_FUNCTION(jump_vaddr):
     ldr    w20, [x29, #fp_cycle_count]
     br     x0
     
-GLOBAL_FUNCTION(verify_code_ds):
-    
-GLOBAL_FUNCTION(verify_code_vm):
-    /* w0 = instruction pointer (virtual address) */
-    /* w1 = source (virtual address) */
-    /* x2 = copy */
-    /* w3 = length */
-    mov    w4, #0xC0000000
-    cmp    w1, w4
-    b.lt   verify_code
-    add    x8, x29, #fp_memory_map
-    lsr    w4, w1, #12
-    add    w5, w1, w3
-    sub    w5, w5, #1
-    ldr    x6, [x8, x4, lsl #3]
-    lsr    w5, w5, #12
-    tst    x6, x6
-    b.mi   .D4
-    mov    x7, x6
-    add    x1, x1, x6, lsl #2
-    lsl    x6, x6, #2
-.C1:
-    add    w4, w4, #1
-    cmp    x6, x7, lsl #2
-    b.ne   .D4
-    ldr    x7, [x8, x4, lsl #3]
-    cmp    w4, w5
-    b.ls   .C1
-    
-/*TODO: Optimize for 64bit*/
 GLOBAL_FUNCTION(verify_code):
-    /* x1 = source */
-    /* x2 = copy */
-    /* w3 = length */
-    tst    w3, #4
-    add    x3, x1, x3
-    mov    w4, #0
-    mov    w5, #0
-    mov    w12, #0
-    b.eq   .D1
-    ldr    w4, [x1], #4
-    ldr    w5, [x2], #4
+    /* x0 = head */
+    mov    x21, x30 /* Save link register */
+    bl     verify_dirty
+    tst    x0, x0
+    b.ne   .D1
+    mov    x30, x21 /* Restore link register */
+    ret
 .D1:
-    cmp    x1, x3
-    b.eq   .D3
-.D2:
-    ldr    w7, [x1], #4
-    eor    w9, w4, w5
-    ldr    w8, [x2], #4
-    orr    w9, w9, w12
-    tst    w9, w9
-    b.ne   .D4
-    ldr    w4, [x1], #4
-    eor    w12, w7, w8
-    ldr    w5, [x2], #4
-    cmp    x1, x3
-    b.cc   .D2
-    cmp    w7, w8
-    b.ne   .D4
-.D3:
-    cmp    w4, w5
-    b.eq   .D5
-.D4:
     bl     get_addr
     br     x0
-.D5:
-    ret
     
 GLOBAL_FUNCTION(cc_interrupt):
     ldr    w0, [x29, #fp_next_interrupt]
@@ -403,8 +347,8 @@ GLOBAL_FUNCTION(new_dyna_start):
     add    x16, x16, :lo12:g_dev
     movl   x1, (device_r4300_new_dynarec_hot_state_dynarec_local + saved_context)
     add    x16, x16, x1
-    adrp   x1, base_addr
-    add    x1, x1, :lo12:base_addr
+    adrp   x1, base_addr_rx
+    add    x1, x1, :lo12:base_addr_rx
     mov    w0, #0xa4000000
     stp    x19,x20,[x16,#0]
     stp    x21,x22,[x16,#16]

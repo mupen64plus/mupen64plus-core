@@ -75,8 +75,6 @@ cglobal jump_vaddr_edx
 cglobal jump_vaddr_ebx
 cglobal jump_vaddr_ebp
 cglobal jump_vaddr_edi
-cglobal verify_code_ds
-cglobal verify_code_vm
 cglobal verify_code
 cglobal cc_interrupt
 cglobal do_interrupt
@@ -104,6 +102,7 @@ cextern invalidate_block
 cextern new_dynarec_check_interrupt
 cextern get_addr_32
 cextern g_dev
+cextern verify_dirty
 
 %ifdef PIC
 cextern _GLOBAL_OFFSET_TABLE_
@@ -149,72 +148,20 @@ jump_vaddr:
     add     esp,    16
     jmp     eax
 
-verify_code_ds:
-    ;eax = source (virtual address)
-    ;edx = target
-    ;ecx = length
-    get_got_address
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_branch_target)],    ebp
-
-verify_code_vm:
-    ;eax = source (virtual address)
-    ;edx = target
-    ;ecx = length
-    get_got_address
-    cmp     eax,    0C0000000h
-    jl      verify_code
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi
-    mov     esi,    eax
-    lea     ebp,    [-1+eax+ecx*1]
-    shr     esi,    12
-    shr     ebp,    12
-    mov     edi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+esi*4)]
-    test    edi,    edi
-    js      _D4
-    lea     eax,    [eax+edi*4]
-_D1:
-    xor     edi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+esi*4)]
-    shl     edi,    2
-    jne     _D4
-    mov     edi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_memory_map+esi*4)]
-    inc     esi
-    cmp     esi,    ebp
-    jbe     _D1
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
-
 verify_code:
-    ;eax = source
-    ;edx = target
-    ;ecx = length
-    get_got_address
-    mov     edi,    [-4+eax+ecx*1]
-    xor     edi,    [-4+edx+ecx*1]
-    jne     _D5
-    mov     edi,    ecx
-    add     ecx,    -4
-    je      _D3
-    test    edi,    4
-    cmove   ecx,    edi
-_D2:
-    mov     edi,    [-4+eax+ecx*1]
-    xor     edi,    [-4+edx+ecx*1]
-    jne     _D5
-    mov     edi,    [-8+eax+ecx*1]
-    xor     edi,    [-8+edx+ecx*1]
-    jne     _D5
-    add     ecx,    -8
-    jne     _D2
-_D3:
-    mov     ebp,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_branch_target)]
+    ;eax = head
+    add     esp,    -8
+    push    eax
+    call    verify_dirty
+    test    eax,eax
+    jne     _D1
+    add     esp,    12
     ret
-_D4:
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
-_D5:
-    mov     ebp,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_branch_target)]
-    push    esi           ;for stack alignment, unused
-    push    DWORD [8+esp]
+_D1:
+    add     esp,    4
+    push    eax
     call    get_addr
-    add     esp,    16    ;pop stack
+    add     esp,    16
     jmp     eax
 
 cc_interrupt:
