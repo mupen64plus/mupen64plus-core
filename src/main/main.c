@@ -483,7 +483,6 @@ void main_state_set_slot(int slot)
     }
 
     savestates_select_slot(slot);
-    StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
 void main_state_inc_slot(void)
