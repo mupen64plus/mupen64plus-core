@@ -1900,7 +1900,7 @@ static void add_link(u_int vaddr,void *src)
   //inv_debug("add_link: Pointer is to %x\n",(intptr_t)ptr);
 }
 
-struct ll_entry *get_clean(struct r4300_core* r4300,u_int vaddr,u_int flags)
+static struct ll_entry *get_clean(struct r4300_core* r4300,u_int vaddr,u_int flags)
 {
   u_int page=(vaddr^0x80000000)>>12;
   if(page>262143&&r4300->cp0.tlb.LUT_r[vaddr>>12]) page=(r4300->cp0.tlb.LUT_r[vaddr>>12]^0x80000000)>>12;
@@ -1916,7 +1916,7 @@ struct ll_entry *get_clean(struct r4300_core* r4300,u_int vaddr,u_int flags)
   return NULL;
 }
 
-struct ll_entry *get_dirty(struct r4300_core* r4300,u_int vaddr,u_int flags)
+static struct ll_entry *get_dirty(struct r4300_core* r4300,u_int vaddr,u_int flags)
 {
   u_int page=(vaddr^0x80000000)>>12;
   u_int vpage=page;
@@ -8207,6 +8207,9 @@ int new_recompile_block(int addr)
           if(ba[j]==start+i*4+4) done=j=0;
           if(ba[j]==start+i*4+8) done=j=0;
         }
+        // Tonic trouble is weird!
+        if(type==CJUMP)
+          done=0;
       }
       else {
         if(stop_after_jal) done=1;

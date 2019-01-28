@@ -49,6 +49,7 @@
 #define stop_after_jal                          recomp_dbg_stop_after_jal
 
 /* Rename non-static functions */
+#define verify_dirty                            recomp_dbg_verify_dirty
 #define clean_blocks                            recomp_dbg_clean_blocks
 #define get_addr                                recomp_dbg_get_addr
 #define get_addr_32                             recomp_dbg_get_addr_32
