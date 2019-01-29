@@ -43,8 +43,8 @@ matrix:
       addons:
         apt:
           sources:
-          - sourceline: 'deb http://pkg.mxe.cc/repos/apt/debian jessie main'
-            key_url: 'http://pkg.mxe.cc/repos/apt/conf/mxeapt.gpg'
+          - sourceline: 'deb https://mirror.mxe.cc/repos/apt xenial main'
+            key_url: 'https://mirror.mxe.cc/repos/apt/client-conf/mxeapt.gpg'
           packages:
           - mxe-i686-w64-mingw32.shared-gcc
           - mxe-i686-w64-mingw32.shared-sdl2
