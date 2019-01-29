@@ -4222,7 +4222,7 @@ static void store_assemble(int i,struct regstat *i_regs)
 static void storelr_assemble(int i,struct regstat *i_regs)
 {
   int s,th,tl;
-  int temp;
+  int temp,real_temp;
   int temp2;
   int map=-1;
   int offset;
@@ -4279,9 +4279,12 @@ static void storelr_assemble(int i,struct regstat *i_regs)
       emit_jmp(0);
     }
   }
+  real_temp=temp;
 #if NEW_DYNAREC >= NEW_DYNAREC_ARM
-  gen_addr(temp,map);
-  map=-1;
+  if(map>=0){
+    emit_addsl2(real_temp,map,map);
+    temp=map; map=-1;
+  }
 #endif
 
   if (opcode[i]==0x2C||opcode[i]==0x2D) { // SDL/SDR
@@ -4289,24 +4292,24 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     if(!rs2[i]) temp2=th=tl;
   }
 
-  emit_testimm(temp,2);
+  emit_testimm(real_temp,2);
   case2=(intptr_t)out;
   emit_jne(0);
-  emit_testimm(temp,1);
+  emit_testimm(real_temp,1);
   case1=(intptr_t)out;
   emit_jne(0);
   // 0
   if (opcode[i]==0x2A) { // SWL
     emit_writeword_indexed_tlb(tl,0,temp,map);
   }
-  if (opcode[i]==0x2E) { // SWR
+  else if (opcode[i]==0x2E) { // SWR
     emit_writebyte_indexed_tlb(tl,3,temp,map);
   }
-  if (opcode[i]==0x2C) { // SDL
+  else if (opcode[i]==0x2C) { // SDL
     emit_writeword_indexed_tlb(th,0,temp,map);
     if(rs2[i]) emit_mov(tl,temp2);
   }
-  if (opcode[i]==0x2D) { // SDR
+  else if (opcode[i]==0x2D) { // SDR
     emit_writebyte_indexed_tlb(tl,3,temp,map);
     if(rs2[i]) emit_shldimm(th,tl,24,temp2);
   }
@@ -4322,11 +4325,11 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     emit_writebyte_indexed_tlb(tl,1,temp,map);
     if(rs2[i]) emit_rorimm(tl,8,tl);
   }
-  if (opcode[i]==0x2E) { // SWR
+  else if (opcode[i]==0x2E) { // SWR
     // Write two lsb into two most significant bytes
     emit_writehword_indexed_tlb(tl,1,temp,map);
   }
-  if (opcode[i]==0x2C) { // SDL
+  else if (opcode[i]==0x2C) { // SDL
     if(rs2[i]) emit_shrdimm(tl,th,8,temp2);
     // Write 3 msb into three least significant bytes
     if(rs2[i]) emit_rorimm(th,8,th);
@@ -4335,7 +4338,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     emit_writebyte_indexed_tlb(th,1,temp,map);
     if(rs2[i]) emit_rorimm(th,8,th);
   }
-  if (opcode[i]==0x2D) { // SDR
+  else if (opcode[i]==0x2D) { // SDR
     if(rs2[i]) emit_shldimm(th,tl,16,temp2);
     // Write two lsb into two most significant bytes
     emit_writehword_indexed_tlb(tl,1,temp,map);
@@ -4344,7 +4347,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
   emit_jmp(0);
   // 2
   set_jump_target(case2,(intptr_t)out);
-  emit_testimm(temp,1);
+  emit_testimm(real_temp,1);
   case3=(intptr_t)out;
   emit_jne(0);
   if (opcode[i]==0x2A) { // SWL
@@ -4353,21 +4356,21 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     emit_writehword_indexed_tlb(tl,-2,temp,map);
     if(rs2[i]) emit_rorimm(tl,16,tl);
   }
-  if (opcode[i]==0x2E) { // SWR
+  else if (opcode[i]==0x2E) { // SWR
     // Write 3 lsb into three most significant bytes
     emit_writebyte_indexed_tlb(tl,-1,temp,map);
     if(rs2[i]) emit_rorimm(tl,8,tl);
     emit_writehword_indexed_tlb(tl,0,temp,map);
     if(rs2[i]) emit_rorimm(tl,24,tl);
   }
-  if (opcode[i]==0x2C) { // SDL
+  else if (opcode[i]==0x2C) { // SDL
     if(rs2[i]) emit_shrdimm(tl,th,16,temp2);
     // Write two msb into two least significant bytes
     if(rs2[i]) emit_rorimm(th,16,th);
     emit_writehword_indexed_tlb(th,-2,temp,map);
     if(rs2[i]) emit_rorimm(th,16,th);
   }
-  if (opcode[i]==0x2D) { // SDR
+  else if (opcode[i]==0x2D) { // SDR
     if(rs2[i]) emit_shldimm(th,tl,8,temp2);
     // Write 3 lsb into three most significant bytes
     emit_writebyte_indexed_tlb(tl,-1,temp,map);
@@ -4385,18 +4388,18 @@ static void storelr_assemble(int i,struct regstat *i_regs)
     emit_writebyte_indexed_tlb(tl,-3,temp,map);
     if(rs2[i]) emit_rorimm(tl,8,tl);
   }
-  if (opcode[i]==0x2E) { // SWR
+  else if (opcode[i]==0x2E) { // SWR
     // Write entire word
     emit_writeword_indexed_tlb(tl,-3,temp,map);
   }
-  if (opcode[i]==0x2C) { // SDL
+  else if (opcode[i]==0x2C) { // SDL
     if(rs2[i]) emit_shrdimm(tl,th,24,temp2);
     // Write msb into least significant byte
     if(rs2[i]) emit_rorimm(th,24,th);
     emit_writebyte_indexed_tlb(th,-3,temp,map);
     if(rs2[i]) emit_rorimm(th,8,th);
   }
-  if (opcode[i]==0x2D) { // SDR
+  else if (opcode[i]==0x2D) { // SDR
     if(rs2[i]) emit_mov(th,temp2);
     // Write entire word
     emit_writeword_indexed_tlb(tl,-3,temp,map);
@@ -4405,44 +4408,51 @@ static void storelr_assemble(int i,struct regstat *i_regs)
   set_jump_target(done1,(intptr_t)out);
   set_jump_target(done2,(intptr_t)out);
   if (opcode[i]==0x2C) { // SDL
-    emit_testimm(temp,4);
+    emit_testimm(real_temp,4);
     done0=(intptr_t)out;
     emit_jne(0);
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+    emit_andimm64(temp,~3,temp);
+#else
     emit_andimm(temp,~3,temp);
+#endif
     emit_writeword_indexed_tlb(temp2,4,temp,map);
     set_jump_target(done0,(intptr_t)out);
   }
-  if (opcode[i]==0x2D) { // SDR
-    emit_testimm(temp,4);
+  else if (opcode[i]==0x2D) { // SDR
+    emit_testimm(real_temp,4);
     done0=(intptr_t)out;
     emit_jeq(0);
+#if NEW_DYNAREC == NEW_DYNAREC_ARM64
+    emit_andimm64(temp,~3,temp);
+#else
     emit_andimm(temp,~3,temp);
+#endif
     emit_writeword_indexed_tlb(temp2,-4,temp,map);
     set_jump_target(done0,(intptr_t)out);
   }
-  if(!c||!memtarget)
-    add_stub(STORELR_STUB,jaddr,(intptr_t)out,0,(intptr_t)i_regs,rs2[i],ccadj[i],reglist);
   if(!using_tlb) {
     #if NEW_DYNAREC >= NEW_DYNAREC_ARM
     map=get_reg(i_regs->regmap,ROREG);
-    if(map<0) map=HOST_TEMPREG;
-    gen_orig_addr(temp,map);
+    if(map>=0) emit_loadreg(ROREG,map);
     #endif
     #if defined(HOST_IMM8) || defined(NEED_INVC_PTR)
     int ir=get_reg(i_regs->regmap,INVCP);
     assert(ir>=0);
-    emit_cmpmem_indexedsr12_reg(ir,temp,1);
+    emit_cmpmem_indexedsr12_reg(ir,real_temp,1);
     #else
-    emit_cmpmem_indexedsr12_imm((intptr_t)g_dev.r4300.cached_interp.invalid_code,temp,1);
+    emit_cmpmem_indexedsr12_imm((intptr_t)g_dev.r4300.cached_interp.invalid_code,real_temp,1);
     #endif
     #if defined(HAVE_CONDITIONAL_CALL) && !defined(DESTRUCTIVE_SHIFT)
-    emit_callne(invalidate_addr_reg[temp]);
+    emit_callne(invalidate_addr_reg[real_temp]);
     #else
     intptr_t jaddr2=(intptr_t)out;
     emit_jne(0);
-    add_stub(INVCODE_STUB,jaddr2,(intptr_t)out,reglist|(1<<HOST_CCREG),temp,0,0,0);
+    add_stub(INVCODE_STUB,jaddr2,(intptr_t)out,reglist|(1<<HOST_CCREG),real_temp,0,0,0);
     #endif
   }
+  if(!c||!memtarget)
+    add_stub(STORELR_STUB,jaddr,(intptr_t)out,0,(intptr_t)i_regs,rs2[i],ccadj[i],reglist);
 }
 #endif
 

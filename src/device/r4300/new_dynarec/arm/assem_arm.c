@@ -2245,6 +2245,12 @@ static void emit_addsr12(int rs1,int rs2,int rt)
   output_w32(0xe0800620|rd_rn_rm(rt,rs1,rs2));
 }
 
+static void emit_addsl2(int rs1,int rs2,int rt)
+{
+  assem_debug("add %s,%s,%s lsl #2",regname[rt],regname[rs1],regname[rs2]);
+  output_w32(0xe0800100|rd_rn_rm(rt,rs1,rs2));
+}
+
 static void emit_callne(int a)
 {
   assem_debug("blne %x",a);
@@ -3063,21 +3069,6 @@ static void do_tlb_w_branch_debug(int map, int c, u_int addr, int *jaddr)
     emit_testimm(map,0x40000000);
     *jaddr=(int)out;
     emit_jne(0);
-  }
-}
-
-static void gen_addr(int ar, int map) {
-  if(map>=0) {
-    assem_debug("add %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0800100|rd_rn_rm(ar,ar,map));
-  }
-}
-
-// This reverses the above operation
-static void gen_orig_addr(int ar, int map) {
-  if(map>=0) {
-    assem_debug("sub %s,%s,%s lsl #2",regname[ar],regname[ar],regname[map]);
-    output_w32(0xe0400100|rd_rn_rm(ar,ar,map));
   }
 }
 
