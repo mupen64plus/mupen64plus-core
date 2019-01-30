@@ -1287,6 +1287,10 @@ static int savestates_load_pj64(struct device* dev,
 
     savestates_load_set_pc(&dev->r4300, *r4300_cp0_last_addr(&dev->r4300.cp0));
 
+#ifdef NEW_DYNAREC
+    stop_after_jal = 1;
+#endif
+
     // assert(savestateData+savestateSize == curr)
 
     free(savestateData);
