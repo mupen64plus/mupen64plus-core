@@ -57,7 +57,7 @@ enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 enum { DD_DISK_ID_OFFSET = 0x43670 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010400;  /* 1.4 */
+static const int savestate_latest_version = 0x00010500;  /* 1.5 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -193,8 +193,9 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     size_t savestateSize;
     unsigned char *savestateData, *curr;
     char queue[1024];
-    unsigned char additionalData[4];
+    unsigned char using_tlb_data[4];
     unsigned char data_0001_0200[4096]; // 4k for extra state from v1.2
+    unsigned char stop_after_jal_data[4];
     uint64_t flashram_status;
 
     uint32_t* cp0_regs = r4300_cp0_regs(&dev->r4300.cp0);
@@ -275,7 +276,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     {
         if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
-            gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData))
+            gzread(f, using_tlb_data, sizeof(using_tlb_data)) != sizeof(using_tlb_data))
         {
             main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.1 data from %s", filepath);
             free(savestateData);
@@ -284,19 +285,43 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             return 0;
         }
     }
-    else // version >= 0x00010200  saves entire eventqueue, 4-byte using_tlb flags and extra state
+    else if (version >= 0x00010200 && version < 0x00010500) // saves entire eventqueue, 4-byte using_tlb flags and extra state
     {
         if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
             gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
-            gzread(f, additionalData, sizeof(additionalData)) != sizeof(additionalData) ||
+            gzread(f, using_tlb_data, sizeof(using_tlb_data)) != sizeof(using_tlb_data) ||
             gzread(f, data_0001_0200, sizeof(data_0001_0200)) != sizeof(data_0001_0200))
         {
-            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.2 data from %s", filepath);
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.2 to 1.4 data from %s", filepath);
             free(savestateData);
             gzclose(f);
             SDL_UnlockMutex(savestates_lock);
             return 0;
         }
+    }
+
+    else if (version == 0x00010500)  // saves entire eventqueue, 4-byte using_tlb flags and extra state and stop_after_jal_state
+    {
+        if (gzread(f, savestateData, savestateSize) != (int)savestateSize ||
+            gzread(f, queue, sizeof(queue)) != sizeof(queue) ||
+            gzread(f, using_tlb_data, sizeof(using_tlb_data)) != sizeof(using_tlb_data) ||
+            gzread(f, data_0001_0200, sizeof(data_0001_0200)) != sizeof(data_0001_0200) ||
+            gzread(f, stop_after_jal_data, sizeof(stop_after_jal_data)) != sizeof(stop_after_jal_data))
+        {
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate 1.5 data from %s", filepath);
+            free(savestateData);
+            gzclose(f);
+            SDL_UnlockMutex(savestates_lock);
+            return 0;
+        }
+    }
+    else
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not read Mupen64Plus savestate %#010x data from %s", version, filepath);
+        free(savestateData);
+        gzclose(f);
+        SDL_UnlockMutex(savestates_lock);
+        return 0;
     }
 
     gzclose(f);
@@ -486,7 +511,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 #ifdef NEW_DYNAREC
     if (version >= 0x00010100)
     {
-        curr = additionalData;
+        curr = using_tlb_data;
         using_tlb = GETDATA(curr, unsigned int);
     }
 #endif
@@ -827,8 +852,17 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 curr += (3+DD_ASIC_REGS_COUNT)*sizeof(uint32_t) + 0x100 + 0x40 + 2*sizeof(int64_t) + 2*sizeof(unsigned int);
             }
         }
+
+#ifdef NEW_DYNAREC
+        if (version >= 0x00010500)
+        {
+            curr = stop_after_jal_data;
+            stop_after_jal = GETDATA(curr, unsigned int);
+        }
+#endif
     }
-    else {
+    else
+    {
         /* extra ai state */
         dev->ai.last_read = 0;
         dev->ai.delayed_carry = 0;
@@ -889,6 +923,13 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             poweron_dd(&dev->dd);
         }
     }
+
+#ifdef NEW_DYNAREC
+    if (version < 0x00010500)
+    {
+        stop_after_jal = 1;
+    }
+#endif
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
     if (input.controllerCommand) {
@@ -1492,7 +1533,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     save_eventqueue_infos(&dev->r4300.cp0, queue);
 
     // Allocate memory for the save state data
-    save->size = 16788288 + sizeof(queue) + 4 + 4096;
+    save->size = 16788288 + sizeof(queue) + 4 + 4096 + 4;
     save->data = curr = malloc(save->size);
     if (save->data == NULL)
     {
@@ -1839,6 +1880,12 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
         PUTDATA(curr, unsigned int, dev->dd.bm_zone);
         PUTDATA(curr, unsigned int, dev->dd.bm_track_offset);
     }
+
+#ifdef NEW_DYNAREC
+    PUTDATA(curr, unsigned int, stop_after_jal);
+#else
+    PUTDATA(curr, unsigned int, 0);
+#endif
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
