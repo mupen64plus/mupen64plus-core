@@ -372,13 +372,4 @@ GLOBAL_FUNCTION(breakpoint):
     /* Set breakpoint here for debugging */
     mov    pc, lr
 
-GLOBAL_FUNCTION(__clear_cache_bugfix):
-    /*  The following bug-fix implements __clear_cache (missing in Android)  */
-    push   {r7, lr}
-    mov    r2, #0
-    mov    r7, #0x2
-    add    r7, r7, #0xf0000
-    svc    0x00000000
-    pop    {r7, pc}
-
 END_SECTION

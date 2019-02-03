@@ -2319,8 +2319,7 @@ static void invalidate_all_pages(void)
     }
   }
   #if NEW_DYNAREC >= NEW_DYNAREC_ARM
-  __clear_cache((char *)base_addr_rx,(char *)base_addr_rx+(1<<TARGET_SIZE_2));
-  //cacheflush((void *)base_addr,(void *)base_addr+(1<<TARGET_SIZE_2),0);
+  cache_flush((char *)base_addr_rx,(char *)base_addr_rx+(1<<TARGET_SIZE_2));
   #endif
   #ifdef USE_MINI_HT
   memset(g_dev.r4300.new_dynarec_hot_state.mini_ht,-1,sizeof(g_dev.r4300.new_dynarec_hot_state.mini_ht));
@@ -10883,8 +10882,7 @@ int new_recompile_block(int addr)
   #if NEW_DYNAREC >= NEW_DYNAREC_ARM
   intptr_t beginning_rx=((intptr_t)beginning-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
   intptr_t out_rx=((intptr_t)out-(intptr_t)base_addr)+(intptr_t)base_addr_rx;
-  __clear_cache((char *)beginning_rx,(char *)out_rx);
-  //cacheflush((void *)beginning,out,0);
+  cache_flush((char *)beginning_rx,(char *)out_rx);
   #endif
 
   // If we're within 256K of the end of the buffer,

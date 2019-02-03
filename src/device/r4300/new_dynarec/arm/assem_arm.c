@@ -230,6 +230,11 @@ static u_int jump_table_symbols[] = {
   (int)breakpoint
 };
 
+static void cache_flush(char* start, char* end)
+{
+    __clear_cache(start, end);
+}
+
 /* Linker */
 static void set_jump_target(int addr,u_int target)
 {
@@ -325,7 +330,7 @@ static void *add_pointer(void *src, void* addr)
   //assert((*(int*)((u_int)ptr2+20)&0x0ff00000)==0x01a00000); //mov
 #endif
   *ptr=(*ptr&0xFF000000)|((((u_int)addr-(u_int)ptr-8)<<6)>>8);
-  __clear_cache((void*)ptr, (void*)((u_int)ptr+4));
+  cache_flush((void*)ptr, (void*)((u_int)ptr+4));
   return ptr2;
 }
 
@@ -4507,8 +4512,7 @@ static void do_clear_cache(void)
               end+=4096;
               j++;
             }else{
-              __clear_cache((void *)start,(void *)end);
-              //cacheflush((void *)start,(void *)end,0);
+              cache_flush((void *)start,(void *)end);
               break;
             }
           }
