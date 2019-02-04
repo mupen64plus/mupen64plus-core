@@ -28,6 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if (!defined(_WIN32))
+#include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 #define M64P_CORE_PROTOTYPES 1
 #include "callbacks.h"
 #include "config.h"
@@ -367,8 +373,9 @@ static m64p_error write_configlist_file(void)
 {
     config_section *curr_section;
     const char *configpath;
-    char *filepath;
+    char *filepath, *filepath_tmp;
     FILE *fPtr;
+    int fd;
 
     /* get the full pathname to the config file and try to open it */
     configpath = ConfigGetUserConfigPath();
@@ -379,14 +386,17 @@ static m64p_error write_configlist_file(void)
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    fPtr = fopen(filepath, "wb"); 
+    filepath_tmp = formatstr("%s.mupen64plus_%d", filepath, getpid());
+    if (filepath_tmp == NULL)
+        return M64ERR_NO_MEMORY;
+
+    fPtr = fopen(filepath_tmp, "wb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Couldn't open configuration file '%s' for writing.", filepath);
         free(filepath);
         return M64ERR_FILES;
     }
-    free(filepath);
 
     /* write out header */
     fprintf(fPtr, "# Mupen64Plus Configuration File\n");
@@ -418,7 +428,51 @@ static m64p_error write_configlist_file(void)
         curr_section = curr_section->next;
     }
 
+    fflush(fPtr);
+
+#if (!defined(_WIN32))
+    if (fsync(fileno(fPtr)) == -1) {
+        DebugMessage(M64MSG_ERROR, "Error syncing tmp configuration file '%s'",
+                filepath_tmp);
+        fclose(fPtr);
+        free(filepath);
+        free(filepath_tmp);
+        return M64ERR_FILES;
+    }
+#endif
+
     fclose(fPtr);
+
+    if (rename(filepath_tmp, filepath) == -1) {
+        DebugMessage(M64MSG_ERROR, "Couldn't rename temporary configuration file '%s' to '%s'",
+                filepath_tmp, filepath);
+        free(filepath);
+        free(filepath_tmp);
+        return M64ERR_FILES;
+    }
+
+    free(filepath);
+    free(filepath_tmp);
+
+#if (!defined(_WIN32))
+    if ((fd = open(configpath, O_RDONLY)) == -1) {
+        DebugMessage(M64MSG_ERROR, "Couldn't open configuration directory '%s'",
+                configpath);
+        return M64ERR_FILES;
+    }
+    if (fsync(fd) == -1) {
+        DebugMessage(M64MSG_ERROR, "Error syncing configuration directory '%s'",
+                configpath);
+        close(fd);
+        return M64ERR_FILES;
+    }
+    if (close(fd) == -1) {
+        DebugMessage(M64MSG_ERROR, "Error closing configuration directory '%s'",
+                configpath);
+        return M64ERR_FILES;
+    }
+#endif
+
     return M64ERR_SUCCESS;
 }
 
