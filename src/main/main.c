@@ -296,7 +296,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultInt(g_CoreConfig, "R4300Emulator", 1, "Use Pure Interpreter if 0, Cached Interpreter if 1, or Dynamic Recompiler if 2 or more");
 #endif
     ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
-    ConfigSetDefaultBool(g_CoreConfig, "DisableExtraMem", 0, "Disable 4MB expansion RAM pack. May be necessary for some games");
+    ConfigSetDefaultInt(g_CoreConfig, "RdramSize", 1, "RDRAM size (0: 4MB, 1: 8MB, 2: 16MB)");
     ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
     ConfigSetDefaultBool(g_CoreConfig, "EnableDebugger", 0, "Activate the R4300 debugger when ROM execution begins, if core was built with Debugger support");
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
@@ -1306,12 +1306,30 @@ m64p_error main_run(void)
     randomize_interrupt = ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt");
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
 
-    if (ROM_PARAMS.disableextramem)
-        disable_extra_mem = ROM_PARAMS.disableextramem;
-    else
-        disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
 
-    rdram_size = (disable_extra_mem == 0) ? RDRAM_8MB_SIZE : RDRAM_4MB_SIZE;
+    if (ROM_PARAMS.disableextramem)
+    {
+        rdram_size = RDRAM_4MB_SIZE;
+    }
+    else
+    {
+        int rdramSizeParam = ConfigGetParamInt(g_CoreConfig, "RdramSize");
+
+        switch (rdramSizeParam)
+        {
+            case 0:
+                rdram_size = RDRAM_4MB_SIZE;
+                break;
+            case 1:
+                rdram_size = RDRAM_8MB_SIZE;
+                break;
+            case 2:
+                rdram_size = RDRAM_16MB_SIZE;
+                break;
+            default:
+                rdram_size = RDRAM_8MB_SIZE;
+        }
+    }
 
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;

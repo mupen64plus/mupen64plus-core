@@ -57,7 +57,7 @@ enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 enum { DD_DISK_ID_OFFSET = 0x43670 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010500;  /* 1.5 */
+static const int savestate_latest_version = 0x00010600;  /* 1.6 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -196,6 +196,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     unsigned char using_tlb_data[4];
     unsigned char data_0001_0200[4096]; // 4k for extra state from v1.2
     uint64_t flashram_status;
+    int rdram_read_size = RDRAM_16MB_SIZE;
 
     uint32_t* cp0_regs = r4300_cp0_regs(&dev->r4300.cp0);
 
@@ -251,6 +252,17 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
     /* Read the rest of the savestate */
     savestateSize = 16788244;
+
+    // Add an extra 8MB to allow loading 16MB of RDRAM
+    if (version >= 0x00010600)
+    {
+        savestateSize += RDRAM_8MB_SIZE;
+    }
+    else
+    {
+        rdram_read_size = RDRAM_8MB_SIZE;
+    }
+
     savestateData = curr = (unsigned char *)malloc(savestateSize);
     if (savestateData == NULL)
     {
@@ -417,14 +429,14 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     dev->dp.dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
     dev->dp.dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
-    if (dev->rdram.dram_size < RDRAM_8MB_SIZE)
+    if (dev->rdram.dram_size < rdram_read_size)
     {
         COPYARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
-        curr += RDRAM_8MB_SIZE - dev->rdram.dram_size;
+        curr += rdram_read_size - dev->rdram.dram_size;
     }
     else
     {
-        COPYARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_8MB_SIZE/4);
+        COPYARRAY(dev->rdram.dram, curr, uint32_t, rdram_read_size/4);
     }
 
     COPYARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1522,7 +1534,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     save_eventqueue_infos(&dev->r4300.cp0, queue);
 
     // Allocate memory for the save state data
-    save->size = 16788288 + sizeof(queue) + 4 + 4096;
+    save->size = 16788288 + sizeof(queue) + 4 + 4096 + 1024*1024*8;
     save->data = curr = malloc(save->size);
     if (save->data == NULL)
     {
@@ -1685,10 +1697,10 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     PUTDATA(curr, uint32_t, dev->dp.dps_regs[DPS_BUFTEST_ADDR_REG]);
     PUTDATA(curr, uint32_t, dev->dp.dps_regs[DPS_BUFTEST_DATA_REG]);
 
-    if (dev->rdram.dram_size < RDRAM_8MB_SIZE)
+    if (dev->rdram.dram_size < RDRAM_16MB_SIZE)
     {
         PUTARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
-        int dummyDataSize = RDRAM_8MB_SIZE - dev->rdram.dram_size;
+        int dummyDataSize = RDRAM_16MB_SIZE - dev->rdram.dram_size;
         for (i = 0; i < dummyDataSize/4; i++)
         {
             PUTDATA(curr, uint32_t, 0);
@@ -1696,7 +1708,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     }
     else
     {
-        PUTARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_8MB_SIZE/4);
+        PUTARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_16MB_SIZE/4);
     }
 
     PUTARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1900,7 +1912,7 @@ static int savestates_save_pj64(const struct device* dev,
                                 int (*write_func)(void *, const void *, size_t))
 {
     unsigned int i;
-    unsigned int SaveRDRAMSize = RDRAM_8MB_SIZE;
+    unsigned int SaveRDRAMSize = RDRAM_16MB_SIZE;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
