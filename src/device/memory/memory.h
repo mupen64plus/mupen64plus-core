@@ -27,7 +27,9 @@
 
 #include "osal/preproc.h"
 
-enum { RDRAM_MAX_SIZE = 0x800000 };
+enum { RDRAM_16MB_SIZE = 0x1000000 };
+enum { RDRAM_8MB_SIZE = 0x800000 };
+enum { RDRAM_4MB_SIZE = 0x400000 };
 enum { CART_ROM_MAX_SIZE = 0x4000000 };
 enum { DD_ROM_MAX_SIZE = 0x400000 };
 

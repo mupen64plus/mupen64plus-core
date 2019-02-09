@@ -215,7 +215,7 @@ void apply_mem_mapping(struct memory* mem, const struct mem_mapping* mapping)
 
 enum {
     MB_RDRAM_DRAM = 0,
-    MB_CART_ROM = MB_RDRAM_DRAM + RDRAM_MAX_SIZE,
+    MB_CART_ROM = MB_RDRAM_DRAM + RDRAM_16MB_SIZE,
     MB_RSP_MEM  = MB_CART_ROM   + CART_ROM_MAX_SIZE,
     MB_DD_ROM   = MB_RSP_MEM    + SP_MEM_SIZE,
     MB_PIF_MEM  = MB_DD_ROM     + DD_ROM_MAX_SIZE,
@@ -272,7 +272,7 @@ uint32_t* mem_base_u32(void* mem_base, uint32_t address)
         /* In compressed mem base mode, select appropriate mem_base offset */
         mem_base = MEM_BASE_PTR(mem_base);
 
-        if (address < RDRAM_MAX_SIZE) {
+        if (address < RDRAM_16MB_SIZE) {
             mem = (uint32_t*)((uint8_t*)mem_base + (address - MM_RDRAM_DRAM + MB_RDRAM_DRAM));
         }
         else if (address >= MM_CART_ROM) {
