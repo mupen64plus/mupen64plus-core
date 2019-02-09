@@ -417,7 +417,16 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     dev->dp.dps_regs[DPS_BUFTEST_ADDR_REG] = GETDATA(curr, uint32_t);
     dev->dp.dps_regs[DPS_BUFTEST_DATA_REG] = GETDATA(curr, uint32_t);
 
-    COPYARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    if (dev->rdram.dram_size < RDRAM_8MB_SIZE)
+    {
+        COPYARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
+        curr += RDRAM_8MB_SIZE - dev->rdram.dram_size;
+    }
+    else
+    {
+        COPYARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_8MB_SIZE/4);
+    }
+
     COPYARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     COPYARRAY(dev->pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -1199,8 +1208,16 @@ static int savestates_load_pj64(struct device* dev,
     }
 
     // RDRAM
-    memset(dev->rdram.dram, 0, RDRAM_MAX_SIZE);
-    COPYARRAY(dev->rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    if (dev->rdram.dram_size < SaveRDRAMSize)
+    {
+        COPYARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
+        curr += SaveRDRAMSize - dev->rdram.dram_size;
+    }
+    else
+    {
+        memset(dev->rdram.dram, 0, dev->rdram.dram_size);
+        COPYARRAY(dev->rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    }
 
     // DMEM + IMEM
     COPYARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
@@ -1668,7 +1685,20 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     PUTDATA(curr, uint32_t, dev->dp.dps_regs[DPS_BUFTEST_ADDR_REG]);
     PUTDATA(curr, uint32_t, dev->dp.dps_regs[DPS_BUFTEST_DATA_REG]);
 
-    PUTARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_MAX_SIZE/4);
+    if (dev->rdram.dram_size < RDRAM_8MB_SIZE)
+    {
+        PUTARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
+        int dummyDataSize = RDRAM_8MB_SIZE - dev->rdram.dram_size;
+        for (i = 0; i < dummyDataSize/4; i++)
+        {
+            PUTDATA(curr, uint32_t, 0);
+        }
+    }
+    else
+    {
+        PUTARRAY(dev->rdram.dram, curr, uint32_t, RDRAM_8MB_SIZE/4);
+    }
+
     PUTARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
     PUTARRAY(dev->pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
@@ -1870,7 +1900,7 @@ static int savestates_save_pj64(const struct device* dev,
                                 int (*write_func)(void *, const void *, size_t))
 {
     unsigned int i;
-    unsigned int SaveRDRAMSize = RDRAM_MAX_SIZE;
+    unsigned int SaveRDRAMSize = RDRAM_8MB_SIZE;
 
     size_t savestateSize;
     unsigned char *savestateData, *curr;
@@ -2015,7 +2045,20 @@ static int savestates_save_pj64(const struct device* dev,
 
     PUTARRAY(dev->pif.ram, curr, uint8_t, PIF_RAM_SIZE);
 
-    PUTARRAY(dev->rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    if (dev->rdram.dram_size < SaveRDRAMSize)
+    {
+        PUTARRAY(dev->rdram.dram, curr, uint32_t, dev->rdram.dram_size/4);
+        size_t dummyDataSize = SaveRDRAMSize - dev->rdram.dram_size;
+        for (i = 0; i < dummyDataSize/4; i++)
+        {
+            PUTDATA(curr, uint32_t, 0);
+        }
+    }
+    else
+    {
+        PUTARRAY(dev->rdram.dram, curr, uint32_t, SaveRDRAMSize/4);
+    }
+
     PUTARRAY(dev->sp.mem, curr, uint32_t, SP_MEM_SIZE/4);
 
     // Write the save state data to the output

@@ -138,7 +138,7 @@ void poweron_rdram(struct rdram* rdram)
     size_t module;
     size_t modules = get_modules_count(rdram);
     memset(rdram->regs, 0, RDRAM_MAX_MODULES_COUNT*RDRAM_REGS_COUNT*sizeof(uint32_t));
-    memset(rdram->dram, 0, rdram->dram_size);
+    memset(rdram->dram, 0, RDRAM_16MB_SIZE);
 
     DebugMessage(M64MSG_INFO, "Initializing %u RDRAM modules for a total of %u MB",
         modules, rdram->dram_size / (1024*1024));

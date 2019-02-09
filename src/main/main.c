@@ -1311,8 +1311,7 @@ m64p_error main_run(void)
     else
         disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
 
-
-    rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
+    rdram_size = (disable_extra_mem == 0) ? RDRAM_8MB_SIZE : RDRAM_4MB_SIZE;
 
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
