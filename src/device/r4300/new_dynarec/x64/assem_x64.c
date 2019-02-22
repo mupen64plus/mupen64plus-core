@@ -3654,7 +3654,7 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
   int s,th,tl,temp,temp2,addr,map=-1;
   int offset;
   intptr_t jaddr=0;
-  int memtarget,c=0;
+  int memtarget=0,c=0;
   u_int hr,reglist=0;
   th=get_reg(i_regs->regmap,rt1[i]|64);
   tl=get_reg(i_regs->regmap,rt1[i]);

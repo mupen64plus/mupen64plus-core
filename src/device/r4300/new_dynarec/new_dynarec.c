@@ -4228,7 +4228,7 @@ static void storelr_assemble(int i,struct regstat *i_regs)
   intptr_t jaddr=0;
   intptr_t case1,case2,case3;
   intptr_t done0,done1,done2;
-  int memtarget,c=0;
+  int memtarget=0,c=0;
   int agr=AGEN1+(i&1);
   u_int hr,reglist=0;
   th=get_reg(i_regs->regmap,rs2[i]|64);
