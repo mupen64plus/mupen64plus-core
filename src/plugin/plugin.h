@@ -38,7 +38,7 @@ extern CONTROL Controls[NUM_CONTROLLER];
 #define RSP_API_VERSION   0x20000
 #define GFX_API_VERSION   0x20200
 #define AUDIO_API_VERSION 0x20000
-#define INPUT_API_VERSION 0x20001
+#define INPUT_API_VERSION 0x20100
 
 /* video plugin function pointers */
 typedef struct _gfx_plugin_functions
