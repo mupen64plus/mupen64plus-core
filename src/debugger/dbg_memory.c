@@ -54,7 +54,9 @@ static void *opaddr_recompiled[564];
 static disassemble_info dis_info;
 static disassembler_ftype disassemble;
 
-static void process_opcode_out(void *strm, const char *fmt, ...) ATTR_FMT(2,3)
+static void process_opcode_out(void *strm, const char *fmt, ...) ATTR_FMT(2,3);
+
+void process_opcode_out(void *strm, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);

@@ -115,12 +115,12 @@ static osal_inline void osd_render(void)
 {
 }
 
-static osal_inline osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...) ATTR_FMT(2, 3)
+static osal_inline osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
 {
 	return NULL;
 }
 
-static osal_inline void osd_update_message(osd_message_t *msg, const char *fmt, ...) ATTR_FMT(2, 3)
+static osal_inline void osd_update_message(osd_message_t *msg, const char *fmt, ...)
 {
 }
 
