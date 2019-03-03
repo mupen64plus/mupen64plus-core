@@ -29,6 +29,12 @@
 
 #include "osal/preproc.h"
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 /**********************
      File utilities
  **********************/
@@ -178,7 +184,7 @@ int parse_hex(const char *str, unsigned char *output, size_t output_size);
 
 /* Formats an string, using the same syntax as printf.
  * Returns the result in a malloc'd string. */
-char* formatstr(const char* fmt, ...);
+char* formatstr(const char* fmt, ...) ATTR_FMT(1, 2);
 
 typedef enum _ini_line_type
 {

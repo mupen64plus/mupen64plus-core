@@ -30,6 +30,12 @@
 #include "device/r4300/cached_interp.h"
 #include "osal/preproc.h"
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 #if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
 
 /* we must define PACKAGE so that bfd.h (which is included from dis-asm.h) doesn't throw an error */
@@ -48,7 +54,7 @@ static void *opaddr_recompiled[564];
 static disassemble_info dis_info;
 static disassembler_ftype disassemble;
 
-static void process_opcode_out(void *strm, const char *fmt, ...)
+static void process_opcode_out(void *strm, const char *fmt, ...) ATTR_FMT(2,3)
 {
     va_list ap;
     va_start(ap, fmt);

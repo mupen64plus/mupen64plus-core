@@ -25,6 +25,12 @@
 #include "main/list.h"
 #include "osal/preproc.h"
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 /******************************************************************
    osd_corner
    0    1    2 |
@@ -89,8 +95,8 @@ enum { R, G, B }; // for referencing color array
 void osd_init(int width, int height);
 void osd_exit(void);
 void osd_render(void);
-osd_message_t * osd_new_message(enum osd_corner, const char *, ...);
-void osd_update_message(osd_message_t *, const char *, ...);
+osd_message_t * osd_new_message(enum osd_corner, const char *, ...) ATTR_FMT(2, 3);
+void osd_update_message(osd_message_t *, const char *, ...) ATTR_FMT(2, 3);
 void osd_delete_message(osd_message_t *);
 void osd_message_set_static(osd_message_t *);
 void osd_message_set_user_managed(osd_message_t *);
@@ -109,12 +115,12 @@ static osal_inline void osd_render(void)
 {
 }
 
-static osal_inline osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...)
+static osal_inline osd_message_t * osd_new_message(enum osd_corner eCorner, const char *fmt, ...) ATTR_FMT(2, 3)
 {
 	return NULL;
 }
 
-static osal_inline void osd_update_message(osd_message_t *msg, const char *fmt, ...)
+static osal_inline void osd_update_message(osd_message_t *msg, const char *fmt, ...) ATTR_FMT(2, 3)
 {
 }
 

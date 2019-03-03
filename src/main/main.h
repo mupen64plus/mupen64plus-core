@@ -30,6 +30,12 @@
 #include "device/device.h"
 #include "osal/preproc.h"
 
+#if defined(__GNUC__)
+#define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
+#else
+#define ATTR_FMT(fmtpos, attrpos)
+#endif
+
 /* globals */
 extern m64p_handle g_CoreConfig;
 
@@ -60,7 +66,7 @@ void main_switch_plugin_pak(int control_id);
 void main_change_gb_cart(int control_id);
 
 int  main_set_core_defaults(void);
-void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...);
+void main_message(m64p_msg_level level, unsigned int osd_corner, const char *format, ...) ATTR_FMT(3, 4);
 
 m64p_error main_run(void);
 void main_stop(void);
