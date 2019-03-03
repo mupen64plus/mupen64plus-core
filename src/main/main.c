@@ -1105,7 +1105,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         } break;
 
     default:
-        DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", dd_disk->size);
+        DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t) dd_disk->size);
         close_file_storage(dd_disk);
         goto no_disk;
     }
@@ -1513,10 +1513,10 @@ m64p_error main_run(void)
 
             if (l_ipaks[l_paks_idx[i]] != NULL) {
                 DebugMessage(M64MSG_INFO, "Game controller %u (%s) has a %s plugged in",
-                    i, cont_flavor->name, l_ipaks[l_paks_idx[i]]->name);
+                    (uint32_t) i, cont_flavor->name, l_ipaks[l_paks_idx[i]]->name);
             } else {
                 DebugMessage(M64MSG_INFO, "Game controller %u (%s) has nothing plugged in",
-                    i, cont_flavor->name);
+                    (uint32_t) i, cont_flavor->name);
             }
         }
     }

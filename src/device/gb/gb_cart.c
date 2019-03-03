@@ -1007,7 +1007,7 @@ void init_gb_cart(struct gb_cart* gb_cart,
         goto error_release_rom;
     }
 
-    DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s%s",
+    DebugMessage(M64MSG_INFO, "GB cart type (%02x) %s%s%s%s%s%s%s",
             cart_type,
             type->mbc,
             (type->extra_devices & GED_RAM)            ? " RAM" : "",
@@ -1046,11 +1046,11 @@ void init_gb_cart(struct gb_cart* gb_cart,
 
             if (iram_storage->data(ram_storage) == NULL || iram_storage->size(ram_storage) != ram_size)
             {
-                DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", ram_size);
+                DebugMessage(M64MSG_ERROR, "Cannot get GB RAM (%d bytes)", (uint32_t) ram_size);
                 goto error_release_ram;
             }
 
-            DebugMessage(M64MSG_INFO, "Using a %d bytes GB RAM", ram_size);
+            DebugMessage(M64MSG_INFO, "Using a %d bytes GB RAM", (uint32_t) ram_size);
         }
     }
 

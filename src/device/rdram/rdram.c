@@ -141,7 +141,7 @@ void poweron_rdram(struct rdram* rdram)
     memset(rdram->dram, 0, rdram->dram_size);
 
     DebugMessage(M64MSG_INFO, "Initializing %u RDRAM modules for a total of %u MB",
-        modules, rdram->dram_size / (1024*1024));
+        (uint32_t) modules, (uint32_t) rdram->dram_size / (1024*1024));
 
     for (module = 0; module < modules; ++module) {
         rdram->regs[module][RDRAM_CONFIG_REG] = UINT32_C(0xb5190010);
@@ -207,7 +207,7 @@ void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t m
         size_t ipl3_rdram_size = r4300_regs(rdram->r4300)[20] & UINT32_C(0x0fffffff);
         if (ipl3_rdram_size != rdram->dram_size) {
             DebugMessage(M64MSG_ERROR, "IPL3 detected %u MB of RDRAM != %u MB",
-                ipl3_rdram_size / (1024*1024), rdram->dram_size / (1024*1024));
+                (uint32_t) ipl3_rdram_size / (1024*1024), (uint32_t) rdram->dram_size / (1024*1024));
         }
     }
 

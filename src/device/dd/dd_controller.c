@@ -189,7 +189,7 @@ static void read_C2(struct dd_controller* dd)
     size_t offset = 0x40 * (dd->regs[DD_ASIC_CUR_SECTOR] - SECTORS_PER_BLOCK);
 
     DebugMessage(M64MSG_INFO, "read C2: length=%08x, offset=%08x",
-            length, offset);
+            (uint32_t)length, (uint32_t)offset);
 
     for (i = 0; i < length; ++i) {
         dd->c2s_buf[(offset + i) ^ 3] = 0;
