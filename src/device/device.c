@@ -46,7 +46,24 @@ static void write_open_bus(void* opaque, uint32_t address, uint32_t value, uint3
 {
 }
 
+
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+static unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+
+static unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
+{
+    return /* length / 8 */0x1000;
+}
+
+
+static void get_pi_dma_handler(struct device* dev, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
+#else
 static void get_pi_dma_handler(struct cart* cart, struct dd_controller* dd, uint32_t address, void** opaque, const struct pi_dma_handler** handler)
+#endif /* build option to disable 64 Disk Drive support */
 {
 #define RW(o, x) \
     do { \
@@ -58,21 +75,37 @@ static void get_pi_dma_handler(struct cart* cart, struct dd_controller* dd, uint
     if (address >= MM_CART_ROM) {
         if (address >= MM_CART_DOM3) {
             /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom (Paper Mario (U)) ??? */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+            RW(&dev->cart, cart_dom3);
+#else
             RW(cart, cart_dom3);
+#endif /* build option to disable 64 Disk Drive support */
         }
         else {
             /* 0x10000000 - 0x1fbfffff : dom1 addr2, cart rom */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+            RW(&dev->cart.cart_rom, cart_rom);
+#else
             RW(&cart->cart_rom, cart_rom);
+#endif /* build option to disable 64 Disk Drive support */
         }
     }
     else if (address >= MM_DOM2_ADDR2) {
         /* 0x08000000 - 0x0fffffff : dom2 addr2, cart save */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+        RW(&dev->cart, cart_dom2);
+#else
         RW(cart, cart_dom2);
+#endif /* build option to disable 64 Disk Drive support */
     }
     else if (address >= MM_DOM2_ADDR1) {
         /* 0x05000000 - 0x05ffffff : dom2 addr1, dd buffers */
         /* 0x06000000 - 0x07ffffff : dom1 addr1, dd rom */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+        RW(NULL, dd_dom);
+#else
         RW(dd, dd_dom);
+#endif /* build option to disable 64 Disk Drive support */
     }
 #undef RW
 }
@@ -103,11 +136,15 @@ void init_device(struct device* dev,
     void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
     uint32_t flashram_type,
     void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+    void* sram_storage, const struct storage_backend_interface* isram_storage)
+#else
     void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* dd */
     void* dd_rtc_clock, const struct clock_backend_interface* dd_rtc_iclock,
     size_t dd_rom_size,
     void* dd_disk, const struct storage_backend_interface* dd_idisk)
+#endif /* build option to disable 64 Disk Drive support */
 {
     struct interrupt_handler interrupt_handlers[] = {
         { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
@@ -145,13 +182,16 @@ void init_device(struct device* dev,
         { A(MM_PI_REGS, 0xffff), M64P_MEM_PI, { &dev->pi, RW(pi_regs) } },
         { A(MM_RI_REGS, 0xffff), M64P_MEM_RI, { &dev->ri, RW(ri_regs) } },
         { A(MM_SI_REGS, 0xffff), M64P_MEM_SI, { &dev->si, RW(si_regs) } },
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
         { A(MM_DOM2_ADDR1, 0xffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DD_ROM, 0x1ffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
+#endif /* build option to disable 64 Disk Drive support */
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_ram) } }
     };
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     /* init and map DD if present */
     if (dd_rom_size > 0) {
         mappings[14] = (struct mem_mapping){ A(MM_DOM2_ADDR1, 0xffffff), M64P_MEM_NOTHING, { &dev->dd, RW(dd_regs) } };
@@ -163,6 +203,7 @@ void init_device(struct device* dev,
                 dd_disk, dd_idisk,
                 &dev->r4300);
     }
+#endif /* build option to disable 64 Disk Drive support */
 
     struct mem_handler dbg_handler = { &dev->r4300, RW(with_bp_checks) };
 #undef A
@@ -181,13 +222,18 @@ void init_device(struct device* dev,
     init_ai(&dev->ai, &dev->mi, &dev->ri, &dev->vi, aout, iaout);
     init_mi(&dev->mi, &dev->r4300);
     init_pi(&dev->pi,
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+            dev, get_pi_dma_handler,
+#else
             get_pi_dma_handler,
             &dev->cart, &dev->dd,
+#endif /* build option to disable 64 Disk Drive support */
             &dev->mi, &dev->ri, &dev->dp);
     init_ri(&dev->ri, &dev->rdram);
     init_si(&dev->si, si_dma_duration, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     /* FIXME: should boot on cart, unless only a disk is present, but having no cart is not yet supported by ui/core,
      * so use another way of selecting boot device:
      * use CART unless DD is plugged and the plugged CART is not a combo media (cart+disk).
@@ -196,11 +242,16 @@ void init_device(struct device* dev,
     uint32_t rom_base = (dd_rom_size > 0 && media != 'C')
         ? MM_DD_ROM
         : MM_CART_ROM;
+#endif /* build option to disable 64 Disk Drive support */
 
     init_pif(&dev->pif,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+        (uint8_t*)mem_base_u32(base, MM_CART_ROM + 0x40),
+#else
         (uint8_t*)mem_base_u32(base, rom_base) + 0x40,
+#endif /* build option to disable 64 Disk Drive support */
         &dev->r4300);
 
     init_cart(&dev->cart,
@@ -240,10 +291,12 @@ void poweron_device(struct device* dev)
             channel->ijbd->poweron(channel->jbd);
         }
     }
-
+   
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     if (dev->dd.rom != NULL) {
         poweron_dd(&dev->dd);
     }
+#endif /* build option to disable 64 Disk Drive support */
 }
 
 void run_device(struct device* dev)

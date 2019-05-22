@@ -146,7 +146,11 @@ void reset_pif(struct pif* pif, unsigned int reset_type)
     size_t i;
 
     /* HACK: for allowing pifbootrom execution */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+    unsigned int rom_type = 0;
+#else
     unsigned int rom_type = (pif->cic.version == CIC_8303) ? 1 : 0;
+#endif /* build option to disable 64 Disk Drive support */
     unsigned int s7 = 0;
 
     /* 0:ColdReset, 1:NMI */

@@ -69,6 +69,7 @@ Type `make` by itself to view all available build options:
      NO_ASM=1       == build without assembly (no dynamic recompiler or MMX/SSE code)
      USE_GLES=1     == build against GLESv2 instead of OpenGL
      VC=1           == build against Broadcom Videocore GLESv2
+     NO_64DD=1      == build without 64 Disk Drive support
      NEON=1         == (ARM only) build for hard floating point environments
      VFP_HARD=1     == (ARM only) full hardware floating point ABI
      SHAREDIR=path  == extra path to search for shared data files

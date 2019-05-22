@@ -45,8 +45,12 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
         { "X103", CIC_X103, 0x78 },
         { "X105", CIC_X105, 0x91 },
         { "X106", CIC_X106, 0x85 },
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+        { "5167", CIC_5167, 0xdd }
+#else
         { "5167", CIC_5167, 0xdd },
         { "8303", CIC_8303, 0xdd }
+#endif /* build option to disable 64 Disk Drive support */
     };
 
     for (i = 0; i < 0xfc0/4; i++)
@@ -65,7 +69,9 @@ void init_cic_using_ipl3(struct cic* cic, const void* ipl3)
         case UINT64_C(0x000000D6D5BE5580): i = 5; break; /* CIC_X106 */
         case UINT64_C(0x000001053BC19870): i = 6; break; /* CIC 5167 */
         case UINT64_C(0x000000A5F80BF620): i = 0; break; /* CIC 5101 */
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
         case UINT64_C(0x000000D2E53EF008): i = 7; break; /* CIC 8303 */
+#endif /* build option to disable 64 Disk Drive support */
     }
 
     memcpy(cic, &cics[i], sizeof(*cic));

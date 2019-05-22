@@ -22,7 +22,9 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 #include <string.h>
+#endif /* build option to disable 64 Disk Drive support */
 
 #include "api/callbacks.h"
 #include "api/m64p_common.h"
@@ -228,6 +230,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 
 static m64p_error plugin_start_gfx(void)
 {
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     uint8_t media = *((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM) + (0x3b ^ S8));
 
     /* Here we feed 64DD IPL ROM header to GFX plugin if 64DD is present.
@@ -244,9 +247,14 @@ static m64p_error plugin_start_gfx(void)
         : MM_CART_ROM;
 
     free(dd_ipl_rom_filename);
+#endif /* build option to disable 64 Disk Drive support */
 
     /* fill in the GFX_INFO data structure */
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+    gfx_info.HEADER = (unsigned char *)mem_base_u32(g_mem_base, MM_CART_ROM);
+#else
     gfx_info.HEADER = (unsigned char *)mem_base_u32(g_mem_base, rom_base);
+#endif /* build option to disable 64 Disk Drive support */
     gfx_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     gfx_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     gfx_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);
