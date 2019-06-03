@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define M64P_CORE_PROTOTYPES 1
 #include "api/m64p_config.h"
 #include "api/m64p_vidext.h"

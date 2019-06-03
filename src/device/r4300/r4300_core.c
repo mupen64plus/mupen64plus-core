@@ -62,7 +62,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
     r4300->mi = mi;
     r4300->rdram = rdram;
     r4300->randomize_interrupt = randomize_interrupt;
-    srand(time(NULL));
+    srand((unsigned int) time(NULL));
 }
 
 void poweron_r4300(struct r4300_core* r4300)
@@ -380,8 +380,8 @@ int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64
     address &= UINT32_C(0x1ffffffc);
 
     const struct mem_handler* handler = mem_get_handler(r4300->mem, address);
-    mem_write32(handler, address + 0, value >> 32, mask >> 32);
-    mem_write32(handler, address + 4, value      , mask      );
+    mem_write32(handler, address + 0, value >> 32,      mask >> 32);
+    mem_write32(handler, address + 4, (uint32_t) value, (uint32_t) mask      );
 
     return 1;
 }

@@ -43,8 +43,6 @@
   /* for isnan() */
   #include <float.h>
 
-  #define isnan _isnan
-
 #else  /* Not WIN32 */
   /* for strcasecmp */
   #include <strings.h>

@@ -44,7 +44,10 @@ static __inline double round(double x) { return floor(x + 0.5); }
 static __inline float  roundf(float x) { return (float)floor(x + 0.5); }
 static __inline double trunc(double x) { return (double)(int)x; }
 static __inline float  truncf(float x) { return (float)(int)x; }
-#define isnan _isnan
+#if !defined(isnan)
+  #define isnan _isnan
+#endif
+
 #else
 #define M64P_FPU_INLINE static inline
 #include <fenv.h>
@@ -107,11 +110,11 @@ M64P_FPU_INLINE void round_l_s(const float* source, int64_t* dest)
     {
         if (*source < 0)
         {
-            *dest = (int64_t)truncf(*source) % 2 != 0 ? floorf(*source) : ceilf(*source);
+            *dest = (int64_t)truncf(*source) % 2 != 0 ? (int64_t)floorf(*source) : (int64_t) ceilf(*source);
         }
         else
         {
-            *dest = (int64_t)truncf(*source) % 2 != 0 ? ceilf(*source) : floorf(*source);
+            *dest = (int64_t)truncf(*source) % 2 != 0 ? (int64_t)ceilf(*source) : (int64_t)floorf(*source);
         }
     }
     else
@@ -126,11 +129,11 @@ M64P_FPU_INLINE void round_w_s(const float* source, int32_t* dest)
     {
         if (*source < 0)
         {
-            *dest = (int32_t)truncf(*source) % 2 != 0 ? floorf(*source) : ceilf(*source);
+            *dest = (int32_t)truncf(*source) % 2 != 0 ? (int32_t)floorf(*source) : (int32_t)ceilf(*source);
         }
         else
         {
-            *dest = (int32_t)truncf(*source) % 2 != 0 ? ceilf(*source) : floorf(*source);
+            *dest = (int32_t)truncf(*source) % 2 != 0 ? (int32_t)ceilf(*source) : (int32_t)floorf(*source);
         }
     }
     else
@@ -170,11 +173,11 @@ M64P_FPU_INLINE void round_l_d(const double* source, int64_t* dest)
     {
         if (*source < 0)
         {
-            *dest = (int64_t)trunc(*source) % 2 != 0 ? floor(*source) : ceil(*source);
+            *dest = (int64_t)trunc(*source) % 2 != 0 ? (int64_t)floor(*source) : (int64_t)ceil(*source);
         }
         else
         {
-            *dest = (int64_t)trunc(*source) % 2 != 0 ? ceil(*source) : floor(*source);
+            *dest = (int64_t)trunc(*source) % 2 != 0 ? (int64_t)ceil(*source) : (int64_t)floor(*source);
         }
     }
     else
@@ -189,11 +192,11 @@ M64P_FPU_INLINE void round_w_d(const double* source, int32_t* dest)
     {
         if (*source < 0)
         {
-            *dest = (int32_t)trunc(*source) % 2 != 0 ? floor(*source) : ceil(*source);
+            *dest = (int32_t)trunc(*source) % 2 != 0 ? (int32_t)floor(*source) : (int32_t)ceil(*source);
         }
         else
         {
-            *dest = (int32_t)trunc(*source) % 2 != 0 ? ceil(*source) : floor(*source);
+            *dest = (int32_t)trunc(*source) % 2 != 0 ? (int32_t)ceil(*source) : (int32_t)floor(*source);
         }
     }
     else
