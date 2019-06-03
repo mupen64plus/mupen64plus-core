@@ -60,7 +60,7 @@ void eeprom_read_block(struct eeprom* eeprom,
     }
     else
     {
-        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04" PRIX16, address);
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
     }
 }
 
@@ -77,7 +77,7 @@ void eeprom_write_block(struct eeprom* eeprom,
     }
     else
     {
-        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04" PRIX16, address);
+        DebugMessage(M64MSG_WARNING, "Invalid access to eeprom address=%04x", address);
     }
 }
 
