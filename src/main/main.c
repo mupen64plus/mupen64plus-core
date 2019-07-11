@@ -256,6 +256,11 @@ static void main_check_inputs(void)
 #ifdef WITH_LIRC
     lircCheckInput();
 #endif
+
+/* Fix pausing on non-Android platforms */
+#ifndef ANDROID
+    SDL_PumpEvents();
+#endif
 }
 
 /*********************************************************************************************************
@@ -395,6 +400,23 @@ void main_set_fastforward(int enable)
 static void main_set_speedlimiter(int enable)
 {
     l_MainSpeedLimit = enable ? 1 : 0;
+}
+
+void main_speedlimiter_toggle(void)
+{
+    l_MainSpeedLimit = !l_MainSpeedLimit;
+    main_set_speedlimiter(l_MainSpeedLimit);
+
+    if (l_MainSpeedLimit) /* fix naturally occuring audio desync */
+    {
+        main_toggle_pause();
+        SDL_Delay(1000);
+        main_toggle_pause();
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Speed limiter enabled");
+    }
+
+    else
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Speed limiter disabled");
 }
 
 static int main_is_paused(void)

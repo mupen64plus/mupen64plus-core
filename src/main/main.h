@@ -76,6 +76,7 @@ void main_advance_one(void);
 void main_speedup(int percent);
 void main_speeddown(int percent);
 void main_set_fastforward(int enable);
+void main_speedlimiter_toggle(void);
 
 void main_take_next_screenshot(void);
 
