@@ -429,7 +429,10 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
     if (Attr == M64P_GL_SWAP_CONTROL)
     {
         if (SDL_GL_SetSwapInterval(Value) != 0)
+        {
+            DebugMessage(M64MSG_ERROR, "SDL swap interval (VSync) set failed: %s", SDL_GetError());
             return M64ERR_SYSTEM_FAIL;
+        }
         return M64ERR_SUCCESS;
     }
 #endif
