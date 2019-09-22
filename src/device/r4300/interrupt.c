@@ -488,6 +488,7 @@ void reset_hard_handler(void* opaque)
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     init_interrupt(&r4300->cp0);
     invalidate_r4300_cached_code(r4300, 0, 0);
+    *r4300_pc_struct(r4300) = &r4300->interp_PC;
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
 
