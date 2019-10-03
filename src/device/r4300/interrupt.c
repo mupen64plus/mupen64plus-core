@@ -490,8 +490,11 @@ void reset_hard_handler(void* opaque)
     invalidate_r4300_cached_code(r4300, 0, 0);
     *r4300_pc_struct(r4300) = &r4300->interp_PC;
 #ifdef NEW_DYNAREC
-    new_dynarec_cleanup();
-    new_dynarec_init();
+    if(r4300->emumode >= 2)
+    {
+        new_dynarec_cleanup();
+        new_dynarec_init();
+    }
 #endif
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
