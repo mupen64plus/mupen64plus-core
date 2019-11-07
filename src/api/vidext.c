@@ -47,6 +47,7 @@ static m64p_video_extension_functions l_ExternalVideoFuncTable = {12, NULL, NULL
 static int l_VideoExtensionActive = 0;
 static int l_VideoOutputActive = 0;
 static int l_Fullscreen = 0;
+static int l_SwapControl = 0;
 static SDL_Surface *l_pScreen = NULL;
 
 /* global function for use by frontend.c */
@@ -103,6 +104,8 @@ EXPORT m64p_error CALL VidExt_Init(void)
 
 #if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+    /* retrieve default swap interval/VSync */ 
+    l_SwapControl = SDL_GL_GetSwapInterval();
 #endif
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) == -1)
@@ -255,6 +258,15 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     }
 
     SDL_ShowCursor(SDL_DISABLE);
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+    /* set swap interval/VSync */
+    if (SDL_GL_SetSwapInterval(l_SwapControl) != 0)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL swap interval (VSync) set failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+#endif
 
     l_Fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
     l_VideoOutputActive = 1;
@@ -425,14 +437,11 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
-#if SDL_VERSION_ATLEAST(1,3,0)
     if (Attr == M64P_GL_SWAP_CONTROL)
     {
-        if (SDL_GL_SetSwapInterval(Value) != 0)
-            return M64ERR_SYSTEM_FAIL;
-        return M64ERR_SUCCESS;
+        /* SDL swap interval/vsync needs to be set on current GL context, so save it for later */
+        l_SwapControl = Value;
     }
-#endif
 
     /* translate the GL context type mask if necessary */
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -482,7 +491,7 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
-#if SDL_VERSION_ATLEAST(1,3,0)
+#if SDL_VERSION_ATLEAST(2,0,0)
     if (Attr == M64P_GL_SWAP_CONTROL)
     {
         *pValue = SDL_GL_GetSwapInterval();
