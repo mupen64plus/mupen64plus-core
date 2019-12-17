@@ -292,16 +292,12 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RD_OF(op) != 0) DSUBU(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 48: /* SPECIAL opcode 48: TGE (Not implemented) */
-		case 49: /* SPECIAL opcode 49: TGEU (Not implemented) */
-		case 50: /* SPECIAL opcode 50: TLT (Not implemented) */
-		case 51: /* SPECIAL opcode 51: TLTU (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 48: TGE(r4300, op); break;
+		case 49: TGEU(r4300, op); break;
+		case 50: TLT(r4300, op); break;
+		case 51: TLTU(r4300, op); break;
 		case 52: TEQ(r4300, op); break;
-		case 54: /* SPECIAL opcode 54: TNE (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 54: TNE(r4300, op); break;
 		case 56: /* SPECIAL opcode 56: DSLL */
 			if (RD_OF(op) != 0) DSLL(r4300, op);
 			else                NOP(r4300, 0);

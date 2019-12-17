@@ -4020,9 +4020,34 @@ void gen_SYSCALL(struct r4300_core* r4300)
 
 /* Exception instructions */
 
+void gen_TGE(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned int)cached_interp_TGE, 0);
+}
+
+void gen_TGEU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned int)cached_interp_TGEU, 0);
+}
+
+void gen_TLT(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned int)cached_interp_TLT, 0);
+}
+
+void gen_TLTU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned int)cached_interp_TLTU, 0);
+}
+
 void gen_TEQ(struct r4300_core* r4300)
 {
     gencallinterp(r4300, (unsigned int)cached_interp_TEQ, 0);
+}
+
+void gen_TNE(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned int)cached_interp_TNE, 0);
 }
 
 /* TLB instructions */

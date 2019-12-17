@@ -969,12 +969,67 @@ DECLARE_INSTRUCTION(SYSCALL)
 
 /* Exception instructions */
 
+DECLARE_INSTRUCTION(TGE)
+{
+    DECLARE_R4300
+    if (rrs >= rrt)
+    {
+        DebugMessage(M64MSG_ERROR, "trap exception in TGE");
+        *r4300_stop(r4300)=1;
+    }
+    ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(TGEU)
+{
+    DECLARE_R4300
+    if ((uint64_t) rrs >= (uint64_t) rrt)
+    {
+        DebugMessage(M64MSG_ERROR, "trap exception in TGEU");
+        *r4300_stop(r4300)=1;
+    }
+    ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(TLT)
+{
+    DECLARE_R4300
+    if (rrs < rrt)
+    {
+        DebugMessage(M64MSG_ERROR, "trap exception in TLT");
+        *r4300_stop(r4300)=1;
+    }
+    ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(TLTU)
+{
+    DECLARE_R4300
+    if ((uint64_t) rrs < (uint64_t) rrt)
+    {
+        DebugMessage(M64MSG_ERROR, "trap exception in TLTU");
+        *r4300_stop(r4300)=1;
+    }
+    ADD_TO_PC(1);
+}
+
 DECLARE_INSTRUCTION(TEQ)
 {
     DECLARE_R4300
     if (rrs == rrt)
     {
         DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
+        *r4300_stop(r4300)=1;
+    }
+    ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(TNE)
+{
+    DECLARE_R4300
+    if (rrs != rrt)
+    {
+        DebugMessage(M64MSG_ERROR, "trap exception in TNE");
         *r4300_stop(r4300)=1;
     }
     ADD_TO_PC(1);
