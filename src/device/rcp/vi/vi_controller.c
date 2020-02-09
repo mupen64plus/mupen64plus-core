@@ -87,16 +87,16 @@ void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 {
     struct vi_controller* vi = (struct vi_controller*)opaque;
     uint32_t reg = vi_reg(address);
-    const uint32_t* cp0_regs = r4300_cp0_regs(&vi->mi->r4300->cp0);
+    const uint64_t* cp0_count = r4300_cp0_get_count(&vi->mi->r4300->cp0);
 
     if (reg == VI_CURRENT_REG)
     {
         /* XXX: update current line number */
         cp0_update_count(vi->mi->r4300);
-        uint32_t next_vi = get_event(&vi->mi->r4300->cp0.q, VI_INT);
+        uint64_t next_vi = get_event(&vi->mi->r4300->cp0.q, VI_INT);
 
         if (vi->regs[VI_V_SYNC_REG] != 0)
-            vi->regs[VI_CURRENT_REG] = (vi->delay - (next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
+            vi->regs[VI_CURRENT_REG] = (vi->delay - (uint32_t)(next_vi - *cp0_count)) / vi->count_per_scanline;
 
         /* wrap around VI_CURRENT_REG if needed */
         if (vi->regs[VI_CURRENT_REG] >= vi->regs[VI_V_SYNC_REG])
@@ -170,7 +170,7 @@ void vi_vertical_interrupt_event(void* opaque)
     vi->field ^= (vi->regs[VI_STATUS_REG] >> 6) & 0x1;
 
     /* schedule next vertical interrupt */
-    uint32_t next_vi = get_event(&vi->mi->r4300->cp0.q, VI_INT) + vi->delay;
+    uint64_t next_vi = get_event(&vi->mi->r4300->cp0.q, VI_INT) + vi->delay;
     remove_interrupt_event(&vi->mi->r4300->cp0);
     add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, next_vi);
 

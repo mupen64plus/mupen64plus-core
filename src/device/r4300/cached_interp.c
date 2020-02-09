@@ -67,6 +67,7 @@
 void cached_interp_##name(void) \
 { \
     DECLARE_R4300 \
+    uint64_t* cp0_count = r4300_cp0_get_count(&r4300->cp0); \
     const int take_jump = (condition); \
     const uint32_t jump_target = (destination); \
     int64_t *link_register = (link); \
@@ -94,12 +95,13 @@ void cached_interp_##name(void) \
         cp0_update_count(r4300); \
     } \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
-    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= *cp0_count) gen_interrupt(r4300); \
 } \
  \
 void cached_interp_##name##_OUT(void) \
 { \
     DECLARE_R4300 \
+    uint64_t* cp0_count = r4300_cp0_get_count(&r4300->cp0); \
     const int take_jump = (condition); \
     const uint32_t jump_target = (destination); \
     int64_t *link_register = (link); \
@@ -127,21 +129,21 @@ void cached_interp_##name##_OUT(void) \
         cp0_update_count(r4300); \
     } \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
-    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= *cp0_count) gen_interrupt(r4300); \
 } \
   \
 void cached_interp_##name##_IDLE(void) \
 { \
     DECLARE_R4300 \
-    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+    uint64_t* cp0_count = r4300_cp0_get_count(&r4300->cp0); \
     const int take_jump = (condition); \
     int skip; \
     if (cop1 && check_cop1_unusable(r4300)) return; \
     if (take_jump) \
     { \
         cp0_update_count(r4300); \
-        skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
-        if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
+        skip = *r4300_cp0_next_interrupt(&r4300->cp0) - *cp0_count; \
+        if (skip > 3) *cp0_count += (skip & UINT32_C(0xFFFFFFFC)); \
         else cached_interp_##name(); \
     } \
     else cached_interp_##name(); \

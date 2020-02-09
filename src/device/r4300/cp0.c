@@ -49,7 +49,7 @@ void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot
 void poweron_cp0(struct cp0* cp0)
 {
     uint32_t* cp0_regs;
-    unsigned int* cp0_next_interrupt;
+    uint64_t* cp0_next_interrupt;
 
     cp0_regs = r4300_cp0_regs(cp0);
     cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
@@ -69,7 +69,7 @@ void poweron_cp0(struct cp0* cp0)
     /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
     cp0->interrupt_unsafe_state = 0;
     *cp0_next_interrupt = 0;
-    cp0->special_done = 0;
+    cp0->count = cp0_regs[CP0_COUNT_REG];
     cp0->last_addr = UINT32_C(0xbfc00000);
 
     init_interrupt(cp0);
@@ -93,7 +93,7 @@ uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
     return &cp0->last_addr;
 }
 
-unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
+uint64_t* r4300_cp0_next_interrupt(struct cp0* cp0)
 {
 #ifndef NEW_DYNAREC
     return &cp0->next_interrupt;
@@ -103,6 +103,10 @@ unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 #endif
 }
 
+uint64_t* r4300_cp0_get_count(struct cp0* cp0)
+{
+    return &cp0->count;
+}
 
 int check_cop1_unusable(struct r4300_core* r4300)
 {
@@ -121,12 +125,14 @@ void cp0_update_count(struct r4300_core* r4300)
 {
     struct cp0* cp0 = &r4300->cp0;
     uint32_t* cp0_regs = r4300_cp0_regs(cp0);
+    uint64_t* cp0_count = r4300_cp0_get_count(cp0);
 
 #ifdef NEW_DYNAREC
     if (r4300->emumode != EMUMODE_DYNAREC)
     {
 #endif
-        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        *cp0_count += ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        cp0_regs[CP0_COUNT_REG] = *cp0_count & UINT64_C(0xFFFFFFFF);
         cp0->last_addr = *r4300_pc(r4300);
 #ifdef NEW_DYNAREC
     }

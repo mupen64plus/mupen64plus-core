@@ -115,7 +115,6 @@ void init_device(struct device* dev,
         { &dev->r4300,     check_int_handler           }, /* CHECK */
         { &dev->si,        si_end_of_dma_event         }, /* SI */
         { &dev->pi,        pi_end_of_dma_event         }, /* PI */
-        { &dev->r4300.cp0, special_int_handler         }, /* SPECIAL */
         { &dev->ai,        ai_end_of_dma_event         }, /* AI */
         { &dev->sp,        rsp_interrupt_event         }, /* SP */
         { &dev->dp,        rdp_interrupt_event         }, /* DP */

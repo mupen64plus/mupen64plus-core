@@ -52,7 +52,7 @@ struct new_dynarec_hot_state
 #else
     uint32_t dynarec_local[16];
 #endif
-    unsigned int next_interrupt;
+    uint64_t next_interrupt;
     int cycle_count;
     int pending_exception;
     int pcaddr;
