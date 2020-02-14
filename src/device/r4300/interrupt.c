@@ -213,7 +213,7 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
     }
 }
 
-static void remove_interrupt_event(struct cp0* cp0)
+void remove_interrupt_event(struct cp0* cp0)
 {
     struct node* e;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
@@ -451,8 +451,7 @@ void nmi_int_handler(void* opaque)
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
 
-    dev->vi.next_vi = cp0_regs[CP0_COUNT_REG] + dev->vi.delay;
-    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
+    add_interrupt_event(&r4300->cp0, VI_INT, dev->vi.delay);
 
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
@@ -549,7 +548,6 @@ void gen_interrupt(struct r4300_core* r4300)
     switch (r4300->cp0.q.first->data.type)
     {
         case VI_INT:
-            remove_interrupt_event(&r4300->cp0);
             call_interrupt_handler(&r4300->cp0, 0);
             break;
 
