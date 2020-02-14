@@ -475,7 +475,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     savestates_load_set_pc(&dev->r4300, GETDATA(curr, uint32_t));
 
     *r4300_cp0_next_interrupt(&dev->r4300.cp0) = GETDATA(curr, uint32_t);
-    dev->vi.next_vi = GETDATA(curr, uint32_t);
+    curr += 4; /* here there used to be next_vi */
     dev->vi.field = GETDATA(curr, uint32_t);
 
     // assert(savestateData+savestateSize == curr)
@@ -1002,7 +1002,7 @@ static int savestates_load_pj64(struct device* dev,
     *r4300_cp0_next_interrupt(&dev->r4300.cp0) = (cp0_regs[CP0_COMPARE_REG] < vi_timer)
                   ? cp0_regs[CP0_COMPARE_REG]
                   : vi_timer;
-    dev->vi.next_vi = vi_timer;
+
     dev->vi.field = 0;
     *((unsigned int*)&buffer[0]) = VI_INT;
     *((unsigned int*)&buffer[4]) = vi_timer;
@@ -1723,7 +1723,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     PUTDATA(curr, uint32_t, *r4300_pc((struct r4300_core*)&dev->r4300));
 
     PUTDATA(curr, uint32_t, *r4300_cp0_next_interrupt((struct cp0*)&dev->r4300.cp0));
-    PUTDATA(curr, uint32_t, dev->vi.next_vi);
+    PUTDATA(curr, uint32_t, 0); /* here there used to be next_vi */
     PUTDATA(curr, uint32_t, dev->vi.field);
 
     to_little_endian_buffer(queue, 4, sizeof(queue)/4);

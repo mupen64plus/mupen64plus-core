@@ -53,7 +53,6 @@ struct vi_controller
     uint32_t regs[VI_REGS_COUNT];
     unsigned int field;
     unsigned int delay;
-    unsigned int next_vi;
 
     unsigned int clock;
     unsigned int expected_refresh_rate;
