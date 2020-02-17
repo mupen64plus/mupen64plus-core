@@ -513,7 +513,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
         /* extra cart_rom state */
         dev->cart.cart_rom.last_write = GETDATA(curr, uint32_t);
-        dev->cart.cart_rom.rom_written = GETDATA(curr, uint32_t);
+        curr += 4; /* used to be cart_rom.rom_written */
 
         /* extra sp state */
         curr += 4; /* here there used to be rsp_task_locked */
@@ -653,7 +653,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
         /* extra cart_rom state */
         dev->cart.cart_rom.last_write = GETDATA(curr, uint32_t);
-        dev->cart.cart_rom.rom_written = GETDATA(curr, uint32_t);
+        curr +=4; /* used to be cart_rom.rom_written */
 
         /* extra sp state */
         curr += 4; /* here there used to be rsp_task_locked */
@@ -848,7 +848,6 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
         /* extra cart_rom state */
         dev->cart.cart_rom.last_write = 0;
-        dev->cart.cart_rom.rom_written = 0;
 
         /* extra af-rtc state */
         dev->cart.af_rtc.control = 0x200;
@@ -1125,7 +1124,6 @@ static int savestates_load_pj64(struct device* dev,
 
     /* extra cart_rom state */
     dev->cart.cart_rom.last_write = 0;
-    dev->cart.cart_rom.rom_written = 0;
 
     // ri_register
     dev->ri.regs[RI_MODE_REG]         = GETDATA(curr, uint32_t);
@@ -1739,7 +1737,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     PUTDATA(curr, uint32_t, dev->ai.delayed_carry);
 
     PUTDATA(curr, uint32_t, dev->cart.cart_rom.last_write);
-    PUTDATA(curr, uint32_t, dev->cart.cart_rom.rom_written);
+    PUTDATA(curr, uint32_t, 0); /* used to be cart_rom.rom_written */
 
     PUTDATA(curr, uint32_t, 0); /* here there used to be rsp_task_locked */
 
