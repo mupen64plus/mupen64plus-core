@@ -965,7 +965,7 @@ DECLARE_INSTRUCTION(ERET)
 {
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     cp0_update_count(r4300);
     if (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_ERL)
@@ -981,7 +981,7 @@ DECLARE_INSTRUCTION(ERET)
     r4300->llbit = 0;
     r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi->regs[MI_INTR_REG] & r4300->mi->regs[MI_INTR_MASK_REG]); // ???
     r4300->cp0.last_addr = PCADDR;
-    if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+    if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
 }
 
 DECLARE_INSTRUCTION(SYNC)
@@ -1212,7 +1212,7 @@ DECLARE_INSTRUCTION(MTC0)
 {
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     switch(rfs)
     {
@@ -1248,10 +1248,9 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COUNT_REG:
         cp0_update_count(r4300);
         r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_R4300;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+        if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_R4300;
         translate_event_queue(&r4300->cp0, rrt32);
-        cp0_regs[CP0_COUNT_REG] = rrt32;
         break;
     case CP0_ENTRYHI_REG:
         cp0_regs[CP0_ENTRYHI_REG] = rrt32 & UINT32_C(0xFFFFE0FF);
@@ -1259,7 +1258,15 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COMPARE_REG:
         cp0_update_count(r4300);
         remove_event(&r4300->cp0.q, COMPARE_INT);
+
+        /* Add count_per_op to avoid wrong event order in case CP0_COUNT_REG == CP0_COMPARE_REG */
+        cp0_regs[CP0_COUNT_REG] += r4300->cp0.count_per_op;
+        *cp0_cycle_count += r4300->cp0.count_per_op;
         add_interrupt_event_count(&r4300->cp0, COMPARE_INT, rrt32);
+        cp0_regs[CP0_COUNT_REG] -= r4300->cp0.count_per_op;
+
+        /* Update next interrupt in case first event is COMPARE_INT */
+        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - r4300->cp0.q.first->data.count;
         cp0_regs[CP0_COMPARE_REG] = rrt32;
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
         break;
@@ -1272,7 +1279,7 @@ DECLARE_INSTRUCTION(MTC0)
         ADD_TO_PC(1);
         r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi->regs[MI_INTR_REG] & r4300->mi->regs[MI_INTR_MASK_REG]); // ???
         r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_R4300;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+        if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_R4300;
         ADD_TO_PC(-1);
         break;

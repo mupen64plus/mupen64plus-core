@@ -72,22 +72,24 @@ static void InterpretOpcode(struct r4300_core* r4300);
          cp0_update_count(r4300); \
       } \
       r4300->cp0.last_addr = r4300->interp_PC.addr; \
-      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+      if (*r4300_cp0_cycle_count(&r4300->cp0) >= 0) gen_interrupt(r4300); \
    } \
    static void name##_IDLE(struct r4300_core* r4300, uint32_t op) \
    { \
       uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+      int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0); \
       const int take_jump = (condition); \
-      int skip; \
       if (cop1 && check_cop1_unusable(r4300)) return; \
       if (take_jump) \
       { \
          cp0_update_count(r4300); \
-         skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
-         else name(r4300, op); \
+         if(*cp0_cycle_count < 0) \
+         { \
+             cp0_regs[CP0_COUNT_REG] -= *cp0_cycle_count; \
+             *cp0_cycle_count = 0; \
+         } \
       } \
-      else name(r4300, op); \
+      name(r4300, op); \
    }
 
 #define RD_OF(op)      (((op) >> 11) & 0x1F)

@@ -94,7 +94,7 @@ void cached_interp_##name(void) \
         cp0_update_count(r4300); \
     } \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
-    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+    if (*r4300_cp0_cycle_count(&r4300->cp0) >= 0) gen_interrupt(r4300); \
 } \
  \
 void cached_interp_##name##_OUT(void) \
@@ -127,24 +127,26 @@ void cached_interp_##name##_OUT(void) \
         cp0_update_count(r4300); \
     } \
     r4300->cp0.last_addr = *r4300_pc(r4300); \
-    if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+    if (*r4300_cp0_cycle_count(&r4300->cp0) >= 0) gen_interrupt(r4300); \
 } \
   \
 void cached_interp_##name##_IDLE(void) \
 { \
     DECLARE_R4300 \
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0); \
     const int take_jump = (condition); \
-    int skip; \
     if (cop1 && check_cop1_unusable(r4300)) return; \
     if (take_jump) \
     { \
         cp0_update_count(r4300); \
-        skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
-        if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
-        else cached_interp_##name(); \
+        if(*cp0_cycle_count < 0) \
+        { \
+            cp0_regs[CP0_COUNT_REG] -= *cp0_cycle_count; \
+            *cp0_cycle_count = 0; \
+        } \
     } \
-    else cached_interp_##name(); \
+    cached_interp_##name(); \
 }
 
 /* These macros allow direct access to parsed opcode fields. */
