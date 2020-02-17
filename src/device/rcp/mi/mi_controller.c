@@ -91,8 +91,7 @@ void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     struct mi_controller* mi = (struct mi_controller*)opaque;
     uint32_t reg = mi_reg(address);
 
-    uint32_t* cp0_regs = r4300_cp0_regs(&mi->r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&mi->r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&mi->r4300->cp0);
 
     switch(reg)
     {
@@ -107,7 +106,7 @@ void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         r4300_check_interrupt(mi->r4300, CP0_CAUSE_IP2, mi->regs[MI_INTR_REG] & mi->regs[MI_INTR_MASK_REG]);
         cp0_update_count(mi->r4300);
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) gen_interrupt(mi->r4300);
+        if (*cp0_cycle_count >= 0) gen_interrupt(mi->r4300);
         break;
     }
 }

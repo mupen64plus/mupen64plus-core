@@ -50,9 +50,11 @@ void poweron_cp0(struct cp0* cp0)
 {
     uint32_t* cp0_regs;
     unsigned int* cp0_next_interrupt;
+    int* cp0_cycle_count;
 
     cp0_regs = r4300_cp0_regs(cp0);
     cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
+    cp0_cycle_count = r4300_cp0_cycle_count(cp0);
 
     memset(cp0_regs, 0, CP0_REGS_COUNT * sizeof(cp0_regs[0]));
     cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
@@ -69,7 +71,7 @@ void poweron_cp0(struct cp0* cp0)
     /* XXX: clarify what is done on poweron, in soft_reset and in execute... */
     cp0->interrupt_unsafe_state = 0;
     *cp0_next_interrupt = 0;
-    cp0->special_done = 0;
+    *cp0_cycle_count = 0;
     cp0->last_addr = UINT32_C(0xbfc00000);
 
     init_interrupt(cp0);
@@ -103,6 +105,16 @@ unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 #endif
 }
 
+int* r4300_cp0_cycle_count(struct cp0* cp0)
+{
+#ifndef NEW_DYNAREC
+    return &cp0->cycle_count;
+#else
+    /* New dynarec uses a different memory layout */
+    return &cp0->new_dynarec_hot_state->cycle_count;
+#endif
+}
+
 
 int check_cop1_unusable(struct r4300_core* r4300)
 {
@@ -126,7 +138,9 @@ void cp0_update_count(struct r4300_core* r4300)
     if (r4300->emumode != EMUMODE_DYNAREC)
     {
 #endif
-        cp0_regs[CP0_COUNT_REG] += ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        uint32_t count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        cp0_regs[CP0_COUNT_REG] += count;
+        *r4300_cp0_cycle_count(cp0) += count;
         cp0->last_addr = *r4300_pc(r4300);
 #ifdef NEW_DYNAREC
     }
@@ -169,6 +183,7 @@ static void exception_epilog(struct r4300_core* r4300)
         {
             r4300->skip_jump = *r4300_pc(r4300);
             *r4300_cp0_next_interrupt(&r4300->cp0) = 0;
+            *r4300_cp0_cycle_count(&r4300->cp0) = 0;
         }
     }
 }
