@@ -815,10 +815,22 @@ DECLARE_INSTRUCTION(DIV)
     DECLARE_R4300
     if (rrt32)
     {
-        *r4300_mult_lo(r4300) = SE32(rrs32 / rrt32);
-        *r4300_mult_hi(r4300) = SE32(rrs32 % rrt32);
+        if (rrs32 == INT32_MIN && rrt32 == -1)
+        {
+            *r4300_mult_lo(r4300) = SE32(rrs32);
+            *r4300_mult_hi(r4300) = 0;
+        }
+        else
+        {
+            *r4300_mult_lo(r4300) = SE32(rrs32 / rrt32);
+            *r4300_mult_hi(r4300) = SE32(rrs32 % rrt32);
+        }
     }
-    else { DebugMessage(M64MSG_ERROR, "DIV: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = rrs32 < 0 ? 1 : -1;
+        *r4300_mult_hi(r4300) = SE32(rrs32);
+    }
     ADD_TO_PC(1);
 }
 
@@ -830,7 +842,11 @@ DECLARE_INSTRUCTION(DIVU)
         *r4300_mult_lo(r4300) = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
         *r4300_mult_hi(r4300) = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
     }
-    else { DebugMessage(M64MSG_ERROR, "DIVU: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = -1;
+        *r4300_mult_hi(r4300) = SE32(rrs32);
+    }
     ADD_TO_PC(1);
 }
 
@@ -839,10 +855,22 @@ DECLARE_INSTRUCTION(DDIV)
     DECLARE_R4300
     if (rrt)
     {
-        *r4300_mult_lo(r4300) = rrs / rrt;
-        *r4300_mult_hi(r4300) = rrs % rrt;
+        if (rrs == INT64_MIN && rrt == -1)
+        {
+            *r4300_mult_lo(r4300) = rrs;
+            *r4300_mult_hi(r4300) = 0;
+        }
+        else
+        {
+            *r4300_mult_lo(r4300) = rrs / rrt;
+            *r4300_mult_hi(r4300) = rrs % rrt;
+        }
     }
-    else { DebugMessage(M64MSG_ERROR, "DDIV: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = rrs < 0 ? 1 : -1;
+        *r4300_mult_hi(r4300) = rrs;
+    }
     ADD_TO_PC(1);
 }
 
@@ -854,7 +882,11 @@ DECLARE_INSTRUCTION(DDIVU)
         *r4300_mult_lo(r4300) = (uint64_t) rrs / (uint64_t) rrt;
         *r4300_mult_hi(r4300) = (uint64_t) rrs % (uint64_t) rrt;
     }
-    else { DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = -1;
+        *r4300_mult_hi(r4300) = rrs;
+    }
     ADD_TO_PC(1);
 }
 
