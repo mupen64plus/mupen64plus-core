@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
@@ -230,6 +231,11 @@ const char * osal_get_user_cachepath(void)
     if (rval < 3)
         DebugMessage(M64MSG_ERROR, "Failed to get cache directory; $HOME is undefined or invalid.");
     return NULL;
+}
+
+const char * get_filename_from_path(const char *path)
+{
+    return basename(path);
 }
 
 

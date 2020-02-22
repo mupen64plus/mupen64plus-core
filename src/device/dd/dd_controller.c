@@ -222,10 +222,6 @@ static void write_sector(struct dd_controller* dd)
 	for (i = 0; i < length; ++i) {
 		disk_mem[offset + i] = dd->ds_buf[i ^ 3];
     }
-
-#if 0 /* disabled for now, because it causes too much slowdowns */
-    dd->idisk->save(dd->disk);
-#endif
 }
 
 static void seek_track(struct dd_controller* dd)

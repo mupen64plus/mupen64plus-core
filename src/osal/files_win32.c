@@ -204,4 +204,14 @@ const char * osal_get_user_cachepath(void)
     return osal_get_user_configpath();
 }
 
+const char * get_filename_from_path(const char *path)
+{
+    char node[ _MAX_DRIVE ];
+    char dir[ _MAX_DIR ];
+    static char fname[ _MAX_FNAME ];
+    char ext[ _MAX_EXT ];
 
+    _splitpath( path, node, dir, fname, ext );
+
+    return fname;
+}

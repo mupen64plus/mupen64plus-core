@@ -178,6 +178,12 @@ static char *get_gb_ram_path(const char* gbrom, unsigned int control_id)
     return formatstr("%s%s.%u.sav", get_savesrampath(), gbrom, control_id);
 }
 
+static char *get_dd_disk_path(const char* diskName)
+{
+    const char * simpleFileName = get_filename_from_path(diskName);
+    return formatstr("%s%s.sav", get_savesrampath(), simpleFileName);
+}
+
 static m64p_error init_video_capture_backend(const struct video_capture_backend_interface** ivcap, void** vcap, m64p_handle config, const char* key)
 {
     m64p_error err;
@@ -1008,20 +1014,18 @@ static void load_dd_rom(uint8_t* rom, size_t* rom_size)
         goto no_dd;
     }
 
-    struct file_storage dd_rom;
+    struct file_storage_rom dd_rom;
     memset(&dd_rom, 0, sizeof(dd_rom));
 
-    if (open_rom_file_storage(&dd_rom, dd_ipl_rom_filename) != file_ok) {
+    if (open_rom_file_storage(&dd_rom, dd_ipl_rom_filename, NULL, 0) != file_ok) {
         DebugMessage(M64MSG_ERROR, "Failed to load DD IPL ROM: %s. Disabling 64DD", dd_ipl_rom_filename);
         goto no_dd;
     }
 
-    DebugMessage(M64MSG_INFO, "DD IPL ROM: %s", dd_ipl_rom_filename);
-
     /* load and swap DD IPL ROM */
     *rom_size = g_ifile_storage_ro.size(&dd_rom);
     memcpy(rom, g_ifile_storage_ro.data(&dd_rom), *rom_size);
-    close_file_storage(&dd_rom);
+    close_rom_file_storage(&dd_rom);
 
     /* fetch 1st word to identify IPL ROM format */
     /* FIXME: use more robust ROM detection heuristic - do the same for regular ROMs */
@@ -1058,7 +1062,7 @@ no_dd:
     *rom_size = 0;
 }
 
-static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk)
+static void load_dd_disk(struct file_storage_rom* dd_disk, const struct storage_backend_interface** dd_idisk)
 {
     const char* format_desc;
     /* ask the core loader for DD disk filename */
@@ -1071,15 +1075,13 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         goto no_disk;
     }
 
-    /* open file */
-    if (open_rom_file_storage(dd_disk, dd_disk_filename) != file_ok) {
-        DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+    int ret = open_rom_file_storage(dd_disk, dd_disk_filename, get_dd_disk_path(dd_disk_filename), SDK_FORMAT_DUMP_SIZE);
+
+    if (ret == (int)file_open_error) {
         goto no_disk;
     }
 
     /* FIXME: handle byte swapping */
-
-
     switch (dd_disk->size)
     {
     case MAME_FORMAT_DUMP_SIZE:
@@ -1093,7 +1095,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         uint8_t* buffer = malloc(MAME_FORMAT_DUMP_SIZE);
         if (buffer == NULL) {
             DebugMessage(M64MSG_ERROR, "Failed to allocate memory for MAME disk dump");
-            close_file_storage(dd_disk);
+            close_rom_file_storage(dd_disk);
             goto no_disk;
         }
 
@@ -1107,7 +1109,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
 
     default:
         DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t) dd_disk->size);
-        close_file_storage(dd_disk);
+        close_rom_file_storage(dd_disk);
         goto no_disk;
     }
 
@@ -1132,7 +1134,7 @@ no_disk:
 struct gb_cart_data
 {
     int control_id;
-    struct file_storage rom_fstorage;
+    struct file_storage_rom rom_fstorage;
     struct file_storage ram_fstorage;
     void* gbcam_backend;
     const struct video_capture_backend_interface* igbcam_backend;
@@ -1155,7 +1157,7 @@ static void init_gb_rom(void* opaque, void** storage, const struct storage_backe
     }
 
     /* Open ROM file */
-    if (open_rom_file_storage(&data->rom_fstorage, rom_filename) != file_ok) {
+    if (open_rom_file_storage(&data->rom_fstorage, rom_filename, NULL, 0) != file_ok) {
         DebugMessage(M64MSG_ERROR, "Failed to load ROM file: %s", rom_filename);
         goto no_cart;
     }
@@ -1179,7 +1181,7 @@ static void release_gb_rom(void* opaque)
 {
     struct gb_cart_data* data = (struct gb_cart_data*)opaque;
 
-    close_file_storage(&data->rom_fstorage);
+    close_rom_file_storage(&data->rom_fstorage);
 
     memset(&data->rom_fstorage, 0, sizeof(data->rom_fstorage));
 }
@@ -1282,7 +1284,7 @@ m64p_error main_run(void)
     struct file_storage fla;
     struct file_storage sra;
     size_t dd_rom_size;
-    struct file_storage dd_disk;
+    struct file_storage_rom dd_disk;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1311,7 +1313,6 @@ m64p_error main_run(void)
         disable_extra_mem = ROM_PARAMS.disableextramem;
     else
         disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
-
 
     rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
 
@@ -1617,11 +1618,15 @@ m64p_error main_run(void)
     igbcam_backend->close(gbcam_backend);
     igbcam_backend->release(gbcam_backend);
 
+    if (dd_rom_size > 0) {
+        g_dev.dd.idisk->save(g_dev.dd.disk);
+    }
+
     close_file_storage(&sra);
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_rom_file_storage(&dd_disk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1660,7 +1665,7 @@ on_gfx_open_failure:
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_rom_file_storage(&dd_disk);
 
     return M64ERR_PLUGIN_FAIL;
 }

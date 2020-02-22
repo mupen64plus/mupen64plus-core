@@ -32,10 +32,19 @@ struct file_storage
     const char* filename;
 };
 
+struct file_storage_rom
+{
+    uint8_t* data;
+    size_t size;
+    const char* filename;
+    const char* saveto_filename;
+};
+
 
 int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
-int open_rom_file_storage(struct file_storage* storage, const char* filename);
+int open_rom_file_storage(struct file_storage_rom* storage, const char* filename, const char* save_filename, unsigned int max_size_bytes);
 void close_file_storage(struct file_storage* storage);
+void close_rom_file_storage(struct file_storage_rom* storage);
 
 extern const struct storage_backend_interface g_ifile_storage;
 extern const struct storage_backend_interface g_ifile_storage_ro;

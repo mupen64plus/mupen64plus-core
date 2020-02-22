@@ -56,6 +56,7 @@ extern const char * osal_get_shared_filepath(const char *filename, const char *f
 extern const char * osal_get_user_configpath(void);
 extern const char * osal_get_user_datapath(void);
 extern const char * osal_get_user_cachepath(void);
+extern const char * get_filename_from_path(const char *path);
 
 #endif /* OSAL_FILES_H */
 

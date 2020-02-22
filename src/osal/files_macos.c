@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
@@ -223,3 +224,7 @@ const char * osal_get_user_cachepath(void)
     return osal_get_user_configpath();
 }
 
+const char * get_filename_from_path(const char *path)
+{
+    return basename(path);
+}
