@@ -1890,7 +1890,11 @@ static int savestates_save_pj64(const struct device* dev,
     PUTARRAY(pj64_magic, curr, unsigned char, 4);
     PUTDATA(curr, unsigned int, SaveRDRAMSize);
     PUTARRAY(dev->cart.cart_rom.rom, curr, unsigned int, 0x40/4);
-    PUTDATA(curr, uint32_t, get_event(&dev->r4300.cp0.q, VI_INT) - cp0_regs[CP0_COUNT_REG]); // vi_timer
+    uint32_t* next_vi = get_event(&dev->r4300.cp0.q, VI_INT);
+    if (next_vi != NULL)
+        PUTDATA(curr, uint32_t, *next_vi - cp0_regs[CP0_COUNT_REG]); // vi_timer
+    else
+        PUTDATA(curr, uint32_t, 0 - cp0_regs[CP0_COUNT_REG]);
     PUTDATA(curr, uint32_t, *r4300_pc((struct r4300_core*)&dev->r4300));
     PUTARRAY(r4300_regs((struct r4300_core*)&dev->r4300), curr, int64_t, 32);
     const cp1_reg* cp1_regs = r4300_cp1_regs((struct cp1*)&dev->r4300.cp1);
