@@ -31,7 +31,9 @@
 #include "controllers/paks/mempak.h"
 #include "controllers/paks/rumblepak.h"
 #include "controllers/paks/transferpak.h"
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 #include "dd/dd_controller.h"
+#endif /* build option to disable 64 Disk Drive support */
 #include "gb/gb_cart.h"
 #include "memory/memory.h"
 #include "pif/pif.h"
@@ -70,10 +72,12 @@ enum { GAME_CONTROLLERS_COUNT = 4 };
 #define MM_SI_REGS          UINT32_C(0x04800000)
 
 #define MM_DOM2_ADDR1       UINT32_C(0x05000000)
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 #define MM_DD_C2S_BUFFER    UINT32_C(0x05000000)
 #define MM_DD_DS_BUFFER     UINT32_C(0x05000400)
 #define MM_DD_REGS          UINT32_C(0x05000500)
 #define MM_DD_MS_RAM        UINT32_C(0x05000580)
+#endif /* build option to disable 64 Disk Drive support */
 #define MM_DD_ROM           UINT32_C(0x06000000)
 
 #define MM_DOM2_ADDR2       UINT32_C(0x08000000)
@@ -107,8 +111,9 @@ struct device
     struct gb_cart gb_carts[GAME_CONTROLLERS_COUNT];
 
     struct cart cart;
-
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     struct dd_controller dd;
+#endif /* build option to disable 64 Disk Drive support */
 };
 
 /* Setup device "static" properties.  */
@@ -138,11 +143,15 @@ void init_device(struct device* dev,
     void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
     uint32_t flashram_type,
     void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */   
+    void* sram_storage, const struct storage_backend_interface* isram_storage);
+#else
     void* sram_storage, const struct storage_backend_interface* isram_storage,
     /* dd */
     void* dd_rtc_clock, const struct clock_backend_interface* dd_rtc_iclock,
     size_t dd_rom_size,
     void* dd_disk, const struct storage_backend_interface* dd_idisk);
+#endif /* build option to disable 64 Disk Drive support */
 
 /* Setup device such that it's state is
  * what it should be after power on.

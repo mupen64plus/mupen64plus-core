@@ -997,6 +997,7 @@ static void open_eep_file(struct file_storage* fstorage)
     }
 }
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 static void load_dd_rom(uint8_t* rom, size_t* rom_size)
 {
     /* ask the core loader for DD disk filename */
@@ -1127,7 +1128,7 @@ no_disk:
     free(dd_disk_filename);
     *dd_idisk = NULL;
 }
-
+#endif /* build option to disable 64 Disk Drive support */
 
 struct gb_cart_data
 {
@@ -1281,8 +1282,10 @@ m64p_error main_run(void)
     struct file_storage eep;
     struct file_storage fla;
     struct file_storage sra;
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     size_t dd_rom_size;
     struct file_storage dd_disk;
+#endif /* build option to disable 64 Disk Drive support */
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1381,6 +1384,7 @@ m64p_error main_run(void)
     open_fla_file(&fla);
     open_sra_file(&sra);
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     /* Load 64DD IPL ROM and Disk */
     const struct clock_backend_interface* dd_rtc_iclock = NULL;
     const struct storage_backend_interface* dd_idisk = NULL;
@@ -1391,6 +1395,7 @@ m64p_error main_run(void)
         dd_rtc_iclock = &g_iclock_ctime_plus_delta;
         load_dd_disk(&dd_disk, &dd_idisk);
     }
+#endif /* build option to disable 64 Disk Drive support */
 
     /* setup pif channel devices */
     void* joybus_devices[PIF_CHANNELS_COUNT];
@@ -1544,10 +1549,14 @@ m64p_error main_run(void)
                 &eep, &g_ifile_storage,
                 flashram_type,
                 &fla, &g_ifile_storage,
+#if defined(NO64DD) /* build option to disable 64 Disk Drive support */
+                &sra, &g_ifile_storage);
+#else
                 &sra, &g_ifile_storage,
                 NULL, dd_rtc_iclock,
                 dd_rom_size,
                 &dd_disk, dd_idisk);
+#endif /* build option to disable 64 Disk Drive support */
 
     // Attach rom to plugins
     if (!gfx.romOpen())
@@ -1621,7 +1630,9 @@ m64p_error main_run(void)
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     close_file_storage(&dd_disk);
+#endif /* build option to disable 64 Disk Drive support */
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1660,7 +1671,9 @@ on_gfx_open_failure:
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     close_file_storage(&dd_disk);
+#endif /* build option to disable 64 Disk Drive support */
 
     return M64ERR_PLUGIN_FAIL;
 }

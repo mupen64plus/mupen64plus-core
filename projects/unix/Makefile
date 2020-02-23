@@ -504,7 +504,6 @@ SOURCE = \
     $(SRCDIR)/device/controllers/paks/mempak.c \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \
     $(SRCDIR)/device/controllers/paks/transferpak.c \
-    $(SRCDIR)/device/dd/dd_controller.c \
     $(SRCDIR)/device/device.c \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \
@@ -547,6 +546,14 @@ SOURCE = \
     $(SRCDIR)/plugin/dummy_input.c \
     $(SRCDIR)/plugin/dummy_rsp.c \
     $(MINIZIP_SOURCE)
+
+# Include 64 Disk Drive support
+NO_64DD ?= 0
+ifeq ($(NO_64DD), 0)
+    SOURCE += $(SRCDIR)/device/dd/dd_controller.c
+else
+    CFLAGS += -DNO64DD
+endif
 
 # MD5 lib
 SOURCE += \

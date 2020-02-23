@@ -54,7 +54,9 @@
 enum { GB_CART_FINGERPRINT_SIZE = 0x1c };
 enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 enum { DD_DISK_ID_OFFSET = 0x43670 };
+#endif /* build option to disable 64 Disk Drive support */
 
 static const char* savestate_magic = "M64+SAVE";
 static const int savestate_latest_version = 0x00010500;  /* 1.5 */
@@ -783,7 +785,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             dev->rdram.regs[i][RDRAM_ADDR_SELECT_REG]  = GETDATA(curr, uint32_t);
             dev->rdram.regs[i][RDRAM_DEVICE_MANUF_REG] = GETDATA(curr, uint32_t);
         }
-
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
         if (version >= 0x00010400) {
             /* verify if DD data is present (and matches what's currently loaded) */
             uint32_t disk_id = GETDATA(curr, uint32_t);
@@ -830,7 +832,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 curr += (3+DD_ASIC_REGS_COUNT)*sizeof(uint32_t) + 0x100 + 0x40 + 2*sizeof(int64_t) + 2*sizeof(unsigned int);
             }
         }
-
+#endif /* build option to disable 64 Disk Drive support */
         if (version >= 0x00010500)
         {
 #ifdef NEW_DYNAREC
@@ -896,11 +898,12 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             memcpy(dev->rdram.regs[i], dev->rdram.regs[0], RDRAM_REGS_COUNT*sizeof(dev->rdram.regs[0][0]));
             dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
         }
-
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
         /* dd state */
         if (dev->dd.rom_size > 0 && dev->dd.idisk != NULL) {
             poweron_dd(&dev->dd);
         }
+#endif /* build option to disable 64 Disk Drive support */
     }
 
     /* Zilmar-Spec plugin expect a call with control_id = -1 when RAM processing is done */
@@ -1251,12 +1254,12 @@ static int savestates_load_pj64(struct device* dev,
         memcpy(dev->rdram.regs[i], dev->rdram.regs[0], RDRAM_REGS_COUNT*sizeof(dev->rdram.regs[0][0]));
         dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
     }
-
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     /* dd state */
     if (dev->dd.rom_size > 0 && dev->dd.idisk != NULL) {
         poweron_dd(&dev->dd);
     }
-
+#endif /* build option to disable 64 Disk Drive support */
     savestates_load_set_pc(&dev->r4300, *r4300_cp0_last_addr(&dev->r4300.cp0));
 
     // assert(savestateData+savestateSize == curr)
@@ -1809,7 +1812,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
         PUTDATA(curr, uint32_t, dev->rdram.regs[i][RDRAM_ADDR_SELECT_REG]);
         PUTDATA(curr, uint32_t, dev->rdram.regs[i][RDRAM_DEVICE_MANUF_REG]);
     }
-
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
     uint32_t* disk_id = ((dev->dd.rom_size > 0) && dev->dd.idisk != NULL)
         ? (uint32_t*)(dev->dd.idisk->data(dev->dd.disk) + DD_DISK_ID_OFFSET)
         : NULL;
@@ -1852,7 +1855,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
         PUTDATA(curr, uint32_t, dev->dd.bm_zone);
         PUTDATA(curr, uint32_t, dev->dd.bm_track_offset);
     }
-
+#endif /* build option to disable 64 Disk Drive support */
 #ifdef NEW_DYNAREC
     PUTDATA(curr, uint32_t, stop_after_jal);
 #else

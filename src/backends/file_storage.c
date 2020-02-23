@@ -26,7 +26,9 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 #include "backends/api/storage_backend.h"
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 #include "device/dd/dd_controller.h"
+#endif /* build option to disable 64 Disk Drive support */
 #include "main/util.h"
 
 int open_file_storage(struct file_storage* fstorage, size_t size, const char* filename)
@@ -103,6 +105,7 @@ static void file_storage_parent_save(void* storage)
     file_storage_save(fstorage);
 }
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 static void file_storage_dd_sdk_dump_save(void* storage)
 {
     static uint8_t sdk_buffer[SDK_FORMAT_DUMP_SIZE];
@@ -131,7 +134,7 @@ static void file_storage_dd_sdk_dump_save(void* storage)
 
     free(filename);
 }
-
+#endif /* build option to disable 64 Disk Drive support */
 
 
 const struct storage_backend_interface g_ifile_storage =
@@ -156,9 +159,11 @@ const struct storage_backend_interface g_isubfile_storage =
     file_storage_parent_save
 };
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
 const struct storage_backend_interface g_ifile_storage_dd_sdk_dump =
 {
     file_storage_data,
     file_storage_size,
     file_storage_dd_sdk_dump_save
 };
+#endif /* build option to disable 64 Disk Drive support */

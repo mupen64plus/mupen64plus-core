@@ -190,6 +190,7 @@ typedef struct {
    */
   char* (*get_gb_cart_ram)(void* cb_data, int controller_num);
 
+#if !defined(NO64DD) /* build option to disable 64 Disk Drive support */
   /* Allow the frontend to specify the DD IPL ROM file to load
    * cb_data: points to frontend-defined callback data.
    * Returns a NULL-terminated string owned by the core specifying the DD IPL ROM filename to load
@@ -203,6 +204,7 @@ typedef struct {
    * Empty or NULL string results in no DD disk being loaded (eg. empty disk drive).
    */
   char* (*get_dd_disk)(void* cb_data);
+#endif /* build option to disable 64 Disk Drive support */
 } m64p_media_loader;
 
 /* ----------------------------------------- */
