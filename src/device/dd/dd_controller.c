@@ -623,14 +623,14 @@ unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_ad
     else {
         DebugMessage(M64MSG_ERROR, "Unknown DD dma read dram=%08x  cart=%08x length=%08x",
             dram_addr, cart_addr, length);
-        return (length * 63) / 25;
+        return (length * 63) / 50;
     }
 
     for (i = 0; i < length; ++i) {
         mem[(cart_addr + i) ^ S8] = dram[(dram_addr + i) ^ S8];
     }
 
-    return (length * 63) / 25;
+    return (length * 63) / 50;
 }
 
 unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
@@ -658,16 +658,16 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
             DebugMessage(M64MSG_ERROR, "Unknown DD dma write dram=%08x  cart=%08x length=%08x",
                 dram_addr, cart_addr, length);
 
-            return (length * 63) / 25;
+            return (length * 63) / 50;
         }
 
-        cycles = (length * 63) / 25;
+        cycles = (length * 63) / 50;
     }
     else {
         /* DD ROM */
         cart_addr = (cart_addr - MM_DD_ROM);
         mem = (const uint8_t*)dd->rom;
-        cycles = (length * 63) / 25;
+        cycles = (length * 63) / 50;
     }
 
     for (i = 0; i < length; ++i) {
