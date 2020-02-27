@@ -32,6 +32,7 @@
 #include "backends/api/joybus.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "device/rcp/si/si_controller.h"
 #include "plugin/plugin.h"
 
 #define __STDC_FORMAT_MACROS
@@ -125,7 +126,8 @@ void init_pif(struct pif* pif,
     void* jbds[PIF_CHANNELS_COUNT],
     const struct joybus_device_interface* ijbds[PIF_CHANNELS_COUNT],
     const uint8_t* ipl3,
-    struct r4300_core* r4300)
+    struct r4300_core* r4300,
+    struct si_controller* si)
 {
     size_t i;
 
@@ -139,6 +141,7 @@ void init_pif(struct pif* pif,
     init_cic_using_ipl3(&pif->cic, ipl3);
 
     pif->r4300 = r4300;
+    pif->si = si;
 }
 
 void reset_pif(struct pif* pif, unsigned int reset_type)
@@ -307,7 +310,11 @@ void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
     masked_write((uint32_t*)(&pif->ram[addr]), fromhl(value), fromhl(mask));
 
-    process_pif_ram(pif);
+    pif->si->dma_dir = SI_DMA_WRITE;
+
+    cp0_update_count(pif->r4300);
+    pif->si->regs[SI_STATUS_REG] |= (SI_STATUS_DMA_BUSY | SI_STATUS_IO_BUSY);
+    add_interrupt_event(&pif->r4300->cp0, SI_INT, pif->si->dma_duration);
 }
 
 
