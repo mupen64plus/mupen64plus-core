@@ -1,23 +1,13 @@
 version: 1.0.{build}
 
-environment:
-  matrix:
-  - platform: Win32
-    configuration: New_Dynarec_Debug
-  - platform: x64
-    configuration: New_Dynarec_Debug
-  - platform: Win32
-    configuration: New_Dynarec_Release
-  - platform: x64
-    configuration: New_Dynarec_Release
-  - platform: Win32
-    configuration: Debug
-  - platform: x64
-    configuration: Debug
-  - platform: Win32
-    configuration: Release
-  - platform: x64
-    configuration: Release
+configuration:
+  - New_Dynarec_Debug
+  - New_Dynarec_Release
+  - Debug
+  - Release
+platform:
+  - Win32
+  - x64
 
 before_build:
   - git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ..\mupen64plus-win32-deps
