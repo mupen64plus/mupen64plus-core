@@ -120,6 +120,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     int randomize_interrupt,
+    uint32_t start_address,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
     /* si */
