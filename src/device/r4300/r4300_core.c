@@ -121,6 +121,13 @@ void poweron_r4300(struct r4300_core* r4300)
 
 void run_r4300(struct r4300_core* r4300)
 {
+#ifdef OSAL_SSE
+    //Save FTZ/DAZ mode
+    unsigned int daz = _MM_GET_DENORMALS_ZERO_MODE();
+    unsigned int ftz = _MM_GET_FLUSH_ZERO_MODE();
+    _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
+#endif
+
     *r4300_stop(r4300) = 0;
     g_rom_pause = 0;
 
@@ -195,6 +202,11 @@ void run_r4300(struct r4300_core* r4300)
 #if defined(COUNT_INSTR)
     if (r4300->emumode == EMUMODE_DYNAREC)
         instr_counters_print();
+#endif
+#ifdef OSAL_SSE
+    //Restore FTZ/DAZ mode
+    _MM_SET_DENORMALS_ZERO_MODE(daz);
+    _MM_SET_FLUSH_ZERO_MODE(ftz);
 #endif
 }
 

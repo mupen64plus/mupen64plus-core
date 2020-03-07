@@ -42,6 +42,11 @@
   /* for isnan() */
   #include <float.h>
 
+#if defined(_M_X64) || (_M_IX86_FP > 0)
+  #include <immintrin.h>
+  #define OSAL_SSE
+#endif
+
 #else  /* Not WIN32 */
   /* for strcasecmp */
   #include <strings.h>
@@ -57,6 +62,11 @@
 
   /* string functions */
   #define osal_insensitive_strcmp(x, y) strcasecmp(x, y)
+
+#ifdef __SSE__
+  #include <immintrin.h>
+  #define OSAL_SSE
+#endif
 
 #endif
 

@@ -27,6 +27,8 @@
 
 #include "new_dynarec/new_dynarec.h"
 
+#define FCR31_FS_BIT UINT32_C(0x1000000)
+
 void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
 #ifdef NEW_DYNAREC
@@ -41,6 +43,9 @@ void poweron_cp1(struct cp1* cp1)
     *r4300_cp1_fcr31(cp1) = 0;
 
     set_fpr_pointers(cp1, UINT32_C(0x34000000)); /* c0_status value at poweron */
+#ifdef OSAL_SSE
+    cp1->flush_mode = _MM_GET_FLUSH_ZERO_MODE();
+#endif
     update_x86_rounding_mode(cp1);
 }
 
@@ -119,6 +124,20 @@ void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
 void update_x86_rounding_mode(struct cp1* cp1)
 {
     uint32_t fcr31 = *r4300_cp1_fcr31(cp1);
+
+#ifdef OSAL_SSE
+    uint32_t flush_mode;
+    if (fcr31 & 2)
+        flush_mode = (fcr31 & FCR31_FS_BIT) ? _MM_FLUSH_ZERO_OFF : _MM_FLUSH_ZERO_ON;
+    else
+        flush_mode = _MM_FLUSH_ZERO_ON;
+
+    if (flush_mode != cp1->flush_mode)
+    {
+        _MM_SET_FLUSH_ZERO_MODE(flush_mode);
+        cp1->flush_mode = flush_mode;
+    }
+#endif
 
     switch (fcr31 & 3)
     {

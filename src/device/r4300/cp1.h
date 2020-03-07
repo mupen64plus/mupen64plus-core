@@ -51,6 +51,10 @@ struct cp1
      * using 32-bit stores. */
     uint32_t rounding_mode;
 
+#ifdef OSAL_SSE
+    uint32_t flush_mode;
+#endif
+
 #ifdef NEW_DYNAREC
 	/* New dynarec uses a different memory layout */
     struct new_dynarec_hot_state* new_dynarec_hot_state;
