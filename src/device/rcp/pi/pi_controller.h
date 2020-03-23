@@ -51,6 +51,18 @@ enum pi_registers
     PI_REGS_COUNT
 };
 
+enum
+{
+    /* PI_STATUS - read */
+    PI_STATUS_DMA_BUSY  = 0x01,
+    PI_STATUS_IO_BUSY   = 0x02,
+    PI_STATUS_ERROR     = 0x04,
+
+    /* PI_STATUS - write */
+    PI_STATUS_RESET     = 0x01,
+    PI_STATUS_CLR_INTR  = 0x02
+};
+
 struct pi_dma_handler
 {
     unsigned int (*dma_read)(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
@@ -93,5 +105,6 @@ void read_pi_regs(void* opaque, uint32_t address, uint32_t* value);
 void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void pi_end_of_dma_event(void* opaque);
+int validate_pi_request(struct pi_controller* pi);
 
 #endif
