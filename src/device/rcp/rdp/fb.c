@@ -162,6 +162,16 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
         size = 2;
         break;
 
+    case 0xffffff00:
+        addr += (0 ^ Sh16);
+        size = 3;
+        break;
+
+    case 0x00ffffff:
+        addr += (1 ^ Sh16);
+        size = 3;
+        break;
+
     case 0xffffffff:
         addr += 0;
         size = 4;
