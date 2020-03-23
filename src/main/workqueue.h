@@ -27,7 +27,6 @@
 
 struct work_struct;
 
-struct work_struct *work;
 typedef void (*work_func_t)(struct work_struct *work);
 struct work_struct {
     work_func_t func;
