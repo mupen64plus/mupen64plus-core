@@ -82,6 +82,6 @@ size_t idec_u53(uint32_t iw, uint8_t u53, uint8_t* u5);
 
 #define IDEC_U53(r4300, iw, u53, u5) (void*)(((char*)(r4300)) + idec_u53((iw), (u53), (u5)))
 
-const char* g_r4300_opcodes[R4300_OPCODES_COUNT];
+extern const char* g_r4300_opcodes[R4300_OPCODES_COUNT];
 
 #endif
