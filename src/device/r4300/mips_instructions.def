@@ -1284,12 +1284,8 @@ DECLARE_INSTRUCTION(MTC0)
         ADD_TO_PC(-1);
         break;
     case CP0_CAUSE_REG:
-        if (rrt32 != 0)
-        {
-            DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
-            *r4300_stop(r4300) = 1;
-        }
-        else { cp0_regs[CP0_CAUSE_REG] = rrt32; }
+        cp0_regs[CP0_CAUSE_REG] &= ~(CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
+        cp0_regs[CP0_CAUSE_REG] |= rrt32 & (CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
         break;
     case CP0_EPC_REG:
         cp0_regs[CP0_EPC_REG] = rrt32;
