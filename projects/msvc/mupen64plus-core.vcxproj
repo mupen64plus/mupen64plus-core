@@ -371,7 +371,6 @@
     <ClCompile Include="..\..\subprojects\minizip\unzip.c" />
     <ClCompile Include="..\..\subprojects\minizip\zip.c" />
     <ClCompile Include="..\..\subprojects\oglft\OGLFT.cpp" />
-    <ClCompile Include="..\..\subprojects\xxhash\xxhash.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\api\callbacks.h" />
