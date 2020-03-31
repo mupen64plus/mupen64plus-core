@@ -11,7 +11,7 @@ before_build:
   - git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ..\mupen64plus-win32-deps
 
 build_script:
-  - msbuild projects/msvc/mupen64plus-core.vcxproj /p:Configuration=%configuration%;Platform=%platform%
+  - msbuild projects\msvc\mupen64plus-core.vcxproj /p:Configuration=%configuration%;Platform=%platform%
 
 after_build:
   - ps: $env:rev1 = git describe --tags
@@ -21,7 +21,7 @@ after_build:
   - if "%rev3%" NEQ "Release" set rev3=NewDynarec
   - set filepkg=mupen64plus-core_v%rev1%_%rev2%-%rev3%
   - cd projects\msvc\%platform%\%configuration%
-  - 7z a -t7z ..\..\..\..\build\%filepkg%.7z mupen64plus.dll
+  - 7z a -t7z ..\..\..\..\build\%filepkg%.7z *.dll
 
 artifacts:
   - path: build\$(filepkg).7z
