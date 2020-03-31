@@ -124,7 +124,7 @@ void init_cart(struct cart* cart,
 
     init_flashram(&cart->flashram,
         flashram_type,
-        flashram_storage, iflashram_storage, dram);
+        flashram_storage, iflashram_storage);
 
     init_sram(&cart->sram,
         sram_storage, isram_storage);
@@ -161,7 +161,7 @@ void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value)
         }
 
         cart->use_flashram = 1;
-        read_flashram_status(&cart->flashram, address, value);
+        read_flashram(&cart->flashram, address, value);
     }
 }
 
@@ -182,7 +182,7 @@ void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t ma
         }
 
         cart->use_flashram = 1;
-        write_flashram_command(&cart->flashram, address, value, mask);
+        write_flashram(&cart->flashram, address, value, mask);
     }
 }
 

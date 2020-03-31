@@ -29,8 +29,12 @@ struct storage_backend_interface;
 
 enum { FLASHRAM_SIZE = 0x20000 };
 
-/* flashram manufacture and device code */
+enum { FLASHRAM_TYPE_ID = 0x11118001 };
+
+/* flashram manufacturer and device code */
 enum {
+    MX29L0000_ID = 0x00c20000,
+    MX29L0001_ID = 0x00c20001,
     MX29L1100_ID = 0x00c2001e,
     MX29L1101_ID = 0x00c2001d,
     MN63F8MPN_ID = 0x003200f1,
@@ -39,37 +43,37 @@ enum {
 
 enum flashram_mode
 {
-    FLASHRAM_MODE_NOPES = 0,
-    FLASHRAM_MODE_ERASE,
-    FLASHRAM_MODE_WRITE,
-    FLASHRAM_MODE_READ,
-    FLASHRAM_MODE_STATUS
+    FLASHRAM_MODE_READ_ARRAY,
+    FLASHRAM_MODE_READ_SILICON_ID,
+    FLASHRAM_MODE_STATUS,
+    FLASHRAM_MODE_SECTOR_ERASE,
+    FLASHRAM_MODE_CHIP_ERASE,
+    FLASHRAM_MODE_PAGE_PROGRAM
 };
 
 struct flashram
 {
+    uint8_t page_buf[128];
+    uint32_t silicon_id[2];
+    uint32_t status; // supposedly only 8-bit
+    uint16_t erase_page;
     enum flashram_mode mode;
-    uint32_t status[2];
-    unsigned int erase_offset;
-    unsigned int write_pointer;
 
     void* storage;
     const struct storage_backend_interface* istorage;
-    const uint8_t* dram;
 };
 
 void init_flashram(struct flashram* flashram,
-                   uint32_t flashram_type,
+                   uint32_t flashram_id,
                    void* storage,
-                   const struct storage_backend_interface* istorage,
-                   const uint8_t* dram);
+                   const struct storage_backend_interface* istorage);
 
 void poweron_flashram(struct flashram* flashram);
 
 void format_flashram(uint8_t* flash);
 
-void read_flashram_status(void* opaque, uint32_t address, uint32_t* value);
-void write_flashram_command(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_flashram(void* opaque, uint32_t address, uint32_t* value);
+void write_flashram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 unsigned int flashram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
