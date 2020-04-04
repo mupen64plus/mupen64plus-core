@@ -297,17 +297,6 @@ void cached_interp_NOTCOMPILED2(void)
 #define cached_interp_SCD         cached_interp_NI
 #define cached_interp_SDC2        cached_interp_NI
 #define cached_interp_SWC2        cached_interp_NI
-#define cached_interp_TEQI        cached_interp_NI
-#define cached_interp_TGE         cached_interp_NI
-#define cached_interp_TGEI        cached_interp_NI
-#define cached_interp_TGEIU       cached_interp_NI
-#define cached_interp_TGEU        cached_interp_NI
-#define cached_interp_TLT         cached_interp_NI
-#define cached_interp_TLTI        cached_interp_NI
-#define cached_interp_TLTIU       cached_interp_NI
-#define cached_interp_TLTU        cached_interp_NI
-#define cached_interp_TNE         cached_interp_NI
-#define cached_interp_TNEI        cached_interp_NI
 #define cached_interp_JR_IDLE     cached_interp_NI
 #define cached_interp_JALR_IDLE   cached_interp_NI
 #define cached_interp_CP1_ABS     cached_interp_RESERVED

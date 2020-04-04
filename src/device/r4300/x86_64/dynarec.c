@@ -4182,7 +4182,47 @@ void gen_SYSCALL(struct r4300_core* r4300)
 #endif
 }
 
-/* Exception instructions */
+/* Trap instructions */
+
+void gen_TGE(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TGE, 0);
+}
+
+void gen_TGEU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TGEU, 0);
+}
+
+void gen_TGEI(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TGEI, 0);
+}
+
+void gen_TGEIU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TGEIU, 0);
+}
+
+void gen_TLT(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TLT, 0);
+}
+
+void gen_TLTU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TLTU, 0);
+}
+
+void gen_TLTI(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TLTI, 0);
+}
+
+void gen_TLTIU(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TLTIU, 0);
+}
 
 void gen_TEQ(struct r4300_core* r4300)
 {
@@ -4190,6 +4230,21 @@ void gen_TEQ(struct r4300_core* r4300)
     inc_m32rel(&instr_count[96]);
 #endif
     gencallinterp(r4300, (unsigned long long)cached_interp_TEQ, 0);
+}
+
+void gen_TEQI(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TEQI, 0);
+}
+
+void gen_TNE(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TNE, 0);
+}
+
+void gen_TNEI(struct r4300_core* r4300)
+{
+    gencallinterp(r4300, (unsigned long long)cached_interp_TNEI, 0);
 }
 
 /* TLB instructions */

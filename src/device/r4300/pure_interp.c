@@ -294,16 +294,12 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RD_OF(op) != 0) DSUBU(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 48: /* SPECIAL opcode 48: TGE (Not implemented) */
-		case 49: /* SPECIAL opcode 49: TGEU (Not implemented) */
-		case 50: /* SPECIAL opcode 50: TLT (Not implemented) */
-		case 51: /* SPECIAL opcode 51: TLTU (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 48: TGE(r4300, op); break;
+		case 49: TGEU(r4300, op); break;
+		case 50: TLT(r4300, op); break;
+		case 51: TLTU(r4300, op); break;
 		case 52: TEQ(r4300, op); break;
-		case 54: /* SPECIAL opcode 54: TNE (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 54: TNE(r4300, op); break;
 		case 56: /* SPECIAL opcode 56: DSLL */
 			if (RD_OF(op) != 0) DSLL(r4300, op);
 			else                NOP(r4300, 0);
@@ -352,14 +348,12 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (IS_RELATIVE_IDLE_LOOP(r4300, op, *r4300_pc(r4300))) BGEZL_IDLE(r4300, op);
 			else                                             BGEZL(r4300, op);
 			break;
-		case 8: /* REGIMM opcode 8: TGEI (Not implemented) */
-		case 9: /* REGIMM opcode 9: TGEIU (Not implemented) */
-		case 10: /* REGIMM opcode 10: TLTI (Not implemented) */
-		case 11: /* REGIMM opcode 11: TLTIU (Not implemented) */
-		case 12: /* REGIMM opcode 12: TEQI (Not implemented) */
-		case 14: /* REGIMM opcode 14: TNEI (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 8: TGEI(r4300, op); break;
+		case 9: TGEIU(r4300, op); break;
+		case 10: TLTI(r4300, op); break;
+		case 11: TLTIU(r4300, op); break;
+		case 12: TEQI(r4300, op); break;
+		case 14: TNEI(r4300, op); break;
 		case 16: /* REGIMM opcode 16: BLTZAL */
 			if (IS_RELATIVE_IDLE_LOOP(r4300, op, *r4300_pc(r4300))) BLTZAL_IDLE(r4300, op);
 			else                                             BLTZAL(r4300, op);

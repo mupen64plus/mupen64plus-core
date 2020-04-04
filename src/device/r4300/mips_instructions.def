@@ -999,18 +999,38 @@ DECLARE_INSTRUCTION(SYSCALL)
     exception_general(r4300);
 }
 
-/* Exception instructions */
+/* Trap instructions */
 
-DECLARE_INSTRUCTION(TEQ)
-{
-    DECLARE_R4300
-    if (rrs == rrt)
-    {
-        DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
-        *r4300_stop(r4300)=1;
-    }
-    ADD_TO_PC(1);
+#define DECLARE_TRAP(name, cond) \
+DECLARE_INSTRUCTION(name) \
+{ \
+    DECLARE_R4300 \
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+    if (cond) \
+    { \
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TR; \
+        exception_general(r4300); \
+    } \
+    else \
+    { \
+        ADD_TO_PC(1); \
+    } \
 }
+
+DECLARE_TRAP(TGE, rrs >= rrt)
+DECLARE_TRAP(TGEU, (uint64_t) rrs >= (uint64_t) rrt)
+DECLARE_TRAP(TGEI, rrs >= (int64_t)iimmediate)
+DECLARE_TRAP(TGEIU, (uint64_t)rrs >= (uint64_t)(int64_t)iimmediate)
+DECLARE_TRAP(TLT, rrs < rrt)
+DECLARE_TRAP(TLTU, (uint64_t) rrs < (uint64_t) rrt)
+DECLARE_TRAP(TLTI, rrs < (int64_t)iimmediate)
+DECLARE_TRAP(TLTIU, (uint64_t)rrs < (uint64_t)(int64_t)iimmediate)
+DECLARE_TRAP(TEQ, rrs == rrt)
+DECLARE_TRAP(TEQI, rrs == (int64_t)iimmediate)
+DECLARE_TRAP(TNE, rrs != rrt)
+DECLARE_TRAP(TNEI, rrs != (int64_t)iimmediate)
+
+#undef DECLARE_TRAP
 
 /* TLB instructions */
 
