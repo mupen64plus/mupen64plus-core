@@ -479,6 +479,11 @@ void reset_hard_handler(void* opaque)
     struct device* dev = (struct device*)opaque;
     struct r4300_core* r4300 = &dev->r4300;
 
+#ifndef NEW_DYNAREC
+    long long save_rsp = r4300->recomp.save_rsp;
+    long long save_rip = r4300->recomp.save_rip;
+#endif
+
     poweron_device(dev);
 
     pif_bootrom_hle_execute(r4300);
@@ -487,6 +492,17 @@ void reset_hard_handler(void* opaque)
     *r4300_cp0_cycle_count(&r4300->cp0) = 0;
     init_interrupt(&r4300->cp0);
     invalidate_r4300_cached_code(r4300, 0, 0);
+    *r4300_pc_struct(r4300) = &r4300->interp_PC;
+    if (r4300->emumode >= 2)
+    {
+#ifdef NEW_DYNAREC
+        new_dynarec_cleanup();
+        new_dynarec_init();
+#else
+        r4300->recomp.save_rsp = save_rsp;
+        r4300->recomp.save_rip = save_rip;
+#endif
+    }
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
 
