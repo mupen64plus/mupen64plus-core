@@ -121,7 +121,6 @@ ifneq ("$(filter arm%,$(HOST_CPU))","")
         CFLAGS += -mfpu=vfp -mfloat-abi=softfp
       endif
     endif
-    $(warning Architecture "$(HOST_CPU)" not officially supported.)
   endif
 endif
 ifneq ("$(filter mips,$(HOST_CPU))","")
