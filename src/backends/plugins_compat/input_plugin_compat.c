@@ -27,6 +27,7 @@
 #include "plugin/plugin.h"
 
 #include "main/main.h"
+#include "main/netplay.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -60,8 +61,28 @@ static m64p_error input_plugin_get_input(void* opaque, uint32_t* input_)
     int pak_change_requested = 0;
 
     /* first poll controller */
-    if (input.getKeys) {
-        input.getKeys(cin_compat->control_id, &keys);
+    if (!netplay_is_init())
+    {
+        if (input.getKeys)
+            input.getKeys(cin_compat->control_id, &keys);
+    }
+    else
+    {
+        int netplay_controller = netplay_get_controller(cin_compat->control_id);
+        if (netplay_controller >= 0)
+        {
+            //Here we "trick" the input plugin
+            //by passing it the controller number that is controlling the player during netplay
+            uint8_t plugin = Controls[netplay_controller].Plugin;
+            uint8_t present = Controls[netplay_controller].Present;
+            if (input.getKeys)
+                input.getKeys(netplay_controller, &keys);
+
+            netplay_set_plugin(cin_compat->control_id, Controls[netplay_controller].Plugin);
+            Controls[netplay_controller].Plugin = plugin;
+            Controls[netplay_controller].Present = present;
+            cin_compat->last_input = keys.Value; //disable pak switching for netplay
+        }
     }
 
     /* return an error if controller is not plugged */
@@ -130,6 +151,11 @@ static void input_plugin_rumble_exec(void* opaque, enum rumble_action action)
         return;
     }
 
+    //This is for netplay, -1 means there is no local controller controlling this player
+    if (control_id == -1) {
+        return;
+    }
+
     static const uint8_t rumble_cmd_header[] =
     {
         0x23, 0x01, /* T=0x23, R=0x01 */
@@ -168,6 +194,11 @@ static void input_plugin_read_controller(void* opaque,
         return;
     }
 
+    //This is for netplay, -1 means there is no local controller controlling this player
+    if (control_id == -1) {
+        return;
+    }
+
     /* UGLY: use negative offsets to get access to non-const tx pointer */
     input.readController(control_id, rx - 1);
 }
@@ -179,6 +210,11 @@ void input_plugin_controller_command(void* opaque,
     int control_id = *(int*)opaque;
 
     if (input.controllerCommand == NULL) {
+        return;
+    }
+
+    //This is for netplay, -1 means there is no local controller controlling this player
+    if (control_id == -1) {
         return;
     }
 

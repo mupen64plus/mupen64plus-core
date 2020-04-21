@@ -33,6 +33,7 @@
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
 #include "plugin/plugin.h"
+#include "main/netplay.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -370,6 +371,8 @@ void update_pif_ram(struct pif* pif)
     if (input.readController) {
         input.readController(-1, NULL);
     }
+
+    netplay_update_input(pif);
 
 #ifdef DEBUG_PIF
     DebugMessage(M64MSG_INFO, "PIF post read");

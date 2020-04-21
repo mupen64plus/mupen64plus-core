@@ -64,7 +64,6 @@
 #include "device/pif/bootrom_hle.h"
 #include "eventloop.h"
 #include "main.h"
-#include "cheat.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
@@ -76,6 +75,7 @@
 #include "savestates.h"
 #include "screenshot.h"
 #include "util.h"
+#include "netplay.h"
 
 #ifdef DBG
 #include "debugger/dbg_debugger.h"
@@ -327,6 +327,9 @@ int main_set_core_defaults(void)
 
 void main_speeddown(int percent)
 {
+    if (netplay_is_init())
+        return;
+
     if (l_SpeedFactor - percent > 10)  /* 10% minimum speed */
     {
         l_SpeedFactor -= percent;
@@ -338,6 +341,9 @@ void main_speeddown(int percent)
 
 void main_speedup(int percent)
 {
+    if (netplay_is_init())
+        return;
+
     if (l_SpeedFactor + percent < 300) /* 300% maximum speed */
     {
         l_SpeedFactor += percent;
@@ -349,6 +355,9 @@ void main_speedup(int percent)
 
 static void main_speedset(int percent)
 {
+    if (netplay_is_init())
+        return;
+
     if (percent < 1 || percent > 1000)
     {
         DebugMessage(M64MSG_WARNING, "Invalid speed setting %i percent", percent);
@@ -365,6 +374,9 @@ static void main_speedset(int percent)
 
 void main_set_fastforward(int enable)
 {
+    if (netplay_is_init())
+        return;
+
     static int ff_state = 0;
     static int SavedSpeedFactor = 100;
 
@@ -395,6 +407,9 @@ void main_set_fastforward(int enable)
 
 static void main_set_speedlimiter(int enable)
 {
+    if (netplay_is_init() && !netplay_lag())
+        return;
+
     l_MainSpeedLimit = enable ? 1 : 0;
 }
 
@@ -406,6 +421,9 @@ static int main_is_paused(void)
 void main_toggle_pause(void)
 {
     if (!g_EmulatorRunning)
+        return;
+
+    if (netplay_is_init())
         return;
 
     if (g_rom_pause)
@@ -491,6 +509,9 @@ void main_state_inc_slot(void)
 
 void main_state_load(const char *filename)
 {
+    if (netplay_is_init())
+        return;
+
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_load, savestates_type_m64p, NULL);
     else
@@ -499,6 +520,9 @@ void main_state_load(const char *filename)
 
 void main_state_save(int format, const char *filename)
 {
+    if (netplay_is_init())
+        return;
+
     if (filename == NULL) // Save to slot
         savestates_set_job(savestates_job_save, savestates_type_m64p, NULL);
     else // Save to file
@@ -864,6 +888,9 @@ static void apply_speed_limiter(void)
 /* TODO: make a GameShark module and move that there */
 static void gs_apply_cheats(struct cheat_ctx* ctx)
 {
+    if (netplay_is_init())
+        return;
+
     struct r4300_core* r4300 = &g_dev.r4300;
 
     if (g_gs_vi_counter < 60)
@@ -906,6 +933,8 @@ void new_vi(void)
     main_check_inputs();
 
     pause_loop();
+
+    netplay_check_sync(&g_dev.r4300.cp0);
 }
 
 static void main_switch_pak(int control_id)
@@ -1272,12 +1301,12 @@ m64p_error main_run(void)
 {
     size_t i, k;
     size_t rdram_size;
-    unsigned int count_per_op;
-    unsigned int emumode;
-    unsigned int disable_extra_mem;
-    int si_dma_duration;
-    int no_compiled_jump;
-    int randomize_interrupt;
+    uint32_t count_per_op;
+    uint32_t emumode;
+    uint32_t disable_extra_mem;
+    int32_t si_dma_duration;
+    int32_t no_compiled_jump;
+    int32_t randomize_interrupt;
     struct file_storage eep;
     struct file_storage fla;
     struct file_storage sra;
@@ -1304,7 +1333,8 @@ m64p_error main_run(void)
     savestates_set_autoinc_slot(ConfigGetParamBool(g_CoreConfig, "AutoStateSlotIncrement"));
     savestates_select_slot(ConfigGetParamInt(g_CoreConfig, "CurrentStateSlot"));
     no_compiled_jump = ConfigGetParamBool(g_CoreConfig, "NoCompiledJump");
-    randomize_interrupt = ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt");
+    //We disable any randomness for netplay
+    randomize_interrupt = !netplay_is_init() ? ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt") : 0;
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
 
     if (ROM_PARAMS.disableextramem)
@@ -1321,6 +1351,9 @@ m64p_error main_run(void)
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
         si_dma_duration = ROM_PARAMS.sidmaduration;
+
+    //During netplay, player 1 is the source of truth for these settings
+    netplay_sync_settings(&count_per_op, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
 
     cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
@@ -1400,9 +1433,13 @@ m64p_error main_run(void)
     memset(&l_gb_carts_data, 0, GAME_CONTROLLERS_COUNT*sizeof(*l_gb_carts_data));
     memset(cin_compats, 0, GAME_CONTROLLERS_COUNT*sizeof(*cin_compats));
 
+    netplay_read_registration(cin_compats);
+
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
 
-        control_ids[i] = (int)i;
+        //During netplay, we "trick" the input plugin
+        //by replacing the regular control_id with the ID that is controlling the player during netplay
+        control_ids[i] = netplay_is_init() ? netplay_get_controller(i) : (int)i;
 
         /* if input plugin requests RawData let the input plugin do the channel device processing */
         if (Controls[i].RawData) {
@@ -1425,6 +1462,9 @@ m64p_error main_run(void)
             cin_compats[i].cont = &g_dev.controllers[i];
             cin_compats[i].tpk = &g_dev.transferpaks[i];
             cin_compats[i].last_pak_type = Controls[i].Plugin;
+            cin_compats[i].last_input = 0;
+            cin_compats[i].netplay_count = 0;
+            cin_compats[i].event_first = NULL;
 
             l_gb_carts_data[i].control_id = (int)i;
 

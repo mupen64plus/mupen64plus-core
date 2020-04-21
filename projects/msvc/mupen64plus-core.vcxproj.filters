@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\src\main\main.c">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\main\netplay.c">
+      <Filter>main</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\main\rom.c">
       <Filter>main</Filter>
     </ClCompile>
@@ -462,6 +465,9 @@
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\main.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\main\netplay.h">
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\rom.h">

@@ -34,6 +34,7 @@
 #include "m64p_config.h"
 #include "m64p_types.h"
 #include "main/util.h"
+#include "main/netplay.h"
 #include "osal/files.h"
 #include "osal/preproc.h"
 
@@ -1595,3 +1596,12 @@ EXPORT const char * CALL ConfigGetUserCachePath(void)
   return osal_get_user_cachepath();
 }
 
+EXPORT m64p_error CALL ConfigSendNetplayConfig(char* data, int size)
+{
+    return netplay_send_config(data, size);
+}
+
+EXPORT m64p_error CALL ConfigReceiveNetplayConfig(char* data, int size)
+{
+    return netplay_receive_config(data, size);
+}
