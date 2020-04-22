@@ -301,7 +301,18 @@ void gen_SWR(struct r4300_core* r4300);
 void gen_SW(struct r4300_core* r4300);
 void gen_SYNC(struct r4300_core* r4300);
 void gen_SYSCALL(struct r4300_core* r4300);
+void gen_TGE(struct r4300_core* r4300);
+void gen_TGEU(struct r4300_core* r4300);
+void gen_TGEI(struct r4300_core* r4300);
+void gen_TGEIU(struct r4300_core* r4300);
+void gen_TLT(struct r4300_core* r4300);
+void gen_TLTU(struct r4300_core* r4300);
+void gen_TLTI(struct r4300_core* r4300);
+void gen_TLTIU(struct r4300_core* r4300);
 void gen_TEQ(struct r4300_core* r4300);
+void gen_TEQI(struct r4300_core* r4300);
+void gen_TNE(struct r4300_core* r4300);
+void gen_TNEI(struct r4300_core* r4300);
 void gen_TLBP(struct r4300_core* r4300);
 void gen_TLBR(struct r4300_core* r4300);
 void gen_TLBWI(struct r4300_core* r4300);
@@ -426,17 +437,6 @@ static void gen_CP1_CVT_S(struct r4300_core* r4300)
 #define gen_SCD        genni
 #define gen_SDC2       genni
 #define gen_SWC2       genni
-#define gen_TEQI       genni
-#define gen_TGE        genni
-#define gen_TGEI       genni
-#define gen_TGEIU      genni
-#define gen_TGEU       genni
-#define gen_TLT        genni
-#define gen_TLTI       genni
-#define gen_TLTIU      genni
-#define gen_TLTU       genni
-#define gen_TNE        genni
-#define gen_TNEI       genni
 
 #define X(op) gen_##op
 static void (*const recomp_funcs[R4300_OPCODES_COUNT])(struct r4300_core* r4300) =

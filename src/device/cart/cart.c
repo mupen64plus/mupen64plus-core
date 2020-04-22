@@ -100,6 +100,7 @@ void init_cart(struct cart* cart,
                /* cart ROM */
                uint8_t* rom, size_t rom_size,
                struct r4300_core* r4300,
+               struct pi_controller* pi,
                /* eeprom */
                uint16_t eeprom_type,
                void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
@@ -115,7 +116,8 @@ void init_cart(struct cart* cart,
 
     init_cart_rom(&cart->cart_rom,
         rom, rom_size,
-        r4300);
+        r4300,
+        pi);
 
     init_eeprom(&cart->eeprom,
         eeprom_type, eeprom_storage, ieeprom_storage);

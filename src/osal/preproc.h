@@ -37,7 +37,6 @@
 
   /* string functions */
   #define osal_insensitive_strcmp(x, y) _stricmp(x, y)
-  #define snprintf _snprintf
   #define strdup _strdup
 
   /* for isnan() */

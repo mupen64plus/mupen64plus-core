@@ -393,9 +393,6 @@
     <ClCompile Include="..\..\subprojects\oglft\OGLFT.cpp">
       <Filter>subprojects\oglft</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\subprojects\xxhash\xxhash.c">
-      <Filter>subprojects\xxhash</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\subprojects\minizip\ioapi.c">
       <Filter>subprojects\minizip</Filter>
     </ClCompile>

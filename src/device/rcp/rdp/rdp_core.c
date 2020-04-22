@@ -112,10 +112,8 @@ void write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     {
     case DPC_START_REG:
         dp->dpc_regs[DPC_CURRENT_REG] = dp->dpc_regs[DPC_START_REG];
-        dp->dpc_regs[DPC_STATUS_REG] |= DPC_STATUS_START_VALID;
         break;
     case DPC_END_REG:
-        dp->dpc_regs[DPC_STATUS_REG] |= DPC_STATUS_END_VALID;
         gfx.processRDPList();
         signal_rcp_interrupt(dp->mi, MI_INTR_DP);
         break;

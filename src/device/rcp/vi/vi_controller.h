@@ -53,7 +53,6 @@ struct vi_controller
     uint32_t regs[VI_REGS_COUNT];
     unsigned int field;
     unsigned int delay;
-    unsigned int next_vi;
 
     unsigned int clock;
     unsigned int expected_refresh_rate;
@@ -71,6 +70,7 @@ static osal_inline uint32_t vi_reg(uint32_t address)
 
 unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
 unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
+void set_vi_vertical_interrupt(struct vi_controller* vi);
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
              struct mi_controller* mi, struct rdp_core* dp);

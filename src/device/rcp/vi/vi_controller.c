@@ -49,12 +49,20 @@ unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_stand
     switch (tv_standard)
     {
     case SYSTEM_PAL:
-    case SYSTEM_MPAL:
         return 50;
-
     case SYSTEM_NTSC:
+    case SYSTEM_MPAL:
     default:
         return 60;
+    }
+}
+
+void set_vi_vertical_interrupt(struct vi_controller* vi)
+{
+    if (!get_event(&vi->mi->r4300->cp0.q, VI_INT) && (vi->regs[VI_V_INTR_REG] < vi->regs[VI_V_SYNC_REG]))
+    {
+        cp0_update_count(vi->mi->r4300);
+        add_interrupt_event(&vi->mi->r4300->cp0, VI_INT, vi->delay);
     }
 }
 
@@ -71,7 +79,7 @@ void poweron_vi(struct vi_controller* vi)
 {
     memset(vi->regs, 0, VI_REGS_COUNT*sizeof(uint32_t));
     vi->field = 0;
-    vi->delay = vi->next_vi = 0;
+    vi->delay = 0;
     vi->count_per_scanline = 0;
 }
 
@@ -83,15 +91,15 @@ void read_vi_regs(void* opaque, uint32_t address, uint32_t* value)
 
     if (reg == VI_CURRENT_REG)
     {
-        /* XXX: update current line number */
-        cp0_update_count(vi->mi->r4300);
+        uint32_t* next_vi = get_event(&vi->mi->r4300->cp0.q, VI_INT);
+        if (next_vi != NULL) {
+            cp0_update_count(vi->mi->r4300);
+            vi->regs[VI_CURRENT_REG] = (vi->delay - (*next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
 
-        if (vi->regs[VI_V_SYNC_REG] != 0)
-            vi->regs[VI_CURRENT_REG] = (vi->delay - (vi->next_vi - cp0_regs[CP0_COUNT_REG])) / vi->count_per_scanline;
-
-        /* wrap around VI_CURRENT_REG if needed */
-        if (vi->regs[VI_CURRENT_REG] >= vi->regs[VI_V_SYNC_REG])
-            vi->regs[VI_CURRENT_REG] -= vi->regs[VI_V_SYNC_REG];
+            /* wrap around VI_CURRENT_REG if needed */
+            if (vi->regs[VI_CURRENT_REG] >= vi->regs[VI_V_SYNC_REG])
+                vi->regs[VI_CURRENT_REG] -= vi->regs[VI_V_SYNC_REG];
+        }
 
         /* update current field */
         vi->regs[VI_CURRENT_REG] = (vi->regs[VI_CURRENT_REG] & (~1)) | vi->field;
@@ -133,18 +141,13 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             masked_write(&vi->regs[VI_V_SYNC_REG], value, mask);
             vi->count_per_scanline = (vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1);
             vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
+            set_vi_vertical_interrupt(vi);
         }
         return;
 
     case VI_V_INTR_REG:
         masked_write(&vi->regs[VI_V_INTR_REG], value, mask);
-        if (!get_event(&vi->mi->r4300->cp0.q, VI_INT) && (vi->regs[VI_V_INTR_REG] < vi->regs[VI_V_SYNC_REG]))
-        {
-            const uint32_t* cp0_regs = r4300_cp0_regs(&vi->mi->r4300->cp0);
-            cp0_update_count(vi->mi->r4300);
-            vi->next_vi = cp0_regs[CP0_COUNT_REG] + vi->delay;
-            add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, vi->next_vi);
-        }
+        set_vi_vertical_interrupt(vi);
         return;
     }
 
@@ -166,8 +169,9 @@ void vi_vertical_interrupt_event(void* opaque)
     vi->field ^= (vi->regs[VI_STATUS_REG] >> 6) & 0x1;
 
     /* schedule next vertical interrupt */
-    vi->next_vi += vi->delay;
-    add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, vi->next_vi);
+    uint32_t next_vi = *get_event(&vi->mi->r4300->cp0.q, VI_INT) + vi->delay;
+    remove_interrupt_event(&vi->mi->r4300->cp0);
+    add_interrupt_event_count(&vi->mi->r4300->cp0, VI_INT, next_vi);
 
     /* trigger interrupt */
     raise_rcp_interrupt(vi->mi, MI_INTR_VI);

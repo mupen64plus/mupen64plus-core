@@ -38,23 +38,23 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-enum
+int validate_pi_request(struct pi_controller* pi)
 {
-    /* PI_STATUS - read */
-    PI_STATUS_DMA_BUSY  = 0x01,
-    PI_STATUS_IO_BUSY   = 0x02,
-    PI_STATUS_ERROR     = 0x04,
+    if (pi->regs[PI_STATUS_REG] & (PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY)) {
+        pi->regs[PI_STATUS_REG] |= PI_STATUS_ERROR;
+        return 0;
+    }
 
-    /* PI_STATUS - write */
-    PI_STATUS_RESET     = 0x01,
-    PI_STATUS_CLR_INTR  = 0x02
-};
-
+    return 1;
+}
 
 static void dma_pi_read(struct pi_controller* pi)
 {
+    if (!validate_pi_request(pi))
+        return;
+
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & ~UINT32_C(7);
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
     uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     const uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
@@ -82,8 +82,11 @@ static void dma_pi_read(struct pi_controller* pi)
 
 static void dma_pi_write(struct pi_controller* pi)
 {
+    if (!validate_pi_request(pi))
+        return;
+
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & ~UINT32_C(7);
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG];
     uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
     uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
@@ -189,7 +192,7 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
-    pi->regs[PI_STATUS_REG] &= ~PI_STATUS_DMA_BUSY;
+    pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
 
     if (pi->dd != NULL) {
         if ((pi->regs[PI_CART_ADDR_REG] == MM_DD_C2S_BUFFER) ||

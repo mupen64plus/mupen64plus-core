@@ -256,11 +256,7 @@ static void main_check_inputs(void)
 #ifdef WITH_LIRC
     lircCheckInput();
 #endif
-
-/* Fix pausing on non-Android platforms */
-#ifndef ANDROID
     SDL_PumpEvents();
-#endif
 }
 
 /*********************************************************************************************************

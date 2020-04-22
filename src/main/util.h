@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus - util.h                                                  *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
+ *   Copyright (C) 2020 Richard42                                          *
  *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -216,6 +217,10 @@ typedef struct _ini_line
  * (so their lifetime is associated to that of 'lineptr').
  */
 ini_line ini_parse_line(char **lineptr);
+
+/* Convert text in Shift-JIS (code page 932) to UTF-8
+ */
+void ShiftJis2UTF8(const unsigned char *pccInput, unsigned char *pucOutput, int outputLength);
 
 #endif // __UTIL_H__
 

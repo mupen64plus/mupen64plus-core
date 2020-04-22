@@ -102,31 +102,13 @@ static int before_event(const struct cp0* cp0, unsigned int evt1, unsigned int e
 {
     const uint32_t* cp0_regs = r4300_cp0_regs((struct cp0*)cp0); /* OK to cast away const qualifier */
     uint32_t count = cp0_regs[CP0_COUNT_REG];
+    int* cp0_cycle_count = r4300_cp0_cycle_count((struct cp0*)cp0);
 
-    if (evt1 - count < UINT32_C(0x80000000))
-    {
-        if (evt2 - count < UINT32_C(0x80000000))
-        {
-            if ((evt1 - count) < (evt2 - count)) return 1;
-            else return 0;
-        }
-        else
-        {
-            if ((count - evt2) < UINT32_C(0x10000000))
-            {
-                switch(type2)
-                {
-                    case SPECIAL_INT:
-                        if (cp0->special_done) return 1;
-                        else return 0;
-                        break;
-                    default:
-                        return 0;
-                }
-            }
-            else return 1;
-        }
-    }
+    /* At least one other interrupt is pending */
+    if (*cp0_cycle_count > 0)
+        count -= *cp0_cycle_count;
+
+    if ((evt1 - count) < (evt2 - count)) return 1;
     else return 0;
 }
 
@@ -154,15 +136,9 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
 {
     struct node* event;
     struct node* e;
-    int special;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
-
-    special = (type == SPECIAL_INT);
-
-    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x80000000)) {
-        cp0->special_done = 0;
-    }
+    int* cp0_cycle_count = r4300_cp0_cycle_count(cp0);
 
     if (get_event(&cp0->q, type)) {
         DebugMessage(M64MSG_WARNING, "two events of type 0x%x in interrupt queue", type);
@@ -183,18 +159,20 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
         cp0->q.first = event;
         event->next = NULL;
         *cp0_next_interrupt = cp0->q.first->data.count;
+        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
     }
-    else if (before_event(cp0, count, cp0->q.first->data.count, cp0->q.first->data.type) && !special)
+    else if (before_event(cp0, count, cp0->q.first->data.count, cp0->q.first->data.type))
     {
         event->next = cp0->q.first;
         cp0->q.first = event;
         *cp0_next_interrupt = cp0->q.first->data.count;
+        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
     }
     else
     {
         for (e = cp0->q.first;
             e->next != NULL &&
-            (!before_event(cp0, count, e->next->data.count, e->next->data.type) || special);
+            (!before_event(cp0, count, e->next->data.count, e->next->data.type));
             e = e->next);
 
         if (e->next == NULL)
@@ -204,8 +182,7 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
         }
         else
         {
-            if (!special)
-                for(; e->next != NULL && e->next->data.count == count; e = e->next);
+            for(; e->next != NULL && e->next->data.count == count; e = e->next);
 
             event->next = e->next;
             e->next = event;
@@ -213,41 +190,43 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
     }
 }
 
-static void remove_interrupt_event(struct cp0* cp0)
+void remove_interrupt_event(struct cp0* cp0)
 {
     struct node* e;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
-    uint32_t count = cp0_regs[CP0_COUNT_REG];
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(cp0);
 
     e = cp0->q.first;
     cp0->q.first = e->next;
     free_node(&cp0->q.pool, e);
 
-    *cp0_next_interrupt = (cp0->q.first != NULL
-         && (cp0->q.first->data.count > count
-         || (count - cp0->q.first->data.count) < UINT32_C(0x80000000)))
+    *cp0_next_interrupt = (cp0->q.first != NULL)
         ? cp0->q.first->data.count
+        : 0;
+
+    *cp0_cycle_count = (cp0->q.first != NULL)
+        ? (cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count)
         : 0;
 }
 
-unsigned int get_event(const struct interrupt_queue* q, int type)
+unsigned int* get_event(const struct interrupt_queue* q, int type)
 {
-    const struct node* e = q->first;
+    struct node* e = q->first;
 
     if (e == NULL) {
-        return 0;
+        return NULL;
     }
 
     if (e->data.type == type) {
-        return e->data.count;
+        return &e->data.count;
     }
 
     for (; e->next != NULL && e->next->data.type != type; e = e->next);
 
     return (e->next != NULL)
-        ? e->next->data.count
-        : 0;
+        ? &e->next->data.count
+        : NULL;
 }
 
 int get_next_event_type(const struct interrupt_queue* q)
@@ -287,7 +266,8 @@ void remove_event(struct interrupt_queue* q, int type)
 void translate_event_queue(struct cp0* cp0, unsigned int base)
 {
     struct node* e;
-    const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
+    uint32_t* cp0_regs = r4300_cp0_regs(cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(cp0);
 
     remove_event(&cp0->q, COMPARE_INT);
     remove_event(&cp0->q, SPECIAL_INT);
@@ -296,8 +276,18 @@ void translate_event_queue(struct cp0* cp0, unsigned int base)
     {
         e->data.count = (e->data.count - cp0_regs[CP0_COUNT_REG]) + base;
     }
+
+    cp0_regs[CP0_COUNT_REG] = base;
+    add_interrupt_event_count(cp0, SPECIAL_INT, ((cp0_regs[CP0_COUNT_REG] & UINT32_C(0x80000000)) ^ UINT32_C(0x80000000)));
+
+    /* Add count_per_op to avoid wrong event order in case CP0_COUNT_REG == CP0_COMPARE_REG */
+    cp0_regs[CP0_COUNT_REG] += cp0->count_per_op;
+    *cp0_cycle_count += cp0->count_per_op;
     add_interrupt_event_count(cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
-    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
+    cp0_regs[CP0_COUNT_REG] -= cp0->count_per_op;
+
+    /* Update next interrupt in case first event is COMPARE_INT */
+    *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
 }
 
 int save_eventqueue_infos(const struct cp0* cp0, char *buf)
@@ -321,6 +311,7 @@ int save_eventqueue_infos(const struct cp0* cp0, char *buf)
 void load_eventqueue_infos(struct cp0* cp0, const char *buf)
 {
     int len = 0;
+    uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
     clear_queue(&cp0->q);
 
@@ -331,14 +322,16 @@ void load_eventqueue_infos(struct cp0* cp0, const char *buf)
         add_interrupt_event_count(cp0, type, count);
         len += 8;
     }
+
+    remove_event(&cp0->q, SPECIAL_INT);
+    add_interrupt_event_count(cp0, SPECIAL_INT, ((cp0_regs[CP0_COUNT_REG] & UINT32_C(0x80000000)) ^ UINT32_C(0x80000000)));
 }
 
 void init_interrupt(struct cp0* cp0)
 {
-    cp0->special_done = 1;
-
     clear_queue(&cp0->q);
-    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
+    add_interrupt_event_count(cp0, SPECIAL_INT, 0x80000000);
+    add_interrupt_event_count(cp0, COMPARE_INT, 0);
 }
 
 void r4300_check_interrupt(struct r4300_core* r4300, uint32_t cause_ip, int set_cause)
@@ -346,6 +339,7 @@ void r4300_check_interrupt(struct r4300_core* r4300, uint32_t cause_ip, int set_
     struct node* event;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     if (set_cause) {
         cp0_regs[CP0_CAUSE_REG] = (cp0_regs[CP0_CAUSE_REG] | cause_ip) & ~CP0_CAUSE_EXCCODE_MASK;
@@ -369,6 +363,7 @@ void r4300_check_interrupt(struct r4300_core* r4300, uint32_t cause_ip, int set_
 
         event->data.count = *cp0_next_interrupt = cp0_regs[CP0_COUNT_REG];
         event->data.type = CHECK_INT;
+        *cp0_cycle_count = 0;
 
         if (r4300->cp0.q.first == NULL)
         {
@@ -404,10 +399,16 @@ void compare_int_handler(void* opaque)
 {
     struct r4300_core* r4300 = (struct r4300_core*)opaque;
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
+    /* Add count_per_op to avoid wrong event order in case CP0_COUNT_REG == CP0_COMPARE_REG */
     cp0_regs[CP0_COUNT_REG] += r4300->cp0.count_per_op;
+    *cp0_cycle_count += r4300->cp0.count_per_op;
     add_interrupt_event_count(&r4300->cp0, COMPARE_INT, cp0_regs[CP0_COMPARE_REG]);
     cp0_regs[CP0_COUNT_REG] -= r4300->cp0.count_per_op;
+
+    /* Update next interrupt in case first event is COMPARE_INT */
+    *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - r4300->cp0.q.first->data.count;
 
     raise_maskable_interrupt(r4300, CP0_CAUSE_IP7);
 }
@@ -417,18 +418,16 @@ void check_int_handler(void* opaque)
     exception_general((struct r4300_core*)opaque);
 }
 
+/* Special interrupt is a fake interrupt which porpose is
+   to ensure the number of cycles between current cycle 
+   and next interrupt will never exceed 2^31 */
 void special_int_handler(void* opaque)
 {
     struct cp0* cp0 = (struct cp0*)opaque;
     const uint32_t* cp0_regs = r4300_cp0_regs(cp0);
 
-    if (cp0_regs[CP0_COUNT_REG] > UINT32_C(0x10000000)) {
-        return;
-    }
-
-    cp0->special_done = 1;
     remove_interrupt_event(cp0);
-    add_interrupt_event_count(cp0, SPECIAL_INT, 0);
+    add_interrupt_event_count(cp0, SPECIAL_INT, ((cp0_regs[CP0_COUNT_REG] & UINT32_C(0x80000000)) ^ UINT32_C(0x80000000)));
 }
 
 /* XXX: this should only require r4300 struct not device ? */
@@ -451,8 +450,7 @@ void nmi_int_handler(void* opaque)
     g_gs_vi_counter = 0;
     init_interrupt(&r4300->cp0);
 
-    dev->vi.next_vi = cp0_regs[CP0_COUNT_REG] + dev->vi.delay;
-    add_interrupt_event_count(&r4300->cp0, VI_INT, dev->vi.next_vi);
+    add_interrupt_event(&r4300->cp0, VI_INT, dev->vi.delay);
 
     // clear the audio status register so that subsequent write_ai() calls will work properly
     dev->ai.regs[AI_STATUS_REG] = 0;
@@ -481,13 +479,48 @@ void reset_hard_handler(void* opaque)
     struct device* dev = (struct device*)opaque;
     struct r4300_core* r4300 = &dev->r4300;
 
+#ifndef NEW_DYNAREC
+#if defined(__x86_64__)
+    long long save_rsp = r4300->recomp.save_rsp;
+    long long save_rip = r4300->recomp.save_rip;
+#else
+    long save_ebp = r4300->recomp.save_ebp;
+    long save_ebx = r4300->recomp.save_ebx;
+    long save_esi = r4300->recomp.save_esi;
+    long save_edi = r4300->recomp.save_edi;
+    long save_esp = r4300->recomp.save_esp;
+    long save_eip = r4300->recomp.save_eip;
+#endif
+#endif
+
     poweron_device(dev);
 
     pif_bootrom_hle_execute(r4300);
     r4300->cp0.last_addr = UINT32_C(0xa4000040);
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
+    *r4300_cp0_cycle_count(&r4300->cp0) = 0;
     init_interrupt(&r4300->cp0);
     invalidate_r4300_cached_code(r4300, 0, 0);
+    *r4300_pc_struct(r4300) = &r4300->interp_PC;
+    if (r4300->emumode >= 2)
+    {
+#ifdef NEW_DYNAREC
+        new_dynarec_cleanup();
+        new_dynarec_init();
+#else
+#if defined(__x86_64__)
+        r4300->recomp.save_rsp = save_rsp;
+        r4300->recomp.save_rip = save_rip;
+#else
+        r4300->recomp.save_ebp = save_ebp;
+        r4300->recomp.save_ebx = save_ebx;
+        r4300->recomp.save_esi = save_esi;
+        r4300->recomp.save_edi = save_edi;
+        r4300->recomp.save_esp = save_esp;
+        r4300->recomp.save_eip = save_eip;
+#endif
+#endif
+    }
     generic_jump_to(r4300, r4300->cp0.last_addr);
 }
 
@@ -505,6 +538,7 @@ void gen_interrupt(struct r4300_core* r4300)
 {
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     if (*r4300_stop(r4300) == 1)
     {
@@ -536,9 +570,12 @@ void gen_interrupt(struct r4300_core* r4300)
         uint32_t dest = r4300->skip_jump;
         r4300->skip_jump = 0;
 
-        *cp0_next_interrupt = (r4300->cp0.q.first->data.count > cp0_regs[CP0_COUNT_REG]
-                || (cp0_regs[CP0_COUNT_REG] - r4300->cp0.q.first->data.count) < UINT32_C(0x80000000))
+        *cp0_next_interrupt = (r4300->cp0.q.first != NULL)
             ? r4300->cp0.q.first->data.count
+            : 0;
+
+        *cp0_cycle_count = (r4300->cp0.q.first != NULL)
+            ? (cp0_regs[CP0_COUNT_REG] - r4300->cp0.q.first->data.count)
             : 0;
 
         r4300->cp0.last_addr = dest;
@@ -549,7 +586,6 @@ void gen_interrupt(struct r4300_core* r4300)
     switch (r4300->cp0.q.first->data.type)
     {
         case VI_INT:
-            remove_interrupt_event(&r4300->cp0);
             call_interrupt_handler(&r4300->cp0, 0);
             break;
 

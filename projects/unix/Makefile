@@ -555,8 +555,6 @@ CFLAGS += -I$(SUBDIR)/md5
 
 
 # xxhash
-SOURCE += \
-    $(SUBDIR)/xxhash/xxhash.c
 CFLAGS += -I$(SUBDIR)/xxhash
 
 

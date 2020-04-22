@@ -38,7 +38,7 @@
 
 static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 {
-    unsigned int next_ai_event;
+    unsigned int* next_ai_event;
     unsigned int remaining_dma_duration;
     const uint32_t* cp0_regs;
 
@@ -47,14 +47,14 @@ static uint32_t get_remaining_dma_length(struct ai_controller* ai)
 
     cp0_update_count(ai->mi->r4300);
     next_ai_event = get_event(&ai->mi->r4300->cp0.q, AI_INT);
-    if (next_ai_event == 0)
+    if (next_ai_event == NULL)
         return 0;
 
     cp0_regs = r4300_cp0_regs(&ai->mi->r4300->cp0);
-    if (next_ai_event <= cp0_regs[CP0_COUNT_REG])
+    if ((int)(cp0_regs[CP0_COUNT_REG] - *next_ai_event) >= 0)
         return 0;
 
-    remaining_dma_duration = next_ai_event - cp0_regs[CP0_COUNT_REG];
+    remaining_dma_duration = *next_ai_event - cp0_regs[CP0_COUNT_REG];
 
     uint64_t dma_length = (uint64_t)remaining_dma_duration * ai->fifo[0].length / ai->fifo[0].duration;
     return dma_length&~7;

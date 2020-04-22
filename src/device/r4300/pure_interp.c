@@ -72,22 +72,24 @@ static void InterpretOpcode(struct r4300_core* r4300);
          cp0_update_count(r4300); \
       } \
       r4300->cp0.last_addr = r4300->interp_PC.addr; \
-      if (*r4300_cp0_next_interrupt(&r4300->cp0) <= r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]) gen_interrupt(r4300); \
+      if (*r4300_cp0_cycle_count(&r4300->cp0) >= 0) gen_interrupt(r4300); \
    } \
    static void name##_IDLE(struct r4300_core* r4300, uint32_t op) \
    { \
       uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+      int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0); \
       const int take_jump = (condition); \
-      int skip; \
       if (cop1 && check_cop1_unusable(r4300)) return; \
       if (take_jump) \
       { \
          cp0_update_count(r4300); \
-         skip = *r4300_cp0_next_interrupt(&r4300->cp0) - cp0_regs[CP0_COUNT_REG]; \
-         if (skip > 3) cp0_regs[CP0_COUNT_REG] += (skip & UINT32_C(0xFFFFFFFC)); \
-         else name(r4300, op); \
+         if(*cp0_cycle_count < 0) \
+         { \
+             cp0_regs[CP0_COUNT_REG] -= *cp0_cycle_count; \
+             *cp0_cycle_count = 0; \
+         } \
       } \
-      else name(r4300, op); \
+      name(r4300, op); \
    }
 
 #define RD_OF(op)      (((op) >> 11) & 0x1F)
@@ -292,16 +294,12 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RD_OF(op) != 0) DSUBU(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 48: /* SPECIAL opcode 48: TGE (Not implemented) */
-		case 49: /* SPECIAL opcode 49: TGEU (Not implemented) */
-		case 50: /* SPECIAL opcode 50: TLT (Not implemented) */
-		case 51: /* SPECIAL opcode 51: TLTU (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 48: TGE(r4300, op); break;
+		case 49: TGEU(r4300, op); break;
+		case 50: TLT(r4300, op); break;
+		case 51: TLTU(r4300, op); break;
 		case 52: TEQ(r4300, op); break;
-		case 54: /* SPECIAL opcode 54: TNE (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 54: TNE(r4300, op); break;
 		case 56: /* SPECIAL opcode 56: DSLL */
 			if (RD_OF(op) != 0) DSLL(r4300, op);
 			else                NOP(r4300, 0);
@@ -350,14 +348,12 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (IS_RELATIVE_IDLE_LOOP(r4300, op, *r4300_pc(r4300))) BGEZL_IDLE(r4300, op);
 			else                                             BGEZL(r4300, op);
 			break;
-		case 8: /* REGIMM opcode 8: TGEI (Not implemented) */
-		case 9: /* REGIMM opcode 9: TGEIU (Not implemented) */
-		case 10: /* REGIMM opcode 10: TLTI (Not implemented) */
-		case 11: /* REGIMM opcode 11: TLTIU (Not implemented) */
-		case 12: /* REGIMM opcode 12: TEQI (Not implemented) */
-		case 14: /* REGIMM opcode 14: TNEI (Not implemented) */
-			NI(r4300, op);
-			break;
+		case 8: TGEI(r4300, op); break;
+		case 9: TGEIU(r4300, op); break;
+		case 10: TLTI(r4300, op); break;
+		case 11: TLTIU(r4300, op); break;
+		case 12: TEQI(r4300, op); break;
+		case 14: TNEI(r4300, op); break;
 		case 16: /* REGIMM opcode 16: BLTZAL */
 			if (IS_RELATIVE_IDLE_LOOP(r4300, op, *r4300_pc(r4300))) BLTZAL_IDLE(r4300, op);
 			else                                             BLTZAL(r4300, op);

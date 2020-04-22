@@ -58,7 +58,7 @@
 #include "device/rdram/rdram.h"
 #include "osal/preproc.h"
 
-#include <xxhash.h>
+#include <xxh3.h>
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -815,10 +815,22 @@ DECLARE_INSTRUCTION(DIV)
     DECLARE_R4300
     if (rrt32)
     {
-        *r4300_mult_lo(r4300) = SE32(rrs32 / rrt32);
-        *r4300_mult_hi(r4300) = SE32(rrs32 % rrt32);
+        if (rrs32 == INT32_MIN && rrt32 == -1)
+        {
+            *r4300_mult_lo(r4300) = SE32(rrs32);
+            *r4300_mult_hi(r4300) = 0;
+        }
+        else
+        {
+            *r4300_mult_lo(r4300) = SE32(rrs32 / rrt32);
+            *r4300_mult_hi(r4300) = SE32(rrs32 % rrt32);
+        }
     }
-    else { DebugMessage(M64MSG_ERROR, "DIV: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = rrs32 < 0 ? 1 : -1;
+        *r4300_mult_hi(r4300) = SE32(rrs32);
+    }
     ADD_TO_PC(1);
 }
 
@@ -830,7 +842,11 @@ DECLARE_INSTRUCTION(DIVU)
         *r4300_mult_lo(r4300) = SE32((uint32_t) rrs32 / (uint32_t) rrt32);
         *r4300_mult_hi(r4300) = SE32((uint32_t) rrs32 % (uint32_t) rrt32);
     }
-    else { DebugMessage(M64MSG_ERROR, "DIVU: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = -1;
+        *r4300_mult_hi(r4300) = SE32(rrs32);
+    }
     ADD_TO_PC(1);
 }
 
@@ -839,10 +855,22 @@ DECLARE_INSTRUCTION(DDIV)
     DECLARE_R4300
     if (rrt)
     {
-        *r4300_mult_lo(r4300) = rrs / rrt;
-        *r4300_mult_hi(r4300) = rrs % rrt;
+        if (rrs == INT64_MIN && rrt == -1)
+        {
+            *r4300_mult_lo(r4300) = rrs;
+            *r4300_mult_hi(r4300) = 0;
+        }
+        else
+        {
+            *r4300_mult_lo(r4300) = rrs / rrt;
+            *r4300_mult_hi(r4300) = rrs % rrt;
+        }
     }
-    else { DebugMessage(M64MSG_ERROR, "DDIV: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = rrs < 0 ? 1 : -1;
+        *r4300_mult_hi(r4300) = rrs;
+    }
     ADD_TO_PC(1);
 }
 
@@ -854,7 +882,11 @@ DECLARE_INSTRUCTION(DDIVU)
         *r4300_mult_lo(r4300) = (uint64_t) rrs / (uint64_t) rrt;
         *r4300_mult_hi(r4300) = (uint64_t) rrs % (uint64_t) rrt;
     }
-    else { DebugMessage(M64MSG_ERROR, "DDIVU: divide by 0"); }
+    else
+    {
+        *r4300_mult_lo(r4300) = -1;
+        *r4300_mult_hi(r4300) = rrs;
+    }
     ADD_TO_PC(1);
 }
 
@@ -933,7 +965,7 @@ DECLARE_INSTRUCTION(ERET)
 {
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     cp0_update_count(r4300);
     if (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_ERL)
@@ -949,7 +981,7 @@ DECLARE_INSTRUCTION(ERET)
     r4300->llbit = 0;
     r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi->regs[MI_INTR_REG] & r4300->mi->regs[MI_INTR_MASK_REG]); // ???
     r4300->cp0.last_addr = PCADDR;
-    if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+    if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
 }
 
 DECLARE_INSTRUCTION(SYNC)
@@ -967,18 +999,38 @@ DECLARE_INSTRUCTION(SYSCALL)
     exception_general(r4300);
 }
 
-/* Exception instructions */
+/* Trap instructions */
 
-DECLARE_INSTRUCTION(TEQ)
-{
-    DECLARE_R4300
-    if (rrs == rrt)
-    {
-        DebugMessage(M64MSG_ERROR, "trap exception in TEQ");
-        *r4300_stop(r4300)=1;
-    }
-    ADD_TO_PC(1);
+#define DECLARE_TRAP(name, cond) \
+DECLARE_INSTRUCTION(name) \
+{ \
+    DECLARE_R4300 \
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0); \
+    if (cond) \
+    { \
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_TR; \
+        exception_general(r4300); \
+    } \
+    else \
+    { \
+        ADD_TO_PC(1); \
+    } \
 }
+
+DECLARE_TRAP(TGE, rrs >= rrt)
+DECLARE_TRAP(TGEU, (uint64_t) rrs >= (uint64_t) rrt)
+DECLARE_TRAP(TGEI, rrs >= (int64_t)iimmediate)
+DECLARE_TRAP(TGEIU, (uint64_t)rrs >= (uint64_t)(int64_t)iimmediate)
+DECLARE_TRAP(TLT, rrs < rrt)
+DECLARE_TRAP(TLTU, (uint64_t) rrs < (uint64_t) rrt)
+DECLARE_TRAP(TLTI, rrs < (int64_t)iimmediate)
+DECLARE_TRAP(TLTIU, (uint64_t)rrs < (uint64_t)(int64_t)iimmediate)
+DECLARE_TRAP(TEQ, rrs == rrt)
+DECLARE_TRAP(TEQI, rrs == (int64_t)iimmediate)
+DECLARE_TRAP(TNE, rrs != rrt)
+DECLARE_TRAP(TNEI, rrs != (int64_t)iimmediate)
+
+#undef DECLARE_TRAP
 
 /* TLB instructions */
 
@@ -1044,7 +1096,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
+                    r4300->cached_interp.blocks[i]->xxhash = XXH3_64bits(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
@@ -1063,7 +1115,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
                 }
                 if (!r4300->cached_interp.invalid_code[i])
                 {
-                    r4300->cached_interp.blocks[i]->xxhash = XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0);
+                    r4300->cached_interp.blocks[i]->xxhash = XXH3_64bits(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000);
                     r4300->cached_interp.invalid_code[i] = 1;
                 }
                 else if (r4300->cached_interp.blocks[i])
@@ -1112,7 +1164,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
             {
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH3_64bits(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
@@ -1125,7 +1177,7 @@ static void TLBWrite(struct r4300_core* r4300, unsigned int idx)
             {
                 if(r4300->cached_interp.blocks[i] && r4300->cached_interp.blocks[i]->xxhash)
                 {
-                    if(r4300->cached_interp.blocks[i]->xxhash == XXH32(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000, 0)) {
+                    if(r4300->cached_interp.blocks[i]->xxhash == XXH3_64bits(&r4300->rdram->dram[(r4300->cp0.tlb.LUT_r[i]&0x7FF000)/4], 0x1000)) {
                         r4300->cached_interp.invalid_code[i] = 0;
                     }
                 }
@@ -1180,7 +1232,7 @@ DECLARE_INSTRUCTION(MTC0)
 {
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
-    unsigned int* cp0_next_interrupt = r4300_cp0_next_interrupt(&r4300->cp0);
+    int* cp0_cycle_count = r4300_cp0_cycle_count(&r4300->cp0);
 
     switch(rfs)
     {
@@ -1216,10 +1268,9 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COUNT_REG:
         cp0_update_count(r4300);
         r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_R4300;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+        if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_R4300;
         translate_event_queue(&r4300->cp0, rrt32);
-        cp0_regs[CP0_COUNT_REG] = rrt32;
         break;
     case CP0_ENTRYHI_REG:
         cp0_regs[CP0_ENTRYHI_REG] = rrt32 & UINT32_C(0xFFFFE0FF);
@@ -1227,7 +1278,15 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_COMPARE_REG:
         cp0_update_count(r4300);
         remove_event(&r4300->cp0.q, COMPARE_INT);
+
+        /* Add count_per_op to avoid wrong event order in case CP0_COUNT_REG == CP0_COMPARE_REG */
+        cp0_regs[CP0_COUNT_REG] += r4300->cp0.count_per_op;
+        *cp0_cycle_count += r4300->cp0.count_per_op;
         add_interrupt_event_count(&r4300->cp0, COMPARE_INT, rrt32);
+        cp0_regs[CP0_COUNT_REG] -= r4300->cp0.count_per_op;
+
+        /* Update next interrupt in case first event is COMPARE_INT */
+        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - r4300->cp0.q.first->data.count;
         cp0_regs[CP0_COMPARE_REG] = rrt32;
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
         break;
@@ -1240,17 +1299,13 @@ DECLARE_INSTRUCTION(MTC0)
         ADD_TO_PC(1);
         r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi->regs[MI_INTR_REG] & r4300->mi->regs[MI_INTR_MASK_REG]); // ???
         r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_R4300;
-        if (*cp0_next_interrupt <= cp0_regs[CP0_COUNT_REG]) { gen_interrupt(r4300); }
+        if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_R4300;
         ADD_TO_PC(-1);
         break;
     case CP0_CAUSE_REG:
-        if (rrt32 != 0)
-        {
-            DebugMessage(M64MSG_ERROR, "MTC0 instruction trying to write Cause register with non-0 value");
-            *r4300_stop(r4300) = 1;
-        }
-        else { cp0_regs[CP0_CAUSE_REG] = rrt32; }
+        cp0_regs[CP0_CAUSE_REG] &= ~(CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
+        cp0_regs[CP0_CAUSE_REG] |= rrt32 & (CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
         break;
     case CP0_EPC_REG:
         cp0_regs[CP0_EPC_REG] = rrt32;

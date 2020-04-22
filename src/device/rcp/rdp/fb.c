@@ -162,6 +162,16 @@ void write_rdram_fb(void* opaque, uint32_t address, uint32_t value, uint32_t mas
         size = 2;
         break;
 
+    case 0xffffff00:
+        addr += (0 ^ Sh16);
+        size = 3;
+        break;
+
+    case 0x00ffffff:
+        addr += (1 ^ Sh16);
+        size = 3;
+        break;
+
     case 0xffffffff:
         addr += 0;
         size = 4;
@@ -185,7 +195,8 @@ void protect_framebuffers(struct fb* fb)
     struct mem_mapping fb_mapping = { 0, 0, M64P_MEM_RDRAM, { fb, RW(rdram_fb) } };
 
     /* check API support */
-    if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)) {
+    if (!(gfx.fBGetFrameBufferInfo && gfx.fBRead && gfx.fBWrite)
+        || fb->r4300->emumode == EMUMODE_DYNAREC /* Dynarecs currently miss some of the read/writes needed for FBInfo */) {
         return;
     }
 
