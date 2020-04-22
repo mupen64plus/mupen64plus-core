@@ -114,7 +114,9 @@ void write_dpc_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
         dp->dpc_regs[DPC_CURRENT_REG] = dp->dpc_regs[DPC_START_REG];
         break;
     case DPC_END_REG:
+        unprotect_framebuffers(&dp->fb);
         gfx.processRDPList();
+        protect_framebuffers(&dp->fb);
         signal_rcp_interrupt(dp->mi, MI_INTR_DP);
         break;
     }
