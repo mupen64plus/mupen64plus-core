@@ -51,6 +51,7 @@
 /* some local state variables */
 static int l_CoreInit = 0;
 static int l_ROMOpen = 0;
+static int l_CallerUsingSDL = 0;
 
 /* functions exported outside of libmupen64plus to front-end application */
 EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context,
@@ -59,6 +60,9 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
 {
     if (l_CoreInit)
         return M64ERR_ALREADY_INIT;
+
+    /* check wether the caller has already initialized SDL */
+    l_CallerUsingSDL = (SDL_WasInit(0) != 0);
 
     /* very first thing is to set the callback functions for debug info and state changing*/
     SetDebugCallback(DebugCallback, Context);
@@ -117,8 +121,9 @@ EXPORT m64p_error CALL CoreShutdown(void)
     workqueue_shutdown();
     savestates_deinit();
 
-    /* tell SDL to shut down */
-    SDL_Quit();
+    /* if the calling code is using SDL, don't shut it down */
+    if (!l_CallerUsingSDL)
+        SDL_Quit();
 
     /* deallocate base memory */
     release_mem_base(g_mem_base);
