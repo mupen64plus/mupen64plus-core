@@ -36,7 +36,7 @@ struct file_storage
 int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
 int open_rom_file_storage(struct file_storage* storage, const char* filename);
 void close_file_storage(struct file_storage* storage);
-int create_file_storage_extra_disk(struct file_storage* fstorage);
+int create_file_storage_extra_disk(struct file_storage* fstorage, uint8_t format, uint8_t dev, uint32_t offset_sys, uint32_t offset_id);
 
 extern const struct storage_backend_interface g_ifile_storage;
 extern const struct storage_backend_interface g_ifile_storage_ro;

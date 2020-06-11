@@ -70,13 +70,14 @@ void close_file_storage(struct file_storage* fstorage)
     free((void*)fstorage->extra);
 }
 
-int create_file_storage_extra_disk(struct file_storage* fstorage, uint8_t format, uint32_t offset_sys, uint32_t offset_id)
+int create_file_storage_extra_disk(struct file_storage* fstorage, uint8_t format, uint8_t dev, uint32_t offset_sys, uint32_t offset_id)
 {
     fstorage->extra = malloc(sizeof(struct extra_storage_disk));
     if (fstorage->extra == NULL) {
         return -1;
     }
     ((struct extra_storage_disk*)fstorage->extra)->format = format;
+    ((struct extra_storage_disk*)fstorage->extra)->development = dev;
     ((struct extra_storage_disk*)fstorage->extra)->offset_sys = offset_sys;
     ((struct extra_storage_disk*)fstorage->extra)->offset_id = offset_id;
     return 0;
@@ -147,10 +148,10 @@ static void file_storage_dd_sdk_dump_save(void* storage)
     free(filename);
 }
 
-static struct extra_storage_disk* file_storage_disk_extra(void* storage)
+static void* file_storage_extra(void* storage)
 {
     struct file_storage* fstorage = (struct file_storage*)storage;
-    return (struct extra_storage_disk*)fstorage->extra;
+    return fstorage->extra;
 }
 
 
@@ -186,5 +187,5 @@ const struct storage_backend_interface g_ifile_storage_disk =
     file_storage_data,
     file_storage_size,
     file_storage_dd_sdk_dump_save,
-    file_storage_disk_extra
+    file_storage_extra
 };

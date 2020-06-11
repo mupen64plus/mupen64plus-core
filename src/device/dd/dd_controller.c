@@ -371,8 +371,9 @@ void dd_update_bm(void* opaque)
     }
     /* handle reads (BM mode 1) */
     else {
+        uint8_t dev = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->development;
         /* track 6 fails to read on retail units (XXX: retail test) */
-        if (((dd->regs[DD_ASIC_CUR_TK] & 0x1fff) == 6) && dd->bm_block == 0) {
+        if (((dd->regs[DD_ASIC_CUR_TK] & 0x1fff) == 6) && dd->bm_block == 0 && !dev) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
@@ -449,13 +450,13 @@ void poweron_dd(struct dd_controller* dd)
     dd->rtc.now = 0;
     dd->rtc.last_update_rtc = 0;
 
+    dd->regs[DD_ASIC_ID_REG] = 0x00030000;
     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
     if (dd->idisk != NULL) {
         dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DISK_PRES;
+        if (((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->development)
+            dd->regs[DD_ASIC_ID_REG] = 0x00040000;
     }
-
-    /* XXX: add non retail support */
-    dd->regs[DD_ASIC_ID_REG] = 0x00030000;
 }
 
 void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)

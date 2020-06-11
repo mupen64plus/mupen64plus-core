@@ -1079,19 +1079,81 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
 
     /* FIXME: handle byte swapping */
 
+    /* Search for good System Data */
+    const uint8_t blocks[8] = { 0, 1, 2, 3, 8, 9, 10, 11 };
+    int8_t isValidDisk = -1;
+    uint8_t isDevelopment = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if ((0x4D08 * blocks[i] + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE))
+        {
+            isValidDisk = -1;
+            break;
+        }
+
+        //Disk Type
+        if ((dd_disk->data[0x4D08 * blocks[i] + 0x05] & 0xEF) > 6) continue;
+
+        //IPL Load Block
+        uint16_t ipl_load_blk = ((dd_disk->data[0x4D08 * blocks[i] + 0x06] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x07]);
+        if (ipl_load_blk > 0x10C3 || ipl_load_blk == 0x0000) continue;
+
+        //IPL Load Address
+        uint32_t ipl_load_addr = (dd_disk->data[0x4D08 * blocks[i] + 0x1C] << 24) | (dd_disk->data[0x4D08 * blocks[i] + 0x1D] << 16) |
+            (dd_disk->data[0x4D08 * blocks[i] + 0x1E] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x1F];
+        if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
+
+        //Country Code
+        switch (*(uint32_t*)dd_disk->data)
+        {
+            case DD_REGION_JP:
+            case DD_REGION_US:
+            case DD_REGION_DV:
+                isValidDisk = i;
+        }
+
+        //Verify if sector repeats
+        if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
+        {
+            uint8_t sectorsize = 0xE8;
+            if (blocks[i] == 2 || blocks[i] == 3 || blocks[i] == 10 || blocks[i] == 11)
+                sectorsize = 0xC0;
+
+            for (int j = i; j < 85; j++)
+            {
+                if (memicmp(&dd_disk->data[(blocks[i] * 0x4D08) + (j - 1) * sectorsize], &dd_disk->data[(blocks[i] * 0x4D08) + j * sectorsize], sectorsize) != 0)
+                {
+                    isValidDisk = -1;
+                }
+                else
+                {
+                    isValidDisk = i;
+                }
+            }
+
+            if (isValidDisk)
+                break;
+        }
+
+        if (isValidDisk)
+            break;
+    }
+
+    if (isValidDisk == 2 || isValidDisk == 3 || isValidDisk == 10 || isValidDisk == 11)
+        isDevelopment = 1;
 
     switch (dd_disk->size)
     {
     case MAME_FORMAT_DUMP_SIZE:
         /* already in a compatible format */
         *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, 0, 0x40000);
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, isDevelopment, 0x4D08 * isValidDisk, 0x40000);
         format_desc = "MAME";
         break;
 
     case SDK_FORMAT_DUMP_SIZE: {
         *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, 0, 0x40000);
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, isDevelopment, 0x4D08 * isValidDisk, 0x40000);
         format_desc = "SDK";
         } break;
 

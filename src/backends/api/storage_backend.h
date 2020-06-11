@@ -28,6 +28,7 @@
 struct extra_storage_disk
 {
     uint8_t format;
+    uint8_t development;
     size_t offset_sys;
     size_t offset_id;
 };
