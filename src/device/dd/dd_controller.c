@@ -309,7 +309,7 @@ static void seek_track(struct dd_controller* dd)
     else if (extra->format == DISK_FORMAT_SDK)
     {
         //SDK Format Seek
-        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9);
+        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
         uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
         uint16_t block = dd->bm_block;
         uint16_t sector = dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write;
@@ -317,17 +317,6 @@ static void seek_track(struct dd_controller* dd)
         //dd->bm_zone = LBAToVZone(dd, PhysToLBA(dd, head, track, block));
 
         dd->bm_track_offset = LBAToByte(dd, 0, PhysToLBA(dd, head, track, block)) + sector * sectorsize;
-        /*
-        if (!dd->bm_write)
-        {
-            DebugMessage(M64MSG_ERROR, "DD sector read: format=%02x disk=%08x track=%04x sector=%02x, size=%02x, lba=%d",
-                extra->format, dd->bm_track_offset, (dd->regs[DD_ASIC_CUR_TK] & 0x1fff), sector, sectorsize, PhysToLBA(dd, head, track, block));
-        }
-        else
-        {
-            DebugMessage(M64MSG_ERROR, "DD sector write: format=%02x disk=%08x track=%04x sector=%02x, size=%02x, lba=%d",
-                extra->format, dd->bm_track_offset, (dd->regs[DD_ASIC_CUR_TK] & 0x1fff) | (block * 0x2000), sector, sectorsize, PhysToLBA(dd, head, track, block));
-        }*/
     }
     else //if (extra->format == DISK_FORMAT_D64)
     {
@@ -849,17 +838,6 @@ uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba)
     uint8_t disktype = sys_data[extra->offset_sys + 5] & 0x0F;
 
     const uint16_t OUTERCYL_TBL[8] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425 };
-
-    if (lba == 0)
-    {
-        DebugMessage(M64MSG_ERROR, "Disk Type: %d", disktype);
-        DebugMessage(M64MSG_ERROR, "%02x%02x%02x%02x%02x%02x%02x%02x",
-            sys_data[extra->offset_sys + 0], sys_data[extra->offset_sys + 1], sys_data[extra->offset_sys + 2], sys_data[extra->offset_sys + 3],
-            sys_data[extra->offset_sys + 4], sys_data[extra->offset_sys + 5], sys_data[extra->offset_sys + 6], sys_data[extra->offset_sys + 7]);
-        DebugMessage(M64MSG_ERROR, "%02x%02x%02x%02x%02x%02x%02x%02x",
-            sys_data[extra->offset_sys + 8], sys_data[extra->offset_sys + 9], sys_data[extra->offset_sys + 10], sys_data[extra->offset_sys + 11],
-            sys_data[extra->offset_sys + 12], sys_data[extra->offset_sys + 13], sys_data[extra->offset_sys + 14], sys_data[extra->offset_sys + 15]);
-    }
 
     //Get Block 0/1 on Disk Track
     uint8_t block = 1;
