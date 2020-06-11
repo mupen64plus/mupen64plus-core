@@ -30,16 +30,17 @@ struct file_storage
     uint8_t* data;
     size_t size;
     const char* filename;
+    void* extra;
 };
-
 
 int open_file_storage(struct file_storage* storage, size_t size, const char* filename);
 int open_rom_file_storage(struct file_storage* storage, const char* filename);
 void close_file_storage(struct file_storage* storage);
+int create_file_storage_extra_disk(struct file_storage* fstorage);
 
 extern const struct storage_backend_interface g_ifile_storage;
 extern const struct storage_backend_interface g_ifile_storage_ro;
 extern const struct storage_backend_interface g_isubfile_storage;
-extern const struct storage_backend_interface g_ifile_storage_dd_sdk_dump;
+extern const struct storage_backend_interface g_ifile_storage_disk;
 
 #endif

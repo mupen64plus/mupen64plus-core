@@ -25,6 +25,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+struct extra_storage_disk
+{
+    uint8_t format;
+    size_t offset_sys;
+    size_t offset_id;
+};
+
 struct storage_backend_interface
 {
     /* Returns a pointer to storage data
@@ -38,6 +45,10 @@ struct storage_backend_interface
     /* Notify the storage backend that data should be persisted
      */
     void (*save)(void* storage);
+
+    /* Returns a pointer to extra storage data
+     */
+    void* (*extra)(void* storage);
 };
 
 #endif

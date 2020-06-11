@@ -38,6 +38,11 @@ struct storage_backend_interface;
 
 #define DD_REGION_JP UINT32_C(0xe848d316)
 #define DD_REGION_US UINT32_C(0x2263ee56)
+#define DD_REGION_DV UINT32_C(0x00000000)
+
+#define DISK_FORMAT_MAME      0
+#define DISK_FORMAT_SDK       1
+#define DISK_FORMAT_D64       2
 
 enum dd_registers {
     DD_ASIC_DATA,
@@ -96,6 +101,7 @@ struct dd_controller
     /* DD Disk */
     void* disk;
     const struct storage_backend_interface* idisk;
+    uint16_t lba_phys_table[0x10DC];
 
     struct r4300_core* r4300;
 };
@@ -131,8 +137,11 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
 void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address);
 void dd_update_bm(void* opaque);
 
-/* Disk conversion routines */
-void dd_convert_to_mame(unsigned char* mame_disk, const unsigned char* sdk_disk);
-void dd_convert_to_sdk (const unsigned char* mame_disk, unsigned char* sdk_disk);
+/* Disk Helper routines */
+void GenerateLBAToPhysTable(struct dd_controller* dd);
+uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba);
+uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas);
+uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba);
+uint32_t PhysToLBA(struct dd_controller* dd, uint16_t head, uint16_t track, uint16_t block);
 
 #endif

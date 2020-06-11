@@ -105,6 +105,9 @@ static const unsigned int zone_sec_size[16] = {
     232, 216, 208, 192, 176, 160, 144, 128,
     216, 208, 192, 176, 160, 144, 128, 112
 };
+static const unsigned int zone_sec_size_phys[9] = {
+    232, 216, 208, 192, 176, 160, 144, 128, 112
+};
 
 static const uint32_t ZoneTracks[16] = {
     158, 158, 149, 149, 149, 149, 149, 114,
@@ -137,14 +140,40 @@ static const uint32_t StartBlock[7][16] = {
     { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0 },
     { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1 }
 };
+const uint16_t VZoneLBATable[7][16] = {
+    {0x0124, 0x0248, 0x035A, 0x047E, 0x05A2, 0x06B4, 0x07C6, 0x08D8, 0x09EA, 0x0AB6, 0x0B82, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x06A2, 0x07C6, 0x08D8, 0x09EA, 0x0AFC, 0x0BC8, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08C6, 0x09EA, 0x0AFC, 0x0C0E, 0x0CDA, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AEA, 0x0C0E, 0x0D20, 0x0DEC, 0x0EB8, 0x0FCA, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AD8, 0x0BEA, 0x0D0E, 0x0E32, 0x0EFE, 0x0FCA, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x0980, 0x0A92, 0x0BA4, 0x0CB6, 0x0DC8, 0x0EEC, 0x1010, 0x10DC},
+    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x093A, 0x0A4C, 0x0B5E, 0x0C70, 0x0D82, 0x0E94, 0x0FB8, 0x10DC}
+};
+const uint16_t TrackZoneTable[2][8] = {
+    {0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425},
+    {0x091, 0x12F, 0x1C4, 0x259, 0x2EE, 0x383, 0x418, 0x48A}
+};
+const uint8_t VZONE_PZONE_TBL[7][16] = {
+    {0x0, 0x1, 0x2, 0x9, 0x8, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA},
+    {0x0, 0x1, 0x2, 0x3, 0xA, 0x9, 0x8, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB},
+    {0x0, 0x1, 0x2, 0x3, 0x4, 0xB, 0xA, 0x9, 0x8, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC},
+    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xC, 0xB, 0xA, 0x9, 0x8, 0x6, 0x7, 0xF, 0xE, 0xD},
+    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0xF, 0xE},
+    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0xF},
+    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8}
+};
 
 
 #define BLOCKSIZE(_zone) zone_sec_size[_zone] * SECTORS_PER_BLOCK
 #define TRACKSIZE(_zone) BLOCKSIZE(_zone) * BLOCKS_PER_TRACK
 #define ZONESIZE(_zone) TRACKSIZE(_zone) * ZoneTracks[_zone]
 #define VZONESIZE(_zone) TRACKSIZE(_zone) * (ZoneTracks[_zone] - 0xC)
+#define VZoneToPZone(x, y) VZONE_PZONE_TBL[y][x]
 
-
+#define MAX_LBA             0x10DB
+#define SIZE_LBA            MAX_LBA+1
+#define SYSTEM_LBAS         24
+#define DISKID_LBA          14
 
 
 
@@ -198,11 +227,17 @@ static void read_C2(struct dd_controller* dd)
 
 static void read_sector(struct dd_controller* dd)
 {
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
+
     size_t i;
     const uint8_t* disk_mem = dd->idisk->data(dd->disk);
     size_t offset = dd->bm_track_offset
         + dd->bm_block * BLOCKSIZE(dd->bm_zone)
         + dd->regs[DD_ASIC_CUR_SECTOR] * (dd->regs[DD_ASIC_HOST_SECBYTE] + 1);
+
+    if (extra->format != DISK_FORMAT_MAME)
+        offset = dd->bm_track_offset;
+
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
     for (i = 0; i < length; ++i) {
@@ -212,12 +247,20 @@ static void read_sector(struct dd_controller* dd)
 
 static void write_sector(struct dd_controller* dd)
 {
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
+
     size_t i;
     uint8_t* disk_mem = dd->idisk->data(dd->disk);
     size_t offset = dd->bm_track_offset
         + dd->bm_block * BLOCKSIZE(dd->bm_zone)
         + (dd->regs[DD_ASIC_CUR_SECTOR] - 1) * zone_sec_size[dd->bm_zone];
     size_t length = zone_sec_size[dd->bm_zone];
+
+    if (extra->format != DISK_FORMAT_MAME)
+    {
+        offset = dd->bm_track_offset;
+        length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+    }
 
 	for (i = 0; i < length; ++i) {
 		disk_mem[offset + i] = dd->ds_buf[i ^ 3];
@@ -230,36 +273,66 @@ static void write_sector(struct dd_controller* dd)
 
 static void seek_track(struct dd_controller* dd)
 {
-    static const unsigned int start_offset[] = {
-        0x0000000, 0x05f15e0, 0x0b79d00, 0x10801a0,
-        0x1523720, 0x1963d80, 0x1d414c0, 0x20bbce0,
-        0x23196e0, 0x28a1e00, 0x2df5dc0, 0x3299340,
-        0x36d99a0, 0x3ab70e0, 0x3e31900, 0x4149200
-    };
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
 
-    static const unsigned int tracks[] = {
-        0x000, 0x09e, 0x13c, 0x1d1, 0x266, 0x2fb, 0x390, 0x425
-    };
+    if (extra->format == DISK_FORMAT_MAME)
+    {
+        //MAME Format Seek
+        static const unsigned int start_offset[] = {
+            0x0000000, 0x05f15e0, 0x0b79d00, 0x10801a0,
+            0x1523720, 0x1963d80, 0x1d414c0, 0x20bbce0,
+            0x23196e0, 0x28a1e00, 0x2df5dc0, 0x3299340,
+            0x36d99a0, 0x3ab70e0, 0x3e31900, 0x4149200
+        };
 
-	unsigned int tr_off;
-	unsigned int head_x_8 = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9);
-	unsigned int track    =  (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
+        static const unsigned int tracks[] = {
+            0x000, 0x09e, 0x13c, 0x1d1, 0x266, 0x2fb, 0x390, 0x425
+        };
 
-    /* find track bm_zone */
-    for (dd->bm_zone = 7; dd->bm_zone > 0; --dd->bm_zone) {
-        if (track >= tracks[dd->bm_zone]) {
-            break;
+        unsigned int tr_off;
+        unsigned int head_x_8 = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9);
+        unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
+
+        /* find track bm_zone */
+        for (dd->bm_zone = 7; dd->bm_zone > 0; --dd->bm_zone) {
+            if (track >= tracks[dd->bm_zone]) {
+                break;
+            }
         }
+
+        tr_off = track - tracks[dd->bm_zone];
+
+        /* set zone and track offset */
+        dd->bm_zone += head_x_8;
+        dd->bm_track_offset = start_offset[dd->bm_zone] + tr_off * TRACKSIZE(dd->bm_zone);
     }
+    else if (extra->format == DISK_FORMAT_SDK)
+    {
+        //SDK Format Seek
+        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9);
+        uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
+        uint16_t block = dd->bm_block;
+        uint16_t sector = dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write;
+        uint16_t sectorsize = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+        //dd->bm_zone = LBAToVZone(dd, PhysToLBA(dd, head, track, block));
 
-    tr_off = track - tracks[dd->bm_zone];
-
-    /* set zone and track offset */
-    dd->bm_zone += head_x_8;
-	dd->bm_track_offset = start_offset[dd->bm_zone] + tr_off * TRACKSIZE(dd->bm_zone);
-
-    /* lock track */
-    dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
+        dd->bm_track_offset = LBAToByte(dd, 0, PhysToLBA(dd, head, track, block)) + sector * sectorsize;
+        /*
+        if (!dd->bm_write)
+        {
+            DebugMessage(M64MSG_ERROR, "DD sector read: format=%02x disk=%08x track=%04x sector=%02x, size=%02x, lba=%d",
+                extra->format, dd->bm_track_offset, (dd->regs[DD_ASIC_CUR_TK] & 0x1fff), sector, sectorsize, PhysToLBA(dd, head, track, block));
+        }
+        else
+        {
+            DebugMessage(M64MSG_ERROR, "DD sector write: format=%02x disk=%08x track=%04x sector=%02x, size=%02x, lba=%d",
+                extra->format, dd->bm_track_offset, (dd->regs[DD_ASIC_CUR_TK] & 0x1fff) | (block * 0x2000), sector, sectorsize, PhysToLBA(dd, head, track, block));
+        }*/
+    }
+    else //if (extra->format == DISK_FORMAT_D64)
+    {
+        //D64 Format Seek
+    }
 }
 
 void dd_update_bm(void* opaque)
@@ -280,6 +353,7 @@ void dd_update_bm(void* opaque)
         }
         /* subsequent sectors: write previous sector */
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+            seek_track(dd);
             write_sector(dd);
             ++dd->regs[DD_ASIC_CUR_SECTOR];
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
@@ -288,6 +362,7 @@ void dd_update_bm(void* opaque)
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 1) {
             /* continue to next block */
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
+                seek_track(dd);
                 write_sector(dd);
                 dd->bm_block = 1 - dd->bm_block;
                 dd->regs[DD_ASIC_CUR_SECTOR] = 1;
@@ -295,6 +370,7 @@ void dd_update_bm(void* opaque)
                 dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
             /* quit writing after second block */
             } else {
+                seek_track(dd);
                 write_sector(dd);
                 ++dd->regs[DD_ASIC_CUR_SECTOR];
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
@@ -313,6 +389,7 @@ void dd_update_bm(void* opaque)
         }
         /* data sectors : read sector and signal BM interrupt */
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+            seek_track(dd);
             read_sector(dd);
             ++dd->regs[DD_ASIC_CUR_SECTOR];
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
@@ -361,6 +438,8 @@ void init_dd(struct dd_controller* dd,
 
     dd->disk = disk;
     dd->idisk = idisk;
+
+    GenerateLBAToPhysTable(dd);
 
     dd->r4300 = r4300;
 }
@@ -464,7 +543,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         case 0x01:
         case 0x02:
             dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA] >> 16;
-            seek_track(dd);
+            /* lock track */
+            dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
             dd->bm_write = (value >> 17) & 0x1;
             break;
 
@@ -694,232 +774,157 @@ void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address)
     }
 }
 
-
-/* Disk conversion routines */
-void dd_convert_to_mame(unsigned char* mame_disk, const unsigned char* sdk_disk)
+/* Disk Helper routines */
+void GenerateLBAToPhysTable(struct dd_controller* dd)
 {
-    /* Original code by Happy_ */
-    uint8_t system_data[DD_DISK_SYSTEM_DATA_SIZE];
-    uint8_t block_data[2][0x100 * SECTORS_PER_BLOCK];
+    //For SDK and D64 formats
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
 
-    uint32_t disktype = 0;
-    uint32_t zone, track = 0;
-    int32_t atrack = 0;
-    int32_t block = 0;
-    uint32_t InOffset, OutOffset = 0;
-    uint32_t InStart[16];
-    uint32_t OutStart[16];
+    if (extra->format == DISK_FORMAT_MAME)
+        return;
 
-    int cur_offset = 0;
-
-
-    /* Read System Area */
-    memcpy(system_data, sdk_disk, DD_DISK_SYSTEM_DATA_SIZE);
-    disktype = system_data[5] & 0xf;
-
-    /* Prepare Input Offsets */
-    InStart[0] = 0;
-    for (zone = 1; zone < 16; ++zone) {
-        InStart[zone] = InStart[zone - 1] + VZONESIZE(DiskTypeZones[disktype][zone - 1]);
-    }
-
-    /* Prepare Output Offsets */
-    OutStart[0] = 0;
-    for (zone = 1; zone < 16; ++zone) {
-        OutStart[zone] = OutStart[zone - 1] + ZONESIZE(zone - 1);
-    }
-
-    /* Copy Head 0 */
-    for (zone = 0; zone < 8; zone++)
+    for (uint32_t lba = 0; lba < SIZE_LBA; lba++)
     {
-        OutOffset = OutStart[zone];
-        InOffset = InStart[RevDiskTypeZones[disktype][zone]];
-        cur_offset = InOffset;
-
-        block = StartBlock[disktype][zone];
-        atrack = 0;
-        for (track = 0; track < ZoneTracks[zone]; track++)
-        {
-            if (atrack < 0xC && track == system_data[0x20 + zone * 0xC + atrack])
-            {
-                memset((void *)(&block_data[0]), 0, BLOCKSIZE(zone));
-                memset((void *)(&block_data[1]), 0, BLOCKSIZE(zone));
-                atrack += 1;
-            }
-            else
-            {
-                if ((block % 2) == 1)
-                {
-                    memcpy(block_data[1], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                    memcpy(block_data[0], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                }
-                else
-                {
-                    memcpy(block_data[0], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                    memcpy(block_data[1], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                }
-                block = 1 - block;
-            }
-            memcpy(mame_disk + OutOffset, &block_data[0], BLOCKSIZE(zone));
-            OutOffset += BLOCKSIZE(zone);
-            memcpy(mame_disk + OutOffset, &block_data[1], BLOCKSIZE(zone));
-            OutOffset += BLOCKSIZE(zone);
-        }
-    }
-
-    /* Copy Head 1 */
-    for (zone = 8; zone < 16; zone++)
-    {
-        InOffset = InStart[RevDiskTypeZones[disktype][zone]];
-        cur_offset = InOffset;
-
-        block = StartBlock[disktype][zone];
-        atrack = 0xB;
-        for (track = 1; track < ZoneTracks[zone] + 1; track++)
-        {
-            if (atrack > -1 && (ZoneTracks[zone] - track) == system_data[0x20 + (zone)* 0xC + atrack])
-            {
-                memset((void *)(&block_data[0]), 0, BLOCKSIZE(zone));
-                memset((void *)(&block_data[1]), 0, BLOCKSIZE(zone));
-                atrack -= 1;
-            }
-            else
-            {
-                if ((block % 2) == 1)
-                {
-                    memcpy(block_data[1], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                    memcpy(block_data[0], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                }
-                else
-                {
-                    memcpy(block_data[0], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                    memcpy(block_data[1], sdk_disk + cur_offset, BLOCKSIZE(zone));
-                    cur_offset += BLOCKSIZE(zone);
-                }
-                block = 1 - block;
-            }
-            OutOffset = OutStart[zone] + (ZoneTracks[zone] - track) * TRACKSIZE(zone);
-            memcpy(mame_disk + OutOffset, &block_data[0], BLOCKSIZE(zone));
-            OutOffset += BLOCKSIZE(zone);
-            memcpy(mame_disk + OutOffset, &block_data[1], BLOCKSIZE(zone));
-            OutOffset += BLOCKSIZE(zone);
-        }
+        dd->lba_phys_table[lba] = LBAToPhys(dd, lba);
     }
 }
 
-void dd_convert_to_sdk(const unsigned char* mame_disk, unsigned char* sdk_disk)
+uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba)
 {
-    /* Original code by Happy_ */
-    uint8_t system_data[DD_DISK_SYSTEM_DATA_SIZE];
-    uint8_t block_data[2][0x100 * SECTORS_PER_BLOCK];
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
+    const uint8_t* sys_data = dd->idisk->data(dd->disk);
 
-    uint32_t disktype = 0;
-    uint32_t zone, track = 0;
-    int32_t atrack = 0;
-    int32_t block = 0;
-    uint32_t InOffset, OutOffset = 0;
-    uint32_t InStart[16];
-    uint32_t OutStart[16];
-
-
-    /* Read System Area */
-    memcpy(system_data, mame_disk, DD_DISK_SYSTEM_DATA_SIZE);
-    disktype = system_data[5] & 0xf;
-
-    /* Prepare Input Offsets */
-    InStart[0] = 0;
-    for (zone = 1; zone < 16; ++zone) {
-        InStart[zone] = InStart[zone - 1] + VZONESIZE(DiskTypeZones[disktype][zone - 1]);
+    for (uint32_t vzone = 0; vzone < 16; vzone++) {
+        if (lba < VZoneLBATable[sys_data[5 + extra->offset_sys] & 0x0F][vzone]) {
+            return vzone;
+        }
     }
+    return -1;
+}
 
-    /* Prepare Output Offsets */
-    OutStart[0] = 0;
-    for (zone = 1; zone < 16; ++zone) {
-        OutStart[zone] = OutStart[zone - 1] + ZONESIZE(zone - 1);
-    }
+uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas)
+{
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
+    const uint8_t* sys_data = dd->idisk->data(dd->disk);
 
-    /* Copy Head 0 */
-    for (zone = 0; zone < 8; zone++)
+    uint8_t init_flag = 1;
+    uint32_t totalbytes = 0;
+    uint32_t blocksize = 0;
+    uint32_t vzone, pzone = 0;
+
+    uint8_t disktype = sys_data[5 + extra->offset_sys] & 0x0F;
+
+    if (nlbas != 0)
     {
-        block = StartBlock[disktype][zone];
-        atrack = 0;
-        for (track = 0; track < ZoneTracks[zone]; track++)
+        for (; nlbas != 0; nlbas--)
         {
-            InOffset = OutStart[zone] + (track)* TRACKSIZE(zone);
-            OutOffset = InStart[RevDiskTypeZones[disktype][zone]] + (track - atrack) * TRACKSIZE(zone);
-
-            if (atrack < 0xC && track == system_data[0x20 + zone * 0xC + atrack])
+            if ((init_flag == 1) || (VZoneLBATable[disktype][vzone] == lba))
             {
-                atrack += 1;
+                vzone = LBAToVZone(dd, lba);
+                pzone = VZoneToPZone(vzone, disktype);
+                if (7 < pzone)
+                {
+                    pzone -= 7;
+                }
+                blocksize = zone_sec_size_phys[pzone] * SECTORS_PER_BLOCK;
             }
-            else
+
+            totalbytes += blocksize;
+            lba++;
+            init_flag = 0;
+            if ((nlbas != 0) && (lba > MAX_LBA))
             {
-                if ((block % 2) == 1)
-                {
-                    memcpy(&block_data[1], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                    memcpy(&block_data[0], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                }
-                else
-                {
-                    memcpy(&block_data[0], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                    memcpy(&block_data[1], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                }
-                block = 1 - block;
-                memcpy(sdk_disk + OutOffset, &block_data[0], BLOCKSIZE(zone));
-                OutOffset += BLOCKSIZE(zone);
-                memcpy(sdk_disk + OutOffset, &block_data[1], BLOCKSIZE(zone));
-                OutOffset += BLOCKSIZE(zone);
+                return 0xFFFFFFFF;
             }
         }
     }
 
-    /* Copy Head 1 */
-    for (zone = 8; zone < 16; zone++)
-    {
-        block = StartBlock[disktype][zone];
-        atrack = 0xB;
-        for (track = 1; track < ZoneTracks[zone] + 1; track++)
-        {
-            InOffset = OutStart[zone] + (ZoneTracks[zone] - track) * TRACKSIZE(zone);
-            OutOffset = InStart[RevDiskTypeZones[disktype][zone]] + (track - (0xB - atrack) - 1) * TRACKSIZE(zone);
+    return totalbytes;
+}
 
-            if (atrack > -1 && (ZoneTracks[zone] - track) == system_data[0x20 + (zone)* 0xC + atrack])
-            {
-                atrack -= 1;
-            }
-            else
-            {
-                if ((block % 2) == 1)
-                {
-                    memcpy(&block_data[1], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                    memcpy(&block_data[0], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                }
-                else
-                {
-                    memcpy(&block_data[0], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                    memcpy(&block_data[1], mame_disk + InOffset, BLOCKSIZE(zone));
-                    InOffset += BLOCKSIZE(zone);
-                }
-                block = 1 - block;
-                memcpy(sdk_disk + OutOffset, &block_data[0], BLOCKSIZE(zone));
-                OutOffset += BLOCKSIZE(zone);
-                memcpy(sdk_disk + OutOffset, &block_data[1], BLOCKSIZE(zone));
-                OutOffset += BLOCKSIZE(zone);
-            }
+uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba)
+{
+    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
+    const uint8_t* sys_data = dd->idisk->data(dd->disk);
+    uint8_t disktype = sys_data[extra->offset_sys + 5] & 0x0F;
+
+    const uint16_t OUTERCYL_TBL[8] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425 };
+
+    if (lba == 0)
+    {
+        DebugMessage(M64MSG_ERROR, "Disk Type: %d", disktype);
+        DebugMessage(M64MSG_ERROR, "%02x%02x%02x%02x%02x%02x%02x%02x",
+            sys_data[extra->offset_sys + 0], sys_data[extra->offset_sys + 1], sys_data[extra->offset_sys + 2], sys_data[extra->offset_sys + 3],
+            sys_data[extra->offset_sys + 4], sys_data[extra->offset_sys + 5], sys_data[extra->offset_sys + 6], sys_data[extra->offset_sys + 7]);
+        DebugMessage(M64MSG_ERROR, "%02x%02x%02x%02x%02x%02x%02x%02x",
+            sys_data[extra->offset_sys + 8], sys_data[extra->offset_sys + 9], sys_data[extra->offset_sys + 10], sys_data[extra->offset_sys + 11],
+            sys_data[extra->offset_sys + 12], sys_data[extra->offset_sys + 13], sys_data[extra->offset_sys + 14], sys_data[extra->offset_sys + 15]);
+    }
+
+    //Get Block 0/1 on Disk Track
+    uint8_t block = 1;
+    if (((lba & 3) == 0) || ((lba & 3) == 3))
+        block = 0;
+
+    //Get Virtual & Physical Disk Zones
+    uint16_t vzone = LBAToVZone(dd, lba);
+    uint16_t pzone = VZoneToPZone(vzone, disktype);
+
+    //Get Disk Head
+    uint16_t head = (7 < pzone);
+
+    //Get Disk Zone
+    uint16_t disk_zone = pzone;
+    if (disk_zone != 0)
+        disk_zone = pzone - 7;
+
+    //Get Virtual Zone LBA start, if Zone 0, it's LBA 0
+    uint16_t vzone_lba = 0;
+    if (vzone != 0)
+        vzone_lba = VZoneLBATable[disktype][vzone - 1];
+
+    //Calculate Physical Track
+    uint16_t track = (lba - vzone_lba) >> 1;
+
+    //Get the start track from current zone
+    uint16_t track_zone_start = TrackZoneTable[0][pzone];
+    if (head != 0)
+    {
+        //If Head 1, count from the other way around
+        track = -track;
+        track_zone_start = OUTERCYL_TBL[disk_zone - 1];
+    }
+    track += TrackZoneTable[0][pzone];
+
+    //Get the relative offset to defect tracks for the current zone (if Zone 0, then it's 0)
+    uint16_t defect_offset = 0;
+    if (pzone != 0)
+        defect_offset = sys_data[extra->offset_sys + (8 + pzone - 1)];
+
+    //Get amount of defect tracks for the current zone
+    uint16_t defect_amount = sys_data[extra->offset_sys + (8 + pzone)] - defect_offset;
+
+    //Skip defect tracks
+    while ((defect_amount != 0) && ((sys_data[extra->offset_sys + (0x20 + defect_offset)] + track_zone_start) <= track))
+    {
+        track++;
+        defect_offset++;
+        defect_amount--;
+    }
+
+    return track | (head * 0x1000) | (block * 0x2000);
+}
+
+uint32_t PhysToLBA(struct dd_controller* dd, uint16_t head, uint16_t track, uint16_t block)
+{
+    uint16_t expectedvalue = track | (head * 0x1000) | (block * 0x2000);
+
+    for (uint16_t lba = 0; lba < SIZE_LBA; lba++)
+    {
+        if (dd->lba_phys_table[lba] == expectedvalue)
+        {
+            return lba;
         }
     }
+    return 0xFFFF;
 }

@@ -34,6 +34,7 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     /* ! Take ownership of filename ! */
     fstorage->filename = filename;
     fstorage->size = size;
+    fstorage->extra = NULL;
 
     /* allocate memory for holding data */
     fstorage->data = malloc(fstorage->size);
@@ -50,6 +51,7 @@ int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
     fstorage->data = NULL;
     fstorage->size = 0;
     fstorage->filename = NULL;
+    fstorage->extra = NULL;
 
     file_status_t err = load_file(filename, (void**)&fstorage->data, &fstorage->size);
 
@@ -65,6 +67,19 @@ void close_file_storage(struct file_storage* fstorage)
 {
     free((void*)fstorage->data);
     free((void*)fstorage->filename);
+    free((void*)fstorage->extra);
+}
+
+int create_file_storage_extra_disk(struct file_storage* fstorage, uint8_t format, uint32_t offset_sys, uint32_t offset_id)
+{
+    fstorage->extra = malloc(sizeof(struct extra_storage_disk));
+    if (fstorage->extra == NULL) {
+        return -1;
+    }
+    ((struct extra_storage_disk*)fstorage->extra)->format = format;
+    ((struct extra_storage_disk*)fstorage->extra)->offset_sys = offset_sys;
+    ((struct extra_storage_disk*)fstorage->extra)->offset_id = offset_id;
+    return 0;
 }
 
 
@@ -115,7 +130,7 @@ static void file_storage_dd_sdk_dump_save(void* storage)
         return;
     }
 
-    dd_convert_to_sdk(fstorage->data, sdk_buffer);
+    //dd_convert_to_sdk(fstorage->data, sdk_buffer);
 
     switch(write_to_file(filename, sdk_buffer, SDK_FORMAT_DUMP_SIZE))
     {
@@ -132,13 +147,21 @@ static void file_storage_dd_sdk_dump_save(void* storage)
     free(filename);
 }
 
+static struct extra_storage_disk* file_storage_disk_extra(void* storage)
+{
+    struct file_storage* fstorage = (struct file_storage*)storage;
+    return (struct extra_storage_disk*)fstorage->extra;
+}
+
+
 
 
 const struct storage_backend_interface g_ifile_storage =
 {
     file_storage_data,
     file_storage_size,
-    file_storage_save
+    file_storage_save,
+    NULL
 };
 
 
@@ -146,6 +169,7 @@ const struct storage_backend_interface g_ifile_storage_ro =
 {
     file_storage_data,
     file_storage_size,
+    NULL,
     NULL
 };
 
@@ -153,12 +177,14 @@ const struct storage_backend_interface g_isubfile_storage =
 {
     file_storage_data,
     file_storage_size,
-    file_storage_parent_save
+    file_storage_parent_save,
+    NULL
 };
 
-const struct storage_backend_interface g_ifile_storage_dd_sdk_dump =
+const struct storage_backend_interface g_ifile_storage_disk =
 {
     file_storage_data,
     file_storage_size,
-    file_storage_dd_sdk_dump_save
+    file_storage_dd_sdk_dump_save,
+    file_storage_disk_extra
 };

@@ -1084,24 +1084,14 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     {
     case MAME_FORMAT_DUMP_SIZE:
         /* already in a compatible format */
-        *dd_idisk = &g_ifile_storage;
+        *dd_idisk = &g_ifile_storage_disk;
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, 0, 0x40000);
         format_desc = "MAME";
         break;
 
     case SDK_FORMAT_DUMP_SIZE: {
-        /* convert to mame format */
-        uint8_t* buffer = malloc(MAME_FORMAT_DUMP_SIZE);
-        if (buffer == NULL) {
-            DebugMessage(M64MSG_ERROR, "Failed to allocate memory for MAME disk dump");
-            close_file_storage(dd_disk);
-            goto no_disk;
-        }
-
-        dd_convert_to_mame(buffer, dd_disk->data);
-        free(dd_disk->data);
-        dd_disk->data = buffer;
-        dd_disk->size = MAME_FORMAT_DUMP_SIZE;
-        *dd_idisk = &g_ifile_storage_dd_sdk_dump;
+        *dd_idisk = &g_ifile_storage_disk;
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, 0, 0x40000);
         format_desc = "SDK";
         } break;
 
