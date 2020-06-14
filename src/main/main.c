@@ -1082,6 +1082,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     /* Search for good System Data */
     const uint8_t blocks[8] = { 0, 1, 2, 3, 8, 9, 10, 11 };
     int8_t isValidDisk = -1;
+    int8_t isValidDiskID = -1;
     uint8_t isDevelopment = 0;
     for (int i = 0; i < 8; i++)
     {
@@ -1103,64 +1104,101 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             (dd_disk->data[0x4D08 * blocks[i] + 0x1E] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x1F];
         if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
 
-        //Country Code
-        switch (*(uint32_t*)dd_disk->data)
+        //Country Code (Big Endian)
+        uint32_t disk_region = (dd_disk->data[0x4D08 * blocks[i] + 0x00] << 24) | (dd_disk->data[0x4D08 * blocks[i] + 0x01] << 16) |
+            (dd_disk->data[0x4D08 * blocks[i] + 0x02] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x03];
+        switch (disk_region)
         {
-            case DD_REGION_JP:
-            case DD_REGION_US:
-            case DD_REGION_DV:
-                isValidDisk = i;
+        case DD_REGION_JP:
+        case DD_REGION_US:
+        case DD_REGION_DV:
+            //isValidDisk = i;
+            break;
+        default:
+            continue;
         }
 
         //Verify if sector repeats
         if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
         {
             uint8_t sectorsize = 0xE8;
+
+            //Development System Data
             if (blocks[i] == 2 || blocks[i] == 3 || blocks[i] == 10 || blocks[i] == 11)
                 sectorsize = 0xC0;
 
-            for (int j = i; j < 85; j++)
+            for (int j = 1; j < 85; j++)
             {
-                if (memicmp(&dd_disk->data[(blocks[i] * 0x4D08) + (j - 1) * sectorsize], &dd_disk->data[(blocks[i] * 0x4D08) + j * sectorsize], sectorsize) != 0)
+                if (memicmp(&dd_disk->data[(blocks[i] * 0x4D08) + ((j - 1) * sectorsize)], &dd_disk->data[(blocks[i] * 0x4D08) + (j * sectorsize)], sectorsize) != 0)
                 {
                     isValidDisk = -1;
+                    break;
                 }
                 else
                 {
                     isValidDisk = i;
                 }
             }
-
-            if (isValidDisk)
-                break;
         }
 
-        if (isValidDisk)
+        if (isValidDisk != -1)
             break;
     }
 
     if (isValidDisk == 2 || isValidDisk == 3 || isValidDisk == 10 || isValidDisk == 11)
         isDevelopment = 1;
 
+    if (isValidDisk == -1)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid System Data for DD Disk: %s.", dd_disk_filename);
+        goto wrong_disk_format;
+    }
+
+    //Check Disk ID
+    //Verify if sector repeats
+    for (int i = 14; i < 16; i++)
+    {
+        for (int j = 1; j < 85; j++)
+        {
+            if (memicmp(&dd_disk->data[(i * 0x4D08) + (j - 1) * 0xE8], &dd_disk->data[(i * 0x4D08) + j * 0xE8], 0xE8) != 0)
+            {
+                isValidDiskID = -1;
+                break;
+            }
+            else
+            {
+                isValidDiskID = i;
+            }
+        }
+
+        if (isValidDiskID != -1)
+            break;
+    }
+
+    if (isValidDiskID == -1)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid Disk ID Data for DD Disk: %s.", dd_disk_filename);
+        goto wrong_disk_format;
+    }
+
     switch (dd_disk->size)
     {
     case MAME_FORMAT_DUMP_SIZE:
         /* already in a compatible format */
         *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, isDevelopment, 0x4D08 * isValidDisk, 0x40000);
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, isDevelopment, 0x4D08 * isValidDisk, 0x4D08 * isValidDiskID);
         format_desc = "MAME";
         break;
 
     case SDK_FORMAT_DUMP_SIZE: {
         *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, isDevelopment, 0x4D08 * isValidDisk, 0x40000);
+        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, isDevelopment, 0x4D08 * isValidDisk, 0x4D08 * isValidDiskID);
         format_desc = "SDK";
         } break;
 
     default:
         DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t) dd_disk->size);
-        close_file_storage(dd_disk);
-        goto no_disk;
+        goto wrong_disk_format;
     }
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
@@ -1169,12 +1207,13 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             format_desc);
 
     uint32_t w = *(uint32_t*)dd_disk->data;
-    if (w == DD_REGION_JP || w == DD_REGION_US) {
+    if (w == DD_REGION_JP || w == DD_REGION_US || w == DD_REGION_DV) {
         DebugMessage(M64MSG_WARNING, "Loading a saved disk ");
     }
 
     return;
-
+wrong_disk_format:
+    close_file_storage(dd_disk);
 no_disk:
     free(dd_disk_filename);
     *dd_idisk = NULL;
