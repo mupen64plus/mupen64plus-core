@@ -1086,7 +1086,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     uint8_t isDevelopment = 0;
     for (int i = 0; i < 8; i++)
     {
-        if ((0x4D08 * blocks[i] + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE))
+        if ((0x4D08 * blocks[i] + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE && i > 0))
         {
             isValidDisk = -1;
             break;
@@ -1104,7 +1104,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             (dd_disk->data[0x4D08 * blocks[i] + 0x1E] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x1F];
         if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
 
-        //Country Code (Big Endian)
+        //Country Code
         uint32_t disk_region = (dd_disk->data[0x4D08 * blocks[i] + 0x00] << 24) | (dd_disk->data[0x4D08 * blocks[i] + 0x01] << 16) |
             (dd_disk->data[0x4D08 * blocks[i] + 0x02] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x03];
         switch (disk_region)
@@ -1112,7 +1112,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         case DD_REGION_JP:
         case DD_REGION_US:
         case DD_REGION_DV:
-            //isValidDisk = i;
+            isValidDisk = i;
             break;
         default:
             continue;
@@ -1154,31 +1154,97 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         goto wrong_disk_format;
     }
 
-    //Check Disk ID
-    //Verify if sector repeats
-    for (int i = 14; i < 16; i++)
+    if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
     {
-        for (int j = 1; j < 85; j++)
+        //Check Disk ID
+        //Verify if sector repeats
+        for (int i = 14; i < 16; i++)
         {
-            if (memicmp(&dd_disk->data[(i * 0x4D08) + (j - 1) * 0xE8], &dd_disk->data[(i * 0x4D08) + j * 0xE8], 0xE8) != 0)
+            for (int j = 1; j < 85; j++)
             {
-                isValidDiskID = -1;
+                if (memicmp(&dd_disk->data[(i * 0x4D08) + (j - 1) * 0xE8], &dd_disk->data[(i * 0x4D08) + j * 0xE8], 0xE8) != 0)
+                {
+                    isValidDiskID = -1;
+                    break;
+                }
+                else
+                {
+                    isValidDiskID = i;
+                }
+            }
+
+            if (isValidDiskID != -1)
                 break;
+        }
+
+        if (isValidDiskID == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Invalid Disk ID Data for DD Disk: %s.", dd_disk_filename);
+            goto wrong_disk_format;
+        }
+    }
+    else
+    {
+        //Check D64 File Size
+        const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
+        const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
+        
+        uint16_t rom_lba_end = (dd_disk->data[0xE0] << 8) | dd_disk->data[0xE1];
+        uint16_t ram_lba_start = (dd_disk->data[0xE2] << 8) | dd_disk->data[0xE3];
+        uint16_t ram_lba_end = (dd_disk->data[0xE4] << 8) | dd_disk->data[0xE5];
+        uint8_t disk_type = dd_disk->data[5] & 0x0F;
+        size_t rom_size = LBAToByteA(disk_type, 24, rom_lba_end + 1);
+        size_t ram_size = 0;
+        if (ram_lba_start != 0xFFFF && ram_lba_end != 0xFFFF)
+            ram_size = LBAToByteA(disk_type, 24 + ram_lba_start, ram_lba_end + 1 - ram_lba_start);
+        size_t d64_size = 0x200 + rom_size + ram_size;
+        size_t full_d64_size = 0x200 + rom_size + RAM_SIZES[disk_type];
+
+        DebugMessage(M64MSG_INFO, "D64 Disk Areas - ROM: 0000 - %04X / RAM: %04X - %04X", rom_lba_end, ram_lba_start, ram_lba_end);
+
+        if (ram_lba_start != (RAM_START_LBA[disk_type] - 24) && ram_lba_start != 0xFFFF)
+        {
+            isValidDisk = -1;
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk RAM Start Info (expected %04X)", (RAM_START_LBA[disk_type] - 24));
+        }
+        else if (dd_disk->size != d64_size)
+        {
+            isValidDisk = -1;
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %u (calculated 0x200 + 0x%x + 0x%x = %u).", (uint32_t)dd_disk->size, rom_size, ram_size, (uint32_t)d64_size);
+        }
+        else
+        {
+            //Change Size to fit all of RAM Area possible
+            uint8_t* buffer = malloc(full_d64_size);
+            if (buffer == NULL) {
+                DebugMessage(M64MSG_ERROR, "Failed to allocate memory for D64 disk dump");
+                goto wrong_disk_format;
+            }
+            memset(buffer, 0, full_d64_size);
+            memcpy(buffer, dd_disk->data, d64_size);
+
+            //Modify System Data so there are no errors in emulation
+            buffer[0x04] = 0x10;
+            buffer[0x05] |= 0x10;
+            if (disk_type < 6)
+            {
+                buffer[0xE2] = ((RAM_START_LBA[disk_type] - 24) >> 8) & 0xFF;
+                buffer[0xE3] = (RAM_START_LBA[disk_type] - 24) & 0xFF;
+                buffer[0xE4] = 0x10;
+                buffer[0xE5] = 0xC3;
             }
             else
             {
-                isValidDiskID = i;
+                buffer[0xE2] = 0xFF;
+                buffer[0xE3] = 0xFF;
+                buffer[0xE4] = 0xFF;
+                buffer[0xE5] = 0xFF;
             }
+
+            free(dd_disk->data);
+            dd_disk->data = buffer;
+            dd_disk->size = full_d64_size;
         }
-
-        if (isValidDiskID != -1)
-            break;
-    }
-
-    if (isValidDiskID == -1)
-    {
-        DebugMessage(M64MSG_ERROR, "Invalid Disk ID Data for DD Disk: %s.", dd_disk_filename);
-        goto wrong_disk_format;
     }
 
     switch (dd_disk->size)
@@ -1197,8 +1263,18 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         } break;
 
     default:
-        DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t) dd_disk->size);
-        goto wrong_disk_format;
+        if (isValidDisk == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t)dd_disk->size);
+            goto wrong_disk_format;
+        }
+        else
+        {
+            //D64
+            *dd_idisk = &g_ifile_storage_disk;
+            create_file_storage_extra_disk(dd_disk, DISK_FORMAT_D64, 1, 0x000, 0x100);
+            format_desc = "D64";
+        }
     }
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",

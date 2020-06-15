@@ -140,7 +140,7 @@ static const uint32_t StartBlock[7][16] = {
     { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0 },
     { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1 }
 };
-const uint16_t VZoneLBATable[7][16] = {
+static const uint16_t VZoneLBATable[7][16] = {
     {0x0124, 0x0248, 0x035A, 0x047E, 0x05A2, 0x06B4, 0x07C6, 0x08D8, 0x09EA, 0x0AB6, 0x0B82, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
     {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x06A2, 0x07C6, 0x08D8, 0x09EA, 0x0AFC, 0x0BC8, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
     {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08C6, 0x09EA, 0x0AFC, 0x0C0E, 0x0CDA, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
@@ -149,11 +149,11 @@ const uint16_t VZoneLBATable[7][16] = {
     {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x0980, 0x0A92, 0x0BA4, 0x0CB6, 0x0DC8, 0x0EEC, 0x1010, 0x10DC},
     {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x093A, 0x0A4C, 0x0B5E, 0x0C70, 0x0D82, 0x0E94, 0x0FB8, 0x10DC}
 };
-const uint16_t TrackZoneTable[2][8] = {
+static const uint16_t TrackZoneTable[2][8] = {
     {0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425},
     {0x091, 0x12F, 0x1C4, 0x259, 0x2EE, 0x383, 0x418, 0x48A}
 };
-const uint8_t VZONE_PZONE_TBL[7][16] = {
+static const uint8_t VZONE_PZONE_TBL[7][16] = {
     {0x0, 0x1, 0x2, 0x9, 0x8, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA},
     {0x0, 0x1, 0x2, 0x3, 0xA, 0x9, 0x8, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB},
     {0x0, 0x1, 0x2, 0x3, 0x4, 0xB, 0xA, 0x9, 0x8, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC},
@@ -320,6 +320,12 @@ static void seek_track(struct dd_controller* dd)
         uint16_t sectorsize = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
         uint16_t lba = PhysToLBA(dd, head, track, block);
         //dd->bm_zone = LBAToVZone(dd, PhysToLBA(dd, head, track, block));
+        if (lba > MAX_LBA)
+        {
+            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+            DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
+            return;
+        }
 
         dd->bm_track_offset = LBAToByte(dd, 0, lba) + sector * sectorsize;
 
@@ -334,10 +340,56 @@ static void seek_track(struct dd_controller* dd)
             else if (block > 12 && block < 16 && block != block_id)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
+
+        if (lba <= MAX_LBA && sector == 0)
+            DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, dd->bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
     }
     else //if (extra->format == DISK_FORMAT_D64)
     {
         //D64 Format Seek
+        uint16_t rom_lba_end = (dd->idisk->data(dd->disk)[0xE0] << 8) | dd->idisk->data(dd->disk)[0xE1];
+        uint16_t ram_lba_start = (dd->idisk->data(dd->disk)[0xE2] << 8) | dd->idisk->data(dd->disk)[0xE3];
+        uint16_t ram_lba_end = (dd->idisk->data(dd->disk)[0xE4] << 8) | dd->idisk->data(dd->disk)[0xE5];
+        uint8_t disk_type = dd->idisk->data(dd->disk)[5] & 0x0F;
+
+        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
+        uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
+        uint16_t block = dd->bm_block;
+        uint16_t sector = dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write;
+        uint16_t sectorsize = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+        uint16_t lba = PhysToLBA(dd, head, track, block);
+
+        if (lba < DISKID_LBA)
+        {
+            //System Data
+            dd->bm_track_offset = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_sys;
+        }
+        else if ((lba >= DISKID_LBA) && (lba < SYSTEM_LBAS))
+        {
+            //Disk ID
+            dd->bm_track_offset = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_id;
+        }
+        else if (lba <= (rom_lba_end + SYSTEM_LBAS))
+        {
+            //ROM Area
+            dd->bm_track_offset = 0x200 + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sectorsize);
+        }
+        else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
+        {
+            //RAM Area
+            dd->bm_track_offset = 0x200 + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
+            dd->bm_track_offset += LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sectorsize);
+        }
+        else
+        {
+            //Invalid
+            dd->bm_track_offset = 0xFFFFFFFF;
+            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+            DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
+        }
+
+        if (lba <= MAX_LBA && sector == 0)
+            DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, dd->bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
     }
 }
 
@@ -835,7 +887,7 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
         {
             if ((init_flag == 1) || (VZoneLBATable[disktype][vzone] == lba))
             {
-                vzone = LBAToVZone(type, lba);
+                vzone = LBAToVZoneA(type, lba);
                 pzone = VZoneToPZone(vzone, disktype);
                 if (7 < pzone)
                 {
