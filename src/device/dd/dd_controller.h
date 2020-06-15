@@ -140,7 +140,9 @@ void dd_update_bm(void* opaque);
 /* Disk Helper routines */
 void GenerateLBAToPhysTable(struct dd_controller* dd);
 uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba);
+uint32_t LBAToVZone(uint8_t type, uint32_t lba);
 uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas);
+uint32_t LBAToByte(uint8_t type, uint32_t lba, uint32_t nlbas);
 uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba);
 uint32_t PhysToLBA(struct dd_controller* dd, uint16_t head, uint16_t track, uint16_t block);
 
