@@ -33,6 +33,7 @@
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "main/util.h"
 
 /* dd commands definition */
 #define DD_CMD_NOOP             UINT32_C(0x00000000)
@@ -94,88 +95,6 @@
 #define DD_BM_CTL_MECHA_RST     UINT32_C(0x01000000)
 
 #define DD_TRACK_LOCK           UINT32_C(0x60000000)
-
-/* disk geometry definitions */
-enum { SECTORS_PER_BLOCK = 85 };
-enum { BLOCKS_PER_TRACK  = 2  };
-
-enum { DD_DISK_SYSTEM_DATA_SIZE = 0xe8 };
-
-static const unsigned int zone_sec_size[16] = {
-    232, 216, 208, 192, 176, 160, 144, 128,
-    216, 208, 192, 176, 160, 144, 128, 112
-};
-static const unsigned int zone_sec_size_phys[9] = {
-    232, 216, 208, 192, 176, 160, 144, 128, 112
-};
-
-static const uint32_t ZoneTracks[16] = {
-    158, 158, 149, 149, 149, 149, 149, 114,
-    158, 158, 149, 149, 149, 149, 149, 114
-};
-static const uint32_t DiskTypeZones[7][16] = {
-    { 0, 1, 2, 9, 8, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10 },
-    { 0, 1, 2, 3, 10, 9, 8, 4, 5, 6, 7, 15, 14, 13, 12, 11 },
-    { 0, 1, 2, 3, 4, 11, 10, 9, 8, 5, 6, 7, 15, 14, 13, 12 },
-    { 0, 1, 2, 3, 4, 5, 12, 11, 10, 9, 8, 6, 7, 15, 14, 13 },
-    { 0, 1, 2, 3, 4, 5, 6, 13, 12, 11, 10, 9, 8, 7, 15, 14 },
-    { 0, 1, 2, 3, 4, 5, 6, 7, 14, 13, 12, 11, 10, 9, 8, 15 },
-    { 0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8 }
-};
-static const uint32_t RevDiskTypeZones[7][16] = {
-    { 0, 1, 2, 5, 6, 7, 8, 9, 4, 3, 15, 14, 13, 12, 11, 10 },
-    { 0, 1, 2, 3, 7, 8, 9, 10, 6, 5, 4, 15, 14, 13, 12, 11 },
-    { 0, 1, 2, 3, 4, 9, 10, 11, 8, 7, 6, 5, 15, 14, 13, 12 },
-    { 0, 1, 2, 3, 4, 5, 11, 12, 10, 9, 8, 7, 6, 15, 14, 13 },
-    { 0, 1, 2, 3, 4, 5, 6, 13, 12, 11, 10, 9, 8, 7, 15, 14 },
-    { 0, 1, 2, 3, 4, 5, 6, 7, 14, 13, 12, 11, 10, 9, 8, 15 },
-    { 0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8 }
-};
-static const uint32_t StartBlock[7][16] = {
-    { 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1 },
-    { 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0 },
-    { 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1 },
-    { 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0 },
-    { 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1 },
-    { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0 },
-    { 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1 }
-};
-static const uint16_t VZoneLBATable[7][16] = {
-    {0x0124, 0x0248, 0x035A, 0x047E, 0x05A2, 0x06B4, 0x07C6, 0x08D8, 0x09EA, 0x0AB6, 0x0B82, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x06A2, 0x07C6, 0x08D8, 0x09EA, 0x0AFC, 0x0BC8, 0x0C94, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08C6, 0x09EA, 0x0AFC, 0x0C0E, 0x0CDA, 0x0DA6, 0x0EB8, 0x0FCA, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AEA, 0x0C0E, 0x0D20, 0x0DEC, 0x0EB8, 0x0FCA, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x08B4, 0x09C6, 0x0AD8, 0x0BEA, 0x0D0E, 0x0E32, 0x0EFE, 0x0FCA, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x0980, 0x0A92, 0x0BA4, 0x0CB6, 0x0DC8, 0x0EEC, 0x1010, 0x10DC},
-    {0x0124, 0x0248, 0x035A, 0x046C, 0x057E, 0x0690, 0x07A2, 0x086E, 0x093A, 0x0A4C, 0x0B5E, 0x0C70, 0x0D82, 0x0E94, 0x0FB8, 0x10DC}
-};
-static const uint16_t TrackZoneTable[2][8] = {
-    {0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425},
-    {0x091, 0x12F, 0x1C4, 0x259, 0x2EE, 0x383, 0x418, 0x48A}
-};
-static const uint8_t VZONE_PZONE_TBL[7][16] = {
-    {0x0, 0x1, 0x2, 0x9, 0x8, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA},
-    {0x0, 0x1, 0x2, 0x3, 0xA, 0x9, 0x8, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB},
-    {0x0, 0x1, 0x2, 0x3, 0x4, 0xB, 0xA, 0x9, 0x8, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC},
-    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0xC, 0xB, 0xA, 0x9, 0x8, 0x6, 0x7, 0xF, 0xE, 0xD},
-    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0xF, 0xE},
-    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0xF},
-    {0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8}
-};
-
-
-#define BLOCKSIZE(_zone) zone_sec_size[_zone] * SECTORS_PER_BLOCK
-#define TRACKSIZE(_zone) BLOCKSIZE(_zone) * BLOCKS_PER_TRACK
-#define ZONESIZE(_zone) TRACKSIZE(_zone) * ZoneTracks[_zone]
-#define VZONESIZE(_zone) TRACKSIZE(_zone) * (ZoneTracks[_zone] - 0xC)
-#define VZoneToPZone(x, y) VZONE_PZONE_TBL[y][x]
-
-#define MAX_LBA             0x10DB
-#define SIZE_LBA            MAX_LBA+1
-#define SYSTEM_LBAS         24
-#define DISKID_LBA          14
-
-
 
 
 static uint8_t byte2bcd(int n)
@@ -301,12 +220,12 @@ static void seek_track(struct dd_controller* dd)
 
         if (dd->regs[DD_ASIC_CUR_SECTOR] == 0)
         {
-            uint16_t block = dd->bm_track_offset / 0x4D08;
-            uint16_t block_sys = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_sys / 0x4D08;
-            uint16_t block_id = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_id / 0x4D08;
-            if (block < 12 && block != block_sys)
+            uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
+            uint16_t block_sys = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_sys / BLOCKSIZE(0);
+            uint16_t block_id = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_id / BLOCKSIZE(0);
+            if (block < PROTECT_LBA && block != block_sys)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            else if (block > 12 && block < 16 && block != block_id)
+            else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
     }
@@ -332,12 +251,12 @@ static void seek_track(struct dd_controller* dd)
         //Handle Errors for wrong System Data
         if (sector == 0)
         {
-            uint16_t block = dd->bm_track_offset / 0x4D08;
-            uint16_t block_sys = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_sys / 0x4D08;
-            uint16_t block_id = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_id / 0x4D08;
-            if (block < 12 && block != block_sys)
+            uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
+            uint16_t block_sys = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_sys / BLOCKSIZE(0);
+            uint16_t block_id = ((struct extra_storage_disk*)dd->idisk->extra(dd->disk))->offset_id / BLOCKSIZE(0);
+            if (block < PROTECT_LBA && block != block_sys)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            else if (block > 12 && block < 16 && block != block_id)
+            else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
 
@@ -347,10 +266,12 @@ static void seek_track(struct dd_controller* dd)
     else //if (extra->format == DISK_FORMAT_D64)
     {
         //D64 Format Seek
-        uint16_t rom_lba_end = (dd->idisk->data(dd->disk)[0xE0] << 8) | dd->idisk->data(dd->disk)[0xE1];
-        uint16_t ram_lba_start = (dd->idisk->data(dd->disk)[0xE2] << 8) | dd->idisk->data(dd->disk)[0xE3];
-        uint16_t ram_lba_end = (dd->idisk->data(dd->disk)[0xE4] << 8) | dd->idisk->data(dd->disk)[0xE5];
-        uint8_t disk_type = dd->idisk->data(dd->disk)[5] & 0x0F;
+        struct dd_sys_data* sys_data = &dd->idisk->data(dd->disk)[D64_OFFSET_SYS];
+
+        uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
+        uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
+        uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
+        uint8_t disk_type = sys_data->type & 0x0F;
 
         uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
         uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
@@ -372,12 +293,12 @@ static void seek_track(struct dd_controller* dd)
         else if (lba <= (rom_lba_end + SYSTEM_LBAS))
         {
             //ROM Area
-            dd->bm_track_offset = 0x200 + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sectorsize);
+            dd->bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sectorsize);
         }
         else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
         {
             //RAM Area
-            dd->bm_track_offset = 0x200 + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
+            dd->bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
             dd->bm_track_offset += LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sectorsize);
         }
         else
@@ -851,8 +772,8 @@ void GenerateLBAToPhysTable(struct dd_controller* dd)
 uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba)
 {
     struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
-    const uint8_t* sys_data = dd->idisk->data(dd->disk);
-    return LBAToVZoneA(sys_data[5 + extra->offset_sys], lba);
+    struct dd_sys_data* sys_data = dd->idisk->data(dd->disk) + extra->offset_sys;
+    return LBAToVZoneA(sys_data->type, lba);
 }
 
 uint32_t LBAToVZoneA(uint8_t type, uint32_t lba)
@@ -868,8 +789,8 @@ uint32_t LBAToVZoneA(uint8_t type, uint32_t lba)
 uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas)
 {
     struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
-    const uint8_t* sys_data = dd->idisk->data(dd->disk);
-    return LBAToByteA(sys_data[5 + extra->offset_sys], lba, nlbas);
+    struct dd_sys_data* sys_data = dd->idisk->data(dd->disk) + extra->offset_sys;
+    return LBAToByteA(sys_data->type, lba, nlbas);
 }
 
 uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
@@ -912,8 +833,8 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
 uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba)
 {
     struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
-    const uint8_t* sys_data = dd->idisk->data(dd->disk);
-    uint8_t disktype = sys_data[extra->offset_sys + 5] & 0x0F;
+    struct dd_sys_data* sys_data = dd->idisk->data(dd->disk) + extra->offset_sys;
+    uint8_t disktype = sys_data->type & 0x0F;
 
     const uint16_t OUTERCYL_TBL[8] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425 };
 
@@ -955,13 +876,13 @@ uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba)
     //Get the relative offset to defect tracks for the current zone (if Zone 0, then it's 0)
     uint16_t defect_offset = 0;
     if (pzone != 0)
-        defect_offset = sys_data[extra->offset_sys + (8 + pzone - 1)];
+        defect_offset = sys_data->defect_offset[pzone - 1];
 
     //Get amount of defect tracks for the current zone
-    uint16_t defect_amount = sys_data[extra->offset_sys + (8 + pzone)] - defect_offset;
+    uint16_t defect_amount = sys_data->defect_offset[pzone] - defect_offset;
 
     //Skip defect tracks
-    while ((defect_amount != 0) && ((sys_data[extra->offset_sys + (0x20 + defect_offset)] + track_zone_start) <= track))
+    while ((defect_amount != 0) && ((sys_data->defect_info[defect_offset] + track_zone_start) <= track))
     {
         track++;
         defect_offset++;

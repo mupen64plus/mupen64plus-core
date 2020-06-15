@@ -1086,27 +1086,28 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     uint8_t isDevelopment = 0;
     for (int i = 0; i < 8; i++)
     {
-        if ((0x4D08 * blocks[i] + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE && i > 0))
+        uint32_t offset = BLOCKSIZE(0) * blocks[i];
+        struct dd_sys_data* sys_data = &dd_disk->data[offset];
+
+        if ((offset + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE && i > 0))
         {
             isValidDisk = -1;
             break;
         }
 
         //Disk Type
-        if ((dd_disk->data[0x4D08 * blocks[i] + 0x05] & 0xEF) > 6) continue;
+        if ((sys_data->type & 0xEF) > 6) continue;
 
         //IPL Load Block
-        uint16_t ipl_load_blk = ((dd_disk->data[0x4D08 * blocks[i] + 0x06] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x07]);
-        if (ipl_load_blk > 0x10C3 || ipl_load_blk == 0x0000) continue;
+        uint16_t ipl_load_blk = big16(sys_data->ipl_load_blk);
+        if (ipl_load_blk > (MAX_LBA - SYSTEM_LBAS) || ipl_load_blk == 0x0000) continue;
 
         //IPL Load Address
-        uint32_t ipl_load_addr = (dd_disk->data[0x4D08 * blocks[i] + 0x1C] << 24) | (dd_disk->data[0x4D08 * blocks[i] + 0x1D] << 16) |
-            (dd_disk->data[0x4D08 * blocks[i] + 0x1E] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x1F];
+        uint32_t ipl_load_addr = big32(sys_data->ipl_load_addr);
         if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
 
         //Country Code
-        uint32_t disk_region = (dd_disk->data[0x4D08 * blocks[i] + 0x00] << 24) | (dd_disk->data[0x4D08 * blocks[i] + 0x01] << 16) |
-            (dd_disk->data[0x4D08 * blocks[i] + 0x02] << 8) | dd_disk->data[0x4D08 * blocks[i] + 0x03];
+        uint32_t disk_region = big32(sys_data->region);
         switch (disk_region)
         {
         case DD_REGION_JP:
@@ -1121,15 +1122,15 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         //Verify if sector repeats
         if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
         {
-            uint8_t sectorsize = 0xE8;
+            uint8_t sectorsize = SECTORSIZE_SYS;
 
             //Development System Data
             if (blocks[i] == 2 || blocks[i] == 3 || blocks[i] == 10 || blocks[i] == 11)
-                sectorsize = 0xC0;
+                sectorsize = SECTORSIZE_SYS_DEV;
 
-            for (int j = 1; j < 85; j++)
+            for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memicmp(&dd_disk->data[(blocks[i] * 0x4D08) + ((j - 1) * sectorsize)], &dd_disk->data[(blocks[i] * 0x4D08) + (j * sectorsize)], sectorsize) != 0)
+                if (memicmp(&dd_disk->data[offset + ((j - 1) * sectorsize)], &dd_disk->data[offset + (j * sectorsize)], sectorsize) != 0)
                 {
                     isValidDisk = -1;
                     break;
@@ -1160,9 +1161,9 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         //Verify if sector repeats
         for (int i = 14; i < 16; i++)
         {
-            for (int j = 1; j < 85; j++)
+            for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memicmp(&dd_disk->data[(i * 0x4D08) + (j - 1) * 0xE8], &dd_disk->data[(i * 0x4D08) + j * 0xE8], 0xE8) != 0)
+                if (memicmp(&dd_disk->data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &dd_disk->data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
                 {
                     isValidDiskID = -1;
                     break;
@@ -1188,24 +1189,28 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         //Check D64 File Size
         const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
         const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
+
+        struct dd_sys_data* sys_data = &dd_disk->data[D64_OFFSET_SYS];
         
-        uint16_t rom_lba_end = (dd_disk->data[0xE0] << 8) | dd_disk->data[0xE1];
-        uint16_t ram_lba_start = (dd_disk->data[0xE2] << 8) | dd_disk->data[0xE3];
-        uint16_t ram_lba_end = (dd_disk->data[0xE4] << 8) | dd_disk->data[0xE5];
-        uint8_t disk_type = dd_disk->data[5] & 0x0F;
+        uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
+        uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
+        uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
+        uint8_t disk_type = sys_data->type & 0x0F;
+
         size_t rom_size = LBAToByteA(disk_type, 24, rom_lba_end + 1);
         size_t ram_size = 0;
         if (ram_lba_start != 0xFFFF && ram_lba_end != 0xFFFF)
-            ram_size = LBAToByteA(disk_type, 24 + ram_lba_start, ram_lba_end + 1 - ram_lba_start);
-        size_t d64_size = 0x200 + rom_size + ram_size;
-        size_t full_d64_size = 0x200 + rom_size + RAM_SIZES[disk_type];
+            ram_size = LBAToByteA(disk_type, SYSTEM_LBAS + ram_lba_start, ram_lba_end + 1 - ram_lba_start);
+
+        size_t d64_size = D64_OFFSET_DATA + rom_size + ram_size;
+        size_t full_d64_size = D64_OFFSET_DATA + rom_size + RAM_SIZES[disk_type];
 
         DebugMessage(M64MSG_INFO, "D64 Disk Areas - ROM: 0000 - %04X / RAM: %04X - %04X", rom_lba_end, ram_lba_start, ram_lba_end);
 
         if (ram_lba_start != (RAM_START_LBA[disk_type] - 24) && ram_lba_start != 0xFFFF)
         {
             isValidDisk = -1;
-            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk RAM Start Info (expected %04X)", (RAM_START_LBA[disk_type] - 24));
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk RAM Start Info (expected %04X)", (RAM_START_LBA[disk_type] - SYSTEM_LBAS));
         }
         else if (dd_disk->size != d64_size)
         {
@@ -1223,22 +1228,20 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             memset(buffer, 0, full_d64_size);
             memcpy(buffer, dd_disk->data, d64_size);
 
+            sys_data = &buffer[D64_OFFSET_SYS];
+
             //Modify System Data so there are no errors in emulation
-            buffer[0x04] = 0x10;
-            buffer[0x05] |= 0x10;
+            sys_data->format = 0x10;
+            sys_data->type |= 0x10;
             if (disk_type < 6)
             {
-                buffer[0xE2] = ((RAM_START_LBA[disk_type] - 24) >> 8) & 0xFF;
-                buffer[0xE3] = (RAM_START_LBA[disk_type] - 24) & 0xFF;
-                buffer[0xE4] = 0x10;
-                buffer[0xE5] = 0xC3;
+                sys_data->ram_lba_start = big16((RAM_START_LBA[disk_type] - SYSTEM_LBAS));
+                sys_data->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS));
             }
             else
             {
-                buffer[0xE2] = 0xFF;
-                buffer[0xE3] = 0xFF;
-                buffer[0xE4] = 0xFF;
-                buffer[0xE5] = 0xFF;
+                sys_data->ram_lba_start = 0xFFFF;
+                sys_data->ram_lba_end = 0xFFFF;
             }
 
             free(dd_disk->data);

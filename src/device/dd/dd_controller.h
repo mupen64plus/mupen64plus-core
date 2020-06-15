@@ -28,21 +28,10 @@ struct r4300_core;
 #include <time.h>
 
 #include "osal/preproc.h"
+#include "device/dd/disk.h"
 
 struct clock_backend_interface;
 struct storage_backend_interface;
-
-/* Disk format sizes */
-#define MAME_FORMAT_DUMP_SIZE 0x0435b0c0
-#define SDK_FORMAT_DUMP_SIZE  0x03dec800
-
-#define DD_REGION_JP UINT32_C(0xe848d316)
-#define DD_REGION_US UINT32_C(0x2263ee56)
-#define DD_REGION_DV UINT32_C(0x00000000)
-
-#define DISK_FORMAT_MAME      0
-#define DISK_FORMAT_SDK       1
-#define DISK_FORMAT_D64       2
 
 enum dd_registers {
     DD_ASIC_DATA,
