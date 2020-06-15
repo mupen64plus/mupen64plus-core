@@ -899,7 +899,7 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
             totalbytes += blocksize;
             lba++;
             init_flag = 0;
-            if ((nlbas != 0) && (lba > MAX_LBA))
+            if (((nlbas - 1) != 0) && (lba > MAX_LBA))
             {
                 return 0xFFFFFFFF;
             }
