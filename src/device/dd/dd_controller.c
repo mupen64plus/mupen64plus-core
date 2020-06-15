@@ -800,10 +800,10 @@ uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba)
 {
     struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
     const uint8_t* sys_data = dd->idisk->data(dd->disk);
-    return LBAToVZone(sys_data[5 + extra->offset_sys], lba);
+    return LBAToVZoneA(sys_data[5 + extra->offset_sys], lba);
 }
 
-uint32_t LBAToVZone(uint8_t type, uint32_t lba)
+uint32_t LBAToVZoneA(uint8_t type, uint32_t lba)
 {
     for (uint32_t vzone = 0; vzone < 16; vzone++) {
         if (lba < VZoneLBATable[type & 0x0F][vzone]) {
@@ -817,10 +817,10 @@ uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas)
 {
     struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
     const uint8_t* sys_data = dd->idisk->data(dd->disk);
-    return LBAToByte(sys_data[5 + extra->offset_sys], lba, nlbas);
+    return LBAToByteA(sys_data[5 + extra->offset_sys], lba, nlbas);
 }
 
-uint32_t LBAToByte(uint8_t type, uint32_t lba, uint32_t nlbas)
+uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
 {
     uint8_t init_flag = 1;
     uint32_t totalbytes = 0;
