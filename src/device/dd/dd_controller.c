@@ -146,8 +146,6 @@ static void read_C2(struct dd_controller* dd)
 
 static void read_sector(struct dd_controller* dd)
 {
-    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
-
     size_t i;
     const uint8_t* disk_mem = dd->idisk->data(dd->disk);
     size_t offset = dd->bm_track_offset;
@@ -160,17 +158,10 @@ static void read_sector(struct dd_controller* dd)
 
 static void write_sector(struct dd_controller* dd)
 {
-    struct extra_storage_disk* extra = (struct extra_storage_disk*)dd->idisk->extra(dd->disk);
-
     size_t i;
     uint8_t* disk_mem = dd->idisk->data(dd->disk);
     size_t offset = dd->bm_track_offset;
-    size_t length = zone_sec_size[dd->bm_zone];
-
-    if (extra->format != DISK_FORMAT_MAME)
-    {
-        length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
-    }
+    size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
 	for (i = 0; i < length; ++i) {
 		disk_mem[offset + i] = dd->ds_buf[i ^ 3];
