@@ -1130,7 +1130,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
 
             for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memicmp(&dd_disk->data[offset + ((j - 1) * sectorsize)], &dd_disk->data[offset + (j * sectorsize)], sectorsize) != 0)
+                if (memcmp(&dd_disk->data[offset + ((j - 1) * sectorsize)], &dd_disk->data[offset + (j * sectorsize)], sectorsize) != 0)
                 {
                     isValidDisk = -1;
                     break;
@@ -1163,7 +1163,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         {
             for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memicmp(&dd_disk->data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &dd_disk->data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
+                if (memcmp(&dd_disk->data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &dd_disk->data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
                 {
                     isValidDiskID = -1;
                     break;
