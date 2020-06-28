@@ -1,6 +1,8 @@
-= Mupen64Plus Netplay API =
+[[Mupen64Plus v2.0 Core API v1.0|Mupen64Plus v2.0 API]]
 
-The Mupen64Plus netplay API is based on a client/server architecture. It supports syncing core settings and save files. It also supports raw input (tested with Raphnet input plugin).
+= Mupen64Plus Netplay Protocol =
+
+The Mupen64Plus netplay protocol is based on a client/server architecture. It supports syncing core settings and save files. It also supports raw input (tested with Raphnet input plugin).
 TCP is used to deal with player registration, and syncing settings and saves.
 UDP is used to transfer key input data.
 Data is sent in Network Byte Order (Big Endian).
@@ -111,3 +113,4 @@ The server is responsible for maintaining healthy buffers and also for detecting
 *** byte[0-3] = player registration ID
 *** byte[4] = player plugin
 *** byte[5] = whether the player is using raw data input
+

@@ -188,7 +188,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |-
 |M64CMD_SET_MEDIA_LOADER
 |This command allow frontends to register their media (such as GameBoy cartridge or 64DD disk) loading functions. These functions will be called appropriately by the core at startup and when a new media is inserted.
-|'''<tt>ParamInt</tt>''' must be sizeof(m64p_media_loader).'''<br /><tt>ParamPtr</tt>'''A pointer to the m64p_media_loader to register, cannot be NULL.
+|'''<tt>ParamInt</tt>''' must be sizeof(m64p_media_loader).'''<br /><tt>ParamPtr</tt>''' A pointer to the m64p_media_loader to register, cannot be NULL.
 |None
 |-
 |M64CMD_NETPLAY_INIT

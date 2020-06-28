@@ -53,8 +53,13 @@ These are the debugger functions, which are also called only from the front-end.
 
 These configuration functions are exported from the core library and are used by the core and the plugins to store all of their persistent configuration parameters.  The front-end application may also use these functions to store its configuration options, or it may use a different mechanism.  This section also contains two Operating System Abstraction functions.  These functions are used by the core, plugins, and the front-end to find full filepaths to shared data files and user-specific data files.
 
+
 == Plugin API ==
 === [[Mupen64Plus v2.0 Plugin API|Plugin API]] ===
 
 This section lists all of the functions which are exported by the plugins.  The front-end application should only use the <tt>PluginStartup</tt>, <tt>PluginShutdown</tt>, and <tt>PluginGetVersion</tt> functions.  All other functions will only be called from the core.
+
+== Netplay ==
+
+Starting with version 2.6, Mupen64Plus has support for playing games with multiple players over a network.  To support this, a few new command types were added to the CoreDoCommand function, as documented in [[Mupen64Plus v2.0 Core Front-End|front-end functions]]. The core handles the network I/O on its own, and the interface for handling netplay from the perspective of the front-end is very high level. The design of the netplay feature is such that a separate piece of server software (not part of Mupen64Plus) is also required. An example of such a server program is available [https://github.com/loganmc10/m64p-netplay-server here] from [https://github.com/loganmc10 loganmc10] on github. A description of the network protocol which is used for communication between the client emulators and the netplay server is available [[Mupen64Plus v2.0 Core Netplay Protocol|here]].
 
