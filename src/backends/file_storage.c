@@ -28,6 +28,7 @@
 #include "backends/api/storage_backend.h"
 #include "device/dd/dd_controller.h"
 #include "main/util.h"
+#include "main/netplay.h"
 
 int open_file_storage(struct file_storage* fstorage, size_t size, const char* filename)
 {
@@ -42,7 +43,14 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     }
 
     /* try to load storage file content */
-    return read_from_file(fstorage->filename, fstorage->data, fstorage->size);
+    if (!netplay_is_init())
+    {
+        return read_from_file(fstorage->filename, fstorage->data, fstorage->size);
+    }
+    else
+    {
+        return netplay_read_storage(fstorage->filename, fstorage->data, fstorage->size);
+    }
 }
 
 int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
@@ -82,6 +90,9 @@ static size_t file_storage_size(const void* storage)
 
 static void file_storage_save(void* storage)
 {
+    if (netplay_is_init() && netplay_get_controller(0) == -1)
+        return;
+
     struct file_storage* fstorage = (struct file_storage*)storage;
 
     switch(write_to_file(fstorage->filename, fstorage->data, fstorage->size))

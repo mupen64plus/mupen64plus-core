@@ -27,6 +27,8 @@ ConfigSetDefaultInt;
 ConfigSetDefaultString;
 ConfigSetParameter;
 ConfigSetParameterHelp;
+ConfigSendNetplayConfig;
+ConfigReceiveNetplayConfig;
 CoreAddCheat;
 CoreAttachPlugin;
 CoreCheatEnabled;

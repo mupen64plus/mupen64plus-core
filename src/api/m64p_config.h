@@ -273,6 +273,28 @@ typedef m64p_error (*ptr_ConfigExternalGetParameter)(m64p_handle, const char *, 
 EXPORT m64p_error CALL ConfigExternalGetParameter(m64p_handle, const char *, const char *, char *, int);
 #endif
 
+/* ConfigSendNetplayConfig()
+ *
+ * This function allows plugins to take advantage of the netplay TCP connection
+ * to send configuration data to the netplay server.
+ */
+
+typedef m64p_error (*ptr_ConfigSendNetplayConfig)(char*, int);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL ConfigSendNetplayConfig(char*, int);
+#endif
+
+/* ConfigReceiveNetplayConfig()
+ *
+ * This function allows plugins to take advantage of the netplay TCP connection
+ * to receive configuration data from the netplay server.
+ */
+
+typedef m64p_error (*ptr_ConfigReceiveNetplayConfig)(char*, int);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL ConfigReceiveNetplayConfig(char*, int);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

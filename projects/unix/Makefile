@@ -326,7 +326,14 @@ ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
     ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
       $(error No SDL development libraries found!)
     else
+      ifeq ($(NETPLAY), 1)
+        SDL_LDLIBS += -lSDL_net
+      endif
       $(warning Using SDL 1.2 libraries)
+    endif
+  else
+    ifeq ($(NETPLAY), 1)
+      SDL_LDLIBS += -lSDL2_net
     endif
   endif
   SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
@@ -581,6 +588,12 @@ SOURCE += $(SUBDIR)/oglft/OGLFT.cpp
 CXXFLAGS += -I$(SUBDIR)/oglft
 endif
 
+# netplay
+ifeq ($(NETPLAY), 1)
+CFLAGS += -DM64P_NETPLAY
+SOURCE += $(SRCDIR)/main/netplay.c
+endif
+
 # source files for optional features
 ifeq ($(DBG_COUNT), 1)
   CFLAGS += -DCOUNT_INSTR
@@ -710,6 +723,7 @@ targets:
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
 	@echo "    PIC=(1|0)      == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)      == Enable/disable build of OpenGL On-screen display"
+	@echo "    NETPLAY=1      == Enable netplay functionality, requires SDL2_net
 	@echo "    NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec"
 	@echo "    OPENCV=1       == Enable OpenCV support"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"

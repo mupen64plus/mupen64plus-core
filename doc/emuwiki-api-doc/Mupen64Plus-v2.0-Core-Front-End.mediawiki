@@ -190,6 +190,26 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |This command allow frontends to register their media (such as GameBoy cartridge or 64DD disk) loading functions. These functions will be called appropriately by the core at startup and when a new media is inserted.
 |'''<tt>ParamInt</tt>''' must be sizeof(m64p_media_loader).'''<br /><tt>ParamPtr</tt>'''A pointer to the m64p_media_loader to register, cannot be NULL.
 |None
+|-
+|M64CMD_NETPLAY_INIT
+|This command will initilize the netplay subsystem. It will also attempt to make an initial connection to the netplay server. Returns M64ERR_SYSTEM_FAIL on failure, M64ERR_SUCCESS on success.
+|'''<tt>ParamInt</tt>''' This is the port number the netplay server is listening on.'''<br /><tt>ParamPtr</tt>''' This is a string containing the IP or hostname of the netplay server.
+|Emulator should be stopped.
+|-
+|M64CMD_NETPLAY_CONTROL_PLAYER
+|This function is used for the client to request control of certain players. This function can be called more than once if a client would like to control multiple players. Local controllers are assigned in order. Returns M64ERR_INPUT_ASSERT if the server rejects the request. If this function is never called, the client is assumed to be a spectator.
+|'''<tt>ParamInt</tt>''' This is the player number (from 1-4) the client would like to control.'''<br /><tt>ParamPtr</tt>''' This is a pointer to a uint32_t that contains a unique registration ID (for instance a random number) for the client. This number should be the same each time if this function is called multiple times. The registration ID cannot be 0.
+|Emulator should be stopped. The input plugin should be started.
+|-
+|M64CMD_NETPLAY_GET_VERSION
+|This function is used to check API and core versions, the server can use this information to make sure everyone is using the same version of the software. The function returns M64ERR_INCOMPATIBLE if the API versions don't match, and M64ERR_SUCCESS if they do.
+|'''<tt>ParamInt</tt>''' This is the Netplay API version that the frontend supports.'''<br /><tt>ParamPtr</tt>''' This is a pointer to a uint32_t, the core fills this pointer with a core netplay version. This version number is incremented when changes are made to the core that would affect netplay sync.
+|None
+|-
+|M64CMD_NETPLAY_CLOSE
+|Closes the netplay subsystem, as well as any connections to the netplay server.
+|N/A
+|None
 |}
 <br />
 

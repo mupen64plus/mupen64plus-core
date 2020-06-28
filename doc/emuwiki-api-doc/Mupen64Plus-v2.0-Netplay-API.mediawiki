@@ -1,0 +1,113 @@
+= Mupen64Plus Netplay API =
+
+The Mupen64Plus netplay API is based on a client/server architecture. It supports syncing core settings and save files. It also supports raw input (tested with Raphnet input plugin).
+TCP is used to deal with player registration, and syncing settings and saves.
+UDP is used to transfer key input data.
+Data is sent in Network Byte Order (Big Endian).
+
+The server is responsible for maintaining healthy buffers and also for detecting desyncs. The server is the source of truth for input data (for instance, when player 1 pushes "A", it sends that information to the server via UDP. That "A" is not registered as input for player 1 until the client receives a packet from the server indicating what input frame to register that "A" in)
+
+== UDP Packet formats ==
+* Request input for a player (sent by client):
+** 12 bytes
+** byte[0] = 2
+** byte[1] = player number (this is the player we need key inputs for)
+** byte[2-5] = client registration ID
+** byte[6-9] = current event count
+** byte[10] = whether client is a spectator
+** byte[11] = local buffer size of the client
+
+* Key input data (sent by server):
+** Variable length, payload cannot be larger than 512 bytes
+** byte[0] = 1
+** byte[1] = player number the key inputs pertain to
+** byte[2] = current status. Bit 0 indicates whether the game has desynced (1 means desync). Bits 1-4 indicate whether a player has disconnected (for instance, if bit 2 is set, that means player 2 has disconnected). Bits 5-7 are currently unused.
+** byte[3] = how far we lag behind the lead player
+** byte[4] = number of events in this packet
+** The following items will repeat/loop for the number of events in the packet
+*** byte[5-8] = event count
+*** byte[9-12] = key input data
+*** byte[13] = current plugin
+
+* Key input data (sent by client):
+** 11 bytes
+** byte[0] = 0
+** byte[1] = player number
+** byte[2-5] = current event count
+** byte[6-9] = key input data
+** byte[10] = current plugin
+
+* Client sync data (sent by client):
+** 133 bytes
+** byte[0] = 4
+** byte[1-4] = current VI count
+** byte[5-132] = CP0 registers
+
+== TCP Packet formats ==
+* Player disconnection notice (sent by client):
+** 5 bytes
+** byte[0] = 7
+** byte[1-4] = client registration ID
+
+* Player registration request (sent by client):
+** 8 bytes
+** byte[0] = 5
+** byte[1] = player the client is trying to register
+** byte[2] = plugin for this player
+** byte[3] = whether to use a raw input plugin
+** byte[4-7] = client registration ID
+
+* Player registration response (sent by server):
+** 2 bytes
+** byte[0] = response (1 if registration was successful, 0 otherwise)
+** byte[1] = local buffer target for the client
+
+* Send save file data (sent by client):
+** Variable length
+** byte[0] = 1
+** byte[1 - next '\0'] = file name
+** byte[4 bytes] = size of save file in bytes
+** byte[size of file] = save file data
+
+* Request save file data (sent by client):
+** Variable length
+** byte[0] = 2
+** byte[1 - next '\0'] = file name
+
+* Receive save file data (sent by server):
+** Server responds with this data right after the above request
+** Variable length
+** byte[file size] = save file data
+
+* Send settings (sent by client):
+** 21 bytes
+** byte[0] = 3
+** byte[1-4] = count_per_op
+** byte[5-8] = disable_extra_mem
+** byte[9-12] = si_dma_duration
+** byte[13-16] = emumode
+** byte[17-20] =  no_compiled_jump
+
+* Request settings (sent by client):
+** 1 byte
+** byte[0] = 4
+
+* Send settings (sent by server):
+** Server responds with this data right after the above request
+** 20 bytes
+** byte[0-3] = count_per_op
+** byte[4-7] = disable_extra_mem
+** byte[8-11] = si_dma_duration
+** byte[12-15] = emumode
+** byte[16-19] = no_compiled_jump
+
+* Request player registration data (sent by client):
+** 1 byte
+** byte[0] = 6
+
+* Send player registration data (sent by server):
+** 24 bytes
+** The following bytes loop 4 times (once for each player)
+*** byte[0-3] = player registration ID
+*** byte[4] = player plugin
+*** byte[5] = whether the player is using raw data input

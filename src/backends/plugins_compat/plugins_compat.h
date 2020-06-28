@@ -50,6 +50,9 @@ struct controller_input_compat
     unsigned int gb_switch_delay;
 
     unsigned int gb_cart_switch_enabled;
+
+    uint32_t netplay_count;
+    struct netplay_event* event_first;
 };
 
 extern const struct controller_input_backend_interface
