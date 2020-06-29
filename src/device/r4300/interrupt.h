@@ -65,5 +65,6 @@ void nmi_int_handler(void* opaque);
 #define DP_INT      0x100
 #define HW2_INT     0x200
 #define NMI_INT     0x400
+#define RSP_DMA_EVT 0x800
 
 #endif /* M64P_DEVICE_R4300_INTERRUPT_H */
