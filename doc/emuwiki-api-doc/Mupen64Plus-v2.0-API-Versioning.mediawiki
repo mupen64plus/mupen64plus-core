@@ -117,6 +117,8 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** add m64p_video_flags parameter to the VidExt_SetVideoMode() function.  Currently the flags are only used to notify the window manager that resizing is supported by the video plugin, and it should create a resizable window if possible.  This may be extended in the future to support other features.
 * '''VIDEXT_API_VERSION''' version 3.1.0:
 ** add VidExt_GL_GetDefaultFramebuffer() function in video extension. This function should be called to get the name of the default FBO.
+* '''VIDEXT_API_VERSION''' version 3.2.0:
+** add the VidExt_ListFullscreenRates and VidExt_SetVideoModeWithRate functions, which allow setting and getting the fullscreen refresh rate
 * '''INPUT_API_VERSION''' version 2.0.1:
 ** add (optional) RenderCallback function to input plugin. This function is called by the core after rendering on screen text (OSD) and before the graphics plugin swaps the buffers. The purpose of this function is to enable the input plugin to draw on screen content, for example buttons in a touch input plugin. If this function is not present the core will ignore it and on screen rendering by the input plugin will be disabled.
 * '''INPUT_API_VERSION''' version 2.1.0:

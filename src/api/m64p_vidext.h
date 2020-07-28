@@ -67,6 +67,16 @@ typedef m64p_error (*ptr_VidExt_ListFullscreenModes)(m64p_2d_size *, int *);
 EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *, int *);
 #endif
 
+/* VidExt_ListFullscreenRates()
+ *
+ * This function is used to enumerate the available refresh rates for a fullscreen
+ * video mode.
+ */
+typedef m64p_error (*ptr_VidExt_ListFullscreenRates)(m64p_2d_size, int *, int *);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size, int *, int *);
+#endif
+
 /* VidExt_SetVideoMode()
  *
  * This function creates a rendering window or switches into a fullscreen
@@ -76,6 +86,17 @@ EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *, int *);
 typedef m64p_error (*ptr_VidExt_SetVideoMode)(int, int, int, m64p_video_mode, m64p_video_flags);
 #if defined(M64P_CORE_PROTOTYPES)
 EXPORT m64p_error CALL VidExt_SetVideoMode(int, int, int, m64p_video_mode, m64p_video_flags);
+#endif
+
+/* VidExt_SetVideoModeWithRate()
+ *
+ * This function creates a rendering window or switches into a fullscreen
+ * video mode. Any desired OpenGL attributes should be set before calling
+ * this function.
+ */
+typedef m64p_error (*ptr_VidExt_SetVideoModeWithRate)(int, int, int, int, m64p_video_mode, m64p_video_flags);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int, int, int, int, m64p_video_mode, m64p_video_flags);
 #endif
 
 /* VidExt_ResizeWindow()
