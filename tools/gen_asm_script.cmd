@@ -1,10 +1,21 @@
 @echo off
 ::
-:: To correctly handle the undefined GAS_ARG2TOINF
+:: To correctly handle the undefined GAS_ARG4TOINF
 setlocal enableextensions disabledelayedexpansion
 ::
 :: Validation of the parameters sent by VS to use them as variables, if an invalid parameter is sent (syntax conflict), this script will fail without error code
-for /f "tokens=1*" %%A in ('echo %*') do set GAS_ARG1=%%A& set GAS_ARG2TOINF=%%B
+for /f "tokens=1,2,3*" %%A in ('echo %*') do (
+set GAS_ARG1=%%A
+set GAS_ARG2=%%B
+set GAS_ARG3=%%C
+set GAS_ARG4TOINF=%%D
+)
+echo MY_INFO
+echo.
+echo %*
+echo %GAS_ARG2%
+echo %GAS_ARG3%
+echo.
 ::
 :: Lite version of Anti-PEBCAK/Layer_8/Wetware implementation
 :: * Makes GAS_PATH more "static"...
@@ -20,7 +31,7 @@ if not exist "%GAS_PATH%asm_defines.c" exit /b 303
 :: * CL's stuff/witchcraft, if all goes well it will generate "Item C"
 ::
 del %GAS_PATH%asm_defines_*
-cl /c /Fo%GAS_ARG1% %GAS_ARG2TOINF% /I ..\..\src %GAS_PATH%asm_defines.c
+cl /c /Fo%GAS_ARG1% %GAS_ARG4TOINF% /I ..\..\src %GAS_PATH%asm_defines.c
 ::
 :: If "Item C" does not exist, send error
 if not exist "%GAS_ARG1%asm_defines.obj" exit /b 404

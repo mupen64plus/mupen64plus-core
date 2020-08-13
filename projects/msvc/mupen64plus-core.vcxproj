@@ -789,7 +789,7 @@
     <TargetPlatformVersion>$(WindowsTargetPlatformVersion)</TargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(PlatformToolset)'==''" Label="Configuration">
+  <PropertyGroup Condition="'$(PlatformToolset)'==''">
     <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -935,7 +935,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir)</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -953,7 +953,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|Win32'">
@@ -971,7 +971,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "NEW_DYNAREC=1"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "NEW_DYNAREC=1"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x86_New_Dynarec_Debug|Win32'">
@@ -989,7 +989,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "NEW_DYNAREC=1"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "NEW_DYNAREC=1"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ARM_New_Dynarec_Debug|Win32'">
@@ -1007,7 +1007,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "NEW_DYNAREC=1"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "NEW_DYNAREC=1"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Debug|x64'">
@@ -1025,7 +1025,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ARM64_New_Dynarec_Debug|x64'">
@@ -1043,7 +1043,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='x64_New_Dynarec_Debug|x64'">
@@ -1061,7 +1061,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -1082,7 +1082,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir)</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -1103,7 +1103,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|Win32'">
@@ -1124,7 +1124,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "NEW_DYNAREC=1"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "NEW_DYNAREC=1"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='New_Dynarec_Release|x64'">
@@ -1145,7 +1145,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
+      <Command>..\..\tools\gen_asm_script.cmd $(IntDir) "$(PlatformToolset)" "$(DefaultPlatformToolset)" /D "__x86_64__" /D "NEW_DYNAREC=2"</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
