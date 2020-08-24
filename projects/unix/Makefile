@@ -723,7 +723,7 @@ targets:
 	@echo "    WARNFLAGS=flag == compiler warning levels (default: -Wall)"
 	@echo "    PIC=(1|0)      == Force enable/disable of position independent code"
 	@echo "    OSD=(1|0)      == Enable/disable build of OpenGL On-screen display"
-	@echo "    NETPLAY=1      == Enable netplay functionality, requires SDL2_net
+	@echo "    NETPLAY=1      == Enable netplay functionality, requires SDL2_net"
 	@echo "    NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec"
 	@echo "    OPENCV=1       == Enable OpenCV support"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
