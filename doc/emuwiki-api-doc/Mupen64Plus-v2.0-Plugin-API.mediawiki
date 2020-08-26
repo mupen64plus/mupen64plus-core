@@ -25,6 +25,14 @@ These functions are present in all of the plugins.
 <br />
 {| border="1"
 |Prototype
+|'''<tt>m64p_error PluginConfig(void)</tt>'''
+|-
+|Usage
+|This optional function opens a configuration GUI for the plugin
+|}
+<br />
+{| border="1"
+|Prototype
 |'''<tt>m64p_error PluginShutdown(void)</tt>'''
 |-
 |Requirements

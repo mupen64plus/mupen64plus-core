@@ -72,6 +72,17 @@ typedef m64p_error (*ptr_PluginStartup)(m64p_dynlib_handle, void *, void (*)(voi
 EXPORT m64p_error CALL PluginStartup(m64p_dynlib_handle, void *, void (*)(void *, int, const char *));
 #endif
 
+
+/* PluginConfig()
+ *
+ * This optional function opens a configuration GUI for the plugin
+ *
+*/
+typedef m64p_error (*ptr_PluginConfig)(void);
+#if defined(M64P_PLUGIN_PROTOTYPES) || defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL PluginConfig(void);
+#endif
+
 /* PluginShutdown()
  *
  * This function destroys data structures and releases memory allocated by
