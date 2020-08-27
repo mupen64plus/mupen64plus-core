@@ -51,11 +51,46 @@ All of these functions should only be called from within the video plugin; they 
 <br />
 {| border="1"
 |Prototype
+|'''<tt>m64p_error VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRates, int *Rates)</tt>'''
+|-
+|Input Parameters
+|'''<tt>Size</tt>''' <tt>m64p_2d_size</tt> object, defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]] of the resolution you want to retrieve the fullscreen refresh rates from.<br />
+'''<tt>NumRates</tt>''' Pointer to an integer which contains the size of '''<tt>Rates</tt>''' for input, and the number of size objects stored for output.<br />
+'''<tt>Rates</tt>''' Pointer to an array of integers which will contain the refresh rates.
+|-
+|Requirements
+|The video extension must be initialized before calling this function.
+|-
+|Usage
+|This function is used to enumerate the available refresh rates for a given resolution. An '''<tt>m64p_2d_size</tt>''' object is passed into the function, which will contain the resolution of the refresh rates you want to retrieve, an array '''<tt>Rates</tt>''' is passed into the function, which is then filled (up to <tt>*'''NumRates'''</tt> objects) with resolution sizes.  The number of sizes actually written is stored in the integer which is pointed to by '''<tt>NumSizes</tt>'''.
+|}
+<br />
+{| border="1"
+|Prototype
 |'''<tt>m64p_error VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)</tt>'''
 |-
 |Input Parameters
 |'''<tt>Width</tt>''' Horizontal resolution in pixels of desired video window<br />
 '''<tt>Height</tt>''' Vertical resolution in pixels of desired video window<br />
+'''<tt>BitsPerPixel</tt>''' Pixel color resolution of desired video window.  This value must be 16, 24, or 32<br />
+'''<tt>ScreenMode</tt>''' Either <tt>M64VIDEO_WINDOWED</tt> or <tt>M64VIDEO_FULLSCREEN</tt><br />
+'''<tt>Flags</tt>''' Logical-OR combination of flags which describes the video plugin's capabilities.
+|-
+|Requirements
+|The video extension must be initialized before calling this function.
+|-
+|Usage
+|This function creates a rendering window or switches into a fullscreen video mode.  Any desired OpenGL attributes should be set before calling this function.
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error VidExt_SetVideoModeWithRate(int Width, int Height, int RefreshRate, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)</tt>'''
+|-
+|Input Parameters
+|'''<tt>Width</tt>''' Horizontal resolution in pixels of desired video window<br />
+'''<tt>Height</tt>''' Vertical resolution in pixels of desired video window<br />
+'''<tt>RefreshRate</tt>''' Fullscreen refresh rate<br />
 '''<tt>BitsPerPixel</tt>''' Pixel color resolution of desired video window.  This value must be 16, 24, or 32<br />
 '''<tt>ScreenMode</tt>''' Either <tt>M64VIDEO_WINDOWED</tt> or <tt>M64VIDEO_FULLSCREEN</tt><br />
 '''<tt>Flags</tt>''' Logical-OR combination of flags which describes the video plugin's capabilities.

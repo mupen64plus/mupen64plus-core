@@ -43,7 +43,7 @@
 #endif
 
 /* local variables */
-static m64p_video_extension_functions l_ExternalVideoFuncTable = {12, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static m64p_video_extension_functions l_ExternalVideoFuncTable = {14, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
 static int l_VideoOutputActive = 0;
 static int l_Fullscreen = 0;
@@ -56,14 +56,16 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
     /* check input data */
     if (VideoFunctionStruct == NULL)
         return M64ERR_INPUT_ASSERT;
-    if (VideoFunctionStruct->Functions < 12)
+    if (VideoFunctionStruct->Functions < 14)
         return M64ERR_INPUT_INVALID;
 
     /* disable video extension if any of the function pointers are NULL */
     if (VideoFunctionStruct->VidExtFuncInit == NULL ||
         VideoFunctionStruct->VidExtFuncQuit == NULL ||
         VideoFunctionStruct->VidExtFuncListModes == NULL ||
+        VideoFunctionStruct->VidExtFuncListRates == NULL ||
         VideoFunctionStruct->VidExtFuncSetMode == NULL ||
+        VideoFunctionStruct->VidExtFuncSetModeWithRate == NULL ||
         VideoFunctionStruct->VidExtFuncGLGetProc == NULL ||
         VideoFunctionStruct->VidExtFuncGLSetAttr == NULL ||
         VideoFunctionStruct->VidExtFuncGLGetAttr == NULL ||
@@ -73,8 +75,8 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
         VideoFunctionStruct->VidExtFuncResizeWindow == NULL ||
         VideoFunctionStruct->VidExtFuncGLGetDefaultFramebuffer == NULL)
     {
-        l_ExternalVideoFuncTable.Functions = 12;
-        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 12 * sizeof(void *));
+        l_ExternalVideoFuncTable.Functions = 14;
+        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 14 * sizeof(void *));
         l_VideoExtensionActive = 0;
         return M64ERR_SUCCESS;
     }
@@ -196,6 +198,53 @@ EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *
     return M64ERR_SUCCESS;
 }
 
+EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRates, int *Rates)
+{
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncListRates)(Size, NumRates, Rates);
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (!SDL_WasInit(SDL_INIT_VIDEO))
+        return M64ERR_NOT_INIT;
+
+    int display = GetVideoDisplay();
+    int modeCount = SDL_GetNumDisplayModes(display);
+    SDL_DisplayMode displayMode;
+
+    if (modeCount < 1)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_GetNumDisplayModes failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    int rateCount = 0;
+    for (int i = 0; (i < modeCount) && (rateCount < *NumRates); i++)
+    {
+        if (SDL_GetDisplayMode(display, i, &displayMode) < 0)
+        {
+            DebugMessage(M64MSG_ERROR, "SDL_GetDisplayMode failed: %s", SDL_GetError());
+            return M64ERR_SYSTEM_FAIL;
+        }
+
+        /* skip when we're not at the right resolution */
+        if (displayMode.w != Size.uiWidth ||
+            displayMode.h != Size.uiHeight)
+            continue;
+
+        Rates[rateCount] = displayMode.refresh_rate;
+        rateCount++;
+    }
+
+    *NumRates = rateCount;
+
+    return M64ERR_SUCCESS;
+#else
+    // SDL1 doesn't support getting refresh rates
+    return M64ERR_UNSUPPORTED;
+#endif
+}
+
 EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)
 {
     const SDL_VideoInfo *videoInfo;
@@ -273,6 +322,106 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
     return M64ERR_SUCCESS;
+}
+
+EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int RefreshRate, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)
+{
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+    {
+        m64p_error rval = (*l_ExternalVideoFuncTable.VidExtFuncSetModeWithRate)(Width, Height, RefreshRate, BitsPerPixel, ScreenMode, Flags);
+        l_Fullscreen = (rval == M64ERR_SUCCESS && ScreenMode == M64VIDEO_FULLSCREEN);
+        l_VideoOutputActive = (rval == M64ERR_SUCCESS);
+        if (l_VideoOutputActive)
+        {
+            StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
+            StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+        }
+        return rval;
+    }
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+    if (!SDL_WasInit(SDL_INIT_VIDEO) || !SDL_VideoWindow)
+        return M64ERR_NOT_INIT;
+    
+    int videoFlags = 0;
+    int display = GetVideoDisplay();
+    int modeCount = SDL_GetNumDisplayModes(display);
+    SDL_DisplayMode displayMode;
+    int modeFound = 0;
+
+    /* Get SDL video flags to use */
+    if (ScreenMode == M64VIDEO_WINDOWED)
+        videoFlags = 0;
+    else if (ScreenMode == M64VIDEO_FULLSCREEN)
+        videoFlags = SDL_WINDOW_FULLSCREEN;
+    else
+        return M64ERR_INPUT_INVALID;
+
+    if (modeCount < 1)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_GetNumDisplayModes failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    /* Attempt to find valid screen mode */
+    for (int i = 0; i < modeCount; i++)
+    {
+        if (SDL_GetDisplayMode(display, i, &displayMode) < 0)
+        {
+            DebugMessage(M64MSG_ERROR, "SDL_GetDisplayMode failed: %s", SDL_GetError());
+            return M64ERR_SYSTEM_FAIL;
+        }
+
+        /* skip when we're not at the right mode */
+        if (displayMode.w != Width ||
+            displayMode.h != Height ||
+            displayMode.refresh_rate != RefreshRate)
+            continue;
+
+        modeFound = 1;
+        break;
+    }
+
+    /* return when no modes with specifed size have been found */
+    if (modeFound == 0)
+        return M64ERR_INPUT_INVALID;
+
+    /* Set window in specified mode */
+    if (SDL_SetWindowFullscreen(SDL_VideoWindow, videoFlags) < 0)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_SetWindowFullscreen failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    if (ScreenMode == M64VIDEO_FULLSCREEN)
+    {
+        if (SDL_SetWindowDisplayMode(SDL_VideoWindow, &displayMode) < 0)
+        {
+            DebugMessage(M64MSG_ERROR, "SDL_SetWindowDisplayMode failed: %s", SDL_GetError());
+            return M64ERR_SYSTEM_FAIL;
+        }
+    }
+
+    SDL_ShowCursor(SDL_DISABLE);
+
+    /* set swap interval/VSync */
+    if (SDL_GL_SetSwapInterval(l_SwapControl) != 0)
+    {
+        DebugMessage(M64MSG_ERROR, "SDL swap interval (VSync) set failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    l_Fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
+    l_VideoOutputActive = 1;
+    StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
+    StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+
+    return M64ERR_SUCCESS;
+#else
+    // SDL1 doesn't support setting refresh rates
+    return M64ERR_UNSUPPORTED;
+#endif
 }
 
 EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
