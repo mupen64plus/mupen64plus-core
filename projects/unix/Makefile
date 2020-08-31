@@ -1,4 +1,3 @@
-
 #/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # *   Mupen64plus - Makefile                                                *
 # *   Mupen64Plus homepage: https://mupen64plus.org/                        *
@@ -403,9 +402,9 @@ ifeq ($(OSD), 1)
 endif
 
 # set base program pointers and flags
-CC        = $(CROSS_COMPILE)gcc
-CXX       = $(CROSS_COMPILE)g++
-STRINGS   = $(CROSS_COMPILE)strings
+CC       ?= $(CROSS_COMPILE)gcc
+CXX      ?= $(CROSS_COMPILE)g++
+STRINGS  ?= $(CROSS_COMPILE)strings
 AS        = nasm
 TR       ?= tr
 RM       ?= rm -f
@@ -765,7 +764,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_nasm.h $(SRCDIR)/asm_defines/asm_defines_gas.h
+	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_*
 
 # build dependency files
 CFLAGS += -MD -MP
@@ -780,8 +779,8 @@ $(ASM_DEFINES_OBJ): $(SRCDIR)/asm_defines/asm_defines.c
 
 # Script hackery for generating ASM include files for the new dynarec assembly code
 $(SRCDIR)/asm_defines/asm_defines_gas.h: $(SRCDIR)/asm_defines/asm_defines_nasm.h
-$(SRCDIR)/asm_defines/asm_defines_nasm.h: $(ASM_DEFINES_OBJ) ../../tools/gen_asm_defines.awk
-	$(STRINGS) "$<" | $(TR) -d '\r' | $(AWK) -v dest_dir="$(SRCDIR)/asm_defines" -f ../../tools/gen_asm_defines.awk
+$(SRCDIR)/asm_defines/asm_defines_nasm.h: $(ASM_DEFINES_OBJ) ../../tools/gen_asm_script.sh
+	sh ../../tools/gen_asm_script.sh "$(SRCDIR)/asm_defines" "$(ASM_DEFINES_OBJ)"
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm $(SRCDIR)/asm_defines/asm_defines_nasm.h
