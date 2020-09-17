@@ -402,9 +402,9 @@ ifeq ($(OSD), 1)
 endif
 
 # set base program pointers and flags
-CC       ?= $(CROSS_COMPILE)gcc
-CXX      ?= $(CROSS_COMPILE)g++
-STRINGS  ?= $(CROSS_COMPILE)strings
+CC       = $(CROSS_COMPILE)gcc
+CXX      = $(CROSS_COMPILE)g++
+STRINGS  = $(CROSS_COMPILE)strings
 AS        = nasm
 TR       ?= tr
 RM       ?= rm -f
