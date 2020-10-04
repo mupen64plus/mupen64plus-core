@@ -192,7 +192,7 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |None
 |-
 |M64CMD_NETPLAY_INIT
-|This command will initilize the netplay subsystem. It will also attempt to make an initial connection to the netplay server. Returns M64ERR_SYSTEM_FAIL on failure, M64ERR_SUCCESS on success.
+|This command will initialize the netplay subsystem. It will also attempt to make an initial connection to the netplay server. Returns M64ERR_SYSTEM_FAIL on failure, M64ERR_SUCCESS on success.
 |'''<tt>ParamInt</tt>''' This is the port number the netplay server is listening on.'''<br /><tt>ParamPtr</tt>''' This is a string containing the IP or hostname of the netplay server.
 |Emulator should be stopped.
 |-
