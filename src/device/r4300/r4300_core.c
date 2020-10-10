@@ -41,7 +41,7 @@
 #include <time.h>
 
 void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct rdram* rdram, const struct interrupt_handler* interrupt_handlers,
-    unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int randomize_interrupt)
+    unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int randomize_interrupt, uint32_t start_address)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
 #ifdef NEW_DYNAREC
@@ -62,6 +62,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
     r4300->mi = mi;
     r4300->rdram = rdram;
     r4300->randomize_interrupt = randomize_interrupt;
+    r4300->start_address = start_address;
     srand((unsigned int) time(NULL));
 }
 
@@ -182,7 +183,7 @@ void run_r4300(struct r4300_core* r4300)
         r4300->cached_interp.recompile_block = cached_interp_recompile_block;
 
         init_blocks(&r4300->cached_interp);
-        cached_interpreter_jump_to(r4300, UINT32_C(0xa4000040));
+        cached_interpreter_jump_to(r4300, r4300->start_address);
 
         /* Prevent segfault on failed cached_interpreter_jump_to */
         if (!r4300->cached_interp.actual->block) {

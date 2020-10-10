@@ -107,6 +107,8 @@ struct cheat_ctx g_cheat_ctx;
  */
 void* g_mem_base = NULL;
 
+uint32_t g_start_address = UINT32_C(0xa4000040);
+
 struct device g_dev;
 
 m64p_media_loader g_media_loader;
@@ -1573,6 +1575,7 @@ m64p_error main_run(void)
                 count_per_op,
                 no_compiled_jump,
                 randomize_interrupt,
+                g_start_address,
                 &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
                 si_dma_duration,
                 rdram_size,
@@ -1742,4 +1745,35 @@ void main_stop(void)
         debugger_step();
     }
 #endif
+}
+
+m64p_error open_pif(const unsigned char* pifimage, unsigned int size)
+{
+    md5_byte_t pif_ntsc_md5[] = {0x49, 0x21, 0xD5, 0xF2, 0x16, 0x5D, 0xEE, 0x6E, 0x24, 0x96, 0xF4, 0x38, 0x8C, 0x4C, 0x81, 0xDA};
+    md5_byte_t pif_pal_md5[]  = {0x2B, 0x6E, 0xEC, 0x58, 0x6F, 0xAA, 0x43, 0xF3, 0x46, 0x23, 0x33, 0xB8, 0x44, 0x83, 0x45, 0x54};
+
+    uint32_t *dst32 = mem_base_u32(g_mem_base, MM_PIF_MEM);
+    uint32_t *src32 = (uint32_t*) pifimage;
+    md5_state_t state;
+    md5_byte_t digest[16];
+
+    md5_init(&state);
+    md5_append(&state, (const md5_byte_t*)pifimage, size);
+    md5_finish(&state, digest);
+
+    if (memcmp(digest, pif_ntsc_md5, 16) == 0)
+        DebugMessage(M64MSG_INFO, "Using NTSC PIF ROM");
+    else if (memcmp(digest, pif_pal_md5, 16) == 0)
+        DebugMessage(M64MSG_INFO, "Using PAL PIF ROM");
+    else
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid PIF ROM");
+        return M64ERR_INPUT_INVALID;
+    }
+
+    for (int i = 0; i < size; i += 4)
+        *dst32++ = big32(*src32++);
+
+    g_start_address = UINT32_C(0xbfc00000);
+    return M64ERR_SUCCESS;
 }

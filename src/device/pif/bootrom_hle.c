@@ -47,6 +47,8 @@ static unsigned int get_tv_type(void)
 
 void pif_bootrom_hle_execute(struct r4300_core* r4300)
 {
+    if (r4300->start_address == 0xbfc00000) return;
+
     uint32_t pif24;
     unsigned int seed;       /* seed (depends on CIC version) */
     unsigned int rom_type;   /* 0:Cart, 1:DD */

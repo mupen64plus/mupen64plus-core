@@ -713,7 +713,7 @@ void run_pure_interpreter(struct r4300_core* r4300)
 {
    *r4300_stop(r4300) = 0;
    *r4300_pc_struct(r4300) = &r4300->interp_PC;
-   *r4300_pc(r4300) = r4300->cp0.last_addr = 0xa4000040;
+   *r4300_pc(r4300) = r4300->cp0.last_addr = r4300->start_address;
 
    while (!*r4300_stop(r4300))
    {

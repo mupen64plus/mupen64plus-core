@@ -53,6 +53,7 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf);
 
 struct pif
 {
+    uint8_t* base;
     uint8_t* ram;
     struct pif_channel channels[PIF_CHANNELS_COUNT];
 
@@ -62,9 +63,9 @@ struct pif
     struct si_controller* si;
 };
 
-static osal_inline uint32_t pif_ram_address(uint32_t address)
+static osal_inline uint32_t pif_address(uint32_t address)
 {
-    return ((address & 0xfffc) - PIF_ROM_SIZE);
+    return (address & 0xfffc);
 }
 
 
@@ -82,8 +83,8 @@ void reset_pif(struct pif* pif, unsigned int reset_type);
 
 void setup_channels_format(struct pif* pif);
 
-void read_pif_ram(void* opaque, uint32_t address, uint32_t* value);
-void write_pif_ram(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
+void read_pif_mem(void* opaque, uint32_t address, uint32_t* value);
+void write_pif_mem(void* opaque, uint32_t address, uint32_t value, uint32_t mask);
 
 void process_pif_ram(struct pif* pif);
 void update_pif_ram(struct pif* pif);

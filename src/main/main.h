@@ -99,5 +99,7 @@ int        main_volume_get_muted(void);
 
 m64p_error main_reset(int do_hard_reset);
 
+m64p_error open_pif(const unsigned char* pifimage, unsigned int size);
+
 #endif /* __MAIN_H__ */
 

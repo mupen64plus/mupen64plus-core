@@ -468,8 +468,8 @@ void nmi_int_handler(void* opaque)
     r4300->recomp.dyna_interp = 0;
 #endif
     // set next instruction address to reset vector
-    r4300->cp0.last_addr = UINT32_C(0xa4000040);
-    generic_jump_to(r4300, UINT32_C(0xa4000040));
+    r4300->cp0.last_addr = r4300->start_address;
+    generic_jump_to(r4300, r4300->start_address);
 }
 
 
@@ -496,7 +496,7 @@ void reset_hard_handler(void* opaque)
     poweron_device(dev);
 
     pif_bootrom_hle_execute(r4300);
-    r4300->cp0.last_addr = UINT32_C(0xa4000040);
+    r4300->cp0.last_addr = r4300->start_address;
     *r4300_cp0_next_interrupt(&r4300->cp0) = 624999;
     *r4300_cp0_cycle_count(&r4300->cp0) = 0;
     init_interrupt(&r4300->cp0);

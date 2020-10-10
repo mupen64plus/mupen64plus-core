@@ -891,7 +891,7 @@ void dynarec_setup_code(void)
     /* The dynarec jumps here after we call dyna_start and it prepares
      * Here we need to prepare the initial code block and jump to it
      */
-    dynarec_jump_to(r4300, UINT32_C(0xa4000040));
+    dynarec_jump_to(r4300, r4300->start_address);
 
     /* Prevent segfault on failed dynarec_jump_to */
     if (!r4300->cached_interp.actual->block || !r4300->cached_interp.actual->code) {

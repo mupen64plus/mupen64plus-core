@@ -85,6 +85,7 @@ void init_device(struct device* dev,
     unsigned int count_per_op,
     int no_compiled_jump,
     int randomize_interrupt,
+    uint32_t start_address,
     /* ai */
     void* aout, const struct audio_out_backend_interface* iaout,
     /* si */
@@ -150,7 +151,7 @@ void init_device(struct device* dev,
         { A(MM_DD_ROM, 0x1ffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
-        { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_ram) } }
+        { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_mem) } }
     };
 
     /* init and map DD if present */
@@ -176,7 +177,7 @@ void init_device(struct device* dev,
     init_rdram(&dev->rdram, mem_base_u32(base, MM_RDRAM_DRAM), dram_size, &dev->r4300);
 
     init_r4300(&dev->r4300, &dev->mem, &dev->mi, &dev->rdram, interrupt_handlers,
-            emumode, count_per_op, no_compiled_jump, randomize_interrupt);
+            emumode, count_per_op, no_compiled_jump, randomize_interrupt, start_address);
     init_rdp(&dev->dp, &dev->sp, &dev->mi, &dev->mem, &dev->rdram, &dev->r4300);
     init_rsp(&dev->sp, mem_base_u32(base, MM_RSP_MEM), &dev->mi, &dev->dp, &dev->ri);
     init_ai(&dev->ai, &dev->mi, &dev->ri, &dev->vi, aout, iaout);
