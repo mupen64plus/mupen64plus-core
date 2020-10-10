@@ -33,15 +33,6 @@
 #include "device/rdram/rdram.h"
 #include "osal/preproc.h"
 
-enum
-{
-    /* SI_STATUS - read */
-    SI_STATUS_DMA_BUSY  = 0x0001,
-    SI_STATUS_RD_BUSY   = 0x0002,
-    SI_STATUS_DMA_ERROR = 0x0008,
-    SI_STATUS_INTERRUPT = 0x1000,
-};
-
 static int validate_dma(struct si_controller* si, uint32_t reg)
 {
     if ((si->regs[reg] & 0x1fffffff) != 0x1fc007c0)
@@ -177,7 +168,7 @@ void si_end_of_dma_event(void* opaque)
 
     /* end DMA */
     si->dma_dir = SI_NO_DMA;
-    si->regs[SI_STATUS_REG] &= ~SI_STATUS_DMA_BUSY;
+    si->regs[SI_STATUS_REG] &= ~(SI_STATUS_DMA_BUSY | SI_STATUS_IO_BUSY);
 
     /* raise si interrupt */
     si->regs[SI_STATUS_REG] |= SI_STATUS_INTERRUPT;

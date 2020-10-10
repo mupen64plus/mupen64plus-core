@@ -49,6 +49,15 @@ enum si_registers
     SI_REGS_COUNT
 };
 
+enum
+{
+    /* SI_STATUS - read */
+    SI_STATUS_DMA_BUSY  = 0x0001,
+    SI_STATUS_IO_BUSY   = 0x0002,
+    SI_STATUS_DMA_ERROR = 0x0008,
+    SI_STATUS_INTERRUPT = 0x1000,
+};
+
 struct si_controller
 {
     uint32_t regs[SI_REGS_COUNT];
