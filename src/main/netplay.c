@@ -28,6 +28,10 @@
 #include "netplay.h"
 
 #include <SDL_net.h>
+#if !defined(WIN32)
+#include <sys/socket.h>
+#include <netinet/ip.h>
+#endif
 
 static int l_canFF;
 static int l_netplay_controller;
@@ -60,6 +64,12 @@ static uint8_t l_player_lag[4];
 #define TCP_GET_REGISTRATION 6
 #define TCP_DISCONNECT_NOTICE 7
 
+struct __UDPSocket {
+    int ready;
+    int channel;
+};
+
+#define EF 46
 
 m64p_error netplay_start(const char* host, int port)
 {
@@ -75,6 +85,12 @@ m64p_error netplay_start(const char* host, int port)
         DebugMessage(M64MSG_ERROR, "Netplay: UDP socket creation failed");
         return M64ERR_SYSTEM_FAIL;
     }
+
+#if !defined(WIN32)
+    const char tos_local = EF << 2;
+    struct __UDPSocket* socket = (struct __UDPSocket*) l_udpSocket;
+    setsockopt(socket->channel, IPPROTO_IP, IP_TOS, &tos_local, sizeof(tos_local));
+#endif
 
     IPaddress dest;
     SDLNet_ResolveHost(&dest, host, port);
