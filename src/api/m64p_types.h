@@ -167,7 +167,8 @@ typedef enum {
   M64CMD_NETPLAY_CONTROL_PLAYER,
   M64CMD_NETPLAY_GET_VERSION,
   M64CMD_NETPLAY_CLOSE,
-  M64CMD_PIF_OPEN
+  M64CMD_PIF_OPEN,
+  M64CMD_ROM_SET_SETTINGS
 } m64p_command;
 
 typedef struct {
@@ -221,6 +222,16 @@ typedef enum
     SYSTEM_MPAL
 } m64p_system_type;
 
+typedef enum
+{
+   EEPROM_4KB = 0,
+   EEPROM_16KB,
+   SRAM,
+   FLASH_RAM,
+   CONTROLLER_PACK,
+   NONE
+} m64p_rom_save_type;
+
 typedef struct
 {
    uint8_t  init_PI_BSB_DOM1_LAT_REG;  /* 0x00 */
@@ -251,6 +262,9 @@ typedef struct
    unsigned char transferpak; /* 0 - No, 1 - Yes boolean for transfer pak support. */
    unsigned char mempak; /* 0 - No, 1 - Yes boolean for memory pak support. */
    unsigned char biopak; /* 0 - No, 1 - Yes boolean for bio pak support. */
+   unsigned char disableextramem; /* 0 - No, 1 - Yes boolean for disabling 4MB expansion RAM pack */
+   unsigned int countperop; /* Number of CPU cycles per instruction. */
+   unsigned int sidmaduration; /* Default SI DMA duration */
 } m64p_rom_settings;
 
 /* ----------------------------------------- */

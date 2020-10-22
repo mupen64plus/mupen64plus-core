@@ -48,9 +48,6 @@ typedef struct _rom_params
    char *cheats;
    m64p_system_type systemtype;
    char headername[21];  /* ROM Name as in the header, removing trailing whitespace */
-   unsigned char countperop;
-   int disableextramem;
-   unsigned int sidmaduration;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;
@@ -84,17 +81,6 @@ enum
     CIC_NUS_6103,
     CIC_NUS_6105,
     CIC_NUS_6106
-};
-
-/* Supported save types. */
-enum
-{
-    EEPROM_4KB,
-    EEPROM_16KB,
-    SRAM,
-    FLASH_RAM,
-    CONTROLLER_PACK,
-    NONE
 };
 
 /* Rom INI database structures and functions */
