@@ -508,8 +508,8 @@ void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, u
         memcpy(&output_data[0], &request, 1);
         SDLNet_TCP_Send(l_tcpSocket, &output_data[0], 1);
         int32_t recv = 0;
-        while (recv < 20)
-            recv += SDLNet_TCP_Recv(l_tcpSocket, &output_data[recv], 20 - recv);
+        while (recv < 24)
+            recv += SDLNet_TCP_Recv(l_tcpSocket, &output_data[recv], 24 - recv);
         *count_per_op = SDLNet_Read32(&output_data[0]);
         *enable_overclock = SDLNet_Read32(&output_data[4]);
         *disable_extra_mem = SDLNet_Read32(&output_data[8]);
