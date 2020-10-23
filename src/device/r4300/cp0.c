@@ -36,9 +36,10 @@
 #endif
 
 /* global functions */
-void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers)
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, unsigned int enable_overclock, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers)
 {
     cp0->count_per_op = count_per_op;
+    cp0->enable_overclock = enable_overclock;
 #ifdef NEW_DYNAREC
     cp0->new_dynarec_hot_state = new_dynarec_hot_state;
 #endif
@@ -138,7 +139,13 @@ void cp0_update_count(struct r4300_core* r4300)
     if (r4300->emumode != EMUMODE_DYNAREC)
     {
 #endif
-        uint32_t count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        uint32_t count;
+        if (!cp0->enable_overclock) {
+            count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
+        }
+        else {
+            count = 2;
+        }
         cp0_regs[CP0_COUNT_REG] += count;
         *r4300_cp0_cycle_count(cp0) += count;
         cp0->last_addr = *r4300_pc(r4300);

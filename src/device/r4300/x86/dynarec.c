@@ -123,11 +123,18 @@ static void gencheck_cop1_unusable(struct r4300_core* r4300)
 static void gencp0_update_count(struct r4300_core* r4300, unsigned int addr)
 {
 #if !defined(COMPARE_CORE) && !defined(DBG)
-    mov_reg32_imm32(EAX, addr);
-    sub_reg32_m32(EAX, (unsigned int*)(&r4300->cp0.last_addr));
-    shr_reg32_imm8(EAX, 2);
-    mov_reg32_m32(EDX, &r4300->cp0.count_per_op);
-    mul_reg32(EDX);
+    if (!r4300->cp0.enable_overclock)
+    {
+        mov_reg32_imm32(EAX, addr);
+        sub_reg32_m32(EAX, (unsigned int*)(&r4300->cp0.last_addr));
+        shr_reg32_imm8(EAX, 2);
+        mov_reg32_m32(EDX, &r4300->cp0.count_per_op);
+        mul_reg32(EDX);
+    }
+    else
+    {
+        mov_reg32_imm32(EAX, 2);
+    }
     add_m32_reg32((unsigned int*)(&r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]), EAX);
     add_m32_reg32((unsigned int*)r4300_cp0_cycle_count(&r4300->cp0), EAX);
 #else

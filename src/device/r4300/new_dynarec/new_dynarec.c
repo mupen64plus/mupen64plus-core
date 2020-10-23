@@ -5668,7 +5668,11 @@ static void do_cc(int i,signed char i_regmap[],int *adj,int addr,int taken,int i
     emit_jmp(0);
   }
   else if(*adj==0||invert) {
-    emit_addimm_and_set_flags(CLOCK_DIVIDER*(count+2),HOST_CCREG);
+    if(!g_dev.r4300.cp0.enable_overclock) {
+      emit_addimm_and_set_flags(CLOCK_DIVIDER*(count+2),HOST_CCREG);
+    } else {
+      emit_addimm_and_set_flags(2,HOST_CCREG);
+    }
     jaddr=(intptr_t)out;
     emit_jns(0);
   }
