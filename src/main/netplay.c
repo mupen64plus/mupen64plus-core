@@ -497,7 +497,7 @@ void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, u
         SDLNet_Write32(*count_per_op, &output_data[1]);
         SDLNet_Write32(*enable_overclock, &output_data[5]);
         SDLNet_Write32(*disable_extra_mem, &output_data[9]);
-        SDLNet_Write32(*si_dma_duration, &output_data[14]);
+        SDLNet_Write32(*si_dma_duration, &output_data[13]);
         SDLNet_Write32(*emumode, &output_data[17]);
         SDLNet_Write32(*no_compiled_jump, &output_data[21]);
         SDLNet_TCP_Send(l_tcpSocket, &output_data[0], 25);
