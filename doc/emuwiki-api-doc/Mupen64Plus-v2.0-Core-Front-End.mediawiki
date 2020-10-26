@@ -7,12 +7,13 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 == Startup/Shutdown Functions ==
 {| border="1"
 |Prototype
-|'''<tt>m64p_error CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context, void (*DebugCallback)(void *Context, int level, const char *message), void *Context2, void (*StateCallback)(void *Context2, m64p_core_param ParamChanged, int NewValue))</tt>'''
+|'''<tt>m64p_error CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, const char *CachePath, void *Context, void (*DebugCallback)(void *Context, int level, const char *message), void *Context2, void (*StateCallback)(void *Context2, m64p_core_param ParamChanged, int NewValue))</tt>'''
 |-
 |Input Parameters
 |'''<tt>APIVersion</tt>''' Integer containing the version number of the Core API used by the front-end.<br />
 '''<tt>ConfigPath</tt>''' File path to folder containing Mupen64Plus.cfg.  Can be NULL.<br />
 '''<tt>DataPath</tt>''' Folder to search first when looking for shared data files.  Can be NULL.<br />
+'''<tt>CachePath</tt>''' File path to folder containing cache files.  Can be NULL.<br />
 '''<tt>Context</tt>''' Pointer which will be passed back to the '''<tt>DebugCallback</tt>''' function.  Can be NULL.<br />
 '''<tt>DebugCallback</tt>''' Pointer to function in front-end for receiving debug information and warnings from the core.  This function must be thread-safe.  Can be NULL.  The value of <tt>level</tt> is 1 for an error, 2 for a warning, 3 for info, and 4 for verbose info.<br />
 '''<tt>Context2</tt>''' Pointer which will be passed back to the '''<tt>StateCallback</tt>''' function.  Can be NULL.<br />

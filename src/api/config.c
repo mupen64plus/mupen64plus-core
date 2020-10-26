@@ -73,6 +73,7 @@ typedef config_section *config_list;
 static int         l_ConfigInit = 0;
 static char       *l_DataDirOverride = NULL;
 static char       *l_ConfigDirOverride = NULL;
+static char       *l_CacheDirOverride = NULL;
 static config_list l_ConfigListActive = NULL;
 static config_list l_ConfigListSaved = NULL;
 
@@ -427,7 +428,7 @@ static m64p_error write_configlist_file(void)
 /* these functions are only to be used within the Core library */
 /* ----------------------------------------------------------- */
 
-m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride)
+m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride, const char *CacheDirOverride)
 {
     m64p_error rval;
     const char *configpath = NULL;
@@ -457,6 +458,14 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     {
         l_ConfigDirOverride = strdup(ConfigDirOverride);
         if (l_ConfigDirOverride == NULL)
+            return M64ERR_NO_MEMORY;
+    }
+
+    /* if a cache directory was specified, make a copy of it */
+    if (CacheDirOverride != NULL)
+    {
+        l_CacheDirOverride = strdup(CacheDirOverride);
+        if (l_CacheDirOverride == NULL)
             return M64ERR_NO_MEMORY;
     }
 
@@ -1593,7 +1602,13 @@ EXPORT const char * CALL ConfigGetUserDataPath(void)
 
 EXPORT const char * CALL ConfigGetUserCachePath(void)
 {
-  return osal_get_user_cachepath();
+    if (l_CacheDirOverride != NULL)
+    {
+        osal_mkdirp(l_CacheDirOverride, 0700);
+        return l_CacheDirOverride;
+    }
+    else
+        return osal_get_user_cachepath();
 }
 
 EXPORT m64p_error CALL ConfigSendNetplayConfig(char* data, int size)

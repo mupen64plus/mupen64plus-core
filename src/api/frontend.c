@@ -55,7 +55,7 @@ static int l_ROMOpen = 0;
 static int l_CallerUsingSDL = 0;
 
 /* functions exported outside of libmupen64plus to front-end application */
-EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, void *Context,
+EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const char *DataPath, const char *CachePath, void *Context,
                                    void (*DebugCallback)(void *, int, const char *), void *Context2,
                                    void (*StateCallback)(void *, m64p_core_param, int))
 {
@@ -86,7 +86,7 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     savestates_init();
 
     /* next, start up the configuration handling code by loading and parsing the config file */
-    if (ConfigInit(ConfigPath, DataPath) != M64ERR_SUCCESS)
+    if (ConfigInit(ConfigPath, DataPath, CachePath) != M64ERR_SUCCESS)
         return M64ERR_INTERNAL;
 
     /* set default configuration parameter values for Core */
