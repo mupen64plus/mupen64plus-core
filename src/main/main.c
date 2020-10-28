@@ -890,9 +890,6 @@ static void apply_speed_limiter(void)
 /* TODO: make a GameShark module and move that there */
 static void gs_apply_cheats(struct cheat_ctx* ctx)
 {
-    if (netplay_is_init())
-        return;
-
     struct r4300_core* r4300 = &g_dev.r4300;
 
     if (g_gs_vi_counter < 60)

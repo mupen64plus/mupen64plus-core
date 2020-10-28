@@ -359,6 +359,8 @@ EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *Code
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (netplay_is_init())
+        return M64ERR_INVALID_STATE;
     if (CheatName == NULL || CodeList == NULL)
         return M64ERR_INPUT_ASSERT;
     if (strlen(CheatName) < 1 || NumCodes < 1)
@@ -374,6 +376,8 @@ EXPORT m64p_error CALL CoreCheatEnabled(const char *CheatName, int Enabled)
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (netplay_is_init())
+        return M64ERR_INVALID_STATE;
     if (CheatName == NULL)
         return M64ERR_INPUT_ASSERT;
 
