@@ -97,7 +97,7 @@ static osal_inline file_status_t netplay_read_storage(const char *filename, void
     return 0;
 }
 
-static osal_inline void netplay_sync_settings(uint32_t *count_per_op, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
+static osal_inline void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
 {
 }
 
