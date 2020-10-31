@@ -5671,7 +5671,12 @@ static void do_cc(int i,signed char i_regmap[],int *adj,int addr,int taken,int i
     if(!g_dev.r4300.cp0.enable_overclock) {
       emit_addimm_and_set_flags(CLOCK_DIVIDER*(count+2),HOST_CCREG);
     } else {
-      emit_addimm_and_set_flags((count+2)-((count+2)>>1),HOST_CCREG);
+      uint32_t oc_factor = g_dev.r4300.cp0.enable_overclock;
+      while (oc_factor) {
+           count -= count >> 1;
+           oc_factor--;
+        }
+      emit_addimm_and_set_flags((count+2),HOST_CCREG);
     }
     jaddr=(intptr_t)out;
     emit_jns(0);

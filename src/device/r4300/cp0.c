@@ -144,7 +144,12 @@ void cp0_update_count(struct r4300_core* r4300)
             count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2) * cp0->count_per_op;
         }
         else {
-            count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2) - ((*r4300_pc(r4300) - cp0->last_addr) >> 3);
+            uint32_t oc_factor = r4300->cp0.enable_overclock;
+            count = ((*r4300_pc(r4300) - cp0->last_addr) >> 2);
+            while (oc_factor) {
+                count -= count >> 1;
+                oc_factor--;
+            }
         }
         cp0_regs[CP0_COUNT_REG] += count;
         *r4300_cp0_cycle_count(cp0) += count;

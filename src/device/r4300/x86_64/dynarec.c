@@ -136,18 +136,22 @@ static void gencp0_update_count(struct r4300_core* r4300, unsigned int addr)
 #if !defined(COMPARE_CORE) && !defined(DBG)
     mov_reg32_imm32(EAX, addr);
     sub_xreg32_m32rel(EAX, (unsigned int*)(&r4300->cp0.last_addr));
+    shr_reg32_imm8(EAX, 2);
     if (!r4300->cp0.enable_overclock)
     {
-        shr_reg32_imm8(EAX, 2);
         mov_xreg32_m32rel(EDX, (void*)&r4300->cp0.count_per_op);
         mul_reg32(EDX);
     }
     else
     {
-        mov_reg32_reg32(EDX, EAX);
-        shr_reg32_imm8(EAX, 2);
-        shr_reg32_imm8(EDX, 3);
-        sub_reg32_reg32(EAX, EDX);
+        unsigned int oc_factor = r4300->cp0.enable_overclock;
+        while (oc_factor)
+        {
+            mov_reg32_reg32(EDX, EAX);
+            shr_reg32_imm8(EDX, 1);
+            sub_reg32_reg32(EAX, EDX);
+            oc_factor--;
+        }
     }
     add_m32rel_xreg32((unsigned int*)(&r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]), EAX);
     add_m32rel_xreg32((unsigned int*)(r4300_cp0_cycle_count(&r4300->cp0)), EAX);
