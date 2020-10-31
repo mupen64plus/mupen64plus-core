@@ -5673,9 +5673,9 @@ static void do_cc(int i,signed char i_regmap[],int *adj,int addr,int taken,int i
     } else {
       uint32_t oc_factor = g_dev.r4300.cp0.enable_overclock;
       while (oc_factor) {
-           count -= count >> 1;
-           oc_factor--;
-        }
+        count -= count >> 1;
+        oc_factor--;
+      }
       emit_addimm_and_set_flags((count+2),HOST_CCREG);
     }
     jaddr=(intptr_t)out;
