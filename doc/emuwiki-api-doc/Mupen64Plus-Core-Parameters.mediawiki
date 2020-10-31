@@ -61,7 +61,7 @@ These are standard parameters which are used by the Mupen64Plus Core library.  T
 |-
 |EnableOverclock
 |M64TYPE_INT
-|Override cycle calculation with reduced count factor (overclock).
+|Override cycle calculation with reduced count factor (overclock) when set greater than 0.
 |-
 |}
 
