@@ -270,10 +270,11 @@ void* init_mem_base(void)
 void release_mem_base(void* mem_base)
 {
 #ifdef _WIN32
-    _aligned_free(MEM_BASE_PTR(mem_base));
-#else
-    free(MEM_BASE_PTR(mem_base));
+    if (MEM_BASE_MODE(mem_base) == 0)
+        _aligned_free(MEM_BASE_PTR(mem_base));
+    else
 #endif
+        free(MEM_BASE_PTR(mem_base));
 }
 
 uint32_t* mem_base_u32(void* mem_base, uint32_t address)
