@@ -48,6 +48,7 @@ static struct controller_input_compat *l_cin_compats;
 static uint8_t l_plugin[4];
 static uint8_t l_buffer_target;
 static uint8_t l_player_lag[4];
+static int input_delay;
 
 //UDP packet formats
 #define UDP_SEND_KEY_INFO 0
@@ -127,6 +128,7 @@ m64p_error netplay_start(const char* host, int port)
     l_vi_counter = 0;
     l_status = 0;
     l_reg_id = 0;
+    input_delay = 0;
 
     return M64ERR_SUCCESS;
 }
@@ -382,7 +384,7 @@ static void netplay_send_input(uint8_t control_id, uint32_t keys)
     UDPpacket *packet = SDLNet_AllocPacket(11);
     packet->data[0] = UDP_SEND_KEY_INFO;
     packet->data[1] = control_id; //player number
-    SDLNet_Write32(l_cin_compats[control_id].netplay_count, &packet->data[2]); // current event count
+    SDLNet_Write32(l_cin_compats[control_id].netplay_count + input_delay, &packet->data[2]); // current event count
     SDLNet_Write32(keys, &packet->data[6]); //key data
     packet->data[10] = l_plugin[control_id]; //current plugin
     packet->len = 11;
@@ -409,6 +411,13 @@ uint8_t netplay_register_player(uint8_t player, uint8_t plugin, uint8_t rawdata,
     l_buffer_target = response[1]; //local buffer size target
     return response[0];
 }
+
+m64p_error netplay_set_input_delay(int _input_delay)
+{
+    input_delay = _input_delay;
+    return M64ERR_SUCCESS;
+}
+
 
 int netplay_lag()
 {

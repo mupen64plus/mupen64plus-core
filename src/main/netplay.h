@@ -40,6 +40,7 @@ struct controller_input_compat;
 #ifdef M64P_NETPLAY
 
 m64p_error netplay_start(const char* host, int port);
+m64p_error netplay_set_input_delay(int input_delay);
 m64p_error netplay_stop();
 uint8_t netplay_register_player(uint8_t player, uint8_t plugin, uint8_t rawdata, uint32_t reg_id);
 int netplay_lag();
