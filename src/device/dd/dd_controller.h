@@ -91,6 +91,10 @@ struct dd_controller
     void* disk;
     const struct storage_backend_interface* idisk;
     uint16_t lba_phys_table[0x10DC];
+    uint8_t disk_format;
+    uint8_t disk_development;
+    size_t disk_offset_sys;
+    size_t disk_offset_id;
 
     struct r4300_core* r4300;
 };
@@ -110,6 +114,7 @@ void init_dd(struct dd_controller* dd,
              void* clock, const struct clock_backend_interface* iclock,
              const uint32_t* rom, size_t rom_size,
              void* disk, const struct storage_backend_interface* idisk,
+             uint8_t disk_format, uint8_t disk_development, size_t disk_offset_sys, size_t disk_offset_id,
              struct r4300_core* r4300);
 
 void poweron_dd(struct dd_controller* dd);

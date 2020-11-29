@@ -107,7 +107,8 @@ void init_device(struct device* dev,
     /* dd */
     void* dd_rtc_clock, const struct clock_backend_interface* dd_rtc_iclock,
     size_t dd_rom_size,
-    void* dd_disk, const struct storage_backend_interface* dd_idisk)
+    void* dd_disk, const struct storage_backend_interface* dd_idisk,
+    uint8_t disk_format, uint8_t disk_development, size_t disk_offset_sys, size_t disk_offset_id)
 {
     struct interrupt_handler interrupt_handlers[] = {
         { &dev->vi,        vi_vertical_interrupt_event }, /* VI */
@@ -161,6 +162,7 @@ void init_device(struct device* dev,
                 dd_rtc_clock, dd_rtc_iclock,
                 mem_base_u32(base, MM_DD_ROM), dd_rom_size,
                 dd_disk, dd_idisk,
+                disk_format, disk_development, disk_offset_sys, disk_offset_id,
                 &dev->r4300);
     }
 
