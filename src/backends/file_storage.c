@@ -103,37 +103,6 @@ static void file_storage_parent_save(void* storage)
     file_storage_save(fstorage);
 }
 
-static void file_storage_dd_sdk_dump_save(void* storage)
-{
-    //static uint8_t sdk_buffer[SDK_FORMAT_DUMP_SIZE];
-    struct file_storage* fstorage = (struct file_storage*)storage;
-
-    /* XXX: for now, don't overwrite the original file, because we don't want to corrupt dumps... */
-    char* filename = formatstr("%s.save", fstorage->filename);
-    if (filename == NULL) {
-        DebugMessage(M64MSG_ERROR, "Failed to allocate memory for sdk_dump filename");
-        return;
-    }
-
-    //dd_convert_to_sdk(fstorage->data, sdk_buffer);
-    //switch(write_to_file(filename, sdk_buffer, SDK_FORMAT_DUMP_SIZE))
-
-    switch(write_to_file(filename, fstorage->data, fstorage->size))
-    {
-    case file_open_error:
-        DebugMessage(M64MSG_WARNING, "couldn't open storage file '%s' for writing", fstorage->filename);
-        break;
-    case file_write_error:
-        DebugMessage(M64MSG_WARNING, "failed to write storage file '%s'", fstorage->filename);
-        break;
-    default:
-        break;
-    }
-
-    free(filename);
-}
-
-
 
 const struct storage_backend_interface g_ifile_storage =
 {
@@ -155,11 +124,4 @@ const struct storage_backend_interface g_isubfile_storage =
     file_storage_data,
     file_storage_size,
     file_storage_parent_save
-};
-
-const struct storage_backend_interface g_ifile_storage_disk =
-{
-    file_storage_data,
-    file_storage_size,
-    file_storage_dd_sdk_dump_save
 };

@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-*   Mupen64plus - dd_controller.h                                         *
+*   Mupen64plus - disk.h                                                  *
 *   Mupen64Plus homepage: https://mupen64plus.org/                        *
 *   Copyright (C) 2020 LuigiBlood                                         *
 *                                                                         *
@@ -21,6 +21,11 @@
 
 #ifndef M64P_DEVICE_DISK_H
 #define M64P_DEVICE_DISK_H
+
+#include <stdint.h>
+#include <stddef.h>
+
+struct storage_backend_interface;
 
 /* Disk format sizes */
 #define MAME_FORMAT_DUMP_SIZE 0x0435b0c0
@@ -130,5 +135,19 @@ static const uint16_t TrackZoneTable[2][8] = {
 
 #define SECTORSIZE_SYS SECTORSIZE(0)
 #define SECTORSIZE_SYS_DEV SECTORSIZE(3)
+
+struct dd_disk
+{
+    void* storage;
+    const struct storage_backend_interface* istorage;
+    uint16_t lba_phys_table[0x10DC];
+    uint8_t format;
+    uint8_t development;
+    size_t offset_sys;
+    size_t offset_id;
+};
+
+/* Storage interface which handles the various 64DD disks format specificities */
+extern const struct storage_backend_interface g_istorage_disk;
 
 #endif

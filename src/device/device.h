@@ -142,8 +142,7 @@ void init_device(struct device* dev,
     /* dd */
     void* dd_rtc_clock, const struct clock_backend_interface* dd_rtc_iclock,
     size_t dd_rom_size,
-    void* dd_disk, const struct storage_backend_interface* dd_idisk,
-    uint8_t disk_format, uint8_t disk_development, size_t disk_offset_sys, size_t disk_offset_id);
+    void* dd_disk, const struct storage_backend_interface* dd_idisk);
 
 /* Setup device such that it's state is
  * what it should be after power on.
