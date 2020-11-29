@@ -1058,7 +1058,8 @@ no_dd:
     *rom_size = 0;
 }
 
-static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk)
+static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk,
+    uint8_t* format, uint8_t* development, size_t* offset_sys, size_t* offset_id)
 {
     const char* format_desc;
     /* ask the core loader for DD disk filename */
@@ -1087,7 +1088,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     for (int i = 0; i < 8; i++)
     {
         uint32_t offset = BLOCKSIZE(0) * blocks[i];
-        struct dd_sys_data* sys_data = &dd_disk->data[offset];
+        const struct dd_sys_data* sys_data = (void*)(&dd_disk->data[offset]);
 
         if ((offset + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE && i > 0))
         {
@@ -1190,8 +1191,8 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
         const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
 
-        struct dd_sys_data* sys_data = &dd_disk->data[D64_OFFSET_SYS];
-        
+        const struct dd_sys_data* sys_data = (void*)(&dd_disk->data[D64_OFFSET_SYS]);
+
         uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
         uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
         uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
@@ -1215,7 +1216,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         else if (dd_disk->size != d64_size)
         {
             isValidDisk = -1;
-            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %u (calculated 0x200 + 0x%x + 0x%x = %u).", (uint32_t)dd_disk->size, rom_size, ram_size, (uint32_t)d64_size);
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %zu (calculated 0x200 + 0x%zx + 0x%zx = %zu).", dd_disk->size, rom_size, ram_size, d64_size);
         }
         else
         {
@@ -1228,40 +1229,46 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             memset(buffer, 0, full_d64_size);
             memcpy(buffer, dd_disk->data, d64_size);
 
-            sys_data = &buffer[D64_OFFSET_SYS];
+            struct dd_sys_data* sys_data_ = (void*)(&buffer[D64_OFFSET_SYS]);
 
             //Modify System Data so there are no errors in emulation
-            sys_data->format = 0x10;
-            sys_data->type |= 0x10;
+            sys_data_->format = 0x10;
+            sys_data_->type |= 0x10;
             if (disk_type < 6)
             {
-                sys_data->ram_lba_start = big16((RAM_START_LBA[disk_type] - SYSTEM_LBAS));
-                sys_data->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS));
+                sys_data_->ram_lba_start = big16((RAM_START_LBA[disk_type] - SYSTEM_LBAS));
+                sys_data_->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS));
             }
             else
             {
-                sys_data->ram_lba_start = 0xFFFF;
-                sys_data->ram_lba_end = 0xFFFF;
+                sys_data_->ram_lba_start = 0xFFFF;
+                sys_data_->ram_lba_end = 0xFFFF;
             }
 
+            /* FIXME: you're not supposed to know that disk->data was malloc'ed */
             free(dd_disk->data);
             dd_disk->data = buffer;
             dd_disk->size = full_d64_size;
         }
     }
 
+    *dd_idisk = &g_ifile_storage_disk;
+
     switch (dd_disk->size)
     {
     case MAME_FORMAT_DUMP_SIZE:
-        /* already in a compatible format */
-        *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_MAME, isDevelopment, 0x4D08 * isValidDisk, 0x4D08 * isValidDiskID);
+        *format = DISK_FORMAT_MAME;
+        *development = isDevelopment;
+        *offset_sys = 0x4D08 * isValidDisk;
+        *offset_id = 0x4D08 * isValidDiskID;
         format_desc = "MAME";
         break;
 
     case SDK_FORMAT_DUMP_SIZE: {
-        *dd_idisk = &g_ifile_storage_disk;
-        create_file_storage_extra_disk(dd_disk, DISK_FORMAT_SDK, isDevelopment, 0x4D08 * isValidDisk, 0x4D08 * isValidDiskID);
+        *format = DISK_FORMAT_SDK;
+        *development = isDevelopment;
+        *offset_sys = 0x4D08 * isValidDisk;
+        *offset_id = 0x4D08 * isValidDiskID;
         format_desc = "SDK";
         } break;
 
@@ -1274,8 +1281,10 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         else
         {
             //D64
-            *dd_idisk = &g_ifile_storage_disk;
-            create_file_storage_extra_disk(dd_disk, DISK_FORMAT_D64, 1, 0x000, 0x100);
+            *format = DISK_FORMAT_D64;
+            *development = 1;
+            *offset_sys = 0x000;
+            *offset_id = 0x100;
             format_desc = "D64";
         }
     }
@@ -1554,12 +1563,16 @@ m64p_error main_run(void)
     /* Load 64DD IPL ROM and Disk */
     const struct clock_backend_interface* dd_rtc_iclock = NULL;
     const struct storage_backend_interface* dd_idisk = NULL;
+    uint8_t disk_format;
+    uint8_t disk_development;
+    size_t disk_offset_sys;
+    size_t disk_offset_id;
     memset(&dd_disk, 0, sizeof(dd_disk));
 
     load_dd_rom((uint8_t*)mem_base_u32(g_mem_base, MM_DD_ROM), &dd_rom_size);
     if (dd_rom_size > 0) {
         dd_rtc_iclock = &g_iclock_ctime_plus_delta;
-        load_dd_disk(&dd_disk, &dd_idisk);
+        load_dd_disk(&dd_disk, &dd_idisk, &disk_format, &disk_development, &disk_offset_sys, &disk_offset_id);
     }
 
     /* setup pif channel devices */
@@ -1717,7 +1730,8 @@ m64p_error main_run(void)
                 &sra, &g_ifile_storage,
                 NULL, dd_rtc_iclock,
                 dd_rom_size,
-                &dd_disk, dd_idisk);
+                &dd_disk, dd_idisk,
+                disk_format, disk_development, disk_offset_sys, disk_offset_id);
 
     // Attach rom to plugins
     if (!gfx.romOpen())
