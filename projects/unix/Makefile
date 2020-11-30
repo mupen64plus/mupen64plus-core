@@ -439,7 +439,7 @@ ifeq ($(PROFILE), 1)
 else
   ifeq ($(DEBUG), 1)
     CFLAGS += -g
-    OPTFLAGS = -O0
+    OPTFLAGS = -Og
     INSTALL_STRIP_FLAG ?= 
   else
     CFLAGS += -DNDEBUG
