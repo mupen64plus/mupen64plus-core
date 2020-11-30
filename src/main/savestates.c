@@ -1421,10 +1421,10 @@ int savestates_load(void)
             fPtr = fopen(filepath, "rb"); // can I open this?
         if (fPtr == NULL)
         {
+            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
             if (filepath != NULL)
                 free(filepath);
             filepath = NULL;
-            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
         }
     }
     if (fPtr != NULL)
