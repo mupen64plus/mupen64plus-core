@@ -544,8 +544,12 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             uint8_t rtc_regs[MBC3_RTC_REGS_COUNT];
             uint8_t rtc_latched_regs[MBC3_RTC_REGS_COUNT];
             uint8_t cam_regs[POCKET_CAM_REGS_COUNT];
-            unsigned int rom_bank, ram_bank, ram_enable, mbc1_mode, rtc_latch;
-            time_t rtc_last_time;
+            unsigned int rom_bank = 0;
+            unsigned int ram_bank = 0;
+            unsigned int ram_enable = 0;
+            unsigned int mbc1_mode = 0;
+            unsigned int rtc_latch = 0;
+            time_t rtc_last_time = 0;
 
             unsigned int enabled = ALIGNED_GETDATA(curr, uint32_t);
             unsigned int bank = ALIGNED_GETDATA(curr, uint32_t);
@@ -685,8 +689,12 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             uint8_t rtc_regs[MBC3_RTC_REGS_COUNT];
             uint8_t rtc_latched_regs[MBC3_RTC_REGS_COUNT];
             uint8_t cam_regs[POCKET_CAM_REGS_COUNT];
-            unsigned int rom_bank, ram_bank, ram_enable, mbc1_mode, rtc_latch;
-            time_t rtc_last_time;
+            unsigned int rom_bank = 0;
+            unsigned int ram_bank = 0;
+            unsigned int ram_enable = 0;
+            unsigned int mbc1_mode = 0;
+            unsigned int rtc_latch = 0;
+            time_t rtc_last_time = 0;
 
             unsigned int enabled = GETDATA(curr, uint32_t);
             unsigned int bank = GETDATA(curr, uint32_t);
