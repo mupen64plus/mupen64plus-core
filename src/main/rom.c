@@ -59,6 +59,15 @@ static _romdatabase g_romdatabase;
 /* Global loaded rom size. */
 int g_rom_size = 0;
 
+/* Global loaded DD Disk */
+void* g_dd_disk;
+
+/* Global loaded DD Disk size */
+int g_dd_disk_size;
+
+/* Global loaded ROM Base */
+int g_rom_base;
+
 m64p_rom_header   ROM_HEADER;
 rom_params        ROM_PARAMS;
 m64p_rom_settings ROM_SETTINGS;
@@ -68,6 +77,7 @@ static m64p_system_type rom_country_code_to_system_type(uint16_t country_code);
 static const uint8_t Z64_SIGNATURE[4] = { 0x80, 0x37, 0x12, 0x40 };
 static const uint8_t V64_SIGNATURE[4] = { 0x37, 0x80, 0x40, 0x12 };
 static const uint8_t N64_SIGNATURE[4] = { 0x40, 0x12, 0x37, 0x80 };
+static const uint8_t NDD_SIGNATURE[4] = { 0xe8, 0x48, 0xd3, 0x16 };
 
 /* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
 static int is_valid_rom(const unsigned char *buffer)
@@ -75,6 +85,14 @@ static int is_valid_rom(const unsigned char *buffer)
     if (memcmp(buffer, Z64_SIGNATURE, sizeof(Z64_SIGNATURE)) == 0
      || memcmp(buffer, V64_SIGNATURE, sizeof(V64_SIGNATURE)) == 0
      || memcmp(buffer, N64_SIGNATURE, sizeof(N64_SIGNATURE)) == 0)
+        return 1;
+    else
+        return 0;
+}
+
+static int is_dd_rom(const unsigned char *buffer)
+{
+    if (memcmp(buffer, NDD_SIGNATURE, sizeof(NDD_SIGNATURE)) == 0)
         return 1;
     else
         return 0;
@@ -136,10 +154,12 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     romdatabase_entry* entry;
     char buffer[256];
     unsigned char imagetype;
-    int i;
+    int i, is_dd_disk;
+
+    is_dd_disk = is_dd_rom(romimage);
 
     /* check input requirements */
-    if (romimage == NULL || !is_valid_rom(romimage))
+    if (romimage == NULL || (!is_valid_rom(romimage) && !is_dd_disk))
     {
         DebugMessage(M64MSG_ERROR, "open_rom(): not a valid ROM image");
         return M64ERR_INPUT_INVALID;
@@ -147,16 +167,30 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_RomWordsLittleEndian = 0;
-    /* allocate new buffer for ROM and copy into this buffer */
-    g_rom_size = size;
-    swap_copy_rom((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM), romimage, size, &imagetype);
-    /* ROM is now in N64 native (big endian) byte order */
+    /* Set ROM Base */
+    g_rom_base = is_dd_disk ? MM_DD_ROM : MM_CART_ROM;
 
-    memcpy(&ROM_HEADER, (uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM), sizeof(m64p_rom_header));
+    if (is_dd_disk)
+    {
+        g_dd_disk_size = size;
+        g_rom_size = 0;
+
+        g_dd_disk = malloc(size);
+        memcpy(g_dd_disk, romimage, size);
+        memset(&ROM_HEADER, 0, sizeof(m64p_rom_header));
+    }
+    else
+    {
+        g_rom_size = size;
+
+        swap_copy_rom((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM), romimage, size, &imagetype);
+        /* ROM is now in N64 native (big endian) byte order */
+        memcpy(&ROM_HEADER, (uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM), sizeof(m64p_rom_header));
+    }
 
     /* Calculate MD5 hash  */
     md5_init(&state);
-    md5_append(&state, (const md5_byte_t*)((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM)), g_rom_size);
+    md5_append(&state, (const md5_byte_t*)(romimage), g_rom_size);
     md5_finish(&state, digest);
     for ( i = 0; i < 16; ++i )
         sprintf(buffer+i*2, "%02X", digest[i]);
@@ -169,6 +203,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
     ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
     ROM_PARAMS.cheats = NULL;
+    ROM_PARAMS.is_dd_disk = is_dd_disk;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
     ROM_PARAMS.headername[20] = '\0';
@@ -176,7 +211,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
-        (entry=ini_search_by_crc(tohl(ROM_HEADER.CRC1),tohl(ROM_HEADER.CRC2))) != NULL)
+        ((!is_dd_disk && (entry=ini_search_by_crc(tohl(ROM_HEADER.CRC1),tohl(ROM_HEADER.CRC2))) != NULL)))
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -194,8 +229,15 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     }
     else
     {
-        strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
-        strcat(ROM_SETTINGS.goodname, " (unknown rom)");
+        if (is_dd_disk)
+        {
+            strcpy(ROM_SETTINGS.goodname, "(unknown 64DD rom)");
+        }
+        else
+        {
+            strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
+            strcat(ROM_SETTINGS.goodname, " (unknown rom)");
+        }
         ROM_SETTINGS.savetype = NONE;
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 4;
@@ -234,6 +276,13 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
 m64p_error close_rom(void)
 {
+    /* Free DD Disk */
+    if (g_dd_disk != NULL)
+    {
+        free(g_dd_disk);
+        g_dd_disk = NULL;
+    }
+
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_RomWordsLittleEndian = 0;
     DebugMessage(M64MSG_STATUS, "Rom closed.");

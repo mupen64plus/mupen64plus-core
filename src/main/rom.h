@@ -42,6 +42,10 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size);
 m64p_error close_rom(void);
 
 extern int g_rom_size;
+extern int g_rom_base;
+
+extern void* g_dd_disk;
+extern int g_dd_disk_size;
 
 typedef struct _rom_params
 {
@@ -51,6 +55,7 @@ typedef struct _rom_params
    unsigned char countperop;
    int disableextramem;
    unsigned int sidmaduration;
+   unsigned int is_dd_disk;
 } rom_params;
 
 extern m64p_rom_header   ROM_HEADER;

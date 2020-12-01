@@ -1421,7 +1421,24 @@ m64p_error main_run(void)
     load_dd_rom((uint8_t*)mem_base_u32(g_mem_base, MM_DD_ROM), &dd_rom_size);
     if (dd_rom_size > 0) {
         dd_rtc_iclock = &g_iclock_ctime_plus_delta;
-        load_dd_disk(&dd_disk, &dd_idisk);
+
+        if (ROM_PARAMS.is_dd_disk)
+        {
+            dd_disk.data = g_dd_disk;
+            dd_disk.size = g_dd_disk_size;
+
+            // TODO, split load_dd_disk into seperate functions,
+            // and use one of those here!
+            dd_idisk = &g_ifile_storage_dd_sdk_dump;
+            uint8_t* buffer = malloc(MAME_FORMAT_DUMP_SIZE);
+            dd_convert_to_mame(buffer, dd_disk.data);
+            dd_disk.data = buffer;
+            dd_disk.size = MAME_FORMAT_DUMP_SIZE;
+        }
+        else
+        {
+            load_dd_disk(&dd_disk, &dd_idisk);
+        }
     }
 
     /* setup pif channel devices */

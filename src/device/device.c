@@ -32,6 +32,7 @@
 #include "rcp/rsp/rsp_core.h"
 #include "rcp/si/si_controller.h"
 #include "rcp/vi/vi_controller.h"
+#include "main/rom.h"
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
 
@@ -190,19 +191,10 @@ void init_device(struct device* dev,
     init_si(&dev->si, si_dma_duration, &dev->mi, &dev->pif, &dev->ri);
     init_vi(&dev->vi, vi_clock, expected_refresh_rate, &dev->mi, &dev->dp);
 
-    /* FIXME: should boot on cart, unless only a disk is present, but having no cart is not yet supported by ui/core,
-     * so use another way of selecting boot device:
-     * use CART unless DD is plugged and the plugged CART is not a combo media (cart+disk).
-     */
-    uint8_t media = *((uint8_t*)mem_base_u32(base, MM_CART_ROM) + (0x3b ^ S8));
-    uint32_t rom_base = (dd_rom_size > 0 && media != 'C')
-        ? MM_DD_ROM
-        : MM_CART_ROM;
-
     init_pif(&dev->pif,
         (uint8_t*)mem_base_u32(base, MM_PIF_MEM),
         jbds, ijbds,
-        (uint8_t*)mem_base_u32(base, rom_base) + 0x40,
+        (uint8_t*)mem_base_u32(base, g_rom_base) + 0x40,
         &dev->r4300,
         &dev->si);
 

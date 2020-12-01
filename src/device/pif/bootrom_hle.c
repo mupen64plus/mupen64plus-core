@@ -33,6 +33,7 @@
 #include "device/rcp/si/si_controller.h"
 #include "device/rcp/vi/vi_controller.h"
 #include "main/rom.h"
+#include "main/main.h"
 
 static unsigned int get_tv_type(void)
 {
@@ -109,7 +110,7 @@ void pif_bootrom_hle_execute(struct r4300_core* r4300)
     /* configure ROM access
      * XXX: we skip the first temporary configuration */
     uint32_t rom_base = (rom_type == 0) ? MM_CART_ROM : MM_DD_ROM;
-    r4300_read_aligned_word(r4300, R4300_KSEG1 + rom_base, &bsd_dom1_config);
+    r4300_read_aligned_word(r4300, R4300_KSEG1 + g_rom_base, &bsd_dom1_config);
     r4300_write_aligned_word(r4300, R4300_KSEG1 + MM_PI_REGS + 4*PI_BSD_DOM1_LAT_REG, (bsd_dom1_config      ) & 0xff, ~UINT32_C(0));
     r4300_write_aligned_word(r4300, R4300_KSEG1 + MM_PI_REGS + 4*PI_BSD_DOM1_PWD_REG, (bsd_dom1_config >>  8) & 0xff, ~UINT32_C(0));
     r4300_write_aligned_word(r4300, R4300_KSEG1 + MM_PI_REGS + 4*PI_BSD_DOM1_PGS_REG, (bsd_dom1_config >> 16) & 0x0f, ~UINT32_C(0));
