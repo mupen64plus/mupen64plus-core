@@ -151,4 +151,13 @@ struct dd_disk
 /* Storage interface which handles the various 64DD disks format specificities */
 extern const struct storage_backend_interface g_istorage_disk;
 
+/* Disk Helper routines */
+void GenerateLBAToPhysTable(struct dd_disk* disk);
+uint32_t LBAToVZone(const struct dd_sys_data* sys_data, uint32_t lba);
+uint32_t LBAToVZoneA(uint8_t type, uint32_t lba);
+uint32_t LBAToByte(const struct dd_sys_data* sys_data, uint32_t lba, uint32_t nlbas);
+uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas);
+uint16_t LBAToPhys(const struct dd_sys_data* sys_data, uint32_t lba);
+uint32_t PhysToLBA(const struct dd_disk* disk, uint16_t head, uint16_t track, uint16_t block);
+
 #endif
