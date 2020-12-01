@@ -387,6 +387,9 @@
     <ClCompile Include="..\..\src\device\dd\dd_controller.c">
       <Filter>device\dd</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\dd\disk.c">
+      <Filter>device\dd</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\subprojects\md5\md5.c">
       <Filter>subprojects\md5</Filter>
     </ClCompile>

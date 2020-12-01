@@ -39,6 +39,5 @@ void close_file_storage(struct file_storage* storage);
 extern const struct storage_backend_interface g_ifile_storage;
 extern const struct storage_backend_interface g_ifile_storage_ro;
 extern const struct storage_backend_interface g_isubfile_storage;
-extern const struct storage_backend_interface g_ifile_storage_disk;
 
 #endif

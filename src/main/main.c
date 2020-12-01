@@ -1058,8 +1058,16 @@ no_dd:
     *rom_size = 0;
 }
 
-static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk,
-    uint8_t* format, uint8_t* development, size_t* offset_sys, size_t* offset_id)
+static void close_dd_disk(struct dd_disk* disk)
+{
+    if (disk->storage != NULL) {
+        close_file_storage(disk->storage);
+        free(disk->storage);
+        disk->storage = NULL;
+    }
+}
+
+static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_interface** dd_idisk)
 {
     const char* format_desc;
     /* ask the core loader for DD disk filename */
@@ -1072,11 +1080,27 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         goto no_disk;
     }
 
+    /* XXX: for now, don't overwrite the original file, because we don't want to corrupt dumps... */
+    char* filename = formatstr("%s.save", dd_disk_filename);
+    if (filename == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to allocate memory for disk filename");
+        goto no_disk;
+    }
+
+    dd_disk->storage = malloc(sizeof(struct file_storage));
+    if (dd_disk->storage == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to allocate DD file_storage");
+        goto no_disk;
+    }
+
     /* open file */
-    if (open_rom_file_storage(dd_disk, dd_disk_filename) != file_ok) {
+    if (open_rom_file_storage(dd_disk->storage, dd_disk_filename) != file_ok) {
         DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
         goto no_disk;
     }
+
+    /* XXX: replace filename after loading content, so we don't overwrite original dump */
+    ((struct file_storage*)(dd_disk->storage))->filename = filename;
 
     /* FIXME: handle byte swapping */
 
@@ -1085,12 +1109,16 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
     int8_t isValidDisk = -1;
     int8_t isValidDiskID = -1;
     uint8_t isDevelopment = 0;
+
+    struct file_storage* fstorage = dd_disk->storage;
+    dd_disk->istorage = &g_ifile_storage;
+    *dd_idisk = &g_istorage_disk;
     for (int i = 0; i < 8; i++)
     {
         uint32_t offset = BLOCKSIZE(0) * blocks[i];
-        const struct dd_sys_data* sys_data = (void*)(&dd_disk->data[offset]);
+        const struct dd_sys_data* sys_data = (void*)(&fstorage->data[offset]);
 
-        if ((offset + 0x20) >= dd_disk->size || (dd_disk->size < MAME_FORMAT_DUMP_SIZE && dd_disk->size < SDK_FORMAT_DUMP_SIZE && i > 0))
+        if ((offset + 0x20) >= fstorage->size || (fstorage->size < MAME_FORMAT_DUMP_SIZE && fstorage->size < SDK_FORMAT_DUMP_SIZE && i > 0))
         {
             isValidDisk = -1;
             break;
@@ -1121,7 +1149,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         }
 
         //Verify if sector repeats
-        if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
+        if (fstorage->size == MAME_FORMAT_DUMP_SIZE || fstorage->size == SDK_FORMAT_DUMP_SIZE)
         {
             uint8_t sectorsize = SECTORSIZE_SYS;
 
@@ -1131,7 +1159,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
 
             for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memcmp(&dd_disk->data[offset + ((j - 1) * sectorsize)], &dd_disk->data[offset + (j * sectorsize)], sectorsize) != 0)
+                if (memcmp(&fstorage->data[offset + ((j - 1) * sectorsize)], &fstorage->data[offset + (j * sectorsize)], sectorsize) != 0)
                 {
                     isValidDisk = -1;
                     break;
@@ -1156,7 +1184,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         goto wrong_disk_format;
     }
 
-    if (dd_disk->size == MAME_FORMAT_DUMP_SIZE || dd_disk->size == SDK_FORMAT_DUMP_SIZE)
+    if (fstorage->size == MAME_FORMAT_DUMP_SIZE || fstorage->size == SDK_FORMAT_DUMP_SIZE)
     {
         //Check Disk ID
         //Verify if sector repeats
@@ -1164,7 +1192,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         {
             for (int j = 1; j < SECTORS_PER_BLOCK; j++)
             {
-                if (memcmp(&dd_disk->data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &dd_disk->data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
+                if (memcmp(&fstorage->data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &fstorage->data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
                 {
                     isValidDiskID = -1;
                     break;
@@ -1191,7 +1219,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
         const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
 
-        const struct dd_sys_data* sys_data = (void*)(&dd_disk->data[D64_OFFSET_SYS]);
+        const struct dd_sys_data* sys_data = (void*)(&fstorage->data[D64_OFFSET_SYS]);
 
         uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
         uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
@@ -1213,10 +1241,10 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
             isValidDisk = -1;
             DebugMessage(M64MSG_ERROR, "Invalid D64 Disk RAM Start Info (expected %04X)", (RAM_START_LBA[disk_type] - SYSTEM_LBAS));
         }
-        else if (dd_disk->size != d64_size)
+        else if (fstorage->size != d64_size)
         {
             isValidDisk = -1;
-            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %zu (calculated 0x200 + 0x%zx + 0x%zx = %zu).", dd_disk->size, rom_size, ram_size, d64_size);
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %zu (calculated 0x200 + 0x%zx + 0x%zx = %zu).", fstorage->size, rom_size, ram_size, d64_size);
         }
         else
         {
@@ -1227,7 +1255,7 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
                 goto wrong_disk_format;
             }
             memset(buffer, 0, full_d64_size);
-            memcpy(buffer, dd_disk->data, d64_size);
+            memcpy(buffer, fstorage->data, d64_size);
 
             struct dd_sys_data* sys_data_ = (void*)(&buffer[D64_OFFSET_SYS]);
 
@@ -1245,68 +1273,67 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
                 sys_data_->ram_lba_end = 0xFFFF;
             }
 
-            /* FIXME: you're not supposed to know that disk->data was malloc'ed */
-            free(dd_disk->data);
-            dd_disk->data = buffer;
-            dd_disk->size = full_d64_size;
+            /* FIXME: you're not supposed to know that fstorage->data was malloc'ed */
+            free(fstorage->data);
+            fstorage->data = buffer;
+            fstorage->size = full_d64_size;
         }
     }
 
-    *dd_idisk = &g_ifile_storage_disk;
-
-    switch (dd_disk->size)
+    switch (fstorage->size)
     {
     case MAME_FORMAT_DUMP_SIZE:
-        *format = DISK_FORMAT_MAME;
-        *development = isDevelopment;
-        *offset_sys = 0x4D08 * isValidDisk;
-        *offset_id = 0x4D08 * isValidDiskID;
+        dd_disk->format = DISK_FORMAT_MAME;
+        dd_disk->development = isDevelopment;
+        dd_disk->offset_sys = 0x4D08 * isValidDisk;
+        dd_disk->offset_id = 0x4D08 * isValidDiskID;
         format_desc = "MAME";
         break;
 
     case SDK_FORMAT_DUMP_SIZE: {
-        *format = DISK_FORMAT_SDK;
-        *development = isDevelopment;
-        *offset_sys = 0x4D08 * isValidDisk;
-        *offset_id = 0x4D08 * isValidDiskID;
+        dd_disk->format = DISK_FORMAT_SDK;
+        dd_disk->development = isDevelopment;
+        dd_disk->offset_sys = 0x4D08 * isValidDisk;
+        dd_disk->offset_id = 0x4D08 * isValidDiskID;
         format_desc = "SDK";
         } break;
 
     default:
         if (isValidDisk == -1)
         {
-            DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t)dd_disk->size);
+            DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t)fstorage->size);
             goto wrong_disk_format;
         }
         else
         {
             //D64
-            *format = DISK_FORMAT_D64;
-            *development = 1;
-            *offset_sys = 0x000;
-            *offset_id = 0x100;
+            dd_disk->format = DISK_FORMAT_D64;
+            dd_disk->development = 1;
+            dd_disk->offset_sys = 0x000;
+            dd_disk->offset_id = 0x100;
             format_desc = "D64";
         }
     }
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
-            dd_disk->filename,
-            dd_disk->size,
+            fstorage->filename,
+            fstorage->size,
             format_desc);
 
-    uint32_t w = *(uint32_t*)dd_disk->data;
+    uint32_t w = *(uint32_t*)fstorage->data;
     if (w == DD_REGION_JP || w == DD_REGION_US || w == DD_REGION_DV) {
         DebugMessage(M64MSG_WARNING, "Loading a saved disk ");
     }
 
+    free(dd_disk_filename);
+
     return;
 wrong_disk_format:
-    close_file_storage(dd_disk);
+    close_dd_disk(dd_disk);
 no_disk:
     free(dd_disk_filename);
     *dd_idisk = NULL;
 }
-
 
 struct gb_cart_data
 {
@@ -1461,7 +1488,7 @@ m64p_error main_run(void)
     struct file_storage fla;
     struct file_storage sra;
     size_t dd_rom_size;
-    struct file_storage dd_disk;
+    struct dd_disk dd_disk;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1563,16 +1590,12 @@ m64p_error main_run(void)
     /* Load 64DD IPL ROM and Disk */
     const struct clock_backend_interface* dd_rtc_iclock = NULL;
     const struct storage_backend_interface* dd_idisk = NULL;
-    uint8_t disk_format;
-    uint8_t disk_development;
-    size_t disk_offset_sys;
-    size_t disk_offset_id;
     memset(&dd_disk, 0, sizeof(dd_disk));
 
     load_dd_rom((uint8_t*)mem_base_u32(g_mem_base, MM_DD_ROM), &dd_rom_size);
     if (dd_rom_size > 0) {
         dd_rtc_iclock = &g_iclock_ctime_plus_delta;
-        load_dd_disk(&dd_disk, &dd_idisk, &disk_format, &disk_development, &disk_offset_sys, &disk_offset_id);
+        load_dd_disk(&dd_disk, &dd_idisk);
     }
 
     /* setup pif channel devices */
@@ -1730,8 +1753,7 @@ m64p_error main_run(void)
                 &sra, &g_ifile_storage,
                 NULL, dd_rtc_iclock,
                 dd_rom_size,
-                &dd_disk, dd_idisk,
-                disk_format, disk_development, disk_offset_sys, disk_offset_id);
+                &dd_disk, dd_idisk);
 
     // Attach rom to plugins
     if (!gfx.romOpen())
@@ -1805,7 +1827,7 @@ m64p_error main_run(void)
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_dd_disk(&dd_disk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1844,7 +1866,7 @@ on_gfx_open_failure:
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_dd_disk(&dd_disk);
 
     return M64ERR_PLUGIN_FAIL;
 }

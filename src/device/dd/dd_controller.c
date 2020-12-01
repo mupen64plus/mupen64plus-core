@@ -174,7 +174,7 @@ static void write_sector(struct dd_controller* dd)
 
 static void seek_track(struct dd_controller* dd)
 {
-    if (dd->disk_format == DISK_FORMAT_MAME)
+    if (dd->disk->format == DISK_FORMAT_MAME)
     {
         //MAME Format Seek
         static const unsigned int start_offset[] = {
@@ -210,15 +210,15 @@ static void seek_track(struct dd_controller* dd)
         if (dd->regs[DD_ASIC_CUR_SECTOR] == 0)
         {
             uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
-            uint16_t block_sys = dd->disk_offset_sys / BLOCKSIZE(0);
-            uint16_t block_id = dd->disk_offset_id / BLOCKSIZE(0);
+            uint16_t block_sys = dd->disk->offset_sys / BLOCKSIZE(0);
+            uint16_t block_id = dd->disk->offset_id / BLOCKSIZE(0);
             if (block < PROTECT_LBA && block != block_sys)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
             else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
     }
-    else if (dd->disk_format == DISK_FORMAT_SDK)
+    else if (dd->disk->format == DISK_FORMAT_SDK)
     {
         //SDK Format Seek
         uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
@@ -241,8 +241,8 @@ static void seek_track(struct dd_controller* dd)
         if (sector == 0)
         {
             uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
-            uint16_t block_sys = dd->disk_offset_sys / BLOCKSIZE(0);
-            uint16_t block_id = dd->disk_offset_id / BLOCKSIZE(0);
+            uint16_t block_sys = dd->disk->offset_sys / BLOCKSIZE(0);
+            uint16_t block_id = dd->disk->offset_id / BLOCKSIZE(0);
             if (block < PROTECT_LBA && block != block_sys)
                 dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
             else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
@@ -252,7 +252,7 @@ static void seek_track(struct dd_controller* dd)
         if (lba <= MAX_LBA && sector == 0)
             DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, dd->bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
     }
-    else //if (dd->disk_format == DISK_FORMAT_D64)
+    else //if (dd->disk->format == DISK_FORMAT_D64)
     {
         //D64 Format Seek
         const struct dd_sys_data* sys_data = (void*)(&dd->idisk->data(dd->disk)[D64_OFFSET_SYS]);
@@ -272,12 +272,12 @@ static void seek_track(struct dd_controller* dd)
         if (lba < DISKID_LBA)
         {
             //System Data
-            dd->bm_track_offset = dd->disk_offset_sys;
+            dd->bm_track_offset = dd->disk->offset_sys;
         }
         else if ((lba >= DISKID_LBA) && (lba < SYSTEM_LBAS))
         {
             //Disk ID
-            dd->bm_track_offset = dd->disk_offset_id;
+            dd->bm_track_offset = dd->disk->offset_id;
         }
         else if (lba <= (rom_lba_end + SYSTEM_LBAS))
         {
@@ -350,7 +350,7 @@ void dd_update_bm(void* opaque)
     }
     /* handle reads (BM mode 1) */
     else {
-        uint8_t dev = dd->disk_development;
+        uint8_t dev = dd->disk->development;
         /* track 6 fails to read on retail units (XXX: retail test) */
         if (((dd->regs[DD_ASIC_CUR_TK] & 0x1fff) == 6) && dd->bm_block == 0 && !dev) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
@@ -396,8 +396,7 @@ void dd_update_bm(void* opaque)
 void init_dd(struct dd_controller* dd,
              void* clock, const struct clock_backend_interface* iclock,
              const uint32_t* rom, size_t rom_size,
-             void* disk, const struct storage_backend_interface* idisk,
-             uint8_t disk_format, uint8_t disk_development, size_t disk_offset_sys, size_t disk_offset_id,
+             struct dd_disk* disk, const struct storage_backend_interface* idisk,
              struct r4300_core* r4300)
 {
     dd->rtc.clock = clock;
@@ -408,10 +407,6 @@ void init_dd(struct dd_controller* dd,
 
     dd->disk = disk;
     dd->idisk = idisk;
-    dd->disk_format = disk_format;
-    dd->disk_development = disk_development;
-    dd->disk_offset_sys = disk_offset_sys;
-    dd->disk_offset_id = disk_offset_id;
 
     GenerateLBAToPhysTable(dd);
 
@@ -438,7 +433,7 @@ void poweron_dd(struct dd_controller* dd)
     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
     if (dd->idisk != NULL) {
         dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DISK_PRES;
-        if (dd->disk_development)
+        if (dd->disk->development)
             dd->regs[DD_ASIC_ID_REG] = 0x00040000;
     }
 }
@@ -759,18 +754,18 @@ void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address)
 void GenerateLBAToPhysTable(struct dd_controller* dd)
 {
     //For SDK and D64 formats
-    if (dd->disk_format == DISK_FORMAT_MAME)
+    if (dd->disk->format == DISK_FORMAT_MAME)
         return;
 
     for (uint32_t lba = 0; lba < SIZE_LBA; lba++)
     {
-        dd->lba_phys_table[lba] = LBAToPhys(dd, lba);
+        dd->disk->lba_phys_table[lba] = LBAToPhys(dd, lba);
     }
 }
 
 uint32_t LBAToVZone(struct dd_controller* dd, uint32_t lba)
 {
-    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk_offset_sys);
+    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk->offset_sys);
     return LBAToVZoneA(sys_data->type, lba);
 }
 
@@ -786,7 +781,7 @@ uint32_t LBAToVZoneA(uint8_t type, uint32_t lba)
 
 uint32_t LBAToByte(struct dd_controller* dd, uint32_t lba, uint32_t nlbas)
 {
-    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk_offset_sys);
+    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk->offset_sys);
     return LBAToByteA(sys_data->type, lba, nlbas);
 }
 
@@ -829,7 +824,7 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
 
 uint16_t LBAToPhys(struct dd_controller* dd, uint32_t lba)
 {
-    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk_offset_sys);
+    const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk->offset_sys);
     uint8_t disktype = sys_data->type & 0x0F;
 
     const uint16_t OUTERCYL_TBL[8] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425 };
@@ -894,7 +889,7 @@ uint32_t PhysToLBA(struct dd_controller* dd, uint16_t head, uint16_t track, uint
 
     for (uint16_t lba = 0; lba < SIZE_LBA; lba++)
     {
-        if (dd->lba_phys_table[lba] == expectedvalue)
+        if (dd->disk->lba_phys_table[lba] == expectedvalue)
         {
             return lba;
         }
