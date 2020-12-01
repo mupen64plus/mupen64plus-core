@@ -1328,7 +1328,7 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
             dd_disk->offset_sys = 0x000;
             dd_disk->offset_id = 0x100;
             const struct dd_sys_data* sys_data = (void*)(&fstorage->data[dd_disk->offset_sys]);
-            dd_disk->offset_ram = D64_OFFSET_DATA + LBAToByteA(sys_data->type & 0xF, 24, sys_data->rom_lba_end + 1);
+            dd_disk->offset_ram = D64_OFFSET_DATA + LBAToByteA(sys_data->type & 0xF, 24, big16(sys_data->rom_lba_end) + 1);
             format_desc = "D64";
         }
     }
@@ -1344,13 +1344,13 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         }
     }
 
-    /* Don't overwrite the original file, because we don't want to corrupt dumps... */
-    ((struct file_storage*)(dd_disk->storage))->filename = filename;
-
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
             fstorage->filename,
             fstorage->size,
             format_desc);
+
+    /* Don't overwrite the original file, because we don't want to corrupt dumps... */
+    ((struct file_storage*)(dd_disk->storage))->filename = filename;
 
     uint32_t w = *(uint32_t*)fstorage->data;
     if (w == DD_REGION_JP || w == DD_REGION_US || w == DD_REGION_DV) {
