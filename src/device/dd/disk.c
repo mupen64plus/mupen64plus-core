@@ -21,7 +21,11 @@
 
 #include "disk.h"
 
+#define M64P_CORE_PROTOTYPES 1
+#include "api/m64p_types.h"
+#include "api/callbacks.h"
 #include "backends/api/storage_backend.h"
+#include "main/util.h"
 
 static uint8_t* storage_disk_data(const void* storage)
 {
@@ -196,4 +200,188 @@ uint32_t PhysToLBA(const struct dd_disk* disk, uint16_t head, uint16_t track, ui
         }
     }
     return 0xFFFF;
+}
+
+
+
+static unsigned int seek_track_mame(const struct dd_disk* disk,
+    uint32_t cur_tk, uint32_t cur_sec, uint32_t host_secbyte,
+    unsigned char bm_write, unsigned char bm_block,
+    unsigned int* bm_zone, unsigned int* bm_track_offset)
+{
+    static const unsigned int start_offset[] = {
+        0x0000000, 0x05f15e0, 0x0b79d00, 0x10801a0,
+        0x1523720, 0x1963d80, 0x1d414c0, 0x20bbce0,
+        0x23196e0, 0x28a1e00, 0x2df5dc0, 0x3299340,
+        0x36d99a0, 0x3ab70e0, 0x3e31900, 0x4149200
+    };
+
+    static const unsigned int tracks[] = {
+        0x000, 0x09e, 0x13c, 0x1d1, 0x266, 0x2fb, 0x390, 0x425
+    };
+
+    unsigned int error = 0;
+    unsigned int tr_off;
+    unsigned int head_x_8 = ((cur_tk & 0x1000) >> 9);
+    unsigned int track = (cur_tk & 0x0fff);
+
+    /* find track bm_zone */
+    for (*bm_zone = 7; *bm_zone > 0; --*bm_zone) {
+        if (track >= tracks[*bm_zone]) {
+            break;
+        }
+    }
+
+    tr_off = track - tracks[*bm_zone];
+
+    /* set zone and track offset */
+    *bm_zone += head_x_8;
+    *bm_track_offset = start_offset[*bm_zone] + tr_off * TRACKSIZE(*bm_zone)
+        + bm_block * BLOCKSIZE(*bm_zone)
+        + (cur_sec - bm_write) * zone_sec_size[*bm_zone];
+
+    if (cur_sec == 0)
+    {
+        uint16_t block = *bm_track_offset / BLOCKSIZE(0);
+        uint16_t block_sys = disk->offset_sys / BLOCKSIZE(0);
+        uint16_t block_id = disk->offset_id / BLOCKSIZE(0);
+
+        if ((block < PROTECT_LBA && block != block_sys)
+         || (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)) {
+            error = 1;
+        }
+    }
+
+    return error;
+}
+
+static unsigned int seek_track_sdk(const struct dd_disk* disk,
+    uint32_t cur_tk, uint32_t cur_sec, uint32_t host_secbyte,
+    unsigned char bm_write, unsigned char bm_block,
+    unsigned int* bm_zone, unsigned int* bm_track_offset)
+{
+    unsigned int error = 0;
+    uint16_t head = ((cur_tk & 0x1000) / 0x1000);
+    uint16_t track = (cur_tk & 0x0fff);
+    uint16_t block = bm_block;
+    uint16_t sector = cur_sec - bm_write;
+    uint16_t sectorsize = host_secbyte + 1;
+    uint16_t lba = PhysToLBA(disk, head, track, block);
+
+    if (lba > MAX_LBA)
+    {
+        error = 1;
+        DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
+        return error;
+    }
+
+    const struct dd_sys_data* sys_data = (void*)(disk->istorage->data(disk->storage) + disk->offset_sys);
+    //*bm_zone = LBAToVZone(sys_data, lba);
+    *bm_track_offset = LBAToByte(sys_data, 0, lba) + sector * sectorsize;
+
+    //Handle Errors for wrong System Data
+    if (sector == 0)
+    {
+        uint16_t block = *bm_track_offset / BLOCKSIZE(0);
+        uint16_t block_sys = disk->offset_sys / BLOCKSIZE(0);
+        uint16_t block_id = disk->offset_id / BLOCKSIZE(0);
+
+        if ((block < PROTECT_LBA && block != block_sys)
+         || (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)) {
+            error = 1;
+        }
+    }
+
+    if (lba <= MAX_LBA && sector == 0)
+        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, *bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
+
+    return error;
+}
+
+static unsigned int seek_track_d64(const struct dd_disk* disk,
+    uint32_t cur_tk, uint32_t cur_sec, uint32_t host_secbyte,
+    unsigned char bm_write, unsigned char bm_block,
+    unsigned int* bm_zone, unsigned int* bm_track_offset)
+{
+    unsigned int error = 0;
+    const struct dd_sys_data* sys_data = (void*)(disk->istorage->data(disk->storage) + disk->offset_sys);
+
+    uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
+    uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
+    uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
+    uint8_t disk_type = sys_data->type & 0x0F;
+
+    uint16_t head = ((cur_tk & 0x1000) / 0x1000);
+    uint16_t track = (cur_tk & 0x0fff);
+    uint16_t block = bm_block;
+    uint16_t sector = cur_sec - bm_write;
+    uint16_t sectorsize = host_secbyte + 1;
+    uint16_t lba = PhysToLBA(disk, head, track, block);
+
+    if (lba < DISKID_LBA)
+    {
+        //System Data
+        *bm_track_offset = disk->offset_sys;
+    }
+    else if ((lba >= DISKID_LBA) && (lba < SYSTEM_LBAS))
+    {
+        //Disk ID
+        *bm_track_offset = disk->offset_id;
+    }
+    else if (lba <= (rom_lba_end + SYSTEM_LBAS))
+    {
+        //ROM Area
+        *bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sectorsize);
+    }
+    else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
+    {
+        //RAM Area
+        *bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
+        *bm_track_offset += LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sectorsize);
+    }
+    else
+    {
+        //Invalid
+        error = 1;
+        *bm_track_offset = 0xFFFFFFFF;
+        DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
+    }
+
+    if (lba <= MAX_LBA && sector == 0)
+        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, *bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
+
+    return error;
+}
+
+
+unsigned int disk_seek_track(const struct dd_disk* disk,
+    uint32_t cur_tk, uint32_t cur_sec, uint32_t host_secbyte,
+    unsigned char bm_write, unsigned char bm_block,
+    unsigned int* bm_zone, unsigned int* bm_track_offset)
+{
+    unsigned int error;
+
+    if (disk->format == DISK_FORMAT_MAME)
+    {
+        error = seek_track_mame(disk,
+            cur_tk, cur_sec, host_secbyte,
+            bm_write, bm_block,
+            bm_zone, bm_track_offset);
+    }
+    else if (disk->format == DISK_FORMAT_SDK)
+    {
+        error = seek_track_sdk(disk,
+            cur_tk, cur_sec, host_secbyte,
+            bm_write, bm_block,
+            bm_zone, bm_track_offset);
+    }
+    else //if (disk->format == DISK_FORMAT_D64)
+    {
+        error = seek_track_d64(disk,
+            cur_tk, cur_sec, host_secbyte,
+            bm_write, bm_block,
+            bm_zone, bm_track_offset);
+    }
+
+    return error;
 }

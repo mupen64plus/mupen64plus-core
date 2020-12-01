@@ -33,7 +33,6 @@
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
-#include "main/util.h"
 
 /* dd commands definition */
 #define DD_CMD_NOOP             UINT32_C(0x00000000)
@@ -174,133 +173,12 @@ static void write_sector(struct dd_controller* dd)
 
 static void seek_track(struct dd_controller* dd)
 {
-    if (dd->disk->format == DISK_FORMAT_MAME)
-    {
-        //MAME Format Seek
-        static const unsigned int start_offset[] = {
-            0x0000000, 0x05f15e0, 0x0b79d00, 0x10801a0,
-            0x1523720, 0x1963d80, 0x1d414c0, 0x20bbce0,
-            0x23196e0, 0x28a1e00, 0x2df5dc0, 0x3299340,
-            0x36d99a0, 0x3ab70e0, 0x3e31900, 0x4149200
-        };
-
-        static const unsigned int tracks[] = {
-            0x000, 0x09e, 0x13c, 0x1d1, 0x266, 0x2fb, 0x390, 0x425
-        };
-
-        unsigned int tr_off;
-        unsigned int head_x_8 = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 9);
-        unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
-
-        /* find track bm_zone */
-        for (dd->bm_zone = 7; dd->bm_zone > 0; --dd->bm_zone) {
-            if (track >= tracks[dd->bm_zone]) {
-                break;
-            }
-        }
-
-        tr_off = track - tracks[dd->bm_zone];
-
-        /* set zone and track offset */
-        dd->bm_zone += head_x_8;
-        dd->bm_track_offset = start_offset[dd->bm_zone] + tr_off * TRACKSIZE(dd->bm_zone)
-            + dd->bm_block * BLOCKSIZE(dd->bm_zone)
-            + (dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write) * zone_sec_size[dd->bm_zone];
-
-        if (dd->regs[DD_ASIC_CUR_SECTOR] == 0)
-        {
-            uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
-            uint16_t block_sys = dd->disk->offset_sys / BLOCKSIZE(0);
-            uint16_t block_id = dd->disk->offset_id / BLOCKSIZE(0);
-            if (block < PROTECT_LBA && block != block_sys)
-                dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
-                dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-        }
-    }
-    else if (dd->disk->format == DISK_FORMAT_SDK)
-    {
-        //SDK Format Seek
-        const struct dd_sys_data* sys_data = (void*)(dd->idisk->data(dd->disk) + dd->disk->offset_sys);
-        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
-        uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
-        uint16_t block = dd->bm_block;
-        uint16_t sector = dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write;
-        uint16_t sectorsize = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
-        uint16_t lba = PhysToLBA(dd->disk, head, track, block);
-        //dd->bm_zone = LBAToVZone(sys_data, PhysToLBA(dd->disk, head, track, block));
-        if (lba > MAX_LBA)
-        {
-            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
-            return;
-        }
-
-        dd->bm_track_offset = LBAToByte(sys_data, 0, lba) + sector * sectorsize;
-
-        //Handle Errors for wrong System Data
-        if (sector == 0)
-        {
-            uint16_t block = dd->bm_track_offset / BLOCKSIZE(0);
-            uint16_t block_sys = dd->disk->offset_sys / BLOCKSIZE(0);
-            uint16_t block_id = dd->disk->offset_id / BLOCKSIZE(0);
-            if (block < PROTECT_LBA && block != block_sys)
-                dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            else if (block > PROTECT_LBA && block < (DISKID_LBA + 2) && block != block_id)
-                dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-        }
-
-        if (lba <= MAX_LBA && sector == 0)
-            DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, dd->bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
-    }
-    else //if (dd->disk->format == DISK_FORMAT_D64)
-    {
-        //D64 Format Seek
-        const struct dd_sys_data* sys_data = (void*)(&dd->idisk->data(dd->disk)[D64_OFFSET_SYS]);
-
-        uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
-        uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
-        uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
-        uint8_t disk_type = sys_data->type & 0x0F;
-
-        uint16_t head = ((dd->regs[DD_ASIC_CUR_TK] & 0x1000) / 0x1000);
-        uint16_t track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff);
-        uint16_t block = dd->bm_block;
-        uint16_t sector = dd->regs[DD_ASIC_CUR_SECTOR] - dd->bm_write;
-        uint16_t sectorsize = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
-        uint16_t lba = PhysToLBA(dd->disk, head, track, block);
-
-        if (lba < DISKID_LBA)
-        {
-            //System Data
-            dd->bm_track_offset = dd->disk->offset_sys;
-        }
-        else if ((lba >= DISKID_LBA) && (lba < SYSTEM_LBAS))
-        {
-            //Disk ID
-            dd->bm_track_offset = dd->disk->offset_id;
-        }
-        else if (lba <= (rom_lba_end + SYSTEM_LBAS))
-        {
-            //ROM Area
-            dd->bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sectorsize);
-        }
-        else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
-        {
-            //RAM Area
-            dd->bm_track_offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
-            dd->bm_track_offset += LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sectorsize);
-        }
-        else
-        {
-            //Invalid
-            dd->bm_track_offset = 0xFFFFFFFF;
-            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-            DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
-        }
-
-        if (lba <= MAX_LBA && sector == 0)
-            DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, dd->bm_track_offset, sectorsize * SECTORS_PER_BLOCK);
+    if (disk_seek_track(dd->disk,
+        dd->regs[DD_ASIC_CUR_TK], dd->regs[DD_ASIC_CUR_SECTOR], dd->regs[DD_ASIC_HOST_SECBYTE],
+        dd->bm_write, dd->bm_block,
+        &dd->bm_zone, &dd->bm_track_offset)) {
+        /* disk seek error */
+        dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
     }
 }
 
