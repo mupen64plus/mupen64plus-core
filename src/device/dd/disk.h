@@ -145,6 +145,7 @@ struct dd_disk
     uint8_t development;
     size_t offset_sys;
     size_t offset_id;
+    size_t offset_ram;
 };
 
 /* Storage interface which handles the various 64DD disks format specificities */

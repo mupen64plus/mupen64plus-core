@@ -309,6 +309,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "RandomizeInterrupt", 1, "Randomize PI/SI Interrupt Timing");
     ConfigSetDefaultInt(g_CoreConfig, "SiDmaDuration", -1, "Duration of SI DMA (-1: use per game settings)");
     ConfigSetDefaultString(g_CoreConfig, "GbCameraVideoCaptureBackend1", DEFAULT_VIDEO_CAPTURE_BACKEND, "Gameboy Camera Video Capture backend");
+    ConfigSetDefaultInt(g_CoreConfig, "SaveDiskFormat", 1, "Disk Save Format (0: Full Disk Copy (*.save), 1: RAM Area Only (*.ram))");
 
     /* handle upgrades */
     if (bUpgrade)
@@ -1080,27 +1081,40 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         goto no_disk;
     }
 
-    /* XXX: for now, don't overwrite the original file, because we don't want to corrupt dumps... */
-    char* filename = formatstr("%s.save", dd_disk_filename);
-    if (filename == NULL) {
-        DebugMessage(M64MSG_ERROR, "Failed to allocate memory for disk filename");
-        goto no_disk;
-    }
-
     dd_disk->storage = malloc(sizeof(struct file_storage));
     if (dd_disk->storage == NULL) {
         DebugMessage(M64MSG_ERROR, "Failed to allocate DD file_storage");
         goto no_disk;
     }
 
-    /* open file */
-    if (open_rom_file_storage(dd_disk->storage, dd_disk_filename) != file_ok) {
-        DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
-        goto no_disk;
-    }
+    /* Try loading *.save file first (if SaveDiskFormat == 0 */
+    char* filename;
+    if (ConfigGetParamInt(g_CoreConfig, "SaveDiskFormat") == 0)
+    {
+        filename = formatstr("%s.save", dd_disk_filename);
+        if (filename == NULL) {
+            DebugMessage(M64MSG_ERROR, "Failed to allocate memory for disk filename");
+            goto no_disk;
+        }
 
-    /* XXX: replace filename after loading content, so we don't overwrite original dump */
-    ((struct file_storage*)(dd_disk->storage))->filename = filename;
+        if (open_rom_file_storage(dd_disk->storage, filename) != file_ok) {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk (*.save): %s.", filename);
+
+            /* Try loading regular disk file */
+            if (open_rom_file_storage(dd_disk->storage, dd_disk_filename) != file_ok) {
+                DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+                goto no_disk;
+            }
+        }
+    }
+    else
+    {
+        /* Try loading regular disk file */
+        if (open_rom_file_storage(dd_disk->storage, dd_disk_filename) != file_ok) {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+            goto no_disk;
+        }
+    }
 
     /* FIXME: handle byte swapping */
 
@@ -1184,6 +1198,9 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         goto wrong_disk_format;
     }
 
+    const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
+    const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
+
     if (fstorage->size == MAME_FORMAT_DUMP_SIZE || fstorage->size == SDK_FORMAT_DUMP_SIZE)
     {
         //Check Disk ID
@@ -1216,9 +1233,6 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     else
     {
         //Check D64 File Size
-        const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
-        const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
-
         const struct dd_sys_data* sys_data = (void*)(&fstorage->data[D64_OFFSET_SYS]);
 
         uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
@@ -1295,6 +1309,8 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         dd_disk->development = isDevelopment;
         dd_disk->offset_sys = 0x4D08 * isValidDisk;
         dd_disk->offset_id = 0x4D08 * isValidDiskID;
+        const struct dd_sys_data* sys_data = (void*)(&fstorage->data[dd_disk->offset_sys]);
+        dd_disk->offset_ram = LBAToByteA(sys_data->type & 0xF, 0, RAM_START_LBA[sys_data->type & 0xF]);
         format_desc = "SDK";
         } break;
 
@@ -1311,9 +1327,25 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
             dd_disk->development = 1;
             dd_disk->offset_sys = 0x000;
             dd_disk->offset_id = 0x100;
+            const struct dd_sys_data* sys_data = (void*)(&fstorage->data[dd_disk->offset_sys]);
+            dd_disk->offset_ram = D64_OFFSET_DATA + LBAToByteA(sys_data->type & 0xF, 24, sys_data->rom_lba_end + 1);
             format_desc = "D64";
         }
     }
+
+    /* Load RAM save data (if SaveDiskFormat == 1) */
+    if (ConfigGetParamInt(g_CoreConfig, "SaveDiskFormat") == 1)
+    {
+        filename = formatstr("%s.ram", dd_disk_filename);
+        const struct dd_sys_data* sys_data = (void*)(&fstorage->data[dd_disk->offset_sys]);
+        if (read_from_file(filename, &fstorage->data[dd_disk->offset_ram], RAM_SIZES[sys_data->type & 0xF]) != file_ok)
+        {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk RAM area (*.ram): %s.", filename);
+        }
+    }
+
+    /* Don't overwrite the original file, because we don't want to corrupt dumps... */
+    ((struct file_storage*)(dd_disk->storage))->filename = filename;
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
             fstorage->filename,
