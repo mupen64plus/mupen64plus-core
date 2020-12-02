@@ -133,7 +133,9 @@ static void read_C2(struct dd_controller* dd)
     size_t i;
 
     size_t length = zone_sec_size[dd->bm_zone];
-    size_t offset = 0x40 * (dd->regs[DD_ASIC_CUR_SECTOR] - SECTORS_PER_BLOCK);
+    unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff;
+    sector %= 90;
+    size_t offset = 0x40 * (sector - SECTORS_PER_BLOCK);
 
     DebugMessage(M64MSG_VERBOSE, "read C2: length=%08x, offset=%08x",
             (uint32_t)length, (uint32_t)offset);
@@ -147,11 +149,10 @@ static uint8_t* seek_sector(struct dd_controller* dd)
 {
     unsigned int head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
     unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
-    // FIXME: deduce block from CUR_SEC
-    unsigned int block = dd->bm_block;
-    // FIXME: hw have this field in the upper 16-bits.
     // XXX: takes into account that for writes dd_update_bm use the previous sector.
-    unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] & 0xff) - dd->bm_write;
+    unsigned int sector = ((dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff) - dd->bm_write;
+    unsigned int block = sector / 90;
+    sector %= 90;
 
     uint8_t* sector_base = get_sector_base(dd->disk, head, track, block, sector);
     if (sector_base == NULL) {
@@ -204,32 +205,35 @@ void dd_update_bm(void* opaque)
 		return;
     }
 
+    unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff;
+    unsigned int block = sector / 90;
+    sector %= 90;
+
     /* handle writes (BM mode 0) */
     if (dd->bm_write) {
         /* first sector : just issue a BM interrupt to get things going */
-        if (dd->regs[DD_ASIC_CUR_SECTOR] == 0) {
-            ++dd->regs[DD_ASIC_CUR_SECTOR];
+        if (sector == 0) {
+            dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
         /* subsequent sectors: write previous sector */
-        else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+        else if (sector < SECTORS_PER_BLOCK) {
             write_sector(dd);
-            ++dd->regs[DD_ASIC_CUR_SECTOR];
+            dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
         /* otherwise write last sector */
-        else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 1) {
+        else if (sector < SECTORS_PER_BLOCK + 1) {
+            write_sector(dd);
+
             /* continue to next block */
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
-                write_sector(dd);
-                dd->bm_block = 1 - dd->bm_block;
-                dd->regs[DD_ASIC_CUR_SECTOR] = 1;
+                // Start at next block sector 1.
+                dd->regs[DD_ASIC_CUR_SECTOR] = ((1 - block) * 90 + 1) << 16;
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_BLOCK;
                 dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
             /* quit writing after second block */
             } else {
-                write_sector(dd);
-                ++dd->regs[DD_ASIC_CUR_SECTOR];
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
             }
         }
@@ -241,29 +245,29 @@ void dd_update_bm(void* opaque)
     else {
         uint8_t dev = dd->disk->development;
         /* track 6 fails to read on retail units (XXX: retail test) */
-        if ((((dd->regs[DD_ASIC_CUR_TK] >> 16) & 0x1fff) == 6) && dd->bm_block == 0 && !dev) {
+        if ((((dd->regs[DD_ASIC_CUR_TK] >> 16) & 0x1fff) == 6) && block == 0 && !dev) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
         /* data sectors : read sector and signal BM interrupt */
-        else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
+        else if (sector < SECTORS_PER_BLOCK) {
             read_sector(dd);
-            ++dd->regs[DD_ASIC_CUR_SECTOR];
+            dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
         /* C2 sectors: do nothing since they're loaded with zeros */
-        else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 4) {
+        else if (sector < SECTORS_PER_BLOCK + 4) {
             read_C2(dd);
-            ++dd->regs[DD_ASIC_CUR_SECTOR];
-            if (dd->regs[DD_ASIC_CUR_SECTOR] == SECTORS_PER_BLOCK + 4) {
+            dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
+            if ((sector + 1) == SECTORS_PER_BLOCK + 4) {
                 dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
             }
         }
         /* Gap sector: continue to next block, quit after second block */
-        else if (dd->regs[DD_ASIC_CUR_SECTOR] == SECTORS_PER_BLOCK + 4) {
+        else if (sector == SECTORS_PER_BLOCK + 4) {
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
-                dd->bm_block = 1 - dd->bm_block;
-                dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+                // Start at next block sector 0.
+                dd->regs[DD_ASIC_CUR_SECTOR] = ((1 - block) * 90 + 0) << 16;
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_BLOCK;
             }
             else {
@@ -310,7 +314,6 @@ void poweron_dd(struct dd_controller* dd)
 
     dd->bm_write = 0;
     dd->bm_reset_held = 0;
-    dd->bm_block = 0;
     dd->bm_zone = 0;
 
     dd->rtc.now = 0;
@@ -355,7 +358,9 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
     {
     case DD_ASIC_CMD_STATUS: {
             /* clear BM interrupt when reading gap */
-            if ((dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) && (dd->regs[DD_ASIC_CUR_SECTOR] > SECTORS_PER_BLOCK)) {
+            unsigned int sector = ((dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff);
+            sector %= 90;
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) && (sector > SECTORS_PER_BLOCK)) {
                 clear_dd_interrupt(dd, DD_STATUS_BM_INT);
                 dd_update_bm(dd);
             }
@@ -365,7 +370,6 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    uint8_t start_sector;
     unsigned int head, track;
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
@@ -451,16 +455,9 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
     case DD_ASIC_BM_STATUS_CTL:
         /* set sector */
-        start_sector = (value >> 16) & 0xff;
-        if (start_sector == 0x00) {
-            dd->bm_block = 0;
-            dd->regs[DD_ASIC_CUR_SECTOR] = 0;
-        } else if (start_sector == 0x5a) {
-            dd->bm_block = 1;
-            dd->regs[DD_ASIC_CUR_SECTOR] = 0;
-        }
-        else {
-            DebugMessage(M64MSG_ERROR, "Start sector not aligned");
+        dd->regs[DD_ASIC_CUR_SECTOR] = (value & 0x00ff0000);
+        if (dd->regs[DD_ASIC_CUR_SECTOR] != 0 && dd->regs[DD_ASIC_CUR_SECTOR] != 0x005a0000) {
+            DebugMessage(M64MSG_ERROR, "Start sector not aligned %08x", dd->regs[DD_ASIC_CUR_SECTOR]);
         }
 
         /* clear MECHA interrupt */
@@ -483,7 +480,6 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                                             | DD_STATUS_BM_INT);
             dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
             dd->regs[DD_ASIC_CUR_SECTOR] = 0;
-            dd->bm_block = 0;
         }
 
         /* clear DD interrupt if both MECHA and BM are cleared */
