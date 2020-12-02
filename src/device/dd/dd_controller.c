@@ -145,9 +145,8 @@ static void read_C2(struct dd_controller* dd)
 
 static uint8_t* seek_sector(struct dd_controller* dd)
 {
-    // FIXME: hw have these fields in the upper 16-bits.
-    unsigned int head = (dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 12;
-    unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0xfff);
+    unsigned int head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
+    unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
     // FIXME: deduce block from CUR_SEC
     unsigned int block = dd->bm_block;
     // FIXME: hw have this field in the upper 16-bits.
@@ -242,7 +241,7 @@ void dd_update_bm(void* opaque)
     else {
         uint8_t dev = dd->disk->development;
         /* track 6 fails to read on retail units (XXX: retail test) */
-        if (((dd->regs[DD_ASIC_CUR_TK] & 0x1fff) == 6) && dd->bm_block == 0 && !dev) {
+        if ((((dd->regs[DD_ASIC_CUR_TK] >> 16) & 0x1fff) == 6) && dd->bm_block == 0 && !dev) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DATA_RQ;
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
         }
@@ -400,13 +399,13 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Seek track */
         case 0x01:
         case 0x02:
-            dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA] >> 16;
+            dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA];
             /* lock track */
             dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
             dd->bm_write = (value >> 17) & 0x1;
             /* update bm_zone */
-            head = (dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 12;
-            track = dd->regs[DD_ASIC_CUR_TK] & 0xfff;
+            head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
+            track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
             break;
 
