@@ -227,8 +227,17 @@ static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
         0x36d99a0, 0x3ab70e0, 0x3e31900, 0x4149200
     };
 
+    unsigned int zone = get_zone_from_head_track(head, track);
+
+    /* Development disk have 0xC0 sector size for head == 0 && track < 6,
+     * in all other cases use default sector size based on zone
+     */
+    unsigned int sector_size = (disk->development && head == 0 && track < 6)
+        ? 0xC0
+        : zone_sec_size_phys[zone];
+
     /* For the sake of tr_off computation we need zone - head */
-    unsigned int zone = get_zone_from_head_track(head, track) - head;
+    zone = zone - head;
     unsigned int tr_off = track - TrackZoneTable[0][zone];
 
     /* For start_offsets and all other macros we want (zone + head * 8) */
@@ -238,7 +247,7 @@ static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
     unsigned int offset = start_offset[zone]
         + tr_off * TRACKSIZE(zone)
         + block * BLOCKSIZE(zone)
-        + sector * zone_sec_size[zone];
+        + sector * sector_size;
 
     /* Access to protected LBA should return an error */
     if (sector == 0)
@@ -267,7 +276,12 @@ static uint8_t* get_sector_base_sdk(const struct dd_disk* disk,
         return NULL;
     }
 
-    unsigned int sector_size = zone_sec_size_phys[get_zone_from_head_track(head, track)];
+    /* Development disk have 0xC0 sector size for head == 0 && track < 6,
+     * in all other cases use default sector size based on zone
+     */
+    unsigned int sector_size = (disk->development && head == 0 && track < 6)
+        ? 0xC0
+        : zone_sec_size_phys[get_zone_from_head_track(head, track)];
     const struct dd_sys_data* sys_data = (void*)(disk->istorage->data(disk->storage) + disk->offset_sys);
     unsigned int offset = LBAToByte(sys_data, 0, lba) + sector * sector_size;
 
