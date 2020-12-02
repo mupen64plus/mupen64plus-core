@@ -78,7 +78,6 @@ struct dd_controller
     unsigned char bm_reset_held;    /* [0-1] */
     unsigned char bm_block;         /* [0-1] */
     unsigned int bm_zone;           /* [0-15] */
-    unsigned int bm_track_offset;   /* */
 
     /* DD RTC */
     struct dd_rtc rtc;

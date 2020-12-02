@@ -143,43 +143,57 @@ static void read_C2(struct dd_controller* dd)
     }
 }
 
+static uint8_t* seek_sector(struct dd_controller* dd)
+{
+    // FIXME: hw have these fields in the upper 16-bits.
+    unsigned int head = (dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 12;
+    unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0xfff);
+    // FIXME: deduce block from CUR_SEC
+    unsigned int block = dd->bm_block;
+    // FIXME: hw have this field in the upper 16-bits.
+    // XXX: takes into account that for writes dd_update_bm use the previous sector.
+    unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] & 0xff) - dd->bm_write;
+
+    uint8_t* sector_base = get_sector_base(dd->disk, head, track, block, sector);
+    if (sector_base == NULL) {
+        dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+    }
+
+    return sector_base;
+}
+
 static void read_sector(struct dd_controller* dd)
 {
     size_t i;
-    const uint8_t* disk_mem = dd->idisk->data(dd->disk);
-    size_t offset = dd->bm_track_offset;
+    const uint8_t* disk_sec = seek_sector(dd);
+    if (disk_sec == NULL) {
+        return;
+    }
+
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
     for (i = 0; i < length; ++i) {
-        dd->ds_buf[i ^ 3] = disk_mem[offset + i];
+        dd->ds_buf[i ^ 3] = disk_sec[i];
     }
 }
 
 static void write_sector(struct dd_controller* dd)
 {
     size_t i;
-    uint8_t* disk_mem = dd->idisk->data(dd->disk);
-    size_t offset = dd->bm_track_offset;
+    uint8_t* disk_sec = seek_sector(dd);
+    if (disk_sec == NULL) {
+        return;
+    }
+
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
 	for (i = 0; i < length; ++i) {
-		disk_mem[offset + i] = dd->ds_buf[i ^ 3];
+		disk_sec[i] = dd->ds_buf[i ^ 3];
     }
 
 #if 0 /* disabled for now, because it causes too much slowdowns */
     dd->idisk->save(dd->disk);
 #endif
-}
-
-static void seek_track(struct dd_controller* dd)
-{
-    if (disk_seek_track(dd->disk,
-        dd->regs[DD_ASIC_CUR_TK], dd->regs[DD_ASIC_CUR_SECTOR], dd->regs[DD_ASIC_HOST_SECBYTE],
-        dd->bm_write, dd->bm_block,
-        &dd->bm_zone, &dd->bm_track_offset)) {
-        /* disk seek error */
-        dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
-    }
 }
 
 void dd_update_bm(void* opaque)
@@ -200,7 +214,6 @@ void dd_update_bm(void* opaque)
         }
         /* subsequent sectors: write previous sector */
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
-            seek_track(dd);
             write_sector(dd);
             ++dd->regs[DD_ASIC_CUR_SECTOR];
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
@@ -209,7 +222,6 @@ void dd_update_bm(void* opaque)
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK + 1) {
             /* continue to next block */
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
-                seek_track(dd);
                 write_sector(dd);
                 dd->bm_block = 1 - dd->bm_block;
                 dd->regs[DD_ASIC_CUR_SECTOR] = 1;
@@ -217,7 +229,6 @@ void dd_update_bm(void* opaque)
                 dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
             /* quit writing after second block */
             } else {
-                seek_track(dd);
                 write_sector(dd);
                 ++dd->regs[DD_ASIC_CUR_SECTOR];
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
@@ -237,7 +248,6 @@ void dd_update_bm(void* opaque)
         }
         /* data sectors : read sector and signal BM interrupt */
         else if (dd->regs[DD_ASIC_CUR_SECTOR] < SECTORS_PER_BLOCK) {
-            seek_track(dd);
             read_sector(dd);
             ++dd->regs[DD_ASIC_CUR_SECTOR];
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
@@ -303,7 +313,6 @@ void poweron_dd(struct dd_controller* dd)
     dd->bm_reset_held = 0;
     dd->bm_block = 0;
     dd->bm_zone = 0;
-    dd->bm_track_offset = 0;
 
     dd->rtc.now = 0;
     dd->rtc.last_update_rtc = 0;
@@ -358,6 +367,7 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     uint8_t start_sector;
+    unsigned int head, track;
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
     if (address < MM_DD_REGS || address >= MM_DD_MS_RAM) {
@@ -394,6 +404,10 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             /* lock track */
             dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
             dd->bm_write = (value >> 17) & 0x1;
+            /* update bm_zone */
+            head = (dd->regs[DD_ASIC_CUR_TK] & 0x1000) >> 12;
+            track = dd->regs[DD_ASIC_CUR_TK] & 0xfff;
+            dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
             break;
 
         /* Clear Disk change flag */

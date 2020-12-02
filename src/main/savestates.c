@@ -824,7 +824,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 dev->dd.bm_reset_held = (unsigned char)GETDATA(curr, uint32_t);
                 dev->dd.bm_block = (unsigned char)GETDATA(curr, uint32_t);
                 dev->dd.bm_zone = GETDATA(curr, uint32_t);
-                dev->dd.bm_track_offset = GETDATA(curr, uint32_t);
+                curr += sizeof(uint32_t); /* was bm_track_offset */
             }
             else {
                 curr += (3+DD_ASIC_REGS_COUNT)*sizeof(uint32_t) + 0x100 + 0x40 + 2*sizeof(int64_t) + 2*sizeof(unsigned int);
@@ -1848,7 +1848,7 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
         PUTDATA(curr, uint32_t, dev->dd.bm_reset_held);
         PUTDATA(curr, uint32_t, dev->dd.bm_block);
         PUTDATA(curr, uint32_t, dev->dd.bm_zone);
-        PUTDATA(curr, uint32_t, dev->dd.bm_track_offset);
+        PUTDATA(curr, uint32_t, 0); /* was bm_track_offset*/
     }
 
 #ifdef NEW_DYNAREC

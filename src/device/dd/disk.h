@@ -160,9 +160,9 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas);
 uint16_t LBAToPhys(const struct dd_sys_data* sys_data, uint32_t lba);
 uint32_t PhysToLBA(const struct dd_disk* disk, uint16_t head, uint16_t track, uint16_t block);
 
-unsigned int disk_seek_track(const struct dd_disk* disk,
-    uint32_t cur_tk, uint32_t cur_sec, uint32_t host_secbyte,
-    unsigned char bm_write, unsigned char bm_block,
-    unsigned int* bm_zone, unsigned int* bm_track_offset);
+unsigned int get_zone_from_head_track(unsigned int head, unsigned int track);
+
+uint8_t* get_sector_base(const struct dd_disk* disk,
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector);
 
 #endif
