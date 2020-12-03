@@ -562,6 +562,11 @@ unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_ad
         cart_addr = (cart_addr - MM_DD_DS_BUFFER) & 0x3fffff;
         mem = dd->ds_buf;
     }
+    else if (cart_addr == MM_DD_MS_RAM) {
+        /* MS is not emulated, we silence warnings for now */
+        /* Recommended Count Per Op = 1, this seems to break very easily */
+        return (length * 63) / 25;
+    }
     else {
         DebugMessage(M64MSG_ERROR, "Unknown DD dma read dram=%08x  cart=%08x length=%08x",
             dram_addr, cart_addr, length);
