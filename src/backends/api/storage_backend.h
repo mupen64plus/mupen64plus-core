@@ -37,7 +37,7 @@ struct storage_backend_interface
 
     /* Notify the storage backend that data should be persisted
      */
-    void (*save)(void* storage);
+    void (*save)(void* storage, size_t start, size_t size);
 };
 
 #endif

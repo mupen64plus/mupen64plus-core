@@ -58,15 +58,17 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
 
         /* do chip/sector erase */
         if (flashram->mode == FLASHRAM_MODE_SECTOR_ERASE) {
-            memset(mem + (flashram->erase_page & 0xff80) * 128, 0xff, 128*128);
+            offset = (flashram->erase_page & 0xff80) * 128;
+            memset(mem + offset, 0xff, 128*128);
+            flashram->istorage->save(flashram->storage, offset, 128*128);
         }
         else if (flashram->mode == FLASHRAM_MODE_CHIP_ERASE){
             memset(mem, 0xff, FLASHRAM_SIZE);
+            flashram->istorage->save(flashram->storage, 0, FLASHRAM_SIZE);
         }
         else {
             DebugMessage(M64MSG_WARNING, "Unexpected erase command (mode=%x)", flashram->mode);
         }
-        flashram->istorage->save(flashram->storage);
 
         /* clear erase busy flag, set erase success flag, transition to status mode */
         flashram->status &= ~UINT32_C(0x02);
@@ -83,7 +85,7 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
         for (i = 0; i < 128; ++i) {
             mem[(offset+i)^S8] = flashram->page_buf[i];
         }
-        flashram->istorage->save(flashram->storage);
+        flashram->istorage->save(flashram->storage, offset, 128);
 
         /* clear program busy flag, set program success flag, transition to status mode */
         flashram->status &= ~UINT32_C(0x01);

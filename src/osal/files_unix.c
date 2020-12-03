@@ -8,7 +8,7 @@
  *   the Free Software Foundation; either version 2 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
- *   This program is distributed in the hope that it will be useful,       * 
+ *   This program is distributed in the hope that it will be useful,       *
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
  *   GNU General Public License for more details.                          *
@@ -18,7 +18,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-                       
+
 /* This file contains the definitions for the unix-specific file handling
  * functions
  */
@@ -173,7 +173,7 @@ const char * osal_get_user_configpath(void)
 {
     static char retpath[PATH_MAX];
     int rval;
-    
+
     /* first, try the XDG_CONFIG_HOME environment variable */
     rval = get_xdg_dir(retpath, "XDG_CONFIG_HOME", "mupen64plus/");
     if (rval == 0)
@@ -194,7 +194,7 @@ const char * osal_get_user_datapath(void)
 {
     static char retpath[PATH_MAX];
     int rval;
-    
+
     /* first, try the XDG_DATA_HOME environment variable */
     rval = get_xdg_dir(retpath, "XDG_DATA_HOME", "mupen64plus/");
     if (rval == 0)
@@ -215,7 +215,7 @@ const char * osal_get_user_cachepath(void)
 {
     static char retpath[PATH_MAX];
     int rval;
-    
+
     /* first, try the XDG_CACHE_HOME environment variable */
     rval = get_xdg_dir(retpath, "XDG_CACHE_HOME", "mupen64plus/");
     if (rval == 0)

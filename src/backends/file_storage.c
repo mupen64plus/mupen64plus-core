@@ -35,6 +35,7 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     /* ! Take ownership of filename ! */
     fstorage->filename = filename;
     fstorage->size = size;
+    fstorage->first_access = 1;
 
     /* allocate memory for holding data */
     fstorage->data = malloc(fstorage->size);
@@ -58,6 +59,7 @@ int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
     fstorage->data = NULL;
     fstorage->size = 0;
     fstorage->filename = NULL;
+    fstorage->first_access = 1;
 
     file_status_t err = load_file(filename, (void**)&fstorage->data, &fstorage->size);
 
@@ -88,14 +90,26 @@ static size_t file_storage_size(const void* storage)
     return fstorage->size;
 }
 
-static void file_storage_save(void* storage)
+static void file_storage_save(void* storage, size_t start, size_t size)
 {
     if (netplay_is_init() && netplay_get_controller(0) == -1)
         return;
 
     struct file_storage* fstorage = (struct file_storage*)storage;
 
-    switch(write_to_file(fstorage->filename, fstorage->data, fstorage->size))
+    file_status_t err;
+
+    /* On first save access ignore start/size and write full storage content,
+     * otherwise write only updated chunk */
+    if (fstorage->first_access) {
+        fstorage->first_access = 0;
+        err = write_to_file(fstorage->filename, fstorage->data, fstorage->size);
+    }
+    else {
+        err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start);
+    }
+
+    switch(err)
     {
     case file_open_error:
         DebugMessage(M64MSG_WARNING, "couldn't open storage file '%s' for writing", fstorage->filename);
@@ -108,13 +122,13 @@ static void file_storage_save(void* storage)
     }
 }
 
-static void file_storage_parent_save(void* storage)
+static void file_storage_parent_save(void* storage, size_t start, size_t size)
 {
     struct file_storage* fstorage = (struct file_storage*)((struct file_storage*)storage)->filename;
-    file_storage_save(fstorage);
+    file_storage_save(fstorage, start, size);
 }
 
-static void dummy_save(void* storage)
+static void dummy_save(void* storage, size_t start, size_t size)
 {
     /* do nothing */
 }

@@ -192,9 +192,7 @@ static void write_sector(struct dd_controller* dd)
 		disk_sec[i] = dd->ds_buf[i ^ 3];
     }
 
-#if 0 /* disabled for now, because it causes too much slowdowns */
-    dd->idisk->save(dd->disk);
-#endif
+    //dd->idisk->save(dd->disk, disk_sec - dd->idisk->data(dd->disk), length);
 }
 
 void dd_update_bm(void* opaque)
