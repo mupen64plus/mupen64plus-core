@@ -234,6 +234,7 @@ void dd_update_bm(void* opaque)
                 dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
             /* quit writing after second block */
             } else {
+                dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
                 dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
             }
         }
