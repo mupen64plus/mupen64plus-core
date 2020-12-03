@@ -523,6 +523,11 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         }
         break;
 
+    case DD_ASIC_CUR_TK: /* fallthrough */
+    case DD_ASIC_CUR_SECTOR:
+        DebugMessage(M64MSG_WARNING, "Trying to write to read-only registers: %08x <- %08x", address, value);
+        break;
+
     default:
         dd->regs[reg] = value;
     }
