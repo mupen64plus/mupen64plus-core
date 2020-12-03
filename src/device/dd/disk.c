@@ -335,8 +335,7 @@ static uint8_t* get_sector_base_d64(const struct dd_disk* disk,
     else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
     {
         //RAM Area
-        offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, rom_lba_end + 1);
-        offset += LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sector_size);
+        offset = disk->offset_ram + LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sector_size);
     }
     else
     {
