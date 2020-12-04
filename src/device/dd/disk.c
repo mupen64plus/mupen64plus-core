@@ -96,7 +96,8 @@ uint32_t LBAToByteA(uint8_t type, uint32_t lba, uint32_t nlbas)
     uint8_t init_flag = 1;
     uint32_t totalbytes = 0;
     uint32_t blocksize = 0;
-    uint32_t vzone, pzone = 0;
+    uint32_t vzone = 0;
+    uint32_t pzone = 0;
 
     uint8_t disktype = type & 0x0F;
 
