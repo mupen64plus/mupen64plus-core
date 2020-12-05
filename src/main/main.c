@@ -178,6 +178,48 @@ static char *get_gb_ram_path(const char* gbrom, unsigned int control_id)
     return formatstr("%s%s.%u.sav", get_savesrampath(), gbrom, control_id);
 }
 
+static char *get_dd_disk_save_path(const char* disk, int format)
+{
+    char* filename = NULL;
+
+    int len = strlen(disk);
+    int has_expected_ext = (len >= 4 && (strcmp(disk + len - 4, ".ndd") == 0 || strcmp(disk + len - 4, ".d64") == 0));
+
+    switch (format) {
+    case 0: /* *.ndr,*.d6r, full disk content */
+        if (has_expected_ext) {
+            /* file has .ndd / .d64, so adjust existing extension */
+            filename = formatstr("%s%s", get_savesrampath(), disk);
+            len = strlen(filename);
+            filename[len-1] = 'r';
+        }
+        else {
+            /* file doesn't have .ndd / .d64 extension, so fallback to .ndr */
+            filename = formatstr("%s%s.ndr", get_savesrampath(), disk);
+        }
+        break;
+    case 1: /* *.ram, only RAM part is persisted */
+        if (has_expected_ext) {
+            /* file has .ndd / .d64, so adjust existing extension */
+            filename = formatstr("%s%s", get_savesrampath(), disk);
+            len = strlen(filename);
+            filename[len-3] = 'r';
+            filename[len-2] = 'a';
+            filename[len-1] = 'm';
+        }
+        else {
+            /* file doesn't have .ndd / .d64 extension, so fallback to .ram */
+            filename = formatstr("%s%s.ram", get_savesrampath(), disk);
+        }
+        break;
+    default:
+        DebugMessage(M64MSG_WARNING, "Unexpected DD save format: %d", format);
+        break;
+    }
+    return filename;
+}
+
+
 static m64p_error init_video_capture_backend(const struct video_capture_backend_interface** ivcap, void** vcap, m64p_handle config, const char* key)
 {
     m64p_error err;
@@ -1079,27 +1121,18 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     }
 
     /* Determine disk save file format and name */
-    // FIXME: use save path, not same directory as disk file.
-    // FIXME: use more standard extension .ndr/*.d6r instead of .save ?
     int save_format = ConfigGetParamInt(g_CoreConfig, "SaveDiskFormat");
-    char* save_filename = NULL;
-    switch (save_format) {
-    case 0: /* *.save, Full disk content */
-        save_filename = formatstr("%s.save", dd_disk_filename);
-        break;
-    case 1: /* *.ram, only RAM part is persisted */
-        save_filename = formatstr("%s.ram", dd_disk_filename);
-        break;
-    default:
-        DebugMessage(M64MSG_ERROR, "Invalid SaveDiskFormat value %d. Disk will be read-only", save_format);
+    char* save_filename = get_dd_disk_save_path(namefrompath(dd_disk_filename), save_format);
+    if (save_filename == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to get DD save path, DD will be read-only.");
         save_format = -1;
     }
 
-    /* Try loading *.save file first (if SaveDiskFormat == 0 */
+    /* Try loading *.{nd,d6}r file first (if SaveDiskFormat == 0 */
     if (save_format == 0)
     {
         if (open_rom_file_storage(fstorage, save_filename) != file_ok) {
-            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk (*.save): %s.", save_filename);
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk save: %s.", save_filename);
 
             /* Try loading regular disk file */
             if (open_rom_file_storage(fstorage, dd_disk_filename) != file_ok) {
