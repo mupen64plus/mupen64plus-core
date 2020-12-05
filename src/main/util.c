@@ -291,7 +291,7 @@ static const char* strpbrk_reverse(const char* needles, const char* haystack)
 const char* namefrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
-    
+
     if (last_separator_ptr != NULL)
         return last_separator_ptr + 1;
     else
@@ -1569,7 +1569,7 @@ void ShiftJis2UTF8(const unsigned char *pccInput, unsigned char *pucOutput, int 
             pucOutput[idxOut++] = 0x80 | (unicodeValue & 0x3f);
         }
     }
-    
+
     if (idxOut < outputLength)
         pucOutput[idxOut] = 0;
     else

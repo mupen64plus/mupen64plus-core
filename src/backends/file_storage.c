@@ -103,6 +103,11 @@ static void file_storage_parent_save(void* storage)
     file_storage_save(fstorage);
 }
 
+static void dummy_save(void* storage)
+{
+    /* do nothing */
+}
+
 
 const struct storage_backend_interface g_ifile_storage =
 {
@@ -116,7 +121,7 @@ const struct storage_backend_interface g_ifile_storage_ro =
 {
     file_storage_data,
     file_storage_size,
-    NULL
+    dummy_save
 };
 
 const struct storage_backend_interface g_isubfile_storage =
