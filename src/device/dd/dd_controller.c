@@ -30,6 +30,7 @@
 #include "api/callbacks.h"
 #include "backends/api/clock_backend.h"
 #include "backends/api/storage_backend.h"
+#include "device/dd/disk.h"
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
@@ -300,8 +301,6 @@ void init_dd(struct dd_controller* dd,
 
     dd->disk = disk;
     dd->idisk = idisk;
-
-    GenerateLBAToPhysTable(disk);
 
     dd->r4300 = r4300;
 }

@@ -56,6 +56,7 @@
 #include "backends/file_storage.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/dd/disk.h"
 #include "device/controllers/paks/biopak.h"
 #include "device/controllers/paks/mempak.h"
 #include "device/controllers/paks/rumblepak.h"
@@ -1385,6 +1386,9 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     *dd_idisk = &g_istorage_disk;
     dd_disk->storage = fstorage;
     dd_disk->istorage = (save_format >= 0) ? &g_ifile_storage : &g_ifile_storage_ro;
+
+    /* Generate LBA conversion table */
+    GenerateLBAToPhysTable(dd_disk);
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
             dd_disk_filename,
