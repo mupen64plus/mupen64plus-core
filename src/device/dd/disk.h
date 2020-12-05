@@ -165,4 +165,11 @@ unsigned int get_zone_from_head_track(unsigned int head, unsigned int track);
 uint8_t* get_sector_base(const struct dd_disk* disk,
     unsigned int head, unsigned int track, unsigned int block, unsigned int sector);
 
+uint8_t* scan_and_expand_disk_format(uint8_t* data, size_t size,
+    unsigned int* format, unsigned int* development,
+    size_t* offset_sys, size_t* offset_id, size_t* offset_ram, size_t* size_ram);
+
+
+const char* get_disk_format_name(unsigned int format);
+
 #endif

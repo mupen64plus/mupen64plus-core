@@ -367,3 +367,238 @@ uint8_t* get_sector_base(const struct dd_disk* disk,
         return NULL;
     }
 }
+
+uint8_t* scan_and_expand_disk_format(uint8_t* data, size_t size,
+    unsigned int* format, unsigned int* development,
+    size_t* offset_sys, size_t* offset_id, size_t* offset_ram, size_t* size_ram)
+{
+    /* Search for good System Data */
+    const unsigned int blocks[8] = { 0, 1, 2, 3, 8, 9, 10, 11 };
+    int isValidDisk = -1;
+    int isValidDiskID = -1;
+    unsigned int isDevelopment = 0;
+
+    for (int i = 0; i < 8; i++)
+    {
+        uint32_t offset = BLOCKSIZE(0) * blocks[i];
+        const struct dd_sys_data* sys_data = (void*)(&data[offset]);
+
+        if ((offset + 0x20) >= size || (size < MAME_FORMAT_DUMP_SIZE && size < SDK_FORMAT_DUMP_SIZE && i > 0))
+        {
+            isValidDisk = -1;
+            break;
+        }
+
+        //Disk Type
+        if ((sys_data->type & 0xEF) > 6) continue;
+
+        //IPL Load Block
+        uint16_t ipl_load_blk = big16(sys_data->ipl_load_blk);
+        if (ipl_load_blk > (MAX_LBA - SYSTEM_LBAS) || ipl_load_blk == 0x0000) continue;
+
+        //IPL Load Address
+        uint32_t ipl_load_addr = big32(sys_data->ipl_load_addr);
+        if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
+
+        //Country Code
+        uint32_t disk_region = big32(sys_data->region);
+        switch (disk_region)
+        {
+        case DD_REGION_JP:
+        case DD_REGION_US:
+        case DD_REGION_DV:
+            isValidDisk = i;
+            break;
+        default:
+            continue;
+        }
+
+        //Verify if sector repeats
+        if (size == MAME_FORMAT_DUMP_SIZE || size == SDK_FORMAT_DUMP_SIZE)
+        {
+            uint8_t sectorsize = SECTORSIZE_SYS;
+
+            //Development System Data
+            if (blocks[i] == 2 || blocks[i] == 3 || blocks[i] == 10 || blocks[i] == 11)
+                sectorsize = SECTORSIZE_SYS_DEV;
+
+            for (int j = 1; j < SECTORS_PER_BLOCK; j++)
+            {
+                if (memcmp(&data[offset + ((j - 1) * sectorsize)], &data[offset + (j * sectorsize)], sectorsize) != 0)
+                {
+                    isValidDisk = -1;
+                    break;
+                }
+                else
+                {
+                    isValidDisk = i;
+                }
+            }
+        }
+
+        if (isValidDisk != -1)
+            break;
+    }
+
+    if (isValidDisk == 2 || isValidDisk == 3 || isValidDisk == 10 || isValidDisk == 11)
+        isDevelopment = 1;
+
+    if (isValidDisk == -1)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid DD Disk System Data.");
+        return NULL;
+    }
+
+    const uint16_t RAM_START_LBA[7] = { 0x5A2, 0x7C6, 0x9EA, 0xC0E, 0xE32, 0x1010, 0x10DC };
+    const uint32_t RAM_SIZES[7] = { 0x24A9DC0, 0x1C226C0, 0x1450F00, 0xD35680, 0x6CFD40, 0x1DA240, 0x0 };
+
+    if (size == MAME_FORMAT_DUMP_SIZE || size == SDK_FORMAT_DUMP_SIZE)
+    {
+        //Check Disk ID
+        //Verify if sector repeats
+        for (int i = 14; i < 16; i++)
+        {
+            for (int j = 1; j < SECTORS_PER_BLOCK; j++)
+            {
+                if (memcmp(&data[(i * BLOCKSIZE(0)) + (j - 1) * SECTORSIZE_SYS], &data[(i * BLOCKSIZE(0)) + j * SECTORSIZE_SYS], SECTORSIZE_SYS) != 0)
+                {
+                    isValidDiskID = -1;
+                    break;
+                }
+                else
+                {
+                    isValidDiskID = i;
+                }
+            }
+
+            if (isValidDiskID != -1)
+                break;
+        }
+
+        if (isValidDiskID == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Invalid DD Disk ID Data.");
+            return NULL;
+        }
+    }
+    else
+    {
+        //Check D64 File Size
+        const struct dd_sys_data* sys_data = (void*)(&data[D64_OFFSET_SYS]);
+
+        uint16_t rom_lba_end = big16(sys_data->rom_lba_end);
+        uint16_t ram_lba_start = big16(sys_data->ram_lba_start);
+        uint16_t ram_lba_end = big16(sys_data->ram_lba_end);
+        uint8_t disk_type = sys_data->type & 0x0F;
+
+        size_t rom_size = LBAToByteA(disk_type, 24, rom_lba_end + 1);
+        size_t ram_size = 0;
+        if (ram_lba_start != 0xFFFF && ram_lba_end != 0xFFFF)
+            ram_size = LBAToByteA(disk_type, SYSTEM_LBAS + ram_lba_start, ram_lba_end + 1 - ram_lba_start);
+
+        size_t d64_size = D64_OFFSET_DATA + rom_size + ram_size;
+        size_t full_d64_size = D64_OFFSET_DATA + rom_size + RAM_SIZES[disk_type];
+
+        DebugMessage(M64MSG_INFO, "D64 Disk Areas - ROM: 0000 - %04X / RAM: %04X - %04X", rom_lba_end, ram_lba_start, ram_lba_end);
+
+        if (ram_lba_start != (RAM_START_LBA[disk_type] - 24) && ram_lba_start != 0xFFFF)
+        {
+            isValidDisk = -1;
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk RAM Start Info (expected %04X)", (RAM_START_LBA[disk_type] - SYSTEM_LBAS));
+        }
+        else if (size != d64_size)
+        {
+            isValidDisk = -1;
+            DebugMessage(M64MSG_ERROR, "Invalid D64 Disk size %zu (calculated 0x200 + 0x%zx + 0x%zx = %zu).", size, rom_size, ram_size, d64_size);
+        }
+        else
+        {
+            //Change Size to fit all of RAM Area possible
+            uint8_t* buffer = malloc(full_d64_size);
+            if (buffer == NULL) {
+                DebugMessage(M64MSG_ERROR, "Failed to allocate memory for D64 disk dump");
+                return NULL;
+            }
+            memset(buffer, 0, full_d64_size);
+            memcpy(buffer, data, d64_size);
+
+            struct dd_sys_data* sys_data_ = (void*)(&buffer[D64_OFFSET_SYS]);
+
+            //Modify System Data so there are no errors in emulation
+            sys_data_->format = 0x10;
+            sys_data_->type |= 0x10;
+            if (disk_type < 6)
+            {
+                sys_data_->ram_lba_start = big16((RAM_START_LBA[disk_type] - SYSTEM_LBAS));
+                sys_data_->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS));
+            }
+            else
+            {
+                sys_data_->ram_lba_start = 0xFFFF;
+                sys_data_->ram_lba_end = 0xFFFF;
+            }
+
+            /* FIXME: you're not supposed to know that data was malloc'ed */
+            free(data);
+            data = buffer;
+            size = full_d64_size;
+        }
+    }
+
+
+    switch (size)
+    {
+    case MAME_FORMAT_DUMP_SIZE:
+        *format = DISK_FORMAT_MAME;
+        *development = isDevelopment;
+        *offset_sys = 0x4D08 * isValidDisk;
+        *offset_id = 0x4D08 * isValidDiskID;
+        break;
+
+    case SDK_FORMAT_DUMP_SIZE: {
+        *format = DISK_FORMAT_SDK;
+        *development = isDevelopment;
+        *offset_sys = 0x4D08 * isValidDisk;
+        *offset_id = 0x4D08 * isValidDiskID;
+        const struct dd_sys_data* sys_data = (void*)(&data[*offset_sys]);
+        *offset_ram = LBAToByteA(sys_data->type & 0xF, 0, RAM_START_LBA[sys_data->type & 0xF]);
+        *size_ram = RAM_SIZES[sys_data->type & 0xF];
+        } break;
+
+    default:
+        if (isValidDisk == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %zu.", size);
+            return NULL;
+        }
+        else
+        {
+            //D64
+            *format = DISK_FORMAT_D64;
+            *development = 1;
+            *offset_sys = 0x000;
+            *offset_id = 0x100;
+            const struct dd_sys_data* sys_data = (void*)(&data[*offset_sys]);
+            *offset_ram = D64_OFFSET_DATA + LBAToByteA(sys_data->type & 0xF, 24, big16(sys_data->rom_lba_end) + 1);
+            *size_ram = RAM_SIZES[sys_data->type & 0xF];
+        }
+    }
+
+    return data;
+}
+
+
+const char* get_disk_format_name(unsigned int format)
+{
+    switch(format)
+    {
+    case DISK_FORMAT_MAME:
+        return "MAME";
+    case DISK_FORMAT_SDK:
+        return "SDK";
+    case DISK_FORMAT_D64:
+        return "D64";
+    default:
+        return "<unknown>";
+    }
+}

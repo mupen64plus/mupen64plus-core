@@ -28,8 +28,8 @@ struct r4300_core;
 #include <time.h>
 
 #include "osal/preproc.h"
-#include "device/dd/disk.h"
 
+struct dd_disk;
 struct clock_backend_interface;
 struct storage_backend_interface;
 
