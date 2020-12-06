@@ -56,6 +56,7 @@
 #include "backends/file_storage.h"
 #include "cheat.h"
 #include "device/device.h"
+#include "device/dd/disk.h"
 #include "device/controllers/paks/biopak.h"
 #include "device/controllers/paks/mempak.h"
 #include "device/controllers/paks/rumblepak.h"
@@ -179,6 +180,48 @@ static char *get_gb_ram_path(const char* gbrom, unsigned int control_id)
 {
     return formatstr("%s%s.%u.sav", get_savesrampath(), gbrom, control_id);
 }
+
+static char *get_dd_disk_save_path(const char* disk, int format)
+{
+    char* filename = NULL;
+
+    int len = strlen(disk);
+    int has_expected_ext = (len >= 4 && (strcmp(disk + len - 4, ".ndd") == 0 || strcmp(disk + len - 4, ".d64") == 0));
+
+    switch (format) {
+    case 0: /* *.ndr,*.d6r, full disk content */
+        if (has_expected_ext) {
+            /* file has .ndd / .d64, so adjust existing extension */
+            filename = formatstr("%s%s", get_savesrampath(), disk);
+            len = strlen(filename);
+            filename[len-1] = 'r';
+        }
+        else {
+            /* file doesn't have .ndd / .d64 extension, so fallback to .ndr */
+            filename = formatstr("%s%s.ndr", get_savesrampath(), disk);
+        }
+        break;
+    case 1: /* *.ram, only RAM part is persisted */
+        if (has_expected_ext) {
+            /* file has .ndd / .d64, so adjust existing extension */
+            filename = formatstr("%s%s", get_savesrampath(), disk);
+            len = strlen(filename);
+            filename[len-3] = 'r';
+            filename[len-2] = 'a';
+            filename[len-1] = 'm';
+        }
+        else {
+            /* file doesn't have .ndd / .d64 extension, so fallback to .ram */
+            filename = formatstr("%s%s.ram", get_savesrampath(), disk);
+        }
+        break;
+    default:
+        DebugMessage(M64MSG_WARNING, "Unexpected DD save format: %d", format);
+        break;
+    }
+    return filename;
+}
+
 
 static m64p_error init_video_capture_backend(const struct video_capture_backend_interface** ivcap, void** vcap, m64p_handle config, const char* key)
 {
@@ -311,6 +354,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "RandomizeInterrupt", 1, "Randomize PI/SI Interrupt Timing");
     ConfigSetDefaultInt(g_CoreConfig, "SiDmaDuration", -1, "Duration of SI DMA (-1: use per game settings)");
     ConfigSetDefaultString(g_CoreConfig, "GbCameraVideoCaptureBackend1", DEFAULT_VIDEO_CAPTURE_BACKEND, "Gameboy Camera Video Capture backend");
+    ConfigSetDefaultInt(g_CoreConfig, "SaveDiskFormat", 1, "Disk Save Format (0: Full Disk Copy (*.ndr/*.d6r), 1: RAM Area Only (*.ram))");
 
     /* handle upgrades */
     if (bUpgrade)
@@ -1086,9 +1130,8 @@ no_dd:
     *rom_size = 0;
 }
 
-static void load_dd_disk(struct file_storage* dd_disk, const struct storage_backend_interface** dd_idisk)
+static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_interface** dd_idisk)
 {
-    const char* format_desc;
     /* ask the core loader for DD disk filename */
     char* dd_disk_filename = (g_media_loader.get_dd_disk == NULL)
         ? NULL
@@ -1099,61 +1142,116 @@ static void load_dd_disk(struct file_storage* dd_disk, const struct storage_back
         goto no_disk;
     }
 
-    /* open file */
-    if (open_rom_file_storage(dd_disk, dd_disk_filename) != file_ok) {
-        DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+    struct file_storage* fstorage = malloc(sizeof(struct file_storage));
+    if (fstorage == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to allocate DD file_storage");
         goto no_disk;
     }
 
-    /* FIXME: handle byte swapping */
+    /* Determine disk save file format and name */
+    int save_format = ConfigGetParamInt(g_CoreConfig, "SaveDiskFormat");
+    char* save_filename = get_dd_disk_save_path(namefrompath(dd_disk_filename), save_format);
+    if (save_filename == NULL) {
+        DebugMessage(M64MSG_ERROR, "Failed to get DD save path, DD will be read-only.");
+        save_format = -1;
+    }
 
-
-    switch (dd_disk->size)
+    /* Try loading *.{nd,d6}r file first (if SaveDiskFormat == 0 */
+    if (save_format == 0)
     {
-    case MAME_FORMAT_DUMP_SIZE:
-        /* already in a compatible format */
-        *dd_idisk = &g_ifile_storage;
-        format_desc = "MAME";
-        break;
+        if (open_rom_file_storage(fstorage, save_filename) != file_ok) {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk save: %s.", save_filename);
 
-    case SDK_FORMAT_DUMP_SIZE: {
-        /* convert to mame format */
-        uint8_t* buffer = malloc(MAME_FORMAT_DUMP_SIZE);
-        if (buffer == NULL) {
-            DebugMessage(M64MSG_ERROR, "Failed to allocate memory for MAME disk dump");
-            close_file_storage(dd_disk);
-            goto no_disk;
+            /* Try loading regular disk file */
+            if (open_rom_file_storage(fstorage, dd_disk_filename) != file_ok) {
+                DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+                goto free_fstorage;
+            }
         }
-
-        dd_convert_to_mame(buffer, dd_disk->data);
-        free(dd_disk->data);
-        dd_disk->data = buffer;
-        dd_disk->size = MAME_FORMAT_DUMP_SIZE;
-        *dd_idisk = &g_ifile_storage_dd_sdk_dump;
-        format_desc = "SDK";
-        } break;
-
-    default:
-        DebugMessage(M64MSG_ERROR, "Invalid DD Disk size %u.", (uint32_t) dd_disk->size);
-        close_file_storage(dd_disk);
-        goto no_disk;
     }
+    else
+    {
+        /* Try loading regular disk file */
+        if (open_rom_file_storage(fstorage, dd_disk_filename) != file_ok) {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk: %s.", dd_disk_filename);
+            goto free_fstorage;
+        }
+    }
+
+    /* Force fstorage to point to save_filename, to redirect all writes to save file,
+     * (and to avoid corrupting 64DD dump)
+     * save_filename is now owned by fstorage.
+     * dd_disk_filename is not owned anymore and must be freed individually.
+     */
+    fstorage->filename = save_filename;
+
+    /* Scan disk to deduce disk format and other parameters and expand its size for D64 */
+    unsigned int format = 0;
+    unsigned int development = 0;
+    size_t offset_sys = 0;
+    size_t offset_id = 0;
+    size_t offset_ram = 0;
+    size_t size_ram = 0;
+    uint8_t* new_data = scan_and_expand_disk_format(fstorage->data, fstorage->size, &format, &development, &offset_sys, &offset_id, &offset_ram, &size_ram);
+    if (new_data == NULL) {
+        DebugMessage(M64MSG_ERROR, "Wrong disk format");
+        goto wrong_disk_format;
+    }
+    else {
+        fstorage->data = new_data;
+    }
+
+    /* Load RAM save data (if SaveDiskFormat == 1) */
+    if (save_format == 1)
+    {
+        if (read_from_file(save_filename, &fstorage->data[offset_ram], size_ram) != file_ok)
+        {
+            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk RAM area (*.ram): %s.", save_filename);
+        }
+    }
+
+    /* Setup dd_{,i}disk */
+    *dd_idisk = &g_istorage_disk;
+    dd_disk->storage = fstorage;
+    dd_disk->istorage = (save_format >= 0) ? &g_ifile_storage : &g_ifile_storage_ro;
+    dd_disk->format = format;
+    dd_disk->development = development;
+    dd_disk->offset_sys = offset_sys;
+    dd_disk->offset_id = offset_id;
+    dd_disk->offset_ram = offset_ram;
+
+    /* Generate LBA conversion table */
+    GenerateLBAToPhysTable(dd_disk);
 
     DebugMessage(M64MSG_INFO, "DD Disk: %s - %zu - %s",
-            dd_disk->filename,
-            dd_disk->size,
-            format_desc);
+            dd_disk_filename,
+            (*dd_idisk)->size(dd_disk),
+            get_disk_format_name(format));
 
-    uint32_t w = *(uint32_t*)dd_disk->data;
-    if (w == DD_REGION_JP || w == DD_REGION_US) {
-        DebugMessage(M64MSG_WARNING, "Loading a saved disk ");
+    uint32_t w = *(uint32_t*)(*dd_idisk)->data(dd_disk);
+    if (w == DD_REGION_JP || w == DD_REGION_US || w == DD_REGION_DV) {
+        DebugMessage(M64MSG_WARNING, "Loading a saved disk");
     }
 
+    free(dd_disk_filename);
     return;
 
+wrong_disk_format:
+    close_file_storage(fstorage);
+free_fstorage:
+    free(fstorage);
 no_disk:
     free(dd_disk_filename);
     *dd_idisk = NULL;
+}
+
+static void close_dd_disk(struct dd_disk* disk)
+{
+    if (disk->storage != NULL) {
+        close_file_storage(disk->storage);
+        free(disk->storage);
+        disk->storage = NULL;
+    }
 }
 
 
@@ -1310,7 +1408,7 @@ m64p_error main_run(void)
     struct file_storage fla;
     struct file_storage sra;
     size_t dd_rom_size;
-    struct file_storage dd_disk;
+    struct dd_disk dd_disk;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1661,7 +1759,7 @@ m64p_error main_run(void)
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_dd_disk(&dd_disk);
 
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))
     {
@@ -1700,7 +1798,7 @@ on_gfx_open_failure:
     close_file_storage(&fla);
     close_file_storage(&eep);
     close_file_storage(&mpk);
-    close_file_storage(&dd_disk);
+    close_dd_disk(&dd_disk);
 
     return M64ERR_PLUGIN_FAIL;
 }

@@ -510,6 +510,7 @@ SOURCE = \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \
     $(SRCDIR)/device/controllers/paks/transferpak.c \
     $(SRCDIR)/device/dd/dd_controller.c \
+    $(SRCDIR)/device/dd/disk.c \
     $(SRCDIR)/device/device.c \
     $(SRCDIR)/device/gb/gb_cart.c \
     $(SRCDIR)/device/gb/mbc3_rtc.c \

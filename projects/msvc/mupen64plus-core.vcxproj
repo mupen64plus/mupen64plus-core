@@ -140,6 +140,7 @@
     <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\transferpak.c" />
     <ClCompile Include="..\..\src\device\dd\dd_controller.c" />
+    <ClCompile Include="..\..\src\device\dd\disk.c" />
     <ClCompile Include="..\..\src\device\gb\gb_cart.c" />
     <ClCompile Include="..\..\src\device\gb\m64282fp.c" />
     <ClCompile Include="..\..\src\device\gb\mbc3_rtc.c" />
@@ -442,6 +443,7 @@
     <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\transferpak.h" />
     <ClInclude Include="..\..\src\device\dd\dd_controller.h" />
+    <ClInclude Include="..\..\src\device\dd\disk.h" />
     <ClInclude Include="..\..\src\device\gb\gb_cart.h" />
     <ClInclude Include="..\..\src\device\gb\m64282fp.h" />
     <ClInclude Include="..\..\src\device\gb\mbc3_rtc.h" />

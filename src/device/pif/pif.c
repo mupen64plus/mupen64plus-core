@@ -151,7 +151,7 @@ void reset_pif(struct pif* pif, unsigned int reset_type)
     size_t i;
 
     /* HACK: for allowing pifbootrom execution */
-    unsigned int rom_type = (pif->cic.version == CIC_8303) ? 1 : 0;
+    unsigned int rom_type = (pif->cic.version == CIC_8303 || pif->cic.version == CIC_8401 || pif->cic.version == CIC_8501) ? 1 : 0;
     unsigned int s7 = 0;
 
     /* 0:ColdReset, 1:NMI */

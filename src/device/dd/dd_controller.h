@@ -29,15 +29,9 @@ struct r4300_core;
 
 #include "osal/preproc.h"
 
+struct dd_disk;
 struct clock_backend_interface;
 struct storage_backend_interface;
-
-/* Disk format sizes */
-#define MAME_FORMAT_DUMP_SIZE 0x0435b0c0
-#define SDK_FORMAT_DUMP_SIZE  0x03dec800
-
-#define DD_REGION_JP UINT32_C(0xe848d316)
-#define DD_REGION_US UINT32_C(0x2263ee56)
 
 enum dd_registers {
     DD_ASIC_DATA,
@@ -82,9 +76,7 @@ struct dd_controller
     /* buffer manager */
     unsigned char bm_write;         /* [0-1] */
     unsigned char bm_reset_held;    /* [0-1] */
-    unsigned char bm_block;         /* [0-1] */
     unsigned int bm_zone;           /* [0-15] */
-    unsigned int bm_track_offset;   /* */
 
     /* DD RTC */
     struct dd_rtc rtc;
@@ -94,7 +86,7 @@ struct dd_controller
     size_t rom_size;
 
     /* DD Disk */
-    void* disk;
+    struct dd_disk* disk;
     const struct storage_backend_interface* idisk;
 
     struct r4300_core* r4300;
@@ -114,7 +106,7 @@ static osal_inline uint32_t dd_rom_address(uint32_t address)
 void init_dd(struct dd_controller* dd,
              void* clock, const struct clock_backend_interface* iclock,
              const uint32_t* rom, size_t rom_size,
-             void* disk, const struct storage_backend_interface* idisk,
+             struct dd_disk* disk, const struct storage_backend_interface* idisk,
              struct r4300_core* r4300);
 
 void poweron_dd(struct dd_controller* dd);
@@ -130,9 +122,5 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
 
 void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address);
 void dd_update_bm(void* opaque);
-
-/* Disk conversion routines */
-void dd_convert_to_mame(unsigned char* mame_disk, const unsigned char* sdk_disk);
-void dd_convert_to_sdk (const unsigned char* mame_disk, unsigned char* sdk_disk);
 
 #endif
