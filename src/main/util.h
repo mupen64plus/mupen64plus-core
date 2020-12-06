@@ -73,6 +73,12 @@ file_status_t write_chunk_to_file(const char *filename, const void *data, size_t
  */
 file_status_t load_file(const char* filename, void** buffer, size_t* size);
 
+/** get_file_size
+ *     get file size.
+ *     returns zero on success, nonzero on failure
+ */
+file_status_t get_file_size(const char* filename, size_t* size);
+
 /**********************
    Byte swap utilities
  **********************/

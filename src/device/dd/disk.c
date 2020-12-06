@@ -39,21 +39,51 @@ static size_t storage_disk_size(const void* storage)
     return disk->istorage->size(disk->storage);
 }
 
-static void storage_disk_save(void* storage, size_t start, size_t size)
+
+static void storage_disk_save_dummy(void* storage, size_t start, size_t size)
+{
+    /* do nothing */
+}
+
+static void storage_disk_save_full(void* storage, size_t start, size_t size)
+{
+    struct dd_disk* disk = (struct dd_disk*)storage;
+    disk->isave_storage->save(disk->save_storage, start, size);
+}
+
+static void storage_disk_save_ram_only(void* storage, size_t start, size_t size)
 {
     struct dd_disk* disk = (struct dd_disk*)storage;
 
-    // XXX: you have now access to all disk members
-    // and can handle the various format specificities here
-
-    disk->istorage->save(disk->storage, start, size);
+    /* check range and translate start address before calling save */
+    if (start >= disk->offset_ram) {
+        start -= disk->offset_ram;
+        if ((start + size) <= disk->isave_storage->size(disk->save_storage)) {
+            disk->isave_storage->save(disk->save_storage, start, size);
+        }
+    }
 }
 
-const struct storage_backend_interface g_istorage_disk =
+
+const struct storage_backend_interface g_istorage_disk_read_only =
 {
     storage_disk_data,
     storage_disk_size,
-    storage_disk_save
+    storage_disk_save_dummy
+};
+
+const struct storage_backend_interface g_istorage_disk_full =
+{
+    storage_disk_data,
+    storage_disk_size,
+    storage_disk_save_full
+};
+
+const struct storage_backend_interface g_istorage_disk_ram_only =
+{
+    storage_disk_data,
+    storage_disk_size,
+    storage_disk_save_ram_only
 };
 
 
