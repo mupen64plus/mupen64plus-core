@@ -1219,6 +1219,7 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     dd_disk->offset_sys = offset_sys;
     dd_disk->offset_id = offset_id;
     dd_disk->offset_ram = offset_ram;
+    dd_disk->save_format = save_format;
 
     /* Generate LBA conversion table */
     GenerateLBAToPhysTable(dd_disk);

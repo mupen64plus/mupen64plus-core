@@ -192,7 +192,7 @@ static void write_sector(struct dd_controller* dd)
 		disk_sec[i] = dd->ds_buf[i ^ 3];
     }
 
-    //dd->idisk->save(dd->disk, disk_sec - dd->idisk->data(dd->disk), length);
+    dd->idisk->save(dd->disk, disk_sec - dd->idisk->data(dd->disk), length);
 }
 
 void dd_update_bm(void* opaque)
