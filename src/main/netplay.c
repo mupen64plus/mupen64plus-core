@@ -483,7 +483,7 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
     return ret;
 }
 
-void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
+void netplay_sync_settings(uint32_t *count_per_op, uint32_t *count_per_op_denom_pot, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
 {
     if (!netplay_is_init())
         return;
@@ -495,7 +495,7 @@ void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, u
         request = TCP_SEND_SETTINGS;
         memcpy(&output_data[0], &request, 1);
         SDLNet_Write32(*count_per_op, &output_data[1]);
-        SDLNet_Write32(*enable_overclock, &output_data[5]);
+        SDLNet_Write32(*count_per_op_denom_pot, &output_data[5]);
         SDLNet_Write32(*disable_extra_mem, &output_data[9]);
         SDLNet_Write32(*si_dma_duration, &output_data[13]);
         SDLNet_Write32(*emumode, &output_data[17]);
@@ -511,7 +511,7 @@ void netplay_sync_settings(uint32_t *count_per_op, uint32_t *enable_overclock, u
         while (recv < 24)
             recv += SDLNet_TCP_Recv(l_tcpSocket, &output_data[recv], 24 - recv);
         *count_per_op = SDLNet_Read32(&output_data[0]);
-        *enable_overclock = SDLNet_Read32(&output_data[4]);
+        *count_per_op_denom_pot = SDLNet_Read32(&output_data[4]);
         *disable_extra_mem = SDLNet_Read32(&output_data[8]);
         *si_dma_duration = SDLNet_Read32(&output_data[12]);
         *emumode = SDLNet_Read32(&output_data[16]);

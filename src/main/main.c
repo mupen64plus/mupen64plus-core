@@ -308,7 +308,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultString(g_CoreConfig, "SaveSRAMPath", "", "Path to directory where SRAM/EEPROM data (in-game saves) are stored. If this is blank, the default value of ${UserDataPath}/save will be used");
     ConfigSetDefaultString(g_CoreConfig, "SharedDataPath", "", "Path to a directory to search when looking for shared data files");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
-    ConfigSetDefaultInt(g_CoreConfig, "EnableOverclock", 0, "Override cycle calculation with reduced count factor (overclock)");
+    ConfigSetDefaultInt(g_CoreConfig, "CountPerOpDenomPot", 0, "Reduce number of cycles per update by power of two when set greater than 0 (overclock).");
     ConfigSetDefaultBool(g_CoreConfig, "RandomizeInterrupt", 1, "Randomize PI/SI Interrupt Timing");
     ConfigSetDefaultInt(g_CoreConfig, "SiDmaDuration", -1, "Duration of SI DMA (-1: use per game settings)");
     ConfigSetDefaultString(g_CoreConfig, "GbCameraVideoCaptureBackend1", DEFAULT_VIDEO_CAPTURE_BACKEND, "Gameboy Camera Video Capture backend");
@@ -1305,7 +1305,7 @@ m64p_error main_run(void)
     size_t i, k;
     size_t rdram_size;
     uint32_t count_per_op;
-    uint32_t enable_overclock;
+    uint32_t count_per_op_denom_pot;
     uint32_t emumode;
     uint32_t disable_extra_mem;
     int32_t si_dma_duration;
@@ -1340,7 +1340,7 @@ m64p_error main_run(void)
     //We disable any randomness for netplay
     randomize_interrupt = !netplay_is_init() ? ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt") : 0;
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
-    enable_overclock = ConfigGetParamInt(g_CoreConfig, "EnableOverclock");
+    count_per_op_denom_pot = ConfigGetParamInt(g_CoreConfig, "CountPerOpDenomPot");
 
     if (ROM_PARAMS.disableextramem)
         disable_extra_mem = ROM_PARAMS.disableextramem;
@@ -1353,15 +1353,15 @@ m64p_error main_run(void)
     if (count_per_op <= 0)
         count_per_op = ROM_PARAMS.countperop;
 
-    if (enable_overclock > 50)
-        enable_overclock = 50;
+    if (count_per_op_denom_pot > 50)
+        count_per_op_denom_pot = 50;
 
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
         si_dma_duration = ROM_PARAMS.sidmaduration;
 
     //During netplay, player 1 is the source of truth for these settings
-    netplay_sync_settings(&count_per_op, &enable_overclock, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
+    netplay_sync_settings(&count_per_op, &count_per_op_denom_pot, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
 
     cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
@@ -1579,7 +1579,7 @@ m64p_error main_run(void)
                 g_mem_base,
                 emumode,
                 count_per_op,
-                enable_overclock,
+                count_per_op_denom_pot,
                 no_compiled_jump,
                 randomize_interrupt,
                 g_start_address,
