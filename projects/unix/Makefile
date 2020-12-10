@@ -211,11 +211,12 @@ ifeq ($(OS), OSX)
     ASFLAGS = -f macho -d LEADING_UNDERSCORE
   endif
 
+  CXXFLAGS += '-stdlib=libc++'
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.6 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.7 -isysroot $(OSX_SDK_PATH)
     else
-      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.6 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.7 -isysroot $(OSX_SDK_PATH)
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
       endif
