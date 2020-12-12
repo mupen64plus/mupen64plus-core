@@ -430,7 +430,7 @@ static void lsn(u_char hsn[], int i, int *preferred_reg)
     }
     if(itype[i+j]==UJUMP||itype[i+j]==RJUMP||(source[i+j]>>16)==0x1000)
     {
-      // Don't go past an unconditonal jump
+      // Don't go past an unconditional jump
       j++;
       break;
     }
@@ -528,7 +528,7 @@ static int needed_again(int r, int i)
     }
     if(itype[i+j]==UJUMP||itype[i+j]==RJUMP||(source[i+j]>>16)==0x1000)
     {
-      // Don't go past an unconditonal jump
+      // Don't go past an unconditional jump
       j++;
       break;
     }
@@ -583,7 +583,7 @@ static int loop_reg(int i, int r, int hr)
     }
     if(itype[i+j]==UJUMP||itype[i+j]==RJUMP||(source[i+j]>>16)==0x1000)
     {
-      // Don't go past an unconditonal jump
+      // Don't go past an unconditional jump
       j++;
       break;
     }
