@@ -135,7 +135,7 @@ static void write_ram(void* ram_storage, const struct storage_backend_interface*
             dst[i] &= mask;
         }
     }
-    iram_storage->save(ram_storage);
+    iram_storage->save(ram_storage, address, size);
 }
 
 

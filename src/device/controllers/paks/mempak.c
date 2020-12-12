@@ -100,7 +100,7 @@ static void write_mempak(void* pak, uint16_t address, const uint8_t* data, size_
     if (address < 0x8000)
     {
         memcpy(mpk->istorage->data(mpk->storage) + address, data, size);
-        mpk->istorage->save(mpk->storage);
+        mpk->istorage->save(mpk->storage, address, size);
     }
     else
     {

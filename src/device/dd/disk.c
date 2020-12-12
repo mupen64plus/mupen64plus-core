@@ -39,14 +39,14 @@ static size_t storage_disk_size(const void* storage)
     return disk->istorage->size(disk->storage);
 }
 
-static void storage_disk_save(void* storage)
+static void storage_disk_save(void* storage, size_t start, size_t size)
 {
     struct dd_disk* disk = (struct dd_disk*)storage;
 
     // XXX: you have now access to all disk members
     // and can handle the various format specificities here
 
-    disk->istorage->save(disk->storage);
+    disk->istorage->save(disk->storage, start, size);
 }
 
 const struct storage_backend_interface g_istorage_disk =

@@ -30,6 +30,7 @@ struct file_storage
     uint8_t* data;
     size_t size;
     const char* filename;
+    int first_access;
 };
 
 

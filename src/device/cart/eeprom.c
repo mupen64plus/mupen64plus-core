@@ -72,7 +72,7 @@ void eeprom_write_block(struct eeprom* eeprom,
     if (address < eeprom->istorage->size(eeprom->storage))
     {
         memcpy(eeprom->istorage->data(eeprom->storage) + address, data, EEPROM_BLOCK_SIZE);
-        eeprom->istorage->save(eeprom->storage);
+        eeprom->istorage->save(eeprom->storage, address, EEPROM_BLOCK_SIZE);
         *status = 0x00;
     }
     else

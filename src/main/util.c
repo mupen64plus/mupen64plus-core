@@ -76,12 +76,45 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
     if (fwrite(data, 1, size, f) != size)
     {
         fclose(f);
-        return file_read_error;
+        return file_write_error;
     }
 
     fclose(f);
     return file_ok;
 }
+
+
+file_status_t write_chunk_to_file(const char *filename, const void *data, size_t size, size_t offset)
+{
+    FILE *f;
+
+    /* first try to open with rb+ to avoid wiping existing content,
+     * otherwise create file */
+    if ((f = fopen(filename, "rb+")) == NULL) {
+        if ((f = fopen(filename, "wb")) == NULL) {
+            return file_open_error;
+        }
+    }
+
+    /* According to POSIX fseek past file size is supported and will fill with zeros bytes
+     * (and use sparse file if supported).
+     * So we can use it to position next write operation at desired offset.
+     */
+    if (fseek(f, offset, SEEK_SET)) {
+        fclose(f);
+        return file_open_error;
+    }
+
+    if (fwrite(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_write_error;
+    }
+
+    fclose(f);
+    return file_ok;
+}
+
 
 file_status_t load_file(const char* filename, void** buffer, size_t* size)
 {
