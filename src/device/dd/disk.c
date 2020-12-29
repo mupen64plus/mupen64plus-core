@@ -251,7 +251,7 @@ static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
         + sector * sector_size;
 
     /* Access to protected LBA should return an error */
-    if (sector == 0)
+    if (sector == 0 && track < (SYSTEM_LBAS / 2))
     {
         uint16_t lblock = offset / BLOCKSIZE(0);
         uint16_t lblock_sys = disk->offset_sys / BLOCKSIZE(0);
@@ -287,7 +287,7 @@ static uint8_t* get_sector_base_sdk(const struct dd_disk* disk,
     unsigned int offset = LBAToByte(sys_data, 0, lba) + sector * sector_size;
 
     /* Handle Errors for wrong System Data */
-    if (sector == 0)
+    if (sector == 0 && lba < SYSTEM_LBAS)
     {
         uint16_t lblock = offset / BLOCKSIZE(0);
         uint16_t lblock_sys = disk->offset_sys / BLOCKSIZE(0);
