@@ -782,7 +782,7 @@ $(ASM_DEFINES_OBJ): $(SRCDIR)/asm_defines/asm_defines.c
 # Script hackery for generating ASM include files for the new dynarec assembly code
 $(SRCDIR)/asm_defines/asm_defines_gas.h: $(SRCDIR)/asm_defines/asm_defines_nasm.h
 $(SRCDIR)/asm_defines/asm_defines_nasm.h: $(ASM_DEFINES_OBJ) $(SRCDIR)/../tools/gen_asm_script.sh
-	sh $(SRCDIR)/../tools/gen_asm_script.sh "$(SRCDIR)/asm_defines" "$(ASM_DEFINES_OBJ)"
+	bash $(SRCDIR)/../tools/gen_asm_script.sh "$(SRCDIR)/asm_defines" "$(ASM_DEFINES_OBJ)"
 
 # standard build rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.asm $(SRCDIR)/asm_defines/asm_defines_nasm.h
