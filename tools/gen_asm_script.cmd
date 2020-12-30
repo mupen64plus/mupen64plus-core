@@ -48,14 +48,14 @@ goto log
 
 :: Adaptation of 'gen_asm_defines.awk' / 'gen_asm_script.sh':
 ::
-:: 1. Display 'asm_defines.obj' (aka "Item C") as a list
-:: 2. Look for the '@ASM_DEFINE' pattern
-:: 3. Sort for easy reading
-:: 4. Ignore "$1" ('@ASM_DEFINE') pattern
-:: 5. Take "$2" (offset*) and "$3" (0x*) patterns in that line
-:: 6. Print '%define "$2" ("$3")' to 'asm_defines_nasm.h'
-:: 7. Print '#define "$2" ("$3")' to 'asm_defines_gas.h'
-:: 8. If LF, repeat steps 4-7 until EOL
+:: 1. Display 'asm_defines.obj' (aka "Item C") as a list, looking only
+::    for patterns '@ASM_DEFINE'
+:: 2. Sort for easy reading, the result is interpreted as an array
+::    with ' ' as default delimiter in the 'for' command
+:: 3. The for's 'tokens=2,3' ignores pattern "1" (@ASM_DEFINE) and anything
+::    beyond "3", take "2" (offset* value) as 'J' and "3" (hex* value) as 'K'
+:: 4. Print current values and repeat steps 3 and 4 on the next line
+::    until EOL is reached
 ::
 for /f "tokens=2,3" %%J in ('type "%GAS_OBJDIR%asm_defines.obj" ^| find "@ASM_DEFINE" ^| sort') do (
 echo %%define %%J ^(%%K^)>>"%GAS_SRCDIR%asm_defines_nasm.h"
@@ -63,7 +63,7 @@ echo #define %%J ^(%%K^)>>"%GAS_SRCDIR%asm_defines_gas.h"
 )
 :log
 
-:: Display 'asm_defines_nasm.h' in log
+:: Display 'asm_defines_nasm.h' in the log
 echo.
 type "%GAS_SRCDIR%asm_defines_nasm.h"
 echo.
