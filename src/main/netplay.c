@@ -282,7 +282,7 @@ static void netplay_process()
                     curr += 1;
 
                     if (input_delay < 0 || player != controlled_player) {
-                        // Ignore inputs for locally controlled players when using input delay.
+                        // Ignore inputs from the network for locally controlled players when using input delay.
                         struct netplay_event* new_event = (struct netplay_event*)malloc(sizeof(struct netplay_event));
                         new_event->count = count;
                         new_event->buttons = keys;
