@@ -41,6 +41,7 @@ struct controller_input_compat;
 
 m64p_error netplay_start(const char* host, int port);
 m64p_error netplay_stop();
+m64p_error netplay_set_input_delay(int input_delay);
 uint8_t netplay_register_player(uint8_t player, uint8_t plugin, uint8_t rawdata, uint32_t reg_id);
 int netplay_lag();
 void netplay_set_controller(uint8_t player);
