@@ -26,9 +26,9 @@
 
 struct audio_out_backend_interface
 {
-    /* Allow the backend to be notified of sample format.
+    /* Allow the backend to be notified of sample frequency.
      */
-    void (*set_format)(void* aout, unsigned int frequency, unsigned int bits);
+    void (*set_frequency)(void* aout, unsigned int frequency);
 
     /* Push samples to be played by the backend
      */
