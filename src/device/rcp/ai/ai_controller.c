@@ -231,6 +231,7 @@ void ai_end_of_dma_event(void* opaque)
         unsigned int diff = ai->fifo[0].length - ai->last_read;
         unsigned char *p = (unsigned char*)&ai->ri->rdram->dram[ai->fifo[0].address/4];
         ai->iaout->push_samples(ai->aout, p + diff, ai->last_read);
+        ai->last_read = 0;
     }
 
     fifo_pop(ai);
