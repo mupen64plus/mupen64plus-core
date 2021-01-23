@@ -29,6 +29,7 @@ ConfigSetParameter;
 ConfigSetParameterHelp;
 ConfigSendNetplayConfig;
 ConfigReceiveNetplayConfig;
+ConfigOverrideUserPaths;
 CoreAddCheat;
 CoreAttachPlugin;
 CoreCheatEnabled;

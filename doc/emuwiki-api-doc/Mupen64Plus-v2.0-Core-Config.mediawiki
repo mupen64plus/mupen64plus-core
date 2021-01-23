@@ -324,6 +324,24 @@ The special Get functions return the configuration value directly rather than wr
 |Usage
 |This function retrieves the value of one of the emulator's parameters in the section which is represented by '''<tt>ConfigSectionHandle</tt>''', and returns the value directly to the calling function.  If an errors occurs (such as if '''<tt>ConfigSectionHandle</tt>''' is invalid, or there is no configuration parameter named '''<tt>ParamName</tt>'''), then an error will be sent to the front-end via the <tt>DebugCallback()</tt> function, and either a 0 (zero) or an empty string will be returned.
 |}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error ConfigOverrideUserPaths(const char *DataPath, const char *CachePath)</tt>'''
+|-
+|Return Value
+|M64ERR_SUCCESS if overriding was successful.
+|-
+|Input Parameters
+|'''<tt>DataPath</tt>''' The path to path where user data is stored. if NULL, fallback to user data path.<br />
+'''<tt>CachePath</tt>''' The path to path where user cache data is stored. if NULL, fallback to user cache path.<br />
+|-
+|Requirements
+|The Mupen64Plus library must already be initialized before calling this function.
+|-
+|Usage
+|This function overrides user paths returned by ConfigGetUserDataPath() and ConfigGetUserCachePath()
+|}
 
 == OS-Abstraction Functions ==
 
