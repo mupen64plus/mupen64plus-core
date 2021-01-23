@@ -1064,7 +1064,7 @@ static void open_eep_file(struct file_storage* fstorage)
     }
 
     /* Truncate to 4k bit if necessary */
-    if (ROM_SETTINGS.savetype != EEPROM_16KB) {
+    if (ROM_SETTINGS.savetype != SAVETYPE_EEPROM_16KB) {
         fstorage->size = 0x200;
     }
 }
@@ -1678,7 +1678,7 @@ m64p_error main_run(void)
                 vi_clock_from_tv_standard(ROM_PARAMS.systemtype), vi_expected_refresh_rate_from_tv_standard(ROM_PARAMS.systemtype),
                 NULL, &g_iclock_ctime_plus_delta,
                 g_rom_size,
-                (ROM_SETTINGS.savetype != EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
+                (ROM_SETTINGS.savetype != SAVETYPE_EEPROM_16KB) ? JDT_EEPROM_4K : JDT_EEPROM_16K,
                 &eep, &g_ifile_storage,
                 flashram_type,
                 &fla, &g_ifile_storage,

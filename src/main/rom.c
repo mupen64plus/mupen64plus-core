@@ -193,7 +193,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     {
         strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-        ROM_SETTINGS.savetype = NONE;
+        ROM_SETTINGS.savetype = SAVETYPE_NONE;
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 4;
         ROM_SETTINGS.rumble = 1;
@@ -523,22 +523,22 @@ void romdatabase_open(void)
             else if(!strcmp(l.name, "SaveType"))
             {
                 if(!strcmp(l.value, "Eeprom 4KB")) {
-                    search->entry.savetype = EEPROM_4KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_4KB;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Eeprom 16KB")) {
-                    search->entry.savetype = EEPROM_16KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_16KB;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "SRAM")) {
-                    search->entry.savetype = SRAM;
+                    search->entry.savetype = SAVETYPE_SRAM;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Flash RAM")) {
-                    search->entry.savetype = FLASH_RAM;
+                    search->entry.savetype = SAVETYPE_FLASH_RAM;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Controller Pack")) {
-                    search->entry.savetype = CONTROLLER_PACK;
+                    search->entry.savetype = SAVETYPE_CONTROLLER_PACK;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "None")) {
-                    search->entry.savetype = NONE;
+                    search->entry.savetype = SAVETYPE_NONE;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid save type on line %i", lineno);
