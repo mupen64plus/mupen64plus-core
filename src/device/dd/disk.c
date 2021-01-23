@@ -39,15 +39,33 @@ static size_t storage_disk_size(const void* storage)
     return disk->istorage->size(disk->storage);
 }
 
+
+// XXX: Might be better to implement several version of this
+// eg. storage_disk_save_{full,ram}_{MAME,SDK,D64} and expose/use them
+// via a dedicated storage_backend_interface:
+// g_istorage_disk_{full,ram}_{MAME,SDK,D64}
+// we can set the right interface inside load_dd_disk
+//
+// This will avoid the nested if/switch inside this function.
 static void storage_disk_save(void* storage, size_t start, size_t size)
 {
     struct dd_disk* disk = (struct dd_disk*)storage;
 
-    // XXX: you have now access to all disk members
-    // and can handle the various format specificities here
+    switch (disk->save_format)
+    {
+    case 0: /* Full disk save */
+        disk->istorage->save(disk->storage, start, size);
+        break;
 
-    disk->istorage->save(disk->storage, start, size);
+    case 1: /* RAM only */
+        // TODO
+        break;
+    default: /* ignoring */
+        break;
+    }
 }
+
+
 
 const struct storage_backend_interface g_istorage_disk =
 {
