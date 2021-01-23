@@ -36,6 +36,8 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     fstorage->filename = filename;
     fstorage->size = size;
     fstorage->first_access = 1;
+    fstorage->save_start = 0;
+    fstorage->save_size = size;
 
     /* allocate memory for holding data */
     fstorage->data = malloc(fstorage->size);
@@ -66,6 +68,8 @@ int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
     if (err == file_ok) {
         /* ! take ownsership of filename ! */
         fstorage->filename = filename;
+        fstorage->save_start = 0;
+        fstorage->save_size = fstorage->size;
     }
 
     return err;
@@ -103,10 +107,10 @@ static void file_storage_save(void* storage, size_t start, size_t size)
      * otherwise write only updated chunk */
     if (fstorage->first_access) {
         fstorage->first_access = 0;
-        err = write_to_file(fstorage->filename, fstorage->data, fstorage->size);
+        err = write_to_file(fstorage->filename, fstorage->data + fstorage->save_start, fstorage->save_size);
     }
     else {
-        err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start);
+        err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start - fstorage->save_start);
     }
 
     switch(err)

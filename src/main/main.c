@@ -1212,6 +1212,11 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
 
     /* Setup dd_{,i}disk */
     *dd_idisk = &g_istorage_disk;
+    if (save_format == 1)
+    {
+        fstorage->save_start = offset_ram;
+        fstorage->save_size = (fstorage->save_size - offset_ram);
+    }
     dd_disk->storage = fstorage;
     dd_disk->istorage = (save_format >= 0) ? &g_ifile_storage : &g_ifile_storage_ro;
     dd_disk->format = format;

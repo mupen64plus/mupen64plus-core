@@ -27,10 +27,15 @@
 
 struct file_storage
 {
+    // File Info
     uint8_t* data;
     size_t size;
     const char* filename;
+
+    // Save Info
     int first_access;
+    size_t save_start;
+    size_t save_size;
 };
 
 

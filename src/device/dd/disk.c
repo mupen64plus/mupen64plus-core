@@ -56,9 +56,8 @@ static void storage_disk_save(void* storage, size_t start, size_t size)
     case 0: /* Full disk save */
         disk->istorage->save(disk->storage, start, size);
         break;
-
     case 1: /* RAM only */
-        // TODO
+        disk->istorage->save(disk->storage, start, size);
         break;
     default: /* ignoring */
         break;
