@@ -66,6 +66,46 @@ These configuration parameters are used in the Core's event loop to detect keybo
 {| border="1"
 !Parameter Name!!Type!!Usage
 |-
+|Kbd Mapping Slot 0
+|M64TYPE_INT
+|SDL keysym for save slot 0
+|-
+|Kbd Mapping Slot 1
+|M64TYPE_INT
+|SDL keysym for save slot 1
+|-
+|Kbd Mapping Slot 2
+|M64TYPE_INT
+|SDL keysym for save slot 2
+|-
+|Kbd Mapping Slot 3
+|M64TYPE_INT
+|SDL keysym for save slot 3
+|-
+|Kbd Mapping Slot 4
+|M64TYPE_INT
+|SDL keysym for save slot 4
+|-
+|Kbd Mapping Slot 5
+|M64TYPE_INT
+|SDL keysym for save slot 5
+|-
+|Kbd Mapping Slot 6
+|M64TYPE_INT
+|SDL keysym for save slot 6
+|-
+|Kbd Mapping Slot 7
+|M64TYPE_INT
+|SDL keysym for save slot 7
+|-
+|Kbd Mapping Slot 8
+|M64TYPE_INT
+|SDL keysym for save slot 8
+|-
+|Kbd Mapping Slot 9
+|M64TYPE_INT
+|SDL keysym for save slot 9
+|-
 |Kbd Mapping Stop
 |M64TYPE_INT
 |SDL keysym for stopping the emulator
