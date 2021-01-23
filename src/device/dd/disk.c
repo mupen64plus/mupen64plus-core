@@ -547,7 +547,7 @@ uint8_t* scan_and_expand_disk_format(uint8_t* data, size_t size,
             if (disk_type < 6)
             {
                 sys_data_->ram_lba_start = big16((RAM_START_LBA[disk_type] - SYSTEM_LBAS));
-                sys_data_->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS));
+                sys_data_->ram_lba_end = big16((RAM_START_LBA[6] - SYSTEM_LBAS - 1));
             }
             else
             {
