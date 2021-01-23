@@ -125,3 +125,5 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** This is not an API change, but reflects an internal behavior change. On March 23, 2018, the SDL_PumpEvents() call was moved from being in the core to only being in the input plugin. After this point, newer builds of the core would not register keyboard input when used with older builds of the input plugin, which did not call SDL_PumpEvents. As such, core libraries with INPUT_API_VERSION of 2.1.0 will refuse to work with older input plugins.
 * '''FRONTEND_API_VERSION''' version 2.1.3:
 ** added "M64CMD_PIF_OPEN" command to allow using a binary PIF Boot ROM (instead of the included HLE implementation).
+* '''FRONTEND_API_VERSION''' version 2.1.4:
+** added "M64CMD_ROM_SET_SETTINGS" command to allow setting ROM settings for the currently opened ROM until the ROM is closed.

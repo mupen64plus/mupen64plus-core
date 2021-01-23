@@ -1434,8 +1434,8 @@ m64p_error main_run(void)
     randomize_interrupt = !netplay_is_init() ? ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt") : 0;
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
 
-    if (ROM_PARAMS.disableextramem)
-        disable_extra_mem = ROM_PARAMS.disableextramem;
+    if (ROM_SETTINGS.disableextramem)
+        disable_extra_mem = ROM_SETTINGS.disableextramem;
     else
         disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
 
@@ -1443,11 +1443,11 @@ m64p_error main_run(void)
     rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
 
     if (count_per_op <= 0)
-        count_per_op = ROM_PARAMS.countperop;
+        count_per_op = ROM_SETTINGS.countperop;
 
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
-        si_dma_duration = ROM_PARAMS.sidmaduration;
+        si_dma_duration = ROM_SETTINGS.sidmaduration;
 
     //During netplay, player 1 is the source of truth for these settings
     netplay_sync_settings(&count_per_op, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
