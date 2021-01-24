@@ -1914,7 +1914,7 @@ m64p_error open_pif(const unsigned char* pifimage, unsigned int size)
         return M64ERR_INPUT_INVALID;
     }
 
-    for (int i = 0; i < size; i += 4)
+    for (unsigned int i = 0; i < size; i += 4)
         *dst32++ = big32(*src32++);
 
     g_start_address = UINT32_C(0xbfc00000);
