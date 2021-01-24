@@ -228,8 +228,8 @@ EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRat
         }
 
         /* skip when we're not at the right resolution */
-        if (displayMode.w != Size.uiWidth ||
-            displayMode.h != Size.uiHeight)
+        if (displayMode.w != (int)Size.uiWidth ||
+            displayMode.h != (int)Size.uiHeight)
             continue;
 
         Rates[rateCount] = displayMode.refresh_rate;
