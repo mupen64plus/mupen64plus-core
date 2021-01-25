@@ -1217,13 +1217,6 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         fstorage->data = new_data;
     }
 
-    /* Force no saves for MAME Format (if SaveDiskFormat > 0) */
-    if (format == DISK_FORMAT_MAME && save_format > 0)
-    {
-        save_format = -1;
-        DebugMessage(M64MSG_ERROR, "MAME Format Disk Images do not support RAM Only saves, set to Full Disk Copy saving in the configuration.");
-    }
-
     /* Load RAM save data (if SaveDiskFormat == 1)*/
     if (save_format == 1)
     {
