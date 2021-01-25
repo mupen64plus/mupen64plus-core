@@ -180,6 +180,42 @@ close_file:
     return ret;
 }
 
+file_status_t get_file_size(const char* filename, size_t* size)
+{
+    FILE* fd;
+    int err;
+    file_status_t ret;
+
+    /* open file */
+    ret = file_open_error;
+    fd = fopen(filename, "rb");
+    if (fd == NULL)
+    {
+        return file_open_error;
+    }
+
+    /* obtain file size */
+    ret = file_size_error;
+    err = fseek(fd, 0, SEEK_END);
+    if (err != 0)
+    {
+        goto close_file;
+    }
+
+    err = ftell(fd);
+    if (err == -1)
+    {
+        goto close_file;
+    }
+
+    ret = file_ok;
+    *size = (size_t)err;
+
+    /* close file */
+close_file:
+    fclose(fd);
+    return ret;
+}
 
 /**********************
    Byte swap utilities

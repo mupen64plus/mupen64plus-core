@@ -1142,6 +1142,13 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         goto no_disk;
     }
 
+    /* Get DD Disk size */
+    size_t dd_size = 0;
+    if (get_file_size(dd_disk_filename, &dd_size) != file_ok) {
+        DebugMessage(M64MSG_ERROR, "Can't get DD disk file size");
+        goto no_disk;
+    }
+
     struct file_storage* fstorage = malloc(sizeof(struct file_storage));
     struct file_storage* fstorage_save = malloc(sizeof(struct file_storage));
     if (fstorage == NULL || fstorage_save == NULL) {
@@ -1159,7 +1166,13 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         save_format = -1;
     }
 
-    /* Try loading *.{nd,d6}r file first (if SaveDiskFormat == 0 */
+    /* MAME disks only support full disk save */
+    if (dd_size == MAME_FORMAT_DUMP_SIZE && save_format != 0) {
+        DebugMessage(M64MSG_WARNING, "MAME disks only support full disk save format, switching to full disk format !");
+        save_format = 0;
+    }
+
+    /* Try loading *.{nd,d6}r file first (if SaveDiskFormat == 0) */
     if (save_format == 0)
     {
         if (open_rom_file_storage(fstorage, save_filename) != file_ok) {
