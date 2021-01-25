@@ -1172,6 +1172,7 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         save_format = 0;
 
         /* Do not use *.ram filename */
+        free(save_filename);
         save_filename = get_dd_disk_save_path(namefrompath(dd_disk_filename), save_format);
         if (save_filename == NULL) {
             DebugMessage(M64MSG_ERROR, "Failed to get DD save path, DD will be read-only.");
