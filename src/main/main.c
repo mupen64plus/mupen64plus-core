@@ -1170,6 +1170,13 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     if (dd_size == MAME_FORMAT_DUMP_SIZE && save_format != 0) {
         DebugMessage(M64MSG_WARNING, "MAME disks only support full disk save format, switching to full disk format !");
         save_format = 0;
+
+        /* Do not use *.ram filename */
+        save_filename = get_dd_disk_save_path(namefrompath(dd_disk_filename), save_format);
+        if (save_filename == NULL) {
+            DebugMessage(M64MSG_ERROR, "Failed to get DD save path, DD will be read-only.");
+            save_format = -1;
+        }
     }
 
     /* Try loading *.{nd,d6}r file first (if SaveDiskFormat == 0) */
