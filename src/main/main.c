@@ -1143,8 +1143,11 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     }
 
     struct file_storage* fstorage = malloc(sizeof(struct file_storage));
-    if (fstorage == NULL) {
+    struct file_storage* fstorage_save = malloc(sizeof(struct file_storage));
+    if (fstorage == NULL || fstorage_save == NULL) {
         DebugMessage(M64MSG_ERROR, "Failed to allocate DD file_storage");
+        if (fstorage != NULL)      { free(fstorage);      fstorage = NULL; }
+        if (fstorage_save != NULL) { free(fstorage_save); fstorage_save = NULL; }
         goto no_disk;
     }
 
@@ -1201,30 +1204,48 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         fstorage->data = new_data;
     }
 
-    /* Load RAM save data (if SaveDiskFormat == 1) */
+    /* Load RAM save data (if SaveDiskFormat == 1)*/
     if (save_format == 1)
     {
         if (read_from_file(save_filename, &fstorage->data[offset_ram], size_ram) != file_ok)
         {
             DebugMessage(M64MSG_ERROR, "Failed to load DD Disk RAM area (*.ram): %s.", save_filename);
+            save_format = -1;
         }
     }
 
-    /* Setup dd_{,i}disk */
-    *dd_idisk = &g_istorage_disk;
-    if (save_format == 1)
+    switch(save_format)
     {
-        fstorage->save_start = offset_ram;
-        fstorage->save_size = (fstorage->save_size - offset_ram);
+    case 0: /* Full disk */
+        *dd_idisk = &g_istorage_disk_full;
+        fstorage_save->filename = save_filename;
+        fstorage_save->data = fstorage->data;
+        fstorage_save->size = fstorage->size;
+        fstorage_save->first_access = 1;
+        break;
+    case 1: /* RAM only */
+        *dd_idisk = &g_istorage_disk_ram_only;
+        fstorage_save->filename = save_filename;
+        fstorage_save->data = &fstorage->data[offset_ram];
+        fstorage_save->size = size_ram;
+        fstorage_save->first_access = 1;
+        break;
+    default: /* read only */
+        *dd_idisk = &g_istorage_disk_read_only;
+        free(fstorage_save);
+        fstorage_save = NULL;
     }
+
+    /* Setup dd_disk */
     dd_disk->storage = fstorage;
-    dd_disk->istorage = (save_format >= 0) ? &g_ifile_storage : &g_ifile_storage_ro;
+    dd_disk->istorage = &g_ifile_storage_ro;
+    dd_disk->save_storage = fstorage_save;
+    dd_disk->isave_storage = (save_format >= 0) ? &g_ifile_storage : NULL;
     dd_disk->format = format;
     dd_disk->development = development;
     dd_disk->offset_sys = offset_sys;
     dd_disk->offset_id = offset_id;
     dd_disk->offset_ram = offset_ram;
-    dd_disk->save_format = save_format;
 
     /* Generate LBA conversion table */
     GenerateLBAToPhysTable(dd_disk);
@@ -1243,9 +1264,11 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
     return;
 
 wrong_disk_format:
+    /* no need to close save_storage as it is a child of disk->storage */
     close_file_storage(fstorage);
 free_fstorage:
     free(fstorage);
+    free(fstorage_save);
 no_disk:
     free(dd_disk_filename);
     *dd_idisk = NULL;
@@ -1253,11 +1276,18 @@ no_disk:
 
 static void close_dd_disk(struct dd_disk* disk)
 {
+    if (disk->save_storage != NULL) {
+        /* no need to close save_storage as it is a child of disk->storage */
+        free(disk->save_storage);
+        disk->save_storage = NULL;
+    }
+
     if (disk->storage != NULL) {
         close_file_storage(disk->storage);
         free(disk->storage);
         disk->storage = NULL;
     }
+
 }
 
 

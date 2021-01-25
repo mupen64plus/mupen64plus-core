@@ -138,19 +138,26 @@ static const uint16_t TrackZoneTable[2][8] = {
 
 struct dd_disk
 {
+    /* Full storage - read only */
     void* storage;
     const struct storage_backend_interface* istorage;
+
+    /* Storage that will be saved - may be a subset of full storage */
+    void* save_storage;
+    const struct storage_backend_interface* isave_storage;
+
     uint16_t lba_phys_table[0x10DC];
     uint8_t format;
     uint8_t development;
     size_t offset_sys;
     size_t offset_id;
     size_t offset_ram;
-    int save_format;
 };
 
 /* Storage interface which handles the various 64DD disks format specificities */
-extern const struct storage_backend_interface g_istorage_disk;
+extern const struct storage_backend_interface g_istorage_disk_read_only;
+extern const struct storage_backend_interface g_istorage_disk_full;
+extern const struct storage_backend_interface g_istorage_disk_ram_only;
 
 /* Disk Helper routines */
 void GenerateLBAToPhysTable(struct dd_disk* disk);
