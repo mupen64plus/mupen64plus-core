@@ -1210,7 +1210,6 @@ static void load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_i
         if (read_from_file(save_filename, &fstorage->data[offset_ram], size_ram) != file_ok)
         {
             DebugMessage(M64MSG_ERROR, "Failed to load DD Disk RAM area (*.ram): %s.", save_filename);
-            save_format = -1;
         }
     }
 
