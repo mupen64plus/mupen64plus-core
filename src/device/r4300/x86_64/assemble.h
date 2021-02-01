@@ -125,7 +125,7 @@ static osal_inline int rel_r15_offset(void *dest, const char *op_name)
 
     if (llabs(rel_offset) > 0x7fffffff)
     {
-        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, r4300_regs(r4300), op_name);
+        DebugMessage(M64MSG_ERROR, "Error: destination %p more than 2GB away from r15 base %p in %s()", dest, (void*)r4300_regs(r4300), op_name);
         OSAL_BREAKPOINT_INTERRUPT;
     }
 
