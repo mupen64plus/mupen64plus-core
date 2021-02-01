@@ -623,7 +623,7 @@ static void build_wrapper(struct r4300_core* r4300, struct precomp_instr *instr,
             if (riprel >= 0x7fffffffLL || riprel < -0x80000000LL)
             {
                 DebugMessage(M64MSG_ERROR, "build_wrapper error: regs[%i] offset too big for relative address from %p to %p",
-                        i, (&r4300_regs(r4300)[0]), instr->reg_cache_infos.needed_registers[i]);
+                        i, (void*)(&r4300_regs(r4300)[0]), instr->reg_cache_infos.needed_registers[i]);
                 OSAL_BREAKPOINT_INTERRUPT;
             }
         }
