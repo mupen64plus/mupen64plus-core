@@ -7554,10 +7554,9 @@ void new_dynarec_init(void)
   assert(base_addr_rx!=(void*)-1);
   close(fd);
 #elif CACHE_ADDR==FIXED_CACHE_ADDR
-  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
-                    PROT_READ | PROT_WRITE | PROT_EXEC,
-                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-                    -1, 0);
+  mprotect ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+            PROT_READ | PROT_WRITE | PROT_EXEC);
+  base_addr = g_dev.r4300.extra_memory;
   base_addr_rx = base_addr;
 #else /*DYNAMIC_CACHE_ADDR*/
   base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
@@ -7567,10 +7566,9 @@ void new_dynarec_init(void)
   base_addr_rx = base_addr;
 #endif
 #elif NEW_DYNAREC == NEW_DYNAREC_ARM
-  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
-                    PROT_READ | PROT_WRITE | PROT_EXEC,
-                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-                    -1, 0);
+  mprotect ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+            PROT_READ | PROT_WRITE | PROT_EXEC);
+  base_addr = g_dev.r4300.extra_memory;
   base_addr_rx = base_addr;
 #else
 #if defined(WIN32)
@@ -7579,10 +7577,9 @@ void new_dynarec_init(void)
   assert(res!=0);
   base_addr = base_addr_rx = (void*)g_dev.r4300.extra_memory;
 #else
-  base_addr = mmap ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
-                    PROT_READ | PROT_WRITE | PROT_EXEC,
-                    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS,
-                    -1, 0);
+  mprotect ((u_char *)g_dev.r4300.extra_memory, 1<<TARGET_SIZE_2,
+            PROT_READ | PROT_WRITE | PROT_EXEC);
+  base_addr = g_dev.r4300.extra_memory;
   base_addr_rx = base_addr;
 #endif
 #endif
@@ -7640,8 +7637,8 @@ void new_dynarec_cleanup(void)
 #if !defined(RECOMP_DBG)
 #if defined(WIN32)
   VirtualFree(base_addr, 0, MEM_RELEASE);
-#else
-  if (munmap (base_addr, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
+#elif NEW_DYNAREC == NEW_DYNAREC_ARM64 && CACHE_ADDR!=FIXED_CACHE_ADDR
+  if (munmap (base_addr_rx, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
 #endif
 #endif
   #ifdef ROM_COPY
