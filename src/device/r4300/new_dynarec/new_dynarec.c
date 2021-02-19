@@ -7635,15 +7635,17 @@ void new_dynarec_cleanup(void)
   for(n=0;n<4096;n++) ll_clear(jump_dirty+n);
   assert(copy_size==0);
 #if !defined(RECOMP_DBG)
-#if defined(WIN32)
-  VirtualFree(base_addr, 0, MEM_RELEASE);
-#elif NEW_DYNAREC == NEW_DYNAREC_ARM64 && CACHE_ADDR!=FIXED_CACHE_ADDR
-  if (munmap (base_addr_rx, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
-#endif
-#endif
-  #ifdef ROM_COPY
-  if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
+  #if defined(WIN32)
+    VirtualFree(base_addr, 0, MEM_RELEASE);
+  #elif NEW_DYNAREC == NEW_DYNAREC_ARM64 && CACHE_ADDR!=FIXED_CACHE_ADDR
+    if (munmap (base_addr_rx, 1<<TARGET_SIZE_2) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
+  #else
+    mprotect(base_addr, 1<<TARGET_SIZE_2, PROT_READ | PROT_WRITE);
   #endif
+#endif
+#ifdef ROM_COPY
+  if (munmap (ROM_COPY, 67108864) < 0) {DebugMessage(M64MSG_ERROR, "munmap() failed");}
+#endif
 }
 
 int new_recompile_block(int addr)
