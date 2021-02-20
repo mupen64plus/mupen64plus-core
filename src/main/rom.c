@@ -716,19 +716,28 @@ static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
 {
     romdatabase_search* search;
+    romdatabase_entry* found_entry = NULL;
 
     if(!g_romdatabase.have_database) 
         return NULL;
 
     search = g_romdatabase.crc_lists[((crc1 >> 24) & 0xff)];
 
-    while (search != NULL && search->entry.crc1 != crc1 && search->entry.crc2 != crc2)
+    // because CRCs can be ambiguous (there can be multiple database entries with the same CRC),
+    // we will prefer MD5 hashes instead. If the given CRC matches more than one entry in the
+    // database, we will return no match.
+    while (search != NULL)
+    {
+        if (search->entry.crc1 == crc1 && search->entry.crc2 == crc2)
+        {
+            if (found_entry != NULL)
+                return NULL;
+            found_entry = &search->entry;
+        }
         search = search->next_crc;
+    }
 
-    if(search == NULL) 
-        return NULL;
-
-    return &(search->entry);
+    return found_entry;
 }
 
 
