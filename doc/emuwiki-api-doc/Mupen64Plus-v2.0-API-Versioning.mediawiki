@@ -127,3 +127,5 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** added "M64CMD_PIF_OPEN" command to allow using a binary PIF Boot ROM (instead of the included HLE implementation).
 * '''FRONTEND_API_VERSION''' version 2.1.4:
 ** added "M64CMD_ROM_SET_SETTINGS" command to allow setting ROM settings for the currently opened ROM until the ROM is closed.
+* '''CONFIG_API_VERSION''' version 2.3.2:
+** add ConfigOverrideUserPaths() function to allow front-ends to override user paths.
