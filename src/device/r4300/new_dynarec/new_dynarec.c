@@ -79,6 +79,8 @@ static void nullf() {}
     #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
     #define assem_debug(...)
+    // Cleanup debug strcpy's
+    #define strcpy(...)
 #endif
 #if INV_DEBUG
     #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
