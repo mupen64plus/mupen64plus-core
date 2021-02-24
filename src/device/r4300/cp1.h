@@ -23,6 +23,7 @@
 #define M64P_DEVICE_R4300_CP1_H
 
 #include <stdint.h>
+#include "osal/preproc.h"
 #include "new_dynarec/new_dynarec.h"
 
 typedef union {
