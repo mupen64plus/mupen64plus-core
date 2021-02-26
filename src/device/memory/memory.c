@@ -42,6 +42,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <malloc.h>
+#endif
+
 #ifdef DBG
 enum
 {
@@ -213,6 +217,9 @@ void apply_mem_mapping(struct memory* mem, const struct mem_mapping* mapping)
     }
 }
 
+/* For paraLLEl-RDP which needs to import RDRAM as a host pointer with potentially 64k of alignment. */
+enum { MB_RDRAM_DRAM_ALIGNMENT_REQUIREMENT = 64 * 1024 };
+
 enum {
     MB_RDRAM_DRAM = 0,
     MB_CART_ROM = MB_RDRAM_DRAM + RDRAM_MAX_SIZE,
@@ -235,7 +242,12 @@ void* init_mem_base(void)
     void* mem_base;
 
     /* First try the full mem base alloc */
-    mem_base = malloc(MB_MAX_SIZE_FULL);
+#ifdef _WIN32
+    mem_base = _aligned_malloc(MB_MAX_SIZE_FULL, MB_RDRAM_DRAM_ALIGNMENT_REQUIREMENT);
+#else
+    if (posix_memalign(&mem_base, MB_RDRAM_DRAM_ALIGNMENT_REQUIREMENT, MB_MAX_SIZE_FULL) != 0)
+        mem_base = NULL;
+#endif
     if (mem_base == NULL) {
         /* if it failed, try the compressed mem base alloc */
         mem_base = malloc(MB_MAX_SIZE);
@@ -257,7 +269,12 @@ void* init_mem_base(void)
 
 void release_mem_base(void* mem_base)
 {
-    free(MEM_BASE_PTR(mem_base));
+#ifdef _WIN32
+    if (MEM_BASE_MODE(mem_base) == 0)
+        _aligned_free(MEM_BASE_PTR(mem_base));
+    else
+#endif
+        free(MEM_BASE_PTR(mem_base));
 }
 
 uint32_t* mem_base_u32(void* mem_base, uint32_t address)
