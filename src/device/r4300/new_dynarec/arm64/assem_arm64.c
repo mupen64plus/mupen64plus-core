@@ -261,6 +261,7 @@ static uintptr_t jump_table_symbols[] = {
 
 static void cache_flush(char* start, char* end)
 {
+#ifndef WIN32
     // Don't rely on GCC's __clear_cache implementation, as it caches
     // icache/dcache cache line sizes, that can vary between cores on
     // big.LITTLE architectures.
@@ -289,6 +290,7 @@ static void cache_flush(char* start, char* end)
 
     __asm__ volatile("dsb ish" : : : "memory");
     __asm__ volatile("isb" : : : "memory");
+#endif
 }
 
 /* Linker */
@@ -1514,9 +1516,31 @@ static void emit_addnop(u_int r)
 
 static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
 {
-  emit_movimm(imm,HOST_TEMPREG);
-  emit_adds(HOST_TEMPREG,rsl,rtl);
-  emit_adc(rsh,WZR,rth);
+  if(imm<0&&imm>-4096) {
+    assem_debug("subs %s, %s, #%d",regname[rtl],regname[rsl],-imm&0xfff);
+    output_w32(0x71000000|((-imm)&0xfff)<<10|rsl<<5|rtl);
+    emit_sbc(rsh,WZR,rth);
+  }else if(imm>0&&imm<4096) {
+    assem_debug("adds %s, %s, #%d",regname[rtl],regname[rsl],imm&0xfff);
+    output_w32(0x31000000|(imm&0xfff)<<10|rsl<<5|rtl);
+    emit_adc(rsh,WZR,rth);
+  }else if(imm<0) {
+    emit_movimm(-imm,HOST_TEMPREG);
+    emit_subs(rsl,HOST_TEMPREG,rtl);
+    emit_sbc(rsh,WZR,rth);
+  }else if(imm>0) {
+    emit_movimm(imm,HOST_TEMPREG);
+    emit_adds(rsl,HOST_TEMPREG,rtl);
+    emit_adc(rsh,WZR,rth);
+  }
+  else {
+    assert(imm==0);
+    if(rsl!=rtl) {
+      assert(rsh!=rth);
+      emit_mov(rsl,rtl);
+      emit_mov(rsh,rth);
+    }
+  }
 }
 
 #ifdef INVERTED_CARRY
