@@ -137,15 +137,18 @@ m64p_error netplay_stop()
         return M64ERR_INVALID_STATE;
     else
     {
-        for (int i = 0; i < 4; ++i)
+        if (l_cin_compats != NULL)
         {
-            struct netplay_event* current = l_cin_compats[i].event_first;
-            struct netplay_event* next;
-            while (current != NULL)
+            for (int i = 0; i < 4; ++i)
             {
-                next = current->next;
-                free(current);
-                current = next;
+                struct netplay_event* current = l_cin_compats[i].event_first;
+                struct netplay_event* next;
+                while (current != NULL)
+                {
+                    next = current->next;
+                    free(current);
+                    current = next;
+                }
             }
         }
 
