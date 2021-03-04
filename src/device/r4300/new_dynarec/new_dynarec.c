@@ -10998,8 +10998,8 @@ static void TLBWI_new(int pcaddr, int count, int diff)
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
 
   /* Update count + pcaddr*/
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
 
   /* Remove old entries */
@@ -11071,7 +11071,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified
 }
 
 static void TLBWR_new(int pcaddr, int count, int diff)
@@ -11081,8 +11081,8 @@ static void TLBWR_new(int pcaddr, int count, int diff)
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
 
   /* Update count + pcaddr*/
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
 
   r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG];
@@ -11152,7 +11152,7 @@ static void TLBWR_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void MFC0_new(int copr, int count, int diff)
@@ -11160,10 +11160,10 @@ static void MFC0_new(int copr, int count, int diff)
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
   state->fake_pc.f.r.nrd = copr;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   cached_interp_MFC0();
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void MTC0_new(int copr, int count, int diff, int pcaddr)
@@ -11171,8 +11171,8 @@ static void MTC0_new(int copr, int count, int diff, int pcaddr)
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
   state->fake_pc.f.r.nrd = copr;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
   state->pending_exception = 0;
   cached_interp_MTC0();
@@ -11202,8 +11202,8 @@ static void read_byte_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11212,7 +11212,7 @@ static void read_byte_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)((value >> shift) & 0xff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_hword_new(int pcaddr, int count, int diff)
@@ -11220,8 +11220,8 @@ static void read_hword_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11230,7 +11230,7 @@ static void read_hword_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)((value >> shift) & 0xffff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_word_new(int pcaddr, int count, int diff)
@@ -11238,8 +11238,8 @@ static void read_word_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11247,29 +11247,29 @@ static void read_word_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)(value);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
   r4300_read_aligned_dword(r4300, state->address, (uint64_t*)&state->rdword);
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void write_byte_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11284,8 +11284,8 @@ static void write_hword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11300,8 +11300,8 @@ static void write_word_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11314,8 +11314,8 @@ static void write_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
