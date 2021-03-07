@@ -74,18 +74,21 @@ void recomp_dbg_block(int addr);
 #define INV_DEBUG 0
 #define COUNT_NOTCOMPILEDS 0
 
-static void nullf() {}
 #if ASSEM_DEBUG
     #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
     #define assem_debug(...)
-    // Cleanup debug strcpy's
-    #define strcpy(...)
 #endif
 #if INV_DEBUG
     #define inv_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
 #else
     #define inv_debug(...)
+#endif
+
+#ifdef NDEBUG
+    #define assem_strcpy(...)
+#else
+    #define assem_strcpy strcpy
 #endif
 
 /* registers that may be allocated */
@@ -7725,265 +7728,265 @@ int new_recompile_block(int addr)
     opcode[i]=op=source[i]>>26;
     switch(op)
     {
-      case 0x00: strcpy(insn[i],"special"); type=NI;
+      case 0x00: assem_strcpy(insn[i],"special"); type=NI;
         op2=source[i]&0x3f;
         switch(op2)
         {
-          case 0x00: strcpy(insn[i],"SLL"); type=SHIFTIMM; break;
-          case 0x02: strcpy(insn[i],"SRL"); type=SHIFTIMM; break;
-          case 0x03: strcpy(insn[i],"SRA"); type=SHIFTIMM; break;
-          case 0x04: strcpy(insn[i],"SLLV"); type=SHIFT; break;
-          case 0x06: strcpy(insn[i],"SRLV"); type=SHIFT; break;
-          case 0x07: strcpy(insn[i],"SRAV"); type=SHIFT; break;
-          case 0x08: strcpy(insn[i],"JR"); type=RJUMP; break;
-          case 0x09: strcpy(insn[i],"JALR"); type=RJUMP; break;
-          case 0x0C: strcpy(insn[i],"SYSCALL"); type=SYSCALL; break;
-          case 0x0D: strcpy(insn[i],"BREAK"); type=OTHER; break;
-          case 0x0F: strcpy(insn[i],"SYNC"); type=OTHER; break;
-          case 0x10: strcpy(insn[i],"MFHI"); type=MOV; break;
-          case 0x11: strcpy(insn[i],"MTHI"); type=MOV; break;
-          case 0x12: strcpy(insn[i],"MFLO"); type=MOV; break;
-          case 0x13: strcpy(insn[i],"MTLO"); type=MOV; break;
-          case 0x14: strcpy(insn[i],"DSLLV"); type=SHIFT; break;
-          case 0x16: strcpy(insn[i],"DSRLV"); type=SHIFT; break;
-          case 0x17: strcpy(insn[i],"DSRAV"); type=SHIFT; break;
-          case 0x18: strcpy(insn[i],"MULT"); type=MULTDIV; break;
-          case 0x19: strcpy(insn[i],"MULTU"); type=MULTDIV; break;
-          case 0x1A: strcpy(insn[i],"DIV"); type=MULTDIV; break;
-          case 0x1B: strcpy(insn[i],"DIVU"); type=MULTDIV; break;
-          case 0x1C: strcpy(insn[i],"DMULT"); type=MULTDIV; break;
-          case 0x1D: strcpy(insn[i],"DMULTU"); type=MULTDIV; break;
-          case 0x1E: strcpy(insn[i],"DDIV"); type=MULTDIV; break;
-          case 0x1F: strcpy(insn[i],"DDIVU"); type=MULTDIV; break;
-          case 0x20: strcpy(insn[i],"ADD"); type=ALU; break;
-          case 0x21: strcpy(insn[i],"ADDU"); type=ALU; break;
-          case 0x22: strcpy(insn[i],"SUB"); type=ALU; break;
-          case 0x23: strcpy(insn[i],"SUBU"); type=ALU; break;
-          case 0x24: strcpy(insn[i],"AND"); type=ALU; break;
-          case 0x25: strcpy(insn[i],"OR"); type=ALU; break;
-          case 0x26: strcpy(insn[i],"XOR"); type=ALU; break;
-          case 0x27: strcpy(insn[i],"NOR"); type=ALU; break;
-          case 0x2A: strcpy(insn[i],"SLT"); type=ALU; break;
-          case 0x2B: strcpy(insn[i],"SLTU"); type=ALU; break;
-          case 0x2C: strcpy(insn[i],"DADD"); type=ALU; break;
-          case 0x2D: strcpy(insn[i],"DADDU"); type=ALU; break;
-          case 0x2E: strcpy(insn[i],"DSUB"); type=ALU; break;
-          case 0x2F: strcpy(insn[i],"DSUBU"); type=ALU; break;
-          case 0x30: strcpy(insn[i],"TGE"); type=NI; break;
-          case 0x31: strcpy(insn[i],"TGEU"); type=NI; break;
-          case 0x32: strcpy(insn[i],"TLT"); type=NI; break;
-          case 0x33: strcpy(insn[i],"TLTU"); type=NI; break;
-          case 0x34: strcpy(insn[i],"TEQ"); type=NI; break;
-          case 0x36: strcpy(insn[i],"TNE"); type=NI; break;
-          case 0x38: strcpy(insn[i],"DSLL"); type=SHIFTIMM; break;
-          case 0x3A: strcpy(insn[i],"DSRL"); type=SHIFTIMM; break;
-          case 0x3B: strcpy(insn[i],"DSRA"); type=SHIFTIMM; break;
-          case 0x3C: strcpy(insn[i],"DSLL32"); type=SHIFTIMM; break;
-          case 0x3E: strcpy(insn[i],"DSRL32"); type=SHIFTIMM; break;
-          case 0x3F: strcpy(insn[i],"DSRA32"); type=SHIFTIMM; break;
+          case 0x00: assem_strcpy(insn[i],"SLL"); type=SHIFTIMM; break;
+          case 0x02: assem_strcpy(insn[i],"SRL"); type=SHIFTIMM; break;
+          case 0x03: assem_strcpy(insn[i],"SRA"); type=SHIFTIMM; break;
+          case 0x04: assem_strcpy(insn[i],"SLLV"); type=SHIFT; break;
+          case 0x06: assem_strcpy(insn[i],"SRLV"); type=SHIFT; break;
+          case 0x07: assem_strcpy(insn[i],"SRAV"); type=SHIFT; break;
+          case 0x08: assem_strcpy(insn[i],"JR"); type=RJUMP; break;
+          case 0x09: assem_strcpy(insn[i],"JALR"); type=RJUMP; break;
+          case 0x0C: assem_strcpy(insn[i],"SYSCALL"); type=SYSCALL; break;
+          case 0x0D: assem_strcpy(insn[i],"BREAK"); type=OTHER; break;
+          case 0x0F: assem_strcpy(insn[i],"SYNC"); type=OTHER; break;
+          case 0x10: assem_strcpy(insn[i],"MFHI"); type=MOV; break;
+          case 0x11: assem_strcpy(insn[i],"MTHI"); type=MOV; break;
+          case 0x12: assem_strcpy(insn[i],"MFLO"); type=MOV; break;
+          case 0x13: assem_strcpy(insn[i],"MTLO"); type=MOV; break;
+          case 0x14: assem_strcpy(insn[i],"DSLLV"); type=SHIFT; break;
+          case 0x16: assem_strcpy(insn[i],"DSRLV"); type=SHIFT; break;
+          case 0x17: assem_strcpy(insn[i],"DSRAV"); type=SHIFT; break;
+          case 0x18: assem_strcpy(insn[i],"MULT"); type=MULTDIV; break;
+          case 0x19: assem_strcpy(insn[i],"MULTU"); type=MULTDIV; break;
+          case 0x1A: assem_strcpy(insn[i],"DIV"); type=MULTDIV; break;
+          case 0x1B: assem_strcpy(insn[i],"DIVU"); type=MULTDIV; break;
+          case 0x1C: assem_strcpy(insn[i],"DMULT"); type=MULTDIV; break;
+          case 0x1D: assem_strcpy(insn[i],"DMULTU"); type=MULTDIV; break;
+          case 0x1E: assem_strcpy(insn[i],"DDIV"); type=MULTDIV; break;
+          case 0x1F: assem_strcpy(insn[i],"DDIVU"); type=MULTDIV; break;
+          case 0x20: assem_strcpy(insn[i],"ADD"); type=ALU; break;
+          case 0x21: assem_strcpy(insn[i],"ADDU"); type=ALU; break;
+          case 0x22: assem_strcpy(insn[i],"SUB"); type=ALU; break;
+          case 0x23: assem_strcpy(insn[i],"SUBU"); type=ALU; break;
+          case 0x24: assem_strcpy(insn[i],"AND"); type=ALU; break;
+          case 0x25: assem_strcpy(insn[i],"OR"); type=ALU; break;
+          case 0x26: assem_strcpy(insn[i],"XOR"); type=ALU; break;
+          case 0x27: assem_strcpy(insn[i],"NOR"); type=ALU; break;
+          case 0x2A: assem_strcpy(insn[i],"SLT"); type=ALU; break;
+          case 0x2B: assem_strcpy(insn[i],"SLTU"); type=ALU; break;
+          case 0x2C: assem_strcpy(insn[i],"DADD"); type=ALU; break;
+          case 0x2D: assem_strcpy(insn[i],"DADDU"); type=ALU; break;
+          case 0x2E: assem_strcpy(insn[i],"DSUB"); type=ALU; break;
+          case 0x2F: assem_strcpy(insn[i],"DSUBU"); type=ALU; break;
+          case 0x30: assem_strcpy(insn[i],"TGE"); type=NI; break;
+          case 0x31: assem_strcpy(insn[i],"TGEU"); type=NI; break;
+          case 0x32: assem_strcpy(insn[i],"TLT"); type=NI; break;
+          case 0x33: assem_strcpy(insn[i],"TLTU"); type=NI; break;
+          case 0x34: assem_strcpy(insn[i],"TEQ"); type=NI; break;
+          case 0x36: assem_strcpy(insn[i],"TNE"); type=NI; break;
+          case 0x38: assem_strcpy(insn[i],"DSLL"); type=SHIFTIMM; break;
+          case 0x3A: assem_strcpy(insn[i],"DSRL"); type=SHIFTIMM; break;
+          case 0x3B: assem_strcpy(insn[i],"DSRA"); type=SHIFTIMM; break;
+          case 0x3C: assem_strcpy(insn[i],"DSLL32"); type=SHIFTIMM; break;
+          case 0x3E: assem_strcpy(insn[i],"DSRL32"); type=SHIFTIMM; break;
+          case 0x3F: assem_strcpy(insn[i],"DSRA32"); type=SHIFTIMM; break;
         }
         break;
-      case 0x01: strcpy(insn[i],"regimm"); type=NI;
+      case 0x01: assem_strcpy(insn[i],"regimm"); type=NI;
         op2=(source[i]>>16)&0x1f;
         switch(op2)
         {
-          case 0x00: strcpy(insn[i],"BLTZ"); type=SJUMP; break;
-          case 0x01: strcpy(insn[i],"BGEZ"); type=SJUMP; break;
-          case 0x02: strcpy(insn[i],"BLTZL"); type=SJUMP; break;
-          case 0x03: strcpy(insn[i],"BGEZL"); type=SJUMP; break;
-          case 0x08: strcpy(insn[i],"TGEI"); type=NI; break;
-          case 0x09: strcpy(insn[i],"TGEIU"); type=NI; break;
-          case 0x0A: strcpy(insn[i],"TLTI"); type=NI; break;
-          case 0x0B: strcpy(insn[i],"TLTIU"); type=NI; break;
-          case 0x0C: strcpy(insn[i],"TEQI"); type=NI; break;
-          case 0x0E: strcpy(insn[i],"TNEI"); type=NI; break;
-          case 0x10: strcpy(insn[i],"BLTZAL"); type=SJUMP; break;
-          case 0x11: strcpy(insn[i],"BGEZAL"); type=SJUMP; break;
-          case 0x12: strcpy(insn[i],"BLTZALL"); type=SJUMP; break;
-          case 0x13: strcpy(insn[i],"BGEZALL"); type=SJUMP; break;
+          case 0x00: assem_strcpy(insn[i],"BLTZ"); type=SJUMP; break;
+          case 0x01: assem_strcpy(insn[i],"BGEZ"); type=SJUMP; break;
+          case 0x02: assem_strcpy(insn[i],"BLTZL"); type=SJUMP; break;
+          case 0x03: assem_strcpy(insn[i],"BGEZL"); type=SJUMP; break;
+          case 0x08: assem_strcpy(insn[i],"TGEI"); type=NI; break;
+          case 0x09: assem_strcpy(insn[i],"TGEIU"); type=NI; break;
+          case 0x0A: assem_strcpy(insn[i],"TLTI"); type=NI; break;
+          case 0x0B: assem_strcpy(insn[i],"TLTIU"); type=NI; break;
+          case 0x0C: assem_strcpy(insn[i],"TEQI"); type=NI; break;
+          case 0x0E: assem_strcpy(insn[i],"TNEI"); type=NI; break;
+          case 0x10: assem_strcpy(insn[i],"BLTZAL"); type=SJUMP; break;
+          case 0x11: assem_strcpy(insn[i],"BGEZAL"); type=SJUMP; break;
+          case 0x12: assem_strcpy(insn[i],"BLTZALL"); type=SJUMP; break;
+          case 0x13: assem_strcpy(insn[i],"BGEZALL"); type=SJUMP; break;
         }
         break;
-      case 0x02: strcpy(insn[i],"J"); type=UJUMP; break;
-      case 0x03: strcpy(insn[i],"JAL"); type=UJUMP; break;
-      case 0x04: strcpy(insn[i],"BEQ"); type=CJUMP; break;
-      case 0x05: strcpy(insn[i],"BNE"); type=CJUMP; break;
-      case 0x06: strcpy(insn[i],"BLEZ"); type=CJUMP; break;
-      case 0x07: strcpy(insn[i],"BGTZ"); type=CJUMP; break;
-      case 0x08: strcpy(insn[i],"ADDI"); type=IMM16; break;
-      case 0x09: strcpy(insn[i],"ADDIU"); type=IMM16; break;
-      case 0x0A: strcpy(insn[i],"SLTI"); type=IMM16; break;
-      case 0x0B: strcpy(insn[i],"SLTIU"); type=IMM16; break;
-      case 0x0C: strcpy(insn[i],"ANDI"); type=IMM16; break;
-      case 0x0D: strcpy(insn[i],"ORI"); type=IMM16; break;
-      case 0x0E: strcpy(insn[i],"XORI"); type=IMM16; break;
-      case 0x0F: strcpy(insn[i],"LUI"); type=IMM16; break;
-      case 0x10: strcpy(insn[i],"cop0"); type=NI;
+      case 0x02: assem_strcpy(insn[i],"J"); type=UJUMP; break;
+      case 0x03: assem_strcpy(insn[i],"JAL"); type=UJUMP; break;
+      case 0x04: assem_strcpy(insn[i],"BEQ"); type=CJUMP; break;
+      case 0x05: assem_strcpy(insn[i],"BNE"); type=CJUMP; break;
+      case 0x06: assem_strcpy(insn[i],"BLEZ"); type=CJUMP; break;
+      case 0x07: assem_strcpy(insn[i],"BGTZ"); type=CJUMP; break;
+      case 0x08: assem_strcpy(insn[i],"ADDI"); type=IMM16; break;
+      case 0x09: assem_strcpy(insn[i],"ADDIU"); type=IMM16; break;
+      case 0x0A: assem_strcpy(insn[i],"SLTI"); type=IMM16; break;
+      case 0x0B: assem_strcpy(insn[i],"SLTIU"); type=IMM16; break;
+      case 0x0C: assem_strcpy(insn[i],"ANDI"); type=IMM16; break;
+      case 0x0D: assem_strcpy(insn[i],"ORI"); type=IMM16; break;
+      case 0x0E: assem_strcpy(insn[i],"XORI"); type=IMM16; break;
+      case 0x0F: assem_strcpy(insn[i],"LUI"); type=IMM16; break;
+      case 0x10: assem_strcpy(insn[i],"cop0"); type=NI;
         op2=(source[i]>>21)&0x1f;
         switch(op2)
         {
-          case 0x00: strcpy(insn[i],"MFC0"); type=COP0; break;
-          case 0x04: strcpy(insn[i],"MTC0"); type=COP0; break;
-          case 0x10: strcpy(insn[i],"tlb"); type=NI;
+          case 0x00: assem_strcpy(insn[i],"MFC0"); type=COP0; break;
+          case 0x04: assem_strcpy(insn[i],"MTC0"); type=COP0; break;
+          case 0x10: assem_strcpy(insn[i],"tlb"); type=NI;
           switch(source[i]&0x3f)
           {
-            case 0x01: strcpy(insn[i],"TLBR"); type=COP0; break;
-            case 0x02: strcpy(insn[i],"TLBWI"); type=COP0; break;
-            case 0x06: strcpy(insn[i],"TLBWR"); type=COP0; break;
-            case 0x08: strcpy(insn[i],"TLBP"); type=COP0; break;
-            case 0x18: strcpy(insn[i],"ERET"); type=COP0; break;
+            case 0x01: assem_strcpy(insn[i],"TLBR"); type=COP0; break;
+            case 0x02: assem_strcpy(insn[i],"TLBWI"); type=COP0; break;
+            case 0x06: assem_strcpy(insn[i],"TLBWR"); type=COP0; break;
+            case 0x08: assem_strcpy(insn[i],"TLBP"); type=COP0; break;
+            case 0x18: assem_strcpy(insn[i],"ERET"); type=COP0; break;
           }
         }
         break;
-      case 0x11: strcpy(insn[i],"cop1"); type=NI;
+      case 0x11: assem_strcpy(insn[i],"cop1"); type=NI;
         op2=(source[i]>>21)&0x1f;
         switch(op2)
         {
-          case 0x00: strcpy(insn[i],"MFC1"); type=COP1; break;
-          case 0x01: strcpy(insn[i],"DMFC1"); type=COP1; break;
-          case 0x02: strcpy(insn[i],"CFC1"); type=COP1; break;
-          case 0x04: strcpy(insn[i],"MTC1"); type=COP1; break;
-          case 0x05: strcpy(insn[i],"DMTC1"); type=COP1; break;
-          case 0x06: strcpy(insn[i],"CTC1"); type=COP1; break;
-          case 0x08: strcpy(insn[i],"BC1"); type=FJUMP;
+          case 0x00: assem_strcpy(insn[i],"MFC1"); type=COP1; break;
+          case 0x01: assem_strcpy(insn[i],"DMFC1"); type=COP1; break;
+          case 0x02: assem_strcpy(insn[i],"CFC1"); type=COP1; break;
+          case 0x04: assem_strcpy(insn[i],"MTC1"); type=COP1; break;
+          case 0x05: assem_strcpy(insn[i],"DMTC1"); type=COP1; break;
+          case 0x06: assem_strcpy(insn[i],"CTC1"); type=COP1; break;
+          case 0x08: assem_strcpy(insn[i],"BC1"); type=FJUMP;
           switch((source[i]>>16)&0x3)
           {
-            case 0x00: strcpy(insn[i],"BC1F"); break;
-            case 0x01: strcpy(insn[i],"BC1T"); break;
-            case 0x02: strcpy(insn[i],"BC1FL"); break;
-            case 0x03: strcpy(insn[i],"BC1TL"); break;
+            case 0x00: assem_strcpy(insn[i],"BC1F"); break;
+            case 0x01: assem_strcpy(insn[i],"BC1T"); break;
+            case 0x02: assem_strcpy(insn[i],"BC1FL"); break;
+            case 0x03: assem_strcpy(insn[i],"BC1TL"); break;
           }
           break;
-          case 0x10: strcpy(insn[i],"C1.S"); type=NI;
+          case 0x10: assem_strcpy(insn[i],"C1.S"); type=NI;
           switch(source[i]&0x3f)
           {
-            case 0x00: strcpy(insn[i],"ADD.S"); type=FLOAT; break;
-            case 0x01: strcpy(insn[i],"SUB.S"); type=FLOAT; break;
-            case 0x02: strcpy(insn[i],"MUL.S"); type=FLOAT; break;
-            case 0x03: strcpy(insn[i],"DIV.S"); type=FLOAT; break;
-            case 0x04: strcpy(insn[i],"SQRT.S"); type=FLOAT; break;
-            case 0x05: strcpy(insn[i],"ABS.S"); type=FLOAT; break;
-            case 0x06: strcpy(insn[i],"MOV.S"); type=FLOAT; break;
-            case 0x07: strcpy(insn[i],"NEG.S"); type=FLOAT; break;
-            case 0x08: strcpy(insn[i],"ROUND.L.S"); type=FCONV; break;
-            case 0x09: strcpy(insn[i],"TRUNC.L.S"); type=FCONV; break;
-            case 0x0A: strcpy(insn[i],"CEIL.L.S"); type=FCONV; break;
-            case 0x0B: strcpy(insn[i],"FLOOR.L.S"); type=FCONV; break;
-            case 0x0C: strcpy(insn[i],"ROUND.W.S"); type=FCONV; break;
-            case 0x0D: strcpy(insn[i],"TRUNC.W.S"); type=FCONV; break;
-            case 0x0E: strcpy(insn[i],"CEIL.W.S"); type=FCONV; break;
-            case 0x0F: strcpy(insn[i],"FLOOR.W.S"); type=FCONV; break;
-            case 0x21: strcpy(insn[i],"CVT.D.S"); type=FCONV; break;
-            case 0x24: strcpy(insn[i],"CVT.W.S"); type=FCONV; break;
-            case 0x25: strcpy(insn[i],"CVT.L.S"); type=FCONV; break;
-            case 0x30: strcpy(insn[i],"C.F.S"); type=FCOMP; break;
-            case 0x31: strcpy(insn[i],"C.UN.S"); type=FCOMP; break;
-            case 0x32: strcpy(insn[i],"C.EQ.S"); type=FCOMP; break;
-            case 0x33: strcpy(insn[i],"C.UEQ.S"); type=FCOMP; break;
-            case 0x34: strcpy(insn[i],"C.OLT.S"); type=FCOMP; break;
-            case 0x35: strcpy(insn[i],"C.ULT.S"); type=FCOMP; break;
-            case 0x36: strcpy(insn[i],"C.OLE.S"); type=FCOMP; break;
-            case 0x37: strcpy(insn[i],"C.ULE.S"); type=FCOMP; break;
-            case 0x38: strcpy(insn[i],"C.SF.S"); type=FCOMP; break;
-            case 0x39: strcpy(insn[i],"C.NGLE.S"); type=FCOMP; break;
-            case 0x3A: strcpy(insn[i],"C.SEQ.S"); type=FCOMP; break;
-            case 0x3B: strcpy(insn[i],"C.NGL.S"); type=FCOMP; break;
-            case 0x3C: strcpy(insn[i],"C.LT.S"); type=FCOMP; break;
-            case 0x3D: strcpy(insn[i],"C.NGE.S"); type=FCOMP; break;
-            case 0x3E: strcpy(insn[i],"C.LE.S"); type=FCOMP; break;
-            case 0x3F: strcpy(insn[i],"C.NGT.S"); type=FCOMP; break;
+            case 0x00: assem_strcpy(insn[i],"ADD.S"); type=FLOAT; break;
+            case 0x01: assem_strcpy(insn[i],"SUB.S"); type=FLOAT; break;
+            case 0x02: assem_strcpy(insn[i],"MUL.S"); type=FLOAT; break;
+            case 0x03: assem_strcpy(insn[i],"DIV.S"); type=FLOAT; break;
+            case 0x04: assem_strcpy(insn[i],"SQRT.S"); type=FLOAT; break;
+            case 0x05: assem_strcpy(insn[i],"ABS.S"); type=FLOAT; break;
+            case 0x06: assem_strcpy(insn[i],"MOV.S"); type=FLOAT; break;
+            case 0x07: assem_strcpy(insn[i],"NEG.S"); type=FLOAT; break;
+            case 0x08: assem_strcpy(insn[i],"ROUND.L.S"); type=FCONV; break;
+            case 0x09: assem_strcpy(insn[i],"TRUNC.L.S"); type=FCONV; break;
+            case 0x0A: assem_strcpy(insn[i],"CEIL.L.S"); type=FCONV; break;
+            case 0x0B: assem_strcpy(insn[i],"FLOOR.L.S"); type=FCONV; break;
+            case 0x0C: assem_strcpy(insn[i],"ROUND.W.S"); type=FCONV; break;
+            case 0x0D: assem_strcpy(insn[i],"TRUNC.W.S"); type=FCONV; break;
+            case 0x0E: assem_strcpy(insn[i],"CEIL.W.S"); type=FCONV; break;
+            case 0x0F: assem_strcpy(insn[i],"FLOOR.W.S"); type=FCONV; break;
+            case 0x21: assem_strcpy(insn[i],"CVT.D.S"); type=FCONV; break;
+            case 0x24: assem_strcpy(insn[i],"CVT.W.S"); type=FCONV; break;
+            case 0x25: assem_strcpy(insn[i],"CVT.L.S"); type=FCONV; break;
+            case 0x30: assem_strcpy(insn[i],"C.F.S"); type=FCOMP; break;
+            case 0x31: assem_strcpy(insn[i],"C.UN.S"); type=FCOMP; break;
+            case 0x32: assem_strcpy(insn[i],"C.EQ.S"); type=FCOMP; break;
+            case 0x33: assem_strcpy(insn[i],"C.UEQ.S"); type=FCOMP; break;
+            case 0x34: assem_strcpy(insn[i],"C.OLT.S"); type=FCOMP; break;
+            case 0x35: assem_strcpy(insn[i],"C.ULT.S"); type=FCOMP; break;
+            case 0x36: assem_strcpy(insn[i],"C.OLE.S"); type=FCOMP; break;
+            case 0x37: assem_strcpy(insn[i],"C.ULE.S"); type=FCOMP; break;
+            case 0x38: assem_strcpy(insn[i],"C.SF.S"); type=FCOMP; break;
+            case 0x39: assem_strcpy(insn[i],"C.NGLE.S"); type=FCOMP; break;
+            case 0x3A: assem_strcpy(insn[i],"C.SEQ.S"); type=FCOMP; break;
+            case 0x3B: assem_strcpy(insn[i],"C.NGL.S"); type=FCOMP; break;
+            case 0x3C: assem_strcpy(insn[i],"C.LT.S"); type=FCOMP; break;
+            case 0x3D: assem_strcpy(insn[i],"C.NGE.S"); type=FCOMP; break;
+            case 0x3E: assem_strcpy(insn[i],"C.LE.S"); type=FCOMP; break;
+            case 0x3F: assem_strcpy(insn[i],"C.NGT.S"); type=FCOMP; break;
           }
           break;
-          case 0x11: strcpy(insn[i],"C1.D"); type=NI;
+          case 0x11: assem_strcpy(insn[i],"C1.D"); type=NI;
           switch(source[i]&0x3f)
           {
-            case 0x00: strcpy(insn[i],"ADD.D"); type=FLOAT; break;
-            case 0x01: strcpy(insn[i],"SUB.D"); type=FLOAT; break;
-            case 0x02: strcpy(insn[i],"MUL.D"); type=FLOAT; break;
-            case 0x03: strcpy(insn[i],"DIV.D"); type=FLOAT; break;
-            case 0x04: strcpy(insn[i],"SQRT.D"); type=FLOAT; break;
-            case 0x05: strcpy(insn[i],"ABS.D"); type=FLOAT; break;
-            case 0x06: strcpy(insn[i],"MOV.D"); type=FLOAT; break;
-            case 0x07: strcpy(insn[i],"NEG.D"); type=FLOAT; break;
-            case 0x08: strcpy(insn[i],"ROUND.L.D"); type=FCONV; break;
-            case 0x09: strcpy(insn[i],"TRUNC.L.D"); type=FCONV; break;
-            case 0x0A: strcpy(insn[i],"CEIL.L.D"); type=FCONV; break;
-            case 0x0B: strcpy(insn[i],"FLOOR.L.D"); type=FCONV; break;
-            case 0x0C: strcpy(insn[i],"ROUND.W.D"); type=FCONV; break;
-            case 0x0D: strcpy(insn[i],"TRUNC.W.D"); type=FCONV; break;
-            case 0x0E: strcpy(insn[i],"CEIL.W.D"); type=FCONV; break;
-            case 0x0F: strcpy(insn[i],"FLOOR.W.D"); type=FCONV; break;
-            case 0x20: strcpy(insn[i],"CVT.S.D"); type=FCONV; break;
-            case 0x24: strcpy(insn[i],"CVT.W.D"); type=FCONV; break;
-            case 0x25: strcpy(insn[i],"CVT.L.D"); type=FCONV; break;
-            case 0x30: strcpy(insn[i],"C.F.D"); type=FCOMP; break;
-            case 0x31: strcpy(insn[i],"C.UN.D"); type=FCOMP; break;
-            case 0x32: strcpy(insn[i],"C.EQ.D"); type=FCOMP; break;
-            case 0x33: strcpy(insn[i],"C.UEQ.D"); type=FCOMP; break;
-            case 0x34: strcpy(insn[i],"C.OLT.D"); type=FCOMP; break;
-            case 0x35: strcpy(insn[i],"C.ULT.D"); type=FCOMP; break;
-            case 0x36: strcpy(insn[i],"C.OLE.D"); type=FCOMP; break;
-            case 0x37: strcpy(insn[i],"C.ULE.D"); type=FCOMP; break;
-            case 0x38: strcpy(insn[i],"C.SF.D"); type=FCOMP; break;
-            case 0x39: strcpy(insn[i],"C.NGLE.D"); type=FCOMP; break;
-            case 0x3A: strcpy(insn[i],"C.SEQ.D"); type=FCOMP; break;
-            case 0x3B: strcpy(insn[i],"C.NGL.D"); type=FCOMP; break;
-            case 0x3C: strcpy(insn[i],"C.LT.D"); type=FCOMP; break;
-            case 0x3D: strcpy(insn[i],"C.NGE.D"); type=FCOMP; break;
-            case 0x3E: strcpy(insn[i],"C.LE.D"); type=FCOMP; break;
-            case 0x3F: strcpy(insn[i],"C.NGT.D"); type=FCOMP; break;
+            case 0x00: assem_strcpy(insn[i],"ADD.D"); type=FLOAT; break;
+            case 0x01: assem_strcpy(insn[i],"SUB.D"); type=FLOAT; break;
+            case 0x02: assem_strcpy(insn[i],"MUL.D"); type=FLOAT; break;
+            case 0x03: assem_strcpy(insn[i],"DIV.D"); type=FLOAT; break;
+            case 0x04: assem_strcpy(insn[i],"SQRT.D"); type=FLOAT; break;
+            case 0x05: assem_strcpy(insn[i],"ABS.D"); type=FLOAT; break;
+            case 0x06: assem_strcpy(insn[i],"MOV.D"); type=FLOAT; break;
+            case 0x07: assem_strcpy(insn[i],"NEG.D"); type=FLOAT; break;
+            case 0x08: assem_strcpy(insn[i],"ROUND.L.D"); type=FCONV; break;
+            case 0x09: assem_strcpy(insn[i],"TRUNC.L.D"); type=FCONV; break;
+            case 0x0A: assem_strcpy(insn[i],"CEIL.L.D"); type=FCONV; break;
+            case 0x0B: assem_strcpy(insn[i],"FLOOR.L.D"); type=FCONV; break;
+            case 0x0C: assem_strcpy(insn[i],"ROUND.W.D"); type=FCONV; break;
+            case 0x0D: assem_strcpy(insn[i],"TRUNC.W.D"); type=FCONV; break;
+            case 0x0E: assem_strcpy(insn[i],"CEIL.W.D"); type=FCONV; break;
+            case 0x0F: assem_strcpy(insn[i],"FLOOR.W.D"); type=FCONV; break;
+            case 0x20: assem_strcpy(insn[i],"CVT.S.D"); type=FCONV; break;
+            case 0x24: assem_strcpy(insn[i],"CVT.W.D"); type=FCONV; break;
+            case 0x25: assem_strcpy(insn[i],"CVT.L.D"); type=FCONV; break;
+            case 0x30: assem_strcpy(insn[i],"C.F.D"); type=FCOMP; break;
+            case 0x31: assem_strcpy(insn[i],"C.UN.D"); type=FCOMP; break;
+            case 0x32: assem_strcpy(insn[i],"C.EQ.D"); type=FCOMP; break;
+            case 0x33: assem_strcpy(insn[i],"C.UEQ.D"); type=FCOMP; break;
+            case 0x34: assem_strcpy(insn[i],"C.OLT.D"); type=FCOMP; break;
+            case 0x35: assem_strcpy(insn[i],"C.ULT.D"); type=FCOMP; break;
+            case 0x36: assem_strcpy(insn[i],"C.OLE.D"); type=FCOMP; break;
+            case 0x37: assem_strcpy(insn[i],"C.ULE.D"); type=FCOMP; break;
+            case 0x38: assem_strcpy(insn[i],"C.SF.D"); type=FCOMP; break;
+            case 0x39: assem_strcpy(insn[i],"C.NGLE.D"); type=FCOMP; break;
+            case 0x3A: assem_strcpy(insn[i],"C.SEQ.D"); type=FCOMP; break;
+            case 0x3B: assem_strcpy(insn[i],"C.NGL.D"); type=FCOMP; break;
+            case 0x3C: assem_strcpy(insn[i],"C.LT.D"); type=FCOMP; break;
+            case 0x3D: assem_strcpy(insn[i],"C.NGE.D"); type=FCOMP; break;
+            case 0x3E: assem_strcpy(insn[i],"C.LE.D"); type=FCOMP; break;
+            case 0x3F: assem_strcpy(insn[i],"C.NGT.D"); type=FCOMP; break;
           }
           break;
-          case 0x14: strcpy(insn[i],"C1.W"); type=NI;
+          case 0x14: assem_strcpy(insn[i],"C1.W"); type=NI;
           switch(source[i]&0x3f)
           {
-            case 0x20: strcpy(insn[i],"CVT.S.W"); type=FCONV; break;
-            case 0x21: strcpy(insn[i],"CVT.D.W"); type=FCONV; break;
+            case 0x20: assem_strcpy(insn[i],"CVT.S.W"); type=FCONV; break;
+            case 0x21: assem_strcpy(insn[i],"CVT.D.W"); type=FCONV; break;
           }
           break;
-          case 0x15: strcpy(insn[i],"C1.L"); type=NI;
+          case 0x15: assem_strcpy(insn[i],"C1.L"); type=NI;
           switch(source[i]&0x3f)
           {
-            case 0x20: strcpy(insn[i],"CVT.S.L"); type=FCONV; break;
-            case 0x21: strcpy(insn[i],"CVT.D.L"); type=FCONV; break;
+            case 0x20: assem_strcpy(insn[i],"CVT.S.L"); type=FCONV; break;
+            case 0x21: assem_strcpy(insn[i],"CVT.D.L"); type=FCONV; break;
           }
           break;
         }
         break;
-      case 0x14: strcpy(insn[i],"BEQL"); type=CJUMP; break;
-      case 0x15: strcpy(insn[i],"BNEL"); type=CJUMP; break;
-      case 0x16: strcpy(insn[i],"BLEZL"); type=CJUMP; break;
-      case 0x17: strcpy(insn[i],"BGTZL"); type=CJUMP; break;
-      case 0x18: strcpy(insn[i],"DADDI"); type=IMM16; break;
-      case 0x19: strcpy(insn[i],"DADDIU"); type=IMM16; break;
-      case 0x1A: strcpy(insn[i],"LDL"); type=LOADLR; break;
-      case 0x1B: strcpy(insn[i],"LDR"); type=LOADLR; break;
-      case 0x20: strcpy(insn[i],"LB"); type=LOAD; break;
-      case 0x21: strcpy(insn[i],"LH"); type=LOAD; break;
-      case 0x22: strcpy(insn[i],"LWL"); type=LOADLR; break;
-      case 0x23: strcpy(insn[i],"LW"); type=LOAD; break;
-      case 0x24: strcpy(insn[i],"LBU"); type=LOAD; break;
-      case 0x25: strcpy(insn[i],"LHU"); type=LOAD; break;
-      case 0x26: strcpy(insn[i],"LWR"); type=LOADLR; break;
-      case 0x27: strcpy(insn[i],"LWU"); type=LOAD; break;
-      case 0x28: strcpy(insn[i],"SB"); type=STORE; break;
-      case 0x29: strcpy(insn[i],"SH"); type=STORE; break;
-      case 0x2A: strcpy(insn[i],"SWL"); type=STORELR; break;
-      case 0x2B: strcpy(insn[i],"SW"); type=STORE; break;
-      case 0x2C: strcpy(insn[i],"SDL"); type=STORELR; break;
-      case 0x2D: strcpy(insn[i],"SDR"); type=STORELR; break;
-      case 0x2E: strcpy(insn[i],"SWR"); type=STORELR; break;
-      case 0x2F: strcpy(insn[i],"CACHE"); type=NOP; break;
-      case 0x30: strcpy(insn[i],"LL"); type=NI; break;
-      case 0x31: strcpy(insn[i],"LWC1"); type=C1LS; break;
-      case 0x34: strcpy(insn[i],"LLD"); type=NI; break;
-      case 0x35: strcpy(insn[i],"LDC1"); type=C1LS; break;
-      case 0x37: strcpy(insn[i],"LD"); type=LOAD; break;
-      case 0x38: strcpy(insn[i],"SC"); type=NI; break;
-      case 0x39: strcpy(insn[i],"SWC1"); type=C1LS; break;
-      case 0x3C: strcpy(insn[i],"SCD"); type=NI; break;
-      case 0x3D: strcpy(insn[i],"SDC1"); type=C1LS; break;
-      case 0x3F: strcpy(insn[i],"SD"); type=STORE; break;
-      default: strcpy(insn[i],"???"); type=NI; break;
+      case 0x14: assem_strcpy(insn[i],"BEQL"); type=CJUMP; break;
+      case 0x15: assem_strcpy(insn[i],"BNEL"); type=CJUMP; break;
+      case 0x16: assem_strcpy(insn[i],"BLEZL"); type=CJUMP; break;
+      case 0x17: assem_strcpy(insn[i],"BGTZL"); type=CJUMP; break;
+      case 0x18: assem_strcpy(insn[i],"DADDI"); type=IMM16; break;
+      case 0x19: assem_strcpy(insn[i],"DADDIU"); type=IMM16; break;
+      case 0x1A: assem_strcpy(insn[i],"LDL"); type=LOADLR; break;
+      case 0x1B: assem_strcpy(insn[i],"LDR"); type=LOADLR; break;
+      case 0x20: assem_strcpy(insn[i],"LB"); type=LOAD; break;
+      case 0x21: assem_strcpy(insn[i],"LH"); type=LOAD; break;
+      case 0x22: assem_strcpy(insn[i],"LWL"); type=LOADLR; break;
+      case 0x23: assem_strcpy(insn[i],"LW"); type=LOAD; break;
+      case 0x24: assem_strcpy(insn[i],"LBU"); type=LOAD; break;
+      case 0x25: assem_strcpy(insn[i],"LHU"); type=LOAD; break;
+      case 0x26: assem_strcpy(insn[i],"LWR"); type=LOADLR; break;
+      case 0x27: assem_strcpy(insn[i],"LWU"); type=LOAD; break;
+      case 0x28: assem_strcpy(insn[i],"SB"); type=STORE; break;
+      case 0x29: assem_strcpy(insn[i],"SH"); type=STORE; break;
+      case 0x2A: assem_strcpy(insn[i],"SWL"); type=STORELR; break;
+      case 0x2B: assem_strcpy(insn[i],"SW"); type=STORE; break;
+      case 0x2C: assem_strcpy(insn[i],"SDL"); type=STORELR; break;
+      case 0x2D: assem_strcpy(insn[i],"SDR"); type=STORELR; break;
+      case 0x2E: assem_strcpy(insn[i],"SWR"); type=STORELR; break;
+      case 0x2F: assem_strcpy(insn[i],"CACHE"); type=NOP; break;
+      case 0x30: assem_strcpy(insn[i],"LL"); type=NI; break;
+      case 0x31: assem_strcpy(insn[i],"LWC1"); type=C1LS; break;
+      case 0x34: assem_strcpy(insn[i],"LLD"); type=NI; break;
+      case 0x35: assem_strcpy(insn[i],"LDC1"); type=C1LS; break;
+      case 0x37: assem_strcpy(insn[i],"LD"); type=LOAD; break;
+      case 0x38: assem_strcpy(insn[i],"SC"); type=NI; break;
+      case 0x39: assem_strcpy(insn[i],"SWC1"); type=C1LS; break;
+      case 0x3C: assem_strcpy(insn[i],"SCD"); type=NI; break;
+      case 0x3D: assem_strcpy(insn[i],"SDC1"); type=C1LS; break;
+      case 0x3F: assem_strcpy(insn[i],"SD"); type=STORE; break;
+      default: assem_strcpy(insn[i],"???"); type=NI; break;
     }
     itype[i]=type;
     opcode2[i]=op2;
@@ -10998,8 +11001,8 @@ static void TLBWI_new(int pcaddr, int count, int diff)
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
 
   /* Update count + pcaddr*/
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
 
   /* Remove old entries */
@@ -11071,7 +11074,7 @@ static void TLBWI_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified
 }
 
 static void TLBWR_new(int pcaddr, int count, int diff)
@@ -11081,8 +11084,8 @@ static void TLBWR_new(int pcaddr, int count, int diff)
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
 
   /* Update count + pcaddr*/
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
 
   r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG];
@@ -11152,7 +11155,7 @@ static void TLBWR_new(int pcaddr, int count, int diff)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void MFC0_new(int copr, int count, int diff)
@@ -11160,10 +11163,10 @@ static void MFC0_new(int copr, int count, int diff)
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
   state->fake_pc.f.r.nrd = copr;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   cached_interp_MFC0();
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void MTC0_new(int copr, int count, int diff, int pcaddr)
@@ -11171,8 +11174,8 @@ static void MTC0_new(int copr, int count, int diff, int pcaddr)
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
   state->fake_pc.f.r.nrd = copr;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr;
   state->pending_exception = 0;
   cached_interp_MTC0();
@@ -11202,8 +11205,8 @@ static void read_byte_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11212,7 +11215,7 @@ static void read_byte_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)((value >> shift) & 0xff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_hword_new(int pcaddr, int count, int diff)
@@ -11220,8 +11223,8 @@ static void read_hword_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11230,7 +11233,7 @@ static void read_hword_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)((value >> shift) & 0xffff);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_word_new(int pcaddr, int count, int diff)
@@ -11238,8 +11241,8 @@ static void read_word_new(int pcaddr, int count, int diff)
   uint32_t value;
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11247,29 +11250,29 @@ static void read_word_new(int pcaddr, int count, int diff)
     state->rdword = (uint64_t)(value);
   }
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void read_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
   r4300_read_aligned_dword(r4300, state->address, (uint64_t*)&state->rdword);
   r4300->delay_slot = 0;
-  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + state->cycle_count)); // Make sure count was not modified 
+  assert(r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] == (state->next_interrupt + cycle_count)); // Make sure count was not modified 
 }
 
 static void write_byte_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11284,8 +11287,8 @@ static void write_hword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11300,8 +11303,8 @@ static void write_word_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;
@@ -11314,8 +11317,8 @@ static void write_dword_new(int pcaddr, int count, int diff)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct new_dynarec_hot_state* state = &r4300->new_dynarec_hot_state;
-  state->cycle_count = count + diff;
-  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + state->cycle_count;
+  int cycle_count = count + diff;
+  r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG] = state->next_interrupt + cycle_count;
   state->pcaddr = pcaddr&~1;
   r4300->delay_slot = pcaddr & 1;
   state->pending_exception = 0;

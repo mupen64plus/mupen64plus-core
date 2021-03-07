@@ -1238,14 +1238,14 @@ static void emit_adcimm(u_int rs,int imm,u_int rt)
   assem_debug("adc %s,%s,#%d",regname[rt],regname[rs],imm);
   output_w32(0xe2a00000|rd_rn_rm(rt,rs,0)|armval);
 }
-/*static void emit_sbcimm(int imm,u_int rt)
+static void emit_sbcimm(u_int rs,int imm,u_int rt)
 {
   u_int armval, ret;
   ret = genimm(imm,&armval);
   assert(ret);
-  assem_debug("sbc %s,%s,#%d",regname[rt],regname[rt],imm);
-  output_w32(0xe2c00000|rd_rn_rm(rt,rt,0)|armval);
-}*/
+  assem_debug("sbc %s,%s,#%d",regname[rt],regname[rs],imm);
+  output_w32(0xe2c00000|rd_rn_rm(rt,rs,0)|armval);
+}
 
 static void emit_rscimm(int rs,int imm,u_int rt)
 {
@@ -1258,11 +1258,32 @@ static void emit_rscimm(int rs,int imm,u_int rt)
 
 static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
 {
-  // TODO: if(genimm(imm,&armval)) ...
-  // else
-  emit_movimm(imm,HOST_TEMPREG);
-  emit_adds(HOST_TEMPREG,rsl,rtl);
-  emit_adcimm(rsh,0,rth);
+  u_int armval;
+  if(imm>0&&genimm(imm,&armval)) {
+    assem_debug("adds %s,%s,#%d",regname[rtl],regname[rsl],imm);
+    output_w32(0xe2900000|rd_rn_rm(rtl,rsl,0)|armval);
+    emit_adcimm(rsh,0,rth);
+  }else if(imm<0&&genimm(-imm,&armval)) {
+    assem_debug("subs %s,%s,#%d",regname[rtl],regname[rsl],imm);
+    output_w32(0xe2500000|rd_rn_rm(rtl,rsl,0)|armval);
+    emit_sbcimm(rsh,0,rth);
+  }else if(imm<0) {
+    emit_movimm(-imm,HOST_TEMPREG);
+    emit_subs(rsl,HOST_TEMPREG,rtl);
+    emit_sbcimm(rsh,0,rth);
+  }else if(imm>0) {
+    emit_movimm(imm,HOST_TEMPREG);
+    emit_adds(rsl,HOST_TEMPREG,rtl);
+    emit_adcimm(rsh,0,rth);
+  }
+  else {
+    assert(imm==0);
+    if(rsl!=rtl) {
+      assert(rsh!=rth);
+      emit_mov(rsl,rtl);
+      emit_mov(rsh,rth);
+    }
+  }
 }
 #ifdef INVERTED_CARRY
 static void emit_sbb(int rs1,int rs2)
