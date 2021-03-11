@@ -903,7 +903,7 @@ static void apply_speed_limiter(void)
         totalVIs += (unsigned long)(minSleepNeeded/AdjustedLimit);
     }
 
-    if(sleepTime > 0 && sleepTime < maxSleepNeeded*SpeedFactorMultiple && l_MainSpeedLimit)
+    if(l_MainSpeedLimit && sleepTime > 0 && sleepTime < maxSleepNeeded*SpeedFactorMultiple)
     {
         while(sleepTime >= 0) {
             SDL_Delay((unsigned int) sleepTime);
