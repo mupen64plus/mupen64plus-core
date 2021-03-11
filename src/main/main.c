@@ -850,7 +850,6 @@ void new_frame(void)
     }
 }
 
-#define SAMPLE_COUNT 3
 static void apply_speed_limiter(void)
 {
     static unsigned long totalVIs = 0;
