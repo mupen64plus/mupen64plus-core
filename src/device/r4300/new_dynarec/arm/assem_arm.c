@@ -3406,7 +3406,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     emit_movimm(copr,ARG1_REG);
     if(cc!=ARG2_REG) emit_mov(cc,ARG2_REG);
     emit_movimm(CLOCK_DIVIDER*ccadj[i],ARG3_REG);
-    emit_movimm(start+i*4+(copr==CP0_STATUS_REG)*4,ARG4_REG);
+    emit_movimm(start+i*4,ARG4_REG);
 
     emit_call((int)MTC0_new);
     restore_regs(reglist);

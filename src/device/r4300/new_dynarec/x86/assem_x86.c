@@ -3423,7 +3423,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
 
     // Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG)
     // Always update the pcaddr even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_STATUS_REG)
-    emit_pushimm(start+i*4+(copr==CP0_STATUS_REG)*4);
+    emit_pushimm(start+i*4);
     emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
     emit_pushreg(cc);
     emit_pushimm(copr);
