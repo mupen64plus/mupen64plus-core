@@ -3947,7 +3947,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADB_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADB_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADB_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
   if (opcode[i]==0x21) { // LH
     if(!c||memtarget) {
@@ -3968,7 +3968,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADH_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADH_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADH_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
   if (opcode[i]==0x23) { // LW
     if(!c||memtarget) {
@@ -3984,7 +3984,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADW_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADW_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADW_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
   if (opcode[i]==0x24) { // LBU
     if(!c||memtarget) {
@@ -4005,7 +4005,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADBU_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADBU_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADBU_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
   if (opcode[i]==0x25) { // LHU
     if(!c||memtarget) {
@@ -4026,7 +4026,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADHU_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADHU_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADHU_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
   if (opcode[i]==0x27) { // LWU
     assert(th>=0);
@@ -4043,7 +4043,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADW_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else {
-      inline_readstub(LOADW_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADW_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
     }
     emit_zeroreg(th);
   }
@@ -4061,7 +4061,7 @@ static void load_assemble(int i,struct regstat *i_regs)
         add_stub(LOADD_STUB,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADD_STUB,i,constmap[i][s]+offset,i_regs->regmap,rt1[i],ccadj[i],reglist);
+      inline_readstub(LOADD_STUB,i,constmap[i][s]+offset,i_regs,rt1[i],ccadj[i],reglist);
   }
 }
 #endif
@@ -4217,7 +4217,7 @@ static void store_assemble(int i,struct regstat *i_regs)
   if(jaddr) {
     add_stub(type,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
   } else if(c&&!memtarget) {
-    inline_writestub(type,i,constmap[i][s]+offset,i_regs->regmap,rs2[i],ccadj[i],reglist);
+    inline_writestub(type,i,constmap[i][s]+offset,i_regs,rs2[i],ccadj[i],reglist);
   }
 }
 #endif
