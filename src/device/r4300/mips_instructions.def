@@ -720,7 +720,7 @@ DECLARE_INSTRUCTION(MULT)
 {
     DECLARE_R4300
     int64_t temp;
-    temp = (uint64_t) rrs * (uint64_t) rrt;
+    temp = rrs32 * (int64_t)rrt32;
     *r4300_mult_hi(r4300) = temp >> 32;
     *r4300_mult_lo(r4300) = SE32(temp);
     ADD_TO_PC(1);
