@@ -101,6 +101,10 @@ static const u_int invalidate_addr_reg[16] = {
 static u_int jump_table_symbols[] = {
   (int)NULL /*TLBR*/,
   (int)NULL /*TLBP*/,
+  (int)NULL /*MULT*/,
+  (int)NULL /*MULTU*/,
+  (int)NULL /*DIV*/,
+  (int)NULL /*DIVU*/,
   (int)NULL /*DMULT*/,
   (int)NULL /*DMULTU*/,
   (int)NULL /*DDIV*/,
@@ -3118,7 +3122,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
       emit_writeword(sl,(u_int)&g_dev.r4300.new_dynarec_hot_state.fcr31);
       // Set the rounding mode
       //FIXME
-      //char temp=get_reg(i_regs->regmap,-1);
+      //signed char temp=get_reg(i_regs->regmap,-1);
       //emit_andimm(sl,3,temp);
       //emit_fldcw_indexed(fp_rounding_modes,temp);
     }
@@ -3140,6 +3144,7 @@ static void fconv_assemble_arm(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FCONV
   #if (defined(__VFP_FP__) && !defined(__SOFTFP__)) 
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x0d) { // trunc_w_s
     emit_readword((u_int)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
@@ -3194,6 +3199,7 @@ static void fconv_assemble_arm(int i,struct regstat *i_regs)
     return;
   }
   #endif
+#endif
   
   // C emulation code
   
@@ -3366,6 +3372,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FCOMP
   if((source[i]&0x3f)==0x30) {
     emit_andimm(fs,~0x800000,fs);
     return;
@@ -3425,6 +3432,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     return;
   }
   #endif
+#endif
   
   // C only
   
@@ -3495,6 +3503,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FLOAT
   #if (defined(__VFP_FP__) && !defined(__SOFTFP__)) 
   if((source[i]&0x3f)==6) // mov
   {
@@ -3622,6 +3631,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     return;
   }
   #endif
+#endif
   
   u_int hr,reglist=0;
   for(hr=0;hr<HOST_REGS;hr++) {
@@ -3710,7 +3720,8 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
   {
     if((opcode2[i]&4)==0) // 32-bit
     {
-      if(opcode2[i]==0x18) // MULT
+#ifndef INTERPRET_MULT
+      if((opcode2[i]==0x18) || (opcode2[i]==0x19))
       {
         signed char m1=get_reg(i_regs->regmap,rs1[i]);
         signed char m2=get_reg(i_regs->regmap,rs2[i]);
@@ -3720,21 +3731,16 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(m2>=0);
         assert(hi>=0);
         assert(lo>=0);
-        emit_smull(m1,m2,hi,lo);
+
+        if(opcode2[i]==0x18) //MULT
+          emit_smull(m1,m2,hi,lo);
+        else if(opcode2[i]==0x19) //MULTU
+          emit_umull(m1,m2,hi,lo);
       }
-      else if(opcode2[i]==0x19) // MULTU
-      {
-        signed char m1=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2=get_reg(i_regs->regmap,rs2[i]);
-        signed char hi=get_reg(i_regs->regmap,HIREG);
-        signed char lo=get_reg(i_regs->regmap,LOREG);
-        assert(m1>=0);
-        assert(m2>=0);
-        assert(hi>=0);
-        assert(lo>=0);
-        emit_umull(m1,m2,hi,lo);
-      }
-      else if(opcode2[i]==0x1A) // DIV
+      else
+#endif
+#ifndef INTERPRET_DIV
+      if((opcode2[i]==0x1A) || (opcode2[i]==0x1B))
       {
         signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
         signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
@@ -3745,74 +3751,107 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
         assert(quotient>=0);
         assert(remainder>=0);
 
-        if(arm_cpu_features.IDIVa)
+        if(opcode2[i]==0x1A) //DIV
+        {
+          if(arm_cpu_features.IDIVa)
+          {
+            emit_test(d2,d2);
+            emit_jeq((int)out+16); // Division by zero
+            emit_sdiv(d1,d2,quotient);
+            emit_mul(quotient,d2,remainder);
+            emit_sub(d1,remainder,remainder);
+          }
+          else
+          {
+            emit_movs(d1,remainder);
+            emit_negmi(remainder,remainder);
+            emit_movs(d2,HOST_TEMPREG);
+            emit_jeq((int)out+52); // Division by zero
+            emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
+            emit_clz(HOST_TEMPREG,quotient);
+            emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
+            emit_orimm(quotient,1<<31,quotient);
+            emit_shr(quotient,quotient,quotient);
+            emit_cmp(remainder,HOST_TEMPREG);
+            emit_subcs(remainder,HOST_TEMPREG,remainder);
+            emit_adcs(quotient,quotient,quotient);
+            emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
+            emit_jcc((int)out-16); // -4
+            emit_teq(d1,d2);
+            emit_negmi(quotient,quotient);
+            emit_test(d1,d1);
+            emit_negmi(remainder,remainder);
+          }
+        }
+        else if(opcode2[i]==0x1B) //DIVU
         {
           emit_test(d2,d2);
-          emit_jeq((int)out+16); // Division by zero
-          emit_sdiv(d1,d2,quotient);
-          emit_mul(quotient,d2,remainder);
-          emit_sub(d1,remainder,remainder);
-        }
-        else
-        {
-          emit_movs(d1,remainder);
-          emit_negmi(remainder,remainder);
-          emit_movs(d2,HOST_TEMPREG);
-          emit_jeq((int)out+52); // Division by zero
-          emit_negmi(HOST_TEMPREG,HOST_TEMPREG);
-          emit_clz(HOST_TEMPREG,quotient);
-          emit_shl(HOST_TEMPREG,quotient,HOST_TEMPREG);
-          emit_orimm(quotient,1<<31,quotient);
-          emit_shr(quotient,quotient,quotient);
-          emit_cmp(remainder,HOST_TEMPREG);
-          emit_subcs(remainder,HOST_TEMPREG,remainder);
-          emit_adcs(quotient,quotient,quotient);
-          emit_shrimm(HOST_TEMPREG,1,HOST_TEMPREG);
-          emit_jcc((int)out-16); // -4
-          emit_teq(d1,d2);
-          emit_negmi(quotient,quotient);
-          emit_test(d1,d1);
-          emit_negmi(remainder,remainder);
+          
+          if(arm_cpu_features.IDIVa)
+          {
+            emit_jeq((int)out+16); // Division by zero
+            emit_udiv(d1,d2,quotient);
+            emit_mul(quotient,d2,remainder);
+            emit_sub(d1,remainder,remainder);
+          }
+          else
+          {
+            emit_jeq((int)out+44); // Division by zero
+            emit_clz(d2,HOST_TEMPREG);
+            emit_movimm(1<<31,quotient);
+            emit_shl(d2,HOST_TEMPREG,d2);
+            emit_mov(d1,remainder);
+            emit_shr(quotient,HOST_TEMPREG,quotient);
+            emit_cmp(remainder,d2);
+            emit_subcs(remainder,d2,remainder);
+            emit_adcs(quotient,quotient,quotient);
+            emit_shrcc_imm(d2,1,d2);
+            emit_jcc((int)out-16); // -4
+          }
         }
       }
-      else if(opcode2[i]==0x1B) // DIVU
+      else
+#endif
       {
-        signed char d1=get_reg(i_regs->regmap,rs1[i]); // dividend
-        signed char d2=get_reg(i_regs->regmap,rs2[i]); // divisor
-        assert(d1>=0);
-        assert(d2>=0);
-        signed char quotient=get_reg(i_regs->regmap,LOREG);
-        signed char remainder=get_reg(i_regs->regmap,HIREG);
-        assert(quotient>=0);
-        assert(remainder>=0);
-        emit_test(d2,d2);
+        u_int reglist=0;
+        signed char r1=get_reg(i_regs->regmap,rs1[i]);
+        signed char r2=get_reg(i_regs->regmap,rs2[i]);
+        signed char hi=get_reg(i_regs->regmap,HIREG);
+        signed char lo=get_reg(i_regs->regmap,LOREG);
+        assert(r1>=0);
+        assert(r2>=0);
 
-        if(arm_cpu_features.IDIVa)
-        {
-          emit_jeq((int)out+16); // Division by zero
-          emit_udiv(d1,d2,quotient);
-          emit_mul(quotient,d2,remainder);
-          emit_sub(d1,remainder,remainder);
+        for(int hr=0;hr<HOST_REGS;hr++) {
+          if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
         }
-        else
-        {
-          emit_jeq((int)out+44); // Division by zero
-          emit_clz(d2,HOST_TEMPREG);
-          emit_movimm(1<<31,quotient);
-          emit_shl(d2,HOST_TEMPREG,d2);
-          emit_mov(d1,remainder);
-          emit_shr(quotient,HOST_TEMPREG,quotient);
-          emit_cmp(remainder,d2);
-          emit_subcs(remainder,d2,remainder);
-          emit_adcs(quotient,quotient,quotient);
-          emit_shrcc_imm(d2,1,d2);
-          emit_jcc((int)out-16); // -4
-        }
+
+        //Don't save lo and hi regs are they will be overwritten anyway
+        if(hi>=0) reglist&=~(1<<hi);
+        if(lo>=0) reglist&=~(1<<lo);
+
+        emit_writeword(r1,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r2,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rt);
+
+        save_regs(reglist);
+
+        if(opcode2[i]==0x18)
+          emit_call((intptr_t)cached_interp_MULT);
+        else if(opcode2[i]==0x19)
+          emit_call((intptr_t)cached_interp_MULTU);
+        else if(opcode2[i]==0x1A)
+          emit_call((intptr_t)cached_interp_DIV);
+        else if(opcode2[i]==0x1B)
+          emit_call((intptr_t)cached_interp_DIVU);
+
+        restore_regs(reglist);
+
+        if(hi>=0) emit_loadreg(HIREG,hi);
+        if(lo>=0) emit_loadreg(LOREG,lo);
       }
     }
     else // 64-bit
     {
-#ifndef INTERPRETED_MULT64
+#ifndef INTERPRET_MULT64
       if(opcode2[i]==0x1C||opcode2[i]==0x1D)
       {
         signed char b_1=get_reg(i_regs->regmap,rs1[i]|64);
@@ -3865,14 +3904,14 @@ static void multdiv_assemble_arm(int i,struct regstat *i_regs)
 #endif
       {
         u_int reglist=0;
-        char r1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char r1l=get_reg(i_regs->regmap,rs1[i]);
-        char r2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char r2l=get_reg(i_regs->regmap,rs2[i]);
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
+        signed char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+        signed char r1l=get_reg(i_regs->regmap,rs1[i]);
+        signed char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+        signed char r2l=get_reg(i_regs->regmap,rs2[i]);
+        signed char hih=get_reg(i_regs->regmap,HIREG|64);
+        signed char hil=get_reg(i_regs->regmap,HIREG);
+        signed char loh=get_reg(i_regs->regmap,LOREG|64);
+        signed char lol=get_reg(i_regs->regmap,LOREG);
         assert(r1h>=0);
         assert(r2h>=0);
         assert(r1l>=0);
@@ -4128,10 +4167,14 @@ static void arch_init(void) {
 
   jump_table_symbols[0] = (int) cached_interp_TLBR;
   jump_table_symbols[1] = (int) cached_interp_TLBP;
-  jump_table_symbols[2] = (int) cached_interp_DMULT;
-  jump_table_symbols[3] = (int) cached_interp_DMULTU;
-  jump_table_symbols[4] = (int) cached_interp_DDIV;
-  jump_table_symbols[5] = (int) cached_interp_DDIVU;
+  jump_table_symbols[2] = (int) cached_interp_MULT;
+  jump_table_symbols[3] = (int) cached_interp_MULTU;
+  jump_table_symbols[4] = (int) cached_interp_DIV;
+  jump_table_symbols[5] = (int) cached_interp_DIVU;
+  jump_table_symbols[6] = (int) cached_interp_DMULT;
+  jump_table_symbols[7] = (int) cached_interp_DMULTU;
+  jump_table_symbols[8] = (int) cached_interp_DDIV;
+  jump_table_symbols[9] = (int) cached_interp_DDIVU;
 
   #ifdef RAM_OFFSET
   g_dev.r4300.new_dynarec_hot_state.ram_offset=((int)g_dev.rdram.dram-(int)0x80000000)>>2;
