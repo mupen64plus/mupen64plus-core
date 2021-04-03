@@ -158,15 +158,11 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
     {
         cp0->q.first = event;
         event->next = NULL;
-        *cp0_next_interrupt = cp0->q.first->data.count;
-        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
     }
     else if (before_event(cp0, count, cp0->q.first->data.count, cp0->q.first->data.type))
     {
         event->next = cp0->q.first;
         cp0->q.first = event;
-        *cp0_next_interrupt = cp0->q.first->data.count;
-        *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
     }
     else
     {
@@ -188,6 +184,8 @@ void add_interrupt_event_count(struct cp0* cp0, int type, unsigned int count)
             e->next = event;
         }
     }
+    *cp0_next_interrupt = cp0->q.first->data.count;
+    *cp0_cycle_count = cp0_regs[CP0_COUNT_REG] - cp0->q.first->data.count;
 }
 
 void remove_interrupt_event(struct cp0* cp0)

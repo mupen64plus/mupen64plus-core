@@ -97,12 +97,7 @@ uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
 
 unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0)
 {
-#ifndef NEW_DYNAREC
     return &cp0->next_interrupt;
-#else
-	/* New dynarec uses a different memory layout */
-    return &cp0->new_dynarec_hot_state->next_interrupt;
-#endif
 }
 
 int* r4300_cp0_cycle_count(struct cp0* cp0)
@@ -144,6 +139,8 @@ void cp0_update_count(struct r4300_core* r4300)
         cp0->last_addr = *r4300_pc(r4300);
 #ifdef NEW_DYNAREC
     }
+    else
+        cp0_regs[CP0_COUNT_REG] = *r4300_cp0_next_interrupt(cp0) + *r4300_cp0_cycle_count(cp0);
 #endif
 
 #ifdef COMPARE_CORE
@@ -159,16 +156,13 @@ void cp0_update_count(struct r4300_core* r4300)
 static void exception_epilog(struct r4300_core* r4300)
 {
 #ifndef NO_ASM
+#ifndef NEW_DYNAREC
     if (r4300->emumode == EMUMODE_DYNAREC)
     {
-#ifndef NEW_DYNAREC
         dyna_jump();
         if (!r4300->recomp.dyna_interp) { r4300->delay_slot = 0; }
-#else
-        /* ??? for new_dynarec dyna_interp is always 0 so that means delay_slot = 0 path is always taken */
-        r4300->delay_slot = 0;
-#endif
     }
+#endif
 #endif
 
 #ifndef NEW_DYNAREC

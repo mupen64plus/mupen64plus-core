@@ -127,7 +127,6 @@ DEFINE(cached_interp, invalid_code);
 DEFINE(r4300_core, new_dynarec_hot_state);
 DEFINE(r4300_core, extra_memory);
 DEFINE(new_dynarec_hot_state, dynarec_local);
-DEFINE(new_dynarec_hot_state, next_interrupt);
 DEFINE(new_dynarec_hot_state, cycle_count);
 DEFINE(new_dynarec_hot_state, pending_exception);
 DEFINE(new_dynarec_hot_state, pcaddr);
@@ -149,6 +148,5 @@ DEFINE(new_dynarec_hot_state, rs);
 DEFINE(new_dynarec_hot_state, rt);
 DEFINE(new_dynarec_hot_state, rd);
 DEFINE(new_dynarec_hot_state, mini_ht);
-DEFINE(new_dynarec_hot_state, restore_candidate);
 DEFINE(new_dynarec_hot_state, memory_map);
 #endif
