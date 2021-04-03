@@ -8304,6 +8304,7 @@ int new_recompile_block(int addr)
       }
       current.isconst=0;
     }
+    memcpy(regmap_pre[i],current.regmap,sizeof(current.regmap));
     if(i>1)
     {
       if((opcode[i-2]&0x2f)==0x05) // BNE/BNEL
@@ -8358,7 +8359,6 @@ int new_recompile_block(int addr)
         current.is32=temp_is32;
       }
     }
-    memcpy(regmap_pre[i],current.regmap,sizeof(current.regmap));
     regs[i].wasconst=current.isconst;
     regs[i].was32=current.is32;
     regs[i].wasdirty=current.dirty;
