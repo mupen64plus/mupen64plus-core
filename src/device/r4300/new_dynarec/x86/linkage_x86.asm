@@ -65,19 +65,10 @@ section .note.GNU-stack noalloc noexec nowrite progbits
     %define find_extern_data(a) a
 %endif
 
-%define g_dev_r4300_cached_interp_invalid_code              (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_cached_interp + offsetof_struct_cached_interp_invalid_code)
 %define g_dev_r4300_new_dynarec_hot_state_stop              (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_stop)
-%define g_dev_r4300_new_dynarec_hot_state_regs              (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_regs)
-%define g_dev_r4300_new_dynarec_hot_state_hi                (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_hi)
-%define g_dev_r4300_new_dynarec_hot_state_lo                (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_lo)
-%define g_dev_r4300_new_dynarec_hot_state_cp0_regs          (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cp0_regs)
-%define g_dev_r4300_new_dynarec_hot_state_next_interrupt    (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_next_interrupt)
 %define g_dev_r4300_new_dynarec_hot_state_cycle_count       (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_cycle_count)
 %define g_dev_r4300_new_dynarec_hot_state_pending_exception (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pending_exception)
 %define g_dev_r4300_new_dynarec_hot_state_pcaddr            (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_pcaddr)
-%define g_dev_r4300_new_dynarec_hot_state_branch_target     (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_branch_target)
-%define g_dev_r4300_new_dynarec_hot_state_restore_candidate (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_restore_candidate)
-%define g_dev_r4300_new_dynarec_hot_state_memory_map        (g_dev + offsetof_struct_device_r4300 + offsetof_struct_r4300_core_new_dynarec_hot_state + offsetof_struct_new_dynarec_hot_state_memory_map)
 
 cglobal jump_vaddr_eax
 cglobal jump_vaddr_ecx
@@ -89,7 +80,6 @@ cglobal verify_code
 cglobal cc_interrupt
 cglobal do_interrupt
 cglobal fp_exception
-cglobal fp_exception_ds
 cglobal jump_syscall
 cglobal jump_eret
 cglobal new_dyna_start
@@ -101,6 +91,8 @@ cglobal invalidate_block_ebp
 cglobal invalidate_block_esi
 cglobal invalidate_block_edi
 cglobal breakpoint
+cglobal dyna_linker
+cglobal dyna_linker_ds
 
 cextern base_addr
 cextern new_recompile_block
@@ -109,10 +101,14 @@ cextern get_addr
 cextern dynarec_gen_interrupt
 cextern clean_blocks
 cextern invalidate_block
-cextern new_dynarec_check_interrupt
+cextern ERET_new
 cextern get_addr_32
 cextern g_dev
 cextern verify_dirty
+cextern cop1_unusable
+cextern SYSCALL_new
+cextern dynamic_linker
+cextern dynamic_linker_ds
 
 %ifdef PIC
 cextern _GLOBAL_OFFSET_TABLE_
@@ -147,14 +143,9 @@ jump_vaddr_edi:
     mov     eax,    edi
 
 jump_vaddr:
-    get_got_address
     add     esp,    -12
     push    edi
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi    ;CCREG
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi    ;Count
     call    get_addr_ht
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
     add     esp,    16
     jmp     eax
 
@@ -176,148 +167,80 @@ _D1:
 
 cc_interrupt:
     get_got_address
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
+    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi    ;Count
     add     esp,    -28                 ;Align stack
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi    ;Count
-    shr     esi,    19
     mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)],    0
-    and     esi,    01fch
-    cmp     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_restore_candidate+esi)],    0
-    jne     _E4
-_E1:
     call    dynarec_gen_interrupt
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
+    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
     mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pending_exception)]
     mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_stop)]
     add     esp,    28
-    sub     esi,    eax
     test    ecx,    ecx
-    jne     _E3
-    test    edx,    edx
     jne     _E2
+    test    edx,    edx
+    jne     _E1
     ret
-_E2:
+_E1:
     add     esp,    -8
     mov     edi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)]
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi    ;CCREG
     push    edi
     call    get_addr_ht
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
     add     esp,    16
     jmp     eax
-_E3:
-    add     esp,    16     ;pop stack
+_E2:
+    add     esp,    4      ;pop return address
+
+new_dyna_stop:
+    add     esp,    12     ;pop stack
     pop     edi            ;restore edi
     pop     esi            ;restore esi
     pop     ebx            ;restore ebx
     pop     ebp            ;restore ebp
     ret                    ;exit dynarec
-_E4:
-    ;Move 'dirty' blocks to the 'clean' list
-    mov     edi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_restore_candidate+esi)]
-    mov     DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_restore_candidate+esi)],    0
-    shl     esi,    3
-    mov     ebp,    0
-_E5:
-    shr     edi,    1
-    jnc     _E6
-    mov     ecx,    esi
-    add     ecx,    ebp
-    push    ecx
-    call    clean_blocks
-    pop     ecx
-_E6:
-    inc     ebp
-    test    ebp,    31
-    jne     _E5
-    jmp     _E1
 
 do_interrupt:
     get_got_address
+    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_stop)]
+    test    ecx,    ecx
+    jne     new_dyna_stop
     mov     edi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)]
     add     esp,    -12
     push    edi
     call    get_addr_ht
     add     esp,    16
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    sub     esi,    edx
+    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
     jmp     eax
 
 fp_exception:
-    mov     edx,    01000002ch
-_E7:
     get_got_address
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)]
-    add     esp,    -12
-    or      ecx,    2
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)],    ecx     ;Status
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+52)],    edx     ;Cause
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+56)],    eax     ;EPC
-    push    080000180h
-    call    get_addr_ht
-    add     esp,    16
+    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    eax
+    call    cop1_unusable
     jmp     eax
 
-fp_exception_ds:
-    mov     edx,    09000002ch    ;Set high bit if delay slot
-    jmp     _E7
-
 jump_syscall:
-    mov     edx,    020h
-    jmp     _E7
+    get_got_address
+    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    eax
+    call    SYSCALL_new
+    jmp     eax
 
 jump_eret:
     get_got_address
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)]        ;Status
-    add     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    and     ecx,    0FFFFFFFDh
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)],    esi        ;Count
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+48)],    ecx        ;Status
-    call    new_dynarec_check_interrupt
-    mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    sub     esi,    eax
     mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)],    esi
-    mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+56)]        ;EPC
-    jns     _E11
-_E8:
-    mov     esi,    248
-    xor     edi,    edi
-_E9:
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_regs + esi)]
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_regs + esi + 4)]
-    sar     ecx,    31
-    xor     edx,    ecx
-    neg     edx
-    adc     edi,    edi
-    sub     esi,    8
-    jne     _E9
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_hi + esi)]
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_hi + esi + 4)]
-    sar     ecx,    31
-    xor     edx,    ecx
-    jne     _E10
-    mov     ecx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_lo + esi)]
-    mov     edx,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_lo + esi + 4)]
-    sar     ecx,    31
-    xor     edx,    ecx
-_E10:
-    neg     edx
-    adc     edi,    edi
-    add     esp,    -8
-    push    edi
-    push    eax
-    call    get_addr_32
+    call    ERET_new
     mov     esi,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
-    add     esp,    16
+    test    eax,   eax
+    je      new_dyna_stop
     jmp     eax
-_E11:
-    mov     [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)],    eax
-    call    cc_interrupt
-    mov     eax,    [find_local_data(g_dev_r4300_new_dynarec_hot_state_pcaddr)]
-    jmp     _E8
+
+dyna_linker:
+    call    dynamic_linker
+    add     esp,    8
+    jmp     eax
+
+dyna_linker_ds:
+    call    dynamic_linker_ds
+    add     esp,    8
+    jmp     eax
 
 new_dyna_start:
     push    ebp
@@ -328,9 +251,7 @@ new_dyna_start:
     push    0a4000040h
     call    new_recompile_block
     get_got_address
-    mov     edi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_next_interrupt)]
-    mov     esi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_cp0_regs+36)]
-    sub     esi,    edi
+    mov     esi,    DWORD [find_local_data(g_dev_r4300_new_dynarec_hot_state_cycle_count)]
     jmp     DWORD [find_local_data(base_addr)]
 
 invalidate_block_eax:

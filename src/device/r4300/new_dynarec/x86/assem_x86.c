@@ -84,7 +84,6 @@ static void *add_pointer(void *src, void* addr)
   int *ptr2=(int*)((u_int)ptr+(u_int)*ptr+4);
   assert((*ptr2&0xFF)==0x68);                   //push
   assert((*(int*)((u_int)ptr2+5)&0xFF)==0x68);  //push
-  //assert((*(int*)((u_int)ptr2+10)&0xFF)==0xE8); //call
   u_int offset=(u_int)addr-(u_int)ptr-4;
   *ptr=offset;
   return (void*)ptr2;
@@ -2632,18 +2631,7 @@ static void emit_extjump2(int addr, int target, int linker)
   }
   emit_pushimm(target);
   emit_pushimm(addr);
-  //assert(addr>=0x7000000&&addr<0x7FFFFFF);
-  //assert((target>=0x80000000&&target<0x80800000)||(target>0xA4000000&&target<0xA4001000));
-//DEBUG >
-#ifdef DEBUG_CYCLE_COUNT
-  emit_readword((int)r4300_cp0_next_interrupt(&g_dev.r4300.cp0),ECX);
-  emit_add(HOST_CCREG,ECX,HOST_CCREG);
-  emit_writeword(HOST_CCREG,(int)&r4300_cp0_regs(&g_dev.r4300.cp0)[CP0_COUNT_REG]);
-#endif
-//DEBUG <
-  emit_call(linker);
-  emit_addimm(ESP,8,ESP);
-  emit_jmpreg(EAX);
+  emit_jmp(linker);
 }
 
 static void do_readstub(int n)
@@ -2676,21 +2664,20 @@ static void do_readstub(int n)
     ftable=(int)read_dword_new;
 
   emit_writeword(addr,(int)&g_dev.r4300.new_dynarec_hot_state.address);
-  emit_pusha();
   
   int cc=get_reg(i_regmap,CCREG);
-  if(cc<0) {
-    cc=HOST_CCREG;
-    emit_loadreg(CCREG,cc);
+  if(cc>=0) {
+    emit_storereg(CCREG,cc);
   }
+  
+  emit_pusha();
 
   int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(stubs[n][6]+1));
-  emit_pushreg(cc);
   emit_pushimm((start+(i+1)*4)+ds);
   emit_call(ftable);
-  emit_addimm(ESP,12,ESP);
+  emit_addimm(ESP,8,ESP);
   emit_popa();
 
   emit_cmpmem_imm_byte((int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,0);
@@ -2741,21 +2728,20 @@ static void inline_readstub(int type, int i, u_int addr_const, struct regstat *i
     ftable=(int)read_dword_new;
 
   emit_writeword_imm(addr_const,(int)&g_dev.r4300.new_dynarec_hot_state.address);
-  emit_pusha();
-
+  
   int cc=get_reg(i_regs->regmap,CCREG);
-  if(cc<0) {
-    cc=HOST_CCREG;
-    emit_loadreg(CCREG,cc);
+  if(cc>=0) {
+    emit_storereg(CCREG,cc);
   }
+
+  emit_pusha();
 
   int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(adj+1));
-  emit_pushreg(cc);
   emit_pushimm((start+(i+1)*4)+ds);
   emit_call(ftable);
-  emit_addimm(ESP,12,ESP);
+  emit_addimm(ESP,8,ESP);
   emit_popa();
 
   if((signed int)addr_const>=(signed int)0xC0000000) {
@@ -2833,21 +2819,19 @@ static void do_writestub(int n)
     emit_writeword(r?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
-  emit_pusha();
-
   int cc=get_reg(i_regmap,CCREG);
-  if(cc<0) {
-    cc=HOST_CCREG;
-    emit_loadreg(CCREG,cc);
+  if(cc>=0) {
+    emit_storereg(CCREG,cc);
   }
+
+  emit_pusha();
 
   int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(stubs[n][6]+1));
-  emit_pushreg(cc);
   emit_pushimm((start+(i+1)*4)+ds);
   emit_call(ftable);
-  emit_addimm(ESP,12,ESP);
+  emit_addimm(ESP,8,ESP);
   emit_popa();
 
   emit_cmpmem_imm_byte((int)&g_dev.r4300.new_dynarec_hot_state.pending_exception,0);
@@ -2860,7 +2844,7 @@ static void do_writestub(int n)
   emit_jmp((int)&do_interrupt);
   set_jump_target(jaddr,(int)out);
 
-  if((cc=get_reg(i_regmap,CCREG))>=0) {
+  if(cc>=0) {
     emit_loadreg(CCREG,cc);
   }
   emit_jmp(stubs[n][2]); // return address
@@ -2895,21 +2879,19 @@ static void inline_writestub(int type, int i, u_int addr_const, struct regstat *
     emit_writeword(target?rth:rt,((int)&g_dev.r4300.new_dynarec_hot_state.wdword)+4);
   }
 
-  emit_pusha();
-
   int cc=get_reg(i_regs->regmap,CCREG);
-  if(cc<0) {
-    cc=HOST_CCREG;
-    emit_loadreg(CCREG,cc);
+  if(cc>=0) {
+    emit_storereg(CCREG,cc);
   }
+
+  emit_pusha();
 
   int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(adj+1));
-  emit_pushreg(cc);
   emit_pushimm((start+(i+1)*4)+ds);
   emit_call(ftable);
-  emit_addimm(ESP,12,ESP);
+  emit_addimm(ESP,8,ESP);
   emit_popa();
 
   if(((signed int)addr_const>=(signed int)0xC0000000)||((addr_const>>16)==0xa430)||((addr_const>>16)==0x8430)) {
@@ -2928,7 +2910,7 @@ static void inline_writestub(int type, int i, u_int addr_const, struct regstat *
     set_jump_target(jaddr,(int)out);
   }
 
-  if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
+  if(cc>=0) {
     emit_loadreg(CCREG,cc);
   }
 }
@@ -2964,25 +2946,6 @@ static void do_dirty_stub_ds(struct ll_entry * head)
   assem_debug("do_dirty_stub_ds %x",head->vaddr);
   emit_movimm((int)head,EAX);
   emit_call((int)&verify_code);
-}
-
-static void do_cop1stub(int n)
-{
-  assem_debug("do_cop1stub %x",start+stubs[n][3]*4);
-  set_jump_target(stubs[n][1],(int)out);
-  int i=stubs[n][3];
-  struct regstat *i_regs=(struct regstat *)stubs[n][5];
-  int ds=stubs[n][6];
-  if(!ds) {
-    load_all_consts(regs[i].regmap_entry,regs[i].was32,regs[i].wasdirty,regs[i].wasconst,i);
-    //if(i_regs!=&regs[i]) DebugMessage(M64MSG_VERBOSE, "oops: regs[i]=%x i_regs=%x",(int)&regs[i],(int)i_regs);
-  }
-  //else {DebugMessage(M64MSG_VERBOSE, "fp exception in delay slot");}
-  wb_dirtys(i_regs->regmap_entry,i_regs->was32,i_regs->wasdirty);
-  if(regs[i].regmap_entry[HOST_CCREG]!=CCREG) emit_loadreg(CCREG,HOST_CCREG);
-  emit_movimm(start+(i-ds)*4,EAX); // Get PC
-  emit_addimm(HOST_CCREG,CLOCK_DIVIDER*ccadj[i],HOST_CCREG); // CHECK: is this right?  There should probably be an extra cycle...
-  emit_jmp(ds?(int)fp_exception_ds:(int)fp_exception);
 }
 
 /* TLB */
@@ -3383,21 +3346,19 @@ static void cop0_assemble(int i,struct regstat *i_regs)
       signed char t=get_reg(i_regs->regmap,rt1[i]);
       char copr=(source[i]>>11)&0x1f;
       if(t>=0) {
-        emit_pusha();
-
         int cc=get_reg(i_regs->regmap,CCREG);
-        if(cc<0) {
-          cc=HOST_CCREG;
-          emit_loadreg(CCREG,cc);
+        if(cc>=0) {
+          emit_storereg(CCREG,cc);
         }
+
+        emit_pusha();
 
         //Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_RANDOM_REG)
         emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
-        emit_pushreg(cc);
         emit_pushimm(copr);
 
         emit_call((int)MFC0_new);
-        emit_addimm(ESP,12,ESP);
+        emit_addimm(ESP,8,ESP);
         emit_popa();
         emit_readword((int)&g_dev.r4300.new_dynarec_hot_state.rt,t);
       }
@@ -3408,24 +3369,23 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     signed char s=get_reg(i_regs->regmap,rs1[i]);
     char copr=(source[i]>>11)&0x1f;
     assert(s>=0);
-    emit_pusha();
     emit_writeword(s,(int)&g_dev.r4300.new_dynarec_hot_state.rt);
 
     int cc=get_reg(i_regs->regmap,CCREG);
-    if(cc<0) {
-      cc=HOST_CCREG;
-      emit_loadreg(CCREG,cc);
+    if(cc>=0) {
+      emit_storereg(CCREG,cc);
     }
+
+    emit_pusha();
 
     // Always update the count even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG)
     // Always update the pcaddr even if it's only necessary when (copr==CP0_COUNT_REG||copr==CP0_STATUS_REG)
     emit_pushimm(start+i*4);
-    emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
-    emit_pushreg(cc);
+    emit_pushimm(CLOCK_DIVIDER*(ccadj[i]+(copr==12)));
     emit_pushimm(copr);
 
     emit_call((int)MTC0_new);
-    emit_addimm(ESP,16,ESP);
+    emit_addimm(ESP,12,ESP);
     emit_popa();
 
     if(copr==CP0_COUNT_REG||copr==CP0_STATUS_REG) {
@@ -3440,7 +3400,7 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     }
 
     if(copr==CP0_COUNT_REG||copr==CP0_COMPARE_REG||copr==CP0_STATUS_REG){
-      if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
+      if(cc>=0) {
         emit_loadreg(CCREG,cc);
       }
     }
@@ -3464,36 +3424,32 @@ static void cop0_assemble(int i,struct regstat *i_regs)
     }
     else if((source[i]&0x3f)==0x02) {  // TLBWI
       assert(!is_delayslot);
-      emit_pusha();
-
       int cc=get_reg(i_regs->regmap,CCREG);
-      if(cc<0) {
-        cc=HOST_CCREG;
-        emit_loadreg(CCREG,cc);
+      if(cc>=0) {
+        emit_storereg(CCREG,cc);
       }
 
+      emit_pusha();
+
       emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
-      emit_pushreg(cc);
       emit_pushimm(start+i*4);
       emit_call((int)TLBWI_new);
-      emit_addimm(ESP,12,ESP);
+      emit_addimm(ESP,8,ESP);
       emit_popa();
     }
     else if((source[i]&0x3f)==0x06) { // TLBWR
       assert(!is_delayslot);
-      emit_pusha();
-
       int cc=get_reg(i_regs->regmap,CCREG);
-      if(cc<0) {
-        cc=HOST_CCREG;
-        emit_loadreg(CCREG,cc);
+      if(cc>=0) {
+        emit_storereg(CCREG,cc);
       }
 
+      emit_pusha();
+
       emit_pushimm(CLOCK_DIVIDER*ccadj[i]);
-      emit_pushreg(cc);
       emit_pushimm(start+i*4);
       emit_call((int)TLBWR_new);
-      emit_addimm(ESP,12,ESP);
+      emit_addimm(ESP,8,ESP);
       emit_popa();
     }
     else if((source[i]&0x3f)==0x18) // ERET
@@ -3513,7 +3469,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
   if(!cop1_usable) {
     signed char rs=get_reg(i_regs->regmap,CSREG);
     assert(rs>=0);
-    emit_testimm(rs,0x20000000);
+    emit_testimm(rs,CP0_STATUS_CU1);
     int jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,rs,(int)i_regs,is_delayslot,0);
@@ -3583,7 +3539,7 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(!cop1_usable) {
     signed char rs=get_reg(i_regs->regmap,CSREG);
     assert(rs>=0);
-    emit_testimm(rs,0x20000000);
+    emit_testimm(rs,CP0_STATUS_CU1);
     int jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,rs,(int)i_regs,is_delayslot,0);
@@ -3848,7 +3804,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   if(!cop1_usable) {
     signed char cs=get_reg(i_regs->regmap,CSREG);
     assert(cs>=0);
-    emit_testimm(cs,0x20000000);
+    emit_testimm(cs,CP0_STATUS_CU1);
     int jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,cs,(int)i_regs,is_delayslot,0);
@@ -3974,7 +3930,7 @@ static void float_assemble(int i,struct regstat *i_regs)
   if(!cop1_usable) {
     signed char cs=get_reg(i_regs->regmap,CSREG);
     assert(cs>=0);
-    emit_testimm(cs,0x20000000);
+    emit_testimm(cs,CP0_STATUS_CU1);
     int jaddr=(int)out;
     emit_jeq(0);
     add_stub(FP_STUB,jaddr,(int)out,i,cs,(int)i_regs,is_delayslot,0);

@@ -1296,14 +1296,13 @@ DECLARE_INSTRUCTION(MTC0)
             set_fpr_pointers(&r4300->cp1, rrt32);
 
         cp0_regs[CP0_STATUS_REG] = rrt32;
-        cp0_update_count(r4300);
         ADD_TO_PC(1);
+        cp0_update_count(r4300);
         r4300_check_interrupt(r4300, CP0_CAUSE_IP2, r4300->mi->regs[MI_INTR_REG] & r4300->mi->regs[MI_INTR_MASK_REG]); // ???
         r4300->cp0.interrupt_unsafe_state |= INTR_UNSAFE_R4300;
         if (*cp0_cycle_count >= 0) { gen_interrupt(r4300); }
         r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_R4300;
-        ADD_TO_PC(-1);
-        break;
+        return;
     case CP0_CAUSE_REG:
         cp0_regs[CP0_CAUSE_REG] &= ~(CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
         cp0_regs[CP0_CAUSE_REG] |= rrt32 & (CP0_CAUSE_IP0 | CP0_CAUSE_IP1);
