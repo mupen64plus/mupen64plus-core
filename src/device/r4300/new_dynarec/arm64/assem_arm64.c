@@ -1362,6 +1362,8 @@ static void emit_storereg(int r, int hr)
   if((r&63)==LOREG) offset=fp_lo+((r&64)>>4);
   if(r==CCREG) offset=fp_cycle_count;
   if(r==FSREG) offset=fp_fcr31;
+  assert((r&63)!=CSREG);
+  assert((r&63)!=0);
   assert((r&63)<=CCREG);
   assert(offset<4096);
   assert(offset%4 == 0); /* 4 bytes aligned */
@@ -3072,22 +3074,21 @@ static void wb_sx(signed char pre[],signed char entry[],uint64_t dirty,uint64_t 
 static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int dirty,uint64_t is32_pre,uint64_t u,uint64_t uu)
 {
   //if(dirty_pre==dirty) return;
-  int hr,tr;
+  int hr,reg;
   for(hr=0;hr<HOST_REGS;hr++) {
     if(hr!=EXCLUDE_REG) {
-      tr=pre[hr];
-      if(((~u)>>(tr&63))&1) {
-        if(tr>0) {
+      reg=pre[hr];
+      if(((~u)>>(reg&63))&1) {
+        if(((reg&63)>0)&&((reg&63)<CSREG)) {
           if(((dirty_pre&~dirty)>>hr)&1) {
-            if(tr>0&&tr<36) {
-              emit_storereg(tr,hr);
-              if( ((is32_pre&~uu)>>tr)&1 ) {
+            if(reg<64) {
+              emit_storereg(reg,hr);
+              if( ((is32_pre&~uu)>>reg)&1 ) {
                 emit_sarimm(hr,31,HOST_TEMPREG);
-                emit_storereg(tr|64,HOST_TEMPREG);
+                emit_storereg(reg|64,HOST_TEMPREG);
               }
-            }
-            else if(tr>=64) {
-              emit_storereg(tr,hr);
+            } else {
+              emit_storereg(reg,hr);
             }
           }
         }
