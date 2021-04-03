@@ -2722,12 +2722,12 @@ static void do_readstub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_readstub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_readstub(int type, int i, u_int addr_const, struct regstat *i_regs, int target, int adj, u_int reglist)
 {
   assem_debug("inline_readstub");
-  int rth=get_reg(regmap,target|64);
-  int rt=get_reg(regmap,target);
-  int agr=get_reg(regmap,AGEN1+(i&1));
+  int rth=get_reg(i_regs->regmap,target|64);
+  int rt=get_reg(i_regs->regmap,target);
+  int agr=get_reg(i_regs->regmap,AGEN1+(i&1));
   assert(agr<0);
 
   int ftable=0;
@@ -2743,16 +2743,13 @@ static void inline_readstub(int type, int i, u_int addr_const, signed char regma
   emit_writeword_imm(addr_const,(int)&g_dev.r4300.new_dynarec_hot_state.address);
   emit_pusha();
 
-  int cc=get_reg(regmap,CCREG);
+  int cc=get_reg(i_regs->regmap,CCREG);
   if(cc<0) {
     cc=HOST_CCREG;
     emit_loadreg(CCREG,cc);
   }
 
-  int ds=regmap!=regs[i].regmap;
-  struct regstat *i_regs;
-  if(!ds) i_regs=&regs[i];
-  else i_regs=&branch_regs[i-1];
+  int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(adj+1));
   emit_pushreg(cc);
@@ -2869,12 +2866,12 @@ static void do_writestub(int n)
   emit_jmp(stubs[n][2]); // return address
 }
 
-static void inline_writestub(int type, int i, u_int addr_const, signed char regmap[], int target, int adj, u_int reglist)
+static void inline_writestub(int type, int i, u_int addr_const, struct regstat *i_regs, int target, int adj, u_int reglist)
 {
   assem_debug("inline_writestub");
-  int rth=get_reg(regmap,target|64);
-  int rt=get_reg(regmap,target);
-  int agr=get_reg(regmap,AGEN1+(i&1));
+  int rth=get_reg(i_regs->regmap,target|64);
+  int rt=get_reg(i_regs->regmap,target);
+  int agr=get_reg(i_regs->regmap,AGEN1+(i&1));
   assert(rt>=0);
   assert(agr<0);
 
@@ -2900,16 +2897,13 @@ static void inline_writestub(int type, int i, u_int addr_const, signed char regm
 
   emit_pusha();
 
-  int cc=get_reg(regmap,CCREG);
+  int cc=get_reg(i_regs->regmap,CCREG);
   if(cc<0) {
     cc=HOST_CCREG;
     emit_loadreg(CCREG,cc);
   }
 
-  int ds=regmap!=regs[i].regmap;
-  struct regstat *i_regs;
-  if(!ds) i_regs=&regs[i];
-  else i_regs=&branch_regs[i-1];
+  int ds=i_regs!=&regs[i];
 
   emit_pushimm(CLOCK_DIVIDER*(adj+1));
   emit_pushreg(cc);
@@ -2934,7 +2928,7 @@ static void inline_writestub(int type, int i, u_int addr_const, signed char regm
     set_jump_target(jaddr,(int)out);
   }
 
-  if((cc=get_reg(regmap,CCREG))>=0) {
+  if((cc=get_reg(i_regs->regmap,CCREG))>=0) {
     emit_loadreg(CCREG,cc);
   }
 }
@@ -3303,7 +3297,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
       if(jaddr) add_stub(LOADW_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADW_STUB,i,(constmap[i][s]+offset)&0xFFFFFFFC,i_regs->regmap,FTEMP,ccadj[i],reglist);
+      inline_readstub(LOADW_STUB,i,(constmap[i][s]+offset)&0xFFFFFFFC,i_regs,FTEMP,ccadj[i],reglist);
     if(rt1[i]) {
       assert(tl>=0);
       emit_andimm(temp,24,temp);
@@ -3357,7 +3351,7 @@ static void loadlr_assemble_x86(int i,struct regstat *i_regs)
       if(jaddr) add_stub(LOADD_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
     }
     else
-      inline_readstub(LOADD_STUB,i,(constmap[i][s]+offset)&0xFFFFFFF8,i_regs->regmap,FTEMP,ccadj[i],reglist);
+      inline_readstub(LOADD_STUB,i,(constmap[i][s]+offset)&0xFFFFFFF8,i_regs,FTEMP,ccadj[i],reglist);
     if(rt1[i]) {
       assert(th>=0);
       assert(tl>=0);
