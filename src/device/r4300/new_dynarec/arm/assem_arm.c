@@ -224,6 +224,14 @@ static u_int jump_table_symbols[] = {
   (int)write_hword_new,
   (int)write_word_new,
   (int)write_dword_new,
+  (int)LWL_new,
+  (int)LWR_new,
+  (int)LDL_new,
+  (int)LDR_new,
+  (int)SWL_new,
+  (int)SWR_new,
+  (int)SDL_new,
+  (int)SDR_new,
   (int)breakpoint
 };
 
@@ -1263,10 +1271,12 @@ static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
     output_w32(0xe2500000|rd_rn_rm(rtl,rsl,0)|armval);
     emit_sbcimm(rsh,0,rth);
   }else if(imm<0) {
+    assert(rsl!=HOST_TEMPREG);
     emit_movimm(-imm,HOST_TEMPREG);
     emit_subs(rsl,HOST_TEMPREG,rtl);
     emit_sbcimm(rsh,0,rth);
   }else if(imm>0) {
+    assert(rsl!=HOST_TEMPREG);
     emit_movimm(imm,HOST_TEMPREG);
     emit_adds(rsl,HOST_TEMPREG,rtl);
     emit_adcimm(rsh,0,rth);
@@ -1311,6 +1321,7 @@ static void emit_andimm(int rs,int imm,int rt)
     output_w32(0xe6ff0070|rd_rn_rm(rt,0,rs));
     #endif
   }else{
+    assert(rs!=HOST_TEMPREG);
     assert(imm>0&&imm<65535);
     #ifdef ARMv5_ONLY
     assem_debug("mov r14,#%d",imm&0xFF00);
@@ -1469,6 +1480,7 @@ static void emit_cmpimm(int rs,int imm)
     assem_debug("cmn %s,#%d",regname[rs],imm);
     output_w32(0xe3700000|rd_rn_rm(0,rs,0)|armval);
   }else if(imm>0) {
+    assert(rs!=HOST_TEMPREG);
     assert(imm<65536);
     #ifdef ARMv5_ONLY
     emit_movimm(imm,HOST_TEMPREG);
@@ -1478,6 +1490,7 @@ static void emit_cmpimm(int rs,int imm)
     assem_debug("cmp %s,r14",regname[rs]);
     output_w32(0xe1500000|rd_rn_rm(0,rs,HOST_TEMPREG));
   }else{
+    assert(rs!=HOST_TEMPREG);
     assert(imm>-65536);
     #ifdef ARMv5_ONLY
     emit_movimm(-imm,HOST_TEMPREG);
@@ -2634,13 +2647,6 @@ static void emit_extjump2(int addr, int target, int linker)
   emit_jmp(linker);
 }
 
-static void do_unalignedwritestub(int n)
-{
-  set_jump_target(stubs[n][1],(int)out);
-  output_w32(0xef000000);
-  emit_jmp(stubs[n][2]); // return address
-}
-
 static void do_invstub(int n)
 {
   literal_pool(20);
@@ -2684,7 +2690,7 @@ static void do_dirty_stub_ds(struct ll_entry * head)
 
 /* TLB */
 
-static int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u_int addr)
+static int do_tlb_r(int s,int ar,int map,int cache,int x,int c,u_int addr)
 {
   if(c) {
     if((signed int)addr>=(signed int)0xC0000000) {
@@ -2705,8 +2711,6 @@ static int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u
     }
     // Schedule this while we wait on the load
     //if(x) emit_xorimm(s,x,ar);
-    if(shift>=0) emit_shlimm(s,3,shift);
-    if(~a) emit_andimm(s,a,ar);
     emit_readword_dualindexedx4(FP,map,map);
   }
   return map;
@@ -2714,15 +2718,6 @@ static int do_tlb_r(int s,int ar,int map,int cache,int x,int a,int shift,int c,u
 static int do_tlb_r_branch(int map, int c, u_int addr, int *jaddr)
 {
   if(!c||(signed int)addr>=(signed int)0xC0000000) {
-    emit_test(map,map);
-    *jaddr=(int)out;
-    emit_js(0);
-  }
-  return map;
-}
-static int do_tlb_r_branch_debug(int map, int c, u_int addr, int *jaddr)
-{
-  if(!c) {
     emit_test(map,map);
     *jaddr=(int)out;
     emit_js(0);
@@ -2758,14 +2753,6 @@ static int do_tlb_w(int s,int ar,int map,int cache,int x,int c,u_int addr)
 static void do_tlb_w_branch(int map, int c, u_int addr, int *jaddr)
 {
   if(!c||addr<0x80800000||addr>=0xC0000000) {
-    emit_testimm(map,0x40000000);
-    *jaddr=(int)out;
-    emit_jne(0);
-  }
-}
-static void do_tlb_w_branch_debug(int map, int c, u_int addr, int *jaddr)
-{
-  if(!c) {
     emit_testimm(map,0x40000000);
     *jaddr=(int)out;
     emit_jne(0);
@@ -2889,142 +2876,184 @@ static void shift_assemble_arm(int i,struct regstat *i_regs)
 
 static void loadlr_assemble_arm(int i,struct regstat *i_regs)
 {
-  int s,th,tl,temp,temp2,addr,map=-1,cache=-1;
-  int offset;
-  int jaddr=0;
-  int memtarget,c=0;
+  signed char s,th,tl,temp,temp2,temp2h,addr,map=-1,cache=-1;
+  int offset,type=0,memtarget=0,c=0;
+  intptr_t jaddr=0;
   u_int hr,reglist=0;
   th=get_reg(i_regs->regmap,rt1[i]|64);
   tl=get_reg(i_regs->regmap,rt1[i]);
   s=get_reg(i_regs->regmap,rs1[i]);
   temp=get_reg(i_regs->regmap,-1);
   temp2=get_reg(i_regs->regmap,FTEMP);
+  temp2h=get_reg(i_regs->regmap,FTEMP|64);
   addr=get_reg(i_regs->regmap,AGEN1+(i&1));
   assert(addr<0);
+  assert(temp>=0);
+  assert(temp2>=0);
   offset=imm[i];
+
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
   reglist|=1<<temp;
-  if(offset||s<0||c) addr=temp2;
-  else addr=s;
   if(s>=0) {
     c=(i_regs->wasconst>>s)&1;
-    memtarget=((signed int)(constmap[i][s]+offset))<(signed int)0x80800000;
-    if(using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
+    memtarget=c&&((signed int)(constmap[i][s]+offset))<(signed int)0x80800000;
+    if(c&&using_tlb&&((signed int)(constmap[i][s]+offset))>=(signed int)0xC0000000) memtarget=1;
   }
+  if(offset||s<0||c) addr=temp2;
+  else addr=s;
+  int dummy=(rt1[i]==0)||(tl!=get_reg(i_regs->regmap,rt1[i])); // ignore loads to r0 and unneeded reg
+
+  switch(opcode[i]) {
+    case 0x22: type=LOADWL_STUB; break;
+    case 0x26: type=LOADWR_STUB; break;
+    case 0x1A: type=LOADDL_STUB; break;
+    case 0x1B: type=LOADDR_STUB; break;
+  }
+
+#ifndef INTERPRET_LOADLR
   if(!using_tlb) {
-    if(!c) {
-      emit_shlimm(addr,3,temp);
-      if (opcode[i]==0x22||opcode[i]==0x26) {
-        emit_andimm(addr,0xFFFFFFFC,temp2); // LWL/LWR
-      }else{
-        emit_andimm(addr,0xFFFFFFF8,temp2); // LDL/LDR
-      }
+    if(!c) { 
       emit_cmpimm(addr,0x800000);
-      jaddr=(int)out;
+      jaddr=(intptr_t)out;
       emit_jno(0);
-      #ifdef RAM_OFFSET
+    }
+    #ifdef RAM_OFFSET
+    if(!c&&!dummy) {
       map=get_reg(i_regs->regmap,ROREG);
       if(map<0) emit_loadreg(ROREG,map=HOST_TEMPREG);
-      #endif
     }
-    else {
-      if (opcode[i]==0x22||opcode[i]==0x26) {
-        emit_movimm(((constmap[i][s]+offset)<<3)&24,temp); // LWL/LWR
-      }else{
-        emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
-      }
-    }
+    #endif
   }else{ // using tlb
-    int a;
-    if(c) {
-      a=-1;
-    }else if (opcode[i]==0x22||opcode[i]==0x26) {
-      a=0xFFFFFFFC; // LWL/LWR
-    }else{
-      a=0xFFFFFFF8; // LDL/LDR
-    }
     map=get_reg(i_regs->regmap,TLREG);
-    cache=get_reg(i_regs->regmap,MMREG); // Get cached offset to memory_map
+    cache=get_reg(i_regs->regmap,MMREG);
     assert(map>=0);
     reglist&=~(1<<map);
-    map=do_tlb_r(addr,temp2,map,cache,0,a,c?-1:temp,c,constmap[i][s]+offset);
-    if(c) {
-      if (opcode[i]==0x22||opcode[i]==0x26) {
-        emit_movimm(((constmap[i][s]+offset)<<3)&24,temp); // LWL/LWR
-      }else{
-        emit_movimm(((constmap[i][s]+offset)<<3)&56,temp); // LDL/LDR
-      }
-    }
+    map=do_tlb_r(addr,temp2,map,cache,0,c,constmap[i][s]+offset);
     do_tlb_r_branch(map,c,constmap[i][s]+offset,&jaddr);
   }
-  if (opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
-    if(!c||memtarget) {
-      //emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2);
-      emit_readword_indexed_tlb(0,temp2,map,temp2);
-      if(jaddr) add_stub(LOADW_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
-    }
-    else
-      inline_readstub(LOADW_STUB,i,(constmap[i][s]+offset)&0xFFFFFFFC,i_regs,FTEMP,ccadj[i],reglist);
-    if(rt1[i]) {
+  if((!c||memtarget)&&!dummy) {
+    if(opcode[i]==0x22||opcode[i]==0x26) { // LWL/LWR
       assert(tl>=0);
-      emit_andimm(temp,24,temp);
-      if (opcode[i]==0x26) emit_xorimm(temp,24,temp); // LWR
-      emit_movimm(-1,HOST_TEMPREG);
-      if (opcode[i]==0x26) {
-        emit_shr(temp2,temp,temp2);
-        emit_bic_lsr(tl,HOST_TEMPREG,temp,tl);
-      }else{
-        emit_shl(temp2,temp,temp2);
-        emit_bic_lsl(tl,HOST_TEMPREG,temp,tl);
+      if(!c) {
+        emit_shlimm(addr,3,temp);
+        emit_andimm(addr,~3,temp2);
+        emit_readword_indexed_tlb(0,temp2,map,temp2);
+        emit_andimm(temp,24,temp);
+        if (opcode[i]==0x26) emit_xorimm(temp,24,temp); // LWR
+        emit_movimm(-1,HOST_TEMPREG);
+        if (opcode[i]==0x26) {
+          emit_shr(temp2,temp,temp2);
+          emit_bic_lsr(tl,HOST_TEMPREG,temp,tl);
+        }else{
+          emit_shl(temp2,temp,temp2);
+          emit_bic_lsl(tl,HOST_TEMPREG,temp,tl);
+        }
+        emit_or(temp2,tl,tl);
       }
-      emit_or(temp2,tl,tl);
+      else
+      {
+        int shift=((constmap[i][s]+offset)&3)<<3;
+        uint32_t mask=~UINT32_C(0);
+        if (opcode[i]==0x26) { //LWR
+          shift^=24;
+          mask>>=shift;
+        } else { //LWL
+          mask<<=shift;
+        }
+
+        if((constmap[i][s]+offset)&3)
+          emit_andimm(addr,~3,temp2);
+
+        if(shift) {
+          emit_readword_indexed_tlb(0,temp2,map,temp2);
+          if (opcode[i]==0x26) emit_shrimm(temp2,shift,temp2);
+          else emit_shlimm(temp2,shift,temp2);
+          emit_andimm(tl,~mask,tl);
+          emit_or(temp2,tl,tl);
+        }
+        else
+          emit_readword_indexed_tlb(0,temp2,map,tl);
+      }
     }
-    //emit_storereg(rt1[i],tl); // DEBUG
-  }
-  if (opcode[i]==0x1A||opcode[i]==0x1B) { // LDL/LDR
-    int temp2h=get_reg(i_regs->regmap,FTEMP|64);
-    if(!c||memtarget) {
-      //if(th>=0) emit_readword_indexed((int)g_dev.rdram.dram-0x80000000,temp2,temp2h);
-      //emit_readword_indexed((int)g_dev.rdram.dram-0x7FFFFFFC,temp2,temp2);
-      emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
-      if(jaddr) add_stub(LOADD_STUB,jaddr,(int)out,i,temp2,(int)i_regs,ccadj[i],reglist);
-    }
-    else
-      inline_readstub(LOADD_STUB,i,(constmap[i][s]+offset)&0xFFFFFFF8,i_regs,FTEMP,ccadj[i],reglist);
-    if(rt1[i]) {
+    if(opcode[i]==0x1A||opcode[i]==0x1B) { // LDL/LDR
+      assert(tl>=0);
       assert(th>=0);
-      assert(tl>=0);
-      emit_testimm(temp,32);
-      emit_andimm(temp,24,temp);
-      if (opcode[i]==0x1A) { // LDL
-        emit_rsbimm(temp,32,HOST_TEMPREG);
-        emit_shl(temp2h,temp,temp2h);
-        emit_orrshr(temp2,HOST_TEMPREG,temp2h);
-        emit_movimm(-1,HOST_TEMPREG);
-        emit_shl(temp2,temp,temp2);
-        emit_cmove_reg(temp2h,th);
-        emit_biceq_lsl(tl,HOST_TEMPREG,temp,tl);
-        emit_bicne_lsl(th,HOST_TEMPREG,temp,th);
-        emit_orreq(temp2,tl,tl);
-        emit_orrne(temp2,th,th);
+      assert(temp2h>=0);
+      if(!c) {
+        emit_shlimm(addr,3,temp);
+        emit_andimm(addr,~7,temp2);
+        emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
+        emit_testimm(temp,32);
+        emit_andimm(temp,24,temp);
+        if (opcode[i]==0x1A) { // LDL
+          emit_rsbimm(temp,32,HOST_TEMPREG);
+          emit_shl(temp2h,temp,temp2h);
+          emit_orrshr(temp2,HOST_TEMPREG,temp2h);
+          emit_movimm(-1,HOST_TEMPREG);
+          emit_shl(temp2,temp,temp2);
+          emit_cmove_reg(temp2h,th);
+          emit_biceq_lsl(tl,HOST_TEMPREG,temp,tl);
+          emit_bicne_lsl(th,HOST_TEMPREG,temp,th);
+          emit_orreq(temp2,tl,tl);
+          emit_orrne(temp2,th,th);
+        }
+        if (opcode[i]==0x1B) { // LDR
+          emit_xorimm(temp,24,temp);
+          emit_rsbimm(temp,32,HOST_TEMPREG);
+          emit_shr(temp2,temp,temp2);
+          emit_orrshl(temp2h,HOST_TEMPREG,temp2);
+          emit_movimm(-1,HOST_TEMPREG);
+          emit_shr(temp2h,temp,temp2h);
+          emit_cmovne_reg(temp2,tl);
+          emit_bicne_lsr(th,HOST_TEMPREG,temp,th);
+          emit_biceq_lsr(tl,HOST_TEMPREG,temp,tl);
+          emit_orrne(temp2h,th,th);
+          emit_orreq(temp2h,tl,tl);
+        }
       }
-      if (opcode[i]==0x1B) { // LDR
-        emit_xorimm(temp,24,temp);
-        emit_rsbimm(temp,32,HOST_TEMPREG);
-        emit_shr(temp2,temp,temp2);
-        emit_orrshl(temp2h,HOST_TEMPREG,temp2);
-        emit_movimm(-1,HOST_TEMPREG);
-        emit_shr(temp2h,temp,temp2h);
-        emit_cmovne_reg(temp2,tl);
-        emit_bicne_lsr(th,HOST_TEMPREG,temp,th);
-        emit_biceq_lsr(tl,HOST_TEMPREG,temp,tl);
-        emit_orrne(temp2h,th,th);
-        emit_orreq(temp2h,tl,tl);
+      else
+      {  
+        int shift=((constmap[i][s]+offset)&7)<<3;
+        uint64_t mask=~UINT64_C(0);
+        if (opcode[i]==0x1B) { //LDR
+          shift^=56;
+          mask>>=shift;
+        } else { //LDL
+          mask<<=shift;
+        }
+
+        if((constmap[i][s]+offset)&7)
+          emit_andimm(addr,~7,temp2);
+
+        if(shift) {
+          emit_readdword_indexed_tlb(0,temp2,map,temp2h,temp2);
+          if (opcode[i]==0x1B) {
+            emit_shrdimm(temp2h,temp2,shift,temp2h);
+            emit_shrimm(temp2,shift,temp2);
+          } else {
+            emit_shldimm(temp2h,temp2,shift,temp2h);
+            emit_shlimm(temp2,shift,temp2);
+          }
+          emit_andimm(tl,~mask,tl);
+          emit_andimm(th,~mask>>32,th);
+          emit_or(temp2,tl,tl);
+          emit_or(temp2h,th,th);
+        }
+        else
+          emit_readdword_indexed_tlb(0,temp2,map,th,tl);
       }
     }
   }
+  if(jaddr) {
+    add_stub(type,jaddr,(intptr_t)out,i,addr,(intptr_t)i_regs,ccadj[i],reglist);
+  } else if(c&&!memtarget) {
+    inline_readstub(type,i,(constmap[i][s]+offset),addr,i_regs,rt1[i],ccadj[i],reglist);
+  }
+#else
+  inline_readstub(type,i,c?(constmap[i][s]+offset):0,addr,i_regs,rt1[i],ccadj[i],reglist);
+#endif
 }
 #define loadlr_assemble loadlr_assemble_arm
 
