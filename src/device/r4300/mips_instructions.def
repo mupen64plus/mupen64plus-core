@@ -1406,11 +1406,11 @@ DECLARE_INSTRUCTION(CFC1)
     if (check_cop1_unusable(r4300)) { return; }
     if (rfs==31)
     {
-        rrt32 = SE32((*r4300_cp1_fcr31(&r4300->cp1)));
+        rrt = SE32((*r4300_cp1_fcr31(&r4300->cp1)));
     }
     if (rfs==0)
     {
-        rrt32 = SE32((*r4300_cp1_fcr0(&r4300->cp1)));
+        rrt = SE32((*r4300_cp1_fcr0(&r4300->cp1)));
     }
     ADD_TO_PC(1);
 }
