@@ -932,6 +932,8 @@ static void emit_storereg(int r, int hr)
   if((r&63)==LOREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.lo+((r&64)>>4);
   if(r==CCREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
   if(r==FSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31;
+  assert((r&63)!=CSREG);
+  assert((r&63)!=0);
   assert((r&63)<=CCREG);
   assert(addr-(intptr_t)out>=-2147483648LL&&addr-(intptr_t)out<2147483647LL);
   assem_debug("mov %%%s,%llx+%d",regname[hr],addr,r);
@@ -4777,16 +4779,15 @@ static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int
     if(hr!=EXCLUDE_REG) {
       reg=pre[hr];
       if(((~u)>>(reg&63))&1) {
-        if(reg>0) {
+        if(((reg&63)>0)&&((reg&63)<CSREG)) {
           if(((dirty_pre&~dirty)>>hr)&1) {
-            if(reg>0&&reg<36) {
+            if(reg<64) {
               emit_storereg(reg,hr);
               if( ((is32_pre&~uu)>>reg)&1 ) {
                 emit_sarimm(hr,31,HOST_TEMPREG);
                 emit_storereg(reg|64,HOST_TEMPREG);
               }
-            }
-            else if(reg>=64) {
+            } else {
               emit_storereg(reg,hr);
             }
           }
