@@ -637,10 +637,26 @@ static void multdiv_alloc_x64(struct regstat *current,int i)
   {
     if((opcode2[i]&4)==0) // 32-bit
     {
-      current->u&=~(1LL<<HIREG);
-      current->u&=~(1LL<<LOREG);
-      alloc_x64_reg(current,i,HIREG,EDX);
-      alloc_x64_reg(current,i,LOREG,EAX);
+#ifdef INTERPRET_MULT
+      if((opcode2[i]==0x18) || (opcode2[i]==0x19)) { //MULT/MULTU
+        alloc_reg(current,i,HIREG);
+        alloc_reg(current,i,LOREG);
+      }
+      else
+#endif
+#ifdef INTERPRET_DIV
+      if((opcode2[i]==0x1A) || (opcode2[i]==0x1B)) { //DIV/DIVU
+        alloc_reg(current,i,HIREG);
+        alloc_reg(current,i,LOREG);
+      }
+      else
+#endif
+      {
+        current->u&=~(1LL<<HIREG);
+        current->u&=~(1LL<<LOREG);
+        alloc_x64_reg(current,i,HIREG,EDX);
+        alloc_x64_reg(current,i,LOREG,EAX);
+      }
       alloc_reg(current,i,rs1[i]);
       alloc_reg(current,i,rs2[i]);
       current->is32|=1LL<<HIREG;
@@ -3130,7 +3146,7 @@ static void shift_assemble_x64(int i,struct regstat *i_regs)
   if(rt1[i]) {
     if(opcode2[i]<=0x07) // SLLV/SRLV/SRAV
     {
-      char s,t,shift;
+      signed char s,t,shift;
       t=get_reg(i_regs->regmap,rt1[i]);
       s=get_reg(i_regs->regmap,rs1[i]);
       shift=get_reg(i_regs->regmap,rs2[i]);
@@ -3146,7 +3162,7 @@ static void shift_assemble_x64(int i,struct regstat *i_regs)
         }
         else
         {
-          char temp=get_reg(i_regs->regmap,-1);
+          signed char temp=get_reg(i_regs->regmap,-1);
           assert(s>=0);
           if(t==ECX&&s!=ECX) {
             if(shift!=ECX) emit_mov(shift,ECX);
@@ -3191,7 +3207,7 @@ static void shift_assemble_x64(int i,struct regstat *i_regs)
         }
       }
     } else { // DSLLV/DSRLV/DSRAV
-      char sh,sl,th,tl,shift;
+      signed char sh,sl,th,tl,shift;
       th=get_reg(i_regs->regmap,rt1[i]|64);
       tl=get_reg(i_regs->regmap,rt1[i]);
       sh=get_reg(i_regs->regmap,rs1[i]|64);
@@ -3522,7 +3538,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
     {
       emit_writeword(sl,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31);
       // Set the rounding mode
-      char temp=get_reg(i_regs->regmap,-1);
+      signed char temp=get_reg(i_regs->regmap,-1);
       emit_movimm(3,temp);
       emit_and(sl,temp,temp);
       emit_lea_rip((intptr_t)g_dev.r4300.new_dynarec_hot_state.rounding_modes, HOST_TEMPREG);
@@ -3545,6 +3561,8 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     add_stub(FP_STUB,jaddr,(intptr_t)out,i,rs,(intptr_t)i_regs,is_delayslot,0);
     cop1_usable=1;
   }
+
+#ifndef INTERPRET_FCONV
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x0d) { // trunc_w_s
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
     emit_movss_load(temp,0);
@@ -3638,6 +3656,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_fldcw_stack();
   }
   return;
+#endif
   
   // C emulation code
   
@@ -3811,6 +3830,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FCOMP
   if((source[i]&0x3f)==0x30) {
     emit_andimm(fs,~0x800000,fs);
     return;
@@ -3872,6 +3892,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)==0x3f) emit_cmova_reg(temp,fs); // c_ngt_d
     return;
   }
+#endif
 
   // C only
 
@@ -3942,6 +3963,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FLOAT
   if((source[i]&0x3f)==6) // mov
   {
     if(((source[i]>>11)&0x1f)!=((source[i]>>6)&0x1f)) {
@@ -4037,7 +4059,8 @@ static void float_assemble(int i,struct regstat *i_regs)
     }
     return;
   }
-  
+#endif
+
   u_int hr,reglist=0;
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
@@ -4125,60 +4148,96 @@ static void multdiv_assemble_x64(int i,struct regstat *i_regs)
   {
     if((opcode2[i]&4)==0) // 32-bit
     {
-      if(opcode2[i]==0x18) // MULT
+#ifndef INTERPRET_MULT
+      if((opcode2[i]==0x18) || (opcode2[i]==0x19))
       {
-        char m1=get_reg(i_regs->regmap,rs1[i]);
-        char m2=get_reg(i_regs->regmap,rs2[i]);
+        signed char m1=get_reg(i_regs->regmap,rs1[i]);
+        signed char m2=get_reg(i_regs->regmap,rs2[i]);
         assert(m1>=0);
         assert(m2>=0);
         emit_mov(m1,EAX);
-        emit_imul(m2);
+
+        if(opcode2[i]==0x18) //MULT
+          emit_imul(m2);
+        else if(opcode2[i]==0x19) //MULTU
+          emit_mul(m2);
       }
-      else if(opcode2[i]==0x19) // MULTU
+      else
+#endif
+#ifndef INTERPRET_DIV
+      if((opcode2[i]==0x1A) || (opcode2[i]==0x1B))
       {
-        char m1=get_reg(i_regs->regmap,rs1[i]);
-        char m2=get_reg(i_regs->regmap,rs2[i]);
-        assert(m1>=0);
-        assert(m2>=0);
-        emit_mov(m1,EAX);
-        emit_mul(m2);
-      }
-      else if(opcode2[i]==0x1A) // DIV
-      {
-        char d1=get_reg(i_regs->regmap,rs1[i]);
-        char d2=get_reg(i_regs->regmap,rs2[i]);
+        signed char d1=get_reg(i_regs->regmap,rs1[i]);
+        signed char d2=get_reg(i_regs->regmap,rs2[i]);
         assert(d1>=0);
         assert(d2>=0);
         emit_mov(d1,EAX);
-        emit_cdq();
-        emit_test(d2,d2);
-        emit_jeq((intptr_t)out+8);
-        emit_idiv(d2);
+
+        if(opcode2[i]==0x1A) //DIV
+        {
+          emit_cdq();
+          emit_test(d2,d2);
+          emit_jeq((intptr_t)out+8);
+          emit_idiv(d2);
+        }
+        else if(opcode2[i]==0x1B) //DIVU
+        {
+          emit_zeroreg(EDX);
+          emit_test(d2,d2);
+          emit_jeq((intptr_t)out+8);
+          emit_div(d2);
+        }
       }
-      else if(opcode2[i]==0x1B) // DIVU
+      else
+#endif
       {
-        char d1=get_reg(i_regs->regmap,rs1[i]);
-        char d2=get_reg(i_regs->regmap,rs2[i]);
-        assert(d1>=0);
-        assert(d2>=0);
-        emit_mov(d1,EAX);
-        emit_zeroreg(EDX);
-        emit_test(d2,d2);
-        emit_jeq((intptr_t)out+8);
-        emit_div(d2);
+        u_int reglist=0;
+        signed char r1=get_reg(i_regs->regmap,rs1[i]);
+        signed char r2=get_reg(i_regs->regmap,rs2[i]);
+        signed char hi=get_reg(i_regs->regmap,HIREG);
+        signed char lo=get_reg(i_regs->regmap,LOREG);
+        assert(r1>=0);
+        assert(r2>=0);
+
+        for(int hr=0;hr<HOST_REGS;hr++) {
+          if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+        }
+
+        //Don't save lo and hi regs are they will be overwritten anyway
+        if(hi>=0) reglist&=~(1<<hi);
+        if(lo>=0) reglist&=~(1<<lo);
+
+        emit_writeword(r1,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r2,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rt);
+
+        save_regs(reglist);
+
+        if(opcode2[i]==0x18)
+          emit_call((intptr_t)cached_interp_MULT);
+        else if(opcode2[i]==0x19)
+          emit_call((intptr_t)cached_interp_MULTU);
+        else if(opcode2[i]==0x1A)
+          emit_call((intptr_t)cached_interp_DIV);
+        else if(opcode2[i]==0x1B)
+          emit_call((intptr_t)cached_interp_DIVU);
+
+        restore_regs(reglist);
+
+        if(hi>=0) emit_loadreg(HIREG,hi);
+        if(lo>=0) emit_loadreg(LOREG,lo);
       }
     }
     else // 64-bit
     {
       u_int reglist=0;
-      char r1h=get_reg(i_regs->regmap,rs1[i]|64);
-      char r1l=get_reg(i_regs->regmap,rs1[i]);
-      char r2h=get_reg(i_regs->regmap,rs2[i]|64);
-      char r2l=get_reg(i_regs->regmap,rs2[i]);
-      char hih=get_reg(i_regs->regmap,HIREG|64);
-      char hil=get_reg(i_regs->regmap,HIREG);
-      char loh=get_reg(i_regs->regmap,LOREG|64);
-      char lol=get_reg(i_regs->regmap,LOREG);
+      signed char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+      signed char r1l=get_reg(i_regs->regmap,rs1[i]);
+      signed char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+      signed char r2l=get_reg(i_regs->regmap,rs2[i]);
+      signed char hih=get_reg(i_regs->regmap,HIREG|64);
+      signed char hil=get_reg(i_regs->regmap,HIREG);
+      signed char loh=get_reg(i_regs->regmap,LOREG|64);
+      signed char lol=get_reg(i_regs->regmap,LOREG);
       assert(r1h>=0);
       assert(r2h>=0);
       assert(r1l>=0);
@@ -4222,8 +4281,8 @@ static void multdiv_assemble_x64(int i,struct regstat *i_regs)
     // Multiply by zero is zero.
     // MIPS does not have a divide by zero exception.
     // The result is undefined, we return zero.
-    char hr=get_reg(i_regs->regmap,HIREG);
-    char lr=get_reg(i_regs->regmap,LOREG);
+    signed char hr=get_reg(i_regs->regmap,HIREG);
+    signed char lr=get_reg(i_regs->regmap,LOREG);
     if(hr>=0) emit_zeroreg(hr);
     if(lr>=0) emit_zeroreg(lr);
   }

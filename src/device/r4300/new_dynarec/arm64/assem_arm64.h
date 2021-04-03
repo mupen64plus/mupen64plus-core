@@ -14,8 +14,6 @@
 //#define HAVE_CONDITIONAL_CALL 1
 #define RAM_OFFSET 1
 #define USE_MINI_HT 1
-//#define INTERPRETED_MULT64 1
-//#define INTERPRETED_DIV64 1
 
 /* ARM calling convention:
    x0-x18: caller-save

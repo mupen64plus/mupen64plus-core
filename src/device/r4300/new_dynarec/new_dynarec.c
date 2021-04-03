@@ -79,6 +79,13 @@ void recomp_dbg_block(int addr);
 //#define INTERPRET_C1LS
 //#define INTERPRET_LOADLR
 //#define INTERPRET_STORELR
+//#define INTERPRET_MULT
+//#define INTERPRET_DIV
+//#define INTERPRET_MULT64
+//#define INTERPRET_DIV64
+//#define INTERPRET_FCONV
+//#define INTERPRET_FLOAT
+//#define INTERPRET_FCOMP
 
 #if ASSEM_DEBUG
     #define assem_debug(...) DebugMessage(M64MSG_VERBOSE, __VA_ARGS__)
@@ -2856,8 +2863,18 @@ void multdiv_alloc(struct regstat *current,int i)
   {
     if((opcode2[i]&4)==0) // 32-bit
     {
-      current->u&=~(1LL<<HIREG);
-      current->u&=~(1LL<<LOREG);
+#ifndef INTERPRET_MULT
+      if((opcode2[i]==0x18) || (opcode2[i]==0x19)) { //MULT/MULTU
+        current->u&=~(1LL<<HIREG);
+        current->u&=~(1LL<<LOREG);
+      }
+#endif
+#ifndef INTERPRET_DIV
+      if((opcode2[i]==0x1A) || (opcode2[i]==0x1B)) { //DIV/DIVU
+        current->u&=~(1LL<<HIREG);
+        current->u&=~(1LL<<LOREG);
+      }
+#endif
       alloc_reg(current,i,HIREG);
       alloc_reg(current,i,LOREG);
       alloc_reg(current,i,rs1[i]);
@@ -2869,8 +2886,17 @@ void multdiv_alloc(struct regstat *current,int i)
     }
     else // 64-bit
     {
-#ifndef INTERPRETED_MULT64
+#ifndef INTERPRET_MULT64
       if((opcode2[i]==0x1C)||(opcode2[i]==0x1D)) // DMULT/DMULTU
+      {
+        current->u&=~(1LL<<HIREG);
+        current->uu&=~(1LL<<HIREG);
+        current->u&=~(1LL<<LOREG);
+        current->uu&=~(1LL<<LOREG);
+      }
+#endif
+#ifndef INTERPRET_DIV64
+      if((opcode2[i]==0x1E)||(opcode2[i]==0x1F)) // DDIV/DIVU
       {
         current->u&=~(1LL<<HIREG);
         current->uu&=~(1LL<<HIREG);

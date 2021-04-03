@@ -120,6 +120,10 @@ static const uintptr_t jump_vaddr_reg[32] = {
 static uintptr_t jump_table_symbols[] = {
   (intptr_t)NULL /*TLBR*/,
   (intptr_t)NULL /*TLBP*/,
+  (intptr_t)NULL /*MULT*/,
+  (intptr_t)NULL /*MULTU*/,
+  (intptr_t)NULL /*DIV*/,
+  (intptr_t)NULL /*DIVU*/,
   (intptr_t)NULL /*DMULT*/,
   (intptr_t)NULL /*DMULTU*/,
   (intptr_t)NULL /*DDIV*/,
@@ -3651,6 +3655,7 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
 
+#ifndef INTERPRET_FCONV
   /*Single-precision to Integer*/
 
   //TOBEDONE
@@ -3866,6 +3871,7 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
     emit_fstd(31,temp);
     return;
   }
+#endif
   
   // C emulation code
   
@@ -4038,6 +4044,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FCOMP
   if((source[i]&0x3f)==0x30) {
     emit_andimm(fs,~0x800000,fs);
     return;
@@ -4095,6 +4102,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)==0x3f) emit_csel_ls(temp,fs,fs); // c_ngt_d
     return;
   }
+#endif
   
   // C only
   
@@ -4165,6 +4173,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   
+#ifndef INTERPRET_FLOAT
   if((source[i]&0x3f)==6) // mov
   {
     if(((source[i]>>11)&0x1f)!=((source[i]>>6)&0x1f)) {
@@ -4290,6 +4299,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     }
     return;
   }
+#endif
   
   u_int hr,reglist=0;
   for(hr=0;hr<HOST_REGS;hr++) {
@@ -4377,7 +4387,8 @@ static void multdiv_assemble_arm64(int i,struct regstat *i_regs)
   {
     if((opcode2[i]&4)==0) // 32-bit
     {
-      if(opcode2[i]==0x18) // MULT
+#ifndef INTERPRET_MULT
+      if((opcode2[i]==0x18) || (opcode2[i]==0x19))
       {
         signed char m1=get_reg(i_regs->regmap,rs1[i]);
         signed char m2=get_reg(i_regs->regmap,rs2[i]);
@@ -4387,25 +4398,19 @@ static void multdiv_assemble_arm64(int i,struct regstat *i_regs)
         assert(m2>=0);
         assert(high>=0);
         assert(low>=0);
-        emit_smull(m1,m2,high);
+
+        if(opcode2[i]==0x18) //MULT
+          emit_smull(m1,m2,high);
+        else if(opcode2[i]==0x19) //MULTU
+          emit_umull(m1,m2,high);
+
         emit_mov(high,low);
         emit_shrimm64(high,32,high);
       }
-      else if(opcode2[i]==0x19) // MULTU
-      {
-        signed char m1=get_reg(i_regs->regmap,rs1[i]);
-        signed char m2=get_reg(i_regs->regmap,rs2[i]);
-        signed char high=get_reg(i_regs->regmap,HIREG);
-        signed char low=get_reg(i_regs->regmap,LOREG);
-        assert(m1>=0);
-        assert(m2>=0);
-        assert(high>=0);
-        assert(low>=0);
-        emit_umull(m1,m2,high);
-        emit_mov(high,low);
-        emit_shrimm64(high,32,high);
-      }
-      else if(opcode2[i]==0x1A) // DIV
+      else
+#endif
+#ifndef INTERPRET_DIV
+      if((opcode2[i]==0x1A) || (opcode2[i]==0x1B))
       {
         signed char numerator=get_reg(i_regs->regmap,rs1[i]);
         signed char denominator=get_reg(i_regs->regmap,rs2[i]);
@@ -4418,31 +4423,57 @@ static void multdiv_assemble_arm64(int i,struct regstat *i_regs)
         emit_test(denominator,denominator);
         intptr_t jaddr=(intptr_t)out;
         emit_jeq(0); // Division by zero
-        emit_sdiv(numerator,denominator,quotient);
+
+        if(opcode2[i]==0x1A) //DIV
+          emit_sdiv(numerator,denominator,quotient);
+        else if(opcode2[i]==0x1B) //DIVU
+          emit_udiv(numerator,denominator,quotient);
+
         emit_msub(quotient,denominator,numerator,remainder);
         set_jump_target(jaddr,(intptr_t)out);
       }
-      else if(opcode2[i]==0x1B) // DIVU
+      else
+#endif
       {
-        signed char numerator=get_reg(i_regs->regmap,rs1[i]);
-        signed char denominator=get_reg(i_regs->regmap,rs2[i]);
-        assert(numerator>=0);
-        assert(denominator>=0);
-        signed char quotient=get_reg(i_regs->regmap,LOREG);
-        signed char remainder=get_reg(i_regs->regmap,HIREG);
-        assert(quotient>=0);
-        assert(remainder>=0);
-        emit_test(denominator,denominator);
-        intptr_t jaddr=(intptr_t)out;
-        emit_jeq(0); // Division by zero
-        emit_udiv(numerator,denominator,quotient);
-        emit_msub(quotient,denominator,numerator,remainder);
-        set_jump_target(jaddr,(intptr_t)out);
+        u_int reglist=0;
+        signed char r1=get_reg(i_regs->regmap,rs1[i]);
+        signed char r2=get_reg(i_regs->regmap,rs2[i]);
+        signed char hi=get_reg(i_regs->regmap,HIREG);
+        signed char lo=get_reg(i_regs->regmap,LOREG);
+        assert(r1>=0);
+        assert(r2>=0);
+
+        for(int hr=0;hr<HOST_REGS;hr++) {
+          if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
+        }
+
+        //Don't save lo and hi regs are they will be overwritten anyway
+        if(hi>=0) reglist&=~(1<<hi);
+        if(lo>=0) reglist&=~(1<<lo);
+
+        emit_writeword(r1,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rs);
+        emit_writeword(r2,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.rt);
+
+        save_regs(reglist);
+
+        if(opcode2[i]==0x18)
+          emit_call((intptr_t)cached_interp_MULT);
+        else if(opcode2[i]==0x19)
+          emit_call((intptr_t)cached_interp_MULTU);
+        else if(opcode2[i]==0x1A)
+          emit_call((intptr_t)cached_interp_DIV);
+        else if(opcode2[i]==0x1B)
+          emit_call((intptr_t)cached_interp_DIVU);
+
+        restore_regs(reglist);
+
+        if(hi>=0) emit_loadreg(HIREG,hi);
+        if(lo>=0) emit_loadreg(LOREG,lo);
       }
     }
     else // 64-bit
     {
-#ifndef INTERPRETED_MULT64
+#ifndef INTERPRET_MULT64
       if(opcode2[i]==0x1C||opcode2[i]==0x1D)
       {
         signed char m1h=get_reg(i_regs->regmap,rs1[i]|64);
@@ -4485,7 +4516,7 @@ static void multdiv_assemble_arm64(int i,struct regstat *i_regs)
       }
       else
 #endif
-#ifndef INTERPRETED_DIV64
+#ifndef INTERPRET_DIV64
       if((opcode2[i]==0x1E)||(opcode2[i]==0x1F))
       {
         signed char numh=get_reg(i_regs->regmap,rs1[i]|64);
@@ -4534,14 +4565,14 @@ static void multdiv_assemble_arm64(int i,struct regstat *i_regs)
 #endif
       {
         u_int reglist=0;
-        char r1h=get_reg(i_regs->regmap,rs1[i]|64);
-        char r1l=get_reg(i_regs->regmap,rs1[i]);
-        char r2h=get_reg(i_regs->regmap,rs2[i]|64);
-        char r2l=get_reg(i_regs->regmap,rs2[i]);
-        char hih=get_reg(i_regs->regmap,HIREG|64);
-        char hil=get_reg(i_regs->regmap,HIREG);
-        char loh=get_reg(i_regs->regmap,LOREG|64);
-        char lol=get_reg(i_regs->regmap,LOREG);
+        signed char r1h=get_reg(i_regs->regmap,rs1[i]|64);
+        signed char r1l=get_reg(i_regs->regmap,rs1[i]);
+        signed char r2h=get_reg(i_regs->regmap,rs2[i]|64);
+        signed char r2l=get_reg(i_regs->regmap,rs2[i]);
+        signed char hih=get_reg(i_regs->regmap,HIREG|64);
+        signed char hil=get_reg(i_regs->regmap,HIREG);
+        signed char loh=get_reg(i_regs->regmap,LOREG|64);
+        signed char lol=get_reg(i_regs->regmap,LOREG);
         assert(r1h>=0);
         assert(r2h>=0);
         assert(r1l>=0);
@@ -4691,10 +4722,14 @@ static void arch_init(void) {
 
   jump_table_symbols[0] = (intptr_t)cached_interp_TLBR;
   jump_table_symbols[1] = (intptr_t)cached_interp_TLBP;
-  jump_table_symbols[2] = (intptr_t)cached_interp_DMULT;
-  jump_table_symbols[3] = (intptr_t)cached_interp_DMULTU;
-  jump_table_symbols[4] = (intptr_t)cached_interp_DDIV;
-  jump_table_symbols[5] = (intptr_t)cached_interp_DDIVU;
+  jump_table_symbols[2] = (intptr_t)cached_interp_MULT;
+  jump_table_symbols[3] = (intptr_t)cached_interp_MULTU;
+  jump_table_symbols[4] = (intptr_t)cached_interp_DIV;
+  jump_table_symbols[5] = (intptr_t)cached_interp_DIVU;
+  jump_table_symbols[6] = (intptr_t)cached_interp_DMULT;
+  jump_table_symbols[7] = (intptr_t)cached_interp_DMULTU;
+  jump_table_symbols[8] = (intptr_t)cached_interp_DDIV;
+  jump_table_symbols[9] = (intptr_t)cached_interp_DDIVU;
 
   // Trampolines for jumps >128MB
   intptr_t *ptr,*ptr2,*ptr3;
