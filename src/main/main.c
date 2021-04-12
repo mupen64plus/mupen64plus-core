@@ -850,7 +850,6 @@ void new_frame(void)
     }
 }
 
-#define SAMPLE_COUNT 3
 static void apply_speed_limiter(void)
 {
     static unsigned long totalVIs = 0;
@@ -859,8 +858,6 @@ static void apply_speed_limiter(void)
     static unsigned int StartFPSTime = 0;
     static const double defaultSpeedFactor = 100.0;
     unsigned int CurrentFPSTime = SDL_GetTicks();
-    static double sleepTimes[SAMPLE_COUNT];
-    static unsigned int sleepTimesIndex = 0;
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
     const double VILimitMilliseconds = 1000.0 / g_dev.vi.expected_refresh_rate;
@@ -901,28 +898,19 @@ static void apply_speed_limiter(void)
        resetOnce = 0;
     }
 
-    sleepTimes[sleepTimesIndex%SAMPLE_COUNT] = sleepTime;
-    sleepTimesIndex++;
-
-    unsigned int elementsForAverage = sleepTimesIndex > SAMPLE_COUNT ? SAMPLE_COUNT : sleepTimesIndex;
-
-    // compute the average sleepTime
-    double sum = 0;
-    unsigned int index;
-    for(index = 0; index < elementsForAverage; index++)
-    {
-        sum += sleepTimes[index];
+    if (sleepTime < minSleepNeeded) {
+        totalVIs += (unsigned long)(minSleepNeeded/AdjustedLimit);
     }
 
-    double averageSleep = sum/elementsForAverage;
-
-    int sleepMs = (int)averageSleep;
-
-    if(sleepMs > 0 && sleepMs < maxSleepNeeded*SpeedFactorMultiple && l_MainSpeedLimit)
+    if(l_MainSpeedLimit && sleepTime > 0 && sleepTime < maxSleepNeeded*SpeedFactorMultiple)
     {
-       DebugMessage(M64MSG_VERBOSE, "    apply_speed_limiter(): Waiting %ims", sleepMs);
+        while(sleepTime >= 0) {
+            SDL_Delay((unsigned int) sleepTime);
 
-       SDL_Delay(sleepMs);
+            CurrentFPSTime = SDL_GetTicks();
+            elapsedRealTime = CurrentFPSTime - StartFPSTime;
+            sleepTime = totalElapsedGameTime - elapsedRealTime;
+        }
     }
 
 
