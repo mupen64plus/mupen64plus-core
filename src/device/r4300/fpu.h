@@ -56,9 +56,9 @@ static __inline float  truncf(float x) { return (float)(int)x; }
 #define FCR31_CMP_BIT UINT32_C(0x800000)
 
 
-M64P_FPU_INLINE void set_rounding(const uint32_t* fcr31)
+M64P_FPU_INLINE void set_rounding(uint32_t fcr31)
 {
-    switch(*fcr31 & 3) {
+    switch(fcr31 & 3) {
     case 0: /* Round to nearest, or to even if equidistant */
         fesetround(FE_TONEAREST);
         break;
@@ -74,7 +74,7 @@ M64P_FPU_INLINE void set_rounding(const uint32_t* fcr31)
     }
 }
 
-M64P_FPU_INLINE void cvt_s_w(const uint32_t* fcr31, const int32_t* source, float* dest)
+M64P_FPU_INLINE void cvt_s_w(uint32_t fcr31, const int32_t* source, float* dest)
 {
     set_rounding(fcr31);
     *dest = (float)*source;
@@ -83,12 +83,12 @@ M64P_FPU_INLINE void cvt_d_w(const int32_t* source, double* dest)
 {
     *dest = (double)*source;
 }
-M64P_FPU_INLINE void cvt_s_l(const uint32_t* fcr31, const int64_t* source, float* dest)
+M64P_FPU_INLINE void cvt_s_l(uint32_t fcr31, const int64_t* source, float* dest)
 {
     set_rounding(fcr31);
     *dest = (float)*source;
 }
-M64P_FPU_INLINE void cvt_d_l(const uint32_t* fcr31, const int64_t* source, double* dest)
+M64P_FPU_INLINE void cvt_d_l(uint32_t fcr31, const int64_t* source, double* dest)
 {
     set_rounding(fcr31);
     *dest = (double)*source;
@@ -97,7 +97,7 @@ M64P_FPU_INLINE void cvt_d_s(const float* source, double* dest)
 {
     *dest = (double)*source;
 }
-M64P_FPU_INLINE void cvt_s_d(const uint32_t* fcr31, const double* source, float* dest)
+M64P_FPU_INLINE void cvt_s_d(uint32_t fcr31, const double* source, float* dest)
 {
     set_rounding(fcr31);
     *dest = (float)*source;
@@ -230,9 +230,9 @@ M64P_FPU_INLINE void floor_w_d(const double* source, int32_t* dest)
     *dest = (int32_t)floor(*source);
 }
 
-M64P_FPU_INLINE void cvt_w_s(const uint32_t* fcr31, const float* source, int32_t* dest)
+M64P_FPU_INLINE void cvt_w_s(uint32_t fcr31, const float* source, int32_t* dest)
 {
-    switch(*fcr31 & 3)
+    switch(fcr31 & 3)
     {
     case 0: round_w_s(source, dest); return;
     case 1: trunc_w_s(source, dest); return;
@@ -240,9 +240,9 @@ M64P_FPU_INLINE void cvt_w_s(const uint32_t* fcr31, const float* source, int32_t
     case 3: floor_w_s(source, dest); return;
     }
 }
-M64P_FPU_INLINE void cvt_w_d(const uint32_t* fcr31, const double* source, int32_t* dest)
+M64P_FPU_INLINE void cvt_w_d(uint32_t fcr31, const double* source, int32_t* dest)
 {
-    switch(*fcr31 & 3)
+    switch(fcr31 & 3)
     {
     case 0: round_w_d(source, dest); return;
     case 1: trunc_w_d(source, dest); return;
@@ -250,9 +250,9 @@ M64P_FPU_INLINE void cvt_w_d(const uint32_t* fcr31, const double* source, int32_
     case 3: floor_w_d(source, dest); return;
     }
 }
-M64P_FPU_INLINE void cvt_l_s(const uint32_t* fcr31, const float* source, int64_t* dest)
+M64P_FPU_INLINE void cvt_l_s(uint32_t fcr31, const float* source, int64_t* dest)
 {
-    switch(*fcr31 & 3)
+    switch(fcr31 & 3)
     {
     case 0: round_l_s(source, dest); return;
     case 1: trunc_l_s(source, dest); return;
@@ -260,9 +260,9 @@ M64P_FPU_INLINE void cvt_l_s(const uint32_t* fcr31, const float* source, int64_t
     case 3: floor_l_s(source, dest); return;
     }
 }
-M64P_FPU_INLINE void cvt_l_d(const uint32_t* fcr31, const double* source, int64_t* dest)
+M64P_FPU_INLINE void cvt_l_d(uint32_t fcr31, const double* source, int64_t* dest)
 {
-    switch(*fcr31 & 3)
+    switch(fcr31 & 3)
     {
     case 0: round_l_d(source, dest); return;
     case 1: trunc_l_d(source, dest); return;
@@ -496,27 +496,27 @@ M64P_FPU_INLINE void c_ngt_d(uint32_t* fcr31, const double* source, const double
 }
 
 
-M64P_FPU_INLINE void add_s(const uint32_t* fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void add_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
 {
     set_rounding(fcr31);
     *target = *source1 + *source2;
 }
-M64P_FPU_INLINE void sub_s(const uint32_t* fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void sub_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
 {
     set_rounding(fcr31);
     *target = *source1 - *source2;
 }
-M64P_FPU_INLINE void mul_s(const uint32_t* fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void mul_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
 {
     set_rounding(fcr31);
     *target = *source1 * *source2;
 }
-M64P_FPU_INLINE void div_s(const uint32_t* fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void div_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
 {
     set_rounding(fcr31);
     *target = *source1 / *source2;
 }
-M64P_FPU_INLINE void sqrt_s(const uint32_t* fcr31, const float* source, float* target)
+M64P_FPU_INLINE void sqrt_s(uint32_t fcr31, const float* source, float* target)
 {
     set_rounding(fcr31);
     *target = sqrtf(*source);
@@ -533,27 +533,27 @@ M64P_FPU_INLINE void neg_s(const float* source, float* target)
 {
     *target = - *source;
 }
-M64P_FPU_INLINE void add_d(const uint32_t* fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void add_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
 {
     set_rounding(fcr31);
     *target = *source1 + *source2;
 }
-M64P_FPU_INLINE void sub_d(const uint32_t* fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void sub_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
 {
     set_rounding(fcr31);
     *target = *source1 - *source2;
 }
-M64P_FPU_INLINE void mul_d(const uint32_t* fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void mul_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
 {
     set_rounding(fcr31);
     *target = *source1 * *source2;
 }
-M64P_FPU_INLINE void div_d(const uint32_t* fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void div_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
 {
     set_rounding(fcr31);
     *target = *source1 / *source2;
 }
-M64P_FPU_INLINE void sqrt_d(const uint32_t* fcr31, const double* source, double* target)
+M64P_FPU_INLINE void sqrt_d(uint32_t fcr31, const double* source, double* target)
 {
     set_rounding(fcr31);
     *target = sqrt(*source);

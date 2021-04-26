@@ -1415,7 +1415,7 @@ static void clean_registers(int istart,int iend,int wr)
                 if(regs[i].regmap[r]!=regmap_pre[i][r]) {
                   temp_will_dirty&=~(1<<r);
                   temp_wont_dirty&=~(1<<r);
-                  if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
+                  if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<CSREG) {
                     temp_will_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
                     temp_wont_dirty|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
                   } else {
@@ -1660,7 +1660,7 @@ static void clean_registers(int istart,int iend,int wr)
         else {
           will_dirty_i&=~(1<<r);
           wont_dirty_i&=~(1<<r);
-          if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<34) {
+          if((regmap_pre[i][r]&63)>0 && (regmap_pre[i][r]&63)<CSREG) {
             will_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
             wont_dirty_i|=((unneeded_reg[i]>>(regmap_pre[i][r]&63))&1)<<r;
           } else {
@@ -3391,6 +3391,78 @@ static void cop0_assemble(int i,struct regstat *i_regs)
   }
 }
 
+static void cop1_assemble(int i,struct regstat *i_regs)
+{
+  // Check cop1 unusable
+  if(!cop1_usable) {
+    signed char rs=get_reg(i_regs->regmap,CSREG);
+    assert(rs>=0);
+    emit_testimm(rs,CP0_STATUS_CU1);
+    intptr_t jaddr=(intptr_t)out;
+    emit_jeq(0);
+    add_stub(FP_STUB,jaddr,(intptr_t)out,i,rs,(intptr_t)i_regs,is_delayslot,0);
+    cop1_usable=1;
+  }
+  if (opcode2[i]==0) { // MFC1
+    signed char tl=get_reg(i_regs->regmap,rt1[i]);
+    if(tl>=0) {
+      emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],tl);
+      emit_readword_indexed(0,tl,tl);
+    }
+  }
+  else if (opcode2[i]==1) { // DMFC1
+    signed char tl=get_reg(i_regs->regmap,rt1[i]);
+    signed char th=get_reg(i_regs->regmap,rt1[i]|64);
+    if(tl>=0) {
+      emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],tl);
+      if(th>=0) emit_readword_indexed(4,tl,th);
+      emit_readword_indexed(0,tl,tl);
+    }
+  }
+  else if (opcode2[i]==4) { // MTC1
+    signed char sl=get_reg(i_regs->regmap,rs1[i]);
+    signed char temp=get_reg(i_regs->regmap,-1);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
+    emit_writeword_indexed(sl,0,temp);
+  }
+  else if (opcode2[i]==5) { // DMTC1
+    signed char sl=get_reg(i_regs->regmap,rs1[i]);
+    signed char sh=rs1[i]>0?get_reg(i_regs->regmap,rs1[i]|64):sl;
+    signed char temp=get_reg(i_regs->regmap,-1);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],temp);
+    emit_writeword_indexed(sh,4,temp);
+    emit_writeword_indexed(sl,0,temp);
+  }
+  else if (opcode2[i]==2) // CFC1
+  {
+    signed char tl=get_reg(i_regs->regmap,rt1[i]);
+    signed char fs=get_reg(i_regs->regmap,FSREG);
+    if(tl>=0) {
+      u_int copr=(source[i]>>11)&0x1f;
+      if(copr==0) emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr0,tl);
+      if(copr==31)
+      {
+          if(fs>=0) emit_mov(fs,tl);
+          else emit_loadreg(FSREG,tl);
+      }
+    }
+  }
+  else if (opcode2[i]==6) // CTC1
+  {
+    signed char sl=get_reg(i_regs->regmap,rs1[i]);
+    signed char fs=get_reg(i_regs->regmap,FSREG);
+    signed char temp=get_reg(i_regs->regmap,-1);
+    u_int copr=(source[i]>>11)&0x1f;
+    assert(sl>=0);
+    if(copr==31)
+    {
+      if(fs>=0) emit_mov(sl,fs);
+      else emit_storereg(FSREG,sl);
+      set_rounding_mode(sl,temp);
+    }
+  }
+}
+
 static void alu_assemble(int i,struct regstat *i_regs)
 {
   if(opcode2[i]>=0x20&&opcode2[i]<=0x23) { // ADD/ADDU/SUB/SUBU
@@ -4718,11 +4790,11 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
     cop1_usable=1;
   }
   if (opcode[i]==0x39) { // SWC1 (get float address)
-    emit_readptr((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f],tl);
     emit_readword_indexed(0,tl,tl);
   }
   else if (opcode[i]==0x3D) { // SDC1 (get double address)
-    emit_readptr((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],tl);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>16)&0x1f],tl);
     emit_readword_indexed(4,tl,th);
     emit_readword_indexed(0,tl,tl);
   }
@@ -4830,11 +4902,11 @@ static void c1ls_assemble(int i,struct regstat *i_regs)
 #endif
 
   if (opcode[i]==0x31) { // LWC1 (write float)
-    emit_readptr((intptr_t)&r4300_cp1_regs_simple(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f],temp);
     emit_writeword_indexed(tl,0,temp);
   }
   else if (opcode[i]==0x35) { // LDC1 (write double)
-    emit_readptr((intptr_t)&r4300_cp1_regs_double(&g_dev.r4300.cp1)[(source[i]>>16)&0x1f],temp);
+    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>16)&0x1f],temp);
     emit_writeword_indexed(th,4,temp);
     emit_writeword_indexed(tl,0,temp);
   }
@@ -11704,10 +11776,10 @@ static void TLBWI_new(int pcaddr, int count)
   state->pcaddr = pcaddr;
 
   /* Remove old entries */
-  unsigned int old_start_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even;
-  unsigned int old_end_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even;
-  unsigned int old_start_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd;
+  unsigned int old_start_even=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_even;
+  unsigned int old_end_even=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_even;
+  unsigned int old_start_odd=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -11725,12 +11797,12 @@ static void TLBWI_new(int pcaddr, int count)
     }
   }
   cached_interp_TLBWI();
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].phys_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].v_even,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].d_even);
-  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].phys_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].v_odd,r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].d_odd);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: index=%d",state->cp0_regs[CP0_INDEX_REG]);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_even=%x end_even=%x phys_even=%x v=%d d=%d",r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_even,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_even,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].phys_even,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].v_even,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].d_even);
+  //DebugMessage(M64MSG_VERBOSE, "TLBWI: start_odd=%x end_odd=%x phys_odd=%x v=%d d=%d",r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_odd,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_odd,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].phys_odd,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].v_odd,r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].d_odd);
   /* Combine r4300->cp0.tlb.LUT_r, r4300->cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
+  for (i=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11751,7 +11823,7 @@ static void TLBWI_new(int pcaddr, int count)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
+  for (i=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[state->cp0_regs[CP0_INDEX_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11781,12 +11853,12 @@ static void TLBWR_new(int pcaddr, int count)
   UPDATE_COUNT_IN
   state->pcaddr = pcaddr;
   cp0_update_count(r4300);
-  r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG] = (r4300_cp0_regs(&r4300->cp0)[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG])) + r4300_cp0_regs(&r4300->cp0)[CP0_WIRED_REG];
+  state->cp0_regs[CP0_RANDOM_REG] = (state->cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - state->cp0_regs[CP0_WIRED_REG])) + state->cp0_regs[CP0_WIRED_REG];
   /* Remove old entries */
-  unsigned int old_start_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_even;
-  unsigned int old_end_even=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_even;
-  unsigned int old_start_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_odd;
-  unsigned int old_end_odd=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_odd;
+  unsigned int old_start_even=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].start_even;
+  unsigned int old_end_even=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].end_even;
+  unsigned int old_start_odd=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].start_odd;
+  unsigned int old_end_odd=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].end_odd;
   for (i=old_start_even>>12; i<=old_end_even>>12; i++)
   {
     if(i<0x80000||i>0xBFFFF)
@@ -11806,7 +11878,7 @@ static void TLBWR_new(int pcaddr, int count)
   cached_interp_TLBWR();
   /* Combine r4300->cp0.tlb.LUT_r, r4300->cp0.tlb.LUT_w, and invalid_code into a single table
      for fast look up. */
-  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
+  for (i=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].start_even>>12; i<=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].end_even>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
@@ -11827,7 +11899,7 @@ static void TLBWR_new(int pcaddr, int count)
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
-  for (i=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[r4300_cp0_regs(&r4300->cp0)[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
+  for (i=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].start_odd>>12; i<=r4300->cp0.tlb.entries[state->cp0_regs[CP0_RANDOM_REG]&0x3F].end_odd>>12; i++)
   {
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)

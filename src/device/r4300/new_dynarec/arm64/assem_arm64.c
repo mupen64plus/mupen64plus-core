@@ -3316,6 +3316,18 @@ static void generate_map_const(u_int addr,int tr) {
   emit_movimm((addr>>12)+(fp_memory_map>>3),tr);
 }
 
+static void set_rounding_mode(int s,int temp)
+{
+  assert(temp>=0);
+  emit_andimm(s,3,temp);
+  emit_addimm64(FP,fp_rounding_modes,HOST_TEMPREG);
+  emit_readword_dualindexedx4(HOST_TEMPREG,temp,temp);
+  output_w32(0xd53b4400|HOST_TEMPREG); /*Read FPCR*/
+  emit_andimm(HOST_TEMPREG,~0xc00000,HOST_TEMPREG); /*Clear RMode*/
+  emit_or(temp,HOST_TEMPREG,HOST_TEMPREG); /*Set RMode*/
+  output_w32(0xd51b4400|HOST_TEMPREG); /*Write FPCR*/
+}
+
 /* Special assem */
 static void shift_assemble_arm64(int i,struct regstat *i_regs)
 {
@@ -3566,80 +3578,6 @@ static void loadlr_assemble_arm64(int i,struct regstat *i_regs)
 }
 #define loadlr_assemble loadlr_assemble_arm64
 
-static void cop1_assemble(int i,struct regstat *i_regs)
-{
-  // Check cop1 unusable
-  if(!cop1_usable) {
-    signed char rs=get_reg(i_regs->regmap,CSREG);
-    assert(rs>=0);
-    emit_testimm(rs,CP0_STATUS_CU1);
-    intptr_t jaddr=(intptr_t)out;
-    emit_jeq(0);
-    add_stub(FP_STUB,jaddr,(intptr_t)out,i,rs,(intptr_t)i_regs,is_delayslot,0);
-    cop1_usable=1;
-  }
-  if (opcode2[i]==0) { // MFC1
-    signed char tl=get_reg(i_regs->regmap,rt1[i]);
-    if(tl>=0) {
-      emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],tl);
-      emit_readword_indexed(0,tl,tl);
-    }
-  }
-  else if (opcode2[i]==1) { // DMFC1
-    signed char tl=get_reg(i_regs->regmap,rt1[i]);
-    signed char th=get_reg(i_regs->regmap,rt1[i]|64);
-    if(tl>=0) {
-      emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],tl);
-      if(th>=0) emit_readword_indexed(4,tl,th);
-      emit_readword_indexed(0,tl,tl);
-    }
-  }
-  else if (opcode2[i]==4) { // MTC1
-    signed char sl=get_reg(i_regs->regmap,rs1[i]);
-    signed char temp=get_reg(i_regs->regmap,-1);
-    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
-    emit_writeword_indexed(sl,0,temp);
-  }
-  else if (opcode2[i]==5) { // DMTC1
-    signed char sl=get_reg(i_regs->regmap,rs1[i]);
-    signed char sh=rs1[i]>0?get_reg(i_regs->regmap,rs1[i]|64):sl;
-    signed char temp=get_reg(i_regs->regmap,-1);
-    emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],temp);
-    emit_writeword_indexed(sh,4,temp);
-    emit_writeword_indexed(sl,0,temp);
-  }
-  else if (opcode2[i]==2) // CFC1
-  {
-    signed char tl=get_reg(i_regs->regmap,rt1[i]);
-    if(tl>=0) {
-      u_int copr=(source[i]>>11)&0x1f;
-      if(copr==0) emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr0,tl);
-      if(copr==31) emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31,tl);
-    }
-  }
-  else if (opcode2[i]==6) // CTC1
-  {
-    signed char sl=get_reg(i_regs->regmap,rs1[i]);
-    u_int copr=(source[i]>>11)&0x1f;
-    assert(sl>=0);
-    if(copr==31)
-    {
-      emit_writeword(sl,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31);
-
-      // Set the rounding mode
-      signed char temp=get_reg(i_regs->regmap,-1);
-      assert(temp>=0);
-      emit_andimm(sl,3,temp);
-      emit_addimm64(FP,fp_rounding_modes,HOST_TEMPREG);
-      emit_readword_dualindexedx4(HOST_TEMPREG,temp,temp);
-      output_w32(0xd53b4400|HOST_TEMPREG); /*Read FPCR*/
-      emit_andimm(HOST_TEMPREG,~0xc00000,HOST_TEMPREG); /*Clear RMode*/
-      emit_or(temp,HOST_TEMPREG,HOST_TEMPREG); /*Set RMode*/
-      output_w32(0xd51b4400|HOST_TEMPREG); /*Write FPCR*/
-    }
-  }
-}
-
 static void fconv_assemble_arm64(int i,struct regstat *i_regs)
 {
   signed char temp=get_reg(i_regs->regmap,-1);
@@ -3879,10 +3817,13 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
+
+  signed char fs=get_reg(i_regs->regmap,FSREG);
   save_regs(reglist);
   
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_s_w);
@@ -3893,13 +3834,15 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
     emit_call((intptr_t)cvt_d_w);
   }
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x20) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_s_l);
   }
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x21) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_d_l);
@@ -3911,32 +3854,37 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
     emit_call((intptr_t)cvt_d_s);
   }
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x24) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_w_s);
   }
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x25) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_l_s);
   }
   
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x20) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_s_d);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x24) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_w_d);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x25) {
-    emit_addimm64(FP,fp_fcr31,ARG1_REG);
+    if(fs>=0) emit_mov(fs,ARG1_REG);
+    else emit_loadreg(FSREG,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_l_d);
@@ -4111,6 +4059,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
   reglist&=~(1<<fs);
+  emit_storereg(FSREG, fs);
   save_regs(reglist);
   if(opcode2[i]==0x10) {
     emit_addimm64(FP,fp_fcr31,ARG1_REG);
@@ -4305,18 +4254,22 @@ static void float_assemble(int i,struct regstat *i_regs)
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
+
+  signed char fs=get_reg(i_regs->regmap,FSREG);
   if(opcode2[i]==0x10) { // Single precision
     save_regs(reglist);
     switch(source[i]&0x3f)
     {
       case 0x00: case 0x01: case 0x02: case 0x03:
-        emit_addimm64(FP,fp_fcr31,ARG1_REG);
+        if(fs>=0) emit_mov(fs,ARG1_REG);
+        else emit_loadreg(FSREG,ARG1_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f],ARG3_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG4_REG);
         break;
      case 0x04:
-        emit_addimm64(FP,fp_fcr31,ARG1_REG);
+        if(fs>=0) emit_mov(fs,ARG1_REG);
+        else emit_loadreg(FSREG,ARG1_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG3_REG);
         break;
@@ -4343,13 +4296,15 @@ static void float_assemble(int i,struct regstat *i_regs)
     switch(source[i]&0x3f)
     {
       case 0x00: case 0x01: case 0x02: case 0x03:
-        emit_addimm64(FP,fp_fcr31,ARG1_REG);
+        if(fs>=0) emit_mov(fs,ARG1_REG);
+        else emit_loadreg(FSREG,ARG1_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>16)&0x1f],ARG3_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG4_REG);
         break;
      case 0x04:
-        emit_addimm64(FP,fp_fcr31,ARG1_REG);
+        if(fs>=0) emit_mov(fs,ARG1_REG);
+        else emit_loadreg(FSREG,ARG1_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
         emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
         break;
