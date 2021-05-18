@@ -6030,18 +6030,20 @@ static void ujump_assemble(int i,struct regstat *i_regs)
   if(rt1[i]==31&&temp>=0) emit_prefetchreg(temp);
   #endif
   do_cc(i,branch_regs[i].regmap,&adj,ba[i],TAKEN,0);
-  if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
-  load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-  if(internal_branch(branch_regs[i].is32,ba[i]))
-    assem_debug("branch: internal");
-  else
-    assem_debug("branch: external");
-  if(internal_branch(branch_regs[i].is32,ba[i])&&is_ds[(ba[i]-start)>>2]) {
-    ds_assemble_entry(i);
-  }
-  else {
-    add_to_linker((intptr_t)out,ba[i],internal_branch(branch_regs[i].is32,ba[i]));
-    emit_jmp(0);
+  if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
+    if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
+    load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
+    if(internal_branch(branch_regs[i].is32,ba[i]))
+      assem_debug("branch: internal");
+    else
+      assem_debug("branch: external");
+    if(internal_branch(branch_regs[i].is32,ba[i])&&is_ds[(ba[i]-start)>>2]) {
+      ds_assemble_entry(i);
+    }
+    else {
+      add_to_linker((intptr_t)out,ba[i],internal_branch(branch_regs[i].is32,ba[i]));
+      emit_jmp(0);
+    }
   }
 }
 
@@ -6499,19 +6501,21 @@ static void cjump_assemble(int i,struct regstat *i_regs)
       assert(cc==HOST_CCREG);
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-      assem_debug("cycle count (adj)");
-      if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
-      load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-      if(branch_internal)
-        assem_debug("branch: internal");
-      else
-        assem_debug("branch: external");
-      if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
-        ds_assemble_entry(i);
-      }
-      else {
-        add_to_linker((intptr_t)out,ba[i],branch_internal);
-        emit_jmp(0);
+      if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
+        assem_debug("cycle count (adj)");
+        if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
+        load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
+        if(branch_internal)
+          assem_debug("branch: internal");
+        else
+          assem_debug("branch: external");
+        if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
+          ds_assemble_entry(i);
+        }
+        else {
+          add_to_linker((intptr_t)out,ba[i],branch_internal);
+          emit_jmp(0);
+        }
       }
     }
     // branch not taken
@@ -6818,19 +6822,21 @@ static void sjump_assemble(int i,struct regstat *i_regs)
       assert(cc==HOST_CCREG);
       store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
       do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-      assem_debug("cycle count (adj)");
-      if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
-      load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-      if(branch_internal)
-        assem_debug("branch: internal");
-      else
-        assem_debug("branch: external");
-      if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
-        ds_assemble_entry(i);
-      }
-      else {
-        add_to_linker((intptr_t)out,ba[i],branch_internal);
-        emit_jmp(0);
+      if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
+        assem_debug("cycle count (adj)");
+        if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
+        load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
+        if(branch_internal)
+          assem_debug("branch: internal");
+        else
+          assem_debug("branch: external");
+        if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
+          ds_assemble_entry(i);
+        }
+        else {
+          add_to_linker((intptr_t)out,ba[i],branch_internal);
+          emit_jmp(0);
+        }
       }
     }
     // branch not taken
@@ -7024,19 +7030,21 @@ static void fjump_assemble(int i,struct regstat *i_regs)
     assert(cc==HOST_CCREG);
     store_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
     do_cc(i,i_regmap,&adj,ba[i],TAKEN,0);
-    assem_debug("cycle count (adj)");
-    if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
-    load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
-    if(branch_internal)
-      assem_debug("branch: internal");
-    else
-      assem_debug("branch: external");
-    if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
-      ds_assemble_entry(i);
-    }
-    else {
-      add_to_linker((intptr_t)out,ba[i],branch_internal);
-      emit_jmp(0);
+    if(i!=(ba[i]-start)>>2 || source[i+1]!=0) {
+      assem_debug("cycle count (adj)");
+      if(adj) emit_addimm(cc,CLOCK_DIVIDER*(ccadj[i]+2-adj),cc);
+      load_regs_bt(branch_regs[i].regmap,branch_regs[i].is32,branch_regs[i].dirty,ba[i]);
+      if(branch_internal)
+        assem_debug("branch: internal");
+      else
+        assem_debug("branch: external");
+      if(branch_internal&&is_ds[(ba[i]-start)>>2]) {
+        ds_assemble_entry(i);
+      }
+      else {
+        add_to_linker((intptr_t)out,ba[i],branch_internal);
+        emit_jmp(0);
+      }
     }
 
     // branch not taken
@@ -7082,6 +7090,7 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
   intptr_t taken=0;
   intptr_t nottaken=0;
   int unconditional=0;
+  assert(!(i==(ba[i]-start)>>2 && source[i+1]==0)); //FIXME: Idle loop
   if(rs1[i]==0)
   {
     s1l=s2l;s1h=s2h;
@@ -8620,7 +8629,7 @@ int new_recompile_block(int addr)
                 if(rs2[i]) alloc_reg64(&current,i,rs2[i]);
               }
             }
-            else
+            else if((i!=(ba[i]-start)>>2 || source[i+1]!=0))
             {
               ooo[i]=1;
               delayslot_alloc(&current,i+1);
@@ -8648,7 +8657,7 @@ int new_recompile_block(int addr)
                 if(rs1[i]) alloc_reg64(&current,i,rs1[i]);
               }
             }
-            else
+            else if((i!=(ba[i]-start)>>2 || source[i+1]!=0))
             {
               ooo[i]=1;
               delayslot_alloc(&current,i+1);
@@ -8725,7 +8734,7 @@ int new_recompile_block(int addr)
                 if(rs1[i]) alloc_reg64(&current,i,rs1[i]);
               }
             }
-            else
+            else if((i!=(ba[i]-start)>>2 || source[i+1]!=0))
             {
               ooo[i]=1;
               delayslot_alloc(&current,i+1);
@@ -8772,7 +8781,7 @@ int new_recompile_block(int addr)
               alloc_reg(&current,i,CSREG);
               alloc_reg(&current,i,FSREG);
             }
-            else {
+            else if((i!=(ba[i]-start)>>2 || source[i+1]!=0)) {
               ooo[i]=1;
               delayslot_alloc(&current,i+1);
               alloc_reg(&current,i+1,CSREG);
