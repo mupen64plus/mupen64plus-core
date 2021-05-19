@@ -9531,7 +9531,7 @@ int new_recompile_block(int addr)
   {
     if(itype[i]==UJUMP||itype[i]==CJUMP||itype[i]==SJUMP||itype[i]==FJUMP)
     {
-      if(ba[i]>=start && ba[i]<(start+i*4)) 
+      if(ba[i]<start||ba[i]>=(start+i*4)) continue; // jump out of this block or forward branch
       if(itype[i+1]==NOP||itype[i+1]==MOV||itype[i+1]==ALU
       ||itype[i+1]==SHIFTIMM||itype[i+1]==IMM16||itype[i+1]==LOAD
       ||itype[i+1]==STORE||itype[i+1]==STORELR||itype[i+1]==C1LS
@@ -9539,8 +9539,8 @@ int new_recompile_block(int addr)
       ||itype[i+1]==FCOMP||itype[i+1]==FCONV)
       {
         int t=(ba[i]-start)>>2;
-        if(t>0&&(itype[t-1]!=UJUMP&&itype[t-1]!=RJUMP&&itype[t-1]!=CJUMP&&itype[t-1]!=SJUMP&&itype[t-1]!=FJUMP)) // loop_preload can't handle jumps into delay slots
-        if(t<2||(itype[t-2]!=UJUMP&&itype[t-2]!=RJUMP)||rt1[t-2]!=31) // call/ret assumes no registers allocated
+        if(t<=0||(itype[t-1]==UJUMP||itype[t-1]==RJUMP||itype[t-1]==CJUMP||itype[t-1]==SJUMP||itype[t-1]==FJUMP)) continue; // loop_preload can't handle jumps into delay slots
+        if(t>=2&&(itype[t-2]==UJUMP||itype[t-2]==RJUMP)&&rt1[t-2]==31) continue; // call/ret assumes no registers allocated
         for(hr=0;hr<HOST_REGS;hr++)
         {
           if(regs[i].regmap[hr]>64) {
@@ -9750,6 +9750,8 @@ int new_recompile_block(int addr)
                 }
                 if(itype[j]==CJUMP||itype[j]==SJUMP||itype[j]==FJUMP)
                 {
+                  if(branch_regs[j].regmap[hr]>=0)
+                    break;
                   if(ooo[j]) {
                     if(count_free_regs(regs[j].regmap)<=minimum_free_regs[j+1]) 
                       break;
