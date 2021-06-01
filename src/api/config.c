@@ -382,7 +382,7 @@ static m64p_error write_configlist_file(void)
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    fPtr = fopen(filepath, "wb"); 
+    fPtr = osal_file_open(filepath, "wb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Couldn't open configuration file '%s' for writing.", filepath);
@@ -471,7 +471,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    fPtr = fopen(filepath, "rb");
+    fPtr = osal_file_open(filepath, "rb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_INFO, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
@@ -635,7 +635,7 @@ EXPORT m64p_error CALL ConfigExternalOpen(const char *FileName, m64p_handle *Han
     struct external_config* ext_config;
     long ftell_result;
     size_t filelen = 0;
-    if (FileName == NULL || (fPtr = fopen(FileName, "rb")) == NULL)
+    if (FileName == NULL || (fPtr = osal_file_open(FileName, "rb")) == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Unable to open config file '%s'.", FileName);
         return M64ERR_INPUT_INVALID;

@@ -119,7 +119,7 @@ int main(int argc, void *argv[])
 
   /* open r4300 opcode/x86 address table generated from emulator run */
   printf("Loading %s...\n", argv[1]);
-  pfIn = fopen(argv[1], "rb");
+  pfIn = osal_file_open(argv[1], "rb");
   if (pfIn == NULL)
   {
     printf("Couldn't open input file: %s\n", argv[1]);
@@ -168,7 +168,7 @@ int main(int argc, void *argv[])
 
   /* open the profiling sample data file */
   printf("Loading %s...\n", argv[2]);
-  pfIn = fopen(argv[2], "rb");
+  pfIn = osal_file_open(argv[2], "rb");
   if (pfIn == NULL)
   {
     printf("Couldn't open input file: %s\n", argv[2]);

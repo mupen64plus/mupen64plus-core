@@ -49,7 +49,7 @@
 
 file_status_t read_from_file(const char *filename, void *data, size_t size)
 {
-    FILE *f = fopen(filename, "rb");
+    FILE *f = osal_file_open(filename, "rb");
     if (f == NULL)
     {
         return file_open_error;
@@ -67,7 +67,7 @@ file_status_t read_from_file(const char *filename, void *data, size_t size)
 
 file_status_t write_to_file(const char *filename, const void *data, size_t size)
 {
-    FILE *f = fopen(filename, "wb");
+    FILE *f = osal_file_open(filename, "wb");
     if (f == NULL)
     {
         return file_open_error;
@@ -90,8 +90,8 @@ file_status_t write_chunk_to_file(const char *filename, const void *data, size_t
 
     /* first try to open with rb+ to avoid wiping existing content,
      * otherwise create file */
-    if ((f = fopen(filename, "rb+")) == NULL) {
-        if ((f = fopen(filename, "wb")) == NULL) {
+    if ((f = osal_file_open(filename, "rb+")) == NULL) {
+        if ((f = osal_file_open(filename, "wb")) == NULL) {
             return file_open_error;
         }
     }
@@ -126,7 +126,7 @@ file_status_t load_file(const char* filename, void** buffer, size_t* size)
 
     /* open file */
     ret = file_open_error;
-    fd = fopen(filename, "rb");
+    fd = osal_file_open(filename, "rb");
     if (fd == NULL)
     {
         return file_open_error;
@@ -188,7 +188,7 @@ file_status_t get_file_size(const char* filename, size_t* size)
 
     /* open file */
     ret = file_open_error;
-    fd = fopen(filename, "rb");
+    fd = osal_file_open(filename, "rb");
     if (fd == NULL)
     {
         return file_open_error;
