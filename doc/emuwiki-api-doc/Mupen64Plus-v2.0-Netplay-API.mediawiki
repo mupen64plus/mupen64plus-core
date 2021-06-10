@@ -103,7 +103,7 @@ The server is responsible for maintaining healthy buffers and also for detecting
 ** byte[8-11] = disable_extra_mem
 ** byte[12-15] = si_dma_duration
 ** byte[16-19] = emumode
-** byte[20-24] = no_compiled_jump
+** byte[20-23] = no_compiled_jump
 
 * Request player registration data (sent by client):
 ** 1 byte
