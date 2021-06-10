@@ -106,6 +106,7 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
     case 0xe1000000:
         /* set silicon_id mode */
         flashram->mode = FLASHRAM_MODE_READ_SILICON_ID;
+        flashram->status |= 0x01; /* Needed for Pokemon Puzzle League */
         break;
 
     case 0xf0000000:
