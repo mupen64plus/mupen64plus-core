@@ -57,6 +57,7 @@ enum
     PI_STATUS_DMA_BUSY  = 0x01,
     PI_STATUS_IO_BUSY   = 0x02,
     PI_STATUS_ERROR     = 0x04,
+    PI_STATUS_INTERRUPT = 0x08,
 
     /* PI_STATUS - write */
     PI_STATUS_RESET     = 0x01,
