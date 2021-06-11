@@ -54,8 +54,8 @@ static void dma_pi_read(struct pi_controller* pi)
         return;
 
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xffffff;
-    uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xfffffe;
+    uint32_t length = (pi->regs[PI_RD_LEN_REG] & UINT32_C(0x00ffffff)) + 1;
     const uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
     const struct pi_dma_handler* handler = NULL;
@@ -70,10 +70,16 @@ static void dma_pi_read(struct pi_controller* pi)
 
     pre_framebuffer_read(&pi->dp->fb, dram_addr);
 
+    /* PI seems to treat the first 128 bytes differently, see https://n64brew.dev/wiki/Peripheral_Interface#Unaligned_DMA_transfer */
+    if (length >= 0x7f && (length & 1))
+        length += 1;
     unsigned int cycles = handler->dma_read(opaque, dram, dram_addr, cart_addr, length);
 
     /* Mark DMA as busy */
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+    /* Update PI_DRAM_ADDR_REG and PI_CART_ADDR_REG */
+    pi->regs[PI_DRAM_ADDR_REG] = (pi->regs[PI_DRAM_ADDR_REG] + length + 7) & ~7;
+    pi->regs[PI_CART_ADDR_REG] = (pi->regs[PI_CART_ADDR_REG] + length + 1) & ~1;
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->mi->r4300);
@@ -86,8 +92,8 @@ static void dma_pi_write(struct pi_controller* pi)
         return;
 
     uint32_t cart_addr = pi->regs[PI_CART_ADDR_REG] & ~UINT32_C(1);
-    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xffffff;
-    uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00fffffe)) + 2;
+    uint32_t dram_addr = pi->regs[PI_DRAM_ADDR_REG] & 0xfffffe;
+    uint32_t length = (pi->regs[PI_WR_LEN_REG] & UINT32_C(0x00ffffff)) + 1;
     uint8_t* dram = (uint8_t*)pi->ri->rdram->dram;
 
     const struct pi_dma_handler* handler = NULL;
@@ -100,12 +106,20 @@ static void dma_pi_write(struct pi_controller* pi)
         return;
     }
 
+    /* PI seems to treat the first 128 bytes differently, see https://n64brew.dev/wiki/Peripheral_Interface#Unaligned_DMA_transfer */
+    if (length >= 0x7f && (length & 1))
+        length += 1;
+    if (length <= 0x80)
+        length -= dram_addr & 0x7;
     unsigned int cycles = handler->dma_write(opaque, dram, dram_addr, cart_addr, length);
 
     post_framebuffer_write(&pi->dp->fb, dram_addr, length);
 
     /* Mark DMA as busy */
     pi->regs[PI_STATUS_REG] |= PI_STATUS_DMA_BUSY;
+    /* Update PI_DRAM_ADDR_REG and PI_CART_ADDR_REG */
+    pi->regs[PI_DRAM_ADDR_REG] = (pi->regs[PI_DRAM_ADDR_REG] + length + 7) & ~7;
+    pi->regs[PI_CART_ADDR_REG] = (pi->regs[PI_CART_ADDR_REG] + length + 1) & ~1;
 
     /* schedule end of dma interrupt event */
     cp0_update_count(pi->mi->r4300);
@@ -140,6 +154,13 @@ void read_pi_regs(void* opaque, uint32_t address, uint32_t* value)
     uint32_t reg = pi_reg(address);
 
     *value = pi->regs[reg];
+
+    if (reg == PI_WR_LEN_REG || reg == PI_RD_LEN_REG)
+        *value = 0x7F;
+    else if (reg == PI_CART_ADDR_REG)
+        *value &= 0xFFFFFFFE;
+    else if (reg == PI_DRAM_ADDR_REG)
+        *value &= 0xFFFFFE;
 }
 
 void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -168,9 +189,12 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
 
     case PI_STATUS_REG:
-        if (value & mask & 2)
+        if (value & mask & PI_STATUS_CLR_INTR)
+        {
+            pi->regs[reg] &= ~PI_STATUS_INTERRUPT;
             clear_rcp_interrupt(pi->mi, MI_INTR_PI);
-        if (value & mask & 1)
+        }
+        if (value & mask & PI_STATUS_RESET)
             pi->regs[PI_STATUS_REG] = 0;
         return;
 
@@ -193,6 +217,7 @@ void pi_end_of_dma_event(void* opaque)
 {
     struct pi_controller* pi = (struct pi_controller*)opaque;
     pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
+    pi->regs[PI_STATUS_REG] |= PI_STATUS_INTERRUPT;
 
     if (pi->dd != NULL) {
         if ((pi->regs[PI_CART_ADDR_REG] == MM_DD_C2S_BUFFER) ||
