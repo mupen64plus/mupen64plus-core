@@ -46,8 +46,8 @@ static void do_sp_dma(struct rsp_core* sp, const struct sp_dma* dma)
     unsigned int count = ((l >> 12) & 0xff) + 1;
     unsigned int skip = ((l >> 20) & 0xfff);
 
-    unsigned int memaddr = dma->memaddr & 0xfff;
-    unsigned int dramaddr = dma->dramaddr & 0xffffff;
+    unsigned int memaddr = dma->memaddr & 0xff8;
+    unsigned int dramaddr = dma->dramaddr & 0xfffff8;
 
     unsigned char *spmem = (unsigned char*)sp->mem + (dma->memaddr & 0x1000);
     unsigned char *dram = (unsigned char*)sp->ri->rdram->dram;
