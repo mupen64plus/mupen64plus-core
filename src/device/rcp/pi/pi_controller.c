@@ -220,8 +220,8 @@ void pi_end_of_dma_event(void* opaque)
     pi->regs[PI_STATUS_REG] |= PI_STATUS_INTERRUPT;
 
     if (pi->dd != NULL) {
-        if ((pi->regs[PI_CART_ADDR_REG] == MM_DD_C2S_BUFFER) ||
-            (pi->regs[PI_CART_ADDR_REG] == MM_DD_DS_BUFFER)) {
+        if ((pi->regs[PI_CART_ADDR_REG] == (MM_DD_C2S_BUFFER + pi->regs[PI_WR_LEN_REG] + 1)) ||
+            (pi->regs[PI_CART_ADDR_REG] == (MM_DD_DS_BUFFER + pi->regs[PI_WR_LEN_REG] + 1))) {
             dd_update_bm(pi->dd);
         }
     }
