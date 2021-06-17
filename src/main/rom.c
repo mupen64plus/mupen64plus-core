@@ -38,6 +38,7 @@
 #include "device/device.h"
 #include "main.h"
 #include "md5.h"
+#include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "rom.h"
@@ -165,9 +166,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* add some useful properties to ROM_PARAMS */
     ROM_PARAMS.systemtype = rom_country_code_to_system_type(ROM_HEADER.Country_code);
-    ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
-    ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
-    ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
     ROM_PARAMS.cheats = NULL;
 
     memcpy(ROM_PARAMS.headername, ROM_HEADER.Name, 20);
@@ -187,25 +185,25 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.transferpak = entry->transferpak;
         ROM_SETTINGS.mempak = entry->mempak;
         ROM_SETTINGS.biopak = entry->biopak;
-        ROM_PARAMS.countperop = entry->countperop;
-        ROM_PARAMS.disableextramem = entry->disableextramem;
-        ROM_PARAMS.sidmaduration = entry->sidmaduration;
+        ROM_SETTINGS.countperop = entry->countperop;
+        ROM_SETTINGS.disableextramem = entry->disableextramem;
+        ROM_SETTINGS.sidmaduration = entry->sidmaduration;
         ROM_PARAMS.cheats = entry->cheats;
     }
     else
     {
         strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-        ROM_SETTINGS.savetype = NONE;
+        ROM_SETTINGS.savetype = SAVETYPE_NONE;
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 4;
         ROM_SETTINGS.rumble = 1;
         ROM_SETTINGS.transferpak = 0;
         ROM_SETTINGS.mempak = 1;
         ROM_SETTINGS.biopak = 0;
-        ROM_PARAMS.countperop = DEFAULT_COUNT_PER_OP;
-        ROM_PARAMS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
-        ROM_PARAMS.sidmaduration = DEFAULT_SI_DMA_DURATION;
+        ROM_SETTINGS.countperop = DEFAULT_COUNT_PER_OP;
+        ROM_SETTINGS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+        ROM_SETTINGS.sidmaduration = DEFAULT_SI_DMA_DURATION;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -414,7 +412,7 @@ void romdatabase_open(void)
         return;
 
     /* Open romdatabase. */
-    if (pathname == NULL || (fPtr = fopen(pathname, "rb")) == NULL)
+    if (pathname == NULL || (fPtr = osal_file_open(pathname, "rb")) == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Unable to open rom database file '%s'.", pathname);
         return;
@@ -526,22 +524,22 @@ void romdatabase_open(void)
             else if(!strcmp(l.name, "SaveType"))
             {
                 if(!strcmp(l.value, "Eeprom 4KB")) {
-                    search->entry.savetype = EEPROM_4KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_4KB;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Eeprom 16KB")) {
-                    search->entry.savetype = EEPROM_16KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_16KB;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "SRAM")) {
-                    search->entry.savetype = SRAM;
+                    search->entry.savetype = SAVETYPE_SRAM;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Flash RAM")) {
-                    search->entry.savetype = FLASH_RAM;
+                    search->entry.savetype = SAVETYPE_FLASH_RAM;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Controller Pack")) {
-                    search->entry.savetype = CONTROLLER_PACK;
+                    search->entry.savetype = SAVETYPE_CONTROLLER_PACK;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "None")) {
-                    search->entry.savetype = NONE;
+                    search->entry.savetype = SAVETYPE_NONE;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid save type on line %i", lineno);
@@ -719,19 +717,28 @@ static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 romdatabase_entry* ini_search_by_crc(unsigned int crc1, unsigned int crc2)
 {
     romdatabase_search* search;
+    romdatabase_entry* found_entry = NULL;
 
     if(!g_romdatabase.have_database) 
         return NULL;
 
     search = g_romdatabase.crc_lists[((crc1 >> 24) & 0xff)];
 
-    while (search != NULL && search->entry.crc1 != crc1 && search->entry.crc2 != crc2)
+    // because CRCs can be ambiguous (there can be multiple database entries with the same CRC),
+    // we will prefer MD5 hashes instead. If the given CRC matches more than one entry in the
+    // database, we will return no match.
+    while (search != NULL)
+    {
+        if (search->entry.crc1 == crc1 && search->entry.crc2 == crc2)
+        {
+            if (found_entry != NULL)
+                return NULL;
+            found_entry = &search->entry;
+        }
         search = search->next_crc;
+    }
 
-    if(search == NULL) 
-        return NULL;
-
-    return &(search->entry);
+    return found_entry;
 }
 
 

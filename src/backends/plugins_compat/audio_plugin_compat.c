@@ -29,11 +29,8 @@
 #include "main/rom.h"
 #include "plugin/plugin.h"
 
-static void audio_plugin_set_format(void* aout, unsigned int frequency, unsigned int bits)
+static void audio_plugin_set_frequency(void* aout, unsigned int frequency)
 {
-    /* not really implementable with just the zilmar spec.
-     * Try a best effort approach
-     */
     struct ai_controller* ai = (struct ai_controller*)aout;
     uint32_t saved_ai_dacrate = ai->regs[AI_DACRATE_REG];
 
@@ -63,6 +60,6 @@ static void audio_plugin_push_samples(void* aout, const void* buffer, size_t siz
 
 const struct audio_out_backend_interface g_iaudio_out_backend_plugin_compat =
 {
-    audio_plugin_set_format,
+    audio_plugin_set_frequency,
     audio_plugin_push_samples
 };

@@ -227,6 +227,15 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
                 ParamInt = sizeof(m64p_rom_settings);
             memcpy(ParamPtr, &ROM_SETTINGS, ParamInt);
             return M64ERR_SUCCESS;
+        case M64CMD_ROM_SET_SETTINGS:
+            if (g_EmulatorRunning || !l_ROMOpen)
+                return M64ERR_INVALID_STATE;
+            if (ParamPtr == NULL)
+                return M64ERR_INPUT_ASSERT;
+            if ((int)sizeof(m64p_rom_settings) < ParamInt)
+                ParamInt = sizeof(m64p_rom_settings);
+            memcpy(&ROM_SETTINGS, ParamPtr, ParamInt);
+            return M64ERR_SUCCESS;
         case M64CMD_EXECUTE:
             if (g_EmulatorRunning || !l_ROMOpen)
                 return M64ERR_INVALID_STATE;
@@ -359,6 +368,8 @@ EXPORT m64p_error CALL CoreAddCheat(const char *CheatName, m64p_cheat_code *Code
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (netplay_is_init())
+        return M64ERR_INVALID_STATE;
     if (CheatName == NULL || CodeList == NULL)
         return M64ERR_INPUT_ASSERT;
     if (strlen(CheatName) < 1 || NumCodes < 1)
@@ -374,6 +385,8 @@ EXPORT m64p_error CALL CoreCheatEnabled(const char *CheatName, int Enabled)
 {
     if (!l_CoreInit)
         return M64ERR_NOT_INIT;
+    if (netplay_is_init())
+        return M64ERR_INVALID_STATE;
     if (CheatName == NULL)
         return M64ERR_INPUT_ASSERT;
 
@@ -411,6 +424,10 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
     RomSettings->rumble = entry->rumble;
     RomSettings->transferpak = entry->transferpak;
     RomSettings->mempak = entry->mempak;
+    RomSettings->disableextramem = entry->disableextramem;
+    RomSettings->countperop = entry->countperop;
+    RomSettings->savetype = entry->savetype;
+    RomSettings->sidmaduration = entry->sidmaduration;
 
     return M64ERR_SUCCESS;
 }

@@ -73,6 +73,8 @@ typedef config_section *config_list;
 static int         l_ConfigInit = 0;
 static char       *l_DataDirOverride = NULL;
 static char       *l_ConfigDirOverride = NULL;
+static char       *l_UserCacheDirOverride = NULL;
+static char       *l_UserDataDirOverride = NULL;
 static config_list l_ConfigListActive = NULL;
 static config_list l_ConfigListSaved = NULL;
 
@@ -380,7 +382,7 @@ static m64p_error write_configlist_file(void)
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    fPtr = fopen(filepath, "wb"); 
+    fPtr = osal_file_open(filepath, "wb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Couldn't open configuration file '%s' for writing.", filepath);
@@ -469,7 +471,7 @@ m64p_error ConfigInit(const char *ConfigDirOverride, const char *DataDirOverride
     if (filepath == NULL)
         return M64ERR_NO_MEMORY;
 
-    fPtr = fopen(filepath, "rb");
+    fPtr = osal_file_open(filepath, "rb");
     if (fPtr == NULL)
     {
         DebugMessage(M64MSG_INFO, "Couldn't open configuration file '%s'.  Using defaults.", filepath);
@@ -605,6 +607,16 @@ m64p_error ConfigShutdown(void)
         free(l_ConfigDirOverride);
         l_ConfigDirOverride = NULL;
     }
+    if (l_UserDataDirOverride != NULL)
+    {
+        free(l_UserDataDirOverride);
+        l_UserDataDirOverride = NULL;
+    }
+    if (l_UserCacheDirOverride != NULL)
+    {
+        free(l_UserCacheDirOverride);
+        l_UserCacheDirOverride = NULL;
+    }
 
     /* free all of the memory in the 2 lists */
     delete_list(&l_ConfigListActive);
@@ -623,7 +635,7 @@ EXPORT m64p_error CALL ConfigExternalOpen(const char *FileName, m64p_handle *Han
     struct external_config* ext_config;
     long ftell_result;
     size_t filelen = 0;
-    if (FileName == NULL || (fPtr = fopen(FileName, "rb")) == NULL)
+    if (FileName == NULL || (fPtr = osal_file_open(FileName, "rb")) == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Unable to open config file '%s'.", FileName);
         return M64ERR_INPUT_INVALID;
@@ -1554,6 +1566,43 @@ EXPORT const char * CALL ConfigGetParamString(m64p_handle ConfigSectionHandle, c
     }
 }
 
+EXPORT m64p_error CALL ConfigOverrideUserPaths(const char *DataPath, const char *CachePath)
+{
+    /* make sure we're initialized */
+    if (!l_ConfigInit)
+        return M64ERR_NOT_INIT;
+
+    /* cleanup variables */
+    if (l_UserDataDirOverride != NULL)
+    {
+        free(l_UserDataDirOverride);
+        l_UserDataDirOverride = NULL;
+    }
+    if (l_UserCacheDirOverride != NULL)
+    {
+        free(l_UserCacheDirOverride);
+        l_UserCacheDirOverride = NULL;
+    }
+
+    /* if a data directory was specified, make a copy of it */
+    if (DataPath != NULL)
+    {
+        l_UserDataDirOverride = strdup(DataPath);
+        if (l_UserDataDirOverride == NULL)
+            return M64ERR_NO_MEMORY;
+    }
+
+    /* if a cache directory was specified, make a copy of it */
+    if (CachePath != NULL)
+    {
+        l_UserCacheDirOverride = strdup(CachePath);
+        if (l_UserCacheDirOverride == NULL)
+            return M64ERR_NO_MEMORY;
+    }
+
+    return M64ERR_SUCCESS;
+}
+
 /* ------------------------------------------------------ */
 /* OS Abstraction functions, exported outside of the Core */
 /* ------------------------------------------------------ */
@@ -1588,12 +1637,24 @@ EXPORT const char * CALL ConfigGetUserConfigPath(void)
 
 EXPORT const char * CALL ConfigGetUserDataPath(void)
 {
-  return osal_get_user_datapath();
+    if (l_UserDataDirOverride != NULL)
+    {
+        osal_mkdirp(l_UserDataDirOverride, 0700);
+        return l_UserDataDirOverride;
+    }
+    else
+        return osal_get_user_datapath();
 }
 
 EXPORT const char * CALL ConfigGetUserCachePath(void)
 {
-  return osal_get_user_cachepath();
+    if (l_UserCacheDirOverride != NULL)
+    {
+        osal_mkdirp(l_UserCacheDirOverride, 0700);
+        return l_UserCacheDirOverride;
+    }
+    else
+        return osal_get_user_cachepath();
 }
 
 EXPORT m64p_error CALL ConfigSendNetplayConfig(char* data, int size)

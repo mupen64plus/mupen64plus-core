@@ -58,14 +58,26 @@ file_status_t read_from_file(const char *filename, void *data, size_t size);
 /** write_to_file
  *    opens a file and writes the specified number of bytes.
  *    returns zero on success, nonzero on failure
- */ 
+ */
 file_status_t write_to_file(const char *filename, const void *data, size_t size);
+
+/** write_chunk_to_file
+ *    opens a file, seek to offset and writes the specified number of bytes.
+ *    returns zero on success, nonzero on failure
+ */
+file_status_t write_chunk_to_file(const char *filename, const void *data, size_t size, size_t offset);
 
 /** load_file
  *    load the file content into a newly allocated buffer.
  *    returns zero on success, nonzero on failure
  */
 file_status_t load_file(const char* filename, void** buffer, size_t* size);
+
+/** get_file_size
+ *     get file size.
+ *     returns zero on success, nonzero on failure
+ */
+file_status_t get_file_size(const char* filename, size_t* size);
 
 /**********************
    Byte swap utilities

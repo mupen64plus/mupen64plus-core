@@ -31,7 +31,9 @@ enum cic_version
     CIC_X106,
     CIC_5101,
     CIC_5167,
-    CIC_8303
+    CIC_8303,
+    CIC_8401,
+    CIC_8501
 };
 
 struct cic

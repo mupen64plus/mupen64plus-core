@@ -49,7 +49,7 @@
 
 file_status_t read_from_file(const char *filename, void *data, size_t size)
 {
-    FILE *f = fopen(filename, "rb");
+    FILE *f = osal_file_open(filename, "rb");
     if (f == NULL)
     {
         return file_open_error;
@@ -67,7 +67,7 @@ file_status_t read_from_file(const char *filename, void *data, size_t size)
 
 file_status_t write_to_file(const char *filename, const void *data, size_t size)
 {
-    FILE *f = fopen(filename, "wb");
+    FILE *f = osal_file_open(filename, "wb");
     if (f == NULL)
     {
         return file_open_error;
@@ -76,12 +76,45 @@ file_status_t write_to_file(const char *filename, const void *data, size_t size)
     if (fwrite(data, 1, size, f) != size)
     {
         fclose(f);
-        return file_read_error;
+        return file_write_error;
     }
 
     fclose(f);
     return file_ok;
 }
+
+
+file_status_t write_chunk_to_file(const char *filename, const void *data, size_t size, size_t offset)
+{
+    FILE *f;
+
+    /* first try to open with rb+ to avoid wiping existing content,
+     * otherwise create file */
+    if ((f = osal_file_open(filename, "rb+")) == NULL) {
+        if ((f = osal_file_open(filename, "wb")) == NULL) {
+            return file_open_error;
+        }
+    }
+
+    /* According to POSIX fseek past file size is supported and will fill with zeros bytes
+     * (and use sparse file if supported).
+     * So we can use it to position next write operation at desired offset.
+     */
+    if (fseek(f, offset, SEEK_SET)) {
+        fclose(f);
+        return file_open_error;
+    }
+
+    if (fwrite(data, 1, size, f) != size)
+    {
+        fclose(f);
+        return file_write_error;
+    }
+
+    fclose(f);
+    return file_ok;
+}
+
 
 file_status_t load_file(const char* filename, void** buffer, size_t* size)
 {
@@ -93,7 +126,7 @@ file_status_t load_file(const char* filename, void** buffer, size_t* size)
 
     /* open file */
     ret = file_open_error;
-    fd = fopen(filename, "rb");
+    fd = osal_file_open(filename, "rb");
     if (fd == NULL)
     {
         return file_open_error;
@@ -147,6 +180,42 @@ close_file:
     return ret;
 }
 
+file_status_t get_file_size(const char* filename, size_t* size)
+{
+    FILE* fd;
+    int err;
+    file_status_t ret;
+
+    /* open file */
+    ret = file_open_error;
+    fd = osal_file_open(filename, "rb");
+    if (fd == NULL)
+    {
+        return file_open_error;
+    }
+
+    /* obtain file size */
+    ret = file_size_error;
+    err = fseek(fd, 0, SEEK_END);
+    if (err != 0)
+    {
+        goto close_file;
+    }
+
+    err = ftell(fd);
+    if (err == -1)
+    {
+        goto close_file;
+    }
+
+    ret = file_ok;
+    *size = (size_t)err;
+
+    /* close file */
+close_file:
+    fclose(fd);
+    return ret;
+}
 
 /**********************
    Byte swap utilities
@@ -291,7 +360,7 @@ static const char* strpbrk_reverse(const char* needles, const char* haystack)
 const char* namefrompath(const char* path)
 {
     const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
-    
+
     if (last_separator_ptr != NULL)
         return last_separator_ptr + 1;
     else
@@ -1569,7 +1638,7 @@ void ShiftJis2UTF8(const unsigned char *pccInput, unsigned char *pucOutput, int 
             pucOutput[idxOut++] = 0x80 | (unicodeValue & 0x3f);
         }
     }
-    
+
     if (idxOut < outputLength)
         pucOutput[idxOut] = 0;
     else

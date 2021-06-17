@@ -35,6 +35,7 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     /* ! Take ownership of filename ! */
     fstorage->filename = filename;
     fstorage->size = size;
+    fstorage->first_access = 1;
 
     /* allocate memory for holding data */
     fstorage->data = malloc(fstorage->size);
@@ -58,6 +59,7 @@ int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
     fstorage->data = NULL;
     fstorage->size = 0;
     fstorage->filename = NULL;
+    fstorage->first_access = 1;
 
     file_status_t err = load_file(filename, (void**)&fstorage->data, &fstorage->size);
 
@@ -88,14 +90,26 @@ static size_t file_storage_size(const void* storage)
     return fstorage->size;
 }
 
-static void file_storage_save(void* storage)
+static void file_storage_save(void* storage, size_t start, size_t size)
 {
     if (netplay_is_init() && netplay_get_controller(0) == -1)
         return;
 
     struct file_storage* fstorage = (struct file_storage*)storage;
 
-    switch(write_to_file(fstorage->filename, fstorage->data, fstorage->size))
+    file_status_t err;
+
+    /* On first save access ignore start/size and write full storage content,
+     * otherwise write only updated chunk */
+    if (fstorage->first_access) {
+        fstorage->first_access = 0;
+        err = write_to_file(fstorage->filename, fstorage->data, fstorage->size);
+    }
+    else {
+        err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start);
+    }
+
+    switch(err)
     {
     case file_open_error:
         DebugMessage(M64MSG_WARNING, "couldn't open storage file '%s' for writing", fstorage->filename);
@@ -108,41 +122,16 @@ static void file_storage_save(void* storage)
     }
 }
 
-static void file_storage_parent_save(void* storage)
+static void file_storage_parent_save(void* storage, size_t start, size_t size)
 {
     struct file_storage* fstorage = (struct file_storage*)((struct file_storage*)storage)->filename;
-    file_storage_save(fstorage);
+    file_storage_save(fstorage, start, size);
 }
 
-static void file_storage_dd_sdk_dump_save(void* storage)
+static void dummy_save(void* storage, size_t start, size_t size)
 {
-    static uint8_t sdk_buffer[SDK_FORMAT_DUMP_SIZE];
-    struct file_storage* fstorage = (struct file_storage*)storage;
-
-    /* XXX: for now, don't overwrite the original file, because we don't want to corrupt dumps... */
-    char* filename = formatstr("%s.save", fstorage->filename);
-    if (filename == NULL) {
-        DebugMessage(M64MSG_ERROR, "Failed to allocate memory for sdk_dump filename");
-        return;
-    }
-
-    dd_convert_to_sdk(fstorage->data, sdk_buffer);
-
-    switch(write_to_file(filename, sdk_buffer, SDK_FORMAT_DUMP_SIZE))
-    {
-    case file_open_error:
-        DebugMessage(M64MSG_WARNING, "couldn't open storage file '%s' for writing", fstorage->filename);
-        break;
-    case file_write_error:
-        DebugMessage(M64MSG_WARNING, "failed to write storage file '%s'", fstorage->filename);
-        break;
-    default:
-        break;
-    }
-
-    free(filename);
+    /* do nothing */
 }
-
 
 
 const struct storage_backend_interface g_ifile_storage =
@@ -157,7 +146,7 @@ const struct storage_backend_interface g_ifile_storage_ro =
 {
     file_storage_data,
     file_storage_size,
-    NULL
+    dummy_save
 };
 
 const struct storage_backend_interface g_isubfile_storage =
@@ -165,11 +154,4 @@ const struct storage_backend_interface g_isubfile_storage =
     file_storage_data,
     file_storage_size,
     file_storage_parent_save
-};
-
-const struct storage_backend_interface g_ifile_storage_dd_sdk_dump =
-{
-    file_storage_data,
-    file_storage_size,
-    file_storage_dd_sdk_dump_save
 };

@@ -390,6 +390,9 @@
     <ClCompile Include="..\..\src\device\dd\dd_controller.c">
       <Filter>device\dd</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\dd\disk.c">
+      <Filter>device\dd</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\subprojects\md5\md5.c">
       <Filter>subprojects\md5</Filter>
     </ClCompile>
@@ -754,6 +757,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\device\r4300\new_dynarec\arm64\assem_arm64.h">
       <Filter>device\r4300\new_dynarec\arm64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\dd\disk.h">
+      <Filter>device\dd</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

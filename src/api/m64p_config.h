@@ -295,6 +295,16 @@ typedef m64p_error (*ptr_ConfigReceiveNetplayConfig)(char*, int);
 EXPORT m64p_error CALL ConfigReceiveNetplayConfig(char*, int);
 #endif
 
+/* ConfigOverrideUserPaths()
+ *
+ * This function allows overriding the paths returned by
+ * ConfigGetUserDataPath and ConfigGetUserCachePath
+ */
+typedef m64p_error (*ptr_ConfigOverrideUserPaths)(const char*, const char*);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL ConfigOverrideUserPaths(const char*, const char*);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
