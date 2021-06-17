@@ -43,6 +43,7 @@
 #include "device/device.h"
 #include "main/list.h"
 #include "main/main.h"
+#include "osal/files.h"
 #include "osal/preproc.h"
 #include "osd/osd.h"
 #include "plugin/plugin.h"
@@ -200,7 +201,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
     SDL_LockMutex(savestates_lock);
 
-    f = gzopen(filepath, "rb");
+    f = osal_gzopen(filepath, "rb");
     if(f==NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
@@ -1338,7 +1339,7 @@ static int savestates_load_pj64_unc(struct device* dev, char *filepath)
     FILE *f;
 
     /* Open the file. */
-    f = fopen(filepath, "rb");
+    f = osal_file_open(filepath, "rb");
     if (f == NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not open state file: %s", filepath);
@@ -1359,7 +1360,7 @@ static int savestates_load_pj64_unc(struct device* dev, char *filepath)
 static savestates_type savestates_detect_type(char *filepath)
 {
     unsigned char magic[4];
-    FILE *f = fopen(filepath, "rb");
+    FILE *f = osal_file_open(filepath, "rb");
     if (f == NULL)
     {
         DebugMessage(M64MSG_STATUS, "Could not open state file %s\n", filepath);
@@ -1399,21 +1400,21 @@ int savestates_load(void)
         // try M64P type first
         type = savestates_type_m64p;
         filepath = savestates_generate_path(type);
-        fPtr = fopen(filepath, "rb"); // can I open this?
+        fPtr = osal_file_open(filepath, "rb"); // can I open this?
         if (fPtr == NULL)
         {
             free(filepath);
             // try PJ64 zipped type second
             type = savestates_type_pj64_zip;
             filepath = savestates_generate_path(type);
-            fPtr = fopen(filepath, "rb"); // can I open this?
+            fPtr = osal_file_open(filepath, "rb"); // can I open this?
             if (fPtr == NULL)
             {
                 free(filepath);
                 // finally, try PJ64 uncompressed
                 type = savestates_type_pj64_unc;
                 filepath = savestates_generate_path(type);
-                fPtr = fopen(filepath, "rb"); // can I open this?
+                fPtr = osal_file_open(filepath, "rb"); // can I open this?
                 if (fPtr == NULL)
                 {
                     free(filepath);
@@ -1433,7 +1434,7 @@ int savestates_load(void)
         }
         filepath = savestates_generate_path(type);
         if (filepath != NULL)
-            fPtr = fopen(filepath, "rb"); // can I open this?
+            fPtr = osal_file_open(filepath, "rb"); // can I open this?
         if (fPtr == NULL)
         {
             main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
@@ -1477,7 +1478,7 @@ static void savestates_save_m64p_work(struct work_struct *work)
     SDL_LockMutex(savestates_lock);
 
     // Write the state to a GZIP file
-    f = gzopen(save->filepath, "wb");
+    f = osal_gzopen(save->filepath, "wb");
 
     if (f==NULL)
     {
@@ -2119,7 +2120,7 @@ static int savestates_save_pj64_unc(const struct device* dev, char *filepath)
 {
     FILE *f;
 
-    f = fopen(filepath, "wb");
+    f = osal_file_open(filepath, "wb");
     if (f == NULL)
     {
         main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Could not create PJ64 state file: %s", filepath);

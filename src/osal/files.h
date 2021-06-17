@@ -26,6 +26,8 @@
 #if !defined (OSAL_FILES_H)
 #define OSAL_FILES_H
 
+#include <zlib.h>
+
 /* some file-related preprocessor definitions */
 #if defined(WIN32) && !defined(__MINGW32__)
   #include <io.h> // For _unlink()
@@ -33,12 +35,14 @@
   #define unlink _unlink
 
   #define OSAL_DIR_SEPARATORS           "\\/"
+  #define WIDE_OSAL_DIR_SEPARATORS     L"\\/"
   #define PATH_MAX _MAX_PATH
 #else  /* Not WIN32 */
   #include <limits.h>  // for PATH_MAX
   #include <unistd.h>  // for unlink()
 
   #define OSAL_DIR_SEPARATORS           "/"
+  #define WIDE_OSAL_DIR_SEPARATORS     L"/"
 
   /* PATH_MAX only may be defined by limits.h */
   #ifndef PATH_MAX
@@ -56,6 +60,9 @@ extern const char * osal_get_shared_filepath(const char *filename, const char *f
 extern const char * osal_get_user_configpath(void);
 extern const char * osal_get_user_datapath(void);
 extern const char * osal_get_user_cachepath(void);
+
+extern FILE * osal_file_open (const char *filename, const char *mode);
+extern gzFile osal_gzopen(const char *filename, const char *mode);
 
 #endif /* OSAL_FILES_H */
 

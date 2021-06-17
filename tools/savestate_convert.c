@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     filename = argv[1];
-    pfTest = fopen(filename, "rb");
+    pfTest = osal_file_open(filename, "rb");
     if (pfTest == NULL)
     {
         printf("Error: cannot open savestate file '%s' for reading.\n", filename);
