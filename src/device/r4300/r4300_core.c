@@ -360,6 +360,7 @@ int r4300_write_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_
     }
 
     invalidate_r4300_cached_code(r4300, address, 4);
+    invalidate_r4300_cached_code(r4300, address ^ UINT32_C(0x20000000), 4);
 
     address &= UINT32_C(0x1ffffffc);
 
@@ -389,6 +390,7 @@ int r4300_write_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64
     }
 
     invalidate_r4300_cached_code(r4300, address, 8);
+    invalidate_r4300_cached_code(r4300, address ^ UINT32_C(0x20000000), 8);
 
     address &= UINT32_C(0x1ffffffc);
 
