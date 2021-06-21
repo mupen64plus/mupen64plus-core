@@ -10315,6 +10315,8 @@ int new_recompile_block(int addr)
                   //DebugMessage(M64MSG_VERBOSE, "Hit %x -> %x, %x %d/%d",start+i*4,ba[i],start+j*4,hr,r);
                   int k;
                   if(regs[i].regmap[hr]==-1&&branch_regs[i].regmap[hr]==-1) {
+                    if(get_reg(regs[i].regmap,f_regmap[hr])>=0) break;
+                    if(get_reg(branch_regs[i].regmap,f_regmap[hr])>=0) break;
                     if(get_reg(regs[i+2].regmap,f_regmap[hr])>=0) break;
                     if(r>63) {
                       if(get_reg(regs[i].regmap,r&63)<0) break;
