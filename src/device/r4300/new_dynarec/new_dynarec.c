@@ -7327,6 +7327,7 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
   int s2h=get_reg(i_regs->regmap,rs2[i]|64);
   intptr_t taken=0;
   intptr_t nottaken=0;
+  intptr_t nottaken1=0;
   int unconditional=0;
   assert(!(i==(ba[i]-start)>>2 && source[i+1]==0)); //FIXME: Idle loop
   if(rs1[i]==0)
@@ -7459,12 +7460,11 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
     if(s1h>=0) {
       if(s2h>=0) emit_cmp(s1h,s2h);
       else emit_test(s1h,s1h);
-      nottaken=(intptr_t)out;
+      nottaken1=(intptr_t)out;
       emit_jne(0);
     }
     if(s2l>=0) emit_cmp(s1l,s2l);
     else emit_test(s1l,s1l);
-    if(nottaken) set_jump_target(nottaken,(intptr_t)out);
     nottaken=(intptr_t)out;
     emit_jne(0);
   }
@@ -7508,13 +7508,62 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
   }
   if((opcode[i]&0x3f)==0x16) // BLEZL
   {
-    assert((opcode[i]&0x3f)!=0x16);
+    if(s1h>=0) {
+      emit_test(s1h,s1h);
+      taken=(intptr_t)out;
+      emit_js(0);
+      nottaken1=(intptr_t)out;
+      emit_jne(0);
+    }
+    emit_cmpimm(s1l,1);
+    nottaken=(intptr_t)out;
+    if(s1h>=0) emit_jae(0);
+    else emit_jge(0);
+    if(taken) set_jump_target(taken,(intptr_t)out);
   }
   if((opcode[i]&0x3f)==0x17) // BGTZL
   {
-    assert((opcode[i]&0x3f)!=0x17);
+    if(s1h>=0) {
+      emit_test(s1h,s1h);
+      nottaken1=(intptr_t)out;
+      emit_js(0);
+      taken=(intptr_t)out;
+      emit_jne(0);
+    }
+    emit_cmpimm(s1l,1);
+    nottaken=(intptr_t)out;
+    if(s1h>=0) emit_jb(0);
+    else emit_jl(0);
+    if(taken) set_jump_target(taken,(intptr_t)out);
   }
-  assert(opcode[i]!=1); // BLTZ/BGEZ
+  if((opcode[i]==1)&&(opcode2[i]==0)) // BLTZ
+  {
+    emit_mov2imm_compact(ba[i],alt,start+i*4+8,addr);
+    if(s1h>=0) emit_test(s1h,s1h);
+    else emit_test(s1l,s1l);
+    emit_cmovs_reg(alt,addr);
+  }
+  if((opcode[i]==1)&&(opcode2[i]==1)) // BGEZ
+  {
+    emit_mov2imm_compact(ba[i],addr,start+i*4+8,alt);
+    if(s1h>=0) emit_test(s1h,s1h);
+    else emit_test(s1l,s1l);
+    emit_cmovs_reg(alt,addr);
+  }
+  if((opcode[i]==1)&&(opcode2[i]==2)) // BLTZL
+  {
+    if(s1h>=0) emit_test(s1h,s1h);
+    else emit_test(s1l,s1l);
+    nottaken=(intptr_t)out;
+    emit_jns(0);
+  }
+  if((opcode[i]==1)&&(opcode2[i]==3)) // BGEZL
+  {
+    if(s1h>=0) emit_test(s1h,s1h);
+    else emit_test(s1l,s1l);
+    nottaken=(intptr_t)out;
+    emit_js(0);
+  }
 
   if(opcode[i]==0x11 && opcode2[i]==0x08 ) {
     // Check cop1 unusable
@@ -7580,6 +7629,7 @@ static void pagespan_assemble(int i,struct regstat *i_regs)
     set_jump_target((intptr_t)branch_addr,(intptr_t)stub);
   if(likely[i]) {
     // Not-taken path
+    if(nottaken1) set_jump_target((intptr_t)nottaken1,(intptr_t)out);
     set_jump_target((intptr_t)nottaken,(intptr_t)out);
     emit_addimm(HOST_CCREG,CLOCK_DIVIDER*(ccadj[i]+2),HOST_CCREG);
     wb_dirtys(regs[i].regmap,regs[i].is32,regs[i].dirty);
