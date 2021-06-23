@@ -339,6 +339,9 @@
     <ClCompile Include="..\..\src\device\cart\flashram.c">
       <Filter>device\cart</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\cart\is_viewer.c">
+      <Filter>device\cart</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\cart\sram.c">
       <Filter>device\cart</Filter>
     </ClCompile>
@@ -678,6 +681,9 @@
       <Filter>device\cart</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\cart\flashram.h">
+      <Filter>device\cart</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\cart\is_viewer.h">
       <Filter>device\cart</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\cart\sram.h">
