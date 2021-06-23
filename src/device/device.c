@@ -150,6 +150,7 @@ void init_device(struct device* dev,
         { A(MM_DOM2_ADDR1, 0xffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DD_ROM, 0x1ffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
+        { A(MM_IS_VIEWER, 0xfff), M64P_MEM_NOTHING, { &dev->is, RW(is_viewer) } },
         { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_mem) } }
     };
@@ -235,6 +236,8 @@ void poweron_device(struct device* dev)
     poweron_pif(&dev->pif);
 
     poweron_cart(&dev->cart);
+
+    poweron_is_viewer(&dev->is);
 
     /* poweron for controllers */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
