@@ -130,6 +130,8 @@ void jump_vaddr_x28(void){}
 static void __clear_cache(char* begin, char *end){}
 #endif
 
+static int disasm_block[] = {0xa4000040};
+
 #include "osal/preproc.h" //for ALIGN
 ALIGN(4096, static char recomp_dbg_extra_memory[33554432]);
 
@@ -664,7 +666,7 @@ static void debugging(int i, FILE * pFile)
         fprintf(pFile, " %s",regname[r]);
     }
   }
-  
+
   fprintf(pFile, "\nreq32:");
   for(r=0;r<=CCREG;r++) {
     if((requires_32bit[i]>>r)&1) {
@@ -691,12 +693,12 @@ static void debugging(int i, FILE * pFile)
         fprintf(pFile, " %s",regname[r]);
     }
   }
-  
+
   fprintf(pFile, "\n/*");
   fprintf(pFile, "\n");
   disassemble(i, pFile);
   fprintf(pFile, "*/");
-  
+
   fprintf(pFile, "\nreg_map:");
   for(r=0;r<HOST_REGS;r++)
   {
@@ -720,7 +722,7 @@ static void debugging(int i, FILE * pFile)
     {
       if(r!=EXCLUDE_REG) {
         if((regs[i].isconst>>r)&1)
-          fprintf(pFile, " %s=%x ",regname[r],(int)constmap[i][0]);
+          fprintf(pFile, " %s=%x ",regname[r],(int)constmap[i][r]);
       }
     }
   }
@@ -769,15 +771,13 @@ static void debugging(int i, FILE * pFile)
   fprintf(pFile, "\n/************************/\n\n");
 }
 
-static int disasm_block[] = {0xa4000040};
-
 static void replace_addr(intptr_t real_addr, intptr_t addr, size_t addr_size, Variable_t * var, char * op_str, size_t op_size)
 {
   char right[256];
   char addr_str[32];
   char * ptr = NULL;
   char * ptr2 = NULL;
-  
+
   if(addr_size == 4)
     sprintf(addr_str, "0x%x", addr);
   else if(addr_size == 8)
@@ -786,11 +786,11 @@ static void replace_addr(intptr_t real_addr, intptr_t addr, size_t addr_size, Va
     assert(0);
 
   ptr = strstr(op_str, addr_str);
-  
+
   if(ptr == NULL) {
     sprintf(addr_str, "0x%x", -addr);
     ptr = strstr(op_str, addr_str);
-  
+
     assert(ptr != NULL);
     assert(*(ptr-2) == '-');
     *(ptr-2) = '+';
@@ -854,7 +854,7 @@ void recomp_dbg_init(void)
         break;
       j++;
     }
-    
+
     fprintf(pFile, "0x%" PRIxPTR ": 0x%" PRIxPTR " (%s)\n", (uintptr_t)src, (uintptr_t)*src, func[j].name);
     src++;
   }
@@ -870,8 +870,6 @@ void recomp_dbg_cleanup(void)
   for(int n=0;n<4096;n++) ll_clear(jump_out+n);
   for(int n=0;n<4096;n++) ll_clear(jump_dirty+n);
   assert(copy_size==0);
-
-  VirtualFree(recomp_dbg_base_addr, 0, MEM_RELEASE);
 
   /* Capstone cleanup */
   if(handle == 0) return;
