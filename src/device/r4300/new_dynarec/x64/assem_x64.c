@@ -122,19 +122,19 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
 {
   int r,hr;
   int preferred_reg = (reg&3)+(reg>28)*4-(reg==32)+(HOST_CCREG-4)*(reg==36)-(reg==40)-(reg==44)-(reg==48);
-  
+
   // Don't allocate unused registers
   if((cur->u>>reg)&1) return;
-  
+
   // see if it's already allocated
   for(hr=0;hr<HOST_REGS;hr++)
   {
     if(cur->regmap[hr]==reg) return;
   }
-  
+
   // Keep the same mapping if the register was already allocated in a loop
   preferred_reg = loop_reg(i,reg,preferred_reg);
-  
+
   // Try to allocate the preferred register
   if(cur->regmap[preferred_reg]==-1) {
     cur->regmap[preferred_reg]=reg;
@@ -155,7 +155,7 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
     cur->isconst&=~(1<<preferred_reg);
     return;
   }
-  
+
   // Try to allocate EAX, EBX, ECX, or EDX
   // We prefer these because they can do byte and halfword loads
   for(hr=0;hr<4;hr++) {
@@ -166,7 +166,7 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
       return;
     }
   }
-  
+
   // Clear any unneeded registers
   // We try to keep the mapping consistent, if possible, because it
   // makes branches easier (especially loops).  So we try to allocate
@@ -211,14 +211,13 @@ static void alloc_reg(struct regstat *cur,int i,signed char reg)
       return;
     }
   }
-  
+
   // Ok, now we have to evict someone
   // Pick a register we hopefully won't need soon
   u_char hsn[MAXREG+1];
   memset(hsn,10,sizeof(hsn));
   int j;
   lsn(hsn,i,&preferred_reg);
-  //DebugMessage(M64MSG_VERBOSE, "hsn(%x): %d %d %d %d %d %d %d",start+i*4,hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
   if(i>0) {
     // Don't evict the cycle count at entry points, otherwise the entry
     // stub will have to write it.
@@ -297,22 +296,22 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
 {
   int preferred_reg = 5+reg%3;
   int r,hr;
-  
+
   // allocate the lower 32 bits
   alloc_reg(cur,i,reg);
-  
+
   // Don't allocate unused registers
   if((cur->uu>>reg)&1) return;
-  
+
   // see if the upper half is already allocated
   for(hr=0;hr<HOST_REGS;hr++)
   {
     if(cur->regmap[hr]==reg+64) return;
   }
-  
+
   // Keep the same mapping if the register was already allocated in a loop
   preferred_reg = loop_reg(i,reg,preferred_reg);
-  
+
   // Try to allocate the preferred register
   if(cur->regmap[preferred_reg]==-1) {
     cur->regmap[preferred_reg]=reg|64;
@@ -333,7 +332,7 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
     cur->isconst&=~(1<<preferred_reg);
     return;
   }
-  
+
   // Try to allocate EBP, ESI or EDI
   for(hr=5;hr<8;hr++) {
     if(cur->regmap[hr]==-1) {
@@ -343,7 +342,7 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
       return;
     }
   }
-  
+
   // Clear any unneeded registers
   // We try to keep the mapping consistent, if possible, because it
   // makes branches easier (especially loops).  So we try to allocate
@@ -386,15 +385,13 @@ static void alloc_reg64(struct regstat *cur,int i,signed char reg)
       return;
     }
   }
-  
+
   // Ok, now we have to evict someone
   // Pick a register we hopefully won't need soon
   u_char hsn[MAXREG+1];
   memset(hsn,10,sizeof(hsn));
   int j;
   lsn(hsn,i,&preferred_reg);
-  //DebugMessage(M64MSG_VERBOSE, "eax=%d ecx=%d edx=%d ebx=%d ebp=%d esi=%d edi=%d",cur->regmap[0],cur->regmap[1],cur->regmap[2],cur->regmap[3],cur->regmap[5],cur->regmap[6],cur->regmap[7]);
-  //DebugMessage(M64MSG_VERBOSE, "hsn(%x): %d %d %d %d %d %d %d",start+i*4,hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
   if(i>0) {
     // Don't evict the cycle count at entry points, otherwise the entry
     // stub will have to write it.
@@ -476,13 +473,13 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
 {
   int r,hr;
   int preferred_reg = -1;
-  
+
   // see if it's already allocated
   for(hr=0;hr<HOST_REGS;hr++)
   {
     if(hr!=EXCLUDE_REG&&cur->regmap[hr]==reg) return;
   }
-  
+
   // Try to allocate any available register, starting with EDI, ESI, EBP...
   // We prefer EDI, ESI, EBP since the others are used for byte/halfword stores
   for(hr=HOST_REGS-1;hr>=0;hr--) {
@@ -493,7 +490,7 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
       return;
     }
   }
-  
+
   // Find an unneeded register
   for(hr=HOST_REGS-1;hr>=0;hr--)
   {
@@ -522,7 +519,7 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
       }
     }
   }
-  
+
   // Ok, now we have to evict someone
   // Pick a register we hopefully won't need soon
   // TODO: we might want to follow unconditional jumps here
@@ -531,7 +528,6 @@ static void alloc_reg_temp(struct regstat *cur,int i,signed char reg)
   memset(hsn,10,sizeof(hsn));
   int j;
   lsn(hsn,i,&preferred_reg);
-  //DebugMessage(M64MSG_VERBOSE, "hsn: %d %d %d %d %d %d %d",hsn[cur->regmap[0]&63],hsn[cur->regmap[1]&63],hsn[cur->regmap[2]&63],hsn[cur->regmap[3]&63],hsn[cur->regmap[5]&63],hsn[cur->regmap[6]&63],hsn[cur->regmap[7]&63]);
   if(i>0) {
     // Don't evict the cycle count at entry points, otherwise the entry
     // stub will have to write it.
@@ -597,7 +593,7 @@ static void alloc_x64_reg(struct regstat *cur,int i,signed char reg,int hr)
 {
   int n;
   int dirty=0;
-  
+
   // see if it's already allocated (and dealloc it)
   for(n=0;n<HOST_REGS;n++)
   {
@@ -606,7 +602,7 @@ static void alloc_x64_reg(struct regstat *cur,int i,signed char reg,int hr)
       cur->regmap[n]=-1;
     }
   }
-  
+
   cur->regmap[hr]=reg;
   cur->dirty&=~(1<<hr);
   cur->dirty|=dirty<<hr;
@@ -3365,7 +3361,7 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
 #ifndef INTERPRET_LOADLR
   int ldlr=(opcode[i]==0x1A||opcode[i]==0x1B); // LDL/LDR always do inline_readstub if non constant
   if(!using_tlb) {
-    if(!c&&!ldlr) { 
+    if(!c&&!ldlr) {
       emit_cmpimm(addr,0x800000);
       jaddr=(intptr_t)out;
       emit_jno(0);
@@ -3444,7 +3440,7 @@ static void loadlr_assemble_x64(int i,struct regstat *i_regs)
         inline_readstub(type,i,0,addr,i_regs,rt1[i],ccadj[i],reglist);
       }
       else
-      {  
+      {
         int shift=((constmap[i][s]+offset)&7)<<3;
         uint64_t mask=~UINT64_C(0);
         if (opcode[i]==0x1B) { //LDR
@@ -3503,6 +3499,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
   }
 
 #ifndef INTERPRET_FCONV
+#ifdef __SSE__
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x0d) { // trunc_w_s
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
     emit_movss_load(temp,0);
@@ -3520,7 +3517,8 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_movd_store(0,temp);
     return;
   }
-  
+#endif
+
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) { // cvt_s_w
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
     emit_fildl(temp);
@@ -3551,7 +3549,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_fstpl(temp);
     return;
   }
-  
+
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x21) { // cvt_d_s
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
     emit_flds(temp);
@@ -3566,7 +3564,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_fstps(temp);
     return;
   }
-  
+
   if(opcode2[i]==0x10) { // cvt_*_s
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],temp);
     emit_flds(temp);
@@ -3597,16 +3595,16 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
   }
   return;
 #endif
-  
+
   // C emulation code
-  
+
   u_int hr,reglist=0;
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
   signed char fs=get_reg(i_regs->regmap,FSREG);
   save_regs(reglist);
-  
+
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
     if(fs>=0) emit_mov(fs,ARG1_REG);
     else emit_loadreg(FSREG,ARG1_REG);
@@ -3633,7 +3631,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_d_l);
   }
-  
+
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x21) {
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG2_REG);
@@ -3653,7 +3651,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_l_s);
   }
-  
+
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x20) {
     if(fs>=0) emit_mov(fs,ARG1_REG);
     else emit_loadreg(FSREG,ARG1_REG);
@@ -3675,7 +3673,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG3_REG);
     emit_call((intptr_t)cvt_l_d);
   }
-  
+
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x08) {
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG2_REG);
@@ -3716,7 +3714,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG2_REG);
     emit_call((intptr_t)floor_w_s);
   }
-  
+
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x08) {
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f],ARG2_REG);
@@ -3757,7 +3755,7 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f],ARG2_REG);
     emit_call((intptr_t)floor_w_d);
   }
-  
+
   restore_regs(reglist);
   return;
 }
@@ -3778,19 +3776,19 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     add_stub(FP_STUB,jaddr,(intptr_t)out,i,cs,(intptr_t)i_regs,is_delayslot,0);
     cop1_usable=1;
   }
-  
+
 #ifndef INTERPRET_FCOMP
   if((source[i]&0x3f)==0x30) {
     emit_andimm(fs,~0x800000,fs);
     return;
   }
-  
+
   if((source[i]&0x3e)==0x38) {
     // sf/ngle - these should throw exceptions for NaNs
     emit_andimm(fs,~0x800000,fs);
     return;
   }
-  
+
   if(opcode2[i]==0x10) {
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f],temp);
     emit_flds(temp);
@@ -3912,7 +3910,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     add_stub(FP_STUB,jaddr,(intptr_t)out,i,cs,(intptr_t)i_regs,is_delayslot,0);
     cop1_usable=1;
   }
-  
+
 #ifndef INTERPRET_FLOAT
   if((source[i]&0x3f)==6) // mov
   {
@@ -3932,7 +3930,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     }
     return;
   }
-  
+
   if((source[i]&0x3f)>3)
   {
     if(opcode2[i]==0x10) {
@@ -4275,56 +4273,6 @@ static void do_miniht_insert(int return_address,int rt,int temp) {
   add_to_linker((intptr_t)out,return_address,1);
   emit_movimm64(0,temp);
   emit_writedword(temp,(intptr_t)&g_dev.r4300.new_dynarec_hot_state.mini_ht[(return_address&0x1FF)>>4][1]);
-}
-
-// Sign-extend to 64 bits and write out upper half of a register
-// This is useful where we have a 32-bit value in a register, and want to
-// keep it in a 32-bit register, but can't guarantee that it won't be read
-// as a 64-bit value later.
-static void wb_sx(signed char pre[],signed char entry[],uint64_t dirty,uint64_t is32_pre,uint64_t is32,uint64_t u,uint64_t uu)
-{
-  if(is32_pre==is32) return;
-  int hr,reg;
-  for(hr=0;hr<HOST_REGS;hr++) {
-    if(hr!=EXCLUDE_REG) {
-      //if(pre[hr]==entry[hr]) {
-        if((reg=pre[hr])>=0) {
-          if((dirty>>hr)&1) {
-            if( ((is32_pre&~is32&~uu)>>reg)&1 ) {
-              emit_sarimm(hr,31,HOST_TEMPREG);
-              emit_storereg(reg|64,HOST_TEMPREG);
-            }
-          }
-        }
-      //}
-    }
-  }
-}
-
-static void wb_valid(signed char pre[],signed char entry[],u_int dirty_pre,u_int dirty,uint64_t is32_pre,uint64_t u,uint64_t uu)
-{
-  //if(dirty_pre==dirty) return;
-  int hr,reg;
-  for(hr=0;hr<HOST_REGS;hr++) {
-    if(hr!=EXCLUDE_REG) {
-      reg=pre[hr];
-      if(((~u)>>(reg&63))&1) {
-        if(((reg&63)>0)&&((reg&63)<CSREG)) {
-          if(((dirty_pre&~dirty)>>hr)&1) {
-            if(reg<64) {
-              emit_storereg(reg,hr);
-              if( ((is32_pre&~uu)>>reg)&1 ) {
-                emit_sarimm(hr,31,HOST_TEMPREG);
-                emit_storereg(reg|64,HOST_TEMPREG);
-              }
-            } else {
-              emit_storereg(reg,hr);
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 // We don't need this for x64

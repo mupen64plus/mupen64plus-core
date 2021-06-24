@@ -55,34 +55,34 @@ fp_pcaddr              = offsetof_struct_new_dynarec_hot_state_pcaddr
 fp_stop                = offsetof_struct_new_dynarec_hot_state_stop
 
 TEXT_SECTION
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x0):
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x1):
     mov    w0, w1
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x2):
     mov    w0, w2
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x3):
     mov    w0, w3
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x4):
     mov    w0, w4
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x5):
     mov    w0, w5
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x6):
     mov    w0, w6
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x8):
     mov    w0, w8
     b      jump_vaddr
@@ -90,82 +90,82 @@ GLOBAL_FUNCTION(jump_vaddr_x8):
 GLOBAL_FUNCTION(jump_vaddr_x9):
     mov    w0, w9
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x10):
     mov    w0, w10
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x11):
     mov    w0, w11
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x12):
     mov    w0, w12
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x13):
     mov    w0, w13
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x14):
     mov    w0, w14
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x15):
     mov    w0, w15
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x16):
     mov    w0, w16
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x17):
     mov    w0, w17
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x19):
     mov    w0, w19
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x21):
     mov    w0, w21
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x22):
     mov    w0, w22
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x23):
     mov    w0, w23
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x24):
     mov    w0, w24
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x25):
     mov    w0, w25
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x26):
     mov    w0, w26
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x27):
     mov    w0, w27
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x28):
     mov    w0, w28
     b      jump_vaddr
-    
+
 GLOBAL_FUNCTION(jump_vaddr_x7):
     mov    w0, w7
- 
+
 GLOBAL_FUNCTION(jump_vaddr):
     bl     get_addr_ht
     br     x0
-    
+
 GLOBAL_FUNCTION(verify_code):
     /* x0 = head */
     mov    x21, x30 /* Save link register */
@@ -177,7 +177,7 @@ GLOBAL_FUNCTION(verify_code):
 .D1:
     bl     get_addr
     br     x0
-    
+
 GLOBAL_FUNCTION(cc_interrupt):
     str    w20, [x29, #fp_cycle_count]
     str    wzr, [x29, #fp_pending_exception]
@@ -206,7 +206,7 @@ LOCAL_FUNCTION(new_dyna_stop):
     ldp    x27,x28,[x16,#64]
     ldp    x29,x30,[x16,#80]
     ret
-    
+
 GLOBAL_FUNCTION(do_interrupt):
     ldr    w2, [x29, #fp_stop]
     tst    w2, w2
@@ -215,17 +215,17 @@ GLOBAL_FUNCTION(do_interrupt):
     bl     get_addr_ht
     ldr    w20, [x29, #fp_cycle_count]
     br     x0
-    
+
 GLOBAL_FUNCTION(fp_exception):
     str    w0, [x29, #fp_pcaddr]
     bl     cop1_unusable
     br     x0
-    
+
 GLOBAL_FUNCTION(jump_syscall):
     str    w0, [x29, #fp_pcaddr]
     bl     SYSCALL_new
     br     x0
-    
+
 GLOBAL_FUNCTION(jump_eret):
     str    w20, [x29, #fp_cycle_count]
     bl     ERET_new
@@ -241,7 +241,7 @@ GLOBAL_FUNCTION(dyna_linker):
 GLOBAL_FUNCTION(dyna_linker_ds):
     bl     dynamic_linker_ds
     br     x0
-    
+
 GLOBAL_FUNCTION(new_dyna_start):
     adrp   x16, g_dev
     add    x16, x16, :lo12:g_dev
@@ -262,7 +262,7 @@ GLOBAL_FUNCTION(new_dyna_start):
     bl     new_recompile_block
     ldr    w20, [x29, #fp_cycle_count]
     br     x19
-    
+
 GLOBAL_FUNCTION(breakpoint):
     brk 0
     ret
