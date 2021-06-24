@@ -40,7 +40,7 @@ void format_eeprom(uint8_t* mem, size_t size)
 
 
 void init_eeprom(struct eeprom* eeprom,
-    uint16_t type,
+    uint32_t type,
     void* storage,
     const struct storage_backend_interface* istorage)
 {

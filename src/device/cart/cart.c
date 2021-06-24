@@ -48,7 +48,7 @@ static void process_cart_command(void* jbd,
         /* set type and status */
         rx_buf[0] = (uint8_t)(cart->eeprom.type >> 0);
         rx_buf[1] = (uint8_t)(cart->eeprom.type >> 8);
-        rx_buf[2] = 0x00;
+        rx_buf[2] = (uint8_t)(cart->eeprom.type >> 16);
     } break;
 
     case JCMD_EEPROM_READ: {
@@ -102,7 +102,7 @@ void init_cart(struct cart* cart,
                struct r4300_core* r4300,
                struct pi_controller* pi,
                /* eeprom */
-               uint16_t eeprom_type,
+               uint32_t eeprom_type,
                void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
                /* flashram */
                uint32_t flashram_type,
