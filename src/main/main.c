@@ -1466,9 +1466,6 @@ m64p_error main_run(void)
         case SAVETYPE_EEPROM_16KB:
             eeprom_type = JDT_EEPROM_16K;
             break;
-        default:
-            eeprom_type = JDT_EEPROM_NONE;
-            break;
     }
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
