@@ -44,6 +44,7 @@ static void process_cart_command(void* jbd,
         /* fall through */
     case JCMD_STATUS: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
+
         if (cart->eeprom.type) {
             /* set type, status, and extra */
             rx_buf[0] = (uint8_t)(cart->eeprom.type >> 0);
