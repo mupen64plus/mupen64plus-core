@@ -1458,7 +1458,7 @@ m64p_error main_run(void)
     /* XXX: select type of flashram from db */
     uint32_t flashram_type = MX29L1100_ID;
 
-    uint32_t eeprom_type = JDT_EEPROM_NONE;
+    uint16_t eeprom_type = JDT_EEPROM_NONE;
     switch (ROM_SETTINGS.savetype) {
         case SAVETYPE_EEPROM_4KB:
             eeprom_type = JDT_EEPROM_4K;
