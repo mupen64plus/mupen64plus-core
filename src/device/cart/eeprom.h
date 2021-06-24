@@ -29,7 +29,7 @@ struct storage_backend_interface;
 
 struct eeprom
 {
-    uint32_t type;
+    uint16_t type;
     void* storage;
     const struct storage_backend_interface* istorage;
 };
@@ -38,7 +38,7 @@ struct eeprom
 void format_eeprom(uint8_t* eeprom, size_t size);
 
 void init_eeprom(struct eeprom* eeprom,
-    uint32_t type,
+    uint16_t type,
     void* storage,
     const struct storage_backend_interface* istorage);
 

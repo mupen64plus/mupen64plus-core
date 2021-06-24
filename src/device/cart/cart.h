@@ -58,7 +58,7 @@ void init_cart(struct cart* cart,
                struct r4300_core* r4300,
                struct pi_controller* pi,
                /* eeprom */
-               uint32_t eeprom_type,
+               uint16_t eeprom_type,
                void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
                /* flashram */
                uint32_t flashram_type,

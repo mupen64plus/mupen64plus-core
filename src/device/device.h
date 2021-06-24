@@ -135,7 +135,7 @@ void init_device(struct device* dev,
     /* cart */
     void* af_rtc_clock, const struct clock_backend_interface* iaf_rtc_clock,
     size_t rom_size,
-    uint32_t eeprom_type,
+    uint16_t eeprom_type,
     void* eeprom_storage, const struct storage_backend_interface* ieeprom_storage,
     uint32_t flashram_type,
     void* flashram_storage, const struct storage_backend_interface* iflashram_storage,
