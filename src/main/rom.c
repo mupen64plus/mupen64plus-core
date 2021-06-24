@@ -459,7 +459,7 @@ void romdatabase_open(void)
             search->entry.crc1 = 0;
             search->entry.crc2 = 0;
             search->entry.status = 0; /* Set default to 0 stars. */
-            search->entry.savetype = 0;
+            search->entry.savetype = SAVETYPE_EEPROM_4K;
             search->entry.players = 4;
             search->entry.rumble = 1;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
