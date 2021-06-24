@@ -45,8 +45,8 @@ enum joybus_device_types
     JDT_JOY_PORT         = 0x0004,  /* has port for external paks */
     JDT_AF_RTC           = 0x1000,  /* RTC */
     JDT_EEPROM_NONE      = 0x0000,  /* EEPROM not present */
-    JDT_EEPROM_4K        = 0x0080,  /* 4k EEPROM */
-    JDT_EEPROM_16K       = 0x00c0,  /* 16k EEPROM */
+    JDT_EEPROM_4K        = 0x8000,  /* 4k EEPROM */
+    JDT_EEPROM_16K       = 0xc000,  /* 16k EEPROM */
 };
 
 /* snippet which helps validate command format */
