@@ -1052,7 +1052,7 @@ static void open_eep_file(struct file_storage* fstorage)
     }
 
     /* Truncate to 4k bit if necessary */
-    if (ROM_SETTINGS.savetype != SAVETYPE_EEPROM_16KB) {
+    if (ROM_SETTINGS.savetype != SAVETYPE_EEPROM_16K) {
         fstorage->size = 0x200;
     }
 }
@@ -1458,12 +1458,12 @@ m64p_error main_run(void)
     /* XXX: select type of flashram from db */
     uint32_t flashram_type = MX29L1100_ID;
 
-    uint16_t eeprom_type = JDT_EEPROM_NONE;
+    uint16_t eeprom_type = JDT_NONE;
     switch (ROM_SETTINGS.savetype) {
-        case SAVETYPE_EEPROM_4KB:
+        case SAVETYPE_EEPROM_4K:
             eeprom_type = JDT_EEPROM_4K;
             break;
-        case SAVETYPE_EEPROM_16KB:
+        case SAVETYPE_EEPROM_16K:
             eeprom_type = JDT_EEPROM_16K;
             break;
     }
