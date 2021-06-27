@@ -1484,8 +1484,8 @@ m64p_error main_run(void)
     if (count_per_op <= 0)
         count_per_op = ROM_SETTINGS.countperop;
 
-    if (count_per_op_denom_pot > 8)
-        count_per_op_denom_pot = 8;
+    if (count_per_op_denom_pot > 11)
+        count_per_op_denom_pot = 11;
 
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
