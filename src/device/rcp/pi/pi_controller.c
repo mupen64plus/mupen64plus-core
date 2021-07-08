@@ -221,7 +221,7 @@ void pi_end_of_dma_event(void* opaque)
 
     if (pi->dd != NULL) {
         if (((pi->regs[PI_CART_ADDR_REG] >= MM_DD_C2S_BUFFER) && (pi->regs[PI_CART_ADDR_REG] < MM_DD_DS_BUFFER)) ||
-            (pi->regs[PI_CART_ADDR_REG] >= MM_DD_DS_BUFFER) && ((pi->regs[PI_CART_ADDR_REG] < MM_DD_REGS))) {
+            ((pi->regs[PI_CART_ADDR_REG] >= MM_DD_DS_BUFFER) && (pi->regs[PI_CART_ADDR_REG] < MM_DD_REGS))) {
             dd_update_bm(pi->dd);
         }
     }
