@@ -140,6 +140,7 @@ ALIGN(4096, static char recomp_dbg_extra_memory[33554432]);
 
 #include <inttypes.h>
 #include <capstone.h>
+#include "osal/files.h"
 #if RECOMPILER_DEBUG == NEW_DYNAREC_X86
     #define ARCHITECTURE CS_ARCH_X86
     #define MODE CS_MODE_32
