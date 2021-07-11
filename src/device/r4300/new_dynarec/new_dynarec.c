@@ -7061,10 +7061,8 @@ static void ujump_assemble(int i,struct regstat *i_regs)
   if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   address_generation(i+1,i_regs,regs[i].regmap_entry);
 
-  //Deal with ROM Hacks
-  if(rt1[i+1]==31)
+  if(rt1[i+1]==31||rs1[i+1]==31||rs2[i+1]==31)
   {
-    assert(rs1[i+1]==31);
     signed char rt=get_reg(branch_regs[i].regmap,31);
     assert(get_reg(i_regs->regmap,31)==rt);
     emit_movimm(start+i*4+8,rt); // PC into link register
@@ -9322,9 +9320,14 @@ int new_recompile_block(int addr)
           if(ba[j]==start+i*4+4) done=j=0;
           if(ba[j]==start+i*4+8) done=j=0;
         }
-        // Tonic trouble is weird!
-        if(type==CJUMP)
-          done=0;
+
+        // Stop if we're compiling junk
+        if(type==UJUMP||type==CJUMP||type==SJUMP||type==RJUMP||type==FJUMP)
+        {
+          done=stop_after_jal=1;
+          itype[i]=NOP;
+          DebugMessage(M64MSG_VERBOSE, "Disabled speculative precompilation");
+        }
       }
       else {
         if(stop_after_jal) done=1;
@@ -9636,7 +9639,6 @@ int new_recompile_block(int addr)
           if (rt1[i]==31) {
             alloc_reg(&current,i,31);
             dirty_reg(&current,31);
-            assert(rs2[i+1]!=31);
             #ifdef REG_PREFETCH
             alloc_reg(&current,i,PTEMP);
             #endif
