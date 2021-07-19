@@ -7061,7 +7061,7 @@ static void ujump_assemble(int i,struct regstat *i_regs)
   if(i==(ba[i]-start)>>2) assem_debug("idle loop");
   address_generation(i+1,i_regs,regs[i].regmap_entry);
 
-  if(rt1[i+1]==31||rs1[i+1]==31||rs2[i+1]==31)
+  if((rt1[i]==31)&&(rt1[i+1]==31||rs1[i+1]==31||rs2[i+1]==31))
   {
     signed char rt=get_reg(branch_regs[i].regmap,31);
     assert(get_reg(i_regs->regmap,31)==rt);
