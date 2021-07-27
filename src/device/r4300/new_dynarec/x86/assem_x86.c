@@ -2899,11 +2899,22 @@ static void shift_assemble_x86(int i,struct regstat *i_regs)
             emit_cmovne_reg(th==ECX?shift:th,tl==ECX?shift:tl);
             if(real_th>=0) emit_cmovne_reg(temp==ECX?shift:temp,th==ECX?shift:th);
           }
-          if(shift!=ECX) {
-            emit_xchg(shift,ECX);
-            if(real_tl==shift) {
-              emit_mov(sl,real_tl);
-              emit_popreg(sl);
+          if(real_tl==ECX&&sl!=ECX&&shift==real_tl) {
+            emit_mov(sl,real_tl);
+            emit_popreg(sl);
+          }
+          else if(th==ECX&&sh!=ECX&&shift==real_tl) {
+            emit_mov(sl,real_tl);
+            emit_popreg(sl);
+          }
+          else
+          {
+            if(shift!=ECX) {
+              emit_xchg(shift,ECX);
+              if(real_tl==shift) {
+                emit_mov(sl,real_tl);
+                emit_popreg(sl);
+              }
             }
           }
         }
