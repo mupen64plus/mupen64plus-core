@@ -185,9 +185,10 @@ struct cp0
     unsigned int interrupt_unsafe_state;
 
     struct interrupt_queue q;
+    unsigned int next_interrupt;
+
 #ifndef NEW_DYNAREC
 	/* New dynarec uses a different memory layout */
-    unsigned int next_interrupt;
     int cycle_count;
 #endif
 

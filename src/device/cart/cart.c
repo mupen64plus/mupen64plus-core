@@ -45,10 +45,12 @@ static void process_cart_command(void* jbd,
     case JCMD_STATUS: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
 
-        /* set type and status */
-        rx_buf[0] = (uint8_t)(cart->eeprom.type >> 0);
-        rx_buf[1] = (uint8_t)(cart->eeprom.type >> 8);
-        rx_buf[2] = 0x00;
+        if (cart->eeprom.type) {
+            /* set type, status, and extra */
+            rx_buf[0] = (uint8_t)(cart->eeprom.type >> 0);
+            rx_buf[1] = (uint8_t)(cart->eeprom.type >> 8);
+            rx_buf[2] = 0x00;
+        }
     } break;
 
     case JCMD_EEPROM_READ: {

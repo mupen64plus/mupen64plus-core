@@ -194,7 +194,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     {
         strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-        ROM_SETTINGS.savetype = SAVETYPE_NONE;
+        /* There's no way to guess the save type, but 4K EEPROM is better than nothing */
+        ROM_SETTINGS.savetype = SAVETYPE_EEPROM_4K;
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 4;
         ROM_SETTINGS.rumble = 1;
@@ -458,7 +459,7 @@ void romdatabase_open(void)
             search->entry.crc1 = 0;
             search->entry.crc2 = 0;
             search->entry.status = 0; /* Set default to 0 stars. */
-            search->entry.savetype = 0;
+            search->entry.savetype = SAVETYPE_EEPROM_4K;
             search->entry.players = 4;
             search->entry.rumble = 1;
             search->entry.countperop = DEFAULT_COUNT_PER_OP;
@@ -524,10 +525,10 @@ void romdatabase_open(void)
             else if(!strcmp(l.name, "SaveType"))
             {
                 if(!strcmp(l.value, "Eeprom 4KB")) {
-                    search->entry.savetype = SAVETYPE_EEPROM_4KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_4K;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Eeprom 16KB")) {
-                    search->entry.savetype = SAVETYPE_EEPROM_16KB;
+                    search->entry.savetype = SAVETYPE_EEPROM_16K;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "SRAM")) {
                     search->entry.savetype = SAVETYPE_SRAM;
@@ -536,7 +537,7 @@ void romdatabase_open(void)
                     search->entry.savetype = SAVETYPE_FLASH_RAM;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "Controller Pack")) {
-                    search->entry.savetype = SAVETYPE_CONTROLLER_PACK;
+                    search->entry.savetype = SAVETYPE_CONTROLLER_PAK;
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SAVETYPE;
                 } else if(!strcmp(l.value, "None")) {
                     search->entry.savetype = SAVETYPE_NONE;

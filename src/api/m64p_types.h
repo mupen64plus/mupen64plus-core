@@ -224,12 +224,15 @@ typedef enum
 
 typedef enum
 {
-    SAVETYPE_EEPROM_4KB = 0,
-    SAVETYPE_EEPROM_16KB,
-    SAVETYPE_SRAM,
-    SAVETYPE_FLASH_RAM,
-    SAVETYPE_CONTROLLER_PACK,
-    SAVETYPE_NONE
+    SAVETYPE_EEPROM_4K       = 0,
+    SAVETYPE_EEPROM_4KB      = 0, // Preserve inaccurate/misleading name
+    SAVETYPE_EEPROM_16K      = 1,
+    SAVETYPE_EEPROM_16KB     = 1, // Preserve inaccurate/misleading name
+    SAVETYPE_SRAM            = 2,
+    SAVETYPE_FLASH_RAM       = 3,
+    SAVETYPE_CONTROLLER_PAK  = 4,
+    SAVETYPE_CONTROLLER_PACK = 4, // Preserve inaccurate/off-brand name
+    SAVETYPE_NONE            = 5,
 } m64p_rom_save_type;
 
 typedef struct

@@ -504,6 +504,7 @@ SOURCE = \
     $(SRCDIR)/device/cart/cart_rom.c \
     $(SRCDIR)/device/cart/eeprom.c \
     $(SRCDIR)/device/cart/flashram.c \
+    $(SRCDIR)/device/cart/is_viewer.c \
     $(SRCDIR)/device/cart/sram.c \
     $(SRCDIR)/device/controllers/game_controller.c \
     $(SRCDIR)/device/controllers/paks/biopak.c \

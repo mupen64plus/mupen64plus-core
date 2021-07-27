@@ -40,9 +40,10 @@ enum joybus_commands
 
 enum joybus_device_types
 {
-    JDT_JOY_ABS_COUNTERS = 0x1,     /* joystick with absolute coordinates */
-    JDT_JOY_REL_COUNTERS = 0x2,     /* joystick with relative coordinates (= mouse) */
-    JDT_JOY_PORT         = 0x4,     /* has port for external paks */
+    JDT_NONE             = 0x0000,
+    JDT_JOY_ABS_COUNTERS = 0x0001,  /* joystick with absolute coordinates */
+    JDT_JOY_REL_COUNTERS = 0x0002,  /* joystick with relative coordinates (= mouse) */
+    JDT_JOY_PORT         = 0x0004,  /* has port for external paks */
     JDT_AF_RTC           = 0x1000,  /* RTC */
     JDT_EEPROM_4K        = 0x8000,  /* 4k EEPROM */
     JDT_EEPROM_16K       = 0xc000,  /* 16k EEPROM */

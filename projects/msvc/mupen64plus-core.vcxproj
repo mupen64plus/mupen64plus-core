@@ -133,6 +133,7 @@
     <ClCompile Include="..\..\src\device\cart\cart_rom.c" />
     <ClCompile Include="..\..\src\device\cart\eeprom.c" />
     <ClCompile Include="..\..\src\device\cart\flashram.c" />
+    <ClCompile Include="..\..\src\device\cart\is_viewer.c" />
     <ClCompile Include="..\..\src\device\cart\sram.c" />
     <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\biopak.c" />
@@ -436,6 +437,7 @@
     <ClInclude Include="..\..\src\device\cart\cart_rom.h" />
     <ClInclude Include="..\..\src\device\cart\eeprom.h" />
     <ClInclude Include="..\..\src\device\cart\flashram.h" />
+    <ClInclude Include="..\..\src\device\cart\is_viewer.h" />
     <ClInclude Include="..\..\src\device\cart\sram.h" />
     <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\biopak.h" />
