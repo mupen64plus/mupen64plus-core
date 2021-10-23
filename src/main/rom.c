@@ -54,6 +54,7 @@ enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
 enum { DEFAULT_SI_DMA_DURATION = 0x900 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
+static romdatabase_entry* ini_search_by_name(const char* name);
 
 static _romdatabase g_romdatabase;
 
@@ -174,7 +175,8 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
 
     /* Look up this ROM in the .ini file and fill in goodname, etc */
     if ((entry=ini_search_by_md5(digest)) != NULL ||
-        (entry=ini_search_by_crc(tohl(ROM_HEADER.CRC1),tohl(ROM_HEADER.CRC2))) != NULL)
+        (entry=ini_search_by_crc(tohl(ROM_HEADER.CRC1),tohl(ROM_HEADER.CRC2))) != NULL ||
+        (entry=ini_search_by_name(ROM_PARAMS.headername)) != NULL)
     {
         strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
         ROM_SETTINGS.goodname[255] = '\0';
@@ -454,6 +456,7 @@ void romdatabase_open(void)
             memset(search, 0, sizeof(romdatabase_search));
 
             search->entry.goodname = NULL;
+            search->entry.internalname = NULL;
             memcpy(search->entry.md5, md5, 16);
             search->entry.refmd5 = NULL;
             search->entry.crc1 = 0;
@@ -492,6 +495,10 @@ void romdatabase_open(void)
             {
                 search->entry.goodname = strdup(l.value);
                 search->entry.set_flags |= ROMDATABASE_ENTRY_GOODNAME;
+            }
+            else if(!strcmp(l.name, "InternalName"))
+            {
+                search->entry.internalname = strdup(l.value);
             }
             else if(!strcmp(l.name, "CRC"))
             {
@@ -689,6 +696,8 @@ void romdatabase_close(void)
         romdatabase_search* search = g_romdatabase.list->next_entry;
         if(g_romdatabase.list->entry.goodname)
             free(g_romdatabase.list->entry.goodname);
+        if(g_romdatabase.list->entry.internalname)
+            free(g_romdatabase.list->entry.internalname);
         if(g_romdatabase.list->entry.refmd5)
             free(g_romdatabase.list->entry.refmd5);
         free(g_romdatabase.list->entry.cheats);
@@ -708,6 +717,31 @@ static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5)
 
     while (search != NULL && memcmp(search->entry.md5, md5, 16) != 0)
         search = search->next_md5;
+
+    if(search==NULL)
+        return NULL;
+
+    return &(search->entry);
+}
+
+static romdatabase_entry* ini_search_by_name(const char* name)
+{
+    romdatabase_search* search;
+
+    if(!g_romdatabase.have_database)
+        return NULL;
+
+    search = g_romdatabase.list;
+
+    while (search != NULL)
+    {
+        if (search->entry.internalname != NULL &&
+            memcmp(search->entry.internalname, name, 20) == 0)
+        {
+            break;
+        }
+        search = search->next_entry;
+    }
 
     if(search==NULL)
         return NULL;

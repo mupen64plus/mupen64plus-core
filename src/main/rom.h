@@ -98,6 +98,7 @@ enum
 typedef struct
 {
    char* goodname;
+   char* internalname;
    md5_byte_t md5[16];
    md5_byte_t* refmd5;
    char *cheats;
