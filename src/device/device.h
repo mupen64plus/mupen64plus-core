@@ -121,6 +121,7 @@ void init_device(struct device* dev,
     /* r4300 */
     unsigned int emumode,
     unsigned int count_per_op,
+    unsigned int count_per_op_denom_pot,
     int no_compiled_jump,
     int randomize_interrupt,
     uint32_t start_address,

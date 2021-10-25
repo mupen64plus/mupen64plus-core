@@ -4485,6 +4485,10 @@ static void do_cc(int i,signed char i_regmap[],int *adj,int addr,int taken,int i
     emit_jmp(0);
   }
   else if(*adj==0||invert) {
+    if(g_dev.r4300.cp0.count_per_op_denom_pot) {
+      count += (1 << g_dev.r4300.cp0.count_per_op_denom_pot) - 1;
+      count >>= g_dev.r4300.cp0.count_per_op_denom_pot;
+    }
     emit_addimm_and_set_flags(CLOCK_DIVIDER*(count+2),HOST_CCREG);
     jaddr=(intptr_t)out;
     emit_jns(0);

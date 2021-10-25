@@ -82,13 +82,14 @@ The server is responsible for maintaining healthy buffers and also for detecting
 ** byte[file size] = save file data
 
 * Send settings (sent by client):
-** 21 bytes
+** 25 bytes
 ** byte[0] = 3
 ** byte[1-4] = count_per_op
-** byte[5-8] = disable_extra_mem
-** byte[9-12] = si_dma_duration
-** byte[13-16] = emumode
-** byte[17-20] =  no_compiled_jump
+** byte[5-8] = count_per_op_denom_pot
+** byte[9-12] = disable_extra_mem
+** byte[13-16] = si_dma_duration
+** byte[17-20] = emumode
+** byte[21-24] =  no_compiled_jump
 
 * Request settings (sent by client):
 ** 1 byte
@@ -96,12 +97,13 @@ The server is responsible for maintaining healthy buffers and also for detecting
 
 * Send settings (sent by server):
 ** Server responds with this data right after the above request
-** 20 bytes
+** 24 bytes
 ** byte[0-3] = count_per_op
-** byte[4-7] = disable_extra_mem
-** byte[8-11] = si_dma_duration
-** byte[12-15] = emumode
-** byte[16-19] = no_compiled_jump
+** byte[4-7] = count_per_op_denom_pot
+** byte[8-11] = disable_extra_mem
+** byte[12-15] = si_dma_duration
+** byte[16-19] = emumode
+** byte[20-23] = no_compiled_jump
 
 * Request player registration data (sent by client):
 ** 1 byte

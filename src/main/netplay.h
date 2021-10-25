@@ -47,7 +47,7 @@ void netplay_set_controller(uint8_t player);
 int netplay_is_init();
 int netplay_get_controller(uint8_t player);
 file_status_t netplay_read_storage(const char *filename, void *data, size_t size);
-void netplay_sync_settings(uint32_t *count_per_op, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump);
+void netplay_sync_settings(uint32_t *count_per_op, uint32_t *count_per_op_denom_pot, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump);
 void netplay_check_sync(struct cp0* cp0);
 int netplay_next_controller();
 void netplay_read_registration(struct controller_input_compat* cin_compats);
@@ -97,7 +97,7 @@ static osal_inline file_status_t netplay_read_storage(const char *filename, void
     return 0;
 }
 
-static osal_inline void netplay_sync_settings(uint32_t *count_per_op, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
+static osal_inline void netplay_sync_settings(uint32_t *count_per_op, uint32_t *count_per_op_denom_pot, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
 {
 }
 

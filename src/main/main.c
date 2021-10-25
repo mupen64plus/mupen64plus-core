@@ -344,6 +344,7 @@ int main_set_core_defaults(void)
     ConfigSetDefaultBool(g_CoreConfig, "NoCompiledJump", 0, "Disable compiled jump commands in dynamic recompiler (should be set to False) ");
     ConfigSetDefaultBool(g_CoreConfig, "DisableExtraMem", 0, "Disable 4MB expansion RAM pack. May be necessary for some games");
     ConfigSetDefaultInt(g_CoreConfig, "CountPerOp", 0, "Force number of cycles per emulated instruction");
+    ConfigSetDefaultInt(g_CoreConfig, "CountPerOpDenomPot", 0, "Reduce number of cycles per update by power of two when set greater than 0 (overclock)");
     ConfigSetDefaultBool(g_CoreConfig, "AutoStateSlotIncrement", 0, "Increment the save state slot after each save operation");
     ConfigSetDefaultInt(g_CoreConfig, "CurrentStateSlot", 0, "Save state slot (0-9) to use when saving/loading the emulator state");
     ConfigSetDefaultBool(g_CoreConfig, "EnableDebugger", 0, "Activate the R4300 debugger when ROM execution begins, if core was built with Debugger support");
@@ -1435,6 +1436,7 @@ m64p_error main_run(void)
     size_t i, k;
     size_t rdram_size;
     uint32_t count_per_op;
+    uint32_t count_per_op_denom_pot;
     uint32_t emumode;
     uint32_t disable_extra_mem;
     int32_t si_dma_duration;
@@ -1478,6 +1480,7 @@ m64p_error main_run(void)
     //We disable any randomness for netplay
     randomize_interrupt = !netplay_is_init() ? ConfigGetParamBool(g_CoreConfig, "RandomizeInterrupt") : 0;
     count_per_op = ConfigGetParamInt(g_CoreConfig, "CountPerOp");
+    count_per_op_denom_pot = ConfigGetParamInt(g_CoreConfig, "CountPerOpDenomPot");
 
     if (ROM_SETTINGS.disableextramem)
         disable_extra_mem = ROM_SETTINGS.disableextramem;
@@ -1490,12 +1493,15 @@ m64p_error main_run(void)
     if (count_per_op <= 0)
         count_per_op = ROM_SETTINGS.countperop;
 
+    if (count_per_op_denom_pot > 11)
+        count_per_op_denom_pot = 11;
+
     si_dma_duration = ConfigGetParamInt(g_CoreConfig, "SiDmaDuration");
     if (si_dma_duration < 0)
         si_dma_duration = ROM_SETTINGS.sidmaduration;
 
     //During netplay, player 1 is the source of truth for these settings
-    netplay_sync_settings(&count_per_op, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
+    netplay_sync_settings(&count_per_op, &count_per_op_denom_pot, &disable_extra_mem, &si_dma_duration, &emumode, &no_compiled_jump);
 
     cheat_add_hacks(&g_cheat_ctx, ROM_PARAMS.cheats);
 
@@ -1713,6 +1719,7 @@ m64p_error main_run(void)
                 g_mem_base,
                 emumode,
                 count_per_op,
+                count_per_op_denom_pot,
                 no_compiled_jump,
                 randomize_interrupt,
                 g_start_address,

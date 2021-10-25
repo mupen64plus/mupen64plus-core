@@ -41,7 +41,7 @@
 #include <time.h>
 
 void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controller* mi, struct rdram* rdram, const struct interrupt_handler* interrupt_handlers,
-    unsigned int emumode, unsigned int count_per_op, int no_compiled_jump, int randomize_interrupt, uint32_t start_address)
+    unsigned int emumode, unsigned int count_per_op, unsigned int count_per_op_denom_pot, int no_compiled_jump, int randomize_interrupt, uint32_t start_address)
 {
     struct new_dynarec_hot_state* new_dynarec_hot_state =
 #ifdef NEW_DYNAREC
@@ -51,7 +51,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
 #endif
 
     r4300->emumode = emumode;
-    init_cp0(&r4300->cp0, count_per_op, new_dynarec_hot_state, interrupt_handlers);
+    init_cp0(&r4300->cp0, count_per_op, count_per_op_denom_pot, new_dynarec_hot_state, interrupt_handlers);
     init_cp1(&r4300->cp1, new_dynarec_hot_state);
 
 #ifndef NEW_DYNAREC
