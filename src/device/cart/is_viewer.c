@@ -33,8 +33,8 @@
 
 void poweron_is_viewer(struct is_viewer* is_viewer)
 {
-    memset(is_viewer->data, 0, 0x1000);
-    memset(is_viewer->output_buffer, 0, 0x200);
+    memset(is_viewer->data, 0, IS_BUFFER_SIZE);
+    memset(is_viewer->output_buffer, 0, IS_BUFFER_SIZE);
     is_viewer->buffer_pos = 0;
 }
 
@@ -55,6 +55,16 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
     {
         if (word > 0)
         {
+            /* make sure we don't overflow the buffer */
+            if (is_viewer->buffer_pos + word > IS_BUFFER_SIZE)
+            {
+                /* reset buffer */
+                memset(is_viewer->output_buffer, 0, IS_BUFFER_SIZE);
+                is_viewer->buffer_pos = 0;
+                DebugMessage(M64MSG_WARNING, "IS64: prevented buffer overflow, cleared buffer");
+                return;
+            }
+
             memcpy(&is_viewer->output_buffer[is_viewer->buffer_pos], &is_viewer->data[0x20], word);
             is_viewer->buffer_pos += word;
             char* newline = memchr(is_viewer->output_buffer, '\n', is_viewer->buffer_pos);

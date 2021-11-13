@@ -25,10 +25,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define IS_BUFFER_SIZE 0x1000
+
 struct is_viewer
 {
-    char data[0x1000];
-    char output_buffer[0x200];
+    char data[IS_BUFFER_SIZE];
+    char output_buffer[IS_BUFFER_SIZE];
     uint32_t buffer_pos;
 };
 
