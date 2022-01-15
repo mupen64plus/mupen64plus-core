@@ -134,6 +134,9 @@ static void* l_paks[GAME_CONTROLLERS_COUNT][PAK_MAX_SIZE];
 static const struct pak_interface* l_ipaks[PAK_MAX_SIZE];
 static size_t l_pak_type_idx[6];
 
+/* PRNG state - used for Mempaks ID generation */
+static struct xoshiro256pp_state l_mpk_idgen;
+
 /*********************************************************************************************************
 * static functions
 */
@@ -1013,7 +1016,19 @@ static void open_mpk_file(struct file_storage* fstorage)
     if (ret == (int)file_open_error) {
         /* if file doesn't exists provide default content */
         for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-            format_mempak(fstorage->data + i * MEMPAK_SIZE);
+
+            /* Generate a random serial ID */
+            uint32_t serial[6];
+            size_t k;
+            for (k = 0; k < 6; ++k) {
+                serial[k] = xoshiro256pp_next(&l_mpk_idgen);
+            }
+
+            format_mempak(fstorage->data + i * MEMPAK_SIZE,
+                serial,
+                DEFAULT_MEMPAK_DEVICEID,
+                DEFAULT_MEMPAK_BANKS,
+                DEFAULT_MEMPAK_VERSION);
         }
     }
 }
@@ -1469,6 +1484,9 @@ m64p_error main_run(void)
             eeprom_type = JDT_EEPROM_16K;
             break;
     }
+
+    /* Seed MPK ID gen using current time */
+    l_mpk_idgen = xoshiro256pp_seed((uint64_t)time(NULL));
 
     /* take the r4300 emulator mode from the config file at this point and cache it in a global variable */
     emumode = ConfigGetParamInt(g_CoreConfig, "R4300Emulator");
