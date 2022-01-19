@@ -154,25 +154,25 @@ void to_big_endian_buffer(void *buffer, size_t length, size_t count);
 /* Simple serialization primitives,
  * Loosely modeled after N2827 <stdbit.h> proposal.
  */
-uint8_t load_beu8(const unsigned char ptr[static sizeof(uint8_t)]);
-uint16_t load_beu16(const unsigned char ptr[static sizeof(uint16_t)]);
-uint32_t load_beu32(const unsigned char ptr[static sizeof(uint32_t)]);
-uint64_t load_beu64(const unsigned char ptr[static sizeof(uint64_t)]);
+uint8_t load_beu8(const unsigned char *ptr);
+uint16_t load_beu16(const unsigned char *ptr);
+uint32_t load_beu32(const unsigned char *ptr);
+uint64_t load_beu64(const unsigned char *ptr);
 
-uint8_t load_leu8(const unsigned char ptr[static sizeof(uint8_t)]);
-uint16_t load_leu16(const unsigned char ptr[static sizeof(uint16_t)]);
-uint32_t load_leu32(const unsigned char ptr[static sizeof(uint32_t)]);
-uint64_t load_leu64(const unsigned char ptr[static sizeof(uint64_t)]);
+uint8_t load_leu8(const unsigned char *ptr);
+uint16_t load_leu16(const unsigned char *ptr);
+uint32_t load_leu32(const unsigned char *ptr);
+uint64_t load_leu64(const unsigned char *ptr);
 
-void store_beu8(uint8_t value, unsigned char ptr[static sizeof(value)]);
-void store_beu16(uint16_t value, unsigned char ptr[static sizeof(value)]);
-void store_beu32(uint32_t value, unsigned char ptr[static sizeof(value)]);
-void store_beu64(uint64_t value, unsigned char ptr[static sizeof(value)]);
+void store_beu8(uint8_t value, unsigned char *ptr);
+void store_beu16(uint16_t value, unsigned char *ptr);
+void store_beu32(uint32_t value, unsigned char *ptr);
+void store_beu64(uint64_t value, unsigned char *ptr);
 
-void store_leu8(uint8_t value, unsigned char ptr[static sizeof(value)]);
-void store_leu16(uint16_t value, unsigned char ptr[static sizeof(value)]);
-void store_leu32(uint32_t value, unsigned char ptr[static sizeof(value)]);
-void store_leu64(uint64_t value, unsigned char ptr[static sizeof(value)]);
+void store_leu8(uint8_t value, unsigned char *ptr);
+void store_leu16(uint16_t value, unsigned char *ptr);
+void store_leu32(uint32_t value, unsigned char *ptr);
+void store_leu64(uint64_t value, unsigned char *ptr);
 
 
 /**********************

@@ -260,18 +260,18 @@ void to_big_endian_buffer(void *buffer, size_t length, size_t count)
 /* Simple serialization primitives,
  * Use byte access to avoid alignment issues.
  */
-uint8_t load_beu8(const unsigned char ptr[static sizeof(uint8_t)])
+uint8_t load_beu8(const unsigned char *ptr)
 {
     return (uint8_t)ptr[0];
 }
 
-uint16_t load_beu16(const unsigned char ptr[static sizeof(uint16_t)])
+uint16_t load_beu16(const unsigned char *ptr)
 {
     return ((uint16_t)ptr[0] << 8)
          | ((uint16_t)ptr[1] << 0);
 }
 
-uint32_t load_beu32(const unsigned char ptr[static sizeof(uint32_t)])
+uint32_t load_beu32(const unsigned char *ptr)
 {
     return ((uint32_t)ptr[0] << 24)
          | ((uint32_t)ptr[1] << 16)
@@ -279,7 +279,7 @@ uint32_t load_beu32(const unsigned char ptr[static sizeof(uint32_t)])
          | ((uint32_t)ptr[3] <<  0);
 }
 
-uint64_t load_beu64(const unsigned char ptr[static sizeof(uint64_t)])
+uint64_t load_beu64(const unsigned char *ptr)
 {
     return ((uint64_t)ptr[0] << 56)
          | ((uint64_t)ptr[1] << 48)
@@ -292,18 +292,18 @@ uint64_t load_beu64(const unsigned char ptr[static sizeof(uint64_t)])
 }
 
 
-uint8_t load_leu8(const unsigned char ptr[static sizeof(uint8_t)])
+uint8_t load_leu8(const unsigned char *ptr)
 {
     return (uint8_t)ptr[0];
 }
 
-uint16_t load_leu16(const unsigned char ptr[static sizeof(uint16_t)])
+uint16_t load_leu16(const unsigned char *ptr)
 {
     return ((uint16_t)ptr[0] << 0)
          | ((uint16_t)ptr[1] << 8);
 }
 
-uint32_t load_leu32(const unsigned char ptr[static sizeof(uint32_t)])
+uint32_t load_leu32(const unsigned char *ptr)
 {
     return ((uint32_t)ptr[0] <<  0)
          | ((uint32_t)ptr[1] <<  8)
@@ -311,7 +311,7 @@ uint32_t load_leu32(const unsigned char ptr[static sizeof(uint32_t)])
          | ((uint32_t)ptr[3] << 24);
 }
 
-uint64_t load_leu64(const unsigned char ptr[static sizeof(uint64_t)])
+uint64_t load_leu64(const unsigned char *ptr)
 {
     return ((uint64_t)ptr[0] <<  0)
          | ((uint64_t)ptr[1] <<  8)
@@ -325,18 +325,18 @@ uint64_t load_leu64(const unsigned char ptr[static sizeof(uint64_t)])
 
 
 
-void store_beu8(uint8_t value, unsigned char ptr[static sizeof(value)])
+void store_beu8(uint8_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)value;
 }
 
-void store_beu16(uint16_t value, unsigned char ptr[static sizeof(value)])
+void store_beu16(uint16_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >> 8);
     ptr[1] = (uint8_t)(value >> 0);
 }
 
-void store_beu32(uint32_t value, unsigned char ptr[static sizeof(value)])
+void store_beu32(uint32_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >> 24);
     ptr[1] = (uint8_t)(value >> 16);
@@ -344,7 +344,7 @@ void store_beu32(uint32_t value, unsigned char ptr[static sizeof(value)])
     ptr[3] = (uint8_t)(value >>  0);
 }
 
-void store_beu64(uint64_t value, unsigned char ptr[static sizeof(value)])
+void store_beu64(uint64_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >> 56);
     ptr[1] = (uint8_t)(value >> 48);
@@ -357,18 +357,18 @@ void store_beu64(uint64_t value, unsigned char ptr[static sizeof(value)])
 }
 
 
-void store_leu8(uint8_t value, unsigned char ptr[static sizeof(value)])
+void store_leu8(uint8_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)value;
 }
 
-void store_leu16(uint16_t value, unsigned char ptr[static sizeof(value)])
+void store_leu16(uint16_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >> 0);
     ptr[1] = (uint8_t)(value >> 8);
 }
 
-void store_leu32(uint32_t value, unsigned char ptr[static sizeof(value)])
+void store_leu32(uint32_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >>  0);
     ptr[1] = (uint8_t)(value >>  8);
@@ -376,7 +376,7 @@ void store_leu32(uint32_t value, unsigned char ptr[static sizeof(value)])
     ptr[3] = (uint8_t)(value >> 24);
 }
 
-void store_leu64(uint64_t value, unsigned char ptr[static sizeof(value)])
+void store_leu64(uint64_t value, unsigned char *ptr)
 {
     ptr[0] = (uint8_t)(value >>  0);
     ptr[1] = (uint8_t)(value >>  8);

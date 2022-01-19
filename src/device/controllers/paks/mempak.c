@@ -25,6 +25,7 @@
 #include "device/controllers/game_controller.h"
 #include "main/util.h"
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -33,6 +34,7 @@
  * Only used to ease offsets/pointers computation
  * DO NOT DEREFERENCE
  */
+#pragma pack(push, 1)
 struct id_block_serialized {
     uint32_t serial[6];
     uint16_t device_id;
@@ -40,10 +42,13 @@ struct id_block_serialized {
     uint8_t  version;
     uint16_t sum;
     uint16_t isum;
-} __attribute__((packed));
-_Static_assert(sizeof(struct id_block_serialized) == 32, "id_block_serialized must have a size of 32 bytes");
+};
+#pragma pack(pop)
+#if defined(static_assert)
+static_assert(sizeof(struct id_block_serialized) == 32, "id_block_serialized must have a size of 32 bytes");
+#endif
 
-static void checksum_id_block(unsigned char ptr[static sizeof(struct id_block_serialized)],
+static void checksum_id_block(unsigned char* ptr,
             uint16_t* sum, uint16_t* isum)
 {
     size_t i;
@@ -55,7 +60,7 @@ static void checksum_id_block(unsigned char ptr[static sizeof(struct id_block_se
     *isum = UINT16_C(0xfff2) - accu;
 }
 
-static uint8_t checksum_index_table(size_t count, unsigned char ptr[static count])
+static uint8_t checksum_index_table(size_t count, unsigned char* ptr)
 {
     unsigned sum = 0;
     while (count != 0) {
@@ -67,7 +72,7 @@ static uint8_t checksum_index_table(size_t count, unsigned char ptr[static count
     return (uint8_t)sum;
 }
 
-static void serialize_id_block(unsigned char ptr[static sizeof(struct id_block_serialized)], const uint32_t serial[6], uint16_t device_id, uint8_t banks, uint8_t version) {
+static void serialize_id_block(unsigned char *ptr, const uint32_t serial[6], uint16_t device_id, uint8_t banks, uint8_t version) {
 
     size_t i;
     /* _ should never be dereferenced - it is only used to ease pointer/offsets computation */
