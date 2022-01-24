@@ -196,6 +196,12 @@ typedef struct {
    */
   char* (*get_gb_cart_ram)(void* cb_data, int controller_num);
 
+  /* Allow the frontend to know what DD IPL ROM region file to load
+   * cb_data: points to frontend-defined callback data.
+   * region: a region from m64p_system_type
+   */
+  void (*set_dd_rom_region)(void* cb_data, uint8_t region);
+
   /* Allow the frontend to specify the DD IPL ROM file to load
    * cb_data: points to frontend-defined callback data.
    * Returns a NULL-terminated string owned by the core specifying the DD IPL ROM filename to load
@@ -234,6 +240,14 @@ typedef enum
     SAVETYPE_CONTROLLER_PACK = 4, // Preserve inaccurate/off-brand name
     SAVETYPE_NONE            = 5,
 } m64p_rom_save_type;
+
+typedef enum
+{
+    DDREGION_JAPAN   = 0,
+    DDREGION_US      = 1,
+    DDREGION_DEV     = 2,
+    DDREGION_UNKNOWN = 3,
+} m64p_disk_region;
 
 typedef struct
 {

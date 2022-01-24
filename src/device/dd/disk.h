@@ -149,6 +149,7 @@ struct dd_disk
     uint16_t lba_phys_table[0x10DC];
     uint8_t format;
     uint8_t development;
+    uint8_t region;
     size_t offset_sys;
     size_t offset_id;
     size_t offset_ram;
