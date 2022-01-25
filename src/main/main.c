@@ -1172,7 +1172,7 @@ static int load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_in
     if (save_format == 0)
     {
         if (open_rom_file_storage(fstorage, save_filename) != file_ok) {
-            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk save: %s.", save_filename);
+            DebugMessage(M64MSG_WARNING, "Failed to load DD Disk save: %s.", save_filename);
 
             /* Try loading regular disk file */
             if (open_rom_file_storage(fstorage, dd_disk_filename) != file_ok) {
@@ -1218,7 +1218,7 @@ static int load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_in
     {
         if (read_from_file(save_filename, &fstorage->data[offset_ram], size_ram) != file_ok)
         {
-            DebugMessage(M64MSG_ERROR, "Failed to load DD Disk RAM area (*.ram): %s.", save_filename);
+            DebugMessage(M64MSG_WARNING, "Failed to load DD Disk RAM area (*.ram): %s.", save_filename);
         }
     }
 
