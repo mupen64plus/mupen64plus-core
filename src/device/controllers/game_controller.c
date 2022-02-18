@@ -155,7 +155,6 @@ const struct game_controller_flavor g_mouse_controller_flavor =
     mouse_controller_reset
 };
 
-
 void init_game_controller(struct game_controller* cont,
     const struct game_controller_flavor* flavor,
     void* cin, const struct controller_input_backend_interface* icin,

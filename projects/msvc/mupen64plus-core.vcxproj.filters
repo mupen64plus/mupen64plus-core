@@ -360,6 +360,9 @@
     <ClCompile Include="..\..\src\device\controllers\game_controller.c">
       <Filter>device\controllers</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\device\controllers\vru_controller.c">
+      <Filter>device\controllers</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\device\rdram\rdram.c">
       <Filter>device\rdram</Filter>
     </ClCompile>
@@ -702,6 +705,9 @@
       <Filter>device\controllers\paks</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\controllers\game_controller.h">
+      <Filter>device\controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\device\controllers\vru_controller.h">
       <Filter>device\controllers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\device\rdram\rdram.h">

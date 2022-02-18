@@ -35,6 +35,11 @@ enum joybus_commands
     JCMD_AF_RTC_STATUS = 0x06,
     JCMD_AF_RTC_READ = 0x07,
     JCMD_AF_RTC_WRITE = 0x08,
+    JCMD_VRU_READ = 0x09,
+    JCMD_VRU_WRITE = 0x0A,
+    JCMD_VRU_READ_STATUS = 0x0B,
+    JCMD_VRU_WRITE_CONFIG = 0x0C,
+    JCMD_VRU_WRITE_INIT = 0x0D,
     JCMD_RESET = 0xff,
 };
 
@@ -44,6 +49,7 @@ enum joybus_device_types
     JDT_JOY_ABS_COUNTERS = 0x0001,  /* joystick with absolute coordinates */
     JDT_JOY_REL_COUNTERS = 0x0002,  /* joystick with relative coordinates (= mouse) */
     JDT_JOY_PORT         = 0x0004,  /* has port for external paks */
+    JDT_VRU              = 0x0100,  /* VRU */
     JDT_AF_RTC           = 0x1000,  /* RTC */
     JDT_EEPROM_4K        = 0x8000,  /* 4k EEPROM */
     JDT_EEPROM_16K       = 0xc000,  /* 16k EEPROM */
