@@ -180,9 +180,21 @@ ifeq ($(ARCH_DETECTED), 64BITS_32)
   ifeq ($(OS), FREEBSD)
     $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
   endif
-  ifneq ($(OS),OSX)
-    CFLAGS += -m32
-    LDFLAGS += -Wl,-m,elf_i386
+  ifneq ($(OS), OSX)
+    ifeq ($(OS), MINGW)
+      CFLAGS += -march=i686
+      LDFLAGS += -Wl,-m,i386pe
+    else
+      CFLAGS += -m32
+      LDFLAGS += -Wl,-m,elf_i386
+    endif
+  endif
+endif
+
+ifeq ($(ARCH_DETECTED), 64BITS)
+  ifeq ($(OS), MINGW)
+    CFLAGS += -march=x86-64
+    LDFLAGS += -Wl,-m,i386pep
   endif
 endif
 

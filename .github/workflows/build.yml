@@ -1,0 +1,288 @@
+name: Core
+
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
+      - '.{gitattributes,gitignore,travis.yml}'
+      - 'appveyor.yml,README'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.{gitattributes,gitignore,travis.yml}'
+      - 'appveyor.yml,README'
+  workflow_dispatch:
+jobs:
+
+  Linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cc: GCC
+          - cc: Clang
+    name: Linux / ${{ matrix.cc }} / x64 | x86
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get build dependencies and arrange the environment
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get -y install libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev nasm zlib1g-dev
+          sudo apt-get --reinstall -y install gcc-multilib g++-multilib libc6 libc6-dev-i386 libfreetype6:i386 libgl1-mesa-glx:i386 libglu1-mesa:i386 libpng16-16:i386 libsdl1.2debian:i386 libsdl2-2.0-0:i386 zlib1g:i386
+          LINK="sudo ln -s -T"
+          cd /usr/lib/i386-linux-gnu
+          if ! [[ -f libfreetype.so ]]; then ${LINK} libfreetype.so.6.17.1 libfreetype.so; fi
+          if ! [[ -f libGL.so ]]; then ${LINK} libGL.so.1.7.0 libGL.so; fi
+          if ! [[ -f libGLU.so ]]; then ${LINK} libGLU.so.1.3.1 libGLU.so; fi
+          if ! [[ -f libpng16.so ]]; then ${LINK} libpng16.so.16.37.0 libpng16.so; fi
+          if ! [[ -f libSDL.so ]]; then ${LINK} libSDL-1.2.so.0.11.4 libSDL.so; fi
+          if ! [[ -f libSDL2.so ]]; then ${LINK} libSDL2-2.0.so.0.10.0 libSDL2.so; fi
+          if ! [[ -f libz.so ]]; then ${LINK} libz.so.1.2.11 libz.so; fi
+          cd /usr/include/SDL2
+          if ! [[ -f _real_SDL_config.h ]]; then ${LINK} ../x86_64-linux-gnu/SDL2/_real_SDL_config.h _real_SDL_config.h; fi
+          sudo ldconfig
+      - name: Build and related stuff
+        run: |
+          if [[ "${{ matrix.cc }}" == "GCC" ]]; then
+            CC="gcc"
+            CXX="g++"
+          else
+            CC="clang"
+            CXX="clang++"
+          fi
+          ${CC} --version
+          for TSK in 1 2 3 4 5 6 7 8
+          do
+            unset PIC
+            if [[ ${TSK} -le 4 ]]; then
+              SDL="sdl"
+              MSG="SDL1.2"
+            else
+              SDL="sdl2"
+              MSG="SDL2"
+            fi
+            if [[ "${DYN}" == "0" ]]; then
+              DYN="1"
+              MSG="${MSG} / NEW_DYNAREC"
+            else
+              DYN="0"
+              if [[ "${BITS}" == "64" ]]; then BITS="32"; else BITS="64"; fi
+            fi
+            if [[ ${BITS} -eq 32 ]]; then
+              if [[ "${CC}" == "clang" ]]; then export PIC="1"; fi
+              MSG="x86 / ${MSG}"
+            else
+              MSG="x64 / ${MSG}"
+            fi
+            echo ""
+            echo ":: ${{ matrix.cc }} ${MSG} ::"
+            echo ""
+            make -C projects/unix clean
+            echo ""
+            make CC="${CC}" CXX="${CXX}" BITS="${BITS}" SDL_CONFIG="${SDL}-config" NEW_DYNAREC="${DYN}" -C projects/unix all
+            echo ""
+            ls -gG projects/unix/*.so*
+            ldd projects/unix/libmupen64plus.so.2.0.0
+          done
+
+  MSYS2:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cc: GCC
+            platform: x64
+            cross: x86_64
+            bits: 64
+          - cc: GCC
+            platform: x86
+            cross: i686
+            bits: 32
+    name: Windows / MSYS2 ${{ matrix.cc }} / ${{ matrix.platform }}
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW${{ matrix.bits }}
+          update: true
+          install: >-
+            git
+            make
+            mingw-w64-${{ matrix.cross }}-gcc
+            mingw-w64-${{ matrix.cross }}-toolchain
+            mingw-w64-${{ matrix.cross }}-freetype
+            mingw-w64-${{ matrix.cross }}-libpng
+            mingw-w64-${{ matrix.cross }}-nasm
+            mingw-w64-${{ matrix.cross }}-SDL2
+            mingw-w64-${{ matrix.cross }}-zlib
+      - name: Build and related stuff
+        run: |
+          export OPTFLAGS="-O2 -flto"
+          echo "G_REV=$(git rev-parse --short HEAD)" >> "${GITHUB_ENV}"
+          CC="gcc"
+          CXX="g++"
+          ${CC} --version
+          mkdir backup
+          LIB="-old"
+          for DYN in 0 1
+          do
+            echo ""
+            echo ":: ${{ matrix.cc }} ${{ matrix.platform }} / SDL2${MSG} ::"
+            echo ""
+            make -C projects/unix clean
+            echo ""
+            make CC="${CC}" CXX="${CXX}" BITS="${{ matrix.bits }}" NEW_DYNAREC="${DYN}" -C projects/unix all
+            echo ""
+            cp projects/unix/*.dll backup/mupen64plus${LIB}.dll
+            ls -gG backup/mupen64plus${LIB}.dll
+            ldd backup/mupen64plus${LIB}.dll
+            unset LIB
+            MSG=" / NEW_DYNAREC"
+          done
+      - name: Copy binaries, dependencies, etc...
+        run: |
+          mkdir pkg
+          if [[ ${{ matrix.bits }} -eq 32 ]]; then LIBGCC="libgcc_s_dw2-1"; else LIBGCC="libgcc_s_seh-1"; fi
+          for LIB in libbrotlicommon libbrotlidec libbz2-1 libfreetype-6 ${LIBGCC} libglib-2.0-0 libgraphite2 libharfbuzz-0 libiconv-2 libintl-8 libpcre-1 libpng16-16 libstdc++-6 libwinpthread-1 SDL2 zlib1
+          do
+            echo ":: Copying ${LIB}.dll"
+            cp "/mingw${{ matrix.bits }}/bin/${LIB}.dll" pkg/
+          done
+          if [ -d data ]; then
+            cd data
+            for DAT in *
+            do
+              echo ":: Copying ${DAT}"
+              cp -r "${DAT}" ../pkg/
+            done
+          fi
+          cd ../backup
+          for BIN in *.dll
+          do
+            echo ":: Copying ${BIN}"
+            cp "${BIN}" ../pkg/
+          done
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mupen64plus-core-msys2-${{ matrix.platform }}-g${{ env.G_REV }}
+          path: pkg/*
+
+  MSVC:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - toolset: v142
+            platform: x64
+          - toolset: v141_xp
+            platform: x86
+    name: Windows / MSVC ${{ matrix.toolset }} / ${{ matrix.platform }}
+    runs-on: windows-2019
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@v2
+      - uses: microsoft/setup-msbuild@v1.0.3
+    #  with:
+    #    vs-version: 16.11
+      - name: Build and related stuff
+        run: |
+          for /f "tokens=1" %%R in ('git rev-parse --short HEAD') do set "G_REV=%%R"
+          echo G_REV=%G_REV%>> "%GITHUB_ENV%"
+          set "ARCH=${{ matrix.platform }}"
+          if [%ARCH%] == [x86] set "ARCH=Win32"
+          echo.
+          msbuild --version
+          echo.
+          git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ..\mupen64plus-win32-deps
+          md backup
+          for %%B in (Release New_Dynarec_Release) do (
+            echo.
+            msbuild "projects\msvc\mupen64plus-core.vcxproj" /p:Configuration=%%B;Platform=%ARCH%;PlatformToolset=${{ matrix.toolset }} /t:Rebuild
+            echo.
+            copy "projects\msvc\%ARCH%\%%B\mupen64plus.dll" backup\
+            if not exist "backup\mupen64plus-old.dll" (
+              ren "backup\mupen64plus.dll" "mupen64plus-old.dll"
+              dir "backup\mupen64plus-old.dll"
+            ) else dir "backup\mupen64plus.dll"
+          )
+      - name: Copy binaries, dependencies, etc...
+        run: |
+          md pkg
+          cd pkg
+          xcopy "..\backup" .
+          xcopy "..\data" .
+          copy "..\..\mupen64plus-win32-deps\freetype-2.10.1\lib\${{ matrix.platform }}\*.dll" .
+          copy "..\..\mupen64plus-win32-deps\libpng-1.6.37\lib\${{ matrix.platform }}\*.dll" .
+          copy "..\..\mupen64plus-win32-deps\SDL2-2.0.10\lib\${{ matrix.platform }}\*.dll" .
+          copy "..\..\mupen64plus-win32-deps\SDL2_net-2.0.1\lib\${{ matrix.platform }}\*.dll" .
+          copy "..\..\mupen64plus-win32-deps\zlib-1.2.11\lib\${{ matrix.platform }}\*.dll" .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mupen64plus-core-msvc-${{ matrix.platform }}-g${{ env.G_REV }}
+          path: pkg/*
+
+  Nightly-build:
+    runs-on: ubuntu-latest
+    needs: [MSYS2, MSVC]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: binaries
+      - name: Get some tools
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install hashdeep
+      - name: Creating new artifacts and update nightly-build
+        run: |
+          mkdir pkg
+          cd binaries
+          for BIN in *
+          do
+            echo ":: Creating ${BIN}.zip"
+            cd "${BIN}"
+            zip -r "../../pkg/${BIN}.zip" *
+            cd ..
+          done
+          cd ../pkg
+          echo ""
+          for BIN in *.zip
+          do
+            ls -gG ${BIN}
+            tigerdeep -l ${BIN} >> ${BIN:0:16}.tiger.txt
+            sha256sum ${BIN} >> ${BIN:0:16}.sha256.txt
+            sha512sum ${BIN} >> ${BIN:0:16}.sha512.txt
+          done
+          echo ""
+          echo "TIGER:"
+          cat *.tiger.txt
+          echo ""
+          echo "SHA256:"
+          cat *.sha256.txt
+          echo ""
+          echo "SHA512:"
+          cat *.sha512.txt
+          echo ""
+          git tag -f nightly-build
+          git push -f origin nightly-build
+      - name: Nightly-build
+        uses: ncipollo/release-action@v1
+        with:
+          prerelease: true
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: false
+          tag: nightly-build
+          artifacts: pkg/*
