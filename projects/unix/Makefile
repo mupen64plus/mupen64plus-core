@@ -99,25 +99,30 @@ endif
 ifneq ("$(filter arm%,$(HOST_CPU))","")
   ifeq ("$(filter arm%b,$(HOST_CPU))","")
     CPU := ARM
-    ARCH_DETECTED := 32BITS
     PIC ?= 1
     NEW_DYNAREC := 1
-    CFLAGS += -marm
-    ifneq ("$(filter armv5%,$(HOST_CPU))","")
-        CFLAGS += -DARMv5_ONLY
-        $(warning Using ARMv5_ONLY)
-    endif
-    ifneq ("$(filter armv6%,$(HOST_CPU))","")
-        CFLAGS += -DARMv5_ONLY
-        $(warning Using ARMv5_ONLY)
-    endif
-    ifeq ($(NEON), 1)
-        CFLAGS += -mfpu=neon -mfloat-abi=hard
+    ifneq ("$(filter arm64,$(HOST_CPU))","")
+      ARCH_DETECTED := 64BITS
+      $(warning Architecture "$(HOST_CPU)" not officially supported.)
     else
-      ifeq ($(VFP_HARD), 1)
-        CFLAGS += -mfpu=vfp -mfloat-abi=hard
+      ARCH_DETECTED := 32BITS
+      CFLAGS += -marm
+      ifneq ("$(filter armv5%,$(HOST_CPU))","")
+          CFLAGS += -DARMv5_ONLY
+          $(warning Using ARMv5_ONLY)
+      endif
+      ifneq ("$(filter armv6%,$(HOST_CPU))","")
+          CFLAGS += -DARMv5_ONLY
+          $(warning Using ARMv5_ONLY)
+      endif
+      ifeq ($(NEON), 1)
+          CFLAGS += -mfpu=neon -mfloat-abi=hard
       else
-        CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+        ifeq ($(VFP_HARD), 1)
+          CFLAGS += -mfpu=vfp -mfloat-abi=hard
+        else
+          CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+        endif
       endif
     endif
   endif
@@ -229,6 +234,11 @@ ifeq ($(OS), OSX)
       endif
 	  LDFLAGS += -read_only_relocs suppress
     endif
+  endif
+  ifeq ($(CPU), ARM)
+    # assembly compilation not yet supported on macOS with Apple Silicon
+    NO_ASM = 1
+    CFLAGS += -pipe -arch arm64 -mmacosx-version-min=10.16 -isysroot $(OSX_SDK_PATH)
   endif
 endif
 ifeq ($(OS), MINGW)
