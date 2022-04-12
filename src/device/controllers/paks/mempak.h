@@ -27,6 +27,10 @@
 
 struct storage_backend_interface;
 
+#define DEFAULT_MEMPAK_DEVICEID UINT16_C(0x0001)
+#define DEFAULT_MEMPAK_BANKS    UINT8_C(0x01)
+#define DEFAULT_MEMPAK_VERSION  UINT8_C(0x00)
+
 struct mempak
 {
     void* storage;
@@ -35,7 +39,11 @@ struct mempak
 
 enum { MEMPAK_SIZE = 0x8000 };
 
-void format_mempak(uint8_t* mem);
+void format_mempak(uint8_t* mem,
+    const uint32_t serial[6],
+    uint16_t device_id,
+    uint8_t banks,
+    uint8_t version);
 
 void init_mempak(struct mempak* mpk,
                  void* storage,

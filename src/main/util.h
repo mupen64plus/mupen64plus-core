@@ -150,6 +150,41 @@ void swap_buffer(void *buffer, size_t length, size_t count);
 void to_little_endian_buffer(void *buffer, size_t length, size_t count);
 void to_big_endian_buffer(void *buffer, size_t length, size_t count);
 
+
+/* Simple serialization primitives,
+ * Loosely modeled after N2827 <stdbit.h> proposal.
+ */
+uint8_t load_beu8(const unsigned char *ptr);
+uint16_t load_beu16(const unsigned char *ptr);
+uint32_t load_beu32(const unsigned char *ptr);
+uint64_t load_beu64(const unsigned char *ptr);
+
+uint8_t load_leu8(const unsigned char *ptr);
+uint16_t load_leu16(const unsigned char *ptr);
+uint32_t load_leu32(const unsigned char *ptr);
+uint64_t load_leu64(const unsigned char *ptr);
+
+void store_beu8(uint8_t value, unsigned char *ptr);
+void store_beu16(uint16_t value, unsigned char *ptr);
+void store_beu32(uint32_t value, unsigned char *ptr);
+void store_beu64(uint64_t value, unsigned char *ptr);
+
+void store_leu8(uint8_t value, unsigned char *ptr);
+void store_leu16(uint16_t value, unsigned char *ptr);
+void store_leu32(uint32_t value, unsigned char *ptr);
+void store_leu64(uint64_t value, unsigned char *ptr);
+
+
+/**********************
+    Random utilities
+ **********************/
+
+struct xoshiro256pp_state { uint64_t s[4]; };
+
+struct xoshiro256pp_state xoshiro256pp_seed(uint64_t seed);
+
+uint64_t xoshiro256pp_next(struct xoshiro256pp_state* s);
+
 /**********************
      GUI utilities
  **********************/
