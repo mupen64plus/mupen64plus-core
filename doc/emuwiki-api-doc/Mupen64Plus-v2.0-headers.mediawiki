@@ -162,6 +162,12 @@
    */
   char* (*get_gb_cart_ram)(void* cb_data, int controller_num);
 
+  /* Allow the frontend to know what DD IPL ROM region file to load
+   * cb_data: points to frontend-defined callback data.
+   * region: a region from m64p_system_type
+   */
+  void (*set_dd_rom_region)(void* cb_data, uint8_t region);
+
   /* Allow the frontend to specify the DD IPL ROM file to load
    * cb_data: points to frontend-defined callback data.
    * Returns a NULL-terminated string owned by the core specifying the DD IPL ROM filename to load
