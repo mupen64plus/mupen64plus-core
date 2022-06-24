@@ -1615,6 +1615,10 @@ m64p_error main_run(void)
         dd_rtc_iclock = &g_iclock_ctime_plus_delta;
         load_dd_rom((uint8_t*)mem_base_u32(g_mem_base, MM_DD_ROM), &dd_rom_size, &dd_disk.region);
     }
+    else
+    {
+        dd_rom_size = 0;
+    }
 
     /* setup pif channel devices */
     void* joybus_devices[PIF_CHANNELS_COUNT];
