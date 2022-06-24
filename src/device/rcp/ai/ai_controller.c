@@ -100,7 +100,7 @@ static void do_dma(struct ai_controller* ai, struct ai_dma* dma)
 
 static void fifo_push(struct ai_controller* ai)
 {
-    unsigned int duration = get_dma_duration(ai);
+    unsigned int duration = get_dma_duration(ai) * ai->dma_modifier;
 
     if (ai->regs[AI_STATUS_REG] & AI_STATUS_BUSY)
     {
@@ -144,13 +144,15 @@ void init_ai(struct ai_controller* ai,
              struct ri_controller* ri,
              struct vi_controller* vi,
              void* aout,
-             const struct audio_out_backend_interface* iaout)
+             const struct audio_out_backend_interface* iaout,
+             float dma_modifier)
 {
     ai->mi = mi;
     ai->ri = ri;
     ai->vi = vi;
     ai->aout = aout;
     ai->iaout = iaout;
+    ai->dma_modifier = dma_modifier;
 }
 
 void poweron_ai(struct ai_controller* ai)

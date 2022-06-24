@@ -394,6 +394,15 @@ static m64p_error plugin_connect_input(m64p_dynlib_handle plugin_handle)
             return M64ERR_INPUT_INVALID;
         }
 
+        if (!GET_FUNC(ptr_SendVRUWord, input.sendVRUWord, "SendVRUWord") ||
+            !GET_FUNC(ptr_SetMicState, input.setMicState, "SetMicState") ||
+            !GET_FUNC(ptr_ReadVRUResults, input.readVRUResults, "ReadVRUResults") ||
+            !GET_FUNC(ptr_ClearVRUWords, input.clearVRUWords, "ClearVRUWords") ||
+            !GET_FUNC(ptr_SetVRUWordMask, input.setVRUWordMask, "SetVRUWordMask"))
+        {
+            DebugMessage(M64MSG_WARNING, "Input plugin does not contain VRU support.");
+        }
+
         /* check the version info */
         (*input.getVersion)(&PluginType, &PluginVersion, &APIVersion, NULL, NULL);
         if (PluginType != M64PLUGIN_INPUT || (APIVersion & 0xffff0000) != (INPUT_API_VERSION & 0xffff0000) || APIVersion < 0x020100)
@@ -427,6 +436,7 @@ static m64p_error plugin_start_input(void)
          Controls[i].Present = 0;
          Controls[i].RawData = 0;
          Controls[i].Plugin = PLUGIN_NONE;
+         Controls[i].Type = CONT_TYPE_STANDARD;
       }
 
     /* call the input plugin */

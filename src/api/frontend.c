@@ -428,6 +428,7 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
     RomSettings->countperop = entry->countperop;
     RomSettings->savetype = entry->savetype;
     RomSettings->sidmaduration = entry->sidmaduration;
+    RomSettings->aidmamodifier = entry->aidmamodifier;
 
     return M64ERR_SUCCESS;
 }

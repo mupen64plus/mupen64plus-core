@@ -57,6 +57,7 @@
 #include "cheat.h"
 #include "device/device.h"
 #include "device/dd/disk.h"
+#include "device/controllers/vru_controller.h"
 #include "device/controllers/paks/biopak.h"
 #include "device/controllers/paks/mempak.h"
 #include "device/controllers/paks/rumblepak.h"
@@ -1641,6 +1642,27 @@ m64p_error main_run(void)
             joybus_devices[i] = &control_ids[i];
             ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
         }
+        else if (Controls[i].Type == CONT_TYPE_VRU) {
+            const struct game_controller_flavor* cont_flavor =
+                &g_vru_controller_flavor;
+            joybus_devices[i] = &g_dev.controllers[i];
+            ijoybus_devices[i] = &g_ijoybus_vru_controller;
+
+            cin_compats[i].control_id = (int)i;
+            cin_compats[i].cont = &g_dev.controllers[i];
+            cin_compats[i].last_pak_type = Controls[i].Plugin;
+            cin_compats[i].last_input = 0;
+            cin_compats[i].netplay_count = 0;
+            cin_compats[i].event_first = NULL;
+
+            Controls[i].Plugin = PLUGIN_NONE;
+
+            /* init vru_controller */
+            init_game_controller(&g_dev.controllers[i],
+                    cont_flavor,
+                    &cin_compats[i], &g_icontroller_input_backend_plugin_compat,
+                    NULL, NULL);
+        }
         /* otherwise let the core do the processing */
         else {
             /* select appropriate controller
@@ -1761,7 +1783,6 @@ m64p_error main_run(void)
         ijoybus_devices[i] = &g_ijoybus_device_cart;
     }
 
-
     init_device(&g_dev,
                 g_mem_base,
                 emumode,
@@ -1770,7 +1791,7 @@ m64p_error main_run(void)
                 no_compiled_jump,
                 randomize_interrupt,
                 g_start_address,
-                &g_dev.ai, &g_iaudio_out_backend_plugin_compat,
+                &g_dev.ai, &g_iaudio_out_backend_plugin_compat, ((float)ROM_SETTINGS.aidmamodifier / 100.0),
                 si_dma_duration,
                 rdram_size,
                 joybus_devices, ijoybus_devices,
@@ -1845,7 +1866,7 @@ m64p_error main_run(void)
 #endif
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData  && (Controls[i].Type == CONT_TYPE_STANDARD) && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }
@@ -1883,7 +1904,7 @@ on_audio_open_failure:
 on_gfx_open_failure:
     /* release gb_carts */
     for(i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
-        if (!Controls[i].RawData && g_dev.gb_carts[i].read_gb_cart != NULL) {
+        if (!Controls[i].RawData  && (Controls[i].Type == CONT_TYPE_STANDARD) && g_dev.gb_carts[i].read_gb_cart != NULL) {
             release_gb_rom(&l_gb_carts_data[i]);
             release_gb_ram(&l_gb_carts_data[i]);
         }

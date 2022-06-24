@@ -224,6 +224,21 @@ These functions are present in all of the plugins.
 |-
 |<tt>void SDL_KeyUp(int keymod, int keysym);</tt>
 |Pass a SDL_KEYUP-style message to the input plugin
+|-
+|<tt>void SendVRUWord(uint16_t length, uint16_t *word, uint8_t lang);</tt>
+|Load a word/phrase into the VRU dictionary. length specifies the length of the buffer. lang is 0 for English and 1 for Japanese. Japanese words are encoding using S-JIS. English words are encoded using a phonetic alphabet explained here: https://pastebin.com/ajLzRLze
+|-
+|<tt>void SetMicState(int state);</tt>
+|A state of 1 tells the input plugin to enable the microphone. A state of 0 tells the input plugin to disable the microphone
+|-
+|<tt>void ReadVRUResults(uint16_t *error_flags, uint16_t *num_results, uint16_t *mic_level, uint16_t *voice_level, uint16_t *voice_length, uint16_t *matches);</tt>
+|Refer to https://pastebin.com/6UiErk5h and https://ultra64.ca/files/documentation/online-manuals/man/pro-man/pro26/index26.8.html for an explanation of these variables. This function is called after the player has finished speaking. The purpose is for the VRU/input plugin to tell the core if any matches were found against the dictionary that was provided earlier
+|-
+|<tt>void ClearVRUWords(uint8_t length);</tt>
+|Clears and initializes the word/phrase dictionary with a max length as provided by the variable
+|-
+|<tt>void SetVRUWordMask(uint8_t length, uint8_t *mask);</tt>
+|Assign a mask to the words in the dictionary. A bit of 1 means to recognize the word, 0 means to ignore the word. See https://ultra64.ca/files/documentation/online-manuals/man/pro-man/pro26/index26.8.html
 |}
 
 === Remove From Older Input API ===

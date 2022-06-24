@@ -540,6 +540,7 @@ SOURCE = \
     $(SRCDIR)/device/cart/is_viewer.c \
     $(SRCDIR)/device/cart/sram.c \
     $(SRCDIR)/device/controllers/game_controller.c \
+    $(SRCDIR)/device/controllers/vru_controller.c \
     $(SRCDIR)/device/controllers/paks/biopak.c \
     $(SRCDIR)/device/controllers/paks/mempak.c \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \

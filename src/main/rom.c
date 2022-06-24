@@ -52,6 +52,8 @@ enum { DEFAULT_COUNT_PER_OP = 2 };
 enum { DEFAULT_DISABLE_EXTRA_MEM = 0 };
 /* Default SI DMA duration */
 enum { DEFAULT_SI_DMA_DURATION = 0x900 };
+/* Default AI DMA modifier */
+enum { DEFAULT_AI_DMA_MODIFIER = 100 };
 
 static romdatabase_entry* ini_search_by_md5(md5_byte_t* md5);
 
@@ -188,6 +190,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.countperop = entry->countperop;
         ROM_SETTINGS.disableextramem = entry->disableextramem;
         ROM_SETTINGS.sidmaduration = entry->sidmaduration;
+        ROM_SETTINGS.aidmamodifier = entry->aidmamodifier;
         ROM_PARAMS.cheats = entry->cheats;
     }
     else
@@ -205,6 +208,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.countperop = DEFAULT_COUNT_PER_OP;
         ROM_SETTINGS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
         ROM_SETTINGS.sidmaduration = DEFAULT_SI_DMA_DURATION;
+        ROM_SETTINGS.aidmamodifier = DEFAULT_AI_DMA_MODIFIER;
         ROM_PARAMS.cheats = NULL;
     }
 
@@ -373,6 +377,12 @@ static size_t romdatabase_resolve_round(void)
             entry->entry.set_flags |= ROMDATABASE_ENTRY_SIDMADURATION;
         }
 
+        if (!isset_bitmask(entry->entry.set_flags, ROMDATABASE_ENTRY_AIDMAMODIFIER) &&
+            isset_bitmask(ref->set_flags, ROMDATABASE_ENTRY_AIDMAMODIFIER)) {
+            entry->entry.aidmamodifier = ref->aidmamodifier;
+            entry->entry.set_flags |= ROMDATABASE_ENTRY_AIDMAMODIFIER;
+        }
+
         free(entry->entry.refmd5);
         entry->entry.refmd5 = NULL;
     }
@@ -469,6 +479,7 @@ void romdatabase_open(void)
             search->entry.mempak = 1;
             search->entry.biopak = 0;
             search->entry.sidmaduration = DEFAULT_SI_DMA_DURATION;
+            search->entry.aidmamodifier = DEFAULT_AI_DMA_MODIFIER;
             search->entry.set_flags = ROMDATABASE_ENTRY_NONE;
 
             search->next_entry = NULL;
@@ -663,6 +674,15 @@ void romdatabase_open(void)
                     search->entry.set_flags |= ROMDATABASE_ENTRY_SIDMADURATION;
                 } else {
                     DebugMessage(M64MSG_WARNING, "ROM Database: Invalid SiDmaDuration on line %i", lineno);
+                }
+            }
+            else if(!strcmp(l.name, "AiDmaModifier"))
+            {
+                if (string_to_int(l.value, &value) && value >= 0 && value <= 200) {
+                    search->entry.aidmamodifier = value;
+                    search->entry.set_flags |= ROMDATABASE_ENTRY_AIDMAMODIFIER;
+                } else {
+                    DebugMessage(M64MSG_WARNING, "ROM Database: Invalid AiDmaModifier on line %i", lineno);
                 }
             }
             else

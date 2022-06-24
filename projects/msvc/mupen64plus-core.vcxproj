@@ -136,6 +136,7 @@
     <ClCompile Include="..\..\src\device\cart\is_viewer.c" />
     <ClCompile Include="..\..\src\device\cart\sram.c" />
     <ClCompile Include="..\..\src\device\controllers\game_controller.c" />
+    <ClCompile Include="..\..\src\device\controllers\vru_controller.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\biopak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\mempak.c" />
     <ClCompile Include="..\..\src\device\controllers\paks\rumblepak.c" />
@@ -440,6 +441,7 @@
     <ClInclude Include="..\..\src\device\cart\is_viewer.h" />
     <ClInclude Include="..\..\src\device\cart\sram.h" />
     <ClInclude Include="..\..\src\device\controllers\game_controller.h" />
+    <ClInclude Include="..\..\src\device\controllers\vru_controller.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\biopak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\mempak.h" />
     <ClInclude Include="..\..\src\device\controllers\paks\rumblepak.h" />
