@@ -51,6 +51,9 @@ static void process_cart_command(void* jbd,
             rx_buf[1] = (uint8_t)(cart->eeprom.type >> 8);
             rx_buf[2] = 0x00;
         }
+        else {
+            *rx |= 0x80;
+        }
     } break;
 
     case JCMD_EEPROM_READ: {
