@@ -474,8 +474,14 @@ SDL_SetVideoMode(int width, int height, int bpp, Uint32 flags)
         if (SDL_GL_MakeCurrent(SDL_VideoWindow, SDL_VideoContext) < 0) {
             return NULL;
         }
+
+        /* Pitch: size of of line in bytes */
+        /* Add 7 to bpp before division, to ensure correct rounding towards infinity
+         * in cases where bits per pixel do not cleanly divide by 8 (such as 15)
+         */
+        int pitch = (bpp + 7) / 8 * width;
         SDL_VideoSurface =
-            SDL_CreateRGBSurfaceFrom(NULL, width, height, bpp, 0, 0, 0, 0, 0);
+            SDL_CreateRGBSurfaceFrom(NULL, width, height, bpp, pitch, 0, 0, 0, 0);
         if (!SDL_VideoSurface) {
             return NULL;
         }
