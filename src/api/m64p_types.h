@@ -265,7 +265,8 @@ typedef struct
    uint32_t unknown;                   /* 0x34 */
    uint32_t Manufacturer_ID;           /* 0x38 */
    uint16_t Cartridge_ID;              /* 0x3C - Game serial number  */
-   uint16_t Country_code;              /* 0x3E */
+   uint8_t  Country_code;              /* 0x3E */
+   uint8_t  Version;                   /* 0x3F */
 } m64p_rom_header;
 
 typedef struct
