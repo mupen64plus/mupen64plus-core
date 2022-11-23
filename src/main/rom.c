@@ -68,6 +68,8 @@ m64p_rom_settings ROM_SETTINGS;
 
 static m64p_system_type rom_country_code_to_system_type(uint16_t country_code);
 
+static unsigned char rom_homebrew_savetype_to_savetype(uint8_t save_type);
+
 static const uint8_t Z64_SIGNATURE[4] = { 0x80, 0x37, 0x12, 0x40 };
 static const uint8_t V64_SIGNATURE[4] = { 0x37, 0x80, 0x40, 0x12 };
 static const uint8_t N64_SIGNATURE[4] = { 0x40, 0x12, 0x37, 0x80 };
@@ -197,8 +199,6 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     {
         strcpy(ROM_SETTINGS.goodname, ROM_PARAMS.headername);
         strcat(ROM_SETTINGS.goodname, " (unknown rom)");
-        /* There's no way to guess the save type, but 4K EEPROM is better than nothing */
-        ROM_SETTINGS.savetype = SAVETYPE_EEPROM_4K;
         ROM_SETTINGS.status = 0;
         ROM_SETTINGS.players = 4;
         ROM_SETTINGS.rumble = 1;
@@ -210,6 +210,18 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         ROM_SETTINGS.sidmaduration = DEFAULT_SI_DMA_DURATION;
         ROM_SETTINGS.aidmamodifier = DEFAULT_AI_DMA_MODIFIER;
         ROM_PARAMS.cheats = NULL;
+
+        /* check if ROM has the Advanced Homebrew ROM Header (see https://n64brew.dev/wiki/ROM_Header) */
+        if (ROM_HEADER.Cartridge_ID == 0x4445)
+        {
+            /* When current ROM has the Advanced Homebrew ROM Header, use the save type */
+            ROM_SETTINGS.savetype = rom_homebrew_savetype_to_savetype(ROM_HEADER.Version >> 4);
+        }
+        else
+        {
+            /* There's no way to guess the save type, but 4K EEPROM is better than nothing */
+            ROM_SETTINGS.savetype = SAVETYPE_EEPROM_4K;
+        }
     }
 
     /* print out a bunch of info about the ROM */
@@ -271,6 +283,36 @@ static m64p_system_type rom_country_code_to_system_type(uint16_t country_code)
         default: // Fallback for unknown codes
             return SYSTEM_NTSC;
     }
+}
+
+// Converts the homebrew advanced rom header savetype to a m64p_rom_save_type
+static unsigned char rom_homebrew_savetype_to_savetype(uint8_t save_type)
+{
+    unsigned char m64p_save_type;
+
+    switch (save_type)
+    {
+        default:
+        case 0: /* None */
+            m64p_save_type = SAVETYPE_NONE;
+            break;
+        case 1: /* 4K EEPROM */
+            m64p_save_type = SAVETYPE_EEPROM_4K;
+            break;
+        case 2: /* 16K EEPROM */
+            m64p_save_type = SAVETYPE_EEPROM_16KB;
+            break;
+        case 3: /* 256K SRAM */
+        case 4: /* 768K SRAM (banked) */
+        case 6: /* 1M SRAM */
+            m64p_save_type = SAVETYPE_SRAM;
+            break;
+        case 5: /* Flash RAM */
+            m64p_save_type = SAVETYPE_FLASH_RAM;
+            break;
+    }
+
+    return m64p_save_type;
 }
 
 static size_t romdatabase_resolve_round(void)
