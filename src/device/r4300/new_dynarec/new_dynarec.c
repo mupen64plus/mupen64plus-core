@@ -2296,7 +2296,7 @@ static void tlb_speed_hacks()
   {
     u_int addr;
     int n;
-    switch (ROM_HEADER.Country_code&0xFF)
+    switch (ROM_HEADER.Country_code)
     {
       case 0x45: // U
         addr=0x34b30;
