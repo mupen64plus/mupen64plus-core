@@ -343,6 +343,12 @@ const char *get_savesrampath(void)
     return get_savepathdefault(ConfigGetParamString(g_CoreConfig, "SaveSRAMPath"));
 }
 
+const char *get_savestatefilename(void)
+{
+    /* return same file name as save files */
+    return get_save_filename();
+}
+
 void main_message(m64p_msg_level level, unsigned int corner, const char *format, ...)
 {
     va_list ap;
