@@ -160,24 +160,83 @@ static const char *get_savepathdefault(const char *configpath)
     return path;
 }
 
+static char *get_save_filename(void)
+{
+    static char filename[256];
+
+    if (strstr(ROM_SETTINGS.goodname, "(unknown rom)") == NULL) {
+        snprintf(filename, 256, "%.32s-%.8s", ROM_SETTINGS.goodname, ROM_SETTINGS.MD5);
+    } else if (ROM_HEADER.Name[0] != 0) {
+        snprintf(filename, 256, "%s-%.8s", ROM_PARAMS.headername, ROM_SETTINGS.MD5);
+    } else {
+        snprintf(filename, 256, "unknown-%.8s", ROM_SETTINGS.MD5);
+    }
+
+    return filename;
+}
+
 static char *get_mempaks_path(void)
 {
-    return formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
+    char *path;
+    size_t size = 0;
+
+    /* check if old file path exists, if it does then use that */
+    path = formatstr("%s%s.mpk", get_savesrampath(), ROM_SETTINGS.goodname);
+    if (get_file_size(path, &size) == file_ok && size > 0)
+    {
+        return path;
+    }
+
+    /* else use new path */
+    return formatstr("%s%s.mpk", get_savesrampath(), get_save_filename());
 }
 
 static char *get_eeprom_path(void)
 {
-    return formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
+    char *path;
+    size_t size = 0;
+
+    /* check if old file path exists, if it does then use that */
+    path = formatstr("%s%s.eep", get_savesrampath(), ROM_SETTINGS.goodname);
+    if (get_file_size(path, &size) == file_ok && size > 0)
+    {
+        return path;
+    }
+
+    /* else use new path */
+    return formatstr("%s%s.eep", get_savesrampath(), get_save_filename());
 }
 
 static char *get_sram_path(void)
 {
-    return formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
+    char *path;
+    size_t size = 0;
+
+    /* check if old file path exists, if it does then use that */
+    path = formatstr("%s%s.sra", get_savesrampath(), ROM_SETTINGS.goodname);
+    if (get_file_size(path, &size) == file_ok && size > 0)
+    {
+        return path;
+    }
+
+    /* else use new path */
+    return formatstr("%s%s.sra", get_savesrampath(), get_save_filename());
 }
 
 static char *get_flashram_path(void)
 {
-    return formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
+    char *path;
+    size_t size = 0;
+
+    /* check if old file path exists, if it does then use that */
+    path = formatstr("%s%s.fla", get_savesrampath(), ROM_SETTINGS.goodname);
+    if (get_file_size(path, &size) == file_ok && size > 0)
+    {
+        return path;
+    }
+
+    /* else use new path */
+    return formatstr("%s%s.fla", get_savesrampath(), get_save_filename());
 }
 
 static char *get_gb_ram_path(const char* gbrom, unsigned int control_id)
@@ -282,6 +341,12 @@ const char *get_savesrampath(void)
 {
     /* try to get the SaveSRAMPath string variable in the Core configuration section */
     return get_savepathdefault(ConfigGetParamString(g_CoreConfig, "SaveSRAMPath"));
+}
+
+const char *get_savestatefilename(void)
+{
+    /* return same file name as save files */
+    return get_save_filename();
 }
 
 void main_message(m64p_msg_level level, unsigned int corner, const char *format, ...)
