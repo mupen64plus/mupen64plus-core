@@ -142,6 +142,7 @@ void savestates_inc_slot(void)
 {
     if(++slot>9)
         slot = 0;
+    ConfigSetParameter(g_CoreConfig, "CurrentStateSlot", M64TYPE_INT, &slot);
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
