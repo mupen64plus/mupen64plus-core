@@ -439,13 +439,11 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
     //This function syncs save games.
     //If the client is controlling player 1, it sends its save game to the server
     //All other players receive save files from the server
-    const char *short_filename = strrchr(filename, '/');
-    if (short_filename == NULL)
-        short_filename = strrchr(filename, '\\');
-    short_filename += 1;
+    const char *file_extension = strrchr(filename, '.');
+    file_extension += 1;
 
     uint32_t buffer_pos = 0;
-    char *output_data = malloc(size + strlen(short_filename) + 6);
+    char *output_data = malloc(size + strlen(file_extension) + 6);
 
     file_status_t ret;
     uint8_t request;
@@ -455,9 +453,9 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
         memcpy(&output_data[buffer_pos], &request, 1);
         ++buffer_pos;
 
-         //send file name
-        memcpy(&output_data[buffer_pos], short_filename, strlen(short_filename) + 1);
-        buffer_pos += strlen(short_filename) + 1;
+         //send file extension
+        memcpy(&output_data[buffer_pos], file_extension, strlen(file_extension) + 1);
+        buffer_pos += strlen(file_extension) + 1;
 
         ret = read_from_file(filename, data, size);
         if (ret == file_open_error)
@@ -475,9 +473,9 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
         memcpy(&output_data[buffer_pos], &request, 1);
         ++buffer_pos;
 
-        //name of the file we are requesting
-        memcpy(&output_data[buffer_pos], short_filename, strlen(short_filename) + 1);
-        buffer_pos += strlen(short_filename) + 1;
+        //extension of the file we are requesting
+        memcpy(&output_data[buffer_pos], file_extension, strlen(file_extension) + 1);
+        buffer_pos += strlen(file_extension) + 1;
 
         SDLNet_TCP_Send(l_tcpSocket, &output_data[0], buffer_pos);
         size_t recv = 0;
