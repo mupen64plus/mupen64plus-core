@@ -24,6 +24,7 @@
 #include "api/callbacks.h"
 #include "api/m64p_types.h"
 
+#include "backends/api/joybus.h"
 #include "main/rom.h"
 
 #include <stdint.h>
@@ -44,6 +45,13 @@ static void process_cart_command(void* jbd,
         /* fall through */
     case JCMD_STATUS: {
         JOYBUS_CHECK_COMMAND_FORMAT(1, 3)
+
+        /* auto = 4k EEPROM */
+        if (ROM_SETTINGS.savetype == SAVETYPE_AUTO)
+        {
+            ROM_SETTINGS.savetype = SAVETYPE_EEPROM_4K;
+            cart->eeprom.type = JDT_EEPROM_4K;
+        }
 
         if (cart->eeprom.type) {
             /* set type, status, and extra */
@@ -153,6 +161,13 @@ void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value)
 {
     struct cart* cart = (struct cart*)opaque;
 
+    /* auto = flash RAM */
+    if (ROM_SETTINGS.savetype == SAVETYPE_AUTO)
+    {
+        ROM_SETTINGS.savetype = SAVETYPE_FLASH_RAM;
+        cart->use_flashram = 1;
+    }
+
     if (cart->use_flashram == -1)
     {
         read_sram(&cart->sram, address, value);
@@ -173,6 +188,13 @@ void read_cart_dom2(void* opaque, uint32_t address, uint32_t* value)
 void write_cart_dom2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct cart* cart = (struct cart*)opaque;
+
+    /* auto = flash RAM */
+    if (ROM_SETTINGS.savetype == SAVETYPE_AUTO)
+    {
+        ROM_SETTINGS.savetype = SAVETYPE_FLASH_RAM;
+        cart->use_flashram = 1;
+    }
 
     if (cart->use_flashram == -1)
     {
@@ -196,6 +218,13 @@ unsigned int cart_dom2_dma_read(void* opaque, const uint8_t* dram, uint32_t dram
     struct cart* cart = (struct cart*)opaque;
     unsigned int cycles;
 
+    /* auto = SRAM */
+    if (ROM_SETTINGS.savetype == SAVETYPE_AUTO)
+    {
+        ROM_SETTINGS.savetype = SAVETYPE_SRAM;
+        cart->use_flashram = -1;
+    }
+
     if (cart->use_flashram != 1)
     {
         cycles = sram_dma_read(&cart->sram, dram, dram_addr, cart_addr, length);
@@ -213,6 +242,13 @@ unsigned int cart_dom2_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr
 {
     struct cart* cart = (struct cart*)opaque;
     unsigned int cycles;
+
+    /* auto = SRAM */
+    if (ROM_SETTINGS.savetype == SAVETYPE_AUTO)
+    {
+        ROM_SETTINGS.savetype = SAVETYPE_SRAM;
+        cart->use_flashram = -1;
+    }
 
     if (cart->use_flashram != 1)
     {

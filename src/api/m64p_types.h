@@ -239,6 +239,7 @@ typedef enum
     SAVETYPE_CONTROLLER_PAK  = 4,
     SAVETYPE_CONTROLLER_PACK = 4, // Preserve inaccurate/off-brand name
     SAVETYPE_NONE            = 5,
+    SAVETYPE_AUTO            = 6,
 } m64p_rom_save_type;
 
 typedef enum
