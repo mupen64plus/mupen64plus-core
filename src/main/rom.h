@@ -41,6 +41,9 @@
 m64p_error open_rom(const unsigned char* romimage, unsigned int size);
 m64p_error close_rom(void);
 
+m64p_error open_disk(void);
+m64p_error close_disk(void);
+
 extern int g_rom_size;
 
 typedef struct _rom_params

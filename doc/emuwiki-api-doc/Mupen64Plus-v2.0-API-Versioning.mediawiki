@@ -131,3 +131,5 @@ This is the most complicated interface, because it involves 3 components: the vi
 ** add ConfigOverrideUserPaths() function to allow front-ends to override user paths.
 * '''INPUT_API_VERSION''' version 2.1.1:
 ** add optional functions: SendVRUWord(), SetMicState(), ReadVRUResults(), ClearVRUWords(), SetVRUWordMask(). These functions add support for the VRU (Voice Recognition Unit). Also added a new int to the CONTROL struct: Type. Type can be CONT_TYPE_STANDARD (0) or CONT_TYPE_VRU (1).
+* '''FRONTEND_API_VERSION''' version 2.1.5:
+** added "M64CMD_DISK_OPEN" and "M64CMD_DISK_CLOSE" commands to allow booting 64DD disks without requiring a cartridge.

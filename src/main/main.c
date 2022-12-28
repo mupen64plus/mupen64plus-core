@@ -1486,6 +1486,7 @@ m64p_error main_run(void)
     struct file_storage sra;
     size_t dd_rom_size;
     struct dd_disk dd_disk;
+    m64p_error failure_rval;
 
     int control_ids[GAME_CONTROLLERS_COUNT];
     struct controller_input_compat cin_compats[GAME_CONTROLLERS_COUNT];
@@ -1619,6 +1620,13 @@ m64p_error main_run(void)
     else
     {
         dd_rom_size = 0;
+    }
+
+    /* ensure the 64DD rom & disk are loaded,
+     * otherwise we have to bail right now */
+    if (g_rom_size == 0 && dd_rom_size == 0)
+    {
+        goto on_disk_failure;
     }
 
     /* setup pif channel devices */
@@ -1808,6 +1816,7 @@ m64p_error main_run(void)
                 &dd_disk, dd_idisk);
 
     // Attach rom to plugins
+    failure_rval = M64ERR_PLUGIN_FAIL;
     if (!gfx.romOpen())
     {
         goto on_gfx_open_failure;
@@ -1897,6 +1906,10 @@ m64p_error main_run(void)
 
     return M64ERR_SUCCESS;
 
+on_disk_failure:
+    failure_rval = M64ERR_INVALID_STATE;
+    rsp.romClosed();
+    input.romClosed();
 on_input_open_failure:
     audio.romClosed();
 on_audio_open_failure:
@@ -1920,7 +1933,7 @@ on_gfx_open_failure:
     close_file_storage(&mpk);
     close_dd_disk(&dd_disk);
 
-    return M64ERR_PLUGIN_FAIL;
+    return failure_rval;
 }
 
 void main_stop(void)

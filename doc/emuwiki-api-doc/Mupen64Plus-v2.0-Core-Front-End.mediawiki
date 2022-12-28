@@ -89,12 +89,22 @@ Most libmupen64plus functions return an <tt>m64p_error</tt> return code, which i
 |M64CMD_ROM_OPEN
 |This will cause the core to read in a binary ROM image provided by the front-end.
 |'''<tt>ParamPtr</tt>''' Pointer to the uncompressed ROM image in memory.<br />'''<tt>ParamInt</tt>''' The size in bytes of the ROM image.
-|The emulator cannot be currently running.  A ROM image must not be currently opened.
+|The emulator cannot be currently running.  A ROM image or disk must not be currently opened.
 |-
 |M64CMD_ROM_CLOSE
 |This will close any currently open ROM.  The current cheat code list will also be deleted.
 |N/A
 |The emulator cannot be currently running.  A ROM image must have been previously opened.  There should be no plugins currently attached.
+|-
+|M64CMD_DISK_OPEN
+|This will cause the core to read in a disk using the medialoader API provided by the front-end.
+|N/A
+|The emulator cannot be currently running.  A disk or ROM image must not be currently opened.
+|-
+|M64CMD_DISK_CLOSE
+|This will close any currently open disk.  The current cheat code list will also be deleted.
+|N/A
+|The emulator cannot be currently running.  A disk must have been previously opened.  There should be no plugins currently attached.
 |-
 |M64CMD_ROM_GET_HEADER
 |This will retrieve the header data of the currently open ROM.
