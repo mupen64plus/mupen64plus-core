@@ -138,7 +138,7 @@ void dd_mecha_int_handler(void* opaque)
 void dd_bm_int_handler(void* opaque)
 {
     struct dd_controller* dd = (struct dd_controller*)opaque;
-    signal_dd_interrupt(dd, DD_STATUS_BM_INT);
+    dd_update_bm(dd);
 }
 
 static void read_C2(struct dd_controller* dd)
@@ -268,15 +268,14 @@ void dd_update_bm(void* opaque)
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
         /* C2 sectors: do nothing since they're loaded with zeros */
-        else if (sector < SECTORS_PER_BLOCK + 4) {
+        else if (sector < SECTORS_PER_BLOCK + 3) {
             read_C2(dd);
             dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
-            if ((sector + 1) == SECTORS_PER_BLOCK + 4) {
-                dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
-            }
         }
-        /* Gap sector: continue to next block, quit after second block */
-        else if (sector == SECTORS_PER_BLOCK + 4) {
+        /* Last C2 sector: continue to next block, quit after second block */
+        else if (sector == SECTORS_PER_BLOCK + 3) {
+            read_C2(dd);
+            dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
                 // Start at next block sector 0.
                 dd->regs[DD_ASIC_CUR_SECTOR] = ((1 - block) * 90 + 0) << 16;
@@ -367,12 +366,10 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
     switch(reg)
     {
     case DD_ASIC_CMD_STATUS: {
-            /* clear BM interrupt when reading gap */
-            unsigned int sector = ((dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff);
-            sector %= 90;
-            if ((dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) && (sector > SECTORS_PER_BLOCK)) {
+            /* acknowledge BM interrupt */
+            if (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) {
                 clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-                dd_update_bm(dd);
+                add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, (16040 + (((dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16) / 35)) / dd->r4300->cp0.count_per_op);
             }
         } break;
     }
@@ -506,6 +503,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* clear DD interrupt if both MECHA and BM are cleared */
         if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_BM_INT | DD_STATUS_MECHA_INT)) == 0) {
             clear_dd_interrupt(dd, DD_STATUS_BM_INT);
+            remove_event(&dd->r4300->cp0.q, DD_BM_INT);
         }
 
         /* start transfer */
@@ -517,7 +515,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                 DebugMessage(M64MSG_WARNING, "Attempt to read disk with BM mode 0");
             }
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_RUNNING;
-            dd_update_bm(dd);
+            add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 25000 / dd->r4300->cp0.count_per_op);
         }
         break;
 

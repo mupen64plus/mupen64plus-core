@@ -219,12 +219,5 @@ void pi_end_of_dma_event(void* opaque)
     pi->regs[PI_STATUS_REG] &= ~(PI_STATUS_DMA_BUSY | PI_STATUS_IO_BUSY);
     pi->regs[PI_STATUS_REG] |= PI_STATUS_INTERRUPT;
 
-    if (pi->dd != NULL) {
-        if (((pi->regs[PI_CART_ADDR_REG] >= MM_DD_C2S_BUFFER) && (pi->regs[PI_CART_ADDR_REG] < MM_DD_DS_BUFFER)) ||
-            ((pi->regs[PI_CART_ADDR_REG] >= MM_DD_DS_BUFFER) && (pi->regs[PI_CART_ADDR_REG] < MM_DD_REGS))) {
-            dd_update_bm(pi->dd);
-        }
-    }
-
     raise_rcp_interrupt(pi->mi, MI_INTR_PI);
 }
