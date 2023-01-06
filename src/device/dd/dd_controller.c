@@ -380,7 +380,7 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    unsigned int head, track;
+    unsigned int head, track, old_track, cycles;
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
     if (address < MM_DD_REGS || address >= MM_DD_MS_RAM) {
@@ -404,6 +404,9 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         update_rtc(&dd->rtc);
         const struct tm* tm = localtime(&dd->rtc.now);
 
+        /* base cycle count */
+        cycles = 4000;
+
         switch ((value >> 16) & 0xff)
         {
         /* No-op */
@@ -413,6 +416,11 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Seek track */
         case 0x01:
         case 0x02:
+            /* base timing cycle count for Seek track CMD */
+            cycles = 496500;
+            /* get old track for calculating extra cycles */
+            old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            /* update track */
             dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA];
             /* lock track */
             dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
@@ -421,6 +429,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
             track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
+            /* calculate track to track head movement timing */
+            cycles += 9650 * abs(track - old_track);
             break;
 
         /* Clear Disk change flag */
@@ -460,7 +470,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         }
 
         /* Signal a MECHA interrupt */
-        signal_dd_interrupt(dd, DD_STATUS_MECHA_INT);
+        cp0_update_count(dd->r4300);
+        add_interrupt_event(&dd->r4300->cp0, DD_MC_INT, cycles / dd->r4300->cp0.count_per_op);
         break;
 
     case DD_ASIC_BM_STATUS_CTL:
