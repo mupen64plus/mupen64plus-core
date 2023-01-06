@@ -123,4 +123,7 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
 void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address);
 void dd_update_bm(void* opaque);
 
+void dd_mecha_int_handler(void* opaque);
+void dd_bm_int_handler(void* opaque);
+
 #endif

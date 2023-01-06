@@ -129,6 +129,18 @@ static void clear_dd_interrupt(struct dd_controller* dd, uint32_t bm_int)
     r4300_check_interrupt(dd->r4300, CP0_CAUSE_IP3, 0);
 }
 
+void dd_mecha_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    signal_dd_interrupt(dd, DD_STATUS_MECHA_INT);
+}
+
+void dd_bm_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    signal_dd_interrupt(dd, DD_STATUS_BM_INT);
+}
+
 static void read_C2(struct dd_controller* dd)
 {
     size_t i;

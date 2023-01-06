@@ -641,6 +641,16 @@ void gen_interrupt(struct r4300_core* r4300)
             call_interrupt_handler(&r4300->cp0, 12);
             break;
 
+        case DD_MC_INT:
+            remove_interrupt_event(&r4300->cp0);
+            call_interrupt_handler(&r4300->cp0, 13);
+            break;
+
+        case DD_BM_INT:
+            remove_interrupt_event(&r4300->cp0);
+            call_interrupt_handler(&r4300->cp0, 14);
+            break;
+
         default:
             DebugMessage(M64MSG_ERROR, "Unknown interrupt queue event type %.8X.", r4300->cp0.q.first->data.type);
             remove_interrupt_event(&r4300->cp0);
