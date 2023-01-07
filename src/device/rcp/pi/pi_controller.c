@@ -173,7 +173,6 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     case PI_CART_ADDR_REG:
         if (pi->dd != NULL) {
             masked_write(&pi->regs[PI_CART_ADDR_REG], value, mask);
-            dd_on_pi_cart_addr_write(pi->dd, pi->regs[PI_CART_ADDR_REG]);
             return;
         }
         break;

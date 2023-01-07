@@ -120,7 +120,6 @@ void write_dd_rom(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 
-void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address);
 void dd_update_bm(void* opaque);
 
 void dd_mecha_int_handler(void* opaque);

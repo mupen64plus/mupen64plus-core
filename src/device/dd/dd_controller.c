@@ -216,6 +216,10 @@ void dd_update_bm(void* opaque)
 		return;
     }
 
+    /* clear flags */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ | DD_STATUS_C2_XFER);
+
+    /* calculate sector and block info for use later */
     unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff;
     unsigned int block = sector / 90;
     sector %= 90;
@@ -481,6 +485,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* clear MECHA interrupt */
         if (value & DD_BM_CTL_MECHA_RST) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MECHA_INT;
+            remove_event(&dd->r4300->cp0.q, DD_MC_INT);
         }
         /* start block transfer */
         if (value & DD_BM_CTL_BLK_TRANS) {
@@ -498,12 +503,12 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                                             | DD_STATUS_BM_INT);
             dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
             dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+            remove_event(&dd->r4300->cp0.q, DD_BM_INT);
         }
 
         /* clear DD interrupt if both MECHA and BM are cleared */
         if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_BM_INT | DD_STATUS_MECHA_INT)) == 0) {
             clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-            remove_event(&dd->r4300->cp0.q, DD_BM_INT);
         }
 
         /* start transfer */
@@ -651,19 +656,5 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
     invalidate_r4300_cached_code(dd->r4300, R4300_KSEG1 + dram_addr, length);
 
     return cycles;
-}
-
-void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address)
-{
-    /* clear C2 xfer */
-    if (address == MM_DD_C2S_BUFFER) {
-        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_C2_XFER | DD_STATUS_BM_ERR);
-        clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-    }
-    /* clear data RQ */
-    else if (address == MM_DD_DS_BUFFER) {
-        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ | DD_STATUS_BM_ERR);
-        clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-    }
 }
 
