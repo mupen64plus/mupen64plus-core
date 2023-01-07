@@ -369,7 +369,7 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
             /* acknowledge BM interrupt */
             if (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) {
                 clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-                add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, (16040 + (((dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16) / 35)) / dd->r4300->cp0.count_per_op);
+                add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 8020 + (((dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16) / 56));
             }
         } break;
     }
@@ -402,7 +402,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         const struct tm* tm = localtime(&dd->rtc.now);
 
         /* base cycle count */
-        cycles = 4000;
+        cycles = 2000;
 
         switch ((value >> 16) & 0xff)
         {
@@ -414,7 +414,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         case 0x01:
         case 0x02:
             /* base timing cycle count for Seek track CMD */
-            cycles = 496500;
+            cycles = 248250;
             /* get old track for calculating extra cycles */
             old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             /* update track */
@@ -427,7 +427,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
             /* calculate track to track head movement timing */
-            cycles += 9650 * abs(track - old_track);
+            cycles += 4825 * abs(track - old_track);
             break;
 
         /* Clear Disk change flag */
@@ -468,7 +468,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Signal a MECHA interrupt */
         cp0_update_count(dd->r4300);
-        add_interrupt_event(&dd->r4300->cp0, DD_MC_INT, cycles / dd->r4300->cp0.count_per_op);
+        add_interrupt_event(&dd->r4300->cp0, DD_MC_INT, cycles);
         break;
 
     case DD_ASIC_BM_STATUS_CTL:
@@ -515,7 +515,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                 DebugMessage(M64MSG_WARNING, "Attempt to read disk with BM mode 0");
             }
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_RUNNING;
-            add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 25000 / dd->r4300->cp0.count_per_op);
+            add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 12500);
         }
         break;
 
