@@ -132,6 +132,8 @@ static void clear_dd_interrupt(struct dd_controller* dd, uint32_t bm_int)
 void dd_mecha_int_handler(void* opaque)
 {
     struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* clear busy state flag */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BUSY_STATE;
     signal_dd_interrupt(dd, DD_STATUS_MECHA_INT);
 }
 
@@ -408,6 +410,9 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* base cycle count */
         cycles = 2000;
 
+        /* say the drive is busy while processing the command */
+        dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BUSY_STATE;
+
         switch ((value >> 16) & 0xff)
         {
         /* No-op */
@@ -627,7 +632,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ
                                         | DD_STATUS_C2_XFER
                                         | DD_STATUS_BM_ERR
-                                        | DD_STATUS_BM_INT);
+                                        | DD_STATUS_BM_INT
+                                        | DD_STATUS_BUSY_STATE);
         dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
         dd->regs[DD_ASIC_CUR_SECTOR] = 0;
         clear_dd_interrupt(dd, DD_STATUS_MECHA_INT);
