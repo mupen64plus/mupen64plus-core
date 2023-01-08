@@ -622,6 +622,15 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         if (value != 0xaaaa0000) {
             DebugMessage(M64MSG_WARNING, "Unexpected hard reset value %08x", value);
         }
+        remove_event(&dd->r4300->cp0.q, DD_MC_INT);
+        remove_event(&dd->r4300->cp0.q, DD_BM_INT);
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ
+                                        | DD_STATUS_C2_XFER
+                                        | DD_STATUS_BM_ERR
+                                        | DD_STATUS_BM_INT);
+        dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
+        dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+        clear_dd_interrupt(dd, DD_STATUS_MECHA_INT);
         dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
         break;
 
