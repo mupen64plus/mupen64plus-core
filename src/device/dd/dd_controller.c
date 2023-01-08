@@ -550,6 +550,11 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             dd->regs[DD_ASIC_DATA] = time2data(tm->tm_min, tm->tm_sec);
             break;
 
+        /* LED On/Off Timing */
+        case 0x15:
+            DebugMessage(M64MSG_VERBOSE, "LED ON Time %02x, LED OFF Time %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+
         /* Feature inquiry */
         case 0x1b:
             dd->regs[DD_ASIC_DATA] = 0x00030000;
