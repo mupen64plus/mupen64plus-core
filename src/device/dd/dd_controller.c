@@ -434,6 +434,55 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             cycles += 4825 * abs(track - old_track);
             break;
 
+        /* Rezero / Start (Seek to track 0) */
+        case 0x03:
+        case 0x05:
+            /* both commands do the exact same thing */
+            /* base timing cycle count for Seek track CMD */
+            cycles = 248250;
+            /* get old track for calculating extra cycles */
+            old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            /* update track to 0 */
+            dd->regs[DD_ASIC_CUR_TK] = 0;
+            /* lock track */
+            dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
+            dd->bm_write = 1;
+            /* update bm_zone */
+            head = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
+            track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8 * head;
+            /* calculate track to track head movement timing */
+            cycles += 4825 * abs(track - old_track);
+            break;
+
+        /* Sleep / Brake */
+        case 0x04:
+            if (dd->regs[DD_ASIC_DATA] == 0)
+            {
+                DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to sleep mode");
+            }
+            else
+            {
+                DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to brake mode");
+            }
+            break;
+
+        /* Set standby delay */
+        case 0x06:
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0)
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive standby delay to %u seconds", (dd->regs[DD_ASIC_DATA] >> 16) & 0xff);
+            else
+                DebugMessage(M64MSG_VERBOSE, "Disable disk drive standby delay");
+            break;
+
+        /* Set sleep delay */
+        case 0x07:
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0)
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive sleep delay to %u seconds", (dd->regs[DD_ASIC_DATA] >> 16) & 0xff);
+            else
+                DebugMessage(M64MSG_VERBOSE, "Disable disk drive sleep delay");
+            break;
+
         /* Clear Disk change flag */
         case 0x08:
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DISK_CHNG;
@@ -445,9 +494,38 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DISK_CHNG;
             break;
 
+        /* Read ASIC version */
+        case 0x0a:
+            if (dd->regs[DD_ASIC_DATA] == 0)
+            {
+                dd->regs[DD_ASIC_DATA] = 0x01140000;
+                if (dd->disk->development)
+                    dd->regs[DD_ASIC_DATA] |= 0x10000000;
+            }
+            else
+            {
+                dd->regs[DD_ASIC_DATA] = 0x53000000;
+            }
+            break;
+
         /* Set Disk type */
         case 0x0b:
             DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", (dd->regs[DD_ASIC_DATA] >> 16) & 0xf);
+            break;
+
+        /* Request controller status */
+        case 0x0c:
+            dd->regs[DD_ASIC_DATA] = 0;
+            break;
+
+        /* Standby */
+        case 0x0d:
+            DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode");
+            break;
+
+        /* Retry index lock */
+        case 0x0e:
+            DebugMessage(M64MSG_VERBOSE, "Retry disk track lock");
             break;
 
         /* Read RTC in ASIC_DATA (BCD format) */
@@ -463,7 +541,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Feature inquiry */
         case 0x1b:
-            dd->regs[DD_ASIC_DATA] = 0x00000000;
+            dd->regs[DD_ASIC_DATA] = 0x00030000;
             break;
 
         default:
