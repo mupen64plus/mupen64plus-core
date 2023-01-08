@@ -528,6 +528,17 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             DebugMessage(M64MSG_VERBOSE, "Retry disk track lock");
             break;
 
+        /* Write RTC from ASIC_DATA (BCD format) */
+        case 0x0f:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Year %02x, Month %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+        case 0x10:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Day %02x, Hour %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+        case 0x11:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Minute %02x, Second %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+
         /* Read RTC in ASIC_DATA (BCD format) */
         case 0x12:
             dd->regs[DD_ASIC_DATA] = time2data(tm->tm_year, tm->tm_mon + 1);
