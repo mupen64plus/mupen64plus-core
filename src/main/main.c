@@ -1352,12 +1352,12 @@ static int load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_in
     }
     
     /* Set region in dd_disk */
-    if (w == DD_REGION_JP) {
+    if (w == DD_REGION_DV || development) {
+        dd_disk->region = DDREGION_DEV;
+    } else if (w == DD_REGION_JP) {
         dd_disk->region = DDREGION_JAPAN;
     } else if (w == DD_REGION_US) {
         dd_disk->region = DDREGION_US;
-    } else if (w == DD_REGION_DV) {
-        dd_disk->region = DDREGION_DEV;
     }
 
     if (w == DD_REGION_JP || w == DD_REGION_US || w == DD_REGION_DV) {
