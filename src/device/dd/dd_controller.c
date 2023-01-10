@@ -530,7 +530,12 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Set Disk type */
         case 0x0b:
             dd->disk_type = (dd->regs[DD_ASIC_DATA] >> 16) & 0xf;
-            DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", dd->disk_type);
+            if (dd->disk_type > 6) {
+                DebugMessage(M64MSG_VERBOSE, "Setting invalid disk type %u, set to fallback disk type 6", dd->disk_type);
+                dd->disk_type = 6;
+            } else {
+                DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", dd->disk_type);
+            }
             break;
 
         /* Request controller status */
