@@ -228,8 +228,14 @@ void dd_update_bm(void* opaque)
 
     /* handle writes (BM mode 0) */
     if (dd->bm_write) {
+        /* do not write anything and stop BM if the track being written is write protected */
+        if (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_WR_PR_ERR) {
+            dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BM_ERR;
+            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+            dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
+        }
         /* first sector : just issue a BM interrupt to get things going */
-        if (sector == 0) {
+        else if (sector == 0) {
             dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
@@ -384,6 +390,7 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     unsigned int head, track, old_track, cycles;
+    const uint16_t startTrackZones[9] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425, 0x497 };
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
     if (address < MM_DD_REGS || address >= MM_DD_MS_RAM) {
@@ -437,6 +444,13 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
             /* calculate track to track head movement timing */
             cycles += 4825 * abs(track - old_track);
+            /* if write seek command, check if the track is writable */
+            dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_WR_PR_ERR;
+            if (dd->bm_write) {
+                if (track < startTrackZones[(dd->disk_type & 0xf) + head + 3]) {
+                    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_WR_PR_ERR;
+                }
+            }
             break;
 
         /* Rezero / Start (Seek to track 0) */
@@ -515,7 +529,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Set Disk type */
         case 0x0b:
-            DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", (dd->regs[DD_ASIC_DATA] >> 16) & 0xf);
+            dd->disk_type = (dd->regs[DD_ASIC_DATA] >> 16) & 0xf;
+            DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", dd->disk_type);
             break;
 
         /* Request controller status */

@@ -73,6 +73,9 @@ struct dd_controller
     uint8_t ds_buf[0x100];              /* 0x400-0x4ff: data buffer */
     uint8_t ms_ram[0x40];               /* 0x580-0x5bf: micro sequencer */
 
+    /* drive controller */
+    unsigned char disk_type;        /* [0-6] */
+
     /* buffer manager */
     unsigned char bm_write;         /* [0-1] */
     unsigned char bm_reset_held;    /* [0-1] */
