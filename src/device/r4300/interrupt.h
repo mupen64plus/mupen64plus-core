@@ -54,18 +54,18 @@ void check_int_handler(void* opaque);
 void special_int_handler(void* opaque);
 void nmi_int_handler(void* opaque);
 
-#define VI_INT      0x001
-#define COMPARE_INT 0x002
-#define CHECK_INT   0x004
-#define SI_INT      0x008
-#define PI_INT      0x010
-#define SPECIAL_INT 0x020
-#define AI_INT      0x040
-#define SP_INT      0x080
-#define DP_INT      0x100
-#define HW2_INT     0x200
-#define NMI_INT     0x400
-#define RSP_DMA_EVT 0x800
+#define VI_INT      0x0001
+#define COMPARE_INT 0x0002
+#define CHECK_INT   0x0004
+#define SI_INT      0x0008
+#define PI_INT      0x0010
+#define SPECIAL_INT 0x0020
+#define AI_INT      0x0040
+#define SP_INT      0x0080
+#define DP_INT      0x0100
+#define HW2_INT     0x0200
+#define NMI_INT     0x0400
+#define RSP_DMA_EVT 0x0800
 #define DD_MC_INT   0x1000
 #define DD_BM_INT   0x2000
 
