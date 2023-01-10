@@ -447,7 +447,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             /* if write seek command, check if the track is writable */
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_WR_PR_ERR;
             if (dd->bm_write) {
-                if (track < startTrackZones[(dd->disk_type & 0xf) + head + 3]) {
+                if (track < startTrackZones[(dd->disk_type & 0xf) - head + 3]) {
                     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_WR_PR_ERR;
                 }
             }
