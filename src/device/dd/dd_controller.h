@@ -75,6 +75,8 @@ struct dd_controller
 
     /* drive controller */
     unsigned char disk_type;        /* [0-6] */
+    short timer_standby;            /* -1 = Disabled, in seconds */
+    short timer_sleep;              /* -1 = Disabled, in seconds */
 
     /* buffer manager */
     unsigned char bm_write;         /* [0-1] */
@@ -127,5 +129,6 @@ void dd_update_bm(void* opaque);
 
 void dd_mecha_int_handler(void* opaque);
 void dd_bm_int_handler(void* opaque);
+void dd_dv_int_handler(void* opaque);
 
 #endif

@@ -143,6 +143,57 @@ void dd_bm_int_handler(void* opaque)
     dd_update_bm(dd);
 }
 
+void dd_dv_active(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor active and prep standby */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT);
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+    if (dd->timer_standby >= 0) {
+        add_interrupt_event(&dd->r4300->cp0, DD_DV_INT, 46875000 * dd->timer_standby);
+    }
+}
+
+void dd_dv_standby(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor standby and prep sleep */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MTR_N_SPIN;
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_HEAD_RTRCT;
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+    if (dd->timer_sleep >= 0) {
+        add_interrupt_event(&dd->r4300->cp0, DD_DV_INT, 46875000 * dd->timer_sleep);
+    }
+}
+
+void dd_dv_sleep(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor sleep */
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT;
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+}
+
+void dd_dv_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* manage drive motor modes (active, standby, sleep) */
+    int motorNotSpinning = (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_MTR_N_SPIN) != 0;
+    int headRetracted = (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_HEAD_RTRCT) != 0;
+
+    if (!motorNotSpinning && headRetracted) {
+        /* standby to sleep */
+        dd_dv_sleep(dd);
+        DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to sleep mode (auto)");
+    }
+
+    if (!motorNotSpinning && !headRetracted) {
+        /* active to standby, prep time to sleep */
+        dd_dv_standby(dd);
+        DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode (auto)");
+    }
+}
+
 static void read_C2(struct dd_controller* dd)
 {
     size_t i;
@@ -302,6 +353,9 @@ void dd_update_bm(void* opaque)
         }
     }
 
+    /* Make sure motor is still considered active */
+    dd_dv_active(dd);
+
     /* Signal a BM interrupt */
     signal_dd_interrupt(dd, DD_STATUS_BM_INT);
 }
@@ -339,6 +393,10 @@ void poweron_dd(struct dd_controller* dd)
 
     dd->rtc.now = 0;
     dd->rtc.last_update_rtc = 0;
+
+    dd->timer_sleep = 1;
+    dd->timer_standby = 3;
+    dd_dv_sleep(dd);
 
     dd->regs[DD_ASIC_ID_REG] = 0x00030000;
     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
@@ -431,6 +489,12 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         case 0x02:
             /* base timing cycle count for Seek track CMD */
             cycles = 248250;
+            /* check if motor is active or not, if not, add more cycles */
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles += 50175000;
+            }
+            /* make motor active */
+            dd_dv_active(dd);
             /* get old track for calculating extra cycles */
             old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             /* update track */
@@ -459,6 +523,12 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             /* both commands do the exact same thing */
             /* base timing cycle count for Seek track CMD */
             cycles = 248250;
+            /* check if motor is active or not, if not, add more cycles */
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles += 50175000;
+            }
+            /* make motor active */
+            dd_dv_active(dd);
             /* get old track for calculating extra cycles */
             old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             /* update track to 0 */
@@ -476,6 +546,10 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Sleep / Brake */
         case 0x04:
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles = 20750000;
+            }
+            dd_dv_sleep(dd);
             if (dd->regs[DD_ASIC_DATA] == 0)
             {
                 DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to sleep mode");
@@ -488,18 +562,24 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Set standby delay */
         case 0x06:
-            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0)
-                DebugMessage(M64MSG_VERBOSE, "Set disk drive standby delay to %u seconds", (dd->regs[DD_ASIC_DATA] >> 16) & 0xff);
-            else
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0) {
+                dd->timer_standby = (dd->regs[DD_ASIC_DATA] >> 16) & 0xff;
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive standby delay to %u seconds", dd->timer_standby);
+            } else {
+                dd->timer_standby = -1;
                 DebugMessage(M64MSG_VERBOSE, "Disable disk drive standby delay");
+            }
             break;
 
         /* Set sleep delay */
         case 0x07:
-            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0)
-                DebugMessage(M64MSG_VERBOSE, "Set disk drive sleep delay to %u seconds", (dd->regs[DD_ASIC_DATA] >> 16) & 0xff);
-            else
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0) {
+                dd->timer_sleep = (dd->regs[DD_ASIC_DATA] >> 16) & 0xff;
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive sleep delay to %u seconds", dd->timer_sleep);
+            } else {
+                dd->timer_sleep = -1;
                 DebugMessage(M64MSG_VERBOSE, "Disable disk drive sleep delay");
+            }
             break;
 
         /* Clear Disk change flag */
@@ -545,6 +625,10 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
         /* Standby */
         case 0x0d:
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles = 16000000;
+            }
+            dd_dv_standby(dd);
             DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode");
             break;
 
@@ -656,6 +740,9 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                                         | DD_STATUS_BUSY_STATE);
         dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
         dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+        dd->timer_sleep = 1;
+        dd->timer_standby = 3;
+        dd_dv_sleep(dd);
         clear_dd_interrupt(dd, DD_STATUS_MECHA_INT);
         dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
         break;
