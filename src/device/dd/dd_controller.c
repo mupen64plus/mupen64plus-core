@@ -129,6 +129,71 @@ static void clear_dd_interrupt(struct dd_controller* dd, uint32_t bm_int)
     r4300_check_interrupt(dd->r4300, CP0_CAUSE_IP3, 0);
 }
 
+void dd_mecha_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* clear busy state flag */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_BUSY_STATE;
+    signal_dd_interrupt(dd, DD_STATUS_MECHA_INT);
+}
+
+void dd_bm_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    dd_update_bm(dd);
+}
+
+void dd_dv_active(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor active and prep standby */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT);
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+    if (dd->timer_standby >= 0) {
+        add_interrupt_event(&dd->r4300->cp0, DD_DV_INT, 46875000 * dd->timer_standby);
+    }
+}
+
+void dd_dv_standby(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor standby and prep sleep */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MTR_N_SPIN;
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_HEAD_RTRCT;
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+    if (dd->timer_sleep >= 0) {
+        add_interrupt_event(&dd->r4300->cp0, DD_DV_INT, 46875000 * dd->timer_sleep);
+    }
+}
+
+void dd_dv_sleep(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* make motor sleep */
+    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT;
+    remove_event(&dd->r4300->cp0.q, DD_DV_INT);
+}
+
+void dd_dv_int_handler(void* opaque)
+{
+    struct dd_controller* dd = (struct dd_controller*)opaque;
+    /* manage drive motor modes (active, standby, sleep) */
+    int motorNotSpinning = (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_MTR_N_SPIN) != 0;
+    int headRetracted = (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_HEAD_RTRCT) != 0;
+
+    if (!motorNotSpinning && headRetracted) {
+        /* standby to sleep */
+        dd_dv_sleep(dd);
+        DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to sleep mode (auto)");
+    }
+
+    if (!motorNotSpinning && !headRetracted) {
+        /* active to standby, prep time to sleep */
+        dd_dv_standby(dd);
+        DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode (auto)");
+    }
+}
+
 static void read_C2(struct dd_controller* dd)
 {
     size_t i;
@@ -204,14 +269,24 @@ void dd_update_bm(void* opaque)
 		return;
     }
 
+    /* clear flags */
+    dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ | DD_STATUS_C2_XFER);
+
+    /* calculate sector and block info for use later */
     unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff;
     unsigned int block = sector / 90;
     sector %= 90;
 
     /* handle writes (BM mode 0) */
     if (dd->bm_write) {
+        /* do not write anything and stop BM if the track being written is write protected */
+        if (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_WR_PR_ERR) {
+            dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BM_ERR;
+            dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
+            dd->regs[DD_ASIC_BM_STATUS_CTL] &= ~DD_BM_STATUS_RUNNING;
+        }
         /* first sector : just issue a BM interrupt to get things going */
-        if (sector == 0) {
+        else if (sector == 0) {
             dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
@@ -256,15 +331,14 @@ void dd_update_bm(void* opaque)
             dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_DATA_RQ;
         }
         /* C2 sectors: do nothing since they're loaded with zeros */
-        else if (sector < SECTORS_PER_BLOCK + 4) {
+        else if (sector < SECTORS_PER_BLOCK + 3) {
             read_C2(dd);
             dd->regs[DD_ASIC_CUR_SECTOR] += 0x10000;
-            if ((sector + 1) == SECTORS_PER_BLOCK + 4) {
-                dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
-            }
         }
-        /* Gap sector: continue to next block, quit after second block */
-        else if (sector == SECTORS_PER_BLOCK + 4) {
+        /* Last C2 sector: continue to next block, quit after second block */
+        else if (sector == SECTORS_PER_BLOCK + 3) {
+            read_C2(dd);
+            dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_C2_XFER;
             if (dd->regs[DD_ASIC_BM_STATUS_CTL] & DD_BM_STATUS_BLOCK) {
                 // Start at next block sector 0.
                 dd->regs[DD_ASIC_CUR_SECTOR] = ((1 - block) * 90 + 0) << 16;
@@ -278,6 +352,9 @@ void dd_update_bm(void* opaque)
             DebugMessage(M64MSG_ERROR, "DD Read, sector overrun");
         }
     }
+
+    /* Make sure motor is still considered active */
+    dd_dv_active(dd);
 
     /* Signal a BM interrupt */
     signal_dd_interrupt(dd, DD_STATUS_BM_INT);
@@ -317,6 +394,10 @@ void poweron_dd(struct dd_controller* dd)
     dd->rtc.now = 0;
     dd->rtc.last_update_rtc = 0;
 
+    dd->timer_sleep = 1;
+    dd->timer_standby = 3;
+    dd_dv_sleep(dd);
+
     dd->regs[DD_ASIC_ID_REG] = 0x00030000;
     dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
     if (dd->idisk != NULL) {
@@ -355,12 +436,10 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
     switch(reg)
     {
     case DD_ASIC_CMD_STATUS: {
-            /* clear BM interrupt when reading gap */
-            unsigned int sector = ((dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff);
-            sector %= 90;
-            if ((dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) && (sector > SECTORS_PER_BLOCK)) {
+            /* acknowledge BM interrupt */
+            if (dd->regs[DD_ASIC_CMD_STATUS] & DD_STATUS_BM_INT) {
                 clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-                dd_update_bm(dd);
+                add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 8020 + (((dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16) / 56));
             }
         } break;
     }
@@ -368,7 +447,8 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    unsigned int head, track;
+    unsigned int head, track, old_track, cycles;
+    const uint16_t startTrackZones[9] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425, 0x497 };
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
     if (address < MM_DD_REGS || address >= MM_DD_MS_RAM) {
@@ -392,6 +472,12 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         update_rtc(&dd->rtc);
         const struct tm* tm = localtime(&dd->rtc.now);
 
+        /* base cycle count */
+        cycles = 2000;
+
+        /* say the drive is busy while processing the command */
+        dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_BUSY_STATE;
+
         switch ((value >> 16) & 0xff)
         {
         /* No-op */
@@ -401,6 +487,17 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Seek track */
         case 0x01:
         case 0x02:
+            /* base timing cycle count for Seek track CMD */
+            cycles = 248250;
+            /* check if motor is active or not, if not, add more cycles */
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles += 50175000;
+            }
+            /* make motor active */
+            dd_dv_active(dd);
+            /* get old track for calculating extra cycles */
+            old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            /* update track */
             dd->regs[DD_ASIC_CUR_TK] = dd->regs[DD_ASIC_DATA];
             /* lock track */
             dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
@@ -409,6 +506,80 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
             track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
             dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8*head;
+            /* calculate track to track head movement timing */
+            cycles += 4825 * abs(track - old_track);
+            /* if write seek command, check if the track is writable */
+            dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_WR_PR_ERR;
+            if (dd->bm_write) {
+                if (track < startTrackZones[(dd->disk_type & 0xf) - head + 3]) {
+                    dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_WR_PR_ERR;
+                }
+            }
+            break;
+
+        /* Rezero / Start (Seek to track 0) */
+        case 0x03:
+        case 0x05:
+            /* both commands do the exact same thing */
+            /* base timing cycle count for Seek track CMD */
+            cycles = 248250;
+            /* check if motor is active or not, if not, add more cycles */
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles += 50175000;
+            }
+            /* make motor active */
+            dd_dv_active(dd);
+            /* get old track for calculating extra cycles */
+            old_track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            /* update track to 0 */
+            dd->regs[DD_ASIC_CUR_TK] = 0;
+            /* lock track */
+            dd->regs[DD_ASIC_CUR_TK] |= DD_TRACK_LOCK;
+            dd->bm_write = 1;
+            /* update bm_zone */
+            head = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
+            track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
+            dd->bm_zone = (get_zone_from_head_track(head, track) - head) + 8 * head;
+            /* calculate track to track head movement timing */
+            cycles += 4825 * abs(track - old_track);
+            break;
+
+        /* Sleep / Brake */
+        case 0x04:
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles = 20750000;
+            }
+            dd_dv_sleep(dd);
+            if (dd->regs[DD_ASIC_DATA] == 0)
+            {
+                DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to sleep mode");
+            }
+            else
+            {
+                DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to brake mode");
+            }
+            break;
+
+        /* Set standby delay */
+        case 0x06:
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0) {
+                dd->timer_standby = (dd->regs[DD_ASIC_DATA] >> 16) & 0xff;
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive standby delay to %u seconds", dd->timer_standby);
+            } else {
+                dd->timer_standby = -1;
+                DebugMessage(M64MSG_VERBOSE, "Disable disk drive standby delay");
+            }
+            break;
+
+        /* Set sleep delay */
+        case 0x07:
+            if ((dd->regs[DD_ASIC_DATA] & 0x01000000) == 0) {
+                dd->timer_sleep = (dd->regs[DD_ASIC_DATA] >> 16) & 0xff;
+                DebugMessage(M64MSG_VERBOSE, "Set disk drive sleep delay to %u seconds", dd->timer_sleep);
+            } else {
+                dd->timer_sleep = -1;
+                DebugMessage(M64MSG_VERBOSE, "Disable disk drive sleep delay");
+            }
             break;
 
         /* Clear Disk change flag */
@@ -422,9 +593,59 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_DISK_CHNG;
             break;
 
+        /* Read ASIC version */
+        case 0x0a:
+            if (dd->regs[DD_ASIC_DATA] == 0)
+            {
+                dd->regs[DD_ASIC_DATA] = 0x01140000;
+                if (dd->disk->development)
+                    dd->regs[DD_ASIC_DATA] |= 0x10000000;
+            }
+            else
+            {
+                dd->regs[DD_ASIC_DATA] = 0x53000000;
+            }
+            break;
+
         /* Set Disk type */
         case 0x0b:
-            DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", (dd->regs[DD_ASIC_DATA] >> 16) & 0xf);
+            dd->disk_type = (dd->regs[DD_ASIC_DATA] >> 16) & 0xf;
+            if (dd->disk_type > 6) {
+                DebugMessage(M64MSG_VERBOSE, "Setting invalid disk type %u, set to fallback disk type 6", dd->disk_type);
+                dd->disk_type = 6;
+            } else {
+                DebugMessage(M64MSG_VERBOSE, "Setting disk type %u", dd->disk_type);
+            }
+            break;
+
+        /* Request controller status */
+        case 0x0c:
+            dd->regs[DD_ASIC_DATA] = 0;
+            break;
+
+        /* Standby */
+        case 0x0d:
+            if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
+                cycles = 16000000;
+            }
+            dd_dv_standby(dd);
+            DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode");
+            break;
+
+        /* Retry index lock */
+        case 0x0e:
+            DebugMessage(M64MSG_VERBOSE, "Retry disk track lock");
+            break;
+
+        /* Write RTC from ASIC_DATA (BCD format) */
+        case 0x0f:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Year %02x, Month %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+        case 0x10:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Day %02x, Hour %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+        case 0x11:
+            DebugMessage(M64MSG_VERBOSE, "Write 64DD RTC Minute %02x, Second %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
             break;
 
         /* Read RTC in ASIC_DATA (BCD format) */
@@ -438,9 +659,14 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             dd->regs[DD_ASIC_DATA] = time2data(tm->tm_min, tm->tm_sec);
             break;
 
+        /* LED On/Off Timing */
+        case 0x15:
+            DebugMessage(M64MSG_VERBOSE, "LED ON Time %02x, LED OFF Time %02x", (dd->regs[DD_ASIC_DATA] & 0xff000000) >> 24, (dd->regs[DD_ASIC_DATA] & 0x00ff0000) >> 16);
+            break;
+
         /* Feature inquiry */
         case 0x1b:
-            dd->regs[DD_ASIC_DATA] = 0x00000000;
+            dd->regs[DD_ASIC_DATA] = 0x00030000;
             break;
 
         default:
@@ -448,7 +674,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         }
 
         /* Signal a MECHA interrupt */
-        signal_dd_interrupt(dd, DD_STATUS_MECHA_INT);
+        cp0_update_count(dd->r4300);
+        add_interrupt_event(&dd->r4300->cp0, DD_MC_INT, cycles);
         break;
 
     case DD_ASIC_BM_STATUS_CTL:
@@ -461,6 +688,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* clear MECHA interrupt */
         if (value & DD_BM_CTL_MECHA_RST) {
             dd->regs[DD_ASIC_CMD_STATUS] &= ~DD_STATUS_MECHA_INT;
+            remove_event(&dd->r4300->cp0.q, DD_MC_INT);
         }
         /* start block transfer */
         if (value & DD_BM_CTL_BLK_TRANS) {
@@ -478,6 +706,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                                             | DD_STATUS_BM_INT);
             dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
             dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+            remove_event(&dd->r4300->cp0.q, DD_BM_INT);
         }
 
         /* clear DD interrupt if both MECHA and BM are cleared */
@@ -494,7 +723,7 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
                 DebugMessage(M64MSG_WARNING, "Attempt to read disk with BM mode 0");
             }
             dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_RUNNING;
-            dd_update_bm(dd);
+            add_interrupt_event(&dd->r4300->cp0, DD_BM_INT, 12500);
         }
         break;
 
@@ -502,6 +731,19 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         if (value != 0xaaaa0000) {
             DebugMessage(M64MSG_WARNING, "Unexpected hard reset value %08x", value);
         }
+        remove_event(&dd->r4300->cp0.q, DD_MC_INT);
+        remove_event(&dd->r4300->cp0.q, DD_BM_INT);
+        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ
+                                        | DD_STATUS_C2_XFER
+                                        | DD_STATUS_BM_ERR
+                                        | DD_STATUS_BM_INT
+                                        | DD_STATUS_BUSY_STATE);
+        dd->regs[DD_ASIC_BM_STATUS_CTL] = 0;
+        dd->regs[DD_ASIC_CUR_SECTOR] = 0;
+        dd->timer_sleep = 1;
+        dd->timer_standby = 3;
+        dd_dv_sleep(dd);
+        clear_dd_interrupt(dd, DD_STATUS_MECHA_INT);
         dd->regs[DD_ASIC_CMD_STATUS] |= DD_STATUS_RST_STATE;
         break;
 
@@ -630,19 +872,5 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
     invalidate_r4300_cached_code(dd->r4300, R4300_KSEG1 + dram_addr, length);
 
     return cycles;
-}
-
-void dd_on_pi_cart_addr_write(struct dd_controller* dd, uint32_t address)
-{
-    /* clear C2 xfer */
-    if (address == MM_DD_C2S_BUFFER) {
-        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_C2_XFER | DD_STATUS_BM_ERR);
-        clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-    }
-    /* clear data RQ */
-    else if (address == MM_DD_DS_BUFFER) {
-        dd->regs[DD_ASIC_CMD_STATUS] &= ~(DD_STATUS_DATA_RQ | DD_STATUS_BM_ERR);
-        clear_dd_interrupt(dd, DD_STATUS_BM_INT);
-    }
 }
 
