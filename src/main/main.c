@@ -172,6 +172,9 @@ static char *get_save_filename(void)
         snprintf(filename, 256, "unknown-%.8s", ROM_SETTINGS.MD5);
     }
 
+    /* sanitize filename */
+    string_replace_chars(filename, ":<>\"/\\|?*", '_');
+
     return filename;
 }
 

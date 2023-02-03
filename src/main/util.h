@@ -214,6 +214,11 @@ char* combinepath(const char* first, const char *second);
  */
 char *trim(char *str);
 
+ /* Replaces all occurences of any char in chars with r in string.
+  * returns amount of replaced chars
+  */
+int string_replace_chars(char *str, const char *chars, const char r);
+
 /* Converts an string to an integer.
  * Returns 1 on success, 0 on failure. 'result' is undefined on failure.
  *

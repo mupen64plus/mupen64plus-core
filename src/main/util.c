@@ -585,6 +585,28 @@ char *trim(char *str)
     return str;
 }
 
+int string_replace_chars(char* str, const char* chars, const char r)
+{
+    int i, y;
+    int str_size, chars_size;
+    int replacements = 0;
+
+    str_size   = strlen(str);
+    chars_size = strlen(chars);
+
+    for (i = 0; i < str_size; i++) {
+        for (y = 0; y < chars_size; y++) {
+            if (str[i] == chars[y]) {
+                str[i] = r;
+                replacements++;
+                break;
+            }
+        }
+    }
+
+    return replacements;
+}
+
 int string_to_int(const char *str, int *result)
 {
     char *endptr;
