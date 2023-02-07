@@ -35,6 +35,8 @@
 #include "api/config.h"
 #include "api/m64p_config.h"
 #include "api/m64p_types.h"
+#include "device/dd/disk.h"
+#include "backends/file_storage.h"
 #include "device/device.h"
 #include "main.h"
 #include "md5.h"
@@ -253,6 +255,132 @@ m64p_error close_rom(void)
     g_RomWordsLittleEndian = 0;
     DebugMessage(M64MSG_STATUS, "Rom closed.");
 
+    return M64ERR_SUCCESS;
+}
+
+m64p_error open_disk(void)
+{
+    md5_state_t state;
+    md5_byte_t digest[16];
+    romdatabase_entry* entry;
+    char buffer[256];
+    int i;
+
+    /* ask the core loader for DD disk filename */
+    char* dd_disk_filename = (g_media_loader.get_dd_disk == NULL)
+        ? NULL
+        : g_media_loader.get_dd_disk(g_media_loader.cb_data);
+
+    /* handle the no disk case */
+    if (dd_disk_filename == NULL || strlen(dd_disk_filename) == 0) {
+        goto no_disk;
+    }
+
+    /* Get DD Disk size */
+    size_t dd_size = 0;
+    if (get_file_size(dd_disk_filename, &dd_size) != file_ok) {
+        goto no_disk;
+    }
+
+    struct file_storage* fstorage = malloc(sizeof(struct file_storage));
+    if (fstorage == NULL) {
+        goto no_disk;
+    }
+
+    /* Try loading regular disk file */
+    if (open_rom_file_storage(fstorage, dd_disk_filename) != file_ok) {
+        goto free_fstorage;
+    }
+
+    /* Scan disk to deduce disk format and other parameters and expand its size for D64 */
+    unsigned int format = 0;
+    unsigned int development = 0;
+    size_t offset_sys = 0;
+    size_t offset_id = 0;
+    size_t offset_ram = 0;
+    size_t size_ram = 0;
+    uint8_t* new_data = scan_and_expand_disk_format(fstorage->data, fstorage->size, &format, &development, &offset_sys, &offset_id, &offset_ram, &size_ram);
+    if (new_data == NULL) {
+        goto wrong_disk_format;
+    }
+    else {
+        fstorage->data = new_data;
+    }
+
+    /* Calculate MD5 hash  */
+    md5_init(&state);
+    md5_append(&state, (const md5_byte_t*)(fstorage->data), fstorage->size);
+    md5_finish(&state, digest);
+    for ( i = 0; i < 16; ++i )
+        sprintf(buffer+i*2, "%02X", digest[i]);
+    buffer[32] = '\0';
+    strcpy(ROM_SETTINGS.MD5, buffer);
+
+    /* Look up this disk in the .ini file and fill in goodname, etc */
+    if ((entry=ini_search_by_md5(digest)) != NULL)
+    {
+        strncpy(ROM_SETTINGS.goodname, entry->goodname, 255);
+        ROM_SETTINGS.goodname[255] = '\0';
+        ROM_SETTINGS.savetype = entry->savetype;
+        ROM_SETTINGS.status = entry->status;
+        ROM_SETTINGS.players = entry->players;
+        ROM_SETTINGS.rumble = entry->rumble;
+        ROM_SETTINGS.transferpak = entry->transferpak;
+        ROM_SETTINGS.mempak = entry->mempak;
+        ROM_SETTINGS.biopak = entry->biopak;
+        ROM_SETTINGS.countperop = entry->countperop;
+        ROM_SETTINGS.disableextramem = entry->disableextramem;
+        ROM_SETTINGS.sidmaduration = entry->sidmaduration;
+        ROM_SETTINGS.aidmamodifier = entry->aidmamodifier;
+        ROM_PARAMS.cheats = entry->cheats;
+    }
+    else
+    {
+        strcpy(ROM_SETTINGS.goodname, "(unknown disk)");
+        /* There's no way to guess the save type, but 4K EEPROM is better than nothing */
+        ROM_SETTINGS.savetype = SAVETYPE_EEPROM_4K;
+        ROM_SETTINGS.status = 0;
+        ROM_SETTINGS.players = 4;
+        ROM_SETTINGS.rumble = 1;
+        ROM_SETTINGS.transferpak = 0;
+        ROM_SETTINGS.mempak = 1;
+        ROM_SETTINGS.biopak = 0;
+        ROM_SETTINGS.countperop = DEFAULT_COUNT_PER_OP;
+        ROM_SETTINGS.disableextramem = DEFAULT_DISABLE_EXTRA_MEM;
+        ROM_SETTINGS.sidmaduration = DEFAULT_SI_DMA_DURATION;
+        ROM_SETTINGS.aidmamodifier = DEFAULT_AI_DMA_MODIFIER;
+        ROM_PARAMS.cheats = NULL;
+    }
+
+    /* set system type */
+    ROM_PARAMS.systemtype = SYSTEM_NTSC;
+
+    /* clear rom header & size */
+    memset(&ROM_HEADER, 0, sizeof(m64p_rom_header));
+    memset(ROM_PARAMS.headername, 0, 20);
+    g_rom_size = 0;
+
+    close_file_storage(fstorage);
+    free(fstorage);
+    return M64ERR_SUCCESS;
+
+wrong_disk_format:
+    close_file_storage(fstorage);
+    dd_disk_filename = NULL; /* already freed in close_file_storage */
+free_fstorage:
+    free(fstorage);
+no_disk:
+    if (dd_disk_filename != NULL) {
+        free(dd_disk_filename);
+    }
+
+    DebugMessage(M64MSG_ERROR, "open_disk(): not a valid disk image");
+    return M64ERR_INPUT_INVALID;
+}
+
+m64p_error close_disk(void)
+{
+    DebugMessage(M64MSG_STATUS, "Disk closed.");
     return M64ERR_SUCCESS;
 }
 

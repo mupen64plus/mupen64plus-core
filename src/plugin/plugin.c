@@ -239,7 +239,7 @@ static m64p_error plugin_start_gfx(void)
         ? NULL
         : g_media_loader.get_dd_rom(g_media_loader.cb_data);
 
-    uint32_t rom_base = (dd_ipl_rom_filename != NULL && strlen(dd_ipl_rom_filename) != 0 && media != 'C')
+    uint32_t rom_base = (g_rom_size == 0 || (dd_ipl_rom_filename != NULL && strlen(dd_ipl_rom_filename) != 0 && media != 'C'))
         ? MM_DD_ROM
         : MM_CART_ROM;
 
