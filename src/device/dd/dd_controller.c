@@ -491,7 +491,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             cycles = 248250;
             /* check if motor is active or not, if not, add more cycles */
             if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
-                cycles += 50175000;
+                //divided by 100 because F-Zero X Expansion Kit really dislikes anything higher
+                cycles += 501750;
             }
             /* make motor active */
             dd_dv_active(dd);
@@ -525,7 +526,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
             cycles = 248250;
             /* check if motor is active or not, if not, add more cycles */
             if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
-                cycles += 50175000;
+                //divided by 100 because F-Zero X Expansion Kit really dislikes anything higher
+                cycles += 501750;
             }
             /* make motor active */
             dd_dv_active(dd);
@@ -547,7 +549,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Sleep / Brake */
         case 0x04:
             if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
-                cycles = 20750000;
+                //divided by 100 because F-Zero X Expansion Kit really dislikes anything higher
+                cycles = 207500;
             }
             dd_dv_sleep(dd);
             if (dd->regs[DD_ASIC_DATA] == 0)
@@ -626,7 +629,8 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         /* Standby */
         case 0x0d:
             if ((dd->regs[DD_ASIC_CMD_STATUS] & (DD_STATUS_MTR_N_SPIN | DD_STATUS_HEAD_RTRCT)) != 0) {
-                cycles = 16000000;
+                //divided by 100 because F-Zero X Expansion Kit really dislikes anything higher
+                cycles = 160000;
             }
             dd_dv_standby(dd);
             DebugMessage(M64MSG_VERBOSE, "Disk drive motor put to standby mode");
