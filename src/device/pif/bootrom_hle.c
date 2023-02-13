@@ -62,7 +62,7 @@ void pif_bootrom_hle_execute(struct r4300_core* r4300)
 
     /* setup CP0 registers */
     cp0_regs[CP0_STATUS_REG] = 0x34000000;
-    cp0_regs[CP0_CONFIG_REG] = 0x0006e463;
+    cp0_regs[CP0_CONFIG_REG] = 0x7006e463;
 
     /* XXX: wait for SP to finish last operation (poll halt) */
 
