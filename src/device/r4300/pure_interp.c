@@ -434,11 +434,15 @@ void InterpretOpcode(struct r4300_core* r4300)
 		break;
 	case 16: /* Coprocessor 0 prefix */
 		switch ((op >> 21) & 0x1F) {
-		case 0: /* Coprocessor 0 opcode 0: MFC0 */
+		case 0: /* Coprocessor 0 opcode 0: MFC0  */
+		case 1: /* Coprocessor 0 opcode 1: DMFC0 */
 			if (RT_OF(op) != 0) MFC0(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 4: MTC0(r4300, op); break;
+		case 4: /* Coprocessor 0 opcode 4: MTC0  */
+		case 5: /* Coprocessor 0 opcode 5: DMTC0 */
+			MTC0(r4300, op);
+			break;
 		case 16: /* Coprocessor 0 opcode 16: TLB */
 			switch (op & 0x3F) {
 			case 1: TLBR(r4300, op); break;
@@ -452,7 +456,7 @@ void InterpretOpcode(struct r4300_core* r4300)
 				break;
 			} /* switch (op & 0x3F) for Coprocessor 0 TLB opcodes */
 			break;
-		default: /* Coprocessor 0 opcodes 1..3, 4..15, 17..31:
+		default: /* Coprocessor 0 opcodes 2..3, 5..15, 17..31:
 		            Reserved Instructions */
 			RESERVED(r4300, op);
 			break;
