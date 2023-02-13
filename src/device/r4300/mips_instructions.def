@@ -682,14 +682,14 @@ DECLARE_INSTRUCTION(DSRL32)
 DECLARE_INSTRUCTION(SRA)
 {
     DECLARE_R4300
-    rrd = SE32((int32_t) rrt32 >> rsa);
+    rrd = SE32(rrt >> rsa);
     ADD_TO_PC(1);
 }
 
 DECLARE_INSTRUCTION(SRAV)
 {
     DECLARE_R4300
-    rrd = SE32((int32_t) rrt32 >> (rrs32 & 0x1F));
+    rrd = SE32(rrt >> (rrs32 & 0x1F));
     ADD_TO_PC(1);
 }
 
