@@ -1264,6 +1264,9 @@ DECLARE_INSTRUCTION(MTC0)
         cp0_regs[CP0_WIRED_REG] = rrt32;
         cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
         break;
+    case CP0_UNUSED_7:
+        cp0_regs[CP0_UNUSED_7] = rrt32;
+        break;
     case CP0_BADVADDR_REG:
         break;
     case CP0_COUNT_REG:
@@ -1321,6 +1324,27 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_WATCHHI_REG:
         cp0_regs[CP0_WATCHHI_REG] = rrt32;
         break;
+    case CP0_UNUSED_21:
+        cp0_regs[CP0_UNUSED_21] = rrt32;
+        break;
+    case CP0_UNUSED_22:
+        cp0_regs[CP0_UNUSED_22] = rrt32;
+        break;
+    case CP0_UNUSED_23:
+        cp0_regs[CP0_UNUSED_23] = rrt32;
+        break;
+    case CP0_UNUSED_24:
+        cp0_regs[CP0_UNUSED_24] = rrt32;
+        break;
+    case CP0_UNUSED_25:
+        cp0_regs[CP0_UNUSED_25] = rrt32;
+        break;
+    case CP0_UNUSED_26:
+        cp0_regs[CP0_UNUSED_26] = rrt32;
+        break;
+    case CP0_UNUSED_27:
+        cp0_regs[CP0_UNUSED_27] = rrt32;
+        break;
     case CP0_TAGLO_REG:
         cp0_regs[CP0_TAGLO_REG] = rrt32 & UINT32_C(0x0FFFFFC0);
         break;
@@ -1329,6 +1353,9 @@ DECLARE_INSTRUCTION(MTC0)
         break;
     case CP0_ERROREPC_REG:
         cp0_regs[CP0_ERROREPC_REG] = rrt32;
+        break;
+    case CP0_UNUSED_31:
+        cp0_regs[CP0_UNUSED_31] = rrt32;
         break;
     default:
         DebugMessage(M64MSG_ERROR, "Unknown MTC0 write: %d", rfs);

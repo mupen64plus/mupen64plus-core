@@ -109,8 +109,8 @@ enum r4300_cp0_registers
     CP0_CONTEXT_REG,
     CP0_PAGEMASK_REG,
     CP0_WIRED_REG,
-    /* 7 is unused */
-    CP0_BADVADDR_REG = 8,
+    CP0_UNUSED_7,
+    CP0_BADVADDR_REG,
     CP0_COUNT_REG,
     CP0_ENTRYHI_REG,
     CP0_COMPARE_REG,
@@ -123,12 +123,18 @@ enum r4300_cp0_registers
     CP0_WATCHLO_REG,
     CP0_WATCHHI_REG,
     CP0_XCONTEXT_REG,
-    /* 21 - 27 are unused */
-    CP0_TAGLO_REG = 28,
+    CP0_UNUSED_21,
+    CP0_UNUSED_22,
+    CP0_UNUSED_23,
+    CP0_UNUSED_24,
+    CP0_UNUSED_25,
+    CP0_UNUSED_26,
+    CP0_UNUSED_27,
+    CP0_TAGLO_REG,
     CP0_TAGHI_REG,
     CP0_ERROREPC_REG,
-    /* 31 is unused */
-    CP0_REGS_COUNT = 32
+    CP0_UNUSED_31,
+    CP0_REGS_COUNT
 };
 
 
