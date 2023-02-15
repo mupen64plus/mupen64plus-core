@@ -1441,6 +1441,19 @@ DECLARE_INSTRUCTION(CFC1)
     ADD_TO_PC(1);
 }
 
+DECLARE_INSTRUCTION(DCFC1)
+{
+    DECLARE_R4300
+    if (check_cop1_unusable(r4300)) { return; }
+
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    /* TODO: throw cop1 Unimplemented Operation exception */
+
+    cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
+    exception_general(r4300);
+}
+
 DECLARE_INSTRUCTION(MTC1)
 {
     DECLARE_R4300
@@ -1469,6 +1482,19 @@ DECLARE_INSTRUCTION(CTC1)
     //if (((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
     //                 (int)(((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F));
     ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(DCTC1)
+{
+    DECLARE_R4300
+    if (check_cop1_unusable(r4300)) { return; }
+
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    /* TODO: throw cop1 Unimplemented Operation exception */
+
+    cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
+    exception_general(r4300);
 }
 
 /* CP1 computational instructions */

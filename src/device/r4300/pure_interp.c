@@ -476,9 +476,14 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RT_OF(op) != 0) CFC1(r4300, op);
 			else                NOP(r4300, 0);
 			break;
+		case 3: /* Coprocessor 1 opcode 2: DCFC1  */
+			if (RT_OF(op) != 0) DCFC1(r4300, op);
+			else                NOP(r4300, 0);
+			break;
 		case 4: MTC1(r4300, op); break;
 		case 5: DMTC1(r4300, op); break;
 		case 6: CTC1(r4300, op); break;
+		case 7: DCTC1(r4300, op); break;
 		case 8: /* Coprocessor 1 opcode 8: Branch on C1 condition... */
 			switch ((op >> 16) & 0x3) {
 			case 0: /* opcode 0: BC1F */
@@ -605,7 +610,7 @@ void InterpretOpcode(struct r4300_core* r4300)
 				break;
 			}
 			break;
-		default: /* Coprocessor 1 opcodes 3, 7, 9..15, 18..19, 22..31:
+		default: /* Coprocessor 1 opcodes 9..15, 18..19, 22..31:
 		            Reserved Instructions */
 			RESERVED(r4300, op);
 			break;
