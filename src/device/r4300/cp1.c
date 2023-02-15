@@ -81,7 +81,7 @@ uint32_t* r4300_cp1_fcr0(struct cp1* cp1)
 	/* New dynarec uses a different memory layout */
     return &cp1->fcr0;
 #else
-    return &cp1->new_dynarec_hot_state->fcr0;
+    return &cp1->new_dynarec_hot_state->cp1_fcr31;
 #endif
 }
 
@@ -91,7 +91,7 @@ uint32_t* r4300_cp1_fcr31(struct cp1* cp1)
 	/* New dynarec uses a different memory layout */
     return &cp1->fcr31;
 #else
-    return &cp1->new_dynarec_hot_state->fcr31;
+    return &cp1->new_dynarec_hot_state->cp1_fcr31;
 #endif
 }
 

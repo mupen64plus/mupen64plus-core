@@ -125,6 +125,19 @@ int check_cop1_unusable(struct r4300_core* r4300)
     return 0;
 }
 
+int check_cop2_unusable(struct r4300_core* r4300)
+{
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU2))
+    {
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        exception_general(r4300);
+        return 1;
+    }
+    return 0;
+}
+
 void cp0_update_count(struct r4300_core* r4300)
 {
     struct cp0* cp0 = &r4300->cp0;

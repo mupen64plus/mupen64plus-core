@@ -557,6 +557,7 @@ SOURCE = \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
+    $(SRCDIR)/device/r4300/cp2.c \
     $(SRCDIR)/device/r4300/idec.c \
     $(SRCDIR)/device/r4300/interrupt.c \
     $(SRCDIR)/device/r4300/pure_interp.c \

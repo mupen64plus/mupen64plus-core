@@ -20,7 +20,7 @@
 
 #define fp_cycle_count         (offsetof(struct new_dynarec_hot_state, cycle_count))
 #define fp_invc_ptr            (offsetof(struct new_dynarec_hot_state, invc_ptr))
-#define fp_fcr31               (offsetof(struct new_dynarec_hot_state, fcr31))
+#define fp_fcr31               (offsetof(struct new_dynarec_hot_state, cp1_fcr31))
 #define fp_regs                (offsetof(struct new_dynarec_hot_state, regs))
 #define fp_hi                  (offsetof(struct new_dynarec_hot_state, hi))
 #define fp_lo                  (offsetof(struct new_dynarec_hot_state, lo))

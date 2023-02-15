@@ -235,10 +235,12 @@ unsigned int* r4300_cp0_next_interrupt(struct cp0* cp0);
 int* r4300_cp0_cycle_count(struct cp0* cp0);
 
 int check_cop1_unusable(struct r4300_core* r4300);
+int check_cop2_unusable(struct r4300_core* r4300);
 
 void cp0_update_count(struct r4300_core* r4300);
 
 void TLB_refill_exception(struct r4300_core* r4300, uint32_t address, int w);
+void store_load_exception(struct r4300_core* r4300, int cause, uint32_t lsaddr);
 void exception_general(struct r4300_core* r4300);
 
 #endif /* M64P_DEVICE_R4300_CP0_H */

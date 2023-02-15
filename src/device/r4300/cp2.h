@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - cp1.h                                                   *
+ *   Mupen64plus - cp2.h                                                   *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
@@ -19,8 +19,8 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_R4300_CP1_H
-#define M64P_DEVICE_R4300_CP1_H
+#ifndef M64P_DEVICE_R4300_CP2_H
+#define M64P_DEVICE_R4300_CP2_H
 
 #include <stdint.h>
 #include "osal/preproc.h"
@@ -30,14 +30,14 @@ typedef union {
     int64_t  dword;
     double   float64;
     float    float32[2];
-}cp1_reg;
+} cp2_reg;
 
-struct cp1
+struct cp2
 {
-    cp1_reg regs[32];
+    cp2_reg regs[32];
 
 #ifndef NEW_DYNAREC
-	/* New dynarec uses a different memory layout */
+    /* New dynarec uses a different memory layout */
     uint32_t fcr0;
     uint32_t fcr31;
 
@@ -57,64 +57,62 @@ struct cp1
 #endif
 
 #ifdef NEW_DYNAREC
-	/* New dynarec uses a different memory layout */
+    /* New dynarec uses a different memory layout */
     struct new_dynarec_hot_state* new_dynarec_hot_state;
 #endif
 };
 
 #ifndef NEW_DYNAREC
-#define R4300_CP1_REGS_S_OFFSET (\
-    offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, regs_simple))
+#define R4300_CP2_REGS_S_OFFSET (\
+    offsetof(struct r4300_core, cp2) + \
+    offsetof(struct cp2, regs_simple))
 #else
-#define R4300_CP1_REGS_S_OFFSET (\
+#define R4300_CP2_REGS_S_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp1_regs_simple))
+    offsetof(struct new_dynarec_hot_state, CP2_regs_simple))
 #endif
 
 #ifndef NEW_DYNAREC
-#define R4300_CP1_REGS_D_OFFSET (\
-    offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, regs_double))
+#define R4300_CP2_REGS_D_OFFSET (\
+    offsetof(struct r4300_core, cp2) + \
+    offsetof(struct cp2, regs_double))
 #else
-#define R4300_CP1_REGS_D_OFFSET (\
+#define R4300_CP2_REGS_D_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp1_regs_double))
+    offsetof(struct new_dynarec_hot_state, CP2_regs_double))
 #endif
 
 #ifndef NEW_DYNAREC
-#define R4300_CP1_FCR0_OFFSET (\
-    offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, cp1_fcr0))
+#define R4300_CP2_FCR0_OFFSET (\
+    offsetof(struct r4300_core, cp2) + \
+    offsetof(struct cp2, cp2_fcr0))
 #else
-#define R4300_CP1_FCR0_OFFSET (\
+#define R4300_CP2_FCR0_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp1_fcr0))
+    offsetof(struct new_dynarec_hot_state, cp2_fcr0))
 #endif
 
 #ifndef NEW_DYNAREC
-#define R4300_CP1_FCR31_OFFSET (\
-    offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, cp1_fcr31))
+#define R4300_CP2_FCR31_OFFSET (\
+    offsetof(struct r4300_core, cp2) + \
+    offsetof(struct cp2, cp2_fcr31))
 #else
-#define R4300_CP1_FCR31_OFFSET (\
+#define R4300_CP2_FCR31_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp1_fcr31))
+    offsetof(struct new_dynarec_hot_state, cp2_fcr31))
 #endif
 
-void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state);
-void poweron_cp1(struct cp1* cp1);
+void init_cp2(struct cp2* cp2, struct new_dynarec_hot_state* new_dynarec_hot_state);
+void poweron_cp2(struct cp2* cp2);
 
-cp1_reg* r4300_cp1_regs(struct cp1* cp1);
-float** r4300_cp1_regs_simple(struct cp1* cp1);
-double** r4300_cp1_regs_double(struct cp1* cp1);
+cp2_reg* r4300_cp2_regs(struct cp2* cp2);
+float** r4300_cp2_regs_simple(struct cp2* cp2);
+double** r4300_cp2_regs_double(struct cp2* cp2);
 
-uint32_t* r4300_cp1_fcr0(struct cp1* cp1);
-uint32_t* r4300_cp1_fcr31(struct cp1* cp1);
+uint32_t* r4300_cp2_fcr0(struct cp2* cp2);
+uint32_t* r4300_cp2_fcr31(struct cp2* cp2);
 
-void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus);
+void set_cp2_fpr_pointers(struct cp2* cp2, uint32_t newStatus);
 
-void update_x86_rounding_mode(struct cp1* cp1);
-
-#endif /* M64P_DEVICE_R4300_CP1_H */
+#endif /* M64P_DEVICE_R4300_CP2_H */
 
