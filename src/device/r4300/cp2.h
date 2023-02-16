@@ -114,5 +114,7 @@ uint32_t* r4300_cp2_fcr31(struct cp2* cp2);
 
 void set_cp2_fpr_pointers(struct cp2* cp2, uint32_t newStatus);
 
+void update_x86_rounding_mode_cp2(struct cp2* cp2);
+
 #endif /* M64P_DEVICE_R4300_CP2_H */
 
