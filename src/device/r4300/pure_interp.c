@@ -204,8 +204,8 @@ void InterpretOpcode(struct r4300_core* r4300)
 			JALR(r4300, op);
 			break;
 		case 12: SYSCALL(r4300, op); break;
-		case 13: /* SPECIAL opcode 13: BREAK (Not implemented) */
-			NI(r4300, op);
+		case 13: /* SPECIAL opcode 13: BREAK */
+			BREAK(r4300, op);
 			break;
 		case 15: SYNC(r4300, op); break;
 		case 16: /* SPECIAL opcode 16: MFHI */

@@ -135,6 +135,17 @@ DECLARE_INSTRUCTION(RESERVED_COP2)
     exception_general(r4300);
 }
 
+/* BREAK */
+
+DECLARE_INSTRUCTION(BREAK)
+{
+    DECLARE_R4300
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_BP;
+    exception_general(r4300);
+}
+
 /* Load instructions */
 
 DECLARE_INSTRUCTION(LB)
