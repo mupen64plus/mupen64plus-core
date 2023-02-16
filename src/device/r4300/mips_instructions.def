@@ -114,8 +114,15 @@ DECLARE_INSTRUCTION(NI)
 DECLARE_INSTRUCTION(RESERVED)
 {
     DECLARE_R4300
+
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
     DebugMessage(M64MSG_ERROR, "reserved opcode: %" PRIX32 ":%" PRIX32, PCADDR, *fast_mem_access(r4300, PCADDR));
-    *r4300_stop(r4300) = 1;
+
+    cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_RI;
+    exception_general(r4300);
+}
+
 DECLARE_INSTRUCTION(RESERVED_COP2)
 {
     DECLARE_R4300
