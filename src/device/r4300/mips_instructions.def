@@ -134,7 +134,6 @@ DECLARE_INSTRUCTION(RESERVED_COP2)
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_RI | CP0_CAUSE_CE2;
     exception_general(r4300);
 }
-}
 
 /* Load instructions */
 
