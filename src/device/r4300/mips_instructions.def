@@ -1476,7 +1476,12 @@ DECLARE_INSTRUCTION(DCFC1)
 
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
-    /* TODO: throw cop1 Unimplemented Operation exception */
+    /* clear cause bits */
+    for (int i = 12; i <= 17; i++)
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~(1 << i);
+
+    /* Unimplemented Operation */
+    (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 17;
 
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
     exception_general(r4300);
@@ -1519,7 +1524,12 @@ DECLARE_INSTRUCTION(DCTC1)
 
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
-    /* TODO: throw cop1 Unimplemented Operation exception */
+    /* clear cause bits */
+    for (int i = 12; i <= 17; i++)
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~(1 << i);
+
+    /* Unimplemented Operation */
+    (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 17;
 
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
     exception_general(r4300);
