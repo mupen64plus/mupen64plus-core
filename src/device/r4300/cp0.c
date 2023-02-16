@@ -131,7 +131,7 @@ int check_cop2_unusable(struct r4300_core* r4300)
 
     if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU2))
     {
-        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE2;
         exception_general(r4300);
         return 1;
     }
