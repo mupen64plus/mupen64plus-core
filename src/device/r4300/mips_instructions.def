@@ -1571,7 +1571,7 @@ DECLARE_INSTRUCTION(CTC2)
     if (rfs==31)
     {
         (*r4300_cp2_fcr31(&r4300->cp2)) = rrt32;
-        update_x86_rounding_mode(&r4300->cp2);
+        update_x86_rounding_mode_cp2(&r4300->cp2);
     }
     //if (((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
     //                 (int)(((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F));
