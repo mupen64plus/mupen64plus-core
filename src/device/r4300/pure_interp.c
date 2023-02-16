@@ -618,30 +618,24 @@ void InterpretOpcode(struct r4300_core* r4300)
 		break;
 	case 18: /* Coprocessor 2 prefix */
 		switch ((op >> 21) & 0x1F) {
-		case 0: /* Coprocessor 1 opcode 0: MFC1 */
+		case 0: /* Coprocessor 2 opcode 0: MFC2 */
 			if (RT_OF(op) != 0) MFC2(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 1: /* Coprocessor 1 opcode 1: DMFC1 */
+		case 1: /* Coprocessor 2 opcode 1: DMFC2 */
 			if (RT_OF(op) != 0) DMFC2(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 2: /* Coprocessor 1 opcode 2: CFC1 */
+		case 2: /* Coprocessor 2 opcode 2: CFC2 */
 			if (RT_OF(op) != 0) CFC2(r4300, op);
 			else                NOP(r4300, 0);
 			break;
 			// TODO
-		/*case 3: Coprocessor 1 opcode 2: DCFC1
-			if (RT_OF(op) != 0) DCFC2(r4300, op);
-			else                NOP(r4300, 0);
-			break;*/
 		case 4: MTC2(r4300, op); break;
 		case 5: DMTC2(r4300, op); break;
 		case 6: CTC2(r4300, op); break;
-		/*
-		case 7: DCTC2(r4300, op); break; */
 		default:
-			RESERVED(r4300, op);
+			RESERVED_COP2(r4300, op);
 			break;
 		}
 		break;
