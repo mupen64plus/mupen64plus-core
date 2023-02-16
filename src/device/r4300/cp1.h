@@ -85,7 +85,7 @@ struct cp1
 #ifndef NEW_DYNAREC
 #define R4300_CP1_FCR0_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, cp1_fcr0))
+    offsetof(struct cp1, fcr0))
 #else
 #define R4300_CP1_FCR0_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
@@ -95,7 +95,7 @@ struct cp1
 #ifndef NEW_DYNAREC
 #define R4300_CP1_FCR31_OFFSET (\
     offsetof(struct r4300_core, cp1) + \
-    offsetof(struct cp1, cp1_fcr31))
+    offsetof(struct cp1, fcr31))
 #else
 #define R4300_CP1_FCR31_OFFSET (\
     offsetof(struct r4300_core, new_dynarec_hot_state) + \
