@@ -2,6 +2,8 @@ version: 1.0.{build}
 
 image: Visual Studio 2022
 
+skip_tags: true
+
 skip_commits:
   files:
     - '**/*.md'
@@ -11,10 +13,6 @@ skip_commits:
     - .gitignore
     - .travis.yml
     - README
-
-branches:
-  except:
-    - nightly-build
 
 configuration:
   - New_Dynarec_Release
