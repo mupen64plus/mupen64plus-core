@@ -513,29 +513,9 @@ void imagestring(unsigned char imagetype, char *string)
      Path utilities
  **********************/
 
-/* Looks for an instance of ANY of the characters in 'needles' in 'haystack',
- * starting from the end of 'haystack'. Returns a pointer to the last position
- * of some character on 'needles' on 'haystack'. If not found, returns NULL.
- */
-static const char* strpbrk_reverse(const char* needles, const char* haystack)
-{
-    size_t stringlength = strlen(haystack), counter;
-
-    for (counter = stringlength; counter > 0; --counter)
-    {
-        if (strchr(needles, haystack[counter-1]))
-            break;
-    }
-
-    if (counter == 0)
-        return NULL;
-
-    return haystack + counter - 1;
-}
-
 const char* namefrompath(const char* path)
 {
-    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, path);
+    const char* last_separator_ptr = strpbrk_reverse(OSAL_DIR_SEPARATORS, (char*)path, strlen(path));
 
     if (last_separator_ptr != NULL)
         return last_separator_ptr + 1;
@@ -569,6 +549,23 @@ char* combinepath(const char* first, const char *second)
 /**********************
     String utilities
  **********************/
+
+char* strpbrk_reverse(const char* needles, char* haystack, size_t haystack_len)
+{
+    size_t counter;
+
+    for (counter = haystack_len; counter > 0; --counter)
+    {
+        if (strchr(needles, haystack[counter-1]))
+            break;
+    }
+
+    if (counter == 0)
+        return NULL;
+
+    return haystack + counter - 1;
+}
+
 char *trim(char *str)
 {
     char *start = str, *end = str + strlen(str);
