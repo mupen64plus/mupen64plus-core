@@ -2090,8 +2090,18 @@ DECLARE_INSTRUCTION(C_SF_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_sf_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2102,8 +2112,18 @@ DECLARE_INSTRUCTION(C_SF_D)
     DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_sf_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2115,8 +2135,18 @@ DECLARE_INSTRUCTION(C_NGLE_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngle_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2127,8 +2157,18 @@ DECLARE_INSTRUCTION(C_NGLE_D)
     DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngle_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2140,8 +2180,18 @@ DECLARE_INSTRUCTION(C_SEQ_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_seq_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2152,8 +2202,18 @@ DECLARE_INSTRUCTION(C_SEQ_D)
     DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_seq_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2165,8 +2225,18 @@ DECLARE_INSTRUCTION(C_NGL_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngl_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2177,8 +2247,18 @@ DECLARE_INSTRUCTION(C_NGL_D)
     DECLARE_R4300
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngl_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2190,8 +2270,18 @@ DECLARE_INSTRUCTION(C_LT_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_lt_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2203,8 +2293,18 @@ DECLARE_INSTRUCTION(C_LT_D)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_lt_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2216,8 +2316,18 @@ DECLARE_INSTRUCTION(C_NGE_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_nge_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2229,8 +2339,18 @@ DECLARE_INSTRUCTION(C_NGE_D)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_nge_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2242,8 +2362,18 @@ DECLARE_INSTRUCTION(C_LE_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_le_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2255,8 +2385,18 @@ DECLARE_INSTRUCTION(C_LE_D)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to false */
+        (*r4300_cp1_fcr31(&r4300->cp1)) &= ~FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_le_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2268,8 +2408,18 @@ DECLARE_INSTRUCTION(C_NGT_S)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_simple(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to true */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngt_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
@@ -2281,8 +2431,18 @@ DECLARE_INSTRUCTION(C_NGT_D)
     if (check_cop1_unusable(r4300)) { return; }
     if (isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cffs]) || isnan(*(r4300_cp1_regs_double(&r4300->cp1))[cfft]))
     {
-        DebugMessage(M64MSG_ERROR, "Invalid operation exception in C opcode");
-        *r4300_stop(r4300)=1;
+        uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+        /* set flags to invop */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 16;    // invalid op cause bit
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 6;     // invalid op flag bit
+
+        /* set condition to true */
+        (*r4300_cp1_fcr31(&r4300->cp1)) |= FCR31_CMP_BIT;
+
+        /* TODO: exceptions */
+        ADD_TO_PC(1);
+        return;
     }
     c_ngt_d(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_double(&r4300->cp1))[cffs], (r4300_cp1_regs_double(&r4300->cp1))[cfft]);
     ADD_TO_PC(1);
