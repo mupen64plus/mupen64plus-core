@@ -201,6 +201,7 @@
     <ClCompile Include="..\..\src\device\r4300\cached_interp.c" />
     <ClCompile Include="..\..\src\device\r4300\cp0.c" />
     <ClCompile Include="..\..\src\device\r4300\cp1.c" />
+    <ClCompile Include="..\..\src\device\r4300\cp2.c" />
     <ClCompile Include="..\..\src\device\r4300\idec.c" />
     <ClCompile Include="..\..\src\device\r4300\interrupt.c" />
     <ClCompile Include="..\..\src\device\rcp\mi\mi_controller.c" />
@@ -481,6 +482,7 @@
     <ClInclude Include="..\..\src\device\r4300\cached_interp.h" />
     <ClInclude Include="..\..\src\device\r4300\cp0.h" />
     <ClInclude Include="..\..\src\device\r4300\cp1.h" />
+    <ClInclude Include="..\..\src\device\r4300\cp2.h" />
     <ClInclude Include="..\..\src\device\r4300\fpu.h" />
     <ClInclude Include="..\..\src\device\r4300\idec.h" />
     <ClInclude Include="..\..\src\device\r4300\interrupt.h" />
