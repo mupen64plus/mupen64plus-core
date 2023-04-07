@@ -1346,11 +1346,16 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_CONFIG_REG:
         cp0_regs[CP0_CONFIG_REG] = rrt32;
         break;
+    case CP0_LLADDR_REG:
+        cp0_regs[CP0_LLADDR_REG] = rrt32;
+        break;
     case CP0_WATCHLO_REG:
         cp0_regs[CP0_WATCHLO_REG] = rrt32;
         break;
     case CP0_WATCHHI_REG:
         cp0_regs[CP0_WATCHHI_REG] = rrt32;
+        break;
+    case CP0_XCONTEXT_REG:
         break;
     case CP0_UNUSED_21:
         cp0_regs[CP0_UNUSED_21] = rrt32;
