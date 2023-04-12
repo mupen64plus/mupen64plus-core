@@ -74,33 +74,196 @@ M64P_FPU_INLINE void set_rounding(uint32_t fcr31)
     }
 }
 
-M64P_FPU_INLINE void cvt_s_w(uint32_t fcr31, const int32_t* source, float* dest)
+M64P_FPU_INLINE void fpu_reset_cause(uint32_t* fcr31)
 {
-    set_rounding(fcr31);
+    /* clear cause bits */
+    for (int i = 12; i <= 17; i++)
+    {
+        (*fcr31) &= ~(1 << i);
+    }
+}
+
+M64P_FPU_INLINE void fpu_reset_exceptions()
+{
+    feclearexcept(FE_ALL_EXCEPT);
+}
+
+M64P_FPU_INLINE int fpu_check_exceptions(uint32_t* fcr31)
+{
+    int fexceptions;
+
+    fexceptions = fetestexcept(FE_ALL_EXCEPT) & FE_ALL_EXCEPT;
+
+    if (fexceptions & FE_DIVBYZERO)
+    {
+        (*fcr31) |= (1 << 15);
+        (*fcr31) |= (1 << 5);
+    }
+    if (fexceptions & FE_INEXACT)
+    {
+        (*fcr31) |= (1 << 12);
+        (*fcr31) |= (1 << 2);
+    }
+    if (fexceptions & FE_UNDERFLOW)
+    {
+        (*fcr31) |= (1 << 13);
+        (*fcr31) |= (1 << 3);
+    }
+    if (fexceptions & FE_OVERFLOW)
+    {
+        (*fcr31) |= (1 << 14);
+        (*fcr31) |= (1 << 4);
+    }
+    if (fexceptions & FE_INVALID)
+    {
+        (*fcr31) |= (1 << 16);
+        (*fcr31) |= (1 << 6);
+    }
+
+    return 0; // TODO: exceptions
+}
+
+M64P_FPU_INLINE void fpu_check_input_float(uint32_t* fcr31, const float* value)
+{
+    switch (fpclassify(*value))
+    {
+    default:
+    case FP_SUBNORMAL: // TODO
+        return;
+    case FP_NAN:
+        (*fcr31) |= (1 << 6);
+        (*fcr31) |= (1 << 16);
+        break;
+    }
+}
+
+M64P_FPU_INLINE void fpu_check_input_double(uint32_t* fcr31, const double* value)
+{
+    switch (fpclassify(*value))
+    {
+    default:
+    case FP_SUBNORMAL: // TODO
+        return;
+    case FP_NAN:
+        (*fcr31) |= (1 << 6);
+        (*fcr31) |= (1 << 16);
+        break;
+    }
+}
+
+M64P_FPU_INLINE void fpu_check_output_float(uint32_t* fcr31, const float* value)
+{
+    switch (fpclassify(*value))
+    {
+    case FP_SUBNORMAL:
+        /* underflow */
+        (*fcr31) |= (1 << 4);
+        (*fcr31) |= (1 << 14);
+        /* inexact */
+        (*fcr31) |= (1 << 2);
+        (*fcr31) |= (1 << 12);
+        break;
+
+    case FP_NAN:
+        break;
+
+    default:
+        break;
+    }
+}
+
+M64P_FPU_INLINE void fpu_check_output_double(uint32_t* fcr31, const double* value)
+{
+    switch (fpclassify(*value))
+    {
+    case FP_SUBNORMAL:
+        /* underflow */
+        (*fcr31) |= (1 << 4);
+        (*fcr31) |= (1 << 14);
+        /* inexact */
+        (*fcr31) |= (1 << 2);
+        (*fcr31) |= (1 << 12);
+        break;
+
+    case FP_NAN:
+        break;
+
+    default:
+        break;
+    }
+}
+
+M64P_FPU_INLINE void cvt_s_w(uint32_t* fcr31, const int32_t* source, float* dest)
+{
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
     *dest = (float)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_float(fcr31, dest);
 }
-M64P_FPU_INLINE void cvt_d_w(const int32_t* source, double* dest)
+M64P_FPU_INLINE void cvt_d_w(uint32_t* fcr31, const int32_t* source, double* dest)
 {
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
     *dest = (double)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_double(fcr31, dest);
 }
-M64P_FPU_INLINE void cvt_s_l(uint32_t fcr31, const int64_t* source, float* dest)
+M64P_FPU_INLINE void cvt_s_l(uint32_t* fcr31, const int64_t* source, float* dest)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
     *dest = (float)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_float(fcr31, dest);
 }
-M64P_FPU_INLINE void cvt_d_l(uint32_t fcr31, const int64_t* source, double* dest)
+M64P_FPU_INLINE void cvt_d_l(uint32_t* fcr31, const int64_t* source, double* dest)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
     *dest = (double)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_double(fcr31, dest);
 }
-M64P_FPU_INLINE void cvt_d_s(const float* source, double* dest)
+M64P_FPU_INLINE void cvt_d_s(uint32_t* fcr31, const float* source, double* dest)
 {
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source);
+
+    fpu_reset_exceptions();
+
     *dest = (double)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_double(fcr31, dest);
 }
-M64P_FPU_INLINE void cvt_s_d(uint32_t fcr31, const double* source, float* dest)
+M64P_FPU_INLINE void cvt_s_d(uint32_t* fcr31, const double* source, float* dest)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source);
+
+    fpu_reset_exceptions();
+
     *dest = (float)*source;
+
+    fpu_check_exceptions(fcr31);
+    fpu_check_output_float(fcr31, dest);
 }
 
 M64P_FPU_INLINE void round_l_s(const float* source, int64_t* dest)
@@ -230,45 +393,71 @@ M64P_FPU_INLINE void floor_w_d(const double* source, int32_t* dest)
     *dest = (int32_t)floor(*source);
 }
 
-M64P_FPU_INLINE void cvt_w_s(uint32_t fcr31, const float* source, int32_t* dest)
+M64P_FPU_INLINE void cvt_w_s(uint32_t* fcr31, const float* source, int32_t* dest)
 {
-    switch(fcr31 & 3)
+    fpu_reset_cause(fcr31);
+
+    fpu_check_input_float(fcr31, source);
+
+    fpu_reset_exceptions();
+
+    switch(*fcr31 & 3)
     {
     case 0: round_w_s(source, dest); return;
     case 1: trunc_w_s(source, dest); return;
     case 2: ceil_w_s (source, dest); return;
     case 3: floor_w_s(source, dest); return;
     }
+
+    fpu_check_exceptions(fcr31);
 }
-M64P_FPU_INLINE void cvt_w_d(uint32_t fcr31, const double* source, int32_t* dest)
+M64P_FPU_INLINE void cvt_w_d(uint32_t* fcr31, const double* source, int32_t* dest)
 {
-    switch(fcr31 & 3)
+    fpu_reset_cause(fcr31);
+
+    fpu_check_input_double(fcr31, source);
+
+    fpu_reset_exceptions();
+
+    switch(*fcr31 & 3)
     {
     case 0: round_w_d(source, dest); return;
     case 1: trunc_w_d(source, dest); return;
     case 2: ceil_w_d (source, dest); return;
     case 3: floor_w_d(source, dest); return;
     }
+
+    fpu_check_exceptions(fcr31);
 }
-M64P_FPU_INLINE void cvt_l_s(uint32_t fcr31, const float* source, int64_t* dest)
+M64P_FPU_INLINE void cvt_l_s(uint32_t* fcr31, const float* source, int64_t* dest)
 {
-    switch(fcr31 & 3)
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
+    switch(*fcr31 & 3)
     {
     case 0: round_l_s(source, dest); return;
     case 1: trunc_l_s(source, dest); return;
     case 2: ceil_l_s (source, dest); return;
     case 3: floor_l_s(source, dest); return;
     }
+
+    fpu_check_exceptions(fcr31);
 }
-M64P_FPU_INLINE void cvt_l_d(uint32_t fcr31, const double* source, int64_t* dest)
+M64P_FPU_INLINE void cvt_l_d(uint32_t* fcr31, const double* source, int64_t* dest)
 {
-    switch(fcr31 & 3)
+    fpu_reset_cause(fcr31);
+    fpu_reset_exceptions();
+
+    switch(*fcr31 & 3)
     {
     case 0: round_l_d(source, dest); return;
     case 1: trunc_l_d(source, dest); return;
     case 2: ceil_l_d (source, dest); return;
     case 3: floor_l_d(source, dest); return;
     }
+
+    fpu_check_exceptions(fcr31);
 }
 
 M64P_FPU_INLINE void c_f_s(uint32_t* fcr31)
@@ -496,79 +685,212 @@ M64P_FPU_INLINE void c_ngt_d(uint32_t* fcr31, const double* source, const double
 }
 
 
-M64P_FPU_INLINE void add_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void add_s(uint32_t* fcr31, const float* source1, const float* source2, float* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source1);
+    fpu_check_input_float(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 + *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void sub_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void sub_s(uint32_t* fcr31, const float* source1, const float* source2, float* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source1);
+    fpu_check_input_float(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 - *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void mul_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void mul_s(uint32_t* fcr31, const float* source1, const float* source2, float* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source1);
+    fpu_check_input_float(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 * *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void div_s(uint32_t fcr31, const float* source1, const float* source2, float* target)
+M64P_FPU_INLINE void div_s(uint32_t* fcr31, const float* source1, const float* source2, float* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source1);
+    fpu_check_input_float(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 / *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void sqrt_s(uint32_t fcr31, const float* source, float* target)
+M64P_FPU_INLINE void sqrt_s(uint32_t* fcr31, const float* source, float* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source);
+
+    fpu_reset_exceptions();
+
     *target = sqrtf(*source);
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void abs_s(const float* source, float* target)
+M64P_FPU_INLINE void abs_s(uint32_t* fcr31, const float* source, float* target)
 {
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source);
+
     *target = fabsf(*source);
+
+    fpu_check_output_float(fcr31, target);
 }
 M64P_FPU_INLINE void mov_s(const float* source, float* target)
 {
     *target = *source;
 }
-M64P_FPU_INLINE void neg_s(const float* source, float* target)
+M64P_FPU_INLINE void neg_s(uint32_t* fcr31, const float* source, float* target)
 {
+    fpu_reset_cause(fcr31);
+    fpu_check_input_float(fcr31, source);
+
     *target = - *source;
+
+    fpu_check_output_float(fcr31, target);
 }
-M64P_FPU_INLINE void add_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void add_d(uint32_t* fcr31, const double* source1, const double* source2, double* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source1);
+    fpu_check_input_double(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 + *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
-M64P_FPU_INLINE void sub_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void sub_d(uint32_t* fcr31, const double* source1, const double* source2, double* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source1);
+    fpu_check_input_double(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 - *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
-M64P_FPU_INLINE void mul_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void mul_d(uint32_t* fcr31, const double* source1, const double* source2, double* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source1);
+    fpu_check_input_double(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 * *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
-M64P_FPU_INLINE void div_d(uint32_t fcr31, const double* source1, const double* source2, double* target)
+M64P_FPU_INLINE void div_d(uint32_t* fcr31, const double* source1, const double* source2, double* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source1);
+    fpu_check_input_double(fcr31, source2);
+
+    fpu_reset_exceptions();
+
     *target = *source1 / *source2;
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
-M64P_FPU_INLINE void sqrt_d(uint32_t fcr31, const double* source, double* target)
+M64P_FPU_INLINE void sqrt_d(uint32_t* fcr31, const double* source, double* target)
 {
-    set_rounding(fcr31);
+    set_rounding(*fcr31);
+
+
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source);
+
+    fpu_reset_exceptions();
+
     *target = sqrt(*source);
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
-M64P_FPU_INLINE void abs_d(const double* source, double* target)
+M64P_FPU_INLINE void abs_d(uint32_t* fcr31, const double* source, double* target)
 {
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source);
+
+    fpu_reset_exceptions();
+
     *target = fabs(*source);
+
+    fpu_check_exceptions(fcr31);
+
+    fpu_check_output_double(fcr31, target);
 }
 M64P_FPU_INLINE void mov_d(const double* source, double* target)
 {
     *target = *source;
 }
-M64P_FPU_INLINE void neg_d(const double* source, double* target)
+M64P_FPU_INLINE void neg_d(uint32_t* fcr31, const double* source, double* target)
 {
+    fpu_reset_cause(fcr31);
+    fpu_check_input_double(fcr31, source);
+
     *target = - *source;
+
+    fpu_check_output_double(fcr31, target);
 }
 
 #endif /* M64P_DEVICE_R4300_FPU_H */
