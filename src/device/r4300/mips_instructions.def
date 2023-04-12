@@ -1621,7 +1621,7 @@ DECLARE_INSTRUCTION(ADD_S)
 {
     DECLARE_R4300
     if (check_cop1_unusable(r4300)) { return; }
-    add_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]))
+    add_s(r4300_cp1_fcr31(&r4300->cp1), (r4300_cp1_regs_simple(&r4300->cp1))[cffs], (r4300_cp1_regs_simple(&r4300->cp1))[cfft], (r4300_cp1_regs_simple(&r4300->cp1))[cffd]);
     ADD_TO_PC(1);
 }
 
