@@ -28,18 +28,8 @@
 #ifdef _MSC_VER
 #define M64P_FPU_INLINE static __inline
 #include <float.h>
+#include <fenv.h>
 
-typedef enum { FE_TONEAREST = 0, FE_TOWARDZERO, FE_UPWARD, FE_DOWNWARD } eRoundType;
-static void fesetround(eRoundType RoundType)
-{
-    static const unsigned int msRound[4] = { _RC_NEAR, _RC_CHOP, _RC_UP, _RC_DOWN };
-#if defined(__x86_64__)
-    _controlfp(msRound[RoundType], _MCW_RC);
-#else
-    unsigned int oldX87, oldSSE2;
-    __control87_2(msRound[RoundType], _MCW_RC, &oldX87, &oldSSE2);
-#endif
-}
 static __inline double round(double x) { return floor(x + 0.5); }
 static __inline float  roundf(float x) { return (float)floor(x + 0.5); }
 static __inline double trunc(double x) { return (double)(int)x; }
