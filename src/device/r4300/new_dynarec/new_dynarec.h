@@ -71,8 +71,7 @@ struct new_dynarec_hot_state
     uint32_t cp0_regs[32];
     float* cp1_regs_simple[32];
     double* cp1_regs_double[32];
-    float* cp2_regs_simple[32];
-    double* cp2_regs_double[32];
+    uint64_t cp2_latch;
     uint32_t rounding_modes[4];
     int branch_target;
     struct precomp_instr* pc;

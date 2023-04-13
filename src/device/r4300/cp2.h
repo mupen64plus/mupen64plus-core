@@ -26,24 +26,9 @@
 #include "osal/preproc.h"
 #include "new_dynarec/new_dynarec.h"
 
-typedef union {
-    int64_t  dword;
-    double   float64;
-    float    float32[2];
-} cp2_reg;
-
 struct cp2
 {
-    cp2_reg regs[32];
-
-#ifndef NEW_DYNAREC
-    /* New dynarec uses a different memory layout */
-    uint32_t fcr0;
-    uint32_t fcr31;
-
-    float* regs_simple[32];
-    double* regs_double[32];
-#endif
+    uint64_t latch;
 
     /* This is the x86 version of the rounding mode contained in FCR31.
      * It should not really be here. Its size should also really be uint16_t,
@@ -62,59 +47,10 @@ struct cp2
 #endif
 };
 
-#ifndef NEW_DYNAREC
-#define R4300_CP2_REGS_S_OFFSET (\
-    offsetof(struct r4300_core, cp2) + \
-    offsetof(struct cp2, regs_simple))
-#else
-#define R4300_CP2_REGS_S_OFFSET (\
-    offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, CP2_regs_simple))
-#endif
-
-#ifndef NEW_DYNAREC
-#define R4300_CP2_REGS_D_OFFSET (\
-    offsetof(struct r4300_core, cp2) + \
-    offsetof(struct cp2, regs_double))
-#else
-#define R4300_CP2_REGS_D_OFFSET (\
-    offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, CP2_regs_double))
-#endif
-
-#ifndef NEW_DYNAREC
-#define R4300_CP2_FCR0_OFFSET (\
-    offsetof(struct r4300_core, cp2) + \
-    offsetof(struct cp2, fcr0))
-#else
-#define R4300_CP2_FCR0_OFFSET (\
-    offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp2_fcr0))
-#endif
-
-#ifndef NEW_DYNAREC
-#define R4300_CP2_FCR31_OFFSET (\
-    offsetof(struct r4300_core, cp2) + \
-    offsetof(struct cp2, fcr31))
-#else
-#define R4300_CP2_FCR31_OFFSET (\
-    offsetof(struct r4300_core, new_dynarec_hot_state) + \
-    offsetof(struct new_dynarec_hot_state, cp2_fcr31))
-#endif
-
 void init_cp2(struct cp2* cp2, struct new_dynarec_hot_state* new_dynarec_hot_state);
 void poweron_cp2(struct cp2* cp2);
 
-cp2_reg* r4300_cp2_regs(struct cp2* cp2);
-float** r4300_cp2_regs_simple(struct cp2* cp2);
-double** r4300_cp2_regs_double(struct cp2* cp2);
-
-uint32_t* r4300_cp2_fcr0(struct cp2* cp2);
-uint32_t* r4300_cp2_fcr31(struct cp2* cp2);
-
-void set_cp2_fpr_pointers(struct cp2* cp2, uint32_t newStatus);
-
-void update_x86_rounding_mode_cp2(struct cp2* cp2);
+uint64_t* r4300_cp2_latch(struct cp2* cp2);
 
 #endif /* M64P_DEVICE_R4300_CP2_H */
 

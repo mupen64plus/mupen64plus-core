@@ -1542,7 +1542,7 @@ DECLARE_INSTRUCTION(MFC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    rrt = SE32(*((int32_t*) (r4300_cp2_regs_simple(&r4300->cp2))[rfs]));
+    rrt = SE32(*r4300_cp2_latch(&r4300->cp2));
     ADD_TO_PC(1);
 }
 
@@ -1550,7 +1550,7 @@ DECLARE_INSTRUCTION(DMFC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    rrt = *((int64_t*) (r4300_cp2_regs_double(&r4300->cp2))[rfs]);
+    rrt = (*r4300_cp2_latch(&r4300->cp2));
     ADD_TO_PC(1);
 }
 
@@ -1558,14 +1558,7 @@ DECLARE_INSTRUCTION(CFC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    if (rfs==31)
-    {
-        rrt = SE32((*r4300_cp2_fcr31(&r4300->cp2)));
-    }
-    if (rfs==0)
-    {
-        rrt = SE32((*r4300_cp2_fcr0(&r4300->cp2)));
-    }
+    rrt = SE32(*r4300_cp2_latch(&r4300->cp2));
     ADD_TO_PC(1);
 }
 
@@ -1573,7 +1566,7 @@ DECLARE_INSTRUCTION(MTC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    *((int32_t*) (r4300_cp2_regs_simple(&r4300->cp2))[rfs]) = rrt32;
+    (*r4300_cp2_latch(&r4300->cp2)) = rrt;
     ADD_TO_PC(1);
 }
 
@@ -1581,7 +1574,7 @@ DECLARE_INSTRUCTION(DMTC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    *((int64_t*) (r4300_cp2_regs_double(&r4300->cp2))[rfs]) = rrt;
+    (*r4300_cp2_latch(&r4300->cp2)) = rrt;
     ADD_TO_PC(1);
 }
 
@@ -1589,13 +1582,7 @@ DECLARE_INSTRUCTION(CTC2)
 {
     DECLARE_R4300
     if (check_cop2_unusable(r4300)) { return; }
-    if (rfs==31)
-    {
-        (*r4300_cp2_fcr31(&r4300->cp2)) = rrt32;
-        update_x86_rounding_mode_cp2(&r4300->cp2);
-    }
-    //if (((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F) printf("FPU Exception enabled : %x\n",
-    //                 (int)(((*r4300_cp1_fcr31(&r4300->cp1)) >> 7) & 0x1F));
+    (*r4300_cp2_latch(&r4300->cp2)) = rrt;
     ADD_TO_PC(1);
 }
 

@@ -39,117 +39,16 @@ void init_cp2(struct cp2* cp2, struct new_dynarec_hot_state* new_dynarec_hot_sta
 
 void poweron_cp2(struct cp2* cp2)
 {
-    memset(cp2->regs, 0, 32 * sizeof(cp2->regs[0]));
-    *r4300_cp2_fcr0(cp2) = UINT32_C(0x511);
-    *r4300_cp2_fcr31(cp2) = 0;
-
-    set_cp2_fpr_pointers(cp2, UINT32_C(0x34000000)); /* c0_status value at poweron */
-#ifdef OSAL_SSE
-    cp2->flush_mode = _MM_GET_FLUSH_ZERO_MODE();
-#endif
-    update_x86_rounding_mode((struct cp1*)cp2);
+    cp2->latch = 0;
 }
 
-
-cp2_reg* r4300_cp2_regs(struct cp2* cp2)
-{
-    return cp2->regs;
-}
-
-float** r4300_cp2_regs_simple(struct cp2* cp2)
+uint64_t* r4300_cp2_latch(struct cp2* cp2)
 {
 #ifndef NEW_DYNAREC
     /* New dynarec uses a different memory layout */
-    return cp2->regs_simple;
+    return &cp2->latch;
 #else
-    return cp2->new_dynarec_hot_state->cp2_regs_simple;
+    return &cp2->new_dynarec_hot_state->cp2_latch;
 #endif
 }
 
-double** r4300_cp2_regs_double(struct cp2* cp2)
-{
-#ifndef NEW_DYNAREC
-    /* New dynarec uses a different memory layout */
-    return cp2->regs_double;
-#else
-    return cp2->new_dynarec_hot_state->cp2_regs_double;
-#endif
-}
-
-uint32_t* r4300_cp2_fcr0(struct cp2* cp2)
-{
-#ifndef NEW_DYNAREC
-    /* New dynarec uses a different memory layout */
-    return &cp2->fcr0;
-#else
-    return &cp2->new_dynarec_hot_state->cp2_fcr31;
-#endif
-}
-
-uint32_t* r4300_cp2_fcr31(struct cp2* cp2)
-{
-#ifndef NEW_DYNAREC
-    /* New dynarec uses a different memory layout */
-    return &cp2->fcr31;
-#else
-    return &cp2->new_dynarec_hot_state->cp2_fcr31;
-#endif
-}
-
-void set_cp2_fpr_pointers(struct cp2* cp2, uint32_t newStatus)
-{
-    int i;
-
-    // update the FPR register pointers
-    if ((newStatus & CP0_STATUS_FR) == 0)
-    {
-        for (i = 0; i < 32; i++)
-        {
-            (r4300_cp2_regs_simple(cp2))[i] = &cp2->regs[i & ~1].float32[i & 1];
-            (r4300_cp2_regs_double(cp2))[i] = &cp2->regs[i & ~1].float64;
-        }
-    }
-    else
-    {
-        for (i = 0; i < 32; i++)
-        {
-            (r4300_cp2_regs_simple(cp2))[i] = &cp2->regs[i].float32[0];
-            (r4300_cp2_regs_double(cp2))[i] = &cp2->regs[i].float64;
-        }
-    }
-}
-
-void update_x86_rounding_mode_cp2(struct cp2* cp2)
-{
-    uint32_t fcr31 = *r4300_cp2_fcr31(cp2);
-
-#ifdef OSAL_SSE
-    uint32_t flush_mode;
-    if (fcr31 & 2)
-        flush_mode = (fcr31 & FCR31_FS_BIT) ? _MM_FLUSH_ZERO_OFF : _MM_FLUSH_ZERO_ON;
-    else
-        flush_mode = _MM_FLUSH_ZERO_ON;
-
-    if (flush_mode != cp2->flush_mode)
-    {
-        _MM_SET_FLUSH_ZERO_MODE(flush_mode);
-        cp2->flush_mode = flush_mode;
-    }
-#endif
-
-    switch (fcr31 & 3)
-    {
-    case 0: /* Round to nearest, or to even if equidistant */
-        cp2->rounding_mode = UINT32_C(0x33F);
-        break;
-    case 1: /* Truncate (toward 0) */
-        cp2->rounding_mode = UINT32_C(0xF3F);
-        break;
-    case 2: /* Round up (toward +Inf) */
-        cp2->rounding_mode = UINT32_C(0xB3F);
-        break;
-    case 3: /* Round down (toward -Inf) */
-        cp2->rounding_mode = UINT32_C(0x73F);
-        break;
-    }
-}
