@@ -630,7 +630,6 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RT_OF(op) != 0) CFC2(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-			// TODO
 		case 4: MTC2(r4300, op); break;
 		case 5: DMTC2(r4300, op); break;
 		case 6: CTC2(r4300, op); break;
