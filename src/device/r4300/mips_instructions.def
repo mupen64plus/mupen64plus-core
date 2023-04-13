@@ -1323,6 +1323,8 @@ DECLARE_INSTRUCTION(MTC0)
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
         break;
     case CP0_STATUS_REG:
+        rrt32 &= ~(1 << 19); /* 19th bit isn't writable */
+
         if((rrt32 & CP0_STATUS_FR) != (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_FR))
             set_fpr_pointers(&r4300->cp1, rrt32);
 
