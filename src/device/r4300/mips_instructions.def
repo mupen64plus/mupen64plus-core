@@ -1408,11 +1408,10 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_UNUSED_25:
         cp0_regs[CP0_UNUSED_25] = rrt32;
         break;
-    case CP0_UNUSED_26:
-        cp0_regs[CP0_UNUSED_26] = rrt32;
+    case CP0_CACHEERR_REG:
         break;
-    case CP0_UNUSED_27:
-        cp0_regs[CP0_UNUSED_27] = rrt32;
+    case CP0_PARITYERR_REG:
+        cp0_regs[CP0_PARITYERR_REG] = rrt32 & UINT32_C(0x000000FF);
         break;
     case CP0_TAGLO_REG:
         cp0_regs[CP0_TAGLO_REG] = rrt32 & UINT32_C(0x0FFFFFC0);
