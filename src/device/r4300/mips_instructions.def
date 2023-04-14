@@ -1381,7 +1381,9 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_PREVID_REG:
         break;
     case CP0_CONFIG_REG:
-        cp0_regs[CP0_CONFIG_REG] = rrt32;
+        cp0_regs[CP0_CONFIG_REG] = (rrt32 & UINT32_C(0x0000000F)) 
+                | (cp0_regs[CP0_CONFIG_REG] & UINT32_C(0x00008000))
+                | (cp0_regs[CP0_CONFIG_REG] & UINT32_C(0x7FFFFFFF));
         break;
     case CP0_LLADDR_REG:
         cp0_regs[CP0_LLADDR_REG] = rrt32;
