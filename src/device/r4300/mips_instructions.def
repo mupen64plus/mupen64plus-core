@@ -371,6 +371,7 @@ DECLARE_INSTRUCTION(SC)
     }
 }
 
+#include <stdio.h>
 DECLARE_INSTRUCTION(SW)
 {
     DECLARE_R4300
@@ -1323,7 +1324,7 @@ DECLARE_INSTRUCTION(MTC0)
         cp0_regs[CP0_PAGEMASK_REG] = rrt32 & UINT32_C(0x01FFE000);
         break;
     case CP0_WIRED_REG:
-        cp0_regs[CP0_WIRED_REG] = rrt32;
+        cp0_regs[CP0_WIRED_REG] = rrt32 & UINT32_C(0x0000003F);
         cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
         break;
     case CP0_UNUSED_7:
