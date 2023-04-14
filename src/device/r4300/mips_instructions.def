@@ -1253,7 +1253,7 @@ DECLARE_INSTRUCTION(MFC0)
         cp0_update_count(r4300);
         break;
     }
-    rrt32 = SE32(cp0_regs[rfs]);
+    rrt = SE32(cp0_regs[rfs]);
     ADD_TO_PC(1);
 }
 
@@ -1268,12 +1268,26 @@ DECLARE_INSTRUCTION(DMFC0)
         cp0_update_count(r4300);
         cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
             + cp0_regs[CP0_WIRED_REG];
+        rrt = cp0_regs[rfs];
         break;
     case CP0_COUNT_REG:
         cp0_update_count(r4300);
+        rrt = cp0_regs[rfs];
+        break;
+    case CP0_EPC_REG:
+    case CP0_UNUSED_21:
+    case CP0_UNUSED_22:
+    case CP0_UNUSED_23:
+    case CP0_UNUSED_24:
+    case CP0_UNUSED_25:
+    case CP0_UNUSED_31:
+        rrt = SE32(cp0_regs[rfs]);
+        break;
+    default:
+        rrt = cp0_regs[rfs];
         break;
     }
-    rrt = cp0_regs[rfs];
+
     ADD_TO_PC(1);
 }
 
