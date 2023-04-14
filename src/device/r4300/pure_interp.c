@@ -435,8 +435,11 @@ void InterpretOpcode(struct r4300_core* r4300)
 	case 16: /* Coprocessor 0 prefix */
 		switch ((op >> 21) & 0x1F) {
 		case 0: /* Coprocessor 0 opcode 0: MFC0  */
-		case 1: /* Coprocessor 0 opcode 1: DMFC0 */
 			if (RT_OF(op) != 0) MFC0(r4300, op);
+			else                NOP(r4300, 0);
+			break;
+		case 1: /* Coprocessor 0 opcode 1: DMFC0 */
+			if (RT_OF(op) != 0) DMFC0(r4300, op);
 			else                NOP(r4300, 0);
 			break;
 		case 4: /* Coprocessor 0 opcode 4: MTC0  */

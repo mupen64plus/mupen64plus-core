@@ -1253,7 +1253,27 @@ DECLARE_INSTRUCTION(MFC0)
         cp0_update_count(r4300);
         break;
     }
-    rrt = SE32(cp0_regs[rfs]);
+    rrt32 = SE32(cp0_regs[rfs]);
+    ADD_TO_PC(1);
+}
+
+DECLARE_INSTRUCTION(DMFC0)
+{
+    DECLARE_R4300
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    switch(rfs)
+    {
+    case CP0_RANDOM_REG:
+        cp0_update_count(r4300);
+        cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
+            + cp0_regs[CP0_WIRED_REG];
+        break;
+    case CP0_COUNT_REG:
+        cp0_update_count(r4300);
+        break;
+    }
+    rrt = cp0_regs[rfs];
     ADD_TO_PC(1);
 }
 
