@@ -371,7 +371,6 @@ DECLARE_INSTRUCTION(SC)
     }
 }
 
-#include <stdio.h>
 DECLARE_INSTRUCTION(SW)
 {
     DECLARE_R4300
