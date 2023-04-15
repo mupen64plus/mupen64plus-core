@@ -45,6 +45,27 @@ static __inline float  truncf(float x) { return (float)(int)x; }
 
 #define FCR31_CMP_BIT UINT32_C(0x800000)
 
+#define FCR31_CAUSE_BITS UINT32_C(0x01F000)
+
+#define FCR31_CAUSE_INEXACT_BIT   UINT32_C(0x001000)
+#define FCR31_CAUSE_UNDERFLOW_BIT UINT32_C(0x002000)
+#define FCR31_CAUSE_OVERFLOW_BIT  UINT32_C(0x004000)
+#define FCR31_CAUSE_DIVBYZERO_BIT UINT32_C(0x008000)
+#define FCR31_CAUSE_INVALIDOP_BIT UINT32_C(0x010000)
+#define FCR31_CAUSE_UNIMPLOP_BIT  UINT32_C(0x020000)
+
+#define FCR31_ENABLE_INEXACT_BIT   UINT32_C(0x000080)
+#define FCR31_ENABLE_UNDERFLOW_BIT UINT32_C(0x000100)
+#define FCR31_ENABLE_OVERFLOW_BIT  UINT32_C(0x000200)
+#define FCR31_ENABLE_DIVBYZERO_BIT UINT32_C(0x000400)
+#define FCR31_ENABLE_INVALIDOP_BIT UINT32_C(0x000800)
+
+#define FCR31_FLAG_INEXACT_BIT   UINT32_C(0x000004)
+#define FCR31_FLAG_UNDERFLOW_BIT UINT32_C(0x000008)
+#define FCR31_FLAG_OVERFLOW_BIT  UINT32_C(0x000010)
+#define FCR31_FLAG_DIVBYZERO_BIT UINT32_C(0x000020)
+#define FCR31_FLAG_INVALIDOP_BIT UINT32_C(0x000040)
+
 
 M64P_FPU_INLINE void set_rounding(uint32_t fcr31)
 {
@@ -66,11 +87,7 @@ M64P_FPU_INLINE void set_rounding(uint32_t fcr31)
 
 M64P_FPU_INLINE void fpu_reset_cause(uint32_t* fcr31)
 {
-    /* clear cause bits */
-    for (int i = 12; i <= 17; i++)
-    {
-        (*fcr31) &= ~(1 << i);
-    }
+    (*fcr31) &= ~FCR31_CAUSE_BITS;
 }
 
 M64P_FPU_INLINE void fpu_reset_exceptions()
@@ -86,28 +103,28 @@ M64P_FPU_INLINE int fpu_check_exceptions(uint32_t* fcr31)
 
     if (fexceptions & FE_DIVBYZERO)
     {
-        (*fcr31) |= (1 << 15);
-        (*fcr31) |= (1 << 5);
+        (*fcr31) |= FCR31_CAUSE_DIVBYZERO_BIT;
+        (*fcr31) |= FCR31_FLAG_DIVBYZERO_BIT;
     }
     if (fexceptions & FE_INEXACT)
     {
-        (*fcr31) |= (1 << 12);
-        (*fcr31) |= (1 << 2);
+        (*fcr31) |= FCR31_CAUSE_INEXACT_BIT;
+        (*fcr31) |= FCR31_FLAG_INEXACT_BIT;
     }
     if (fexceptions & FE_UNDERFLOW)
     {
-        (*fcr31) |= (1 << 13);
-        (*fcr31) |= (1 << 3);
+        (*fcr31) |= FCR31_CAUSE_UNDERFLOW_BIT;
+        (*fcr31) |= FCR31_FLAG_UNDERFLOW_BIT;
     }
     if (fexceptions & FE_OVERFLOW)
     {
-        (*fcr31) |= (1 << 14);
-        (*fcr31) |= (1 << 4);
+        (*fcr31) |= FCR31_CAUSE_OVERFLOW_BIT;
+        (*fcr31) |= FCR31_FLAG_OVERFLOW_BIT;
     }
     if (fexceptions & FE_INVALID)
     {
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
     }
 
     return 0; // TODO: exceptions
@@ -121,8 +138,8 @@ M64P_FPU_INLINE void fpu_check_input_float(uint32_t* fcr31, const float* value)
     case FP_SUBNORMAL: // TODO
         return;
     case FP_NAN:
-        (*fcr31) |= (1 << 6);
-        (*fcr31) |= (1 << 16);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         break;
     }
 }
@@ -135,8 +152,8 @@ M64P_FPU_INLINE void fpu_check_input_double(uint32_t* fcr31, const double* value
     case FP_SUBNORMAL: // TODO
         return;
     case FP_NAN:
-        (*fcr31) |= (1 << 6);
-        (*fcr31) |= (1 << 16);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         break;
     }
 }
@@ -146,12 +163,10 @@ M64P_FPU_INLINE void fpu_check_output_float(uint32_t* fcr31, const float* value)
     switch (fpclassify(*value))
     {
     case FP_SUBNORMAL:
-        /* underflow */
-        (*fcr31) |= (1 << 4);
-        (*fcr31) |= (1 << 14);
-        /* inexact */
-        (*fcr31) |= (1 << 2);
-        (*fcr31) |= (1 << 12);
+        (*fcr31) |= FCR31_CAUSE_UNDERFLOW_BIT;
+        (*fcr31) |= FCR31_FLAG_UNDERFLOW_BIT;
+        (*fcr31) |= FCR31_CAUSE_INEXACT_BIT;
+        (*fcr31) |= FCR31_FLAG_INEXACT_BIT;
         break;
 
     case FP_NAN:
@@ -167,12 +182,10 @@ M64P_FPU_INLINE void fpu_check_output_double(uint32_t* fcr31, const double* valu
     switch (fpclassify(*value))
     {
     case FP_SUBNORMAL:
-        /* underflow */
-        (*fcr31) |= (1 << 4);
-        (*fcr31) |= (1 << 14);
-        /* inexact */
-        (*fcr31) |= (1 << 2);
-        (*fcr31) |= (1 << 12);
+        (*fcr31) |= FCR31_CAUSE_UNDERFLOW_BIT;
+        (*fcr31) |= FCR31_FLAG_UNDERFLOW_BIT;
+        (*fcr31) |= FCR31_CAUSE_INEXACT_BIT;
+        (*fcr31) |= FCR31_FLAG_INEXACT_BIT;
         break;
 
     case FP_NAN:
@@ -457,8 +470,8 @@ M64P_FPU_INLINE void c_f_s(uint32_t* fcr31, const float* source, const float* ta
     if ((isnan(*source) || isnan(*target)))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -471,8 +484,6 @@ M64P_FPU_INLINE void c_un_s(uint32_t* fcr31, const float* source, const float* t
     if ((isnan(*source) || isnan(*target)))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -488,8 +499,6 @@ M64P_FPU_INLINE void c_eq_s(uint32_t* fcr31, const float* source, const float* t
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -504,8 +513,6 @@ M64P_FPU_INLINE void c_ueq_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return; 
     }
 
@@ -521,8 +528,6 @@ M64P_FPU_INLINE void c_olt_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -537,8 +542,6 @@ M64P_FPU_INLINE void c_ult_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return; 
     }
 
@@ -554,8 +557,6 @@ M64P_FPU_INLINE void c_ole_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -570,8 +571,6 @@ M64P_FPU_INLINE void c_ule_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return; 
     }
 
@@ -587,8 +586,8 @@ M64P_FPU_INLINE void c_sf_s(uint32_t* fcr31, const float* source, const float* t
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -601,8 +600,8 @@ M64P_FPU_INLINE void c_ngle_s(uint32_t* fcr31, const float* source, const float*
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -616,8 +615,8 @@ M64P_FPU_INLINE void c_seq_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -632,8 +631,8 @@ M64P_FPU_INLINE void c_ngl_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -649,8 +648,8 @@ M64P_FPU_INLINE void c_lt_s(uint32_t* fcr31, const float* source, const float* t
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -665,8 +664,8 @@ M64P_FPU_INLINE void c_nge_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -682,8 +681,8 @@ M64P_FPU_INLINE void c_le_s(uint32_t* fcr31, const float* source, const float* t
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -698,8 +697,8 @@ M64P_FPU_INLINE void c_ngt_s(uint32_t* fcr31, const float* source, const float* 
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -721,8 +720,6 @@ M64P_FPU_INLINE void c_un_d(uint32_t* fcr31, const double* source, const double*
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -738,8 +735,6 @@ M64P_FPU_INLINE void c_eq_d(uint32_t* fcr31, const double* source, const double*
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -754,8 +749,6 @@ M64P_FPU_INLINE void c_ueq_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -771,8 +764,6 @@ M64P_FPU_INLINE void c_olt_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -787,8 +778,6 @@ M64P_FPU_INLINE void c_ult_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return; 
     }
 
@@ -804,8 +793,6 @@ M64P_FPU_INLINE void c_ole_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) &= ~FCR31_CMP_BIT;
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return;
     }
 
@@ -820,8 +807,6 @@ M64P_FPU_INLINE void c_ule_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     { 
         (*fcr31) |= FCR31_CMP_BIT; 
-        //(*fcr31) |= (1 << 16);
-        //(*fcr31) |= (1 << 6);
         return; 
     }
 
@@ -837,8 +822,8 @@ M64P_FPU_INLINE void c_sf_d(uint32_t* fcr31, const double* source, const double*
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -851,8 +836,8 @@ M64P_FPU_INLINE void c_ngle_d(uint32_t* fcr31, const double* source, const doubl
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -866,8 +851,8 @@ M64P_FPU_INLINE void c_seq_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -882,8 +867,8 @@ M64P_FPU_INLINE void c_ngl_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -899,8 +884,8 @@ M64P_FPU_INLINE void c_lt_d(uint32_t* fcr31, const double* source, const double*
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -915,8 +900,8 @@ M64P_FPU_INLINE void c_nge_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -932,8 +917,8 @@ M64P_FPU_INLINE void c_le_d(uint32_t* fcr31, const double* source, const double*
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) &= ~FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 
@@ -948,8 +933,8 @@ M64P_FPU_INLINE void c_ngt_d(uint32_t* fcr31, const double* source, const double
     if (isnan(*source) || isnan(*target))
     {
         (*fcr31) |= FCR31_CMP_BIT;
-        (*fcr31) |= (1 << 16);
-        (*fcr31) |= (1 << 6);
+        (*fcr31) |= FCR31_CAUSE_INVALIDOP_BIT;
+        (*fcr31) |= FCR31_FLAG_INVALIDOP_BIT;
         return;
     }
 

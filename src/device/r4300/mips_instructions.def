@@ -1376,7 +1376,7 @@ DECLARE_INSTRUCTION(MTC0)
         cp0_regs[CP0_CAUSE_REG] &= ~CP0_CAUSE_IP7;
         break;
     case CP0_STATUS_REG:
-        rrt32 &= ~(1 << 19); /* 19th bit isn't writable */
+        rrt32 &= ~UINT32_C(0x080000); /* 19th bit isn't writable */
 
         if((rrt32 & CP0_STATUS_FR) != (cp0_regs[CP0_STATUS_REG] & CP0_STATUS_FR))
             set_fpr_pointers(&r4300->cp1, rrt32);
@@ -1522,7 +1522,7 @@ DECLARE_INSTRUCTION(DCFC1)
     fpu_reset_cause(r4300_cp1_fcr31(&r4300->cp1));
 
     /* Unimplemented Operation */
-    (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 17;
+    (*r4300_cp1_fcr31(&r4300->cp1)) |= FCR31_CAUSE_UNIMPLOP_BIT;
 
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
     exception_general(r4300);
@@ -1568,7 +1568,7 @@ DECLARE_INSTRUCTION(DCTC1)
     fpu_reset_cause(r4300_cp1_fcr31(&r4300->cp1));
 
     /* Unimplemented Operation */
-    (*r4300_cp1_fcr31(&r4300->cp1)) |= 1 << 17;
+    (*r4300_cp1_fcr31(&r4300->cp1)) |= FCR31_CAUSE_UNIMPLOP_BIT;
 
     cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_FPE;
     exception_general(r4300);
