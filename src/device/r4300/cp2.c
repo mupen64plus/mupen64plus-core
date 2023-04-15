@@ -39,7 +39,7 @@ void init_cp2(struct cp2* cp2, struct new_dynarec_hot_state* new_dynarec_hot_sta
 
 void poweron_cp2(struct cp2* cp2)
 {
-    cp2->latch = 0;
+    *r4300_cp2_latch(cp2) = 0;
 }
 
 uint64_t* r4300_cp2_latch(struct cp2* cp2)
