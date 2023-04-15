@@ -63,8 +63,6 @@ struct new_dynarec_hot_state
     uint32_t wword;
     uint32_t cp1_fcr0;
     uint32_t cp1_fcr31;
-    uint32_t cp2_fcr0;
-    uint32_t cp2_fcr31;
     int64_t  regs[32];
     int64_t  hi;
     int64_t  lo;
