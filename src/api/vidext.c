@@ -110,6 +110,11 @@ EXPORT m64p_error CALL VidExt_Init(void)
     l_SwapControl = SDL_GL_GetSwapInterval();
 #endif
 
+#if SDL_VERSION_ATLEAST(2,24,0)
+    /* fix DPI scaling issues on Windows */
+    SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+#endif
+
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) == -1)
     {
         DebugMessage(M64MSG_ERROR, "SDL video subsystem init failed: %s", SDL_GetError());
