@@ -91,6 +91,16 @@ uint32_t* r4300_cp0_regs(struct cp0* cp0)
 #endif
 }
 
+uint64_t* r4300_cp0_latch(struct cp0* cp0)
+{
+#ifndef NEW_DYNAREC
+    return &cp0->latch;
+#else
+    /* New dynarec uses a different memory layout */
+    return &cp0->new_dynarec_hot_state->cp0_latch;
+#endif
+}
+
 uint32_t* r4300_cp0_last_addr(struct cp0* cp0)
 {
     return &cp0->last_addr;
