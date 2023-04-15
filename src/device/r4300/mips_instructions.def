@@ -1263,8 +1263,7 @@ DECLARE_INSTRUCTION(MFC0)
     case CP0_UNUSED_25:
     case CP0_UNUSED_31:
         rrt = (*cp0_latch);
-        ADD_TO_PC(1);
-        return;
+        break;
     default:
         rrt = SE32(cp0_regs[rfs]);
         break;
