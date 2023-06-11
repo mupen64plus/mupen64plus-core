@@ -45,20 +45,7 @@ jobs:
           if [[ ${{ matrix.bits }} -eq 32 ]]; then sudo dpkg --add-architecture i386; fi
           sudo apt-get update
           sudo apt-get -y install libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev nasm zlib1g-dev
-          if [[ ${{ matrix.bits }} -eq 32 ]]; then
-            sudo apt-get --reinstall -y install gcc-multilib g++-multilib libc6 libc6-dev-i386 libfreetype6:i386 libgl1-mesa-glx:i386 libglu1-mesa:i386 libpng16-16:i386 libsdl1.2debian:i386 libsdl2-2.0-0:i386 zlib1g:i386
-            LINK="sudo ln -s -T"
-            cd /usr/lib/i386-linux-gnu
-            if ! [[ -f libfreetype.so ]]; then ${LINK} libfreetype.so.6.18.1 libfreetype.so; fi
-            if ! [[ -f libGL.so ]]; then ${LINK} libGL.so.1.7.0 libGL.so; fi
-            if ! [[ -f libGLU.so ]]; then ${LINK} libGLU.so.1.3.1 libGLU.so; fi
-            if ! [[ -f libpng16.so ]]; then ${LINK} libpng16.so.16.37.0 libpng16.so; fi
-            if ! [[ -f libSDL.so ]]; then ${LINK} libSDL-1.2.so.0.11.4 libSDL.so; fi
-            if ! [[ -f libSDL2.so ]]; then ${LINK} libSDL2-2.0.so.0.18.2 libSDL2.so; fi
-            if ! [[ -f libz.so ]]; then ${LINK} libz.so.1.2.11 libz.so; fi
-            cd /usr/include/SDL2
-            if ! [[ -f _real_SDL_config.h ]]; then ${LINK} ../x86_64-linux-gnu/SDL2/_real_SDL_config.h _real_SDL_config.h; fi
-          fi
+          if [[ ${{ matrix.bits }} -eq 32 ]]; then sudo apt-get --reinstall -y install gcc-multilib g++-multilib libc6 libc6-dev-i386 libatomic1:i386 libgcc-s1:i386 libstdc++6:i386 libfreetype6-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libpng-dev:i386 libsdl1.2-dev:i386 libsdl2-dev:i386 zlib1g-dev:i386; fi
           sudo ldconfig
       - name: Build and related stuff, backup binaries
         run: |
@@ -272,9 +259,11 @@ jobs:
             tigerdeep -lz ${BIN} >> ../${BIN:0:16}.tiger.txt
             sha256sum ${BIN} >> ../${BIN:0:16}.sha256.txt
             sha512sum ${BIN} >> ../${BIN:0:16}.sha512.txt
+            b2sum ${BIN} >> ../${BIN:0:16}.blake2.txt
           done
           mv ../*.tiger.txt .
           mv ../*.sha*.txt .
+          mv ../*.blake2.txt .
           echo ""
           echo "TIGER:"
           cat *.tiger.txt
@@ -284,6 +273,9 @@ jobs:
           echo ""
           echo "SHA512:"
           cat *.sha512.txt
+          echo ""
+          echo "BLAKE2:"
+          cat *.blake2.txt
           echo ""
           git tag -f nightly-build
           git push -f origin nightly-build
