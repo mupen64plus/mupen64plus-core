@@ -85,6 +85,7 @@ M64P_FPU_INLINE void set_rounding(uint32_t fcr31)
     }
 }
 
+#ifdef ACCURATE_FPU_BEHAVIOR
 M64P_FPU_INLINE void fpu_reset_cause(uint32_t* fcr31)
 {
     (*fcr31) &= ~FCR31_CAUSE_BITS;
@@ -195,6 +196,36 @@ M64P_FPU_INLINE void fpu_check_output_double(uint32_t* fcr31, const double* valu
         break;
     }
 }
+#else
+M64P_FPU_INLINE void fpu_reset_cause(uint32_t* fcr31)
+{
+}
+
+M64P_FPU_INLINE void fpu_reset_exceptions()
+{
+}
+
+M64P_FPU_INLINE int fpu_check_exceptions(uint32_t* fcr31)
+{
+    return 0;
+}
+
+M64P_FPU_INLINE void fpu_check_input_float(uint32_t* fcr31, const float* value)
+{
+}
+
+M64P_FPU_INLINE void fpu_check_input_double(uint32_t* fcr31, const double* value)
+{
+}
+
+M64P_FPU_INLINE void fpu_check_output_float(uint32_t* fcr31, const float* value)
+{
+}
+
+M64P_FPU_INLINE void fpu_check_output_double(uint32_t* fcr31, const double* value)
+{
+}
+#endif /* ACCURATE_FPU_BEHAVIOR */
 
 M64P_FPU_INLINE void cvt_s_w(uint32_t* fcr31, const int32_t* source, float* dest)
 {
