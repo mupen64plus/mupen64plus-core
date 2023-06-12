@@ -437,6 +437,10 @@ static void gen_CP1_CVT_S(struct r4300_core* r4300)
 #define gen_SCD        genni
 #define gen_SDC2       genni
 #define gen_SWC2       genni
+#define gen_DCFC1      genni
+#define gen_DCFC2      genni
+#define gen_DCTC1      genni
+#define gen_DCTC2      genni
 
 #define X(op) gen_##op
 static void (*const recomp_funcs[R4300_OPCODES_COUNT])(struct r4300_core* r4300) =
