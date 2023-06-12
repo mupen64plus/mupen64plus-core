@@ -283,23 +283,17 @@ void cached_interp_NOTCOMPILED2(void)
 #define cached_interp_BC2TL       cached_interp_NI
 #define cached_interp_BC2TL_IDLE  cached_interp_NI
 #define cached_interp_BC2TL_OUT   cached_interp_NI
-#define cached_interp_BREAK       cached_interp_NI
 #define cached_interp_CFC0        cached_interp_NI
-#define cached_interp_CFC2        cached_interp_NI
 #define cached_interp_CTC0        cached_interp_NI
-#define cached_interp_CTC2        cached_interp_NI
-#define cached_interp_DMFC0       cached_interp_NI
-#define cached_interp_DMFC2       cached_interp_NI
-#define cached_interp_DMTC0       cached_interp_NI
-#define cached_interp_DMTC2       cached_interp_NI
-#define cached_interp_LDC2        cached_interp_NI
-#define cached_interp_LWC2        cached_interp_NI
+#define cached_interp_DMTC0       cached_interp_MTC0
+#define cached_interp_DCFC2       cached_interp_RESERVED_COP2
+#define cached_interp_LDC2        cached_interp_RESERVED_COP2
+#define cached_interp_DCTC2       cached_interp_RESERVED_COP2
+#define cached_interp_LWC2        cached_interp_RESERVED_COP2
 #define cached_interp_LLD         cached_interp_NI
-#define cached_interp_MFC2        cached_interp_NI
-#define cached_interp_MTC2        cached_interp_NI
 #define cached_interp_SCD         cached_interp_NI
-#define cached_interp_SDC2        cached_interp_NI
-#define cached_interp_SWC2        cached_interp_NI
+#define cached_interp_SDC2        cached_interp_RESERVED_COP2
+#define cached_interp_SWC2        cached_interp_RESERVED_COP2
 #define cached_interp_JR_IDLE     cached_interp_NI
 #define cached_interp_JALR_IDLE   cached_interp_NI
 #define cached_interp_CP1_ABS     cached_interp_RESERVED
@@ -522,6 +516,8 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
     case R4300_OP_CFC0:
     case R4300_OP_CFC1:
     case R4300_OP_CFC2:
+    case R4300_OP_DCFC1:
+    case R4300_OP_DCFC2:
     case R4300_OP_DMFC0:
     case R4300_OP_DMFC1:
     case R4300_OP_DMFC2:
@@ -617,7 +613,9 @@ enum r4300_opcode r4300_decode(struct precomp_instr* inst, struct r4300_core* r4
 
     case R4300_OP_CTC0:
     case R4300_OP_CTC1:
+    case R4300_OP_DCTC1:
     case R4300_OP_CTC2:
+    case R4300_OP_DCTC2:
     case R4300_OP_DDIV:
     case R4300_OP_DDIVU:
     case R4300_OP_DIV:
