@@ -145,7 +145,9 @@
 #define CACHE       { R4300_OP_CACHE,       IDEC_CACHEOP_BASE_OFFSET }
 #define CFC0        { R4300_OP_CFC0,        IDEC_RT_CCR0 }
 #define CFC1        { R4300_OP_CFC1,        IDEC_RT_FCR }
+#define DCFC1       { R4300_OP_DCFC1,       IDEC_RT_FCR }
 #define CFC2        { R4300_OP_CFC2,        IDEC_RT_CCR2 }
+#define DCFC2       { R4300_OP_DCFC2,       IDEC_RT_CCR2 }
 #define CP1_ABS     { R4300_OP_CP1_ABS,     IDEC_FD_FS_FMT }
 #define CP1_ADD     { R4300_OP_CP1_ADD,     IDEC_FD_FS_FT_FMT }
 #define CP1_C_EQ    { R4300_OP_CP1_C_EQ,    IDEC_FS_FT_FMT }
@@ -184,7 +186,9 @@
 #define CP1_TRUNC_W { R4300_OP_CP1_TRUNC_W, IDEC_FDW_FS_FMT }
 #define CTC0        { R4300_OP_CTC0,        IDEC_RT_CCR0 }
 #define CTC1        { R4300_OP_CTC1,        IDEC_RT_FCR }
+#define DCTC1       { R4300_OP_DCTC1,       IDEC_RT_FCR }
 #define CTC2        { R4300_OP_CTC2,        IDEC_RT_CCR2 }
+#define DCTC2       { R4300_OP_DCTC2,       IDEC_RT_CCR2 }
 #define DADD        { R4300_OP_DADD,        IDEC_RD_RS_RT }
 #define DADDI       { R4300_OP_DADDI,       IDEC_RT_RS_SIMM }
 #define DADDIU      { R4300_OP_DADDIU,      IDEC_RT_RS_SIMM }
@@ -387,8 +391,8 @@ static const struct r4300_idec r4300_op_table[] = {
 /* COP1 opcodes table
  * 240-247
  */
-    MFC1,        DMFC1,       CFC1,        RESERVED,
-    MTC1,        DMTC1,       CTC1,        RESERVED,
+    MFC1,        DMFC1,       CFC1,        DCFC1,
+    MTC1,        DMTC1,       CTC1,        DCTC1,
 /* BC1 opcodes table
  * 248-255
  */
@@ -416,8 +420,8 @@ static const struct r4300_idec r4300_op_table[] = {
 /* COP2 opcodes table
  * 320-327
  */
-    MFC2,        DMFC2,       CFC2,        RESERVED,
-    MTC2,        DMTC2,       CTC2,        RESERVED,
+    MFC2,        DMFC2,       CFC2,        DCFC2,
+    MTC2,        DMTC2,       CTC2,        DCTC2,
 /* BC2 opcodes table
  * 328-335
  */

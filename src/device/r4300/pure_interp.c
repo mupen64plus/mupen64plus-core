@@ -204,8 +204,8 @@ void InterpretOpcode(struct r4300_core* r4300)
 			JALR(r4300, op);
 			break;
 		case 12: SYSCALL(r4300, op); break;
-		case 13: /* SPECIAL opcode 13: BREAK (Not implemented) */
-			NI(r4300, op);
+		case 13: /* SPECIAL opcode 13: BREAK */
+			BREAK(r4300, op);
 			break;
 		case 15: SYNC(r4300, op); break;
 		case 16: /* SPECIAL opcode 16: MFHI */
@@ -434,11 +434,18 @@ void InterpretOpcode(struct r4300_core* r4300)
 		break;
 	case 16: /* Coprocessor 0 prefix */
 		switch ((op >> 21) & 0x1F) {
-		case 0: /* Coprocessor 0 opcode 0: MFC0 */
+		case 0: /* Coprocessor 0 opcode 0: MFC0  */
 			if (RT_OF(op) != 0) MFC0(r4300, op);
 			else                NOP(r4300, 0);
 			break;
-		case 4: MTC0(r4300, op); break;
+		case 1: /* Coprocessor 0 opcode 1: DMFC0 */
+			if (RT_OF(op) != 0) DMFC0(r4300, op);
+			else                NOP(r4300, 0);
+			break;
+		case 4: /* Coprocessor 0 opcode 4: MTC0  */
+		case 5: /* Coprocessor 0 opcode 5: DMTC0 */
+			MTC0(r4300, op);
+			break;
 		case 16: /* Coprocessor 0 opcode 16: TLB */
 			switch (op & 0x3F) {
 			case 1: TLBR(r4300, op); break;
@@ -452,7 +459,7 @@ void InterpretOpcode(struct r4300_core* r4300)
 				break;
 			} /* switch (op & 0x3F) for Coprocessor 0 TLB opcodes */
 			break;
-		default: /* Coprocessor 0 opcodes 1..3, 4..15, 17..31:
+		default: /* Coprocessor 0 opcodes 2..3, 5..15, 17..31:
 		            Reserved Instructions */
 			RESERVED(r4300, op);
 			break;
@@ -472,9 +479,14 @@ void InterpretOpcode(struct r4300_core* r4300)
 			if (RT_OF(op) != 0) CFC1(r4300, op);
 			else                NOP(r4300, 0);
 			break;
+		case 3: /* Coprocessor 1 opcode 2: DCFC1  */
+			if (RT_OF(op) != 0) DCFC1(r4300, op);
+			else                NOP(r4300, 0);
+			break;
 		case 4: MTC1(r4300, op); break;
 		case 5: DMTC1(r4300, op); break;
 		case 6: CTC1(r4300, op); break;
+		case 7: DCTC1(r4300, op); break;
 		case 8: /* Coprocessor 1 opcode 8: Branch on C1 condition... */
 			switch ((op >> 16) & 0x3) {
 			case 0: /* opcode 0: BC1F */
@@ -601,11 +613,33 @@ void InterpretOpcode(struct r4300_core* r4300)
 				break;
 			}
 			break;
-		default: /* Coprocessor 1 opcodes 3, 7, 9..15, 18..19, 22..31:
+		default: /* Coprocessor 1 opcodes 9..15, 18..19, 22..31:
 		            Reserved Instructions */
 			RESERVED(r4300, op);
 			break;
 		} /* switch ((op >> 21) & 0x1F) for the Coprocessor 1 prefix */
+		break;
+	case 18: /* Coprocessor 2 prefix */
+		switch ((op >> 21) & 0x1F) {
+		case 0: /* Coprocessor 2 opcode 0: MFC2 */
+			if (RT_OF(op) != 0) MFC2(r4300, op);
+			else                NOP(r4300, 0);
+			break;
+		case 1: /* Coprocessor 2 opcode 1: DMFC2 */
+			if (RT_OF(op) != 0) DMFC2(r4300, op);
+			else                NOP(r4300, 0);
+			break;
+		case 2: /* Coprocessor 2 opcode 2: CFC2 */
+			if (RT_OF(op) != 0) CFC2(r4300, op);
+			else                NOP(r4300, 0);
+			break;
+		case 4: MTC2(r4300, op); break;
+		case 5: DMTC2(r4300, op); break;
+		case 6: CTC2(r4300, op); break;
+		default:
+			RESERVED_COP2(r4300, op);
+			break;
+		}
 		break;
 	case 20: /* Major opcode 20: BEQL */
 		if (IS_RELATIVE_IDLE_LOOP(r4300, op, *r4300_pc(r4300))) BEQL_IDLE(r4300, op);

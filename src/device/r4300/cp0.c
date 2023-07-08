@@ -61,7 +61,7 @@ void poweron_cp0(struct cp0* cp0)
     cp0_regs[CP0_RANDOM_REG] = UINT32_C(31);
     cp0_regs[CP0_STATUS_REG]= UINT32_C(0x34000000);
     cp0_regs[CP0_CONFIG_REG]= UINT32_C(0x6e463);
-    cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb00);
+    cp0_regs[CP0_PREVID_REG] = UINT32_C(0xb10);
     cp0_regs[CP0_COUNT_REG] = UINT32_C(0x5000);
     cp0_regs[CP0_CAUSE_REG] = UINT32_C(0x5c);
     cp0_regs[CP0_CONTEXT_REG] = UINT32_C(0x7ffff0);
@@ -88,6 +88,16 @@ uint32_t* r4300_cp0_regs(struct cp0* cp0)
 #else
 	/* New dynarec uses a different memory layout */
     return cp0->new_dynarec_hot_state->cp0_regs;
+#endif
+}
+
+uint64_t* r4300_cp0_latch(struct cp0* cp0)
+{
+#ifndef NEW_DYNAREC
+    return &cp0->latch;
+#else
+    /* New dynarec uses a different memory layout */
+    return &cp0->new_dynarec_hot_state->cp0_latch;
 #endif
 }
 
@@ -119,6 +129,19 @@ int check_cop1_unusable(struct r4300_core* r4300)
     if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU1))
     {
         cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE1;
+        exception_general(r4300);
+        return 1;
+    }
+    return 0;
+}
+
+int check_cop2_unusable(struct r4300_core* r4300)
+{
+    uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
+
+    if (!(cp0_regs[CP0_STATUS_REG] & CP0_STATUS_CU2))
+    {
+        cp0_regs[CP0_CAUSE_REG] = CP0_CAUSE_EXCCODE_CPU | CP0_CAUSE_CE2;
         exception_general(r4300);
         return 1;
     }

@@ -53,6 +53,7 @@ void init_r4300(struct r4300_core* r4300, struct memory* mem, struct mi_controll
     r4300->emumode = emumode;
     init_cp0(&r4300->cp0, count_per_op, count_per_op_denom_pot, new_dynarec_hot_state, interrupt_handlers);
     init_cp1(&r4300->cp1, new_dynarec_hot_state);
+    init_cp2(&r4300->cp2, new_dynarec_hot_state);
 
 #ifndef NEW_DYNAREC
     r4300->recomp.no_compiled_jump = no_compiled_jump;
@@ -117,6 +118,9 @@ void poweron_r4300(struct r4300_core* r4300)
 
     /* setup CP1 registers */
     poweron_cp1(&r4300->cp1);
+
+    /* setup CP2 registers */
+    poweron_cp2(&r4300->cp2);
 }
 
 

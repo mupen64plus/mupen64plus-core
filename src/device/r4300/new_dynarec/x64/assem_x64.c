@@ -927,7 +927,7 @@ static void emit_loadreg(int r, int hr)
     if((r&63)==LOREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.lo+((r&64)>>4);
     if(r==CCREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
     if(r==CSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp0_regs[CP0_STATUS_REG];
-    if(r==FSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31;
+    if(r==FSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31;
     assert(addr-(intptr_t)out>=-2147483648LL&&addr-(intptr_t)out<2147483647LL);
     assem_debug("mov %llx+%d,%%%s",addr,r,regname[hr]);
     if(hr>=8) output_rex(0,hr>>3,0,0);
@@ -942,7 +942,7 @@ static void emit_storereg(int r, int hr)
   if((r&63)==HIREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.hi+((r&64)>>4);
   if((r&63)==LOREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.lo+((r&64)>>4);
   if(r==CCREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cycle_count;
-  if(r==FSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31;
+  if(r==FSREG) addr=(intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31;
   assert((r&63)!=CSREG);
   assert((r&63)!=0);
   assert((r&63)<=CCREG);
@@ -3862,7 +3862,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
   emit_storereg(FSREG, fs);
   save_regs(reglist);
   if(opcode2[i]==0x10) {
-    emit_lea_rip((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31,ARG1_REG);
+    emit_lea_rip((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f],ARG3_REG);
     if((source[i]&0x3f)==0x30) emit_call((intptr_t)c_f_s);
@@ -3883,7 +3883,7 @@ static void fcomp_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)==0x3f) emit_call((intptr_t)c_ngt_s);
   }
   if(opcode2[i]==0x11) {
-    emit_lea_rip((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr31,ARG1_REG);
+    emit_lea_rip((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31,ARG1_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f],ARG2_REG);
     emit_readptr((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>16)&0x1f],ARG3_REG);
     if((source[i]&0x3f)==0x30) emit_call((intptr_t)c_f_d);

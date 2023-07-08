@@ -61,14 +61,16 @@ struct new_dynarec_hot_state
     uint64_t rdword;
     uint64_t wdword;
     uint32_t wword;
-    uint32_t fcr0;
-    uint32_t fcr31;
+    uint32_t cp1_fcr0;
+    uint32_t cp1_fcr31;
     int64_t  regs[32];
     int64_t  hi;
     int64_t  lo;
     uint32_t cp0_regs[32];
+    uint64_t cp0_latch;
     float* cp1_regs_simple[32];
     double* cp1_regs_double[32];
+    uint64_t cp2_latch;
     uint32_t rounding_modes[4];
     int branch_target;
     struct precomp_instr* pc;

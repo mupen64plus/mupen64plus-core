@@ -67,7 +67,7 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
 
             memcpy(&is_viewer->output_buffer[is_viewer->buffer_pos], &is_viewer->data[0x20], word);
             is_viewer->buffer_pos += word;
-            char* newline = memchr(is_viewer->output_buffer, '\n', is_viewer->buffer_pos);
+            char* newline = strpbrk_reverse("\n", is_viewer->output_buffer, is_viewer->buffer_pos);
             if (newline)
             {
                 *newline = '\0';
