@@ -235,6 +235,10 @@ void read_rdram_dram(void* opaque, uint32_t address, uint32_t* value)
     {
         *value = rdram->dram[addr];
     }
+    else
+    {
+        *value = 0;
+    }
 }
 
 void write_rdram_dram(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
