@@ -195,6 +195,7 @@ static char *get_mempaks_path(void)
     {
         return path;
     }
+    free(path);
 
     /* else use new path */
     return formatstr("%s%s.mpk", get_savesrampath(), get_save_filename());
@@ -211,6 +212,7 @@ static char *get_eeprom_path(void)
     {
         return path;
     }
+    free(path);
 
     /* else use new path */
     return formatstr("%s%s.eep", get_savesrampath(), get_save_filename());
@@ -227,6 +229,7 @@ static char *get_sram_path(void)
     {
         return path;
     }
+    free(path);
 
     /* else use new path */
     return formatstr("%s%s.sra", get_savesrampath(), get_save_filename());
@@ -243,6 +246,7 @@ static char *get_flashram_path(void)
     {
         return path;
     }
+    free(path);
 
     /* else use new path */
     return formatstr("%s%s.fla", get_savesrampath(), get_save_filename());
