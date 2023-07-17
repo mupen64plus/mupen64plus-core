@@ -714,14 +714,18 @@ ifeq ($(DEBUGGER), 1)
     $(SRCDIR)/debugger/dbg_breakpoints.c
   LDLIBS += -lopcodes -lbfd
 
-  # UGLY libopcodes version check (we check for > 2.28)
+  # UGLY libopcodes/libbfd version check (we check for >= 2.28 and >= 2.39)
   LIBOPCODES_VERSION := $(shell $(STRINGS) --version | head -n1 | rev | cut -d ' ' -f1 | rev)
   LIBOPCODES_MAJOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f1 -d.)
   LIBOPCODES_MINOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f2 -d.)
   LIBOPCODES_POINT := $(shell echo $(LIBOPCODES_VERSION) | cut -f3 -d.)
   LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 29 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 28 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
+  LIBBFD_GE_2_39 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 29 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 39 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
   ifeq ($(LIBOPCODES_GE_2_29),true)
     CFLAGS += -DUSE_LIBOPCODES_GE_2_29
+  endif
+  ifeq ($(LIBBFD_GE_2_39),true)
+    CFLAGS += -DUSE_LIBBFD_GE_2_39
   endif
 endif
 
