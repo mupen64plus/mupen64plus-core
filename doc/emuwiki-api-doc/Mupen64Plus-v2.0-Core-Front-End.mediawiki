@@ -306,6 +306,12 @@ These core parameters may be read and/or written using the M64CMD_CORE_STATE_QUE
 |<tt>1</tt> if state saving was successful, <tt>0</tt> if state saving failed.
 |This parameter cannot be read or written.  It is only used for callbacks, because the state load/save operations are asynchronous.
 |}
+|M64CORE_SCREENSHOT_CAPTURED
+|No
+|No
+|<tt>1</tt> if capturing screenshot was successful, <tt>0</tt> if capturing screenshot failed.
+|This parameter cannot be read or written.  It is only used for callbacks.
+|}
 <br />
 
 == ROM Handling Functions ==
