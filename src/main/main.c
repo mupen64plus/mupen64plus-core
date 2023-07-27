@@ -727,6 +727,7 @@ m64p_error main_core_state_query(m64p_core_param param, int *rval)
             *rval = event_gameshark_active();
             break;
         // these are only used for callbacks; they cannot be queried or set
+        case M64CORE_SCREENSHOT_CAPTURED:
         case M64CORE_STATE_LOADCOMPLETE:
         case M64CORE_STATE_SAVECOMPLETE:
             return M64ERR_INPUT_INVALID;
@@ -1934,6 +1935,9 @@ m64p_error main_run(void)
 
     /* set up the SDL key repeat and event filter to catch keyboard/joystick commands for the core */
     event_initialize();
+
+    /* initialize frame counter */
+    l_CurrentFrame = 0;
 
     /* initialize the on-screen display */
     if (ConfigGetParamBool(g_CoreConfig, "OnScreenDisplay"))

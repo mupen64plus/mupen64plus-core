@@ -222,7 +222,10 @@ void TakeScreenshot(int iFrameNumber)
     // look for an unused screenshot filename
     filename = GetNextScreenshotPath();
     if (filename == NULL)
+    {
+        StateChanged(M64CORE_SCREENSHOT_CAPTURED, 0);
         return;
+    }
 
     // get the width and height
     int width = 640;
@@ -233,6 +236,7 @@ void TakeScreenshot(int iFrameNumber)
     unsigned char *pucFrame = (unsigned char *) malloc(width * height * 3);
     if (pucFrame == NULL)
     {
+        StateChanged(M64CORE_SCREENSHOT_CAPTURED, 0);
         free(filename);
         return;
     }
@@ -241,11 +245,19 @@ void TakeScreenshot(int iFrameNumber)
     gfx.readScreen(pucFrame, &width, &height, 0);
 
     // write the image to a PNG
-    SaveRGBBufferToFile(filename, pucFrame, width, height, width * 3);
+    int rval = SaveRGBBufferToFile(filename, pucFrame, width, height, width * 3);
     // free the memory
     free(pucFrame);
     free(filename);
     // print message -- this allows developers to capture frames and use them in the regression test
-    main_message(M64MSG_INFO, OSD_BOTTOM_LEFT, "Captured screenshot for frame %i.", iFrameNumber);
+    if (rval != 0)
+    {
+        StateChanged(M64CORE_SCREENSHOT_CAPTURED, 0);
+    }
+    else
+    {
+        main_message(M64MSG_INFO, OSD_BOTTOM_LEFT, "Captured screenshot for frame %i.", iFrameNumber);
+        StateChanged(M64CORE_SCREENSHOT_CAPTURED, 1);
+    }
 }
 
