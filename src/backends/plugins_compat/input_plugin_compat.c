@@ -78,11 +78,11 @@ static m64p_error input_plugin_get_input(void* opaque, uint32_t* input_)
             if (input.getKeys)
                 input.getKeys(netplay_controller, &keys);
 
-            netplay_set_plugin(cin_compat->control_id, Controls[netplay_controller].Plugin);
             Controls[netplay_controller].Plugin = plugin;
             Controls[netplay_controller].Present = present;
-            cin_compat->last_input = keys.Value; //disable pak switching for netplay
         }
+        cin_compat->last_input = keys.Value; //disable pak switching for netplay
+        cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin; //disable pak switching for netplay
     }
 
     /* return an error if controller is not plugged */

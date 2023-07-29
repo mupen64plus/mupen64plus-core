@@ -52,7 +52,6 @@ void netplay_check_sync(struct cp0* cp0);
 int netplay_next_controller();
 void netplay_read_registration(struct controller_input_compat* cin_compats);
 void netplay_update_input(struct pif* pif);
-void netplay_set_plugin(uint8_t control_id, uint8_t plugin);
 m64p_error netplay_send_config(char* data, int size);
 m64p_error netplay_receive_config(char* data, int size);
 
