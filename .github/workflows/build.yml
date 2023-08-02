@@ -44,8 +44,8 @@ jobs:
           echo "G_REV=$(git rev-parse --short HEAD)" >> "${GITHUB_ENV}"
           if [[ ${{ matrix.bits }} -eq 32 ]]; then sudo dpkg --add-architecture i386; fi
           sudo apt-get update
-          sudo apt-get -y install libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev nasm zlib1g-dev
-          if [[ ${{ matrix.bits }} -eq 32 ]]; then sudo apt-get --reinstall -y install gcc-multilib g++-multilib libc6 libc6-dev-i386 libatomic1:i386 libgcc-s1:i386 libstdc++6:i386 libfreetype6-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libpng-dev:i386 libsdl1.2-dev:i386 libsdl2-dev:i386 zlib1g-dev:i386; fi
+          sudo apt-get -y install libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev libvulkan-dev nasm zlib1g-dev
+          if [[ ${{ matrix.bits }} -eq 32 ]]; then sudo apt-get --reinstall -y install gcc-multilib g++-multilib libc6 libc6-dev-i386 libatomic1:i386 libgcc-s1:i386 libstdc++6:i386 libfreetype6-dev:i386 libgl1-mesa-dev:i386 libglu1-mesa-dev:i386 libpng-dev:i386 libsdl1.2-dev:i386 libsdl2-dev:i386 libvulkan-dev:i386 zlib1g-dev:i386; fi
           sudo ldconfig
       - name: Build and related stuff, backup binaries
         run: |

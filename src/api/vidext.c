@@ -24,6 +24,14 @@
  */
 
 #include <SDL.h>
+/* we need at least SDL 2.0.6 for vulkan */
+#if !SDL_VERSION_ATLEAST(2,0,6)
+    #undef VIDEXT_VULKAN
+#endif
+#ifdef VIDEXT_VULKAN
+#include <SDL_vulkan.h>
+#include <vulkan/vulkan.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,12 +51,16 @@
 #endif
 
 /* local variables */
-static m64p_video_extension_functions l_ExternalVideoFuncTable = {14, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+static m64p_video_extension_functions l_ExternalVideoFuncTable = {17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int l_VideoExtensionActive = 0;
 static int l_VideoOutputActive = 0;
 static int l_Fullscreen = 0;
 static int l_SwapControl = 0;
+static m64p_render_mode l_RenderMode = M64P_RENDER_OPENGL;
 static SDL_Surface *l_pScreen = NULL;
+#ifdef VIDEXT_VULKAN
+static const char** l_VulkanExtensionNames = NULL;
+#endif
 
 /* global function for use by frontend.c */
 m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionStruct)
@@ -56,11 +68,12 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
     /* check input data */
     if (VideoFunctionStruct == NULL)
         return M64ERR_INPUT_ASSERT;
-    if (VideoFunctionStruct->Functions < 14)
+    if (VideoFunctionStruct->Functions < 17)
         return M64ERR_INPUT_INVALID;
 
     /* disable video extension if any of the function pointers are NULL */
     if (VideoFunctionStruct->VidExtFuncInit == NULL ||
+        VideoFunctionStruct->VidExtFuncInitWithRenderMode == NULL ||
         VideoFunctionStruct->VidExtFuncQuit == NULL ||
         VideoFunctionStruct->VidExtFuncListModes == NULL ||
         VideoFunctionStruct->VidExtFuncListRates == NULL ||
@@ -73,10 +86,12 @@ m64p_error OverrideVideoFunctions(m64p_video_extension_functions *VideoFunctionS
         VideoFunctionStruct->VidExtFuncSetCaption == NULL ||
         VideoFunctionStruct->VidExtFuncToggleFS == NULL ||
         VideoFunctionStruct->VidExtFuncResizeWindow == NULL ||
-        VideoFunctionStruct->VidExtFuncGLGetDefaultFramebuffer == NULL)
+        VideoFunctionStruct->VidExtFuncGLGetDefaultFramebuffer == NULL ||
+        VideoFunctionStruct->VidExtFuncVKGetSurface == NULL ||
+        VideoFunctionStruct->VidExtFuncVKGetInstanceExtensions == NULL)
     {
-        l_ExternalVideoFuncTable.Functions = 14;
-        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 14 * sizeof(void *));
+        l_ExternalVideoFuncTable.Functions = 17;
+        memset(&l_ExternalVideoFuncTable.VidExtFuncInit, 0, 17 * sizeof(void *));
         l_VideoExtensionActive = 0;
         return M64ERR_SUCCESS;
     }
@@ -104,10 +119,27 @@ EXPORT m64p_error CALL VidExt_Init(void)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncInit)();
 
+    /* redirect to VidExt_InitWithRenderMode with OpenGL render mode */
+    return VidExt_InitWithRenderMode(M64P_RENDER_OPENGL);
+}
+
+EXPORT m64p_error CALL VidExt_InitWithRenderMode(m64p_render_mode RenderMode)
+{
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncInitWithRenderMode)(RenderMode);
+
+    /* set global render mode */
+#ifdef VIDEXT_VULKAN
+    l_RenderMode = RenderMode;
+#endif
+
 #if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
-    /* retrieve default swap interval/VSync */ 
-    l_SwapControl = SDL_GL_GetSwapInterval();
+    /* retrieve default swap interval/VSync */
+    if (RenderMode == M64P_RENDER_OPENGL) {
+        l_SwapControl = SDL_GL_GetSwapInterval();
+    }
 #endif
 
 #if SDL_VERSION_ATLEAST(2,24,0)
@@ -119,6 +151,20 @@ EXPORT m64p_error CALL VidExt_Init(void)
     {
         DebugMessage(M64MSG_ERROR, "SDL video subsystem init failed: %s", SDL_GetError());
         return M64ERR_SYSTEM_FAIL;
+    }
+
+    /* attempt to load vulkan library  */
+    if (RenderMode == M64P_RENDER_VULKAN)
+    {
+#ifdef VIDEXT_VULKAN
+        if (SDL_Vulkan_LoadLibrary(NULL) == -1)
+        {
+            DebugMessage(M64MSG_ERROR, "SDL_Vulkan_LoadLibrary failed: %s", SDL_GetError());
+            return M64ERR_SYSTEM_FAIL;
+        }
+#else
+        return M64ERR_UNSUPPORTED;
+#endif
     }
 
     return M64ERR_SUCCESS;
@@ -144,6 +190,15 @@ EXPORT m64p_error CALL VidExt_Quit(void)
     SDL_ShowCursor(SDL_ENABLE);
 #if SDL_VERSION_ATLEAST(2,0,0)
     SDL2_DestroyWindow();
+#endif
+#ifdef VIDEXT_VULKAN
+    if (l_RenderMode == M64P_RENDER_VULKAN) {
+        SDL_Vulkan_UnloadLibrary();
+    }
+    if (l_VulkanExtensionNames != NULL) {
+        free(l_VulkanExtensionNames);
+        l_VulkanExtensionNames = NULL;
+    }
 #endif
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     l_pScreen = NULL;
@@ -273,15 +328,24 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
         return M64ERR_NOT_INIT;
 
     /* Get SDL video flags to use */
-    if (ScreenMode == M64VIDEO_WINDOWED)
+    if (l_RenderMode == M64P_RENDER_OPENGL)
     {
         videoFlags = SDL_OPENGL;
+    }
+#ifdef VIDEXT_VULKAN
+    else
+    {
+        videoFlags = SDL_VULKAN;
+    }
+#endif
+    if (ScreenMode == M64VIDEO_WINDOWED)
+    {
         if (Flags & M64VIDEOFLAG_SUPPORT_RESIZING)
             videoFlags |= SDL_RESIZABLE;
     }
     else if (ScreenMode == M64VIDEO_FULLSCREEN)
     {
-        videoFlags = SDL_OPENGL | SDL_FULLSCREEN;
+        videoFlags |= SDL_FULLSCREEN;
     }
     else
     {
@@ -315,7 +379,8 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 
 #if SDL_VERSION_ATLEAST(2,0,0)
     /* set swap interval/VSync */
-    if (SDL_GL_SetSwapInterval(l_SwapControl) != 0)
+    if (l_RenderMode == M64P_RENDER_OPENGL &&
+        SDL_GL_SetSwapInterval(l_SwapControl) != 0)
     {
         DebugMessage(M64MSG_ERROR, "SDL swap interval (VSync) set failed: %s", SDL_GetError());
     }
@@ -347,7 +412,7 @@ EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int Re
 #if SDL_VERSION_ATLEAST(2,0,0)
     if (!SDL_WasInit(SDL_INIT_VIDEO) || !SDL_VideoWindow)
         return M64ERR_NOT_INIT;
-    
+
     int videoFlags = 0;
     int display = GetVideoDisplay();
     int modeCount = SDL_GetNumDisplayModes(display);
@@ -459,7 +524,13 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     }
 
     /* Get SDL video flags to use */
-    videoFlags = SDL_OPENGL | SDL_RESIZABLE;
+    if (l_RenderMode == M64P_RENDER_OPENGL)
+        videoFlags = SDL_OPENGL;
+#ifdef VIDEXT_VULKAN
+    else
+        videoFlags = SDL_VULKAN;
+#endif
+    videoFlags |= SDL_RESIZABLE;
     if ((videoInfo = SDL_GetVideoInfo()) == NULL)
     {
         DebugMessage(M64MSG_ERROR, "SDL_GetVideoInfo query failed: %s", SDL_GetError());
@@ -532,6 +603,10 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
         StateChanged(M64CORE_VIDEO_MODE, l_Fullscreen ? M64VIDEO_FULLSCREEN : M64VIDEO_WINDOWED);
         return M64ERR_SUCCESS;
     }
+    else
+    {
+        DebugMessage(M64MSG_ERROR, "SDL_WM_ToggleFullScreen failed: %s", SDL_GetError());
+    }
 
     return M64ERR_SYSTEM_FAIL;
 }
@@ -541,6 +616,9 @@ EXPORT m64p_function CALL VidExt_GL_GetProcAddress(const char* Proc)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetProc)(Proc);
+
+    if (l_RenderMode != M64P_RENDER_OPENGL)
+        return NULL;
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return NULL;
@@ -585,6 +663,9 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLSetAttr)(Attr, Value);
+
+    if (l_RenderMode != M64P_RENDER_OPENGL)
+        return M64ERR_INVALID_STATE;
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
@@ -640,6 +721,9 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetAttr)(Attr, pValue);
 
+    if (l_RenderMode != M64P_RENDER_OPENGL)
+        return M64ERR_INVALID_STATE;
+
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -692,6 +776,9 @@ EXPORT m64p_error CALL VidExt_GL_SwapBuffers(void)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLSwapBuf)();
 
+    if (l_RenderMode != M64P_RENDER_OPENGL)
+        return M64ERR_INVALID_STATE;
+
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -705,4 +792,73 @@ EXPORT uint32_t CALL VidExt_GL_GetDefaultFramebuffer(void)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetDefaultFramebuffer)();
 
     return 0;
+}
+
+EXPORT m64p_error CALL VidExt_VK_GetSurface(void** Surface, void* Instance)
+{
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncVKGetSurface)(Surface, Instance);
+
+#ifdef VIDEXT_VULKAN
+    VkSurfaceKHR vulkanSurface = VK_NULL_HANDLE;
+
+    if (l_RenderMode != M64P_RENDER_VULKAN)
+        return M64ERR_INVALID_STATE;
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO) || !SDL_VideoWindow)
+        return M64ERR_NOT_INIT;
+
+    if (SDL_Vulkan_CreateSurface(SDL_VideoWindow, (VkInstance)Instance, &vulkanSurface) == SDL_FALSE) {
+        DebugMessage(M64MSG_ERROR, "SDL_Vulkan_CreateSurface failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    *Surface = (void*)vulkanSurface;
+    return M64ERR_SUCCESS;
+#else
+    return M64ERR_UNSUPPORTED;
+#endif
+}
+
+EXPORT m64p_error CALL VidExt_VK_GetInstanceExtensions(const char** Extensions[], uint32_t* NumExtensions)
+{
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncVKGetInstanceExtensions)(Extensions, NumExtensions);
+
+#ifdef VIDEXT_VULKAN
+    if (l_RenderMode != M64P_RENDER_VULKAN)
+        return M64ERR_INVALID_STATE;
+
+    if (!SDL_WasInit(SDL_INIT_VIDEO))
+        return M64ERR_NOT_INIT;
+
+    unsigned int extensionCount = 0;
+    if (SDL_Vulkan_GetInstanceExtensions(NULL, &extensionCount, NULL) == SDL_FALSE) {
+        DebugMessage(M64MSG_ERROR, "SDL_Vulkan_GetInstanceExtensions failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    /* ensure names have been freed before allocating it again */
+    if (l_VulkanExtensionNames != NULL) {
+        free(l_VulkanExtensionNames);
+        l_VulkanExtensionNames = NULL;
+    }
+
+    l_VulkanExtensionNames = malloc(sizeof(const char*) * extensionCount);
+    if (l_VulkanExtensionNames == NULL) {
+        DebugMessage(M64MSG_ERROR, "malloc failed");
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    if (SDL_Vulkan_GetInstanceExtensions(NULL, &extensionCount, l_VulkanExtensionNames) == SDL_FALSE) {
+        DebugMessage(M64MSG_ERROR, "SDL_Vulkan_GetInstanceExtensions failed: %s", SDL_GetError());
+        return M64ERR_SYSTEM_FAIL;
+    }
+
+    *NumExtensions = extensionCount;
+    *Extensions    = l_VulkanExtensionNames;
+    return M64ERR_SUCCESS;
+#else
+    return M64ERR_UNSUPPORTED;
+#endif
 }

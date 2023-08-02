@@ -360,6 +360,8 @@ ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
       ifeq ($(NETPLAY), 1)
         SDL_LDLIBS += -lSDL_net
       endif
+      # SDL1 doesn't support vulkan
+      VULKAN = 0
       $(warning Using SDL 1.2 libraries)
     endif
   else
@@ -431,6 +433,22 @@ ifeq ($(OSD), 1)
   endif
   CFLAGS += $(GLU_CFLAGS)
   LDLIBS += $(GLU_LDLIBS)
+endif
+
+ifneq ($(OS), OSX)
+  ifneq ($(VULKAN), 0)
+    CFLAGS += -DVIDEXT_VULKAN
+
+    ifeq ($(origin VULKAN_CFLAGS) $(origin VULKAN_LDLIBS), undefined undefined)
+      ifeq ($(shell $(PKG_CONFIG) --modversion vulkan 2>/dev/null),)
+        $(error No Vulkan development libraries found!)
+      endif
+      VULKAN_CFLAGS += $(shell $(PKG_CONFIG) --cflags vulkan)
+      VULKAN_LDLIBS +=  $(shell $(PKG_CONFIG) --libs vulkan)
+    endif
+    CFLAGS += $(VULKAN_CFLAGS)
+    LDLIBS += $(VULKAN_LDLIBS)
+  endif
 endif
 
 # set base program pointers and flags
@@ -775,6 +793,7 @@ targets:
 	@echo "    KEYBINDINGS=0  == Disables the default keybindings"
 	@echo "    ACCURATE_FPU=1 == Enables accurate FPU behavior (i.e correct cause bits)"
 	@echo "    OPENCV=1       == Enable OpenCV support"
+	@echo "    VULKAN=0       == Disable vulkan support for the default video extension implementation"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
 	@echo "    PREFIX=path    == install/uninstall prefix (default: /usr/local/)"
