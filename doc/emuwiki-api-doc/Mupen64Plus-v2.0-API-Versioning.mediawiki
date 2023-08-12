@@ -136,3 +136,5 @@ This is the most complicated interface, because it involves 3 components: the vi
 * '''FRONTEND_API_VERSION''' version 2.1.6:
 ** added "m64p_core_param" type:
 *** M64CORE_SCREENSHOT_CAPTURED
+* '''VIDEXT_API_VERSION''' version 3.3.0:
+** add the VidExt_InitWithRenderMode, VidExt_VK_GetSurface and VidExt_VK_GetInstanceExtensions functions, which allows a plugin to use Vulkan and a front-end to support Vulkan

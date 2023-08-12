@@ -23,6 +23,20 @@ All of these functions should only be called from within the video plugin; they 
 <br />
 {| border="1"
 |Prototype
+|'''<tt>m64p_error VidExt_InitWithRenderMode(m64p_render_mode RenderMode)</tt>'''
+|-
+|Input Parameters
+|'''<tt>RenderMode</tt>''' Render mode, either <tt>M64P_RENDER_OPENGL</tt> or <tt>M64P_RENDER_VULKAN</tt>, defined in [[Mupen64Plus v2.0 headers#m64p_types.h|m64p_types.h]]<br />
+|-
+|Requirements
+|This function should be called before any other Video Extension functions.
+|-
+|Usage
+|This function should be called from within the RomOpen() video plugin function call.  The default SDL implementation of this function simply calls SDL_InitSubSystem(SDL_INIT_VIDEO).  It does not open a rendering window or switch video modes.
+|}
+<br />
+{| border="1"
+|Prototype
 |'''<tt>m64p_error VidExt_Quit(void)</tt>'''
 |-
 |Input Parameters
@@ -240,5 +254,37 @@ In the Core Video Extension function ResizeWindow, the SDL function SetVideoMode
 |-
 |Usage
 |On some platforms (for instance, iOS) the default framebuffer object depends on the surface being rendered to, and might be different from 0. This function should be called to retrieve the name of the default FBO. Calling this function may have performance implications and it should not be called every time the default FBO is bound.
+|}
+<br />
+
+== Vulkan Functions ==
+{| border="1"
+|Prototype
+|'''<tt>m64p_error VidExt_VK_GetSurface(void** Surface, void* Instance)</tt>'''
+|-
+|Input Parameters
+|'''<tt>Surface</tt>''' Pointer to a VkSurfaceKHR which will be returned when function succeeds<br />
+'''<tt>Instance</tt>''' VkInstance which can be used as the front-end's Vulkan instance
+|-
+|Requirements
+|The video extension must be initialized before calling this function.
+|-
+|Usage
+|This function is used to retrieve the Vulkan surface
+|}
+<br />
+{| border="1"
+|Prototype
+|'''<tt>m64p_error VidExt_VK_GetInstanceExtensions(const char** Extensions[], uint32_t* NumExtensions)</tt>'''
+|-
+|Input Parameters
+|'''<tt>Extensions</tt>''' Pointer to an array of strings<br />
+'''<tt>NumExtensions</tt>''' Pointer to an integer which contains the size of the number of objects stored for output.
+|-
+|Requirements
+|The video extension must be initialized before calling this function.
+|-
+|Usage
+|This function is used to retrieve the supported Vulkan extensions.
 |}
 <br />
