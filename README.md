@@ -1,8 +1,8 @@
 # Mupen64Plus-Core README
 
-[![TravisCI Build Status](https://travis-ci.org/mupen64plus/mupen64plus-core.svg?branch=master)](https://travis-ci.org/mupen64plus/mupen64plus-core) 
+[![GitHub Actions Build Status](https://github.com/mupen64plus/mupen64plus-core/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/mupen64plus/mupen64plus-core/actions)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/4381/badge.svg)](https://scan.coverity.com/projects/mupen64plus-core)
-[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/a1ua5t87n2w8a7fc?svg=true)](https://ci.appveyor.com/project/Narann/mupen64plus-core)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/a1ua5t87n2w8a7fc?svg=true)](https://ci.appveyor.com/project/Narann/mupen64plus-core)
 
 More documentation can be found on the [Mupen64Plus website](https://mupen64plus.org/docs/)
 and you can find a more complete README file on the [wiki](https://mupen64plus.org/wiki/index.php/README).
@@ -76,8 +76,12 @@ Type `make` by itself to view all available build options:
      WARNFLAGS=flag == compiler warning levels (default: -Wall)
      PIC=(1|0)      == Force enable/disable of position independent code
      OSD=(1|0)      == Enable/disable build of OpenGL On-screen display
+     NETPLAY=1      == Enable netplay functionality, requires SDL2_net
      NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec
+     KEYBINDINGS=0  == Disables the default keybindings
+     ACCURATE_FPU=1 == Enables accurate FPU behavior (i.e correct cause bits)
      OPENCV=1       == Enable OpenCV support
+     VULKAN=0       == Disable vulkan support for the default video extension implementation
      POSTFIX=name   == String added to the name of the the build (default: '')
    Install Options:
      PREFIX=path    == install/uninstall prefix (default: /usr/local/)
