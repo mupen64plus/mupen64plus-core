@@ -67,9 +67,9 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
 
             memcpy(&is_viewer->output_buffer[is_viewer->buffer_pos], &is_viewer->data[0x20], word);
             is_viewer->buffer_pos += word;
-            
+
             /* process new lines in buffer to prevent empty debug messages without losing data */
-            char* newline = strchr(is_viewer->output_buffer, '\n');
+            char* newline = memchr(is_viewer->output_buffer, '\n', is_viewer->buffer_pos);
             while (newline)
             {
                 size_t index = (newline - is_viewer->output_buffer) + 1;
@@ -77,7 +77,7 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
                 DebugMessage(M64MSG_INFO, "IS64: %s", is_viewer->output_buffer);
                 memcpy(&is_viewer->output_buffer, &is_viewer->output_buffer[index], IS_BUFFER_SIZE - index);
                 is_viewer->buffer_pos -= index;
-                newline = strchr(is_viewer->output_buffer, '\n');
+                newline = memchr(is_viewer->output_buffer, '\n', is_viewer->buffer_pos);
             }
         }
     }
