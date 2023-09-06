@@ -31,7 +31,6 @@
 
 #include <SDL_net.h>
 #if !defined(WIN32)
-#include <sys/socket.h>
 #include <netinet/ip.h>
 #endif
 
@@ -72,7 +71,7 @@ struct __UDPSocket {
     int channel;
 };
 
-#define EF 46
+#define CS4 32
 
 m64p_error netplay_start(const char* host, int port)
 {
@@ -90,7 +89,7 @@ m64p_error netplay_start(const char* host, int port)
     }
 
 #if !defined(WIN32)
-    const char tos_local = EF << 2;
+    const char tos_local = CS4 << 2;
     struct __UDPSocket* socket = (struct __UDPSocket*) l_udpSocket;
     setsockopt(socket->channel, IPPROTO_IP, IP_TOS, &tos_local, sizeof(tos_local));
 #endif
