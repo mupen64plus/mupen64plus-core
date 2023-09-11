@@ -48,6 +48,7 @@
 #include "main/netplay.h"
 #include "plugin/plugin.h"
 #include "vidext.h"
+#include "debugger/gdbstub/gdbstub.h"
 
 /* some local state variables */
 static int l_CoreInit = 0;
@@ -107,6 +108,10 @@ EXPORT m64p_error CALL CoreStartup(int APIVersion, const char *ConfigPath, const
     romdatabase_open();
 
     workqueue_init();
+
+#if defined(DBG)
+    gdbstub_init();
+#endif
 
     l_CoreInit = 1;
     return M64ERR_SUCCESS;

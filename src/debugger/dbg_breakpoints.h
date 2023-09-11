@@ -26,6 +26,11 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 struct memory;
 
 extern int g_NumBreakpoints;
@@ -42,6 +47,10 @@ int check_breakpoints_on_mem_access(uint32_t pc, uint32_t address, uint32_t size
 int lookup_breakpoint(uint32_t address, uint32_t size, uint32_t flags);
 int log_breakpoint(uint32_t PC, uint32_t Flag, uint32_t Access);
 void replace_breakpoint_num(struct memory* mem, int, m64p_breakpoint*);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* __BREAKPOINTS_H__ */
 

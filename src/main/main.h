@@ -30,6 +30,11 @@
 #include "device/device.h"
 #include "osal/preproc.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #if defined(__GNUC__)
 #define ATTR_FMT(fmtpos, attrpos) __attribute__ ((format (printf, fmtpos, attrpos)))
 #else
@@ -102,6 +107,10 @@ int        main_volume_get_muted(void);
 m64p_error main_reset(int do_hard_reset);
 
 m64p_error open_pif(const unsigned char* pifimage, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MAIN_H__ */
 

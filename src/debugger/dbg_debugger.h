@@ -25,6 +25,11 @@
 
 #include "api/m64p_types.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern int g_DebuggerActive;  /* True if the debugger is running */
 
 extern m64p_dbg_runstate g_dbg_runstate;
@@ -38,6 +43,10 @@ void init_debugger(void);
 void update_debugger(uint32_t pc);
 void destroy_debugger(void);
 void debugger_step(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DBG_DEBUGGER_H__ */
 

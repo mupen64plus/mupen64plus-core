@@ -19,6 +19,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef M64P_DEVICE_R4300_R4300_CORE_H
 #define M64P_DEVICE_R4300_R4300_CORE_H
 
@@ -233,6 +238,7 @@ unsigned int get_r4300_emumode(struct r4300_core* r4300);
  * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
  * Useful for getting fast access to a zone with executable code. */
 uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address);
+uint32_t *fast_mem_access_no_tlb_refill_exception(struct r4300_core* r4300, uint32_t address);
 
 int r4300_read_aligned_word(struct r4300_core* r4300, uint32_t address, uint32_t* value);
 int r4300_read_aligned_dword(struct r4300_core* r4300, uint32_t address, uint64_t* value);
@@ -253,4 +259,8 @@ void generic_jump_to(struct r4300_core* r4300, unsigned int address);
 
 void savestates_load_set_pc(struct r4300_core* r4300, uint32_t pc);
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

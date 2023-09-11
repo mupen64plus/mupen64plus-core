@@ -100,7 +100,7 @@ void tlb_map(struct tlb* tlb, size_t entry)
     }
 }
 
-uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
+uint32_t virtual_to_physical_address_no_tlb_refill_exception(struct r4300_core* r4300, uint32_t address, int w)
 {
     const struct tlb* tlb = &r4300->cp0.tlb;
     unsigned int addr = address >> 12;
@@ -140,8 +140,16 @@ uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address,
     //printf("tlb exception !!! @ %x, %x, add:%x\n", address, w, r4300->pc->addr);
     //getchar();
 
-    TLB_refill_exception(r4300, address, w);
-
     //return 0x80000000;
     return 0x00000000;
+}
+
+
+uint32_t virtual_to_physical_address(struct r4300_core* r4300, uint32_t address, int w)
+{
+    uint32_t physicalAddress = virtual_to_physical_address_no_tlb_refill_exception(r4300, address, w);
+
+    TLB_refill_exception(r4300, address, w);
+
+    return physicalAddress;
 }

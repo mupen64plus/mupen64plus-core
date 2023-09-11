@@ -297,6 +297,20 @@ uint32_t *fast_mem_access(struct r4300_core* r4300, uint32_t address)
     return mem_base_u32(r4300->mem->base, address);
 }
 
+uint32_t *fast_mem_access_no_tlb_refill_exception(struct r4300_core* r4300, uint32_t address)
+{
+    if ((address & UINT32_C(0xc0000000)) != UINT32_C(0x80000000)) {
+        address = virtual_to_physical_address_no_tlb_refill_exception(r4300, address, 2);
+        if (address == 0) // TLB exception
+            return NULL;
+    }
+
+    address &= UINT32_C(0x1ffffffc);
+
+    return mem_base_u32(r4300->mem->base, address);
+}
+
+
 /* Read aligned word from memory.
  * address may not be word-aligned for byte or hword accesses.
  * Alignment is taken care of when calling mem handler.

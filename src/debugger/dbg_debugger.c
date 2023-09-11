@@ -27,6 +27,7 @@
 #include "dbg_breakpoints.h"
 #include "dbg_debugger.h"
 #include "dbg_memory.h"
+#include "gdbstub/gdbstub.h"
 
 #ifdef DBG
 
@@ -94,6 +95,7 @@ void update_debugger(uint32_t pc)
         DebuggerCallback(DEBUG_UI_UPDATE, pc);  /* call front-end to notify user interface to update */
     }
     if (g_dbg_runstate == M64P_DBG_RUNSTATE_PAUSED) {
+        gdb_try_send_signal_stop();
         // The emulation thread is blocked until a step call via the API.
         SDL_SemWait(sem_pending_steps);
     }
