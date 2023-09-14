@@ -736,9 +736,9 @@ ifeq ($(DEBUGGER), 1)
   LIBOPCODES_VERSION := $(shell $(STRINGS) --version | head -n1 | rev | cut -d ' ' -f1 | rev)
   LIBOPCODES_MAJOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f1 -d.)
   LIBOPCODES_MINOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f2 -d.)
-  LIBOPCODES_POINT := $(shell echo $(LIBOPCODES_VERSION) | cut -f3 -d.)
-  LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 29 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 28 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
-  LIBBFD_GE_2_39 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 29 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 39 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
+  LIBOPCODES_POINT := $(shell echo $(LIBOPCODES_VERSION) | cut -f3 -d. | sed 's/^$$/0/')
+  LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 28 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 28 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
+  LIBBFD_GE_2_39 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 39 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 39 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
   ifeq ($(LIBOPCODES_GE_2_29),true)
     CFLAGS += -DUSE_LIBOPCODES_GE_2_29
   endif

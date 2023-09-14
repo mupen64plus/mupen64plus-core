@@ -1,2 +1,5 @@
 /projects/unix/_obj*/
 /projects/unix/libmupen64plus*.so*
+/.vscode
+/projects/unix/*.dll
+/src/asm_defines/*.h
