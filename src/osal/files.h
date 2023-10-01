@@ -29,14 +29,17 @@
 #include <zlib.h>
 
 /* some file-related preprocessor definitions */
-#if defined(WIN32) && !defined(__MINGW32__)
+#if defined(WIN32)
   #include <io.h> // For _unlink()
 
   #define unlink _unlink
 
   #define OSAL_DIR_SEPARATORS           "\\/"
   #define WIDE_OSAL_DIR_SEPARATORS     L"\\/"
-  #define PATH_MAX _MAX_PATH
+
+  #ifndef PATH_MAX
+    #define PATH_MAX _MAX_PATH
+  #endif
 #else  /* Not WIN32 */
   #include <limits.h>  // for PATH_MAX
   #include <unistd.h>  // for unlink()
