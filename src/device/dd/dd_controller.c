@@ -21,6 +21,7 @@
 
 #include "dd_controller.h"
 
+#include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 #include <time.h>
