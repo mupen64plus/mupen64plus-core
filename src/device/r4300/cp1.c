@@ -118,7 +118,7 @@ void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
     {
         for (i = 0; i < 32; i++)
         {
-            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i].float32[0];
+            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i].float32[DOUBLE_HALF_XOR];
             (r4300_cp1_regs_double(cp1))[i] = &cp1->regs[i].float64;
         }
     }
