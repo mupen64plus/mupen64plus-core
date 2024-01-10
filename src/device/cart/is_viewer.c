@@ -43,7 +43,7 @@ void read_is_viewer(void* opaque, uint32_t address, uint32_t* value)
     struct is_viewer* is_viewer = (struct is_viewer*)opaque;
     address &= IS_ADDR_MASK;
     memcpy(value, &is_viewer->data[address], 4);
-    *value = m64p_swap32(*value);
+    *value = big32(*value);
 }
 
 void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -83,7 +83,7 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
     }
     else
     {
-        word = m64p_swap32(word);
+        word = big32(word);
         memcpy(&is_viewer->data[address], &word, sizeof(word));
     }
 }
