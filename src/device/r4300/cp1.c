@@ -29,6 +29,12 @@
 
 #define FCR31_FS_BIT UINT32_C(0x1000000)
 
+#ifdef M64P_BIG_ENDIAN
+#define DOUBLE_HALF_XOR 1
+#else
+#define DOUBLE_HALF_XOR 0
+#endif
+
 void init_cp1(struct cp1* cp1, struct new_dynarec_hot_state* new_dynarec_hot_state)
 {
 #ifdef NEW_DYNAREC
@@ -104,7 +110,7 @@ void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
     {
         for (i = 0; i < 32; i++)
         {
-            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i & ~1].float32[i & 1];
+            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i & ~1].float32[i & 1 ^ DOUBLE_HALF_XOR];
             (r4300_cp1_regs_double(cp1))[i] = &cp1->regs[i & ~1].float64;
         }
     }
@@ -112,7 +118,7 @@ void set_fpr_pointers(struct cp1* cp1, uint32_t newStatus)
     {
         for (i = 0; i < 32; i++)
         {
-            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i].float32[0];
+            (r4300_cp1_regs_simple(cp1))[i] = &cp1->regs[i].float32[DOUBLE_HALF_XOR];
             (r4300_cp1_regs_double(cp1))[i] = &cp1->regs[i].float64;
         }
     }
