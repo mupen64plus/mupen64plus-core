@@ -198,7 +198,7 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
     if (!(w & 0x1) && !(w & 0x4) && !sp->rsp_task_locked)
         return;
 
-    if (!(sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)))
+    if (!(sp->regs[SP_STATUS_REG] & SP_STATUS_HALT))
         do_SP_Task(sp);
 }
 
@@ -266,6 +266,7 @@ void write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     {
     case SP_STATUS_REG:
         update_sp_status(sp, value & mask);
+        return;
     case SP_DMA_FULL_REG:
     case SP_DMA_BUSY_REG:
         return;
