@@ -65,9 +65,9 @@ static void do_sp_dma(struct rsp_core* sp, const struct sp_dma* dma)
             dramaddr+=skip;
         }
 
-    sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
-    sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
-    sp->regs[SP_RD_LEN_REG] = 0xff8;
+        sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
+        sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
+        sp->regs[SP_RD_LEN_REG] = 0xff8;
     }
     else
     {
@@ -82,9 +82,9 @@ static void do_sp_dma(struct rsp_core* sp, const struct sp_dma* dma)
             dramaddr+=skip;
         }
 
-    sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
-    sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
-    sp->regs[SP_RD_LEN_REG] = 0xff8;
+        sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
+        sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
+        sp->regs[SP_RD_LEN_REG] = 0xff8;
     }
 
     /* schedule end of dma event */
@@ -172,7 +172,7 @@ static void update_sp_status(struct rsp_core* sp, uint32_t w)
 
     /* clear / set signal 0 */
     if ((w & 0x600) == 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
-    if ((w & 0x600) == 0x400)
+    if ((w & 0x600) == 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
 
     /* clear / set signal 1 */
     if ((w & 0x1800) == 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
@@ -276,7 +276,6 @@ void write_rsp_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mas
     {
     case SP_STATUS_REG:
         update_sp_status(sp, value & mask);
-        return;
     case SP_DMA_FULL_REG:
     case SP_DMA_BUSY_REG:
         return;
@@ -318,7 +317,6 @@ void write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t ma
 
     if (reg == SP_PC_REG)
         mask &= 0xffc;
-
 
     masked_write(&sp->regs2[reg], value, mask);
 }
