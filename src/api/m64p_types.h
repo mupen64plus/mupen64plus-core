@@ -1,6 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-core - m64p_types.h                                       *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
+ *   Copyright (C) 2024 Jacky Guo                                          *
  *   Copyright (C) 2012 CasualJames                                        *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *                                                                         *
@@ -61,6 +62,32 @@ typedef void (*m64p_frame_callback)(unsigned int FrameIndex);
 typedef void (*m64p_input_callback)(void);
 typedef void (*m64p_audio_callback)(void);
 typedef void (*m64p_vi_callback)(void);
+
+typedef union {
+    unsigned int Value;
+    struct {
+        unsigned R_DPAD       : 1;
+        unsigned L_DPAD       : 1;
+        unsigned D_DPAD       : 1;
+        unsigned U_DPAD       : 1;
+        unsigned START_BUTTON : 1;
+        unsigned Z_TRIG       : 1;
+        unsigned B_BUTTON     : 1;
+        unsigned A_BUTTON     : 1;
+
+        unsigned R_CBUTTON    : 1;
+        unsigned L_CBUTTON    : 1;
+        unsigned D_CBUTTON    : 1;
+        unsigned U_CBUTTON    : 1;
+        unsigned R_TRIG       : 1;
+        unsigned L_TRIG       : 1;
+        unsigned Reserved1    : 1;
+        unsigned Reserved2    : 1;
+
+        signed   X_AXIS       : 8;
+        signed   Y_AXIS       : 8;
+    };
+} BUTTONS;
 
 typedef enum {
   M64TYPE_INT = 1,
@@ -171,7 +198,8 @@ typedef enum {
   M64CMD_PIF_OPEN,
   M64CMD_ROM_SET_SETTINGS,
   M64CMD_DISK_OPEN,
-  M64CMD_DISK_CLOSE
+  M64CMD_DISK_CLOSE,
+  M64CMD_SET_INPUT_FILTER,
 } m64p_command;
 
 typedef struct {
@@ -219,6 +247,9 @@ typedef struct {
    */
   char* (*get_dd_disk)(void* cb_data);
 } m64p_media_loader;
+
+
+typedef void (*m64p_input_filter_callback)(int control, BUTTONS* keys);
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */
