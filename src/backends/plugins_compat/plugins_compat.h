@@ -22,6 +22,7 @@
 #ifndef M64P_BACKENDS_PLUGINS_COMPAT_PLUGINS_COMPAT_H
 #define M64P_BACKENDS_PLUGINS_COMPAT_PLUGINS_COMPAT_H
 
+#include "api/m64p_types.h"
 #include "backends/api/audio_out_backend.h"
 #include "backends/api/controller_input_backend.h"
 #include "backends/api/rumble_backend.h"
@@ -54,6 +55,8 @@ struct controller_input_compat
     uint32_t netplay_count;
     struct netplay_event* event_first;
 };
+
+extern m64p_input_filter_callback g_input_filter_callback;
 
 extern const struct controller_input_backend_interface
     g_icontroller_input_backend_plugin_compat;

@@ -30,6 +30,7 @@
 
 /* necessary headers */
 #include <stdint.h>
+#include <stdbool.h>
 #if defined(WIN32)
   #include <windows.h>
 #endif
@@ -249,7 +250,7 @@ typedef struct {
 } m64p_media_loader;
 
 
-typedef void (*m64p_input_filter_callback)(int control, BUTTONS* keys);
+typedef bool (*m64p_input_filter_callback)(int control, BUTTONS* keys);
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */

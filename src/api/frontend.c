@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <md5.h>
+#include "backends/plugins_compat/plugins_compat.h"
 
 #define M64P_CORE_PROTOTYPES 1
 #include "callbacks.h"
@@ -317,6 +318,9 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             return M64ERR_SUCCESS;
         case M64CMD_SET_FRAME_CALLBACK:
             *(void**)&g_FrameCallback = ParamPtr;
+            return M64ERR_SUCCESS;
+        case M64CMD_SET_INPUT_FILTER:
+            *(void**)&g_input_filter_callback = ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
             if (!g_EmulatorRunning)
