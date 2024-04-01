@@ -249,8 +249,11 @@ typedef struct {
   char* (*get_dd_disk)(void* cb_data);
 } m64p_media_loader;
 
+typedef struct {
+  void* cb_data;
 
-typedef bool (*m64p_input_filter_callback)(int control, BUTTONS* keys);
+  bool (*filter_input)(void* cb_data, int controller_num, BUTTONS* keys);
+} m64p_input_filter;
 
 /* ----------------------------------------- */
 /* Structures to hold ROM image information  */

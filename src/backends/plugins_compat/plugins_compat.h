@@ -56,7 +56,7 @@ struct controller_input_compat
     struct netplay_event* event_first;
 };
 
-extern m64p_input_filter_callback g_input_filter_callback;
+extern m64p_input_filter g_input_filter;
 
 extern const struct controller_input_backend_interface
     g_icontroller_input_backend_plugin_compat;

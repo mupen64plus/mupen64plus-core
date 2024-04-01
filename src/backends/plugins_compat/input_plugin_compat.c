@@ -86,7 +86,7 @@ static m64p_error input_plugin_get_input(void* opaque, uint32_t* input_)
         cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin; //disable pak switching for netplay
     }
 
-    bool is_override = g_input_filter_callback(cin_compat->control_id, &keys);
+    bool is_override = g_input_filter.filter_input(g_input_filter.cb_data, cin_compat->control_id, &keys);
 
     /* return an error if controller is not plugged OR input was not provided by the filter callback */
     if (!Controls[cin_compat->control_id].Present || is_override) {
@@ -232,4 +232,4 @@ const struct joybus_device_interface
     input_plugin_controller_command,
 };
 
-m64p_input_filter_callback g_input_filter_callback = NULL;
+m64p_input_filter g_input_filter;

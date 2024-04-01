@@ -319,8 +319,6 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_SET_FRAME_CALLBACK:
             *(void**)&g_FrameCallback = ParamPtr;
             return M64ERR_SUCCESS;
-        case M64CMD_SET_INPUT_FILTER:
-            *(void**)&g_input_filter_callback = ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_TAKE_NEXT_SCREENSHOT:
             if (!g_EmulatorRunning)
@@ -350,6 +348,11 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (ParamInt != sizeof(m64p_media_loader) || ParamPtr == NULL)
                 return M64ERR_INPUT_INVALID;
             g_media_loader = *(m64p_media_loader*)ParamPtr;
+            return M64ERR_SUCCESS;
+        case M64CMD_SET_INPUT_FILTER:
+            if (ParamInt != sizeof(m64p_input_filter) || ParamPtr == NULL)
+                return M64ERR_INPUT_INVALID;
+            g_input_filter = *(m64p_input_filter*)ParamPtr;
             return M64ERR_SUCCESS;
         case M64CMD_NETPLAY_INIT:
             if (ParamInt < 1 || ParamPtr == NULL)
