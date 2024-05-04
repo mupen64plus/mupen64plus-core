@@ -76,12 +76,12 @@ static const uint8_t Z64_SIGNATURE[4] = { 0x80, 0x37, 0x12, 0x40 };
 static const uint8_t V64_SIGNATURE[4] = { 0x37, 0x80, 0x40, 0x12 };
 static const uint8_t N64_SIGNATURE[4] = { 0x40, 0x12, 0x37, 0x80 };
 
-/* Tests if a file is a valid N64 rom by checking the first 4 bytes. */
-static int is_valid_rom(const unsigned char *buffer)
+/* Tests if a file is a valid N64 rom by checking the first 4 bytes and size */
+static int is_valid_rom(const unsigned char *buffer, unsigned int size)
 {
-    if (memcmp(buffer, Z64_SIGNATURE, sizeof(Z64_SIGNATURE)) == 0
-     || memcmp(buffer, V64_SIGNATURE, sizeof(V64_SIGNATURE)) == 0
-     || memcmp(buffer, N64_SIGNATURE, sizeof(N64_SIGNATURE)) == 0)
+    if ((memcmp(buffer, Z64_SIGNATURE, sizeof(Z64_SIGNATURE)) == 0)
+     || (memcmp(buffer, V64_SIGNATURE, sizeof(V64_SIGNATURE)) == 0 && size % 2 == 0)
+     || (memcmp(buffer, N64_SIGNATURE, sizeof(N64_SIGNATURE)) == 0 && size % 4 == 0))
         return 1;
     else
         return 0;
@@ -146,7 +146,7 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
     int i;
 
     /* check input requirements */
-    if (romimage == NULL || !is_valid_rom(romimage))
+    if (romimage == NULL || !is_valid_rom(romimage, size))
     {
         DebugMessage(M64MSG_ERROR, "open_rom(): not a valid ROM image");
         return M64ERR_INPUT_INVALID;
