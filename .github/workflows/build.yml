@@ -126,6 +126,7 @@ jobs:
             mingw-w64-${{ matrix.cross }}-nasm
             mingw-w64-${{ matrix.cross }}-SDL2
             mingw-w64-${{ matrix.cross }}-zlib
+            mingw-w64-${{ matrix.cross }}-vulkan-headers
       - name: Build and related stuff, backup binaries
         run: |
           echo "G_REV=$(git rev-parse --short HEAD)" >> "${GITHUB_ENV}"
