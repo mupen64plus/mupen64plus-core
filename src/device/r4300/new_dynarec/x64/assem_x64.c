@@ -2309,6 +2309,7 @@ static void emit_xchg64(int rs, int rt)
 }
 static void emit_writeword(int rt, intptr_t addr)
 {
+  if(rt<0) return;
   assert((intptr_t)addr-(intptr_t)out>=-2147483648LL&&(intptr_t)addr-(intptr_t)out<2147483647LL);
   assem_debug("movl %%%s,%llx",regname[rt],addr);
   output_byte(0x89);

@@ -2040,6 +2040,7 @@ static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 }
 static void emit_writeword(int rt, int addr)
 {
+  if(rt<0) return;
   u_int offset = addr-(u_int)&g_dev.r4300.new_dynarec_hot_state;
   assert(offset<4096);
   assem_debug("str %s,fp+%d",regname[rt],offset);
