@@ -2813,7 +2813,7 @@ void invalidate_block(u_int block)
 {
   u_int page;
   page=block^0x80000;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[block]) page=(g_dev.r4300.cp0.tlb.LUT_r[block]^0x80000000)>>12;
+  if(block<0x100000&&page>262143&&g_dev.r4300.cp0.tlb.LUT_r[block]) page=(g_dev.r4300.cp0.tlb.LUT_r[block]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
   inv_debug("INVALIDATE: %x (%d)\n",block<<12,page);
   u_int first,last;
@@ -2869,9 +2869,11 @@ void invalidate_block(u_int block)
   #endif
 
   // Don't trap writes
-  g_dev.r4300.cached_interp.invalid_code[block]=1;
+  if(block<0x100000) {
+    g_dev.r4300.cached_interp.invalid_code[block]=1;
+  }
   // If there is a valid TLB entry for this page, remove write protect
-  if(g_dev.r4300.cp0.tlb.LUT_w[block]) {
+  if(block<0x100000&&g_dev.r4300.cp0.tlb.LUT_w[block]) {
     assert(g_dev.r4300.cp0.tlb.LUT_r[block]==g_dev.r4300.cp0.tlb.LUT_w[block]);
     g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((g_dev.r4300.cp0.tlb.LUT_w[block]&0xFFFFF000)-0x80000000)-(block<<12))>>2;
     u_int real_block=g_dev.r4300.cp0.tlb.LUT_w[block]>>12;
