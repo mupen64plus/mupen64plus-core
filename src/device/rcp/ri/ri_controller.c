@@ -41,7 +41,9 @@ void read_ri_regs(void* opaque, uint32_t address, uint32_t* value)
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = ri_reg(address);
 
-    *value = ri->regs[reg];
+    if (reg < RI_REGS_COUNT) {
+        *value = ri->regs[reg];
+    }
 }
 
 void write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
@@ -49,6 +51,8 @@ void write_ri_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
     struct ri_controller* ri = (struct ri_controller*)opaque;
     uint32_t reg = ri_reg(address);
 
-    masked_write(&ri->regs[reg], value, mask);
+    if (reg < RI_REGS_COUNT) {
+        masked_write(&ri->regs[reg], value, mask);
+    }
 }
 

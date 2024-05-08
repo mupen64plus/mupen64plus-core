@@ -83,7 +83,9 @@ void read_mi_regs(void* opaque, uint32_t address, uint32_t* value)
     struct mi_controller* mi = (struct mi_controller*)opaque;
     uint32_t reg = mi_reg(address);
 
-    *value = mi->regs[reg];
+    if (reg < MI_REGS_COUNT) {
+        *value = mi->regs[reg];
+    }
 }
 
 void write_mi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
