@@ -91,7 +91,6 @@ jobs:
             mingw-w64-${{ matrix.cross }}-SDL2
             mingw-w64-${{ matrix.cross }}-vulkan-headers
             mingw-w64-${{ matrix.cross }}-zlib
-            mingw-w64-${{ matrix.cross }}-vulkan-headers
       - name: Build and related stuff, backup binaries
         run: |
           export PATH="$(pwd)/.github/workflows/scripts:${PATH}"
