@@ -70,6 +70,7 @@ static const uintptr_t invalidate_block_reg[8] = {
 static void set_jump_target(uintptr_t addr,uintptr_t target)
 {
   u_char *ptr=(u_char *)addr;
+  if(ptr==NULL) return;
   if(*ptr==0x0f)
   {
     assert(ptr[1]>=0x80&&ptr[1]<=0x8f); // conditional jmp
