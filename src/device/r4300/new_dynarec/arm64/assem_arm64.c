@@ -2393,6 +2393,7 @@ static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 
 static void emit_writeword(int rt, intptr_t addr)
 {
+  if(rt<0) return;
   intptr_t offset = addr-(intptr_t)&g_dev.r4300.new_dynarec_hot_state;
   assert(offset<16380LL);
   assert(offset%4 == 0); /* 4 bytes aligned */
