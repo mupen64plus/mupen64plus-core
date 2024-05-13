@@ -833,7 +833,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r *mupen64plus*.* $(TARGET) $(SONAME) _obj $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_*.h
+	$(RM) -r _obj $(OBJDIR) $(TARGET) $(SONAME) $(SRCDIR)/asm_defines/asm_defines_*.h
 
 # build dependency files
 CFLAGS += -MD -MP

@@ -23,6 +23,7 @@ for BIN in *; do
 done
 cd ../pkg
 echo ""
+
 for ZIP in *; do
 	ls -gG ${ZIP}
 	tigerdeep -lz ${ZIP} >> ../${REPO}.tiger.txt
@@ -31,20 +32,13 @@ for ZIP in *; do
 	b2sum ${ZIP} >> ../${REPO}.blake2.txt
 done
 mv ../${REPO}.*.txt .
+echo ""
 
-echo ""
-echo "TIGER:"
-cat *.tiger.txt
-echo ""
-echo "SHA256:"
-cat *.sha256.txt
-echo ""
-echo "SHA512:"
-cat *.sha512.txt
-echo ""
-echo "BLAKE2:"
-cat *.blake2.txt
-echo ""
+for HASH in tiger sha256 sha512 blake2; do
+	echo "${HASH}:" | tr [a-z] [A-Z]
+	cat *.${HASH}.txt
+	echo ""
+done
 
 if [[ -f "${GITHUB_ENV}" ]]; then
 	git tag -f nightly-build
