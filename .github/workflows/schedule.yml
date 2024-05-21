@@ -1,4 +1,4 @@
-name: Core
+name: Core - Scheduled
 
 on:
   schedule:
@@ -26,26 +26,26 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get build dependencies and arrange the environment
         run: |
+          export C_CLANG_SUFFIX="-15" C_GCC_SUFFIX="-12"
           export BUILD_DEPS="libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev libvulkan-dev zlib1g-dev"
           ./.github/workflows/scripts/ci_install_ubuntu_deps.sh ${{ matrix.arch }} ${{ matrix.cc }}
       - name: Build and related stuff, backup binaries
         run: |
+          export C_CLANG_SUFFIX="-15" C_GCC_SUFFIX="-12"
           export PATH="$(pwd)/.github/workflows/scripts:${PATH}"
-          export BUILD_CONFIG="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG=\"sdl-config\"" POSTFIX="-old"
+          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG="sdl-config""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export BUILD_CONFIG="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG=\"sdl-config\""
-          unset POSTFIX
+          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG="sdl2-config""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export BUILD_CONFIG="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG=\"sdl2-config\"" POSTFIX="-old"
+          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG="sdl-config" POSTFIX="-old""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export BUILD_CONFIG="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG=\"sdl2-config\"" MAKE_PKG=1
-          unset POSTFIX
-          ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
+          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG="sdl2-config" POSTFIX="-old""
+          ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }} makepkg
       - name: Upload artifact
         if: matrix.cc == 'GCC'
         uses: actions/upload-artifact@v4
         with:
-          name: mupen64plus-core-linux-${{ matrix.arch }}-g${{ env.G_REV }}
+          name: ${{ env.PKG_NAME }}
           path: pkg/*.tar.gz
 
   MSYS2:
@@ -89,10 +89,9 @@ jobs:
       - name: Build and related stuff, backup binaries
         run: |
           export PATH="$(pwd)/.github/workflows/scripts:${PATH}"
-          export BUILD_CONFIG="ACCURATE_FPU=0 NEW_DYNAREC=0" POSTFIX="-old"
+          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1"
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export BUILD_CONFIG="ACCURATE_FPU=1 NEW_DYNAREC=1"
-          unset POSTFIX
+          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 POSTFIX="-old""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
       - name: Backup dependencies, etc...
         run: |
@@ -100,7 +99,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mupen64plus-core-msys2-${{ matrix.arch }}-g${{ env.G_REV }}
+          name: ${{ env.PKG_NAME }}
           path: pkg/*
 
   MSVC:
@@ -135,7 +134,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mupen64plus-core-msvc-${{ matrix.arch }}-g${{ env.G_REV }}
+          name: ${{ env.PKG_NAME }}
           path: pkg/*
 
   Nightly-build:
