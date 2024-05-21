@@ -209,7 +209,9 @@ void write_pi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         return;
     }
 
-    masked_write(&pi->regs[reg], value, mask);
+    if (reg < PI_REGS_COUNT) {
+        masked_write(&pi->regs[reg], value, mask);
+    }
 }
 
 void pi_end_of_dma_event(void* opaque)
