@@ -2338,7 +2338,9 @@ static void tlb_speed_hacks()
 u_int verify_dirty(struct ll_entry * head)
 {
   void *source;
-  if((int)head->start>=0xa4000000&&(int)head->start<0xa4001000) {
+  if((int)head->start>=0xa0000000&&(int)head->start<0xa07fffff) {
+    source=(void *)((uintptr_t)g_dev.rdram.dram+head->start-0xa0000000);
+  }else if((int)head->start>=0xa4000000&&(int)head->start<0xa4001000) {
     source=(void *)((uintptr_t)g_dev.sp.mem+head->start-0xa4000000);
   }else if((int)head->start>=0x80000000&&(int)head->start<0x80800000) {
     source=(void *)((uintptr_t)g_dev.rdram.dram+head->start-(uintptr_t)0x80000000);
@@ -8769,7 +8771,11 @@ int new_recompile_block(int addr)
 #endif
   start = (u_int)addr&~3;
   //assert(((u_int)addr&1)==0);
-  if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
+  if ((int)addr >= 0xa0000000 && (int)addr < 0xa07fffff) {
+    source = (u_int *)((uintptr_t)g_dev.rdram.dram+start-0xa0000000);
+    pagelimit = 0xa07fffff;
+  }
+  else if ((int)addr >= 0xa4000000 && (int)addr < 0xa4001000) {
     source = (u_int *)((uintptr_t)g_dev.sp.mem+start-0xa4000000);
     pagelimit = 0xa4001000;
   }
