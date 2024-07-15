@@ -249,6 +249,7 @@ static void set_jump_target(int addr,u_int target)
 {
   u_char *ptr=(u_char *)addr;
   u_int *ptr2=(u_int *)ptr;
+  if(ptr==NULL) return;
   if(ptr[3]==0xe2) {
     assert((target-(u_int)ptr2-8)<1024);
     assert((addr&3)==0);
@@ -2039,6 +2040,7 @@ static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 }
 static void emit_writeword(int rt, int addr)
 {
+  if(rt<0) return;
   u_int offset = addr-(u_int)&g_dev.r4300.new_dynarec_hot_state;
   assert(offset<4096);
   assem_debug("str %s,fp+%d",regname[rt],offset);
@@ -2622,6 +2624,7 @@ static void emit_extjump2(int addr, int target, int linker)
 
 static void do_invstub(int n)
 {
+  if(stubs[n][4]==-1) return;
   literal_pool(20);
   u_int reglist=stubs[n][3];
   set_jump_target(stubs[n][1],(int)out);
