@@ -1,9 +1,831 @@
 Mupen64Plus-Core Emulator Library RELEASE
 -----------------------------------------
 
-Mupen64Plus-core v2.5.9 - February 10, 2019
--------------------------------------------
- - *** BETA RELEASE *** For Testing Only ***
+-----------------------------------------
+# Mupen64Plus-core v2.6.0 - July 14, 2024
+
+## Merged PRs
+
+* [1086](https://github.com/mupen64plus/mupen64plus-core/pull/1086): Backport mupen64plus-libretro-nx dynarec fix for OoTMM randomizer
+* [1085](https://github.com/mupen64plus/mupen64plus-core/pull/1085): savestates: Only notify SAVECOMPLETE once save is actually done.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/1031
+* [1084](https://github.com/mupen64plus/mupen64plus-core/pull/1084): Add support for new PIF ROM and reset PIF
+* [1082](https://github.com/mupen64plus/mupen64plus-core/pull/1082): Update "libmd5-rfc" code to the one used in CPython v2.7 repository
+* [1079](https://github.com/mupen64plus/mupen64plus-core/pull/1079): CI/CD: Rearranged some parts of the logic, many details and more...
+* [1077](https://github.com/mupen64plus/mupen64plus-core/pull/1077): CI/CD: Upgrade, generic scripts, independent schedule, etc
+* [1076](https://github.com/mupen64plus/mupen64plus-core/pull/1076): Correct ROM file size checks
+* [1075](https://github.com/mupen64plus/mupen64plus-core/pull/1075): ci: install vulkan-headers package in MSYS2
+  (Fixes CI build failure)
+* [1074](https://github.com/mupen64plus/mupen64plus-core/pull/1074): Update minizip
+* [1061](https://github.com/mupen64plus/mupen64plus-core/pull/1061): RSP opcode fixes.
+  Ported from: https://gitlab.com/parallel-launcher/parallel-n64
+* [1060](https://github.com/mupen64plus/mupen64plus-core/pull/1060): src: fix the new_dynarec with musl
+* [1059](https://github.com/mupen64plus/mupen64plus-core/pull/1059): Add missing ROM file size checks
+* [1058](https://github.com/mupen64plus/mupen64plus-core/pull/1058): Added 3 translations and a game.
+* [1057](https://github.com/mupen64plus/mupen64plus-core/pull/1057): Fix Big-Endian Incompatibilities.
+  (Tested on a Wii U.)
+* [1056](https://github.com/mupen64plus/mupen64plus-core/pull/1056): Add redumps/correct bad ROM IDs and add some unlicensed releases.
+  Based on the latest (2024/5/1) version of the No-Intro database.
+* [1054](https://github.com/mupen64plus/mupen64plus-core/pull/1054): Increase maximum allowed overclocking factor to 20
+* [1046](https://github.com/mupen64plus/mupen64plus-core/pull/1046): Added Italian translations.
+* [1040](https://github.com/mupen64plus/mupen64plus-core/pull/1040): Fix incorrect OSAL_DIR_SEPARATORS when compiling using mingw.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/937
+* [1039](https://github.com/mupen64plus/mupen64plus-core/pull/1039): bfd version check fix for X.XX version number format
+* [1036](https://github.com/mupen64plus/mupen64plus-core/pull/1036): use CS4 for netplay DSCP
+* [1034](https://github.com/mupen64plus/mupen64plus-core/pull/1034): Added English translation of Bomberman 64 - Arcade Edition
+* [1033](https://github.com/mupen64plus/mupen64plus-core/pull/1033): use memchr instead of strchr in is_viewer.c
+* [1032](https://github.com/mupen64plus/mupen64plus-core/pull/1032): Adding 4 more translations and updating ROM database.
+* [1030](https://github.com/mupen64plus/mupen64plus-core/pull/1030): rom: Fix closing the ROM database
+* [1029](https://github.com/mupen64plus/mupen64plus-core/pull/1029): Update README* files
+* [1027](https://github.com/mupen64plus/mupen64plus-core/pull/1027): new_dynarec: fix FPU crashes.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/1026
+* [1023](https://github.com/mupen64plus/mupen64plus-core/pull/1023): Added 3 more translations
+* [1022](https://github.com/mupen64plus/mupen64plus-core/pull/1022): Add Video Extension functions to support Vulkan
+* [1021](https://github.com/mupen64plus/mupen64plus-core/pull/1021): netplay fixes from simple64
+* [1020](https://github.com/mupen64plus/mupen64plus-core/pull/1020): Updating rom database
+* [1019](https://github.com/mupen64plus/mupen64plus-core/pull/1019): Fix IS64 Truncating Lines
+* [1018](https://github.com/mupen64plus/mupen64plus-core/pull/1018): Added French translation of Conker's Bad Fur Day
+* [1017](https://github.com/mupen64plus/mupen64plus-core/pull/1017): Update xxhash to 0.8.2
+* [1015](https://github.com/mupen64plus/mupen64plus-core/pull/1015): Fix building with libbfd >=2.39
+* [1014](https://github.com/mupen64plus/mupen64plus-core/pull/1014): Add M64CORE_SCREENSHOT_CAPTURED to m64p_core_param.
+  (Allows front-ends to know when a screenshot has been captured.)
+* [1012](https://github.com/mupen64plus/mupen64plus-core/pull/1012): Change IPL3 memory detection error to a warning
+* [1011](https://github.com/mupen64plus/mupen64plus-core/pull/1011): Add Xeno Crisis to the ROM database
+* [1009](https://github.com/mupen64plus/mupen64plus-core/pull/1009): Ensure out of bounds RDRAM reads 0
+* [1008](https://github.com/mupen64plus/mupen64plus-core/pull/1008): Add some Spanish translations.
+* [1006](https://github.com/mupen64plus/mupen64plus-core/pull/1006): Implement unused RDRAM address range 0x0800000-0x03EFFFFF.
+  (Fixes an in-game crash in Paper Mario when hitting a specific tree with a hammer.)
+* [1005](https://github.com/mupen64plus/mupen64plus-core/pull/1005): CI/CD: Fixes Ubuntu i386 builds, among other changes
+* [1002](https://github.com/mupen64plus/mupen64plus-core/pull/1002): vidext.c: Fix DPI scaling issues on Windows
+* [1001](https://github.com/mupen64plus/mupen64plus-core/pull/1001): Interpreter accuracy improvements
+* [998](https://github.com/mupen64plus/mupen64plus-core/pull/998): Introduce SaveFilenameFormat parameter
+* [995](https://github.com/mupen64plus/mupen64plus-core/pull/995): CI/CD: Integrate scheduled builds and other...
+* [994](https://github.com/mupen64plus/mupen64plus-core/pull/994): [64DD] Shorten extra cycles timing depending on motor state for stability
+* [993](https://github.com/mupen64plus/mupen64plus-core/pull/993): Sanitize save filename
+* [992](https://github.com/mupen64plus/mupen64plus-core/pull/992): Fix screenshots when compiling with OSD=0
+* [990](https://github.com/mupen64plus/mupen64plus-core/pull/990): Improve 64DD emulation
+* [989](https://github.com/mupen64plus/mupen64plus-core/pull/989): Update that helps diagnose and in some cases circumvent issues...
+* [986](https://github.com/mupen64plus/mupen64plus-core/pull/986): Fix incorrect DDREGION being used for development disks
+* [983](https://github.com/mupen64plus/mupen64plus-core/pull/983): Introduce M64CMD_DISK_OPEN & M64CMD_DISK_CLOSE
+* [980](https://github.com/mupen64plus/mupen64plus-core/pull/980): Have netplay just use file extension for file syncing
+* [979](https://github.com/mupen64plus/mupen64plus-core/pull/979): use MD5 for save filename
+* [977](https://github.com/mupen64plus/mupen64plus-core/pull/977): Add support for Advanced Homebrew ROM Header save type
+* [976](https://github.com/mupen64plus/mupen64plus-core/pull/976): Add ROM version to m64p_rom_header
+* [974](https://github.com/mupen64plus/mupen64plus-core/pull/974): CI/CD: Update MSVC
+* [970](https://github.com/mupen64plus/mupen64plus-core/pull/970): Fix crash due to SDL_SetVideoMode in SDL 2 compatibility code.
+* [967](https://github.com/mupen64plus/mupen64plus-core/pull/967): Proper response when eeprom absent
+* [965](https://github.com/mupen64plus/mupen64plus-core/pull/965): Add Smash Remix 1.2.0
+* [963](https://github.com/mupen64plus/mupen64plus-core/pull/963): Added GoldenEye X and Perfect Dark Plus to INI
+* [961](https://github.com/mupen64plus/mupen64plus-core/pull/961): CI/CD: Update
+* [960](https://github.com/mupen64plus/mupen64plus-core/pull/960): 3 LSBs of AI Length must be 0
+* [958](https://github.com/mupen64plus/mupen64plus-core/pull/958): Initialize dd_rom_size to 0 if load_dd_disk fails to fix possible runtime errors during initialization
+* [954](https://github.com/mupen64plus/mupen64plus-core/pull/954): Add support for clang/mingw targets
+* [946](https://github.com/mupen64plus/mupen64plus-core/pull/946): Use a predictable seed when using netplay
+* [929](https://github.com/mupen64plus/mupen64plus-core/pull/929): CountPerOp=1 for Bottom of the 9th.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/927
+* [926](https://github.com/mupen64plus/mupen64plus-core/pull/926): Add ROM entries for SM64 splitscreen hack
+* [925](https://github.com/mupen64plus/mupen64plus-core/pull/925): Entry for SmashRemix1.1.0
+* [922](https://github.com/mupen64plus/mupen64plus-core/pull/922): Update xxhash to 0.8.1
+* [920](https://github.com/mupen64plus/mupen64plus-core/pull/920): Allow frontends to know what DD ROM region they should use
+* [919](https://github.com/mupen64plus/mupen64plus-core/pull/919): Generate unique mempaks ID when formatting them
+* [912](https://github.com/mupen64plus/mupen64plus-core/pull/912): CI/CD: Implement GitHub Actions and public nightly builds
+* [911](https://github.com/mupen64plus/mupen64plus-core/pull/911): Add Donkey Kong 64 - Tag Anywhere V5 (U)
+* [910](https://github.com/mupen64plus/mupen64plus-core/pull/910): Native Apple Silicon (darwin-arm64) Support
+* [909](https://github.com/mupen64plus/mupen64plus-core/pull/909): Fix IS Viewer crash.
+  Fixes a segfault in [The Missing Link](https://www.romhacking.net/hacks/5334/) when entering a door.
+* [901](https://github.com/mupen64plus/mupen64plus-core/pull/901): Add SmashRemix1.0.0/1.0.1
+* [899](https://github.com/mupen64plus/mupen64plus-core/pull/899): Add NO_KEYBINDINGS for joy mappings
+* [898](https://github.com/mupen64plus/mupen64plus-core/pull/898): Add RISC-V Support
+* [893](https://github.com/mupen64plus/mupen64plus-core/pull/893): Add KEYBINDINGS=0 option to Makefile
+* [890](https://github.com/mupen64plus/mupen64plus-core/pull/890): Fix https://github.com/mupen64plus/mupen64plus-core/issues/889
+* [887](https://github.com/mupen64plus/mupen64plus-core/pull/887): Fix https://github.com/mupen64plus/mupen64plus-core/issues/886
+* [884](https://github.com/mupen64plus/mupen64plus-core/pull/884): Fix https://github.com/mupen64plus/mupen64plus-core/issues/883
+* [881](https://github.com/mupen64plus/mupen64plus-core/pull/881): Fix for compiler warning
+* [880](https://github.com/mupen64plus/mupen64plus-core/pull/880): Fix 64DD Write Address Check Regression
+* [878](https://github.com/mupen64plus/mupen64plus-core/pull/878): Make 4K EEPROM default save type; support carts with no EEPROM
+* [876](https://github.com/mupen64plus/mupen64plus-core/pull/876): IS Viewer support.
+  IS-Viewer 64 was a physical debugging tool (https://n64squid.com/homebrew/n64-sdk/development-hardware/).
+* [873](https://github.com/mupen64plus/mupen64plus-core/pull/873): VRU support and Hey You Pikachu audio fix
+* [872](https://github.com/mupen64plus/mupen64plus-core/pull/872): Fix address check for DD DMA Interrupt.
+  Fixes the issue identified in https://github.com/mupen64plus/mupen64plus-core/pull/868#issuecomment-861760293
+* [871](https://github.com/mupen64plus/mupen64plus-core/pull/871): Misc fixes
+* [869](https://github.com/mupen64plus/mupen64plus-core/pull/869): Update RSP alignment code as per CEN64
+* [868](https://github.com/mupen64plus/mupen64plus-core/pull/868): Update PI DMA alignment as per CEN64
+* [867](https://github.com/mupen64plus/mupen64plus-core/pull/867): Rearranged order of Core settings in the config file
+* [866](https://github.com/mupen64plus/mupen64plus-core/pull/866): invalidate alternate address on write.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/738
+* [865](https://github.com/mupen64plus/mupen64plus-core/pull/865): Fix Pokemon Puzzle League saving
+* [863](https://github.com/mupen64plus/mupen64plus-core/pull/863): Get Xena (E) to boot
+* [860](https://github.com/mupen64plus/mupen64plus-core/pull/860): Support Unicode on Windows
+* [858](https://github.com/mupen64plus/mupen64plus-core/pull/858): Add SmashRemix0.9.7
+* [854](https://github.com/mupen64plus/mupen64plus-core/pull/854): Revert "Prevents game freezing unrelated to dynarecs"
+* [853](https://github.com/mupen64plus/mupen64plus-core/pull/853): Prevents game freezing unrelated to dynarecs
+* [848](https://github.com/mupen64plus/mupen64plus-core/pull/848): Fix https://github.com/mupen64plus/mupen64plus-core/issues/842
+* [847](https://github.com/mupen64plus/mupen64plus-core/pull/847): Netplay fixes from Android port
+* [843](https://github.com/mupen64plus/mupen64plus-core/pull/843): [new_dynarec] Trivial perf improvement on initial recompilation
+* [841](https://github.com/mupen64plus/mupen64plus-core/pull/841): Remove CountPerOp=1 for Dino Planet
+* [840](https://github.com/mupen64plus/mupen64plus-core/pull/840): Add Dinosaur Planet to ini
+* [836](https://github.com/mupen64plus/mupen64plus-core/pull/836): Fix some warnings about wrong pointer format "%p" needs a void*
+* [835](https://github.com/mupen64plus/mupen64plus-core/pull/835): Change mempak formatting
+* [834](https://github.com/mupen64plus/mupen64plus-core/pull/834): refactor lba_end computation to better convey intent
+* [832](https://github.com/mupen64plus/mupen64plus-core/pull/832): 64dd save rebased
+* [830](https://github.com/mupen64plus/mupen64plus-core/pull/830): Fix some unsigned/signed comparison warnings
+* [828](https://github.com/mupen64plus/mupen64plus-core/pull/828): Mention save slot keybindings in docs
+* [827](https://github.com/mupen64plus/mupen64plus-core/pull/827): Add prefix to m64p_rom_save_type members
+* [825](https://github.com/mupen64plus/mupen64plus-core/pull/825): Ai fixes
+* [820](https://github.com/mupen64plus/mupen64plus-core/pull/820): Add correct MD5 for SmashRemix0.9.5b to INI
+* [817](https://github.com/mupen64plus/mupen64plus-core/pull/817): Failing to explain the asm scripts in a better way...
+* [816](https://github.com/mupen64plus/mupen64plus-core/pull/816): [Disk] Make sure the wrong System Data is checked upon read of the System Area
+* [815](https://github.com/mupen64plus/mupen64plus-core/pull/815): Simplify and make the asm script more robust to 3rd party scripts
+* [814](https://github.com/mupen64plus/mupen64plus-core/pull/814): Add SmashRemix0.9.5b to INI
+* [811](https://github.com/mupen64plus/mupen64plus-core/pull/811): build: Allow out of tree builds.
+* [809](https://github.com/mupen64plus/mupen64plus-core/pull/809): docs: fix simple typo, unconditonal -> unconditional
+* [808](https://github.com/mupen64plus/mupen64plus-core/pull/808): Fix to MacOSX building
+* [803](https://github.com/mupen64plus/mupen64plus-core/pull/803): storage backend save method nows know about modified byte range
+* [801](https://github.com/mupen64plus/mupen64plus-core/pull/801): Fixes
+* [798](https://github.com/mupen64plus/mupen64plus-core/pull/798): Allow customizable save slot keybindings
+* [796](https://github.com/mupen64plus/mupen64plus-core/pull/796): Align memory for parallel-rdp
+* [794](https://github.com/mupen64plus/mupen64plus-core/pull/794): Clean up netplay linked list
+* [793](https://github.com/mupen64plus/mupen64plus-core/pull/793): Just stop frontend from enabling cheats during netplay
+* [791](https://github.com/mupen64plus/mupen64plus-core/pull/791): Allow front-ends to override user paths 
+* [789](https://github.com/mupen64plus/mupen64plus-core/pull/789): Add count factor overclock
+* [788](https://github.com/mupen64plus/mupen64plus-core/pull/788): Add M64CMD_ROM_SET_SETTINGS
+* [785](https://github.com/mupen64plus/mupen64plus-core/pull/785): Tag outgoing UDP packets with EF DSCP
+* [784](https://github.com/mupen64plus/mupen64plus-core/pull/784): CountPerOp=1 for Smash
+* [782](https://github.com/mupen64plus/mupen64plus-core/pull/782): Update xxHash to 0.8.0
+* [779](https://github.com/mupen64plus/mupen64plus-core/pull/779): Fix typo in M64CMD_NETPLAY_INIT docs
+* [775](https://github.com/mupen64plus/mupen64plus-core/pull/775): Improve compatibility on restrictive platforms and other minor changes
+* [771](https://github.com/mupen64plus/mupen64plus-core/pull/771): Makefile: add missing quotation mark.
+* [768](https://github.com/mupen64plus/mupen64plus-core/pull/768): CountPerOp=3 for Wave Race 64 - Shindou Edition
+* [766](https://github.com/mupen64plus/mupen64plus-core/pull/766): Allow to set custom platform toolset from commands
+* [764](https://github.com/mupen64plus/mupen64plus-core/pull/764): Get/Set Refresh Rate
+* [762](https://github.com/mupen64plus/mupen64plus-core/pull/762): [Disk] Major Disk Support Changes
+* [758](https://github.com/mupen64plus/mupen64plus-core/pull/758): Allow frontends to manage SDL's lifetime
+* [756](https://github.com/mupen64plus/mupen64plus-core/pull/756): NOT mempak checksum when pak is not present
+* [753](https://github.com/mupen64plus/mupen64plus-core/pull/753): Netplay
+* [752](https://github.com/mupen64plus/mupen64plus-core/pull/752): Mask DRAM address in PI DMA
+* [751](https://github.com/mupen64plus/mupen64plus-core/pull/751): Enable FBInfo for CPU-RDP rendering
+* [750](https://github.com/mupen64plus/mupen64plus-core/pull/750): Removed "not officially supported" for ARM
+* [748](https://github.com/mupen64plus/mupen64plus-core/pull/748): CountPerOp=1 for Top Gear Overdrive/Hyperbike
+* [747](https://github.com/mupen64plus/mupen64plus-core/pull/747): fix compilation on x86
+* [746](https://github.com/mupen64plus/mupen64plus-core/pull/746): Fix hard reset crash
+* [745](https://github.com/mupen64plus/mupen64plus-core/pull/745): Implement trap instructions
+* [744](https://github.com/mupen64plus/mupen64plus-core/pull/744): CountPerOp=1 for Battle for Naboo
+* [743](https://github.com/mupen64plus/mupen64plus-core/pull/743): Rework flashram implementation
+* [741](https://github.com/mupen64plus/mupen64plus-core/pull/741): Fix path expansion when building with VisualStudio so directories with spaces will not cause the build to fail.
+* [740](https://github.com/mupen64plus/mupen64plus-core/pull/740): Use XXH3 hashing (v0.7.3)
+* [739](https://github.com/mupen64plus/mupen64plus-core/pull/739): IP0 and IP1 CAUSE bits are writeable
+* [737](https://github.com/mupen64plus/mupen64plus-core/pull/737): BattleTanx (U) games need CountPerOp=3 to boot
+* [736](https://github.com/mupen64plus/mupen64plus-core/pull/736): Fix multiple definition errors
+* [735](https://github.com/mupen64plus/mupen64plus-core/pull/735): PIF binary boot rom support
+* [734](https://github.com/mupen64plus/mupen64plus-core/pull/734): Support FBWrites with a size of 3
+* [731](https://github.com/mupen64plus/mupen64plus-core/pull/731): Disable FTZ (flush to zero) mode for SSE when FS bit is set
+* [729](https://github.com/mupen64plus/mupen64plus-core/pull/729): Improve glue code generation
+* [727](https://github.com/mupen64plus/mupen64plus-core/pull/727): CountPerOp=1 for Elmo's Letter Adventure
+* [725](https://github.com/mupen64plus/mupen64plus-core/pull/725): Implement PIF write flags properly
+* [721](https://github.com/mupen64plus/mupen64plus-core/pull/721): Emulate RSP DMA FIFO queue
+* [718](https://github.com/mupen64plus/mupen64plus-core/pull/718): Adjust DD DMA timing
+* [717](https://github.com/mupen64plus/mupen64plus-core/pull/717): Don't check event count to test if event is pending
+* [716](https://github.com/mupen64plus/mupen64plus-core/pull/716): Change some DD logging to only happen in verbose mode
+* [714](https://github.com/mupen64plus/mupen64plus-core/pull/714): Use cheat code to allow Rat Attack to boot
+* [710](https://github.com/mupen64plus/mupen64plus-core/pull/710): Disable FBInfo support for dynarecs
+* [709](https://github.com/mupen64plus/mupen64plus-core/pull/709): Proper handling of divide by zero
+* [708](https://github.com/mupen64plus/mupen64plus-core/pull/708): Rework interrupt scheduling
+* [707](https://github.com/mupen64plus/mupen64plus-core/pull/707): Implement cart ROM writes as described by Jan Goldacker.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/609
+* [706](https://github.com/mupen64plus/mupen64plus-core/pull/706): Enable transferpak write
+* [705](https://github.com/mupen64plus/mupen64plus-core/pull/705): Only align cart address in PI DMA.
+  This PR fixes https://github.com/mupen64plus/mupen64plus-core/issues/600
+* [702](https://github.com/mupen64plus/mupen64plus-core/pull/702): Remove next_vi.
+  Should fix https://github.com/mupen64plus/mupen64plus-core/issues/554
+* [699](https://github.com/mupen64plus/mupen64plus-core/pull/699): Revert "Don't call SDL_PumpEvents() in core"
+* [698](https://github.com/mupen64plus/mupen64plus-core/pull/698): Don't set DPC_STATUS_START/END_VALID bits
+* [697](https://github.com/mupen64plus/mupen64plus-core/pull/697): Update xxHash to 0.7.2
+* [696](https://github.com/mupen64plus/mupen64plus-core/pull/696): if config parameter already exists, add help text if missing, before returning successfully
+* [694](https://github.com/mupen64plus/mupen64plus-core/pull/694): Let MSBuild do its job and implement a proper AppVeyor with artifact packaging
+* [692](https://github.com/mupen64plus/mupen64plus-core/pull/692): Fix VI interrupt not being called in certain cases
+* [687](https://github.com/mupen64plus/mupen64plus-core/pull/687): Database updates
+* [682](https://github.com/mupen64plus/mupen64plus-core/pull/682): MPAL's refresh rate is 60 Hz
+* [670](https://github.com/mupen64plus/mupen64plus-core/pull/670): Set VSync (SDL_GL_SetSwapInterval) after GL context is available.
+  This fixes https://github.com/mupen64plus/mupen64plus-core/issues/663
+* [666](https://github.com/mupen64plus/mupen64plus-core/pull/666): Add speed limiter toggle, reintroduce SDL_PumpEvents for non-android platforms
+* [632](https://github.com/mupen64plus/mupen64plus-core/pull/632): Add ppc64le support
+
+
+## Closed Issues
+
+* [1031](https://github.com/mupen64plus/mupen64plus-core/issues/1031): M64CORE_STATE_SAVECOMPLETE callback happens too early with M64P_PARALLEL
+* [1081](https://github.com/mupen64plus/mupen64plus-core/issues/1081): Fix buffer overflow in RSP DMA - SECURITY CONCERN
+* [1065](https://github.com/mupen64plus/mupen64plus-core/issues/1065): [Proposal] Features for tool-assisted speedrunning
+* [622](https://github.com/mupen64plus/mupen64plus-core/issues/622): Kirby 64 texture stretching
+* [849](https://github.com/mupen64plus/mupen64plus-core/issues/849): Random Game Crash/Freeze in Ocarina of Time with Dynamic Recompiler 
+* [551](https://github.com/mupen64plus/mupen64plus-core/issues/551): perfect dark flickers quite a bit.
+* [915](https://github.com/mupen64plus/mupen64plus-core/issues/915): South Park - Chef's Luv Shack	 Not working 
+* [1049](https://github.com/mupen64plus/mupen64plus-core/issues/1049): Missing ROM file size validation
+* [1042](https://github.com/mupen64plus/mupen64plus-core/issues/1042): mupen64plus-core no longer builds on Apple Silicon
+* [1041](https://github.com/mupen64plus/mupen64plus-core/issues/1041): Help, unplayable stuttering 
+* [937](https://github.com/mupen64plus/mupen64plus-core/issues/937): 64DD: Wrong path to save file [Windows]
+* [1037](https://github.com/mupen64plus/mupen64plus-core/issues/1037): Control Stick in Pokemon Snap not working
+* [1028](https://github.com/mupen64plus/mupen64plus-core/issues/1028): mupen64plus-core.svg missing in Readme.md
+* [1026](https://github.com/mupen64plus/mupen64plus-core/issues/1026): Crash (Segfault) on 32bit ARM & DynaRec enabled
+* [493](https://github.com/mupen64plus/mupen64plus-core/issues/493): FBInfo missing some data with dynarec
+* [1003](https://github.com/mupen64plus/mupen64plus-core/issues/1003): How To Correctly Install Mupen64Plus in Ubuntu
+* [1000](https://github.com/mupen64plus/mupen64plus-core/issues/1000): Mupen64Plus has own Screen Resolution on 1.15.0
+* [999](https://github.com/mupen64plus/mupen64plus-core/issues/999): Error: dlopen('/usr/local/lib/libmupen64plus.so.2') failed: libminizip.so.1: cannot open shared object file: No such file or directory
+* [157](https://github.com/mupen64plus/mupen64plus-core/issues/157): Hey You, Pikachu! VRU Emulation Support
+* [646](https://github.com/mupen64plus/mupen64plus-core/issues/646): Pausing causes the emulator to lock up
+* [988](https://github.com/mupen64plus/mupen64plus-core/issues/988): asm_defines_nasm.h is not generated on Windows
+* [978](https://github.com/mupen64plus/mupen64plus-core/issues/978): With `AutoStateSlotIncrement = True` `CurrentStateSlot` is not updated
+* [875](https://github.com/mupen64plus/mupen64plus-core/issues/875): [Feature Request] Overclocking support
+* [823](https://github.com/mupen64plus/mupen64plus-core/issues/823): Various input-related bugs in Paper Mario
+* [971](https://github.com/mupen64plus/mupen64plus-core/issues/971): Crash from Core Error: SDL_SetVIdeoMode failure due to invalid 'pitch'
+* [975](https://github.com/mupen64plus/mupen64plus-core/issues/975): Coverity scan defects founds
+* [972](https://github.com/mupen64plus/mupen64plus-core/issues/972): Audio crackling problem with ParaLLEl-RDP
+* [969](https://github.com/mupen64plus/mupen64plus-core/issues/969): Crash with Core Error: SDL_SetVideoMode failed and multiple Core Warnings
+* [966](https://github.com/mupen64plus/mupen64plus-core/issues/966): Document Vidext_GL_GetDefaultFramebuffer
+* [956](https://github.com/mupen64plus/mupen64plus-core/issues/956): Add CMake project
+* [957](https://github.com/mupen64plus/mupen64plus-core/issues/957): "print_insn_i386 undeclared" when building with DEBUGGER=1
+* [931](https://github.com/mupen64plus/mupen64plus-core/issues/931): Fix FBInfo implementation (for Jet Force Gemini)
+* [948](https://github.com/mupen64plus/mupen64plus-core/issues/948): Per-Rom configuration C# interop broken
+* [945](https://github.com/mupen64plus/mupen64plus-core/issues/945): Diddy Kong Racing freezes at 2nd Wizpig race cut scene
+* [877](https://github.com/mupen64plus/mupen64plus-core/issues/877): Travis CI not working
+* [159](https://github.com/mupen64plus/mupen64plus-core/issues/159): Mario Story (JPN) freeze
+* [933](https://github.com/mupen64plus/mupen64plus-core/issues/933): Buck Bumble hangs on the ending cutscene of Mission 3
+* [927](https://github.com/mupen64plus/mupen64plus-core/issues/927): Bottom of the 9th sluggish when loading match
+* [928](https://github.com/mupen64plus/mupen64plus-core/issues/928): Bottom of the 9th - some images are Blue tinted
+* [885](https://github.com/mupen64plus/mupen64plus-core/issues/885): Legend of Zelda, The - Ocarina of Time (U) (V1.0) [T+Por1.5BetaFinal] can crash with new dynarec
+* [917](https://github.com/mupen64plus/mupen64plus-core/issues/917): San Francisco Rush - No Sound
+* [822](https://github.com/mupen64plus/mupen64plus-core/issues/822): Illegal instruction (core dumped)
+* [245](https://github.com/mupen64plus/mupen64plus-core/issues/245): Mario Kart 64 item not usable bug
+* [761](https://github.com/mupen64plus/mupen64plus-core/issues/761): [Audio Sync] Super Smash Bros. (Europe) Intro speed issues
+* [861](https://github.com/mupen64plus/mupen64plus-core/issues/861): New Release
+* [902](https://github.com/mupen64plus/mupen64plus-core/issues/902): 2.5.9 Linux 64 binary bundle - Illegal instruction
+* [900](https://github.com/mupen64plus/mupen64plus-core/issues/900): [BUG] Zelda OOT, EnableFBEmulation = true
+* [897](https://github.com/mupen64plus/mupen64plus-core/issues/897): CPU type "riscv64" not supported.
+* [657](https://github.com/mupen64plus/mupen64plus-core/issues/657): Issue with the mupen64plus dynarec in Indiana Jones and the Infernal Machine
+* [894](https://github.com/mupen64plus/mupen64plus-core/issues/894): unzip.h not found
+* [889](https://github.com/mupen64plus/mupen64plus-core/issues/889): Dinosaur Planet crashes with new dynarec
+* [888](https://github.com/mupen64plus/mupen64plus-core/issues/888): MINGW32 -> x86 compilation
+* [886](https://github.com/mupen64plus/mupen64plus-core/issues/886): Road rush 64 black screen on new game with new dynarec
+* [441](https://github.com/mupen64plus/mupen64plus-core/issues/441): Banjo-Tooie freeze
+* [883](https://github.com/mupen64plus/mupen64plus-core/issues/883): NBA Jam '99/2000 crash on startup with dynarec (aarch64)
+* [610](https://github.com/mupen64plus/mupen64plus-core/issues/610): Jet force gimini (U) locks up
+* [372](https://github.com/mupen64plus/mupen64plus-core/issues/372): Top Gear Rally freezing frames
+* [704](https://github.com/mupen64plus/mupen64plus-core/issues/704): Random crashes when loading save states
+* [520](https://github.com/mupen64plus/mupen64plus-core/issues/520): Still some crashes, probably when loading save states
+* [600](https://github.com/mupen64plus/mupen64plus-core/issues/600): Command and conquer in-game save corruption
+* [171](https://github.com/mupen64plus/mupen64plus-core/issues/171): Glover crash
+* [174](https://github.com/mupen64plus/mupen64plus-core/issues/174): Audio cuts off in Army Men: Sarge's Heroes with new dynarec
+* [433](https://github.com/mupen64plus/mupen64plus-core/issues/433): MRC - Multi Racing Championship missing ground with new dynarec
+* [631](https://github.com/mupen64plus/mupen64plus-core/issues/631): arm dynarec crash with stop_after_jal=0
+* [806](https://github.com/mupen64plus/mupen64plus-core/issues/806): World Driving Championship doesn't boot with new dynarec
+* [856](https://github.com/mupen64plus/mupen64plus-core/issues/856): Forcing ROM-side High VSync Mode Gets Ignored By ALL Mupen Forks
+* [679](https://github.com/mupen64plus/mupen64plus-core/issues/679): Cannot exit fullscreen with ALT+ENTER when launched with Glide64mk2 video plugin
+* [608](https://github.com/mupen64plus/mupen64plus-core/issues/608): Minizip header build failure
+* [633](https://github.com/mupen64plus/mupen64plus-core/issues/633): Display Issues when ResY > 1000
+* [639](https://github.com/mupen64plus/mupen64plus-core/issues/639): Crash on hard reset using Pure Interpreter/Dynarec
+* [712](https://github.com/mupen64plus/mupen64plus-core/issues/712):  fails to build with -fno-common or gcc-10
+* [755](https://github.com/mupen64plus/mupen64plus-core/issues/755): Black bar in many games when framebuffer emulation is ticked
+* [821](https://github.com/mupen64plus/mupen64plus-core/issues/821): [mupen64plus:15] Failed to load library file
+* [845](https://github.com/mupen64plus/mupen64plus-core/issues/845): video-glide64mk2 won't start game
+* [594](https://github.com/mupen64plus/mupen64plus-core/issues/594): Compiling for ARM?
+* [517](https://github.com/mupen64plus/mupen64plus-core/issues/517): Unable to build on Raspberry Pi 3 / Raspbian - error: ‘EAX’ undeclared
+* [408](https://github.com/mupen64plus/mupen64plus-core/issues/408): Cant use emulation?
+* [378](https://github.com/mupen64plus/mupen64plus-core/issues/378): Can't compile on Linux ARM (64 bit kernel, 32 bit user land)
+* [292](https://github.com/mupen64plus/mupen64plus-core/issues/292): Mupen64plus.cfg changes being overwritten automatically after game launch.
+* [252](https://github.com/mupen64plus/mupen64plus-core/issues/252): Compile fails on src Linux Armv7l
+* [224](https://github.com/mupen64plus/mupen64plus-core/issues/224): Compilation not producing executable
+* [305](https://github.com/mupen64plus/mupen64plus-core/issues/305): Worms Armageddon new dynarec crash
+* [286](https://github.com/mupen64plus/mupen64plus-core/issues/286): FIFA 99: Players are floating (x64 Dynarec)
+* [738](https://github.com/mupen64plus/mupen64plus-core/issues/738): libdragon games only work with Pure Interpreter
+* [870](https://github.com/mupen64plus/mupen64plus-core/issues/870): Smash Remix 0.9.7 locked at 30fps on Retroarch Mupen64Plus-Next core
+* [864](https://github.com/mupen64plus/mupen64plus-core/issues/864): Core won't compile.
+* [862](https://github.com/mupen64plus/mupen64plus-core/issues/862): Error LNK1181 cannot open input file 'Win32\Release\dyna_start.obj'
+* [838](https://github.com/mupen64plus/mupen64plus-core/issues/838): Input doesn't work in Wolfenstein 3d N64 port
+* [850](https://github.com/mupen64plus/mupen64plus-core/issues/850): Mupen64Plus Core Configuring gamepad buggy
+* [842](https://github.com/mupen64plus/mupen64plus-core/issues/842): Dinosaur planet beta TLB exceptions in new dynarec
+* [846](https://github.com/mupen64plus/mupen64plus-core/issues/846): Virtual N64 controller Notches
+* [812](https://github.com/mupen64plus/mupen64plus-core/issues/812): Unknown "no name" ROMs passes as known without even checking the MD5/CRC
+* [640](https://github.com/mupen64plus/mupen64plus-core/issues/640): New dynarec crashing when opening 2nd ROM
+* [837](https://github.com/mupen64plus/mupen64plus-core/issues/837): Input
+* [673](https://github.com/mupen64plus/mupen64plus-core/issues/673): Uncached memory code execution support
+* [826](https://github.com/mupen64plus/mupen64plus-core/issues/826): PR #788 breaks build of mupen64plus-video-rice
+* [576](https://github.com/mupen64plus/mupen64plus-core/issues/576): banjo tooie tip-toe using keyboard (move banjo analog 5% to 10% range)
+* [786](https://github.com/mupen64plus/mupen64plus-core/issues/786): Undefined behaviour in rsp-hle
+* [813](https://github.com/mupen64plus/mupen64plus-core/issues/813): Video displays at the lower left corner, no full screen
+* [797](https://github.com/mupen64plus/mupen64plus-core/issues/797): Unable to start Mupen64Plus on Slackware Linux (2.5.0)
+* [800](https://github.com/mupen64plus/mupen64plus-core/issues/800): m64p_rom_header struct outdated?
+* [787](https://github.com/mupen64plus/mupen64plus-core/issues/787): Rat Attack Not Booting 
+* [790](https://github.com/mupen64plus/mupen64plus-core/issues/790): Nuclear Escape button
+* [350](https://github.com/mupen64plus/mupen64plus-core/issues/350): RSP DMA double buffering not implemented
+* [732](https://github.com/mupen64plus/mupen64plus-core/issues/732): Donkey Kong 64 (U) [f2] does not boot
+* [730](https://github.com/mupen64plus/mupen64plus-core/issues/730): Binary PIF ROM support
+* [777](https://github.com/mupen64plus/mupen64plus-core/issues/777): Is there any way to add Gameshark Codes?
+* [780](https://github.com/mupen64plus/mupen64plus-core/issues/780): Illegal instruction (core dumped)
+* [778](https://github.com/mupen64plus/mupen64plus-core/issues/778): Every time I open mupen64plus-ui-console it crashes very quickly.
+* [776](https://github.com/mupen64plus/mupen64plus-core/issues/776): mupen64plus-gui DK64 - Severe Slowdown
+* [773](https://github.com/mupen64plus/mupen64plus-core/issues/773): Account creation on the wiki (or just answer to my question... 😅)
+* [763](https://github.com/mupen64plus/mupen64plus-core/issues/763): Dynamically switch output resolution to that of console
+* [760](https://github.com/mupen64plus/mupen64plus-core/issues/760): Fails to build under MSYS Windows 2004
+* [686](https://github.com/mupen64plus/mupen64plus-core/issues/686): New dynarec and F-Zero X Expansion Kit hacked rom
+* [599](https://github.com/mupen64plus/mupen64plus-core/issues/599): N64 database errors?
+* [722](https://github.com/mupen64plus/mupen64plus-core/issues/722): AppVeyor is broken
+* [719](https://github.com/mupen64plus/mupen64plus-core/issues/719): Incorrect Folder Name In Source Code
+* [703](https://github.com/mupen64plus/mupen64plus-core/issues/703): Can't build core
+* [676](https://github.com/mupen64plus/mupen64plus-core/issues/676): CheckInterrupts is not implemented for Audio/Gfx/RSP plugins
+* [674](https://github.com/mupen64plus/mupen64plus-core/issues/674): Mupen32.exe, more like
+* [650](https://github.com/mupen64plus/mupen64plus-core/issues/650): Kaillera integration/support
+* [689](https://github.com/mupen64plus/mupen64plus-core/issues/689): Aero Fighters Assault - Startup Error
+* [749](https://github.com/mupen64plus/mupen64plus-core/issues/749): Missing "mupen64plus.dll" when compiling on windows
+* [570](https://github.com/mupen64plus/mupen64plus-core/issues/570): Battle of Naboo: wrong gfx in level selection (core bug)
+* [742](https://github.com/mupen64plus/mupen64plus-core/issues/742): Super Mario 64 not responding
+* [720](https://github.com/mupen64plus/mupen64plus-core/issues/720): Mupen64Plus Compiled With Visual Studio Solution File Has No Sound
+* [609](https://github.com/mupen64plus/mupen64plus-core/issues/609): WCW Backstage Assault locks up
+* [669](https://github.com/mupen64plus/mupen64plus-core/issues/669): Test ROM hangs emulator
+* [636](https://github.com/mupen64plus/mupen64plus-core/issues/636): Elmo's Letter Adventure - keys are not responsive
+* [723](https://github.com/mupen64plus/mupen64plus-core/issues/723): Audio stops in Army Men Sarges Heroes
+* [660](https://github.com/mupen64plus/mupen64plus-core/issues/660): Custom roms won't boot
+* [711](https://github.com/mupen64plus/mupen64plus-core/issues/711): Memory leak when playing Indiana Jones (musyx_v1/v2_task)
+* [713](https://github.com/mupen64plus/mupen64plus-core/issues/713): Adding webhook to Discord64
+* [554](https://github.com/mupen64plus/mupen64plus-core/issues/554): VI_CURRENT_REG not calculated properly if CP0_COUNT_REG changed by software
+* [634](https://github.com/mupen64plus/mupen64plus-core/issues/634): screenshots can't be saved correctly when ROM had an invalid header.
+* [546](https://github.com/mupen64plus/mupen64plus-core/issues/546): Pokemon Puzzle League FMV not dealt with by RSP-HLE
+* [563](https://github.com/mupen64plus/mupen64plus-core/issues/563): Compiling for AARCH64/ARM64?
+* [663](https://github.com/mupen64plus/mupen64plus-core/issues/663): VidExt_GL_SetAttribute sets SDL_GL_SetSwapInterval prematurely
+* [675](https://github.com/mupen64plus/mupen64plus-core/issues/675): any way to take advantage of GLES 3.0 ES on rpi4?
+* [656](https://github.com/mupen64plus/mupen64plus-core/issues/656): Failed to create GL context on RPI3 under mesa with GLideN64
+* [678](https://github.com/mupen64plus/mupen64plus-core/issues/678): segfault while loading World Driver Championship
+* [661](https://github.com/mupen64plus/mupen64plus-core/issues/661): Does Mupen64 work with Windows 10 64-Bit? Or Does 64-Bit Windows not work with the 32-Bit?
+* [658](https://github.com/mupen64plus/mupen64plus-core/issues/658): SetVideoMode returns NULL pointer to Screen
+* [265](https://github.com/mupen64plus/mupen64plus-core/issues/265): Banjo-Kazooie intro puzzle effect not displaying correctly with Rice
+* [655](https://github.com/mupen64plus/mupen64plus-core/issues/655): [Glide64] Compilation error on char signedness
+* [653](https://github.com/mupen64plus/mupen64plus-core/issues/653): Opening game crashes on Mac
+* [648](https://github.com/mupen64plus/mupen64plus-core/issues/648): How compile "mupen64plus-video-z64" on debian 9
+* [645](https://github.com/mupen64plus/mupen64plus-core/issues/645): Retrolinc Controller not found - Arch Linux mupen64plus
+* [637](https://github.com/mupen64plus/mupen64plus-core/issues/637): LoS: Majoras Mask unable to move marker to items in inventory.
+* [638](https://github.com/mupen64plus/mupen64plus-core/issues/638): Command Line Ends Process After Starting And Request A More Detailed Install Readme File
+* [628](https://github.com/mupen64plus/mupen64plus-core/issues/628): 2.5.9: Print of size_t has to use z modifier
+* [630](https://github.com/mupen64plus/mupen64plus-core/issues/630): 2.5.9: Missing INPUT_API_VERSION change (2.5 Input plugin not working with 2.5.9 core)
+
+
+## Top Contributors (2 or more commits)
+1. Rosalie241
+2. loganmc10
+3. LuigiBlood
+4. bsmiles32
+5. Gillou68310
+6. Jj0YzL5nvJ
+7. richard42
+8. Pcgaming575
+9. meeq
+10. GhostlyDark
+11. mpharoah
+12. Clownacy
+13. obrea
+14. m4xw
+15. alice-mkh
+16. flagrama
+17. dankcushions
+
+---------------------------------------------
+# Mupen64Plus-core v2.5.9 - February 10, 2019
+
+## Merged PRs
+
+* [619](https://github.com/mupen64plus/mupen64plus-core/pull/619): do not force saving config when file not present
+  (Front-ends now ensure that configuration is saved (when desired) before starting the game.)
+* [618](https://github.com/mupen64plus/mupen64plus-core/pull/618): __clear_cache fix for ARM 64 devices plus ANDROID cleanup
+* [615](https://github.com/mupen64plus/mupen64plus-core/pull/615): Fixes for last save state update
+* [614](https://github.com/mupen64plus/mupen64plus-core/pull/614): Make stop_after_jal a save state parameter instead of configuration.
+* [612](https://github.com/mupen64plus/mupen64plus-core/pull/612): Allow valid interpretations of strings as non-strings
+* [611](https://github.com/mupen64plus/mupen64plus-core/pull/611): Remove DelaySI from wiki
+  (This parameter was removed from the core in 0bcfd3cc7.)
+* [607](https://github.com/mupen64plus/mupen64plus-core/pull/607): Fix joy_max for initialize loop
+* [606](https://github.com/mupen64plus/mupen64plus-core/pull/606): new_dynarec fixes
+* [605](https://github.com/mupen64plus/mupen64plus-core/pull/605): Preserve floating-point configuration values.
+* [604](https://github.com/mupen64plus/mupen64plus-core/pull/604): Fix mingw build
+* [602](https://github.com/mupen64plus/mupen64plus-core/pull/602): new_dynarec: Initial support for x64 and arm64
+* [598](https://github.com/mupen64plus/mupen64plus-core/pull/598): Fix errors introduced in #444
+  (These changes allow Rugrats and Xena to boot.)
+* [597](https://github.com/mupen64plus/mupen64plus-core/pull/597): Avoid nameless union in r4300_core.h (this is a non standard extension)
+* [596](https://github.com/mupen64plus/mupen64plus-core/pull/596): Fix access to DD_ROM memory pointer.
+* [593](https://github.com/mupen64plus/mupen64plus-core/pull/593): Two new debugger APIs: 'DebugBreakpointTriggeredBy' and 'DebugVirtualToPhysical'
+* [590](https://github.com/mupen64plus/mupen64plus-core/pull/590): Fix missing header in biopak.c
+* [589](https://github.com/mupen64plus/mupen64plus-core/pull/589): Cleanings
+* [588](https://github.com/mupen64plus/mupen64plus-core/pull/588): added support for aarch64
+* [585](https://github.com/mupen64plus/mupen64plus-core/pull/585): Cleanings
+* [583](https://github.com/mupen64plus/mupen64plus-core/pull/583): Update nasm path to use latest stable release 2.13.03
+* [582](https://github.com/mupen64plus/mupen64plus-core/pull/582): Move third-party code into subprojects directory.
+* [581](https://github.com/mupen64plus/mupen64plus-core/pull/581): Bugfixes
+  (Various compilation fixes found while working on meson porting.)
+* [579](https://github.com/mupen64plus/mupen64plus-core/pull/579): Make --nosaveoptions not ever save options.
+* [578](https://github.com/mupen64plus/mupen64plus-core/pull/578): Update readme
+* [573](https://github.com/mupen64plus/mupen64plus-core/pull/573): Rework Video Capture backend to allow better isolation.
+* [569](https://github.com/mupen64plus/mupen64plus-core/pull/569): Cleanup tpak savestate loading.
+* [566](https://github.com/mupen64plus/mupen64plus-core/pull/566): Initial bio pak support.
+* [565](https://github.com/mupen64plus/mupen64plus-core/pull/565): Fix homepage link in dd_controller files.
+* [564](https://github.com/mupen64plus/mupen64plus-core/pull/564): GB Camera support
+* [561](https://github.com/mupen64plus/mupen64plus-core/pull/561): Update xxHash to 0.6.5
+* [557](https://github.com/mupen64plus/mupen64plus-core/pull/557): Increase DebugMessage buffer size to prevent overflows
+* [556](https://github.com/mupen64plus/mupen64plus-core/pull/556): Add VidExt_GL_GetDefaultFramebuffer
+* [553](https://github.com/mupen64plus/mupen64plus-core/pull/553): Fix write_memory_8
+  (This was overflowing a u8, causing zeroes to be written most of the time instead of the intended value.)
+* [550](https://github.com/mupen64plus/mupen64plus-core/pull/550): Don't call SDL_PumpEvents() in core
+* [549](https://github.com/mupen64plus/mupen64plus-core/pull/549): Clear CLOCK_REG when requested
+* [548](https://github.com/mupen64plus/mupen64plus-core/pull/548): Added missing Joy Mappings
+  (Added the 4 missing Joystick counterparts of the Keyboard Mappings: Reset, Speed Down, Speed Up, Frame Advance)
+* [547](https://github.com/mupen64plus/mupen64plus-core/pull/547): R4300 refactorings
+* [545](https://github.com/mupen64plus/mupen64plus-core/pull/545): Fix: try to keep savestates offsets aligned.
+* [544](https://github.com/mupen64plus/mupen64plus-core/pull/544): Fix DSLLV in x86 dynarec
+* [541](https://github.com/mupen64plus/mupen64plus-core/pull/541): Force alignment of PI DMA
+* [538](https://github.com/mupen64plus/mupen64plus-core/pull/538): Alternative implementation of "Don't deal with save states when RSP task is locked"
+* [537](https://github.com/mupen64plus/mupen64plus-core/pull/537): new_dynarec: Fix DMULT/DMULTU recompiled code
+* [535](https://github.com/mupen64plus/mupen64plus-core/pull/535): Allow game controllers to be unplugged and plugged in on the fly
+* [533](https://github.com/mupen64plus/mupen64plus-core/pull/533): Remove CountPerOp=1 for Vigilante games
+* [532](https://github.com/mupen64plus/mupen64plus-core/pull/532): If a ROM is not in the database, use 4 players, enable mempak, and enable rumble pak
+* [529](https://github.com/mupen64plus/mupen64plus-core/pull/529): Fix compile on MinGW
+* [526](https://github.com/mupen64plus/mupen64plus-core/pull/526): Fix undefined reference to print_insn_i386 with libopcode >= 2.29
+* [521](https://github.com/mupen64plus/mupen64plus-core/pull/521): Fix empty dynarec
+* [519](https://github.com/mupen64plus/mupen64plus-core/pull/519): Less g dev
+  (Reduce usage of global variable g_dev (and other derived variables) in emulation modules.)
+* [515](https://github.com/mupen64plus/mupen64plus-core/pull/515): Fix compilation of new dynarec.
+* [514](https://github.com/mupen64plus/mupen64plus-core/pull/514): Fix potential crash with FBInfo and save states
+* [513](https://github.com/mupen64plus/mupen64plus-core/pull/513): Add SiDmaDuration option.
+* [510](https://github.com/mupen64plus/mupen64plus-core/pull/510): Cleanings
+  (This is just some more internal source cleanings such as reindentation, forward declaration, header inclusion or just moving some code around.)
+* [507](https://github.com/mupen64plus/mupen64plus-core/pull/507): Update homepage links
+* [505](https://github.com/mupen64plus/mupen64plus-core/pull/505): Update xxHash to 0.6.4
+* [503](https://github.com/mupen64plus/mupen64plus-core/pull/503): Device: RDRAM: Use the R4300 helpers to get the R4300 registers
+* [502](https://github.com/mupen64plus/mupen64plus-core/pull/502): Bugfixes
+  (Some small bugfixes found while looking around.)
+* [501](https://github.com/mupen64plus/mupen64plus-core/pull/501): Implement enough of RDRAM subsystem to remove rdram detection hack.
+* [500](https://github.com/mupen64plus/mupen64plus-core/pull/500): Fix reset bug introduced in commit 1c01c233.
+* [499](https://github.com/mupen64plus/mupen64plus-core/pull/499): Fix copy pasting error in MBC2 messages.
+* [498](https://github.com/mupen64plus/mupen64plus-core/pull/498): Fix crash when loading save state
+* [496](https://github.com/mupen64plus/mupen64plus-core/pull/496): Various GB cart enhancements.
+* [495](https://github.com/mupen64plus/mupen64plus-core/pull/495): Create files_macos.c
+  (First try to get a proper Mupen64Plus app on macOS)
+* [494](https://github.com/mupen64plus/mupen64plus-core/pull/494): Update Makefile
+  (First try to get it fixed for macOS)
+* [492](https://github.com/mupen64plus/mupen64plus-core/pull/492): If DEBUG not set, set NDEBUG
+* [491](https://github.com/mupen64plus/mupen64plus-core/pull/491): Remove orphaned line related to removed GoldenEye TLB hack
+  (Needed to resolve build error on Raspberry Pi 3).
+* [490](https://github.com/mupen64plus/mupen64plus-core/pull/490): Warnings
+  (With this PR all warnings except those about unused parameters should be gone. This is tested on GCC with -Wall -Wextra -pedantic.)
+* [487](https://github.com/mupen64plus/mupen64plus-core/pull/487): Remove GoldenEye TLB hack.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/447
+* [485](https://github.com/mupen64plus/mupen64plus-core/pull/485): Modify DPC_STATUS_FREEZE hack
+* [483](https://github.com/mupen64plus/mupen64plus-core/pull/483): Extract PIF, RCP and RDRAM modules
+  (Just moving some files around to isolate PIF and RCP modules.)
+* [481](https://github.com/mupen64plus/mupen64plus-core/pull/481): Add more FB writes and reads
+* [480](https://github.com/mupen64plus/mupen64plus-core/pull/480): Fix 40 winks ini
+* [478](https://github.com/mupen64plus/mupen64plus-core/pull/478): Fix FbInfo 2
+* [476](https://github.com/mupen64plus/mupen64plus-core/pull/476): Preliminary refactorings 
+  (This PR is just a collection of preliminary refactoring commits extracted from PR #446. They are not directly related to 64DD so we can incorporate them hopefully sooner.)
+* [475](https://github.com/mupen64plus/mupen64plus-core/pull/475): Fix handlers[i].{read,write}32 comparison in dynarec.
+* [474](https://github.com/mupen64plus/mupen64plus-core/pull/474): Big alloc fallback
+  (Another try at the memory allocation failure encountered in some Android devices.)
+* [473](https://github.com/mupen64plus/mupen64plus-core/pull/473): CountPerOp=1 for Bokujou Monogatari 2
+* [472](https://github.com/mupen64plus/mupen64plus-core/pull/472): If an invalid controller pak is selected, use NONE instead
+* [471](https://github.com/mupen64plus/mupen64plus-core/pull/471): Fix LWL, LWR, LDL, LDR, SWL, SWR, SDL, SDR implementations
+* [470](https://github.com/mupen64plus/mupen64plus-core/pull/470): Build MXE targets as additional tests in travis build matrix
+* [466](https://github.com/mupen64plus/mupen64plus-core/pull/466): CountPerOp=1 for Densha de Go! 64
+* [465](https://github.com/mupen64plus/mupen64plus-core/pull/465): new_dynarec: Fix Dance Dance revolution
+* [464](https://github.com/mupen64plus/mupen64plus-core/pull/464): Increase Delay DP Interrupt time
+* [461](https://github.com/mupen64plus/mupen64plus-core/pull/461): Get rid of USE_SDL flag
+* [460](https://github.com/mupen64plus/mupen64plus-core/pull/460): Add support for different flashram types.
+* [459](https://github.com/mupen64plus/mupen64plus-core/pull/459): Fix reset
+* [457](https://github.com/mupen64plus/mupen64plus-core/pull/457): Add support for SRAM cpu read/write
+* [455](https://github.com/mupen64plus/mupen64plus-core/pull/455): Complete (U) save types + Add four games
+* [454](https://github.com/mupen64plus/mupen64plus-core/pull/454): CountPerOp=1 for Gauntlet Legends
+  (Allows for better performance when using GLideN64.)
+* [453](https://github.com/mupen64plus/mupen64plus-core/pull/453): Do SI DMA in 2 stages.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/452
+* [451](https://github.com/mupen64plus/mupen64plus-core/pull/451): Enable CountPerOp=1 for Battletanx 2 & Army Men
+* [450](https://github.com/mupen64plus/mupen64plus-core/pull/450): Fix issues listed in #385
+* [449](https://github.com/mupen64plus/mupen64plus-core/pull/449): Allow switching controller paks using CONTROLS.plugin API
+* [448](https://github.com/mupen64plus/mupen64plus-core/pull/448): Fix some Save Type entries
+* [446](https://github.com/mupen64plus/mupen64plus-core/pull/446): [WIP] Add support for 64 Disk Drive.
+* [444](https://github.com/mupen64plus/mupen64plus-core/pull/444): Re-work the way VI interrupts are timed
+* [443](https://github.com/mupen64plus/mupen64plus-core/pull/443): Remove CountPerOp=1 for Ep I Racer
+* [440](https://github.com/mupen64plus/mupen64plus-core/pull/440): Mempak/Rumble fixes
+* [439](https://github.com/mupen64plus/mupen64plus-core/pull/439): Fix crash when loading savestate.
+* [437](https://github.com/mupen64plus/mupen64plus-core/pull/437): ROM database update
+* [436](https://github.com/mupen64plus/mupen64plus-core/pull/436): PI refactorings
+* [430](https://github.com/mupen64plus/mupen64plus-core/pull/430): Fix a few indentation warnings
+* [428](https://github.com/mupen64plus/mupen64plus-core/pull/428): Raspberry Pi: use new vendor library names
+* [427](https://github.com/mupen64plus/mupen64plus-core/pull/427): Do a proper open bus read.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/418
+* [425](https://github.com/mupen64plus/mupen64plus-core/pull/425): Add note about SP_STATUS_REG
+* [424](https://github.com/mupen64plus/mupen64plus-core/pull/424): SDL_Delay is only called just before input polling.
+* [423](https://github.com/mupen64plus/mupen64plus-core/pull/423): Add SP_STATUS_REG and RDRAM_SIZE to gfx_info
+* [422](https://github.com/mupen64plus/mupen64plus-core/pull/422): Stubbing some 64dd conversion roms into database.
+* [421](https://github.com/mupen64plus/mupen64plus-core/pull/421): CIC and Densha de Go Translation Patch
+* [420](https://github.com/mupen64plus/mupen64plus-core/pull/420): Don't use IO_BUSY flags for DMA
+* [417](https://github.com/mupen64plus/mupen64plus-core/pull/417): Fix rounding in interpreter
+* [415](https://github.com/mupen64plus/mupen64plus-core/pull/415): Randomize PI/SI interrupt timing
+* [411](https://github.com/mupen64plus/mupen64plus-core/pull/411): More si refactorings
+* [410](https://github.com/mupen64plus/mupen64plus-core/pull/410): Fix slowdowns in Mischief Makers
+* [407](https://github.com/mupen64plus/mupen64plus-core/pull/407): Add AppVeyor config
+* [406](https://github.com/mupen64plus/mupen64plus-core/pull/406): Bump savestate format to 1.2
+* [404](https://github.com/mupen64plus/mupen64plus-core/pull/404): Add entry for 007 - Goldfinger
+* [403](https://github.com/mupen64plus/mupen64plus-core/pull/403): Fix save size for Custom Robo V2.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/402
+* [401](https://github.com/mupen64plus/mupen64plus-core/pull/401): Add travisCI and coverity badges
+* [399](https://github.com/mupen64plus/mupen64plus-core/pull/399): Fix screenshots for games with colon in the title.
+  Fix for https://github.com/mupen64plus/mupen64plus-core/issues/398
+* [394](https://github.com/mupen64plus/mupen64plus-core/pull/394): CountPerOp=1 for Yakouchuu II - Satsujin Kouro
+* [393](https://github.com/mupen64plus/mupen64plus-core/pull/393): Fix description of some core config variables
+* [390](https://github.com/mupen64plus/mupen64plus-core/pull/390): Fix set_fpr_pointers
+* [388](https://github.com/mupen64plus/mupen64plus-core/pull/388): Remove DelaySI hack/option
+* [387](https://github.com/mupen64plus/mupen64plus-core/pull/387): Remove Rat Attack hack for new_dynarec
+* [386](https://github.com/mupen64plus/mupen64plus-core/pull/386): Switch from adler32 to xxHash
+* [382](https://github.com/mupen64plus/mupen64plus-core/pull/382): Use faster container based Travis CI
+* [381](https://github.com/mupen64plus/mupen64plus-core/pull/381): Let travis handle the package installation directly
+* [375](https://github.com/mupen64plus/mupen64plus-core/pull/375): Fix duplicate saving in Paper Mario.
+  This fixes https://github.com/mupen64plus/mupen64plus-core/issues/154
+* [373](https://github.com/mupen64plus/mupen64plus-core/pull/373): Remove Rat Attack hack
+* [371](https://github.com/mupen64plus/mupen64plus-core/pull/371): Have emulator signal RSP interrupts again
+* [370](https://github.com/mupen64plus/mupen64plus-core/pull/370): Base count_per_scanline on N64 clockrate
+* [367](https://github.com/mupen64plus/mupen64plus-core/pull/367): Fixing some warnings
+* [365](https://github.com/mupen64plus/mupen64plus-core/pull/365): Fix order of operations for AI interrupt timing
+* [364](https://github.com/mupen64plus/mupen64plus-core/pull/364): Get x86 new dynarec compiling again (when using PIC)
+* [363](https://github.com/mupen64plus/mupen64plus-core/pull/363): Round PI_WR_LEN_REG up to nearest even number
+* [362](https://github.com/mupen64plus/mupen64plus-core/pull/362): Add setting for Mischief Makers J
+* [360](https://github.com/mupen64plus/mupen64plus-core/pull/360): Rewrite PIF emulation.
+* [358](https://github.com/mupen64plus/mupen64plus-core/pull/358): Fix RevA (U) Rogue Squadron
+* [356](https://github.com/mupen64plus/mupen64plus-core/pull/356): Get rid of "alternate VI timing"
+* [355](https://github.com/mupen64plus/mupen64plus-core/pull/355): Change tpak/gb debug message level to verbose.
+* [352](https://github.com/mupen64plus/mupen64plus-core/pull/352): CountPerOp=1 for Factor5 games
+* [351](https://github.com/mupen64plus/mupen64plus-core/pull/351): Add SI_STATUS_DMA_BUSY.
+  This fixes the error:
+  ```
+  Core Warning: two events of type 0x8 in interrupt queue
+  ```
+  in some games.
+* [343](https://github.com/mupen64plus/mupen64plus-core/pull/343): Send audio data to plugin as the DMA drains
+* [339](https://github.com/mupen64plus/mupen64plus-core/pull/339): Use count_per_op instead of 2
+* [336](https://github.com/mupen64plus/mupen64plus-core/pull/336): Ignore TLB write if TLB entry is unmapping itself.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/221
+* [334](https://github.com/mupen64plus/mupen64plus-core/pull/334): Fix write_cart_rom/read_cart_rom.
+  This fixes https://github.com/mupen64plus/mupen64plus-core/issues/311 (International Track & Field 2000 and Midway's Greatest Arcade Hits Vol. 1)
+* [333](https://github.com/mupen64plus/mupen64plus-core/pull/333): Multiplayer timing fix for Mario Kart E and J
+* [330](https://github.com/mupen64plus/mupen64plus-core/pull/330): Add hack for Rat Attack!
+* [329](https://github.com/mupen64plus/mupen64plus-core/pull/329): Print accelerator when GB cart supports it.
+* [327](https://github.com/mupen64plus/mupen64plus-core/pull/327): Implement "Audio Signal"
+* [326](https://github.com/mupen64plus/mupen64plus-core/pull/326): Updates to DisableExtraMem
+* [324](https://github.com/mupen64plus/mupen64plus-core/pull/324): Add CP0_ERROREPC_REG to MTC0.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/323
+* [322](https://github.com/mupen64plus/mupen64plus-core/pull/322): Fix asm_defines w/ mawk by setting LANG=C
+* [320](https://github.com/mupen64plus/mupen64plus-core/pull/320): Revert "Allow using compiler other than gcc"
+* [318](https://github.com/mupen64plus/mupen64plus-core/pull/318): Fix random resets in South Park 64.
+  https://github.com/mupen64plus/mupen64plus-core/issues/316
+* [317](https://github.com/mupen64plus/mupen64plus-core/pull/317): Allow using compiler other than gcc
+* [313](https://github.com/mupen64plus/mupen64plus-core/pull/313): Memory refactorings
+* [312](https://github.com/mupen64plus/mupen64plus-core/pull/312): Remove memd
+* [310](https://github.com/mupen64plus/mupen64plus-core/pull/310): Fix reading CP0_RANDOM_REG.
+  Fixes https://github.com/mupen64plus/mupen64plus-core/issues/309
+* [308](https://github.com/mupen64plus/mupen64plus-core/pull/308): Add note for NBA Showtime - NBA on NBC
+* [307](https://github.com/mupen64plus/mupen64plus-core/pull/307): Trust plugins to trigger SP interrupts
+* [306](https://github.com/mupen64plus/mupen64plus-core/pull/306): INI cheat cleanup
+* [301](https://github.com/mupen64plus/mupen64plus-core/pull/301): Avoid usage of global variable g_delay_si.
+  (One less global variable used inside the emulation core.)
+* [300](https://github.com/mupen64plus/mupen64plus-core/pull/300): CountPerScanline=1600 for Twisted Edge
+* [298](https://github.com/mupen64plus/mupen64plus-core/pull/298): Various Mac-related build fixes
+* [297](https://github.com/mupen64plus/mupen64plus-core/pull/297): Fix M64P_GL_SWAP_CONTROL with SDL>=1.3 and no video extension
+* [296](https://github.com/mupen64plus/mupen64plus-core/pull/296): Fix undefined behavior in the interpreter
+* [295](https://github.com/mupen64plus/mupen64plus-core/pull/295): [WIP] Pass pointer to fcr31 around in fpu.h functions to avoid usage of g_dev.
+* [293](https://github.com/mupen64plus/mupen64plus-core/pull/293): Revert "Pass pointer to fcr31 around in fpu.h functions to avoid usage of g_dev."
+* [290](https://github.com/mupen64plus/mupen64plus-core/pull/290): Fix audio in RE2
+* [289](https://github.com/mupen64plus/mupen64plus-core/pull/289): Fix Twisted Edge audio.
+  Fixes #285
+* [282](https://github.com/mupen64plus/mupen64plus-core/pull/282): No g dev in interrupt
+  (Remove usage of g_dev in interrupt.)
+* [281](https://github.com/mupen64plus/mupen64plus-core/pull/281): Pass pointer to fcr31 around in fpu.h functions to avoid usage of g_dev.
+* [280](https://github.com/mupen64plus/mupen64plus-core/pull/280): Remove MK64 cheat for E and J
+* [278](https://github.com/mupen64plus/mupen64plus-core/pull/278): Avoid usage of g_dev in rdram_deteciton_hack.
+* [275](https://github.com/mupen64plus/mupen64plus-core/pull/275): README.md URL fix
+* [272](https://github.com/mupen64plus/mupen64plus-core/pull/272): Fix audio in Star Wars Episode I - Racer
+* [271](https://github.com/mupen64plus/mupen64plus-core/pull/271): DK64 Bone Displacement fix
+* [270](https://github.com/mupen64plus/mupen64plus-core/pull/270): Remove custom CountPerScanline values
+* [269](https://github.com/mupen64plus/mupen64plus-core/pull/269): Remove byte and hword accessors
+* [263](https://github.com/mupen64plus/mupen64plus-core/pull/263): Fix Indiana Jones
+* [258](https://github.com/mupen64plus/mupen64plus-core/pull/258): Reduce usage of g_dev
+* [257](https://github.com/mupen64plus/mupen64plus-core/pull/257): Get World Driver Championship booting
+* [256](https://github.com/mupen64plus/mupen64plus-core/pull/256): Mips instructions refactorings
+  (This is just some internal reoganization of mips instructions functions.)
+* [255](https://github.com/mupen64plus/mupen64plus-core/pull/255): new_dynarec: Fix crash during shutdown
+* [253](https://github.com/mupen64plus/mupen64plus-core/pull/253): Restore old behavior when allocating memory for RDRAM
+* [250](https://github.com/mupen64plus/mupen64plus-core/pull/250): Don't reset the speed limiter when falling behind
+* [246](https://github.com/mupen64plus/mupen64plus-core/pull/246): CountPerOp=3 for CBFD
+* [243](https://github.com/mupen64plus/mupen64plus-core/pull/243): Fix compilation in msvc as per Gillou's comment.
+* [242](https://github.com/mupen64plus/mupen64plus-core/pull/242): Fix excessive warnings when compiling using clang.
+* [241](https://github.com/mupen64plus/mupen64plus-core/pull/241): Minor refac
+  (Some minor refactorings to remove some magic constants and rework the si peripherals status command handling.)
+* [240](https://github.com/mupen64plus/mupen64plus-core/pull/240): Avoid g_dev in r4300 code
+  (Small PR which avoids usage of the g_dev global variable inside TLB code.)
+* [239](https://github.com/mupen64plus/mupen64plus-core/pull/239): Don't use SDL directly
+* [238](https://github.com/mupen64plus/mupen64plus-core/pull/238): Dyna start
+* [237](https://github.com/mupen64plus/mupen64plus-core/pull/237): Add ConfigExternalGetParameter
+* [235](https://github.com/mupen64plus/mupen64plus-core/pull/235): new_dynarec: Code cleanup
+* [233](https://github.com/mupen64plus/mupen64plus-core/pull/233): fix include paths / fixes building on arm/neon
+* [232](https://github.com/mupen64plus/mupen64plus-core/pull/232): Disable OSD if OpenGL core context is in use
+* [227](https://github.com/mupen64plus/mupen64plus-core/pull/227): Device refactorings
+* [220](https://github.com/mupen64plus/mupen64plus-core/pull/220): Fix Kirby 64 save size
+* [216](https://github.com/mupen64plus/mupen64plus-core/pull/216): Fix new dynarec interrupt management
+  (This also fixes soft reset.)
+* [215](https://github.com/mupen64plus/mupen64plus-core/pull/215): Fix assertion failure when starting Kuiki Uhabi Suigo
+* [213](https://github.com/mupen64plus/mupen64plus-core/pull/213): No globals
+* [212](https://github.com/mupen64plus/mupen64plus-core/pull/212): Allow CountPerScan and ViTiming in ROM database to be overridden
+* [211](https://github.com/mupen64plus/mupen64plus-core/pull/211): Avoid processing CIC response pif ram as commands
+* [208](https://github.com/mupen64plus/mupen64plus-core/pull/208): Various refactorings
+* [205](https://github.com/mupen64plus/mupen64plus-core/pull/205): Clean magic constants
+* [204](https://github.com/mupen64plus/mupen64plus-core/pull/204): Use custom ViRefresh for some games
+* [203](https://github.com/mupen64plus/mupen64plus-core/pull/203): Fix mario kart multiplayer timings
+* [202](https://github.com/mupen64plus/mupen64plus-core/pull/202): Make SDL usage optional in some files
+* [199](https://github.com/mupen64plus/mupen64plus-core/pull/199): Add using_tlb flag to savestates
+* [198](https://github.com/mupen64plus/mupen64plus-core/pull/198): Allow setting a loadstate job before emulator is running.
+* [196](https://github.com/mupen64plus/mupen64plus-core/pull/196): Fix Pokemon Puzzle League
+* [192](https://github.com/mupen64plus/mupen64plus-core/pull/192): new_dynarec: Allocate memory for original MIPS source code of a recompiled block before do_dirty_stub_ds is being called.
+* [182](https://github.com/mupen64plus/mupen64plus-core/pull/182): New dynarec fix
+* [180](https://github.com/mupen64plus/mupen64plus-core/pull/180): Use Ubuntu Trusty as base system for Travis CI
+* [168](https://github.com/mupen64plus/mupen64plus-core/pull/168): Documentation Update and Formatting
+* [155](https://github.com/mupen64plus/mupen64plus-core/pull/155): Fix speed limiter issue
+* [150](https://github.com/mupen64plus/mupen64plus-core/pull/150): Improve speed limiter accuracy
+* [144](https://github.com/mupen64plus/mupen64plus-core/pull/144): Framelimiter: Discard frames with excessive execution time
+* [143](https://github.com/mupen64plus/mupen64plus-core/pull/143): Fixed gfx moveScreen when SDL_VERSION > 1.2
+* [140](https://github.com/mupen64plus/mupen64plus-core/pull/140): Call gfx moveScreen when SDL window moved (Windows only)
+* [138](https://github.com/mupen64plus/mupen64plus-core/pull/138): new_dynarec: Reverted printing method when warning about a block compiled at bogus memory address
+* [137](https://github.com/mupen64plus/mupen64plus-core/pull/137): Dynamic linker
+* [135](https://github.com/mupen64plus/mupen64plus-core/pull/135): new_dynarec: Fixed bomberman 64
+* [133](https://github.com/mupen64plus/mupen64plus-core/pull/133): new_dynarec: Fixed verifier pointer when using trampoline jump
+* [132](https://github.com/mupen64plus/mupen64plus-core/pull/132): new_dynarec: Avoid replacing an allocated temporary register.
+  Fixed crash in castlevania
+* [131](https://github.com/mupen64plus/mupen64plus-core/pull/131): Allow building the old dynarec on x64 with VisualStudio2013
+* [128](https://github.com/mupen64plus/mupen64plus-core/pull/128): Rename new_dynarec.txt to new_dynarec.mediawiki
+* [125](https://github.com/mupen64plus/mupen64plus-core/pull/125): Remove Zelda OoT Subscreen Delay Fix from mupen64plus.ini
+* [124](https://github.com/mupen64plus/mupen64plus-core/pull/124): new_dynarec: Implemented recompiled DMULT instruction on x86
+  (This also fix DK going through wall issue on x86)
+* [123](https://github.com/mupen64plus/mupen64plus-core/pull/123): Merge back "Avoid .text relocations in PIC shared library" fix + cleanup linkage_arm.S
+* [122](https://github.com/mupen64plus/mupen64plus-core/pull/122): Remove unnecessary OpenBSD warning.
+* [120](https://github.com/mupen64plus/mupen64plus-core/pull/120): Avoid .text relocations in PIC shared library
+* [117](https://github.com/mupen64plus/mupen64plus-core/pull/117): Squelch sscanf warning in arm_cpu_features.
+* [98](https://github.com/mupen64plus/mupen64plus-core/pull/98): [WIP/RFC] Transfer Pak emulation support
+
+
+## Closed Issues
+
+* [245](https://github.com/mupen64plus/mupen64plus-core/issues/245): Mario Kart 64 item not usable bug
+* [350](https://github.com/mupen64plus/mupen64plus-core/issues/350): RSP DMA double buffering not implemented
+* [438](https://github.com/mupen64plus/mupen64plus-core/issues/438): Mario 64 Star Revenge New dynarec game freezes
+* [616](https://github.com/mupen64plus/mupen64plus-core/issues/616): Please add 4K access to resolution in Android.
+* [552](https://github.com/mupen64plus/mupen64plus-core/issues/552): Tonic trouble (u) new dynarec crash
+* [338](https://github.com/mupen64plus/mupen64plus-core/issues/338): Turok 3 freezes after intro
+* [304](https://github.com/mupen64plus/mupen64plus-core/issues/304): Pokemon Puzzle League New Dynarec assert
+* [613](https://github.com/mupen64plus/mupen64plus-core/issues/613): Selecting a save state slot sends M64CORE_SAVESTATE_SLOT command twice
+* [558](https://github.com/mupen64plus/mupen64plus-core/issues/558): Donkey Kong 64 back to level beginning on vines
+* [587](https://github.com/mupen64plus/mupen64plus-core/issues/587): New dynarec CBFD is freezing
+* [504](https://github.com/mupen64plus/mupen64plus-core/issues/504): No 64 bit ARM library support with new dynarec
+* [603](https://github.com/mupen64plus/mupen64plus-core/issues/603): New dynarec not working on x64
+* [540](https://github.com/mupen64plus/mupen64plus-core/issues/540): Translucent textures in Zelda OOT
+* [584](https://github.com/mupen64plus/mupen64plus-core/issues/584): Regression caused by #444
+* [601](https://github.com/mupen64plus/mupen64plus-core/issues/601): Combined joystick actions not working on Windows 10
+* [592](https://github.com/mupen64plus/mupen64plus-core/issues/592): Support for non-SDL mouse injection
+* [595](https://github.com/mupen64plus/mupen64plus-core/issues/595): Debugger is broken
+* [591](https://github.com/mupen64plus/mupen64plus-core/issues/591): Troubles extracting rom MD5 from save state
+* [580](https://github.com/mupen64plus/mupen64plus-core/issues/580): SM64 Last Impact: Game Crashes When jumping inside basket or entering warpipe in hub world
+* [539](https://github.com/mupen64plus/mupen64plus-core/issues/539): Is not longer possible to play using the keyboard
+* [568](https://github.com/mupen64plus/mupen64plus-core/issues/568): Is "frame advance" working?
+* [567](https://github.com/mupen64plus/mupen64plus-core/issues/567): Unable to enter and edit config
+* [555](https://github.com/mupen64plus/mupen64plus-core/issues/555): Audio is not working in Windows
+* [560](https://github.com/mupen64plus/mupen64plus-core/issues/560): D-pad on iOS 
+* [536](https://github.com/mupen64plus/mupen64plus-core/issues/536): Bus error when loading savestate on odroid c2 (armhf)
+* [261](https://github.com/mupen64plus/mupen64plus-core/issues/261): ARM New dynarec crash
+* [522](https://github.com/mupen64plus/mupen64plus-core/issues/522): Building with LTO enabled makes loading save states crash
+* [543](https://github.com/mupen64plus/mupen64plus-core/issues/543): Speed limiter is slowing down way too much
+* [542](https://github.com/mupen64plus/mupen64plus-core/issues/542): Indiana Jones have bugs in dynarec
+* [531](https://github.com/mupen64plus/mupen64plus-core/issues/531): Unplugging controllers using CONTROL_INFO doesn't work
+* [528](https://github.com/mupen64plus/mupen64plus-core/issues/528): Log spam when loading save states: Unexpected command format 01 c4 01  
+* [222](https://github.com/mupen64plus/mupen64plus-core/issues/222): World Driver Championship | Video Error: Error: Unsupported uCode! crc: 844b55b5
+* [530](https://github.com/mupen64plus/mupen64plus-core/issues/530): Major League Baseball with Ken Griffey Jr. (Messed Up Splash Screens and Start Screen)
+* [181](https://github.com/mupen64plus/mupen64plus-core/issues/181): Top Gear Really 2 freezes
+* [294](https://github.com/mupen64plus/mupen64plus-core/issues/294): Save states are locking up the emulator
+* [321](https://github.com/mupen64plus/mupen64plus-core/issues/321): Crash report
+* [527](https://github.com/mupen64plus/mupen64plus-core/issues/527): GLP license text has outdated address
+* [484](https://github.com/mupen64plus/mupen64plus-core/issues/484): mupen64plus save/screenshot/config folder change on macOS
+* [512](https://github.com/mupen64plus/mupen64plus-core/issues/512): Tetris 64 (J) freezes on boot.
+* [489](https://github.com/mupen64plus/mupen64plus-core/issues/489): Reported crashes
+* [497](https://github.com/mupen64plus/mupen64plus-core/issues/497): Crash when loading save state
+* [344](https://github.com/mupen64plus/mupen64plus-core/issues/344): Possibility of idle loop detection on cached interpreter.
+* [447](https://github.com/mupen64plus/mupen64plus-core/issues/447): Removing the GoldenEye TLB hack (Pure Interpreter)
+* [486](https://github.com/mupen64plus/mupen64plus-core/issues/486): International super star soccer 2000 keeps stalling
+* [482](https://github.com/mupen64plus/mupen64plus-core/issues/482): Compiler log seldomness
+* [479](https://github.com/mupen64plus/mupen64plus-core/issues/479): MacOS makefile changes
+* [463](https://github.com/mupen64plus/mupen64plus-core/issues/463): Audio cracks in Banjo Kazooie
+* [458](https://github.com/mupen64plus/mupen64plus-core/issues/458): FlashRam saving fails in Derby Stallion 64
+* [467](https://github.com/mupen64plus/mupen64plus-core/issues/467): Some devices are failing CoreStartup with M64ERR_NO_MEMORY
+* [445](https://github.com/mupen64plus/mupen64plus-core/issues/445): Can't change pak type after game has started using CONTROL.plugin API
+* [469](https://github.com/mupen64plus/mupen64plus-core/issues/469): Hey You Pikachu corrupt graphics
+* [462](https://github.com/mupen64plus/mupen64plus-core/issues/462): Ide Yousuke no Mahjong Juku - black screen
+* [456](https://github.com/mupen64plus/mupen64plus-core/issues/456): Waialae Country Club won't save
+* [452](https://github.com/mupen64plus/mupen64plus-core/issues/452): Turok: Dinosaur Hunter not responding to inputs.
+* [385](https://github.com/mupen64plus/mupen64plus-core/issues/385): Bomberman 64: black screen using arm/x86 new dynarec
+* [283](https://github.com/mupen64plus/mupen64plus-core/issues/283): BattleTanx - Global Assault (U) - Game restarts
+* [442](https://github.com/mupen64plus/mupen64plus-core/issues/442): No longer supporting Raspberry Pi?
+* [434](https://github.com/mupen64plus/mupen64plus-core/issues/434): Should mupen64plus switch to big-endian format for raw saves?
+* [432](https://github.com/mupen64plus/mupen64plus-core/issues/432): Bomberman 64 is freezing as of latest
+* [426](https://github.com/mupen64plus/mupen64plus-core/issues/426): x86 new dynarec games are freezing
+* [429](https://github.com/mupen64plus/mupen64plus-core/issues/429): UI-Console Error: LoadLibrary('mupen64plus.dll') error: The specified module could not be found. 
+* [418](https://github.com/mupen64plus/mupen64plus-core/issues/418): Castlevania gets stuck in the intro demo
+* [145](https://github.com/mupen64plus/mupen64plus-core/issues/145): Donkey Kong 64 - Bone Displacement
+* [288](https://github.com/mupen64plus/mupen64plus-core/issues/288): Indiana Jones x86 new dynarec crash
+* [274](https://github.com/mupen64plus/mupen64plus-core/issues/274): New Dynarec: WDC not working
+* [416](https://github.com/mupen64plus/mupen64plus-core/issues/416): Interpreter fails CP1ROUND test
+* [384](https://github.com/mupen64plus/mupen64plus-core/issues/384): Better COUNT emulation idea/enhancement
+* [405](https://github.com/mupen64plus/mupen64plus-core/issues/405): PIF rewrite broke loading save states at startup
+* [409](https://github.com/mupen64plus/mupen64plus-core/issues/409): Mischief Makers - Framerate halved
+* [402](https://github.com/mupen64plus/mupen64plus-core/issues/402): Custom Robo V2 freeze
+* [374](https://github.com/mupen64plus/mupen64plus-core/issues/374): Save paths not correct.
+* [398](https://github.com/mupen64plus/mupen64plus-core/issues/398): Vigilante 8: Second Offense Screenshots/Save States don't work.
+* [349](https://github.com/mupen64plus/mupen64plus-core/issues/349): Crash GLXBadFBConfig
+* [315](https://github.com/mupen64plus/mupen64plus-core/issues/315): SM64 won't launch (several issues I believe)
+* [392](https://github.com/mupen64plus/mupen64plus-core/issues/392): Yakouchuu II - Satsujin Kouro does not go to menu
+* [154](https://github.com/mupen64plus/mupen64plus-core/issues/154): Paper Mario (U) flash written incorrectly
+* [389](https://github.com/mupen64plus/mupen64plus-core/issues/389): OSD=0 causes game to hang after one has been played
+* [391](https://github.com/mupen64plus/mupen64plus-core/issues/391): Hydro thunder broke with recent commits
+* [127](https://github.com/mupen64plus/mupen64plus-core/issues/127): Several Rare games locking up while using LLE video plugins
+* [379](https://github.com/mupen64plus/mupen64plus-core/issues/379): Perfect Dark (Europe) is hanging/freezing at the Perfect Dark logo
+* [130](https://github.com/mupen64plus/mupen64plus-core/issues/130): Remove processDList() from code and API
+* [335](https://github.com/mupen64plus/mupen64plus-core/issues/335): Compressed ROM support
+* [303](https://github.com/mupen64plus/mupen64plus-core/issues/303): No RPS available in Mupen64 0.51
+* [377](https://github.com/mupen64plus/mupen64plus-core/issues/377): Travis CI broken
+* [314](https://github.com/mupen64plus/mupen64plus-core/issues/314): New Dynarec: NFL Quarterback Club 2001 corrupt graphics
+* [186](https://github.com/mupen64plus/mupen64plus-core/issues/186): Perfect Dark freezes occasionally when attempting to start next level
+* [346](https://github.com/mupen64plus/mupen64plus-core/issues/346): Anisotropic Filtering Missing
+* [200](https://github.com/mupen64plus/mupen64plus-core/issues/200): Top Gear Rally bad audio
+* [316](https://github.com/mupen64plus/mupen64plus-core/issues/316): South park restarts (x86 fix not PIC complaint)
+* [366](https://github.com/mupen64plus/mupen64plus-core/issues/366): Doom 64 Mempak saving issue
+* [354](https://github.com/mupen64plus/mupen64plus-core/issues/354): [Website] HTTPS does not work
+* [345](https://github.com/mupen64plus/mupen64plus-core/issues/345): XbrZ is Broken
+* [221](https://github.com/mupen64plus/mupen64plus-core/issues/221): All Star Baseball 2001 not starting (TLB Exception)
+* [311](https://github.com/mupen64plus/mupen64plus-core/issues/311): International Track & Field 2000 won't start (TLB Exception)
+* [340](https://github.com/mupen64plus/mupen64plus-core/issues/340): Unable to map C buttons
+* [331](https://github.com/mupen64plus/mupen64plus-core/issues/331): Indiana Jones freeze at end of level
+* [319](https://github.com/mupen64plus/mupen64plus-core/issues/319): Issue with compile-time generation of asm defines
+* [328](https://github.com/mupen64plus/mupen64plus-core/issues/328): x86 new dynarec crashing
+* [325](https://github.com/mupen64plus/mupen64plus-core/issues/325): DisableExtraMem no longer working?
+* [323](https://github.com/mupen64plus/mupen64plus-core/issues/323): NHL Breakaway 98 won't start
+* [309](https://github.com/mupen64plus/mupen64plus-core/issues/309): Space Invaders won't start
+* [87](https://github.com/mupen64plus/mupen64plus-core/issues/87): Signed integer overflow in core interpreter
+* [217](https://github.com/mupen64plus/mupen64plus-core/issues/217): Add custom ini support 
+* [284](https://github.com/mupen64plus/mupen64plus-core/issues/284): CBFD freezes when entering other stages using a saved state
+* [299](https://github.com/mupen64plus/mupen64plus-core/issues/299): RE2 video distorted on ARM dynarec and x64 Windows dynarec
+* [287](https://github.com/mupen64plus/mupen64plus-core/issues/287): Banjo tooie crash after latest refactors
+* [219](https://github.com/mupen64plus/mupen64plus-core/issues/219): RSP HLE Crash
+* [268](https://github.com/mupen64plus/mupen64plus-core/issues/268): new dynarec ARM crash
+* [291](https://github.com/mupen64plus/mupen64plus-core/issues/291): macho64 output format not recognized on El Capitan
+* [285](https://github.com/mupen64plus/mupen64plus-core/issues/285): Twisted Edge Extreme Snowboarding no audio
+* [266](https://github.com/mupen64plus/mupen64plus-core/issues/266): Constant audio buffer underflows and GFX flickering in Pokemon Puzzle League FMV's
+* [267](https://github.com/mupen64plus/mupen64plus-core/issues/267): Question: RSP specific instructions and their interpretation
+* [226](https://github.com/mupen64plus/mupen64plus-core/issues/226): Input Lag with GFX plugins that have framebuffer emulation (Mario 64)
+* [262](https://github.com/mupen64plus/mupen64plus-core/issues/262): Pilot Wings 64 Shadows Graphics Glitch
+* [254](https://github.com/mupen64plus/mupen64plus-core/issues/254): Mupen 0.5 Save States (Discussion)
+* [251](https://github.com/mupen64plus/mupen64plus-core/issues/251): Compilation fix for SDL2 from homebrew on Mac for plugins
+* [247](https://github.com/mupen64plus/mupen64plus-core/issues/247): How to run in Fedora?
+* [158](https://github.com/mupen64plus/mupen64plus-core/issues/158): Crash during Mario Party (Coin Block Bash)
+* [248](https://github.com/mupen64plus/mupen64plus-core/issues/248): Missing textures and incorrect placement in Star Wars: Shadows of the Empire
+* [244](https://github.com/mupen64plus/mupen64plus-core/issues/244): Saving sate cause retroarch to crash
+* [193](https://github.com/mupen64plus/mupen64plus-core/issues/193): OSD should support OpenGL core profile
+* [195](https://github.com/mupen64plus/mupen64plus-core/issues/195): arm new dynarec doesn't build with clang
+* [234](https://github.com/mupen64plus/mupen64plus-core/issues/234): Segfault when closing games
+* [225](https://github.com/mupen64plus/mupen64plus-core/issues/225): Ability to set custom RDRAM size
+* [230](https://github.com/mupen64plus/mupen64plus-core/issues/230): fails to build since 5aebce38204de4fe3671f78e3cee66838f9a1d87
+* [139](https://github.com/mupen64plus/mupen64plus-core/issues/139): Configurable VI Refresh Rate
+* [187](https://github.com/mupen64plus/mupen64plus-core/issues/187): Gamepads are comfortable
+* [194](https://github.com/mupen64plus/mupen64plus-core/issues/194): Compiling to custom paths
+* [191](https://github.com/mupen64plus/mupen64plus-core/issues/191): Wonder Project J2: Cutoff / misaligned textures
+* [183](https://github.com/mupen64plus/mupen64plus-core/issues/183): Building on Windows
+* [179](https://github.com/mupen64plus/mupen64plus-core/issues/179): NBA live 2000 crash
+* [170](https://github.com/mupen64plus/mupen64plus-core/issues/170): Banjo-Tooie crash
+* [160](https://github.com/mupen64plus/mupen64plus-core/issues/160): Vidext SDL2 compatibility overrides context profile mask, making attribute useless
+* [119](https://github.com/mupen64plus/mupen64plus-core/issues/119): ARM build creates broken PIC with TEXTREL
+* [172](https://github.com/mupen64plus/mupen64plus-core/issues/172): Screenshots broken on raspberry pi
+* [166](https://github.com/mupen64plus/mupen64plus-core/issues/166): glide64mk2 requires libboost 1.46.1
+* [173](https://github.com/mupen64plus/mupen64plus-core/issues/173): Core build fails in VS2013
+* [169](https://github.com/mupen64plus/mupen64plus-core/issues/169): With mouse input disabled, mouse still gets captured and ctrl alt does nothing
+* [167](https://github.com/mupen64plus/mupen64plus-core/issues/167): N64 from open emu suddenly stopped working. 
+* [163](https://github.com/mupen64plus/mupen64plus-core/issues/163): Does not work on Windows XP (but works if binaries are patched)
+* [161](https://github.com/mupen64plus/mupen64plus-core/issues/161): Disney's Tarzan freezes
+* [153](https://github.com/mupen64plus/mupen64plus-core/issues/153): Triggering [CoreEvents] using simultaneous button presses doesn't work
+* [152](https://github.com/mupen64plus/mupen64plus-core/issues/152): Matching code for input neglects spaces in controller names
+* [149](https://github.com/mupen64plus/mupen64plus-core/issues/149): Bomberman 64: transition and effets are not rightly emulated
+* [146](https://github.com/mupen64plus/mupen64plus-core/issues/146): RSP SETTINGS VANISHED
+* [141](https://github.com/mupen64plus/mupen64plus-core/issues/141): Fails to build on windows (mingw64)
+* [136](https://github.com/mupen64plus/mupen64plus-core/issues/136): si/eeprom.o (symbol from plugin): memset used with constant zero length parameter;
+* [102](https://github.com/mupen64plus/mupen64plus-core/issues/102): Google Code shutting down: More organization needed
+* [126](https://github.com/mupen64plus/mupen64plus-core/issues/126): Can map buttons with controller, game play doesnt work. Sixaxis
+* [107](https://github.com/mupen64plus/mupen64plus-core/issues/107): Next release discussion
+
 
 Mupen64Plus-core v2.5 - April 26, 2015
 --------------------------------------

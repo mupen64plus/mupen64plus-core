@@ -236,9 +236,9 @@ ifeq ($(OS), OSX)
   CXXFLAGS += '-stdlib=libc++'
   ifeq ($(CPU), X86)
     ifeq ($(ARCH_DETECTED), 64BITS)
-      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.7 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -arch x86_64 -mmacosx-version-min=10.9 -isysroot $(OSX_SDK_PATH)
     else
-      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.7 -isysroot $(OSX_SDK_PATH)
+      CFLAGS += -pipe -mmmx -msse -arch i686 -mmacosx-version-min=10.9 -isysroot $(OSX_SDK_PATH)
       ifneq ($(PROFILE), 1)
         CFLAGS += -fomit-frame-pointer
       endif
@@ -796,7 +796,7 @@ targets:
 	@echo "    VULKAN=0       == Disable vulkan support for the default video extension implementation"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
-	@echo "    PREFIX=path    == install/uninstall prefix (default: /usr/local/)"
+	@echo "    PREFIX=path    == install/uninstall prefix (default: /usr/local)"
 	@echo "    SHAREDIR=path  == path to install shared data files (default: PREFIX/share/mupen64plus)"
 	@echo "    LIBDIR=path    == path to install core library (default: PREFIX/lib)"
 	@echo "    INCDIR=path    == path to install core header files (default: PREFIX/include/mupen64plus)"
@@ -833,7 +833,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) _obj $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_*
+	$(RM) -r _obj $(OBJDIR) $(TARGET) $(SONAME) $(SRCDIR)/asm_defines/asm_defines_*.h
 
 # build dependency files
 CFLAGS += -MD -MP

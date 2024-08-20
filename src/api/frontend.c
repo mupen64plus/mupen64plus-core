@@ -182,7 +182,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (g_EmulatorRunning || l_DiskOpen || l_ROMOpen)
                 return M64ERR_INVALID_STATE;
             // ROM buffer size must be divisible by 4 to avoid out-of-bounds read in swap_copy_rom (v64/n64 formats)
-            if (ParamPtr == NULL || ParamInt < 4096 || ParamInt > CART_ROM_MAX_SIZE || ParamInt % 4 != 0)
+            if (ParamPtr == NULL || ParamInt < 4096 || ParamInt > CART_ROM_MAX_SIZE)
                 return M64ERR_INPUT_ASSERT;
             rval = open_rom((const unsigned char *) ParamPtr, ParamInt);
             if (rval == M64ERR_SUCCESS)
@@ -222,7 +222,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
         case M64CMD_PIF_OPEN:
             if (g_EmulatorRunning)
                 return M64ERR_INVALID_STATE;
-            if (ParamPtr == NULL || ParamInt != 2048)
+            if (ParamPtr == NULL || ParamInt < 1984 || ParamInt > 2048 || ParamInt % 4 != 0)
                 return M64ERR_INPUT_ASSERT;
             return open_pif((const unsigned char *) ParamPtr, ParamInt);
         case M64CMD_ROM_GET_HEADER:

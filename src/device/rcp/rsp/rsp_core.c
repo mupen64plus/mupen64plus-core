@@ -56,27 +56,36 @@ static void do_sp_dma(struct rsp_core* sp, const struct sp_dma* dma)
     {
         for(j=0; j<count; j++) {
             for(i=0; i<length; i++) {
-                dram[dramaddr^S8] = spmem[memaddr^S8];
+                dram[(dramaddr^S8) & 0x7fffff] = spmem[(memaddr^S8) & 0xfff];
                 memaddr++;
                 dramaddr++;
             }
-
-            post_framebuffer_write(&sp->dp->fb, dramaddr - length, length);
+            if (dramaddr <= 0x800000)
+                post_framebuffer_write(&sp->dp->fb, dramaddr - length, length);
             dramaddr+=skip;
         }
+
+        sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
+        sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
+        sp->regs[SP_RD_LEN_REG] = 0xff8;
     }
     else
     {
         for(j=0; j<count; j++) {
-            pre_framebuffer_read(&sp->dp->fb, dramaddr);
+            if (dramaddr < 0x800000)
+                pre_framebuffer_read(&sp->dp->fb, dramaddr);
 
             for(i=0; i<length; i++) {
-                spmem[memaddr^S8] = dram[dramaddr^S8];
+                spmem[(memaddr^S8) & 0xfff] = dram[(dramaddr^S8) & 0x7fffff];
                 memaddr++;
                 dramaddr++;
             }
             dramaddr+=skip;
         }
+
+        sp->regs[SP_MEM_ADDR_REG] = memaddr & 0xfff;
+        sp->regs[SP_DRAM_ADDR_REG] = dramaddr & 0xffffff;
+        sp->regs[SP_RD_LEN_REG] = 0xff8;
     }
 
     /* schedule end of dma event */
@@ -137,68 +146,68 @@ static void fifo_pop(struct rsp_core* sp)
 static void update_sp_status(struct rsp_core* sp, uint32_t w)
 {
     /* clear / set halt */
-    if (w & 0x1) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_HALT;
-    if (w & 0x2) sp->regs[SP_STATUS_REG] |= SP_STATUS_HALT;
+    if ((w & 0x3) == 0x1) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_HALT;
+    if ((w & 0x3) == 0x2) sp->regs[SP_STATUS_REG] |= SP_STATUS_HALT;
 
     /* clear broke */
     if (w & 0x4) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_BROKE;
 
     /* clear SP interrupt */
-    if (w & 0x8)
+    if ((w & 0x18) == 0x8)
     {
         clear_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
     /* set SP interrupt */
-    if (w & 0x10)
+    if ((w & 0x18) == 0x10)
     {
         signal_rcp_interrupt(sp->mi, MI_INTR_SP);
     }
 
     /* clear / set single step */
-    if (w & 0x20) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SSTEP;
-    if (w & 0x40) sp->regs[SP_STATUS_REG] |= SP_STATUS_SSTEP;
+    if ((w & 0x60) == 0x20) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SSTEP;
+    if ((w & 0x60) == 0x40) sp->regs[SP_STATUS_REG] |= SP_STATUS_SSTEP;
 
     /* clear / set interrupt on break */
-    if (w & 0x80) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_INTR_BREAK;
-    if (w & 0x100) sp->regs[SP_STATUS_REG] |= SP_STATUS_INTR_BREAK;
+    if ((w & 0x180) == 0x80) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_INTR_BREAK;
+    if ((w & 0x180) == 0x100) sp->regs[SP_STATUS_REG] |= SP_STATUS_INTR_BREAK;
 
     /* clear / set signal 0 */
-    if (w & 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
-    if (w & 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
+    if ((w & 0x600) == 0x200) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG0;
+    if ((w & 0x600) == 0x400) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG0;
 
     /* clear / set signal 1 */
-    if (w & 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
-    if (w & 0x1000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG1;
+    if ((w & 0x1800) == 0x800) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG1;
+    if ((w & 0x1800) == 0x1000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG1;
 
     /* clear / set signal 2 */
-    if (w & 0x2000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG2;
-    if (w & 0x4000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG2;
+    if ((w & 0x6000) == 0x2000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG2;
+    if ((w & 0x6000) == 0x4000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG2;
 
     /* clear / set signal 3 */
-    if (w & 0x8000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG3;
-    if (w & 0x10000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG3;
+    if ((w & 0x18000) == 0x8000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG3;
+    if ((w & 0x18000) == 0x10000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG3;
 
     /* clear / set signal 4 */
-    if (w & 0x20000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG4;
-    if (w & 0x40000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG4;
+    if ((w & 0x60000) == 0x20000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG4;
+    if ((w & 0x60000) == 0x40000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG4;
 
     /* clear / set signal 5 */
-    if (w & 0x80000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG5;
-    if (w & 0x100000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG5;
+    if ((w & 0x180000) == 0x80000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG5;
+    if ((w & 0x180000) == 0x100000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG5;
 
     /* clear / set signal 6 */
-    if (w & 0x200000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG6;
-    if (w & 0x400000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG6;
+    if ((w & 0x600000) == 0x200000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG6;
+    if ((w & 0x600000) == 0x400000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG6;
 
     /* clear / set signal 7 */
-    if (w & 0x800000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG7;
-    if (w & 0x1000000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG7;
+    if ((w & 0x1800000) == 0x800000) sp->regs[SP_STATUS_REG] &= ~SP_STATUS_SIG7;
+    if ((w & 0x1800000) == 0x1000000) sp->regs[SP_STATUS_REG] |= SP_STATUS_SIG7;
 
     if (sp->rsp_task_locked && (get_event(&sp->mi->r4300->cp0.q, SP_INT))) return;
-    if (!(w & 0x1) && !(w & 0x4) && !sp->rsp_task_locked)
+    if (!((w & 0x3) == 1) && !(w & 0x4) && !sp->rsp_task_locked)
         return;
 
-    if (!(sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)))
+    if (!(sp->regs[SP_STATUS_REG] & SP_STATUS_HALT))
         do_SP_Task(sp);
 }
 
@@ -224,6 +233,8 @@ void poweron_rsp(struct rsp_core* sp)
     sp->rsp_task_locked = 0;
     sp->mi->r4300->cp0.interrupt_unsafe_state &= ~INTR_UNSAFE_RSP;
     sp->regs[SP_STATUS_REG] = 1;
+    sp->regs[SP_RD_LEN_REG] = 0xff8;
+    sp->regs[SP_WR_LEN_REG] = 0xff8;
 }
 
 
@@ -294,12 +305,19 @@ void read_rsp_regs2(void* opaque, uint32_t address, uint32_t* value)
     uint32_t reg = rsp_reg2(address);
 
     *value = sp->regs2[reg];
+
+    if (reg == SP_PC_REG)
+        *value &= 0xffc;
+
 }
 
 void write_rsp_regs2(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
     uint32_t reg = rsp_reg2(address);
+
+    if (reg == SP_PC_REG)
+        mask &= 0xffc;
 
     masked_write(&sp->regs2[reg], value, mask);
 }
