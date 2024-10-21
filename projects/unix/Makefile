@@ -353,17 +353,7 @@ endif
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
   SDL_CONFIG = $(CROSS_COMPILE)sdl2-config
   ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-    SDL_CONFIG = $(CROSS_COMPILE)sdl-config
-    ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-      $(error No SDL development libraries found!)
-    else
-      ifeq ($(NETPLAY), 1)
-        SDL_LDLIBS += -lSDL_net
-      endif
-      # SDL1 doesn't support vulkan
-      VULKAN = 0
-      $(warning Using SDL 1.2 libraries)
-    endif
+    $(error No SDL development libraries found!)
   else
     ifeq ($(NETPLAY), 1)
       SDL_LDLIBS += -lSDL2_net
