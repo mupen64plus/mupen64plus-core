@@ -351,26 +351,18 @@ endif
 
 # test for presence of SDL
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
-  SDL_CONFIG = $(CROSS_COMPILE)sdl2-config
-  ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-    SDL_CONFIG = $(CROSS_COMPILE)sdl-config
-    ifeq ($(shell which $(SDL_CONFIG) 2>/dev/null),)
-      $(error No SDL development libraries found!)
-    else
-      ifeq ($(NETPLAY), 1)
-        SDL_LDLIBS += -lSDL_net
-      endif
-      # SDL1 doesn't support vulkan
-      VULKAN = 0
-      $(warning Using SDL 1.2 libraries)
-    endif
-  else
-    ifeq ($(NETPLAY), 1)
-      SDL_LDLIBS += -lSDL2_net
-    endif
+  ifeq ($(shell $(PKG_CONFIG) --modversion sdl2 2>/dev/null),)
+    $(error No SDL2 development libraries found!)
   endif
-  SDL_CFLAGS  += $(shell $(SDL_CONFIG) --cflags)
-  SDL_LDLIBS += $(shell $(SDL_CONFIG) --libs)
+  ifeq ($(NETPLAY), 1)
+    ifeq ($(shell $(PKG_CONFIG) --modversion SDL2_net 2>/dev/null),)
+      $(error No SDL2_net development libraries found!)
+    endif
+    SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags SDL2_net)
+    SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs SDL2_net)
+  endif
+  SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl2)
+  SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl2)
 endif
 CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
