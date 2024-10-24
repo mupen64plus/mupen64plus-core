@@ -429,7 +429,7 @@ uint8_t* scan_and_expand_disk_format(uint8_t* data, size_t size,
 
         //IPL Load Address
         uint32_t ipl_load_addr = big32(sys_data->ipl_load_addr);
-        if (ipl_load_addr < 0x80000000 && ipl_load_addr >= 0x80800000) continue;
+        if (ipl_load_addr < 0x80000000 || ipl_load_addr >= 0x80800000) continue;
 
         //Country Code
         uint32_t disk_region = big32(sys_data->region);
