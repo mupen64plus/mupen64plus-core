@@ -43,12 +43,11 @@
 #include "m64p_vidext.h"
 #include "vidext.h"
 
-#if SDL_VERSION_ATLEAST(2,0,0)
-    #ifndef USE_GLES
-    static int l_ForceCompatibilityContext = 1;
-    #endif
-#include "vidext_sdl2_compat.h"
+#ifndef USE_GLES
+static int l_ForceCompatibilityContext = 1;
 #endif
+
+#include "vidext_sdl2_compat.h"
 
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -134,13 +133,11 @@ EXPORT m64p_error CALL VidExt_InitWithRenderMode(m64p_render_mode RenderMode)
     l_RenderMode = RenderMode;
 #endif
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
     /* retrieve default swap interval/VSync */
     if (RenderMode == M64P_RENDER_OPENGL) {
         l_SwapControl = SDL_GL_GetSwapInterval();
     }
-#endif
 
 #if SDL_VERSION_ATLEAST(2,24,0)
     /* fix DPI scaling issues on Windows */
@@ -188,9 +185,7 @@ EXPORT m64p_error CALL VidExt_Quit(void)
         return M64ERR_NOT_INIT;
 
     SDL_ShowCursor(SDL_ENABLE);
-#if SDL_VERSION_ATLEAST(2,0,0)
     SDL2_DestroyWindow();
-#endif
 #ifdef VIDEXT_VULKAN
     if (l_RenderMode == M64P_RENDER_VULKAN) {
         SDL_Vulkan_UnloadLibrary();
@@ -264,7 +259,6 @@ EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRat
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncListRates)(Size, NumRates, Rates);
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -299,10 +293,6 @@ EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRat
     *NumRates = rateCount;
 
     return M64ERR_SUCCESS;
-#else
-    // SDL1 doesn't support getting refresh rates
-    return M64ERR_UNSUPPORTED;
-#endif
 }
 
 EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)
@@ -377,14 +367,12 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
 
     SDL_ShowCursor(SDL_DISABLE);
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     /* set swap interval/VSync */
     if (l_RenderMode == M64P_RENDER_OPENGL &&
         SDL_GL_SetSwapInterval(l_SwapControl) != 0)
     {
         DebugMessage(M64MSG_ERROR, "SDL swap interval (VSync) set failed: %s", SDL_GetError());
     }
-#endif
 
     l_Fullscreen = (ScreenMode == M64VIDEO_FULLSCREEN);
     l_VideoOutputActive = 1;
@@ -409,7 +397,6 @@ EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int Re
         return rval;
     }
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     if (!SDL_WasInit(SDL_INIT_VIDEO) || !SDL_VideoWindow)
         return M64ERR_NOT_INIT;
 
@@ -486,10 +473,6 @@ EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int Re
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
 
     return M64ERR_SUCCESS;
-#else
-    // SDL1 doesn't support setting refresh rates
-    return M64ERR_UNSUPPORTED;
-#endif
 }
 
 EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
@@ -643,16 +626,11 @@ static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_GREEN_SIZE,   SDL_GL_GREEN_SIZE },
         { M64P_GL_BLUE_SIZE,    SDL_GL_BLUE_SIZE },
         { M64P_GL_ALPHA_SIZE,   SDL_GL_ALPHA_SIZE },
-#if !SDL_VERSION_ATLEAST(1,3,0)
-        { M64P_GL_SWAP_CONTROL, SDL_GL_SWAP_CONTROL },
-#endif
         { M64P_GL_MULTISAMPLEBUFFERS, SDL_GL_MULTISAMPLEBUFFERS },
         { M64P_GL_MULTISAMPLESAMPLES, SDL_GL_MULTISAMPLESAMPLES }
-#if SDL_VERSION_ATLEAST(2,0,0)
        ,{ M64P_GL_CONTEXT_MAJOR_VERSION, SDL_GL_CONTEXT_MAJOR_VERSION },
         { M64P_GL_CONTEXT_MINOR_VERSION, SDL_GL_CONTEXT_MINOR_VERSION },
         { M64P_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_MASK }
-#endif
 };
 static const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
 
@@ -677,7 +655,6 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
     }
 
     /* translate the GL context type mask if necessary */
-#if SDL_VERSION_ATLEAST(2,0,0)
     if (Attr == M64P_GL_CONTEXT_PROFILE_MASK)
     {
         switch (Value)
@@ -698,7 +675,6 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
                 Value = 0;
         }
     }
-#endif
 
     for (i = 0; i < mapSize; i++)
     {
@@ -727,13 +703,11 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     if (Attr == M64P_GL_SWAP_CONTROL)
     {
         *pValue = SDL_GL_GetSwapInterval();
         return M64ERR_SUCCESS;
     }
-#endif
 
     for (i = 0; i < mapSize; i++)
     {
@@ -743,7 +717,6 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
             if (SDL_GL_GetAttribute(GLAttrMap[i].sdlAttr, &NewValue) != 0)
                 return M64ERR_SYSTEM_FAIL;
             /* translate the GL context type mask if necessary */
-#if SDL_VERSION_ATLEAST(2,0,0)
             if (Attr == M64P_GL_CONTEXT_PROFILE_MASK)
             {
                 switch (NewValue)
@@ -761,7 +734,6 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
                         NewValue = 0;
                 }
             }
-#endif
             *pValue = NewValue;
             return M64ERR_SUCCESS;
         }
