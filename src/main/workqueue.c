@@ -131,11 +131,8 @@ int workqueue_init(void)
             return -1;
         }
 
-#if SDL_VERSION_ATLEAST(2,0,0)
         thread->thread = SDL_CreateThread(workqueue_thread_handler, "m64pwq", thread);
-#else
-        thread->thread = SDL_CreateThread(workqueue_thread_handler, thread);
-#endif
+
         if (!thread->thread) {
             DebugMessage(M64MSG_ERROR, "Could not create workqueue thread handler");
             SDL_UnlockMutex(workqueue_mgmt.lock);

@@ -312,11 +312,8 @@ static int netplay_ensure_valid(uint8_t control_id)
     if (l_udpChannel == -1)
         return 0;
 
-#if SDL_VERSION_ATLEAST(2,0,0)
     SDL_Thread* thread = SDL_CreateThread(netplay_require_response, "Netplay key request", &control_id);
-#else
-    SDL_Thread* thread = SDL_CreateThread(netplay_require_response, &control_id);
-#endif
+
     while (!check_valid(control_id, l_cin_compats[control_id].netplay_count) && l_udpChannel != -1)
         netplay_process();
     int success;
