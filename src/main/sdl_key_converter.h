@@ -27,8 +27,6 @@
 uint16_t sdl_keysym2scancode(uint16_t keysym);
 uint16_t sdl_scancode2keysym(uint16_t scancode);
 
-#if SDL_VERSION_ATLEAST(1,3,0)
-
 static osal_inline uint16_t sdl_keysym2native(uint16_t keysym)
 {
     return sdl_keysym2scancode(keysym);
@@ -38,17 +36,3 @@ static osal_inline uint16_t sdl_native2keysym(uint16_t native)
 {
     return sdl_scancode2keysym(native);
 }
-
-#else
-
-static osal_inline uint16_t sdl_keysym2native(uint16_t keysym)
-{
-    return keysym;
-}
-
-static osal_inline uint16_t sdl_native2keysym(uint16_t native)
-{
-    return native;
-}
-
-#endif
