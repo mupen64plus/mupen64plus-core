@@ -180,7 +180,7 @@ void read_ai_regs(void* opaque, uint32_t address, uint32_t* value)
             ai->last_read = *value;
         }
     }
-    else
+    else if (reg < AI_REGS_COUNT)
     {
         *value = ai->regs[reg];
     }
@@ -212,11 +212,15 @@ void write_ai_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         if ((ai->regs[reg]) != (value & mask))
             ai->samples_format_changed = 1;
 
-        masked_write(&ai->regs[reg], value, mask);
+        if (reg < AI_REGS_COUNT) {
+            masked_write(&ai->regs[reg], value, mask);
+        }
         return;
     }
 
-    masked_write(&ai->regs[reg], value, mask);
+    if (reg < AI_REGS_COUNT) {
+        masked_write(&ai->regs[reg], value, mask);
+    }
 }
 
 void ai_end_of_dma_event(void* opaque)
