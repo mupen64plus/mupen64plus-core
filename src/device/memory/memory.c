@@ -227,7 +227,7 @@ enum {
     MB_DD_ROM   = MB_RSP_MEM    + SP_MEM_SIZE,
     MB_PIF_MEM  = MB_DD_ROM     + DD_ROM_MAX_SIZE,
     MB_MAX_SIZE = MB_PIF_MEM    + PIF_ROM_SIZE + PIF_RAM_SIZE,
-    MB_MAX_SIZE_FULL = 0x20000000
+    MB_MAX_SIZE_FULL = 0x120000000,
 };
 
 /* Use LSB of mem_base pointer to encode mem_base mode

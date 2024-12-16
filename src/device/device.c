@@ -21,6 +21,7 @@
 
 #include "device.h"
 
+#include "main/util.h"
 #include "memory/memory.h"
 #include "pif/pif.h"
 #include "r4300/r4300_core.h"
@@ -57,7 +58,7 @@ static void get_pi_dma_handler(struct cart* cart, struct dd_controller* dd, uint
 
     if (address >= MM_CART_ROM) {
         if (address >= MM_CART_DOM3) {
-            /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom (Paper Mario (U)) ??? */
+            /* 0x1fd00000 - 0xffffffff : dom3 addr2, cart rom */
             RW(cart, cart_dom3);
         }
         else {
@@ -155,7 +156,7 @@ void init_device(struct device* dev,
         { A(MM_DD_ROM, 0x1ffffff), M64P_MEM_NOTHING, { NULL, RW(open_bus) } },
         { A(MM_DOM2_ADDR2, 0x1ffff), M64P_MEM_FLASHRAMSTAT, { &dev->cart, RW(cart_dom2)  } },
         { A(MM_IS_VIEWER, 0xfff), M64P_MEM_NOTHING, { &dev->is, RW(is_viewer) } },
-        { A(MM_CART_ROM, rom_size-1), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
+        { A(MM_CART_ROM, min(rom_size-1, 0xfbfffff)), M64P_MEM_ROM, { &dev->cart.cart_rom, RW(cart_rom) } },
         { A(MM_PIF_MEM, 0xffff), M64P_MEM_PIF, { &dev->pif, RW(pif_mem) } }
     };
 

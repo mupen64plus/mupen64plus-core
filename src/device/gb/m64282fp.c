@@ -24,11 +24,9 @@
  */
 
 #include "m64282fp.h"
+#include "main/util.h"
 
 #include <string.h>
-
-int min(int a, int b) { return (a < b) ? a : b; }
-int max(int a, int b) { return (a < b) ? b : a; }
 
 int clamp(int v, int low, int high)
 {
