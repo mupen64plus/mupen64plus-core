@@ -932,7 +932,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
          */
         for (i = 0; i < RDRAM_MAX_MODULES_COUNT; ++i) {
             memcpy(dev->rdram.regs[i], dev->rdram.regs[0], RDRAM_REGS_COUNT*sizeof(dev->rdram.regs[0][0]));
-            dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
+            dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(ri_address(i * 0x200000), 0) << 2;
         }
 
         /* dd state */
@@ -1286,7 +1286,7 @@ static int savestates_load_pj64(struct device* dev,
      */
     for (i = 0; i < (SaveRDRAMSize / 0x200000); ++i) {
         memcpy(dev->rdram.regs[i], dev->rdram.regs[0], RDRAM_REGS_COUNT*sizeof(dev->rdram.regs[0][0]));
-        dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(i * 0x200000) << 2;
+        dev->rdram.regs[i][RDRAM_DEVICE_ID_REG] = ri_address_to_id_field(ri_address(i * 0x200000), 0) << 2;
     }
 
     /* dd state */
