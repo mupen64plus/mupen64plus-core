@@ -20,8 +20,12 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
 #include <SDL_syswm.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -268,7 +272,7 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
 /*********************************************************************************************************
 * sdl event filter
 */
-static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
+static bool SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
 {
 #ifndef NO_KEYBINDINGS
     int cmd, action;
@@ -277,20 +281,21 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
     switch(event->type)
     {
         // user clicked on window close button
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             main_stop();
             break;
 
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             if (event->key.repeat)
                 return 0;
 
-            event_sdl_keydown(event->key.keysym.scancode, event->key.keysym.mod);
+            event_sdl_keydown(event->key.scancode, event->key.mod);
             return 0;
-        case SDL_KEYUP:
-            event_sdl_keyup(event->key.keysym.scancode, event->key.keysym.mod);
+        case SDL_EVENT_KEY_UP:
+            event_sdl_keyup(event->key.scancode, event->key.mod);
             return 0;
 
+/*
         case SDL_WINDOWEVENT:
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_RESIZED:
@@ -306,7 +311,7 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                     break;
             }
             break;
-
+*/
 #ifndef NO_KEYBINDINGS
         // if joystick action is detected, check if it's mapped to a special function
         case SDL_JOYAXISMOTION:

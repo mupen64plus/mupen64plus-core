@@ -22,14 +22,21 @@
 /* This file contains the Core video extension functions which will be exported
  * outside of the core library.
  */
-
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 /* we need at least SDL 2.0.6 for vulkan */
 #if !SDL_VERSION_ATLEAST(2,0,6)
     #undef VIDEXT_VULKAN
 #endif
 #ifdef VIDEXT_VULKAN
+#ifdef USE_SDL3
+#include <SDL3/SDL_vulkan.h>
+#else
 #include <SDL_vulkan.h>
+#endif
 #include <vulkan/vulkan.h>
 #endif
 #include <stdlib.h>
@@ -47,7 +54,9 @@
 static int l_ForceCompatibilityContext = 1;
 #endif
 
+#ifndef USE_SDL3
 #include "vidext_sdl2_compat.h"
+#endif
 
 /* local variables */
 static m64p_video_extension_functions l_ExternalVideoFuncTable = {17, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
@@ -127,7 +136,7 @@ EXPORT m64p_error CALL VidExt_InitWithRenderMode(m64p_render_mode RenderMode)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncInitWithRenderMode)(RenderMode);
-
+#ifndef USE_SDL3
     /* set global render mode */
 #ifdef VIDEXT_VULKAN
     l_RenderMode = RenderMode;
@@ -163,7 +172,7 @@ EXPORT m64p_error CALL VidExt_InitWithRenderMode(m64p_render_mode RenderMode)
         return M64ERR_UNSUPPORTED;
 #endif
     }
-
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -181,6 +190,7 @@ EXPORT m64p_error CALL VidExt_Quit(void)
         return rval;
     }
 
+#ifndef USE_SDL3
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -199,20 +209,21 @@ EXPORT m64p_error CALL VidExt_Quit(void)
     l_pScreen = NULL;
     l_VideoOutputActive = 0;
     StateChanged(M64CORE_VIDEO_MODE, M64VIDEO_NONE);
-
+#endif
     return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *NumSizes)
 {
+    /* call video extension override if necessary */
+    if (l_VideoExtensionActive)
+        return (*l_ExternalVideoFuncTable.VidExtFuncListModes)(SizeArray, NumSizes);
+
+#ifndef USE_SDL3
     const SDL_VideoInfo *videoInfo;
     unsigned int videoFlags;
     SDL_Rect **modes;
     int i;
-
-    /* call video extension override if necessary */
-    if (l_VideoExtensionActive)
-        return (*l_ExternalVideoFuncTable.VidExtFuncListModes)(SizeArray, NumSizes);
 
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
@@ -249,7 +260,7 @@ EXPORT m64p_error CALL VidExt_ListFullscreenModes(m64p_2d_size *SizeArray, int *
     }
 
     *NumSizes = i;
-
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -259,6 +270,7 @@ EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRat
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncListRates)(Size, NumRates, Rates);
 
+#ifndef USE_SDL3
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -291,13 +303,13 @@ EXPORT m64p_error CALL VidExt_ListFullscreenRates(m64p_2d_size Size, int *NumRat
     }
 
     *NumRates = rateCount;
-
+#endif
     return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPixel, m64p_video_mode ScreenMode, m64p_video_flags Flags)
 {
-    const SDL_VideoInfo *videoInfo;
+    
     int videoFlags = 0;
 
     /* call video extension override if necessary */
@@ -314,6 +326,8 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
         return rval;
     }
 
+#ifndef USE_SDL3
+    const SDL_VideoInfo *videoInfo;
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -378,6 +392,7 @@ EXPORT m64p_error CALL VidExt_SetVideoMode(int Width, int Height, int BitsPerPix
     l_VideoOutputActive = 1;
     StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -397,6 +412,7 @@ EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int Re
         return rval;
     }
 
+#ifndef USE_SDL3
     if (!SDL_WasInit(SDL_INIT_VIDEO) || !SDL_VideoWindow)
         return M64ERR_NOT_INIT;
 
@@ -471,13 +487,13 @@ EXPORT m64p_error CALL VidExt_SetVideoModeWithRate(int Width, int Height, int Re
     l_VideoOutputActive = 1;
     StateChanged(M64CORE_VIDEO_MODE, ScreenMode);
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
-
+#endif
     return M64ERR_SUCCESS;
 }
 
 EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
 {
-    const SDL_VideoInfo *videoInfo;
+    
     int videoFlags = 0;
 
     /* call video extension override if necessary */
@@ -497,6 +513,8 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
         return rval;
     }
 
+#ifndef USE_SDL3
+    const SDL_VideoInfo *videoInfo;
     if (!l_VideoOutputActive || !SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -538,6 +556,7 @@ EXPORT m64p_error CALL VidExt_ResizeWindow(int Width, int Height)
     StateChanged(M64CORE_VIDEO_SIZE, (Width << 16) | Height);
     // re-create the On-Screen Display
     osd_init(Width, Height);
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -546,12 +565,12 @@ EXPORT m64p_error CALL VidExt_SetCaption(const char *Title)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncSetCaption)(Title);
-
+#ifndef USE_SDL3
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
     SDL_WM_SetCaption(Title, "M64+ Video");
-
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -569,6 +588,7 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
         return rval;
     }
 
+#ifndef USE_SDL3
     if (!SDL_WasInit(SDL_INIT_VIDEO))
         return M64ERR_NOT_INIT;
 
@@ -590,7 +610,7 @@ EXPORT m64p_error CALL VidExt_ToggleFullScreen(void)
     {
         DebugMessage(M64MSG_ERROR, "SDL_WM_ToggleFullScreen failed: %s", SDL_GetError());
     }
-
+#endif
     return M64ERR_SYSTEM_FAIL;
 }
 
@@ -599,7 +619,7 @@ EXPORT m64p_function CALL VidExt_GL_GetProcAddress(const char* Proc)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetProc)(Proc);
-
+#ifndef USE_SDL3
     if (l_RenderMode != M64P_RENDER_OPENGL)
         return NULL;
 
@@ -611,8 +631,10 @@ OSAL_WARNING_PUSH
 OSAL_NO_WARNING_FPTR_VOIDP_CAST
     return (m64p_function)SDL_GL_GetProcAddress(Proc);
 OSAL_WARNING_POP
+#endif
 }
 
+#ifndef USE_SDL3
 typedef struct {
     m64p_GLattr m64Attr;
     SDL_GLattr sdlAttr;
@@ -633,7 +655,7 @@ static const GLAttrMapNode GLAttrMap[] = {
         { M64P_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_MASK }
 };
 static const int mapSize = sizeof(GLAttrMap) / sizeof(GLAttrMapNode);
-
+#endif
 EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
 {
     int i;
@@ -675,7 +697,7 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
                 Value = 0;
         }
     }
-
+#ifndef USE_SDL3
     for (i = 0; i < mapSize; i++)
     {
         if (GLAttrMap[i].m64Attr == Attr)
@@ -685,6 +707,7 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
             return M64ERR_SUCCESS;
         }
     }
+#endif
 
     return M64ERR_INPUT_INVALID;
 }
@@ -696,7 +719,7 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLGetAttr)(Attr, pValue);
-
+#ifndef USE_SDL3
     if (l_RenderMode != M64P_RENDER_OPENGL)
         return M64ERR_INVALID_STATE;
 
@@ -738,7 +761,7 @@ EXPORT m64p_error CALL VidExt_GL_GetAttribute(m64p_GLattr Attr, int *pValue)
             return M64ERR_SUCCESS;
         }
     }
-
+#endif
     return M64ERR_INPUT_INVALID;
 }
 
@@ -747,7 +770,7 @@ EXPORT m64p_error CALL VidExt_GL_SwapBuffers(void)
     /* call video extension override if necessary */
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncGLSwapBuf)();
-
+#ifndef USE_SDL3
     if (l_RenderMode != M64P_RENDER_OPENGL)
         return M64ERR_INVALID_STATE;
 
@@ -755,6 +778,7 @@ EXPORT m64p_error CALL VidExt_GL_SwapBuffers(void)
         return M64ERR_NOT_INIT;
 
     SDL_GL_SwapBuffers();
+#endif
     return M64ERR_SUCCESS;
 }
 
@@ -771,7 +795,7 @@ EXPORT m64p_error CALL VidExt_VK_GetSurface(void** Surface, void* Instance)
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncVKGetSurface)(Surface, Instance);
 
-#ifdef VIDEXT_VULKAN
+#if defined(VIDEXT_VULKAN) && !defined(USE_SDL3)
     VkSurfaceKHR vulkanSurface = VK_NULL_HANDLE;
 
     if (l_RenderMode != M64P_RENDER_VULKAN)
@@ -797,7 +821,7 @@ EXPORT m64p_error CALL VidExt_VK_GetInstanceExtensions(const char** Extensions[]
     if (l_VideoExtensionActive)
         return (*l_ExternalVideoFuncTable.VidExtFuncVKGetInstanceExtensions)(Extensions, NumExtensions);
 
-#ifdef VIDEXT_VULKAN
+#if defined(VIDEXT_VULKAN) && !defined(USE_SDL3)
     if (l_RenderMode != M64P_RENDER_VULKAN)
         return M64ERR_INVALID_STATE;
 
