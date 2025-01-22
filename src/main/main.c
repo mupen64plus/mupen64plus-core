@@ -28,7 +28,11 @@
  * if you want to implement an interface, you should look here
  */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>

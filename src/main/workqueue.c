@@ -21,8 +21,13 @@
 
 #include "workqueue.h"
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_thread.h>
+#else
 #include <SDL.h>
 #include <SDL_thread.h>
+#endif
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,12 +42,20 @@ struct workqueue_mgmt_globals {
     struct list_head work_queue;
     struct list_head thread_queue;
     struct list_head thread_list;
+#ifdef USE_SDL3
+    SDL_Mutex *lock;
+#else
     SDL_mutex *lock;
+#endif
 };
 
 struct workqueue_thread {
     SDL_Thread *thread;
+#ifdef USE_SDL3
+    SDL_Condition *work_avail;
+#else
     SDL_cond *work_avail;
+#endif
     struct list_head list;
     struct list_head list_mgmt;
 };
@@ -67,7 +80,11 @@ static struct work_struct *workqueue_get_work(struct workqueue_thread *thread)
             list_del_init(&work->list);
         } else {
             list_add(&thread->list, &workqueue_mgmt.thread_queue);
+#ifdef USE_SDL3
+            SDL_WaitCondition(thread->work_avail, workqueue_mgmt.lock);
+#else
 	        SDL_CondWait(thread->work_avail, workqueue_mgmt.lock);
+#endif
         }
         SDL_UnlockMutex(workqueue_mgmt.lock);
 
@@ -124,7 +141,11 @@ int workqueue_init(void)
         memset(thread, 0, sizeof(*thread));
         list_add(&thread->list_mgmt, &workqueue_mgmt.thread_list);
         INIT_LIST_HEAD(&thread->list);
+#ifdef USE_SDL3
+        thread->work_avail = SDL_CreateCondition();
+#else
         thread->work_avail = SDL_CreateCond();
+#endif
         if (!thread->work_avail) {
             DebugMessage(M64MSG_ERROR, "Could not create workqueue thread work_avail condition");
             SDL_UnlockMutex(workqueue_mgmt.lock);
@@ -160,7 +181,11 @@ void workqueue_shutdown(void)
     list_for_each_entry_safe_t(thread, safe, &workqueue_mgmt.thread_list, struct workqueue_thread, list_mgmt) {
         list_del(&thread->list_mgmt);
         SDL_WaitThread(thread->thread, &status);
+#ifdef USE_SDL3
+        SDL_DestroyCondition(thread->work_avail);
+#else
         SDL_DestroyCond(thread->work_avail);
+#endif
         free(thread);
     }
 
@@ -179,8 +204,11 @@ int queue_work(struct work_struct *work)
     if (!list_empty(&workqueue_mgmt.thread_queue)) {
         thread = list_first_entry(&workqueue_mgmt.thread_queue, struct workqueue_thread, list);
         list_del_init(&thread->list);
-
+#ifdef USE_SDL3
+        SDL_SignalCondition(thread->work_avail);
+#else
         SDL_CondSignal(thread->work_avail);
+#endif
     }
     SDL_UnlockMutex(workqueue_mgmt.lock);
 
