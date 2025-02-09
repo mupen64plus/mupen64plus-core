@@ -57,7 +57,7 @@ struct mi_controller
 
 static osal_inline uint32_t mi_reg(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0xf) >> 2;
 }
 
 void init_mi(struct mi_controller* mi, struct r4300_core* r4300);

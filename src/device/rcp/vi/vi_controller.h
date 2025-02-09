@@ -64,7 +64,7 @@ struct vi_controller
 
 static osal_inline uint32_t vi_reg(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0x3f) >> 2;
 }
 
 

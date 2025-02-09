@@ -72,7 +72,7 @@ struct si_controller
 
 static osal_inline uint32_t si_reg(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0x1f) >> 2;
 }
 
 
