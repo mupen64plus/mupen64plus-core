@@ -61,12 +61,13 @@ struct flashram
 
     void* storage;
     const struct storage_backend_interface* istorage;
+    struct rdram* rdram;
 };
 
 void init_flashram(struct flashram* flashram,
                    uint32_t flashram_id,
                    void* storage,
-                   const struct storage_backend_interface* istorage);
+                   const struct storage_backend_interface* istorage, struct rdram* rdram);
 
 void poweron_flashram(struct flashram* flashram);
 

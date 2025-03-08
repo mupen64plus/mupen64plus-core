@@ -28,6 +28,7 @@
 #include "api/m64p_types.h"
 #include "backends/api/storage_backend.h"
 #include "device/memory/memory.h"
+#include "device/rdram/rdram.h"
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -122,12 +123,13 @@ static void flashram_command(struct flashram* flashram, uint32_t command)
 
 void init_flashram(struct flashram* flashram,
                    uint32_t flashram_id,
-                   void* storage, const struct storage_backend_interface* istorage)
+                   void* storage, const struct storage_backend_interface* istorage, struct rdram* rdram)
 {
     flashram->silicon_id[0] = FLASHRAM_TYPE_ID;
     flashram->silicon_id[1] = flashram_id;
     flashram->storage = storage;
     flashram->istorage = istorage;
+    flashram->rdram = rdram;
 }
 
 void poweron_flashram(struct flashram* flashram)
@@ -207,7 +209,7 @@ unsigned int flashram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr,
         }
 
         /* do actual DMA */
-        for(i = 0; i < length; ++i) {
+        for(i = 0; i < length && (dram_addr+i) < flashram->rdram->dram_size; ++i) {
             dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
         }
     }
