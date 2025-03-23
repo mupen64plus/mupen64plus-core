@@ -58,7 +58,7 @@ static void get_pi_dma_handler(struct cart* cart, struct dd_controller* dd, uint
 
     if (address >= MM_CART_ROM) {
         if (address >= MM_CART_DOM3) {
-            /* 0x1fd00000 - 0xffffffff : dom3 addr2, cart rom */
+            /* 0x1fd00000 - 0x7fffffff : dom3 addr2, cart rom */
             RW(cart, cart_dom3);
         }
         else {

@@ -91,6 +91,8 @@ void apply_mem_mapping(struct memory* mem, const struct mem_mapping* mapping);
 
 void* init_mem_base(void);
 void release_mem_base(void* mem_base);
+void* init_mem_rom(uint32_t size);
+void release_mem_rom(void);
 uint32_t* mem_base_u32(void* mem_base, uint32_t address);
 
 void read_with_bp_checks(void* opaque, uint32_t address, uint32_t* value);
