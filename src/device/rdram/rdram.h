@@ -54,6 +54,8 @@ struct rdram
     uint32_t* dram;
     size_t dram_size;
 
+    uint8_t corrupted_handler;
+
     struct r4300_core* r4300;
 };
 
