@@ -54,12 +54,23 @@ static osal_inline uint32_t ri_reg(uint32_t address)
     return (address & 0x1f) >> 2;
 }
 
-static osal_inline uint16_t ri_address_to_id_field(uint32_t address)
+static osal_inline uint32_t ri_address(uint32_t address)
 {
-    /* XXX: pure guessing, need harware test */
-    return (uint16_t)(((address >> 20) == 0x03f)
-        ? (address & 0x0007fc00) >> 10   /* RDRAM registers id_field: [19..10] */
-        : (address & 0x00f00000) >> 20); /* RDRAM memory    id_field: [23..20] */
+    /* https://n64brew.dev/wiki/RDRAM_Interface#Memory_addressing */
+    return (((address >> 20) == 0x03f)
+        ? (((address & 0x3ff)))              | /* Adr[10:0]  */
+           (((address >> 10) & 0x1ff) << 11) | /* Adr[19:11] */
+           (((address >> 10) & 0x1ff) << 20)   /* Adr[28:20] */
+        : (((address & 0x7ff)))              | /* Adr[10:0]  */
+           (((address >> 11) & 0x1ff) << 11) | /* Adr[19:11] */
+           (((address >> 20) & 0x03f) << 20)); /* Adr[28:20] */
+}
+
+static osal_inline uint16_t ri_address_to_id_field(uint32_t address, uint8_t swapfield)
+{
+    /* https://n64brew.dev/wiki/RDRAM#RDRAM_addressing */
+    return (((swapfield  & ((address >> 11) & 0x1ff))) 
+          | ((~swapfield & ((address >> 20) & 0x1ff)))); /* AdrS[28:20] */
 }
 
 

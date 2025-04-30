@@ -581,6 +581,9 @@ void netplay_read_registration(struct controller_input_compat* cin_compats)
     {
         reg_id = SDLNet_Read32(&input_data[curr]);
         curr += 4;
+
+        Controls[i].Type = CONT_TYPE_STANDARD; //make sure VRU is disabled
+
         if (reg_id == 0) //No one registered to control this player
         {
             Controls[i].Present = 0;
