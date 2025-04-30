@@ -448,7 +448,8 @@ void read_dd_regs(void* opaque, uint32_t address, uint32_t* value)
 
 void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
 {
-    unsigned int head, track, old_track, cycles;
+    uint32_t head, cycles;
+    int32_t  track, old_track;
     const uint16_t startTrackZones[9] = { 0x000, 0x09E, 0x13C, 0x1D1, 0x266, 0x2FB, 0x390, 0x425, 0x497 };
     struct dd_controller* dd = (struct dd_controller*)opaque;
 
