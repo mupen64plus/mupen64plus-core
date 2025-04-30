@@ -38,6 +38,11 @@ extern void dummyinput_RomClosed(void);
 extern void dummyinput_SDL_KeyDown(int keymod, int keysym);
 extern void dummyinput_SDL_KeyUp(int keymod, int keysym);
 extern void dummyinput_RenderCallback(void);
+extern void dummyinput_SendVRUWord(uint16_t length, uint16_t *word, uint8_t lang);
+extern void dummyinput_SetMicState(int state);
+extern void dummyinput_ReadVRUResults(uint16_t *error_flags, uint16_t *num_results, uint16_t *mic_level, uint16_t *voice_level, uint16_t *voice_length, uint16_t *matches);
+extern void dummyinput_ClearVRUWords(uint8_t lenght);
+extern void dummyinput_SetVRUWordMask(uint8_t length, uint8_t *mask);
 
 #endif /* DUMMY_INPUT_H */
 

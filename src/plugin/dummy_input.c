@@ -85,3 +85,23 @@ void dummyinput_SDL_KeyUp(int keymod, int keysym)
 void dummyinput_RenderCallback(void)
 {
 }
+
+void dummyinput_SendVRUWord(uint16_t length, uint16_t *word, uint8_t lang)
+{
+}
+
+void dummyinput_SetMicState(int state)
+{
+}
+
+void dummyinput_ReadVRUResults(uint16_t *error_flags, uint16_t *num_results, uint16_t *mic_level, uint16_t *voice_level, uint16_t *voice_length, uint16_t *matches)
+{
+}
+
+void dummyinput_ClearVRUWords(uint8_t lenght)
+{
+}
+
+void dummyinput_SetVRUWordMask(uint8_t length, uint8_t *mask)
+{
+}

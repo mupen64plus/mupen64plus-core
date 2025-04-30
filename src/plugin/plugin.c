@@ -101,7 +101,12 @@ static const input_plugin_functions dummy_input = {
     dummyinput_RomOpen,
     dummyinput_SDL_KeyDown,
     dummyinput_SDL_KeyUp,
-    dummyinput_RenderCallback
+    dummyinput_RenderCallback,
+    dummyinput_SendVRUWord,
+    dummyinput_SetMicState,
+    dummyinput_ReadVRUResults,
+    dummyinput_ClearVRUWords,
+    dummyinput_SetVRUWordMask
 };
 
 static const rsp_plugin_functions dummy_rsp = {
