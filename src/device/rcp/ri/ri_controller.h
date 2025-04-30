@@ -51,7 +51,7 @@ struct ri_controller
 
 static osal_inline uint32_t ri_reg(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0x1f) >> 2;
 }
 
 static osal_inline uint32_t ri_address(uint32_t address)

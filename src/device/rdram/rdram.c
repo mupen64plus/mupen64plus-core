@@ -185,7 +185,11 @@ void read_rdram_regs(void* opaque, uint32_t address, uint32_t* value)
         return;
     }
 
-    *value = rdram->regs[module][reg];
+    if (reg < RDRAM_REGS_COUNT) {
+        *value = rdram->regs[module][reg];
+    } else {
+        *value = 0;
+    }
 
     /* some bits are inverted when read */
     if (reg == RDRAM_MODE_REG) {
@@ -201,6 +205,10 @@ void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t m
     uint8_t corrupted_handler = 0;
     size_t module;
     size_t modules = get_modules_count(rdram);
+
+    if (reg >= RDRAM_REGS_COUNT) {
+        return;
+    }
 
     if (address & RDRAM_BCAST_ADDRESS_MASK) {
         for (module = 0; module < modules; ++module) {

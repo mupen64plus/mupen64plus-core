@@ -111,12 +111,12 @@ static osal_inline uint32_t rsp_mem_address(uint32_t address)
 
 static osal_inline uint32_t rsp_reg(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0x1f) >> 2;
 }
 
 static osal_inline uint32_t rsp_reg2(uint32_t address)
 {
-    return (address & 0xffff) >> 2;
+    return (address & 0x1f) >> 2;
 }
 
 void init_rsp(struct rsp_core* sp,

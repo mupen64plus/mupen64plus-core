@@ -123,7 +123,10 @@ void read_si_regs(void* opaque, uint32_t address, uint32_t* value)
     struct si_controller* si = (struct si_controller*)opaque;
     uint32_t reg = si_reg(address);
 
-    *value = si->regs[reg];
+    if (reg < SI_REGS_COUNT)
+    {
+        *value = si->regs[reg];
+    }
 }
 
 void write_si_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask)
