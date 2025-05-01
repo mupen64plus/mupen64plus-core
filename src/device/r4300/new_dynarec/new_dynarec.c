@@ -2815,7 +2815,7 @@ void invalidate_block(u_int block)
 {
   u_int page;
   page=block^0x80000;
-  if(page>262143&&g_dev.r4300.cp0.tlb.LUT_r[block]) page=(g_dev.r4300.cp0.tlb.LUT_r[block]^0x80000000)>>12;
+  if(block<0x100000&&page>262143&&g_dev.r4300.cp0.tlb.LUT_r[block]) page=(g_dev.r4300.cp0.tlb.LUT_r[block]^0x80000000)>>12;
   if(page>2048) page=2048+(page&2047);
   inv_debug("INVALIDATE: %x (%d)\n",block<<12,page);
   u_int first,last;
@@ -2871,9 +2871,11 @@ void invalidate_block(u_int block)
   #endif
 
   // Don't trap writes
-  g_dev.r4300.cached_interp.invalid_code[block]=1;
+  if(block<0x100000) {
+    g_dev.r4300.cached_interp.invalid_code[block]=1;
+  }
   // If there is a valid TLB entry for this page, remove write protect
-  if(g_dev.r4300.cp0.tlb.LUT_w[block]) {
+  if(block<0x100000&&g_dev.r4300.cp0.tlb.LUT_w[block]) {
     assert(g_dev.r4300.cp0.tlb.LUT_r[block]==g_dev.r4300.cp0.tlb.LUT_w[block]);
     g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((g_dev.r4300.cp0.tlb.LUT_w[block]&0xFFFFF000)-0x80000000)-(block<<12))>>2;
     u_int real_block=g_dev.r4300.cp0.tlb.LUT_w[block]>>12;
@@ -4272,6 +4274,7 @@ static void loop_preload(signed char pre[],signed char entry[])
 // Generate address for load/store instruction
 static void address_generation(int i,struct regstat *i_regs,signed char entry[])
 {
+  if(i>=MAXBLOCK) return;
   if(itype[i]==LOAD||itype[i]==LOADLR||itype[i]==STORE||itype[i]==STORELR||itype[i]==C1LS) {
     int ra=0;
     int agr=AGEN1+(i&1);
@@ -4378,6 +4381,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
     }
   }
   // Preload constants for next instruction
+  if(i+1>=MAXBLOCK) return;
   if(itype[i+1]==LOAD||itype[i+1]==LOADLR||itype[i+1]==STORE||itype[i+1]==STORELR||itype[i+1]==C1LS) {
     int agr,ra;
     #if (NEW_DYNAREC!=NEW_DYNAREC_X86) && (NEW_DYNAREC!=NEW_DYNAREC_X64)
