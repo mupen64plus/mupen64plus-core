@@ -4272,6 +4272,7 @@ static void loop_preload(signed char pre[],signed char entry[])
 // Generate address for load/store instruction
 static void address_generation(int i,struct regstat *i_regs,signed char entry[])
 {
+  if(i>=MAXBLOCK) return;
   if(itype[i]==LOAD||itype[i]==LOADLR||itype[i]==STORE||itype[i]==STORELR||itype[i]==C1LS) {
     int ra=0;
     int agr=AGEN1+(i&1);
@@ -4378,6 +4379,7 @@ static void address_generation(int i,struct regstat *i_regs,signed char entry[])
     }
   }
   // Preload constants for next instruction
+  if(i+1>=MAXBLOCK) return;
   if(itype[i+1]==LOAD||itype[i+1]==LOADLR||itype[i+1]==STORE||itype[i+1]==STORELR||itype[i+1]==C1LS) {
     int agr,ra;
     #if (NEW_DYNAREC!=NEW_DYNAREC_X86) && (NEW_DYNAREC!=NEW_DYNAREC_X64)
