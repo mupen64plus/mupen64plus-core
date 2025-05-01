@@ -37,7 +37,7 @@ export REPO="${PWD##*/}"
 if [[ "${REPO}" == "" ]]; then exit 6; fi
 
 export BIN_OS="$(uname -s | tr [A-Z] [a-z])"
-if [[ ! -z ${MSYSTEM} ]]; then export BIN_OS="msys2"; fi
+if [[ ! -z ${MSYSTEM} ]]; then export BIN_OS="msys2-$(echo "${MSYSTEM}" | tr [A-Z] [a-z])"; fi
 export ENV_NAME="$(uname -s)"
 export LDD="ldd"
 export PKG_PATH="usr/local/lib/mupen64plus/"
@@ -105,6 +105,7 @@ if [[ -z ${ARTIFACT} ]]; then
 	exit 5
 else
 	cd pkg
+	if [[ -f "mupen64plus.desktop" ]]; then rm -f mupen64plus.desktop; fi
 	ls -gG "${PKG_PATH}${ARTIFACT}"
 	echo ""
 	${LDD} "${PKG_PATH}${ARTIFACT}" > ldd.log
