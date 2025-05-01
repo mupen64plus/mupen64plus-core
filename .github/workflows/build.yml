@@ -26,26 +26,20 @@ jobs:
             arch: x64
           - cc: Clang
             arch: x86
-    name: Linux / ${{ matrix.cc }} / ${{ matrix.arch }}
-    runs-on: ubuntu-22.04
+    name: Linux / ${{ matrix.cc }} ${{ matrix.arch }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Get build dependencies and arrange the environment
         run: |
-          export C_CLANG_SUFFIX="-15" C_GCC_SUFFIX="-12"
-          export BUILD_DEPS="libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl1.2-dev libsdl2-dev libvulkan-dev zlib1g-dev"
+          export BUILD_DEPS="libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl2-dev libvulkan-dev zlib1g-dev"
           ./.github/workflows/scripts/ci_install_ubuntu_deps.sh ${{ matrix.arch }} ${{ matrix.cc }}
       - name: Build and related stuff, backup binaries
         run: |
-          export C_CLANG_SUFFIX="-15" C_GCC_SUFFIX="-12"
           export PATH="$(pwd)/.github/workflows/scripts:${PATH}"
-          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG="sdl-config""
+          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1"
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1 SDL_CONFIG="sdl2-config""
-          ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG="sdl-config" POSTFIX="-old""
-          ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 SDL_CONFIG="sdl2-config" POSTFIX="-old""
+          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 POSTFIX="-old""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }} makepkg
       - name: Upload artifact
         if: matrix.cc == 'GCC'
@@ -63,12 +57,24 @@ jobs:
             arch: x64
             cross: x86_64
             env: MINGW64
+            gbc: 0
           - cc: GCC
             arch: x86
             cross: i686
             env: MINGW32
-    name: Windows / MSYS2 ${{ matrix.cc }} / ${{ matrix.arch }}
-    runs-on: windows-2022
+            gbc: 0
+          - cc: GCC
+            arch: x64
+            cross: ucrt-x86_64
+            env: UCRT64
+            gbc: 1
+          - cc: Clang
+            arch: x64
+            cross: clang-x86_64
+            env: CLANG64
+            gbc: 1
+    name: Windows ${{ matrix.arch }} / MSYS2 ${{ matrix.env }} ${{ matrix.cc }}
+    runs-on: windows-2025
     defaults:
       run:
         shell: msys2 {0}
@@ -82,7 +88,6 @@ jobs:
             git
             libtool
             make
-            mingw-w64-${{ matrix.cross }}-gcc
             mingw-w64-${{ matrix.cross }}-toolchain
             mingw-w64-${{ matrix.cross }}-freetype
             mingw-w64-${{ matrix.cross }}-libpng
@@ -93,10 +98,11 @@ jobs:
             mingw-w64-${{ matrix.cross }}-zlib
       - name: Build and related stuff, backup binaries
         run: |
+          if [[ ${{ matrix.gbc }} -eq 1 ]]; then pacman --noconfirm -S --needed mingw-w64-${{ matrix.cross }}-opencv; fi
           export PATH="$(pwd)/.github/workflows/scripts:${PATH}"
-          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1"
+          export CONFIG_OVERRIDE="ACCURATE_FPU=1 NEW_DYNAREC=1 OPENCV=${{ matrix.gbc }}"
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
-          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 POSTFIX="-old""
+          export CONFIG_OVERRIDE="ACCURATE_FPU=0 NEW_DYNAREC=0 OPENCV=${{ matrix.gbc }} POSTFIX="-old""
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }}
       - name: Backup dependencies, etc...
         run: |
@@ -114,11 +120,11 @@ jobs:
         include:
           - toolset: v143
             arch: x64
-            vs: 2022
+            vs: 2025
           - toolset: v141_xp
             arch: x86
             vs: 2019
-    name: Windows / MSVC with ${{ matrix.toolset }} / ${{ matrix.arch }}
+    name: Windows ${{ matrix.arch }} / MSVC with ${{ matrix.toolset }}
     runs-on: windows-${{ matrix.vs }}
     defaults:
       run:
@@ -131,7 +137,7 @@ jobs:
           set PATH=%CD%\.github\workflows\scripts;%PATH%
           set TOOLSET=${{ matrix.toolset }}
           call ci_msvc_build.cmd ${{ matrix.arch }}
-          ci_msvc_build.cmd ${{ matrix.arch }} newdyn
+          call ci_msvc_build.cmd ${{ matrix.arch }} newdyn
       - name: Backup dependencies, etc...
         run: |
           .\.github\workflows\scripts\ci_backup_msvc_deps.cmd ${{ matrix.arch }} freetype.dll libpng16.dll SDL2.dll SDL2_net.dll zlib.dll
