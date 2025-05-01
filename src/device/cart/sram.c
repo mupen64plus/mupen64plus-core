@@ -27,6 +27,7 @@
 
 #include "backends/api/storage_backend.h"
 #include "device/memory/memory.h"
+#include "device/rdram/rdram.h"
 
 #define SRAM_ADDR_MASK UINT32_C(0x0000ffff)
 
@@ -36,10 +37,11 @@ void format_sram(uint8_t* mem)
 }
 
 void init_sram(struct sram* sram,
-               void* storage, const struct storage_backend_interface* istorage)
+               void* storage, const struct storage_backend_interface* istorage, struct rdram* rdram)
 {
     sram->storage = storage;
     sram->istorage = istorage;
+    sram->rdram = rdram;
 }
 
 unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
@@ -50,7 +52,7 @@ unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr
 
     cart_addr &= SRAM_ADDR_MASK;
 
-    for (i = 0; i < length; ++i) {
+    for (i = 0; i < length && (cart_addr+i) < SRAM_SIZE; ++i) {
         mem[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
     }
 
@@ -67,7 +69,7 @@ unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uin
 
     cart_addr &= SRAM_ADDR_MASK;
 
-    for (i = 0; i < length; ++i) {
+    for (i = 0; i < length && (dram_addr+i) < sram->rdram->dram_size; ++i) {
         dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
     }
 

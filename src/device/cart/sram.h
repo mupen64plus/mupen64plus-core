@@ -32,12 +32,13 @@ struct sram
 {
     void* storage;
     const struct storage_backend_interface* istorage;
+    struct rdram* rdram;
 };
 
 void format_sram(uint8_t* sram);
 
 void init_sram(struct sram* sram,
-               void* storage, const struct storage_backend_interface* istorage);
+               void* storage, const struct storage_backend_interface* istorage, struct rdram* rdram);
 
 unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
 unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length);
