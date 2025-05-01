@@ -24,11 +24,9 @@
 
 #if defined(WIN32)
 typedef unsigned int uint32_t;
-typedef unsigned char bool;
 #define false 0
 #define true 1
 #else
-#include <stdbool.h>
 #include <stdint.h>
 #endif
 

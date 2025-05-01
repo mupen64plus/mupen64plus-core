@@ -281,7 +281,7 @@ static db_addr_t
 db_disasm_insn ( struct r4k_dis_t * state,
                  int insn, 
                  db_addr_t loc, 
-                 bool altfmt               )
+                 unsigned char altfmt)
 {
     char * rel;
     InstFmt i;
