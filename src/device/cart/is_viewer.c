@@ -58,12 +58,12 @@ void write_is_viewer(void* opaque, uint32_t address, uint32_t value, uint32_t ma
             /* make sure we don't overflow the integer or the buffer  */
             if (is_viewer->buffer_pos > IS_BUFFER_SIZE 
                 || word > IS_BUFFER_SIZE
-                || is_viewer->buffer_pos + word > IS_BUFFER_SIZE )
+                || is_viewer->buffer_pos + word > IS_BUFFER_SIZE)
             {
                 /* reset buffer */
                 memset(is_viewer->output_buffer, 0, IS_BUFFER_SIZE);
                 is_viewer->buffer_pos = 0;
-                DebugMessage(M64MSG_WARNING, "IS64: prevented integer overflow, cleared buffer");
+                DebugMessage(M64MSG_WARNING, "IS64: prevented buffer overflow, cleared buffer");
                 return;
             }
 
