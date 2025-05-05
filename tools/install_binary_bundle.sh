@@ -30,7 +30,7 @@ if `which ginstall >/dev/null 2>&1`; then
     INSTALL=ginstall
 elif install --help >/dev/null 2>&1; then
     INSTALL=install
-elif [ -e "`which install 2>/dev/null`" ]; then 
+elif [ -e "`which install 2>/dev/null`" ]; then
     printf "warning: GNU install not found, assuming BSD install\n" >&2
     INSTALL=install
     GINSTALLFLAG=
@@ -104,6 +104,7 @@ printf "Installing Mupen64Plus Binary Bundle to ${PREFIX}\n"
 $INSTALL -d -v "${LIBDIR}"
 $INSTALL -m 0644 "${INSTALL_STRIP_FLAG}" libmupen64plus.so.2.* "${LIBDIR}"
 /sbin/ldconfig
+ln -s ${LIBDIR}/libmupen64plus.so.2.* ${LIBDIR}/libmupen64plus.so.2
 $INSTALL -d -v "${SHAREDIR}"
 $INSTALL -m 0644 font.ttf "${SHAREDIR}"
 $INSTALL -m 0644 mupencheat.txt "${SHAREDIR}"
@@ -135,4 +136,3 @@ $INSTALL -m 0644 InputAutoCfg.ini "${SHAREDIR}"
 $INSTALL -m 0644 Glide64mk2.ini "${SHAREDIR}"
 
 printf "Installation successful.\n"
-
