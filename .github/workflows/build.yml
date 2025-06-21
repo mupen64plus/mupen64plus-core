@@ -120,18 +120,20 @@ jobs:
         include:
           - toolset: v143
             arch: x64
-            vs: 2025
           - toolset: v141_xp
             arch: x86
-            vs: 2019
     name: Windows ${{ matrix.arch }} / MSVC with ${{ matrix.toolset }}
-    runs-on: windows-${{ matrix.vs }}
+    runs-on: windows-2025
     defaults:
       run:
         shell: cmd
     steps:
       - uses: actions/checkout@v4
       - uses: microsoft/setup-msbuild@v2
+      - name: Pre-build arrangements for ${{ matrix.toolset }}
+        if: matrix.toolset == 'v141_xp'
+        run: |
+          "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\setup.exe" modify --quiet --productId Microsoft.VisualStudio.Product.Enterprise --channelId VisualStudio.17.Release --add Microsoft.VisualStudio.Component.WinXP
       - name: Build and related stuff, backup binaries
         run: |
           set PATH=%CD%\.github\workflows\scripts;%PATH%
