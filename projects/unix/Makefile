@@ -253,7 +253,7 @@ ifeq ($(OS), OSX)
 endif
 ifeq ($(OS), MINGW)
   TARGET = mupen64plus$(POSTFIX).dll
-  ifeq ($(CC), clang)
+  ifeq (clang, $(word 1, $(shell $(CC) --version)))
     LDFLAGS += -shared -Wl,-export-all-symbols
   else
     LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
