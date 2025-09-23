@@ -40,6 +40,8 @@
 #include <netinet/ip.h>
 #endif
 
+#include <stdlib.h>
+
 /* small helper structures to wrap SDL2_net/SDL3_net */
 
 #ifdef USE_SDL3NET
