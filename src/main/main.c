@@ -334,8 +334,10 @@ static m64p_error init_video_capture_backend(const struct video_capture_backend_
         DebugMessage(M64MSG_INFO, "Using video capture backend: %s", (*ivcap)->name);
     }
     else {
-        DebugMessage(M64MSG_ERROR, "Failed to initialize video capture backend %s: %s", (*ivcap)->name, CoreErrorMessage(err));
-        *ivcap = NULL;
+        DebugMessage(M64MSG_ERROR, "Failed to initialize video capture backend %s: %s, falling back to dummy backend", (*ivcap)->name, CoreErrorMessage(err));
+        /* fallback to dummy backend */
+        *ivcap = get_video_capture_backend(NULL);
+        (*ivcap)->init(vcap, section);
     }
 
     free(section);
@@ -1704,10 +1706,7 @@ m64p_error main_run(void)
 
     /* init GbCamera backend specified in the configuration file */
     init_video_capture_backend(&igbcam_backend, &gbcam_backend,
-        g_CoreConfig, "GbCameraVideoCaptureBackend1");
-
-    /* open GB cam video device */
-    igbcam_backend->open(gbcam_backend, M64282FP_SENSOR_W, M64282FP_SENSOR_H);
+        g_CoreConfig, "GbCameraVideoCaptureBackend1");    
 
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);

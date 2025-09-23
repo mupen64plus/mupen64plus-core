@@ -355,9 +355,13 @@ ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
     ifeq ($(shell $(PKG_CONFIG) --modversion sdl2 2>/dev/null),)
       $(error No SDL3 or SDL2 development libraries found!)
     endif
+    ifeq ($(SDL3_CAMERA), 1)
+    	$(error SDL3_CAMERA requires SDL3!)
+    endif
     SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl2)
     SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl2)
   else
+    SDL3_CAMERA := 1
     SDL_CFLAGS += -DUSE_SDL3
     SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl3)
     SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl3)
@@ -762,6 +766,10 @@ ifeq ($(OPENCV), 1)
   CFLAGS += -DM64P_OPENCV
 endif
 
+ifeq ($(SDL3_CAMERA), 1)
+  SOURCE += $(SRCDIR)/backends/sdl3_video_capture.cpp
+  CFLAGS += -DSDL3_CAMERA
+endif
 
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter $(SRCDIR)/%.c,   $(SOURCE)))
