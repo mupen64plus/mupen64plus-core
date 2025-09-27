@@ -38,8 +38,9 @@ struct transferpak
 {
     unsigned int enabled;
     unsigned int bank;
-    unsigned int access_mode;
-    unsigned int access_mode_changed;
+
+    unsigned int cart_enabled;
+    unsigned int reset_state;
 
     struct gb_cart* gb_cart;
 };
