@@ -949,7 +949,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     /* reset fb state */
     poweron_fb(&dev->dp.fb);
 
-    dev->sp.rsp_task_locked = 0;
+    //dev->sp.rsp_task_locked = 0;
     dev->r4300.cp0.interrupt_unsafe_state = 0;
 
     *r4300_cp0_last_addr(&dev->r4300.cp0) = *r4300_pc(&dev->r4300);
@@ -1253,7 +1253,7 @@ static int savestates_load_pj64(struct device* dev,
     // No flashram info in pj64 savestate.
     poweron_flashram(&dev->cart.flashram);
 
-    dev->sp.rsp_task_locked = 0;
+    //dev->sp.rsp_task_locked = 0;
     dev->r4300.cp0.interrupt_unsafe_state = 0;
 
     /* extra fb state */

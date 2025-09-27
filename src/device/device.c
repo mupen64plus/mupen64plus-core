@@ -128,6 +128,7 @@ void init_device(struct device* dev,
         { &dev->dd,        dd_mecha_int_handler        }, /* DD MECHA */
         { &dev->dd,        dd_bm_int_handler           }, /* DD BM */
         { &dev->dd,        dd_dv_int_handler           }, /* DD DRIVE */
+        { &dev->sp,        rsp_task_event              },
     };
 
 #define R(x) read_ ## x
