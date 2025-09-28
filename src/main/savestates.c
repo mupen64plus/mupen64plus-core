@@ -58,7 +58,7 @@ enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 enum { DD_DISK_ID_OFFSET = 0x43670 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010900;  /* 1.9 */
+static const int savestate_latest_version = 0x00020000;  /* 2.0 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -878,6 +878,14 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             *r4300_cp0_latch(&dev->r4300.cp0) = GETDATA(curr, uint64_t);
             *r4300_cp2_latch(&dev->r4300.cp2) = GETDATA(curr, uint64_t);
         }
+
+        if (version >= 0x00020000)
+        {
+            /* extra rsp state */
+            dev->sp.rsp_status = GETDATA(curr, uint32_t);
+            dev->sp.first_run = GETDATA(curr, uint32_t);
+            dev->sp.rsp_wait = GETDATA(curr, uint32_t);
+        }
     }
     else
     {
@@ -949,7 +957,6 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     /* reset fb state */
     poweron_fb(&dev->dp.fb);
 
-    //dev->sp.rsp_task_locked = 0;
     dev->r4300.cp0.interrupt_unsafe_state = 0;
 
     *r4300_cp0_last_addr(&dev->r4300.cp0) = *r4300_pc(&dev->r4300);
@@ -1253,7 +1260,6 @@ static int savestates_load_pj64(struct device* dev,
     // No flashram info in pj64 savestate.
     poweron_flashram(&dev->cart.flashram);
 
-    //dev->sp.rsp_task_locked = 0;
     dev->r4300.cp0.interrupt_unsafe_state = 0;
 
     /* extra fb state */
@@ -1914,6 +1920,11 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     /* cp0 and cp2 latch (since 1.9) */
     PUTDATA(curr, uint64_t, *r4300_cp0_latch((struct cp0*)&dev->r4300.cp0));
     PUTDATA(curr, uint64_t, *r4300_cp2_latch((struct cp2*)&dev->r4300.cp2));
+
+    /* rsp state (since 2.0) */
+    PUTDATA(curr, uint32_t, dev->sp.rsp_status);
+    PUTDATA(curr, uint32_t, dev->sp.first_run);
+    PUTDATA(curr, uint32_t, dev->sp.rsp_wait);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
