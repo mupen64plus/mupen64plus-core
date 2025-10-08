@@ -552,8 +552,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
             unsigned int enabled = ALIGNED_GETDATA(curr, uint32_t);
             unsigned int bank = ALIGNED_GETDATA(curr, uint32_t);
-            unsigned int access_mode = ALIGNED_GETDATA(curr, uint32_t);
-            unsigned int access_mode_changed = ALIGNED_GETDATA(curr, uint32_t);
+            unsigned int cart_enabled = ALIGNED_GETDATA(curr, uint32_t);
+            unsigned int reset_state = ALIGNED_GETDATA(curr, uint32_t);
             COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
             if (gb_fingerprint[0] != 0) {
                 rom_bank = ALIGNED_GETDATA(curr, uint32_t);
@@ -572,8 +572,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 /* init transferpak state if enabled and not controlled by input plugin */
                 dev->transferpaks[i].enabled = enabled;
                 dev->transferpaks[i].bank = bank;
-                dev->transferpaks[i].access_mode = access_mode;
-                dev->transferpaks[i].access_mode_changed = access_mode_changed;
+                dev->transferpaks[i].cart_enabled = cart_enabled;
+                dev->transferpaks[i].reset_state = reset_state;
 
                 /* if it holds a valid cartridge init gbcart */
                 if (dev->transferpaks[i].gb_cart != NULL
@@ -697,8 +697,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
             unsigned int enabled = GETDATA(curr, uint32_t);
             unsigned int bank = GETDATA(curr, uint32_t);
-            unsigned int access_mode = GETDATA(curr, uint32_t);
-            unsigned int access_mode_changed = GETDATA(curr, uint32_t);
+            unsigned int cart_enabled = GETDATA(curr, uint32_t);
+            unsigned int reset_state = GETDATA(curr, uint32_t);
             COPYARRAY(gb_fingerprint, curr, uint8_t, GB_CART_FINGERPRINT_SIZE);
             if (gb_fingerprint[0] != 0) {
                 rom_bank = GETDATA(curr, uint32_t);
@@ -717,8 +717,8 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 /* init transferpak state if enabled and not controlled by input plugin */
                 dev->transferpaks[i].enabled = enabled;
                 dev->transferpaks[i].bank = bank;
-                dev->transferpaks[i].access_mode = access_mode;
-                dev->transferpaks[i].access_mode_changed = access_mode_changed;
+                dev->transferpaks[i].cart_enabled = cart_enabled;
+                dev->transferpaks[i].reset_state = reset_state;
 
                 /* if it holds a valid cartridge init gbcart */
                 if (dev->transferpaks[i].gb_cart != NULL
@@ -1796,8 +1796,8 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     for (i = 0; i < GAME_CONTROLLERS_COUNT; ++i) {
         PUTDATA(curr, uint32_t, dev->transferpaks[i].enabled);
         PUTDATA(curr, uint32_t, dev->transferpaks[i].bank);
-        PUTDATA(curr, uint32_t, dev->transferpaks[i].access_mode);
-        PUTDATA(curr, uint32_t, dev->transferpaks[i].access_mode_changed);
+        PUTDATA(curr, uint32_t, dev->transferpaks[i].cart_enabled);
+        PUTDATA(curr, uint32_t, dev->transferpaks[i].reset_state);
 
         if (dev->transferpaks[i].gb_cart == NULL) {
             uint8_t gb_fingerprint[GB_CART_FINGERPRINT_SIZE];
