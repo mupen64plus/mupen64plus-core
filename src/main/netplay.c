@@ -502,7 +502,7 @@ static int netplay_require_response(void* opaque)
     //We basically beg the server for input data.
     //After 10 seconds a timeout occurs, we assume we have lost connection to the server.
     uint8_t control_id = *(uint8_t*)opaque;
-    uint32_t timeout = SDL_GetTicks() + 10000;
+    uint64_t timeout = SDL_GetTicks() + 10000;
     while (!check_valid(control_id, l_cin_compats[control_id].netplay_count))
     {
         if (SDL_GetTicks() > timeout)

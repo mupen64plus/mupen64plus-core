@@ -972,9 +972,9 @@ static void apply_speed_limiter(void)
     static unsigned long totalVIs = 0;
     static int resetOnce = 0;
     static int lastSpeedFactor = 100;
-    static unsigned int StartFPSTime = 0;
+    static uint64_t StartFPSTime = 0;
     static const double defaultSpeedFactor = 100.0;
-    unsigned int CurrentFPSTime = SDL_GetTicks();
+    uint64_t CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
     const double VILimitMilliseconds = 1000.0 / g_dev.vi.expected_refresh_rate;
