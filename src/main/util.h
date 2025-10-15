@@ -185,6 +185,13 @@ struct xoshiro256pp_state xoshiro256pp_seed(uint64_t seed);
 
 uint64_t xoshiro256pp_next(struct xoshiro256pp_state* s);
 
+#ifndef min
+#define min(a, b) ((a < b) ? a : b)
+#endif
+#ifndef max
+#define max(a, b) ((a < b) ? b : a)
+#endif
+
 /**********************
      GUI utilities
  **********************/
