@@ -22,8 +22,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_thread.h>
+#else
 #include <SDL.h>
 #include <SDL_thread.h>
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -68,7 +73,11 @@ static char *fname = NULL;
 static unsigned int slot = 0;
 static int autoinc_save_slot = 0;
 
+#ifdef USE_SDL3
+static SDL_Mutex *savestates_lock;
+#else
 static SDL_mutex *savestates_lock;
+#endif
 
 struct savestate_work {
     char *filepath;
