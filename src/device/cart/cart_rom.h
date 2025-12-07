@@ -43,7 +43,7 @@ struct cart_rom
 
 static osal_inline uint32_t rom_address(uint32_t address)
 {
-    return (address & 0x03fffffc);
+    return (address & 0x0ffffffc);
 }
 
 void init_cart_rom(struct cart_rom* cart_rom,

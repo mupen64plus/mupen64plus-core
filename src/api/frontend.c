@@ -131,6 +131,9 @@ EXPORT m64p_error CALL CoreShutdown(void)
     release_mem_base(g_mem_base);
     g_mem_base = NULL;
 
+    /* deallocate rom memory */
+    release_mem_rom();
+
     l_CoreInit = 0;
     return M64ERR_SUCCESS;
 }

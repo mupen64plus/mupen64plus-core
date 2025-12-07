@@ -152,6 +152,10 @@ m64p_error open_rom(const unsigned char* romimage, unsigned int size)
         return M64ERR_INPUT_INVALID;
     }
 
+    /* ensure mem_base has enough memory allocated */
+    if (init_mem_rom(size) == NULL)
+        return M64ERR_NO_MEMORY;
+
     /* Clear Byte-swapped flag, since ROM is now deleted. */
     g_RomWordsLittleEndian = 0;
     /* allocate new buffer for ROM and copy into this buffer */
