@@ -1446,7 +1446,8 @@ int savestates_load(void)
             fPtr = osal_file_open(filepath, "rb"); // can I open this?
         if (fPtr == NULL)
         {
-            main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
+            if (filepath != NULL)
+                main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT, "Failed to open savestate file %s", filepath);
             if (filepath != NULL)
                 free(filepath);
             filepath = NULL;
