@@ -200,7 +200,7 @@ void init_device(struct device* dev,
      * use CART unless DD is plugged and the plugged CART is not a combo media (cart+disk),
      * or rom_size is 0 meaning there's no CART loaded
      */
-    uint8_t media = *((uint8_t*)mem_base_u32(base, MM_CART_ROM) + (0x3b ^ S8));
+    uint8_t media = rom_size == 0 ? 0 : *((uint8_t*)mem_base_u32(base, MM_CART_ROM) + (0x3b ^ S8));
     uint32_t rom_base = (rom_size == 0 || (dd_rom_size > 0 && media != 'C'))
         ? MM_DD_ROM
         : MM_CART_ROM;
