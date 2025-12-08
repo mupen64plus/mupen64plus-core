@@ -848,6 +848,7 @@ static void alloc_cc(struct regstat *cur,int i)
 
 /* Assembler */
 
+#if ASSEM_DEBUG
 static char regname[32][4] = {
  "w0",
  "w1",
@@ -915,11 +916,14 @@ static char regname64[32][4] = {
  "fp",
  "lr",
  "sp"};
+#endif
 
+#if 0
 static void output_byte(u_char byte)
 {
   *(out++)=byte;
 }
+#endif
 
 static void output_w32(u_int word)
 {
@@ -1170,11 +1174,13 @@ static void emit_zeroreg(int rt)
   output_w32(0x52800000|rt);
 }
 
+#if 0
 static void emit_zeroreg64(int rt)
 {
   assem_debug("movz %s,#0",regname64[rt]);
   output_w32(0xd2800000|rt);
 }
+#endif
 
 static void emit_movz(u_int imm,u_int rt)
 {
@@ -1211,6 +1217,7 @@ static void emit_movk(u_int imm,u_int rt)
   output_w32(0x72800000|imm<<5|rt);
 }
 
+#if 0
 static void emit_movk_lsl16(u_int imm,u_int rt)
 {
   assert(imm<65536);
@@ -1301,6 +1308,7 @@ static void emit_movk64_lsl48(u_int imm,u_int rt)
   assem_debug("movk %s, #%d, lsl #%d",regname64[rt],imm,48);
   output_w32(0xf2e00000|imm<<5|rt);
 }
+#endif
 
 static void emit_movimm(u_int imm,u_int rt)
 {
@@ -1384,7 +1392,11 @@ static void emit_testimm(int rs,int imm)
   u_int armval, ret;
   assem_debug("tst %s,#%d",regname[rs],imm);
   ret=genimm(imm,32,&armval);
+#ifdef NDEBUG
+  (void)ret;
+#else
   assert(ret);
+#endif
   output_w32(0x72000000|armval<<10|rs<<5|WZR);
 }
 
@@ -1393,7 +1405,11 @@ static void emit_testimm64(int rs,int64_t imm)
   u_int armval, ret;
   assem_debug("tst %s,#%d",regname64[rs],imm);
   ret=genimm(imm,64,&armval);
+#ifdef NDEBUG
+  (void)ret;
+#else
   assert(ret);
+#endif
   output_w32(0xf2000000|armval<<10|rs<<5|WZR);
 }
 
@@ -1415,11 +1431,13 @@ static void emit_or(u_int rs1,u_int rs2,u_int rt)
   output_w32(0x2a000000|rs2<<16|rs1<<5|rt);
 }
 
+#if 0
 static void emit_orr64(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("orr %s,%s,%s",regname64[rt],regname64[rs1],regname64[rs2]);
   output_w32(0xaa000000|rs2<<16|rs1<<5|rt);
 }
+#endif
 
 static void emit_xor(u_int rs1,u_int rs2,u_int rt)
 {
@@ -1504,6 +1522,7 @@ static void emit_addimm_no_flags(u_int imm,u_int rt)
 }
 #endif
 
+#if 0
 static void emit_addnop(u_int r)
 {
   assem_debug("nop");
@@ -1511,6 +1530,7 @@ static void emit_addnop(u_int r)
   /*assem_debug("add %s,%s,#0 (nop)",regname[r],regname[r]);
   output_w32(0x11000000|r<<5|r);*/
 }
+#endif
 
 static void emit_addimm64_32(int rsh,int rsl,int imm,int rth,int rtl)
 {
@@ -1575,7 +1595,11 @@ static void emit_andimm64(int rs,int64_t imm,int rt)
 {
   u_int armval;
   uint32_t ret=genimm((uint64_t)imm,64,&armval);
+#ifdef NDEBUG
+  (void)ret;
+#else
   assert(ret);
+#endif
   assem_debug("and %s,%s,#%d",regname64[rt],regname64[rs],imm);
   output_w32(0x92000000|armval<<10|rs<<5|rt);
 }
@@ -1823,11 +1847,13 @@ static void emit_cmovs_imm(int imm,int rt)
   }
 }
 
+#if 0
 static void emit_cmove_reg(int rs,int rt)
 {
   assem_debug("csel %s,%s,%s,eq",regname[rt],regname[rs],regname[rt]);
   output_w32(0x1a800000|rt<<16|COND_EQ<<12|rs<<5|rt);
 }
+#endif
 
 static void emit_cmovne_reg(int rs,int rt)
 {
@@ -2063,12 +2089,14 @@ static void emit_jno(intptr_t a)
   output_w32(0x54000000|offset<<5|COND_VC);
 }
 
+#if 0
 static void emit_jcc(intptr_t a)
 {
   assem_debug("bcc %x",a);
   u_int offset=gencondjmp(a);
   output_w32(0x54000000|offset<<5|COND_CC);
 }
+#endif
 
 static void emit_jae(intptr_t a)
 {
@@ -2084,6 +2112,7 @@ static void emit_jb(intptr_t a)
   output_w32(0x54000000|offset<<5|COND_CC);
 }
 
+#if 0
 static void emit_pushreg(u_int r)
 {
   assert(0);
@@ -2093,6 +2122,7 @@ static void emit_popreg(u_int r)
 {
   assert(0);
 }
+#endif
 
 static void emit_jmpreg(u_int r)
 {
@@ -2410,6 +2440,7 @@ static void emit_writedword(int rt, intptr_t addr)
   output_w32(0xf9000000|((offset>>3)<<10)|(FP<<5)|rt);
 }
 
+#if 0
 static void emit_writehword(int rt, int addr)
 {
   intptr_t offset = addr-(intptr_t)&g_dev.r4300.new_dynarec_hot_state;
@@ -2426,6 +2457,7 @@ static void emit_writebyte(int rt, intptr_t addr)
   assem_debug("strb %s,fp+%d",regname[rt],offset);
   output_w32(0x39000000|offset<<10|(FP<<5)|rt);
 }
+#endif
 
 static void emit_msub(u_int rs1,u_int rs2,u_int rs3,u_int rt)
 {
@@ -2499,11 +2531,13 @@ static void emit_bic(u_int rs1,u_int rs2,u_int rt)
   output_w32(0x0a200000|rs2<<16|rs1<<5|rt);
 }
 
+#if 0
 static void emit_bic64(u_int rs1,u_int rs2,u_int rt)
 {
   assem_debug("bic %s,%s,%s",regname64[rt],regname64[rs1],regname64[rs2]);
   output_w32(0x8a200000|rs2<<16|rs1<<5|rt);
 }
+#endif
 
 // Load 2 immediates optimizing for small code size
 static void emit_mov2imm_compact(int imm1,u_int rt1,int imm2,u_int rt2)
@@ -2939,6 +2973,7 @@ static void emit_fcmpd(int x,int y)
   output_w32(0x1e602000|y<<16|x<<5);
 }
 
+#if 0
 static void emit_jno_unlikely(intptr_t a)
 {
   emit_jno(a);
@@ -2949,6 +2984,7 @@ static void emit_breakpoint(u_int imm)
   assem_debug("brk #%d",imm);
   output_w32(0xd4200000|imm<<5);
 }
+#endif
 
 static void emit_adr(intptr_t addr, int rt)
 {
@@ -2974,6 +3010,7 @@ static void emit_adrp(intptr_t addr, int rt)
   assem_debug("adrp %d,#%d",regname64[rt],offset);
   output_w32(0x90000000|(offset&0x3)<<29|((offset>>2)&0x7ffff)<<5|rt);
 }
+#if 0
 static void emit_pc_relative_addr(intptr_t addr, int rt)
 {
   intptr_t out_rx=(intptr_t)out;
@@ -2991,6 +3028,7 @@ static void emit_pc_relative_addr(intptr_t addr, int rt)
     }
   }
 }
+#endif
 
 // Save registers before function call
 static void save_regs(u_int reglist)
@@ -3085,7 +3123,9 @@ static void literal_pool_jumpover(int n)
 
 static void emit_extjump2(intptr_t addr, int target, intptr_t linker)
 {
+#ifndef NDEBUG
   u_char *ptr=(u_char *)addr;
+#endif
   assert(((ptr[3]&0xfc)==0x14)||((ptr[3]&0xff)==0x54)); //b or b.cond
 
   emit_movz_lsl16(((u_int)target>>16)&0xffff,1);
@@ -3739,7 +3779,6 @@ static void fconv_assemble_arm64(int i,struct regstat *i_regs)
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
 
-  signed char fs=get_reg(i_regs->regmap,FSREG);
   save_regs(reglist);
 
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
@@ -4170,7 +4209,6 @@ static void float_assemble(int i,struct regstat *i_regs)
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
 
-  signed char fs=get_reg(i_regs->regmap,FSREG);
   if(opcode2[i]==0x10) { // Single precision
     save_regs(reglist);
     switch(source[i]&0x3f)

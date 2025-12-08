@@ -94,8 +94,7 @@ static void *add_pointer(void *src, void* addr)
 {
   int *ptr=(int*)src;
   int *ptr2=(int*)((uintptr_t)ptr+(uintptr_t)*ptr+4);
-  u_char *ptr3=(u_char*)ptr2;
-  assert((*(ptr3+1)&0xFF)==0x8d); //lea
+  assert((*(((u_char*)ptr2)+1)&0xFF)==0x8d); //lea
   u_int offset=(uintptr_t)addr-(uintptr_t)ptr-4;
   *ptr=offset;
   return (void*)ptr2;
@@ -822,6 +821,7 @@ static void emit_lea8(int rs1,int rt)
   output_sib(3,rs1,5);
   output_w32(0);
 }
+#if 0
 static void emit_leairrx1(int imm,int rs1,int rs2,int rt)
 {
   assem_debug("lea %x(%%%s,%%%s,1),%%%s",imm,regname[rs1],regname[rs2],regname[rt]);
@@ -850,6 +850,7 @@ static void emit_leairrx4(int imm,int rs1,int rs2,int rt)
     output_sib(2,rs2&7,rs1&7);
   }
 }
+#endif
 
 static void emit_lea_rip(intptr_t addr, int hr)
 {
@@ -1171,6 +1172,7 @@ static void emit_addimm_and_set_flags(int imm,int rt)
     output_w32(imm);
   }
 }
+#if 0
 static void emit_addimm_no_flags(int imm,int rt)
 {
   if(imm!=0) {
@@ -1185,6 +1187,7 @@ static void emit_addimm_no_flags(int imm,int rt)
     }
   }
 }
+#endif
 
 static void emit_adcimm(int imm,u_int rt)
 {
@@ -1406,6 +1409,7 @@ static void emit_shrimm(int rs,u_int imm,int rt)
   }
 }
 
+#if 0
 static void emit_shrimm64(int rs,u_int imm,int rt)
 {
   assert(rs==rt);
@@ -1423,6 +1427,7 @@ static void emit_shrimm64(int rs,u_int imm,int rt)
     emit_shrimm64(rt,imm,rt);
   }
 }
+#endif
 
 static void emit_sarimm(int rs,u_int imm,int rt)
 {
@@ -1862,6 +1867,7 @@ static void emit_jb(intptr_t a)
   output_w32(a-(intptr_t)out-4);
 }
 
+#if 0
 static void emit_pushimm(int imm)
 {
   assert(0);
@@ -1869,6 +1875,7 @@ static void emit_pushimm(int imm)
   output_byte(0x68);
   output_w32(imm);
 }
+#endif
 static void emit_pushreg(u_int r)
 {
   assem_debug("push %%%s",regname[r]);
@@ -1883,6 +1890,7 @@ static void emit_popreg(u_int r)
     output_rex(0,0,0,r>>3);
   output_byte(0x58+(r&7));
 }
+#if 0
 static void emit_callreg(u_int r)
 {
   assem_debug("call *%%%s",regname[r]);
@@ -1890,6 +1898,7 @@ static void emit_callreg(u_int r)
   output_byte(0xFF);
   output_modrm(3,r,2);
 }
+#endif
 static void emit_jmpreg(u_int r)
 {
   assem_debug("jmp *%%%s",regname[r]);
@@ -1897,6 +1906,7 @@ static void emit_jmpreg(u_int r)
   output_byte(0xFF);
   output_modrm(3,r,4);
 }
+#if 0
 static void emit_jmpmem_indexed(u_int addr,u_int r)
 {
   assem_debug("jmp *%x(%%%s)",addr,regname[r]);
@@ -1905,7 +1915,9 @@ static void emit_jmpmem_indexed(u_int addr,u_int r)
   output_modrm(2,r,4);
   output_w32(addr);
 }
+#endif
 
+#if 0
 static void emit_addmem64(intptr_t addr,int hr)
 {
   assert(0);
@@ -1930,6 +1942,7 @@ static void emit_submem64(intptr_t addr,int hr)
   output_modrm(0,5,hr&7);
   output_w32((intptr_t)addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#endif
 
 static void emit_readword(intptr_t addr, int rt)
 {
@@ -2003,6 +2016,7 @@ static void emit_readdword_dualindexedx8(int rs1, int rs2, int rt)
     output_byte(0);
   }
 }
+#if 0
 static void emit_movmem_indexedx4(int addr, int rs, int rt)
 {
   assert(0);
@@ -2046,6 +2060,7 @@ static void emit_movmem64_irrx8(int offset, int rs1, int rs2, int rt)
     output_sib(3,rs2&7,rs1&7);
   }
 }
+#endif
 static void emit_movmem64(intptr_t addr, int rt)
 {
   assert((intptr_t)addr-(intptr_t)out>=-2147483648LL&&(intptr_t)addr-(intptr_t)out<2147483647LL);
@@ -2055,6 +2070,7 @@ static void emit_movmem64(intptr_t addr, int rt)
   output_modrm(0,5,rt&7);
   output_w32(addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#if 0
 static void emit_readdword_indexed(intptr_t addr, int rs, int rt)
 {
   assem_debug("mov %x+%%%s,%%%s",addr,regname[rs],regname[rt]);
@@ -2073,6 +2089,7 @@ static void emit_readdword_indexed(intptr_t addr, int rs, int rt)
     output_w32(addr);
   }
 }
+#endif
 static void emit_readdword_indexed_tlb(int addr, int rs, int map, int rh, int rl)
 {
   assert(map>=0);
@@ -2089,6 +2106,7 @@ static void emit_movsbl(intptr_t addr, int rt)
   output_modrm(0,5,rt);
   output_w32(addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#if 0
 static void emit_movsbl_indexed(uintptr_t addr, int rs, int rt)
 {
   assert(addr<4294967296LL);
@@ -2098,6 +2116,7 @@ static void emit_movsbl_indexed(uintptr_t addr, int rs, int rt)
   output_modrm(2,rs,rt);
   output_w32(addr);
 }
+#endif
 static void emit_movsbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   assert(map>=0);
@@ -2139,6 +2158,7 @@ static void emit_movswl(intptr_t addr, int rt)
   output_modrm(0,5,rt);
   output_w32(addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#if 0
 static void emit_movswl_indexed(uintptr_t addr, int rs, int rt)
 {
   assert(addr<4294967296LL);
@@ -2148,6 +2168,7 @@ static void emit_movswl_indexed(uintptr_t addr, int rs, int rt)
   output_modrm(2,rs,rt);
   output_w32(addr);
 }
+#endif
 static void emit_movswl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   assert(map>=0);
@@ -2189,6 +2210,7 @@ static void emit_movzbl(intptr_t addr, int rt)
   output_modrm(0,5,rt);
   output_w32(addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#if 0
 static void emit_movzbl_indexed(uintptr_t addr, int rs, int rt)
 {
   assert(addr<4294967296LL);
@@ -2198,6 +2220,7 @@ static void emit_movzbl_indexed(uintptr_t addr, int rs, int rt)
   output_modrm(2,rs,rt);
   output_w32(addr);
 }
+#endif
 static void emit_movzbl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   assert(map>=0);
@@ -2239,6 +2262,7 @@ static void emit_movzwl(intptr_t addr, int rt)
   output_modrm(0,5,rt);
   output_w32(addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#if 0
 static void emit_movzwl_indexed(uintptr_t addr, int rs, int rt)
 {
   assert(addr<4294967296LL);
@@ -2248,6 +2272,7 @@ static void emit_movzwl_indexed(uintptr_t addr, int rs, int rt)
   output_modrm(2,rs,rt);
   output_w32(addr);
 }
+#endif
 static void emit_movzwl_indexed_tlb(int addr, int rs, int map, int rt)
 {
   assert(map>=0);
@@ -2373,6 +2398,7 @@ static void emit_writedword_indexed_tlb(int rh, int rl, int addr, int rs, int ma
   emit_writeword_indexed_tlb(rh, addr, rs, map);
   emit_writeword_indexed_tlb(rl, addr+4, rs, map);
 }
+#if 0
 static void emit_writehword(int rt, int addr)
 {
   assert((intptr_t)addr-(intptr_t)out>=-2147483648LL&&(intptr_t)addr-(intptr_t)out<2147483647LL);
@@ -2398,6 +2424,7 @@ static void emit_writehword_indexed(int rt, intptr_t addr, int rs)
     output_w32(addr);
   }
 }
+#endif
 static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
 {
   assert(map>=0);
@@ -2431,6 +2458,7 @@ static void emit_writehword_indexed_tlb(int rt, int addr, int rs, int map)
     }
   }
 }
+#if 0
 static void emit_writebyte(int rt, int addr)
 {
   assert((intptr_t)addr-(intptr_t)out>=-2147483648LL&&(intptr_t)addr-(intptr_t)out<2147483647LL);
@@ -2456,6 +2484,7 @@ static void emit_writebyte_indexed(int rt, intptr_t addr, int rs)
     output_w32(addr);
   }
 }
+#endif
 static void emit_writebyte_indexed_tlb(int rt, int addr, int rs, int map)
 {
   assert(map>=0);
@@ -2498,6 +2527,7 @@ static void emit_writeword_imm(int imm, intptr_t addr)
   output_w32(addr-(intptr_t)out-8); // Note: rip-relative in 64-bit mode
   output_w32(imm);
 }
+#if 0
 static void emit_writeword_imm_esp(int imm, intptr_t addr)
 {
   assert(0);
@@ -2530,6 +2560,7 @@ static void emit_writebyte_imm(int imm, intptr_t addr)
   output_w32(addr-(intptr_t)out-5); // Note: rip-relative in 64-bit mode
   output_byte(imm);
 }
+#endif
 static void emit_writedword(int rt, intptr_t addr)
 {
   assert((intptr_t)addr-(intptr_t)out>=-2147483648LL&&(intptr_t)addr-(intptr_t)out<2147483647LL);
@@ -2591,10 +2622,12 @@ static void emit_cmpmem_imm(intptr_t addr, int imm)
 }
 
 // special case for checking invalid_code
+#if 0
 static void emit_cmpmem_indexedsr12_imm(int addr,int r,int imm)
 {
   assert(0);
 }
+#endif
 static void emit_cmpmem_indexedsr12_reg(int base,int r,int imm)
 {
   assert(imm<128&&imm>=-127);
@@ -2645,6 +2678,7 @@ static void emit_readdword_dualindexed(int offset, int base,int rs,int rt)
 }
 
 // special case for checking memory_map in verify_mapping
+#if 0
 static void emit_cmpmem(intptr_t addr,int rt)
 {
   assert(0);
@@ -2655,6 +2689,7 @@ static void emit_cmpmem(intptr_t addr,int rt)
   output_modrm(0,5,rt);
   output_w32((intptr_t)addr-(intptr_t)out-4); // Note: rip-relative in 64-bit mode
 }
+#endif
 
 // Used to preload hash table entries
 #ifdef IMM_PREFETCH
@@ -2866,6 +2901,7 @@ static void emit_fldcw_stack(void)
   output_modrm(0,4,5);
   output_sib(0,4,4);
 }
+#if 0
 static void emit_fldcw_indexed(intptr_t addr,int r)
 {
   assert(0);
@@ -2875,6 +2911,7 @@ static void emit_fldcw_indexed(intptr_t addr,int r)
   output_sib(1,r,5);
   output_w32(addr);
 }
+#endif
 static void emit_fldcw_indexedx4(int addr, int r)
 {
   assem_debug("fldcw (%%%s,%%%s,4)",regname[addr],regname[r]);
@@ -3616,7 +3653,6 @@ static void fconv_assemble_x64(int i,struct regstat *i_regs)
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
-  signed char fs=get_reg(i_regs->regmap,FSREG);
   save_regs(reglist);
 
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
@@ -4021,7 +4057,6 @@ static void float_assemble(int i,struct regstat *i_regs)
   for(hr=0;hr<HOST_REGS;hr++) {
     if(i_regs->regmap[hr]>=0) reglist|=1<<hr;
   }
-  signed char fs=get_reg(i_regs->regmap,FSREG);
   if(opcode2[i]==0x10) { // Single precision
     save_regs(reglist);
     switch(source[i]&0x3f)
