@@ -233,7 +233,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 
 static m64p_error plugin_start_gfx(void)
 {
-    uint8_t media = *((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM) + (0x3b ^ S8));
+    uint8_t media = g_rom_size == 0 ? 0 : *((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM) + (0x3b ^ S8));
 
     /* Here we feed 64DD IPL ROM header to GFX plugin if 64DD is present.
      * We use g_media_loader.get_dd_rom to detect 64DD presence
