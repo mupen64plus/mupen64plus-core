@@ -132,8 +132,10 @@ static void __clear_cache(char* begin, char *end){}
 
 static int disasm_block[] = {0xa4000040};
 
+#include "device/r4300/new_dynarec/new_dynarec.h"
 #include "osal/preproc.h" //for ALIGN
-ALIGN(4096, static char recomp_dbg_extra_memory[33554432]);
+ALIGN(4096, static unsigned char recomp_dbg_extra_memory_buffer[NEW_DYNAREC_CACHE_SIZE + NEW_DYNAREC_CACHE_PAGE_PAD]);
+static unsigned char* recomp_dbg_extra_memory;
 
 // Recompile new_dynarec.c with the above redefinitions
 #include "new_dynarec.c"
@@ -813,6 +815,12 @@ static void replace_addr(intptr_t real_addr, intptr_t addr, size_t addr_size, Va
 
 void recomp_dbg_init(void)
 {
+  if (recomp_dbg_extra_memory == NULL) {
+    recomp_dbg_extra_memory = (unsigned char*)
+        dynarec_align_cache_buffer(recomp_dbg_extra_memory_buffer,
+                                   sizeof(recomp_dbg_extra_memory_buffer));
+  }
+
   var[0].addr = (uintptr_t)g_dev.rdram.dram - 0x80000000;
   var[0].size = g_dev.rdram.dram_size;
 

@@ -25,6 +25,16 @@
 #include <sys/types.h> // needed for u_int, u_char, etc
 #include <assert.h>
 
+#if defined(WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <winsock2.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #if defined(__APPLE__)
 #define MAP_ANONYMOUS MAP_ANON
 #endif
@@ -66,6 +76,56 @@ void recomp_dbg_block(int addr);
 #else
 #error Unsupported dynarec architecture
 #endif
+
+#if ((1u << TARGET_SIZE_2) != NEW_DYNAREC_CACHE_SIZE)
+#error "NEW_DYNAREC_CACHE_SIZE must match TARGET_SIZE_2"
+#endif
+
+static size_t dynarec_host_page_size(void)
+{
+#if defined(WIN32)
+  SYSTEM_INFO sys_info;
+  GetSystemInfo(&sys_info);
+  size_t page_size = (size_t) sys_info.dwPageSize;
+#else
+  long result = sysconf(_SC_PAGESIZE);
+  size_t page_size = result > 0 ? (size_t) result : 0;
+#endif
+  return page_size != 0 ? page_size : 4096u;
+}
+
+static void* dynarec_align_cache_buffer(void* buffer, size_t buffer_size)
+{
+  const size_t cache_size = (size_t) NEW_DYNAREC_CACHE_SIZE;
+  const size_t page_size = dynarec_host_page_size();
+  const uintptr_t base = (uintptr_t) buffer;
+  const uintptr_t end = base + buffer_size;
+  uintptr_t aligned = ((base + page_size - 1) / page_size) * page_size;
+
+  if (aligned + cache_size > end) {
+    const uintptr_t max_start = end - cache_size;
+    const uintptr_t fallback = (max_start / page_size) * page_size;
+    if (fallback < base) {
+      DebugMessage(M64MSG_ERROR,
+          "Unable to align dynarec cache to host page size (%zu). "
+          "Execution may fail.", page_size);
+      return (void*) base;
+    }
+    aligned = fallback;
+  }
+
+  return (void*) aligned;
+}
+
+static void ensure_dynarec_cache_alignment(void)
+{
+  if (g_dev.r4300.extra_memory != NULL)
+    return;
+
+  g_dev.r4300.extra_memory = (unsigned char*)
+      dynarec_align_cache_buffer(g_dev.r4300.extra_memory_buffer,
+                                 sizeof(g_dev.r4300.extra_memory_buffer));
+}
 
 /* debug */
 #define ASSEM_DEBUG 0
@@ -8631,6 +8691,7 @@ static void pagespan_ds(void)
 void new_dynarec_init(void)
 {
   DebugMessage(M64MSG_INFO, "Init new dynarec");
+  ensure_dynarec_cache_alignment();
 
 #if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
   recomp_dbg_init();
