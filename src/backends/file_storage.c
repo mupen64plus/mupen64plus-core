@@ -124,8 +124,10 @@ static void file_storage_save(void* storage, size_t start, size_t size)
 
 static void file_storage_parent_save(void* storage, size_t start, size_t size)
 {
-    struct file_storage* fstorage = (struct file_storage*)((struct file_storage*)storage)->filename;
-    file_storage_save(fstorage, start, size);
+    struct file_storage* fstorage = (struct file_storage*)storage;
+    struct file_storage* fstorage_parent = (struct file_storage*)fstorage->filename;
+
+    file_storage_save(fstorage_parent, fstorage->offset + start, size);
 }
 
 static void dummy_save(void* storage, size_t start, size_t size)

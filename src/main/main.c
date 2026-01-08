@@ -1823,6 +1823,7 @@ m64p_error main_run(void)
                 else if (l_ipaks[k] == &g_imempak) {
                     mpk_storages[i].data = mpk.data + i * MEMPAK_SIZE;
                     mpk_storages[i].size = MEMPAK_SIZE;
+                    mpk_storages[i].offset = i * MEMPAK_SIZE;
                     mpk_storages[i].filename = (void*)&mpk; /* OK for isubfile_storage */
 
                     init_mempak(&g_dev.mempaks[i], &mpk_storages[i], &g_isubfile_storage);

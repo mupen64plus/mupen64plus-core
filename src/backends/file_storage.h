@@ -29,6 +29,7 @@ struct file_storage
 {
     uint8_t* data;
     size_t size;
+    size_t offset;
     const char* filename;
     int first_access;
 };
