@@ -37,7 +37,11 @@ enum
     DPC_STATUS_FREEZE        = 0x002,
     DPC_STATUS_FLUSH         = 0x004,
     DPC_STATUS_START_GCLK    = 0x008,
+    DPC_STATUS_TMEM_BUSY     = 0x010,
+    DPC_STATUS_PIPE_BUSY     = 0x020,
+    DPC_STATUS_CMD_BUSY      = 0x040,
     DPC_STATUS_CBUF_READY    = 0x080,
+    DPC_STATUS_DMA_BUSY      = 0x100,
     DPC_STATUS_END_VALID     = 0x200,
     DPC_STATUS_START_VALID   = 0x400,
     /* DPC status - write */
