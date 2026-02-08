@@ -22,10 +22,10 @@ for ARG in ${ENV_ARGS}; do
 			export MULTILIB=1
 			;;
 		x64 )
-			export ARCH_ARG="x64" CPU_TUNE="-march=nocona" BITS=64
+			export ARCH_ARG="x64" CPU_TUNE="-march=nocona"
 			;;
 		x86 )
-			export ARCH_ARG="x86" CPU_TUNE="-march=pentium4" BITS=32
+			export ARCH_ARG="x86" CPU_TUNE="-march=pentium4"
 			;;
 	esac
 done
@@ -38,17 +38,18 @@ if [[ "${REPO}" == "" ]]; then exit 6; fi
 
 export BIN_OS="$(uname -s | tr [A-Z] [a-z])"
 if [[ ! -z ${MSYSTEM} ]]; then export BIN_OS="msys2-$(echo "${MSYSTEM}" | tr [A-Z] [a-z])"; fi
-export ENV_NAME="$(uname -s)"
-export LDD="ldd"
-export PKG_PATH="usr/local/lib/mupen64plus/"
+export ENV_NAME="$(uname -s)" LDD="ldd"
+export PIX="PIC" PKG_PATH="usr/local/lib/mupen64plus/"
 if [[ "${REPO}" == *"core"* ]]; then
 	export PKG_PATH="usr/local/lib/"
 elif [[ "${REPO}" == *"ui-console"* ]]; then
-	export PKG_PATH="usr/local/bin/"
+	export PIX="PIE" PKG_PATH="usr/local/bin/"
 fi
+if [[ "${ARCH_ARG}" == "x86" ]]; then export CONFIG_OVERRIDE="BITS=32 ${CONFIG_OVERRIDE}"; fi
+if [[ -z ${OPTFLAGS} ]]; then export OPTFLAGS="-O3 ${CPU_TUNE}"; fi
 
 if [[ "${ENV_NAME}" == *"Linux"* ]]; then
-	if [[ "${ARCH_ARG}" == "x86" ]]; then export PIC=1 PIE=1; fi
+	if [[ "${ARCH_ARG}" == "x86" ]]; then export CONFIG_OVERRIDE="${CONFIG_OVERRIDE} ${PIX}=1"; fi
 	if [[ ${MULTILIB} -eq 0 ]]; then
 		if [[ "${CC_ARG}" == "GCC" ]]; then
 			if [[ "${ARCH_ARG}" == "x86" ]]; then export CC="i686-linux-gnu-${CC}" CXX="i686-linux-gnu-${CXX}"; fi
@@ -71,21 +72,19 @@ if [[ -f "${GITHUB_ENV}" ]]; then
 	set -e
 fi
 
-if [[ -z ${OPTFLAGS} ]]; then export OPTFLAGS="-O3 -flto ${CPU_TUNE}"; fi
-
 echo ""
-echo ":: CC=${CC} CXX=${CXX} BITS=${BITS} ${CONFIG_OVERRIDE} ::"
+echo ":: CC=${CC} CXX=${CXX} ${CONFIG_OVERRIDE} OPTFLAGS=\"${OPTFLAGS}\" ::"
 echo ""
 ${CC} --version
 echo ""
 
 make_clean () {
-	make CC="${CC}" CXX="${CXX}" BITS=${BITS} ${CONFIG_OVERRIDE} -C projects/unix clean
+	make CC=${CC} CXX=${CXX} ${CONFIG_OVERRIDE} OPTFLAGS="${OPTFLAGS}" -C projects/unix clean
 	echo ""
 }
 
 make_clean
-make CC="${CC}" CXX="${CXX}" BITS=${BITS} ${CONFIG_OVERRIDE} -C projects/unix all -j4
+make CC=${CC} CXX=${CXX} ${CONFIG_OVERRIDE} OPTFLAGS="${OPTFLAGS}" -C projects/unix all -j4
 echo ""
 
 if [[ ! -d pkg ]]; then
@@ -96,22 +95,19 @@ fi
 pushd projects/unix > /dev/null
 export ARTIFACT="$(find *mupen64plus* -type f 2> /dev/null | head -n 1)"
 popd > /dev/null
+if [[ "${ARTIFACT}" == "" ]]; then exit 5; fi
 
-make CC="${CC}" CXX="${CXX}" BITS=${BITS} ${CONFIG_OVERRIDE} -C projects/unix install ${INSTALL_OVERRIDE} DESTDIR="$(pwd)/pkg/"
+make CC=${CC} CXX=${CXX} ${CONFIG_OVERRIDE} OPTFLAGS="${OPTFLAGS}" -C projects/unix install ${INSTALL_OVERRIDE} DESTDIR="$(pwd)/pkg/"
 echo ""
 make_clean
 
-if [[ -z ${ARTIFACT} ]]; then
-	exit 5
-else
-	cd pkg
-	if [[ -f "mupen64plus.desktop" ]]; then rm -f mupen64plus.desktop; fi
-	ls -gG "${PKG_PATH}${ARTIFACT}"
-	echo ""
-	${LDD} "${PKG_PATH}${ARTIFACT}" > ldd.log
-	cat ldd.log
-	echo ""
-	if [[ ${MAKE_PKG} -eq 1 ]]; then tar --owner=0 --group=0 --mode='og-w' -czf "${PKG_NAME}.tar.gz" usr; fi
-fi
+cd pkg
+if [[ -f "mupen64plus.desktop" ]]; then rm -f mupen64plus.desktop; fi
+ls -gG "${PKG_PATH}${ARTIFACT}"
+echo ""
+${LDD} "${PKG_PATH}${ARTIFACT}" > ldd.log
+cat ldd.log
+echo ""
+if [[ ${MAKE_PKG} -eq 1 ]]; then tar --owner=0 --group=0 --mode='og-w' -czf "${PKG_NAME}.tar.gz" usr; fi
 
 exit 0
