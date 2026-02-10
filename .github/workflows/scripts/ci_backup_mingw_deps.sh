@@ -2,6 +2,7 @@
 set -e +u
 
 if [[ ${#} -ne 1 ]]; then exit 9; fi
+if [[ ! -f "pkg/ldd.log" ]]; then exit 8; fi
 
 export ENV_MSYS="$(echo "${1}" | tr [A-Z] [a-z])"
 export DEPS="$(LC_ALL=C grep "${ENV_MSYS}" pkg/ldd.log | tr -s '\t' ' ' | sort | cut -d ' ' -f4 | tr '\\' '/' | tr -d ':')"

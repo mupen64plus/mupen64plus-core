@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository == 'mupen64plus/mupen64plus-core'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Get build dependencies and arrange the environment
         run: |
           export BUILD_DEPS="libfreetype6-dev libgl1-mesa-dev libglu1-mesa-dev libpng-dev libsdl2-dev libvulkan-dev zlib1g-dev"
@@ -37,7 +37,7 @@ jobs:
           ci_build.sh ${{ matrix.arch }} ${{ matrix.cc }} makepkg
       - name: Upload artifact
         if: matrix.cc == 'GCC'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*.tar.gz
@@ -74,7 +74,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.env }}
@@ -103,7 +103,7 @@ jobs:
         run: |
           ./.github/workflows/scripts/ci_backup_mingw_deps.sh ${{ matrix.env }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*
@@ -124,7 +124,7 @@ jobs:
       run:
         shell: cmd
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: microsoft/setup-msbuild@v2
       - name: Pre-build arrangements for ${{ matrix.toolset }}
         if: matrix.toolset == 'v141_xp'
@@ -135,12 +135,13 @@ jobs:
           set PATH=%CD%\.github\workflows\scripts;%PATH%
           set TOOLSET=${{ matrix.toolset }}
           call ci_msvc_build.cmd ${{ matrix.arch }}
-          call ci_msvc_build.cmd ${{ matrix.arch }} newdyn
+          if errorlevel 1 exit %ERRORLEVEL%
+          ci_msvc_build.cmd ${{ matrix.arch }} newdyn
       - name: Backup dependencies, etc...
         run: |
           .\.github\workflows\scripts\ci_backup_msvc_deps.cmd ${{ matrix.arch }} freetype.dll libpng16.dll SDL2.dll SDL2_net.dll zlib.dll
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.PKG_NAME }}
           path: pkg/*
@@ -150,9 +151,9 @@ jobs:
     if: github.ref_name == 'master'
     needs: [Linux, MSYS2, MSVC]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: binaries
       - name: Get some tools
@@ -163,6 +164,7 @@ jobs:
         run: |
           ./.github/workflows/scripts/ci_nightly_artifacts.sh
       - name: Nightly-build
+        if: ${{ env.WORKFLOW_REV == env.CURRENT_REV }}
         uses: ncipollo/release-action@v1
         with:
           prerelease: true

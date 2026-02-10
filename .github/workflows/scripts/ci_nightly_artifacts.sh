@@ -4,7 +4,6 @@ set -e +u
 export REPO="${PWD##*/}"
 if [[ "${REPO}" == "" ]]; then exit 9; fi
 
-rm -fr pkg
 mkdir pkg
 cd binaries
 for BIN in *; do
@@ -41,8 +40,15 @@ for HASH in tiger sha256 sha512 blake2; do
 done
 
 if [[ -f "${GITHUB_ENV}" ]]; then
-	git tag -f nightly-build
-	git push -f origin nightly-build
+	export WORKFLOW_REV="$(git rev-parse HEAD)"
+	echo "WORKFLOW_REV=${WORKFLOW_REV}" >> "${GITHUB_ENV}"
+	git pull
+	export CURRENT_REV="$(git rev-parse HEAD)"
+	echo "CURRENT_REV=${CURRENT_REV}" >> "${GITHUB_ENV}"
+	if [[ "${WORKFLOW_REV}" == "${CURRENT_REV}" ]]; then
+		git tag -f nightly-build
+		git push -f origin nightly-build
+	fi
 fi
 
 exit 0
