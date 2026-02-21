@@ -20,7 +20,11 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +41,26 @@ SDL_JoystickID l_iJoyInstanceID[10];
 #include "plugin/plugin.h"
 #include "sdl_key_converter.h"
 #include "util.h"
+
+/* SDL2 compatability defines */
+#ifndef USE_SDL3
+
+#define SDL_EVENT_QUIT SDL_QUIT
+#define SDL_EVENT_KEY_DOWN SDL_KEYDOWN
+#define SDL_EVENT_KEY_UP SDL_KEYUP
+
+#define SDL_EVENT_JOYSTICK_AXIS_MOTION SDL_JOYAXISMOTION 
+#define SDL_EVENT_JOYSTICK_HAT_MOTION SDL_JOYHATMOTION
+#define SDL_EVENT_JOYSTICK_BUTTON_DOWN SDL_JOYBUTTONDOWN
+
+#define SDL_EVENT_JOYSTICK_BUTTON_UP SDL_JOYBUTTONUP
+#define SDL_EVENT_JOYSTICK_BUTTON_DOWN SDL_JOYBUTTONDOWN
+
+#define SDL_KMOD_LALT KMOD_LALT
+#define SDL_KMOD_RALT KMOD_RALT
+
+#define SDL_SCANCODE_COUNT SDL_NUM_SCANCODES
+#endif
 
 /* version number for CoreEvents config section */
 #define CONFIG_PARAM_VERSION 1.00
@@ -192,7 +216,7 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
             {
                 /* Axis */
                 case 'A':
-                    if (event->type != SDL_JOYAXISMOTION)
+                    if (event->type != SDL_EVENT_JOYSTICK_AXIS_MOTION)
                         break;
                     if (sscanf(action_str, "A%d%c", &input_number, &axis_direction) != 2)
                         break;
@@ -217,7 +241,7 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                     break;
                 /* Hat */
                 case 'H':
-                    if (event->type != SDL_JOYHATMOTION)
+                    if (event->type != SDL_EVENT_JOYSTICK_HAT_MOTION)
                         break;
                     if (sscanf(action_str, "H%dV%d", &input_number, &input_value) != 2)
                         break;
@@ -230,15 +254,15 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
                     break;
                 /* Button. */
                 case 'B':
-                    if (event->type != SDL_JOYBUTTONDOWN && event->type != SDL_JOYBUTTONUP)
+                    if (event->type != SDL_EVENT_JOYSTICK_BUTTON_DOWN && event->type != SDL_EVENT_JOYSTICK_BUTTON_UP)
                         break;
                     if (sscanf(action_str, "B%d", &input_number) != 1)
                         break;
                     if ((dev_number != -1 && dev_number != event->jbutton.which) || input_number != event->jbutton.button)
                         break;
-                    if (event->type == SDL_JOYBUTTONDOWN)
+                    if (event->type == SDL_EVENT_JOYSTICK_BUTTON_DOWN)
                         JoyCmdActive[cmd][iHotkey] = 1;
-                    else if (event->type == SDL_JOYBUTTONUP)
+                    else if (event->type == SDL_EVENT_JOYSTICK_BUTTON_UP)
                         JoyCmdActive[cmd][iHotkey] = 0;
                     break;
                 default:
@@ -267,7 +291,11 @@ static int MatchJoyCommand(const SDL_Event *event, eJoyCommand cmd)
 /*********************************************************************************************************
 * sdl event filter
 */
+#ifdef USE_SDL3
+static bool SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
+#else
 static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
+#endif
 {
 #ifndef NO_KEYBINDINGS
     int cmd, action;
@@ -276,20 +304,42 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
     switch(event->type)
     {
         // user clicked on window close button
-        case SDL_QUIT:
+        case SDL_EVENT_QUIT:
             main_stop();
             break;
 
-        case SDL_KEYDOWN:
+        case SDL_EVENT_KEY_DOWN:
             if (event->key.repeat)
                 return 0;
 
+#ifdef USE_SDL3
+            event_sdl_keydown(event->key.scancode, event->key.mod);
+#else
             event_sdl_keydown(event->key.keysym.scancode, event->key.keysym.mod);
+#endif
             return 0;
-        case SDL_KEYUP:
+        case SDL_EVENT_KEY_UP:
+#ifdef USE_SDL3
+            event_sdl_keyup(event->key.scancode, event->key.mod);
+#else
             event_sdl_keyup(event->key.keysym.scancode, event->key.keysym.mod);
+#endif
             return 0;
 
+#ifdef USE_SDL3
+        case SDL_EVENT_WINDOW_RESIZED:
+            // call the video plugin.  if the video plugin supports resizing, it will resize its viewport and call
+            // VidExt_ResizeWindow to update the window manager handling our opengl output window
+            gfx.resizeVideoOutput(event->window.data1, event->window.data2);
+            return 0;  // consumed the event
+            break;
+
+        case SDL_EVENT_WINDOW_MOVED:
+            gfx.moveScreen(event->window.data1, event->window.data2);
+            return 0;  // consumed the event
+            break;
+
+#else
         case SDL_WINDOWEVENT:
             switch (event->window.event) {
                 case SDL_WINDOWEVENT_RESIZED:
@@ -305,13 +355,15 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
                     break;
             }
             break;
+#endif
+
 
 #ifndef NO_KEYBINDINGS
         // if joystick action is detected, check if it's mapped to a special function
-        case SDL_JOYAXISMOTION:
-        case SDL_JOYBUTTONDOWN:
-        case SDL_JOYBUTTONUP:
-        case SDL_JOYHATMOTION:
+        case SDL_EVENT_JOYSTICK_AXIS_MOTION:
+        case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+        case SDL_EVENT_JOYSTICK_BUTTON_UP:
+        case SDL_EVENT_JOYSTICK_HAT_MOTION:
             for (cmd = 0; cmd < NumJoyCommands; cmd++)
             {
                 action = MatchJoyCommand(event, (eJoyCommand) cmd);
@@ -374,7 +426,7 @@ static int SDLCALL event_sdl_filter(void *userdata, SDL_Event *event)
 
 void event_initialize(void)
 {
-#ifndef NO_KEYBINDINGS
+#if !defined(NO_KEYBINDINGS) && !defined(USE_SDL3)
     int i, j;
 
     /* set initial state of all joystick commands to 'off' */
@@ -487,7 +539,7 @@ int event_set_core_defaults(void)
         ConfigSetDefaultInt(l_CoreEventsConfig, kbdSaveSlotStr, sdl_native2keysym(key), kbdSaveSlotHelpStr);
     }
     ConfigSetDefaultInt(l_CoreEventsConfig, kbdStop, sdl_native2keysym(SDL_SCANCODE_ESCAPE),          "SDL keysym for stopping the emulator");
-    ConfigSetDefaultInt(l_CoreEventsConfig, kbdFullscreen, sdl_native2keysym(SDL_NUM_SCANCODES),      "SDL keysym for switching between fullscreen/windowed modes");
+    ConfigSetDefaultInt(l_CoreEventsConfig, kbdFullscreen, sdl_native2keysym(SDL_SCANCODE_COUNT),      "SDL keysym for switching between fullscreen/windowed modes");
     ConfigSetDefaultInt(l_CoreEventsConfig, kbdSave, sdl_native2keysym(SDL_SCANCODE_F5),              "SDL keysym for saving the emulator state");
     ConfigSetDefaultInt(l_CoreEventsConfig, kbdLoad, sdl_native2keysym(SDL_SCANCODE_F7),              "SDL keysym for loading the emulator state");
     ConfigSetDefaultInt(l_CoreEventsConfig, kbdIncrement, sdl_native2keysym(SDL_SCANCODE_UNKNOWN),    "SDL keysym for advancing the save state slot");
@@ -551,7 +603,7 @@ void event_sdl_keydown(int keysym, int keymod)
     int slot;
 
     /* check for the only hard-coded key command: Alt-enter for fullscreen */
-    if (keysym == SDL_SCANCODE_RETURN && keymod & (KMOD_LALT | KMOD_RALT))
+    if (keysym == SDL_SCANCODE_RETURN && keymod & (SDL_KMOD_LALT | SDL_KMOD_RALT))
         gfx.changeWindow();
     /* check all of the configurable commands */
     else if ((slot = get_saveslot_from_keysym(keysym)) >= 0)
