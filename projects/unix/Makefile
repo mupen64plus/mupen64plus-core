@@ -313,7 +313,7 @@ LDLIBS += $(ZLIB_LDLIBS)
 
 ifeq ($(origin MINIZIP_CFLAGS) $(origin MINIZIP_LDLIBS), undefined undefined)
   ifeq ($(shell $(PKG_CONFIG) --modversion minizip 2>/dev/null),)
-    CFLAGS += -DNOCRYPT -DNOUNCRYPT -I$(SUBDIR)/minizip
+    CFLAGS += -DNOCRYPT -DNOUNCRYPT -I$(SUBDIR)
     MINIZIP_SOURCE = \
       $(SUBDIR)/minizip/ioapi.c \
       $(SUBDIR)/minizip/zip.c \
