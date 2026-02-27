@@ -23,9 +23,15 @@
 
 #include "oglft_c.h"
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+#include <SDL3/SDL_thread.h>
+#else
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <SDL_thread.h>
+#endif
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -56,7 +62,11 @@ static osd_message_t * osd_message_valid(osd_message_t *testmsg);
 
 static float fCornerScroll[OSD_NUM_CORNERS];
 
+#ifdef USE_SDL3
+static SDL_Mutex *osd_list_lock;
+#else
 static SDL_mutex *osd_list_lock;
+#endif
 
 // animation handlers
 static void (*l_animations[OSD_NUM_ANIM_TYPES])(osd_message_t *) = {

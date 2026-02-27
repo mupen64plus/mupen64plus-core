@@ -28,7 +28,11 @@
  * if you want to implement an interface, you should look here
  */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -330,8 +334,10 @@ static m64p_error init_video_capture_backend(const struct video_capture_backend_
         DebugMessage(M64MSG_INFO, "Using video capture backend: %s", (*ivcap)->name);
     }
     else {
-        DebugMessage(M64MSG_ERROR, "Failed to initialize video capture backend %s: %s", (*ivcap)->name, CoreErrorMessage(err));
-        *ivcap = NULL;
+        DebugMessage(M64MSG_ERROR, "Failed to initialize video capture backend %s: %s, falling back to dummy backend", (*ivcap)->name, CoreErrorMessage(err));
+        /* fallback to dummy backend */
+        *ivcap = get_video_capture_backend(NULL);
+        (*ivcap)->init(vcap, section);
     }
 
     free(section);
@@ -966,9 +972,9 @@ static void apply_speed_limiter(void)
     static unsigned long totalVIs = 0;
     static int resetOnce = 0;
     static int lastSpeedFactor = 100;
-    static unsigned int StartFPSTime = 0;
+    static uint64_t StartFPSTime = 0;
     static const double defaultSpeedFactor = 100.0;
-    unsigned int CurrentFPSTime = SDL_GetTicks();
+    uint64_t CurrentFPSTime = SDL_GetTicks();
 
     // calculate frame duration based upon ROM setting (50/60hz) and mupen64plus speed adjustment
     const double VILimitMilliseconds = 1000.0 / g_dev.vi.expected_refresh_rate;
@@ -1700,10 +1706,7 @@ m64p_error main_run(void)
 
     /* init GbCamera backend specified in the configuration file */
     init_video_capture_backend(&igbcam_backend, &gbcam_backend,
-        g_CoreConfig, "GbCameraVideoCaptureBackend1");
-
-    /* open GB cam video device */
-    igbcam_backend->open(gbcam_backend, M64282FP_SENSOR_W, M64282FP_SENSOR_H);
+        g_CoreConfig, "GbCameraVideoCaptureBackend1");    
 
     /* open storage files, provide default content if not present */
     open_mpk_file(&mpk);

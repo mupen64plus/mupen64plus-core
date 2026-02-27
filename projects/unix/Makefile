@@ -351,21 +351,43 @@ endif
 
 # test for presence of SDL
 ifeq ($(origin SDL_CFLAGS) $(origin SDL_LDLIBS), undefined undefined)
-  ifeq ($(shell $(PKG_CONFIG) --modversion sdl2 2>/dev/null),)
-    $(error No SDL2 development libraries found!)
-  endif
-  ifeq ($(NETPLAY), 1)
-    ifeq ($(shell $(PKG_CONFIG) --modversion SDL2_net 2>/dev/null),)
-      $(error No SDL2_net development libraries found!)
+  ifeq ($(shell $(PKG_CONFIG) --modversion sdl3 2>/dev/null),)
+    ifeq ($(shell $(PKG_CONFIG) --modversion sdl2 2>/dev/null),)
+      $(error No SDL3 or SDL2 development libraries found!)
     endif
-    SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags SDL2_net)
-    SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs SDL2_net)
+    ifeq ($(SDL3_CAMERA), 1)
+    	$(error SDL3_CAMERA requires SDL3!)
+    endif
+    SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl2)
+    SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl2)
+  else
+    SDL3_CAMERA := 1
+    SDL_CFLAGS += -DUSE_SDL3
+    SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl3)
+    SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl3)
   endif
-  SDL_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl2)
-  SDL_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl2)
 endif
 CFLAGS += $(SDL_CFLAGS)
 LDLIBS += $(SDL_LDLIBS)
+
+# test for presence of SDL_net
+ifeq ($(NETPLAY), 1)
+  ifeq ($(origin SDLNET_CFLAGS) $(origin SDLNET_LDLIBS), undefined undefined)
+    ifeq ($(shell $(PKG_CONFIG) --modversion sdl3-net 2>/dev/null),)
+      ifeq ($(shell $(PKG_CONFIG) --modversion SDL2_net 2>/dev/null),)
+        $(error No SDL3_net or SDL2_net development libraries found!)
+      endif
+      SDLNET_CFLAGS += $(shell $(PKG_CONFIG) --cflags SDL2_net)
+      SDLNET_LDLIBS += $(shell $(PKG_CONFIG) --libs SDL2_net)
+    else
+      SDLNET_CFLAGS += -DUSE_SDL3NET
+      SDLNET_CFLAGS += $(shell $(PKG_CONFIG) --cflags sdl3-net)
+      SDLNET_LDLIBS += $(shell $(PKG_CONFIG) --libs sdl3-net)
+    endif
+  endif
+  CFLAGS += $(SDLNET_CFLAGS)
+  LDLIBS += $(SDLNET_LDLIBS)
+endif
 
 ifeq ($(VC), 1)
   CFLAGS += -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/vmcs_host/linux
@@ -744,6 +766,10 @@ ifeq ($(OPENCV), 1)
   CFLAGS += -DM64P_OPENCV
 endif
 
+ifeq ($(SDL3_CAMERA), 1)
+  SOURCE += $(SRCDIR)/backends/sdl3_video_capture.cpp
+  CFLAGS += -DSDL3_CAMERA
+endif
 
 # generate a list of object files to build, make a temporary directory for them
 OBJECTS := $(patsubst $(SRCDIR)/%.c,   $(OBJDIR)/%.o, $(filter $(SRCDIR)/%.c,   $(SOURCE)))

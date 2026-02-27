@@ -28,12 +28,18 @@ extern const struct video_capture_backend_interface g_idummy_video_capture_backe
 #if defined(M64P_OPENCV)
 extern const struct video_capture_backend_interface g_iopencv_video_capture_backend;
 #endif
+#if defined(SDL3_CAMERA)
+extern const struct video_capture_backend_interface g_isdl3_video_capture_backend;
+#endif
 
 
 const struct video_capture_backend_interface* g_video_capture_backend_interfaces[] =
 {
 #if defined(M64P_OPENCV)
     &g_iopencv_video_capture_backend,
+#endif
+#if defined(SDL3_CAMERA)
+    &g_isdl3_video_capture_backend,
 #endif
     &g_idummy_video_capture_backend,
     NULL /* sentinel - must be last element */

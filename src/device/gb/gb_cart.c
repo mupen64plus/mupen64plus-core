@@ -715,6 +715,9 @@ static void init_pocket_cam(struct pocket_cam* cam, uint8_t* ram, void* vcap, co
 
     cam->vcap = vcap;
     cam->ivcap = ivcap;
+
+    /* open video device */
+    cam->ivcap->open(cam->vcap,  M64282FP_SENSOR_W, M64282FP_SENSOR_H);
 }
 
 static void poweron_pocket_cam(struct pocket_cam* cam)
