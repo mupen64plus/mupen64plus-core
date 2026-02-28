@@ -55,6 +55,36 @@ enum
     SP_STATUS_SIG7       = 0x4000,
 };
 
+enum
+{
+    /* SP_STATUS - write */
+    SP_CLR_HALT       = 0x0000001,
+    SP_SET_HALT       = 0x0000002,
+    SP_CLR_BROKE      = 0x0000004,
+    SP_CLR_INTR       = 0x0000008,
+    SP_SET_INTR       = 0x0000010,
+    SP_CLR_SSTEP      = 0x0000020,
+    SP_SET_SSTEP      = 0x0000040,
+    SP_CLR_INTR_BREAK = 0x0000080,
+    SP_SET_INTR_BREAK = 0x0000100,
+    SP_CLR_SIG0       = 0x0000200,
+    SP_SET_SIG0       = 0x0000400,
+    SP_CLR_SIG1       = 0x0000800,
+    SP_SET_SIG1       = 0x0001000,
+    SP_CLR_SIG2       = 0x0002000,
+    SP_SET_SIG2       = 0x0004000,
+    SP_CLR_SIG3       = 0x0008000,
+    SP_SET_SIG3       = 0x0010000,
+    SP_CLR_SIG4       = 0x0020000,
+    SP_SET_SIG4       = 0x0040000,
+    SP_CLR_SIG5       = 0x0080000,
+    SP_SET_SIG5       = 0x0100000,
+    SP_CLR_SIG6       = 0x0200000,
+    SP_SET_SIG6       = 0x0400000,
+    SP_CLR_SIG7       = 0x0800000,
+    SP_SET_SIG7       = 0x1000000,
+};
+
 enum sp_registers
 {
     SP_MEM_ADDR_REG,
@@ -81,6 +111,14 @@ enum sp_dma_dir
     SP_DMA_WRITE
 };
 
+enum sp_rsp_wait
+{
+    WAIT_PENDING_SP_INT_BROKE = 0x1,
+    WAIT_PENDING_SP_INT       = 0x2,
+    WAIT_PENDING_DP_SYNC      = 0x4,
+    WAIT_HALTED               = 0x8
+};
+
 enum { SP_DMA_FIFO_SIZE = 2} ;
 
 struct sp_dma
@@ -96,7 +134,9 @@ struct rsp_core
     uint32_t* mem;
     uint32_t regs[SP_REGS_COUNT];
     uint32_t regs2[SP_REGS2_COUNT];
-    uint32_t rsp_task_locked;
+    uint32_t rsp_status;
+    uint32_t first_run;
+    uint32_t rsp_wait;
 
     struct mi_controller* mi;
     struct rdp_core* dp;
@@ -140,5 +180,8 @@ void do_SP_Task(struct rsp_core* sp);
 
 void rsp_interrupt_event(void* opaque);
 void rsp_end_of_dma_event(void* opaque);
+
+void rsp_task_event(void* opaque);
+void clear_rsp_wait(struct rsp_core* sp, uint32_t value);
 
 #endif
