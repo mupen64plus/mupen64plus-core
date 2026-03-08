@@ -26,11 +26,11 @@ RELEASE text
 *.ver text
 
 # windows specific text files
-*.cmd text eol=crlf
-*.sln text eol=crlf
-*.vcproj text eol=crlf
-*.vcxproj text eol=crlf
-*.vcxproj.filters text eol=crlf
+*.cmd text
+*.sln text
+*.vcproj text
+*.vcxproj text
+*.vcxproj.filters text
 
 # binary files
 *.gz binary
