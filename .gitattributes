@@ -1,39 +1,52 @@
-* text=auto
+#* text=auto
 
 # normal text files
 *.6 text
+*.asm text
 AUTHORS text
+*.awk text
 *.c text
 *.cfg text
 *.cht text
+*.cmake text
 *.conf text
 COPYING text
 *.cpp text
+CREDITS text
 *.def text
-*-license text
+*.desktop text
+.gitattributes text
+.gitignore text
 *.h text
+*.hpp text
 *.html text
 *.ini text
 INSTALL text
+*-license text
 LICENSES text
 Makefile text
+*.md text
+*.mediawiki text
 *.py text
 README text
 RELEASE text
 *.S text
 *.sh text
+*.svg text
 *.txt text
 *.ver text
+*.yml text
 
 # windows specific text files
-*.cmd text eol=crlf
-*.sln text eol=crlf
-*.vcproj text eol=crlf
-*.vcxproj text eol=crlf
-*.vcxproj.filters text eol=crlf
+#*.cmd text eol=crlf
+#*.sln text eol=crlf
+#*.vcproj text eol=crlf
+#*.vcxproj text eol=crlf
+#*.vcxproj.filters text eol=crlf
 
 # binary files
 *.gz binary
+*.png binary
 *.ttf binary
 cursor.tex binary
 font.tex binary
