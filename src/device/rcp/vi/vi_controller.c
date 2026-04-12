@@ -66,6 +66,26 @@ void set_vi_vertical_interrupt(struct vi_controller* vi)
     }
 }
 
+void vi_recalculate_timing(struct vi_controller* vi)
+{
+    unsigned int vtotal = vi->regs[VI_V_SYNC_REG] + 1;
+    unsigned int htotal = (vi->regs[VI_H_SYNC_REG] & UINT32_C(0x0fff)) + 1;
+
+    if (vtotal == 0 || htotal < 2)
+    {
+        vi->count_per_scanline = (vi->regs[VI_V_SYNC_REG] == 0)
+            ? 1500
+            : ((unsigned int) (((double) vi->clock / vi->expected_refresh_rate) / (double) vtotal));
+        vi->delay = vtotal * vi->count_per_scanline;
+        return;
+    }
+
+    vi->count_per_scanline = htotal / 2;
+    vi->delay = vtotal * vi->count_per_scanline;
+    vi->expected_refresh_rate = ((double) vi->clock * 2.0)
+        / ((double) vtotal * (double) htotal);
+}
+
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
              struct mi_controller* mi, struct rdp_core* dp)
 {
@@ -142,9 +162,16 @@ void write_vi_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
         if ((vi->regs[VI_V_SYNC_REG] & mask) != (value & mask))
         {
             masked_write(&vi->regs[VI_V_SYNC_REG], value, mask);
-            vi->count_per_scanline = (vi->clock / vi->expected_refresh_rate) / (vi->regs[VI_V_SYNC_REG] + 1);
-            vi->delay = (vi->regs[VI_V_SYNC_REG] + 1) * vi->count_per_scanline;
+            vi_recalculate_timing(vi);
             set_vi_vertical_interrupt(vi);
+        }
+        return;
+
+    case VI_H_SYNC_REG:
+        if ((vi->regs[VI_H_SYNC_REG] & mask) != (value & mask))
+        {
+            masked_write(&vi->regs[VI_H_SYNC_REG], value, mask);
+            vi_recalculate_timing(vi);
         }
         return;
 

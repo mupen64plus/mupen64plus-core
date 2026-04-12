@@ -916,9 +916,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         setup_channels_format(&dev->pif);
 
         /* extra vi state */
-        dev->vi.count_per_scanline = (dev->vi.regs[VI_V_SYNC_REG] == 0)
-            ? 1500
-            : ((dev->vi.clock / dev->vi.expected_refresh_rate) / (dev->vi.regs[VI_V_SYNC_REG] + 1));
+        vi_recalculate_timing(&dev->vi);
 
         /* extra si state */
         dev->si.dma_dir = SI_NO_DMA;
@@ -1122,9 +1120,7 @@ static int savestates_load_pj64(struct device* dev,
     gfx.viStatusChanged();
     gfx.viWidthChanged();
 
-    dev->vi.count_per_scanline = (dev->vi.regs[VI_V_SYNC_REG] == 0)
-        ? 1500
-        : ((dev->vi.clock / dev->vi.expected_refresh_rate) / (dev->vi.regs[VI_V_SYNC_REG] + 1));
+    vi_recalculate_timing(&dev->vi);
 
     /* extra si state */
     dev->si.dma_dir = SI_NO_DMA;
