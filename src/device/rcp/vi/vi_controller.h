@@ -55,7 +55,7 @@ struct vi_controller
     unsigned int delay;
 
     unsigned int clock;
-    unsigned int expected_refresh_rate;
+    double expected_refresh_rate;
     unsigned int count_per_scanline;
 
     struct mi_controller* mi;
@@ -71,6 +71,7 @@ static osal_inline uint32_t vi_reg(uint32_t address)
 unsigned int vi_clock_from_tv_standard(m64p_system_type tv_standard);
 unsigned int vi_expected_refresh_rate_from_tv_standard(m64p_system_type tv_standard);
 void set_vi_vertical_interrupt(struct vi_controller* vi);
+void vi_recalculate_timing(struct vi_controller* vi);
 
 void init_vi(struct vi_controller* vi, unsigned int clock, unsigned int expected_refresh_rate,
              struct mi_controller* mi, struct rdp_core* dp);
