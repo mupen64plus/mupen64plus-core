@@ -467,9 +467,8 @@ void InterpretOpcode(struct r4300_core* r4300)
 			case 6: TLBWR(r4300, op); break;
 			case 8: TLBP(r4300, op); break;
 			case 24: ERET(r4300, op); break;
-			default: /* TLB sub-opcodes 0, 3..5, 7, 9..23, 25..63:
-			            Reserved Instructions */
-				RESERVED(r4300, op);
+			default: /* TLB sub-opcodes 0, 3..5, 7, 9..23, 25..63: undefined */
+				NOP(r4300, 0);
 				break;
 			} /* switch (op & 0x3F) for Coprocessor 0 TLB opcodes */
 			break;
