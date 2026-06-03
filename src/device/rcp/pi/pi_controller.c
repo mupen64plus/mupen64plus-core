@@ -110,7 +110,7 @@ static void dma_pi_write(struct pi_controller* pi)
     if (length >= 0x7f && (length & 1))
         length += 1;
     if (length <= 0x80)
-        length -= dram_addr & 0x7;
+        length = length >= (dram_addr & 0x7) ? length - (dram_addr & 0x7) : 0;
     unsigned int cycles = handler->dma_write(opaque, dram, dram_addr, cart_addr, length);
 
     post_framebuffer_write(&pi->dp->fb, dram_addr, length);

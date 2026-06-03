@@ -1089,16 +1089,17 @@ DECLARE_INSTRUCTION(TLBR)
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
-    int index;
-    index = cp0_regs[CP0_INDEX_REG] & UINT32_C(0x1F);
-    cp0_regs[CP0_PAGEMASK_REG] = r4300->cp0.tlb.entries[index].mask << 13;
-    cp0_regs[CP0_ENTRYHI_REG] = ((r4300->cp0.tlb.entries[index].vpn2 << 13) | r4300->cp0.tlb.entries[index].asid);
-    cp0_regs[CP0_ENTRYLO0_REG] = (r4300->cp0.tlb.entries[index].pfn_even << 6) | (r4300->cp0.tlb.entries[index].c_even << 3)
-        | (r4300->cp0.tlb.entries[index].d_even << 2) | (r4300->cp0.tlb.entries[index].v_even << 1)
-        | r4300->cp0.tlb.entries[index].g;
-    cp0_regs[CP0_ENTRYLO1_REG] = (r4300->cp0.tlb.entries[index].pfn_odd << 6) | (r4300->cp0.tlb.entries[index].c_odd << 3)
-        | (r4300->cp0.tlb.entries[index].d_odd << 2) | (r4300->cp0.tlb.entries[index].v_odd << 1)
-        | r4300->cp0.tlb.entries[index].g;
+    int index = cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F);
+	if (index < CP0_REGS_COUNT) {
+		cp0_regs[CP0_PAGEMASK_REG] = r4300->cp0.tlb.entries[index].mask << 13;
+		cp0_regs[CP0_ENTRYHI_REG] = ((r4300->cp0.tlb.entries[index].vpn2 << 13) | r4300->cp0.tlb.entries[index].asid);
+		cp0_regs[CP0_ENTRYLO0_REG] = (r4300->cp0.tlb.entries[index].pfn_even << 6) | (r4300->cp0.tlb.entries[index].c_even << 3)
+			| (r4300->cp0.tlb.entries[index].d_even << 2) | (r4300->cp0.tlb.entries[index].v_even << 1)
+			| r4300->cp0.tlb.entries[index].g;
+		cp0_regs[CP0_ENTRYLO1_REG] = (r4300->cp0.tlb.entries[index].pfn_odd << 6) | (r4300->cp0.tlb.entries[index].c_odd << 3)
+			| (r4300->cp0.tlb.entries[index].d_odd << 2) | (r4300->cp0.tlb.entries[index].v_odd << 1)
+			| r4300->cp0.tlb.entries[index].g;
+	}
     ADD_TO_PC(1);
 }
 
@@ -1220,8 +1221,12 @@ DECLARE_INSTRUCTION(TLBWR)
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
     cp0_update_count(r4300);
-    cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
+	if (cp0_regs[CP0_WIRED_REG] >= 32) {
+		cp0_regs[CP0_RANDOM_REG] = cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % 64;
+	} else {
+    	cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
         + cp0_regs[CP0_WIRED_REG];
+	}
     TLBWrite(r4300, cp0_regs[CP0_RANDOM_REG]);
     ADD_TO_PC(1);
 }
@@ -1231,7 +1236,9 @@ DECLARE_INSTRUCTION(TLBWI)
     DECLARE_R4300
     uint32_t* cp0_regs = r4300_cp0_regs(&r4300->cp0);
 
-    TLBWrite(r4300, cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F));
+	int index = cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F);
+	if (index < CP0_REGS_COUNT)
+    	TLBWrite(r4300, index);
     ADD_TO_PC(1);
 }
 
@@ -1247,8 +1254,12 @@ DECLARE_INSTRUCTION(MFC0)
     {
     case CP0_RANDOM_REG:
         cp0_update_count(r4300);
-        cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
-            + cp0_regs[CP0_WIRED_REG];
+		if (cp0_regs[CP0_WIRED_REG] >= 32) {
+			cp0_regs[CP0_RANDOM_REG] = cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % 64;
+		} else {
+			cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
+			+ cp0_regs[CP0_WIRED_REG];
+		}
         rrt = SE32(cp0_regs[rfs]);
         break;
     case CP0_COUNT_REG:
@@ -1282,8 +1293,12 @@ DECLARE_INSTRUCTION(DMFC0)
     {
     case CP0_RANDOM_REG:
         cp0_update_count(r4300);
-        cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
-            + cp0_regs[CP0_WIRED_REG];
+		if (cp0_regs[CP0_WIRED_REG] >= 32) {
+			cp0_regs[CP0_RANDOM_REG] = cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % 64;
+		} else {
+			cp0_regs[CP0_RANDOM_REG] = (cp0_regs[CP0_COUNT_REG]/r4300->cp0.count_per_op % (32 - cp0_regs[CP0_WIRED_REG]))
+			+ cp0_regs[CP0_WIRED_REG];
+		}
         rrt = cp0_regs[rfs];
         break;
     case CP0_COUNT_REG:
@@ -1323,11 +1338,6 @@ DECLARE_INSTRUCTION(MTC0)
     {
     case CP0_INDEX_REG:
         cp0_regs[CP0_INDEX_REG] = rrt32 & UINT32_C(0x8000003F);
-        if ((cp0_regs[CP0_INDEX_REG] & UINT32_C(0x3F)) > UINT32_C(31))
-        {
-            DebugMessage(M64MSG_ERROR, "MTC0 instruction writing Index register with TLB index > 31");
-            *r4300_stop(r4300)=1;
-        }
         break;
     case CP0_RANDOM_REG:
         break;
@@ -1399,7 +1409,7 @@ DECLARE_INSTRUCTION(MTC0)
     case CP0_PREVID_REG:
         break;
     case CP0_CONFIG_REG:
-        cp0_regs[CP0_CONFIG_REG] = (rrt32 & UINT32_C(0x0000000F)) 
+        cp0_regs[CP0_CONFIG_REG] = (rrt32 & UINT32_C(0x0000000F))
                 | (cp0_regs[CP0_CONFIG_REG] & UINT32_C(0x00008000))
                 | (cp0_regs[CP0_CONFIG_REG] & UINT32_C(0x7FFFFFFF));
         break;

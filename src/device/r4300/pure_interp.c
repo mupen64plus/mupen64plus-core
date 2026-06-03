@@ -446,22 +446,31 @@ void InterpretOpcode(struct r4300_core* r4300)
 		case 5: /* Coprocessor 0 opcode 5: DMTC0 */
 			MTC0(r4300, op);
 			break;
-		case 16: /* Coprocessor 0 opcode 16: TLB */
+		case 2:
+		case 3:
+		case 6:
+		case 7:
+		case 8:
+		case 9:
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15: /* Coprocessor 0 opcodes 2..3, 6..15: Reserved Instructions */
+			RESERVED(r4300, op);
+			break;
+		default: /* Coprocessor 0 opcode 16..31: TLB */
 			switch (op & 0x3F) {
 			case 1: TLBR(r4300, op); break;
 			case 2: TLBWI(r4300, op); break;
 			case 6: TLBWR(r4300, op); break;
 			case 8: TLBP(r4300, op); break;
 			case 24: ERET(r4300, op); break;
-			default: /* TLB sub-opcodes 0, 3..5, 7, 9..23, 25..63:
-			            Reserved Instructions */
-				RESERVED(r4300, op);
+			default: /* TLB sub-opcodes 0, 3..5, 7, 9..23, 25..63: undefined */
+				NOP(r4300, 0);
 				break;
 			} /* switch (op & 0x3F) for Coprocessor 0 TLB opcodes */
-			break;
-		default: /* Coprocessor 0 opcodes 2..3, 5..15, 17..31:
-		            Reserved Instructions */
-			RESERVED(r4300, op);
 			break;
 		} /* switch ((op >> 21) & 0x1F) for the Coprocessor 0 prefix */
 		break;

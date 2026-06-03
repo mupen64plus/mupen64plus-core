@@ -372,22 +372,22 @@ static const struct r4300_idec r4300_op_table[] = {
 /* TLB opcodes table
  * 176-239
  */
-    RESERVED,    TLBR,        TLBWI,       RESERVED,
-    RESERVED,    RESERVED,    TLBWR,       RESERVED,
-    TLBP,        RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    ERET,        RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
-    RESERVED,    RESERVED,    RESERVED,    RESERVED,
+    NOP,         TLBR,        TLBWI,       NOP,
+    NOP,         NOP,         TLBWR,       NOP,
+    TLBP,        NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    ERET,        NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
+    NOP,         NOP,         NOP,         NOP,
 /* COP1 opcodes table
  * 240-247
  */
@@ -430,7 +430,7 @@ static const struct r4300_idec r4300_op_table[] = {
 /* Pseudo opcodes
  * 336
  */
-	NOP
+    NOP
 };
 
 #define E_INV       {   0,  0, 0x00 }
@@ -459,7 +459,7 @@ struct r4300_op_escape {
 static const struct r4300_op_escape r4300_escapes_table[] = {
 
     /* 000000 - special */
-	E_SPECIAL, E_SPECIAL, E_SPECIAL, E_SPECIAL,
+    E_SPECIAL, E_SPECIAL, E_SPECIAL, E_SPECIAL,
 
     /* 000001 - regimm */
     E_REGIMM,  E_REGIMM,  E_REGIMM,  E_REGIMM,
