@@ -30,6 +30,8 @@
 #if !defined(DEFAULT_VIDEO_CAPTURE_BACKEND)
 #if defined(M64P_OPENCV)
 #define DEFAULT_VIDEO_CAPTURE_BACKEND "opencv"
+#elif defined(SDL3_CAMERA)
+#define DEFAULT_VIDEO_CAPTURE_BACKEND "sdl3"
 #else
 #define DEFAULT_VIDEO_CAPTURE_BACKEND ""
 #endif
