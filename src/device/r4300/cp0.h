@@ -173,7 +173,7 @@ struct interrupt_handler
     void (*callback)(void*);
 };
 
-enum { CP0_INTERRUPT_HANDLERS_COUNT = 16 };
+enum { CP0_INTERRUPT_HANDLERS_COUNT = 17 };
 
 enum {
     INTR_UNSAFE_R4300 = 0x01,
