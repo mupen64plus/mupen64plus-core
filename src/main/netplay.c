@@ -263,7 +263,7 @@ m64p_error netplay_start(const char* host, int port)
         return M64ERR_SYSTEM_FAIL;
     }
 
-    l_udpSocket = NET_CreateDatagramSocket(NULL, 0);
+    l_udpSocket = NET_CreateDatagramSocket(NULL, 0, 0);
     if (l_udpSocket == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Netplay: UDP socket creation failed: %s", SDL_GetError());
@@ -272,7 +272,7 @@ m64p_error netplay_start(const char* host, int port)
         return M64ERR_SYSTEM_FAIL;
     }
 
-    l_tcpSocket = NET_CreateClient(l_resolvedAddress, port);
+    l_tcpSocket = NET_CreateClient(l_resolvedAddress, port, 0);
     if (l_tcpSocket == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Netplay: TCP socket connection failed: %s", SDL_GetError());
