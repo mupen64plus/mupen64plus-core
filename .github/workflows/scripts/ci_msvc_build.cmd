@@ -17,6 +17,10 @@ if not defined ARCH exit /b 7
 for %%T in (.) do set REPO=%%~nxT
 if not defined REPO exit /b 6
 
+for /f "usebackq tokens=*" %%U in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set VSDS=%%U\Common7\Tools\VsDevCmd.bat
+msbuild -version >nul 2>&1
+if errorlevel 1 call "%VSDS%"
+
 set ARTIFACT=
 set FPROJ=
 set EXT=dll
@@ -27,12 +31,12 @@ if not defined TOOLSET set TOOLSET=v143
 for /f "tokens=1" %%R in ('git rev-parse --short HEAD') do set G_REV=%%R
 set PKG_NAME=%REPO%-msvc-%ARCH_ARG%-g%G_REV%
 if exist "%GITHUB_ENV%" (
-	type "%GITHUB_ENV%" | findstr "PKG_NAME=%PKG_NAME%" >nul 2>&1
+	type "%GITHUB_ENV%" | findstr /C:"PKG_NAME=%PKG_NAME%" >nul 2>&1
 	if errorlevel 1 echo PKG_NAME=%PKG_NAME%>> "%GITHUB_ENV%"
 )
 
 echo.
-msbuild --version
+msbuild -version
 echo.
 
 if not exist "..\mupen64plus-win32-deps\" git clone --depth 1 https://github.com/mupen64plus/mupen64plus-win32-deps.git ..\mupen64plus-win32-deps
@@ -55,7 +59,7 @@ popd
 if not defined ARTIFACT exit /b 3
 
 md pkg 2>nul
-xcopy "projects\msvc\%ARCH%\%CONF%\%ARTIFACT%" pkg\
+xcopy /y "projects\msvc\%ARCH%\%CONF%\%ARTIFACT%" pkg\
 if errorlevel 1 exit /b 2
 dir "pkg\%ARTIFACT%"
 
