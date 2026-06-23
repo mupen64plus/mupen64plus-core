@@ -14,7 +14,7 @@ for %%P in (%*) do (
 
 if not defined ARCH exit /b 7
 
-if exist "data\" xcopy /e data pkg
+if exist "data\" xcopy /e /y data pkg
 if errorlevel 1 exit /b 6
 if exist "pkg\mupen64plus.desktop" del /f /q pkg\mupen64plus.desktop
 
@@ -23,14 +23,19 @@ if not defined DEPS (
 	exit /b 0
 )
 
+set C1=0
+set C2=0
 set PKG=%CD%\pkg
 cd ..\mupen64plus-win32-deps
 if errorlevel 1 exit /b 5
 for %%D in (%DEPS%) do (
+	set /a C1+=1
 	for /f "tokens=*" %%T in ('dir /b /s %%D ^| findstr "%ARCH%"') do (
-		if exist "%%T" xcopy "%%T" "%PKG%\"
+		set /a C2+=1
+		xcopy /y "%%T" "%PKG%\"
 		if errorlevel 1 exit /b 4
 	)
 )
+if %C1% NEQ %C2% exit /b 3%C2%
 
 exit /b 0

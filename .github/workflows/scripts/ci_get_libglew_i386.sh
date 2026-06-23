@@ -9,7 +9,7 @@ export PKGS="$(apt list libglew* | grep "${GLEWVER}" | cut -d '/' -f1)"
 export GLEWBUILD="$(echo "${GLEWVER}" | cut -d '-' -f1)"
 export GLEWBUILD2="$(echo "${GLEWVER}" | cut -d '-' -f2)"
 if [[ "${GLEWBUILD}" != "${GLEWVER}" ]]; then export GLEWBUILD="${GLEWBUILD}-${GLEWBUILD2:0:1}"; fi
-export PKGVER_LS="$(curl -sS ${DEBSOURCE} | grep "${GLEWBUILD}" | grep "amd64" | cut -d '_' -f2 | sort)"
+export PKGVER_LS="$(curl -sS ${DEBSOURCE} | grep "libglew-dev" | grep "${GLEWBUILD}" | grep "amd64" | cut -d '_' -f2 | sort)"
 if [[ "${PKGVER_LS}" == "" ]]; then exit 9; fi
 
 for VER in ${PKGVER_LS}; do export PKGVER="${VER}"; done
@@ -17,6 +17,7 @@ cd /tmp
 for PKG in ${PKGS}; do
 	for ARCH in amd64 i386; do curl -L -O "${DEBSOURCE}${PKG}_${PKGVER}_${ARCH}.deb"; done
 done
+
 sudo dpkg -i libglew*${PKGVER}*.deb
 sudo ldconfig
 
