@@ -605,6 +605,11 @@ EXPORT m64p_error CALL VidExt_GL_SetAttribute(m64p_GLattr Attr, int Value)
                 break;
             case M64P_GL_CONTEXT_PROFILE_ES:
                 Value = SDL_GL_CONTEXT_PROFILE_ES;
+#ifndef USE_GLES
+                /* an explicit ES profile request must not be overridden by
+                 * the default compatibility context at SetVideoMode */
+                l_ForceCompatibilityContext = 0;
+#endif
                 break;
             default:
                 Value = 0;
