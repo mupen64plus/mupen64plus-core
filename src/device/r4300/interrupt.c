@@ -438,6 +438,9 @@ void nmi_int_handler(void* opaque)
 
     reset_pif(&dev->pif, 1);
 
+    // HACK: reset rsp state
+    poweron_rsp(&dev->sp);
+
     // setup r4300 Status flags: reset TS and SR, set BEV, ERL, and SR
     cp0_regs[CP0_STATUS_REG] = (cp0_regs[CP0_STATUS_REG] & ~(CP0_STATUS_SR | CP0_STATUS_TS | UINT32_C(0x00080000))) | (CP0_STATUS_ERL | CP0_STATUS_BEV | CP0_STATUS_SR);
     cp0_regs[CP0_CAUSE_REG]  = 0x00000000;
@@ -654,6 +657,11 @@ void gen_interrupt(struct r4300_core* r4300)
         case DD_DV_INT:
             remove_interrupt_event(&r4300->cp0);
             call_interrupt_handler(&r4300->cp0, 15);
+            break;
+
+        case RSP_TSK_EVT:
+            remove_interrupt_event(&r4300->cp0);
+            call_interrupt_handler(&r4300->cp0, 16);
             break;
 
         default:

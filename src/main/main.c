@@ -1065,6 +1065,7 @@ static void pause_loop(void)
  * Allow the core to perform various things */
 void new_vi(void)
 {
+    new_frame();
 #if defined(PROFILE)
     timed_sections_refresh();
 #endif
