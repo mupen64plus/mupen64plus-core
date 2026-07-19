@@ -18,6 +18,47 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#ifdef __APPLE__
+
+/* Mach-O: C symbols carry a leading underscore, .hidden/.type/.size are
+ * ELF-only (visibility is .private_extern), and adrp page relocations are
+ * spelled sym@PAGE/sym@PAGEOFF instead of sym/:lo12:sym. The Darwin arm64
+ * assembler treats ';' as a comment, so multi-statement macros use the '%%'
+ * statement separator instead.
+ * Each function gets two labels: _name for linkage with C code and a plain
+ * name for branches within this file. */
+
+#define GLOBAL_FUNCTION(name)      \
+    .globl _##name %%              \
+    .private_extern _##name %%     \
+    _##name: name
+
+#define LOCAL_FUNCTION(name)  \
+    name
+
+#define GLOBAL_VARIABLE(name, size_) \
+    .globl _##name %%                \
+    .private_extern _##name
+
+#define PAGE(sym)    sym@PAGE
+#define PAGEOFF(sym) sym@PAGEOFF
+
+/* C symbols referenced from this file */
+#define g_dev                _g_dev
+#define base_addr_rx         _base_addr_rx
+#define get_addr_ht          _get_addr_ht
+#define get_addr             _get_addr
+#define verify_dirty         _verify_dirty
+#define dynarec_gen_interrupt _dynarec_gen_interrupt
+#define cop1_unusable        _cop1_unusable
+#define SYSCALL_new          _SYSCALL_new
+#define ERET_new             _ERET_new
+#define dynamic_linker       _dynamic_linker
+#define dynamic_linker_ds    _dynamic_linker_ds
+#define new_recompile_block  _new_recompile_block
+
+#else /* ELF */
+
 #define GLOBAL_FUNCTION(name)  \
     .globl name;               \
     .hidden name;              \
@@ -34,6 +75,11 @@
     .hidden name;                    \
     .type   name, %object;           \
     .size   name, size_
+
+#define PAGE(sym)    sym
+#define PAGEOFF(sym) :lo12:sym
+
+#endif
 
 .macro movl Wn, imm
     movz    \Wn, (\imm >> 16) & 0xFFFF, lsl 16
@@ -171,10 +217,10 @@ GLOBAL_FUNCTION(verify_code):
     mov    x21, x30 /* Save link register */
     bl     verify_dirty
     tst    x0, x0
-    b.ne   .D1
+    b.ne   1f
     mov    x30, x21 /* Restore link register */
     ret
-.D1:
+1:
     bl     get_addr
     br     x0
 
@@ -190,9 +236,9 @@ GLOBAL_FUNCTION(cc_interrupt):
     tst    w2, w2
     b.ne   new_dyna_stop
     tst    w1, w1
-    b.ne   .E1
+    b.ne   1f
     ret
-.E1:
+1:
     ldr    w0, [x29, #fp_pcaddr]
     bl     get_addr_ht
     br     x0
@@ -243,12 +289,12 @@ GLOBAL_FUNCTION(dyna_linker_ds):
     br     x0
 
 GLOBAL_FUNCTION(new_dyna_start):
-    adrp   x16, g_dev
-    add    x16, x16, :lo12:g_dev
+    adrp   x16, PAGE(g_dev)
+    add    x16, x16, PAGEOFF(g_dev)
     movl   x1, (device_r4300_new_dynarec_hot_state_dynarec_local + saved_context)
     add    x16, x16, x1
-    adrp   x1, base_addr_rx
-    add    x1, x1, :lo12:base_addr_rx
+    adrp   x1, PAGE(base_addr_rx)
+    add    x1, x1, PAGEOFF(base_addr_rx)
     mov    w0, #0xa4000000
     stp    x19,x20,[x16,#0]
     stp    x21,x22,[x16,#16]

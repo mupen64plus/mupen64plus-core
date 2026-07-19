@@ -58,6 +58,30 @@
 #include <sys/mman.h>
 #endif
 
+#if defined(__APPLE__) && defined(__aarch64__)
+/* Apple Silicon enforces W^X: the MAP_JIT code cache is executable by
+ * default and only writable while the calling thread has toggled itself
+ * into write mode with pthread_jit_write_protect_np(). Exec mode is the
+ * default; every code path that writes to the cache is bracketed with
+ * jit_write_begin/jit_write_end. The depth counter makes the brackets
+ * reentrant (e.g. dynamic_linker -> new_recompile_block). */
+#include <pthread.h>
+static int jit_write_depth;
+static void jit_write_begin(void)
+{
+  if (jit_write_depth++ == 0)
+    pthread_jit_write_protect_np(0);
+}
+static void jit_write_end(void)
+{
+  if (--jit_write_depth == 0)
+    pthread_jit_write_protect_np(1);
+}
+#else
+#define jit_write_begin() do {} while (0)
+#define jit_write_end()   do {} while (0)
+#endif
+
 #if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
 void recomp_dbg_init(void);
 void recomp_dbg_cleanup(void);
@@ -2593,7 +2617,7 @@ static struct ll_entry *get_dirty(struct r4300_core* r4300,u_int vaddr,u_int fla
   return NULL;
 }
 
-void *dynamic_linker(void * src, u_int vaddr)
+static void *dynamic_linker_impl(void * src, u_int vaddr)
 {
   assert((vaddr&1)==0);
   struct r4300_core* r4300 = &g_dev.r4300;
@@ -2643,7 +2667,7 @@ void *dynamic_linker(void * src, u_int vaddr)
   }
 
   int r=new_recompile_block(vaddr);
-  if(r==0) return dynamic_linker(src,vaddr);
+  if(r==0) return dynamic_linker_impl(src,vaddr);
   // Execute in unmapped page, generate pagefault execption
   assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
   assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
@@ -2652,7 +2676,15 @@ void *dynamic_linker(void * src, u_int vaddr)
   return get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
 }
 
-void *dynamic_linker_ds(void * src, u_int vaddr)
+void *dynamic_linker(void * src, u_int vaddr)
+{
+  jit_write_begin();
+  void *ret = dynamic_linker_impl(src, vaddr);
+  jit_write_end();
+  return ret;
+}
+
+static void *dynamic_linker_ds_impl(void * src, u_int vaddr)
 {
   struct r4300_core* r4300 = &g_dev.r4300;
   struct ll_entry *head;
@@ -2701,13 +2733,21 @@ void *dynamic_linker_ds(void * src, u_int vaddr)
   }
 
   int r=new_recompile_block((vaddr&0xFFFFFFF8)+1);
-  if(r==0) return dynamic_linker_ds(src,vaddr);
+  if(r==0) return dynamic_linker_ds_impl(src,vaddr);
   // Execute in unmapped page, generate pagefault execption
   assert(r4300->cp0.tlb.LUT_r[(vaddr&~1) >> 12] == 0);
   assert((intptr_t)r4300->new_dynarec_hot_state.memory_map[(vaddr&~1) >> 12] < 0);
   r4300->delay_slot = vaddr&1;
   TLB_refill_exception(r4300, vaddr&~1, 2);
   return get_addr_ht(r4300->new_dynarec_hot_state.pcaddr);
+}
+
+void *dynamic_linker_ds(void * src, u_int vaddr)
+{
+  jit_write_begin();
+  void *ret = dynamic_linker_ds_impl(src, vaddr);
+  jit_write_end();
+  return ret;
 }
 
 // Get address from virtual address
@@ -2873,7 +2913,7 @@ static void invalidate_page(u_int page)
   }
 }
 
-void invalidate_block(u_int block)
+static void invalidate_block_impl(u_int block)
 {
   u_int page;
   page=block^0x80000;
@@ -2950,11 +2990,19 @@ void invalidate_block(u_int block)
   #endif
 }
 
+void invalidate_block(u_int block)
+{
+  jit_write_begin();
+  invalidate_block_impl(block);
+  jit_write_end();
+}
+
 // This is called when loading a save state.
 // Anything could have changed, so invalidate everything.
 static void invalidate_all_pages(void)
 {
   u_int page;
+  jit_write_begin();
   for(page=0;page<4096;page++)
     invalidate_page(page);
   for(page=0;page<1048576;page++)
@@ -2967,6 +3015,7 @@ static void invalidate_all_pages(void)
   #if NEW_DYNAREC >= NEW_DYNAREC_ARM
   cache_flush((char *)base_addr_rx,(char *)base_addr_rx+(1<<TARGET_SIZE_2));
   #endif
+  jit_write_end();
   #ifdef USE_MINI_HT
   memset(g_dev.r4300.new_dynarec_hot_state.mini_ht,-1,sizeof(g_dev.r4300.new_dynarec_hot_state.mini_ht));
   #endif
@@ -8713,7 +8762,13 @@ void new_dynarec_init(void)
 #define DOUBLE_CACHE_ADDR 3   // Put the dynarec cache at random address with RW address != RX address
 
 // Default to fixed cache address
+#if defined(__APPLE__)
+// Apple Silicon requires a fresh MAP_JIT mapping for the code cache
+// (static memory cannot be made executable), so the cache address is dynamic.
+#define CACHE_ADDR DYNAMIC_CACHE_ADDR
+#else
 #define CACHE_ADDR FIXED_CACHE_ADDR
+#endif
 
 #if CACHE_ADDR==DOUBLE_CACHE_ADDR
   #include <unistd.h>
@@ -8744,7 +8799,11 @@ void new_dynarec_init(void)
 #else /*DYNAMIC_CACHE_ADDR*/
   base_addr = mmap (NULL, 1<<TARGET_SIZE_2,
                     PROT_READ | PROT_WRITE | PROT_EXEC,
-                    MAP_PRIVATE | MAP_ANONYMOUS,
+                    MAP_PRIVATE | MAP_ANONYMOUS
+#if defined(__APPLE__) && defined(__aarch64__)
+                    | MAP_JIT
+#endif
+                    ,
                     -1, 0);
   base_addr_rx = base_addr;
 #endif
@@ -8830,7 +8889,7 @@ void new_dynarec_cleanup(void)
 #endif
 }
 
-int new_recompile_block(int addr)
+static int new_recompile_block_impl(int addr)
 {
 #if defined(RECOMPILER_DEBUG) && !defined(RECOMP_DBG)
   recomp_dbg_block(addr);
@@ -11961,4 +12020,12 @@ int new_recompile_block(int addr)
     expirep=(expirep+1)&65535;
   }
   return 0;
+}
+
+int new_recompile_block(int addr)
+{
+  jit_write_begin();
+  int ret = new_recompile_block_impl(addr);
+  jit_write_end();
+  return ret;
 }

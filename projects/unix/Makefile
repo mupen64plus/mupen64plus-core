@@ -246,9 +246,7 @@ ifeq ($(OS), OSX)
     endif
   endif
   ifeq ($(CPU), ARM)
-    # assembly compilation not yet supported on macOS with Apple Silicon
-    NO_ASM = 1
-    CFLAGS += -pipe -arch arm64 -mmacosx-version-min=10.16 -isysroot $(OSX_SDK_PATH)
+    CFLAGS += -pipe -arch arm64 -mmacosx-version-min=11.0 -isysroot $(OSX_SDK_PATH)
   endif
 endif
 ifeq ($(OS), MINGW)
