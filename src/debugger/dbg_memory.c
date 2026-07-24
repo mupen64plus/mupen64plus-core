@@ -36,7 +36,7 @@
 #define ATTR_FMT(fmtpos, attrpos)
 #endif
 
-#if !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
+#if !defined(NO_HOST_DISASSEMBLER) && !defined(NO_ASM) && (defined(__i386__) || (defined(__x86_64__) && defined(__GNUC__)))
 
 /* we must define PACKAGE so that bfd.h (which is included from dis-asm.h) doesn't throw an error */
 #define PACKAGE "mupen64plus-core"

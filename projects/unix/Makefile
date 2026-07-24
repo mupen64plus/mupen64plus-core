@@ -720,20 +720,38 @@ ifeq ($(DEBUGGER), 1)
     $(SRCDIR)/debugger/dbg_decoder.c \
     $(SRCDIR)/debugger/dbg_memory.c \
     $(SRCDIR)/debugger/dbg_breakpoints.c
-  LDLIBS += -lopcodes -lbfd
 
-  # UGLY libopcodes/libbfd version check (we check for >= 2.28 and >= 2.39)
-  LIBOPCODES_VERSION := $(shell $(STRINGS) --version | head -n1 | rev | cut -d ' ' -f1 | rev)
-  LIBOPCODES_MAJOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f1 -d.)
-  LIBOPCODES_MINOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f2 -d.)
-  LIBOPCODES_POINT := $(shell echo $(LIBOPCODES_VERSION) | cut -f3 -d. | sed 's/^$$/0/')
-  LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 28 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 28 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
-  LIBBFD_GE_2_39 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 39 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 39 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
-  ifeq ($(LIBOPCODES_GE_2_29),true)
-    CFLAGS += -DUSE_LIBOPCODES_GE_2_29
+  # The host disassembler (libopcodes/libbfd, used only by dbg_memory.c's
+  # init_host_disassembler()) is x86-only (it hardcodes bfd_arch_i386) and is
+  # not used by the single-step / memory-read / breakpoint machinery that the
+  # frontend debugger API exposes. On macOS it is doubly useless: dbg_memory.c
+  # already stubs it out on non-x86 hosts, linking -lopcodes/-lbfd is fragile,
+  # and BSD `strings` has no --version flag so the version probe below fails.
+  # Default it off on OSX; allow forcing it off anywhere with
+  # DEBUGGER_NO_DISASM=1.
+  ifeq ($(OS),OSX)
+    DEBUGGER_NO_DISASM ?= 1
   endif
-  ifeq ($(LIBBFD_GE_2_39),true)
-    CFLAGS += -DUSE_LIBBFD_GE_2_39
+  DEBUGGER_NO_DISASM ?= 0
+
+  ifeq ($(DEBUGGER_NO_DISASM),1)
+    CFLAGS += -DNO_HOST_DISASSEMBLER
+  else
+    LDLIBS += -lopcodes -lbfd
+
+    # UGLY libopcodes/libbfd version check (we check for >= 2.28 and >= 2.39)
+    LIBOPCODES_VERSION := $(shell $(STRINGS) --version | head -n1 | rev | cut -d ' ' -f1 | rev)
+    LIBOPCODES_MAJOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f1 -d.)
+    LIBOPCODES_MINOR := $(shell echo $(LIBOPCODES_VERSION) | cut -f2 -d.)
+    LIBOPCODES_POINT := $(shell echo $(LIBOPCODES_VERSION) | cut -f3 -d. | sed 's/^$$/0/')
+    LIBOPCODES_GE_2_29 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 28 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 28 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
+    LIBBFD_GE_2_39 := $(shell [ $(LIBOPCODES_MAJOR) -gt 2 -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -ge 39 \) -o \( $(LIBOPCODES_MAJOR) -eq 2 -a $(LIBOPCODES_MINOR) -eq 39 -a $(LIBOPCODES_POINT) -ge 1 \) ] && echo true)
+    ifeq ($(LIBOPCODES_GE_2_29),true)
+      CFLAGS += -DUSE_LIBOPCODES_GE_2_29
+    endif
+    ifeq ($(LIBBFD_GE_2_39),true)
+      CFLAGS += -DUSE_LIBBFD_GE_2_39
+    endif
   endif
 endif
 
