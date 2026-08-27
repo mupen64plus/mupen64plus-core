@@ -339,11 +339,20 @@ LDLIBS += $(LIBPNG_LDLIBS)
 ifeq ($(OPENCV), 1)
   # OpenCV lib
   ifeq ($(origin OPENCV_CFLAGS) $(origin OPENCV_LDLIBS), undefined undefined)
-    ifeq ($(shell $(PKG_CONFIG) --modversion opencv4 2>/dev/null),)
-      $(error No OpenCV 4 development libraries found!)
+    ifeq ($(shell $(PKG_CONFIG) --modversion opencv5 2>/dev/null),)
+      ifeq ($(shell $(PKG_CONFIG) --modversion opencv4 2>/dev/null),)
+        ifeq ($(shell $(PKG_CONFIG) --modversion opencv 2>/dev/null),)
+          $(error No OpenCV development libraries found!)
+        endif
+        OPENCV_VER = opencv
+      else
+        OPENCV_VER = opencv4
+      endif
+    else
+      OPENCV_VER = opencv5
     endif
-    OPENCV_CFLAGS += $(shell $(PKG_CONFIG) --cflags opencv4)
-    OPENCV_LDLIBS += $(shell $(PKG_CONFIG) --libs opencv4)
+    OPENCV_CFLAGS += $(shell $(PKG_CONFIG) --cflags $(OPENCV_VER))
+    OPENCV_LDLIBS += $(shell $(PKG_CONFIG) --libs $(OPENCV_VER))
   endif
   CFLAGS += $(OPENCV_CFLAGS)
   LDLIBS += $(OPENCV_LDLIBS)
