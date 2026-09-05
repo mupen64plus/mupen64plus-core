@@ -261,9 +261,17 @@ static uintptr_t jump_table_symbols[] = {
   (intptr_t)breakpoint
 };
 
+#if defined(__APPLE__)
+#include <libkern/OSCacheControl.h>
+#endif
+
 static void cache_flush(char* start, char* end)
 {
-#ifndef WIN32
+#if defined(__APPLE__)
+    // Reading ctr_el0 from EL0 traps (SIGILL) on Apple Silicon; use the
+    // system-provided cache maintenance routine instead.
+    sys_icache_invalidate(start, end - start);
+#elif !defined(WIN32)
     // Don't rely on GCC's __clear_cache implementation, as it caches
     // icache/dcache cache line sizes, that can vary between cores on
     // big.LITTLE architectures.
@@ -4639,6 +4647,7 @@ static void arch_init(void) {
 
   // Trampolines for jumps >128MB
   intptr_t *ptr,*ptr2,*ptr3;
+  jit_write_begin();
   ptr=(intptr_t *)jump_table_symbols;
   ptr2=(intptr_t *)((char *)base_addr+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE);
   ptr3=(intptr_t *)((char *)base_addr_rx+(1<<TARGET_SIZE_2)-JUMP_TABLE_SIZE);
@@ -4658,4 +4667,5 @@ static void arch_init(void) {
     ptr2++;
     ptr3+=2;
   }
+  jit_write_end();
 }
