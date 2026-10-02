@@ -648,7 +648,10 @@ static void netplay_send_raw_input(struct pif* pif)
     {
         if (l_netplay_control[i] != -1)
         {
-            if (pif->channels[i].tx && pif->channels[i].tx_buf[0] == JCMD_CONTROLLER_READ)
+            if (pif->channels[i].tx
+             && (*pif->channels[i].tx & 0x3f) == 1
+             && (*pif->channels[i].rx & 0x3f) == 4
+             && pif->channels[i].tx_buf[0] == JCMD_CONTROLLER_READ)
                 netplay_send_input(i, *(uint32_t*)pif->channels[i].rx_buf);
         }
     }
@@ -664,11 +667,16 @@ static void netplay_get_raw_input(struct pif* pif)
             {
                 *pif->channels[i].rx &= ~0xC0; //Always show the controller as connected
 
-                if(pif->channels[i].tx_buf[0] == JCMD_CONTROLLER_READ)
+                if (pif->channels[i].tx_buf[0] == JCMD_CONTROLLER_READ
+                 && (*pif->channels[i].tx & 0x3f) == 1
+                 && (*pif->channels[i].rx & 0x3f) == 4)
                 {
                     *(uint32_t*)pif->channels[i].rx_buf = netplay_get_input(i);
                 }
-                else if ((pif->channels[i].tx_buf[0] == JCMD_STATUS || pif->channels[i].tx_buf[0] == JCMD_RESET) && Controls[i].RawData)
+                else if ((pif->channels[i].tx_buf[0] == JCMD_STATUS || pif->channels[i].tx_buf[0] == JCMD_RESET)
+                      && (*pif->channels[i].tx & 0x3f) == 1
+                      && (*pif->channels[i].rx & 0x3f) == 3
+                      && Controls[i].RawData)
                 {
                     //a bit of a hack for raw input controllers, force the status
                     uint16_t type = JDT_JOY_ABS_COUNTERS | JDT_JOY_PORT;
@@ -676,12 +684,18 @@ static void netplay_get_raw_input(struct pif* pif)
                     pif->channels[i].rx_buf[1] = (uint8_t)(type >> 8);
                     pif->channels[i].rx_buf[2] = 0;
                 }
-                else if (pif->channels[i].tx_buf[0] == JCMD_PAK_READ && Controls[i].RawData)
+                else if (pif->channels[i].tx_buf[0] == JCMD_PAK_READ
+                      && (*pif->channels[i].tx & 0x3f) == 3
+                      && (*pif->channels[i].rx & 0x3f) == 33
+                      && Controls[i].RawData)
                 {
                     //also a hack for raw input, we return "mempak not present" if the game tries to read the mempak
                     pif->channels[i].rx_buf[32] = 255;
                 }
-                else if (pif->channels[i].tx_buf[0] == JCMD_PAK_WRITE && Controls[i].RawData)
+                else if (pif->channels[i].tx_buf[0] == JCMD_PAK_WRITE
+                      && (*pif->channels[i].tx & 0x3f) == 35
+                      && (*pif->channels[i].rx & 0x3f) == 1
+                      && Controls[i].RawData)
                 {
                     //also a hack for raw input, we return "mempak not present" if the game tries to write to mempak
                     pif->channels[i].rx_buf[0] = 255;
