@@ -212,7 +212,7 @@ static void read_C2(struct dd_controller* dd)
     }
 }
 
-static uint8_t* seek_sector(struct dd_controller* dd)
+static uint8_t* seek_sector(struct dd_controller* dd, size_t length)
 {
     unsigned int head  = (dd->regs[DD_ASIC_CUR_TK] & 0x10000000) >> 28;
     unsigned int track = (dd->regs[DD_ASIC_CUR_TK] & 0x0fff0000) >> 16;
@@ -221,7 +221,7 @@ static uint8_t* seek_sector(struct dd_controller* dd)
     unsigned int block = sector / 90;
     sector %= 90;
 
-    uint8_t* sector_base = get_sector_base(dd->disk, head, track, block, sector);
+    uint8_t* sector_base = get_sector_base(dd->disk, head, track, block, sector, length);
     if (sector_base == NULL) {
         dd->regs[DD_ASIC_BM_STATUS_CTL] |= DD_BM_STATUS_MICRO;
     }
@@ -232,12 +232,11 @@ static uint8_t* seek_sector(struct dd_controller* dd)
 static void read_sector(struct dd_controller* dd)
 {
     size_t i;
-    const uint8_t* disk_sec = seek_sector(dd);
+    size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+    const uint8_t* disk_sec = seek_sector(dd, length);
     if (disk_sec == NULL) {
         return;
     }
-
-    size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
     for (i = 0; i < length; ++i) {
         dd->ds_buf[i ^ 3] = disk_sec[i];
@@ -247,12 +246,11 @@ static void read_sector(struct dd_controller* dd)
 static void write_sector(struct dd_controller* dd)
 {
     size_t i;
-    uint8_t* disk_sec = seek_sector(dd);
+    size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+    uint8_t* disk_sec = seek_sector(dd, length);
     if (disk_sec == NULL) {
         return;
     }
-
-    size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
 	for (i = 0; i < length; ++i) {
 		disk_sec[i] = dd->ds_buf[i ^ 3];
@@ -879,4 +877,3 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
 
     return cycles;
 }
-
