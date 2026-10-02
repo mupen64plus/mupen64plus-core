@@ -992,6 +992,12 @@ static int savestates_load_pj64(struct device* dev,
     curr += 4;
 
     SaveRDRAMSize = GETDATA(curr, uint32_t);
+    if (SaveRDRAMSize != 0x400000 && SaveRDRAMSize != RDRAM_MAX_SIZE)
+    {
+        main_message(M64MSG_STATUS, OSD_BOTTOM_LEFT,
+            "Invalid Project64 state RDRAM size.");
+        return 0;
+    }
 
     /* Read the rest of the savestate into memory. */
     savestateSize = SaveRDRAMSize + 0x2754;
