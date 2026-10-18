@@ -58,6 +58,11 @@ static void read_rom(const void* rom_storage, const struct storage_backend_inter
 {
     assert(size > 0);
 
+    /* banks past the end of the ROM mirror the start, like on hardware */
+    if (irom_storage->size(rom_storage) != 0) {
+        address %= irom_storage->size(rom_storage);
+    }
+
     if (address + size > irom_storage->size(rom_storage))
     {
         DebugMessage(M64MSG_WARNING, "Out of bound read from GB ROM %04x", address);
@@ -86,6 +91,9 @@ static void read_ram(const void* ram_storage, const struct storage_backend_inter
         memset(data, 0xff, size);
         return;
     }
+
+    /* banks past the end of the RAM mirror the start, like on hardware */
+    address %= iram_storage->size(ram_storage);
 
     if (address + size > iram_storage->size(ram_storage))
     {
@@ -120,6 +128,9 @@ static void write_ram(void* ram_storage, const struct storage_backend_interface*
         DebugMessage(M64MSG_WARNING, "Trying to write to absent GB RAM %04x", address);
         return;
     }
+
+    /* banks past the end of the RAM mirror the start, like on hardware */
+    address %= iram_storage->size(ram_storage);
 
     if (address + size > iram_storage->size(ram_storage))
     {
