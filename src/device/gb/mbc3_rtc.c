@@ -80,7 +80,9 @@ void poweron_mbc3_rtc(struct mbc3_rtc* rtc)
     memset(rtc->regs, 0, MBC3_RTC_REGS_COUNT);
     memset(rtc->latched_regs, 0, MBC3_RTC_REGS_COUNT);
     rtc->latch = 0;
-    rtc->last_time = 0;
+    /* the registers count time elapsed since power on, not since 1970,
+     * which would set the day counter carry bit on the first update */
+    rtc->last_time = rtc->iclock->get_time(rtc->clock);
 }
 
 uint8_t read_mbc3_rtc_regs(struct mbc3_rtc* rtc, unsigned int reg)
