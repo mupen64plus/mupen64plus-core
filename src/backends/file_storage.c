@@ -36,6 +36,7 @@ int open_file_storage(struct file_storage* fstorage, size_t size, const char* fi
     fstorage->filename = filename;
     fstorage->size = size;
     fstorage->first_access = 1;
+    fstorage->keep_trailing_data = 0;
 
     /* allocate memory for holding data */
     fstorage->data = malloc(fstorage->size);
@@ -60,6 +61,7 @@ int open_rom_file_storage(struct file_storage* fstorage, const char* filename)
     fstorage->size = 0;
     fstorage->filename = NULL;
     fstorage->first_access = 1;
+    fstorage->keep_trailing_data = 0;
 
     file_status_t err = load_file(filename, (void**)&fstorage->data, &fstorage->size);
 
@@ -103,7 +105,9 @@ static void file_storage_save(void* storage, size_t start, size_t size)
      * otherwise write only updated chunk */
     if (fstorage->first_access) {
         fstorage->first_access = 0;
-        err = write_to_file(fstorage->filename, fstorage->data, fstorage->size);
+        err = (fstorage->keep_trailing_data)
+            ? write_chunk_to_file(fstorage->filename, fstorage->data, fstorage->size, 0)
+            : write_to_file(fstorage->filename, fstorage->data, fstorage->size);
     }
     else {
         err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start);
