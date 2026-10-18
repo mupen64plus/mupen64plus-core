@@ -1520,6 +1520,10 @@ static void init_gb_ram(void* opaque, size_t ram_size, void** storage, const str
         DebugMessage(M64MSG_WARNING, "Size mismatch between expected RAM size and effective file size");
     }
 
+    /* Game Boy emulators append extra data to cartridge RAM files,
+     * like the MBC3 RTC state, so don't truncate it */
+    data->ram_fstorage.keep_trailing_data = 1;
+
     DebugMessage(M64MSG_INFO, "GB Loader RAM: %s - %zu",
             data->ram_fstorage.filename,
             data->ram_fstorage.size);
