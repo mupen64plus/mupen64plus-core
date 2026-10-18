@@ -103,7 +103,9 @@ static void file_storage_save(void* storage, size_t start, size_t size)
      * otherwise write only updated chunk */
     if (fstorage->first_access) {
         fstorage->first_access = 0;
-        err = write_to_file(fstorage->filename, fstorage->data, fstorage->size);
+        /* rb+, not wb: keep data past the storage size, like the clock
+         * footer Game Boy emulators append to a cartridge save */
+        err = write_chunk_to_file(fstorage->filename, fstorage->data, fstorage->size, 0);
     }
     else {
         err = write_chunk_to_file(fstorage->filename, fstorage->data + start, size, start);
