@@ -105,12 +105,24 @@ void disable_pif_channel(struct pif_channel* channel)
     channel->rx_buf = NULL;
 }
 
-size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
+size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf, size_t size)
 {
+    size_t command_size;
+
+    if (size < 2) {
+        disable_pif_channel(channel);
+        return 0;
+    }
+
     uint8_t tx = buf[0] & 0x3f;
     uint8_t rx = buf[1] & 0x3f;
 
-    /* XXX: check out of bounds accesses */
+    command_size = 2 + tx + rx;
+    /* Joybus handlers always read a command byte from tx_buf. */
+    if (tx == 0 || command_size > size) {
+        disable_pif_channel(channel);
+        return 0;
+    }
 
     channel->tx = buf;
     channel->rx = buf + 1;
@@ -119,7 +131,7 @@ size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf)
 
     post_setup_channel(channel);
 
-    return 2 + tx + rx;
+    return command_size;
 }
 
 void init_pif(struct pif* pif,
@@ -208,7 +220,8 @@ void setup_channels_format(struct pif* pif)
             dummy_reset_buffer[k][1] = 0x03;
             dummy_reset_buffer[k][2] = 0xff;
 
-            setup_pif_channel(&pif->channels[k], dummy_reset_buffer[k]);
+            setup_pif_channel(&pif->channels[k], dummy_reset_buffer[k],
+                sizeof(dummy_reset_buffer[k]));
             ++k;
             ++i;
             }
@@ -231,8 +244,14 @@ void setup_channels_format(struct pif* pif)
                 continue;
             }
 
-
-            i += setup_pif_channel(&pif->channels[k++], &pif->ram[i]);
+            size_t command_size = setup_pif_channel(&pif->channels[k++],
+                &pif->ram[i], PIF_RAM_SIZE - i);
+            if (command_size == 0) {
+                DebugMessage(M64MSG_WARNING, "Truncated PIF command ! Stopping PIF channel processing");
+                i = PIF_RAM_SIZE;
+                continue;
+            }
+            i += command_size;
         }
     }
 
@@ -395,4 +414,3 @@ void hw2_int_handler(void* opaque)
 
     raise_maskable_interrupt(pif->r4300, CP0_CAUSE_IP4);
 }
-

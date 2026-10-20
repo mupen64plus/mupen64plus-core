@@ -615,8 +615,9 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         /* extra pif channels state */
         for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
             int offset = GETDATA(curr, int8_t);
-            if (offset >= 0) {
-                setup_pif_channel(&dev->pif.channels[i], dev->pif.ram + offset);
+            if (offset >= 0 && offset < PIF_RAM_SIZE) {
+                setup_pif_channel(&dev->pif.channels[i], dev->pif.ram + offset,
+                    PIF_RAM_SIZE - offset);
             }
             else {
                 disable_pif_channel(&dev->pif.channels[i]);
@@ -760,8 +761,9 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
         /* extra pif channels state */
         for (i = 0; i < PIF_CHANNELS_COUNT; ++i) {
             int offset = GETDATA(curr, int8_t);
-            if (offset >= 0) {
-                setup_pif_channel(&dev->pif.channels[i], dev->pif.ram + offset);
+            if (offset >= 0 && offset < PIF_RAM_SIZE) {
+                setup_pif_channel(&dev->pif.channels[i], dev->pif.ram + offset,
+                    PIF_RAM_SIZE - offset);
             }
             else {
                 disable_pif_channel(&dev->pif.channels[i]);

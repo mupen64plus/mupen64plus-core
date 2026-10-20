@@ -49,7 +49,7 @@ struct pif_channel
 };
 
 void disable_pif_channel(struct pif_channel* channel);
-size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf);
+size_t setup_pif_channel(struct pif_channel* channel, uint8_t* buf, size_t size);
 
 struct pif
 {
@@ -92,4 +92,3 @@ void update_pif_ram(struct pif* pif);
 void hw2_int_handler(void* opaque);
 
 #endif
-
