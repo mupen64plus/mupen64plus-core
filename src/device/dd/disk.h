@@ -172,7 +172,8 @@ uint32_t PhysToLBA(const struct dd_disk* disk, uint16_t head, uint16_t track, ui
 unsigned int get_zone_from_head_track(unsigned int head, unsigned int track);
 
 uint8_t* get_sector_base(const struct dd_disk* disk,
-    unsigned int head, unsigned int track, unsigned int block, unsigned int sector);
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector,
+    size_t length);
 
 uint8_t* scan_and_expand_disk_format(uint8_t* data, size_t size,
     unsigned int* format, unsigned int* development,

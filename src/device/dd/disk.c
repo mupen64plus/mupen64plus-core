@@ -248,9 +248,23 @@ unsigned int get_zone_from_head_track(unsigned int head, unsigned int track)
     return zone + head;
 }
 
+static uint8_t* get_disk_data(const struct dd_disk* disk, uint64_t offset, size_t length)
+{
+    size_t disk_size = disk->istorage->size(disk->storage);
+
+    if (offset > disk_size || length > disk_size - offset)
+    {
+        DebugMessage(M64MSG_ERROR, "DD sector exceeds disk image size");
+        return NULL;
+    }
+
+    return disk->istorage->data(disk->storage) + (size_t)offset;
+}
+
 
 static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
-    unsigned int head, unsigned int track, unsigned int block, unsigned int sector)
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector,
+    size_t length)
 {
     static const unsigned int start_offset[] = {
         0x0000000, 0x05f15e0, 0x0b79d00, 0x10801a0,
@@ -276,10 +290,10 @@ static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
     zone += head * 8;
 
     /* compute sector offset */
-    unsigned int offset = start_offset[zone]
-        + tr_off * TRACKSIZE(zone)
-        + block * BLOCKSIZE(zone)
-        + sector * sector_size;
+    uint64_t offset = (uint64_t)start_offset[zone]
+        + (uint64_t)tr_off * TRACKSIZE(zone)
+        + (uint64_t)block * BLOCKSIZE(zone)
+        + (uint64_t)sector * sector_size;
 
     /* Access to protected LBA should return an error */
     if (sector == 0 && track < (SYSTEM_LBAS / 2))
@@ -294,11 +308,12 @@ static uint8_t* get_sector_base_mame(const struct dd_disk* disk,
         }
     }
 
-    return disk->istorage->data(disk->storage) + offset;
+    return get_disk_data(disk, offset, length);
 }
 
 static uint8_t* get_sector_base_sdk(const struct dd_disk* disk,
-    unsigned int head, unsigned int track, unsigned int block, unsigned int sector)
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector,
+    size_t length)
 {
     uint16_t lba = PhysToLBA(disk, head, track, block);
 
@@ -315,7 +330,7 @@ static uint8_t* get_sector_base_sdk(const struct dd_disk* disk,
         ? 0xC0
         : zone_sec_size_phys[get_zone_from_head_track(head, track)];
     const struct dd_sys_data* sys_data = (void*)(disk->istorage->data(disk->storage) + disk->offset_sys);
-    unsigned int offset = LBAToByte(sys_data, 0, lba) + sector * sector_size;
+    uint64_t offset = (uint64_t)LBAToByte(sys_data, 0, lba) + sector * sector_size;
 
     /* Handle Errors for wrong System Data */
     if (sector == 0 && lba < SYSTEM_LBAS)
@@ -331,13 +346,14 @@ static uint8_t* get_sector_base_sdk(const struct dd_disk* disk,
     }
 
     if (lba <= MAX_LBA && sector == 0)
-        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, offset, sector_size * SECTORS_PER_BLOCK);
+        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, (unsigned int)offset, sector_size * SECTORS_PER_BLOCK);
 
-    return disk->istorage->data(disk->storage) + offset;
+    return get_disk_data(disk, offset, length);
 }
 
 static uint8_t* get_sector_base_d64(const struct dd_disk* disk,
-    unsigned int head, unsigned int track, unsigned int block, unsigned int sector)
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector,
+    size_t length)
 {
     const struct dd_sys_data* sys_data = (void*)(disk->istorage->data(disk->storage) + disk->offset_sys);
 
@@ -347,7 +363,13 @@ static uint8_t* get_sector_base_d64(const struct dd_disk* disk,
     uint8_t disk_type = sys_data->type & 0x0F;
     unsigned int sector_size = zone_sec_size_phys[get_zone_from_head_track(head, track)];
     uint16_t lba = PhysToLBA(disk, head, track, block);
-    unsigned int offset = 0;
+    uint64_t offset = 0;
+
+    if (lba > MAX_LBA)
+    {
+        DebugMessage(M64MSG_ERROR, "Invalid LBA (Head:%d - Track:%04x - Block:%d)", head, track, block);
+        return NULL;
+    }
 
     if (lba < DISKID_LBA)
     {
@@ -362,12 +384,12 @@ static uint8_t* get_sector_base_d64(const struct dd_disk* disk,
     else if (lba <= (rom_lba_end + SYSTEM_LBAS))
     {
         //ROM Area
-        offset = D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sector_size);
+        offset = (uint64_t)D64_OFFSET_DATA + LBAToByteA(disk_type, SYSTEM_LBAS, lba - SYSTEM_LBAS) + (sector * sector_size);
     }
     else if (((lba - SYSTEM_LBAS) >= ram_lba_start) && ((lba - SYSTEM_LBAS) <= ram_lba_end))
     {
         //RAM Area
-        offset = disk->offset_ram + LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sector_size);
+        offset = (uint64_t)disk->offset_ram + LBAToByteA(disk_type, ram_lba_start + SYSTEM_LBAS, lba - SYSTEM_LBAS - ram_lba_start) + (sector * sector_size);
     }
     else
     {
@@ -377,23 +399,24 @@ static uint8_t* get_sector_base_d64(const struct dd_disk* disk,
     }
 
     if (lba <= MAX_LBA && sector == 0)
-        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, offset, sector_size * SECTORS_PER_BLOCK);
+        DebugMessage(M64MSG_VERBOSE, "LBA %d - Offset %08X - Size %04X", lba, (unsigned int)offset, sector_size * SECTORS_PER_BLOCK);
 
-    return disk->istorage->data(disk->storage) + offset;
+    return get_disk_data(disk, offset, length);
 }
 
 
 uint8_t* get_sector_base(const struct dd_disk* disk,
-    unsigned int head, unsigned int track, unsigned int block, unsigned int sector)
+    unsigned int head, unsigned int track, unsigned int block, unsigned int sector,
+    size_t length)
 {
     switch(disk->format)
     {
     case DISK_FORMAT_MAME:
-        return get_sector_base_mame(disk, head, track, block, sector);
+        return get_sector_base_mame(disk, head, track, block, sector, length);
     case DISK_FORMAT_SDK:
-        return get_sector_base_sdk(disk, head, track, block, sector);
+        return get_sector_base_sdk(disk, head, track, block, sector, length);
     case DISK_FORMAT_D64:
-        return get_sector_base_d64(disk, head, track, block, sector);
+        return get_sector_base_d64(disk, head, track, block, sector, length);
     default:
         return NULL;
     }

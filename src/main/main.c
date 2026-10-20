@@ -1333,6 +1333,8 @@ static int load_dd_disk(struct dd_disk* dd_disk, const struct storage_backend_in
     }
     else {
         fstorage->data = new_data;
+        if (format == DISK_FORMAT_D64)
+            fstorage->size = offset_ram + size_ram;
     }
 
     /* Load RAM save data (if SaveDiskFormat == 1) */
