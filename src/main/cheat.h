@@ -36,7 +36,11 @@ struct r4300_core;
 
 struct cheat_ctx
 {
+#ifdef USE_SDL3
+    struct SDL_Mutex* mutex;
+#else
     struct SDL_mutex* mutex;
+#endif
     struct list_head active_cheats;
 };
 
