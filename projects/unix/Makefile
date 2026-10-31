@@ -55,7 +55,11 @@ ifeq ("$(OS)","NONE")
 endif
 
 # detect system architecture
-HOST_CPU ?= $(shell uname -m)
+ifeq ($(UNAME), FreeBSD)
+  HOST_CPU ?= $(shell uname -p)
+else
+  HOST_CPU ?= $(shell uname -m)
+endif
 CPU := NONE
 ifneq ("$(filter x86_64 amd64,$(HOST_CPU))","")
   CPU := X86
