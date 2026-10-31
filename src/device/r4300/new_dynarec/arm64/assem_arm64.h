@@ -5,6 +5,18 @@
 #define HOST_CCREG 20 /* callee-save */
 #define HOST_BTREG 19 /* callee-save */
 #define EXCLUDE_REG 29 /* FP */
+#if defined(__APPLE__)
+/* Apple reserves x18 ("The platforms reserve register x18. Don't use this
+ * register.") and macOS zeroes it at arbitrary points (i.e on context
+ * switches), so it must never hold an N64 register, and the trampolines
+ * for far jumps (the code cache is a MAP_JIT mapping far away from the
+ * core) use x16 (ip0) instead, which is then kept out of allocation too */
+#define EXCLUDE_REG2 18
+#define EXCLUDE_REG3 16
+#define TRAMPOLINE_REG 16
+#else
+#define TRAMPOLINE_REG 18
+#endif
 
 #define NATIVE_64 1
 #define HOST_IMM8 1
