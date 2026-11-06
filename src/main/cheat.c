@@ -22,8 +22,13 @@
 
 /* gameshark and xploder64 reference: http://doc.kodewerx.net/hacking_n64.html */
 
+#ifdef USE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_thread.h>
+#else
 #include <SDL.h>
 #include <SDL_thread.h>
+#endif
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -214,11 +219,13 @@ void cheat_apply_cheats(struct cheat_ctx* ctx, struct r4300_core* r4300, int ent
     if (list_empty(&ctx->active_cheats))
         return;
 
-    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
+    if (ctx->mutex == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_apply_cheats()");
         return;
     }
+
+    SDL_LockMutex(ctx->mutex);
 
     list_for_each_entry_t(cheat, &ctx->active_cheats, cheat_t, list) {
         if (cheat->enabled)
@@ -325,11 +332,13 @@ void cheat_delete_all(struct cheat_ctx* ctx)
     if (list_empty(&ctx->active_cheats))
         return;
 
-    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
+    if (ctx->mutex == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_delete_all()");
         return;
     }
+
+    SDL_LockMutex(ctx->mutex);
 
     list_for_each_entry_safe_t(cheat, safe_cheat, &ctx->active_cheats, cheat_t, list) {
         free(cheat->name);
@@ -352,11 +361,13 @@ int cheat_set_enabled(struct cheat_ctx* ctx, const char* name, int enabled)
     if (list_empty(&ctx->active_cheats))
         return 0;
 
-    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
+    if (ctx->mutex == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_set_enabled()");
         return 0;
     }
+
+    SDL_LockMutex(ctx->mutex);
 
     list_for_each_entry_t(cheat, &ctx->active_cheats, cheat_t, list) {
         if (strcmp(name, cheat->name) == 0)
@@ -376,11 +387,13 @@ int cheat_add_new(struct cheat_ctx* ctx, const char* name, m64p_cheat_code* code
     cheat_t *cheat;
     int i, j;
 
-    if (ctx->mutex == NULL || SDL_LockMutex(ctx->mutex) != 0)
+    if (ctx->mutex == NULL)
     {
         DebugMessage(M64MSG_ERROR, "Internal error: failed to lock mutex in cheat_add_new()");
         return 0;
     }
+
+    SDL_LockMutex(ctx->mutex);
 
     /* create a new cheat function or erase the codes in an existing cheat function */
     cheat = find_or_create_cheat(ctx, name);
