@@ -74,7 +74,7 @@ static void vru_controller_reset(struct game_controller* cont)
         cont->voice_state = VOICE_STATUS_START;
     cont->load_offset = 0;
     cont->voice_init = 1;
-    memset(cont->word, 0, 80);
+    memset(cont->word, 0, sizeof(cont->word));
 }
 
 const struct game_controller_flavor g_vru_controller_flavor =
@@ -151,31 +151,53 @@ static void process_vru_command(void* jbd,
         rx_buf[2] = vru_data_crc(&rx_buf[0], 2);
         if (cont->load_offset > 0)
         {
-            uint8_t offset = 0;
-            while (cont->word[offset] == 0 && offset < 40)
+            const size_t word_count = sizeof(cont->word) / sizeof(cont->word[0]);
+            size_t offset = 0;
+            while (offset < word_count && cont->word[offset] == 0)
                 ++offset;
-            if (offset == 40)
+            if (offset == word_count)
             {
                 DebugMessage(M64MSG_WARNING, "Empty JCMD_VRU_WRITE.");
             }
             else if (cont->word[offset] == 3)
             {
-                offset += 3;
-                uint16_t length = cont->word[offset];
-                if (ROM_HEADER.Country_code == 0x4A /* Japan */ || ROM_HEADER.Country_code == 0x00 /* Demo */)
+                if (offset > word_count - 4)
                 {
-                    offset -= 1;
-                    length = 0;
-                    while (cont->word[offset + length] != 0)
-                    {
-                        ++length;
-                    }
-                    input.sendVRUWord(length, &cont->word[offset], 1);
+                    DebugMessage(M64MSG_WARNING, "Truncated JCMD_VRU_WRITE.");
                 }
                 else
                 {
-                    ++offset;
-                    input.sendVRUWord(length, &cont->word[offset], 0);
+                    offset += 3;
+                    uint16_t length = cont->word[offset];
+                    if (ROM_HEADER.Country_code == 0x4A /* Japan */ || ROM_HEADER.Country_code == 0x00 /* Demo */)
+                    {
+                        offset -= 1;
+                        length = 0;
+                        while (offset + length < word_count && cont->word[offset + length] != 0)
+                        {
+                            ++length;
+                        }
+                        if (offset + length == word_count)
+                        {
+                            DebugMessage(M64MSG_WARNING, "Unterminated JCMD_VRU_WRITE.");
+                        }
+                        else
+                        {
+                            input.sendVRUWord(length, &cont->word[offset], 1);
+                        }
+                    }
+                    else
+                    {
+                        ++offset;
+                        if (length > word_count - offset)
+                        {
+                            DebugMessage(M64MSG_WARNING, "Oversized JCMD_VRU_WRITE.");
+                        }
+                        else
+                        {
+                            input.sendVRUWord(length, &cont->word[offset], 0);
+                        }
+                    }
                 }
             }
             else
@@ -232,11 +254,19 @@ static void process_vru_command(void* jbd,
 
     case JCMD_VRU_WRITE: {
         JOYBUS_CHECK_COMMAND_FORMAT(23, 1)
+        const size_t word_count = sizeof(cont->word) / sizeof(cont->word[0]);
+        const size_t write_count = 20 / sizeof(cont->word[0]);
         rx_buf[0] = vru_data_crc(&tx_buf[3], 20);
         if (cont->load_offset == 0)
-            memset(cont->word, 0, 80);
+            memset(cont->word, 0, sizeof(cont->word));
+        if (cont->load_offset > word_count - write_count)
+        {
+            DebugMessage(M64MSG_WARNING, "Too many JCMD_VRU_WRITE packets.");
+            *rx |= 0x40;
+            break;
+        }
         memcpy(&cont->word[cont->load_offset], &tx_buf[3], 20);
-        cont->load_offset += 10;
+        cont->load_offset += write_count;
         cont->status = 0; /* status is always set to 0 after a write */
     } break;
 
