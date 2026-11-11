@@ -406,6 +406,17 @@ void rsp_interrupt_event(void* opaque)
 {
     struct rsp_core* sp = (struct rsp_core*)opaque;
 
+    /* The RSP plugin returned without the task halting or breaking (cxd4
+     * does this when the microcode polls SP_STATUS waiting for the CPU).
+     * Keep running the task instead of waiting for the CPU to write
+     * SP_STATUS: Pokemon Stadium 2's GB Tower leaves its RSP task running
+     * and never writes SP_STATUS again, so it hung on a black screen. */
+    if (sp->rsp_task_locked && !(sp->regs[SP_STATUS_REG] & (SP_STATUS_HALT | SP_STATUS_BROKE)))
+    {
+        do_SP_Task(sp);
+        return;
+    }
+
     if (!sp->rsp_task_locked)
     {
         sp->regs[SP_STATUS_REG] |=
