@@ -29,7 +29,23 @@
 #include "device/memory/memory.h"
 #include "device/rdram/rdram.h"
 
-#define SRAM_ADDR_MASK UINT32_C(0x0000ffff)
+/* The 256 Kbit SRAM decodes 15 address lines and is mirrored through the
+ * remainder of the save domain. */
+#define SRAM_ADDR_MASK ((uint32_t)SRAM_SIZE - 1)
+
+static size_t sram_dma_length(const struct sram* sram,
+                              uint32_t dram_addr, uint32_t length)
+{
+    if (dram_addr >= sram->rdram->dram_size) {
+        return 0;
+    }
+
+    if (length > sram->rdram->dram_size - dram_addr) {
+        return sram->rdram->dram_size - dram_addr;
+    }
+
+    return length;
+}
 
 void format_sram(uint8_t* mem)
 {
@@ -47,16 +63,23 @@ void init_sram(struct sram* sram,
 unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     size_t i;
+    size_t transfer_length;
     struct sram* sram = (struct sram*)opaque;
     uint8_t* mem = sram->istorage->data(sram->storage);
 
     cart_addr &= SRAM_ADDR_MASK;
+    transfer_length = sram_dma_length(sram, dram_addr, length);
 
-    for (i = 0; i < length && (cart_addr+i) < SRAM_SIZE; ++i) {
-        mem[(cart_addr+i)^S8] = dram[(dram_addr+i)^S8];
+    for (i = 0; i < transfer_length; ++i) {
+        mem[((cart_addr+i) & SRAM_ADDR_MASK)^S8] = dram[(dram_addr+i)^S8];
     }
 
-    sram->istorage->save(sram->storage, cart_addr, length);
+    if (transfer_length > SRAM_SIZE - cart_addr) {
+        sram->istorage->save(sram->storage, 0, SRAM_SIZE);
+    }
+    else if (transfer_length != 0) {
+        sram->istorage->save(sram->storage, cart_addr, transfer_length);
+    }
 
     return /* length / 8 */0x1000;
 }
@@ -64,13 +87,15 @@ unsigned int sram_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_addr
 unsigned int sram_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, uint32_t cart_addr, uint32_t length)
 {
     size_t i;
+    size_t transfer_length;
     struct sram* sram = (struct sram*)opaque;
     const uint8_t* mem = sram->istorage->data(sram->storage);
 
     cart_addr &= SRAM_ADDR_MASK;
+    transfer_length = sram_dma_length(sram, dram_addr, length);
 
-    for (i = 0; i < length && (dram_addr+i) < sram->rdram->dram_size; ++i) {
-        dram[(dram_addr+i)^S8] = mem[(cart_addr+i)^S8];
+    for (i = 0; i < transfer_length; ++i) {
+        dram[(dram_addr+i)^S8] = mem[((cart_addr+i) & SRAM_ADDR_MASK)^S8];
     }
 
     return /* length / 8 */0x1000;
