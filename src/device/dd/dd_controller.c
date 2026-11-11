@@ -35,6 +35,7 @@
 #include "device/device.h"
 #include "device/memory/memory.h"
 #include "device/r4300/r4300_core.h"
+#include "device/rdram/rdram.h"
 
 /* dd commands definition */
 #define DD_CMD_NOOP             UINT32_C(0x00000000)
@@ -198,11 +199,24 @@ void dd_dv_int_handler(void* opaque)
 static void read_C2(struct dd_controller* dd)
 {
     size_t i;
+    size_t length;
+    size_t offset;
 
-    size_t length = zone_sec_size[dd->bm_zone];
+    if (dd->bm_zone >= sizeof(zone_sec_size) / sizeof(zone_sec_size[0])) {
+        DebugMessage(M64MSG_ERROR, "DD C2 transfer has an invalid zone");
+        return;
+    }
+
+    length = zone_sec_size[dd->bm_zone];
     unsigned int sector = (dd->regs[DD_ASIC_CUR_SECTOR] >> 16) & 0xff;
     sector %= 90;
-    size_t offset = 0x40 * (sector - SECTORS_PER_BLOCK);
+    offset = 0x40 * (sector - SECTORS_PER_BLOCK);
+
+    if (offset > sizeof(dd->c2s_buf) ||
+        length > sizeof(dd->c2s_buf) - offset) {
+        DebugMessage(M64MSG_ERROR, "DD C2 transfer exceeds its buffer");
+        return;
+    }
 
     DebugMessage(M64MSG_VERBOSE, "read C2: length=%08x, offset=%08x",
             (uint32_t)length, (uint32_t)offset);
@@ -233,6 +247,12 @@ static void read_sector(struct dd_controller* dd)
 {
     size_t i;
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+
+    if (length > sizeof(dd->ds_buf)) {
+        DebugMessage(M64MSG_ERROR, "DD read sector exceeds its buffer");
+        return;
+    }
+
     const uint8_t* disk_sec = seek_sector(dd, length);
     if (disk_sec == NULL) {
         return;
@@ -247,6 +267,12 @@ static void write_sector(struct dd_controller* dd)
 {
     size_t i;
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
+
+    if (length > sizeof(dd->ds_buf)) {
+        DebugMessage(M64MSG_ERROR, "DD write sector exceeds its buffer");
+        return;
+    }
+
     uint8_t* disk_sec = seek_sector(dd, length);
     if (disk_sec == NULL) {
         return;
@@ -753,7 +779,10 @@ void write_dd_regs(void* opaque, uint32_t address, uint32_t value, uint32_t mask
 
     case DD_ASIC_HOST_SECBYTE:
         dd->regs[DD_ASIC_HOST_SECBYTE] = (value >> 16) & 0xff;
-        if ((dd->regs[DD_ASIC_HOST_SECBYTE] + 1) != zone_sec_size[dd->bm_zone]) {
+        if (dd->bm_zone >= sizeof(zone_sec_size) / sizeof(zone_sec_size[0])) {
+            DebugMessage(M64MSG_WARNING, "Sector size set with an invalid DD zone");
+        }
+        else if ((dd->regs[DD_ASIC_HOST_SECBYTE] + 1) != zone_sec_size[dd->bm_zone]) {
             DebugMessage(M64MSG_WARNING, "Sector size %u set different than expected %u",
                     dd->regs[DD_ASIC_HOST_SECBYTE] + 1, zone_sec_size[dd->bm_zone]);
         }
@@ -797,10 +826,16 @@ unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_ad
 {
     struct dd_controller* dd = (struct dd_controller*)opaque;
     uint8_t* mem;
+    size_t transfer_length;
     size_t i;
 
     DebugMessage(M64MSG_VERBOSE, "DD DMA read dram=%08x  cart=%08x length=%08x",
             dram_addr, cart_addr, length);
+
+    if (dd->r4300 == NULL || dd->r4300->rdram == NULL) {
+        DebugMessage(M64MSG_ERROR, "DD DMA read without an initialized DD");
+        return (length * 63) / 25;
+    }
 
     if (cart_addr == MM_DD_DS_BUFFER) {
         cart_addr = (cart_addr - MM_DD_DS_BUFFER) & 0x3fffff;
@@ -819,7 +854,18 @@ unsigned int dd_dom_dma_read(void* opaque, const uint8_t* dram, uint32_t dram_ad
         return (length * 63) / 25;
     }
 
-    for (i = 0; i < length; ++i) {
+    transfer_length = length;
+    if (dram_addr >= dd->r4300->rdram->dram_size) {
+        transfer_length = 0;
+    }
+    else if (transfer_length > dd->r4300->rdram->dram_size - dram_addr) {
+        transfer_length = dd->r4300->rdram->dram_size - dram_addr;
+    }
+    if (transfer_length > sizeof(dd->ds_buf) - cart_addr) {
+        transfer_length = sizeof(dd->ds_buf) - cart_addr;
+    }
+
+    for (i = 0; i < transfer_length; ++i) {
         mem[(cart_addr + i) ^ S8] = dram[(dram_addr + i) ^ S8];
     }
 
@@ -832,21 +878,30 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
     struct dd_controller* dd = (struct dd_controller*)opaque;
     unsigned int cycles;
     const uint8_t* mem;
+    size_t mem_size;
+    size_t transfer_length;
     size_t i;
 
     DebugMessage(M64MSG_VERBOSE, "DD DMA write dram=%08x  cart=%08x length=%08x",
             dram_addr, cart_addr, length);
+
+    if (dd->r4300 == NULL || dd->r4300->rdram == NULL) {
+        DebugMessage(M64MSG_ERROR, "DD DMA write without an initialized DD");
+        return (length * 63) / 25;
+    }
 
     if (cart_addr < MM_DD_ROM) {
         if (cart_addr == MM_DD_C2S_BUFFER) {
             /* C2 sector buffer */
             cart_addr = (cart_addr - MM_DD_C2S_BUFFER);
             mem = (const uint8_t*)&dd->c2s_buf;
+            mem_size = sizeof(dd->c2s_buf);
         }
         else if (cart_addr == MM_DD_DS_BUFFER) {
             /* Data sector buffer */
             cart_addr = (cart_addr - MM_DD_DS_BUFFER);
             mem = (const uint8_t*)&dd->ds_buf;
+            mem_size = sizeof(dd->ds_buf);
         }
         else {
             DebugMessage(M64MSG_ERROR, "Unknown DD dma write dram=%08x  cart=%08x length=%08x",
@@ -863,17 +918,31 @@ unsigned int dd_dom_dma_write(void* opaque, uint8_t* dram, uint32_t dram_addr, u
         /* DD ROM */
         cart_addr = (cart_addr - MM_DD_ROM);
         mem = (const uint8_t*)dd->rom;
+        mem_size = dd->rom_size;
 
         /* Recommended Count Per Op = 1, this seems to break very easily */
         cycles = (length * 63) / 25;
     }
 
-    for (i = 0; i < length; ++i) {
-        dram[(dram_addr + i) ^ S8] = mem[(cart_addr + i) ^ S8];
+    transfer_length = length;
+    if (dram_addr >= dd->r4300->rdram->dram_size) {
+        transfer_length = 0;
+    }
+    else if (transfer_length > dd->r4300->rdram->dram_size - dram_addr) {
+        transfer_length = dd->r4300->rdram->dram_size - dram_addr;
     }
 
-    invalidate_r4300_cached_code(dd->r4300, R4300_KSEG0 + dram_addr, length);
-    invalidate_r4300_cached_code(dd->r4300, R4300_KSEG1 + dram_addr, length);
+    for (i = 0; i < transfer_length; ++i) {
+        dram[(dram_addr + i) ^ S8] = (cart_addr < mem_size &&
+                                      i < mem_size - cart_addr)
+            ? mem[(cart_addr + i) ^ S8]
+            : 0;
+    }
+
+    if (transfer_length != 0) {
+        invalidate_r4300_cached_code(dd->r4300, R4300_KSEG0 + dram_addr, transfer_length);
+        invalidate_r4300_cached_code(dd->r4300, R4300_KSEG1 + dram_addr, transfer_length);
+    }
 
     return cycles;
 }
