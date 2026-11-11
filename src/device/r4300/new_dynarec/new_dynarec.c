@@ -1988,6 +1988,35 @@ void* ERET_new(void)
     }
 }
 
+static int get_tlb_memory_map(uint32_t page, uint32_t lut, uintptr_t* map)
+{
+  uint32_t physical;
+
+  if ((lut & 0xfff) != 0xfff || (lut & 0xe0000000) != 0x80000000)
+    return 0;
+
+  physical=(lut&0xfffff000)-0x80000000;
+  *map=((uintptr_t)g_dev.rdram.dram+physical-((uintptr_t)page<<12))>>2;
+  return 1;
+}
+
+static int update_tlb_memory_map(struct r4300_core* r4300, uint32_t page)
+{
+  uint32_t read=r4300->cp0.tlb.LUT_r[page];
+  uintptr_t map;
+
+  if (!get_tlb_memory_map(page, read, &map)) {
+    r4300->new_dynarec_hot_state.memory_map[page]=(uintptr_t)-1;
+    return 0;
+  }
+
+  if (r4300->cp0.tlb.LUT_w[page] != read ||
+      !r4300->cached_interp.invalid_code[page])
+    map|=WRITE_PROTECT;
+  r4300->new_dynarec_hot_state.memory_map[page]=map;
+  return 1;
+}
+
 static void TLBWI_new(int pcaddr, int count)
 {
   unsigned int i;
@@ -2026,19 +2055,11 @@ static void TLBWI_new(int pcaddr, int count)
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(r4300->cp0.tlb.LUT_r[i]) {
-        state->memory_map[i]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-0x80000000)-(i<<12))>>2;
-        // FIXME: should make sure the physical page is invalid too
-        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
-          state->memory_map[i]|=WRITE_PROTECT; // Write protect
-        }else{
-          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
-        }
+      if(update_tlb_memory_map(r4300, i)) {
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else state->memory_map[i]=(uintptr_t)-1;
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
@@ -2047,19 +2068,11 @@ static void TLBWI_new(int pcaddr, int count)
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(r4300->cp0.tlb.LUT_r[i]) {
-        state->memory_map[i]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-0x80000000)-(i<<12))>>2;
-        // FIXME: should make sure the physical page is invalid too
-        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
-          state->memory_map[i]|=WRITE_PROTECT; // Write protect
-        }else{
-          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
-        }
+      if(update_tlb_memory_map(r4300, i)) {
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else state->memory_map[i]=(uintptr_t)-1;
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
@@ -2102,19 +2115,11 @@ static void TLBWR_new(int pcaddr, int count)
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(r4300->cp0.tlb.LUT_r[i]) {
-        state->memory_map[i]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-0x80000000)-(i<<12))>>2;
-        // FIXME: should make sure the physical page is invalid too
-        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
-          state->memory_map[i]|=WRITE_PROTECT; // Write protect
-        }else{
-          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
-        }
+      if(update_tlb_memory_map(r4300, i)) {
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else state->memory_map[i]=(uintptr_t)-1;
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
@@ -2123,19 +2128,11 @@ static void TLBWR_new(int pcaddr, int count)
     //DebugMessage(M64MSG_VERBOSE, "%x: r:%8x w:%8x",i,r4300->cp0.tlb.LUT_r[i],r4300->cp0.tlb.LUT_w[i]);
     if(i<0x80000||i>0xBFFFF)
     {
-      if(r4300->cp0.tlb.LUT_r[i]) {
-        state->memory_map[i]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((r4300->cp0.tlb.LUT_r[i]&0xFFFFF000)-0x80000000)-(i<<12))>>2;
-        // FIXME: should make sure the physical page is invalid too
-        if(!r4300->cp0.tlb.LUT_w[i]||!r4300->cached_interp.invalid_code[i]) {
-          state->memory_map[i]|=WRITE_PROTECT; // Write protect
-        }else{
-          assert(r4300->cp0.tlb.LUT_r[i]==r4300->cp0.tlb.LUT_w[i]);
-        }
+      if(update_tlb_memory_map(r4300, i)) {
         if(!using_tlb) DebugMessage(M64MSG_VERBOSE, "Enabled TLB");
         // Tell the dynamic recompiler to generate tlb lookup code
         using_tlb=1;
       }
-      else state->memory_map[i]=(uintptr_t)-1;
     }
     //DebugMessage(M64MSG_VERBOSE, "memory_map[%x]: %8x (+%8x)",i,state->memory_map[i],state->memory_map[i]<<2);
   }
@@ -2986,14 +2983,17 @@ static void invalidate_block_impl(u_int block)
     g_dev.r4300.cached_interp.invalid_code[block]=1;
   }
   // If there is a valid TLB entry for this page, remove write protect
-  if(block<0x100000&&g_dev.r4300.cp0.tlb.LUT_w[block]) {
-    assert(g_dev.r4300.cp0.tlb.LUT_r[block]==g_dev.r4300.cp0.tlb.LUT_w[block]);
-    g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((g_dev.r4300.cp0.tlb.LUT_w[block]&0xFFFFF000)-0x80000000)-(block<<12))>>2;
+  uintptr_t map;
+  if(block<0x100000&&
+     g_dev.r4300.cp0.tlb.LUT_r[block]==g_dev.r4300.cp0.tlb.LUT_w[block]&&
+     get_tlb_memory_map(block,g_dev.r4300.cp0.tlb.LUT_w[block],&map)) {
+    g_dev.r4300.new_dynarec_hot_state.memory_map[block]=map;
     u_int real_block=g_dev.r4300.cp0.tlb.LUT_w[block]>>12;
     g_dev.r4300.cached_interp.invalid_code[real_block]=1;
     if(real_block>=0x80000&&real_block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[real_block]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
   }
   else if(block>=0x80000&&block<0x80800) g_dev.r4300.new_dynarec_hot_state.memory_map[block]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
+  else if(block<0x100000&&g_dev.r4300.cp0.tlb.LUT_w[block]) g_dev.r4300.new_dynarec_hot_state.memory_map[block]=(uintptr_t)-1;
   #ifdef USE_MINI_HT
   memset(g_dev.r4300.new_dynarec_hot_state.mini_ht,-1,sizeof(g_dev.r4300.new_dynarec_hot_state.mini_ht));
   #endif
@@ -3030,12 +3030,7 @@ static void invalidate_all_pages(void)
   #endif
   // TLB
   for(page=0;page<0x100000;page++) {
-    if(g_dev.r4300.cp0.tlb.LUT_r[page]) {
-      g_dev.r4300.new_dynarec_hot_state.memory_map[page]=((uintptr_t)g_dev.rdram.dram+(uintptr_t)((g_dev.r4300.cp0.tlb.LUT_r[page]&0xFFFFF000)-0x80000000)-(page<<12))>>2;
-      if(!g_dev.r4300.cp0.tlb.LUT_w[page]||!g_dev.r4300.cached_interp.invalid_code[page])
-        g_dev.r4300.new_dynarec_hot_state.memory_map[page]|=WRITE_PROTECT; // Write protect
-    }
-    else g_dev.r4300.new_dynarec_hot_state.memory_map[page]=(uintptr_t)-1;
+    update_tlb_memory_map(&g_dev.r4300,page);
     if(page==0x80000) page=0xC0000;
   }
   tlb_speed_hacks();
