@@ -210,6 +210,12 @@ void write_rdram_regs(void* opaque, uint32_t address, uint32_t value, uint32_t m
         return;
     }
 
+    /* IPL calibration needs corrupted reads as soon as the delay is broadcast. */
+    if (address & RDRAM_BCAST_ADDRESS_MASK && reg == RDRAM_DELAY_REG) {
+        map_corrupt_rdram(rdram, 1);
+        rdram->corrupted_handler = 1;
+    }
+
     if (address & RDRAM_BCAST_ADDRESS_MASK) {
         for (module = 0; module < modules; ++module) {
             masked_write(&rdram->regs[module][reg], value, mask);

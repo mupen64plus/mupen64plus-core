@@ -361,7 +361,8 @@ m64p_error open_disk(void)
 
     /* clear rom header & size */
     memset(&ROM_HEADER, 0, sizeof(m64p_rom_header));
-    memset(ROM_PARAMS.headername, 0, 20);
+    memcpy(ROM_PARAMS.headername, fstorage->data + offset_id, 4);
+    ROM_PARAMS.headername[4] = '\0';
     g_rom_size = 0;
 
     close_file_storage(fstorage);
