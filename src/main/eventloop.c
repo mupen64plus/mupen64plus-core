@@ -43,6 +43,16 @@ SDL_JoystickID l_iJoyInstanceID[10];
 
 static m64p_handle l_CoreEventsConfig = NULL;
 
+static int native_keyboard_active(void)
+{
+    int port;
+    for (port = 0; port < 4; port++) {
+        if (Controls[port].Present && Controls[port].Type == CONT_TYPE_KEYBOARD)
+            return 1;
+    }
+    return 0;
+}
+
 /*********************************************************************************************************
 * static variables and definitions for eventloop.c
 */
@@ -547,6 +557,10 @@ static int get_saveslot_from_keysym(int keysym)
 
 void event_sdl_keydown(int keysym, int keymod)
 {
+    if (native_keyboard_active()) {
+        input.keyDown(keymod, keysym);
+        return;
+    }
 #ifndef NO_KEYBINDINGS
     int slot;
 
@@ -602,6 +616,10 @@ void event_sdl_keydown(int keysym, int keymod)
 
 void event_sdl_keyup(int keysym, int keymod)
 {
+    if (native_keyboard_active()) {
+        input.keyUp(keymod, keysym);
+        return;
+    }
 #ifndef NO_KEYBINDINGS
     if (keysym == sdl_keysym2native(ConfigGetParamInt(l_CoreEventsConfig, kbdStop)))
     {

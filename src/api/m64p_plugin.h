@@ -139,6 +139,7 @@ typedef struct {
 /*** Controller types ****/
 #define CONT_TYPE_STANDARD          0
 #define CONT_TYPE_VRU               1
+#define CONT_TYPE_KEYBOARD          2
 
 typedef struct {
     int Present;

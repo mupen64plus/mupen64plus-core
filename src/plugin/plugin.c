@@ -233,6 +233,7 @@ static m64p_error plugin_connect_gfx(m64p_dynlib_handle plugin_handle)
 
 static m64p_error plugin_start_gfx(void)
 {
+    static unsigned char disk_gfx_header[0x40];
     uint8_t media = g_rom_size == 0 ? 0 : *((uint8_t*)mem_base_u32(g_mem_base, MM_CART_ROM) + (0x3b ^ S8));
 
     /* Here we feed 64DD IPL ROM header to GFX plugin if 64DD is present.
@@ -252,6 +253,14 @@ static m64p_error plugin_start_gfx(void)
 
     /* fill in the GFX_INFO data structure */
     gfx_info.HEADER = (unsigned char *)mem_base_u32(g_mem_base, rom_base);
+    if (g_rom_size == 0)
+    {
+        int i;
+        memcpy(disk_gfx_header, gfx_info.HEADER, sizeof(disk_gfx_header));
+        for (i = 0; i < 20; ++i)
+            disk_gfx_header[(32 + i) ^ S8] = i < 4 ? ROM_PARAMS.headername[i] : ' ';
+        gfx_info.HEADER = disk_gfx_header;
+    }
     gfx_info.RDRAM = (unsigned char *)mem_base_u32(g_mem_base, MM_RDRAM_DRAM);
     gfx_info.DMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM);
     gfx_info.IMEM = (unsigned char *)mem_base_u32(g_mem_base, MM_RSP_MEM + 0x1000);

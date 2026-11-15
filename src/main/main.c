@@ -113,6 +113,54 @@ uint32_t g_start_address = UINT32_C(0xa4000040);
 
 struct device g_dev;
 
+struct hotplug_controller {
+    int port;
+    int plugin_control_id;
+    struct game_controller* standard;
+};
+
+static struct hotplug_controller l_hotplug_controllers[GAME_CONTROLLERS_COUNT];
+
+static void hotplug_controller_poweron(void* opaque)
+{
+    struct hotplug_controller* device = (struct hotplug_controller*)opaque;
+    g_ijoybus_device_controller.poweron(device->standard);
+}
+
+static void hotplug_controller_process(void* opaque, const uint8_t* tx,
+    const uint8_t* tx_buf, uint8_t* rx, uint8_t* rx_buf)
+{
+    struct hotplug_controller* device = (struct hotplug_controller*)opaque;
+    BUTTONS keys = { 0 };
+
+    if (Controls[device->port].RawData && input.getKeys != NULL) {
+        input.getKeys(device->port, &keys);
+    }
+    if (Controls[device->port].RawData) {
+        g_ijoybus_device_plugin_compat.process(&device->plugin_control_id,
+            tx, tx_buf, rx, rx_buf);
+    } else {
+        g_ijoybus_device_controller.process(device->standard, tx, tx_buf, rx, rx_buf);
+    }
+}
+
+static void hotplug_controller_post_setup(void* opaque, uint8_t* tx,
+    const uint8_t* tx_buf, const uint8_t* rx, const uint8_t* rx_buf)
+{
+    struct hotplug_controller* device = (struct hotplug_controller*)opaque;
+
+    if (Controls[device->port].RawData) {
+        g_ijoybus_device_plugin_compat.post_setup(&device->plugin_control_id,
+            tx, tx_buf, rx, rx_buf);
+    }
+}
+
+static const struct joybus_device_interface l_ijoybus_hotplug_controller = {
+    hotplug_controller_poweron,
+    hotplug_controller_process,
+    hotplug_controller_post_setup
+};
+
 m64p_media_loader g_media_loader;
 
 int g_gs_vi_counter = 0;
@@ -1756,12 +1804,7 @@ m64p_error main_run(void)
         //by replacing the regular control_id with the ID that is controlling the player during netplay
         control_ids[i] = netplay_is_init() ? netplay_get_controller(i) : (int)i;
 
-        /* if input plugin requests RawData let the input plugin do the channel device processing */
-        if (Controls[i].RawData) {
-            joybus_devices[i] = &control_ids[i];
-            ijoybus_devices[i] = &g_ijoybus_device_plugin_compat;
-        }
-        else if (Controls[i].Type == CONT_TYPE_VRU) {
+        if (Controls[i].Type == CONT_TYPE_VRU) {
             const struct game_controller_flavor* cont_flavor =
                 &g_vru_controller_flavor;
             joybus_devices[i] = &g_dev.controllers[i];
@@ -1791,8 +1834,11 @@ m64p_error main_run(void)
             const struct game_controller_flavor* cont_flavor =
                 &g_standard_controller_flavor;
 
-            joybus_devices[i] = &g_dev.controllers[i];
-            ijoybus_devices[i] = &g_ijoybus_device_controller;
+            l_hotplug_controllers[i].port = (int)i;
+            l_hotplug_controllers[i].plugin_control_id = control_ids[i];
+            l_hotplug_controllers[i].standard = &g_dev.controllers[i];
+            joybus_devices[i] = &l_hotplug_controllers[i];
+            ijoybus_devices[i] = &l_ijoybus_hotplug_controller;
 
             cin_compats[i].control_id = (int)i;
             cin_compats[i].cont = &g_dev.controllers[i];
