@@ -31,9 +31,31 @@
 
 #include <string.h>
 
-static osal_inline size_t fb_buffer_size(const FrameBufferInfo* fb_info)
+static int fb_get_range(const struct fb* fb, const FrameBufferInfo* fb_info,
+                        uint32_t* begin, uint32_t* end)
 {
-    return fb_info->width * fb_info->height * fb_info->size;
+    size_t row_size;
+    size_t remaining;
+
+    if (fb_info->addr == 0 || fb_info->size == 0 ||
+        fb_info->width == 0 || fb_info->height == 0 ||
+        fb_info->addr >= fb->rdram->dram_size) {
+        return 0;
+    }
+
+    remaining = fb->rdram->dram_size - fb_info->addr;
+    if (fb_info->width > remaining / fb_info->size) {
+        return 0;
+    }
+
+    row_size = (size_t) fb_info->width * fb_info->size;
+    if (fb_info->height > remaining / row_size) {
+        return 0;
+    }
+
+    *begin = fb_info->addr;
+    *end = fb_info->addr + row_size * fb_info->height - 1;
+    return 1;
 }
 
 void pre_framebuffer_read(struct fb* fb, uint32_t address)
@@ -45,17 +67,16 @@ void pre_framebuffer_read(struct fb* fb, uint32_t address)
     size_t i;
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
+        uint32_t begin;
+        uint32_t end;
 
-        /* skip empty fb info */
-        if (fb->infos[i].addr == 0) {
+        /* skip empty or invalid fb info */
+        if (!fb_get_range(fb, &fb->infos[i], &begin, &end)) {
             continue;
         }
 
         /* if address in within a fb and its page is dirty,
          * notify GFX plugin and mark page as not dirty */
-        uint32_t begin = fb->infos[i].addr;
-        uint32_t end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-
         if ((address >= begin) && (address <= end) && (fb->dirty_page[address >> 12])) {
             gfx.fBRead(address);
             fb->dirty_page[address >> 12] = 0;
@@ -79,16 +100,15 @@ void post_framebuffer_write(struct fb* fb, uint32_t address, uint32_t length)
         size = 1;
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
+        uint32_t begin;
+        uint32_t end;
 
-        /* skip empty fb info */
-        if (fb->infos[i].addr == 0) {
+        /* skip empty or invalid fb info */
+        if (!fb_get_range(fb, &fb->infos[i], &begin, &end)) {
             continue;
         }
 
         /* if address in within a fb notify GFX plugin */
-        uint32_t begin = fb->infos[i].addr;
-        uint32_t end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
-
         for (j = 0; j < length; j += size) {
             if ((address + j >= begin) && (address + j <= end)) {
                 gfx.fBWrite(address + j, size);
@@ -209,15 +229,17 @@ void protect_framebuffers(struct fb* fb)
     }
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
+        uint32_t begin;
+        uint32_t end;
 
-        /* skip empty fb info */
-        if (fb->infos[i].addr == 0) {
+        /* skip empty or invalid fb info */
+        if (!fb_get_range(fb, &fb->infos[i], &begin, &end)) {
             continue;
         }
 
         /* map fb rw handlers */
-        fb_mapping.begin = fb->infos[i].addr;
-        fb_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
+        fb_mapping.begin = begin;
+        fb_mapping.end   = end;
         apply_mem_mapping(fb->mem, &fb_mapping);
 
         /* mark all pages that are within a fb as dirty */
@@ -249,15 +271,17 @@ void unprotect_framebuffers(struct fb* fb)
     }
 
     for (i = 0; i < FB_INFOS_COUNT; ++i) {
+        uint32_t begin;
+        uint32_t end;
 
-        /* skip empty fb info */
-        if (fb->infos[i].addr == 0) {
+        /* skip empty or invalid fb info */
+        if (!fb_get_range(fb, &fb->infos[i], &begin, &end)) {
             continue;
         }
 
         /* restore ram rw handlers */
-        ram_mapping.begin = fb->infos[i].addr;
-        ram_mapping.end   = fb->infos[i].addr + fb_buffer_size(&fb->infos[i]) - 1;
+        ram_mapping.begin = begin;
+        ram_mapping.end   = end;
         apply_mem_mapping(fb->mem, &ram_mapping);
     }
 }
