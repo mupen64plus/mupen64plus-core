@@ -58,7 +58,7 @@ enum { GB_CART_FINGERPRINT_OFFSET = 0x134 };
 enum { DD_DISK_ID_OFFSET = 0x43670 };
 
 static const char* savestate_magic = "M64+SAVE";
-static const int savestate_latest_version = 0x00010900;  /* 1.9 */
+static const int savestate_latest_version = 0x00010A00;  /* 1.10 */
 static const unsigned char pj64_magic[4] = { 0xC8, 0xA6, 0xD8, 0x23 };
 
 static savestates_job job = savestates_job_nothing;
@@ -419,9 +419,9 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
     dev->ai.fifo[1].length = GETDATA(curr, uint32_t);
     dev->ai.fifo[0].duration  = GETDATA(curr, uint32_t);
     dev->ai.fifo[0].length = GETDATA(curr, uint32_t);
-    /* best effort initialization of fifo addresses...
-     * You might get a small sound "pop" because address might be wrong.
-     * Proper initialization requires changes to savestate format
+    /* best effort initialization of fifo addresses for states older than 1.10,
+     * which did not save them: you might get a small sound "pop" because
+     * address might be wrong. Since 1.10 they are read with the extra state below.
      */
     dev->ai.fifo[0].address = dev->ai.regs[AI_DRAM_ADDR_REG];
     dev->ai.fifo[1].address = dev->ai.regs[AI_DRAM_ADDR_REG];
@@ -903,6 +903,13 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             /* extra cp0 and cp2 state */
             *r4300_cp0_latch(&dev->r4300.cp0) = GETDATA(curr, uint64_t);
             *r4300_cp2_latch(&dev->r4300.cp2) = GETDATA(curr, uint64_t);
+        }
+
+        if (version >= 0x00010A00)
+        {
+            /* addresses of the two queued AI DMAs (older states keep the best effort above) */
+            dev->ai.fifo[0].address = GETDATA(curr, uint32_t);
+            dev->ai.fifo[1].address = GETDATA(curr, uint32_t);
         }
     }
     else
@@ -1947,6 +1954,10 @@ static int savestates_save_m64p(const struct device* dev, char *filepath)
     /* cp0 and cp2 latch (since 1.9) */
     PUTDATA(curr, uint64_t, *r4300_cp0_latch((struct cp0*)&dev->r4300.cp0));
     PUTDATA(curr, uint64_t, *r4300_cp2_latch((struct cp2*)&dev->r4300.cp2));
+
+    /* addresses of the two queued AI DMAs (since 1.10) */
+    PUTDATA(curr, uint32_t, dev->ai.fifo[0].address);
+    PUTDATA(curr, uint32_t, dev->ai.fifo[1].address);
 
     init_work(&save->work, savestates_save_m64p_work);
     queue_work(&save->work);
