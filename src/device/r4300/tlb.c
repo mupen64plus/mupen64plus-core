@@ -38,7 +38,7 @@ void poweron_tlb(struct tlb* tlb)
 
 void tlb_unmap(struct tlb* tlb, size_t entry)
 {
-    unsigned int i;
+    uint64_t i;
     const struct tlb_entry* e;
 
     assert(entry < 32);
@@ -65,37 +65,46 @@ void tlb_unmap(struct tlb* tlb, size_t entry)
 
 void tlb_map(struct tlb* tlb, size_t entry)
 {
-    unsigned int i;
+    uint64_t i;
     const struct tlb_entry* e;
+    uint64_t span;
 
     assert(entry < 32);
     e = &tlb->entries[entry];
 
     if (e->v_even)
     {
+        span = (uint64_t)e->end_even - e->start_even + 1;
         if (e->start_even < e->end_even &&
             !(e->start_even >= 0x80000000 && e->end_even < 0xC0000000) &&
-            e->phys_even < 0x20000000)
+            e->phys_even < 0x20000000 &&
+            span <= UINT32_C(0x20000000) - e->phys_even)
         {
             for (i=e->start_even;i<e->end_even;i+=0x1000)
-                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (e->phys_even + (i - e->start_even) + 0xFFF);
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) |
+                    (uint32_t)(e->phys_even + (i - e->start_even) + 0xFFF);
             if (e->d_even)
                 for (i=e->start_even;i<e->end_even;i+=0x1000)
-                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (e->phys_even + (i - e->start_even) + 0xFFF);
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) |
+                        (uint32_t)(e->phys_even + (i - e->start_even) + 0xFFF);
         }
     }
 
     if (e->v_odd)
     {
+        span = (uint64_t)e->end_odd - e->start_odd + 1;
         if (e->start_odd < e->end_odd &&
             !(e->start_odd >= 0x80000000 && e->end_odd < 0xC0000000) &&
-            e->phys_odd < 0x20000000)
+            e->phys_odd < 0x20000000 &&
+            span <= UINT32_C(0x20000000) - e->phys_odd)
         {
             for (i=e->start_odd;i<e->end_odd;i+=0x1000)
-                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) | (e->phys_odd + (i - e->start_odd) + 0xFFF);
+                tlb->LUT_r[i>>12] = UINT32_C(0x80000000) |
+                    (uint32_t)(e->phys_odd + (i - e->start_odd) + 0xFFF);
             if (e->d_odd)
                 for (i=e->start_odd;i<e->end_odd;i+=0x1000)
-                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) | (e->phys_odd + (i - e->start_odd) + 0xFFF);
+                    tlb->LUT_w[i>>12] = UINT32_C(0x80000000) |
+                        (uint32_t)(e->phys_odd + (i - e->start_odd) + 0xFFF);
         }
     }
 }
