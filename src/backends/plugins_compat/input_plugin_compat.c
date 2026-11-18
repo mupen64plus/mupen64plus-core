@@ -29,6 +29,7 @@
 #include "main/main.h"
 #include "main/netplay.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <api/m64p_plugin.h>
@@ -85,8 +86,10 @@ static m64p_error input_plugin_get_input(void* opaque, uint32_t* input_)
         cin_compat->last_pak_type = Controls[cin_compat->control_id].Plugin; //disable pak switching for netplay
     }
 
-    /* return an error if controller is not plugged */
-    if (!Controls[cin_compat->control_id].Present) {
+    bool is_override = g_input_filter.filter_input(g_input_filter.cb_data, cin_compat->control_id, &keys);
+
+    /* return an error if controller is not plugged OR input was not provided by the filter callback */
+    if (!Controls[cin_compat->control_id].Present || is_override) {
         return M64ERR_SYSTEM_FAIL;
     }
 
@@ -228,3 +231,5 @@ const struct joybus_device_interface
     input_plugin_read_controller,
     input_plugin_controller_command,
 };
+
+m64p_input_filter g_input_filter;

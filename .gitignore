@@ -4,3 +4,6 @@
 /.vscode
 /projects/unix/*.dll
 /src/asm_defines/*.h
+
+.cache/
+compile_commands.json
